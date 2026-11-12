@@ -82,6 +82,7 @@ export interface AssistantProfils {
   referent_id: string | null;
   documents: Generated<boolean>;
   classification_max: Generated<"public" | "interne" | "restreint" | "confidentiel">;
+  tous_perimetres: Generated<boolean>;
 }
 
 export interface AssistantPropositions {

@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `063`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `064`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -118,6 +118,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : accès par défaut et réglages** : par défaut, les deux profils lisent tous les périmètres (y compris ceux
+  créés plus tard) et tous les documents, toujours dans la limite des droits de la personne ; un profil se restreint par une
+  liste de périmètres ou un niveau de classification. Chaque option de l'écran de réglages porte une explication.
+  **Corrigé** : après « Enregistrer », l'écran réaffichait les anciennes valeurs comme des modifications en attente ; il
+  montre maintenant ce qui est enregistré, et l'erreur éventuelle s'affiche à côté du bouton.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : présence dans toute la plateforme** : un bouton flottant en bas à droite ouvre un panneau de discussion
   commun à toutes les rubriques, avec l'historique et une boîte personnelle « Pour vous » (questions reçues, rappels,
   propositions). La discussion et les brouillons sont conservés en changeant de page. L'entrée de menu « Assistant RSSI »

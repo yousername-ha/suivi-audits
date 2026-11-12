@@ -79,6 +79,7 @@ const regler = async (change: Record<string, unknown>, profil: Record<string, un
       id,
       actif,
       perimetres,
+      tousPerimetres: false,
       ...(id === 'mise_en_oeuvre' ? profil : {}),
     })),
     version: cur.version,
@@ -103,6 +104,10 @@ const rappelsDe = async (userId: string) =>
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
+  await t.svc.db.q(
+    "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
+  );
   // Le scénario lance plus de rondes qu'un administrateur n'en demanderait en une heure.
   t.svc.limits.assistantRondeByUser = Object.assign(() => true, { reset() {} });
   const a = await makeUser(t, 'ro_admin', 'admin');

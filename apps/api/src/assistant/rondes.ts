@@ -230,7 +230,9 @@ export class RondesAssistant {
     if (!r.rondes_sur_evenement) return null;
     for (const id of PROFILS_ASSISTANT) {
       const p = profils.get(id);
-      if (!p?.actif || !p.referent_id || !p.perimetres.length) continue;
+      if (!p?.actif || !p.referent_id) continue;
+      const ouverts = await this.assistant.perimetresDuProfil(p);
+      if (!ouverts.length) continue;
       const derniere = await this.db.k
         .selectFrom('assistant_rondes')
         .select(sql<Date>`max(debut)`.as('debut'))
@@ -241,7 +243,7 @@ export class RondesAssistant {
       const depuis = new Date(derniere.debut);
       if (maintenant.getTime() - depuis.getTime() < EVENEMENT_INTERVALLE_HEURES * 3_600_000) continue;
       // Compte fait par le module du registre, sur les seuls périmètres du profil : il ne révèle aucun contenu.
-      const { retards, ecarts } = await this.grc.tasks.evenementsDepuis(p.perimetres, depuis, maintenant);
+      const { retards, ecarts } = await this.grc.tasks.evenementsDepuis(ouverts, depuis, maintenant);
       if (!retards && !ecarts) continue;
       return this.demarrer(
         id,
@@ -307,7 +309,7 @@ export class RondesAssistant {
       l.id,
       profil,
       referent,
-      new Set(p.perimetres),
+      new Set(await this.assistant.perimetresDuProfil(p)),
       particularite,
       p.documents ? (p.classification_max as Classification) : null,
     )

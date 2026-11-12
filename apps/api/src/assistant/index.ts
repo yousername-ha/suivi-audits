@@ -72,6 +72,13 @@ export class Assistant {
     return { r, profils: new Map(profils.map((p) => [p.id, p])) };
   }
 
+  /** Périmètres ouverts à un profil : sa liste, ou tous les périmètres existants quand il les lit tous. L'assistant ne lit
+      de toute façon que ceux que la personne (ou le référent de la ronde) peut lire elle-même. */
+  async perimetresDuProfil(p: { tous_perimetres: boolean; perimetres: string[] }): Promise<string[]> {
+    if (!p.tous_perimetres) return p.perimetres;
+    return (await this.db.k.selectFrom('grc_smsis').select('id').execute()).map((s) => s.id);
+  }
+
   async cleDefinie(): Promise<boolean> {
     return !!(await this.db.k.selectFrom('settings').select('key').where('key', '=', CLE).executeTakeFirst());
   }
@@ -101,6 +108,7 @@ export class Assistant {
         libelle: PROFIL_ASSISTANT_LIBELLES[id],
         actif: profils.get(id)?.actif ?? false,
         perimetres: profils.get(id)?.perimetres ?? [],
+        tousPerimetres: profils.get(id)?.tous_perimetres ?? false,
         rondeQuotidienne: profils.get(id)?.ronde_quotidienne ?? false,
         referent: profils.get(id)?.referent_id ?? null,
         documents: profils.get(id)?.documents ?? false,
@@ -154,7 +162,7 @@ export class Assistant {
       for (const p of b.profils) {
         const avant = await k
           .selectFrom('assistant_profils')
-          .select(['perimetres', 'ronde_quotidienne', 'referent_id'])
+          .select(['perimetres', 'tous_perimetres', 'ronde_quotidienne', 'referent_id'])
           .where('id', '=', p.id)
           .executeTakeFirstOrThrow();
         const referent = p.referent === undefined ? avant.referent_id : p.referent;
@@ -166,6 +174,7 @@ export class Assistant {
           .set({
             actif: p.actif,
             perimetres: [...new Set(p.perimetres)],
+            ...(p.tousPerimetres === undefined ? {} : { tous_perimetres: p.tousPerimetres }),
             ronde_quotidienne: quotidienne,
             referent_id: referent,
             ...(p.documents === undefined ? {} : { documents: p.documents }),
@@ -174,7 +183,9 @@ export class Assistant {
           .where('id', '=', p.id)
           .execute();
         // Un périmètre retiré au profil : sa mémoire peut en garder des éléments, elle est purgée (ADR 0086, point 13).
-        if (avant.perimetres.some((x) => !p.perimetres.includes(x))) {
+        const tous = p.tousPerimetres ?? avant.tous_perimetres;
+        const reduit = avant.tous_perimetres ? !tous : !tous && avant.perimetres.some((x) => !p.perimetres.includes(x));
+        if (reduit) {
           const purge = await k.deleteFrom('assistant_memoire').where('profil', '=', p.id).returning('id').execute();
           if (purge.length)
             await this.db.audit(user, ip, 'assistant.memoire_purgee', '', { profil: p.id, notes: purge.length }, c);
@@ -287,7 +298,7 @@ export class Assistant {
       profils: PROFILS_ASSISTANT.filter((id) => profils.get(id)?.actif).map((id) => ({
         id,
         libelle: PROFIL_ASSISTANT_LIBELLES[id],
-        perimetres: (profils.get(id)?.perimetres ?? [])
+        perimetres: (profils.get(id)?.tous_perimetres ? [...lisibles.keys()] : (profils.get(id)?.perimetres ?? []))
           .filter((p) => lisibles.has(p))
           .map((p) => ({ id: p, nom: lisibles.get(p)! })),
       })),
@@ -472,7 +483,7 @@ export class Assistant {
       adresse: r.adresse,
       modele: r.modele,
       cle,
-      perimetres: new Set(p.perimetres),
+      perimetres: new Set(await this.perimetresDuProfil(p)),
       documents: p.documents ? (p.classification_max as Classification) : null,
     }).finally(() => this.taches.delete(id));
     this.taches.set(id, tache);

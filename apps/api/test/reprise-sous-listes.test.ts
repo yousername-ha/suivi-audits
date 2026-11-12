@@ -135,6 +135,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '061_assistant_evenements.sql',
         '062_assistant_documents.sql',
         '063_assistant_constats.sql',
+        '064_assistant_acces_par_defaut.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();

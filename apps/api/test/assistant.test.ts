@@ -78,7 +78,7 @@ const regler = async (
     adresse: cur.adresse,
     modele: cur.modele,
     budgetJetonsJour: cur.budgetJetonsJour,
-    profils: cur.profils.map(({ id, actif, perimetres }) => ({ id, actif, perimetres })),
+    profils: cur.profils.map(({ id, actif, perimetres }) => ({ id, actif, perimetres, tousPerimetres: false })),
     version: cur.version,
     ...change,
   });
@@ -101,6 +101,10 @@ const ouvrir = async (a: Agent, profil = 'mise_en_oeuvre') => {
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
+  await t.svc.db.q(
+    "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
+  );
   admin = await login(t, await makeUser(t, 'as_admin', 'admin'));
   contributeur = await login(t, await makeUser(t, 'as_rw', 'rw'));
   // Rôle personnalisé : le droit dédié, plus la lecture des écarts ; aucune appartenance aux périmètres restreints.

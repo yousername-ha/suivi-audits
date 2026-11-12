@@ -37,8 +37,9 @@ droits de la personne qui l'interroge. Les comptes, les mots de passe, les secre
 
 Avant d'aller plus loin :
 
-1. Choisissez **un seul périmètre** pour le premier essai. La plateforme ne stocke pas de données de santé ; ce qui part
-   chez Mistral, ce sont des informations sur votre sécurité (écarts, risques, extraits de politiques).
+1. Sachez ce qui est ouvert par défaut : chaque profil lit **tous les périmètres et tous les documents**, dans la limite
+   des droits de la personne qui l'interroge. Ce qui part chez Mistral, ce sont des informations sur votre sécurité
+   (écarts, risques, extraits de politiques). Vous pouvez restreindre un profil à l'étape 4.
 2. Lisez les conditions de l'API de Mistral et son accord de traitement des données (liens en fin de guide). C'est à
    votre organisation de décider ce qui peut être envoyé.
 3. Inscrivez ce flux dans votre appréciation des risques.
@@ -116,9 +117,11 @@ L'application n'a aucun accès à Internet. Un petit service, le **relais**, est
    | Nom du modèle | `mistral-small-latest` pour commencer |
    | Budget quotidien, en jetons | laissez 500 000 |
 
-5. Dans **Profils et périmètres**, cochez **Profil « Mise en œuvre »** et choisissez le périmètre retenu à l'étape 1. Laissez
-   le profil « Audit interne » décoché pour l'instant.
-6. Cliquez sur **Enregistrer**.
+5. Dans **Profils et périmètres**, rien n'est obligatoire : les deux profils sont cochés et lisent tout par défaut. Pour
+   restreindre un profil, décochez « lit tous les périmètres » et choisissez les périmètres, ou baissez la classification
+   des documents. Chaque option porte son explication à l'écran.
+6. Cliquez sur **Enregistrer les réglages**. Le texte à côté du bouton doit dire « Tous les réglages ci-dessus sont
+   enregistrés ». Une erreur s'affiche juste au-dessus du bouton.
 7. Dans **Clé du modèle**, collez la clé de l'étape 2 puis cliquez sur **Enregistrer la clé**. La puce passe à « Clé
    enregistrée ». La clé n'est plus jamais affichée : c'est normal.
 

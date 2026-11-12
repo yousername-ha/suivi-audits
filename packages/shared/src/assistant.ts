@@ -59,6 +59,8 @@ export const ReglagesAssistantBody = z
             id: z.enum(PROFILS_ASSISTANT),
             actif: z.boolean(),
             perimetres: z.array(z.uuid()).max(200),
+            /** Le profil lit tous les périmètres, y compris ceux créés plus tard ; la liste est alors ignorée. */
+            tousPerimetres: z.boolean().optional(),
             rondeQuotidienne: z.boolean().optional(),
             /** Le profil peut lire le texte des documents, jusqu'à ce niveau de classification. */
             documents: z.boolean().optional(),
@@ -96,6 +98,8 @@ export interface ProfilAssistantDto {
   libelle: string;
   actif: boolean;
   perimetres: string[];
+  /** Le profil lit tous les périmètres, y compris ceux créés plus tard ; la liste est alors ignorée. */
+  tousPerimetres: boolean;
   /** Une ronde part chaque jour pour ce profil, à l'heure réglée. */
   rondeQuotidienne: boolean;
   /** Compte dont les droits bornent ce que la ronde lit, et qui reçoit le rapport. */

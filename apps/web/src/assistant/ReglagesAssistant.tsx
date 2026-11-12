@@ -99,8 +99,8 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   if (!q.data || !saisie) return <Text c="dimmed">Chargement des réglages…</Text>;
   const d = q.data;
   const changer = (c: Partial<Saisie>) => setSaisie({ ...saisie, ...c });
+  /** Relit l'état affiché ailleurs (page de suivi, panneau flottant). Le formulaire en cours de saisie n'est pas touché. */
   const actualiser = async () => {
-    setSaisie(null);
     await Promise.all([
       qc.invalidateQueries({ queryKey: CLE_REGLAGES }),
       qc.invalidateQueries({ queryKey: CLE_ETAT_ASSISTANT }),
@@ -121,28 +121,39 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
       setEnvoi(false);
     }
   };
+  // Le formulaire reprend la réponse du serveur : il affiche exactement ce qui est enregistré, et redevient « à jour ».
   const enregistrer = () =>
-    agir(
-      () =>
-        api('PUT', '/api/assistant/reglages', {
-          body: {
-            ...saisie,
-            profils: saisie.profils.map(
-              ({ id, actif, perimetres: p, rondeQuotidienne, referent, documents, classificationMax }) => ({
-                id,
-                actif,
-                perimetres: p,
-                rondeQuotidienne,
-                referent,
-                documents,
-                classificationMax,
-              }),
-            ),
-            version: d.version,
-          },
-        }),
-      'Réglages de l’assistant enregistrés.',
-    );
+    agir(async () => {
+      const enregistre = await api<ReglagesAssistantDto>('PUT', '/api/assistant/reglages', {
+        body: {
+          ...saisie,
+          profils: saisie.profils.map(
+            ({
+              id,
+              actif,
+              perimetres: p,
+              tousPerimetres,
+              rondeQuotidienne,
+              referent,
+              documents,
+              classificationMax,
+            }) => ({
+              id,
+              actif,
+              perimetres: p,
+              tousPerimetres,
+              rondeQuotidienne,
+              referent,
+              documents,
+              classificationMax,
+            }),
+          ),
+          version: d.version,
+        },
+      });
+      qc.setQueryData(CLE_REGLAGES, enregistre);
+      setSaisie(saisieDe(enregistre));
+    }, 'Réglages de l’assistant enregistrés.');
   const tester = async () => {
     setEnvoi(true);
     try {
@@ -160,12 +171,11 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
 
   return (
     <Stack>
-      <ErrorAlert error={erreur} />
       <Alert color="orange" title="Ce qui quitte le serveur">
         Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus
-        (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit que les périmètres choisis ci-dessous,
-        avec les droits de la personne qui l’interroge. N’ouvrez que les périmètres dont le contenu peut être confié à
-        ce fournisseur.
+        (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit que ce que les profils ci-dessous
+        ouvrent, et jamais plus que la personne qui l’interroge. Par défaut, un profil lit tous les périmètres et tous
+        les documents : restreignez-le si une partie ne doit pas être confiée à ce fournisseur.
         {fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}
       </Alert>
       {!d.relaisDeclare && (
@@ -182,6 +192,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           </Title>
           <Switch
             label="Activer l’assistant"
+            description="Coché : le bouton de l’assistant apparaît en bas à droite pour les personnes autorisées, et les rondes peuvent partir. Décoché : plus aucun appel au modèle, les réglages sont conservés."
             checked={saisie.actif}
             onChange={(e) => changer({ actif: e.currentTarget.checked })}
           />
@@ -199,7 +210,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           />
           <NumberInput
             label="Budget quotidien, en jetons"
-            description="Au-delà, l’assistant ne répond plus jusqu’au lendemain."
+            description="Plafond de dépense : un jeton vaut à peu près trois quarts de mot, une ronde en consomme 30 000 à 90 000. Au-delà du budget, l’assistant ne répond plus et aucune ronde ne part jusqu’au lendemain."
             min={1000}
             max={50_000_000}
             step={50_000}
@@ -219,8 +230,9 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             images), {d.indexDocuments.enAttente} en attente de lecture.
           </Text>
           <Text size="sm" c="dimmed">
-            Un profil sans périmètre ne lit rien. Les deux profils restent séparés : un auditeur n’audite pas son propre
-            travail.
+            Un profil est un rôle de l’assistant, avec ses propres accès, sa mémoire et ses missions. Les deux profils
+            restent séparés : un auditeur n’audite pas son propre travail. Dans tous les cas, l’assistant ne lit jamais
+            plus que la personne qui l’interroge.
           </Text>
           {saisie.profils.map((p, i) => {
             const maj = (c: Partial<(typeof saisie.profils)[number]>) =>
@@ -229,29 +241,46 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
               <Stack key={p.id} gap="xs">
                 <Switch
                   label={`Profil « ${p.libelle} »`}
+                  description={
+                    p.id === 'audit_interne'
+                      ? 'Coché : ce profil est proposé dans le panneau. Il prépare l’audit interne et propose des constats, jamais d’action corrective.'
+                      : 'Coché : ce profil est proposé dans le panneau. Il suit la mise en œuvre : retards, manques, rappels, propositions d’action.'
+                  }
                   checked={p.actif}
                   onChange={(e) => maj({ actif: e.currentTarget.checked })}
                 />
+                <Switch
+                  label={`Le profil « ${p.libelle} » lit tous les périmètres`}
+                  description="Coché (par défaut) : tous les périmètres, y compris ceux créés plus tard. Décoché : seulement ceux de la liste ci-dessous."
+                  checked={p.tousPerimetres}
+                  onChange={(e) => maj({ tousPerimetres: e.currentTarget.checked })}
+                  disabled={!p.actif}
+                />
                 <MultiSelect
                   label={`Périmètres ouverts au profil « ${p.libelle} »`}
+                  description={
+                    p.tousPerimetres
+                      ? 'Sans effet tant que « tous les périmètres » est coché.'
+                      : 'Seuls ces périmètres sont lus. Une liste vide : le profil ne lit rien.'
+                  }
                   data={choix}
                   value={p.perimetres}
                   onChange={(v) => maj({ perimetres: v })}
                   searchable
                   clearable
-                  disabled={!p.actif}
+                  disabled={!p.actif || p.tousPerimetres}
                   comboboxProps={{ withinPortal: true }}
                 />
                 <Switch
                   label={`Le profil « ${p.libelle} » peut lire les documents`}
-                  description="Le texte des documents est alors extrait et gardé en clair dans la base pour la recherche. Les extraits lus partent chez le fournisseur du modèle."
+                  description="Coché (par défaut) : l’assistant cherche et lit le texte des documents déposés (hors PDF et images). Ce texte est gardé en clair dans la base pour la recherche, et les extraits lus partent chez le fournisseur du modèle. Décoché pour les deux profils : cet index est effacé."
                   checked={p.documents}
                   onChange={(e) => maj({ documents: e.currentTarget.checked })}
                   disabled={!p.actif}
                 />
                 <Select
                   label={`Classification la plus élevée lisible par le profil « ${p.libelle} »`}
-                  description="Les documents classés au-dessus ne sont ni trouvés ni lus par l’assistant."
+                  description="« Confidentiel » (par défaut) : tous les documents. Un niveau plus bas : les documents classés au-dessus ne sont ni trouvés ni lus par l’assistant."
                   data={[
                     { value: 'public', label: 'Public' },
                     { value: 'interne', label: 'Interne' },
@@ -266,7 +295,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                 />
                 <Select
                   label={`Référent du profil « ${p.libelle} »`}
-                  description="Les rondes lisent avec les droits de ce compte, dans les périmètres ci-dessus. Il reçoit les rapports."
+                  description="Nécessaire aux rondes seulement. Une ronde travaille sans personne : elle lit avec les droits de ce compte, jamais plus, et c’est lui qui lit ses rapports. Sans référent, pas de ronde ; le dialogue, lui, fonctionne."
                   data={choixReferents}
                   value={p.referent}
                   onChange={(v) => maj({ referent: v, ...(v ? {} : { rondeQuotidienne: false }) })}
@@ -276,6 +305,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                 />
                 <Switch
                   label={`Ronde quotidienne du profil « ${p.libelle} »`}
+                  description="Coché : chaque jour, l’assistant fait seul le tour des périmètres, rappelle ou interroge les responsables et rend un rapport. Décoché : il ne travaille que lorsqu’on l’interroge ou qu’on lance une ronde à la main."
                   checked={p.rondeQuotidienne}
                   onChange={(e) => maj({ rondeQuotidienne: e.currentTarget.checked })}
                   disabled={!p.actif || !p.referent}
@@ -297,7 +327,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           </Text>
           <Switch
             label="Mettre l’assistant en pause"
-            description="Aucune ronde ne part et la ronde en cours conclut. Le dialogue reste disponible."
+            description="Coché : aucune ronde ne part, et la ronde en cours conclut tout de suite. Plus aucun rappel ni question n’est envoyé. Le dialogue reste disponible."
             checked={saisie.enPause}
             onChange={(e) => changer({ enPause: e.currentTarget.checked })}
           />
@@ -361,16 +391,27 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
         </Stack>
       </Card>
 
-      <Group>
-        <Button onClick={() => void enregistrer()} loading={envoi} disabled={!modifie}>
-          Enregistrer
-        </Button>
-        {d.updatedBy && (
+      <Card withBorder>
+        <Stack gap="xs">
+          {/* L'erreur s'affiche ici, à côté du bouton, et non en haut d'une longue page. */}
+          <ErrorAlert error={erreur} />
+          <Group>
+            <Button onClick={() => void enregistrer()} loading={envoi} disabled={!modifie}>
+              Enregistrer les réglages
+            </Button>
+            <Text size="sm" role="status">
+              {modifie
+                ? 'Modifications non enregistrées : elles ne prennent effet qu’après « Enregistrer les réglages ».'
+                : 'Tous les réglages ci-dessus sont enregistrés.'}
+            </Text>
+          </Group>
           <Text size="xs" c="dimmed">
-            Dernière modification par {d.updatedBy}.
+            Ce bouton enregistre les trois blocs ci-dessus (modèle, profils, autonomie). La clé, les missions, les
+            fiches de méthode et la mémoire s’enregistrent chacune avec leur propre bouton, plus bas.
+            {d.updatedBy ? ` Dernière modification par ${d.updatedBy}.` : ''}
           </Text>
-        )}
-      </Group>
+        </Stack>
+      </Card>
 
       <Card withBorder>
         <Stack>

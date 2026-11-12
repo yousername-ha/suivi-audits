@@ -395,3 +395,20 @@ authentifiée** : bouton, panneau de discussion, historique, boîte personnelle 
 Le service, ses routes, ses droits et ses tables sont inchangés. La page `/assistant` garde les rondes, les propositions et les
 questions ; un lien direct vers une conversation l'ouvre dans le panneau. La pause des rondes ne suspend pas le dialogue. La
 boîte personnelle n'exige pas `assistant:lire` et n'a pas de profil. Détail du portage et des contrôles : `HANDOVER.md`.
+
+## Addendum du 12/11/2026 — accès par défaut élargi, écran de réglages
+
+Décision du RSSI (12/11/2026) : par défaut, l'assistant a **accès à toute la plateforme et aux documents**. Elle remplace la
+réponse 3 ci-dessus (« un profil n'a aucun périmètre par défaut ») et le défaut « interne » de l'addendum sur les documents.
+
+- Migration `064` : nouvelle colonne `assistant_profils.tous_perimetres` (vrai par défaut). Un profil qui lit tous les
+  périmètres lit aussi ceux créés plus tard. Par défaut : les deux profils sont actifs, lisent tous les périmètres et les
+  documents de toute classification (« confidentiel »). Un profil déjà réglé à la main garde sa liste explicite.
+- **Bornes inchangées** : l'assistant reste inactif tant que le modèle et la clé ne sont pas réglés ; il ne lit jamais plus
+  que la personne qui l'interroge, ou que le référent d'une ronde ; aucune ronde ne part sans référent ni ronde quotidienne
+  activée. L'index des documents se constitue dès l'activation, puisque les profils lisent les documents par défaut.
+- **Conséquence** : dès l'activation, tout ce que la personne peut lire peut être envoyé au fournisseur du modèle en réponse
+  à ses questions, documents confidentiels compris. Restreindre un profil (liste de périmètres, classification) reste possible.
+- **Écran de réglages** : défaut corrigé (après « Enregistrer », le formulaire réaffichait les anciennes valeurs comme des
+  modifications en attente, et un second clic les aurait rétablies) ; le formulaire reprend désormais la réponse du serveur.
+  L'erreur s'affiche à côté du bouton. Chaque option porte une explication.

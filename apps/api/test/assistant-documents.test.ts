@@ -158,6 +158,7 @@ const regler = async (profil: Record<string, unknown>) => {
       id,
       actif,
       perimetres,
+      tousPerimetres: false,
       ...(id === 'mise_en_oeuvre' ? { actif: true, ...profil } : {}),
     })),
     version: cur.version,
@@ -194,6 +195,10 @@ let politique: string, secret: string, pdf: string;
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
+  await t.svc.db.q(
+    "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
+  );
   admin = await login(t, await makeUser(t, 'doc_admin', 'admin'));
   await t.svc.db.q("INSERT INTO roles(id, name, permissions) VALUES ('r_sans_doc', 'Assistant sans documents', $1)", [
     ['assistant:lire', 'ecarts:lire'],
