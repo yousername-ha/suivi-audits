@@ -24,7 +24,7 @@ import type { Actor, Db } from '../db/db.js';
 import type { Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
-import { repondre } from './agent.js';
+import { consigne, repondre } from './agent.js';
 import type { TransportModele } from './modele.js';
 import { OUTILS } from './outils.js';
 import type { RondesAssistant } from './rondes.js';
@@ -89,6 +89,7 @@ export class Assistant {
       enPause: r.en_pause,
       heureRonde: r.heure_ronde,
       plafondRappelsJour: r.plafond_rappels_jour,
+      contexte: r.contexte,
       profils: PROFILS_ASSISTANT.map((id) => ({
         id,
         libelle: PROFIL_ASSISTANT_LIBELLES[id],
@@ -131,6 +132,7 @@ export class Assistant {
           ...(b.enPause === undefined ? {} : { en_pause: b.enPause }),
           ...(b.heureRonde === undefined ? {} : { heure_ronde: b.heureRonde }),
           ...(b.plafondRappelsJour === undefined ? {} : { plafond_rappels_jour: b.plafondRappelsJour }),
+          ...(b.contexte === undefined ? {} : { contexte: b.contexte }),
           version: cur.version + 1,
           updated_at: sql`now()`,
           updated_by: user.username,
@@ -492,6 +494,13 @@ export class Assistant {
         cle: t.cle,
         modele: t.modele,
         profil: t.profil,
+        // Contexte de l'organisation et fiches de méthode validées : relus aussi en conversation.
+        consigne: [
+          consigne(t.profil, new Date().toISOString().slice(0, 10)),
+          (await this.rondes?.annexes(t.profil)) ?? '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
         fil: t.fil,
         outils: OUTILS,
         ctx: { g: this.grc, user: t.user, perimetres: t.perimetres },

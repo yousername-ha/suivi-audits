@@ -739,6 +739,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           kind: string;
           title: string;
           message: string;
+          avis?: 'utile' | 'inutile' | null;
           readAt: string | null;
         }[]
       >('/api/grc/notifications'),
@@ -784,6 +785,29 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
                   Marquer comme lu
                 </Button>
               )}
+              {n.kind === 'assistant_rappel' &&
+                (n.avis ? (
+                  <Text size="sm" c="dimmed">
+                    Votre avis : {n.avis === 'utile' ? 'utile' : 'pas utile'}.
+                  </Text>
+                ) : (
+                  (['utile', 'inutile'] as const).map((avis) => (
+                    <Button
+                      key={avis}
+                      variant="subtle"
+                      onClick={async () => {
+                        try {
+                          await api('PUT', `/api/grc/notifications/${n.id}/avis`, { body: { avis } });
+                          await qc.invalidateQueries({ queryKey: ['grc', 'notifications'] });
+                        } catch (e) {
+                          setError(e);
+                        }
+                      }}
+                    >
+                      {avis === 'utile' ? 'Rappel utile' : 'Rappel pas utile'}
+                    </Button>
+                  ))
+                ))}
             </Group>
           </Card>
         ))}

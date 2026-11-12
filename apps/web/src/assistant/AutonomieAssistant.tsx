@@ -1,12 +1,17 @@
 /* Autonomie de l'assistant RSSI (ADR 0086, lot A3) : rondes et leurs rapports, missions confiées par le RSSI, mémoire par
    profil. Une ronde lit avec les droits de son référent ; son rapport n'est rendu qu'à lui et aux administrateurs de
    l'assistant (le serveur reste seul juge). */
-import { Badge, Button, Card, Group, Select, Stack, Text, Textarea, Title } from '@mantine/core';
+import { Badge, Button, Card, Group, Select, Stack, Table, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { StatusChip } from '@suivi/ui';
 import {
+  AVIS_MOTIF_MAX,
+  METHODE_CONTENU_MAX,
+  METHODE_TITRE_MAX,
   MISSION_ASSISTANT_MAX,
   type MemoireAssistantDto,
+  type MesureAssistantDto,
+  type MethodeAssistantDto,
   type MissionAssistantDto,
   type ProfilAssistant,
   type RondeAssistantDetailDto,
@@ -20,6 +25,8 @@ import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
 const CLE_RONDES = ['assistant', 'rondes'];
 const CLE_MISSIONS = ['assistant', 'missions'];
 const CLE_MEMOIRE = ['assistant', 'memoire'];
+const CLE_METHODES = ['assistant', 'methodes'];
+const CLE_MESURES = ['assistant', 'mesures'];
 type Profils = readonly { id: ProfilAssistant; libelle: string }[];
 const ETATS = {
   en_cours: { etat: 'info', libelle: 'En cours' },
@@ -46,6 +53,15 @@ function useAction() {
 }
 
 function Rapport({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const { erreur, envoi, agir } = useAction();
+  const [motif, setMotif] = useState('');
+  const noter = (avis: 'utile' | 'inutile') =>
+    agir(async () => {
+      await api('PUT', `/api/assistant/rondes/${id}/avis`, { body: { avis, motif } });
+      setMotif('');
+      await qc.invalidateQueries({ queryKey: CLE_RONDES });
+    }, 'Avis enregistré : l’assistant le relira à la prochaine ronde.');
   const q = useQuery({
     queryKey: [...CLE_RONDES, id],
     queryFn: () => get<RondeAssistantDetailDto>(`/api/assistant/rondes/${id}`),
@@ -73,6 +89,28 @@ function Rapport({ id }: { id: string }) {
           {elements.length > 12 ? ` ; et ${elements.length - 12} autres` : ''}
         </Text>
       )}
+      <ErrorAlert error={erreur} />
+      {d.avis && (
+        <Text size="sm">
+          Avis rendu : {d.avis === 'utile' ? 'utile' : 'pas utile'}
+          {d.avisMotif ? ` (${d.avisMotif})` : ''}.
+        </Text>
+      )}
+      <TextInput
+        label="Votre avis sur cette ronde (motif facultatif)"
+        description="L’assistant relit les derniers avis à chaque ronde."
+        value={motif}
+        onChange={(e) => setMotif(e.currentTarget.value)}
+        maxLength={AVIS_MOTIF_MAX}
+      />
+      <Group>
+        <Button variant="default" size="compact-sm" loading={envoi} onClick={() => void noter('utile')}>
+          Ronde utile
+        </Button>
+        <Button variant="default" size="compact-sm" loading={envoi} onClick={() => void noter('inutile')}>
+          Ronde pas utile
+        </Button>
+      </Group>
     </Stack>
   );
 }
@@ -298,6 +336,235 @@ export function MemoireAssistant({ profils }: { profils: Profils }) {
             </ConfirmButton>
           </Group>
         ))}
+      </Stack>
+    </Card>
+  );
+}
+
+function FicheProposee({
+  m,
+  libelle,
+  relire,
+}: {
+  m: MethodeAssistantDto;
+  libelle: string;
+  relire: () => Promise<void>;
+}) {
+  const { erreur, envoi, agir } = useAction();
+  const [contenu, setContenu] = useState(m.contenu);
+  const decider = (decision: 'valider' | 'refuser') =>
+    agir(
+      async () => {
+        await api('POST', `/api/assistant/methodes/${m.id}/decision`, {
+          body: decision === 'valider' ? { decision, contenu } : { decision },
+        });
+        await relire();
+      },
+      decision === 'valider' ? 'Fiche validée : l’assistant la suivra.' : 'Fiche refusée.',
+    );
+  return (
+    <Card withBorder>
+      <Stack gap="xs">
+        <ErrorAlert error={erreur} />
+        <Group gap="xs">
+          <StatusChip etat="attention">À décider</StatusChip>
+          <Text size="sm" fw={600}>
+            {m.titre}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {libelle} · proposée par l’assistant le {fmtDate(m.createdAt)}
+          </Text>
+        </Group>
+        <Textarea
+          label={`Texte de la fiche « ${m.titre} » (modifiable avant validation)`}
+          value={contenu}
+          onChange={(e) => setContenu(e.currentTarget.value)}
+          maxLength={METHODE_CONTENU_MAX}
+          autosize
+          minRows={3}
+        />
+        <Group>
+          <Button
+            variant="default"
+            loading={envoi}
+            disabled={contenu.trim() === ''}
+            onClick={() => void decider('valider')}
+          >
+            Valider
+          </Button>
+          <Button variant="default" loading={envoi} onClick={() => void decider('refuser')}>
+            Refuser
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
+
+/** Fiches de méthode : façons de faire propres à l'organisation. L'assistant en propose ; seules les fiches validées
+    par une personne sont relues. */
+export function MethodesAssistant({ profils }: { profils: Profils }) {
+  const qc = useQueryClient();
+  const { erreur, envoi, agir } = useAction();
+  const [profil, setProfil] = useState<ProfilAssistant | null>(null);
+  const [titre, setTitre] = useState('');
+  const [contenu, setContenu] = useState('');
+  const q = useQuery({ queryKey: CLE_METHODES, queryFn: () => get<MethodeAssistantDto[]>('/api/assistant/methodes') });
+  const choisi = profil ?? profils[0]?.id ?? null;
+  const libelle = (p: string) => profils.find((x) => x.id === p)?.libelle ?? p;
+  const relire = async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: CLE_METHODES }),
+      qc.invalidateQueries({ queryKey: CLE_MESURES }),
+    ]);
+  };
+  const liste = q.data ?? [];
+
+  return (
+    <Card withBorder>
+      <Stack>
+        <Title order={3} size="h5">
+          Fiches de méthode
+        </Title>
+        <Text size="sm" c="dimmed">
+          Une fiche décrit une façon de faire propre à votre organisation. L’assistant peut en proposer après une ronde
+          ; il ne suit que celles que vous avez validées. Vous pouvez aussi en rédiger vous-même.
+        </Text>
+        <ErrorAlert error={q.error ?? erreur} />
+        {liste
+          .filter((m) => m.etat === 'proposee')
+          .map((m) => (
+            <FicheProposee key={m.id} m={m} libelle={libelle(m.profil)} relire={relire} />
+          ))}
+        {liste
+          .filter((m) => m.etat !== 'proposee')
+          .map((m) => (
+            <Group key={m.id} justify="space-between" wrap="nowrap" align="flex-start">
+              <Stack gap="xs">
+                <Group gap="xs">
+                  <StatusChip etat={m.etat === 'validee' ? 'succes' : 'neutre'}>
+                    {m.etat === 'validee' ? 'Validée' : 'Refusée'}
+                  </StatusChip>
+                  <Text size="sm" fw={600}>
+                    {m.titre}
+                  </Text>
+                </Group>
+                <Text size="sm" className="assistant-message__texte">
+                  {m.contenu}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {libelle(m.profil)} ·{' '}
+                  {m.origine === 'assistant' ? 'proposée par l’assistant' : 'rédigée par une personne'}
+                  {m.decidedBy ? ` · décision de ${m.decidedBy}` : ''}
+                </Text>
+              </Stack>
+              <ConfirmButton
+                variant="default"
+                message="Supprimer cette fiche ? L’assistant ne la suivra plus."
+                onConfirm={() =>
+                  agir(async () => {
+                    await api('DELETE', `/api/assistant/methodes/${m.id}`);
+                    await relire();
+                  }, 'Fiche supprimée.')
+                }
+              >
+                Supprimer
+              </ConfirmButton>
+            </Group>
+          ))}
+        <Select
+          label="Profil de la nouvelle fiche"
+          data={profils.map((p) => ({ value: p.id, label: p.libelle }))}
+          value={choisi}
+          onChange={(v) => setProfil(v as ProfilAssistant | null)}
+          allowDeselect={false}
+          comboboxProps={{ withinPortal: true }}
+        />
+        <TextInput
+          label="Titre de la nouvelle fiche"
+          value={titre}
+          onChange={(e) => setTitre(e.currentTarget.value)}
+          maxLength={METHODE_TITRE_MAX}
+        />
+        <Textarea
+          label="Texte de la nouvelle fiche"
+          description="Ce texte part chez le fournisseur du modèle : aucune donnée de santé ni donnée personnelle."
+          value={contenu}
+          onChange={(e) => setContenu(e.currentTarget.value)}
+          maxLength={METHODE_CONTENU_MAX}
+          autosize
+          minRows={3}
+        />
+        <Group>
+          <Button
+            variant="default"
+            loading={envoi}
+            disabled={!choisi || titre.trim() === '' || contenu.trim() === ''}
+            onClick={() =>
+              void agir(async () => {
+                await api('POST', '/api/assistant/methodes', { body: { profil: choisi, titre, contenu } });
+                setTitre('');
+                setContenu('');
+                await relire();
+              }, 'Fiche enregistrée : l’assistant la suivra.')
+            }
+          >
+            Enregistrer la fiche
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
+
+/** Mesure : chiffres calculés par la plateforme, pour voir si l'assistant progresse. */
+export function MesuresAssistant() {
+  const q = useQuery({ queryKey: CLE_MESURES, queryFn: () => get<MesureAssistantDto[]>('/api/assistant/mesures') });
+  return (
+    <Card withBorder>
+      <Stack>
+        <Title order={3} size="h5">
+          Mesure
+        </Title>
+        <Text size="sm" c="dimmed">
+          Six derniers mois, comptés par la plateforme. Les avis viennent des personnes : celui du référent sur chaque
+          ronde, celui du destinataire sur chaque rappel.
+        </Text>
+        <ErrorAlert error={q.error} />
+        <Table.ScrollContainer minWidth={640}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th scope="col">Mois</Table.Th>
+                <Table.Th scope="col">Rondes</Table.Th>
+                <Table.Th scope="col">En échec</Table.Th>
+                <Table.Th scope="col">Jugées utiles</Table.Th>
+                <Table.Th scope="col">Jugées pas utiles</Table.Th>
+                <Table.Th scope="col">Rappels</Table.Th>
+                <Table.Th scope="col">Rappels utiles</Table.Th>
+                <Table.Th scope="col">Rappels pas utiles</Table.Th>
+                <Table.Th scope="col">Fiches validées</Table.Th>
+                <Table.Th scope="col">Fiches refusées</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {(q.data ?? []).map((m) => (
+                <Table.Tr key={m.mois}>
+                  <Table.Th scope="row">{m.mois}</Table.Th>
+                  <Table.Td>{m.rondes}</Table.Td>
+                  <Table.Td>{m.rondesEnEchec}</Table.Td>
+                  <Table.Td>{m.rondesUtiles}</Table.Td>
+                  <Table.Td>{m.rondesInutiles}</Table.Td>
+                  <Table.Td>{m.rappels}</Table.Td>
+                  <Table.Td>{m.rappelsUtiles}</Table.Td>
+                  <Table.Td>{m.rappelsInutiles}</Table.Td>
+                  <Table.Td>{m.methodesValidees}</Table.Td>
+                  <Table.Td>{m.methodesRefusees}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       </Stack>
     </Card>
   );

@@ -21,6 +21,7 @@ export interface ContexteOutil {
 export interface ActionsRonde {
   rappeler(perimetre: string, objet: string, message: string): Promise<{ envoye: boolean; detail: string }>;
   memoriser(note: string): Promise<{ enregistre: boolean; detail: string }>;
+  proposerMethode(titre: string, contenu: string): Promise<{ enregistre: boolean; detail: string }>;
 }
 export interface ResultatOutil {
   donnees: unknown;
@@ -350,6 +351,27 @@ export const OUTILS_RONDE: readonly Outil[] = [
     async executer(ctx, a) {
       if (!ctx.ronde) throw new HttpError(403, 'La mémoire ne s’écrit que pendant une ronde.');
       const r = await ctx.ronde.memoriser(a.note);
+      return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'proposer_methode',
+    description:
+      'Propose au RSSI une fiche de méthode : une façon de faire propre à cette organisation, que vous venez d’éprouver et qui servira aux rondes suivantes. Elle ne sera relue qu’après validation par le RSSI. Une seule par ronde ; ni donnée personnelle, ni copie de fiche, ni texte de norme.',
+    parametres: z
+      .object({
+        titre: z
+          .string()
+          .trim()
+          .min(5)
+          .max(120)
+          .describe('Titre court, par exemple « Préparer la revue de direction ».'),
+        contenu: z.string().trim().min(20).max(2000).describe('Étapes de la méthode, en français.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      if (!ctx.ronde) throw new HttpError(403, 'Une fiche de méthode ne se propose que pendant une ronde.');
+      const r = await ctx.ronde.proposerMethode(a.titre, a.contenu);
       return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
     },
   }),

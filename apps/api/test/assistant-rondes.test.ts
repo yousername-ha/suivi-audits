@@ -59,6 +59,7 @@ const action = (name: string, extra: Record<string, unknown> = {}) => ({
 let t: TestApp, modele: FauxModele;
 let admin: Agent, responsable: Agent, invite: Agent;
 let adminId: string, responsableId: string, inviteId: string;
+let compteInvite: Parameters<typeof login>[1];
 let perimetre: string, autre: string, enRetard: string, sansResponsable: string;
 const base = '/api/assistant';
 /** 12/11/2026 à 07 h 30 (heure de Paris) et le lendemain. */
@@ -113,6 +114,7 @@ beforeAll(async () => {
   );
   const i = await makeUser(t, 'ro_invite', 'r_assistant');
   inviteId = i.id;
+  compteInvite = i;
 
   const creer = async (name: string) =>
     (await admin.post('/api/grc/smsis', { name, scope: 'Périmètre fictif', timezone: 'Europe/Paris' })).json()
@@ -428,5 +430,132 @@ describe('assistant : bornes d’une ronde', () => {
     const detail = (await admin.get(`${base}/rondes/${id}`)).json() as RondeAssistantDetailDto;
     expect(detail.etat).toBe('echec');
     expect(detail.erreur).toContain('référent');
+  });
+});
+
+describe('assistant : amélioration avec l’usage', () => {
+  const lancer = async () => {
+    modele.demandes = [];
+    const r = await admin.post(`${base}/rondes`, { profil: 'mise_en_oeuvre' });
+    expect(r.statusCode, r.body).toBe(202);
+    await t.svc.assistantRondes.attendre();
+    return (r.json() as RondeAssistantDto).id;
+  };
+  const consigne = () => String(modele.demandes[0]!.messages[0]!.content);
+
+  it('remet un référent valide après les tests de bornes', async () => {
+    expect((await regler({}, { referent: adminId })).statusCode).toBe(200);
+    await t.svc.db.q('UPDATE users SET disabled = false WHERE id = $1', [inviteId]);
+    invite = await login(t, compteInvite);
+  });
+
+  it('relit le contexte de l’organisation en ronde comme en conversation', async () => {
+    expect(
+      (await regler({ contexte: 'Contexte fictif : certification fictive visée en fin d’année.' })).statusCode,
+    ).toBe(200);
+    modele.script = () => ({ role: 'assistant', content: 'Rapport fictif.' });
+    await lancer();
+    expect(consigne()).toContain('Contexte fictif : certification fictive');
+
+    const conv = (await admin.post(`${base}/conversations`, { profil: 'mise_en_oeuvre' })).json().id as string;
+    modele.demandes = [];
+    await admin.post(`${base}/conversations/${conv}/messages`, { texte: 'Question fictive' });
+    await t.svc.assistant.attendre(conv);
+    expect(consigne()).toContain('Contexte fictif : certification fictive');
+    expect(consigne()).not.toContain('RONDE AUTONOME');
+  });
+
+  it('ne relit une fiche de méthode proposée par l’assistant qu’après validation, corrigée au besoin', async () => {
+    const comptes: Record<string, unknown>[] = [];
+    modele.script = (d, n) => {
+      if (n > 1) comptes.push(dernierOutil(d)!);
+      if (n <= 2)
+        return appel('f' + n, 'proposer_methode', {
+          titre: 'Méthode fictive de suivi',
+          contenu: 'Étape fictive 1 : lire les signaux. Étape fictive 2 : relire les actions en retard.',
+        });
+      return { role: 'assistant', content: 'Rapport fictif : une fiche proposée.' };
+    };
+    const ronde = await lancer();
+    expect(comptes[0]).toMatchObject({ enregistre: true });
+    // Une seule fiche par ronde.
+    expect(comptes[1]).toMatchObject({ enregistre: false });
+    expect((await admin.get(`${base}/rondes/${ronde}`)).json()).toMatchObject({ methodes: 1 });
+
+    const fiches = (await admin.get(`${base}/methodes`)).json() as { id: string; etat: string; origine: string }[];
+    expect(fiches).toHaveLength(1);
+    expect(fiches[0]).toMatchObject({ etat: 'proposee', origine: 'assistant' });
+    expect((await invite.get(`${base}/methodes`)).statusCode).toBe(403);
+
+    // Tant qu'elle n'est pas validée, l'assistant ne la relit pas.
+    modele.script = () => ({ role: 'assistant', content: 'Rapport fictif.' });
+    await lancer();
+    expect(consigne()).not.toContain('Méthode fictive de suivi');
+
+    const decision = await admin.post(`${base}/methodes/${fiches[0]!.id}/decision`, {
+      decision: 'valider',
+      contenu: 'Étape fictive corrigée par le RSSI.',
+    });
+    expect(decision.statusCode, decision.body).toBe(200);
+    await lancer();
+    expect(consigne()).toContain('### Méthode fictive de suivi\nÉtape fictive corrigée par le RSSI.');
+
+    // Refusée : elle n'est plus relue.
+    expect((await admin.post(`${base}/methodes/${fiches[0]!.id}/decision`, { decision: 'refuser' })).statusCode).toBe(
+      200,
+    );
+    await lancer();
+    expect(consigne()).not.toContain('Méthode fictive de suivi');
+  });
+
+  it('accepte une fiche rédigée par une personne, validée d’office, et sa suppression', async () => {
+    const r = await admin.post(`${base}/methodes`, {
+      profil: 'mise_en_oeuvre',
+      titre: 'Fiche fictive du RSSI',
+      contenu: 'Toujours commencer par le plan d’action fictif.',
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json()).toMatchObject({ etat: 'validee', origine: 'personne' });
+    await lancer();
+    expect(consigne()).toContain('Fiche fictive du RSSI');
+    expect((await admin.del(`${base}/methodes/${r.json().id}`)).statusCode).toBe(204);
+  });
+
+  it('relit à la ronde suivante l’avis rendu sur une ronde, réservé au référent et aux administrateurs', async () => {
+    const ronde = await lancer();
+    expect((await invite.put(`${base}/rondes/${ronde}/avis`, { avis: 'utile' })).statusCode).toBe(404);
+    const r = await admin.put(`${base}/rondes/${ronde}/avis`, {
+      avis: 'inutile',
+      motif: 'Motif fictif : rapport trop long.',
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ avis: 'inutile', avisMotif: 'Motif fictif : rapport trop long.' });
+    await lancer();
+    expect(consigne()).toContain('Pas utile : Motif fictif : rapport trop long.');
+  });
+
+  it('laisse le seul destinataire dire si un rappel était utile, et compte le tout par mois', async () => {
+    const { rows } = await t.svc.db.q<{ id: string }>(
+      "SELECT id::text FROM grc_notifications WHERE kind = 'assistant_rappel' AND user_id = $1",
+      [responsableId],
+    );
+    const rappel = rows[0]!.id;
+    expect((await admin.put(`/api/grc/notifications/${rappel}/avis`, { avis: 'utile' })).statusCode).toBe(404);
+    expect((await responsable.put(`/api/grc/notifications/${rappel}/avis`, { avis: 'utile' })).statusCode).toBe(200);
+    const vus = (await responsable.get('/api/grc/notifications')).json() as { id: string; avis: string | null }[];
+    expect(vus.find((n) => n.id === rappel)).toMatchObject({ avis: 'utile' });
+
+    const mesures = (await admin.get(`${base}/mesures`)).json() as Record<string, number | string>[];
+    expect(mesures).toHaveLength(6);
+    expect(mesures[0]).toMatchObject({
+      mois: new Date().toISOString().slice(0, 7),
+      rappels: 1,
+      rappelsUtiles: 1,
+      rappelsInutiles: 0,
+      rondesInutiles: 1,
+      methodesRefusees: 1,
+    });
+    expect(Number(mesures[0]!.rondes)).toBeGreaterThan(5);
+    expect((await invite.get(`${base}/mesures`)).statusCode).toBe(403);
   });
 });

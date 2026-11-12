@@ -50,6 +50,19 @@ export interface AssistantMessages {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface AssistantMethodes {
+  id: Generated<string>;
+  profil: string;
+  titre: string;
+  contenu: string;
+  etat: Generated<"proposee" | "validee" | "refusee">;
+  origine: Generated<"assistant" | "personne">;
+  ronde_id: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  decided_by: Generated<string>;
+  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
 export interface AssistantMissions {
   id: Generated<string>;
   profil: string;
@@ -81,6 +94,7 @@ export interface AssistantReglages {
   en_pause: Generated<boolean>;
   heure_ronde: Generated<number>;
   plafond_rappels_jour: Generated<number>;
+  contexte: Generated<string>;
 }
 
 export interface AssistantRondes {
@@ -102,6 +116,10 @@ export interface AssistantRondes {
   jetons_entree: Generated<number>;
   jetons_sortie: Generated<number>;
   appels: Generated<number>;
+  avis: "utile" | "inutile" | null;
+  avis_motif: Generated<string>;
+  avis_par: Generated<string>;
+  methodes: Generated<number>;
 }
 
 export interface AuditLog {
@@ -384,6 +402,7 @@ export interface GrcNotifications {
   read_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   canal_application: Generated<boolean>;
+  avis: "utile" | "inutile" | null;
 }
 
 export interface GrcObjectVersions {
@@ -1546,6 +1565,7 @@ export interface DB {
   assistant_conversations: AssistantConversations;
   assistant_memoire: AssistantMemoire;
   assistant_messages: AssistantMessages;
+  assistant_methodes: AssistantMethodes;
   assistant_missions: AssistantMissions;
   assistant_profils: AssistantProfils;
   assistant_reglages: AssistantReglages;

@@ -158,6 +158,15 @@ rappelle les responsables et vous rend un rapport. Il ne modifie toujours aucun 
 5. Vérifiez ce que la ronde a fait : les rappels envoyés apparaissent chez leurs destinataires dans **Pilotage > Rappels**,
    les notes dans **Mémoire de l'assistant**.
 
+Pour qu'il devienne meilleur avec le temps, toujours dans **Plateforme > Assistant RSSI** :
+
+- rédigez le **contexte de l'organisation** (périmètre de certification, vocabulaire, priorités de l'année) ;
+- après chaque rapport, dites s'il était **utile** et pourquoi : l'assistant relit vos avis ;
+- lisez les **fiches de méthode** qu'il propose, corrigez-les, puis validez ou refusez : il ne suit que les fiches validées ;
+- regardez le tableau **Mesure** une fois par mois.
+
+Ces textes partent chez Mistral comme le reste : n'y écrivez ni donnée de santé ni donnée personnelle.
+
 Pour tout arrêter d'un geste : interrupteur **Mettre l'assistant en pause**. Chaque personne peut couper les rappels de
 l'assistant dans **Mon compte > Notifications**. Une ronde consomme plus de jetons qu'une question : surveillez la
 consommation du jour les premières fois.

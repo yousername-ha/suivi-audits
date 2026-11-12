@@ -495,6 +495,7 @@ export class GrcTasks {
         'kind',
         'title',
         'message',
+        'avis',
         'read_at as readAt',
         'created_at as createdAt',
       ])

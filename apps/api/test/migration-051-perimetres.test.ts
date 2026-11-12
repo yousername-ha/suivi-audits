@@ -40,6 +40,7 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
         '054_retrait_revues_acces.sql',
         '055_assistant.sql',
         '056_assistant_rondes.sql',
+        '057_assistant_apprentissage.sql',
       ]);
       const { rows: lignes } = await t.svc.db.q<{
         id: string;

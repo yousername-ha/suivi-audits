@@ -229,3 +229,24 @@ Réalisé sur `claude/assistant-rssi` (migration `056`) :
 Reste à faire pour l'autonomie : déclenchement sur événement, synthèse hebdomadaire, questions avec réponse, relances,
 propositions (lot A2), jeu d'évaluation mesuré. **Non vérifié** : aucun modèle réel n'a exécuté une ronde ; la qualité des
 rapports et la pertinence des rappels ne sont pas mesurées.
+
+## Addendum du 12/11/2026 — amélioration avec l'usage (point 13)
+
+Le RSSI a demandé pourquoi ne pas reprendre Hermes pour que l'assistant « apprenne » la plateforme. Réponse retenue : Hermes
+n'entraîne pas le modèle, il écrit une mémoire et des fiches de savoir-faire qu'il relit. Le même mécanisme est réalisé dans la
+plateforme, **avec validation par une personne**, ce qu'Hermes ne fait pas. Décision du RSSI : accord (12/11/2026).
+
+Réalisé sur `claude/assistant-rssi` (migration `057`) :
+
+- **Fiches de méthode** par profil. L'assistant peut en proposer une par ronde (outil `proposer_methode`, dix en attente au
+  plus). **Seules les fiches validées par un administrateur de l'assistant sont relues**, en ronde comme en conversation ; la
+  personne peut corriger le texte en validant, en rédiger elle-même, refuser ou supprimer. Une fiche refusée n'est jamais relue.
+- **Contexte de l'organisation** : texte rédigé par le RSSI dans les réglages, relu à chaque ronde et à chaque conversation.
+  Il part chez le fournisseur du modèle, comme les fiches : ni donnée de santé ni donnée personnelle.
+- **Avis** : le référent ou un administrateur de l'assistant dit si une ronde était utile, avec un motif ; les huit derniers
+  avis sont relus à la ronde suivante. Le destinataire d'un rappel dit s'il était utile, sans droit particulier.
+- **Mesure** : la plateforme compte par mois, sur six mois, les rondes (dont échecs et avis), les rappels (dont avis) et les
+  fiches validées ou refusées. Le modèle ne calcule rien.
+
+Aucun entraînement de modèle. Limite : rien ne prouve encore que ces textes améliorent les rapports d'un modèle réel ; la
+mesure sert à le constater à l'usage.

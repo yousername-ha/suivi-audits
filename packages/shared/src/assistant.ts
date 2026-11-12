@@ -12,6 +12,7 @@ export const PROFIL_ASSISTANT_LIBELLES: Record<ProfilAssistant, string> = {
 };
 
 export const BUDGET_JETONS_DEFAUT = 500_000;
+export const CONTEXTE_ASSISTANT_MAX = 4000;
 export const MESSAGE_ASSISTANT_MAX = 4000;
 
 /** Adresse du service de modèle (API compatible OpenAI) : HTTPS, sans identifiants, sans paramètres ni fragment. */
@@ -43,6 +44,8 @@ export const ReglagesAssistantBody = z
     enPause: z.boolean().optional(),
     heureRonde: z.number().int().min(0).max(23).optional(),
     plafondRappelsJour: z.number().int().min(0).max(50).optional(),
+    /** Contexte de l'organisation, relu par l'assistant à chaque ronde et à chaque conversation. */
+    contexte: z.string().trim().max(CONTEXTE_ASSISTANT_MAX).optional(),
     profils: z
       .array(
         z
@@ -100,6 +103,7 @@ export interface ReglagesAssistantDto {
   heureRonde: number;
   /** Nombre maximal de rappels de l'assistant reçus par une personne en un jour. */
   plafondRappelsJour: number;
+  contexte: string;
   profils: ProfilAssistantDto[];
   version: number;
   /** Une clé est enregistrée (elle n'est jamais renvoyée). */
@@ -177,7 +181,12 @@ export interface RondeAssistantDto {
   /** Rappels envoyés et notes de mémoire écrites pendant la ronde. */
   rappels: number;
   notes: number;
+  /** Fiches de méthode proposées pendant la ronde. */
+  methodes: number;
   jetons: number;
+  /** Avis rendu sur la ronde par son référent ou un administrateur de l'assistant. */
+  avis: 'utile' | 'inutile' | null;
+  avisMotif: string;
 }
 export interface RondeAssistantDetailDto extends RondeAssistantDto {
   rapport: string;
@@ -204,3 +213,51 @@ export interface ReferentAssistantDto {
   id: string;
   nom: string;
 }
+
+/* ------------------------------------------------------------------ Amélioration avec l'usage (ADR 0086, point 13) */
+export const METHODE_TITRE_MAX = 120;
+export const METHODE_CONTENU_MAX = 2000;
+export const AVIS_MOTIF_MAX = 500;
+export const AvisRondeBody = z
+  .object({ avis: z.enum(['utile', 'inutile']), motif: z.string().trim().max(AVIS_MOTIF_MAX).default('') })
+  .strict();
+export const AvisRappelBody = z.object({ avis: z.enum(['utile', 'inutile']) }).strict();
+const methode = {
+  titre: z.string().trim().min(1).max(METHODE_TITRE_MAX),
+  contenu: z.string().trim().min(1).max(METHODE_CONTENU_MAX),
+};
+/** Fiche rédigée par une personne : validée d'office. */
+export const NouvelleMethodeBody = z.object({ profil: z.enum(PROFILS_ASSISTANT), ...methode }).strict();
+/** Décision sur une fiche : la personne peut corriger le texte en la validant. */
+export const DecisionMethodeBody = z
+  .object({
+    decision: z.enum(['valider', 'refuser']),
+    titre: methode.titre.optional(),
+    contenu: methode.contenu.optional(),
+  })
+  .strict();
+export interface MethodeAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  titre: string;
+  contenu: string;
+  etat: 'proposee' | 'validee' | 'refusee';
+  origine: 'assistant' | 'personne';
+  createdAt: string;
+  decidedBy: string;
+}
+/** Chiffres d'un mois, calculés par la plateforme : l'assistant progresse-t-il ? */
+export interface MesureAssistantDto {
+  /** Mois au format AAAA-MM. */
+  mois: string;
+  rondes: number;
+  rondesEnEchec: number;
+  rondesUtiles: number;
+  rondesInutiles: number;
+  rappels: number;
+  rappelsUtiles: number;
+  rappelsInutiles: number;
+  methodesValidees: number;
+  methodesRefusees: number;
+}
+export type DecisionMethodeBody = z.infer<typeof DecisionMethodeBody>;

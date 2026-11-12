@@ -72,6 +72,7 @@ export const TABLES_TRAVAIL = [
   'assistant_conversations',
   'assistant_messages',
   'assistant_memoire',
+  'assistant_methodes',
   'assistant_missions',
   'assistant_rondes',
   'state_history',

@@ -13,24 +13,38 @@ import {
   Stack,
   Switch,
   Text,
+  Textarea,
   TextInput,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { StatusChip } from '@suivi/ui';
-import type { ReferentAssistantDto, ReglagesAssistantDto, TestModeleDto } from '@suivi/shared';
+import {
+  CONTEXTE_ASSISTANT_MAX,
+  type ReferentAssistantDto,
+  type ReglagesAssistantDto,
+  type TestModeleDto,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
-import { MemoireAssistant, MissionsAssistant } from './AutonomieAssistant';
+import { MemoireAssistant, MesuresAssistant, MethodesAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
 const CLE_REGLAGES = ['assistant', 'reglages'];
 
 type Saisie = Pick<
   ReglagesAssistantDto,
-  'actif' | 'adresse' | 'modele' | 'budgetJetonsJour' | 'enPause' | 'heureRonde' | 'plafondRappelsJour' | 'profils'
+  | 'actif'
+  | 'adresse'
+  | 'modele'
+  | 'budgetJetonsJour'
+  | 'enPause'
+  | 'heureRonde'
+  | 'plafondRappelsJour'
+  | 'contexte'
+  | 'profils'
 >;
 const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
   actif: d.actif,
@@ -40,6 +54,7 @@ const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
   enPause: d.enPause,
   heureRonde: d.heureRonde,
   plafondRappelsJour: d.plafondRappelsJour,
+  contexte: d.contexte,
   profils: d.profils,
 });
 const hote = (adresse: string) => {
@@ -263,6 +278,15 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             value={saisie.plafondRappelsJour}
             onChange={(v) => changer({ plafondRappelsJour: typeof v === 'number' ? v : saisie.plafondRappelsJour })}
           />
+          <Textarea
+            label="Contexte de l’organisation"
+            description="Relu par l’assistant à chaque ronde et à chaque conversation : périmètre de certification, vocabulaire, priorités de l’année. Ce texte part chez le fournisseur du modèle : aucune donnée de santé ni donnée personnelle."
+            value={saisie.contexte}
+            onChange={(e) => changer({ contexte: e.currentTarget.value })}
+            maxLength={CONTEXTE_ASSISTANT_MAX}
+            autosize
+            minRows={3}
+          />
         </Stack>
       </Card>
 
@@ -342,7 +366,9 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
       </Card>
 
       <MissionsAssistant profils={d.profils} />
+      <MethodesAssistant profils={d.profils} />
       <MemoireAssistant profils={d.profils} />
+      <MesuresAssistant />
     </Stack>
   );
 }
