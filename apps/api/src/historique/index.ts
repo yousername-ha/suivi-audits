@@ -4,7 +4,6 @@ import { AuditSuivi } from './audit.js';
 import { Crise } from './crise.js';
 import { DeclarationApplicabilite } from './dda.js';
 import { EvaluationsClausier } from './evals-fournisseurs.js';
-import { Gap } from './gap.js';
 import { Incidents } from './incidents.js';
 import { Retex } from './retex.js';
 import { Plans } from './plans.js';
@@ -14,7 +13,6 @@ export class Historique {
   readonly registre: RegistreHistorique;
   readonly plans: Plans;
   readonly audit: AuditSuivi;
-  readonly gap: Gap;
   readonly incidents: Incidents;
   readonly retex: Retex;
   readonly crise: Crise;
@@ -24,7 +22,6 @@ export class Historique {
     this.registre = new RegistreHistorique(g);
     this.plans = new Plans(this.registre);
     this.audit = new AuditSuivi(this.registre);
-    this.gap = new Gap(this.registre);
     this.incidents = new Incidents(this.registre);
     this.retex = new Retex(this.registre);
     this.crise = new Crise(this.registre);

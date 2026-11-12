@@ -38,6 +38,7 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
         '052_referentiels_copies_perimetre.sql',
         '053_retrait_crrc_investissements.sql',
         '054_retrait_revues_acces.sql',
+        '058_retrait_gap_applications.sql',
       ]);
       const { rows: lignes } = await t.svc.db.q<{
         id: string;

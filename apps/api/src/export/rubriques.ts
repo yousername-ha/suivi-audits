@@ -12,11 +12,6 @@ import {
   prioriteIncident,
   recurrenceSuivante,
   valeurIndicateur,
-  lireAppGap,
-  etatPointGap,
-  pointsGap,
-  SECTIONS_GAP,
-  statsGap,
   lireEvaluationClausier,
   pointsEvaluation,
   scoreEvaluation,
@@ -109,22 +104,6 @@ const lignesDda =
 
 const nomFournisseur = (etat: JsonObject, id: unknown) =>
   texte(objs(etat.suppliers).find((s) => s.id === id)?.name) || texte(id);
-
-/** Exigences exclues de la déclaration d'applicabilité (points GAP « Non applicable » par défaut). */
-const exigencesExclues = (etat: JsonObject): Set<string> => {
-  const dda = obj(etat.dda);
-  return new Set(
-    objs(etat.items)
-      .filter((i) => obj(dda[texte(i.id)]).app === 'non')
-      .map((i) => texte(i.id)),
-  );
-};
-const appsGap = (etat: JsonObject) =>
-  (Array.isArray(etat.appGaps) ? etat.appGaps : []).map(lireAppGap).filter((a): a is NonNullable<typeof a> => !!a);
-const codeExigence = (etat: JsonObject, id: string) => {
-  const m = objs(etat.items).find((x) => x.id === id);
-  return m ? codeMesure(m) : id;
-};
 
 export const JEUX: Record<string, Jeu> = {
   plan: {
@@ -787,70 +766,6 @@ export const JEUX: Record<string, Jeu> = {
         ]);
     },
   },
-  gapApps: {
-    titre: () => 'GAP — applications à intégrer',
-    colonnes: [
-      ['Application', 30],
-      ['DSCP', 10],
-      ['Nuage', 10],
-      ['Statut', 12],
-      ['Avancement', 11],
-      ['Conformes', 10],
-      ['Écarts', 8],
-      ['À évaluer', 10],
-      ['Responsable', 18],
-      ['Échéance cible', 14],
-    ],
-    lignes: ({ etat }) => {
-      const exclues = exigencesExclues(etat);
-      return appsGap(etat).map((a) => {
-        const st = statsGap(a, exclues);
-        return [
-          a.name,
-          a.dscp,
-          a.cloud,
-          a.status,
-          `${st.pct} %`,
-          st.c.Conforme,
-          st.ouverts,
-          st.c['À évaluer'],
-          a.owner,
-          dFr(a.target),
-        ];
-      });
-    },
-  },
-  gapLignes: {
-    titre: () => 'GAP — points de contrôle',
-    colonnes: [
-      ['Application', 26],
-      ['Section', 22],
-      ['Références', 20],
-      ['Point de contrôle', 60],
-      ['État', 14],
-      ['Constat', 40],
-      ['Pilote', 16],
-      ['Échéance', 12],
-    ],
-    lignes: ({ etat }) => {
-      const exclues = exigencesExclues(etat);
-      return appsGap(etat).flatMap((a) =>
-        pointsGap(a).map((l) => {
-          const v = a.lines[l.id] ?? {};
-          return [
-            a.name,
-            SECTIONS_GAP.find((x) => x[0] === l.sec)?.[1] ?? '',
-            l.refs.map((r) => codeExigence(etat, r)).join(', '),
-            l.t,
-            etatPointGap(a, l, exclues),
-            v.comment ?? '',
-            v.owner ?? '',
-            dFr(v.due),
-          ];
-        }),
-      );
-    },
-  },
   evalFournisseurs: {
     titre: () => 'Évaluations sécurité fournisseurs',
     colonnes: [
@@ -939,12 +854,6 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
     titre: 'Plans du SMSI',
     description: 'Formation, sensibilisation, audit interne, exercices et tâches récurrentes.',
     jeux: ['plans', 'recurrentes'],
-  },
-  {
-    id: 'apps',
-    titre: 'GAP — Applications',
-    description: 'Synthèse par application et points de contrôle.',
-    jeux: ['gapApps', 'gapLignes'],
   },
 ];
 export const TOUS_LES_JEUX = GROUPES.flatMap((g) => g.jeux);
