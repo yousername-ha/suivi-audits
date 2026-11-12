@@ -71,6 +71,13 @@ pas une assertion réduite : l'assertion décrit le comportement attendu. Consta
 Les corrections sont faites par la session de développement dédiée ; la session de recette repasse ensuite, vérifie et
 retire le marqueur `test.fail`.
 
+## Briques techniques (exigence du RSSI, 12/11/2026)
+
+La recette doit tourner sur **les mêmes briques que l'application** : PostgreSQL 18, Node 26, images Docker de la pile,
+conteneur Playwright officiel, c'est-à-dire `lancer.sh` ou le workflow « RSSI virtuel ». Une pile native sur d'autres versions
+(PostgreSQL 16 et Node 22 les 11 et 12/11/2026) ne donne que des constats **à confirmer** ; le rapport doit alors le dire en
+tête.
+
 ## Limites
 
 - Couverture déterministe actuelle : étapes 0 (installation), 6 bis (DdA) et 9 (écarts) du scénario ; les autres étapes sont
