@@ -117,16 +117,7 @@ export const FAMILLES: Famille[] = [
     id: 'conformite',
     label: 'Conformité et audits',
     destinations: [
-      dest('referentiels', 'Référentiels et exigences', [
-        p('referentiels'),
-        p('bibliotheque'),
-        p('correspondances'),
-        p('rapprochements'),
-        p('couverture'),
-        p('analyser-service'),
-        p('gap-applications'),
-        p('correspondances-bibliotheque'),
-      ]),
+      dest('referentiels', 'Bibliothèque de référentiels', [p('bibliotheque')]),
       dest('applicabilite', 'Applicabilité et mesures', [
         p('dda-iso'),
         p('dda-annexe-a'),

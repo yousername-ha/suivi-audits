@@ -21,7 +21,7 @@ import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
-import { ExtremiteChamps } from './CorrespondancesBibliotheque';
+import { ExtremiteChamps } from './ExtremiteChamps';
 import type { Critere } from './Fournisseurs';
 
 interface Referentiel {

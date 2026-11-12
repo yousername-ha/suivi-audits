@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
 import { canReadBusiness, useCan } from '../session';
-import { useRapprochementsEnAttente } from './compteur-rapprochements';
 
 export interface Alerte {
   n: number;
@@ -20,14 +19,8 @@ export type AlertesMenu = Record<string, Alerte | undefined>;
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 
 /** Calcul pur (testé) : alertes par identifiant de destination du menu (voir navigation.ts). */
-export function alertesDepuisSynthese(s: SyntheseApi | undefined, rapprochements: number): AlertesMenu {
+export function alertesDepuisSynthese(s: SyntheseApi | undefined): AlertesMenu {
   const alertes: AlertesMenu = {};
-  if (rapprochements > 0)
-    alertes['referentiels'] = {
-      n: rapprochements,
-      rouge: false,
-      detail: pluriel(rapprochements, 'rapprochement à valider', 'rapprochements à valider'),
-    };
   const mauvais = s?.indicateurs?.nonAtteints ?? 0;
   if (mauvais > 0)
     alertes['objectifs'] = {
@@ -74,8 +67,7 @@ export function useAlertesMenu(): AlertesMenu {
     refetchInterval: 120_000,
     retry: false,
   });
-  const rapprochements = useRapprochementsEnAttente();
-  return alertesDepuisSynthese(q.data, rapprochements);
+  return alertesDepuisSynthese(q.data);
 }
 
 /** Libellé de menu suivi de sa pastille ; sans alerte, le libellé seul. */

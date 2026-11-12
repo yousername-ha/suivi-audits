@@ -8,6 +8,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Modifié
+
+- **Menu Conformité simplifié, lot 1 : interface** ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md)) : la destination « Référentiels et exigences » ne garde
+  que la **Bibliothèque de référentiels**, qui affiche une carte par référentiel avec la **couverture du périmètre** (barre des états, clauses
+  obligatoires, mesures reliées, « Voir la couverture » pour le détail exigence par exigence). Les pages « Référentiels et exigences », « Correspondances entre
+  exigences », « Rapprochements à valider », « Couverture par référentiel » (fusionnée), « Analyser un service », « Applications à intégrer » et « Correspondances de la
+  bibliothèque » disparaissent de l'interface, avec le bandeau et la pastille de menu des rapprochements. Aucun changement de serveur ni de données dans ce lot.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+
 ## [6.3.0] — 2026-11-12
 
 Version mineure : trois migrations SQL (`052` additive, `053` et `054` destructives), aucune nouvelle dépendance. Elle apporte la **porte de lecture

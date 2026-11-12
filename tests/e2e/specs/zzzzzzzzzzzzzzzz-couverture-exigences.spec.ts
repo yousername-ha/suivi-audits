@@ -72,10 +72,10 @@ test('Couverture : une exigence passe de non implémentée à testée, avec hist
     });
     expect(att.ok(), await att.text()).toBeTruthy();
 
-    await page.goto('/pilotage/couverture');
-    await expect(page.getByText(definition.name).first()).toBeVisible();
-    await page.getByRole('combobox', { name: 'Détail par exigence' }).click();
-    await page.getByRole('option', { name: definition.name }).click();
+    await page.goto('/pilotage/bibliotheque');
+    const carte = page.getByLabel(`Référentiel ${definition.name}`);
+    await expect(carte).toBeVisible();
+    await carte.getByRole('button', { name: `Voir la couverture de ${definition.name}` }).click();
     const ligne = page.getByRole('row', { name: /R1 · Exigence fictive à évaluer/ });
     await expect(ligne.getByText('Non implémenté')).toBeVisible();
 

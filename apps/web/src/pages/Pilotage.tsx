@@ -1,4 +1,4 @@
-import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import { Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import {
   type BusinessPolicy,
@@ -25,7 +25,7 @@ import { RiskEvaluation } from '../grc/Risks';
 import { RiskMap } from '../grc/RiskMap';
 import { Imports } from '../grc/Imports';
 import { BusinessPolicyPanel } from '../grc/BusinessPolicy';
-import { MappingPanel, Registry } from './Grc';
+import { Registry } from './Grc';
 import { BusinessRegistry } from '../pilotage/Registry';
 import { cheminRetourSur } from '../retour';
 import { RecordEditor } from '../pilotage/RecordEditor';
@@ -36,10 +36,6 @@ import { Perimetres } from '../pilotage/Perimetres';
 import { Fournisseurs } from '../pilotage/Fournisseurs';
 import { CriteresFournisseurs } from '../pilotage/CriteresFournisseurs';
 import { FournisseursPerimetre } from '../pilotage/FournisseursPerimetre';
-import { Rapprochements } from '../pilotage/Rapprochements';
-import { Couverture } from '../pilotage/Couverture';
-import { CorrespondancesBibliotheque } from '../pilotage/CorrespondancesBibliotheque';
-import { useRapprochementsEnAttente } from '../pilotage/compteur-rapprochements';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
@@ -52,8 +48,6 @@ import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
-import { AnalyserService } from '../pilotage/AnalyserService';
-import { GapApplications } from '../pilotage/Gap';
 import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
 import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
 import { RetexIncidents } from '../incidents/Retex';
@@ -331,7 +325,6 @@ export function PilotagePage() {
             {section === 'parcours-iso' && <ParcoursIso key={smsi} smsi={smsi} />}
             {section === 'synthese' && (
               <>
-                {smsi && <BandeauRapprochements smsi={smsi} />}
                 <Card withBorder>
                   <Stack>
                     <Text fw={600}>Vos travaux de pilotage</Text>
@@ -347,7 +340,7 @@ export function PilotagePage() {
                       <Button component={Link} to="/pilotage/actions" variant="light">
                         Voir les actions
                       </Button>
-                      <Button component={Link} to="/pilotage/referentiels" variant="default">
+                      <Button component={Link} to="/pilotage/bibliotheque" variant="default">
                         Voir les référentiels
                       </Button>
                     </Group>
@@ -456,10 +449,6 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
-            {section === 'analyser-service' && can('conformite', 'lire') && smsi && (
-              <AnalyserService smsi={smsi} onChoisir={chooseScope} />
-            )}
-            {section === 'gap-applications' && can('conformite', 'lire') && <GapApplications />}
             {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
             {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
             {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
@@ -479,8 +468,6 @@ export function PilotagePage() {
             {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" />}
             {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" />}
             {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" />}
-            {section === 'referentiels' && can('conformite', 'lire') && <Publication smsi={smsi} type="frameworks" />}
-            {section === 'correspondances' && can('conformite', 'lire') && <MappingPanel smsi={smsi} />}
             {section === 'imports' && can('import_export', 'lire') && <Imports smsi={smsi} />}
             {section === 'configuration' && can('pilotage', 'lire') && (
               <>
@@ -497,10 +484,7 @@ export function PilotagePage() {
                 )}
               </>
             )}
-            {section === 'bibliotheque' && can('conformite', 'lire') && <Bibliotheque />}
-            {section === 'rapprochements' && can('conformite', 'lire') && smsi && <Rapprochements smsi={smsi} />}
-            {section === 'couverture' && can('conformite', 'lire') && smsi && <Couverture smsi={smsi} />}
-            {section === 'correspondances-bibliotheque' && can('conformite', 'lire') && <CorrespondancesBibliotheque />}
+            {section === 'bibliotheque' && can('conformite', 'lire') && <Bibliotheque smsi={smsi} />}
             {section === 'fournisseurs' && can('fournisseurs', 'lire') && <Fournisseurs />}
             {section === 'criteres-fournisseurs' && can('fournisseurs', 'lire') && <CriteresFournisseurs />}
             {section === 'fournisseurs-perimetre' && can('fournisseurs', 'lire') && smsi && (
@@ -702,25 +686,8 @@ function ControlSchedule({ smsi, object, onClose }: { smsi: string; object: GrcO
     </Modal>
   );
 }
-function BandeauRapprochements({ smsi }: { smsi: string }) {
-  const n = useRapprochementsEnAttente(smsi);
-  if (!n) return null;
-  return (
-    <Alert color="suivi" title="Rapprochements à valider" role="status">
-      <Group justify="space-between">
-        <Text>
-          {n} rapprochement(s) proposé(s) à partir des mesures déjà déclarées attendent une décision du pilote.
-        </Text>
-        <Button component={Link} to="/pilotage/rapprochements" size="xs">
-          Examiner les rapprochements
-        </Button>
-      </Group>
-    </Alert>
-  );
-}
 function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => void }) {
   const qc = useQueryClient(),
-    navigate = useNavigate(),
     [error, setError] = useState<unknown>(null);
   const q = useQuery({
     queryKey: ['grc', 'notifications'],
@@ -741,7 +708,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
     <Stack>
       <ErrorAlert error={error ?? q.error} />
       {q.data
-        ?.filter((n) => n.smsiId === smsi)
+        ?.filter((n) => n.smsiId === smsi && n.kind !== 'rapprochement')
         .map((n) => (
           <Card key={n.id} withBorder>
             <Text fw={600}>{n.title}</Text>
@@ -750,10 +717,6 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
               <Button
                 variant="light"
                 onClick={async () => {
-                  if (n.kind === 'rapprochement') {
-                    navigate('/pilotage/rapprochements');
-                    return;
-                  }
                   try {
                     onOpen(await get<GrcObject>(`/api/grc/${smsi}/objects/${n.objectId}`));
                   } catch (e) {

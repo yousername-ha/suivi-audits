@@ -464,15 +464,15 @@ et le cas TEST-019.
 Objectif : Publications, activation, mappings révisables, simulations/imports ; sources normatives sous licence non redistribuées.
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/pilotage/referentiels ; /pilotage/correspondances**.
+Accès : **/pilotage/bibliotheque** (les pages « Référentiels et exigences » et « Correspondances » sont retirées, ADR 0089).
 Profils : Session complète, lecture du domaine conformite ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir Pilotage → Référentiels et exigences et sélectionner le référentiel/version.
+1. Ouvrir Pilotage → Conformité → Bibliothèque de référentiels et consulter les exigences du référentiel/version.
 2. Préparer les exigences organisationnelles ou l’import autorisé, simuler et vérifier les sources/droits de réutilisation.
 3. Publier avec justification/confirmation ; activer seulement les versions retenues.
-4. Dans Correspondances, relier les exigences, justifier et réviser le mapping en conservant son historique.
+4. Pour le périmètre affiché, « Voir la couverture » ouvre le détail exigence par exigence, avec l’évaluation et son historique.
 
 Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
 Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon

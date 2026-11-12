@@ -53,5 +53,5 @@ ni entre référentiels : une preuve partagée ne rend pas deux exigences égale
 
 ## Où le voir
 
-Pilotage → Conformité → « Couverture par référentiel » (synthèse des états, filtre, fiche d'évaluation et historique).
+Pilotage → Conformité → « Bibliothèque de référentiels » : une carte par référentiel avec la couverture du périmètre affiché (états, clauses obligatoires, mesures reliées) ; « Voir la couverture » ouvre le détail exigence par exigence (filtre, fiche d'évaluation et historique, plan d'action des écarts).
 Déclarations d'applicabilité historiques : « Clauses ISO 27001 », « Annexe A », « HDS ».

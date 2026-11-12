@@ -67,9 +67,9 @@ test('Kit IA : aperçu, import confirmé, rejeu sans effet, veille à revérifie
     await dialogue.getByRole('button', { name: 'Fermer', exact: true }).click();
 
     await expect(carte).toContainText('importé par');
-    await expect(page.getByRole('region', { name: /Référentiels de la bibliothèque/ })).toContainText(
-      'Contrôles IA internes',
-    );
+    await expect(
+      page.locator('[aria-label^="Référentiel "]').filter({ hasText: 'Contrôles IA internes' }).first(),
+    ).toBeVisible();
 
     // Rejeu à l'identique : l'aperçu l'annonce et l'import reste fermé.
     await carte.getByRole('button', { name: 'Importer une nouvelle édition du kit' }).click();

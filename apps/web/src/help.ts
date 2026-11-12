@@ -65,24 +65,13 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'conformite:lire',
     link: '/pilotage/bibliotheque',
     steps: [
+      'Chaque référentiel est une carte : exigences au catalogue, périmètres rattachés et, pour le périmètre affiché, la couverture (états des exigences, mesures reliées, clauses obligatoires pas encore conformes). « Voir la couverture » ouvre le détail exigence par exigence, avec l’évaluation et le plan d’action des écarts. Ces états aident à piloter : ils ne constituent ni un taux de conformité ni une preuve de conformité.',
       'La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Elle est figée : chaque édition est immuable et ne se personnalise pas. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les droits.',
       'Importer un référentiel : collez sa définition, simulez la publication, indiquez un motif puis publiez. Chaque version est immuable ; une évolution crée une nouvelle version.',
       'Importer depuis l’outil de suivi : les clauses ISO 27001, l’Annexe A, le HDS et le ReCyF déjà saisis dans l’outil de suivi s’importent d’un clic après simulation et confirmation. Seuls les intitulés ou textes saisis sont repris ; la source reste « non vérifiée » et jamais normative.',
       'Dans la page Périmètres, « Référentiels » attribue une édition à un périmètre : le périmètre en reçoit une copie nommée « <référentiel> (PRIVE - <périmètre>) », en préparation, qu’il modifie librement (ajout, modification, retrait d’exigences, renommage ; chaque modification est une version conservée). La bibliothèque n’est jamais modifiée.',
-      'Appliquer la copie en fait un référentiel suivi en conformité (couverture, évaluations, rapprochements, plan d’écarts) ; elle reste modifiable et peut repasser en préparation sans perte. Les sous-périmètres qui héritent suivent la copie de leur parent et peuvent seulement la désactiver chez eux. Renommer un périmètre propose de renommer aussi ses copies avec le nouveau nom.',
+      'Appliquer la copie en fait un référentiel suivi en conformité (couverture, évaluations, plan d’écarts) ; elle reste modifiable et peut repasser en préparation sans perte. Les sous-périmètres qui héritent suivent la copie de leur parent et peuvent seulement la désactiver chez eux. Renommer un périmètre propose de renommer aussi ses copies avec le nouveau nom.',
       'Un référentiel déjà publié dans un périmètre peut être promu dans la bibliothèque (simulation puis confirmation) ; l’original est conservé.',
-    ],
-  },
-  {
-    id: 'rapprochements',
-    title: 'Rapprochements entre référentiels',
-    permission: 'conformite:lire',
-    link: '/pilotage/rapprochements',
-    steps: [
-      'Une correspondance de la bibliothèque dit en quoi une exigence d’un référentiel rejoint celle d’un autre. Elle est proposée, puis validée une seule fois pour l’organisation par une personne habilitée (rubrique « Correspondances de la bibliothèque »). Aucune correspondance n’est fournie.',
-      'Quand une mesure met déjà en œuvre une exigence et qu’une correspondance validée la rattache à une exigence d’un autre référentiel du périmètre, un rapprochement est proposé. Il n’est jamais appliqué seul : une pastille du menu « Rapprochements à valider », un bandeau de la synthèse et « Mes rappels » signalent les propositions en attente.',
-      'Le pilote confirme (un lien « met en œuvre » est alors créé, à son nom) ou rejette avec un motif, une proposition à la fois ou en lot. Une correspondance partielle ne donne jamais une couverture complète.',
-      '« Couverture par référentiel » compte, pour chaque référentiel rattaché, les exigences couvertes, à valider et non couvertes. Ce sont des repères de pilotage, pas un taux de conformité.',
     ],
   },
   {

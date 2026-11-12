@@ -1,6 +1,6 @@
-/* Analyser un service et plan d'action des écarts (ADR 0056) : l'assistant crée un périmètre enfant qualifié, la
-   couverture s'évalue, puis le plan d'action des écarts se crée en une fois et se rejoue sans doublon. Données fictives
-   créées par ce test. */
+/* Plan d'action des écarts (ADR 0056 et 0089) : un périmètre reçoit un référentiel, la couverture s'évalue dans la page
+   Bibliothèque de référentiels, puis le plan d'action des écarts se crée en une fois et se rejoue sans doublon. Données
+   fictives créées par ce test. */
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
@@ -41,7 +41,7 @@ const definition = {
   })),
 };
 
-test('Analyser un service : périmètre enfant qualifié, évaluation, plan d’action des écarts rejouable', async ({
+test('Bibliothèque : couverture d’un périmètre, évaluation, plan d’action des écarts rejouable', async ({
   browser,
 }) => {
   test.setTimeout(180_000);
@@ -66,20 +66,11 @@ test('Analyser un service : périmètre enfant qualifié, évaluation, plan d’
     );
     const nom = 'Service fictif ' + Date.now();
 
-    await page.goto('/pilotage/analyser-service');
-    const assistant = page.getByTestId('analyser-service');
-    await assistant.getByLabel('Nom du service').fill(nom);
-    await assistant.getByLabel('Description').fill('Application interne fictive de recette.');
-    await assistant.getByRole('button', { name: 'Suivant' }).click();
-    await assistant.getByRole('button', { name: 'Créer le service' }).click();
-    await expect(assistant).toContainText(`Service « ${nom} » créé`);
-    await assistant.getByRole('button', { name: 'Appliquer les référentiels cochés' }).click();
-    await expect(assistant).toContainText('Ouvrez la Couverture du service');
-
-    const service = (
-      (await (await page.request.get('/api/grc/smsis')).json()) as { id: string; name: string; scope: string }[]
-    ).find((s) => s.name === nom)!;
-    expect(service.scope).toContain('Qualification : Données de santé : à préciser');
+    const service = (await appel(page, 'POST', '/api/grc/smsis', {
+      name: nom,
+      scope: 'Application interne fictive de recette.',
+      timezone: 'Europe/Paris',
+    })) as { id: string; name: string };
     await appel(page, 'PUT', `/api/grc/${service.id}/framework-attachments/${fw.id}`, {
       version: 1,
       statut: 'applique',
@@ -97,10 +88,13 @@ test('Analyser un service : périmètre enfant qualifié, évaluation, plan d’
     await evaluer('R2', { applicability: 'applicable', implementation: 'partielle' });
     await evaluer('R3', { applicability: 'exclue', justification: 'Hors du service' });
 
-    await assistant.getByRole('button', { name: 'Ouvrir la couverture du service' }).click();
-    await expect(page).toHaveURL(/\/pilotage\/couverture/);
-    await page.getByRole('combobox', { name: 'Détail par exigence' }).click();
-    await page.getByRole('option', { name: definition.name }).click();
+    await page.goto('/pilotage');
+    await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
+    await page.getByRole('option', { name: service.name, exact: true }).click();
+    await page.goto('/pilotage/bibliotheque');
+    const carte = page.getByLabel(`Référentiel ${definition.name}`);
+    await expect(carte).toBeVisible();
+    await carte.getByRole('button', { name: `Voir la couverture de ${definition.name}` }).click();
     await page.getByRole('button', { name: 'Créer le plan d’action des écarts' }).click();
     const plan = page.getByTestId('plan-ecarts');
     await expect(plan).toContainText('2 écart(s)');

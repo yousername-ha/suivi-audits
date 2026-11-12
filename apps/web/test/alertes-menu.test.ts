@@ -11,15 +11,14 @@ const base = {
 
 describe('alertes du menu', () => {
   it('compte en rouge les indicateurs non atteints et les échéances dépassées', () => {
-    const a = alertesDepuisSynthese(base, 0);
+    const a = alertesDepuisSynthese(base);
     expect(a['objectifs']).toMatchObject({ n: 1, rouge: true });
     expect(a['plan-actions']).toMatchObject({ n: 5, rouge: true });
     expect(a['risques']).toMatchObject({ n: 2, rouge: false });
     expect(a['referentiels']).toBeUndefined();
   });
   it('totalise une famille et reste rouge dès qu’une destination est rouge', () => {
-    const a = alertesDepuisSynthese(base, 4);
-    expect(a['referentiels']).toMatchObject({ n: 4, rouge: false });
+    const a = alertesDepuisSynthese(base);
     expect(alerteDeFamille(a, [{ id: 'objectifs' }, { id: 'plan-actions' }, { id: 'revues' }])).toMatchObject({
       n: 6,
       rouge: true,
@@ -27,17 +26,13 @@ describe('alertes du menu', () => {
     expect(alerteDeFamille(a, [{ id: 'revues' }])).toBeUndefined();
   });
   it('n’affiche aucune pastille sans donnée ni droit de lecture', () => {
-    expect(alertesDepuisSynthese(undefined, 0)).toEqual({});
+    expect(alertesDepuisSynthese(undefined)).toEqual({});
     const sain = {
       ...base,
       ecarts: { ...base.ecarts, enRetard: 0 },
       indicateurs: { ...base.indicateurs!, nonAtteints: 0 },
       pilotage: { ...base.pilotage!, risquesSansDecision: 0, actionsEnRetard: 0 },
     } as SyntheseApi;
-    expect(alertesDepuisSynthese(sain, 0)).toEqual({});
-  });
-  it('une famille est neutre quand seules des pastilles neutres existent', () => {
-    const a = alertesDepuisSynthese(undefined, 3);
-    expect(alerteDeFamille(a, [{ id: 'referentiels' }])).toMatchObject({ n: 3, rouge: false });
+    expect(alertesDepuisSynthese(sain)).toEqual({});
   });
 });
