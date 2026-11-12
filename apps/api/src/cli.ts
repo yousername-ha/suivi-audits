@@ -22,6 +22,7 @@
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
   consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
+  recette-locale              poste de test sur localhost : crée le compte administrateur sans assistant d'installation
   poivre-restaurer            reprend le poivre des mots de passe (texte sur l'entrée standard) après perte de la clé maîtresse
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
@@ -231,6 +232,22 @@ async function main() {
           derniere_connexion: u.last_login_at?.toISOString() ?? null,
         })),
       );
+      break;
+    }
+    case 'recette-locale': {
+      // Poste de test seulement : premier administrateur créé sans assistant, refusé hors de « localhost ».
+      const { buildApp } = await import('./app.js');
+      const { installerRecetteLocale } = await import('./recette-locale.js');
+      const app = await buildApp(svc);
+      try {
+        const c = await installerRecetteLocale(svc, app);
+        console.log(`\nCompte de recette créé.\n  Identifiant  : ${c.identifiant}\n  Mot de passe : ${c.motDePasse}\n`);
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exitCode = 1;
+      } finally {
+        await app.close();
+      }
       break;
     }
     case 'setup-token': {

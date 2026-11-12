@@ -118,6 +118,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Recette locale en une commande** (`sudo ./scripts/dev/recette-locale.sh`, poste de test seulement) : construit la branche,
+  démarre la pile sur `https://localhost` avec le relais de l'assistant et crée le compte administrateur sans assistant
+  d'installation. Nouvelle commande `suivi recette-locale`, refusée hors de `localhost` et dès qu'un administrateur existe ;
+  elle passe par la route d'installation normale. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : constats d'audit proposés** : le profil « Audit interne » propose des constats (observation,
   non-conformité, opportunité) ; confirmé, le constat est créé en brouillon au nom de la personne qui décide. Ce profil ne
   propose jamais d'action corrective. Un constat qui vise un élément issu d'une proposition de l'assistant est signalé.
