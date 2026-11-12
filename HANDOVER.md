@@ -69,6 +69,51 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
   « Aucun bug ouvert enregistré » ne signifie pas « aucun bug possible ».
 - Résultat du test du serveur utilisateur **NON REÇU** ; aucun PV accepté.
 
+## Assistant RSSI : panneau global (12/11/2026, branche `claude/assistant-rssi`)
+
+Portage de l'interface validée du paquet « assistant-ia-implementation-2026-11-12 » (frontend de référence `04a310f` sur
+`codex/refonte-neon-main`), **sans modification du backend**. Session « Assistant RSSI intégré plateforme »
+(`session_01EnWdzfTjPHLznQbaTS7Ugc`).
+
+- **Fichiers ajoutés** : `apps/web/src/assistant/AssistantGlobal.tsx` (hôte `AssistantGlobal`, panneau `PanneauAssistant`,
+  formulaires `Decision` et `MissionForm`), `IdentiteAssistant.tsx` (avatar, icônes), `contrats.ts`, `cles.ts`,
+  `packages/ui/src/neon-assistant.css`, `apps/web/test/assistant-global.test.ts` (9 cas).
+- **`contrats.ts`** : les interfaces du pont sont remplacées par des alias des DTO de `@suivi/shared` (`EtatAssistantDto`,
+  `ConversationAssistantDto`, `ConversationAssistantDetailDto`, `MessageAssistantDto`, `SourceAssistant`,
+  `PropositionAssistantDto`, `MissionAssistantDto`, `ProfilAssistant`) ; longueurs maximales lues dans les constantes
+  partagées (`LONGUEURS`). Restent locales : `NotificationAssistant` (la liste `/api/grc/notifications` n'a pas de contrat
+  partagé), `messageAEnvoyer`, `contexteJoint`, `indisponibilite`, `estNotificationAssistant`, `pointEnAttente`, et le
+  nouveau `conversationDuChemin`.
+- **Raccordements** : `Layout.tsx` monte `<AssistantGlobal onPinned=…>` en frère du contenu, hors de l'Outlet, et pose
+  `data-assistant-pinned` sur `.shell` ; l'entrée de menu « Assistant RSSI » est retirée. `main.tsx` : `/admin/:tab?` passe
+  dans le cadre authentifié commun derrière la garde enfant `RequireAdministration` (`canAdminArea`), `RequireAuth` ne
+  reçoit plus `admin`. `packages/ui/src/styles.css` importe `neon-assistant.css` une seule fois (ce dépôt n'a pas `neon.css`).
+- **Écarts d'adaptation avec le paquet** : droits lus par `useCan` (plus par chaînes) ; « Demander un suivi » et la lecture
+  des missions exigent `assistant:administrer`, parce que les routes des missions l'exigent sur cette branche (le paquet
+  supposait `assistant:modifier`) ; une source de type `document` (périmètre vide) n'offre pas de lien de périmètre ; la
+  suggestion sur la « revue des accès » est remplacée (module retiré, ADR 0087) ; règle `.as-dock .rr-kicker` ajoutée à la
+  feuille (la classe venait d'une feuille de la refonte).
+- **Une seule interface de dialogue** : `AssistantPage` (`/assistant/:id?`) devient « Suivi de l'assistant RSSI » (rondes,
+  propositions, questions) et n'affiche plus de conversation. Un lien direct `/assistant/:id` ouvre la conversation dans
+  le panneau, dans son profil réel. La page de suivi est liée depuis l'onglet « Pour vous ».
+- **Caches** : clés `['assistant-global', <id du compte>, …]` ; les réglages et les décisions prises sur la page de suivi
+  invalident cette racine. La purge de session existante (`isPrivateSessionQuery`) s'applique.
+- **Contrôles exécutés le 12/11/2026** (Node 22) : `tsc` web ; Vitest web 27 fichiers 227/227 (dont 9 de l’assistant global)
+  et UI 235/235 ; ESLint et Prettier ; `vite build`. Recette dans un navigateur réel sur l'**API réelle** (base de test),
+  relais réel et **faux fournisseur de modèle** : 18 points vérifiés (panneau fermé au démarrage, pas d'entrée de menu,
+  brouillon remis à zéro au rechargement et conservé entre rubriques et vers `/admin`, corps strict `{texte}` avec contexte
+  joint visible, sources du serveur, rappel reçu sans ouverture forcée, lecture d'un rappel, largeur réservée à 1920 px
+  mais pas sur `/cartographie`, lien direct, pas de second dialogue, Échap et retour du focus, 1366×768 sombre dans la
+  hauteur), aucune erreur de console.
+- **Non exécuté** : les dix scénarios Playwright et les analyses Axe du paquet (ils dépendent de supports de la refonte,
+  non portés) ; les seize dispositions d'écran et la taille 150 % (deux dispositions vues) ; réponse à une question,
+  avis, décision, mission et séparation des profils dans le panneau (couvertes par les tests du service, pas par une
+  recette du panneau) ; Mistral réel à travers le panneau ; pile Docker. Les preuves historiques du paquet ne sont pas
+  des tests de cette branche.
+- **Reste à faire** : porter des scénarios de bout en bout sur les supports du dépôt ; contrôler les tailles d'écran
+  restantes ; la feuille de l'assistant garde ses tailles en pixels (hors périmètre du test de charte, limité à
+  `apps/web/src`).
+
 ## Prochaine action
 
 Recetter sur le serveur de l’utilisateur : version/santé, clic Pilotage,

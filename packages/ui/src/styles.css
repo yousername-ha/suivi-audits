@@ -1,3 +1,5 @@
+/* Habillage de l'assistant global (ADR 0086) : importé une seule fois, ici. */
+@import './neon-assistant.css';
 /* Police Inter variable, hébergée avec l'application (SIL OFL, licence dans fonts/). */
 @font-face {
   font-family: 'Inter';

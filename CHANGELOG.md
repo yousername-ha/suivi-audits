@@ -118,6 +118,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : présence dans toute la plateforme** : un bouton flottant en bas à droite ouvre un panneau de discussion
+  commun à toutes les rubriques, avec l'historique et une boîte personnelle « Pour vous » (questions reçues, rappels,
+  propositions). La discussion et les brouillons sont conservés en changeant de page. L'entrée de menu « Assistant RSSI »
+  disparaît ; la page `/assistant` devient le suivi des rondes, des propositions et des questions, et un lien direct vers
+  une conversation l'ouvre dans le panneau. Aucun changement du service. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Recette locale en une commande** (`sudo ./scripts/dev/recette-locale.sh`, poste de test seulement) : construit la branche,
   démarre la pile sur `https://localhost` avec le relais de l'assistant et crée le compte administrateur sans assistant
   d'installation. Nouvelle commande `suivi recette-locale`, refusée hors de `localhost` et dès qu'un administrateur existe ;

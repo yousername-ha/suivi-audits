@@ -29,6 +29,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
+import { ASSISTANT_GLOBAL } from './cles';
 import { MemoireAssistant, MesuresAssistant, MethodesAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
@@ -103,6 +104,8 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
     await Promise.all([
       qc.invalidateQueries({ queryKey: CLE_REGLAGES }),
       qc.invalidateQueries({ queryKey: CLE_ETAT_ASSISTANT }),
+      // Le panneau flottant relit aussitôt son état (activation, pause, profils).
+      qc.invalidateQueries({ queryKey: [ASSISTANT_GLOBAL] }),
     ]);
   };
   const agir = async (fn: () => Promise<unknown>, message: string) => {

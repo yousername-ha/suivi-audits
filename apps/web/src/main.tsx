@@ -45,13 +45,11 @@ const queryClient = new QueryClient({
 
 /** Accès réservé aux sessions complètes (double authentification faite), éventuellement à l'administration.
     Confort d'affichage seulement : chaque appel reste contrôlé par le serveur. */
-function RequireAuth({ admin = false }: { admin?: boolean }) {
+function RequireAuth() {
   const me = useMe();
   const loc = useLocation();
-  const can = useCan();
   if (me.stage !== 'ok')
     return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
-  if (admin && !canAdminArea(can)) return <Navigate to="/" replace />;
   return (
     <RealtimeProvider>
       <Layout>
@@ -59,6 +57,13 @@ function RequireAuth({ admin = false }: { admin?: boolean }) {
       </Layout>
     </RealtimeProvider>
   );
+}
+
+/** Garde d’administration dans le cadre authentifié commun : le cadre, donc l’assistant et ses brouillons, n’est pas
+    recréé en entrant dans l’administration. Confort d’affichage : le serveur contrôle chaque appel. */
+function RequireAdministration() {
+  const can = useCan();
+  return canAdminArea(can) ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 const router = createBrowserRouter([
@@ -100,12 +105,8 @@ const router = createBrowserRouter([
       { path: '/systeme/:carte?', element: <PageCartes cote="systeme" /> },
       { path: '/parametres/configuration-grc/:kind?', element: <ConfigurationGrcPage /> },
       { path: '/parametres/:section?', element: <SettingsPage /> },
+      { element: <RequireAdministration />, children: [{ path: '/admin/:tab?', element: <AdminPage /> }] },
     ],
-  },
-  {
-    element: <RequireAuth admin />,
-    errorElement: <ErrorPage />,
-    children: [{ path: '/admin/:tab?', element: <AdminPage /> }],
   },
   { path: '*', element: <NotFoundPage /> },
 ]);

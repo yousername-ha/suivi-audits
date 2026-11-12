@@ -26,6 +26,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
+import { ASSISTANT_GLOBAL } from './cles';
 
 const CLE_RONDES = ['assistant', 'rondes'];
 const CLE_MISSIONS = ['assistant', 'missions'];
@@ -749,7 +750,11 @@ export function PropositionsAssistant({ peutDecider }: { peutDecider: boolean })
     queryFn: () => get<PropositionAssistantDto[]>('/api/assistant/propositions'),
   });
   const relire = async () => {
-    await qc.invalidateQueries({ queryKey: CLE_PROPOSITIONS });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: CLE_PROPOSITIONS }),
+      // Le panneau flottant affiche les mêmes propositions : son compteur suit la décision.
+      qc.invalidateQueries({ queryKey: [ASSISTANT_GLOBAL] }),
+    ]);
   };
   const liste = q.data ?? [];
   return (

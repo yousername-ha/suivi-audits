@@ -386,3 +386,12 @@ informations sur la sécurité de l'organisation (écarts, risques, extraits de 
 personnelles (réponses saisies par des personnes). Les garde-fous qui s'y rapportent sont inchangés : périmètres explicites
 par profil, classification maximale des documents, identité des responsables non transmise, refus de l'entraînement chez le
 fournisseur.
+
+## Addendum du 12/11/2026 — panneau global de l'assistant (point 11)
+
+Le point 11 prévoyait un chat dans une page. À la demande du RSSI, sur une proposition visuelle validée (paquet
+« assistant-ia-implementation-2026-11-12 »), le dialogue devient une **présence flottante commune à toute la plateforme
+authentifiée** : bouton, panneau de discussion, historique, boîte personnelle « Pour vous ». Ce n'est plus une entrée du menu.
+Le service, ses routes, ses droits et ses tables sont inchangés. La page `/assistant` garde les rondes, les propositions et les
+questions ; un lien direct vers une conversation l'ouvre dans le panneau. La pause des rondes ne suspend pas le dialogue. La
+boîte personnelle n'exige pas `assistant:lire` et n'a pas de profil. Détail du portage et des contrôles : `HANDOVER.md`.
