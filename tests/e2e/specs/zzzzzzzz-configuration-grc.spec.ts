@@ -1,5 +1,5 @@
 /* Configuration GRC (ADR 0038) : catalogue vide, adoption du modèle de pertinence, création et publication d'une échelle
-   dans l'interface, matrice complète, même contenu sous Gestion des risques → Configuration des analyses. Données fictives. */
+   dans l'interface, matrice complète. Données fictives (la rubrique Configuration des analyses du menu Risques est retirée, ADR 0090). */
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
@@ -64,10 +64,6 @@ test('Configuration GRC : modèle adopté, échelle créée et publiée, mêmes 
     await expect(page.getByText('Version 1').first()).toBeVisible();
     await page.screenshot({ path: 'test-results/cfg-grc-echelle.png', fullPage: true });
 
-    // Mêmes éléments sous Gestion des risques → Configuration des analyses.
-    await page.goto('/pilotage/configuration-analyses');
-    await expect(page.getByRole('heading', { name: 'Configuration des analyses' })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Échelles' }).getByText('Gravité fictive de recette')).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

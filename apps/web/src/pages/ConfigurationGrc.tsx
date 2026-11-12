@@ -1,5 +1,4 @@
-/* Paramètres de la plateforme → Configuration GRC (ADR 0038). Mêmes éléments et mêmes API que Gestion des risques →
-   Configuration des analyses. */
+/* Paramètres de la plateforme → Configuration GRC (ADR 0038). */
 import { CFG_KINDS, type CfgKind } from '@suivi/shared';
 import { Page, PageHeader } from '@suivi/ui';
 import { Text } from '@mantine/core';
@@ -22,11 +21,7 @@ export function ConfigurationGrcPage() {
         description="Échelles, matrices, critères et classifications partagés par toutes les méthodes d’analyse."
       />
       {lecture ? (
-        <ConfigurationGrc
-          kind={courant}
-          onKind={(k) => nav(`/parametres/configuration-grc/${k}`)}
-          contexte="plateforme"
-        />
+        <ConfigurationGrc kind={courant} onKind={(k) => nav(`/parametres/configuration-grc/${k}`)} />
       ) : (
         <Text>Vous ne disposez pas du droit de consulter la configuration.</Text>
       )}

@@ -1,5 +1,5 @@
-/* Types, requêtes et petits composants communs de la configuration GRC (ADR 0038). Les mêmes éléments sont lus et écrits
-   depuis Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses : un seul stockage, une seule API. */
+/* Types, requêtes et petits composants communs de la configuration GRC (ADR 0038). Ils sont lus et écrits
+   depuis Paramètres → Configuration GRC : un seul stockage, une seule API. */
 import { Select } from '@mantine/core';
 import type { CfgFamily, CfgKind, CfgRef, CfgScope, CfgState, CfgTemplateSource, ScaleDiff } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
