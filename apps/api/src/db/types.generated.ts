@@ -82,6 +82,27 @@ export interface AssistantProfils {
   referent_id: string | null;
 }
 
+export interface AssistantPropositions {
+  id: Generated<string>;
+  profil: string;
+  ronde_id: string | null;
+  referent_id: string | null;
+  smsi_id: string;
+  type: string;
+  titre: string;
+  description: Generated<string>;
+  echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  source_id: string | null;
+  source_nom: Generated<string>;
+  source_version: number | null;
+  etat: Generated<"en_attente" | "confirmee" | "rejetee">;
+  decided_by: Generated<string>;
+  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  decision_note: Generated<string>;
+  objet_cree: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface AssistantQuestions {
   id: Generated<string>;
   profil: string;
@@ -142,6 +163,7 @@ export interface AssistantRondes {
   avis_par: Generated<string>;
   methodes: Generated<number>;
   actions: ColumnType<JsonValue, string | undefined, string>;
+  propositions: Generated<number>;
 }
 
 export interface AuditLog {
@@ -1590,6 +1612,7 @@ export interface DB {
   assistant_methodes: AssistantMethodes;
   assistant_missions: AssistantMissions;
   assistant_profils: AssistantProfils;
+  assistant_propositions: AssistantPropositions;
   assistant_questions: AssistantQuestions;
   assistant_reglages: AssistantReglages;
   assistant_rondes: AssistantRondes;

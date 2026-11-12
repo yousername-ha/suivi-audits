@@ -13,7 +13,10 @@ import {
   type MesureAssistantDto,
   type MethodeAssistantDto,
   type MissionAssistantDto,
+  PROPOSITION_DESCRIPTION_MAX,
+  PROPOSITION_TITRE_MAX,
   type ProfilAssistant,
+  type PropositionAssistantDto,
   type QuestionAssistantDto,
   type RondeAssistantDetailDto,
   type RondeAssistantDto,
@@ -27,6 +30,7 @@ const CLE_RONDES = ['assistant', 'rondes'];
 const CLE_MISSIONS = ['assistant', 'missions'];
 const CLE_MEMOIRE = ['assistant', 'memoire'];
 const CLE_QUESTIONS = ['assistant', 'questions'];
+const CLE_PROPOSITIONS = ['assistant', 'propositions'];
 const CLE_METHODES = ['assistant', 'methodes'];
 const CLE_MESURES = ['assistant', 'mesures'];
 type Profils = readonly { id: ProfilAssistant; libelle: string }[];
@@ -549,7 +553,7 @@ export function MesuresAssistant() {
           ronde, celui du destinataire sur chaque rappel.
         </Text>
         <ErrorAlert error={q.error} />
-        <Table.ScrollContainer minWidth={640}>
+        <Table.ScrollContainer minWidth={820}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -558,6 +562,8 @@ export function MesuresAssistant() {
                 <Table.Th scope="col">En échec</Table.Th>
                 <Table.Th scope="col">Jugées utiles</Table.Th>
                 <Table.Th scope="col">Jugées pas utiles</Table.Th>
+                <Table.Th scope="col">Propositions confirmées</Table.Th>
+                <Table.Th scope="col">Propositions rejetées</Table.Th>
                 <Table.Th scope="col">Rappels</Table.Th>
                 <Table.Th scope="col">Rappels utiles</Table.Th>
                 <Table.Th scope="col">Rappels pas utiles</Table.Th>
@@ -573,6 +579,8 @@ export function MesuresAssistant() {
                   <Table.Td>{m.rondesEnEchec}</Table.Td>
                   <Table.Td>{m.rondesUtiles}</Table.Td>
                   <Table.Td>{m.rondesInutiles}</Table.Td>
+                  <Table.Td>{m.propositionsConfirmees}</Table.Td>
+                  <Table.Td>{m.propositionsRejetees}</Table.Td>
                   <Table.Td>{m.rappels}</Table.Td>
                   <Table.Td>{m.rappelsUtiles}</Table.Td>
                   <Table.Td>{m.rappelsInutiles}</Table.Td>
@@ -633,6 +641,132 @@ export function QuestionsAssistant() {
             )}
           </Stack>
         ))}
+      </Stack>
+    </Card>
+  );
+}
+
+function PropositionADecider({ p, relire }: { p: PropositionAssistantDto; relire: () => Promise<void> }) {
+  const { erreur, envoi, agir } = useAction();
+  const [titre, setTitre] = useState(p.titre);
+  const [description, setDescription] = useState(p.description);
+  const [echeance, setEcheance] = useState(p.echeance ?? '');
+  const [note, setNote] = useState('');
+  const decider = (decision: 'confirmer' | 'rejeter') =>
+    agir(
+      async () => {
+        await api('POST', `/api/assistant/propositions/${p.id}/decision`, {
+          body:
+            decision === 'confirmer'
+              ? { decision, titre, description, echeance: echeance || null, note }
+              : { decision, note },
+        });
+        await relire();
+      },
+      decision === 'confirmer' ? 'Action créée à votre nom.' : 'Proposition rejetée.',
+    );
+  return (
+    <Card withBorder>
+      <Stack gap="xs">
+        <ErrorAlert error={erreur} />
+        <Group gap="xs">
+          <StatusChip etat="attention">À décider</StatusChip>
+          <Text size="xs" c="dimmed" className="horodatage">
+            Proposée le {fmtDate(p.createdAt)}
+            {p.sourceNom ? ` au sujet de « ${p.sourceNom} »` : ''}
+          </Text>
+        </Group>
+        <TextInput
+          label="Intitulé de l’action proposée"
+          value={titre}
+          onChange={(e) => setTitre(e.currentTarget.value)}
+          maxLength={PROPOSITION_TITRE_MAX}
+        />
+        <Textarea
+          label={`Description de l’action « ${p.titre} »`}
+          value={description}
+          onChange={(e) => setDescription(e.currentTarget.value)}
+          maxLength={PROPOSITION_DESCRIPTION_MAX}
+          autosize
+          minRows={2}
+        />
+        <TextInput
+          label={`Échéance de l’action « ${p.titre} »`}
+          description="Au format AAAA-MM-JJ ; vide pour ne pas en fixer."
+          value={echeance}
+          onChange={(e) => setEcheance(e.currentTarget.value)}
+          maxLength={10}
+        />
+        <TextInput
+          label={`Motif de votre décision sur « ${p.titre} » (facultatif)`}
+          description="L’assistant relit les dernières décisions à chaque ronde."
+          value={note}
+          onChange={(e) => setNote(e.currentTarget.value)}
+          maxLength={AVIS_MOTIF_MAX}
+        />
+        <Group>
+          <Button
+            variant="default"
+            loading={envoi}
+            disabled={titre.trim() === ''}
+            onClick={() => void decider('confirmer')}
+          >
+            Confirmer et créer l’action
+          </Button>
+          <Button variant="default" loading={envoi} onClick={() => void decider('rejeter')}>
+            Rejeter
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
+
+/** Propositions de l'assistant : rien n'entre dans un registre avant la confirmation d'une personne, qui crée l'élément
+    à son nom et avec ses droits. */
+export function PropositionsAssistant({ peutDecider }: { peutDecider: boolean }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: CLE_PROPOSITIONS,
+    queryFn: () => get<PropositionAssistantDto[]>('/api/assistant/propositions'),
+  });
+  const relire = async () => {
+    await qc.invalidateQueries({ queryKey: CLE_PROPOSITIONS });
+  };
+  const liste = q.data ?? [];
+  return (
+    <Card withBorder>
+      <Stack>
+        <Title order={2} size="h4">
+          Propositions de l’assistant
+        </Title>
+        <Text size="sm" c="dimmed">
+          L’assistant ne crée rien lui-même. Quand il estime qu’une action manque, il la propose : vous la corrigez, la
+          confirmez ou la rejetez. Une action confirmée est créée à votre nom, avec vos droits.
+        </Text>
+        <ErrorAlert error={q.error} />
+        {q.data && liste.length === 0 && <Text c="dimmed">Aucune proposition pour le moment.</Text>}
+        {liste.map((p) =>
+          p.etat === 'en_attente' && peutDecider ? (
+            <PropositionADecider key={p.id} p={p} relire={relire} />
+          ) : (
+            <Stack key={p.id} gap="xs">
+              <Group gap="xs">
+                <StatusChip etat={p.etat === 'confirmee' ? 'succes' : p.etat === 'rejetee' ? 'neutre' : 'attention'}>
+                  {p.etat === 'confirmee' ? 'Confirmée' : p.etat === 'rejetee' ? 'Rejetée' : 'À décider'}
+                </StatusChip>
+                <Text size="sm" fw={600}>
+                  {p.titre}
+                </Text>
+              </Group>
+              <Text size="sm">{p.description}</Text>
+              <Text size="xs" c="dimmed">
+                {p.decidedBy ? `Décision de ${p.decidedBy}` : 'En attente d’une personne autorisée à décider'}
+                {p.decisionNote ? ` : ${p.decisionNote}` : ''}
+              </Text>
+            </Stack>
+          ),
+        )}
       </Stack>
     </Card>
   );

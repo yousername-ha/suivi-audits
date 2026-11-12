@@ -4,6 +4,7 @@ import {
   AvisRondeBody,
   CleModeleBody,
   DecisionMethodeBody,
+  DecisionPropositionBody,
   NouvelleMethodeBody,
   LancerRondeBody,
   MessageAssistantBody,
@@ -224,6 +225,26 @@ export const assistantRoutes = [
     tags,
     access: 'assistant:lire',
     handler: async ({ svc, s }) => svc.assistantRondes.questions((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/assistant/propositions',
+    summary: 'Propositions de l’assistant (référent des rondes ou administrateur de l’assistant)',
+    tags,
+    access: 'assistant:lire',
+    handler: async ({ svc, s }) => svc.assistantRondes.propositions((s as Session).user),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/assistant/propositions/:id/decision',
+    summary:
+      'Confirmer (en corrigeant au besoin) ou rejeter une proposition ; la confirmation crée l’élément avec les droits de la personne',
+    tags,
+    access: 'assistant:modifier',
+    params: id,
+    body: DecisionPropositionBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.assistantRondes.deciderProposition(params.id, body, (s as Session).user, ip),
   }),
   /* ---------------------------------------------------------------- Amélioration avec l'usage */
   route({

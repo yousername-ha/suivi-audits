@@ -186,6 +186,8 @@ export interface RondeAssistantDto {
   notes: number;
   /** Fiches de méthode proposées pendant la ronde. */
   methodes: number;
+  /** Propositions déposées pendant la ronde, à décider par une personne. */
+  propositions: number;
   jetons: number;
   /** Avis rendu sur la ronde par son référent ou un administrateur de l'assistant. */
   avis: 'utile' | 'inutile' | null;
@@ -259,6 +261,8 @@ export interface MesureAssistantDto {
   rondesEnEchec: number;
   rondesUtiles: number;
   rondesInutiles: number;
+  propositionsConfirmees: number;
+  propositionsRejetees: number;
   rappels: number;
   rappelsUtiles: number;
   rappelsInutiles: number;
@@ -285,4 +289,37 @@ export interface QuestionAssistantDto {
   relances: number;
   createdAt: string;
   repondueAt: string | null;
+}
+
+/* ------------------------------------------------------------------ Propositions de l'assistant (ADR 0086, point 8) */
+export const PROPOSITION_TITRE_MAX = 200;
+export const PROPOSITION_DESCRIPTION_MAX = 2000;
+const DateJour = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date attendue au format AAAA-MM-JJ.');
+/** Décision sur une proposition : la personne peut corriger le texte et l'échéance en confirmant. */
+export const DecisionPropositionBody = z
+  .object({
+    decision: z.enum(['confirmer', 'rejeter']),
+    titre: z.string().trim().min(1).max(PROPOSITION_TITRE_MAX).optional(),
+    description: z.string().trim().max(PROPOSITION_DESCRIPTION_MAX).optional(),
+    echeance: DateJour.nullable().optional(),
+    note: z.string().trim().max(AVIS_MOTIF_MAX).default(''),
+  })
+  .strict();
+export type DecisionPropositionBody = z.infer<typeof DecisionPropositionBody>;
+export interface PropositionAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  perimetre: string;
+  type: 'action';
+  titre: string;
+  description: string;
+  echeance: string | null;
+  /** Élément qui motive la proposition. */
+  sourceNom: string;
+  etat: 'en_attente' | 'confirmee' | 'rejetee';
+  decidedBy: string;
+  decisionNote: string;
+  /** Élément créé à la confirmation. */
+  objetCree: string | null;
+  createdAt: string;
 }

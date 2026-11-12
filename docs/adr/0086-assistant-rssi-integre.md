@@ -297,3 +297,22 @@ Réalisé sur `claude/assistant-rssi` (migration `059`) :
   que par les tests automatisés. À observer en recette.
 - **Erreur 404 de la console** (essais navigateur) : `/update/client.js`, script de maintenance servi par la passerelle en
   production, absent du mode développement. Sans rapport avec l'assistant ; rien à corriger.
+
+## Addendum du 12/11/2026 — propositions d'action (point 8)
+
+Réalisé sur `claude/assistant-rssi` (migration `060`) :
+
+- **Dépôt** : pendant une ronde, le profil « Mise en œuvre » peut proposer la création d'une action (outil `proposer_action`),
+  avec l'élément qui la motive. Rien n'est écrit dans un registre. Cinq propositions par ronde, trente en attente par profil,
+  une seule en attente par élément. Le profil « Audit interne » ne peut pas proposer d'action (point 14).
+- **Décision** : droit `assistant:modifier`, par le référent des rondes concernées ou un administrateur de l'assistant. La
+  personne corrige au besoin l'intitulé, la description et l'échéance, puis confirme ou rejette, avec un motif facultatif.
+- **Confirmation** : l'action est créée par le service du registre (`createObject`), **sous l'identité et avec les droits de la
+  personne qui décide** ; sans droit d'écriture sur le module ou le périmètre, rien n'est créé et la proposition reste à
+  décider. La justification de l'action porte la mention de l'origine.
+- **Rejet** : la proposition n'est pas redéposée tant que l'élément source n'a pas changé de version.
+- **Retour** : les huit dernières décisions, avec leur motif, sont relues par l'assistant à chaque ronde ; la mesure mensuelle
+  compte propositions confirmées et rejetées.
+
+Reste du point 8 : propositions d'écart, de tâche, d'évaluation d'exigence et de constat d'audit ; notification « proposition
+à décider » (les propositions se lisent pour l'instant sur la page de l'assistant).

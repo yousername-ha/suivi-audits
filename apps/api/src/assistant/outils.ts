@@ -23,6 +23,13 @@ export interface ActionsRonde {
   questionner(perimetre: string, objet: string, question: string): Promise<{ envoye: boolean; detail: string }>;
   memoriser(note: string): Promise<{ enregistre: boolean; detail: string }>;
   proposerMethode(titre: string, contenu: string): Promise<{ enregistre: boolean; detail: string }>;
+  proposerAction(p: {
+    perimetre: string;
+    titre: string;
+    description: string;
+    echeance?: string;
+    source?: string;
+  }): Promise<{ enregistre: boolean; detail: string }>;
 }
 export interface ResultatOutil {
   donnees: unknown;
@@ -379,6 +386,35 @@ export const OUTILS_RONDE: readonly Outil[] = [
     async executer(ctx, a) {
       if (!ctx.ronde) throw new HttpError(403, 'La mémoire ne s’écrit que pendant une ronde.');
       const r = await ctx.ronde.memoriser(a.note);
+      return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'proposer_action',
+    description:
+      'Propose au RSSI la création d’une action dans un périmètre (par exemple une action manquante pour traiter un écart ou un retard constaté). Rien n’est créé : une personne confirmera, corrigera ou rejettera. Ne proposez pas une action qui existe déjà, et pas deux fois pour le même élément.',
+    parametres: z
+      .object({
+        perimetre,
+        titre: z.string().trim().min(5).max(200).describe('Intitulé de l’action, à l’infinitif.'),
+        description: z
+          .string()
+          .trim()
+          .min(10)
+          .max(2000)
+          .describe('Ce qu’il faut faire et pourquoi, en citant ce que vous avez lu.'),
+        echeance: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Échéance suggérée, AAAA-MM-JJ.'),
+        source: z.uuid().optional().describe('Identifiant de l’élément qui motive l’action.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      if (!ctx.ronde) throw new HttpError(403, 'Une proposition ne se dépose que pendant une ronde.');
+      const r = await ctx.ronde.proposerAction(a);
       return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
     },
   }),

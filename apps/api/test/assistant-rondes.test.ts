@@ -757,3 +757,140 @@ describe('assistant : filet de la ronde', () => {
     expect(detail).toMatchObject({ etat: 'terminee', rapport: 'Rapport fictif n° 3.' });
   });
 });
+
+describe('assistant : propositions décidées par une personne', () => {
+  const lancer = async () => {
+    modele.demandes = [];
+    const r = await admin.post(`${base}/rondes`, { profil: 'mise_en_oeuvre' });
+    expect(r.statusCode, r.body).toBe(202);
+    await t.svc.assistantRondes.attendre();
+    return (await admin.get(`${base}/rondes/${(r.json() as RondeAssistantDto).id}`)).json() as RondeAssistantDetailDto;
+  };
+  const consigne = () => String(modele.demandes[0]!.messages[0]!.content);
+  const proposer = (titre: string) => {
+    const comptes: Record<string, unknown>[] = [];
+    modele.script = (d, n) => {
+      if (n > 1) comptes.push(dernierOutil(d)!);
+      return n === 1
+        ? appel('p1', 'proposer_action', {
+            perimetre,
+            titre,
+            description: 'Description fictive : traiter le retard constaté sur l’action fictive.',
+            echeance: '2027-01-31',
+            source: enRetard,
+          })
+        : { role: 'assistant', content: 'Rapport fictif.' };
+    };
+    return comptes;
+  };
+  const actions = async () =>
+    Number(
+      (
+        await t.svc.db.q<{ n: string }>(
+          "SELECT count(*) AS n FROM grc_objects WHERE kind = 'action' AND smsi_id = $1",
+          [perimetre],
+        )
+      ).rows[0]!.n,
+    );
+  const liste = async (a: Agent) =>
+    (await a.get(`${base}/propositions`)).json() as {
+      id: string;
+      etat: string;
+      titre: string;
+      objetCree: string | null;
+    }[];
+
+  it('dépose une proposition sans rien écrire dans le registre, une seule en attente par élément', async () => {
+    const avant = await actions();
+    let comptes = proposer('Relancer le traitement fictif');
+    const ronde = await lancer();
+    expect(comptes[0]).toMatchObject({ enregistre: true });
+    expect(ronde).toMatchObject({ propositions: 1 });
+    expect(ronde.actions).toContain('Proposition d’action déposée : « Relancer le traitement fictif ».');
+    expect(await actions()).toBe(avant);
+    comptes = proposer('Relancer encore le traitement fictif');
+    await lancer();
+    expect(String(comptes[0]!.detail)).toContain('attend déjà une décision');
+    expect(await liste(admin)).toHaveLength(1);
+    // Un autre utilisateur de l'assistant ne voit pas les propositions d'un référent, et ne peut pas décider.
+    expect(await liste(invite)).toEqual([]);
+    const [p] = await liste(admin);
+    expect((await invite.post(`${base}/propositions/${p!.id}/decision`, { decision: 'rejeter' })).statusCode).toBe(403);
+  });
+
+  it('ne redépose pas une proposition rejetée tant que l’élément n’a pas changé, et dit la décision à l’assistant', async () => {
+    const [p] = await liste(admin);
+    const r = await admin.post(`${base}/propositions/${p!.id}/decision`, {
+      decision: 'rejeter',
+      note: 'Note fictive : action déjà suivie ailleurs.',
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toMatchObject({ etat: 'rejetee', objetCree: null });
+    expect((await admin.post(`${base}/propositions/${p!.id}/decision`, { decision: 'confirmer' })).statusCode).toBe(
+      409,
+    );
+
+    let comptes = proposer('Relancer le traitement fictif');
+    await lancer();
+    expect(consigne()).toContain(
+      '« Relancer le traitement fictif » : rejetée (Note fictive : action déjà suivie ailleurs.)',
+    );
+    expect(String(comptes[0]!.detail)).toContain('rejetée et il n’a pas changé');
+
+    // L'élément change de version : une nouvelle proposition redevient possible.
+    const o = (await admin.get(`/api/grc/${perimetre}/objects/${enRetard}`)).json() as {
+      version: number;
+      name: string;
+      data: Record<string, unknown>;
+    };
+    const maj = await admin.put(
+      `/api/grc/${perimetre}/objects/${enRetard}`,
+      { kind: 'action', name: o.name, data: { ...o.data, description: 'Description fictive modifiée.' } },
+      { 'if-match': String(o.version) },
+    );
+    expect(maj.statusCode, maj.body).toBe(200);
+    comptes = proposer('Reprendre le traitement fictif');
+    await lancer();
+    expect(comptes[0]).toMatchObject({ enregistre: true });
+  });
+
+  it('crée l’action à la confirmation, avec les droits et sous l’identité de la personne qui décide', async () => {
+    const p = (await liste(admin)).find((x) => x.etat === 'en_attente')!;
+    // Décideur sans droit d'écriture sur les écarts : rien n'est créé, la proposition reste à décider.
+    await t.svc.db.q("INSERT INTO roles(id, name, permissions) VALUES ('r_decideur', 'Décideur fictif', $1)", [
+      ['assistant:lire', 'assistant:modifier', 'assistant:administrer', 'ecarts:lire'],
+    ]);
+    const decideur = await login(t, await makeUser(t, 'ro_decideur', 'r_decideur'));
+    const avant = await actions();
+    // Refus du service du registre : 404 sans accès au périmètre restreint, 403 sans droit d'écriture.
+    expect([403, 404]).toContain(
+      (await decideur.post(`${base}/propositions/${p.id}/decision`, { decision: 'confirmer' })).statusCode,
+    );
+    expect(await actions()).toBe(avant);
+    expect((await liste(admin)).find((x) => x.id === p.id)).toMatchObject({ etat: 'en_attente' });
+
+    const r = await admin.post(`${base}/propositions/${p.id}/decision`, {
+      decision: 'confirmer',
+      titre: 'Reprendre le traitement fictif (corrigé)',
+    });
+    expect(r.statusCode, r.body).toBe(200);
+    const cree = (r.json() as { objetCree: string }).objetCree;
+    expect(cree).toBeTruthy();
+    expect(await actions()).toBe(avant + 1);
+    const o = (await admin.get(`/api/grc/${perimetre}/objects/${cree}`)).json() as {
+      name: string;
+      data: { justification: string; dueAt: string };
+    };
+    expect(o.name).toBe('Reprendre le traitement fictif (corrigé)');
+    expect(o.data.justification).toContain('proposée par l’assistant RSSI au sujet de « Action fictive en retard »');
+    expect(o.data.dueAt.slice(0, 10)).toBe('2027-01-31');
+    // L'écriture est celle de la personne, pas de l'assistant.
+    const { rows } = await t.svc.db.q<{ username: string }>(
+      'SELECT username FROM audit_log WHERE target = $1 ORDER BY id LIMIT 1',
+      [cree],
+    );
+    expect(rows[0]!.username).toBe('ro_admin');
+    const mesures = (await admin.get(`${base}/mesures`)).json() as Record<string, number>[];
+    expect(mesures[0]).toMatchObject({ propositionsConfirmees: 1, propositionsRejetees: 1 });
+  });
+});
