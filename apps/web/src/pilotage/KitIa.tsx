@@ -72,7 +72,7 @@ export function KitIa() {
         <Text size="sm">
           Kit {d.version} importé par {d.importePar} le{' '}
           {d.importeLe ? new Date(d.importeLe).toLocaleDateString('fr-FR') : ''}. Ses contrôles forment le référentiel «
-          Contrôles IA internes » ; les correspondances proposées se valident dans la page Correspondances.
+          Contrôles IA internes ».
         </Text>
       ) : (
         <Text size="sm">

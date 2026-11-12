@@ -294,7 +294,7 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     await dialog.getByLabel('Motif de la publication').fill('Publication de recette automatisée');
     await dialog.getByRole('button', { name: 'Publier', exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('QA-BIBLIO');
+    await expect(page.getByLabel(`Référentiel ${nom}`, { exact: true })).toContainText('QA-BIBLIO');
     await page.goto('/pilotage/perimetres');
     await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
@@ -571,7 +571,7 @@ test('Pilotage : les standards sont disponibles d’emblée et figés dans la bi
       page.locator('.mantine-Alert-root[data-variant]').filter({ hasText: /non importable|erreur/i }),
     ).toHaveCount(0);
     await page.getByRole('button', { name: `Ajouter ${nom} à la bibliothèque`, exact: true }).click();
-    const ligne = page.getByRole('row').filter({ hasText: nom });
+    const ligne = page.getByLabel(`Référentiel ${nom}`, { exact: true });
     await expect(ligne.getByText('Figé', { exact: true })).toBeVisible();
     // La bibliothèque est figée (ADR 0082) : ni copie ni ajout d'exigence ; la personnalisation se fait dans la copie
     // attribuée à un périmètre.
@@ -579,7 +579,7 @@ test('Pilotage : les standards sont disponibles d’emblée et figés dans la bi
     await expect(
       ligne.getByRole('button', { name: `Créer une copie personnalisable de ${nom}`, exact: true }),
     ).toHaveCount(0);
-    await expect(ligne.getByRole('cell', { name: '1', exact: true }).first()).toBeVisible();
+    await expect(ligne).toContainText('exigences au catalogue');
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
