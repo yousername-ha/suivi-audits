@@ -108,6 +108,7 @@ Source de référence des chiffres/IDs/états :
 - [Guide installation](06_GUIDES/GUIDE_INSTALLATION.md)
 - [Guide depannage](06_GUIDES/GUIDE_DEPANNAGE.md)
 - [Connecter l'assistant RSSI à Mistral, pas à pas](06_GUIDES/GUIDE_ASSISTANT_MISTRAL.md) (non rejoué de bout en bout)
+- [Essayer la branche de l'assistant sur un poste Windows (Docker Desktop)](06_GUIDES/GUIDE_RECETTE_DOCKER_WINDOWS.md) (non rejoué sur Windows)
 - [Faq](06_GUIDES/FAQ.md)
 
 ## 07_HISTORIQUE

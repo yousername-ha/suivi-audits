@@ -213,6 +213,9 @@ jetons consommés, sans le contenu.
 
 ## Annexe A — Serveur de recette depuis la branche
 
+Sur un poste Windows avec Docker Desktop, suivez plutôt le
+[guide de recette pour Windows](GUIDE_RECETTE_DOCKER_WINDOWS.md).
+
 Tant qu'aucune version publiée ne contient l'assistant, les images officielles ne le contiennent pas non plus. Sur un serveur
 de **recette** (jamais la production), il faut récupérer la branche et construire les images sur place, comme le décrit
 [CONTRIBUTING](../../CONTRIBUTING.md) (« Tests de bout en bout ») :
