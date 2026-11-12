@@ -52,8 +52,9 @@ PROJET=suivi-rssi-virtuel$SUFFIXE
 TRAVAIL=/srv/suivi-rssi-virtuel$SUFFIXE
 DONNEES=$TRAVAIL/donnees
 ENV_FICHIER=$TRAVAIL/.env
-# Le service app lit `env_file: .env`, relatif au dépôt : ce fichier de surcharge pointe vers le .env de la pile, sans
-# créer ni modifier le .env du dépôt.
+# Les services app et updater lisent le .env du dépôt : ce fichier de surcharge leur donne celui de la pile, sans écrire
+# dans le .env du dépôt. Docker crée seulement un .env vide (ignoré par Git) comme point de montage s'il n'existe pas ;
+# --arreter le retire quand il est vide et qu'aucune autre pile ne tourne.
 SURCHARGE=$TRAVAIL/compose.rssi-virtuel.yml
 JETON=$DEPOT/tests/e2e/.jeton$SUFFIXE
 URL=https://$ADRESSE
@@ -70,6 +71,9 @@ arreter() {
   if [ -f "$ENV_FICHIER" ]; then compose down -v --remove-orphans >/dev/null 2>&1 || true; fi
   rm -rf "$TRAVAIL"
   rm -f "$JETON"
+  if [ -f "$DEPOT/.env" ] && [ ! -s "$DEPOT/.env" ] && ! compgen -G '/srv/suivi-rssi-virtuel*/.env' >/dev/null; then
+    rm -f "$DEPOT/.env"
+  fi
   echo "Pile du RSSI virtuel ($PROJET) arrêtée, données effacées."
 }
 
@@ -98,7 +102,9 @@ demarrer() {
     -e 's/^RATE_LIMIT_PER_MINUTE=.*/RATE_LIMIT_PER_MINUTE=6000/' \
     .env.example >"$ENV_FICHIER"
   chmod 0600 "$ENV_FICHIER"
-  printf 'services:\n  app:\n    env_file: !override\n      - %s\n' "$ENV_FICHIER" >"$SURCHARGE"
+  # L'exécutant d'exploitation (updater) lit lui aussi le .env du dépôt monté : celui de la pile y est monté en lecture.
+  printf 'services:\n  app:\n    env_file: !override\n      - %s\n  updater:\n    volumes:\n      - %s:%s/.env:ro\n' \
+    "$ENV_FICHIER" "$ENV_FICHIER" "$DEPOT" >"$SURCHARGE"
   if [ -n "$LOCALES" ]; then
     echo "== Images locales déjà construites (étiquette local)"
     local c
