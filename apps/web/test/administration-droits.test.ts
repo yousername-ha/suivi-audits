@@ -157,8 +157,8 @@ describe('entrées de menu : anciennes adresses', () => {
       '/pilotage/configuration',
     ])
       expect([url, plateforme.test(url), systeme.test(url)]).toEqual([url, true, false]);
-    // La configuration des analyses reste une rubrique du menu Risques, pas de l'Administration.
-    for (const url of ['/pilotage/configuration-analyses', '/pilotage/rappels', '/pilotage/risques'])
+    // Les rubriques du menu Risques et Pilotage ne sont pas de l'Administration.
+    for (const url of ['/pilotage/rappels', '/pilotage/risques'])
       expect([url, plateforme.test(url), systeme.test(url)]).toEqual([url, false, false]);
     for (const url of [
       '/systeme',

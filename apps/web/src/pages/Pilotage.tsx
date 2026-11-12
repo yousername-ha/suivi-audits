@@ -1,13 +1,6 @@
 import { Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
-import {
-  type BusinessPolicy,
-  type CfgKind,
-  type GrcKind,
-  type GrcObject,
-  type PilotageRecord,
-  type Module,
-} from '@suivi/shared';
+import { type BusinessPolicy, type GrcKind, type GrcObject, type PilotageRecord, type Module } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { useEffect, useRef, useState } from 'react';
@@ -40,7 +33,6 @@ import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
 import { EtudesEbios } from '../grc/Ebios';
-import { ConfigurationGrc } from '../config-grc/ConfigurationGrc';
 import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
 import { CartesProcessus } from '../processus/CartesProcessus';
@@ -79,11 +71,6 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
     kind: 'governance',
     legacy: 'roles',
     description: 'Attribuez les responsabilités, décisions et moyens.',
-  },
-  opportunites: {
-    kind: 'opportunity',
-    description:
-      'Opportunités de l’article 6.1 (ISO 9001:2015), traitées avec les risques : origine, bénéfice attendu, décision et revue.',
   },
   processus: {
     kind: 'process',
@@ -153,7 +140,6 @@ export function PilotagePage() {
     [editing, setEditing] = useState<GrcObject | null>(null),
     [kind, setKind] = useState<GrcKind>('context'),
     [opened, setOpened] = useState(false),
-    [cfgKind, setCfgKind] = useState<CfgKind | 'modeles'>('scale'),
     [evaluation, setEvaluation] = useState<GrcObject | null>(null),
     [relation, setRelation] = useState<string | null>(null),
     [decision, setDecision] = useState<{
@@ -400,6 +386,7 @@ export function PilotagePage() {
                   onEvaluation={setEvaluation}
                   onAcceptation={(o) => decide(o, 'risk_acceptance')}
                   onRelation={setRelation}
+                  onAjouterTraitement={(risqueId) => create('treatment', { riskRefs: ['object:' + risqueId] })}
                 />
               </>
             )}
@@ -412,38 +399,6 @@ export function PilotagePage() {
                 onCreateRisk={createRisk}
                 onDecision={decide}
               />
-            )}
-            {section === 'traitements' && can('pilotage', 'lire') && (
-              <>
-                <Button onClick={() => create('treatment')}>Ajouter un traitement</Button>
-                <Registry
-                  smsi={smsi}
-                  fixedKind="treatment"
-                  onOpen={open}
-                  onEvaluation={setEvaluation}
-                  onRelation={setRelation}
-                />
-              </>
-            )}
-            {section === 'scenarios' && can('pilotage', 'lire') && (
-              <Registry
-                smsi={smsi}
-                onOpen={open}
-                onCreate={create}
-                onEvaluation={setEvaluation}
-                onRelation={setRelation}
-                choices={[
-                  'business_asset',
-                  'support_asset',
-                  'risk_source',
-                  'feared_event',
-                  'strategic_scenario',
-                  'operational_scenario',
-                ]}
-              />
-            )}
-            {section === 'configuration-analyses' && can('pilotage', 'lire') && (
-              <ConfigurationGrc kind={cfgKind} onKind={setCfgKind} contexte="analyses" />
             )}
             {section === 'carte' && can('cartographie', 'lire') && can('pilotage', 'lire') && (
               <RiskMap smsi={smsi} onOpen={open} />

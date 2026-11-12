@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { PlanTraitementRisque } from './PlanTraitementRisque';
 
 interface Ligne {
   id: string;
@@ -57,12 +58,15 @@ export function RegistreRisques({
   onEvaluation,
   onAcceptation,
   onRelation,
+  onAjouterTraitement,
 }: {
   smsi: string;
   onOpen: (o: GrcObject) => void;
   onEvaluation: (o: GrcObject) => void;
   onAcceptation: (o: GrcObject) => void;
   onRelation: (ref: string) => void;
+  /** Ouvre la création d'un traitement déjà rattaché au risque. */
+  onAjouterTraitement: (risqueId: string) => void;
 }) {
   const can = useCan();
   const [demarche, setDemarche] = useState<string | null>(null),
@@ -71,7 +75,8 @@ export function RegistreRisques({
     [etude, setEtude] = useState<string | null>(null),
     [retard, setRetard] = useState(false),
     [ecart, setEcart] = useState(false),
-    [recherche, setRecherche] = useState('');
+    [recherche, setRecherche] = useState(''),
+    [plan, setPlan] = useState<{ id: string; name: string } | null>(null);
   const params = new URLSearchParams();
   if (demarche) params.set('demarche', demarche);
   if (strategie) params.set('strategie', strategie);
@@ -184,6 +189,14 @@ export function RegistreRisques({
                       <Button size="xs" variant="default" onClick={() => void objet(r.id).then(onOpen)}>
                         Ouvrir
                       </Button>
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Plan d’action de ${r.name}`}
+                        onClick={() => setPlan({ id: r.id, name: r.name })}
+                      >
+                        Plan d’action
+                      </Button>
                       <Button size="xs" variant="default" onClick={() => onRelation('object:' + r.id)}>
                         Liens et preuves
                       </Button>
@@ -203,6 +216,13 @@ export function RegistreRisques({
           </Table>
         </DataTable>
       )}
+      <PlanTraitementRisque
+        smsi={smsi}
+        risque={plan}
+        onClose={() => setPlan(null)}
+        onAjouter={onAjouterTraitement}
+        onOpen={onOpen}
+      />
     </>
   );
 }

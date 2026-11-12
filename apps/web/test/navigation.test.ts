@@ -1,8 +1,9 @@
 /* Menu à sept familles : aucune rubrique du Pilotage perdue ni doublée, droits et adresses d'origine conservés. */
-import type { Action, Module } from '@suivi/shared';
+import { ETAPES_PARCOURS, type Action, type Module } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { PILOTAGE_DANS_ADMINISTRATION } from '../src/administration-droits';
 import { deplacerDansMenu, FAMILLES, famillesVisibles, localiser, ordonnerMenu, placer } from '../src/navigation';
+import { resoudreDestination } from '../src/parcours-iso/destinations';
 import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
 const tout = () => true;
@@ -36,12 +37,8 @@ const INVENTAIRE = [
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
-  'risques|risques|opportunites|/pilotage/opportunites|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
-  'risques|risques|traitements|/pilotage/traitements|pilotage|lire',
-  'risques|risques|scenarios|/pilotage/scenarios|pilotage|lire',
-  'risques|risques|configuration-analyses|/pilotage/configuration-analyses|pilotage|lire',
   'conformite|referentiels|bibliotheque|/pilotage/bibliotheque|conformite|lire',
   'conformite|applicabilite|dda-iso|/pilotage/dda-iso|audit|lire',
   'conformite|applicabilite|dda-annexe-a|/pilotage/dda-annexe-a|audit|lire',
@@ -233,5 +230,10 @@ describe('ordre du menu choisi par la personne', () => {
     expect(famillesVisibles(() => false, ordre).map((f) => f.famille.id)).toEqual(['actions']);
     // L'ordre ne change ni les adresses ni la famille désignée par une adresse.
     expect(localiser('/pilotage/perimetres')?.famille.id).toBe('organisation');
+  });
+
+  it('chaque étape du parcours ISO pointe vers une rubrique qui existe encore', () => {
+    for (const e of ETAPES_PARCOURS)
+      for (const s of e.sousActions) expect([s.id, resoudreDestination(s.vers) !== null]).toEqual([s.id, true]);
   });
 });

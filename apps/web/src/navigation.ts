@@ -101,17 +101,7 @@ export const FAMILLES: Famille[] = [
   {
     id: 'risques',
     label: 'Risques',
-    destinations: [
-      dest('risques', 'Gestion des risques', [
-        p('risques'),
-        p('opportunites'),
-        p('etudes'),
-        p('carte'),
-        p('traitements'),
-        p('scenarios'),
-        p('configuration-analyses'),
-      ]),
-    ],
+    destinations: [dest('risques', 'Gestion des risques', [p('risques'), p('etudes'), p('carte')])],
   },
   {
     id: 'conformite',

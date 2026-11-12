@@ -5,7 +5,10 @@ import { PILOTAGE_NAV } from '../pilotage-navigation';
 
 export const CHEMIN_PARCOURS = '/pilotage/parcours-iso';
 const rubriques = new Map(PILOTAGE_NAV.flatMap((g) => g.items.map((i) => [i.id, i] as const)));
-const LIBELLES_CHEMIN: Record<string, string> = { '/documents': 'Documents et liens' };
+const LIBELLES_CHEMIN: Record<string, string> = {
+  '/documents': 'Documents et liens',
+  '/parametres/configuration-grc': 'Configuration GRC',
+};
 
 export interface DestinationResolue {
   /** Adresse de la rubrique (sans paramètre). */

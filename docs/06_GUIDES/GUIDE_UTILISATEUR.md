@@ -513,7 +513,7 @@ et le cas TEST-021.
 Objectif : EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action.
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/pilotage/risques ; /pilotage/scenarios ; /pilotage/traitements**.
+Accès : **/pilotage/risques ; /pilotage/etudes** (les pages « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » sont retirées, ADR 0090).
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
@@ -521,7 +521,7 @@ un environnement de recette autorisé pour les opérations sensibles.
 1. Ouvrir Registre des risques ; sélectionner une méthode publiée adaptée au périmètre.
 2. Renseigner les étapes/champs exigés ; EBIOS RM suit cinq ateliers et les scénarios/sources/biens associés.
 3. Apprécier le risque brut et résiduel selon la méthode, justifier et valider selon les droits.
-4. Relier les mesures et actions de traitement ; consulter les évaluations antérieures.
+4. Dans le Registre, « Plan d’action » d’un risque : mesures en place pour l’atténuer et actions rattachées (« Générer une action » depuis un traitement) ; consulter les évaluations antérieures.
 5. Après réalisation d’un traitement, déclencher une réévaluation explicite ; aucun résiduel automatiquement diminué.
 
 Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
