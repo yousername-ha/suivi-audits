@@ -142,6 +142,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   disparaît ; la page `/assistant` devient le suivi des rondes, des propositions et des questions, et un lien direct vers
   une conversation l'ouvre dans le panneau. Aucun changement du service. _(Session « Assistant RSSI intégré plateforme »
   (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Chargement d'un jeu de données externe** (instance de test vide) : `sudo ./scripts/dev/charger-jeu.sh <archive.zip>` charge un
+  jeu fourni par la personne (périmètre, processus, objectifs, fournisseurs, risques, actions, écarts, documents, liens,
+  contexte de l'assistant) par l'API publique, avec des dates relatives au jour du chargement. Nouvelle commande
+  `suivi charger-jeu`. Le dépôt ne contient aucun jeu. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Recette locale en une commande** (`sudo ./scripts/dev/recette-locale.sh`, poste de test seulement) : construit la branche,
   démarre la pile sur `https://localhost` avec le relais de l'assistant et crée le compte administrateur sans assistant
   d'installation. Nouvelle commande `suivi recette-locale`, refusée hors de `localhost` et dès qu'un administrateur existe ;
