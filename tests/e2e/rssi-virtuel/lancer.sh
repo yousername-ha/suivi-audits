@@ -7,6 +7,12 @@
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --garder         pile vierge laissée démarrée pour l'agent (pas de test)
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --arreter        arrête la pile gardée et efface ses données
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --pile 3 --garder   pile numérotée, pour plusieurs agents en parallèle
+#   sudo tests/e2e/rssi-virtuel/lancer.sh --images-locales --pile 3 --garder   images déjà construites (étiquette local)
+#
+# --images-locales : derrière un proxy TLS, `compose build` ne sait pas transmettre le secret BuildKit `build_ca`. Les
+# images se construisent alors une fois avec `docker buildx build --secret id=build_ca,src=<autorité> --network host
+# -f docker/<api|web|updater>.Dockerfile -t ghcr.io/yousername-ha/suivi-audits-<api|web|updater>:local --load .`, et
+# chaque pile les réutilise sans reconstruction ni téléchargement.
 #
 # Sans --pile, la pile écoute sur https://localhost (port 443, toutes les interfaces). Avec --pile N (1 à 99), elle a
 # son propre projet Compose, son propre dossier de données et sa propre adresse de bouclage, https://127.0.0.(10+N) :
@@ -18,6 +24,7 @@ IMAGE_PLAYWRIGHT=mcr.microsoft.com/playwright:v1.56.1-noble
 VERSION=""
 MODE=complet
 PILE=""
+LOCALES=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,7 +32,8 @@ while [ $# -gt 0 ]; do
     --garder) MODE=garder; shift ;;
     --arreter) MODE=arreter; shift ;;
     --pile) PILE="$2"; shift 2 ;;
-    -h | --help) sed -n '2,13p' "$0"; exit 0 ;;
+    --images-locales) LOCALES=1; VERSION=local; shift ;;
+    -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
     *) echo "Option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -44,6 +52,9 @@ PROJET=suivi-rssi-virtuel$SUFFIXE
 TRAVAIL=/srv/suivi-rssi-virtuel$SUFFIXE
 DONNEES=$TRAVAIL/donnees
 ENV_FICHIER=$TRAVAIL/.env
+# Le service app lit `env_file: .env`, relatif au dépôt : ce fichier de surcharge pointe vers le .env de la pile, sans
+# créer ni modifier le .env du dépôt.
+SURCHARGE=$TRAVAIL/compose.rssi-virtuel.yml
 JETON=$DEPOT/tests/e2e/.jeton$SUFFIXE
 URL=https://$ADRESSE
 [ "$(id -u)" = 0 ] || { echo "À lancer avec sudo (dossier de données $TRAVAIL)." >&2; exit 1; }
@@ -51,6 +62,7 @@ URL=https://$ADRESSE
 compose() {
   local fichiers=(-f docker-compose.yml)
   [ -z "$VERSION" ] && fichiers+=(-f docker-compose.build.yml)
+  [ -f "$SURCHARGE" ] && fichiers+=(-f "$SURCHARGE")
   docker compose -p "$PROJET" --env-file "$ENV_FICHIER" "${fichiers[@]}" "$@"
 }
 
@@ -86,7 +98,15 @@ demarrer() {
     -e 's/^RATE_LIMIT_PER_MINUTE=.*/RATE_LIMIT_PER_MINUTE=6000/' \
     .env.example >"$ENV_FICHIER"
   chmod 0600 "$ENV_FICHIER"
-  if [ -z "$VERSION" ]; then
+  printf 'services:\n  app:\n    env_file: !override\n      - %s\n' "$ENV_FICHIER" >"$SURCHARGE"
+  if [ -n "$LOCALES" ]; then
+    echo "== Images locales déjà construites (étiquette local)"
+    local c
+    for c in api web updater; do
+      docker image inspect "ghcr.io/yousername-ha/suivi-audits-$c:local" >/dev/null 2>&1 ||
+        { echo "Image suivi-audits-$c:local absente : la construire d'abord (voir l'en-tête)." >&2; exit 1; }
+    done
+  elif [ -z "$VERSION" ]; then
     echo "== Construction des images de la branche ($(git rev-parse --short HEAD))"
     compose build
   else
