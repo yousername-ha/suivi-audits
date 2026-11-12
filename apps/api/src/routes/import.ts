@@ -1,7 +1,7 @@
 /* Import et export du format legacy (docs/legacy/IMPORT-LEGACY.md).
    1. Dépôt et validation   2. Simulation (aucune écriture)   3. Confirmation et mode   4. Application en une transaction
    (sauvegarde préalable, fichier brut chiffré, journal d'audit, diffusion temps réel)   5. Annulation possible. */
-import { ImportApplyQuery, ImportMode } from '@suivi/shared';
+import { ImportApplyQuery, ImportMode, legacyKeyModule, type Rights } from '@suivi/shared';
 import {
   deepEqual,
   ENVELOPE_FORMAT,
@@ -12,11 +12,13 @@ import {
   moduleLabel,
   planImport,
   readLegacyFile,
+  type ImportReport,
   type Json,
   type JsonObject,
 } from '@suivi/shared/legacy';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { PorteeLecture } from '../acces/portee.js';
 import type { Session } from '../auth.js';
 import { sql } from 'kysely';
 import type { Client, Kdb } from '../db/db.js';
@@ -53,6 +55,46 @@ function readUpload(buf: unknown) {
     if (e instanceof LegacyFileError) throw new HttpError(422, e.message, { details: e.details });
     throw e;
   }
+}
+
+/** Rapport vu par une personne : seuls les modules qu'elle peut lire y figurent (le mode fusion décrit aussi les modules déjà
+    présents), totaux recalculés. */
+export function redactReport(r: ImportReport, rights: Rights): ImportReport {
+  const lisible = (k: string) => {
+    const m = legacyKeyModule(k);
+    return !m || rights.can(m, 'lire');
+  };
+  const modules = r.modules.filter((m) => lisible(m.module));
+  const totals = { created: 0, updated: 0, unchanged: 0, deleted: 0 };
+  for (const m of modules)
+    for (const c of m.collections) {
+      totals.created += c.created;
+      totals.updated += c.updated;
+      totals.unchanged += c.unchanged;
+      totals.deleted += c.deleted;
+    }
+  return {
+    ...r,
+    modules,
+    totals,
+    affected: r.affected.filter(lisible),
+    brokenRefs: r.brokenRefs.filter((b) => lisible(b.path.replace(/^\$\./, '').split(/[.[]/)[0] ?? '')),
+  };
+}
+
+/** Clés du fichier importé : un seul analyseur pour le dépôt et le téléchargement (BOM retiré dans les deux cas). */
+function clesDuFichier(plain: Buffer): string[] {
+  let o: unknown;
+  try {
+    o = JSON.parse(plain.toString('utf8').replace(/^\uFEFF/, ''));
+  } catch {
+    throw new HttpError(422, 'Fichier importé illisible : téléchargement refusé.');
+  }
+  const rec = o as Record<string, unknown> | null;
+  const data = rec && typeof rec.data === 'object' && rec.format ? rec.data : rec;
+  if (!data || typeof data !== 'object' || Array.isArray(data))
+    throw new HttpError(422, 'Fichier importé illisible : téléchargement refusé.');
+  return Object.keys(data);
 }
 
 function plan(
@@ -150,11 +192,20 @@ export const importRoutes = [
     raw: true,
     bodyLimit: importLimit,
     query: SimulateQuery,
-    handler: async ({ svc, req, body, query }) => {
+    handler: async ({ svc, s, req, body, query }) => {
+      const rights = (s as Session).user.rights;
       const file = readUpload(body);
-      const current = (await svc.legacy.recompose())?.data ?? null;
-      const { report } = plan(current, file, query.mode, query.module);
-      await svc.modules.assertKeys(query.module ? [query.module] : Object.keys(file.data));
+      const cles = query.module ? [query.module] : Object.keys(file.data);
+      // Comme l'application : module activé, puis lecture des modules concernés ; remplacer exige aussi la suppression.
+      await svc.modules.assertKeys(cles);
+      assertLegacyKeys(rights, cles, 'lire');
+      if (query.mode === 'replace') svc.auth.requirePermission(s as Session, 'import_export:supprimer');
+      // Le plan se calcule sur l'état rédigé pour le lecteur (porte de lecture, ADR 0083) : un module qu'il ne peut pas lire
+      // n'entre pas dans la comparaison, en plus de la rédaction du rapport.
+      const courant = await PorteeLecture.pour(svc.grc, (s as Session).user).etatHistoriqueSiPresent();
+      const current = courant?.data ?? null;
+      const { report: complet } = plan(current, file, query.mode, query.module);
+      const report = redactReport(complet, rights);
       return {
         filename: fileName(req),
         size: (body as unknown as Buffer).length,
@@ -272,7 +323,15 @@ export const importRoutes = [
     summary: 'Historique des imports',
     tags: ['Import legacy'],
     access: 'import_export:lire',
-    handler: async ({ svc }) => resumes(svc.db.k).orderBy('id', 'desc').limit(200).execute(),
+    handler: async ({ svc, s }) => {
+      const rights = (s as Session).user.rights;
+      const rows = await resumes(svc.db.k).select('report').orderBy('id', 'desc').limit(200).execute();
+      // Totaux recalculés sur les seuls modules que la personne peut lire.
+      return rows.map(({ report, ...r }) => ({
+        ...r,
+        totals: redactReport(report as unknown as ImportReport, rights).totals,
+      }));
+    },
   }),
   route({
     method: 'GET',
@@ -281,11 +340,12 @@ export const importRoutes = [
     tags: ['Import legacy'],
     access: 'import_export:lire',
     params: BatchParams,
-    handler: async ({ svc, params }) => {
+    handler: async ({ svc, s, params }) => {
       const r = await resumes(svc.db.k).select('report').where('id', '=', params.id).executeTakeFirst();
       if (!r) throw new HttpError(404, 'Import introuvable.');
       await svc.modules.assertKeys(r.modules);
-      return r;
+      const rep = redactReport(r.report as unknown as ImportReport, (s as Session).user.rights);
+      return { ...r, modules: rep.affected, totals: rep.totals, report: rep };
     },
   }),
   route({
@@ -307,15 +367,18 @@ export const importRoutes = [
         `import:${params.id}`,
       );
       if (sha256hex(plain) !== r.sha256) throw new HttpError(500, "Échec du contrôle d'intégrité du fichier importé.");
-      // Le fichier source contient des données métier : droit d'exporter chacun de ses modules.
-      let parsed: Record<string, unknown> = {};
-      try {
-        const o = JSON.parse(plain.toString('utf8')) as Record<string, unknown>;
-        parsed = (o && typeof o.data === 'object' && o.format ? o.data : o) as Record<string, unknown>;
-      } catch {
-        /* fichier refusé à l'import : déjà sans contenu exploitable */
-      }
-      assertLegacyKeys((s as Session).user.rights, Object.keys(parsed ?? {}), 'exporter');
+      // Le fichier source contient des données métier : droit d'exporter chacun de ses modules, ceux du fichier comme ceux
+      // enregistrés à l'application. Un fichier illisible n'est jamais servi.
+      const lot = await svc.db.k
+        .selectFrom('import_batches')
+        .select('modules')
+        .where('id', '=', params.id)
+        .executeTakeFirst();
+      assertLegacyKeys(
+        (s as Session).user.rights,
+        [...new Set([...clesDuFichier(plain), ...((lot?.modules as string[] | undefined) ?? [])])],
+        'exporter',
+      );
       await svc.db.audit((s as Session).user, ip, 'import.file_download', `import:${params.id}`);
       reply
         .header('Content-Type', 'application/json; charset=utf-8')

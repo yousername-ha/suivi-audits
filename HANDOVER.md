@@ -1,6 +1,12 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md)** (clés de sécurité FIDO2 / WebAuthn,
+> **Reprise la plus récente : [11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
+> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive). Précédente :
+> **[10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre
+> modules, [ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md) acceptée le 11/11/2026, garde-fous d'architecture, routes
+> découpées) ; avant elle : **[06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe, lots A à D) ; avant elle : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
+> référentiel propre au périmètre, application pour le suivi de conformité, [ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)
+> proposée, migration `052`) ; avant elle : **[30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md)** (clés de sécurité FIDO2 / WebAuthn,
 > ADR 0079, PR ouverte vers `claude-suivi-smsi` ; § 6 : module RETEX d'incident sur `claude/retex-incidents`,
 > [ADR 0080](docs/adr/0080-habilitation-deleguee-contribution-retex.md) acceptée), qui complète celle du [29/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-29.md)
 > (version 6.0.0 préparée, PR de sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire) et celle du

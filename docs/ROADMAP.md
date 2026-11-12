@@ -90,7 +90,7 @@ Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, 
 
 *Backlog : aucune exigence détaillée pour l'instant (section « Pilotage » à compléter).*
 
-Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `accessReviews`, `roles`, `reviews`, `recurring`, `evidences`.
+Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `roles`, `reviews`, `recurring`, `evidences`.
 - Processus, objectifs et indicateurs (valeurs, cibles, historique).
 - Déclaration d'applicabilité (DdA) liée à l'Annexe A.
 - Fournisseurs : contrôles, fréquences, certifications, évaluations.
@@ -98,23 +98,16 @@ Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `a
 
 ## Phase 3 — Conformité étendue, risques et crise
 
-Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `crrc`, `invest`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`. La cartographie passe alors de l'état legacy aux tables pour ces objets, sans changer les cartes (`CARTO-02`), et la nature des enjeux devient un champ de l'enjeu (`CARTO-12`).
+Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`. La cartographie passe alors de l'état legacy aux tables pour ces objets, sans changer les cartes (`CARTO-02`), et la nature des enjeux devient un champ de l'enjeu (`CARTO-12`).
 - ReCyF et analyse d'écarts (GAP) multi-référentiels.
 - IA : registre des systèmes, évaluations, plan, politiques.
-- **CRRC** :
-  - `CRRC-01` menu organisé en catalogue d'offres (modèle générique, la sauvegarde étant la première offre) ;
-  - `CRRC-02` onglet « Convention et offre » (convention versionnée et échéance, résumé technique, volumes, tarifs, export PDF et Word) ;
-  - `CRRC-03` statut unique par établissement et par offre (Non délivré, Non configuré, En run), avec historique, en remplacement du suivi par ressource ;
-  - `CRRC-04` activité des établissements regroupée par département (deux premiers chiffres du FINESS) ; réalisé sous forme de liste, la carte géographique n'est pas reprise.
-- **Investissements** :
-  - `INV-01` filtres cumulables en haut de la liste, sous forme de puces, mémorisés dans l'adresse, et vues enregistrées ;
-  - `INV-02` page « Prospection » (tableau, Kanban par étape, conversion en investissement).
+- ~~**CRRC** et **Investissements** (`CRRC-01` à `CRRC-04`, `INV-01`, `INV-02`)~~ : modules retirés le 11/11/2026 ([ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)), exigences abandonnées.
 - **Incidents, PCA/PRA, événements** :
   - `INC-01` deux menus distincts : Incidents (registre, crise, retours d'expérience, déclarations) et PCA/PRA (plans, RTO et RPO, exercices, échéances) ;
   - `INC-02` suivi mensuel des événements et alertes cyber et IT (grille, import CSV, camemberts, évolution sur 12 mois) ;
   - `INC-03` alimentation automatique du compte rendu COMSEC (Word).
 - Cellule de crise et main courante.
-- Le moteur d'export Word et PDF, nécessaire à `CRRC-02` et `INC-03`, est avancé de la phase 4 à la phase 3.
+- Le moteur d'export Word et PDF, nécessaire à `INC-03`, est avancé de la phase 4 à la phase 3.
 
 ## Phase 4 — Exports, SSO, fin de l'outil historique
 

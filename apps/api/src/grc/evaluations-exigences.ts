@@ -87,18 +87,11 @@ export class GrcEvaluationsExigences {
     if (corps.validatedAt !== null) await this.g.permission(user, 'pilotage', 'administrer');
     return this.g.db.tx(async (c, k) => {
       await k.selectFrom('grc_smsis').select('id').where('id', '=', smsi).forUpdate().execute();
-      const effectif = (await this.g.effectiveFrameworks(smsi, c)).find(
-        (e) => e.frameworkId === frameworkId && e.enabled,
-      );
-      if (!effectif) throw new HttpError(404, 'Référentiel non rattaché et actif dans ce périmètre.');
-      const def = (
-        await k
-          .selectFrom('lib_framework_versions')
-          .select('definition')
-          .where('framework_id', '=', frameworkId)
-          .where('version', '=', effectif.version)
-          .executeTakeFirst()
-      )?.definition as FrameworkDefinition | undefined;
+      // Référentiel appliqué et actif (ADR 0082) : exigences de la copie effective du périmètre.
+      const effective = await this.g.copies.effective(smsi, frameworkId, c);
+      if (!effective) throw new HttpError(404, 'Référentiel non appliqué ou inactif dans ce périmètre.');
+      const effectif = effective.effectif;
+      const def: FrameworkDefinition | undefined = effective.definition;
       const exigence = def?.requirements.find((r) => r.id === requirementId);
       if (!def || !exigence) throw new HttpError(404, 'Exigence inconnue.');
       if (corps.applicability === 'exclue' && exclusionInterdite(def, exigence.domain))

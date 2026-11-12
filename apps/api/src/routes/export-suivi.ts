@@ -1,12 +1,11 @@
 /* Exports Excel de l'outil de suivi, par rubrique (reprise des exports de l'outil historique). */
 import { z } from 'zod';
-import type { JsonObject } from '@suivi/shared/legacy';
+import { PorteeLecture } from '../acces/portee.js';
 import type { Session } from '../auth.js';
 import { classeur } from '../export/classeur.js';
 import { GROUPES, feuillesDuGroupe } from '../export/rubriques.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
-import { redactLegacy } from './suivi.js';
 
 const jourFr = (iso: string) => iso.split('-').reverse().join('/');
 
@@ -29,11 +28,11 @@ export const exportSuiviRoutes = [
     query: z.object({ groupe: z.string().regex(/^[a-z]{2,8}$/), mode: z.enum(['std', 'pro']).default('std') }),
     handler: async ({ svc, s, ip, query, reply }) => {
       const u = (s as Session).user;
-      const r = await svc.legacy.recompose();
+      // État historique rédigé par la porte de lecture (ADR 0083) : les rubriques illisibles sont exportées vides.
+      const r = await PorteeLecture.pour(svc.grc, u).etatHistoriqueSiPresent();
       if (!r) throw new HttpError(404, 'Aucune donnée.');
       const aujourdhui = new Date().toISOString().slice(0, 10);
-      // Les rubriques que la personne n'a pas le droit de lire sont exportées vides, comme dans l'interface.
-      const etat = redactLegacy(r.data as JsonObject, u.rights);
+      const etat = r.data;
       const feuilles = feuillesDuGroupe(query.groupe, { etat, aujourdhui });
       if (!feuilles) throw new HttpError(404, 'Groupe d’export inconnu.');
       const titre =

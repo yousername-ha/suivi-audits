@@ -119,6 +119,20 @@ describe('lecture d’un fichier legacy', () => {
 });
 
 describe('planification d’un import', () => {
+  it('ignore sans avertissement les clés des modules retirés (CRRC, investissements)', () => {
+    const f = {
+      ...fixture(),
+      crrc: { offers: [{ id: 'X' }] },
+      invest: { baseYear: 2026, lines: [{ id: 'INV-1' }] },
+      accessReviews: [{ id: 'RA-1', app: 'App fictive' }],
+    };
+    const { next, report } = planImport(seed(), f, { mode: 'init', sourceSchema: 14, envelope: false });
+    expect(['crrc', 'invest', 'accessReviews'].some((k) => k in next)).toBe(false);
+    expect(report.warnings.join(' ')).not.toMatch(/crrc|invest|CRRC/i);
+    expect(report.unknownPaths).toEqual(['$.suppliers[].MFA-001']);
+    expect(report.modules.map((m) => m.module)).not.toContain('crrc');
+  });
+
   it('Initialiser sur l’état initial vide reproduit le fichier (au schéma 15)', () => {
     const f = fixture();
     expect(isEmptyState(seed())).toBe(true);

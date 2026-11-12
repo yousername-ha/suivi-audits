@@ -65,19 +65,6 @@ export const COLLECTIONS: readonly CollectionSpec[] = [
     ],
   },
   {
-    key: 'accessReviews',
-    table: 'suivi_access_reviews',
-    cols: [
-      { f: 'id', c: 'id', t: 'text' },
-      { f: 'app', c: 'app', t: 'text' },
-      { f: 'supplier', c: 'supplier', t: 'text' },
-      { f: 'month', c: 'month', t: 'text' },
-      { f: 'freq', c: 'freq', t: 'num' },
-      { f: 'source', c: 'source', t: 'text' },
-      { f: 'comment', c: 'comment', t: 'text' },
-    ],
-  },
-  {
     key: 'appGaps',
     table: 'suivi_app_gaps',
     cols: [

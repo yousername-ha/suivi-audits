@@ -231,6 +231,17 @@ export interface Fonctions {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface GrcFrameworkCopyVersions {
+  smsi_id: string;
+  framework_id: string;
+  version: number;
+  source_version: number;
+  definition: ColumnType<JsonValue, string, string>;
+  reason: string;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface GrcFrameworkVersions {
   id: Generated<string>;
   framework_id: string;
@@ -387,6 +398,10 @@ export interface GrcScopeFrameworks {
   enabled: Generated<boolean>;
   attached_by: string;
   attached_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  status: Generated<"preparation" | "applique">;
+  status_by: string | null;
+  status_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  copy_version: number | null;
 }
 
 export interface GrcSeries {
@@ -456,36 +471,6 @@ export interface ImportBatches {
   undone_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   undone_by: string | null;
   version: Generated<number>;
-}
-
-export interface InvestLines {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  company: Generated<string>;
-  priority: Generated<string>;
-  type: Generated<string>;
-  description: Generated<string>;
-  n0: Generated<number>;
-  n1: Generated<number>;
-  n2: Generated<number>;
-  comment: Generated<string>;
-  alt: Generated<string>;
-  account: Generated<string>;
-  perimeter: Generated<string>;
-  status: Generated<string>;
-  nature: Generated<string>;
-  renewal: Generated<string>;
-  notice: Generated<number>;
-  supplier: Generated<string>;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface InvestSettings {
-  id: Generated<number>;
-  base_year: number;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface JournalTechniqueConfig {
@@ -796,19 +781,6 @@ export interface StateHistory {
   import_batch_id: number | null;
 }
 
-export interface SuiviAccessReviews {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  app: string | null;
-  supplier: string | null;
-  month: string | null;
-  freq: number | null;
-  source: string | null;
-  comment: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
 export interface SuiviAppGaps {
   seq: Generated<number>;
   position: number;
@@ -884,101 +856,6 @@ export interface SuiviCriseScenarios {
   ref: string | null;
   description: string | null;
   items: ColumnType<JsonValue | null, string | null, string | null>;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcAlertes {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  alert_date: string | null;
-  severity: string | null;
-  est: string | null;
-  res: string | null;
-  message: string | null;
-  status: string | null;
-  incident: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcEtablissements {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  name: string | null;
-  finess: string | null;
-  status: string | null;
-  admin_contact: string | null;
-  admin_email: string | null;
-  tech_contact: string | null;
-  tech_email: string | null;
-  prestataire: string | null;
-  alerts: string | null;
-  signed: string | null;
-  service_date: string | null;
-  renewal: string | null;
-  capacity_gb: number | null;
-  retention_days: number | null;
-  offers: ColumnType<JsonValue | null, string | null, string | null>;
-  scopes: ColumnType<JsonValue | null, string | null, string | null>;
-  notes: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcOffres {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  name: string | null;
-  status: string | null;
-  partner: string | null;
-  description: string | null;
-  perimeters: ColumnType<JsonValue | null, string | null, string | null>;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcRessources {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  est: string | null;
-  name: string | null;
-  tech: string | null;
-  freq: string | null;
-  retention: number | null;
-  notes: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcRestaurations {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  restore_date: string | null;
-  est: string | null;
-  res: string | null;
-  scope: string | null;
-  type: string | null;
-  status: string | null;
-  owner: string | null;
-  duration: string | null;
-  dest: string | null;
-  path: string | null;
-  conflict: string | null;
-  point: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
-export interface SuiviCrrcSauvegardes {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  res: string | null;
-  run_date: string | null;
-  type: string | null;
-  status: string | null;
-  volume_gb: number | null;
-  duration_min: number | null;
   extra: ColumnType<JsonValue, string | undefined, string>;
 }
 
@@ -1594,6 +1471,7 @@ export interface DB {
   droits_ressources: DroitsRessources;
   fonction_membres: FonctionMembres;
   fonctions: Fonctions;
+  grc_framework_copy_versions: GrcFrameworkCopyVersions;
   grc_framework_versions: GrcFrameworkVersions;
   grc_links: GrcLinks;
   grc_members: GrcMembers;
@@ -1611,8 +1489,6 @@ export interface DB {
   group_roles: GroupRoles;
   groups: Groups;
   import_batches: ImportBatches;
-  invest_lines: InvestLines;
-  invest_settings: InvestSettings;
   journal_technique_config: JournalTechniqueConfig;
   lib_framework_promotions: LibFrameworkPromotions;
   lib_framework_versions: LibFrameworkVersions;
@@ -1639,18 +1515,11 @@ export interface DB {
   sessions: Sessions;
   settings: Settings;
   state_history: StateHistory;
-  suivi_access_reviews: SuiviAccessReviews;
   suivi_app_gaps: SuiviAppGaps;
   suivi_clausier_evals: SuiviClausierEvals;
   suivi_crise_cellules: SuiviCriseCellules;
   suivi_crise_contacts: SuiviCriseContacts;
   suivi_crise_scenarios: SuiviCriseScenarios;
-  suivi_crrc_alertes: SuiviCrrcAlertes;
-  suivi_crrc_etablissements: SuiviCrrcEtablissements;
-  suivi_crrc_offres: SuiviCrrcOffres;
-  suivi_crrc_ressources: SuiviCrrcRessources;
-  suivi_crrc_restaurations: SuiviCrrcRestaurations;
-  suivi_crrc_sauvegardes: SuiviCrrcSauvegardes;
   suivi_dda: SuiviDda;
   suivi_fournisseurs: SuiviFournisseurs;
   suivi_groupes: SuiviGroupes;

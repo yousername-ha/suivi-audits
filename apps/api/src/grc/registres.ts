@@ -187,6 +187,44 @@ export class GrcRegistres {
     if (roleSuffit(await this.roleDe(user, reg.id, objetId, c), besoin)) return true;
     return this.parModule(user, reg, besoin, module, action, c);
   }
+  /** Autorité d'attribuer sur un registre qui ne repose pas sur le rôle de gestionnaire donné automatiquement à son créateur :
+      administrateur, droit d'administrer le module, ou rôle de gestionnaire attribué par quelqu'un d'autre. */
+  private async attributionAttribuee(
+    user: SessionUser,
+    reg: RegistreRow,
+    module: Module,
+    c?: Client,
+  ): Promise<boolean> {
+    if (await this.g.isAdmin(user, c)) return true;
+    const attribue = await this.k(c)
+      .selectFrom('droits_ressources as d')
+      .select('d.id')
+      .where('d.resource_type', '=', 'registre')
+      .where('d.resource_id', '=', reg.id)
+      .where('d.role', '=', 'gestionnaire')
+      // Le rôle donné automatiquement au créateur est inscrit par lui-même : un rôle qu'on s'est donné ne compte pas.
+      .where((eb) =>
+        eb.not(
+          eb.and([
+            eb('d.subject_type', '=', 'utilisateur'),
+            eb('d.subject_id', '=', user.id),
+            eb('d.granted_by', '=', user.username),
+          ]),
+        ),
+      )
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.subject_type', '=', 'utilisateur'), eb('d.subject_id', '=', user.id)]),
+          eb.and([
+            eb('d.subject_type', '=', 'groupe'),
+            eb('d.subject_id', 'in', eb.selectFrom('user_groups').select('group_id').where('user_id', '=', user.id)),
+          ]),
+        ]),
+      )
+      .executeTakeFirst();
+    if (attribue) return true;
+    return this.parModule(user, reg, 'gerer', module, 'administrer', c);
+  }
   /** 404 si l'utilisateur ne peut même pas lire (aucune fuite d'existence) ; 403 s'il lit mais ne peut pas plus. */
   async exiger(
     user: SessionUser,
@@ -624,20 +662,26 @@ export class GrcRegistres {
   }
 
   /** Impact d'un changement de périmètres : éléments, liens et droits concernés, sans rien écrire. */
-  private async impact(reg: RegistreRow, avant: string[], apres: string[], k: Kdb) {
-    const nom = async (ids: string[]) =>
-      ids.length
-        ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).orderBy('name').execute()
-        : [];
+  private async impact(reg: RegistreRow, avant: string[], apres: string[], k: Kdb, user: SessionUser, c: Client) {
+    let autres = 0;
+    const nom = async (ids: string[]) => {
+      const { visibles, autres: n } = await this.perimetresLisibles(k, ids, user, c);
+      autres += n;
+      return visibles;
+    };
     const n = sql<number>`count(*)::int`.as('n');
     const elements = k
       .selectFrom('grc_objects')
       .select(n)
       .where('registre_id', '=', reg.id)
       .where('archived', '=', false);
+    const ajoutes = await nom(apres.filter((x) => !avant.includes(x)));
+    const retires = await nom(avant.filter((x) => !apres.includes(x)));
     return {
-      ajoutes: await nom(apres.filter((x) => !avant.includes(x))),
-      retires: await nom(avant.filter((x) => !apres.includes(x))),
+      ajoutes,
+      retires,
+      /** Périmètres ajoutés ou retirés que l'appelant ne peut pas lire : comptés, jamais nommés. */
+      autresPerimetres: autres,
       elements: (await elements.executeTakeFirstOrThrow()).n,
       series: (await elements.where('kind', '=', 'task_series').executeTakeFirstOrThrow()).n,
       liens: (
@@ -658,6 +702,24 @@ export class GrcRegistres {
       ).n,
     };
   }
+  /** Périmètres nommés pour l'appelant : seuls ceux qu'il peut lire sont nommés, les autres ne sont que comptés. */
+  private async perimetresLisibles(k: Kdb, ids: string[], user: SessionUser, c: Client) {
+    const noms = ids.length
+      ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).orderBy('name').execute()
+      : [];
+    const admin = await this.g.isAdmin(user, c);
+    const visibles: { id: string; name: string }[] = [];
+    for (const p of noms) {
+      if (!admin)
+        try {
+          await this.g.access(p.id, user, false, c);
+        } catch {
+          continue;
+        }
+      visibles.push(p);
+    }
+    return { visibles, autres: noms.length - visibles.length };
+  }
   /** Commande atomique : le périmètre de référence reste ; les éléments héritent aussitôt, sans écriture individuelle. */
   async setPerimetres(id: string, input: RegistrePerimetresBody, expected: number, user: SessionUser, ip: string) {
     const b = RegistrePerimetresBody.parse(input);
@@ -676,7 +738,7 @@ export class GrcRegistres {
       const admin = await this.g.isAdmin(user, c);
       // Rattacher un registre à un périmètre exige de pouvoir au moins le consulter.
       if (!admin) for (const p of apres.filter((x) => !avant.includes(x))) await this.g.access(p, user, false, c);
-      const impact = await this.impact(reg, avant, apres, k);
+      const impact = await this.impact(reg, avant, apres, k, user, c);
       if (b.apercu) return { apercu: true as const, impact, version: reg.version };
       if (!b.reason) throw new HttpError(422, 'Un motif de 10 caractères au moins est exigé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
@@ -779,6 +841,19 @@ export class GrcRegistres {
       if (cible.archived) throw new HttpError(409, 'Registre cible archivé.');
       if (cible.id === source.id) throw new HttpError(422, 'L’élément est déjà dans ce registre.');
       if (cible.kind !== famille) throw new HttpError(422, 'Le registre cible n’est pas de la même famille.');
+      // ADR 0067 §1/§3 : attribuer des droits ou restreindre un élément exige une attribution réelle. Un déplacement ne doit
+      // pas donner cette autorité à qui ne l'avait pas, ni rendre l'élément restreint : le rôle de gestionnaire donné
+      // automatiquement au créateur d'un registre ne suffit pas pour cela.
+      const module = GRC_MODULES[o.kind];
+      const restreint = cible.restricted && !source.restricted;
+      const attributionSource = await this.peut(user, source, o.id, 'gerer', c, module, 'administrer');
+      const gagneAttribution =
+        !attributionSource && (await this.peut(user, cible, null, 'gerer', c, module, 'administrer'));
+      if ((restreint || gagneAttribution) && !(await this.attributionAttribuee(user, cible, module, c)))
+        throw new HttpError(
+          403,
+          'Déplacement refusé : il étendrait vos droits d’attribution ou rendrait l’élément restreint.',
+        );
       const membres = [o];
       if (o.kind === 'task_series')
         for (const r of await objets(k)
@@ -790,14 +865,13 @@ export class GrcRegistres {
       const ids = membres.map((m) => m.id);
       const refs = ids.map((i) => 'object:' + i);
       const nouveau = cible.referenceId;
-      const nomPerimetres = async (reg: RegistreRow) =>
-        await k
-          .selectFrom('registre_perimetres as p')
-          .innerJoin('grc_smsis as s', 's.id', 'p.smsi_id')
-          .select(['s.id', 's.name'])
-          .where('p.registre_id', '=', reg.id)
-          .orderBy('s.name')
-          .execute();
+      const nomPerimetres = async (reg: RegistreRow) => {
+        const ids = (
+          await k.selectFrom('registre_perimetres').select('smsi_id').where('registre_id', '=', reg.id).execute()
+        ).map((p) => p.smsi_id);
+        const { visibles, autres } = await this.perimetresLisibles(k, ids, user, c);
+        return { perimetres: visibles, autresPerimetres: autres };
+      };
       // Liens qui touchent les éléments déplacés (ids et refs ne sont jamais vides : ils contiennent l'élément lui-même).
       const touchesElements = (eb: ExpressionBuilder<DB, 'grc_links'>) =>
         eb.or([eb('source_id', 'in', ids), eb('source_ref', 'in', refs), eb('target_ref', 'in', refs)]);
@@ -809,6 +883,7 @@ export class GrcRegistres {
         .execute();
       const incompatibles: ImpactDeplacement['liensIncompatibles'] = [];
       const incompatiblesIds: string[] = [];
+      let liensMasques = 0;
       for (const l of liens) {
         const autre = refs.includes(l.source_ref) ? l.target_ref : l.source_ref;
         if (!autre.startsWith('object:') || ids.includes(autre.slice(7))) continue;
@@ -818,8 +893,15 @@ export class GrcRegistres {
           .where('id', '=', autre.slice(7))
           .executeTakeFirst();
         if (x && x.smsi_id !== nouveau) {
-          incompatibles.push({ ref: autre, type: l.type, nom: x.name });
           incompatiblesIds.push(l.id);
+          // Le nom de l'autre extrémité n'est donné que si l'appelant peut la lire ; sinon elle est seulement comptée.
+          try {
+            await this.g.resolve(x.smsi_id, autre, user, c);
+            incompatibles.push({ ref: autre, type: l.type, nom: x.name });
+          } catch (e) {
+            if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
+            liensMasques++;
+          }
         }
       }
       const problemes: string[] = [];
@@ -836,19 +918,20 @@ export class GrcRegistres {
           }
       }
       const impact: ImpactDeplacement = {
-        depuis: { id: source.id, name: source.name, perimetres: await nomPerimetres(source) },
-        vers: { id: cible.id, name: cible.name, perimetres: await nomPerimetres(cible) },
+        depuis: { id: source.id, name: source.name, ...(await nomPerimetres(source)) },
+        vers: { id: cible.id, name: cible.name, ...(await nomPerimetres(cible)) },
         elements: membres.length,
         referenceChange: nouveau !== o.smsiId,
-        liensConserves: liens.length - incompatibles.length,
+        liensConserves: liens.length - incompatiblesIds.length,
         liensIncompatibles: incompatibles,
+        liensMasques,
         problemes,
       };
       if (b.apercu) return { apercu: true as const, impact, version: o.version };
       if (!b.reason) throw new HttpError(422, 'Un motif de 10 caractères au moins est exigé.');
       if (o.version !== expected) throw new HttpError(412, 'La fiche a changé. Rechargez avant de confirmer.');
       if (problemes.length) throw new HttpError(422, 'Déplacement impossible : ' + problemes.join(' '));
-      if (incompatibles.length && !b.retirerLiensIncompatibles)
+      if (incompatiblesIds.length && !b.retirerLiensIncompatibles)
         throw new HttpError(409, 'Des liens ne peuvent pas suivre le déplacement : confirmez leur retrait.');
       if (incompatiblesIds.length) await k.deleteFrom('grc_links').where('id', 'in', incompatiblesIds).execute();
       let deplace = o;

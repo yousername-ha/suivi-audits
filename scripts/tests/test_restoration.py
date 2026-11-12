@@ -284,6 +284,42 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         return subprocess.run(['bash', str(self.root / 'scripts/backup.sh'), str(destination)],
                               input='', text=True, capture_output=True, env={**self.env, **(env or {})}, timeout=20)
 
+    def test_backup_refuses_links_in_caddy_data_and_stays_restorable_otherwise(self):
+        """Le dossier caddy/data est modifiable par le frontal : un lien rendrait la sauvegarde non restaurable. Elle est refusée
+        (rien n'est publié) ; avec des fichiers ordinaires seulement, l'archive passe le contrôle de la restauration."""
+        caddy = self.root / 'data/caddy/data'
+        (caddy / 'pki').mkdir(parents=True)
+        (caddy / 'pki/root.crt').write_text('certificat-fictif')
+        (caddy / 'lien').symlink_to('/etc/passwd')
+        destination = self.root / 'archives-caddy'
+        refus = self.sauvegarder(destination)
+        self.assertNotEqual(refus.returncode, 0)
+        self.assertIn('caddy/data', refus.stderr + refus.stdout)
+        self.assertEqual(list(destination.glob('*.tar.age')) if destination.exists() else [], [])
+        (caddy / 'lien').unlink()
+        ok = self.sauvegarder(destination)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        archive = next(destination.glob('*.tar.age'))
+        self.events.unlink(missing_ok=True)
+        result = self.run_restore(archive)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_gateway_stopped_for_manual_restore_but_kept_for_web_update(self):
+        """Restauration manuelle : le frontal est arrêté (il écrit dans caddy/data). Parcours de mise à jour web : il reste en
+        service pour la page de maintenance et n'est pas recréé."""
+        destination = self.root / 'archives-frontal'
+        self.assertEqual(self.sauvegarder(destination).returncode, 0)
+        archive = next(destination.glob('*.tar.age'))
+        for web, attendu in (('', True), ('1', False)):
+            self.events.unlink(missing_ok=True)
+            result = self.run_restore(archive, False, env={'RESTAURER_SANS_CONFIRMATION': '1', 'SUIVI_MAJ_WEB': web})
+            self.assertEqual(result.returncode, 0, result.stderr)
+            appels = [ligne for ligne in self.events.read_text().splitlines() if ligne.startswith('[')]
+            arret = [a for a in appels if '"stop"' in a][0]
+            self.assertEqual('"gateway"' in arret, attendu, arret)
+            if not attendu:
+                self.assertFalse([a for a in appels if '"up"' in a and '"gateway"' in a], appels)
+
     def test_archive_produced_by_backup_script_is_compatible(self):
         destination = self.root / 'archives'
         backup = self.sauvegarder(destination)

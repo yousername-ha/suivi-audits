@@ -123,6 +123,9 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '049_retex_contributions.sql',
         '050_tableaux_de_bord_partages.sql',
         '051_perimetres_organisation_fournisseur.sql',
+        '052_referentiels_copies_perimetre.sql',
+        '053_retrait_crrc_investissements.sql',
+        '054_retrait_revues_acces.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();

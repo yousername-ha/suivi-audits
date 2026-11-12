@@ -79,14 +79,12 @@ export const FAMILLES: Famille[] = [
         p('fournisseurs-perimetre'),
         p('evaluations-clausier'),
       ]),
-      dest('revues-acces', 'Revues des accès', [p('revues-acces')]),
       dest('plans', 'Plans annuels', [
         p('plans-calendrier'),
         p('plans-planning'),
         p('plans-formation'),
         p('plans-sensibilisation'),
       ]),
-      dest('budget', 'Budget', [p('investissements')]),
     ],
   },
   {
@@ -163,7 +161,7 @@ export const FAMILLES: Famille[] = [
     id: 'resilience',
     label: 'Résilience',
     destinations: [
-      dest('continuite', 'Continuité d’activité', [p('bia'), p('continuite'), p('exercices')]),
+      dest('continuite', 'Continuité d’activité', [p('continuite'), p('exercices')]),
       dest('incidents', 'Incidents et crise', [
         p('incidents-registre'),
         p('incidents-qualifier'),
@@ -171,16 +169,6 @@ export const FAMILLES: Famille[] = [
         p('crise-cellule'),
         p('crise-contacts'),
         p('crise-scenarios'),
-      ]),
-      dest('sauvegardes', 'Sauvegardes (CRRC)', [
-        p('crrc-ensemble'),
-        p('crrc-etablissements'),
-        p('crrc-offres'),
-        p('crrc-tableau'),
-        p('crrc-ressources'),
-        p('crrc-restaurations'),
-        p('crrc-alertes'),
-        p('crrc-rapports'),
       ]),
     ],
   },

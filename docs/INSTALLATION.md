@@ -13,7 +13,7 @@ Ce guide part d'un serveur vide et ne suppose aucune connaissance de Linux ni de
 - Le texte `<comme_ceci>` est à remplacer par votre valeur, **chevrons compris**. Par exemple, `ssh <utilisateur>@<adresse_ip_du_serveur>` devient `ssh admin@10.0.12.40`.
 - ⚠️ signale une action risquée : lisez l'avertissement **avant** de lancer la commande.
 
-Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge, jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
+Ce guide est **vérifié automatiquement** : à chaque modification de l'application, l'intégration continue rejoue ses commandes sur un serveur Ubuntu vierge et sur des machines virtuelles vierges Debian 12 et Rocky Linux 10 (variantes `dnf` du guide, SELinux en mode `enforcing`), jusqu'à la création de l'administrateur, l'import d'un fichier de l'ancien outil, une sauvegarde et sa restauration. Un guide inexact bloque la publication. Les commentaires `<!-- ci: … -->`, invisibles sur GitHub, servent à ce contrôle.
 
 ---
 
@@ -43,7 +43,7 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 
 | ☐ | Élément | Détail |
 |---|---|---|
-| ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12** ou **Ubuntu 24.04 LTS**, installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
+| ☐ | **Un serveur Linux** (machine virtuelle) | **Debian 12**, **Ubuntu 24.04 LTS** ou **Rocky Linux 10** ([ADR 0085](adr/0085-support-de-rocky-linux-10.md)), installation minimale, en 64 bits (x86_64). Demandez à l'équipe infrastructure « une VM Linux pour une application Docker ». |
 | ☐ | **Dimensionnement** | 2 processeurs, 4 Go de mémoire, 30 Go de disque, plus la place des sauvegardes (prévoir 10 Go). Avec l'antivirus facultatif (ClamAV) : 8 Go de mémoire. Une mise à jour demande, en espace libre, deux fois la taille de la base plus 2 Go. |
 | ☐ | **Un emplacement pour les données** | Un dossier du serveur, par défaut `/srv/suivi-audits/donnees`. Les sauvegardes chiffrées de l'application sont rangées dans son sous-dossier `sauvegardes/` : demandez à l'équipe infrastructure de les **copier hors du serveur** (sauvegarde externalisée), **sans** le sous-dossier `cles-sauvegarde/` (étape 6.6). |
 | ☐ | **Un compte sur ce serveur** avec droits d'administration (`sudo`) | L'équipe infrastructure vous fournit l'adresse IP, l'identifiant et le mot de passe. |
@@ -57,7 +57,7 @@ Cochez chaque ligne avant de passer à l'étape 1. Les demandes aux autres équi
 
 | Destination | Port | Usage |
 |---|---|---|
-| `deb.debian.org`, `security.debian.org` (Debian) ou `archive.ubuntu.com`, `security.ubuntu.com` (Ubuntu) | TCP 80 et 443 | Mises à jour du système |
+| `deb.debian.org`, `security.debian.org` (Debian), `archive.ubuntu.com`, `security.ubuntu.com` (Ubuntu) ou `mirrors.rockylinux.org` et un miroir Rocky, `dl.fedoraproject.org` (Rocky : dépôt EPEL, pour l'outil `age`) | TCP 80 et 443 | Mises à jour du système |
 | `download.docker.com` | TCP 443 | Installation de Docker |
 | `github.com` | TCP 443 | Téléchargement de l'application et de ses nouvelles versions |
 | `ghcr.io`, `pkg-containers.githubusercontent.com` | TCP 443 | Images de l'application |
@@ -94,21 +94,45 @@ Une fois démarrée, l'application elle-même n'a **aucun accès à Internet** :
 
 **2.1 Mettre à jour le système.** La commande peut prendre plusieurs minutes. Si `sudo` demande votre mot de passe, saisissez-le (il ne s'affiche pas).
 
+**Debian ou Ubuntu :**
+
 <!-- ci: instead: sudo apt-get update -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
 **Résultat attendu** : la commande se termine sans ligne commençant par `E:` (erreur). Les lignes `W:` (avertissements) sont sans gravité.
 
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-instead: sudo dnf makecache -->
+```bash
+sudo dnf upgrade -y
+```
+**Résultat attendu** : la commande se termine par `Terminé !` (ou `Complete!`) sans ligne `Error`.
+
+> ⚠️ Si la liste des paquets mis à jour contient `kernel-core`, un **nouveau noyau** a été installé : **redémarrez le serveur maintenant** (`sudo reboot`), puis reconnectez-vous au bout de 2 minutes avant de continuer. Sans ce redémarrage, les modules réseau du noyau en cours ne correspondent plus à ceux installés et **Docker (étape 3) ne démarre pas** (erreur `iptables … RULE_APPEND failed`). Vérification : `sudo dnf needs-restarting -r` répond `No core libraries or services have been updated` (ou `Reboot should not be necessary`) quand aucun redémarrage n'est nécessaire.
+
 > Sur Ubuntu, un écran violet « **Daemons using outdated libraries** » peut s'afficher : appuyez sur **Tab** jusqu'à `<Ok>`, puis **Entrée**.
 
 **2.2 Installer git** (téléchargement de l'application) et les outils de base :
 
+**Debian ou Ubuntu :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt install -y git curl ca-certificates ufw
 ```
 **Résultat attendu** : la dernière ligne ne contient pas `E:`.
+
+**Rocky Linux 10** (le dépôt EPEL fournit l'outil `age` des sauvegardes) :
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y git curl ca-certificates firewalld kernel-modules-extra epel-release && sudo dnf install -y age python3
+```
+**Résultat attendu** : la commande se termine sans ligne `Error`. Laissez **SELinux en mode `enforcing`** (état par défaut de Rocky) : Docker CE n'étiquette pas les conteneurs et l'application fonctionne sans l'assouplir (`getenforce` doit répondre `Enforcing`).
 
 **2.3 L'heure du serveur** est **indispensable** : les codes de double authentification en dépendent. La commande d'installation (étape 5) la vérifie et active la synchronisation si besoin. Pour la contrôler vous-même :
 
@@ -122,23 +146,36 @@ timedatectl
 
 > ⚠️ Autorisez **toujours le port 22 en premier**. Si vous activez le pare-feu sans lui, vous perdez immédiatement la connexion au serveur, et il faudra l'intervention de l'équipe infrastructure.
 
+**Debian ou Ubuntu (`ufw`) :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw allow 22/tcp
 ```
 **Résultat attendu** : `Rules updated` (et `Rules updated (v6)`).
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw allow 80/tcp && sudo ufw allow 443/tcp
 ```
 **Résultat attendu** : `Rules updated`, quatre fois.
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo ufw --force enable
 ```
 **Résultat attendu** : `Firewall is active and enabled on system startup`.
+
+**Rocky Linux 10 (`firewalld`) :** le service autorise déjà `ssh` ; ajoutez le web, puis activez-le.
+
+<!-- ci: rocky-run -->
+```bash
+sudo systemctl enable --now firewalld && sudo firewall-cmd --permanent --add-service=ssh --add-service=http --add-service=https && sudo firewall-cmd --reload
+```
+**Résultat attendu** : `success` à chaque commande `firewall-cmd`.
 
 ---
 
@@ -148,13 +185,17 @@ Docker fait tourner l'application dans des « conteneurs » isolés (voir le [gl
 
 **3.1 Ajouter la clé de signature de Docker :**
 
+**Debian ou Ubuntu :**
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 ```
 **Résultat attendu** : aucun message.
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 . /etc/os-release && sudo curl -fsSL "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc && sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
@@ -163,6 +204,7 @@ sudo install -m 0755 -d /etc/apt/keyrings
 **3.2 Déclarer le dépôt de Docker :**
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 . /etc/os-release && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$ID $VERSION_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list
 ```
@@ -171,10 +213,25 @@ sudo install -m 0755 -d /etc/apt/keyrings
 **3.3 Installer Docker :**
 
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 **Résultat attendu** : la dernière ligne ne contient pas `E:`.
+
+**Rocky Linux 10 :** déclarez le dépôt officiel de Docker pour RHEL (sa clé de signature est importée à la première installation), puis installez Docker.
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y dnf-plugins-core && sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+```
+**Résultat attendu** : le dépôt `docker-ce-stable` est ajouté, sans ligne `Error`.
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+**Résultat attendu** : la commande se termine sans ligne `Error`. Si `dnf` affiche l'empreinte de la clé de Docker et demande de l'accepter, comparez-la avec celle publiée sur la page d'installation de Docker pour RHEL, puis répondez `y`.
 
 **3.4 Démarrer Docker, et le lancer automatiquement au démarrage du serveur :**
 
@@ -515,7 +572,7 @@ La commande vérifie les références logiques entre objets (processus, objectif
 
 ## 11. Mettre en place les sauvegardes
 
-Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), les secrets (clé de chiffrement des documents) **et** l'autorité de certification interne, lus dans le dossier des données. Elle est elle-même chiffrée avec [age](https://github.com/FiloSottile/age) pour **deux clés** : celle du serveur et une **clé de secours** que le RSSI garde hors du serveur ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md)). Aucune sauvegarde n'est jamais produite en clair. Chaque sauvegarde laisse un rapport dans `/srv/suivi-audits/donnees/etat/` : **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
+Une sauvegarde contient la base (suivi, comptes, documents chiffrés, journal), les secrets (clé de chiffrement des documents) **et** l'autorité de certification interne, lus dans le dossier des données. Elle est elle-même chiffrée avec [age](https://github.com/FiloSottile/age) pour **deux clés** : celle du serveur et une **clé de secours** que le RSSI garde hors du serveur ([ADR 0071](adr/0071-sauvegardes-chiffrees-avec-age.md)). Aucune sauvegarde n'est jamais produite en clair. Avant de publier l'archive, `backup.sh` lui applique le même contrôle que la restauration (structure, secrets, nom) puis la relit avec la clé du serveur ; si le contrôle échoue, ou si `caddy/data` contient un lien ou un fichier spécial (ce dossier est modifiable par le frontal), la sauvegarde est refusée et aucune archive n'est laissée. Le contrôle réextrait une copie dans le dossier temporaire : prévoir de la place pour deux exemplaires du dump. Chaque sauvegarde laisse un rapport dans `/srv/suivi-audits/donnees/etat/` : **Administration**, onglet **Système**, affiche la date de la dernière sauvegarde réussie et une **alerte au-delà de 48 h**.
 
 > ⚠️ Sans la clé du serveur **ni** la clé de secours, les sauvegardes sont **illisibles**, définitivement. Sans les sauvegardes, une panne du serveur fait **tout perdre**.
 
@@ -551,15 +608,16 @@ La recherche de nouvelle version est, elle aussi, automatique (au démarrage, pu
 
 > ⚠️ La restauration **remplace** toutes les données actuelles par celles de la sauvegarde. Juste après l'installation, rien n'est perdu. Plus tard, faites ce test sur un **serveur de test**, jamais sur le serveur en service.
 
-**Depuis l'application** : **Administration**, **Certificats et opérations**, carte « Archives disponibles ». Sur la ligne de l'archive, **Vérifier** contrôle son empreinte, son déchiffrement et sa structure sans rien modifier. Une fois la vérification réussie, **Restaurer**, puis tapez `RESTAURER` pour confirmer. L'exécutant fait d'abord une sauvegarde de sécurité, puis restaure ; la session est fermée : reconnectez-vous. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
+**Depuis l'application** : **Administration**, **Certificats et opérations**, carte « Archives disponibles ». Sur la ligne de l'archive, **Vérifier** contrôle son empreinte, son déchiffrement et sa structure sans rien modifier. Une fois la vérification réussie, **Restaurer**, puis tapez `RESTAURER` pour confirmer et saisissez un **code de double authentification** (usage unique). L'exécutant fait d'abord une sauvegarde de sécurité, puis restaure ; la session est fermée : reconnectez-vous. Notez la date de ce test dans **Paramètres**, section **Sauvegardes** : l'application signale quand le prochain test est dû.
 
 **Sur un autre serveur, avec la clé de secours** (perte du serveur et de sa clé). C'est le seul cas qui demande des commandes : installez l'application sur un serveur neuf (étapes 2 à 8), copiez-y l'archive et son fichier `.sha256`, ainsi que le fichier de la clé de secours sorti du coffre-fort, puis installez les outils de restauration :
 
 <!-- ci: run -->
+<!-- ci: rocky-run -->
 ```bash
-sudo apt install -y age python3
+if command -v apt > /dev/null; then sudo apt install -y age python3; else sudo dnf install -y epel-release && sudo dnf install -y age python3; fi
 ```
-**Résultat attendu** : la dernière ligne ne contient pas `E:`.
+**Résultat attendu** : la dernière ligne ne contient ni `E:` ni `Error`.
 
 Les commandes ci-dessous sont rejouées par la CI sur la sauvegarde faite par le serveur lui-même ; sur un autre serveur, ajoutez `BACKUP_KEY_FILE=<fichier de la clé de secours>` après `sudo`. Faites d'abord une sauvegarde en ligne de commande, dans le dossier de l'étape 11.2 :
 
@@ -694,12 +752,12 @@ Priorité : le marqueur `secrets/tls-web/mode` (sauvegardé avec le couple, il n
 
 Le certificat/chaîne PEM et la clé PEM non chiffrée sont contrôlés ensemble (format, validité, hôte, clé publique et chaîne). La clé est scellée avec Vault en base, déchiffrée seulement par la CLI hôte, écrite dans `DATA_DIR/secrets/tls-web` (uid Caddy 1001, fichiers 0400) et incluse dans les sauvegardes chiffrées. Son contenu n'est pas rendu dans l'interface, l'API de lecture, les notifications ou l'audit ; il est effacé de la demande terminée/annulée. Ne pas copier de clé dans les journaux, arguments CLI ou fichiers d'état publics. Conserver les permissions et les sauvegardes externalisées.
 
-L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellement servi avec l'hôte attendu et la santé. Un échec rétablit le couple/mode antérieur ; une interruption du retour arrière exige la reprise manuelle ci-dessus. Les métadonnées de simple observation (sujet, émetteur, validité, empreinte) ne constituent pas une attestation de confiance PKI. Une expiration à trente jours ou moins déclenche une alerte dans l'interface. Une restauration réattribue aussi les droits des clés TLS sauvegardées avant redémarrage.
+L'exécutant valide Caddy, recrée le frontal, vérifie le certificat réellement servi avec l'hôte attendu et la santé. Un échec rétablit le couple/mode antérieur ; une interruption du retour arrière exige la reprise manuelle ci-dessus. Les métadonnées de simple observation (sujet, émetteur, validité, empreinte) ne constituent pas une attestation de confiance PKI. Une expiration à trente jours ou moins déclenche une alerte dans l'interface. Une restauration réattribue aussi les droits des clés TLS sauvegardées avant redémarrage. Après une restauration, la clé de secours des sauvegardes et l'adresse du site en service sur le serveur font foi : à la première passe de l'exécutant, l'application est réalignée dessus (actions d'audit `sauvegarde.cle_secours_realignee` et `exploitation.adresse_site_realignee`), de sorte qu'une clé de secours remplacée avant la sauvegarde restaurée ne redevient pas destinataire des archives suivantes. Les rotations et changements d'adresse approuvés ensuite s'appliquent normalement.
 
 
 ### 11.8 Envoi de courriels
 
-Aucune étape d'installation supplémentaire : l'envoi de courriels (message de test et alertes d'exploitation au contact technique) se règle entièrement dans l'application, sous Administration, Configuration système, Courriel ([ADR 0049](adr/0049-courriel-et-sortie-reseau-optionnelle.md)). Le conteneur de l'API n'a toujours aucun accès à Internet : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui se connecte au serveur SMTP, sous un compte sans privilège, avec les paramètres saisis dans l'interface. Il doit donc pouvoir joindre le relais SMTP depuis le serveur ; si votre pare-feu le bloque, le message de test échoue avec une explication. L'authentification prend en charge PLAIN et LOGIN ; XOAUTH2 (Exchange Online avec authentification moderne) n'est pas pris en charge.
+Aucune étape d'installation supplémentaire : l'envoi de courriels (message de test et alertes d'exploitation au contact technique) se règle entièrement dans l'application, sous Administration, Configuration système, Courriel ([ADR 0049](adr/0049-courriel-et-sortie-reseau-optionnelle.md)). Le conteneur de l'API n'a toujours aucun accès à Internet : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui se connecte au serveur SMTP, sous un compte sans privilège, avec les paramètres saisis dans l'interface. Il doit donc pouvoir joindre le relais SMTP depuis le serveur ; si votre pare-feu le bloque, le message de test échoue avec une explication. L'authentification prend en charge PLAIN et LOGIN ; XOAUTH2 (Exchange Online avec authentification moderne) n'est pas pris en charge. Le mot de passe du compte SMTP est scellé et ne vaut que pour le relais pour lequel il a été saisi : changer le serveur, le port, le chiffrement, le compte ou l'autorité de certification le supprime (le journal d'audit garde l'action `courriel.mot_de_passe_invalide`), il faut alors le ressaisir avant de tester l'envoi.
 
 **Notifications par courriel** ([ADR 0058](adr/0058-notifications-metier.md)). Les notifications métier (échéance d'une action, réévaluation d'un risque, rapprochements à valider) peuvent aussi partir par courriel, **aucune étape d'installation de plus** : qui les reçoit, par groupe, par rôle ou par compte, se règle dans l'application (Administration, Plateforme, Destinataires des notifications ; chaque personne règle les siennes dans Mon compte). Tant que le courriel n'est pas activé et configuré, l'interface le dit (« Courriel non configuré, rien n'est envoyé ») et aucune demande n'est mise en file. Quand il l'est, le même exécutant d'exploitation envoie ces courriels, au plus 20 par passage (une minute environ) : une rafale s'écoule en quelques passages, et une demande restée en attente plus de trois jours est abandonnée. Un courriel ne contient que le type de la notification, un titre court et l'adresse de la rubrique « Rappels » (jamais de donnée métier) ; le lien reprend l'adresse du site (`SITE_ADDRESS`, déjà renseignée à l'installation). Un échec d'envoi n'empêche jamais la notification d'apparaître dans l'application et se lit dans la carte « Destinataires des notifications ».
 
@@ -720,11 +778,19 @@ Le poivre ([ADR 0072](adr/0072-poivre-des-mots-de-passe.md)) est défini à l'é
 
 Retirées par la migration `037_retrait_environnement.sql` (décision du 25/10/2026, [ADR 0046](adr/0046-retrait-du-catalogue-environnement.md)) : les échelles et matrices se publient dans Configuration GRC. La sauvegarde automatique de la mise à jour précède la suppression.
 
+### Modules CRRC et Investissements (retirés)
+
+Retirés par la migration `053_retrait_crrc_investissements.sql` (décision du 11/11/2026, [ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes, restaurations, alertes et offres du module CRRC et le plan d’investissement (rubrique Budget) disparaissent, avec leurs droits. **Suppression définitive des données** : la sauvegarde automatique de la mise à jour précède la migration et reste le seul retour arrière. Si ces données doivent être conservées, les exporter avant la mise à jour (Exports Excel de la version précédente) ; la version qui retire ces modules n’en propose plus d’export. Un fichier de l’outil historique qui contient les clés `crrc` ou `invest` reste importable : ces clés sont écartées sans rien dire.
+
+### Module Revues des accès (retiré)
+
+Retiré par la migration `054_retrait_revues_acces.sql` (décision du 11/11/2026, [ADR 0087](adr/0087-retrait-du-module-revues-des-acces.md)) : le registre des revues d’accès des applications (page Pilotage → Organisation) disparaît avec ses données. Elles se suivent par une **tâche récurrente** du Pilotage. **Suppression définitive des données** : la sauvegarde automatique de la mise à jour précède la migration et reste le seul retour arrière ; pour garder une trace, exporter la rubrique Excel des revues avant la mise à jour. L’export de la revue des accès **des comptes** (Administration, onglet Utilisateurs) est inchangé.
+
 ### Mise à jour depuis l’application
 
 L’installation Compose normale démarre désormais `gateway` (frontal HTTPS stable), `web` (interface interne), `app`, `db`, `init` et `updater` (exécutant privilégié). Aucun cron ni fichier de configuration supplémentaire n’est nécessaire pour la mise à jour intégrée. Une installation existante reçoit ces services lors de sa première mise à niveau vers une version qui les contient ; la procédure serveur ci-dessous reste disponible pour ce premier passage et pour le dépannage.
 
-Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version numérotée est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. **Aucun identifiant n’est monté par défaut dans l’exécutant** ([ADR 0061](adr/0061-mise-a-jour-web-renforcee.md)) : le dépôt public est lu en HTTPS et les images publiques sans connexion. Pour un dépôt ou un registre privé, ajouter dans `.env` `UPDATER_SSH_DIR=/root/.ssh` (clé de déploiement en lecture seule déclarée sur le dépôt) et/ou `UPDATER_DOCKER_CONFIG=/root/.docker` (jeton de lecture `read:packages`, après `sudo docker login ghcr.io`) : ils sont alors montés **en lecture seule**. Lors de la mise à jour vers cette version, une installation qui dépend encore d’une connexion au registre `ghcr.io` ou d’une clé de déploiement (dépôt non lisible en HTTPS) les conserve automatiquement ; le script l’annonce. Les retirer de `.env` dès qu’ils ne servent plus. L’API GitHub publique est essayée en premier et accepte les publications stables uniquement ; si le dépôt est privé, les étiquettes numériques et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. Ce dernier chemin peut proposer une préversion **numérotée** comme celle de la section 12.0 ; les suffixes `-beta`/`-dev` restent refusés. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
+Chaque utilisateur connecté voit un bandeau fin dès qu’une nouvelle version numérotée est disponible : version installée, version disponible, lien vers les nouveautés. Le contrôle est automatique au démarrage puis toutes les six heures. **Aucun identifiant n’est monté par défaut dans l’exécutant** ([ADR 0061](adr/0061-mise-a-jour-web-renforcee.md)) : le dépôt public est lu en HTTPS et les images publiques sans connexion. Pour un dépôt ou un registre privé, ajouter dans `.env` `UPDATER_SSH_DIR=/root/.ssh` (clé de déploiement en lecture seule déclarée sur le dépôt) et/ou `UPDATER_DOCKER_CONFIG=/root/.docker` (jeton de lecture `read:packages`, après `sudo docker login ghcr.io`) : ils sont alors montés **en lecture seule**. Lors de la mise à jour vers cette version, une installation qui dépend encore d’une connexion au registre `ghcr.io` ou d’une clé de déploiement (dépôt non lisible en HTTPS) les conserve automatiquement ; le script l’annonce. Les retirer de `.env` dès qu’ils ne servent plus. L’API GitHub publique est essayée en premier et accepte les publications stables uniquement. Le repli sur les étiquettes git n’a lieu que si le déploiement est **déclaré privé** (`UPDATER_SSH_DIR` dans `.env`) et que l’API répond « refusé » ou « absent » (401/404) : une limite de débit (403/429) ou un dépôt public injoignable est une erreur de vérification, signalée comme telle. Dans ce cas, les étiquettes numériques et la présence des trois artefacts sont contrôlées par la clé de déploiement et le registre. **Le canal est lié à la révision signée** : le fichier `.github/publication.json` de cette révision doit porter la version cible et le canal `stable` ; sinon l’installation est refusée (« Canal de publication non autorisé »), par le menu comme par `sudo ./scripts/mettre-a-jour.sh` (cible par défaut ou explicite). Une préversion du canal `development` (section 12.0) ne s’installe que si le serveur le demande explicitement en ajoutant `UPDATE_CHANNEL=development` dans `.env` ; les suffixes `-beta`/`-dev` restent refusés. Une panne réseau conserve la dernière information connue et est signalée, sans prétendre que le serveur est à jour.
 
 Dans **Configuration système → Mises à jour et versions**, un compte ayant le **rôle système Administrateur** peut vérifier manuellement puis confirmer en tapant **METTRE À JOUR** et en saisissant un **code de double authentification** (6 chiffres, à usage unique, demandé à chaque installation ; cinq essais par quart d’heure, chaque refus est journalisé). Une permission personnalisée `administration:administrer` seule ne suffit pas.
 
@@ -838,6 +904,19 @@ sudo docker compose ps -a
 > ```
 > Si la version en service gardait ses données dans des volumes Docker, le script les copie au passage dans le dossier des données (étape 12.5).
 
+#### Vérifier l'authenticité des images avant une première installation (facultatif) et réglages GitHub à contrôler
+
+**Installation neuve.** L'installateur ([ADR 0077](adr/0077-installation-sans-ligne-de-commande.md)) tire les images par leur étiquette de version et ne vérifie pas leur signature : il est volontairement simple, et la vérification cosign reste facultative à ce stade. Les mises à jour, elles, vérifient toujours signature, attestation SBOM, révision et canal, puis épinglent l'empreinte. Pour vérifier une installation neuve avant de la démarrer, après le téléchargement des images (cosign installé, point 0 ci-dessus) :
+
+```text
+docker image inspect --format '{{json .RepoDigests}}' ghcr.io/yousername-ha/suivi-audits-api:<version>
+cosign verify ghcr.io/yousername-ha/suivi-audits-api@sha256:<empreinte> --certificate-identity https://github.com/yousername-ha/suivi-audits/.github/workflows/release.yml@refs/tags/v<version> --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+À répéter pour `suivi-audits-web` et `suivi-audits-updater`. Une image non signée par ce workflow, pour cette étiquette, est refusée : ne pas démarrer l'installation. Risque résiduel assumé : tant que cette vérification n'est pas faite, le contenu d'une installation neuve repose sur l'intégrité des étiquettes du registre.
+
+**Réglages GitHub à contrôler par le propriétaire du dépôt** (la signature prouve le workflow et l'étiquette, pas qui a approuvé la publication) : (1) *Settings, Rules, Rulesets* : qui peut créer des étiquettes `v*` et la liste complète des contournements ; (2) *Settings, Environments, publication* : relecteurs requis (le RSSI seul) et qui peut modifier l'environnement ; (3) collaborateurs ou équipes en droit *admin* ou *maintain*, applications GitHub avec `contents:write`, clés de déploiement en écriture ; (4) *Packages* `suivi-audits-api`, `-web`, `-updater` : dépôts et personnes autorisés en écriture, immutabilité des étiquettes si l'option existe ; (5) aucun jeton personnel avec `packages:write` en dehors du workflow de publication. Toute personne pouvant créer une étiquette `v*` sans être le relecteur unique de l'environnement `publication` est un écart à corriger.
+
 ### 12.2 Revenir à une version précédente
 
 Le script revient en arrière tout seul en cas d'échec. Pour revenir plus tard à une version précédente (problème découvert après coup), il faut **restaurer la sauvegarde faite avant la mise à jour** : les évolutions de la base ne s'annulent pas. Les données saisies depuis la mise à jour seront perdues : exportez-les ou notez-les avant.
@@ -849,17 +928,37 @@ Le script revient en arrière tout seul en cas d'échec. Pour revenir plus tard 
 
 Une fois par mois, et dès qu'une faille importante est annoncée :
 
+**Debian ou Ubuntu :**
+
 <!-- ci: instead: sudo apt-get update -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 sudo apt update && sudo apt full-upgrade -y
 ```
 **Résultat attendu** : aucune ligne `E:`. Docker est mis à jour par la même occasion.
 
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-instead: sudo dnf makecache -->
+```bash
+sudo dnf upgrade -y
+```
+**Résultat attendu** : aucune ligne `Error`. Docker est mis à jour par la même occasion.
+
 <!-- ci: run -->
+<!-- ci: rocky-skip — Debian et Ubuntu seulement -->
 ```bash
 [ -f /var/run/reboot-required ] && echo "Redémarrage nécessaire" || echo "Pas de redémarrage nécessaire"
 ```
 **Résultat attendu** : l'un des deux messages. Si un redémarrage est nécessaire, prévenez les utilisateurs, puis lancez `sudo reboot`. L'application redémarre toute seule avec le serveur. Reconnectez-vous au bout de 2 minutes et vérifiez les états (étape 7.1).
+
+**Rocky Linux 10 :**
+
+<!-- ci: rocky-run -->
+```bash
+sudo dnf needs-restarting -r && echo "Pas de redémarrage nécessaire" || echo "Redémarrage nécessaire"
+```
+**Résultat attendu** : l'un des deux messages ; même conduite à tenir que ci-dessus.
 
 ### 12.4 Passer d'un serveur v2 à cette version
 
@@ -975,8 +1074,9 @@ Toutes ces commandes se lancent depuis `/opt/suivi-audits`.
 | **Terminal, PowerShell** | La fenêtre où l'on tape les commandes |
 | **sudo** | Préfixe qui exécute une commande avec les droits d'administrateur du serveur |
 | **apt** | L'outil qui installe et met à jour les logiciels sur Debian et Ubuntu |
+| **dnf** | L'outil qui installe et met à jour les logiciels sur Rocky Linux |
 | **nano** | Un éditeur de texte simple, utilisable dans le terminal |
-| **Pare-feu (ufw)** | Filtre qui n'autorise que certaines connexions vers le serveur |
+| **Pare-feu (ufw, firewalld)** | Filtre qui n'autorise que certaines connexions vers le serveur (`ufw` sur Debian et Ubuntu, `firewalld` sur Rocky Linux) |
 | **NTP** | Protocole de mise à l'heure automatique |
 | **Docker** | Logiciel qui fait tourner des applications dans des boîtes isolées |
 | **Image** | Le « modèle » d'une boîte : l'application prête à l'emploi, téléchargée depuis un registre |

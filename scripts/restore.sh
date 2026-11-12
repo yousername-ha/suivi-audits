@@ -33,7 +33,7 @@ trap 'rm -rf "$WORK"' EXIT
 cp -- "$ARCH" "$WORK/source"
 python3 "$REPO/scripts/verifier-archive-restauration.py" --checksum "$ARCH" "$WORK/source"
 CLE="$(cle_sauvegarde_serveur)"
-command -v age > /dev/null || arret "outil « age » absent : l'installer (sudo apt-get install -y age)."
+command -v age > /dev/null || arret "outil « age » absent : l'installer (Debian ou Ubuntu : sudo apt-get install -y age ; Rocky Linux : sudo dnf install -y epel-release age)."
 [ -f "$CLE" ] && [ ! -L "$CLE" ] && [ -s "$CLE" ] || arret "clé de déchiffrement absente ou vide ($CLE) : indiquer BACKUP_KEY_FILE (clé du serveur ou clé de secours)."
 (( (8#$(stat -c %a "$CLE") & 077) == 0 )) || arret "droits trop larges sur la clé de déchiffrement ($CLE) : 0600 requis."
 age -d -i "$CLE" -o "$WORK/a.tar" "$WORK/source" 2> /dev/null || { rm -f "$WORK/a.tar"; arret "déchiffrement impossible : archive modifiée ou tronquée, ou clé qui n'est pas un destinataire de cette archive."; }
@@ -70,7 +70,9 @@ docker compose run --rm --no-deps -T db pg_restore --list < "$WORK/extrait/suivi
 WORK="$WORK/extrait"
 # Le trap supprime aussi le dossier temporaire parent.
 trap 'rm -rf "$(dirname "$WORK")"' EXIT
-docker compose stop app web
+# Le frontal (gateway) écrit dans caddy/data et garderait monté un dossier remplacé : il est arrêté aussi, sauf dans le
+# parcours de mise à jour web (SUIVI_MAJ_WEB=1), où il doit rester en service pour afficher la page de maintenance.
+if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then docker compose stop app web; else docker compose stop app web gateway; fi
 # 1. Secrets (doivent correspondre aux documents chiffrés de la sauvegarde), puis autorité de certification interne.
 install -d -m 0711 "$DATA_DIR/secrets"
 find "$DATA_DIR/secrets" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +

@@ -58,7 +58,7 @@ async function publier(def: unknown, id: string | null, expected: number) {
   return r.json() as { id: string; version: number };
 }
 const rattacher = (version: number) =>
-  a.put(`/api/grc/${scope}/framework-attachments/${libId}`, { version, confirm: 'RATTACHER' });
+  a.put(`/api/grc/${scope}/framework-attachments/${libId}`, { version, statut: 'applique', confirm: 'RATTACHER' });
 
 beforeAll(async () => {
   t = await createTestApp();

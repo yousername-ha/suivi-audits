@@ -97,8 +97,7 @@ export function RecordEditor({
       if (!object && initial) Object.assign(d, initial);
       delete d.name;
       if (kind === 'evidence' && ['validated', 'rejected'].includes(String(d.status))) d.status = 'draft';
-      if (['bia', 'continuity_plan', 'management_review'].includes(kind) && d.status === 'validated')
-        d.status = 'draft';
+      if (['continuity_plan', 'management_review'].includes(kind) && d.status === 'validated') d.status = 'draft';
       if (kind === 'nonconformity' && d.status !== 'closed') {
         d.effectiveness = 'pending';
         d.effectivenessNote = '';

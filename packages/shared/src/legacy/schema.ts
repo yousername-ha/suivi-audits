@@ -108,7 +108,6 @@ export const LegacyStateSchema = loose({
   activeFw: optStr,
   entityCategory: optStr,
   iso27001Certified: bool.optional(),
-  accessReviews: z.array(idObj({ freq: num.optional() })).optional(),
   plan: loose({
     status: optStr,
     note: optStr,
@@ -143,8 +142,6 @@ export const LegacyStateSchema = loose({
   roles: z.array(Role).optional(),
   recurring: z.array(z.unknown()).optional(),
   evidences: z.array(z.unknown()).optional(),
-  invest: loose({ baseYear: num.optional(), lines: z.array(idObj()).optional() }).optional(),
-  crrc: loose({}).optional(),
 });
 
 export const EnvelopeSchema = z.object({

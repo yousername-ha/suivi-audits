@@ -2486,26 +2486,6 @@
  "entityCategory": "",
  "schema": 14,
  "iso27001Certified": true,
- "accessReviews": [
-  {
-   "id": "CONTRO-001",
-   "app": "[app]",
-   "month": "2026-04",
-   "supplier": "[supplier]",
-   "freq": 12,
-   "source": "[source]",
-   "comment": ""
-  },
-  {
-   "id": "CONTRO-002",
-   "app": "[app]",
-   "month": "2026-07",
-   "supplier": "[supplier]",
-   "freq": 12,
-   "source": "[source]",
-   "comment": ""
-  }
- ],
  "plan": {
   "status": "Projet",
   "note": "[note]",
@@ -2825,85 +2805,6 @@
  ],
  "recurring": [],
  "evidences": [],
- "invest": {
-  "baseYear": 2026,
-  "lines": [
-   {
-    "id": "INV-001",
-    "createdAt": "2026-01-07T09:00:00.000Z",
-    "company": "[company]",
-    "priority": "2",
-    "type": "Bastion",
-    "desc": "[desc]",
-    "n0": 20736,
-    "n1": 16128,
-    "n2": 16128,
-    "comment": "[comment]",
-    "alt": "[alt]",
-    "account": "",
-    "perimeter": "[perimeter]",
-    "status": "Prévisionnel",
-    "nature": "[nature]",
-    "renewal": "",
-    "notice": 60,
-    "supplier": ""
-   },
-   {
-    "id": "INV-002",
-    "createdAt": "2026-01-07T09:00:00.000Z",
-    "company": "[company]",
-    "priority": "",
-    "type": "Transfert Sécurisé",
-    "desc": "[desc]",
-    "n0": 923.4,
-    "n1": 810,
-    "n2": 810,
-    "comment": "[comment]",
-    "alt": "",
-    "account": "",
-    "perimeter": "[perimeter]",
-    "status": "En place",
-    "nature": "[nature]",
-    "renewal": "",
-    "notice": 60,
-    "supplier": ""
-   }
-  ],
-  "source": "[source]"
- },
- "crrc": {
-  "offers": [
-   {
-    "id": "BACKUP-001",
-    "name": "[name]",
-    "status": "Disponible",
-    "partner": "",
-    "desc": "[desc]",
-    "perimeters": [
-     [
-      "[perimeters]",
-      "[perimeters]",
-      "[perimeters]"
-     ],
-     [
-      "[perimeters]",
-      "[perimeters]",
-      "[perimeters]"
-     ],
-     [
-      "[perimeters]",
-      "[perimeters]",
-      "[perimeters]"
-     ]
-    ]
-   }
-  ],
-  "establishments": [],
-  "resources": [],
-  "runs": [],
-  "restores": [],
-  "alerts": []
- },
  "maps": {
   "context": {
    "nodes": {

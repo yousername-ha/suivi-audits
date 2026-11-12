@@ -7,23 +7,40 @@ repris, les exigences se chargent par import avec leurs droits.
 
 ## Bibliothèque
 
-- Référentiels standards sélectionnables d'emblée, **sources verrouillées**, copie personnalisable (ajout de mesures) sans
-  alerte rouge ([ADR 0031](adr/0031-bibliotheque-de-referentiels.md)).
-- Versions publiées immuables ; un référentiel se rattache à un périmètre.
+- Référentiels standards sélectionnables d'emblée ; la bibliothèque est **figée** : chaque édition publiée est immuable et ne
+  se personnalise pas ([ADR 0031](adr/0031-bibliotheque-de-referentiels.md), [ADR 0082](adr/0082-referentiels-du-perimetre-copie-et-application.md)).
+  Une nouvelle édition s'importe comme une nouvelle version immuable.
 - Correspondances entre exigences : les propositions automatiques passent par une **revue humaine** (« Rapprochements à
   valider »).
+
+## Référentiels d'un périmètre : copie, puis application
+
+1. **Attribuer** un référentiel de la bibliothèque à un périmètre (page Périmètres → « Référentiels ») en crée une **copie
+   propre au périmètre**, à l'édition choisie, **en préparation**, nommée « <référentiel> (PRIVE - <périmètre>) ». La
+   bibliothèque n'est pas modifiée.
+2. **Modifier la copie** librement : ajouter, modifier ou retirer des exigences, créer un domaine, renommer. Chaque
+   modification est une version immuable de la copie (historique consultable). La copie garde l'identifiant du référentiel :
+   évaluations, mesures reliées et rapprochements suivent chaque exigence par son identifiant.
+3. **Appliquer** la copie : elle devient un **référentiel suivi en conformité** (couverture, évaluations, rapprochements, plan
+   d'écarts). Elle reste modifiable ; la repasser en préparation la sort du suivi sans rien effacer.
+4. **Renommer le périmètre** : l'écran demande s'il faut aussi renommer ses copies avec le nouveau nom ; seules celles qui
+   portent encore « (PRIVE - <ancien nom>) » sont concernées.
+5. **Reprendre une nouvelle édition** de la bibliothèque remplace le contenu de la copie (statut conservé, adaptations
+   gardées dans l'historique).
 
 ## Périmètres hiérarchiques
 
 - Un périmètre est une organisation ou un fournisseur ; il peut avoir un parent (par exemple, l'organisation A a pour enfants les organisations B et C et le fournisseur F ; un fournisseur n'a pour enfants que des fournisseurs), sans boucle, profondeur limitée à 8
   ([ADR 0039](adr/0039-hierarchie-des-perimetres.md)).
-- **Héritage explicite** : si le périmètre l'a décidé, il reçoit les référentiels rattachés à son parent ; ses propres
-  rattachements priment. L'héritage ne concerne que les référentiels, jamais les évaluations.
-- La bibliothèque montre l'origine d'un rattachement hérité et permet de le désactiver localement (« Désactiver ici »).
+- **Héritage explicite** : si le périmètre l'a décidé, il suit **la copie de son parent** (contenu et statut), en lecture
+  seule ; attribuer le même référentiel chez lui lui donne sa propre copie, qui prime. L'héritage ne concerne que les
+  référentiels, jamais les évaluations.
+- La fenêtre « Référentiels » montre le périmètre qui porte une copie héritée et permet de la désactiver localement
+  (« Désactiver ici »).
 
 ## Couverture par exigence
 
-Pour chaque exigence d'un référentiel actif du périmètre ([ADR 0041](adr/0041-evaluation-des-exigences-et-couverture.md)) :
+Pour chaque exigence d'un référentiel appliqué et actif du périmètre ([ADR 0041](adr/0041-evaluation-des-exigences-et-couverture.md)) :
 
 1. **Applicabilité** : à déterminer, applicable, exclue (avec justification).
 2. **Mise en œuvre** : aucune, partielle, complète.

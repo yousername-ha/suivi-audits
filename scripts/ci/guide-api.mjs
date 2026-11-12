@@ -351,8 +351,10 @@ switch (cmd) {
       return job;
     };
     const operation = async (body) => {
+      // Une restauration exige un code de double authentification frais (pas encore utilisé par le serveur).
+      const code = body.kind === 'restore' ? { code: await freshCode(st) } : {};
       const job = await call('POST', '/api/admin/exploitation/operations', {
-        json: { requestId: crypto.randomUUID(), ...body },
+        json: { requestId: crypto.randomUUID(), ...body, ...code },
         expect: [202],
       });
       worker();

@@ -23,12 +23,10 @@ const INVENTAIRE = [
   'organisation|fournisseurs|criteres-fournisseurs|/pilotage/criteres-fournisseurs|fournisseurs|lire',
   'organisation|fournisseurs|fournisseurs-perimetre|/pilotage/fournisseurs-perimetre|fournisseurs|lire',
   'organisation|fournisseurs|evaluations-clausier|/pilotage/evaluations-clausier|fournisseurs|lire',
-  'organisation|revues-acces|revues-acces|/pilotage/revues-acces|pilotage|lire',
   'organisation|plans|plans-calendrier|/pilotage/plans-calendrier|pilotage|lire',
   'organisation|plans|plans-planning|/pilotage/plans-planning|pilotage|lire',
   'organisation|plans|plans-formation|/pilotage/plans-formation|pilotage|lire',
   'organisation|plans|plans-sensibilisation|/pilotage/plans-sensibilisation|pilotage|lire',
-  'organisation|budget|investissements|/pilotage/investissements|investissements|lire',
   'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
   'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
   'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
@@ -69,7 +67,6 @@ const INVENTAIRE = [
   'actions|plan-actions|actions|/pilotage/actions|ecarts|lire',
   'actions|recurrences|recurrences|/pilotage/recurrences|ecarts|lire',
   'actions|registres|registres|/registres|-|lire',
-  'resilience|continuite|bia|/pilotage/bia|pilotage|lire',
   'resilience|continuite|continuite|/pilotage/continuite|pilotage|lire',
   'resilience|continuite|exercices|/pilotage/exercices|pilotage|lire',
   'resilience|incidents|incidents-registre|/pilotage/incidents-registre|incidents|lire',
@@ -78,14 +75,6 @@ const INVENTAIRE = [
   'resilience|incidents|crise-cellule|/pilotage/crise-cellule|incidents|lire',
   'resilience|incidents|crise-contacts|/pilotage/crise-contacts|incidents|lire',
   'resilience|incidents|crise-scenarios|/pilotage/crise-scenarios|incidents|lire',
-  'resilience|sauvegardes|crrc-ensemble|/pilotage/crrc-ensemble|crrc|lire',
-  'resilience|sauvegardes|crrc-etablissements|/pilotage/crrc-etablissements|crrc|lire',
-  'resilience|sauvegardes|crrc-offres|/pilotage/crrc-offres|crrc|lire',
-  'resilience|sauvegardes|crrc-tableau|/pilotage/crrc-tableau|crrc|lire',
-  'resilience|sauvegardes|crrc-ressources|/pilotage/crrc-ressources|crrc|lire',
-  'resilience|sauvegardes|crrc-restaurations|/pilotage/crrc-restaurations|crrc|lire',
-  'resilience|sauvegardes|crrc-alertes|/pilotage/crrc-alertes|crrc|lire',
-  'resilience|sauvegardes|crrc-rapports|/pilotage/crrc-rapports|crrc|lire',
   'documents|documents|documents|/documents|documents|lire',
   'documents|echanges|imports|/pilotage/imports|import_export|lire',
   'documents|echanges|exports|/exports|import_export|exporter',
@@ -224,10 +213,10 @@ describe('ordre du menu choisi par la personne', () => {
       'actions',
       'resilience',
     ]);
-    const org = ordonnerMenu({ destinations: { organisation: ['budget', 'contexte'] } }).find(
+    const org = ordonnerMenu({ destinations: { organisation: ['plans', 'contexte'] } }).find(
       (f) => f.id === 'organisation',
     );
-    expect(org?.destinations.map((d) => d.id).slice(0, 3)).toEqual(['budget', 'contexte', 'perimetres']);
+    expect(org?.destinations.map((d) => d.id).slice(0, 3)).toEqual(['plans', 'contexte', 'perimetres']);
   });
   it('place un identifiant avant ou après une cible', () => {
     expect(placer(['a', 'b', 'c', 'd'], 'a', 'c')).toEqual(['b', 'a', 'c', 'd']);

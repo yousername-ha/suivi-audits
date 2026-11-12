@@ -1,5 +1,6 @@
 import { EBIOS_ATELIERS, GRC_MODULES, JOURNEY_STEPS, PilotageRecord, SeriesData } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
+import { PorteeLecture } from '../acces/portee.js';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
 import { surConnexion, type Client, type Kdb } from '../db/db.js';
@@ -51,6 +52,39 @@ export class Pilotage {
     if (!ref.startsWith('legacy:') || !key) throw new HttpError(422, 'Fiche de pilotage attendue.');
     return (await this.legacy.get(smsi, key, id.join(':'), user, c, write)).object;
   }
+  /** Les décisions sont immuables : ce qui y est cité (références, actions générées, actions restées ouvertes à la clôture)
+      est filtré à la lecture selon les droits du lecteur, comme les liens. Une action qu'il ne peut pas lire, par exemple
+      d'un registre restreint, n'y laisse ni identifiant ni nom : elle n'est que comptée (`actionsMasquees`). */
+  async pourLecteur<T extends Record<string, unknown>>(smsi: string, rows: T[], user: SessionUser): Promise<T[]> {
+    const portee = PorteeLecture.pour(this.g, user);
+    const lisible = async (ref: unknown) => (typeof ref === 'string' ? portee.refLisible(smsi, ref) : false);
+    const filtrer = async (v: unknown) => {
+      if (!Array.isArray(v)) return v;
+      const out: unknown[] = [];
+      for (const x of v) if (await lisible(x)) out.push(x);
+      return out;
+    };
+    const out: T[] = [];
+    for (const row of rows) {
+      const r: Record<string, unknown> = { ...row };
+      for (const k of ['refs', 'generatedRefs', 'generated_refs']) if (k in r) r[k] = await filtrer(r[k]);
+      const terms = r.terms;
+      if (isObject(terms) && isObject(terms.openLinks) && Array.isArray(terms.openLinks.actions)) {
+        const visibles: unknown[] = [];
+        for (const a of terms.openLinks.actions) if (isObject(a) && (await lisible(a.ref))) visibles.push(a);
+        r.terms = {
+          ...terms,
+          openLinks: {
+            ...terms.openLinks,
+            actions: visibles,
+            actionsMasquees: terms.openLinks.actions.length - visibles.length,
+          },
+        };
+      }
+      out.push(r as T);
+    }
+    return out;
+  }
   async history(smsi: string, ref: string, user: SessionUser, before?: string) {
     await this.source(smsi, ref, user);
     // Le journal des décisions est immuable : après le déplacement d'un élément vers un autre périmètre de référence, ses
@@ -63,25 +97,44 @@ export class Pilotage {
       .orderBy('id', 'desc')
       .limit(50)
       .execute();
-    const refs: string[] = [...new Set(rows.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
+    const items = await this.pourLecteur(smsi, rows, user);
+    const refs: string[] = [...new Set(items.flatMap((r) => (Array.isArray(r.refs) ? (r.refs as string[]) : [])))];
     const references: Record<string, { name: string; version: number }> = {};
+    const portee = PorteeLecture.pour(this.g, user);
     for (const ref of refs.slice(0, 200)) {
-      try {
-        const r = await this.g.resolve(smsi, ref, user);
-        references[ref] = { name: r.name, version: r.version };
-      } catch (e) {
-        if (!(e instanceof HttpError) || ![403, 404].includes(e.status)) throw e;
-      }
+      const r = await portee.resoudreSiLisible(smsi, ref);
+      if (r) references[ref] = { name: r.name, version: r.version };
     }
     return {
-      items: rows,
+      items,
       references,
       referencesTruncated: refs.length > 200,
       nextBefore: rows.length === 50 ? rows.at(-1)!.createdAt : null,
     };
   }
-  async action(c: Client, smsi: string, ref: string, name: string, ownerId: unknown, user: SessionUser, ip: string) {
+  async action(
+    c: Client,
+    smsi: string,
+    ref: string,
+    name: string,
+    ownerId: unknown,
+    user: SessionUser,
+    ip: string,
+    sourceRegistreId: string | null = null,
+    registreId: string | null = null,
+  ) {
     await this.g.permission(user, 'ecarts', 'modifier');
+    // L'action dérivée d'une fiche d'un registre restreint ne retombe pas d'office dans le plan ouvert par défaut, avec le
+    // titre de la fiche : l'auteur choisit un plan qu'il gère.
+    const source = sourceRegistreId ? await this.g.registres.brut(sourceRegistreId, c) : null;
+    if (source?.restricted && !registreId)
+      throw new HttpError(
+        422,
+        'Choisissez le plan d’actions d’accueil : la fiche source appartient à un registre restreint.',
+      );
+    const accueil = registreId
+      ? await this.g.registreDeCreation(c, smsi, 'action', 'plan_actions', registreId, user)
+      : null;
     const policy = (await this.g.policy(smsi, user)).definition;
     const data = await this.g.normalize(
       smsi,
@@ -101,7 +154,7 @@ export class Pilotage {
       user,
       c,
     );
-    const action = await this.g.insert(c, smsi, 'action', name, data, user, ip);
+    const action = await this.g.insert(c, smsi, 'action', name, data, user, ip, accueil);
     await surConnexion(c)
       .insertInto('grc_links')
       .values({
@@ -158,14 +211,13 @@ export class Pilotage {
         reopen: ['nonconformity'],
         step_validation: ['journey', 'risk_study'],
         risk_acceptance: ['risk'],
-        approval: ['bia', 'continuity_plan', 'management_review'],
+        approval: ['continuity_plan', 'management_review'],
         action_create: [
           'nonconformity',
           'control',
           'management_review',
           'continuity_exercise',
           'continuity_plan',
-          'bia',
           'objective',
         ],
       };
@@ -235,7 +287,7 @@ export class Pilotage {
           .orderBy('a.id')
           .limit(50)
           .execute();
-        const masques = new Set(await this.g.registres.inaccessibles(user, smsi, c));
+        const masques = new Set(await PorteeLecture.pour(this.g, user).masquesDuPerimetre(smsi, c));
         const tasks = Array.isArray(data.tasks) ? data.tasks : [];
         const tasksOpen = tasks.filter((t) => isObject(t) && t.done !== true).length;
         if (pending.length || tasksOpen) {
@@ -282,21 +334,11 @@ export class Pilotage {
           throw new HttpError(422, 'Décision de validation attendue.');
         if (input.result === 'accepted') {
           const required =
-            source.kind === 'bia'
-              ? ['activity', 'scenario', 'minimumService']
-              : source.kind === 'continuity_plan'
-                ? ['scope', 'trigger', 'strategy', 'procedures', 'roles', 'returnToNormal']
-                : ['inputs', 'decisions'];
+            source.kind === 'continuity_plan'
+              ? ['scope', 'trigger', 'strategy', 'procedures', 'roles', 'returnToNormal']
+              : ['inputs', 'decisions'];
           if (required.some((k) => !String(data[k] ?? '').trim()) || !input.refs.length)
             throw new HttpError(422, 'Complétez les informations et justificatifs avant validation.');
-          if (
-            source.kind === 'bia' &&
-            (!Array.isArray(data.impacts) ||
-              !data.impacts.length ||
-              data.recoveryHours == null ||
-              data.maxInterruptionHours == null)
-          )
-            throw new HttpError(422, 'Décrivez les impacts dans le temps et les objectifs d’interruption/reprise.');
         }
         data.status = input.result === 'accepted' ? 'validated' : 'draft';
         data.justification = input.note;
@@ -393,7 +435,17 @@ export class Pilotage {
       }
       if (input.createAction)
         generated.push(
-          await this.action(c, smsi, generated[0] ?? ref, 'Action : ' + source.name, data.ownerId, user, ip),
+          await this.action(
+            c,
+            smsi,
+            generated[0] ?? ref,
+            'Action : ' + source.name,
+            data.ownerId,
+            user,
+            ip,
+            'registreId' in source ? (source.registreId ?? null) : null,
+            input.registreId ?? null,
+          ),
         );
       if (input.operation !== 'step_validation') {
         data.refs = [...new Set([...(Array.isArray(data.refs) ? data.refs : []), ...input.refs])];
@@ -517,7 +569,7 @@ export class Pilotage {
   async indicators(smsi: string, user: SessionUser) {
     await this.g.permission(user, 'ecarts', 'lire');
     const scope = await this.g.access(smsi, user);
-    const masques = await this.g.registres.inaccessibles(user, smsi);
+    const masques = await PorteeLecture.pour(this.g, user).masquesDuPerimetre(smsi);
     // Indicateurs des écarts : expression commune (CTE) avec contrôle de date (pg_input_is_valid) et fuseau du périmètre,
     // gardée en SQL paramétré (ADR 0062 §5).
     const native = (await this.g.db.one<{

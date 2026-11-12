@@ -6,7 +6,16 @@ import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fas
 import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { createLogger } from '../src/log.js';
-import { finPoivre, formaterPoivreGenere, genererPoivre, type PoivreAEnregistrer } from '@suivi/shared';
+import {
+  effectivePermissions,
+  finPoivre,
+  formaterPoivreGenere,
+  genererPoivre,
+  Rights,
+  type PoivreAEnregistrer,
+} from '@suivi/shared';
+import type { SessionUser } from '../src/auth.js';
+import { loadGrants } from '../src/rights.js';
 import type { PoivrePrepare } from '../src/mots-de-passe.js';
 import { hotp } from '../src/security/crypto.js';
 import { createServices, type Services } from '../src/services.js';
@@ -190,6 +199,18 @@ export async function makeUser(
     ]);
   }
   return { id, username, role: role ?? '', key };
+}
+
+/** La personne telle que les contrôles la voient dans une requête : mêmes droits effectifs, pour appeler un service
+    directement dans un test. */
+export async function sessionUser(t: TestApp, u: TestUser): Promise<SessionUser> {
+  return {
+    id: u.id,
+    username: u.username,
+    displayName: u.username,
+    roles: [],
+    rights: new Rights(effectivePermissions(await loadGrants(t.svc.db.pool, u.id)).keys()),
+  } as unknown as SessionUser;
 }
 
 /** Code TOTP valide et non encore utilisé (anti-rejeu : pas strictement supérieur au dernier accepté). */

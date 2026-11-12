@@ -1,6 +1,8 @@
-/* Bibliothèque de référentiels de l'organisation (ADR 0031, lot M2) : importer un référentiel une fois, le rattacher à
-   plusieurs périmètres et promouvoir un référentiel déjà publié dans un périmètre. Aucun texte normatif n'est fourni :
-   l'organisation importe les exigences dont elle détient les droits. Les droits sont ceux de l'API. */
+/* Bibliothèque de référentiels de l'organisation (ADR 0031, lot M2 ; ADR 0082) : importer un référentiel une fois ; la
+   bibliothèque est figée (versions immuables, aucune personnalisation). L'attribuer à un périmètre en crée une copie
+   propre au périmètre, modifiable librement, « en préparation » ; l'appliquer en fait un référentiel suivi en conformité.
+   Aucun texte normatif n'est fourni : l'organisation importe les exigences dont elle détient les droits. Les droits sont
+   ceux de l'API. */
 import { Alert, Button, Group, Modal, Select, Stack, Table, Text, Textarea, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -19,7 +21,7 @@ interface Referentiel {
   requirements: number;
   scopes: number;
   source: { status: string; organisation: string };
-  /** Version source : verrouillée, seule une copie se personnalise. */
+  /** Toujours vrai : la bibliothèque est figée (la personnalisation se fait dans la copie d'un périmètre). */
   locked: boolean;
   derivedFrom: { identifier: string; name: string; version: number } | null;
 }
@@ -27,12 +29,19 @@ interface Rattachement {
   frameworkId: string;
   identifier: string;
   name: string;
+  libraryName: string;
   version: number;
   latestVersion: number;
   enabled: boolean;
+  statut: 'preparation' | 'applique';
+  suivi: boolean;
+  copyVersion: number;
+  requirements: number;
   inherited: boolean;
+  overridden: boolean;
   originId: string;
   originName: string | null;
+  orphan: boolean;
 }
 /** Exemple fictif d'import : ne reproduit aucun référentiel officiel. */
 const EXEMPLE_FICTIF: FrameworkDefinition = {
@@ -76,8 +85,6 @@ export function Bibliotheque() {
     qc = useQueryClient(),
     modifier = can('conformite', 'modifier'),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
-    [copie, setCopie] = useState<Referentiel | null>(null),
-    [ajout, setAjout] = useState<Referentiel | null>(null),
     [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
@@ -94,9 +101,11 @@ export function Bibliotheque() {
   return (
     <Stack>
       <Alert>
-        La bibliothèque contient les référentiels de l’organisation, importés une seule fois puis rattachés aux
-        périmètres qui les utilisent (page Périmètres). Aucun texte normatif n’est fourni : importez les exigences dont
-        vous détenez les droits. Chaque version publiée est immuable.
+        La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Elle est figée : chaque
+        édition publiée est immuable et ne se personnalise pas. Attribuer un référentiel à un périmètre (page
+        Périmètres) en crée une copie propre à ce périmètre, que vous adaptez librement ; une fois appliquée, la copie
+        est suivie en conformité. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les
+        droits.
       </Alert>
       <ErrorAlert error={liste.error ?? exigences.error} />
       <Group justify="space-between">
@@ -112,7 +121,7 @@ export function Bibliotheque() {
               <Table.Th>Référentiel</Table.Th>
               <Table.Th>Version</Table.Th>
               <Table.Th>Exigences</Table.Th>
-              <Table.Th>Périmètres</Table.Th>
+              <Table.Th>Copies dans les périmètres</Table.Th>
               <Table.Th>Source</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
@@ -131,9 +140,7 @@ export function Bibliotheque() {
                 <Table.Td>{f.scopes}</Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <StatusChip etat={f.locked ? 'neutre' : 'succes'}>
-                      {f.locked ? 'Version source verrouillée' : 'Copie de l’organisation'}
-                    </StatusChip>
+                    <StatusChip etat="neutre">Figé</StatusChip>
                     <Text size="xs" c="dimmed">
                       {f.derivedFrom ? `Copie de ${f.derivedFrom.name}` : (STATUTS[f.source.status] ?? f.source.status)}
                     </Text>
@@ -149,26 +156,6 @@ export function Bibliotheque() {
                     >
                       Exigences
                     </Button>
-                    {modifier && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Créer une copie personnalisable de ${f.name}`}
-                        onClick={() => setCopie(f)}
-                      >
-                        Créer une copie
-                      </Button>
-                    )}
-                    {modifier && !f.locked && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Ajouter une exigence à ${f.name}`}
-                        onClick={() => setAjout(f)}
-                      >
-                        Ajouter une exigence
-                      </Button>
-                    )}
                     {modifier && (
                       <Button
                         size="xs"
@@ -209,26 +196,6 @@ export function Bibliotheque() {
           </Stack>
         )}
       </Modal>
-      {copie && (
-        <CopieReferentiel
-          cible={copie}
-          onClose={() => setCopie(null)}
-          onDone={async () => {
-            setCopie(null);
-            await qc.invalidateQueries({ queryKey: ['library'] });
-          }}
-        />
-      )}
-      {ajout && (
-        <AjoutExigence
-          cible={ajout}
-          onClose={() => setAjout(null)}
-          onDone={async () => {
-            setAjout(null);
-            await qc.invalidateQueries({ queryKey: ['library'] });
-          }}
-        />
-      )}
       {import_ && (
         <Import
           cible={import_.cible}
@@ -366,13 +333,25 @@ function Import({
   );
 }
 
-/** Référentiels de la bibliothèque rattachés à un périmètre : version rattachée, mise à jour, activation, détachement. */
+/** Statut affiché d'un référentiel du périmètre. */
+function statutDe(r: Rattachement): { etat: 'succes' | 'attention' | 'neutre'; libelle: string } {
+  if (r.orphan) return { etat: 'neutre', libelle: 'Sans effet' };
+  if (!r.enabled) return { etat: 'neutre', libelle: 'Inactif' };
+  return r.statut === 'applique'
+    ? { etat: 'succes', libelle: 'Appliqué : suivi en conformité' }
+    : { etat: 'attention', libelle: 'En préparation' };
+}
+
+/** Référentiels d'un périmètre (ADR 0082) : attribuer un référentiel de la bibliothèque crée une copie propre au
+    périmètre, en préparation ; on l'adapte librement, puis on l'applique pour la suivre en conformité. Les périmètres qui
+    héritent lisent la copie de leur ancêtre et peuvent seulement la désactiver chez eux. */
 export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
   const can = useCan(),
     qc = useQueryClient(),
     admin = can('pilotage', 'administrer'),
     [choix, setChoix] = useState<string | null>(null),
     [version, setVersion] = useState<string | null>(null),
+    [edite, setEdite] = useState<Rattachement | null>(null),
     [erreur, setErreur] = useState<unknown>(null);
   const rattaches = useQuery({
     queryKey: ['grc', smsi, 'attachments'],
@@ -383,100 +362,153 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
     queryFn: () => get<Referentiel[]>('/api/library/frameworks'),
   });
   const standards = useStandards(can('conformite', 'modifier'));
-  const libres = (biblio.data ?? []).filter((f) => !(rattaches.data ?? []).some((r) => r.frameworkId === f.id));
+  const liste = rattaches.data ?? [];
+  // Un référentiel hérité peut recevoir sa propre copie, qui l'emporte sur celle de l'ancêtre.
+  const libres = (biblio.data ?? []).filter(
+    (f) => !liste.some((r) => r.frameworkId === f.id && (!r.inherited || r.overridden)),
+  );
   const selection = libres.find((f) => f.id === choix);
-  // Standards pas encore dans la bibliothèque : proposés à la sélection, ajoutés en version source verrouillée au rattachement.
+  // Standards pas encore dans la bibliothèque : proposés à la sélection, ajoutés (figés) à la bibliothèque à l'attribution.
   const standardsOfferts = (standards.data ?? []).filter((c) => !c.duplicate && !c.error);
   const standardChoisi = standardsOfferts.find((c) => 'standard:' + c.definition.identifier === choix);
+  const rafraichir = async () => {
+    await qc.invalidateQueries({ queryKey: ['grc', smsi] });
+    await qc.invalidateQueries({ queryKey: ['library'] });
+  };
   const agir = async (action: () => Promise<unknown>) => {
     try {
       setErreur(null);
       await action();
-      await qc.invalidateQueries({ queryKey: ['grc', smsi, 'attachments'] });
-      await qc.invalidateQueries({ queryKey: ['library'] });
+      await rafraichir();
     } catch (e) {
       setErreur(e);
     }
   };
-  const rattacher = (id: string, v: number) =>
+  const attribuer = (id: string, v: number) =>
     agir(() =>
       api('PUT', `/api/grc/${smsi}/framework-attachments/${id}`, { body: { version: v, confirm: 'RATTACHER' } }),
     );
+  const statut = (id: string, s: 'preparation' | 'applique') =>
+    agir(() =>
+      api('PUT', `/api/grc/${smsi}/framework-attachments/${id}/statut`, { body: { statut: s, confirm: 'APPLIQUER' } }),
+    );
+  const activer = (id: string, enabled: boolean) =>
+    agir(() => api('PUT', `/api/grc/${smsi}/framework-attachments/${id}/activation`, { body: { enabled } }));
   return (
     <Stack>
+      <Text size="sm">
+        Attribuer un référentiel de la bibliothèque crée une copie propre à ce périmètre, en préparation. Adaptez-la
+        librement (ajout, modification ou retrait d’exigences), puis appliquez-la : elle devient un référentiel suivi en
+        conformité. La bibliothèque n’est jamais modifiée.
+      </Text>
       <ErrorAlert error={erreur ?? rattaches.error ?? biblio.error} />
-      {(rattaches.data ?? []).length === 0 && (
-        <Text>Aucun référentiel de la bibliothèque n’est rattaché à ce périmètre.</Text>
-      )}
-      {(rattaches.data ?? []).map((r) => (
-        <Group key={r.frameworkId} justify="space-between" wrap="nowrap">
-          <div>
-            <Text fw={600}>{r.name}</Text>
-            <Text size="sm">
-              Version {r.version}
-              {r.latestVersion > r.version && ` (la version ${r.latestVersion} est disponible)`} ·{' '}
-              {r.enabled ? 'Actif' : 'Inactif'}
-              {r.inherited && ` · hérité de ${r.originName ?? 'un périmètre parent non accessible'}`}
-            </Text>
-          </div>
-          {admin && r.inherited && (
-            <ConfirmButton
-              size="xs"
-              variant="default"
-              message={`Désactiver « ${r.name} » pour ce périmètre ? Le référentiel reste actif dans le périmètre parent.`}
-              onConfirm={() =>
-                agir(async () => {
-                  await api('PUT', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}`, {
-                    body: { version: r.version, confirm: 'RATTACHER' },
-                  });
-                  await api('PUT', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}/activation`, {
-                    body: { enabled: false },
-                  });
-                })
-              }
-            >
-              Désactiver ici
-            </ConfirmButton>
-          )}
-          {admin && !r.inherited && (
+      {liste.length === 0 && <Text>Aucun référentiel n’est attribué à ce périmètre.</Text>}
+      {liste.map((r) => {
+        const s = statutDe(r);
+        return (
+          <Stack key={r.frameworkId} gap="2xs">
+            <Group justify="space-between" wrap="nowrap" align="flex-start">
+              <div>
+                <Group gap="xs">
+                  <Text fw={600}>{r.name}</Text>
+                  <StatusChip etat={s.etat}>{s.libelle}</StatusChip>
+                </Group>
+                <Text size="sm" c="dimmed">
+                  Copie de « {r.libraryName} », édition {r.version}
+                  {!r.inherited && r.latestVersion > r.version && ` (édition ${r.latestVersion} disponible)`}
+                  {!r.orphan && ` · ${r.requirements} exigence(s) · version ${r.copyVersion} de la copie`}
+                </Text>
+                {r.inherited && (
+                  <Text size="sm">
+                    Copie héritée de {r.originName ?? 'un périmètre parent non accessible'} : elle se modifie et
+                    s’applique dans ce périmètre.{r.overridden && ' Activation réglée ici.'}
+                  </Text>
+                )}
+                {r.orphan && (
+                  <Text size="sm">Réglage local d’un référentiel qui n’est plus hérité : sans effet, à retirer.</Text>
+                )}
+              </div>
+            </Group>
             <Group gap="xs">
-              {r.latestVersion > r.version && (
-                <Button size="xs" variant="default" onClick={() => rattacher(r.frameworkId, r.latestVersion)}>
-                  Passer à la version {r.latestVersion}
+              {!r.orphan && (
+                <Button
+                  size="xs"
+                  variant="default"
+                  aria-label={`${!r.inherited && can('conformite', 'modifier') ? 'Modifier' : 'Consulter'} la copie de ${r.name}`}
+                  onClick={() => setEdite(r)}
+                >
+                  {!r.inherited && can('conformite', 'modifier') ? 'Modifier la copie' : 'Consulter la copie'}
                 </Button>
               )}
-              <Button
-                size="xs"
-                variant="default"
-                onClick={() =>
-                  agir(() =>
-                    api('PUT', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}/activation`, {
-                      body: { enabled: !r.enabled },
-                    }),
-                  )
-                }
-              >
-                {r.enabled ? 'Désactiver' : 'Activer'}
-              </Button>
-              <ConfirmButton
-                size="xs"
-                variant="default"
-                message={`Détacher « ${r.name} » de ce périmètre ? Le référentiel reste dans la bibliothèque.`}
-                onConfirm={() => agir(() => api('DELETE', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}`))}
-              >
-                Détacher
-              </ConfirmButton>
+              {admin && !r.inherited && !r.orphan && r.statut === 'preparation' && (
+                <ConfirmButton
+                  size="xs"
+                  color="blue"
+                  message={`Appliquer « ${r.name} » à ce périmètre ? La copie devient un référentiel suivi en conformité (couverture, évaluations, rapprochements) ; elle reste modifiable.`}
+                  onConfirm={() => statut(r.frameworkId, 'applique')}
+                >
+                  Appliquer
+                </ConfirmButton>
+              )}
+              {admin && !r.inherited && !r.orphan && r.statut === 'applique' && (
+                <ConfirmButton
+                  size="xs"
+                  variant="default"
+                  message={`Repasser « ${r.name} » en préparation ? Il sort du suivi de conformité ; évaluations, liens et historique sont conservés.`}
+                  onConfirm={() => statut(r.frameworkId, 'preparation')}
+                >
+                  Repasser en préparation
+                </ConfirmButton>
+              )}
+              {admin && !r.inherited && !r.orphan && r.latestVersion > r.version && (
+                <ConfirmButton
+                  size="xs"
+                  variant="default"
+                  message={`Reprendre l’édition ${r.latestVersion} de « ${r.libraryName} » ? Le contenu de la copie est remplacé par cette édition (vos adaptations sont conservées dans l’historique de la copie).`}
+                  onConfirm={() => attribuer(r.frameworkId, r.latestVersion)}
+                >
+                  Reprendre l’édition {r.latestVersion}
+                </ConfirmButton>
+              )}
+              {admin && r.inherited && (
+                <Button size="xs" variant="default" onClick={() => activer(r.frameworkId, !r.enabled)}>
+                  {r.enabled ? 'Désactiver ici' : 'Réactiver ici'}
+                </Button>
+              )}
+              {admin && !r.inherited && !r.orphan && (
+                <Button size="xs" variant="default" onClick={() => activer(r.frameworkId, !r.enabled)}>
+                  {r.enabled ? 'Désactiver' : 'Activer'}
+                </Button>
+              )}
+              {admin && (!r.inherited || r.overridden) && (
+                <ConfirmButton
+                  size="xs"
+                  variant="default"
+                  message={
+                    r.inherited || r.orphan
+                      ? `Retirer le réglage local de « ${r.name} » ?`
+                      : `Détacher « ${r.name} » de ce périmètre ? Le référentiel reste dans la bibliothèque ; l’historique de la copie est conservé.`
+                  }
+                  onConfirm={() => agir(() => api('DELETE', `/api/grc/${smsi}/framework-attachments/${r.frameworkId}`))}
+                >
+                  {r.inherited || r.orphan ? 'Retirer le réglage local' : 'Détacher'}
+                </ConfirmButton>
+              )}
             </Group>
-          )}
-        </Group>
-      ))}
+          </Stack>
+        );
+      })}
       {admin && (libres.length > 0 || standardsOfferts.length > 0) && (
         <Group align="flex-end">
           <Select
-            label="Rattacher un référentiel de la bibliothèque"
+            label="Attribuer un référentiel de la bibliothèque"
+            description="Crée une copie propre à ce périmètre, en préparation."
             placeholder="Choisir un référentiel"
             data={[
-              ...libres.map((f) => ({ value: f.id, label: f.name })),
+              ...libres.map((f) => ({
+                value: f.id,
+                label: liste.some((r) => r.frameworkId === f.id) ? `${f.name} (remplace la copie héritée)` : f.name,
+              })),
               ...standardsOfferts.map((c) => ({
                 value: 'standard:' + c.definition.identifier,
                 label: `${c.definition.name} (standard)`,
@@ -490,7 +522,7 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
           />
           {selection && (
             <Select
-              label="Version"
+              label="Édition"
               allowDeselect={false}
               data={versions(selection.version)}
               value={version}
@@ -501,24 +533,285 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
             disabled={!(selection && version) && !standardChoisi}
             onClick={async () => {
               if (standardChoisi) {
-                // Standard de l'outil de suivi : ajouté à la bibliothèque (version source verrouillée), puis rattaché.
+                // Standard de l'outil de suivi : ajouté à la bibliothèque (figé), puis attribué au périmètre.
                 try {
                   setErreur(null);
                   const ajoute = await adopterStandard(standardChoisi.definition.identifier);
-                  await rattacher(ajoute.id, ajoute.version);
+                  await attribuer(ajoute.id, ajoute.version);
                 } catch (e) {
                   setErreur(e);
                   return;
                 }
-              } else await rattacher(selection!.id, Number(version));
+              } else await attribuer(selection!.id, Number(version));
               setChoix(null);
               setVersion(null);
             }}
           >
-            Rattacher
+            Attribuer
           </Button>
         </Group>
       )}
+      <Modal
+        opened={!!edite}
+        onClose={() => setEdite(null)}
+        size="xl"
+        title={edite ? `Copie : ${edite.name}` : ''}
+        closeButtonProps={{ 'aria-label': 'Fermer la copie' }}
+      >
+        {edite && <EditeurCopie smsi={smsi} frameworkId={edite.frameworkId} onChanged={rafraichir} />}
+      </Modal>
+    </Stack>
+  );
+}
+
+interface CopieDuPerimetre {
+  frameworkId: string;
+  definition: FrameworkDefinition;
+  version: number;
+  versionCourante: number;
+  sourceVersion: number;
+  statut: 'preparation' | 'applique';
+  modifiable: boolean;
+  historique: { version: number; sourceVersion: number; reason: string; createdBy: string; createdAt: string }[];
+}
+type Exigence = FrameworkDefinition['requirements'][number];
+
+/** Copie du référentiel dans le périmètre : exigences par domaine, ajout, modification, retrait, renommage et historique
+    des versions. Chaque modification publie une version immuable de la copie ; la bibliothèque n'est pas touchée. */
+function EditeurCopie({
+  smsi,
+  frameworkId,
+  onChanged,
+}: {
+  smsi: string;
+  frameworkId: string;
+  onChanged: () => Promise<void>;
+}) {
+  const [vue, setVue] = useState<string | null>(null),
+    [formulaire, setFormulaire] = useState<{ exigence: Exigence | null } | null>(null),
+    [nom, setNom] = useState<string | null>(null),
+    [erreur, setErreur] = useState<unknown>(null);
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'copie', frameworkId, vue],
+    queryFn: () =>
+      get<CopieDuPerimetre>(`/api/grc/${smsi}/framework-copies/${frameworkId}${vue ? `?version=${vue}` : ''}`),
+  });
+  const c = q.data;
+  const courante = !!c && c.version === c.versionCourante;
+  const modifiable = !!c?.modifiable && courante;
+  const agir = async (action: () => Promise<unknown>) => {
+    try {
+      setErreur(null);
+      await action();
+      setFormulaire(null);
+      await onChanged();
+    } catch (e) {
+      setErreur(e);
+    }
+  };
+  if (!c) return <ErrorAlert error={q.error} />;
+  const domaines = c.definition.domains;
+  return (
+    <Stack>
+      <ErrorAlert error={erreur ?? q.error} />
+      <Text size="sm">
+        {c.statut === 'applique'
+          ? 'Copie appliquée : ses exigences sont suivies en conformité. Les évaluations et les mesures reliées suivent chaque exigence par son identifiant ; une exigence retirée garde son historique mais n’est plus comptée.'
+          : 'Copie en préparation : adaptez-la, puis appliquez-la depuis la liste des référentiels du périmètre.'}
+        {!c.modifiable &&
+          ' Lecture seule : la copie se modifie dans le périmètre qui la porte, avec le droit de modifier la conformité.'}
+      </Text>
+      <Select
+        label="Version de la copie"
+        allowDeselect={false}
+        data={c.historique.map((h) => ({
+          value: String(h.version),
+          label: `Version ${h.version}${h.version === c.versionCourante ? ' (courante)' : ''} · ${h.reason}`,
+        }))}
+        value={String(c.version)}
+        onChange={(v) => {
+          setFormulaire(null);
+          setVue(v && Number(v) !== c.versionCourante ? v : null);
+        }}
+      />
+      {modifiable && (
+        <Group align="flex-end">
+          <TextInput
+            label="Nom de la copie"
+            value={nom ?? c.definition.name}
+            onChange={(e) => setNom(e.currentTarget.value)}
+          />
+          <Button
+            variant="default"
+            disabled={!nom?.trim() || nom.trim() === c.definition.name}
+            onClick={() =>
+              agir(async () => {
+                await api('PUT', `/api/grc/${smsi}/framework-copies/${frameworkId}`, {
+                  body: { name: nom!.trim(), expectedVersion: c.versionCourante },
+                });
+                setNom(null);
+              })
+            }
+          >
+            Renommer
+          </Button>
+        </Group>
+      )}
+      {domaines.map((d) => {
+        const exigences = c.definition.requirements.filter((r) => r.domain === d.id);
+        if (!exigences.length && !modifiable) return null;
+        return (
+          <Stack key={d.id} gap="2xs">
+            <Text fw={600}>{d.label}</Text>
+            {exigences.length === 0 && (
+              <Text size="sm" c="dimmed">
+                Aucune exigence dans ce domaine.
+              </Text>
+            )}
+            {exigences.map((r) => (
+              <Group key={r.id} justify="space-between" wrap="nowrap">
+                <Text size="sm">
+                  <b>{r.id}</b> · {r.title}
+                </Text>
+                {modifiable && (
+                  <Group gap="xs" wrap="nowrap">
+                    <Button
+                      size="xs"
+                      variant="default"
+                      aria-label={`Modifier l’exigence ${r.id}`}
+                      onClick={() => setFormulaire({ exigence: r })}
+                    >
+                      Modifier
+                    </Button>
+                    <ConfirmButton
+                      size="xs"
+                      variant="default"
+                      aria-label={`Retirer l’exigence ${r.id}`}
+                      message={`Retirer l’exigence ${r.id} de la copie ? Ses évaluations et liens restent dans l’historique ; elle ne sera plus comptée.`}
+                      onConfirm={() =>
+                        agir(() =>
+                          api(
+                            'DELETE',
+                            `/api/grc/${smsi}/framework-copies/${frameworkId}/requirements/${encodeURIComponent(r.id)}`,
+                            { ifMatch: c.versionCourante },
+                          ),
+                        )
+                      }
+                    >
+                      Retirer
+                    </ConfirmButton>
+                  </Group>
+                )}
+              </Group>
+            ))}
+          </Stack>
+        );
+      })}
+      {modifiable && !formulaire && (
+        <Group>
+          <Button onClick={() => setFormulaire({ exigence: null })}>Ajouter une exigence</Button>
+        </Group>
+      )}
+      {modifiable && formulaire && (
+        <FormulaireExigence
+          key={formulaire.exigence?.id ?? 'nouvelle'}
+          domaines={domaines}
+          exigence={formulaire.exigence}
+          onCancel={() => setFormulaire(null)}
+          onSave={(corps) =>
+            agir(() =>
+              api('POST', `/api/grc/${smsi}/framework-copies/${frameworkId}/requirements`, {
+                body: { expectedVersion: c.versionCourante, ...corps },
+              }),
+            )
+          }
+        />
+      )}
+    </Stack>
+  );
+}
+
+function FormulaireExigence({
+  domaines,
+  exigence,
+  onCancel,
+  onSave,
+}: {
+  domaines: FrameworkDefinition['domains'];
+  exigence: Exigence | null;
+  onCancel: () => void;
+  onSave: (corps: Record<string, unknown>) => Promise<void>;
+}) {
+  const [domaine, setDomaine] = useState<string | null>(exigence?.domain ?? null),
+    [nouveau, setNouveau] = useState(''),
+    [id, setId] = useState(exigence?.id ?? ''),
+    [titre, setTitre] = useState(exigence?.title ?? ''),
+    [description, setDescription] = useState(exigence?.description ?? ''),
+    [applicabilite, setApplicabilite] = useState(exigence?.applicability ?? ''),
+    [envoi, setEnvoi] = useState(false);
+  const valide = id.trim() && titre.trim() && (nouveau.trim() || domaine);
+  return (
+    <Stack gap="xs">
+      <Text fw={600}>{exigence ? `Modifier l’exigence ${exigence.id}` : 'Nouvelle exigence'}</Text>
+      <Select
+        label="Domaine"
+        searchable
+        clearable
+        data={domaines.map((d) => ({ value: d.id, label: d.label }))}
+        value={domaine}
+        onChange={setDomaine}
+        disabled={!!nouveau.trim()}
+      />
+      <TextInput
+        label="Ou nouveau domaine"
+        description="Libellé du domaine à créer."
+        value={nouveau}
+        onChange={(e) => setNouveau(e.currentTarget.value)}
+      />
+      <TextInput
+        label="Identifiant de l’exigence"
+        value={id}
+        disabled={!!exigence}
+        onChange={(e) => setId(e.currentTarget.value)}
+      />
+      <TextInput label="Intitulé" value={titre} onChange={(e) => setTitre(e.currentTarget.value)} />
+      <Textarea
+        label="Description"
+        autosize
+        minRows={3}
+        value={description}
+        onChange={(e) => setDescription(e.currentTarget.value)}
+      />
+      <TextInput
+        label="Applicabilité"
+        value={applicabilite}
+        onChange={(e) => setApplicabilite(e.currentTarget.value)}
+      />
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button
+          loading={envoi}
+          disabled={!valide}
+          onClick={async () => {
+            setEnvoi(true);
+            try {
+              await onSave({
+                ...(nouveau.trim() ? { newDomainLabel: nouveau.trim() } : { domain: domaine }),
+                id: id.trim(),
+                title: titre.trim(),
+                description,
+                applicability: applicabilite,
+              });
+            } finally {
+              setEnvoi(false);
+            }
+          }}
+        >
+          Enregistrer dans la copie
+        </Button>
+      </Group>
     </Stack>
   );
 }
@@ -575,7 +868,8 @@ export function PromotionBouton({ smsi, id }: { smsi: string; id: string }) {
             <>
               <Text>
                 La version {simulation.sourceVersion} ({simulation.requirements} exigence(s)) est copiée dans la
-                bibliothèque de l’organisation et rattachée à ce périmètre. L’original est conservé.
+                bibliothèque de l’organisation, où elle est figée ; ce périmètre en reçoit une copie, appliquée.
+                L’original est conservé.
               </Text>
               {simulation.droppedMeasureRefs > 0 && (
                 <Alert color="orange">
@@ -587,7 +881,7 @@ export function PromotionBouton({ smsi, id }: { smsi: string; id: string }) {
               {simulation.libraryFrameworkId && !simulation.alreadyPromoted && (
                 <Alert color="orange">
                   Un référentiel de la bibliothèque porte déjà cet identifiant
-                  {simulation.identicalToLibrary ? ' avec la même définition' : ''} : rattachez-le au périmètre depuis
+                  {simulation.identicalToLibrary ? ' avec la même définition' : ''} : attribuez-le au périmètre depuis
                   la page Périmètres.
                 </Alert>
               )}
@@ -659,7 +953,7 @@ function StandardsDisponibles({ onDone }: { onDone: () => unknown }) {
       <Text fw={600}>Standards disponibles</Text>
       <Text size="sm">
         Repris de l’outil de suivi : les intitulés et textes qui y sont saisis, sans rien ajouter. Une fois ajouté, un
-        standard est une version source verrouillée ; pour le personnaliser, créez-en une copie.
+        standard est figé dans la bibliothèque ; pour l’adapter, attribuez-le à un périmètre et modifiez sa copie.
       </Text>
       <ErrorAlert error={erreur} />
       {proposes.map((c) => (
@@ -683,142 +977,5 @@ function StandardsDisponibles({ onDone }: { onDone: () => unknown }) {
         </Group>
       ))}
     </Stack>
-  );
-}
-
-function CopieReferentiel({
-  cible,
-  onClose,
-  onDone,
-}: {
-  cible: Referentiel;
-  onClose: () => void;
-  onDone: () => Promise<void>;
-}) {
-  const [nom, setNom] = useState(`${cible.name} — version de l’organisation`.slice(0, 200)),
-    [erreur, setErreur] = useState<unknown>(null),
-    [envoi, setEnvoi] = useState(false);
-  const creer = async () => {
-    setEnvoi(true);
-    try {
-      setErreur(null);
-      await api('POST', `/api/library/frameworks/${cible.id}/copy`, { body: { name: nom } });
-      await onDone();
-    } catch (e) {
-      setErreur(e);
-    } finally {
-      setEnvoi(false);
-    }
-  };
-  return (
-    <Modal opened onClose={onClose} title={`Créer une copie de ${cible.name}`}>
-      <Stack>
-        <ErrorAlert error={erreur} />
-        <Text size="sm">
-          {cible.locked
-            ? 'Cette version source reste verrouillée et inchangée. '
-            : 'La copie repart de la version courante de cette copie. '}
-          La copie est un référentiel de l’organisation : vous pourrez y ajouter vos propres exigences et mesures, puis
-          la rattacher à un périmètre.
-        </Text>
-        <TextInput label="Nom de la copie" value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button loading={envoi} disabled={!nom.trim()} onClick={creer}>
-            Créer la copie
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
-  );
-}
-
-function AjoutExigence({
-  cible,
-  onClose,
-  onDone,
-}: {
-  cible: Referentiel;
-  onClose: () => void;
-  onDone: () => Promise<void>;
-}) {
-  const def = useQuery({
-    queryKey: ['library', 'frameworks', cible.id, cible.version],
-    queryFn: () =>
-      get<{ definition: FrameworkDefinition }>(`/api/library/frameworks/${cible.id}/versions/${cible.version}`),
-  });
-  const [domaine, setDomaine] = useState<string | null>(null),
-    [nouveau, setNouveau] = useState(''),
-    [id, setId] = useState(''),
-    [titre, setTitre] = useState(''),
-    [description, setDescription] = useState(''),
-    [erreur, setErreur] = useState<unknown>(null),
-    [envoi, setEnvoi] = useState(false);
-  const domaines = def.data?.definition.domains ?? [];
-  const valide = id.trim() && titre.trim() && (nouveau.trim() || domaine);
-  const enregistrer = async () => {
-    setEnvoi(true);
-    try {
-      setErreur(null);
-      await api('POST', `/api/library/frameworks/${cible.id}/requirements`, {
-        body: {
-          expectedVersion: cible.version,
-          ...(nouveau.trim() ? { newDomainLabel: nouveau.trim() } : { domain: domaine }),
-          id: id.trim(),
-          title: titre.trim(),
-          description,
-        },
-      });
-      await onDone();
-    } catch (e) {
-      setErreur(e);
-    } finally {
-      setEnvoi(false);
-    }
-  };
-  return (
-    <Modal opened onClose={onClose} size="lg" title={`Ajouter une exigence à ${cible.name}`}>
-      <Stack>
-        <ErrorAlert error={erreur ?? def.error} />
-        <Text size="sm">
-          Chaque ajout publie une nouvelle version immuable de la copie. Un identifiant déjà présent est remplacé dans
-          cette nouvelle version ; les versions précédentes restent consultables.
-        </Text>
-        <Select
-          label="Domaine"
-          searchable
-          clearable
-          data={domaines.map((d) => ({ value: d.id, label: d.label }))}
-          value={domaine}
-          onChange={setDomaine}
-          disabled={!!nouveau.trim()}
-        />
-        <TextInput
-          label="Ou nouveau domaine"
-          description="Libellé du domaine à créer."
-          value={nouveau}
-          onChange={(e) => setNouveau(e.currentTarget.value)}
-        />
-        <TextInput label="Identifiant de l’exigence" value={id} onChange={(e) => setId(e.currentTarget.value)} />
-        <TextInput label="Intitulé" value={titre} onChange={(e) => setTitre(e.currentTarget.value)} />
-        <Textarea
-          label="Description"
-          autosize
-          minRows={3}
-          value={description}
-          onChange={(e) => setDescription(e.currentTarget.value)}
-        />
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button loading={envoi} disabled={!valide} onClick={enregistrer}>
-            Publier la nouvelle version
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
   );
 }

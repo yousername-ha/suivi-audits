@@ -6,6 +6,7 @@ import { isObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 
@@ -26,15 +27,16 @@ export class PilotageBoites {
     if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user);
     await this.g.permission(user, GRC_MODULES.process, 'lire');
-    const etat = await this.g.legacy.recompose();
-    const refs = (Array.isArray(etat?.data.processes) ? (etat!.data.processes as unknown[]) : [])
+    const portee = PorteeLecture.pour(this.g, user);
+    const etat = await portee.etatHistorique();
+    const refs = (Array.isArray(etat.data.processes) ? (etat.data.processes as unknown[]) : [])
       .filter(isObject)
       .filter((p) => typeof p.id === 'string')
       .map((p) => `legacy:processes:${p.id}`);
     const lire = (m: 'ecarts' | 'pilotage') => user.rights.can(m, 'lire');
     const politique = (await this.g.policy(smsi, user)).definition;
     const clos = new Set(politique.statuses.filter((s) => s.terminal).map((s) => s.id));
-    const masques = await this.g.registres.inaccessibles(user, smsi);
+    const masques = await portee.masquesDuPerimetre(smsi);
     // Chemins jsonb fixes.
     const objets = await this.g.db.k
       .selectFrom('grc_objects')

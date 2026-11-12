@@ -1,6 +1,7 @@
 # ADR 0037 — Standards verrouillés, copies personnalisables, jeu de test et contrôle des relations
 
-Statut : Acceptée. Date : 13/10/2026.
+Statut : Acceptée. Date : 13/10/2026. Point 2 (copies personnalisables **dans la bibliothèque**) remplacé par
+l'[ADR 0082](0082-referentiels-du-perimetre-copie-et-application.md) : la bibliothèque est figée, la copie se fait dans le périmètre.
 
 ## Contexte
 

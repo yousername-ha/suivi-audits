@@ -630,21 +630,19 @@ Restriction : L’avancement ne constitue ni conformité ni certification ; rece
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-026.
 
-## FCT-027 — BIA, continuité, exercices et RETEX E
+## FCT-027 — Continuité, exercices et RETEX E (le BIA est retiré)
 
 Objectif : Formulaires génériques, impacts temporels, objectifs cohérents, validations et rapports HTML/JSON testés.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/pilotage/bia ; /pilotage/continuite ; /pilotage/exercices**.
+Accès : **/pilotage/continuite ; /pilotage/exercices**.
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Dans BIA, renseigner activité/service/scénario/dépendances et impacts dans le temps.
-2. Fixer service minimum, durée maximale d’interruption et objectifs de reprise/perte compatibles.
-3. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
-4. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
-5. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
+1. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
+2. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
+3. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
 
 Champs/paramètres : Activité, Service rendu, Périmètre, Scénario d’interruption, Criticité de l’activité, Durée maximale d’interruption (heures), Objectif de reprise (heures), Perte de données acceptable (heures), Service minimum attendu, Ressources nécessaires, Dépendances et fournisseurs, État, Justification
 Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
@@ -775,53 +773,13 @@ Restriction : Reprise fonctionnelle IA distincte du futur assistant MCP J, exclu
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-032.
 
-## FCT-033 — CRRC, établissements et offres
+## FCT-033 — CRRC, établissements et offres (retiré)
 
-Objectif : Code historique conservé ; parcours CRRC complet non rejoué.
+Module retiré le 11/11/2026 par décision du RSSI ([ADR 0084](../adr/0084-retrait-des-modules-crrc-et-investissements.md)) : plus de page, de droit ni de donnée.
 
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → CRRC**.
-Profils : Session complète, lecture du domaine crrc ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
+## FCT-034 — Investissements et prospection (retiré)
 
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : CRRC-01 à CRRC-04 au backlog ; offres/statuts/carte/exports attendent cadrage autorisé.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-033.
-
-## FCT-034 — Investissements et prospection
-
-Objectif : Registre et code d’export conservés ; INV-01 et INV-02 ne sont pas revendiqués livrés.
-
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → Investissements**.
-Profils : Session complète, lecture du domaine investissements ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Filtres/vues et prospection au backlog ; lot D exclu de la livraison actuelle.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-034.
+Module « Plan d’investissement » (rubrique Budget) retiré le 11/11/2026 par décision du RSSI ([ADR 0084](../adr/0084-retrait-des-modules-crrc-et-investissements.md)) : plus de page, de droit ni de donnée.
 
 ## FCT-035 — Incidents, crise et main courante
 
@@ -847,29 +805,9 @@ Restriction : INC-01 à INC-03, déclarations, événements et COMSEC à cadrer 
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-035.
 
-## FCT-036 — Revues d’accès métier historiques
+## FCT-036 — Revues d’accès métier historiques (retiré)
 
-Objectif : Distinct de la revue technique RBAC déjà reprise (FCT-002).
-
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → Pilotage**.
-Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Reprise périodique et preuve de réalisation des revues métier à spécifier.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-036.
+Module retiré le 11/11/2026 par décision du RSSI ([ADR 0087](../adr/0087-retrait-du-module-revues-des-acces.md)) : les revues d’accès se suivent par une **tâche récurrente** du Pilotage. L’export de la revue des accès des comptes (Administration → Utilisateurs) reste disponible.
 
 ## FCT-037 — Revues de direction
 
@@ -992,7 +930,7 @@ Emplacements descriptifs, **aucune fausse capture générée** :
 | Risque/carte                 | Fiche fictive, méthode/version, légende, brut/résiduel et détail au clic.     |
 | Preuve/contrôle              | Versions documentaires fictives, résultat et action liée.                     |
 | Parcours qualité             | Étape et validation fictive ; aucun faux score de conformité.                 |
-| Continuité                   | BIA et plan fictifs, objectifs, dépendances, rapport imprimable.              |
+| Continuité                   | Plan fictif, exercices, rapport imprimable.                                   |
 | Exploitation                 | État final anonymisé ; aucun chemin privé, secret ou token affiché.           |
 
 Les références visuelles existantes tests/e2e/specs/**captures** prouvent des

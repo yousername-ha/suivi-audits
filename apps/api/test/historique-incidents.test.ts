@@ -1,4 +1,4 @@
-/* Reprise du registre des incidents, de la cellule de crise et de l'alerte CRRC → incident de l'outil de suivi : écritures
+/* Reprise du registre des incidents et de la cellule de crise de l'outil de suivi : écritures
    natives sous verrou, droits croisés (écarts, pilotage, incidents), champs inconnus conservés. Données fictives. */
 import { schema15Problems } from '@suivi/shared/legacy';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -13,7 +13,7 @@ beforeAll(async () => {
   admin = await login(t, await makeUser(t, 'inc_admin', 'admin'));
   reader = await login(t, await makeUser(t, 'inc_reader', 'ro'));
   writer = await login(t, await makeUser(t, 'inc_writer', 'rw'));
-  sansEcarts = await login(t, await makeUser(t, 'inc_sans_ecarts', null, { modules: ['incidents', 'crrc'] }));
+  sansEcarts = await login(t, await makeUser(t, 'inc_sans_ecarts', null, { modules: ['incidents'] }));
   const cur = await admin.get('/api/suivi/etat');
   const s = cur.json();
   s.entityCategory = 'essentielle';
@@ -31,21 +31,6 @@ beforeAll(async () => {
   ];
   s.crisis = {
     scenarios: [{ id: 'SCN-1', title: 'Scénario fictif', items: [{ phase: 'Alerte', t: 'Alerter', owner: '' }] }],
-  };
-  s.crrc = {
-    establishments: [{ id: 'E1', name: 'Établissement fictif', status: 'Actif' }],
-    resources: [{ id: 'R1', est: 'E1', name: 'NAS fictif', tech: 's3' }],
-    alerts: [
-      {
-        id: 'ALR-1',
-        date: '2026-10-12T03:00',
-        severity: 'Haute',
-        est: 'E1',
-        res: 'R1',
-        message: 'Échec fictif',
-        status: 'Ouverte',
-      },
-    ],
   };
   await seedState(t, s);
 });
@@ -107,22 +92,6 @@ describe('registre des incidents', () => {
     expect(s.findings[0]).toMatchObject({ id: 'INC-AC-01', type: 'PP', status: 'Ouvert', items: ['A-5.27'] });
     expect((await writer.post(`/api/incidents/${incident}/action`)).statusCode).toBe(409);
     expect((await reader.get('/api/incidents')).json().ecarts).toEqual({ 'INC-AC-01': 'Ouvert' });
-  });
-  it('ouvre une fiche depuis une alerte CRRC, avec le droit des incidents', async () => {
-    const r = await writer.post('/api/crrc/alertes/ALR-1/incident');
-    expect(r.statusCode, r.body).toBe(201);
-    const s = await etat();
-    const inc = s.incidents.find((x: { id: string }) => x.id === r.json().incident);
-    expect(inc).toMatchObject({
-      title: 'Sauvegarde : Échec fictif (Établissement fictif)',
-      desc: 'Alerte ALR-1 du 12/10/2026 03:00 sur NAS fictif.',
-      kind: 'Incident',
-      cat: 'Indisponibilité de service',
-      status: 'Qualifié',
-      reporter: 'Gestion CRRC',
-    });
-    expect(s.crrc.alerts[0]).toMatchObject({ incident: r.json().incident, status: 'En cours' });
-    expect((await writer.post('/api/crrc/alertes/ALR-1/incident')).statusCode).toBe(409);
   });
   it('tient la chronologie du RETEX : ajout, tri, modification, retrait, droits et champs inconnus conservés', async () => {
     const url = '/api/incidents/INC-2026-001/retex';

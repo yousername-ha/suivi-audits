@@ -18,7 +18,6 @@ import { COLLECTIONS_COEUR, CLES_REGLAGES } from './historique/tables/coeur.js';
 import { ecartsNatifsMapper } from './historique/ecarts-natifs.js';
 import { CARTES, GROUPES } from './historique/tables/groupes.js';
 import { reglagesMapper } from './historique/tables/reglages.js';
-import { investMapper } from './historique/tables/invest.js';
 import { LegacyStore } from './legacy/store.js';
 import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
@@ -46,7 +45,6 @@ export function createServices(cfg: Config, log: Logger) {
   const legacy = new LegacyStore(cfg, db);
   // Modules repris dans des tables (ADR 0007) : /legacy les affiche, le serveur refuse leurs modifications.
   legacy.register(mapsMapper);
-  legacy.register(investMapper);
   for (const spec of COLLECTIONS) legacy.register(collectionMapper(spec));
   for (const spec of GROUPES) legacy.register(groupeMapper(spec));
   for (const spec of CARTES) legacy.register(carteMapper(spec));

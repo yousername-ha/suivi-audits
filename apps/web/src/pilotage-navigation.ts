@@ -68,7 +68,6 @@ export const PILOTAGE_NAV = [
       { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
       { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
       { id: 'evaluations-clausier', label: 'Évaluations par le clausier (Club RSSI Santé)', module: 'fournisseurs' },
-      { id: 'revues-acces', label: 'Revues des accès', module: 'pilotage' },
     ],
   },
   {
@@ -101,7 +100,6 @@ export const PILOTAGE_NAV = [
   {
     label: 'Plans et revues',
     items: [
-      { id: 'bia', label: 'Impacts sur l’activité — BIA', module: 'pilotage' },
       { id: 'continuite', label: 'Continuité et reprise', module: 'pilotage' },
       { id: 'exercices', label: 'Exercices et RETEX', module: 'pilotage' },
       { id: 'plans-calendrier', label: 'Calendrier des plans', module: 'pilotage' },
@@ -122,23 +120,6 @@ export const PILOTAGE_NAV = [
       { id: 'crise-contacts', label: 'Contacts de crise', module: 'incidents' },
       { id: 'crise-scenarios', label: 'Scénarios et check-lists', module: 'incidents' },
     ],
-  },
-  {
-    label: 'Gestion CRRC',
-    items: [
-      { id: 'crrc-ensemble', label: 'Vue d’ensemble CRRC', module: 'crrc' },
-      { id: 'crrc-etablissements', label: 'Établissements et contrats', module: 'crrc' },
-      { id: 'crrc-offres', label: 'Catalogue des offres', module: 'crrc' },
-      { id: 'crrc-tableau', label: 'Tableau de bord des sauvegardes', module: 'crrc' },
-      { id: 'crrc-ressources', label: 'Sauvegardes par ressource', module: 'crrc' },
-      { id: 'crrc-restaurations', label: 'Restaurations', module: 'crrc' },
-      { id: 'crrc-alertes', label: 'Alertes de sauvegarde', module: 'crrc' },
-      { id: 'crrc-rapports', label: 'Rapports mensuels', module: 'crrc' },
-    ],
-  },
-  {
-    label: 'Budget',
-    items: [{ id: 'investissements', label: 'Plan d’investissement', module: 'investissements' }],
   },
   {
     label: 'Outils',

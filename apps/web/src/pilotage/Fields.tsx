@@ -1,15 +1,4 @@
-import {
-  Checkbox,
-  Group,
-  MultiSelect,
-  NumberInput,
-  Select,
-  Stack,
-  Textarea,
-  TextInput,
-  Button,
-  Text,
-} from '@mantine/core';
+import { Checkbox, MultiSelect, NumberInput, Select, Stack, Textarea, TextInput, Text } from '@mantine/core';
 import { PILOTAGE_FIELDS, type GrcKind, type PilotageField } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -265,7 +254,6 @@ export function Fields({
       />
     );
   };
-  const impacts = Array.isArray(data.impacts) ? (data.impacts as Record<string, unknown>[]) : [];
   return (
     <Stack>
       {fields.map(input)}
@@ -289,69 +277,6 @@ export function Fields({
           onChange={(v) => onChange('auditedFrameworks', v)}
           readonly={readonly}
         />
-      )}
-      {kind === 'bia' && (
-        <Stack>
-          <Text fw={600}>Impacts selon la durée d’interruption</Text>
-          <Text size="sm">Décrivez les conséquences concrètes aux durées utiles à votre activité.</Text>
-          {impacts.map((row, index) => (
-            <fieldset key={index} disabled={readonly} className="grc-fieldset">
-              <Stack>
-                <NumberInput
-                  label="Durée d’interruption (heures)"
-                  value={Number(row.hours ?? 0)}
-                  min={0}
-                  onChange={(v) =>
-                    onChange(
-                      'impacts',
-                      impacts.map((x, i) => (i === index ? { ...x, hours: Number(v) } : x)),
-                    )
-                  }
-                />
-                {[
-                  ['business', 'Impact métier'],
-                  ['financial', 'Impact financier'],
-                  ['legal', 'Impact juridique'],
-                  ['reputation', 'Impact sur la réputation'],
-                ].map(([key, label]) => (
-                  <Textarea
-                    key={key}
-                    label={label}
-                    value={String(row[key!] ?? '')}
-                    onChange={(e) =>
-                      onChange(
-                        'impacts',
-                        impacts.map((x, i) => (i === index ? { ...x, [key!]: e.currentTarget.value } : x)),
-                      )
-                    }
-                  />
-                ))}
-                <Button
-                  variant="subtle"
-                  onClick={() =>
-                    onChange(
-                      'impacts',
-                      impacts.filter((_, i) => i !== index),
-                    )
-                  }
-                >
-                  Retirer cette durée
-                </Button>
-              </Stack>
-            </fieldset>
-          ))}
-          <Group>
-            <Button
-              variant="light"
-              disabled={readonly || impacts.length >= 30}
-              onClick={() =>
-                onChange('impacts', [...impacts, { hours: 24, business: '', financial: '', legal: '', reputation: '' }])
-              }
-            >
-              Ajouter une durée d’interruption
-            </Button>
-          </Group>
-        </Stack>
       )}
     </Stack>
   );

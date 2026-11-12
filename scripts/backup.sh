@@ -83,6 +83,11 @@ tar czf "$WORK/secrets.tgz" -C "$DATA_DIR/secrets" .
 membres=(suivi.dump secrets.tgz INFO)
 # Autorité de certification interne (CADDY_TLS=internal) : la conserver évite de redéployer le certificat racine.
 if [ -d "$DATA_DIR/caddy/data" ]; then
+  # Ce dossier est modifiable par le frontal (exposé à Internet) : seuls des fichiers et dossiers ordinaires sont sauvegardés,
+  # comme le vérificateur de restauration les accepte. Un lien ou un fichier spécial rendrait la sauvegarde non restaurable.
+  if [ -n "$(find "$DATA_DIR/caddy/data" ! -type f ! -type d -print -quit)" ]; then
+    arret "caddy/data contient des liens ou des fichiers spéciaux : sauvegarde refusée (contrôler le frontal, puis les retirer)."
+  fi
   tar czf "$WORK/caddy.tgz" -C "$DATA_DIR/caddy/data" .
   membres+=(caddy.tgz)
 fi
@@ -102,6 +107,13 @@ docker compose exec -T -u postgres db psql -d suivi -Atc "SELECT 'version_donnee
 # L'archive contenant les secrets reste dans le dossier temporaire privé.
 PLAIN="$WORK/complete.tar"
 tar cf "$PLAIN" -C "$WORK" "${membres[@]}"
+# Les membres sont maintenant dans l'archive : les retirer libère l'espace temporaire (limité dans le conteneur
+# d'exécution) avant le contrôle, qui réextrait une copie, et ne laisse pas les secrets en double.
+rm -f "$WORK/suivi.dump" "$WORK/secrets.tgz" "$WORK/caddy.tgz"
+# Une archive déclarée « vérifiée » passe le même contrôle que la restauration : structure, bornes, secrets, INFO.
+python3 "$REPO/scripts/verifier-archive-restauration.py" --nom "$(basename "$OUT")" "$PLAIN" "$WORK/controle" > /dev/null \
+  || arret "L'archive ne passerait pas le contrôle de restauration : sauvegarde refusée."
+rm -rf "$WORK/controle"
 TEMP_OUT=$(mktemp "$DEST/.suivi-backup.XXXXXX")
 age -r "$PUBLIQUE" -R "$SECOURS" -o "$TEMP_OUT" "$PLAIN"
 # Contrôle de bout en bout avec la clé du serveur avant de publier l'archive : déchiffrement authentifié, lisible comme tar.

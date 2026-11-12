@@ -29,6 +29,8 @@ npm-debug.log*
 # Jeton d’installation des tests de bout en bout
 tests/e2e/.jeton
 tests/e2e/.tmp-e2e/
+# Navigateur, captures et trace du pilote de l'agent RSSI virtuel (peuvent montrer des secrets d'installation fictifs)
+tests/e2e/rssi-virtuel/.pilote/
 
 # Données de développement (docker-compose.dev.yml) et copie de .env faite pendant une mise à jour
 .donnees-dev/

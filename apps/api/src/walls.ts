@@ -82,7 +82,7 @@ export class Walls {
   /** Écran mural de la requête (cookie), ou null. Met à jour la dernière activité (au plus une fois par minute). */
   async load(req: FastifyRequest): Promise<WallSession | null> {
     const c = parseCookies(req.headers.cookie);
-    const tok = c.get(WALL_COOKIE_SECURE) || c.get(WALL_COOKIE_PLAIN);
+    const tok = c.get(this.securise(req) ? WALL_COOKIE_SECURE : WALL_COOKIE_PLAIN);
     if (!tok || tok.length > 100) return null;
     const r = await this.db.k
       .selectFrom('wall_screens')
@@ -124,8 +124,13 @@ export class Walls {
     return r?.name ?? null;
   }
 
+  /** Le cookie de cette requête est-il émis (et donc lu) sous le nom préfixé ? */
+  private securise(req: FastifyRequest): boolean {
+    return this.cfg.cookieSecure === 'true' || (this.cfg.cookieSecure === 'auto' && isHttps(req));
+  }
+
   private setCookie(req: FastifyRequest, reply: FastifyReply, value: string, maxAge: number) {
-    const secure = this.cfg.cookieSecure === 'true' || (this.cfg.cookieSecure === 'auto' && isHttps(req));
+    const secure = this.securise(req);
     reply.header(
       'Set-Cookie',
       `${secure ? WALL_COOKIE_SECURE : WALL_COOKIE_PLAIN}=${value}; Path=/; HttpOnly; SameSite=Strict${secure ? '; Secure' : ''}; Max-Age=${maxAge}`,

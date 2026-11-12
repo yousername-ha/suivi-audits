@@ -199,13 +199,11 @@ export function BusinessRegistry({
                 : 'Vérifier l’efficacité'}
           </Button>
         )}
-        {editable &&
-          ['bia', 'continuity_plan', 'management_review'].includes(kind) &&
-          can('pilotage', 'administrer') && (
-            <Button variant="default" size="xs" onClick={() => onDecision(o, 'approval')}>
-              Valider
-            </Button>
-          )}
+        {editable && ['continuity_plan', 'management_review'].includes(kind) && can('pilotage', 'administrer') && (
+          <Button variant="default" size="xs" onClick={() => onDecision(o, 'approval')}>
+            Valider
+          </Button>
+        )}
         <Menu>
           <Menu.Target>
             <Button variant="subtle" size="xs" aria-label={'Autres actions pour ' + o.name}>
@@ -270,7 +268,6 @@ export function BusinessRegistry({
                 'management_review',
                 'continuity_exercise',
                 'continuity_plan',
-                'bia',
                 'objective',
               ].includes(kind) &&
               can('ecarts', 'modifier') && (

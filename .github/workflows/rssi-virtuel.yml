@@ -1,0 +1,47 @@
+# RSSI virtuel : parcours d'un RSSI sur une installation neuve (installation, DdA, écarts) et invariants du SMSI, sur une
+# pile Docker éphémère construite depuis la branche. Hors des contrôles exigés pour fusionner une PR : lancement manuel
+# (onglet Actions) et chaque semaine sur la branche de travail. Les constats ouverts sont des test.fail attendus : le job
+# devient rouge si un parcours régresse, si un invariant bloquant est violé ou si un constat est corrigé sans retirer son
+# marqueur. Agent exploratoire : .claude/agents/rssi-virtuel.md ; guide : docs/05_RECETTE/RSSI_VIRTUEL.md.
+name: RSSI virtuel
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rssi-virtuel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rssi-virtuel:
+    name: Parcours du RSSI virtuel et invariants du SMSI
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'schedule' && 'claude-suivi-smsi' || github.ref }}
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @suivi/e2e
+      - name: Pile éphémère, harnais du RSSI virtuel, remise à zéro
+        env:
+          CI: 'true'
+        run: sudo --preserve-env=CI tests/e2e/rssi-virtuel/lancer.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: rssi-virtuel-resultats
+          path: |
+            tests/e2e/rssi-virtuel/playwright-report/
+            tests/e2e/rssi-virtuel/test-results/
+          if-no-files-found: ignore

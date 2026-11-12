@@ -49,7 +49,7 @@ interface ExigenceBib {
   title?: string;
 }
 
-/** Rend disponibles les référentiels ISO/IEC 27001:2022 et HDS, et les rattache au pilotage commun. */
+/** Rend disponibles les référentiels ISO/IEC 27001:2022 et HDS, et les applique au pilotage commun (copies appliquées). */
 export async function rattacherStandards(ctx: ContexteDemo) {
   const { appel, exiger, commun } = ctx;
   const rattacher = async (identifier: string) => {
@@ -58,8 +58,10 @@ export async function rattacherStandards(ctx: ContexteDemo) {
       `Adoption du référentiel ${identifier}`,
     );
     await exiger(
+      // Copie du pilotage commun, appliquée d'emblée : la démonstration l'évalue aussitôt (ADR 0082).
       await appel('PUT', `/api/grc/${commun}/framework-attachments/${f.id}`, {
         version: f.version,
+        statut: 'applique',
         confirm: 'RATTACHER',
       }),
       `Rattachement du référentiel ${identifier}`,

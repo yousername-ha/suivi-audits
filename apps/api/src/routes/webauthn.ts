@@ -294,7 +294,7 @@ export const webauthnRoutes = [
       await exigerMotDePasse(svc, sess.user, ip, body.password);
       limiter(svc.limits.mfaByUser(sess.user.id));
       let facteur: 'totp' | 'webauthn' | 'mot_de_passe';
-      if (!sess.user.totpEnabled && sess.user.cles === 0) {
+      if (!sess.user.totpEnabled && sess.user.clesEnregistrees === 0) {
         // Aucun second facteur encore (double authentification facultative sur ce serveur) : le mot de passe suffit.
         facteur = 'mot_de_passe';
       } else if (!body.code && !body.response) {

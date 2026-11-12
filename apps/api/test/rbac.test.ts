@@ -1,5 +1,8 @@
 /* Droits (RBAC) : matrice automatique permissions × routes, garde-fous, rôles, groupes, expiration, revue des accès,
    filtrage de l'outil historique selon les modules. */
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 import { ALL_PERMISSIONS, isPermission, type Permission } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -34,8 +37,9 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
   });
   const guarded = routes.filter((r) => isPermission(r.access) || r.access === 'metier' || r.access === 'mur');
 
-  /** Seules routes sans permission métier : authentification, compte personnel, temps réel, pages et fichiers statiques. */
-  const UNGUARDED = new Set([
+  /** Routes sans permission métier par construction : authentification, compte personnel, temps réel, pages et fichiers
+      statiques, données publiques de la plateforme. Aucune donnée d'un autre compte ni d'un module métier n'en sort. */
+  const PAR_CONSTRUCTION = new Set([
     'GET /healthz',
     'GET /api/health/ready',
     'GET /api/version',
@@ -80,6 +84,11 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/account/notifications',
     'PUT /api/account/notifications',
     'POST /api/mur/activer',
+  ]);
+
+  /** Routes dont le service décide de l'accès (droits de module, périmètre, registre restreint, droit attribué, habilitation
+      sur un objet). Le test ci-dessous vérifie que chacune est appelée par un test qui contrôle un refus (401, 403 ou 404). */
+  const SERVICE = new Set([
     // Catalogue de configuration GRC : droits contrôlés par le service (pilotage, paramètres ou administration), testés dans
     // config-grc.test.ts (401, 403, portée du périmètre, droits de publication).
     // Registres et droits par ressource (ADR 0043) : l'autorisation (droits de module, périmètres, droits attribués) est évaluée
@@ -94,6 +103,8 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'POST /api/registres/:id/archivage',
     'GET /api/registres/:id/elements',
     'GET /api/registres/elements',
+    // Annuaire des responsables : désigner exige modifier sur un module métier ou un rôle de registre du périmètre (403
+    // sinon), testé dans responsables-droits.test.ts.
     'GET /api/grc/:smsi/responsables',
     'POST /api/grc/:smsi/objects/:id/deplacement',
     'GET /api/registres/elements/:id/acces',
@@ -132,6 +143,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'POST /api/config-grc/items/:id/restore',
     'DELETE /api/config-grc/items/:id',
   ]);
+  const UNGUARDED = new Set([...PAR_CONSTRUCTION, ...SERVICE]);
 
   it('toute route hors de la liste explicite exige une permission (ou un module métier lisible)', () => {
     const unexpected = routes
@@ -140,6 +152,41 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
       .filter((k) => !UNGUARDED.has(k));
     expect(unexpected).toEqual([]);
     expect(guarded.length).toBeGreaterThan(40);
+  });
+
+  it('chaque route dont le service décide de l’accès est appelée par un test qui vérifie un refus (401, 403 ou 404)', () => {
+    const dossier = path.dirname(fileURLToPath(import.meta.url));
+    const tests = readdirSync(dossier)
+      .filter((f) => f.endsWith('.test.ts') && f !== 'rbac.test.ts')
+      .map((f) => readFileSync(path.join(dossier, f), 'utf8'));
+    const REFUS = /(?:toBe|toEqual)\((?:401|403|404)\)|\[(?:401|403|404)[,\]]|status(?:Code)?: (?:401|403|404)/;
+    const segment = (s: string) =>
+      s.startsWith(':') ? '(?:\\$\\{[^}]*\\}|[^/\'"`\\s?]+)' : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const motif = (url: string, prefixeEnConstante: boolean) => {
+      const parts = url.split('/').filter(Boolean);
+      // Un test peut déclarer le préfixe dans une constante (`const base = '/api/config-grc'`, puis `${base}/items`).
+      const debut = prefixeEnConstante ? '\\$\\{[^}]+\\}' : '/' + parts.slice(0, 2).map(segment).join('/');
+      return new RegExp(debut + '/' + parts.slice(2).map(segment).join('/') + '(?![A-Za-z0-9_/-])');
+    };
+    const sansTest = [...SERVICE].filter((cle) => {
+      const url = cle.split(' ')[1]!;
+      const prefixe = '/' + url.split('/').filter(Boolean).slice(0, 2).join('/');
+      return !tests.some(
+        (t) =>
+          REFUS.test(t) &&
+          (motif(url, false).test(t) ||
+            (t.includes(prefixe) && url.split('/').filter(Boolean).length > 2 && motif(url, true).test(t))),
+      );
+    });
+    expect(
+      sansTest,
+      'Ajouter un test de refus (compte sans droit, hors périmètre ou registre restreint) pour ces routes.',
+    ).toEqual([]);
+  });
+
+  it('la liste des routes sans permission ne contient que des routes qui existent', () => {
+    const existantes = new Set(routes.map((r) => `${r.method} ${r.url}`));
+    expect([...UNGUARDED].filter((k) => !existantes.has(k))).toEqual([]);
   });
 
   it('refus sans la permission, accès avec la seule permission requise', async () => {
@@ -164,9 +211,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
         r.access === 'metier' || r.access === 'mur'
           ? ALL_PERMISSIONS.filter(
               (p) =>
-                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|crrc|investissements|incidents|cartographie):lire$/.test(
-                  p,
-                ),
+                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|incidents|cartographie):lire$/.test(p),
             )
           : ALL_PERMISSIONS.filter((p) => p !== r.access),
       );

@@ -47,6 +47,11 @@ API et base appartiennent à des réseaux internes ; les flux externes de mise
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 
+Lecture entre modules ([ADR 0083](../adr/0083-porte-de-lecture-autorisee-entre-modules.md), acceptée) : une donnée d'un
+module qui sort vers un autre passe par une portée de lecture (`apps/api/src/acces/portee.ts`), calculée une fois par
+requête pour un lecteur : droit de module, périmètre, registre restreint, rôle attribué. Le branchement des lecteurs
+existants est progressif ; seul le module existe à ce stade.
+
 ## Technologies vérifiées
 
 | Technologie                   | Version de source vérifiée                                                  |

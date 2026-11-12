@@ -8,6 +8,172 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [6.3.0] — 2026-11-12
+
+Version mineure : trois migrations SQL (`052` additive, `053` et `054` destructives), aucune nouvelle dépendance. Elle apporte la **porte de lecture
+autorisée entre modules** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md)) et le durcissement des droits, des registres, de
+l'authentification et de l'exploitation issus d'un audit externe, les **référentiels de périmètre en copie** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)),
+le support de **Rocky Linux 10** comme serveur ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md)), et retire les modules **CRRC**, **Investissements**
+(Budget) et **Revues des accès** ainsi que le **BIA**. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.2.1** (depuis l'interface web ou `scripts/mettre-a-jour.sh`) : **aucune action sur le serveur**, mais **trois migrations
+automatiques**, appliquées au démarrage de `app` : `052` (additive) et **`053` et `054`, destructives**. La sauvegarde automatique d'avant mise à
+jour précède la mise à jour et reste le seul retour arrière.
+
+- **`052` : référentiels des périmètres** (additive, durée négligeable). Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce
+  périmètre, nommée « <référentiel> (PRIVE - <périmètre>) », au statut « appliqué » (il reste suivi en conformité comme avant) ; un « Désactiver ici »
+  d'un référentiel hérité reste une surcharge qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement n'est réécrit. Les
+  intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel
+  library management ».)_
+- **`053` : retrait des modules CRRC et Investissements** ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les
+  établissements, ressources, sauvegardes, restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés
+  définitivement**. Exporter avant (Exports Excel de la version précédente) si ces données doivent être conservées. Les droits `crrc` et
+  `investissements` disparaissent des rôles et des attributions.
+- **`054` : retrait du module « Revues des accès »** des applications ([ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) : la table des
+  revues est **supprimée définitivement** ; les revues d'accès se suivent par une tâche récurrente du Pilotage, et l'export de la revue des accès des
+  comptes (Administration) est inchangé.
+- **Retrait du BIA** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : le type d'objet « analyse d'impact sur l'activité » disparaît du Pilotage.
+  **Pas de migration** : une instance de test qui contient des fiches BIA doit être **réinstallée** ; les plans de continuité et les exercices sont
+  conservés.
+
+_(Session « Projet audit_suivi Coeur ».)_
+
+### Sécurité
+
+- **Authentification** : une clé de sécurité suspendue reste un facteur enregistré ; elle n'abaisse plus l'assurance exigée
+  à la connexion ni à la ré-authentification (seul un compte sans aucun facteur enregistré reste connectable par mot de
+  passe). Le cookie de session et celui de l'écran mural ne sont lus que sous le nom que le serveur émettrait pour la
+  requête : sur HTTPS, uniquement le nom préfixé `__Host-`. Aucune action sur le serveur. _(Session « Projet audit_suivi
+  Coeur ».)_
+
+- **Registres restreints et périmètres** (ADR 0043) : la carte des risques, son graphe et le rapport de comité, les
+  aperçus de déplacement et de périmètres, l'import Tenacy, l'historique et l'export des décisions de pilotage, ainsi que
+  le registre des usages de la configuration GRC ne renvoient plus que ce que la personne peut lire (ce qui ne se lit pas
+  est compté, jamais nommé). Une action issue d'une décision sur une fiche de registre restreint se range dans un plan
+  d'accueil choisi par l'auteur (champ facultatif `registreId` de la décision ; l'écran de décision propose le choix).
+  Une ligne d'import Tenacy visant un écart que la personne ne gère pas est « refusée (droits) ». Aucune action sur le
+  Déplacer un élément vers un registre ne donne pas à un contributeur de module une autorité d'attribution qu'il n'avait pas et ne
+  le rend pas restreint : le rôle donné automatiquement au créateur d'un registre ne suffit pas (ADR 0067 §1 et §3).
+  serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Droits par module** (ADR 0010) : les vues des modules repris ne renvoient plus les clés d'un module que la personne ne
+  peut pas lire (écarts, échéance de clôture, déclaration d'applicabilité) ; écrire la déclaration d'applicabilité exige
+  aussi `pilotage:modifier`. La simulation d'import, le rapport enregistré et le téléchargement du fichier brut se limitent
+  aux modules lisibles ou exportables (un fichier illisible n'est plus servi). Les noms d'objets copiés dans les cartes ne
+  sortent que pour qui lit le module source. L'annuaire des responsables est réservé à qui peut désigner un responsable
+  dans le périmètre (modification d'un module métier ou rôle de registre). Aucune action sur le serveur. _(Session
+  « Projet audit_suivi Coeur ».)_
+
+- **Porte de lecture autorisée entre modules** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  acceptée le 11/11/2026) : nouvelle portée de lecture (`apps/api/src/acces/portee.ts`) qui applique, avec les droits du lecteur, le droit
+  de module, le périmètre, le registre restreint et le rôle attribué, et sur laquelle les lectures transverses seront
+  branchées une à une. Fondation seule : aucun branchement, aucun changement de comportement, aucune migration. Aucune
+  action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,
+  compte ou autorité le supprime : il faut le ressaisir) ; une restauration lancée depuis l'interface exige un code de
+  double authentification ; après une restauration, la clé de secours et l'adresse du site en service sur le serveur font foi
+  (réalignement unique, journalisé) ; une sauvegarde déclarée vérifiée passe le contrôle de la restauration et refuse les liens
+  dans `caddy/data` ; le service `init` attribue les dossiers du frontal par descripteurs et `restore.sh` arrête aussi le
+  frontal (sauf pendant une mise à jour web, où il reste en service pour la page de maintenance) ; le canal de publication est lié à la révision signée (stable seul, `UPDATE_CHANNEL=development` pour accepter les
+  préversions, repli sur les étiquettes réservé aux déploiements déclarés privés) ; `mettre-a-jour.sh` vérifie et épingle
+  l'empreinte tirée et non l'étiquette. Le guide décrit la vérification facultative d'une installation neuve et les réglages
+  GitHub à contrôler. **Action sur le serveur : aucune** ; option facultative `UPDATE_CHANNEL` dans `.env`.
+  _(Session « Projet audit_suivi Coeur ».)_
+- **Lecture de l'état historique par la porte** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2a) : les vues natives des modules repris (audit, DdA, GAP, incidents, plans, CRRC, investissements, crise,
+  évaluations des fournisseurs, revues d'accès) lisent l'état historique rédigé par la porte de lecture, après le contrôle du
+  droit du module. Comportement inchangé (mêmes clés masquées, mêmes refus). Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+- **Carte des risques et rapport de comité par la porte** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2b) : la carte des risques (projection, graphe, traversée des références liées) et le rapport de comité
+  appliquent le droit du module et le masque des registres restreints par la porte de lecture, au lieu de règles écrites sur
+  place. Comportement inchangé pour les droits existants ; un objet d'un module désactivé n'apparaît plus dans le graphe,
+  comme dans les listes. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Pilotage par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), sous-chantier
+  2c) : l'historique des décisions, l'export du registre, les indicateurs d'amélioration, la revue de direction, les boîtes et
+  les cartes de processus obtiennent l'état historique rédigé, les registres restreints masqués et la lisibilité des
+  références citées par la porte, au lieu de règles écrites sur place. Comportement inchangé pour les droits existants ; une
+  référence dont la résolution est refusée pour une autre raison qu'un droit (module désactivé, par exemple) est masquée au
+  lieu de faire échouer la lecture. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Catalogue de configuration par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2e) : la liste, les compteurs, les usages et l'étude d'impact du catalogue de configuration GRC ne retiennent
+  que les consommateurs et variantes d'un périmètre lisible, par la porte de lecture (cache par périmètre), au lieu de trois
+  caches écrits sur place. Comportement inchangé pour les droits existants. Les chemins d'écriture sous transaction (déplacement,
+  import Tenacy) restent sur les primitives GRC, ce que l'ADR consigne. Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+- **Tableau de bord par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2g) : la portée des agrégats du tableau de bord (périmètres lisibles, registres restreints masqués) vient de la
+  porte de lecture, comme les listes. Comportement inchangé pour les droits existants. Les opérations système (garde de purge
+  des documents, conservation, contrôle des relations) lisent tout par construction et l'annuaire des responsables est interne
+  au module GRC : ils ne passent pas par la porte. Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Export Excel et simulation d'import par la porte de lecture** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  sous-chantier 2f) : l'export Excel du suivi et la simulation d'import lisent l'état historique rédigé par la porte de lecture ;
+  la simulation compare le fichier à cet état, en plus de la rédaction du rapport. Comportement inchangé pour les droits
+  existants. L'export complet au format historique et l'application d'un import gardent l'état brut (droit d'exporter exigé
+  sur chaque clé, écriture sous verrou). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Garde-fous d'architecture des accès** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 4) :
+  un test d'architecture refuse toute nouvelle lecture directe des tables GRC partagées ou de l'état historique brut hors d'une
+  liste blanche justifiée (entrées périmées refusées, dette plafonnée) ; le test des droits vérifie que chaque route dont le
+  service décide de l'accès est appelée par un test qui contrôle un refus. Deux routes sans test de refus en ont reçu un
+  (ordre des actions d'un plan, synthèse des périmètres). Aucune modification de comportement. Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+### Ajouté
+
+- **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), acceptée) : le guide
+  d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les
+  messages des scripts indiquent l'installation d'`age` sur les deux familles, et la CI rejoue le guide dans une machine virtuelle
+  Rocky Linux 10 et dans une machine virtuelle Debian 12 (jusque-là non rejouée). Aucune action sur un serveur existant. _(Session « Projet audit_suivi Coeur ».)_
+
+- **RSSI virtuel** (recette, sans effet sur l'application) : sous-agent Claude Code `rssi-virtuel` (persona de RSSI d'un groupement de santé
+  certifié ISO/IEC 27001:2022 et HDS, scénario en 17 étapes aligné sur le parcours ISO 27001 / HDS, jeu de données fictif,
+  pilote de navigateur sans dépendance ajoutée) et harnais de non-régression sur pile Docker éphémère
+  (`tests/e2e/rssi-virtuel/lancer.sh` : installation, déclaration d'applicabilité, écarts, huit invariants du SMSI, journal
+  d'audit), lancé à la main ou chaque semaine par le workflow « RSSI virtuel », hors des contrôles exigés pour fusionner.
+  Premier passage : quatre constats ouverts (BUG-016 à BUG-019), suivis par des tests `test.fail`. Guide :
+  `docs/05_RECETTE/RSSI_VIRTUEL.md`. _(Session « Agent RSSI virtuel ».)_
+
+### Modifié
+
+- **Bibliothèque figée, référentiels du périmètre en copie, puis appliqués** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)) :
+  la bibliothèque ne se personnalise plus (« Créer une copie » et « Ajouter une exigence » retirés ; chaque édition est
+  immuable, une nouvelle édition reste importable). Attribuer un référentiel à un périmètre (Périmètres → « Référentiels »)
+  en crée une **copie propre au périmètre**, nommée « <référentiel> (PRIVE - <périmètre>) », en préparation, que l'on
+  modifie librement : ajout, modification ou retrait
+  d'exigences, nouveau domaine, renommage, historique des versions. **Appliquer** la copie en fait un référentiel suivi en
+  conformité (couverture, évaluations, rapprochements, plan d'écarts) ; elle reste modifiable et peut repasser en
+  préparation sans perte. Les sous-périmètres qui héritent suivent la copie du parent (désactivable chez eux) ; attribuer chez
+  l'enfant lui donne sa propre copie. « Reprendre l'édition N » remplace la copie par une nouvelle édition de la
+  bibliothèque. Renommer un périmètre propose de renommer aussi ses copies « (PRIVE - <ancien nom>) » avec le nouveau nom
+  (option `renommerCopies` de `PATCH /api/grc/smsis/:id`). L'assistant « Analyser un service » applique les référentiels cochés. Nouvelles routes
+  `PUT /api/grc/:smsi/framework-attachments/:id/statut`, `GET|PUT /api/grc/:smsi/framework-copies/:id`,
+  `POST /api/grc/:smsi/framework-copies/:id/requirements`, `DELETE …/requirements/:requirementId` ; routes
+  `POST /api/library/frameworks/:id/copy` et `…/requirements` retirées. Migration `052`. _(Session « Référentiel library management ».)_
+- **Routes GRC découpées par sous-domaine** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md), chantier 5) :
+  `routes/grc.ts` (106 routes) est réparti dans `routes/grc/` (périmètres, objets et tâches, référentiels et bibliothèque,
+  fournisseurs, risques et méthodes), sans changement d'URL, de schéma ni de niveau d'accès : le document OpenAPI est identique
+  (377 chemins, mêmes opérations). Aucune action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
+- **Routes des modules repris découpées par module** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md),
+  chantier 5) : `routes/historique.ts` (109 routes) est réparti dans `routes/historique/` (incidents et RETEX, cellule de crise,
+  CRRC, audit et déclaration d'applicabilité, autres modules annexes), sans changement d'URL, de schéma ni de niveau d'accès :
+  le document OpenAPI est identique (377 chemins, mêmes opérations). Aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Analyse d'impact sur l'activité (BIA)** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : type d'objet, formulaire, règles de validation, liens, export, rubrique « Impacts sur l'activité — BIA » du menu Continuité d'activité et compteurs (cartes de périmètre, synthèse, tableau de bord : seuls les PCRA sont comptés). Les plans de continuité et les exercices restent. _(Session « Projet audit_suivi Coeur ».)_
+- **Module « Revues des accès »** des applications (page Pilotage → Organisation, routes `/api/revues-acces*`, table, rubrique d'export Excel,
+  données de démonstration), sur décision du RSSI ([ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) : ces revues se suivent par une
+  tâche récurrente du Pilotage. La clé `accessReviews` d'un fichier de l'outil historique est écartée sans rien dire à l'import. La revue des accès des
+  **comptes** (Administration) est inchangée. _(Session « Projet audit_suivi Coeur ».)_
+- **Modules CRRC (sauvegardes des établissements partenaires) et Investissements (rubrique Budget, « Plan d'investissement »)**,
+  ancien et nouveau code, sur décision du RSSI ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) :
+  pages et menus, routes `/api/crrc/*` et `/api/investissements/*`, tables (migration `053`), modules de droits, rubriques
+  d'export Excel et données de démonstration. Un fichier de l'outil historique qui contient les clés `crrc` ou `invest` reste
+  importable : ces clés sont écartées sans rien dire, et l'export ne les produit plus (schéma 15 inchangé). _(Session « Projet
+  audit_suivi Coeur ».)_
+
 ## [6.2.1] — 2026-11-11
 
 Version de publication : **aucun changement de fonction par rapport à la 6.2.0**. La publication de l'étiquette `v6.2.0` a échoué au scan Trivy (voir « Corrigé ») et une étiquette ne peut ni être déplacée ni supprimée ; la 6.2.1 est la première version 6.2 publiée. Le contenu fonctionnel est celui de la section [6.2.0] ci-dessous. Section rédigée par la session « Projet audit_suivi Coeur ».

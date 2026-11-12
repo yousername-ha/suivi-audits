@@ -98,3 +98,12 @@ ne contribue qu'à cette action (le droit par élément, déjà décrit plus hau
 - **Cartes de périmètres** : chaque carte compte les éléments visibles dans son périmètre, les siens et ceux des registres qui le
   portent ; un élément n'est compté qu'une fois dans une carte, une occurrence de tâche récurrente que dans les récurrences ;
   un registre multi-périmètre figure dans chacune de ses cartes ; la carte d'un périmètre parent affiche son total avec ses sous-périmètres, et un total général est affiché sous les cartes, chaque élément n'y étant compté qu'une fois (conformité non agrégée).
+
+## Addendum du 05/11/2026 — lectures dérivées
+
+Tout ce qui cite un élément d'un registre restreint (graphe de la carte des risques et rapport de comité, aperçus d'impact
+d'un déplacement ou d'un changement de périmètres, historique et export des décisions de pilotage, registre des usages de la
+configuration) est filtré **à la lecture** selon les droits de la personne : ce qui ne se lit pas est compté, jamais nommé
+ni identifié. Les décisions restent immuables ; une action issue d'une décision sur une fiche de registre restreint se
+range dans un plan d'accueil que l'auteur gère. L'import Tenacy applique le contrôle de gestion du chemin interactif. _(Session
+« Projet audit_suivi Coeur ».)_
