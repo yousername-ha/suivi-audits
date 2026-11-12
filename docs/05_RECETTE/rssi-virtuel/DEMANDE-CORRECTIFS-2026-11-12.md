@@ -220,6 +220,11 @@ uniquement. « Piste » = endroit repéré par la recette en lisant le code, san
   alerte. Question : alerte, matrice par défaut, ou jugement libre assumé ?
 - **Rôle d'auditeur interne** : aucun rôle ne permet de saisir des constats sans pouvoir modifier la DdA auditée.
 
+## 5 bis. Défauts graphiques
+
+Vingt-trois constats d'affichage (GR-01 à GR-23), avec captures : [dossier graphique](DOSSIER-GRAPHIQUE-2026-11-12.md), relevé sur
+la 6.3.0. À traiter d'abord : GR-16, GR-17 (BUG-029) et GR-07.
+
 ## 6. Retour vers la recette
 
 Pour chaque correctif fusionné dans `claude-suivi-smsi` : numéro de BUG, PR, commit. La session de recette rejoue le

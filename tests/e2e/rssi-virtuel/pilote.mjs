@@ -34,6 +34,7 @@ const AIDE = `Pilote du navigateur de l'agent RSSI virtuel (base : ${BASE})
   choisir <libellé> <option>    liste déroulante (native ou Mantine) : ouvre puis choisit l'option
   cocher <libellé>              coche une case ou un interrupteur
   fichier <chemin> [sélecteur]  dépose un fichier dans le champ de fichier de la page
+  taille <largeur> <hauteur>    taille de la fenêtre d'affichage, le temps de la commande suivante (capture)
   taper <texte>                 frappe au clavier dans l'élément actif (ex. code TOTP dans les six cases)
   touche <touche>               appuie sur une touche (Enter, Escape, Tab…)
   attendre <texte>              attend qu'un texte apparaisse (10 s)
@@ -258,6 +259,18 @@ async function executer(commande, args) {
           .first()
           .setInputFiles(args[0]);
         break;
+      case 'taille': {
+        // Taille de la fenêtre d'affichage (ex. taille 390 844 pour un téléphone), conservée jusqu'à « arreter ».
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send('Emulation.setDeviceMetricsOverride', {
+          width: Number(args[0] || 1440),
+          height: Number(args[1] || 900),
+          deviceScaleFactor: 1,
+          mobile: Number(args[0] || 1440) < 600,
+        });
+        resultat = `Fenêtre : ${args[0] || 1440} × ${args[1] || 900}`;
+        break;
+      }
       case 'taper':
         await page.keyboard.type(args.join(' '), { delay: 30 });
         break;
