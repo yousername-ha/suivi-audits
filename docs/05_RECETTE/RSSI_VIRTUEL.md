@@ -42,6 +42,12 @@ pilote ne journalise ni mot de passe, ni jeton, ni secret TOTP ; ses fichiers (`
 d'installation y montre le poivre et la clé de secours, fictifs mais à ne pas publier. À la fin :
 `sudo tests/e2e/rssi-virtuel/lancer.sh --arreter`, puis `lancer.sh` pour la non-régression.
 
+## Campagne complète à plusieurs agents
+
+Pour recetter toute l'application sans trou : [dossier de campagne](rssi-virtuel/CAMPAGNE-MULTI-AGENT.md) et
+[matrice de couverture](rssi-virtuel/MATRICE-COUVERTURE.md) (107 écrans, 1 712 cases, générée depuis le code par
+`tests/e2e/rssi-virtuel/matrice.mjs`). `lancer.sh --pile N` donne une pile vierge par agent. Jamais exécuté à ce jour.
+
 ## Invariants du SMSI
 
 Réécrits à partir des normes, sans réutiliser le code de l'application (un défaut de calcul ne doit pas se retrouver dans son

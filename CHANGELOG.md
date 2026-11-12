@@ -14,6 +14,10 @@ Aucune action.
   l'écran ; 18 constats (BUG-020 à BUG-036, dont deux bloquants sur les chiffres de la revue de direction), trois nouveaux
   tests `test.fail`, pilote complété (dépôt de fichier, libellés répétés). Rapport :
   `docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md`. _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents** (sans effet sur l'application) : matrice de couverture générée depuis le
+  code (`tests/e2e/rssi-virtuel/matrice.mjs` : 107 écrans, 1 712 cases), `lancer.sh --pile N` pour une pile vierge par
+  agent, dossier de reprise `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`. Non exécuté à ce jour (Docker
+  inaccessible dans la session). _(Session « Agent RSSI virtuel ».)_
 
 ## [6.3.0] — 2026-11-12
 

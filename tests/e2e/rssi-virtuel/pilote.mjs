@@ -7,7 +7,8 @@
    node tests/e2e/rssi-virtuel/pilote.mjs <commande> [arguments]      (aide : sans argument)
 
    Variables : E2E_BASE_URL (défaut https://localhost), E2E_TOKEN_CMD (jeton d'installation, comme les tests de bout en
-   bout), PILOTE_CHROME (exécutable ; défaut : Chromium de Playwright), PILOTE_PORT (défaut 9333), PILOTE_VISIBLE=1. */
+   bout), PILOTE_CHROME (exécutable ; défaut : Chromium de Playwright), PILOTE_PORT (défaut 9333), PILOTE_DOSSIER (défaut .pilote),
+   PILOTE_VISIBLE=1. */
 import { spawn, execSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,7 +16,8 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
-const DOSSIER = path.join(ICI, '.pilote');
+// PILOTE_DOSSIER : un dossier par agent quand plusieurs pilotes tournent en parallèle (profil, journal, captures).
+const DOSSIER = path.join(ICI, path.basename(process.env.PILOTE_DOSSIER || '.pilote'));
 const ETAT = path.join(DOSSIER, 'etat.json');
 const JOURNAL = path.join(DOSSIER, 'journal.jsonl');
 const BASE = (process.env.E2E_BASE_URL || 'https://localhost').replace(/\/+$/, '');
