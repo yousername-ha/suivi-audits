@@ -1,0 +1,211 @@
+cellule;resultat;constat;commentaire
+pilotage/configuration|principal|rssi|vide|bureau;ok;;Périmètre affiché SMSI Groupement Santé Fictif : « Méthode publiée » vide, boutons Créer EBIOS RM / ISO 27005 / MÉHARI / personnalisée, politique globale v1
+pilotage/configuration|principal|rssi|rempli|bureau;defaut;C6-10;Méthode ISO 27005 publiée (v1 relue par GET …/methods) mais aucun message de réussite et « Méthode publiée » vide au rechargement , l'épinglage propose une échelle limitée au périmètre Hébergement HDS (C6-09)
+pilotage/configuration|principal|rssi|erreur|bureau;defaut;C6-01;Publication sans motif : « Données invalides — reason : Trop petit : chaîne de caractères doit avoir >=10 caractères » (méthode) et « >=5 » (politique métier) , la simulation annonçait « Configuration valide »
+pilotage/configuration|sous-perimetre|rssi|vide|bureau;ok;;Périmètre affiché Hébergement HDS : liste « Méthode publiée » sans la méthode ISO 27005 du périmètre principal , accès au périmètre : Responsable SSI (fictif) · Écriture
+pilotage/configuration|sous-perimetre|rssi|rempli|bureau;ok;;Méthode EBIOS RM publiée pour Hébergement HDS , visible seulement sous ce périmètre, la méthode ISO 27005 seulement sous le principal (cloisonnement vérifié dans les deux sens)
+pilotage/configuration|sous-perimetre|rssi|erreur|bureau;defaut;C6-09;Épinglage d'échelle de la méthode : la liste ne filtre pas sur la portée (échelle « Un périmètre » Hébergement HDS proposée aussi sous le principal , échelles de motivation/ressources proposées comme vraisemblance)
+plateforme/general|principal|rssi|vide|bureau;ok;;Fenêtre Général : seul le nom saisi à l'installation, champs vides, « Aucun logo. », Enregistrer désactivé tant que rien n'est modifié
+plateforme/general|principal|rssi|rempli|bureau;ok;;RSSI, courriel, téléphone, site, adresse et logo PNG fictifs enregistrés (« Général : enregistré. », version 2 relue par GET /api/settings/general)
+plateforme/general|principal|rssi|erreur|bureau;defaut;C6-01;Courriel et site invalides, organisation vide : refus 422 mais message « email : … , site : … , orgName : … » (clés techniques au lieu des libellés, champ non marqué) , téléphone « abc » accepté , faux PNG refusé avec message clair
+plateforme/general|sous-perimetre|rssi|vide|bureau;;;
+plateforme/general|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/general|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/cycle|principal|rssi|vide|bureau;defaut;C6-02;Installation neuve : cycle 2025-2027 pré-rempli (Certification initiale, Surveillance 1 et 2), prochain audit 2027, « Organisation certifiée ISO 27001 » coché , le tableau de bord annonce « 2027 — Surveillance 2 » sans saisie du RSSI
+plateforme/cycle|principal|rssi|rempli|bureau;ok;;Cycle du jeu fictif 2026-2029 saisi (libellés, prochain audit 15/03/2027, audit interne 15/01/2027) , repris au tableau de bord « 15/03/2027 dans 123 j — 2027 — Surveillance 1 »
+plateforme/cycle|principal|rssi|erreur|bureau;defaut;C6-03;Année « abcd » ou « 1850 » ignorée sans message , date du prochain audit 15/03/2031 acceptée avec l'année 2027 hors cycle 2026-2029 : tableau de bord contradictoire « 15/03/2031 dans 1584 j — 2027 — Surveillance 1 »
+plateforme/cycle|sous-perimetre|rssi|vide|bureau;;;
+plateforme/cycle|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/cycle|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/referentiels|principal|rssi|vide|bureau;defaut;C6-04;Tableau des 4 référentiels chargés (33/93/31/152 exigences) correct, mais « Référentiel complémentaire actif » affiché vide alors que GET /api/settings/referentiels renvoie activeFw « recyf-2.5 »
+plateforme/referentiels|principal|rssi|rempli|bureau;defaut;C6-04;Choisir « ReCyF » enregistre le nom (activeFw « ReCyF ») : /pilotage/referentiels passe de « Actif dans le socle historique » à « Conservé dans le socle historique » , valeur d'origine remise par l'API
+plateforme/referentiels|principal|rssi|erreur|bureau;defaut;C6-05;Aucune saisie libre (listes fermées) , repasser « Catégorie d'entité (NIS 2) » à « Non renseignée » affiche « Référentiels : enregistré. » mais la valeur reste « Entité importante » (GET et rechargement)
+plateforme/referentiels|sous-perimetre|rssi|vide|bureau;;;
+plateforme/referentiels|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/referentiels|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/echelles|principal|rssi|vide|bureau;ok;;La carte « Échelles et matrices (GRC) » mène à /parametres/configuration-grc (cases détaillées sur cette route) , l'adresse /plateforme/echelles seule n'ouvre aucune fenêtre (C6-06)
+plateforme/echelles|principal|rssi|rempli|bureau;ok;;Via la carte : échelle Gravité HDS publiée v1, modèle SR/OV adopté , liste à jour (état Active, version 1, usages)
+plateforme/echelles|principal|rssi|erreur|bureau;defaut;C6-08;Via la carte : catégorie obligatoire non signalée, message « levels : … » , doublon et format d'identifiant bien refusés
+plateforme/echelles|sous-perimetre|rssi|vide|bureau;sans-objet;;Carte d'instance sans sélecteur de périmètre , portée par périmètre testée sur /parametres/configuration-grc
+plateforme/echelles|sous-perimetre|rssi|rempli|bureau;defaut;C6-09;Échelle à portée Hébergement HDS proposée aussi aux méthodes du périmètre principal
+plateforme/echelles|sous-perimetre|rssi|erreur|bureau;sans-objet;;Même formulaire que la route /parametres/configuration-grc (case sous-périmètre erreur testée là)
+plateforme/configuration-pilotage|principal|rssi|vide|bureau;ok;;La carte mène à /pilotage/configuration (cases détaillées sur cet écran) , l'adresse /plateforme/configuration-pilotage seule n'ouvre aucune fenêtre (C6-06)
+plateforme/configuration-pilotage|principal|rssi|rempli|bureau;defaut;C6-10;Via la carte : méthode publiée sans message de réussite, liste « Méthode publiée » vide au rechargement
+plateforme/configuration-pilotage|principal|rssi|erreur|bureau;defaut;C6-01;Via la carte : motif manquant signalé « reason : Trop petit : … >=10 caractères »
+plateforme/configuration-pilotage|sous-perimetre|rssi|vide|bureau;ok;;Via la carte puis Périmètre affiché Hébergement HDS : aucune méthode du principal
+plateforme/configuration-pilotage|sous-perimetre|rssi|rempli|bureau;ok;;Méthode EBIOS RM du sous-périmètre isolée du principal
+plateforme/configuration-pilotage|sous-perimetre|rssi|erreur|bureau;defaut;C6-09;Épinglage sans filtre de portée
+plateforme/utilisateurs|principal|rssi|vide|bureau;;;
+plateforme/utilisateurs|principal|rssi|rempli|bureau;;;
+plateforme/utilisateurs|principal|rssi|erreur|bureau;;;
+plateforme/utilisateurs|sous-perimetre|rssi|vide|bureau;;;
+plateforme/utilisateurs|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/utilisateurs|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/groupes|principal|rssi|vide|bureau;;;
+plateforme/groupes|principal|rssi|rempli|bureau;;;
+plateforme/groupes|principal|rssi|erreur|bureau;;;
+plateforme/groupes|sous-perimetre|rssi|vide|bureau;;;
+plateforme/groupes|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/groupes|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/fonctions|principal|rssi|vide|bureau;;;
+plateforme/fonctions|principal|rssi|rempli|bureau;;;
+plateforme/fonctions|principal|rssi|erreur|bureau;;;
+plateforme/fonctions|sous-perimetre|rssi|vide|bureau;;;
+plateforme/fonctions|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/fonctions|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/roles|principal|rssi|vide|bureau;;;
+plateforme/roles|principal|rssi|rempli|bureau;;;
+plateforme/roles|principal|rssi|erreur|bureau;;;
+plateforme/roles|sous-perimetre|rssi|vide|bureau;;;
+plateforme/roles|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/roles|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/conservation|principal|rssi|vide|bureau;;;
+plateforme/conservation|principal|rssi|rempli|bureau;;;
+plateforme/conservation|principal|rssi|erreur|bureau;;;
+plateforme/conservation|sous-perimetre|rssi|vide|bureau;;;
+plateforme/conservation|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/conservation|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/calendriers|principal|rssi|vide|bureau;;;
+plateforme/calendriers|principal|rssi|rempli|bureau;;;
+plateforme/calendriers|principal|rssi|erreur|bureau;;;
+plateforme/calendriers|sous-perimetre|rssi|vide|bureau;;;
+plateforme/calendriers|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/calendriers|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/types-processus|principal|rssi|vide|bureau;;;
+plateforme/types-processus|principal|rssi|rempli|bureau;;;
+plateforme/types-processus|principal|rssi|erreur|bureau;;;
+plateforme/types-processus|sous-perimetre|rssi|vide|bureau;;;
+plateforme/types-processus|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/types-processus|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/apparence|principal|rssi|vide|bureau;;;
+plateforme/apparence|principal|rssi|rempli|bureau;;;
+plateforme/apparence|principal|rssi|erreur|bureau;;;
+plateforme/apparence|sous-perimetre|rssi|vide|bureau;;;
+plateforme/apparence|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/apparence|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/notifications|principal|rssi|vide|bureau;;;
+plateforme/notifications|principal|rssi|rempli|bureau;;;
+plateforme/notifications|principal|rssi|erreur|bureau;;;
+plateforme/notifications|sous-perimetre|rssi|vide|bureau;;;
+plateforme/notifications|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/notifications|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/notifications-destinataires|principal|rssi|vide|bureau;;;
+plateforme/notifications-destinataires|principal|rssi|rempli|bureau;;;
+plateforme/notifications-destinataires|principal|rssi|erreur|bureau;;;
+plateforme/notifications-destinataires|sous-perimetre|rssi|vide|bureau;;;
+plateforme/notifications-destinataires|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/notifications-destinataires|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/murs|principal|rssi|vide|bureau;;;
+plateforme/murs|principal|rssi|rempli|bureau;;;
+plateforme/murs|principal|rssi|erreur|bureau;;;
+plateforme/murs|sous-perimetre|rssi|vide|bureau;;;
+plateforme/murs|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/murs|sous-perimetre|rssi|erreur|bureau;;;
+plateforme/import|principal|rssi|vide|bureau;;;
+plateforme/import|principal|rssi|rempli|bureau;;;
+plateforme/import|principal|rssi|erreur|bureau;;;
+plateforme/import|sous-perimetre|rssi|vide|bureau;;;
+plateforme/import|sous-perimetre|rssi|rempli|bureau;;;
+plateforme/import|sous-perimetre|rssi|erreur|bureau;;;
+systeme/sauvegardes|principal|rssi|vide|bureau;;;
+systeme/sauvegardes|principal|rssi|rempli|bureau;;;
+systeme/sauvegardes|principal|rssi|erreur|bureau;;;
+systeme/sauvegardes|sous-perimetre|rssi|vide|bureau;;;
+systeme/sauvegardes|sous-perimetre|rssi|rempli|bureau;;;
+systeme/sauvegardes|sous-perimetre|rssi|erreur|bureau;;;
+systeme/courriel|principal|rssi|vide|bureau;;;
+systeme/courriel|principal|rssi|rempli|bureau;;;
+systeme/courriel|principal|rssi|erreur|bureau;;;
+systeme/courriel|sous-perimetre|rssi|vide|bureau;;;
+systeme/courriel|sous-perimetre|rssi|rempli|bureau;;;
+systeme/courriel|sous-perimetre|rssi|erreur|bureau;;;
+systeme/mises-a-jour|principal|rssi|vide|bureau;;;
+systeme/mises-a-jour|principal|rssi|rempli|bureau;;;
+systeme/mises-a-jour|principal|rssi|erreur|bureau;;;
+systeme/mises-a-jour|sous-perimetre|rssi|vide|bureau;;;
+systeme/mises-a-jour|sous-perimetre|rssi|rempli|bureau;;;
+systeme/mises-a-jour|sous-perimetre|rssi|erreur|bureau;;;
+systeme/certificats|principal|rssi|vide|bureau;;;
+systeme/certificats|principal|rssi|rempli|bureau;;;
+systeme/certificats|principal|rssi|erreur|bureau;;;
+systeme/certificats|sous-perimetre|rssi|vide|bureau;;;
+systeme/certificats|sous-perimetre|rssi|rempli|bureau;;;
+systeme/certificats|sous-perimetre|rssi|erreur|bureau;;;
+systeme/securite|principal|rssi|vide|bureau;;;
+systeme/securite|principal|rssi|rempli|bureau;;;
+systeme/securite|principal|rssi|erreur|bureau;;;
+systeme/securite|sous-perimetre|rssi|vide|bureau;;;
+systeme/securite|sous-perimetre|rssi|rempli|bureau;;;
+systeme/securite|sous-perimetre|rssi|erreur|bureau;;;
+systeme/sessions|principal|rssi|vide|bureau;;;
+systeme/sessions|principal|rssi|rempli|bureau;;;
+systeme/sessions|principal|rssi|erreur|bureau;;;
+systeme/sessions|sous-perimetre|rssi|vide|bureau;;;
+systeme/sessions|sous-perimetre|rssi|rempli|bureau;;;
+systeme/sessions|sous-perimetre|rssi|erreur|bureau;;;
+systeme/journal|principal|rssi|vide|bureau;;;
+systeme/journal|principal|rssi|rempli|bureau;;;
+systeme/journal|principal|rssi|erreur|bureau;;;
+systeme/journal|sous-perimetre|rssi|vide|bureau;;;
+systeme/journal|sous-perimetre|rssi|rempli|bureau;;;
+systeme/journal|sous-perimetre|rssi|erreur|bureau;;;
+systeme/journaux-techniques|principal|rssi|vide|bureau;;;
+systeme/journaux-techniques|principal|rssi|rempli|bureau;;;
+systeme/journaux-techniques|principal|rssi|erreur|bureau;;;
+systeme/journaux-techniques|sous-perimetre|rssi|vide|bureau;;;
+systeme/journaux-techniques|sous-perimetre|rssi|rempli|bureau;;;
+systeme/journaux-techniques|sous-perimetre|rssi|erreur|bureau;;;
+systeme/modules|principal|rssi|vide|bureau;;;
+systeme/modules|principal|rssi|rempli|bureau;;;
+systeme/modules|principal|rssi|erreur|bureau;;;
+systeme/modules|sous-perimetre|rssi|vide|bureau;;;
+systeme/modules|sous-perimetre|rssi|rempli|bureau;;;
+systeme/modules|sous-perimetre|rssi|erreur|bureau;;;
+systeme/details|principal|rssi|vide|bureau;;;
+systeme/details|principal|rssi|rempli|bureau;;;
+systeme/details|principal|rssi|erreur|bureau;;;
+systeme/details|sous-perimetre|rssi|vide|bureau;;;
+systeme/details|sous-perimetre|rssi|rempli|bureau;;;
+systeme/details|sous-perimetre|rssi|erreur|bureau;;;
+route/setup|principal|rssi|vide|bureau;;;
+route/setup|principal|rssi|rempli|bureau;;;
+route/setup|principal|rssi|erreur|bureau;;;
+route/setup|sous-perimetre|rssi|vide|bureau;;;
+route/setup|sous-perimetre|rssi|rempli|bureau;;;
+route/setup|sous-perimetre|rssi|erreur|bureau;;;
+route/login|principal|rssi|vide|bureau;;;
+route/login|principal|rssi|rempli|bureau;;;
+route/login|principal|rssi|erreur|bureau;;;
+route/login|sous-perimetre|rssi|vide|bureau;;;
+route/login|sous-perimetre|rssi|rempli|bureau;;;
+route/login|sous-perimetre|rssi|erreur|bureau;;;
+route/account|principal|rssi|vide|bureau;;;
+route/account|principal|rssi|rempli|bureau;;;
+route/account|principal|rssi|erreur|bureau;;;
+route/account|sous-perimetre|rssi|vide|bureau;;;
+route/account|sous-perimetre|rssi|rempli|bureau;;;
+route/account|sous-perimetre|rssi|erreur|bureau;;;
+route/aide|principal|rssi|vide|bureau;;;
+route/aide|principal|rssi|rempli|bureau;;;
+route/aide|principal|rssi|erreur|bureau;;;
+route/aide|sous-perimetre|rssi|vide|bureau;;;
+route/aide|sous-perimetre|rssi|rempli|bureau;;;
+route/aide|sous-perimetre|rssi|erreur|bureau;;;
+route/parametres/configuration-grc/:kind?|principal|rssi|vide|bureau;ok;;« Aucun élément — Le catalogue est vide à l'installation. Créez un élément, ou adoptez un modèle » , onglets Échelles, Matrices, Correspondances, Critères, Taxonomies, Modèles
+route/parametres/configuration-grc/:kind?|principal|rssi|rempli|bureau;ok;;Échelle « Gravité HDS (fictive) » créée, décrite, publiée v1 avec motif et saisie PUBLIER , modèle SR/OV adopté (3 échelles + 1 matrice v1) , brouillon test6 supprimé après confirmation (aucun message après suppression)
+route/parametres/configuration-grc/:kind?|principal|rssi|erreur|bureau;defaut;C6-08;Identifiant « Gravité HDS » : « Format invalide. » , doublon refusé « Cet identifiant existe déjà » (409) , mais Catégorie obligatoire non signalée (bouton Créer désactivé sans explication) , quantitative sans valeurs : « levels : … » (clé technique, C6-01) , bouton de fermeture des fenêtres sans nom
+route/parametres/configuration-grc/:kind?|sous-perimetre|rssi|vide|bureau;sans-objet;;Catalogue unique de l'instance, sans sélecteur de périmètre : la portée « Un périmètre » se choisit à la création (testée en rempli)
+route/parametres/configuration-grc/:kind?|sous-perimetre|rssi|rempli|bureau;defaut;C6-09;Échelle « Disponibilité hébergement (fictive) » portée Hébergement HDS publiée , colonne Portée « Périmètre » sans le nom , proposée à l'épinglage d'une méthode du périmètre principal
+route/parametres/configuration-grc/:kind?|sous-perimetre|rssi|erreur|bureau;ok;;Nom, identifiant, catégorie et niveaux remplis, portée « Un périmètre » sans périmètre : Créer le brouillon reste désactivé (refus effectif, sans message : voir C6-08) , seuls les deux périmètres accessibles sont proposés
+route/parametres/:section?|principal|rssi|vide|bureau;;;
+route/parametres/:section?|principal|rssi|rempli|bureau;;;
+route/parametres/:section?|principal|rssi|erreur|bureau;;;
+route/parametres/:section?|sous-perimetre|rssi|vide|bureau;;;
+route/parametres/:section?|sous-perimetre|rssi|rempli|bureau;;;
+route/parametres/:section?|sous-perimetre|rssi|erreur|bureau;;;
+route/admin/:tab?|principal|rssi|vide|bureau;;;
+route/admin/:tab?|principal|rssi|rempli|bureau;;;
+route/admin/:tab?|principal|rssi|erreur|bureau;;;
+route/admin/:tab?|sous-perimetre|rssi|vide|bureau;;;
+route/admin/:tab?|sous-perimetre|rssi|rempli|bureau;;;
+route/admin/:tab?|sous-perimetre|rssi|erreur|bureau;;;

@@ -1,0 +1,127 @@
+cellule;resultat;constat;commentaire
+pilotage/audit-pronostic|principal|rssi|vide|bureau;ok;;157 mesures (33 clauses, 93 annexe A 37/8/14/34, 31 HDS), légende Certain 0 / Très probable 93 / Systématique 64 , cycle par défaut 2025-2027 et organisme « AFNOR » imposés (voir C3)
+pilotage/audit-pronostic|principal|rssi|rempli|bureau;;;
+pilotage/audit-pronostic|principal|rssi|erreur|bureau;;;
+pilotage/audit-pronostic|sous-perimetre|rssi|vide|bureau;ok;;157 mesures (33 clauses, 93 annexe A 37/8/14/34, 31 HDS), légende Certain 0 / Très probable 93 / Systématique 64 , cycle par défaut 2025-2027 et organisme « AFNOR » imposés (voir C3)
+pilotage/audit-pronostic|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audit-pronostic|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-couverture|principal|rssi|vide|bureau;ok;;157 mesures affichées, toutes « non auditée » , en-têtes de tableau en cellules simples
+pilotage/audit-couverture|principal|rssi|rempli|bureau;;;
+pilotage/audit-couverture|principal|rssi|erreur|bureau;;;
+pilotage/audit-couverture|sous-perimetre|rssi|vide|bureau;ok;;157 mesures affichées, toutes « non auditée » , en-têtes de tableau en cellules simples
+pilotage/audit-couverture|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audit-couverture|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-deroule|principal|rssi|vide|bureau;ok;;Plan 2027 « Projet », 3 jours vides, alerte 157 mesures sans créneau
+pilotage/audit-deroule|principal|rssi|rempli|bureau;;;
+pilotage/audit-deroule|principal|rssi|erreur|bureau;;;
+pilotage/audit-deroule|sous-perimetre|rssi|vide|bureau;ok;;Plan 2027 « Projet », 3 jours vides, alerte 157 mesures sans créneau
+pilotage/audit-deroule|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audit-deroule|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-planning|principal|rssi|vide|bureau;ok;;« Aucun créneau. » et bouton « Ajouter un créneau »
+pilotage/audit-planning|principal|rssi|rempli|bureau;;;
+pilotage/audit-planning|principal|rssi|erreur|bureau;;;
+pilotage/audit-planning|sous-perimetre|rssi|vide|bureau;ok;;« Aucun créneau. » et bouton « Ajouter un créneau »
+pilotage/audit-planning|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audit-planning|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-participants|principal|rssi|vide|bureau;ok;;« Aucune personne : ajoutez les interlocuteurs de l’audit. » et bouton « Ajouter une personne »
+pilotage/audit-participants|principal|rssi|rempli|bureau;;;
+pilotage/audit-participants|principal|rssi|erreur|bureau;;;
+pilotage/audit-participants|sous-perimetre|rssi|vide|bureau;ok;;« Aucune personne : ajoutez les interlocuteurs de l’audit. » et bouton « Ajouter une personne »
+pilotage/audit-participants|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audit-participants|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/referentiels|principal|rssi|vide|bureau;;;
+pilotage/referentiels|principal|rssi|rempli|bureau;;;
+pilotage/referentiels|principal|rssi|erreur|bureau;;;
+pilotage/referentiels|sous-perimetre|rssi|vide|bureau;;;
+pilotage/referentiels|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/referentiels|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/bibliotheque|principal|rssi|vide|bureau;ok;;0 référentiel, trois standards proposés avec bouton d’ajout
+pilotage/bibliotheque|principal|rssi|rempli|bureau;;;
+pilotage/bibliotheque|principal|rssi|erreur|bureau;;;
+pilotage/bibliotheque|sous-perimetre|rssi|vide|bureau;ok;;0 référentiel, trois standards proposés (ISO/IEC 27001:2022, HDS v2, ReCyF) avec bouton d’ajout
+pilotage/bibliotheque|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/bibliotheque|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-iso|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-iso|principal|rssi|rempli|bureau;;;
+pilotage/dda-iso|principal|rssi|erreur|bureau;;;
+pilotage/dda-iso|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-iso|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/dda-iso|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-annexe-a|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-annexe-a|principal|rssi|rempli|bureau;;;
+pilotage/dda-annexe-a|principal|rssi|erreur|bureau;;;
+pilotage/dda-annexe-a|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-annexe-a|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/dda-annexe-a|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-hds|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-hds|principal|rssi|rempli|bureau;;;
+pilotage/dda-hds|principal|rssi|erreur|bureau;;;
+pilotage/dda-hds|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
+pilotage/dda-hds|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/dda-hds|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/applicabilite|principal|rssi|vide|bureau;;;
+pilotage/applicabilite|principal|rssi|rempli|bureau;;;
+pilotage/applicabilite|principal|rssi|erreur|bureau;;;
+pilotage/applicabilite|sous-perimetre|rssi|vide|bureau;;;
+pilotage/applicabilite|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/applicabilite|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/mesures|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter mesure » (registre vide à côté des 93 mesures de la DdA : remarque connue)
+pilotage/mesures|principal|rssi|rempli|bureau;;;
+pilotage/mesures|principal|rssi|erreur|bureau;;;
+pilotage/mesures|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter mesure » (registre vide à côté des 93 mesures de la DdA : remarque connue)
+pilotage/mesures|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/mesures|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/correspondances|principal|rssi|vide|bureau;ok;;Formulaire de proposition vide , aucune liste de correspondances existantes sur cet écran
+pilotage/correspondances|principal|rssi|rempli|bureau;;;
+pilotage/correspondances|principal|rssi|erreur|bureau;;;
+pilotage/correspondances|sous-perimetre|rssi|vide|bureau;ok;;Formulaire de proposition vide , aucune liste de correspondances existantes sur cet écran
+pilotage/correspondances|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/correspondances|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/rapprochements|principal|rssi|vide|bureau;ok;;« Aucun rapprochement à valider. »
+pilotage/rapprochements|principal|rssi|rempli|bureau;;;
+pilotage/rapprochements|principal|rssi|erreur|bureau;;;
+pilotage/rapprochements|sous-perimetre|rssi|vide|bureau;ok;;« Aucun rapprochement à valider. »
+pilotage/rapprochements|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/rapprochements|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/couverture|principal|rssi|vide|bureau;ok;;« Aucun référentiel n’est appliqué et actif dans ce périmètre… » avec la marche à suivre
+pilotage/couverture|principal|rssi|rempli|bureau;;;
+pilotage/couverture|principal|rssi|erreur|bureau;;;
+pilotage/couverture|sous-perimetre|rssi|vide|bureau;ok;;« Aucun référentiel n’est appliqué et actif dans ce périmètre… » avec la marche à suivre
+pilotage/couverture|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/couverture|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/analyser-service|principal|rssi|vide|bureau;ok;;Assistant en 4 étapes, Suivant désactivé tant que le nom est vide , parent = périmètre affiché
+pilotage/analyser-service|principal|rssi|rempli|bureau;;;
+pilotage/analyser-service|principal|rssi|erreur|bureau;;;
+pilotage/analyser-service|sous-perimetre|rssi|vide|bureau;ok;;Assistant en 4 étapes, Suivant désactivé tant que le nom est vide , parent = périmètre affiché
+pilotage/analyser-service|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/analyser-service|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/gap-applications|principal|rssi|vide|bureau;ok;;« Aucune application. Lancez un nouveau GAP guidé… » avec trois boutons de création
+pilotage/gap-applications|principal|rssi|rempli|bureau;;;
+pilotage/gap-applications|principal|rssi|erreur|bureau;;;
+pilotage/gap-applications|sous-perimetre|rssi|vide|bureau;ok;;« Aucune application. Lancez un nouveau GAP guidé… » avec trois boutons de création
+pilotage/gap-applications|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/gap-applications|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/correspondances-bibliotheque|principal|rssi|vide|bureau;ok;;« Aucune correspondance dans cet état. » , « Proposer une correspondance » désactivé (bibliothèque vide), sans explication à l’écran
+pilotage/correspondances-bibliotheque|principal|rssi|rempli|bureau;;;
+pilotage/correspondances-bibliotheque|principal|rssi|erreur|bureau;;;
+pilotage/correspondances-bibliotheque|sous-perimetre|rssi|vide|bureau;ok;;Idem périmètre principal
+pilotage/correspondances-bibliotheque|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/correspondances-bibliotheque|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/preuves|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter preuve »
+pilotage/preuves|principal|rssi|rempli|bureau;;;
+pilotage/preuves|principal|rssi|erreur|bureau;;;
+pilotage/preuves|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter preuve »
+pilotage/preuves|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/preuves|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/controles|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter contrôle »
+pilotage/controles|principal|rssi|rempli|bureau;;;
+pilotage/controles|principal|rssi|erreur|bureau;;;
+pilotage/controles|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter contrôle »
+pilotage/controles|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/controles|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audits|principal|rssi|vide|bureau;ok;;Programme 9.2 : « 0/0 réalisé(s) en 2026 », 0 fiches, bouton « Ajouter audit »
+pilotage/audits|principal|rssi|rempli|bureau;;;
+pilotage/audits|principal|rssi|erreur|bureau;;;
+pilotage/audits|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, bouton « Ajouter audit » , pas de bandeau Programme d’audit sous le sous-périmètre
+pilotage/audits|sous-perimetre|rssi|rempli|bureau;;;
+pilotage/audits|sous-perimetre|rssi|erreur|bureau;;;
