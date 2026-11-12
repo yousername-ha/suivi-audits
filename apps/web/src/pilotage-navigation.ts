@@ -46,19 +46,12 @@ export const PILOTAGE_NAV = [
   {
     label: 'Conformité',
     items: [
-      { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
       { id: 'bibliotheque', label: 'Bibliothèque de référentiels', module: 'conformite' },
       { id: 'dda-iso', label: 'Clauses ISO 27001 (DdA)', module: 'audit' },
       { id: 'dda-annexe-a', label: 'Annexe A (DdA)', module: 'audit' },
       { id: 'dda-hds', label: 'HDS (DdA)', module: 'audit' },
       { id: 'applicabilite', label: 'Applicabilité et justifications', module: 'pilotage' },
       { id: 'mesures', label: 'Mesures', module: 'audit' },
-      { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },
-      { id: 'rapprochements', label: 'Rapprochements à valider', module: 'conformite' },
-      { id: 'couverture', label: 'Couverture par référentiel', module: 'conformite' },
-      { id: 'analyser-service', label: 'Analyser un service', module: 'conformite' },
-      { id: 'gap-applications', label: 'Applications à intégrer', module: 'conformite' },
-      { id: 'correspondances-bibliotheque', label: 'Correspondances de la bibliothèque', module: 'conformite' },
     ],
   },
   {

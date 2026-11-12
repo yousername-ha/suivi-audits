@@ -1,7 +1,7 @@
-/* Couverture par référentiel (ADR 0031 et 0041) : pour chaque référentiel actif du périmètre, l'état de chaque exigence
-   — applicabilité, mise en œuvre, test d'efficacité, validation métier — et les mesures qui la portent. Les états décrivent
-   ce qui est établi dans le périmètre ; ils ne constituent ni un taux de conformité ni une preuve de conformité. Un
-   rapprochement non décidé est affiché à part et n'est jamais compté. */
+/* Couverture d'un référentiel dans le périmètre (ADR 0031, 0041 et 0089) : l'état de chaque exigence — applicabilité, mise en
+   œuvre, test d'efficacité, validation métier — et les mesures qui la portent. Les états décrivent ce qui est établi dans le
+   périmètre ; ils ne constituent ni un taux de conformité ni une preuve de conformité. Affichée dans la page « Bibliothèque de
+   référentiels » : résumé d'états (EtatsCouverture) et détail exigence par exigence (DetailExigences). */
 import { Alert, Button, Card, Group, Modal, Select, Stack, Table, Text, Textarea, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -29,8 +29,10 @@ import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { PlanEcarts } from './PlanEcarts';
 
-interface Referentiel {
+export interface CouvertureReferentiel {
   frameworkId: string;
+  /** Identifiant du référentiel de la bibliothèque dont la copie est appliquée (clé de rapprochement avec la carte). */
+  identifier: string;
   name: string;
   version: number;
   requirements: number;
@@ -62,7 +64,7 @@ const COULEUR_ETAT: Record<EtatExigence, Etat> = {
 };
 const ETATS_LIEN: Record<Detail['status'], string> = {
   covered: 'Mesure reliée',
-  to_validate: 'Rapprochement à valider',
+  to_validate: 'Aucune mesure reliée',
   uncovered: 'Aucune mesure reliée',
 };
 
@@ -275,184 +277,214 @@ function Evaluation({
   );
 }
 
-export function Couverture({ smsi }: { smsi: string }) {
+const COULEURS_BARRE: Record<EtatExigence, string> = {
+  non_implemente: 'couv-barre-rouge',
+  partiel: 'couv-barre-orange',
+  implemente: 'couv-barre-bleu',
+  teste: 'couv-barre-teal',
+  valide_metier: 'couv-barre-vert',
+  non_applicable: 'couv-barre-gris',
+};
+
+/** Barre des états des exigences d'un référentiel : SVG (aucun style en ligne, CSP stricte), une part par état non vide. */
+function BarreEtats({ etats }: { etats: CouvertureReferentiel['etats'] }) {
+  const total = ETATS_EXIGENCE.reduce((n, e) => n + etats[e], 0);
+  if (!total) return null;
+  let x = 0;
+  return (
+    <svg
+      className="couv-barre"
+      viewBox="0 0 100 3"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={ETATS_EXIGENCE.map((e) => `${etats[e]} ${LIBELLES_ETAT[e].toLowerCase()}`).join(', ')}
+    >
+      {ETATS_EXIGENCE.filter((e) => etats[e] > 0).map((e) => {
+        const largeur = (etats[e] / total) * 100;
+        const rect = <rect key={e} className={COULEURS_BARRE[e]} x={x} y={0} width={largeur} height={3} />;
+        x += largeur;
+        return rect;
+      })}
+    </svg>
+  );
+}
+
+/** Résumé d'un référentiel dans le périmètre : alertes de clauses, barre et états des exigences, mesures reliées. */
+export function EtatsCouverture({ f }: { f: CouvertureReferentiel }) {
+  return (
+    <Stack gap="xs">
+      <Text size="xs" c="dimmed">
+        Version active v{f.version} · {f.etats.applicables} applicable(s) ou à déterminer
+      </Text>
+      <BarreEtats etats={f.etats} />
+      <Group gap="xs">
+        {ETATS_EXIGENCE.map((e) => (
+          <StatusChip key={e} etat={COULEUR_ETAT[e]}>
+            {f.etats[e]} · {LIBELLES_ETAT[e]}
+          </StatusChip>
+        ))}
+      </Group>
+      <Group gap="xs">
+        <StatusChip etat="succes">{f.covered} avec mesure reliée</StatusChip>
+        <StatusChip etat="neutre">{f.uncovered + f.toValidate} sans mesure reliée</StatusChip>
+      </Group>
+      {f.etats.obligatoiresNonConformes > 0 && (
+        <Alert color="red" role="alert">
+          {f.etats.obligatoiresNonConformes} clause(s) obligatoire(s) (4 à 10) pas encore conforme(s). Une clause est
+          conforme quand sa mise en œuvre est complète et son test d’efficacité conforme ; elle ne peut pas être exclue.
+        </Alert>
+      )}
+      {f.etats.aDeterminer > 0 && (
+        <Alert color="orange" role="alert">
+          {f.etats.aDeterminer} exigence(s) à déterminer : leur applicabilité n’a pas encore été tranchée. À revoir :
+          chaque exigence doit être déclarée applicable ou exclue (avec justification).
+        </Alert>
+      )}
+    </Stack>
+  );
+}
+
+/** Détail exigence par exigence d'un référentiel dans le périmètre : évaluation, plan d'action des écarts. */
+export function DetailExigences({
+  smsi,
+  frameworkId,
+  nom,
+  onClose,
+}: {
+  smsi: string;
+  frameworkId: string;
+  nom: string;
+  onClose: () => void;
+}) {
   const can = useCan(),
-    [choix, setChoix] = useState<string | null>(null),
     [filtre, setFiltre] = useState<string | null>(null),
     [ouverte, setOuverte] = useState<Detail | null>(null),
     [plan, setPlan] = useState(false);
   const q = useQuery({
-    queryKey: ['grc', smsi, 'couverture', choix],
+    queryKey: ['grc', smsi, 'couverture', frameworkId],
     queryFn: () =>
-      get<{ frameworks: Referentiel[]; detail: Detail[] | null }>(
-        `/api/grc/${smsi}/couverture${choix ? `?frameworkId=${choix}` : ''}`,
+      get<{ frameworks: CouvertureReferentiel[]; detail: Detail[] | null }>(
+        `/api/grc/${smsi}/couverture?frameworkId=${frameworkId}`,
       ),
   });
-  const frameworks = q.data?.frameworks ?? [];
   const lignes = (q.data?.detail ?? []).filter((r) => !filtre || r.etat === filtre);
   return (
-    <Stack>
-      <Alert>
-        L’état d’une exigence se déduit de son évaluation dans ce périmètre : mise en œuvre, test d’efficacité puis
-        validation métier. Une mesure ou une preuve partagée avec un autre référentiel ne rend jamais une exigence «
-        testée » ou « validée » : chaque exigence s’évalue pour elle-même. Un rapprochement non décidé est affiché à
-        part et n’est pas compté. Ces états aident à piloter : ils ne constituent ni un taux de conformité ni une preuve
-        de conformité à un référentiel.
-      </Alert>
-      <ErrorAlert error={q.error} />
-      {q.data && !frameworks.length && (
-        <Text>
-          Aucun référentiel n’est appliqué et actif dans ce périmètre. Attribuez un référentiel de la bibliothèque, puis
-          appliquez sa copie (page Périmètres, bouton « Référentiels ») ; une copie en préparation n’est pas suivie ici.
-        </Text>
-      )}
+    <Card withBorder id="couverture-detail">
       <Stack>
-        {frameworks.map((f) => (
-          <Card key={f.frameworkId} withBorder>
-            <Text fw={600}>{f.name}</Text>
-            <Text size="sm" c="dimmed">
-              Version {f.version} · {f.requirements} exigence(s) · {f.etats.applicables} applicable(s) ou à déterminer
-            </Text>
-            {f.etats.obligatoiresNonConformes > 0 && (
-              <Alert color="red" mt="sm" role="alert">
-                {f.etats.obligatoiresNonConformes} clause(s) obligatoire(s) (4 à 10) pas encore conforme(s). Une clause
-                est conforme quand sa mise en œuvre est complète et son test d’efficacité conforme ; elle ne peut pas
-                être exclue.
-              </Alert>
-            )}
-            {f.etats.aDeterminer > 0 && (
-              <Alert color="orange" mt="sm" role="alert">
-                {f.etats.aDeterminer} exigence(s) à déterminer : leur applicabilité n’a pas encore été tranchée. À
-                revoir : chaque exigence doit être déclarée applicable ou exclue (avec justification).
-              </Alert>
-            )}
-            <Group mt="sm" gap="xs">
-              {ETATS_EXIGENCE.map((e) => (
-                <StatusChip key={e} etat={COULEUR_ETAT[e]}>
-                  {f.etats[e]} · {LIBELLES_ETAT[e]}
-                </StatusChip>
-              ))}
-            </Group>
-            <Group mt="xs" gap="xs">
-              <StatusChip etat="succes">{f.covered} avec mesure reliée</StatusChip>
-              <StatusChip etat="info">{f.toValidate} rapprochement(s) à valider</StatusChip>
-              <StatusChip etat="neutre">{f.uncovered} sans mesure reliée</StatusChip>
-            </Group>
-          </Card>
-        ))}
-      </Stack>
-      {frameworks.length > 0 && (
+        <Group justify="space-between">
+          <Text fw={600}>Exigences de {nom} dans le périmètre</Text>
+          <Button variant="default" onClick={onClose}>
+            Fermer le détail
+          </Button>
+        </Group>
+        <Alert>
+          L’état d’une exigence se déduit de son évaluation dans ce périmètre : mise en œuvre, test d’efficacité puis
+          validation métier. Une mesure ou une preuve partagée avec un autre référentiel ne rend jamais une exigence «
+          testée » ou « validée » : chaque exigence s’évalue pour elle-même. Ces états aident à piloter : ils ne
+          constituent ni un taux de conformité ni une preuve de conformité à un référentiel.
+        </Alert>
+        <ErrorAlert error={q.error} />
         <Group align="flex-end">
-          <Select
-            label="Détail par exigence"
-            placeholder="Choisir un référentiel"
-            clearable
-            data={frameworks.map((f) => ({ value: f.frameworkId, label: f.name }))}
-            value={choix}
-            onChange={setChoix}
-          />
-          {choix && can('ecarts', 'modifier') && (
+          {can('ecarts', 'modifier') && (
             <Button variant="default" onClick={() => setPlan(true)}>
               Créer le plan d’action des écarts
             </Button>
           )}
-          {choix && (
-            <Select
-              label="Filtrer par état"
-              placeholder="Tous les états"
-              clearable
-              data={ETATS_EXIGENCE.map((e) => ({ value: e, label: LIBELLES_ETAT[e] }))}
-              value={filtre}
-              onChange={setFiltre}
+          <Select
+            label="Filtrer par état"
+            placeholder="Tous les états"
+            clearable
+            data={ETATS_EXIGENCE.map((e) => ({ value: e, label: LIBELLES_ETAT[e] }))}
+            value={filtre}
+            onChange={setFiltre}
+          />
+        </Group>
+        {q.data?.detail && (
+          <DataTable label="Exigences du référentiel, défilement horizontal possible">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Exigence</Table.Th>
+                  <Table.Th>Applicabilité</Table.Th>
+                  <Table.Th>État</Table.Th>
+                  <Table.Th>Mesures reliées</Table.Th>
+                  <Table.Th>Dernière évaluation</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {lignes.map((r) => (
+                  <Table.Tr key={r.id}>
+                    <Table.Td>
+                      <b>{r.id}</b> · {r.title}
+                    </Table.Td>
+                    <Table.Td>
+                      {r.obligatoire ? (
+                        'Applicable (obligatoire)'
+                      ) : (r.evaluation?.applicability ?? 'a_determiner') === 'a_determiner' ? (
+                        <StatusChip etat="attention">À déterminer : à revoir</StatusChip>
+                      ) : (
+                        LIBELLES_APPLICABILITE[r.evaluation!.applicability]
+                      )}
+                      {r.exclusionIllicite && <StatusChip etat="erreur">Exclusion non permise</StatusChip>}
+                      {r.obligatoire &&
+                        (exigenceConforme(r.etat) ? (
+                          <StatusChip etat="succes">Clause conforme</StatusChip>
+                        ) : (
+                          <StatusChip etat={r.evaluation?.testResult === 'non_conforme' ? 'erreur' : 'attention'}>
+                            Clause pas encore conforme
+                          </StatusChip>
+                        ))}
+                    </Table.Td>
+                    <Table.Td>
+                      <StatusChip etat={COULEUR_ETAT[r.etat]}>{LIBELLES_ETAT[r.etat]}</StatusChip>
+                      {r.evaluation?.testResult === 'non_conforme' && (
+                        <StatusChip etat="erreur">Test non conforme</StatusChip>
+                      )}
+                      {r.sansMesure && <StatusChip etat="attention">Aucune mesure reliée</StatusChip>}
+                    </Table.Td>
+                    <Table.Td>{r.measures.map((m) => m.name || m.ref).join(', ') || ETATS_LIEN[r.status]}</Table.Td>
+                    <Table.Td>
+                      {r.evaluation
+                        ? `v${r.evaluation.version} · ${r.evaluation.createdBy} · ${String(r.evaluation.createdAt).slice(0, 10)}`
+                        : '—'}
+                    </Table.Td>
+                    <Table.Td>
+                      {can('conformite', 'lire') && (
+                        <Button
+                          size="xs"
+                          variant="default"
+                          aria-label={`${can('conformite', 'modifier') ? 'Évaluer' : 'Consulter'} l’exigence ${r.id}`}
+                          onClick={() => setOuverte(r)}
+                        >
+                          {can('conformite', 'modifier') ? 'Évaluer' : 'Historique'}
+                        </Button>
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </DataTable>
+        )}
+        {plan && <PlanEcarts smsi={smsi} frameworkId={frameworkId} onClose={() => setPlan(false)} />}
+        <Modal
+          opened={!!ouverte}
+          onClose={() => setOuverte(null)}
+          size="lg"
+          title={ouverte ? `Évaluation de l’exigence ${ouverte.id}` : ''}
+        >
+          {ouverte && (
+            <Evaluation
+              key={ouverte.id}
+              smsi={smsi}
+              frameworkId={frameworkId}
+              ligne={ouverte}
+              onClose={() => setOuverte(null)}
             />
           )}
-        </Group>
-      )}
-      {q.data?.detail && (
-        <DataTable label="Exigences du référentiel, défilement horizontal possible">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Exigence</Table.Th>
-                <Table.Th>Applicabilité</Table.Th>
-                <Table.Th>État</Table.Th>
-                <Table.Th>Mesures reliées</Table.Th>
-                <Table.Th>Dernière évaluation</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {lignes.map((r) => (
-                <Table.Tr key={r.id}>
-                  <Table.Td>
-                    <b>{r.id}</b> · {r.title}
-                  </Table.Td>
-                  <Table.Td>
-                    {r.obligatoire ? (
-                      'Applicable (obligatoire)'
-                    ) : (r.evaluation?.applicability ?? 'a_determiner') === 'a_determiner' ? (
-                      <StatusChip etat="attention">À déterminer : à revoir</StatusChip>
-                    ) : (
-                      LIBELLES_APPLICABILITE[r.evaluation!.applicability]
-                    )}
-                    {r.exclusionIllicite && <StatusChip etat="erreur">Exclusion non permise</StatusChip>}
-                    {r.obligatoire &&
-                      (exigenceConforme(r.etat) ? (
-                        <StatusChip etat="succes">Clause conforme</StatusChip>
-                      ) : (
-                        <StatusChip etat={r.evaluation?.testResult === 'non_conforme' ? 'erreur' : 'attention'}>
-                          Clause pas encore conforme
-                        </StatusChip>
-                      ))}
-                  </Table.Td>
-                  <Table.Td>
-                    <StatusChip etat={COULEUR_ETAT[r.etat]}>{LIBELLES_ETAT[r.etat]}</StatusChip>
-                    {r.evaluation?.testResult === 'non_conforme' && (
-                      <StatusChip etat="erreur">Test non conforme</StatusChip>
-                    )}
-                    {r.sansMesure && <StatusChip etat="attention">Aucune mesure reliée</StatusChip>}
-                  </Table.Td>
-                  <Table.Td>{r.measures.map((m) => m.name || m.ref).join(', ') || ETATS_LIEN[r.status]}</Table.Td>
-                  <Table.Td>
-                    {r.evaluation
-                      ? `v${r.evaluation.version} · ${r.evaluation.createdBy} · ${String(r.evaluation.createdAt).slice(0, 10)}`
-                      : '—'}
-                  </Table.Td>
-                  <Table.Td>
-                    {can('conformite', 'lire') && (
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`${can('conformite', 'modifier') ? 'Évaluer' : 'Consulter'} l’exigence ${r.id}`}
-                        onClick={() => setOuverte(r)}
-                      >
-                        {can('conformite', 'modifier') ? 'Évaluer' : 'Historique'}
-                      </Button>
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
-      )}
-      {plan && choix && <PlanEcarts smsi={smsi} frameworkId={choix} onClose={() => setPlan(false)} />}
-      <Modal
-        opened={!!ouverte}
-        onClose={() => setOuverte(null)}
-        size="lg"
-        title={ouverte ? `Évaluation de l’exigence ${ouverte.id}` : ''}
-      >
-        {ouverte && choix && (
-          <Evaluation
-            key={ouverte.id}
-            smsi={smsi}
-            frameworkId={choix}
-            ligne={ouverte}
-            onClose={() => setOuverte(null)}
-          />
-        )}
-      </Modal>
-    </Stack>
+        </Modal>
+      </Stack>
+    </Card>
   );
 }
