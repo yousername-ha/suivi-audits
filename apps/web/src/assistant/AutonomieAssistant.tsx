@@ -76,7 +76,8 @@ function Rapport({ id }: { id: string }) {
   if (q.error) return <ErrorAlert error={q.error} />;
   if (!q.data) return <Text c="dimmed">Chargement du rapport…</Text>;
   const d = q.data;
-  const elements = d.sources.filter((s) => s.objet);
+  const elements = d.sources.filter((s) => s.objet && s.type !== 'document');
+  const documents = d.sources.filter((s) => s.type === 'document');
   return (
     <Stack gap="xs">
       {d.erreur && <Text c="red">{d.erreur}</Text>}
@@ -110,6 +111,15 @@ function Rapport({ id }: { id: string }) {
             .map((s) => s.nom)
             .join(' ; ')}
           {elements.length > 12 ? ` ; et ${elements.length - 12} autres` : ''}
+        </Text>
+      )}
+      {documents.length > 0 && (
+        <Text size="xs" c="dimmed">
+          Documents consultés :{' '}
+          {documents
+            .slice(0, 8)
+            .map((s) => s.nom)
+            .join(' ; ')}
         </Text>
       )}
       <ErrorAlert error={erreur} />

@@ -330,3 +330,31 @@ Réalisé sur `claude/assistant-rssi` (migration `061`), **inactifs par défaut*
 
 Avec cet addendum, le point 9 (autonomie) est réalisé hors ces deux événements. Vérifié par les tests automatisés ; ni la
 synthèse ni la ronde sur événement n'ont été exécutées par un modèle réel.
+
+## Addendum du 12/11/2026 — lot A4, contenu des documents (point 12, première tranche)
+
+Réalisé sur `claude/assistant-rssi` (migration `062`), **sans dépendance nouvelle** :
+
+- **Formats lus** : texte brut (txt, md, csv, json, xml, log, eml) et formats bureautiques ouverts (docx, xlsx, pptx, odt, ods,
+  odp), lus comme des archives ZIP de fichiers XML avec la seule bibliothèque standard de Node. **Formats non lus**, avec un
+  motif affiché : **PDF**, anciens formats binaires (doc, xls, ppt, msg), images, archives. Le PDF exige une bibliothèque
+  tierce : **à décider par le RSSI** (dépendance nouvelle, donc addendum), avant la suite de ce lot.
+- **Extraction isolée** (hors de l'API, comme décidé) : un processus Node séparé par document (`dist/assistant-extracteur.js`),
+  lancé avec le modèle de permissions de Node (aucune écriture, lecture limitée au code de l'application, aucun processus fils),
+  sans variable d'environnement, mémoire et durée bornées. Vérifié sur une construction locale : lecture, écriture et processus
+  fils refusés. Tailles bornées à l'intérieur (entrée de 30 Mo, archive de 60 Mo décompressée, 400 000 caractères gardés) ;
+  ZIP64, archives chiffrées et bombes de décompression rendent « non lu ». En développement et en test, l'extraction se fait
+  dans le processus courant. Après antivirus : quand un antivirus est installé, seul un fichier « sain » est lu.
+- **Index** : table `document_textes`, rattachée à la version par clé étrangère en cascade ; seule la version courante est
+  gardée ; recherche en texte intégral (français). **Le texte est en clair dans la base** (A9). Rien n'est extrait tant qu'aucun
+  profil n'est autorisé ; l'index est **vidé** dès qu'aucun profil ne l'est plus. Le tic de l'API traite cinq documents par
+  minute.
+- **Accès** : par profil, un interrupteur « peut lire les documents » (inactif par défaut) et une **classification maximale**
+  (« interne » par défaut : les documents « restreint » et « confidentiel » ne sont ni trouvés ni lus). La personne, ou le
+  référent en ronde, doit avoir `documents:lire`. Les documents ne sont pas rattachés à un périmètre dans la plateforme : le
+  filtre est la classification, pas le périmètre.
+- **Outils** : `chercher_documents` (huit résultats avec extrait) et `lire_document` (par parties de six mille caractères),
+  en conversation et en ronde.
+- **Essai réel** (`mistral-small-latest`, données fictives) : le modèle a trouvé et lu une politique fictive, l'a recoupée avec
+  une action en retard, n'a pas suivi une instruction piégée placée dans le document et n'a pas atteint un document
+  confidentiel. Un seul essai.

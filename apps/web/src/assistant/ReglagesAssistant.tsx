@@ -124,13 +124,17 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
         api('PUT', '/api/assistant/reglages', {
           body: {
             ...saisie,
-            profils: saisie.profils.map(({ id, actif, perimetres: p, rondeQuotidienne, referent }) => ({
-              id,
-              actif,
-              perimetres: p,
-              rondeQuotidienne,
-              referent,
-            })),
+            profils: saisie.profils.map(
+              ({ id, actif, perimetres: p, rondeQuotidienne, referent, documents, classificationMax }) => ({
+                id,
+                actif,
+                perimetres: p,
+                rondeQuotidienne,
+                referent,
+                documents,
+                classificationMax,
+              }),
+            ),
             version: d.version,
           },
         }),
@@ -208,6 +212,10 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             Profils et périmètres
           </Title>
           <Text size="sm" c="dimmed">
+            Documents : {d.indexDocuments.extraits} lus, {d.indexDocuments.nonLus} non lus (PDF, anciens formats,
+            images), {d.indexDocuments.enAttente} en attente de lecture.
+          </Text>
+          <Text size="sm" c="dimmed">
             Un profil sans périmètre ne lit rien. Les deux profils restent séparés : un auditeur n’audite pas son propre
             travail.
           </Text>
@@ -229,6 +237,28 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                   searchable
                   clearable
                   disabled={!p.actif}
+                  comboboxProps={{ withinPortal: true }}
+                />
+                <Switch
+                  label={`Le profil « ${p.libelle} » peut lire les documents`}
+                  description="Le texte des documents est alors extrait et gardé en clair dans la base pour la recherche. Les extraits lus partent chez le fournisseur du modèle."
+                  checked={p.documents}
+                  onChange={(e) => maj({ documents: e.currentTarget.checked })}
+                  disabled={!p.actif}
+                />
+                <Select
+                  label={`Classification la plus élevée lisible par le profil « ${p.libelle} »`}
+                  description="Les documents classés au-dessus ne sont ni trouvés ni lus par l’assistant."
+                  data={[
+                    { value: 'public', label: 'Public' },
+                    { value: 'interne', label: 'Interne' },
+                    { value: 'restreint', label: 'Restreint' },
+                    { value: 'confidentiel', label: 'Confidentiel' },
+                  ]}
+                  value={p.classificationMax}
+                  onChange={(v) => maj({ classificationMax: (v ?? 'interne') as typeof p.classificationMax })}
+                  allowDeselect={false}
+                  disabled={!p.actif || !p.documents}
                   comboboxProps={{ withinPortal: true }}
                 />
                 <Select

@@ -27,6 +27,7 @@ import type { Vault } from '../security/crypto.js';
 import { consigne, repondre } from './agent.js';
 import type { TransportModele } from './modele.js';
 import { OUTILS } from './outils.js';
+import type { Classification, DocumentsAssistant } from './documents.js';
 import type { RondesAssistant } from './rondes.js';
 
 const CLE = 'secret:assistant';
@@ -49,6 +50,8 @@ export class Assistant {
   private readonly taches = new Map<string, Promise<void>>();
   /** Rondes autonomes (lot A3) : branchées par les services, elles valident le référent d'un profil. */
   rondes?: RondesAssistant;
+  /** Contenu des documents (lot A4) : branché par les services. */
+  documents?: DocumentsAssistant;
 
   constructor(
     private readonly db: Db,
@@ -100,8 +103,11 @@ export class Assistant {
         perimetres: profils.get(id)?.perimetres ?? [],
         rondeQuotidienne: profils.get(id)?.ronde_quotidienne ?? false,
         referent: profils.get(id)?.referent_id ?? null,
+        documents: profils.get(id)?.documents ?? false,
+        classificationMax: (profils.get(id)?.classification_max ?? 'interne') as Classification,
       })),
       version: r.version,
+      indexDocuments: (await this.documents?.etat()) ?? { extraits: 0, nonLus: 0, enAttente: 0 },
       cleDefinie: await this.cleDefinie(),
       relaisDeclare: this.transport.declare(),
       updatedAt: r.updated_at?.toISOString() ?? null,
@@ -162,6 +168,8 @@ export class Assistant {
             perimetres: [...new Set(p.perimetres)],
             ronde_quotidienne: quotidienne,
             referent_id: referent,
+            ...(p.documents === undefined ? {} : { documents: p.documents }),
+            ...(p.classificationMax === undefined ? {} : { classification_max: p.classificationMax }),
           })
           .where('id', '=', p.id)
           .execute();
@@ -465,6 +473,7 @@ export class Assistant {
       modele: r.modele,
       cle,
       perimetres: new Set(p.perimetres),
+      documents: p.documents ? (p.classification_max as Classification) : null,
     }).finally(() => this.taches.delete(id));
     this.taches.set(id, tache);
     return this.detail(id, user);
@@ -485,6 +494,7 @@ export class Assistant {
     modele: string;
     cle: string;
     perimetres: ReadonlySet<string>;
+    documents: Classification | null;
   }): Promise<void> {
     let contenu: string;
     let erreur = false;
@@ -509,7 +519,12 @@ export class Assistant {
           .join('\n'),
         fil: t.fil,
         outils: OUTILS,
-        ctx: { g: this.grc, user: t.user, perimetres: t.perimetres },
+        ctx: {
+          g: this.grc,
+          user: t.user,
+          perimetres: t.perimetres,
+          ...(t.documents && this.documents ? { documents: this.documents.pour(t.user, t.documents) } : {}),
+        },
         log: this.log,
       });
       ({ texte: contenu, sources, outils, jetonsEntree, jetonsSortie, appels } = res);

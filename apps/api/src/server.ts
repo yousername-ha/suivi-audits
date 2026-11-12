@@ -39,6 +39,7 @@ async function main() {
           .run(true, async () => {
             if ((await svc.modules.state()).disabled.includes('assistant')) return;
             await svc.assistantRondes.tic();
+            await svc.assistantDocuments.indexer();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
       )

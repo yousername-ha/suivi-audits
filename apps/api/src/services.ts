@@ -38,6 +38,7 @@ import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 import { Webauthn } from './webauthn.js';
 import { Assistant } from './assistant/index.js';
+import { DocumentsAssistant } from './assistant/documents.js';
 import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 
@@ -75,6 +76,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const assistant = new Assistant(db, vault, grc, modele, log);
   const assistantRondes = new RondesAssistant(db, grc, assistant, modele, log);
   assistant.rondes = assistantRondes;
+  const assistantDocuments = new DocumentsAssistant(db, vault, cfg, assistant, log);
+  assistant.documents = assistantDocuments;
   return {
     cfg,
     log,
@@ -107,6 +110,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     assistant,
     /** Rondes autonomes de l'assistant (lot A3) : lancées par le tic de l'API ou à la demande. */
     assistantRondes,
+    /** Texte et index de recherche des documents, pour l'assistant (lot A4). */
+    assistantDocuments,
     bus,
     presence: new Presence(db, bus),
     legacy,

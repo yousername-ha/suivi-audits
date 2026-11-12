@@ -12,6 +12,8 @@ export const PROFIL_ASSISTANT_LIBELLES: Record<ProfilAssistant, string> = {
 };
 
 export const BUDGET_JETONS_DEFAUT = 500_000;
+export const CLASSIFICATIONS_DOCUMENT = ['public', 'interne', 'restreint', 'confidentiel'] as const;
+export type ClassificationDocument = (typeof CLASSIFICATIONS_DOCUMENT)[number];
 export const CONTEXTE_ASSISTANT_MAX = 4000;
 export const MESSAGE_ASSISTANT_MAX = 4000;
 
@@ -58,6 +60,9 @@ export const ReglagesAssistantBody = z
             actif: z.boolean(),
             perimetres: z.array(z.uuid()).max(200),
             rondeQuotidienne: z.boolean().optional(),
+            /** Le profil peut lire le texte des documents, jusqu'à ce niveau de classification. */
+            documents: z.boolean().optional(),
+            classificationMax: z.enum(CLASSIFICATIONS_DOCUMENT).optional(),
             referent: z.uuid().nullable().optional(),
           })
           .strict(),
@@ -95,6 +100,9 @@ export interface ProfilAssistantDto {
   rondeQuotidienne: boolean;
   /** Compte dont les droits bornent ce que la ronde lit, et qui reçoit le rapport. */
   referent: string | null;
+  /** Le profil peut lire le texte des documents, jusqu'au niveau de classification indiqué. */
+  documents: boolean;
+  classificationMax: ClassificationDocument;
 }
 export interface ReglagesAssistantDto {
   actif: boolean;
@@ -116,6 +124,8 @@ export interface ReglagesAssistantDto {
   contexte: string;
   profils: ProfilAssistantDto[];
   version: number;
+  /** État de l'index des documents : textes extraits, documents non lus (format), documents en attente. */
+  indexDocuments: { extraits: number; nonLus: number; enAttente: number };
   /** Une clé est enregistrée (elle n'est jamais renvoyée). */
   cleDefinie: boolean;
   /** Le relais de modèle est déclaré sur le serveur (profil Compose « assistant »). */

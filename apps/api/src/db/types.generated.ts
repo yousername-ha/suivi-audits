@@ -1,6 +1,6 @@
 /* Types des tables et vues de la base, générés depuis la base migrée (ADR 0062). NE PAS MODIFIER À LA MAIN :
    pnpm --filter @suivi/api db:types ; la CI régénère ce fichier et échoue s’il diffère. */
-import type { ColumnType, Generated } from 'kysely';
+import type { ColumnType, Generated, GeneratedAlways } from 'kysely';
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -80,6 +80,8 @@ export interface AssistantProfils {
   perimetres: Generated<string[]>;
   ronde_quotidienne: Generated<boolean>;
   referent_id: string | null;
+  documents: Generated<boolean>;
+  classification_max: Generated<"public" | "interne" | "restreint" | "confidentiel">;
 }
 
 export interface AssistantPropositions {
@@ -318,6 +320,16 @@ export interface CourrielJobs {
   body: string | null;
   attempts: Generated<number>;
   next_attempt_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface DocumentTextes {
+  document_id: string;
+  version: number;
+  etat: "extrait" | "non_lu" | "echec";
+  motif: Generated<string>;
+  texte: Generated<string>;
+  recherche: GeneratedAlways<string | null>;
+  extrait_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface DocumentVersions {
@@ -1632,6 +1644,7 @@ export interface DB {
   cfg_versions: CfgVersions;
   contributions_elements: ContributionsElements;
   courriel_jobs: CourrielJobs;
+  document_textes: DocumentTextes;
   document_versions: DocumentVersions;
   documents: Documents;
   droits_ressources: DroitsRessources;

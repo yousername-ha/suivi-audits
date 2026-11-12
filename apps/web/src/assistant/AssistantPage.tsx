@@ -29,12 +29,15 @@ const OUTILS: Record<string, string> = {
   historique_element: 'historique',
   actions_en_retard: 'actions en retard',
   couverture_referentiels: 'couverture',
+  chercher_documents: 'recherche de documents',
+  lire_document: 'document',
   signaux: 'points d’attention',
 };
 
 function Message({ m }: { m: MessageAssistantDto }) {
-  const perimetres = new Map(m.sources.map((s) => [s.perimetre, s]));
-  const elements = m.sources.filter((s) => s.objet);
+  const perimetres = new Map(m.sources.filter((s) => s.perimetre).map((s) => [s.perimetre, s]));
+  const elements = m.sources.filter((s) => s.objet && s.type !== 'document');
+  const documents = m.sources.filter((s) => s.type === 'document');
   return (
     <Card withBorder className="assistant-message" data-role={m.role} data-erreur={m.erreur || undefined}>
       <Stack gap="xs">
@@ -69,6 +72,15 @@ function Message({ m }: { m: MessageAssistantDto }) {
                   .map((s) => s.nom)
                   .join(' ; ')}
                 {elements.length > 12 ? ` ; et ${elements.length - 12} autres` : ''}
+              </Text>
+            )}
+            {documents.length > 0 && (
+              <Text size="xs" c="dimmed">
+                Documents consultés :{' '}
+                {documents
+                  .slice(0, 8)
+                  .map((s) => s.nom)
+                  .join(' ; ')}
               </Text>
             )}
             {perimetres.size > 0 && (
