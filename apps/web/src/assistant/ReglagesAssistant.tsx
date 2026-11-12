@@ -43,6 +43,7 @@ type Saisie = Pick<
   | 'enPause'
   | 'heureRonde'
   | 'plafondRappelsJour'
+  | 'delaiRelanceJours'
   | 'contexte'
   | 'profils'
 >;
@@ -54,6 +55,7 @@ const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
   enPause: d.enPause,
   heureRonde: d.heureRonde,
   plafondRappelsJour: d.plafondRappelsJour,
+  delaiRelanceJours: d.delaiRelanceJours,
   contexte: d.contexte,
   profils: d.profils,
 });
@@ -271,12 +273,20 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             onChange={(v) => changer({ heureRonde: typeof v === 'number' ? v : saisie.heureRonde })}
           />
           <NumberInput
-            label="Rappels par personne et par jour, au plus"
-            description="Au-delà, l’assistant ne peut plus rappeler cette personne jusqu’au lendemain."
+            label="Rappels et questions par personne et par jour, au plus"
+            description="Au-delà, l’assistant ne peut plus écrire à cette personne jusqu’au lendemain."
             min={0}
             max={50}
             value={saisie.plafondRappelsJour}
             onChange={(v) => changer({ plafondRappelsJour: typeof v === 'number' ? v : saisie.plafondRappelsJour })}
+          />
+          <NumberInput
+            label="Délai avant relance d’une question, en jours"
+            description="Sans réponse après ce délai, la personne est relancée une fois. Après un second délai, la question vous est signalée dans le rapport."
+            min={1}
+            max={30}
+            value={saisie.delaiRelanceJours}
+            onChange={(v) => changer({ delaiRelanceJours: typeof v === 'number' ? v : saisie.delaiRelanceJours })}
           />
           <Textarea
             label="Contexte de l’organisation"

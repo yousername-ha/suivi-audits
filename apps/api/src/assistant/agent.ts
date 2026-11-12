@@ -71,6 +71,8 @@ export async function repondre(p: {
   consigne?: string;
   /** Interrogé avant chaque tour : vrai, le modèle doit conclure sans nouvel outil (pause, durée maximale). */
   doitConclure?: () => Promise<boolean>;
+  /** Interrogé une seule fois quand le modèle veut conclure : un texte le renvoie au travail (étape oubliée). */
+  avantDeConclure?: (journal: readonly { nom: string; elements: number }[]) => string | null;
 }): Promise<ResultatAgent> {
   const messages: MessageModele[] = [
     { role: 'system', content: p.consigne ?? consigne(p.profil, new Date().toISOString().slice(0, 10)) },
@@ -84,6 +86,7 @@ export async function repondre(p: {
   let jetonsSortie = 0;
   let appels = 0;
   const toursMax = p.toursMax ?? TOURS_MAX;
+  let renvoye = false;
 
   for (let tour = 0; tour <= toursMax; tour++) {
     // Au dernier tour, plus d'outils : le modèle doit conclure avec ce qu'il a lu.
@@ -100,6 +103,14 @@ export async function repondre(p: {
     jetonsEntree += r.jetonsEntree;
     jetonsSortie += r.jetonsSortie;
     const demandes = dernier ? [] : (r.message.tool_calls ?? []);
+    if (!demandes.length && !dernier && !renvoye) {
+      renvoye = true;
+      const renvoi = p.avantDeConclure?.(journal);
+      if (renvoi) {
+        messages.push({ role: 'assistant', content: r.message.content ?? '' }, { role: 'user', content: renvoi });
+        continue;
+      }
+    }
     if (!demandes.length) {
       const texte = (r.message.content ?? '').trim();
       return {

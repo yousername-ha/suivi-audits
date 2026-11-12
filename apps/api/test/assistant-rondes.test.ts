@@ -103,6 +103,8 @@ const rappelsDe = async (userId: string) =>
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Le scénario lance plus de rondes qu'un administrateur n'en demanderait en une heure.
+  t.svc.limits.assistantRondeByUser = Object.assign(() => true, { reset() {} });
   const a = await makeUser(t, 'ro_admin', 'admin');
   adminId = a.id;
   admin = await login(t, a);
@@ -211,7 +213,8 @@ describe('assistant : ronde planifiée', () => {
       etat: 'terminee',
       rapport: 'Rapport fictif : deux actions en retard.',
       rappels: 0,
-      jetons: 360,
+      // Quatre appels : le modèle est renvoyé une fois à ses rappels avant de conclure (filet de la ronde).
+      jetons: 480,
     });
     expect(detail.outils.map((o) => o.nom)).toEqual(['signaux', 'signaux']);
 
@@ -271,7 +274,7 @@ describe('assistant : ce qu’une ronde émet seule', () => {
     expect(comptes[0]).toMatchObject({ envoye: true });
     expect(comptes[1]).toMatchObject({ envoye: false });
     expect(String(comptes[1]!.detail)).toContain('déjà été envoyé');
-    expect(String(comptes[2]!.detail)).toContain('pas de responsable nommé');
+    expect(String(comptes[2]!.detail)).toContain('pas de responsable joignable');
 
     const recus = await rappelsDe(responsableId);
     expect(recus).toHaveLength(1);
@@ -557,5 +560,200 @@ describe('assistant : amélioration avec l’usage', () => {
     });
     expect(Number(mesures[0]!.rondes)).toBeGreaterThan(5);
     expect((await invite.get(`${base}/mesures`)).statusCode).toBe(403);
+  });
+});
+
+describe('assistant : questions, réponses et relances', () => {
+  const lancer = async () => {
+    modele.demandes = [];
+    const r = await admin.post(`${base}/rondes`, { profil: 'mise_en_oeuvre' });
+    expect(r.statusCode, r.body).toBe(202);
+    await t.svc.assistantRondes.attendre();
+    return (await admin.get(`${base}/rondes/${(r.json() as RondeAssistantDto).id}`)).json() as RondeAssistantDetailDto;
+  };
+  const consigne = () => String(modele.demandes[0]!.messages[0]!.content);
+  const rapport = (): MessageModele => ({ role: 'assistant', content: 'Rapport fictif.' });
+  const questionsDe = async (userId: string) =>
+    (
+      await t.svc.db.q<{ id: string; notification_id: string; etat: string; relances: number; object_id: string }>(
+        'SELECT id::text, notification_id::text, etat, relances, object_id::text FROM assistant_questions WHERE user_id = $1 ORDER BY created_at',
+        [userId],
+      )
+    ).rows;
+
+  it('pose une question au responsable, une seule en attente par élément', async () => {
+    const comptes: Record<string, unknown>[] = [];
+    modele.script = (d, n) => {
+      if (n > 1) comptes.push(dernierOutil(d)!);
+      if (n <= 2)
+        return appel('q' + n, 'poser_question', {
+          perimetre,
+          id: enRetard,
+          question: 'Où en est cette action fictive, et quelle échéance vous paraît tenable ?',
+        });
+      return rapport();
+    };
+    const ronde = await lancer();
+    expect(comptes[0]).toMatchObject({ envoye: true });
+    expect(comptes[1]).toMatchObject({ envoye: false });
+    expect(ronde.actions).toContain('Question posée au sujet de « Action fictive en retard ».');
+    const [q] = await questionsDe(responsableId);
+    expect(q).toMatchObject({ etat: 'ouverte', relances: 0, object_id: enRetard });
+    const vus = (await responsable.get('/api/grc/notifications')).json() as {
+      id: string;
+      kind: string;
+      title: string;
+    }[];
+    expect(vus.find((n) => n.id === q!.notification_id)).toMatchObject({
+      kind: 'assistant_question',
+      title: 'Question de l’assistant RSSI',
+    });
+  });
+
+  it('laisse la seule personne interrogée répondre, et remet la réponse à l’assistant une seule fois', async () => {
+    const [q] = await questionsDe(responsableId);
+    const url = `/api/grc/notifications/${q!.notification_id}/reponse`;
+    expect((await admin.put(url, { texte: 'Réponse fictive d’un tiers.' })).statusCode).toBe(404);
+    const r = await responsable.put(url, { texte: 'Réponse fictive : action bloquée, échéance fictive en décembre.' });
+    expect(r.statusCode, r.body).toBe(200);
+    expect((await responsable.put(url, { texte: 'Seconde réponse fictive.' })).statusCode).toBe(404);
+    const vus = (await responsable.get('/api/grc/notifications')).json() as { id: string; reponse: string | null }[];
+    expect(vus.find((n) => n.id === q!.notification_id)!.reponse).toContain('action bloquée');
+
+    // Le référent lit la réponse ; un autre utilisateur de l'assistant ne voit rien.
+    const liste = (await admin.get(`${base}/questions`)).json() as { etat: string; reponse: string }[];
+    expect(liste[0]).toMatchObject({ etat: 'repondue' });
+    expect((await invite.get(`${base}/questions`)).json()).toEqual([]);
+    expect((await responsable.get(`${base}/questions`)).statusCode).toBe(403);
+
+    modele.script = rapport;
+    await lancer();
+    expect(consigne()).toContain('réponse reçue : « Réponse fictive : action bloquée');
+    await lancer();
+    expect(consigne()).not.toContain('Réponse fictive : action bloquée');
+    // Le journal d'audit ne garde pas le texte de la réponse.
+    const { rows } = await t.svc.db.q<{ details: unknown }>(
+      "SELECT details FROM audit_log WHERE action = 'assistant.question_repondue'",
+    );
+    expect(rows).toHaveLength(1);
+    expect(JSON.stringify(rows)).not.toContain('bloquée');
+  });
+
+  it('relance une question sans réponse après le délai, puis la signale au référent', async () => {
+    const autreAction = (
+      await admin.post(
+        `/api/grc/${perimetre}/objects`,
+        action('Action fictive muette', { dueAt: '2020-04-01T00:00:00.000Z', ownerId: responsableId }),
+      )
+    ).json().id as string;
+    modele.script = (_d, n) =>
+      n === 1
+        ? appel('m1', 'poser_question', {
+            perimetre,
+            id: autreAction,
+            question: 'Cette action fictive est-elle toujours utile ?',
+          })
+        : rapport();
+    await lancer();
+    const muette = (await questionsDe(responsableId)).find((q) => q.object_id === autreAction)!;
+    expect(muette).toMatchObject({ etat: 'ouverte', relances: 0 });
+
+    // Avant le délai : rien. Après : une relance, une seule.
+    modele.script = rapport;
+    let ronde = await lancer();
+    expect(ronde.actions.join(' ')).not.toContain('relancée');
+    await t.svc.db.q("UPDATE assistant_questions SET created_at = now() - interval '4 days' WHERE id = $1", [
+      muette.id,
+    ]);
+    ronde = await lancer();
+    expect(ronde.actions).toContain('Question relancée au sujet de « Action fictive muette ».');
+    ronde = await lancer();
+    expect(ronde.actions.join(' ')).not.toContain('relancée');
+    const relances = await t.svc.db.q(
+      "SELECT 1 FROM grc_notifications WHERE kind = 'assistant_question' AND due_key = $1",
+      [muette.id + ':relance'],
+    );
+    expect(relances.rows).toHaveLength(1);
+
+    // Toujours rien après un second délai : signalée, et dite à l'assistant.
+    await t.svc.db.q("UPDATE assistant_questions SET relancee_at = now() - interval '4 days' WHERE id = $1", [
+      muette.id,
+    ]);
+    ronde = await lancer();
+    expect(ronde.actions).toContain(
+      'Question restée sans réponse malgré une relance, au sujet de « Action fictive muette ».',
+    );
+    expect(consigne()).toContain('restée sans réponse malgré une relance');
+    expect((await questionsDe(responsableId)).find((q) => q.id === muette.id)).toMatchObject({ etat: 'sans_reponse' });
+    // Une réponse tardive reste possible.
+    const { rows } = await t.svc.db.q<{ id: string }>(
+      "SELECT id::text FROM grc_notifications WHERE kind = 'assistant_question' AND due_key = $1",
+      [muette.id + ':relance'],
+    );
+    expect(
+      (await responsable.put(`/api/grc/notifications/${rows[0]!.id}/reponse`, { texte: 'Réponse fictive tardive.' }))
+        .statusCode,
+    ).toBe(200);
+  });
+
+  it('rappelle les membres du groupe responsable qui ont accès au périmètre, et eux seuls', async () => {
+    const { rows } = await t.svc.db.q<{ id: string }>(
+      "INSERT INTO groups(name) VALUES ('Groupe fictif') RETURNING id::text",
+    );
+    const groupe = rows[0]!.id;
+    // Le responsable est membre du périmètre ; l'invité est dans le groupe mais n'a pas accès au périmètre restreint.
+    await t.svc.db.q('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $3), ($2, $3)', [
+      responsableId,
+      inviteId,
+      groupe,
+    ]);
+    const collective = (
+      await admin.post(
+        `/api/grc/${perimetre}/objects`,
+        action('Action fictive collective', { dueAt: '2020-05-01T00:00:00.000Z' }),
+      )
+    ).json().id as string;
+    await t.svc.db.q(
+      `UPDATE grc_objects SET data = data || jsonb_build_object('responsable', jsonb_build_object('type', 'groupe', 'id', $2::text)) WHERE id = $1`,
+      [collective, groupe],
+    );
+    let compte: Record<string, unknown> | null = null;
+    modele.script = (d, n) => {
+      if (n === 1)
+        return appel('g1', 'envoyer_rappel', {
+          perimetre,
+          id: collective,
+          message: 'Cette action fictive collective a dépassé son échéance.',
+        });
+      compte = dernierOutil(d);
+      return rapport();
+    };
+    await lancer();
+    expect(compte).toMatchObject({ envoye: true });
+    const recus = await t.svc.db.q<{ user_id: string }>(
+      "SELECT user_id::text FROM grc_notifications WHERE kind = 'assistant_rappel' AND object_id = $1",
+      [collective],
+    );
+    expect(recus.rows.map((x) => x.user_id)).toEqual([responsableId]);
+  });
+});
+
+describe('assistant : filet de la ronde', () => {
+  it('renvoie une fois le modèle à ses rappels quand il conclut sans avoir écrit à personne', async () => {
+    modele.demandes = [];
+    modele.script = (_d, n) =>
+      n === 1 ? appel('s1', 'signaux', { perimetre }) : { role: 'assistant', content: 'Rapport fictif n° ' + n + '.' };
+    const r = await admin.post(`${base}/rondes`, { profil: 'mise_en_oeuvre' });
+    expect(r.statusCode, r.body).toBe(202);
+    await t.svc.assistantRondes.attendre();
+    // Tour 2 : le modèle veut conclure ; la plateforme le renvoie. Tour 3 : il conclut, sans second renvoi.
+    expect(modele.demandes).toHaveLength(3);
+    const renvoi = modele.demandes[2]!.messages.at(-1)!;
+    expect(renvoi.role).toBe('user');
+    expect(renvoi.content).toContain('Vous n’avez encore écrit à aucun responsable');
+    const detail = (
+      await admin.get(`${base}/rondes/${(r.json() as RondeAssistantDto).id}`)
+    ).json() as RondeAssistantDetailDto;
+    expect(detail).toMatchObject({ etat: 'terminee', rapport: 'Rapport fictif n° 3.' });
   });
 });

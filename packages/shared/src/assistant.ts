@@ -44,6 +44,7 @@ export const ReglagesAssistantBody = z
     enPause: z.boolean().optional(),
     heureRonde: z.number().int().min(0).max(23).optional(),
     plafondRappelsJour: z.number().int().min(0).max(50).optional(),
+    delaiRelanceJours: z.number().int().min(1).max(30).optional(),
     /** Contexte de l'organisation, relu par l'assistant à chaque ronde et à chaque conversation. */
     contexte: z.string().trim().max(CONTEXTE_ASSISTANT_MAX).optional(),
     profils: z
@@ -103,6 +104,8 @@ export interface ReglagesAssistantDto {
   heureRonde: number;
   /** Nombre maximal de rappels de l'assistant reçus par une personne en un jour. */
   plafondRappelsJour: number;
+  /** Jours sans réponse avant la relance d'une question, puis avant son signalement au référent. */
+  delaiRelanceJours: number;
   contexte: string;
   profils: ProfilAssistantDto[];
   version: number;
@@ -263,3 +266,23 @@ export interface MesureAssistantDto {
   methodesRefusees: number;
 }
 export type DecisionMethodeBody = z.infer<typeof DecisionMethodeBody>;
+
+/* ------------------------------------------------------------------ Questions de l'assistant (ADR 0086, points 9 et 10) */
+export const QUESTION_ASSISTANT_MAX = 400;
+export const REPONSE_QUESTION_MAX = 2000;
+export const ReponseQuestionBody = z.object({ texte: z.string().trim().min(1).max(REPONSE_QUESTION_MAX) }).strict();
+export interface QuestionAssistantDto {
+  id: string;
+  profil: ProfilAssistant;
+  perimetre: string;
+  objet: string;
+  objetNom: string;
+  /** Nom affiché de la personne interrogée. */
+  destinataire: string;
+  texte: string;
+  etat: 'ouverte' | 'repondue' | 'sans_reponse';
+  reponse: string;
+  relances: number;
+  createdAt: string;
+  repondueAt: string | null;
+}

@@ -89,6 +89,7 @@ export class Assistant {
       enPause: r.en_pause,
       heureRonde: r.heure_ronde,
       plafondRappelsJour: r.plafond_rappels_jour,
+      delaiRelanceJours: r.delai_relance_jours,
       contexte: r.contexte,
       profils: PROFILS_ASSISTANT.map((id) => ({
         id,
@@ -133,6 +134,7 @@ export class Assistant {
           ...(b.heureRonde === undefined ? {} : { heure_ronde: b.heureRonde }),
           ...(b.plafondRappelsJour === undefined ? {} : { plafond_rappels_jour: b.plafondRappelsJour }),
           ...(b.contexte === undefined ? {} : { contexte: b.contexte }),
+          ...(b.delaiRelanceJours === undefined ? {} : { delai_relance_jours: b.delaiRelanceJours }),
           version: cur.version + 1,
           updated_at: sql`now()`,
           updated_by: user.username,

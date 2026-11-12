@@ -20,6 +20,7 @@ export interface ContexteOutil {
 /** Actions d'une ronde : aucune n'écrit dans un registre. Chaque méthode rend un compte rendu remis au modèle. */
 export interface ActionsRonde {
   rappeler(perimetre: string, objet: string, message: string): Promise<{ envoye: boolean; detail: string }>;
+  questionner(perimetre: string, objet: string, question: string): Promise<{ envoye: boolean; detail: string }>;
   memoriser(note: string): Promise<{ enregistre: boolean; detail: string }>;
   proposerMethode(titre: string, contenu: string): Promise<{ enregistre: boolean; detail: string }>;
 }
@@ -83,6 +84,8 @@ function resume(o: { id: string; kind: GrcKind; name: string; data: Record<strin
     nom: o.name,
     statut: texte(o.data.status, 60),
     echeance: texte(o.data.dueAt, 40),
+    // Sans identité : dit seulement si quelqu'un peut être rappelé ou interrogé au sujet de l'élément.
+    responsable: o.data.ownerId ? 'personne nommée' : o.data.responsable ? 'groupe ou fonction' : 'aucun',
     modifieLe: o.updatedAt,
   };
 }
@@ -330,7 +333,7 @@ export const OUTILS_RONDE: readonly Outil[] = [
   outil({
     nom: 'envoyer_rappel',
     description:
-      'Envoie un rappel au responsable nommé d’un élément (action en retard, risque à revoir). La plateforme choisit le destinataire et refuse un second rappel tant que l’élément n’a pas changé. À utiliser avec mesure : seulement pour un retard ou un manque constaté par un outil.',
+      'Envoie un rappel au responsable d’un élément (personne nommée, sinon membres du groupe ou de la fonction responsable) pour une action en retard ou un risque à revoir. La plateforme choisit le destinataire et refuse un second rappel tant que l’élément n’a pas changé. À utiliser avec mesure : seulement pour un retard ou un manque constaté par un outil.',
     parametres: z
       .object({
         perimetre,
@@ -342,6 +345,29 @@ export const OUTILS_RONDE: readonly Outil[] = [
       exiger(ctx, a.perimetre);
       if (!ctx.ronde) throw new HttpError(403, 'Un rappel ne peut être envoyé que pendant une ronde.');
       const r = await ctx.ronde.rappeler(a.perimetre, a.id, a.message);
+      return { donnees: r, elements: r.envoye ? 1 : 0, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'poser_question',
+    description:
+      'Pose une question au responsable d’un élément quand il vous manque une information que lui seul peut donner (état réel, obstacle, nouvelle échéance). La plateforme choisit le destinataire, le relance une fois sans réponse, et vous remet la réponse à une ronde suivante. Une seule question en attente par élément.',
+    parametres: z
+      .object({
+        perimetre,
+        id: z.uuid().describe('Identifiant de l’élément concerné.'),
+        question: z
+          .string()
+          .trim()
+          .min(10)
+          .max(RAPPEL_MAX)
+          .describe('Question courte, précise et courtoise, en français.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      if (!ctx.ronde) throw new HttpError(403, 'Une question ne peut être posée que pendant une ronde.');
+      const r = await ctx.ronde.questionner(a.perimetre, a.id, a.question);
       return { donnees: r, elements: r.envoye ? 1 : 0, sources: [] };
     },
   }),

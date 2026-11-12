@@ -1,4 +1,17 @@
-import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Button,
+  Card,
+  Group,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Textarea,
+} from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import {
   type BusinessPolicy,
@@ -7,6 +20,7 @@ import {
   type GrcObject,
   type PilotageRecord,
   type Module,
+  REPONSE_QUESTION_MAX,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
@@ -740,6 +754,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           title: string;
           message: string;
           avis?: 'utile' | 'inutile' | null;
+          reponse?: string | null;
           readAt: string | null;
         }[]
       >('/api/grc/notifications'),
@@ -753,6 +768,9 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           <Card key={n.id} withBorder>
             <Text fw={600}>{n.title}</Text>
             <Text>{n.message}</Text>
+            {n.kind === 'assistant_question' && (
+              <ReponseQuestion id={n.id} reponse={n.reponse ?? null} onError={setError} />
+            )}
             <Group>
               <Button
                 variant="light"
@@ -812,6 +830,54 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           </Card>
         ))}
       {q.data && !q.data.some((n) => n.smsiId === smsi) && <Text>Aucun rappel pour le moment.</Text>}
+    </Stack>
+  );
+}
+/** Réponse à une question de l'assistant RSSI : la personne interrogée répond ici, sans droit particulier. */
+function ReponseQuestion({
+  id,
+  reponse,
+  onError,
+}: {
+  id: string;
+  reponse: string | null;
+  onError: (e: unknown) => void;
+}) {
+  const qc = useQueryClient();
+  const [texte, setTexte] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+  if (reponse) return <Text size="sm">Votre réponse : {reponse}</Text>;
+  return (
+    <Stack gap="xs">
+      <Textarea
+        label="Votre réponse à l’assistant"
+        description="Elle sera lue par l’assistant et par le RSSI, et envoyée au fournisseur du modèle : n’y écrivez aucune donnée de santé."
+        value={texte}
+        onChange={(e) => setTexte(e.currentTarget.value)}
+        maxLength={REPONSE_QUESTION_MAX}
+        autosize
+        minRows={2}
+      />
+      <Group>
+        <Button
+          variant="default"
+          loading={envoi}
+          disabled={texte.trim() === ''}
+          onClick={async () => {
+            setEnvoi(true);
+            try {
+              await api('PUT', `/api/grc/notifications/${id}/reponse`, { body: { texte } });
+              await qc.invalidateQueries({ queryKey: ['grc', 'notifications'] });
+            } catch (e) {
+              onError(e);
+            } finally {
+              setEnvoi(false);
+            }
+          }}
+        >
+          Répondre
+        </Button>
+      </Group>
     </Stack>
   );
 }

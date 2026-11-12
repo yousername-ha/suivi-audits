@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `058`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `059`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -118,6 +118,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : questions et relances** : pendant une ronde, l'assistant peut poser une question au responsable d'un
+  élément. La personne répond depuis Pilotage > Rappels, sans droit particulier ; la réponse est remise à l'assistant à la ronde
+  suivante. Sans réponse après le délai réglé (3 jours par défaut), la plateforme relance une fois, puis signale la question au
+  référent. Rappels et questions vont aussi aux membres du groupe ou de la fonction responsable. Nouveau type de notification
+  « Question de l'assistant RSSI ». _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : constat par la plateforme** : sous chaque rapport de ronde, la plateforme affiche elle-même les rappels
   réellement envoyés ou refusés, les notes et les fiches écrites. Un premier essai avec un modèle réel a montré qu'un modèle
   peut annoncer un rappel qu'il n'a pas envoyé. L'identifiant du responsable d'un élément n'est plus transmis au modèle.

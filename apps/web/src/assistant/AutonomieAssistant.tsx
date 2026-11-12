@@ -14,6 +14,7 @@ import {
   type MethodeAssistantDto,
   type MissionAssistantDto,
   type ProfilAssistant,
+  type QuestionAssistantDto,
   type RondeAssistantDetailDto,
   type RondeAssistantDto,
 } from '@suivi/shared';
@@ -25,6 +26,7 @@ import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
 const CLE_RONDES = ['assistant', 'rondes'];
 const CLE_MISSIONS = ['assistant', 'missions'];
 const CLE_MEMOIRE = ['assistant', 'memoire'];
+const CLE_QUESTIONS = ['assistant', 'questions'];
 const CLE_METHODES = ['assistant', 'methodes'];
 const CLE_MESURES = ['assistant', 'mesures'];
 type Profils = readonly { id: ProfilAssistant; libelle: string }[];
@@ -581,6 +583,56 @@ export function MesuresAssistant() {
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
+      </Stack>
+    </Card>
+  );
+}
+
+const ETATS_QUESTION = {
+  ouverte: { etat: 'attention', libelle: 'En attente' },
+  repondue: { etat: 'succes', libelle: 'Répondue' },
+  sans_reponse: { etat: 'erreur', libelle: 'Sans réponse' },
+} as const;
+
+/** Questions posées par l'assistant pendant ses rondes, avec leurs réponses : pour le référent et les administrateurs. */
+export function QuestionsAssistant() {
+  const q = useQuery({
+    queryKey: CLE_QUESTIONS,
+    queryFn: () => get<QuestionAssistantDto[]>('/api/assistant/questions'),
+  });
+  const liste = q.data ?? [];
+  return (
+    <Card withBorder>
+      <Stack>
+        <Title order={2} size="h4">
+          Questions posées par l’assistant
+        </Title>
+        <Text size="sm" c="dimmed">
+          L’assistant interroge le responsable d’un élément quand il lui manque une information. Sans réponse, il
+          relance une fois, puis vous le signale.
+        </Text>
+        <ErrorAlert error={q.error} />
+        {q.data && liste.length === 0 && <Text c="dimmed">Aucune question pour le moment.</Text>}
+        {liste.map((x) => (
+          <Stack key={x.id} gap="xs">
+            <Group gap="xs">
+              <StatusChip etat={ETATS_QUESTION[x.etat].etat}>{ETATS_QUESTION[x.etat].libelle}</StatusChip>
+              <Text size="sm" fw={600}>
+                {x.objetNom}
+              </Text>
+              <Text size="xs" c="dimmed" className="horodatage">
+                à {x.destinataire}, le {fmtDate(x.createdAt)}
+                {x.relances > 0 ? ' · relancée' : ''}
+              </Text>
+            </Group>
+            <Text size="sm">{x.texte}</Text>
+            {x.reponse && (
+              <Text size="sm" className="assistant-message__texte">
+                Réponse : {x.reponse}
+              </Text>
+            )}
+          </Stack>
+        ))}
       </Stack>
     </Card>
   );

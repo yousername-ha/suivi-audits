@@ -17,7 +17,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { api, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
 import { useCan } from '../session';
-import { RondesAssistant } from './AutonomieAssistant';
+import { QuestionsAssistant, RondesAssistant } from './AutonomieAssistant';
 import { CLE_ETAT_ASSISTANT } from './ReglagesAssistant';
 
 const CLE_FILS = ['assistant', 'conversations'];
@@ -275,6 +275,7 @@ export function AssistantPage() {
               </Alert>
             )}
             <RondesAssistant profils={profils} peutLancer={can('assistant', 'administrer') && e.pret && !e.enPause} />
+            <QuestionsAssistant />
           </>
         )}
 

@@ -496,6 +496,15 @@ export class GrcTasks {
         'title',
         'message',
         'avis',
+        // Question de l'assistant : sa réponse éventuelle (seule la personne interrogée lit cette liste).
+        (eb) =>
+          eb
+            .selectFrom('assistant_questions as aq')
+            .select('aq.reponse')
+            .whereRef('aq.notification_id', '=', 'grc_notifications.id')
+            .where('aq.etat', '=', 'repondue')
+            .limit(1)
+            .as('reponse'),
         'read_at as readAt',
         'created_at as createdAt',
       ])
@@ -515,7 +524,7 @@ export class GrcTasks {
           user,
           r.smsiId,
           // Un rappel de l'assistant cite un élément de tout type : seul l'accès au périmètre est exigé.
-          r.kind === 'assistant_rappel'
+          r.kind === 'assistant_rappel' || r.kind === 'assistant_question'
             ? undefined
             : r.kind === 'risk_review'
               ? 'pilotage'

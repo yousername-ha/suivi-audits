@@ -273,3 +273,27 @@ Constaté :
 - **Consommation** : 29 000 à 42 000 jetons par ronde sur ce petit jeu, 9 à 18 secondes.
 - **Limites vues** : le grand modèle écrit en Markdown malgré la consigne (l'écran affiche du texte simple) ; le petit modèle
   répète parfois une lecture. Qualité jugée sur trois rondes seulement, sans jeu d'évaluation.
+
+## Addendum du 12/11/2026 — questions, relances, responsables collectifs, filet de ronde
+
+Réalisé sur `claude/assistant-rssi` (migration `059`) :
+
+- **Questions** (points 9 et 10) : pendant une ronde, l'assistant peut interroger le responsable d'un élément (outil
+  `poser_question`, type de notification `assistant_question`). La personne répond depuis ses rappels, **sans droit
+  particulier** ; elle seule peut répondre. La réponse est remise à l'assistant **une seule fois**, à la ronde suivante, comme
+  une déclaration et non comme une consigne. Une seule question ouverte par élément et par personne ; dix par ronde au plus.
+  Le texte de la réponse n'entre pas au journal d'audit. Il part chez le fournisseur du modèle : l'écran le dit à la personne.
+- **Relances, par la plateforme et non par le modèle** : au début de chaque ronde, une question sans réponse après le délai
+  réglé (3 jours par défaut) est relancée une fois ; sans réponse après un second délai, elle passe « sans réponse » et est
+  signalée au référent dans le constat et dans la consigne. Une réponse tardive reste possible.
+- **Responsables collectifs** : rappels et questions vont au responsable nommé, sinon aux membres du groupe ou de la fonction
+  responsable qui ont accès au périmètre (dix au plus). Le plafond par personne et par jour compte rappels et questions.
+- **Lecture des questions** : par le référent des rondes concernées et par les administrateurs de l'assistant.
+- **Filet de ronde**, ajouté après essai avec `mistral-small-latest` : une ronde sur deux, ce modèle relevait les retards sans
+  écrire à personne. Si le modèle veut conclure sans aucun rappel ni question alors que des retards ont été relevés, la
+  plateforme l'y renvoie **une fois**. Les listes disent aussi, pour chaque élément, s'il a un responsable (sans identité).
+  Après correction : trois rondes réelles sur trois ont envoyé les deux rappels attendus.
+- **Limite constatée** : sur le jeu d'essai, le modèle préfère le rappel à la question ; l'outil de question n'a été exercé
+  que par les tests automatisés. À observer en recette.
+- **Erreur 404 de la console** (essais navigateur) : `/update/client.js`, script de maintenance servi par la passerelle en
+  production, absent du mode développement. Sans rapport avec l'assistant ; rien à corriger.

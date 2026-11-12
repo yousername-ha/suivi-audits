@@ -216,6 +216,15 @@ export const assistantRoutes = [
     params: id,
     handler: async ({ svc, s, params, ip }) => svc.assistantRondes.oublier(params.id, (s as Session).user, ip),
   }),
+  route({
+    method: 'GET',
+    url: '/api/assistant/questions',
+    summary:
+      'Questions posées par l’assistant et leurs réponses (référent des rondes ou administrateur de l’assistant)',
+    tags,
+    access: 'assistant:lire',
+    handler: async ({ svc, s }) => svc.assistantRondes.questions((s as Session).user),
+  }),
   /* ---------------------------------------------------------------- Amélioration avec l'usage */
   route({
     method: 'PUT',

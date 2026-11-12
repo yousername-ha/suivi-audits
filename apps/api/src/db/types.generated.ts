@@ -82,6 +82,26 @@ export interface AssistantProfils {
   referent_id: string | null;
 }
 
+export interface AssistantQuestions {
+  id: Generated<string>;
+  profil: string;
+  ronde_id: string | null;
+  referent_id: string | null;
+  smsi_id: string;
+  object_id: string;
+  objet_nom: Generated<string>;
+  user_id: string;
+  notification_id: string | null;
+  texte: string;
+  etat: Generated<"ouverte" | "repondue" | "sans_reponse">;
+  reponse: Generated<string>;
+  repondue_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lue_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  relances: Generated<number>;
+  relancee_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface AssistantReglages {
   id: number;
   actif: Generated<boolean>;
@@ -95,6 +115,7 @@ export interface AssistantReglages {
   heure_ronde: Generated<number>;
   plafond_rappels_jour: Generated<number>;
   contexte: Generated<string>;
+  delai_relance_jours: Generated<number>;
 }
 
 export interface AssistantRondes {
@@ -1569,6 +1590,7 @@ export interface DB {
   assistant_methodes: AssistantMethodes;
   assistant_missions: AssistantMissions;
   assistant_profils: AssistantProfils;
+  assistant_questions: AssistantQuestions;
   assistant_reglages: AssistantReglages;
   assistant_rondes: AssistantRondes;
   audit_log: AuditLog;
