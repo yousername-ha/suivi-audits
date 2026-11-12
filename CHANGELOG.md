@@ -23,6 +23,12 @@ Aucune action.
   Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
   _(Session « Projet audit_suivi Coeur ».)_
 
+### Corrigé
+
+- **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
+  PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que
+  PostgreSQL 17 précède le passage à 18 (ADR 0035). Aucun changement de code.
+
 
 ## [6.3.0] — 2026-11-12
 
