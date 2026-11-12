@@ -1,43 +1,43 @@
 cellule;resultat;constat;commentaire
-pilotage/risques|principal|rssi|vide|bureau;;;
-pilotage/risques|principal|rssi|rempli|bureau;;;
-pilotage/risques|principal|rssi|erreur|bureau;;;
-pilotage/risques|sous-perimetre|rssi|vide|bureau;;;
-pilotage/risques|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/risques|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/opportunites|principal|rssi|vide|bureau;;;
-pilotage/opportunites|principal|rssi|rempli|bureau;;;
-pilotage/opportunites|principal|rssi|erreur|bureau;;;
-pilotage/opportunites|sous-perimetre|rssi|vide|bureau;;;
-pilotage/opportunites|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/opportunites|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/etudes|principal|rssi|vide|bureau;;;
-pilotage/etudes|principal|rssi|rempli|bureau;;;
-pilotage/etudes|principal|rssi|erreur|bureau;;;
-pilotage/etudes|sous-perimetre|rssi|vide|bureau;;;
-pilotage/etudes|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/etudes|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/carte|principal|rssi|vide|bureau;;;
-pilotage/carte|principal|rssi|rempli|bureau;;;
-pilotage/carte|principal|rssi|erreur|bureau;;;
-pilotage/carte|sous-perimetre|rssi|vide|bureau;;;
-pilotage/carte|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/carte|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/traitements|principal|rssi|vide|bureau;;;
-pilotage/traitements|principal|rssi|rempli|bureau;;;
-pilotage/traitements|principal|rssi|erreur|bureau;;;
-pilotage/traitements|sous-perimetre|rssi|vide|bureau;;;
-pilotage/traitements|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/traitements|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/scenarios|principal|rssi|vide|bureau;;;
-pilotage/scenarios|principal|rssi|rempli|bureau;;;
-pilotage/scenarios|principal|rssi|erreur|bureau;;;
-pilotage/scenarios|sous-perimetre|rssi|vide|bureau;;;
-pilotage/scenarios|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/scenarios|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/configuration-analyses|principal|rssi|vide|bureau;;;
-pilotage/configuration-analyses|principal|rssi|rempli|bureau;;;
-pilotage/configuration-analyses|principal|rssi|erreur|bureau;;;
-pilotage/configuration-analyses|sous-perimetre|rssi|vide|bureau;;;
-pilotage/configuration-analyses|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/configuration-analyses|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/risques|principal|rssi|vide|bureau;defaut;BUG-022;Liste vide « Aucun risque ne correspond. » et bouton « Ajouter un risque » présent, mais sans méthode publiée la fiche n’offre aucune méthode et l’enregistrement répond « methodId : UUID invalide » (422)
+pilotage/risques|principal|rssi|rempli|bureau;defaut;C2-03;R-01 à R-05 saisis, appréciés (v1 jugement, puis R-01 en v2 avec matrice : G4×V3 = Élevé, G4×V1 = Moyen, conformes à la matrice publiée), registre = API ; risque non apprécié accepté formellement (C2-03), code R-01 en doublon accepté (C2-04), registre non exportable (C2-05), décisions en JSON (BUG-023), Faible choisi pour Critique×Probable (BUG-024)
+pilotage/risques|principal|rssi|erreur|bureau;defaut;C2-01;« Stratégie » affiche Réduire mais envoie null après re-sélection : 422 « strategy : Option invalide… "reduce"|"accept"… », message hors de vue (C2-02) ; validation d’étape refusée sans champ désigné (BUG-025) ; acceptation sans justification bien refusée en français
+pilotage/risques|sous-perimetre|rssi|vide|bureau;defaut;BUG-022;Hébergement HDS : registre vide, données du principal absentes (isolation conforme) ; méthode du parent non héritée, « Méthode publiée » vide jusqu’à publication d’une méthode propre au sous-périmètre
+pilotage/risques|sous-perimetre|rssi|rempli|bureau;defaut;BUG-023;HDS-R-01 et HDS-R-02 saisis et appréciés avec matrice épinglée (G3×V3 = Élevé, G3×V1 = Faible, G2×V2 = Faible conformes) ; simulation « Brut : Élevé · unacceptable » et historique en JSON brut
+pilotage/risques|sous-perimetre|rssi|erreur|bureau;defaut;BUG-022;Sous HDS sans méthode publiée : « Données invalides — methodId : UUID invalide » (422), aucun lien vers la méthode dans la fiche
+pilotage/opportunites|principal|rssi|vide|bureau;ok;;« 0 fiches » et « Aucune fiche pour le moment. Ajoutez votre premier élément… », bouton « Ajouter opportunité »
+pilotage/opportunites|principal|rssi|rempli|bureau;defaut;C2-10;Opportunité créée, état passé à « Évaluée », reliée au risque R-04 (lien visible des deux côtés) ; aucune action d’archivage ou de suppression dans la fiche ni dans « Autres actions » ; aucun export
+pilotage/opportunites|principal|rssi|erreur|bureau;defaut;C2-13;Intitulé vide : « Enregistrer » grisé sans message ni champ marqué obligatoire
+pilotage/opportunites|sous-perimetre|rssi|vide|bureau;ok;;Sous HDS : « 0 fiches », message d’invitation, opportunité du principal absente
+pilotage/opportunites|sous-perimetre|rssi|rempli|bureau;defaut;C2-10;Opportunité HDS créée et listée, absente du principal ; toujours aucune suppression possible
+pilotage/opportunites|sous-perimetre|rssi|erreur|bureau;defaut;C2-13;Intitulé vidé : bouton grisé, ni required ni aria-required sur le champ, aucun message
+pilotage/etudes|principal|rssi|vide|bureau;ok;;« Aucune étude pour ce périmètre. » et « Aucune source dans la bibliothèque. », boutons de création présents
+pilotage/etudes|principal|rssi|rempli|bureau;defaut;C2-09;Étude complète (ER-01, SR-01, couple SR/OV pertinence +++×+++ = Élevée recalculée, PP-01 indice 2.25 = 3×3/(2×2) correct, SS-01, SO-01, R-05 et T-05) ; SO-01 G4×V2 « Non placés dans la matrice » (C2-09) ; libellés techniques (C2-14) ; « Option : reduce » (C2-06)
+pilotage/etudes|principal|rssi|erreur|bureau;ok;;Pertinence retenue différente de la matrice : alertes « Choix différent de la proposition — Justifiez ce choix dans le champ « Justification du choix » » ; Intitulé vide : bouton grisé (C2-13 général)
+pilotage/etudes|sous-perimetre|rssi|vide|bureau;ok;;Sous HDS : « Aucune étude pour ce périmètre. », bibliothèque vide, étude du principal absente
+pilotage/etudes|sous-perimetre|rssi|rempli|bureau;defaut;C2-14;Étude HDS, source ajoutée à la bibliothèque puis choisie dans l’étude ; la source et l’étude s’affichent « Référence déjà liée » dans la fiche du couple
+pilotage/etudes|sous-perimetre|rssi|erreur|bureau;ok;;« Valider l’atelier » sur un atelier incomplet : refus « Renseignez l’objet et le périmètre de l’étude. » (422), message en français qui nomme les champs
+pilotage/carte|principal|rssi|vide|bureau;defaut;C2-12;Principal déjà rempli avant la première ouverture : état vide vu par une recherche sans résultat ; zone de carte blanche, aucun message, exports actifs
+pilotage/carte|principal|rssi|rempli|bureau;defaut;C2-11;Carte = registre (brut et résiduel, vue liens et vue matrice, après passage de R-01 en v2) ; exports SVG/PNG/PDF avec pictogrammes en carrés noirs, fichier « Cartographie_contexte_… », JSON de mise en page sans niveaux ; légende « conditional », « unacceptable » (C2-06)
+pilotage/carte|principal|rssi|erreur|bureau;defaut;C2-12;Recherche « zzz-inexistant » : carte blanche sans message « aucun risque »
+pilotage/carte|sous-perimetre|rssi|vide|bureau;defaut;C2-12;Sous HDS sans risque : canevas vide sans message, boutons d’export actifs (capture carte-vide-hds)
+pilotage/carte|sous-perimetre|rssi|rempli|bureau;defaut;C2-06;HDS-R-01 et HDS-R-02 placés comme au registre (brut G3×V3 Élevé, G2×V2 Faible ; résiduel Faible), aucun risque du principal ; légende « Moyen · conditional », « Élevé · unacceptable », version affichée « publication 4b35a98c »
+pilotage/carte|sous-perimetre|rssi|erreur|bureau;defaut;C2-12;« Appréciations au » 01/01/2020 (avant toute appréciation) : seule la phrase d’aide, aucun message « aucune appréciation à cette date »
+pilotage/traitements|principal|rssi|vide|bureau;ok;;« 0 fiches » et bouton « Ajouter un traitement »
+pilotage/traitements|principal|rssi|rempli|bureau;defaut;C2-07;T-01 à T-04 reliés à R-01..R-04 et aux mesures A.8.13, A.8.14, A.5.15, A.8.2, A.8.5, A.7.1, A.7.4, A.5.20 ; modification tracée (version 2) ; action générée et liée ; liste des mesures sans références et avec doublons (C2-07), mesures absentes de l’onglet « Liens » et de la DdA (BUG-026), suppression impossible (C2-10), liste sans risque ni mesure (C2-18)
+pilotage/traitements|principal|rssi|erreur|bureau;defaut;C2-13;Intitulé fait d’espaces : « Enregistrer » grisé sans message ni marque d’obligation
+pilotage/traitements|sous-perimetre|rssi|vide|bureau;ok;;Sous HDS : « 0 fiches », traitements du principal absents
+pilotage/traitements|sous-perimetre|rssi|rempli|bureau;defaut;C2-08;T-HDS-01 relié à HDS-R-01 ; la liste « Mesures de sécurité (mesures, DdA) » est vide sous HDS (0 option, même en recherchant « Sauvegarde ») : traitement impossible à relier à une mesure
+pilotage/traitements|sous-perimetre|rssi|erreur|bureau;defaut;C2-13;Intitulé vide sous HDS : bouton grisé sans indication
+pilotage/scenarios|principal|rssi|vide|bureau;ok;;« 0 fiches », type de fiche et bouton « Créer valeur métier »
+pilotage/scenarios|principal|rssi|rempli|bureau;defaut;C2-10;1 valeur métier et 4 biens supports reliés (businessAssetRefs vérifiés par l’API), proposés dans les fiches risque, étude et carte ; aucune suppression ou archivage dans la fiche ; « 1 fiches »
+pilotage/scenarios|principal|rssi|erreur|bureau;defaut;C2-13;Intitulé vide : « Enregistrer » grisé sans message
+pilotage/scenarios|sous-perimetre|rssi|vide|bureau;ok;;Sous HDS : « 0 fiches », fiches du principal absentes
+pilotage/scenarios|sous-perimetre|rssi|rempli|bureau;defaut;C2-10;Valeur métier et bien support HDS créés et liés, seuls proposés dans le risque HDS ; suppression impossible
+pilotage/scenarios|sous-perimetre|rssi|erreur|bureau;defaut;C2-13;Événement redouté sous HDS, Intitulé d’espaces : bouton grisé, aria-required absent, aucun message
+pilotage/configuration-analyses|principal|rssi|vide|bureau;ok;;« Aucun élément — Le catalogue est vide à l’installation. Créez un élément, ou adoptez un modèle depuis l’onglet « Modèles ». »
+pilotage/configuration-analyses|principal|rssi|rempli|bureau;defaut;C2-16;Deux modèles adoptés (8 éléments version 1), épinglés dans la méthode v2 et dans l’étude ; bouton « Adopter ce modèle » inchangé après adoption ; brouillon supprimé sans message (404 en console) ; aucun export
+pilotage/configuration-analyses|principal|rssi|erreur|bureau;ok;;Identifiant « 1 Invalide » : « Format invalide. » sous le champ ; doublon « gravite_ebios_rm » : « Cet identifiant existe déjà pour ce type d’élément. » (409) ; réadoption d’un modèle refusée en français
+pilotage/configuration-analyses|sous-perimetre|rssi|vide|bureau;sans-objet;C2-16;Catalogue de portée Organisation commun à tous les périmètres : sous HDS il affiche les éléments adoptés depuis le principal, l’état vide n’existe pas séparément (le sélecteur de périmètre est sans effet, C2-16)
+pilotage/configuration-analyses|sous-perimetre|rssi|rempli|bureau;defaut;C2-16;Échelle de portée « Un périmètre » (HDS) créée et publiée (motif et saisie de PUBLIER exigés) ; elle reste listée sous le périmètre principal sans indiquer son périmètre
+pilotage/configuration-analyses|sous-perimetre|rssi|erreur|bureau;ok;;Doublon « motivation_sr » sous HDS : « Cet identifiant existe déjà pour ce type d’élément. » (409) ; mais « Annuler » conserve valeurs et alerte (C2-16)

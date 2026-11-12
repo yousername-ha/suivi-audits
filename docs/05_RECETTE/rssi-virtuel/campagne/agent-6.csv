@@ -35,81 +35,81 @@ plateforme/configuration-pilotage|principal|rssi|erreur|bureau;defaut;C6-01;Via 
 plateforme/configuration-pilotage|sous-perimetre|rssi|vide|bureau;ok;;Via la carte puis Périmètre affiché Hébergement HDS : aucune méthode du principal
 plateforme/configuration-pilotage|sous-perimetre|rssi|rempli|bureau;ok;;Méthode EBIOS RM du sous-périmètre isolée du principal
 plateforme/configuration-pilotage|sous-perimetre|rssi|erreur|bureau;defaut;C6-09;Épinglage sans filtre de portée
-plateforme/utilisateurs|principal|rssi|vide|bureau;;;
-plateforme/utilisateurs|principal|rssi|rempli|bureau;;;
-plateforme/utilisateurs|principal|rssi|erreur|bureau;;;
+plateforme/utilisateurs|principal|rssi|vide|bureau;ok;;Seul le compte rssi (Administrateur, 1 session) , boutons Nouveau compte, revue des accès A.5.18 en Excel et CSV
+plateforme/utilisateurs|principal|rssi|rempli|bureau;defaut;C6-11;Comptes du jeu fictif créés (dpo.fictif et pilote.infra Contributeurs, auditeur.interne et direction Lecteurs) + test6-verrou , mot de passe temporaire affiché une fois , modification, réinitialisation, suppression (test6-suppr) tracées au journal , export CSV de revue des accès : « Dernière connexion » vide pour rssi pourtant connecté, aucun périmètre accessible (C6-12)
+plateforme/utilisateurs|principal|rssi|erreur|bureau;ok;;Identifiant vide : « Données invalides — username : Identifiant invalide (2 à 64 caractères…) » , courriel invalide refusé , doublon « rssi » : « Cet identifiant existe déjà. » (409) , expiration passée acceptée et affichée « expiré 2020-01-01 » (clé technique dans le message : C6-01)
 plateforme/utilisateurs|sous-perimetre|rssi|vide|bureau;;;
 plateforme/utilisateurs|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/utilisateurs|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/groupes|principal|rssi|vide|bureau;;;
-plateforme/groupes|principal|rssi|rempli|bureau;;;
-plateforme/groupes|principal|rssi|erreur|bureau;;;
+plateforme/groupes|principal|rssi|vide|bureau;ok;;« Aucun groupe. Un groupe porte un ou plusieurs rôles, accordés à tous ses membres. » , bouton Nouveau groupe
+plateforme/groupes|principal|rssi|rempli|bureau;ok;;Groupe « Cellule SSI (fictive) » (rôle Lecteur, membres dpo.fictif et pilote.infra) créé, repris dans GET /api/admin/users , groupe test6 créé puis supprimé après confirmation (« Ses membres perdent les rôles qu'il porte »)
+plateforme/groupes|principal|rssi|erreur|bureau;ok;;Nom vide : « Données invalides — name : Nom obligatoire. » (clé technique, C6-01 , l'alerte reste affichée après correction) , doublon : « Un groupe porte déjà ce nom. » (409)
 plateforme/groupes|sous-perimetre|rssi|vide|bureau;;;
 plateforme/groupes|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/groupes|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/fonctions|principal|rssi|vide|bureau;;;
-plateforme/fonctions|principal|rssi|rempli|bureau;;;
-plateforme/fonctions|principal|rssi|erreur|bureau;;;
+plateforme/fonctions|principal|rssi|vide|bureau;ok;;« Aucune fonction. Une fonction (par exemple « Responsable qualité ») regroupe ses titulaires… » , bouton Nouvelle fonction
+plateforme/fonctions|principal|rssi|rempli|bureau;ok;;Fonctions RSSI, DPO, Pilote du processus infrastructure, Auditeur interne créées avec leurs titulaires du jeu fictif , fonction test6 archivée après confirmation (« Les fiches qui la désignent restent lisibles »)
+plateforme/fonctions|principal|rssi|erreur|bureau;defaut;C6-01;Nom vide : « Données invalides — name : Trop petit : chaîne de caractères doit avoir >=1 caractères » (message brut du validateur) , doublon « Une fonction porte déjà ce nom. » (409) correct
 plateforme/fonctions|sous-perimetre|rssi|vide|bureau;;;
 plateforme/fonctions|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/fonctions|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/roles|principal|rssi|vide|bureau;;;
-plateforme/roles|principal|rssi|rempli|bureau;;;
-plateforme/roles|principal|rssi|erreur|bureau;;;
+plateforme/roles|principal|rssi|vide|bureau;ok;;Cinq rôles prédéfinis non modifiables (Administrateur, RSSI, Contributeur, Lecteur, Auditeur externe) avec « Voir la matrice » , compteurs d'attribution exacts (1 Administrateur, 2 Contributeurs, 3 Lecteurs + 1 groupe)
+plateforme/roles|principal|rssi|rempli|bureau;ok;;Lecteur dupliqué en « Auditeur interne (lecture et export) », matrice adaptée (export Audit, Écarts, Pilotage) et enregistrée , permissions relues par GET /api/admin/roles , rôle test6 créé puis supprimé après confirmation
+plateforme/roles|principal|rssi|erreur|bureau;ok;;Doublon « Lecteur » : « Un rôle porte déjà ce nom. » (409) , nom vide : « Données invalides — name : Nom obligatoire. » (clé technique, C6-01)
 plateforme/roles|sous-perimetre|rssi|vide|bureau;;;
 plateforme/roles|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/roles|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/conservation|principal|rssi|vide|bureau;;;
-plateforme/conservation|principal|rssi|rempli|bureau;;;
-plateforme/conservation|principal|rssi|erreur|bureau;;;
+plateforme/conservation|principal|rssi|vide|bureau;ok;;Trois catégories « Conservation sans limite », avertissement « Aucune suppression automatique », aperçu à « — »
+plateforme/conservation|principal|rssi|rempli|bureau;ok;;Éléments archivés limités à 3650 jours : enregistré, aperçu recalculé (« Non candidats : Archivés depuis moins de 3650 jours (0) ») , réglage remis à « sans limite » (GET /api/settings/conservation : null)
+plateforme/conservation|principal|rssi|erreur|bureau;defaut;C6-15;Durée « 0 » ramenée sans message à 1 jour et enregistrée (« Conservation : enregistré. ») , « -5 » et « abc » remplacés silencieusement , aucune valeur refusée avec un message
 plateforme/conservation|sous-perimetre|rssi|vide|bureau;;;
 plateforme/conservation|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/conservation|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/calendriers|principal|rssi|vide|bureau;;;
-plateforme/calendriers|principal|rssi|rempli|bureau;;;
-plateforme/calendriers|principal|rssi|erreur|bureau;;;
+plateforme/calendriers|principal|rssi|vide|bureau;ok;;« Aucun calendrier. Créez un calendrier « Jours fériés », puis générez l'année en cours. »
+plateforme/calendriers|principal|rssi|rempli|bureau;ok;;Calendrier « Jours fériés France métropolitaine » : aperçu 2026 exact (11 jours, Pâques 06/04, Ascension 14/05, Pentecôte 25/05), 2026 et 2027 ajoutées (« 2026 (11 j) »), relance 2027 : « 0 à ajouter, 11 déjà présent(s) » , calendrier test6 supprimé après confirmation
+plateforme/calendriers|principal|rssi|erreur|bureau;defaut;C6-16;iCalendar invalide refusé (« Ligne 1 : … BEGIN:VCALENDAR attendu », rien importé) , doublon de nom refusé (409) , mais année 1800 acceptée : « 08/05/1800 (Victoire 1945) », « 11/11/1800 (Armistice 1918) » proposés à l'ajout
 plateforme/calendriers|sous-perimetre|rssi|vide|bureau;;;
 plateforme/calendriers|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/calendriers|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/types-processus|principal|rssi|vide|bureau;;;
-plateforme/types-processus|principal|rssi|rempli|bureau;;;
-plateforme/types-processus|principal|rssi|erreur|bureau;;;
+plateforme/types-processus|principal|rssi|vide|bureau;ok;;Trois types livrés (Pilotage/Management, Réalisation, Support), 0 processus, explication du code non modifiable et de l'archivage
+plateforme/types-processus|principal|rssi|rempli|bureau;ok;;Type « Hébergement de données de santé » créé (code Hebergement_de_donnees_de_sante), remonté avant Support (« Ordre enregistré. ») , type test6 supprimé après confirmation
+plateforme/types-processus|principal|rssi|erreur|bureau;ok;;Libellé en double « Pilotage » : « Un type de processus porte déjà ce libellé. » (409) , libellé vide : Enregistrer désactivé
 plateforme/types-processus|sous-perimetre|rssi|vide|bureau;;;
 plateforme/types-processus|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/types-processus|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/apparence|principal|rssi|vide|bureau;;;
-plateforme/apparence|principal|rssi|rempli|bureau;;;
-plateforme/apparence|principal|rssi|erreur|bureau;;;
+plateforme/apparence|principal|rssi|vide|bureau;ok;;Valeurs par défaut affichées : thème Automatique, densité Normale, style Référence 08 — Sauge , Enregistrer désactivé
+plateforme/apparence|principal|rssi|rempli|bureau;ok;;Thème Sombre et style Clair bleuté enregistrés et appliqués aussitôt (capture relue) , valeurs d'origine remises (auto, normale, sage)
+plateforme/apparence|principal|rssi|erreur|bureau;sans-objet;;Uniquement des choix fermés (boutons segmentés et radios) : aucune saisie invalide possible depuis l'écran
 plateforme/apparence|sous-perimetre|rssi|vide|bureau;;;
 plateforme/apparence|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/apparence|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/notifications|principal|rssi|vide|bureau;;;
-plateforme/notifications|principal|rssi|rempli|bureau;;;
-plateforme/notifications|principal|rssi|erreur|bureau;;;
+plateforme/notifications|principal|rssi|vide|bureau;ok;;Valeurs par défaut : alerte 30 jours, convention 90 jours, signalements des imports et des droits activés
+plateforme/notifications|principal|rssi|rempli|bureau;ok;;Alerte à 15 jours et signalement des imports désactivé : enregistré et relu (GET /api/settings/notifications) , valeurs d'origine remises (30, 90, activés)
+plateforme/notifications|principal|rssi|erreur|bureau;defaut;C6-15;« -3 » ramené à 0 et « 99999 » enregistré 365 alors que l'écran affichait 99999 au moment d'enregistrer : « Notifications : enregistré. » sans signaler la correction
 plateforme/notifications|sous-perimetre|rssi|vide|bureau;;;
 plateforme/notifications|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/notifications|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/notifications-destinataires|principal|rssi|vide|bureau;;;
-plateforme/notifications-destinataires|principal|rssi|rempli|bureau;;;
-plateforme/notifications-destinataires|principal|rssi|erreur|bureau;;;
+plateforme/notifications-destinataires|principal|rssi|vide|bureau;ok;;Aucun réglage : « Personne ne recevrait cette notification par ce canal. », bandeau « Courriel non configuré, rien n'est envoyé » , compteurs des portées exacts (Lecteur : 5 comptes actifs dont 2 par le groupe)
+plateforme/notifications-destinataires|principal|rssi|rempli|bureau;ok;;Groupe Cellule SSI : « Échéance d'une action » par courriel Activé puis Enregistrer (« Réglages de notification enregistrés. ») : 2 destinataires résolus, pilote.infra signalé « Sans adresse : rien ne peut être envoyé » , réglage remis à « Non défini (hérite) »
+plateforme/notifications-destinataires|principal|rssi|erreur|bureau;sans-objet;;Uniquement des listes fermées (Non défini, Activé, Désactivé) : aucune saisie invalide possible , modification non enregistrée signalée par les boutons Annuler/Enregistrer actifs
 plateforme/notifications-destinataires|sous-perimetre|rssi|vide|bureau;;;
 plateforme/notifications-destinataires|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/notifications-destinataires|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/murs|principal|rssi|vide|bureau;;;
-plateforme/murs|principal|rssi|rempli|bureau;;;
-plateforme/murs|principal|rssi|erreur|bureau;;;
+plateforme/murs|principal|rssi|vide|bureau;ok;;« Aucun écran mural. » , formulaire Nouvel écran (nom, durée 180 j, modules) , explication du jeton à usage unique et de la révocation
+plateforme/murs|principal|rssi|rempli|bureau;defaut;C6-17;Écran « Salle d'exploitation HDS (fictive) » créé, lien d'activation affiché une seule fois (non recopié), état « En attente d'activation » , écran test6 révoqué après confirmation (« Révoqué ») , mais aucun choix du périmètre affiché alors que la carte annonce « jeton, périmètre et contenu »
+plateforme/murs|principal|rssi|erreur|bureau;defaut;C6-15;Durée « 400 » (aide : entre 1 et 365) ramenée sans message à 365 et l'écran créé (expiration 12/11/2027) , nom vide : bouton désactivé
 plateforme/murs|sous-perimetre|rssi|vide|bureau;;;
 plateforme/murs|sous-perimetre|rssi|rempli|bureau;;;
 plateforme/murs|sous-perimetre|rssi|erreur|bureau;;;
-plateforme/import|principal|rssi|vide|bureau;;;
-plateforme/import|principal|rssi|rempli|bureau;;;
-plateforme/import|principal|rssi|erreur|bureau;;;
-plateforme/import|sous-perimetre|rssi|vide|bureau;;;
-plateforme/import|sous-perimetre|rssi|rempli|bureau;;;
-plateforme/import|sous-perimetre|rssi|erreur|bureau;;;
-systeme/sauvegardes|principal|rssi|vide|bureau;;;
-systeme/sauvegardes|principal|rssi|rempli|bureau;;;
-systeme/sauvegardes|principal|rssi|erreur|bureau;;;
+plateforme/import|principal|rssi|vide|bureau;ok;;« Aucun import. », « Imports réalisés : 0 », taille maximale 50 Mo, étapes Dépôt / Simulation / Confirmation, Import Tenacy avec périmètre de destination
+plateforme/import|principal|rssi|rempli|bureau;defaut;C6-18;Export au format legacy (schéma 15, empreinte sha256) puis simulation de son réimport en fusion : 0 création, 0 mise à jour, 175 inchangés (aller-retour cohérent, non appliqué) , mais l'application signale sur son propre export « Champs inconnus du contrat (32) $.hdsChap… » , réglage « Format par défaut de la revue des accès » enregistré mais sans effet (C6-19), remis à Excel
+plateforme/import|principal|rssi|erreur|bureau;ok;;JSON tronqué : « Import impossible — Le fichier n'est pas un JSON valide. » (422), rien d'écrit
+plateforme/import|sous-perimetre|rssi|vide|bureau;ok;;Import Tenacy : « Périmètre de destination » propose Hébergement HDS , aucun import
+plateforme/import|sous-perimetre|rssi|rempli|bureau;sans-objet;;Aucun export Tenacy fictif disponible dans le jeu de données : import d'écarts vers le sous-périmètre non exécuté (la reprise legacy, elle, n'a pas de périmètre)
+plateforme/import|sous-perimetre|rssi|erreur|bureau;ok;;Destination Hébergement HDS, faux .xlsx : « Import Tenacy impossible — XML manquant ou entités externes interdites. » (refus effectif, message technique), Simuler désactivé
+systeme/sauvegardes|principal|rssi|vide|bureau;ok;;Aucune demande de sauvegarde , alerte « Test de restauration à faire » , clé de secours définie à l'installation (fin nquy7kgj, rssi, 12/11/2026 20:00)
+systeme/sauvegardes|principal|rssi|rempli|bureau;defaut;C6-20;« Demander une sauvegarde » désactivé : « Exécutant serveur indisponible » (GET /api/admin/sauvegardes : worker available false, seenAt null, « Exécutant serveur non configuré. ») et clé de secours « En attente de l'exécutant » 40 min après l'installation , suivi du test de restauration enregistré (15/10/2026, 6 mois → prochain test 2027-04-15) puis remis à vide
+systeme/sauvegardes|principal|rssi|erreur|bureau;defaut;C6-21;Date du dernier test de restauration dans le futur (2027-12-01) acceptée : l'alerte « Test de restauration à faire » disparaît (enRetard false) , fréquence 0 ramenée à 1 sans message (C6-15) , emplacement relatif accepté , mauvais code TOTP au remplacement de la clé de secours refusé (401, clé inchangée)
 systeme/sauvegardes|sous-perimetre|rssi|vide|bureau;;;
 systeme/sauvegardes|sous-perimetre|rssi|rempli|bureau;;;
 systeme/sauvegardes|sous-perimetre|rssi|erreur|bureau;;;
@@ -143,9 +143,9 @@ systeme/sessions|principal|rssi|erreur|bureau;;;
 systeme/sessions|sous-perimetre|rssi|vide|bureau;;;
 systeme/sessions|sous-perimetre|rssi|rempli|bureau;;;
 systeme/sessions|sous-perimetre|rssi|erreur|bureau;;;
-systeme/journal|principal|rssi|vide|bureau;;;
-systeme/journal|principal|rssi|rempli|bureau;;;
-systeme/journal|principal|rssi|erreur|bureau;;;
+systeme/journal|principal|rssi|vide|bureau;sans-objet;;Le journal n'est jamais vide après l'installation (jetons, création de l'administrateur, poivre, clé de secours, TOTP tracés)
+systeme/journal|principal|rssi|rempli|bureau;defaut;C6-13;Toutes les actions du RSSI tracées avec auteur et date , exports CSV et JSON tracés (admin.audit_export) , mais actions en codes techniques (grc.membership.changed, admin.user_password_reset), cible en UUID pour le périmètre et la réinitialisation, détail avant/après absent de l'écran , journal inexact pour la catégorie NIS 2 (C6-05)
+systeme/journal|principal|rssi|erreur|bureau;defaut;C6-14;Filtre Du 13/11/2026 au 01/11/2026 : « 0 entrée(s) affichée(s) » sans signaler que la période est inversée
 systeme/journal|sous-perimetre|rssi|vide|bureau;;;
 systeme/journal|sous-perimetre|rssi|rempli|bureau;;;
 systeme/journal|sous-perimetre|rssi|erreur|bureau;;;
