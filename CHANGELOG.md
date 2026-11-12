@@ -122,6 +122,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   d'audit), lancé à la main ou chaque semaine par le workflow « RSSI virtuel », hors des contrôles exigés pour fusionner.
   Premier passage : quatre constats ouverts (BUG-016 à BUG-019), suivis par des tests `test.fail`. Guide :
   `docs/05_RECETTE/RSSI_VIRTUEL.md`. _(Session « Agent RSSI virtuel ».)_
+- **Recette métier du RSSI virtuel du 12/11/2026** (sans effet sur l'application) : étapes 1 à 17 du scénario déroulées à
+  l'écran ; 18 constats (BUG-020 à BUG-036, dont deux bloquants sur les chiffres de la revue de direction), trois nouveaux
+  tests `test.fail`, pilote complété (dépôt de fichier, libellés répétés). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md`. _(Session « Agent RSSI virtuel ».)_
 
 ### Modifié
 

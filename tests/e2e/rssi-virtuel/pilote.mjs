@@ -33,6 +33,7 @@ const AIDE = `Pilote du navigateur de l'agent RSSI virtuel (base : ${BASE})
   remplir <libellé> <valeur>    saisit dans le champ de ce libellé (remplace le contenu)
   choisir <libellé> <option>    liste déroulante (native ou Mantine) : ouvre puis choisit l'option
   cocher <libellé>              coche une case ou un interrupteur
+  fichier <chemin> [sélecteur]  dépose un fichier dans le champ de fichier de la page
   taper <texte>                 frappe au clavier dans l'élément actif (ex. code TOTP dans les six cases)
   touche <touche>               appuie sur une touche (Enter, Escape, Tab…)
   attendre <texte>              attend qu'un texte apparaisse (10 s)
@@ -129,7 +130,7 @@ async function connecter() {
       erreurs.push(`console : ${m.text()}`);
   });
   page.on('response', (r) => {
-    if (r.url().includes('/api/') && r.status() >= 500) erreurs.push(`HTTP ${r.status()} ${r.url()}`);
+    if (r.status() >= 400) erreurs.push(`HTTP ${r.status()} ${r.url()}`);
   });
   return { page, erreurs, fermer: () => navigateur.close() };
 }
@@ -157,7 +158,10 @@ async function decrire(page, selecteur) {
 
 /** Champ désigné par son nom accessible, tel que « voir » l'affiche (le libellé visible d'un champ obligatoire porte un
     astérisque masqué aux lecteurs d'écran : le nom accessible est donc essayé en premier). */
-async function parLibelle(page, libelle) {
+async function parLibelle(page, libelleBrut) {
+  // « Libellé##2 » désigne le deuxième champ portant ce nom (fiches où un même libellé revient à chaque étape).
+  const [libelle, n] = libelleBrut.split('##');
+  const rang = n ? Number(n) - 1 : 0;
   const candidats = [
     ...['textbox', 'combobox', 'spinbutton', 'searchbox', 'checkbox', 'switch', 'radio'].map((role) =>
       page.getByRole(role, { name: libelle, exact: true }),
@@ -165,7 +169,7 @@ async function parLibelle(page, libelle) {
     page.getByLabel(libelle, { exact: true }),
     page.getByLabel(libelle),
   ];
-  for (const c of candidats) if ((await c.count()) > 0) return c.first();
+  for (const c of candidats) if ((await c.count()) > rang) return c.nth(rang);
   throw new Error(`aucun champ nommé « ${libelle} » sur la page`);
 }
 
@@ -246,6 +250,13 @@ async function executer(commande, args) {
       }
       case 'cocher':
         await (await parLibelle(page, args[0])).check({ force: true });
+        break;
+      case 'fichier':
+        // Dépose un fichier dans le premier champ de fichier de la page (ou du sélecteur donné en second argument).
+        await page
+          .locator(args[1] || 'input[type=file]')
+          .first()
+          .setInputFiles(args[0]);
         break;
       case 'taper':
         await page.keyboard.type(args.join(' '), { delay: 30 });

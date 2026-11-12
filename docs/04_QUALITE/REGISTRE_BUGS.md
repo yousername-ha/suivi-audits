@@ -324,3 +324,160 @@ elles ne sont pas ajoutées artificiellement comme trois bugs applicatifs ouvert
 | Attendu | Intitulé ou référence lisible de l'écart, avec un lien vers sa fiche : c'est ce que le RSSI rapproche du rapport d'audit. |
 | Observé | La colonne affiche l'UUID de l'écart (ex. `6bc1501f-…`). Le test `zzzzzzzzzzzzzzz-dda-evaluations.spec.ts` vérifie aujourd'hui la présence de cet identifiant : il faudra l'adapter avec le correctif. |
 | Non-régression | `tests/e2e/rssi-virtuel/specs/20-ecarts.spec.ts`, test « RSSI-04 ouvert » (`test.fail`). |
+
+## Constats de la recette métier du RSSI virtuel du 12/11/2026 (BUG-020 à BUG-036)
+
+Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7jw824ozEWpfF`), commit `7a9494d`, pile native. Déclencheur, observé et attendu de chaque constat : [rapport du 12/11/2026](../05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md). Aucune correction par la session de recette. RSSI-13 complète BUG-017 (mesure non examinée affichée « Applicable » dans « Applicabilité et justifications »).
+
+## BUG-020 — Parties intéressées saisies à l'écran comptées nulle part (bandeau et revue de direction à 0) (RSSI-05)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Parties intéressées, revue de direction ; BLOQUANTE ; P1 |
+| Statut | OUVERT |
+| Cause / niveau | CONFIRMÉE : `Pestel.tsx` (`SynthesePartiesBandeau`) et `pilotage/revue.ts` lisent `interested` du registre historique, pas les objets `stakeholder`. |
+| Non-régression | `30-recette-2026-11-12.spec.ts`, « RSSI-05 ouvert » (`test.fail`) |
+
+## BUG-021 — Revue de direction validée non reconnue comme dernière revue (RSSI-19)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Revue de direction ; BLOQUANTE ; P1 |
+| Statut | OUVERT |
+| Cause / niveau | CONFIRMÉE : `pilotage/revue.ts` lit `etat.reviews`, pas les objets `management_review`. |
+| Non-régression | à écrire |
+
+## BUG-022 — Créer un risque sans méthode publiée : liste vide puis « methodId : UUID invalide » (RSSI-07)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Registre des risques ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | PROBABLE : aucun contrôle ni message quand le périmètre n'a pas de méthode publiée. |
+| Non-régression | à écrire |
+
+## BUG-023 — Décisions d'appréciation affichées en JSON brut ; « draft », « unacceptable » (RSSI-08)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Appréciation des risques ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | Non analysée. |
+| Non-régression | à écrire |
+
+## BUG-024 — Appréciation « Grave × Probable = Faible, acceptable » acceptée sans alerte (à arbitrer) (RSSI-09)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Appréciation des risques, modèle ISO 27005 ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | Le modèle n'a pas de matrice : niveau choisi librement. |
+| Non-régression | à écrire |
+
+## BUG-025 — Refus de validation du risque sans désigner l'étape ni le champ (RSSI-10)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Fiche du risque ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | Messages génériques du serveur ; champs obligatoires non marqués. |
+| Non-régression | à écrire |
+
+## BUG-026 — Traitement d'un risque relié à une mesure : invisible dans la DdA (RSSI-11)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Traitements, DdA ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Cause / niveau | Non analysée (« Risques traités » de la DdA est un texte libre). |
+| Non-régression | à écrire |
+
+## BUG-027 — « Origine de référence inconnue » dans les liens d'une déclaration d'applicabilité (RSSI-12)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Applicabilité et justifications ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Cause / niveau | CONFIRMÉE côté appel : `GET …/links?ref=legacy:dda:A-8.13` → 422. |
+| Non-régression | `30-recette-2026-11-12.spec.ts`, « RSSI-12 ouvert » |
+
+## BUG-028 — Cible d'indicateur « 1 » convertie en « 100 % » sans le dire (RSSI-14)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Objectifs et indicateurs ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | Indicateurs en pourcentage seulement (stocké `target: 1`). |
+| Non-régression | à écrire |
+
+## BUG-029 — Réglages de récurrence nommés « start », « interval », « reminderDays »… (RSSI-15)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Tâches récurrentes ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | Libellés non traduits des champs de récurrence. |
+| Non-régression | `30-recette-2026-11-12.spec.ts`, « RSSI-15 ouvert » |
+
+## BUG-030 — Audit interne : « Référentiels audités » sans option ; programme et revue à 0 après planification (RSSI-17)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Audits internes ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | PROBABLE : liste alimentée par les référentiels publiés (aucun sur installation neuve) ; compteurs lus ailleurs que dans les fiches d'audit. |
+| Non-régression | à écrire |
+
+## BUG-031 — Revue de direction : entrées de l'ISO 9001 seulement, pas celles de l'ISO/IEC 27001 9.3.2 (à arbitrer, ADR 0036) (RSSI-18)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Revue de direction ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Cause / niveau | Choix de l'ADR 0036 (volet qualité) ; volet SMSI absent. |
+| Non-régression | à écrire après arbitrage |
+
+## BUG-032 — Validation de la revue refusée sans désigner « Décisions et moyens » (RSSI-20)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Revue de direction ; MAJEURE ; P2 |
+| Statut | OUVERT |
+| Cause / niveau | CONFIRMÉE : `pilotage/service.ts` exige `inputs`, `decisions` et un justificatif ; message générique. |
+| Non-régression | à écrire |
+
+## BUG-033 — Document rattaché à une mesure : invisible dans la fiche de la DdA (RSSI-06)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Documents, DdA ; MINEURE ; P3 |
+| Statut | OUVERT |
+| Cause / niveau | Non analysée. |
+| Non-régression | à écrire |
+
+## BUG-034 — « Créer une action suivie » : action sans intitulé propre ni échéance (RSSI-16)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Amélioration continue ; MINEURE ; P3 |
+| Statut | OUVERT |
+| Cause / niveau | Non analysée. |
+| Non-régression | à écrire |
+
+## BUG-035 — « Actions » : 3 ouvertes sur un écran, 0 sur un autre (RSSI-21)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Amélioration continue, Synthèse ; MINEURE ; P3 |
+| Statut | OUVERT |
+| Cause / niveau | Occurrences de série comptées comme actions sur un seul des écrans. |
+| Non-régression | à écrire |
+
+## BUG-036 — Parcours ISO : « Applicabilité — Aucun travail trouvé » malgré une DdA renseignée (RSSI-22)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Parcours ISO 27001 / HDS ; MINEURE ; P3 |
+| Statut | OUVERT |
+| Cause / niveau | Non analysée. |
+| Non-régression | à écrire |

@@ -37,7 +37,7 @@ sudo tests/e2e/rssi-virtuel/lancer.sh --garder
 ```
 
 L'agent pilote un Chrome par `node tests/e2e/rssi-virtuel/pilote.mjs` (commandes `demarrer`, `ouvrir`, `voir`, `cliquer`,
-`remplir`, `choisir`, `capture`, `api`, `invariants`…). `voir` affiche la page telle qu'un lecteur d'écran la perçoit. Le
+`remplir`, `choisir`, `fichier`, `capture`, `api`, `invariants`…). `voir` affiche la page telle qu'un lecteur d'écran la perçoit. Le
 pilote ne journalise ni mot de passe, ni jeton, ni secret TOTP ; ses fichiers (`.pilote/`) ne sont pas versionnés car l'écran
 d'installation y montre le poivre et la clé de secours, fictifs mais à ne pas publier. À la fin :
 `sudo tests/e2e/rssi-virtuel/lancer.sh --arreter`, puis `lancer.sh` pour la non-régression.
@@ -63,8 +63,13 @@ propre contrôle). Aucun texte normatif sous licence : numéros de clause et de 
 
 Un constat reproductible devient un test marqué `test.fail(true, 'RSSI-NN ouvert : …')` : le harnais reste vert tant que le
 défaut existe et **devient rouge quand il est corrigé**, ce qui oblige à retirer le marqueur dans la PR du correctif. Ce n'est
-pas une assertion réduite : l'assertion décrit le comportement attendu. Constats ouverts : BUG-016 à BUG-019
-([registre](../04_QUALITE/REGISTRE_BUGS.md)), détail dans le [rapport du 11/11/2026](rssi-virtuel/RAPPORT-2026-11-11.md).
+pas une assertion réduite : l'assertion décrit le comportement attendu. Constats ouverts : BUG-016 à BUG-036
+([registre](../04_QUALITE/REGISTRE_BUGS.md)), détail dans les rapports du [11/11/2026](rssi-virtuel/RAPPORT-2026-11-11.md) et du
+[12/11/2026](rssi-virtuel/RAPPORT-2026-11-12.md) (recette métier des étapes 1 à 17).
+
+**Rôle de la session de recette** (décision du RSSI, 11/11/2026) : elle teste et constate, elle ne corrige pas l'application.
+Les corrections sont faites par la session de développement dédiée ; la session de recette repasse ensuite, vérifie et
+retire le marqueur `test.fail`.
 
 ## Limites
 
