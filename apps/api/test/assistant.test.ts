@@ -421,6 +421,7 @@ describe('assistant : garde-fous de construction', () => {
       'historique_element',
       'actions_en_retard',
       'couverture_referentiels',
+      'applicabilite_hds',
       'chercher_documents',
       'lire_document',
       'signaux',

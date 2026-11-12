@@ -936,3 +936,92 @@ describe('assistant : synthèse hebdomadaire et ronde sur événement', () => {
     expect((await regler({ rondesSurEvenement: false, jourSynthese: 0 })).statusCode).toBe(200);
   });
 });
+
+describe('assistant : profil « Audit interne » et séparation des rôles', () => {
+  const lancer = async (profil: string) => {
+    modele.demandes = [];
+    const r = await admin.post(`${base}/rondes`, { profil });
+    expect(r.statusCode, r.body).toBe(202);
+    await t.svc.assistantRondes.attendre();
+  };
+  /** Fait appeler un outil pendant une ronde du profil, et rend son compte rendu. */
+  const outil = async (profil: string, nom: string, args: unknown) => {
+    let compte: Record<string, unknown> | null = null;
+    modele.script = (d, n) => {
+      if (n === 1) return appel('c1', nom, args);
+      compte ??= dernierOutil(d);
+      return { role: 'assistant', content: 'Rapport fictif.' };
+    };
+    await lancer(profil);
+    return compte as unknown as Record<string, unknown>;
+  };
+  const propositions = async () =>
+    (await admin.get(`${base}/propositions`)).json() as {
+      id: string;
+      type: string;
+      etat: string;
+      nature: string;
+      sourceIssueAssistant: boolean;
+      objetCree: string | null;
+    }[];
+
+  it('ouvre le profil d’audit sur le périmètre, avec son référent', async () => {
+    const cur = await reglages();
+    const r = await admin.put(`${base}/reglages`, {
+      actif: cur.actif,
+      adresse: cur.adresse,
+      modele: cur.modele,
+      budgetJetonsJour: cur.budgetJetonsJour,
+      profils: cur.profils.map(({ id, actif, perimetres }) =>
+        id === 'audit_interne'
+          ? { id, actif: true, perimetres: [perimetre], referent: adminId }
+          : { id, actif, perimetres },
+      ),
+      version: cur.version,
+    });
+    expect(r.statusCode, r.body).toBe(200);
+  });
+
+  it('refuse une action au profil d’audit et un constat au profil de mise en œuvre', async () => {
+    const action1 = {
+      perimetre,
+      titre: 'Action fictive corrective',
+      description: 'Description fictive d’une action corrective.',
+    };
+    expect(await outil('audit_interne', 'proposer_action', action1)).toMatchObject({ enregistre: false });
+    const constat = {
+      perimetre,
+      titre: 'Constat fictif',
+      description: 'Fait fictif constaté sur une action en retard.',
+      nature: 'observation',
+    };
+    expect(await outil('mise_en_oeuvre', 'proposer_constat', constat)).toMatchObject({ enregistre: false });
+    expect((await propositions()).filter((p) => p.type === 'constat')).toEqual([]);
+  });
+
+  it('propose un constat, créé en brouillon à la confirmation, et signale un élément issu de l’assistant', async () => {
+    // L'élément visé est l'action créée plus haut à partir d'une proposition de l'assistant.
+    const issue = (await propositions()).find((p) => p.objetCree)!.objetCree!;
+    const compte = await outil('audit_interne', 'proposer_constat', {
+      perimetre,
+      titre: 'Échéance fictive dépassée sans justification',
+      description: 'Fait fictif : l’action lue n’a ni responsable ni justification de report.',
+      nature: 'nonconformity',
+      source: issue,
+    });
+    expect(compte).toMatchObject({ enregistre: true });
+    const p = (await propositions()).find((x) => x.type === 'constat')!;
+    expect(p).toMatchObject({ etat: 'en_attente', nature: 'nonconformity', sourceIssueAssistant: true });
+
+    const r = await admin.post(`${base}/propositions/${p.id}/decision`, { decision: 'confirmer' });
+    expect(r.statusCode, r.body).toBe(200);
+    const cree = (r.json() as { objetCree: string }).objetCree;
+    const o = (await admin.get(`/api/grc/${perimetre}/objects/${cree}`)).json() as {
+      kind: string;
+      data: { status: string; origin: string; findingType: string; source: string; description: string };
+    };
+    expect(o.kind).toBe('nonconformity');
+    expect(o.data).toMatchObject({ status: 'draft', origin: 'audit', findingType: 'nonconformity', source: 'Interne' });
+    expect(o.data.description).toContain('Constat proposé par l’assistant RSSI');
+  });
+});

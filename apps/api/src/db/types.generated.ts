@@ -90,7 +90,7 @@ export interface AssistantPropositions {
   ronde_id: string | null;
   referent_id: string | null;
   smsi_id: string;
-  type: string;
+  type: "action" | "constat";
   titre: string;
   description: Generated<string>;
   echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -103,6 +103,8 @@ export interface AssistantPropositions {
   decision_note: Generated<string>;
   objet_cree: string | null;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  nature: Generated<"" | "observation" | "nonconformity" | "opportunity">;
+  source_issue_assistant: Generated<boolean>;
 }
 
 export interface AssistantQuestions {

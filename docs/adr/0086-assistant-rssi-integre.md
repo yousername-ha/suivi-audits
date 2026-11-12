@@ -358,3 +358,20 @@ Réalisé sur `claude/assistant-rssi` (migration `062`), **sans dépendance nouv
 - **Essai réel** (`mistral-small-latest`, données fictives) : le modèle a trouvé et lu une politique fictive, l'a recoupée avec
   une action en retard, n'a pas suivi une instruction piégée placée dans le document et n'a pas atteint un document
   confidentiel. Un seul essai.
+
+## Addendum du 12/11/2026 — constats d'audit, applicabilité HDS, jeu d'évaluation
+
+Réalisé sur `claude/assistant-rssi` (migration `063`) :
+
+- **Lot A5, première tranche** : le profil « Audit interne » propose des **constats** (observation, non-conformité, opportunité
+  d'amélioration) par l'outil `proposer_constat`. Confirmé, le constat est créé **en brouillon**, origine « audit », source
+  « Interne », sous l'identité et avec les droits de la personne qui décide : l'auditeur le qualifie et conclut lui-même. Ce
+  profil ne peut pas proposer d'action ; le profil « Mise en œuvre » ne peut pas proposer de constat (point 14).
+  **Indépendance** : une proposition qui vise un élément lui-même créé à partir d'une proposition de l'assistant le signale à
+  l'écran. Restent : préparation d'audit à partir du programme, brouillon de rapport, recette par un auditeur.
+- **Lot A6, première tranche** : outil `applicabilite_hds`, compté par la plateforme. Les autres lectures utiles à la mise en
+  œuvre (couverture, signaux, éléments, historique, documents) existaient déjà. Restent : parcours ISO/HDS détaillé,
+  déclaration d'applicabilité, préparation de la revue de direction.
+- **Jeu d'évaluation** (lot A3) : `apps/api/test/evaluation/assistant-evaluation.ts`, résultats publiés dans
+  [EVALUATION_ASSISTANT](../05_RECETTE/EVALUATION_ASSISTANT.md) : 60 contrôles sur 60 avec `mistral-small-latest` (5 passes),
+  35 sur 36 avec `mistral-large-latest` (3 passes). Jeu petit ; limites décrites dans ce document.

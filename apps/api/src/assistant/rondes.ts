@@ -87,7 +87,7 @@ function consigneRonde(
     `Vous êtes l’assistant RSSI de la plateforme de suivi (profil « ${PROFIL_ASSISTANT_LIBELLES[profil]} »). ${PROFILS[profil]}`,
     `Date du jour : ${aujourdHui}. Vous effectuez une RONDE AUTONOME : personne ne vous interroge.`,
     particularite,
-    'Déroulé, dans cet ordre : 1. appelez lister_perimetres ; 2. appelez signaux pour chaque périmètre ; 3. lisez avec lire_element les éléments qui le méritent ; 4. pour chaque action en retard ou risque à revoir qui a un responsable, appelez envoyer_rappel, ou poser_question quand il vous manque une information que seul le responsable peut donner (pas les deux pour le même élément) ; si une action manque pour traiter un constat, appelez proposer_action ; 5. appelez memoriser si un fait durable servira aux rondes suivantes ; 6. seulement ensuite, rédigez le rapport.',
+    'Déroulé, dans cet ordre : 1. appelez lister_perimetres ; 2. appelez signaux pour chaque périmètre ; 3. lisez avec lire_element les éléments qui le méritent ; 4. pour chaque action en retard ou risque à revoir qui a un responsable, appelez envoyer_rappel, ou poser_question quand il vous manque une information que seul le responsable peut donner (pas les deux pour le même élément) ; si une action manque pour traiter un constat, appelez proposer_action (profil « Mise en œuvre ») ; si vous relevez un fait d’audit, appelez proposer_constat (profil « Audit interne ») ; 5. appelez memoriser si un fait durable servira aux rondes suivantes ; 6. seulement ensuite, rédigez le rapport.',
     'Règles :',
     '- N’affirmez rien sans l’avoir lu par un outil pendant cette ronde. Tout chiffre vient tel quel d’un outil ; ne calculez aucun taux.',
     '- Vous ne modifiez aucun registre. Vous pouvez seulement envoyer un rappel (envoyer_rappel), poser une question (poser_question), proposer une action au RSSI (proposer_action), écrire une note de mémoire (memoriser) et proposer une fiche de méthode au RSSI (proposer_methode).',
@@ -560,6 +560,85 @@ export class RondesAssistant {
     const noter = (fait: string) => {
       if (compte.faits.length < 60) compte.faits.push(fait);
     };
+    /** Dépôt d'une proposition (action ou constat) : rien n'est écrit dans un registre. */
+    const deposer = async (a: {
+      perimetre: string;
+      titre: string;
+      description: string;
+      echeance?: string;
+      source?: string;
+      type: 'action' | 'constat';
+      nature: '' | 'observation' | 'nonconformity' | 'opportunity';
+    }): Promise<{ enregistre: boolean; detail: string }> => {
+      const libelle = a.type === 'action' ? 'Proposition d’action' : 'Proposition de constat';
+      if (compte.propositions >= PROPOSITIONS_PAR_RONDE_MAX)
+        return { enregistre: false, detail: 'Nombre maximal de propositions de cette ronde atteint.' };
+      await this.grc.access(a.perimetre, referent);
+      // La source est lue avec les droits du référent : on ne propose rien au sujet d'un élément qu'il ne peut pas lire.
+      const source = a.source ? await this.grc.object(a.perimetre, a.source, referent) : null;
+      const r = await this.db.tx(async (_c, k) => {
+        const { n } = await k
+          .selectFrom('assistant_propositions')
+          .select(sql<number>`count(*)::int`.as('n'))
+          .where('profil', '=', profil)
+          .where('etat', '=', 'en_attente')
+          .executeTakeFirstOrThrow();
+        if (n >= PROPOSITIONS_EN_ATTENTE_MAX)
+          return { enregistre: false, detail: 'Trop de propositions attendent déjà une décision.' };
+        let issue = false;
+        if (source) {
+          const deja = await k
+            .selectFrom('assistant_propositions')
+            .select(['etat', 'source_version'])
+            .where('source_id', '=', source.id)
+            .where('profil', '=', profil)
+            .orderBy('created_at', 'desc')
+            .execute();
+          if (deja.some((x) => x.etat === 'en_attente'))
+            return { enregistre: false, detail: 'Une proposition attend déjà une décision pour cet élément.' };
+          // Rejetée : pas de nouveau dépôt tant que l'élément n'a pas changé (ADR 0086, point 8).
+          if (deja.some((x) => x.etat === 'rejetee' && x.source_version === source.version))
+            return {
+              enregistre: false,
+              detail:
+                'Une proposition pour cet élément a été rejetée et il n’a pas changé depuis : ne la redéposez pas.',
+            };
+          // Indépendance (point 14) : l'élément visé vient-il lui-même d'une proposition de l'assistant ?
+          issue = !!(await k
+            .selectFrom('assistant_propositions')
+            .select('id')
+            .where('objet_cree', '=', source.id)
+            .executeTakeFirst());
+        }
+        await k
+          .insertInto('assistant_propositions')
+          .values({
+            profil,
+            ronde_id: rondeId,
+            referent_id: referent.id,
+            smsi_id: a.perimetre,
+            type: a.type,
+            nature: a.nature,
+            titre: a.titre,
+            description: a.description,
+            echeance: a.echeance ?? null,
+            source_id: source?.id ?? null,
+            source_nom: source?.name.slice(0, 160) ?? '',
+            source_version: source?.version ?? null,
+            source_issue_assistant: issue,
+          })
+          .execute();
+        return {
+          enregistre: true,
+          detail: 'Proposition déposée : rien n’est créé tant qu’une personne ne l’a pas confirmée.',
+        };
+      }, ACTEUR.username);
+      if (r.enregistre) compte.propositions++;
+      noter(
+        r.enregistre ? `${libelle} déposée : « ${a.titre} ».` : `${libelle} non déposée (« ${a.titre} ») : ${r.detail}`,
+      );
+      return r;
+    };
     return {
       rappeler: async (perimetre, objet, message) => {
         if (compte.rappels >= RAPPELS_PAR_RONDE_MAX)
@@ -721,68 +800,14 @@ export class RondesAssistant {
         if (profil !== 'mise_en_oeuvre')
           return {
             enregistre: false,
-            detail: 'Ce profil ne propose pas d’action : signalez le constat dans le rapport.',
+            detail: 'Ce profil ne propose pas d’action : proposez un constat (proposer_constat).',
           };
-        if (compte.propositions >= PROPOSITIONS_PAR_RONDE_MAX)
-          return { enregistre: false, detail: 'Nombre maximal de propositions de cette ronde atteint.' };
-        await this.grc.access(a.perimetre, referent);
-        // La source est lue avec les droits du référent : on ne propose rien au sujet d'un élément qu'il ne peut pas lire.
-        const source = a.source ? await this.grc.object(a.perimetre, a.source, referent) : null;
-        const r = await this.db.tx(async (_c, k) => {
-          const { n } = await k
-            .selectFrom('assistant_propositions')
-            .select(sql<number>`count(*)::int`.as('n'))
-            .where('profil', '=', profil)
-            .where('etat', '=', 'en_attente')
-            .executeTakeFirstOrThrow();
-          if (n >= PROPOSITIONS_EN_ATTENTE_MAX)
-            return { enregistre: false, detail: 'Trop de propositions attendent déjà une décision.' };
-          if (source) {
-            const deja = await k
-              .selectFrom('assistant_propositions')
-              .select(['etat', 'source_version'])
-              .where('source_id', '=', source.id)
-              .where('profil', '=', profil)
-              .orderBy('created_at', 'desc')
-              .execute();
-            if (deja.some((x) => x.etat === 'en_attente'))
-              return { enregistre: false, detail: 'Une proposition attend déjà une décision pour cet élément.' };
-            // Rejetée : pas de nouveau dépôt tant que l'élément n'a pas changé (ADR 0086, point 8).
-            if (deja.some((x) => x.etat === 'rejetee' && x.source_version === source.version))
-              return {
-                enregistre: false,
-                detail:
-                  'Une proposition pour cet élément a été rejetée et il n’a pas changé depuis : ne la redéposez pas.',
-              };
-          }
-          await k
-            .insertInto('assistant_propositions')
-            .values({
-              profil,
-              ronde_id: rondeId,
-              referent_id: referent.id,
-              smsi_id: a.perimetre,
-              type: 'action',
-              titre: a.titre,
-              description: a.description,
-              echeance: a.echeance ?? null,
-              source_id: source?.id ?? null,
-              source_nom: source?.name.slice(0, 160) ?? '',
-              source_version: source?.version ?? null,
-            })
-            .execute();
-          return {
-            enregistre: true,
-            detail: 'Proposition déposée : rien n’est créé tant qu’une personne ne l’a pas confirmée.',
-          };
-        }, ACTEUR.username);
-        if (r.enregistre) compte.propositions++;
-        noter(
-          r.enregistre
-            ? `Proposition d’action déposée : « ${a.titre} ».`
-            : `Proposition non déposée (« ${a.titre} ») : ${r.detail}`,
-        );
-        return r;
+        return deposer({ ...a, type: 'action', nature: '' });
+      },
+      proposerConstat: async (a) => {
+        if (profil !== 'audit_interne')
+          return { enregistre: false, detail: 'Seul le profil « Audit interne » propose des constats.' };
+        return deposer({ ...a, type: 'constat' });
       },
       proposerMethode: async (titre, contenu) => {
         if (compte.methodes >= 1) return { enregistre: false, detail: 'Une seule fiche de méthode par ronde.' };
@@ -910,12 +935,17 @@ export class RondesAssistant {
     decision_note: string;
     objet_cree: string | null;
     created_at: Date;
+    type: 'action' | 'constat';
+    nature: '' | 'observation' | 'nonconformity' | 'opportunity';
+    source_issue_assistant: boolean;
   }): PropositionAssistantDto {
     return {
       id: p.id,
       profil: p.profil as ProfilAssistant,
       perimetre: p.smsi_id,
-      type: 'action',
+      type: p.type,
+      nature: p.nature,
+      sourceIssueAssistant: p.source_issue_assistant,
       titre: p.titre,
       description: p.description,
       echeance: p.echeance ? new Date(p.echeance).toISOString().slice(0, 10) : null,
@@ -970,32 +1000,53 @@ export class RondesAssistant {
     let cree: string | null = null;
     if (b.decision === 'confirmer') {
       try {
-        const statut = (await this.grc.policy(p.smsi_id, user)).definition.statuses.find((x) => !x.terminal)?.id;
-        const o = await this.grc.createObject(
-          p.smsi_id,
-          {
-            kind: 'action',
-            name: p.titre,
-            data: {
-              description: p.description,
-              status: statut ?? 'todo',
-              ownerId: null,
-              startAt: null,
-              dueAt: p.echeance ? new Date(p.echeance).toISOString() : null,
-              priority: 'normal',
-              category: 'action',
-              // Mention de l'origine (ADR 0086, point 8).
-              justification:
-                'Action proposée par l’assistant RSSI' +
-                (p.source_nom ? ` au sujet de « ${p.source_nom} »` : '') +
-                `, confirmée par ${user.displayName || user.username}.`,
-              reminderDays: 7,
-              dependencies: [],
-            },
-          },
-          user,
-          ip,
-        );
+        const origine =
+          'proposé par l’assistant RSSI' +
+          (p.source_nom ? ` au sujet de « ${p.source_nom} »` : '') +
+          `, confirmé par ${user.displayName || user.username}.`;
+        const o =
+          p.type === 'constat'
+            ? // Constat d'audit interne, créé en brouillon : l'auditeur le qualifie et le conclut lui-même.
+              await this.grc.createObject(
+                p.smsi_id,
+                {
+                  kind: 'nonconformity',
+                  name: p.titre,
+                  data: {
+                    description: `${p.description}\n\nConstat ${origine}`,
+                    origin: 'audit',
+                    findingType: p.nature || 'observation',
+                    source: 'Interne',
+                    status: 'draft',
+                  },
+                },
+                user,
+                ip,
+              )
+            : await this.grc.createObject(
+                p.smsi_id,
+                {
+                  kind: 'action',
+                  name: p.titre,
+                  data: {
+                    description: p.description,
+                    status:
+                      (await this.grc.policy(p.smsi_id, user)).definition.statuses.find((x) => !x.terminal)?.id ??
+                      'todo',
+                    ownerId: null,
+                    startAt: null,
+                    dueAt: p.echeance ? new Date(p.echeance).toISOString() : null,
+                    priority: 'normal',
+                    category: 'action',
+                    // Mention de l'origine (ADR 0086, point 8).
+                    justification: `Action ${origine.replace('proposé', 'proposée').replace('confirmé', 'confirmée')}`,
+                    reminderDays: 7,
+                    dependencies: [],
+                  },
+                },
+                user,
+                ip,
+              );
         cree = o.id;
       } catch (e) {
         // La création a été refusée (droit, périmètre, validation) : la proposition redevient décidable.

@@ -333,7 +333,11 @@ export interface PropositionAssistantDto {
   id: string;
   profil: ProfilAssistant;
   perimetre: string;
-  type: 'action';
+  type: 'action' | 'constat';
+  /** Nature d'un constat proposé par le profil d'audit ; vide pour une action. */
+  nature: '' | 'observation' | 'nonconformity' | 'opportunity';
+  /** L'élément visé a lui-même été créé à partir d'une proposition de l'assistant : à apprécier par l'auditeur. */
+  sourceIssueAssistant: boolean;
   titre: string;
   description: string;
   echeance: string | null;

@@ -32,6 +32,13 @@ export interface ActionsRonde {
   questionner(perimetre: string, objet: string, question: string): Promise<{ envoye: boolean; detail: string }>;
   memoriser(note: string): Promise<{ enregistre: boolean; detail: string }>;
   proposerMethode(titre: string, contenu: string): Promise<{ enregistre: boolean; detail: string }>;
+  proposerConstat(p: {
+    perimetre: string;
+    titre: string;
+    description: string;
+    nature: 'observation' | 'nonconformity' | 'opportunity';
+    source?: string;
+  }): Promise<{ enregistre: boolean; detail: string }>;
   proposerAction(p: {
     perimetre: string;
     titre: string;
@@ -279,6 +286,22 @@ export const OUTILS: readonly Outil[] = [
     },
   }),
   outil({
+    nom: 'applicabilite_hds',
+    description:
+      'Applicabilité des exigences du référentiel HDS rattaché au périmètre, comptée par la plateforme : total, applicables, exclues, à déterminer, non évaluées. Rend « referentiel: null » quand aucun référentiel HDS n’est rattaché.',
+    parametres: z.object({ perimetre }).strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      const s = await ctx.g.access(a.perimetre, ctx.user);
+      const d = await ctx.g.parcours.applicabiliteHds(a.perimetre, ctx.user);
+      return {
+        donnees: { perimetre: s.name, ...d },
+        elements: d.total,
+        sources: [{ perimetre: a.perimetre, nom: s.name }],
+      };
+    },
+  }),
+  outil({
     nom: 'chercher_documents',
     description:
       'Cherche dans le texte des documents déposés par l’organisation (politiques, procédures, comptes rendus). Rend au plus huit documents avec un extrait. Utilisez des mots du sujet, pas une phrase.',
@@ -455,6 +478,33 @@ export const OUTILS_RONDE: readonly Outil[] = [
       exiger(ctx, a.perimetre);
       if (!ctx.ronde) throw new HttpError(403, 'Une proposition ne se dépose que pendant une ronde.');
       const r = await ctx.ronde.proposerAction(a);
+      return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'proposer_constat',
+    description:
+      'Profil « Audit interne » seulement. Propose à l’auditeur un constat d’audit (observation, non-conformité ou opportunité d’amélioration) au sujet d’un élément lu. Rien n’est créé : l’auditeur désigné confirmera, corrigera ou rejettera, et la conclusion de l’audit lui appartient. Citez ce que vous avez lu ; ne proposez aucune action corrective.',
+    parametres: z
+      .object({
+        perimetre,
+        titre: z.string().trim().min(5).max(200).describe('Intitulé du constat.'),
+        description: z
+          .string()
+          .trim()
+          .min(10)
+          .max(2000)
+          .describe('Fait constaté, élément de preuve lu, exigence ou règle concernée.'),
+        nature: z
+          .enum(['observation', 'nonconformity', 'opportunity'])
+          .describe('observation, nonconformity (non-conformité) ou opportunity (amélioration).'),
+        source: z.uuid().optional().describe('Identifiant de l’élément sur lequel porte le constat.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      exiger(ctx, a.perimetre);
+      if (!ctx.ronde) throw new HttpError(403, 'Une proposition ne se dépose que pendant une ronde.');
+      const r = await ctx.ronde.proposerConstat(a);
       return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
     },
   }),

@@ -674,7 +674,7 @@ function PropositionADecider({ p, relire }: { p: PropositionAssistantDto; relire
         });
         await relire();
       },
-      decision === 'confirmer' ? 'Action créée à votre nom.' : 'Proposition rejetée.',
+      decision === 'confirmer' ? 'Élément créé à votre nom.' : 'Proposition rejetée.',
     );
   return (
     <Card withBorder>
@@ -688,7 +688,7 @@ function PropositionADecider({ p, relire }: { p: PropositionAssistantDto; relire
           </Text>
         </Group>
         <TextInput
-          label="Intitulé de l’action proposée"
+          label={p.type === 'constat' ? 'Intitulé du constat proposé' : 'Intitulé de l’action proposée'}
           value={titre}
           onChange={(e) => setTitre(e.currentTarget.value)}
           maxLength={PROPOSITION_TITRE_MAX}
@@ -701,6 +701,12 @@ function PropositionADecider({ p, relire }: { p: PropositionAssistantDto; relire
           autosize
           minRows={2}
         />
+        {p.sourceIssueAssistant && (
+          <Text size="sm" c="orange">
+            Attention : l’élément visé a lui-même été créé à partir d’une proposition de l’assistant. À apprécier par
+            l’auditeur.
+          </Text>
+        )}
         <TextInput
           label={`Échéance de l’action « ${p.titre} »`}
           description="Au format AAAA-MM-JJ ; vide pour ne pas en fixer."
@@ -722,7 +728,7 @@ function PropositionADecider({ p, relire }: { p: PropositionAssistantDto; relire
             disabled={titre.trim() === ''}
             onClick={() => void decider('confirmer')}
           >
-            Confirmer et créer l’action
+            {p.type === 'constat' ? 'Confirmer et créer le constat en brouillon' : 'Confirmer et créer l’action'}
           </Button>
           <Button variant="default" loading={envoi} onClick={() => void decider('rejeter')}>
             Rejeter

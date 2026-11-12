@@ -103,6 +103,7 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         '060_assistant_propositions.sql',
         '061_assistant_evenements.sql',
         '062_assistant_documents.sql',
+        '063_assistant_constats.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

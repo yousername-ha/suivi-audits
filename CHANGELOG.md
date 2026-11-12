@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `062`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `063`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -118,6 +118,12 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : constats d'audit proposés** : le profil « Audit interne » propose des constats (observation,
+  non-conformité, opportunité) ; confirmé, le constat est créé en brouillon au nom de la personne qui décide. Ce profil ne
+  propose jamais d'action corrective. Un constat qui vise un élément issu d'une proposition de l'assistant est signalé.
+  Nouvel outil de lecture de l'applicabilité HDS. Jeu d'évaluation sur organisation fictive, résultats publiés
+  ([évaluation](docs/05_RECETTE/EVALUATION_ASSISTANT.md)). _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : lecture des documents** (inactive par défaut) : un profil autorisé cherche et lit le texte des documents
   déposés (texte brut, docx, xlsx, pptx, odt, ods, odp), jusqu'au niveau de classification réglé (« interne » par défaut). Le
   texte est extrait par un processus séparé et sans droits, puis gardé **en clair dans la base** pour la recherche ; il est
