@@ -330,6 +330,30 @@ describe('assistant : index des documents', () => {
     });
   });
 
+  it('trouve un lien enregistré par ses métadonnées, sans ouvrir la page visée', async () => {
+    const r0 = await admin.post('/api/links', {
+      title: 'Procédure fictive de gestion de crise',
+      url: 'https://intranet.example.invalid/crise',
+      description: 'Lien fictif vers la procédure de crise.',
+      category: 'Procédures',
+    });
+    expect(r0.statusCode, r0.body).toBe(201);
+    const r = (await outil(admin, 'chercher_documents', { recherche: 'gestion crise' })) as {
+      liens: { titre: string; adresse: string }[];
+    };
+    expect(r.liens).toEqual([
+      expect.objectContaining({
+        titre: 'Procédure fictive de gestion de crise',
+        adresse: 'https://intranet.example.invalid/crise',
+      }),
+    ]);
+    // Tous les mots doivent correspondre : un mot absent ne rend rien.
+    const vide = (await outil(admin, 'chercher_documents', { recherche: 'crise inexistante' })) as { liens: unknown[] };
+    expect(vide.liens).toEqual([]);
+    // Sans le droit de lire les documents, les liens ne sont pas rendus non plus.
+    expect(await outil(sansDocuments, 'chercher_documents', { recherche: 'crise' })).toHaveProperty('erreur');
+  });
+
   it('refuse les documents à une personne qui n’a pas le droit de les lire', async () => {
     expect(await outil(sansDocuments, 'chercher_documents', { recherche: 'sauvegardes' })).toEqual({
       erreur: 'Les documents ne sont pas accessibles à cette personne.',

@@ -715,7 +715,7 @@ function PanneauAssistant({
                               onClick={() => showDetail({ type: 'source', source: s })}
                             >
                               <IconeAssistant
-                                nom={s.type === 'evidence' || s.type === 'document' ? 'file' : 'action'}
+                                nom={['evidence', 'document', 'lien'].includes(s.type ?? '') ? 'file' : 'action'}
                               />
                               {s.type === 'evidence' ? 'Fiche documentaire' : s.nom}
                             </button>
@@ -1034,9 +1034,11 @@ function PanneauAssistant({
                   <p>
                     {detail.source.type === 'evidence'
                       ? 'Fiche documentaire ; le contenu du fichier n’est pas reproduit ici.'
-                      : detail.source.type === 'document'
-                        ? 'Document déposé dans la plateforme, cité par le service ; son contenu n’est pas reproduit ici.'
-                        : 'Fiche ou périmètre consulté par l’assistant.'}
+                      : detail.source.type === 'lien'
+                        ? 'Lien enregistré dans la plateforme. L’assistant en connaît le titre et l’adresse ; il n’a pas ouvert la page.'
+                        : detail.source.type === 'document'
+                          ? 'Document déposé dans la plateforme, cité par le service ; son contenu n’est pas reproduit ici.'
+                          : 'Fiche ou périmètre consulté par l’assistant.'}
                   </p>
                 </div>
                 {/* Un document n’est rattaché à aucun périmètre : pas de lien inventé. */}

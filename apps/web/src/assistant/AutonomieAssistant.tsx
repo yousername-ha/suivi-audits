@@ -77,8 +77,8 @@ function Rapport({ id }: { id: string }) {
   if (q.error) return <ErrorAlert error={q.error} />;
   if (!q.data) return <Text c="dimmed">Chargement du rapport…</Text>;
   const d = q.data;
-  const elements = d.sources.filter((s) => s.objet && s.type !== 'document');
-  const documents = d.sources.filter((s) => s.type === 'document');
+  const elements = d.sources.filter((s) => s.objet && s.type !== 'document' && s.type !== 'lien');
+  const documents = d.sources.filter((s) => s.type === 'document' || s.type === 'lien');
   return (
     <Stack gap="xs">
       {d.erreur && <Text c="red">{d.erreur}</Text>}

@@ -25,9 +25,11 @@ export interface ContexteOutil {
 }
 /** Lecture des documents, bornée par le droit de la personne et le niveau de classification du profil. */
 export interface LectureDocuments {
-  chercher(
-    recherche: string,
-  ): Promise<{ id: string; titre: string; categorie: string; classification: string; extrait: string }[]>;
+  chercher(recherche: string): Promise<{
+    documents: { id: string; titre: string; categorie: string; classification: string; extrait: string }[];
+    /** Liens enregistrés dans la plateforme : métadonnées seulement, la page visée n'est jamais ouverte. */
+    liens: { id: string; titre: string; adresse: string; categorie: string; description: string }[];
+  }>;
   lire(id: string, partie: number): Promise<Record<string, unknown> & { id: string; titre: string }>;
 }
 /** Actions d'une ronde : aucune n'écrit dans un registre. Chaque méthode rend un compte rendu remis au modèle. */
@@ -519,15 +521,18 @@ export const OUTILS: readonly Outil[] = [
   outil({
     nom: 'chercher_documents',
     description:
-      'Cherche dans le texte des documents déposés par l’organisation (politiques, procédures, comptes rendus). Rend au plus huit documents avec un extrait. Utilisez des mots du sujet, pas une phrase.',
+      'Cherche dans le texte des documents déposés par l’organisation (politiques, procédures, comptes rendus) et parmi les liens enregistrés. Rend au plus huit documents avec un extrait, et au plus huit liens avec leur titre, leur adresse et leur description. Vous ne pouvez pas ouvrir la page d’un lien : indiquez son adresse à la personne, sans rien affirmer sur son contenu. Utilisez des mots du sujet, pas une phrase.',
     parametres: z.object({ recherche: z.string().trim().min(2).max(200) }).strict(),
     async executer(ctx, a) {
       if (!ctx.documents) throw new HttpError(403, 'Ce profil de l’assistant ne lit pas les documents.');
-      const l = await ctx.documents.chercher(a.recherche);
+      const r = await ctx.documents.chercher(a.recherche);
       return {
-        donnees: { documents: l },
-        elements: l.length,
-        sources: l.map((d) => ({ perimetre: '', objet: d.id, type: 'document', nom: d.titre })),
+        donnees: r,
+        elements: r.documents.length + r.liens.length,
+        sources: [
+          ...r.documents.map((d) => ({ perimetre: '', objet: d.id, type: 'document', nom: d.titre })),
+          ...r.liens.map((l) => ({ perimetre: '', objet: l.id, type: 'lien', nom: l.titre })),
+        ],
       };
     },
   }),

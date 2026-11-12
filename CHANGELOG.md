@@ -118,6 +118,9 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : liens enregistrés** : la recherche de l'assistant trouve aussi les liens de « Documents et liens » par leur
+  titre, leur description et leur adresse, et indique où se trouve une ressource. Il n'ouvre jamais la page visée.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : lecture des PDF** : le texte des PDF déposés est lu comme celui des autres documents (500 pages au plus).
   Les PDF numérisés, protégés par mot de passe ou illisibles sont signalés « non lus ». Nouvelle dépendance de l'API,
   `pdfjs-dist` (Mozilla, Apache-2.0), exécutée seulement dans le processus d'extraction isolé ; choix accepté par le RSSI le 12/11/2026.

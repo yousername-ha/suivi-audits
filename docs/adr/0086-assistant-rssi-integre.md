@@ -449,3 +449,12 @@ d'organisation. Le choix de la bibliothèque, proposé par la session, a été *
   marqué « non lu » avec son motif. Aucune reconnaissance de caractères.
 - **Non vérifié** : la construction de l'image Docker avec cette dépendance, et des PDF réels variés (un seul PDF fictif,
   texte simple).
+
+## Addendum du 12/11/2026 — liens de la rubrique « Documents et liens »
+
+Demande du RSSI : l'assistant doit connaître les liens enregistrés. Retenu : **les métadonnées seulement**. La recherche de
+documents (`chercher_documents`) rend aussi, au plus, huit liens dont le titre, la description, la catégorie ou l'adresse
+contiennent tous les mots cherchés. **La page visée n'est jamais ouverte** : l'API garde zéro accès sortant (ADR 0014), et
+l'assistant a pour consigne de donner l'adresse sans rien affirmer sur son contenu. Mêmes conditions que les documents : profil
+autorisé à lire les documents et droit `documents:lire` de la personne ; les liens n'ont pas de classification. Écarté : lire
+des adresses autorisées par un service isolé (sortie réseau supplémentaire, à décider à part si le besoin se confirme).

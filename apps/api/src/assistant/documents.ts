@@ -202,13 +202,41 @@ export class DocumentsAssistant {
             LIMIT 8`,
           [recherche, niveaux],
         );
-        return rows.map((d) => ({
-          id: d.id,
-          titre: d.title,
-          categorie: d.category,
-          classification: d.classification,
-          extrait: d.extrait.replace(/<\/?b>/g, ''),
-        }));
+        // Liens : titre, adresse, catégorie et description seulement. La page visée n'est jamais ouverte (l'API n'a aucun
+        // accès sortant) ; chaque mot cherché doit apparaître dans l'une de ces métadonnées.
+        const mots = recherche
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((m) => m.length >= 2)
+          .slice(0, 6);
+        const liens = mots.length
+          ? await this.db.pool.query<{ id: string; title: string; url: string; category: string; description: string }>(
+              `SELECT l.id::text, l.title, l.url, l.category, l.description
+                 FROM links l
+                WHERE l.deleted_at IS NULL
+                  AND (SELECT bool_and(position(m in lower(l.title || ' ' || l.description || ' ' || l.category || ' ' || l.url)) > 0)
+                         FROM unnest($1::text[]) m)
+                ORDER BY l.updated_at DESC
+                LIMIT 8`,
+              [mots],
+            )
+          : { rows: [] };
+        return {
+          documents: rows.map((d) => ({
+            id: d.id,
+            titre: d.title,
+            categorie: d.category,
+            classification: d.classification,
+            extrait: d.extrait.replace(/<\/?b>/g, ''),
+          })),
+          liens: liens.rows.map((l) => ({
+            id: l.id,
+            titre: l.title,
+            adresse: l.url.slice(0, 500),
+            categorie: l.category,
+            description: l.description.slice(0, 300),
+          })),
+        };
       },
       lire: async (id, partie) => {
         exiger();
