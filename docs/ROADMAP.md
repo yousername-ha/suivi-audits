@@ -90,7 +90,7 @@ Modules repris : `years`, `yearLabels`, `nextYear`, `nextDate`, `internalDate`, 
 
 *Backlog : aucune exigence détaillée pour l'instant (section « Pilotage » à compléter).*
 
-Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `accessReviews`, `roles`, `reviews`, `recurring`, `evidences`.
+Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `roles`, `reviews`, `recurring`, `evidences`.
 - Processus, objectifs et indicateurs (valeurs, cibles, historique).
 - Déclaration d'applicabilité (DdA) liée à l'Annexe A.
 - Fournisseurs : contrôles, fréquences, certifications, évaluations.

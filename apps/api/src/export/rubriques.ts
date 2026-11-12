@@ -11,7 +11,6 @@ import {
   formatValeurIndicateur,
   prioriteIncident,
   recurrenceSuivante,
-  revueEtat,
   valeurIndicateur,
   lireAppGap,
   etatPointGap,
@@ -60,10 +59,6 @@ const dFr = (v: unknown): string => {
   return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10).split('-').reverse().join('/') : s;
 };
 const dateHeure = (v: unknown) => texte(v).replace('T', ' ');
-const moisFr = (v: unknown) => {
-  const m = /^(\d{4})-(\d{2})$/.exec(texte(v));
-  return m ? `${m[2]}/${m[1]}` : texte(v);
-};
 const codeMesure = (m: Obj) =>
   m.ref === 'A' ? `A.${texte(m.num)}` : m.ref === 'HDS' ? `HDS ${texte(m.num)}` : texte(m.num);
 const typeEcart = (t: unknown) =>
@@ -429,26 +424,6 @@ export const JEUX: Record<string, Jeu> = {
           etatControle(c, aujourdhui)[0],
         ]),
       ),
-  },
-  revues: {
-    titre: () => 'Revues des accès',
-    colonnes: [
-      ['Contrôle', 14],
-      ['Application', 30],
-      ['Fournisseur', 26],
-      ['Dernière revue', 14],
-      ['État', 16],
-      ['Commentaire', 40],
-    ],
-    lignes: ({ etat, aujourdhui }) =>
-      objs(etat.accessReviews).map((a) => [
-        texte(a.id),
-        texte(a.app),
-        texte(a.supplier),
-        moisFr(a.month),
-        revueEtat({ month: texte(a.month), freq: nombre(a.freq) || 12 }, aujourdhui)[0],
-        texte(a.comment),
-      ]),
   },
   perimetre: {
     titre: () => 'Périmètre du SMSI',
@@ -943,8 +918,8 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
   {
     id: 'sup',
     titre: 'Fournisseurs',
-    description: 'Fournisseurs, certificats, contrôles, revues des accès et évaluations sécurité.',
-    jeux: ['fournisseurs', 'certificats', 'controles', 'revues', 'evalFournisseurs'],
+    description: 'Fournisseurs, certificats, contrôles et évaluations sécurité.',
+    jeux: ['fournisseurs', 'certificats', 'controles', 'evalFournisseurs'],
   },
   {
     id: 'ctx',

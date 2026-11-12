@@ -12,7 +12,7 @@ Le fonctionnement métier complet reste NON VÉRIFIÉ dans cette mission.
 | FCT-033 | CRRC, établissements et offres          | crrc                 | Abandon décidé le 11/11/2026 : module retiré (ADR 0084). |
 | FCT-034 | Investissements et prospection          | invest               | Abandon décidé le 11/11/2026 : module retiré (ADR 0084). |
 | FCT-035 | Incidents, crise et main courante       | incidents / crisis   | INC-01 à INC-03, déclarations, événements et COMSEC à cadrer ; aucun abandon décidé.                      |
-| FCT-036 | Revues d’accès métier historiques       | accessReviews        | Reprise périodique et preuve de réalisation des revues métier à spécifier.                                |
+| FCT-036 | Revues d’accès métier historiques       | accessReviews        | Abandon décidé le 11/11/2026 : module retiré (ADR 0087), suivi par tâche récurrente. |
 | FCT-038 | Plans historiques et sous-sections      | plans                | Inventorier types/champs, identifiants et liens avant migration vers le début E.                          |
 
 ## Reprises partielles ou non testées

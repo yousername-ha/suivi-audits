@@ -8,14 +8,12 @@ import { Gap } from './gap.js';
 import { Incidents } from './incidents.js';
 import { Retex } from './retex.js';
 import { Plans } from './plans.js';
-import { RevuesAcces } from './revues-acces.js';
 import { RegistreHistorique } from './registre.js';
 
 export class Historique {
   readonly registre: RegistreHistorique;
   readonly plans: Plans;
   readonly audit: AuditSuivi;
-  readonly revuesAcces: RevuesAcces;
   readonly gap: Gap;
   readonly incidents: Incidents;
   readonly retex: Retex;
@@ -26,7 +24,6 @@ export class Historique {
     this.registre = new RegistreHistorique(g);
     this.plans = new Plans(this.registre);
     this.audit = new AuditSuivi(this.registre);
-    this.revuesAcces = new RevuesAcces(this.registre);
     this.gap = new Gap(this.registre);
     this.incidents = new Incidents(this.registre);
     this.retex = new Retex(this.registre);

@@ -191,7 +191,6 @@ const LEGACY_KEY_MODULE: Record<string, Module | null> = {
   objectives: 'pilotage',
   indicators: 'pilotage',
   dda: 'pilotage',
-  accessReviews: 'pilotage',
   reviews: 'pilotage',
   scope: 'pilotage',
   interested: 'pilotage',

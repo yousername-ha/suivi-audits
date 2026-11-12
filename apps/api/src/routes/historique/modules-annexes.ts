@@ -6,7 +6,6 @@ import {
   GuideGapCreation,
   LigneGapModification,
   PointGapCreation,
-  RevueAccesModification,
 } from '@suivi/shared';
 import { z } from 'zod';
 import { route } from '../../http/route.js';
@@ -86,33 +85,6 @@ export const modulesAnnexesRoutes = [
     access: 'pilotage:modifier' as const,
     params: idPlan,
     handler: async ({ svc, s, params, ip }) => svc.historique.plans.creerEcart(params.id, user(s), ip),
-  }),
-  route({
-    method: 'GET',
-    url: '/api/revues-acces',
-    summary: 'Revues des accès des applications (contrôles périodiques)',
-    tags,
-    access: 'pilotage:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.revuesAcces.vue(user(s)),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/revues-acces',
-    summary: 'Ajouter une revue des accès',
-    tags,
-    access: 'pilotage:modifier' as const,
-    status: 201,
-    handler: async ({ svc, s, ip }) => svc.historique.revuesAcces.creer(user(s), ip),
-  }),
-  route({
-    method: 'PATCH',
-    url: '/api/revues-acces/:id',
-    summary: 'Modifier une revue des accès (application, fournisseur, dernière revue, périodicité, commentaire)',
-    tags,
-    access: 'pilotage:modifier' as const,
-    params: idElement,
-    body: RevueAccesModification,
-    handler: async ({ svc, s, params, body, ip }) => svc.historique.revuesAcces.modifier(params.id, body, user(s), ip),
   }),
   route({
     method: 'GET',

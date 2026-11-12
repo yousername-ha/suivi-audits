@@ -94,7 +94,8 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
       expect(await t.svc.db.migrate()).toEqual([
         '052_referentiels_copies_perimetre.sql',
         '053_retrait_crrc_investissements.sql',
-        '054_assistant.sql',
+        '054_retrait_revues_acces.sql',
+        '055_assistant.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

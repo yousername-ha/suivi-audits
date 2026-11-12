@@ -107,7 +107,6 @@ export const TABLES_TRAVAIL = [
   'pilotage_decisions',
   'registre_perimetres',
   'registres',
-  'suivi_access_reviews',
   'suivi_app_gaps',
   'suivi_clausier_evals',
   'suivi_crise_cellules',

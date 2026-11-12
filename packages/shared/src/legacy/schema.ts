@@ -108,7 +108,6 @@ export const LegacyStateSchema = loose({
   activeFw: optStr,
   entityCategory: optStr,
   iso27001Certified: bool.optional(),
-  accessReviews: z.array(idObj({ freq: num.optional() })).optional(),
   plan: loose({
     status: optStr,
     note: optStr,

@@ -68,7 +68,6 @@ export const PILOTAGE_NAV = [
       { id: 'criteres-fournisseurs', label: 'Critères d’évaluation des fournisseurs', module: 'fournisseurs' },
       { id: 'fournisseurs-perimetre', label: 'Fournisseurs du périmètre', module: 'fournisseurs' },
       { id: 'evaluations-clausier', label: 'Évaluations par le clausier (Club RSSI Santé)', module: 'fournisseurs' },
-      { id: 'revues-acces', label: 'Revues des accès', module: 'pilotage' },
     ],
   },
   {

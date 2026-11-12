@@ -9,17 +9,11 @@ type Annexes = Pick<ContexteDemo, 'appel' | 'exiger' | 'decaler'>;
 
 export interface BilanAnnexes {
   incidents: number;
-  revuesAcces: number;
   crise: { contacts: number; scenarios: number; cellules: number };
   gap: { applications: number; usagesIa: number };
 }
 
 const heure = (jours: number, h: string) => `${new Date(Date.now() + jours * 86400e3).toISOString().slice(0, 10)}T${h}`;
-const mois = (delta: number) => {
-  const d = new Date();
-  const t = d.getUTCFullYear() * 12 + d.getUTCMonth() + delta;
-  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
-};
 
 /** Incidents : cinq signalements de qualifications, de catégories et d'états différents, dont un incident de sécurité ouvert
     avec obligations (données personnelles et de santé) et un retour d'expérience. */
@@ -133,60 +127,6 @@ async function incidents({ appel, exiger }: Annexes): Promise<number> {
     n++;
   }
   return n;
-}
-
-/** Revues des accès : cinq applications, une par état (à jour, à planifier, en retard, jamais réalisée). */
-async function revuesAcces({ appel, exiger }: Annexes): Promise<number> {
-  const revues: Json[] = [
-    {
-      app: 'Logiciel de dossiers patients',
-      supplier: 'Logiciel de dossiers fictif',
-      month: mois(-3),
-      freq: 12,
-      source: 'Export des comptes du logiciel',
-      comment: 'Revue annuelle avec le responsable qualité.',
-    },
-    {
-      app: 'Messagerie collaborative',
-      supplier: 'Messagerie collaborative fictive',
-      month: mois(-10),
-      freq: 12,
-      source: 'Console d’administration',
-      comment: 'À planifier avant la fin de l’année.',
-    },
-    {
-      app: 'Console de l’hébergeur de données',
-      supplier: 'Hébergeur de données fictif',
-      month: mois(-16),
-      freq: 12,
-      source: 'Console d’administration',
-      comment: 'En retard : relancer l’hébergeur pour obtenir l’export.',
-    },
-    {
-      app: 'Outil de visioconférence',
-      supplier: 'Outil de visioconférence fictif',
-      month: '',
-      freq: 12,
-      source: '',
-      comment: 'Première revue à réaliser.',
-    },
-    {
-      app: 'Annuaire interne',
-      supplier: '',
-      month: mois(-8),
-      freq: 6,
-      source: 'Export de l’annuaire',
-      comment: 'Revue semestrielle des comptes à privilèges.',
-    },
-  ];
-  for (const r of revues) {
-    const cree = await exiger<{ id: string }>(
-      await appel('POST', '/api/revues-acces'),
-      'Création d’une revue des accès',
-    );
-    await exiger(await appel('PATCH', `/api/revues-acces/${cree.id}`, r), `Revue ${cree.id}`);
-  }
-  return revues.length;
 }
 
 /** Cellule de crise : contacts clés (numéros et adresses réservés à la fiction), deux scénarios avec leur check-list et un
@@ -451,12 +391,10 @@ async function gap({ appel, exiger, decaler }: Annexes): Promise<BilanAnnexes['g
 export async function modulesAnnexes(ctx: Annexes): Promise<BilanAnnexes> {
   const bilan: BilanAnnexes = {
     incidents: 0,
-    revuesAcces: 0,
     crise: { contacts: 0, scenarios: 0, cellules: 0 },
     gap: { applications: 0, usagesIa: 0 },
   };
   bilan.incidents = await incidents(ctx);
-  bilan.revuesAcces = await revuesAcces(ctx);
   bilan.crise = await crise(ctx);
   bilan.gap = await gap(ctx);
   return bilan;

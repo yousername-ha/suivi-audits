@@ -807,29 +807,9 @@ Restriction : INC-01 à INC-03, déclarations, événements et COMSEC à cadrer 
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-035.
 
-## FCT-036 — Revues d’accès métier historiques
+## FCT-036 — Revues d’accès métier historiques (retiré)
 
-Objectif : Distinct de la revue technique RBAC déjà reprise (FCT-002).
-
-État : **NON VÉRIFIÉ**, uniquement dans ce périmètre.
-Accès : **Pilotage → Pilotage**.
-Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
-Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
-un environnement de recette autorisé pour les opérations sensibles.
-
-1. Ouvrir le menu Pilotage et sélectionner la rubrique indiquée.
-2. Consulter les éléments existants selon ses permissions ; conserver un jeu fictif pour toute recette.
-3. Relever les champs, liens, filtres et exports effectivement présents avant de préparer une reprise.
-4. Consigner tout écart : le parcours complet n’a pas été exécuté pendant cet audit.
-
-Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
-Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
-les droits ; le résultat serveur prime sur l’affichage du bouton.
-Erreurs : voir section commune ci-dessous ; conservation du brouillon en cas
-de conflit, refus de validation si conditions métier manquantes.
-Restriction : Reprise périodique et preuve de réalisation des revues métier à spécifier.
-Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
-et le cas TEST-036.
+Module retiré le 11/11/2026 par décision du RSSI ([ADR 0087](../adr/0087-retrait-du-module-revues-des-acces.md)) : les revues d’accès se suivent par une **tâche récurrente** du Pilotage. L’export de la revue des accès des comptes (Administration → Utilisateurs) reste disponible.
 
 ## FCT-037 — Revues de direction
 
