@@ -41,6 +41,14 @@ Conditions : branche `claude/assistant-rssi`, Node 22 et PostgreSQL 16 locaux, c
 L'échec du grand modèle : une fois sur trois, sa réponse sur la politique de sauvegarde ne contenait pas la règle attendue.
 La cause n'a pas été recherchée (réponse non conservée par le jeu).
 
+## Rejeu du 12/11/2026 après la vue d'ensemble, les rubriques d'organisation et les PDF
+
+Mêmes conditions, `mistral-small-latest`, quatre passes : **48 contrôles réussis sur 48**, environ 96 000 jetons par passe
+(contre 88 000 auparavant : l'assistant a six outils de plus et commence ses rondes par la vue d'ensemble). Le profil du jeu
+lit tous les périmètres, avec une classification maximale « interne » pour vérifier qu'un document confidentiel reste hors
+d'atteinte. Le grand modèle n'a pas été rejoué. Les nouveaux outils eux-mêmes (vue d'ensemble, plan d'audit, incidents,
+fournisseurs, PDF) ne sont pas notés par le jeu.
+
 ## Ce que ces chiffres ne disent pas
 
 - Le jeu est **petit** : cinq actions et deux documents. Un vrai SMSI en compte des centaines.

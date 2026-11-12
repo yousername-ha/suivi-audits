@@ -119,7 +119,8 @@ async function passe(): Promise<{ controles: Controle[]; jetons: number }> {
       [MODELE],
     );
     await t.svc.db.q(
-      "UPDATE assistant_profils SET actif = true, documents = true, perimetres = ARRAY[$1]::uuid[], referent_id = $2 WHERE id = 'mise_en_oeuvre'",
+      // Le profil lit tout (réglage par défaut), sauf les documents classés au-dessus de « interne » : c'est ce que le jeu vérifie.
+      "UPDATE assistant_profils SET actif = true, documents = true, classification_max = 'interne', tous_perimetres = true, referent_id = $2 WHERE id = 'mise_en_oeuvre' AND $1::uuid IS NOT NULL",
       [smsi, rssi.id],
     );
     await a.put('/api/assistant/reglages/cle', { cle: 'cle-d-evaluation-non-utilisee' });
