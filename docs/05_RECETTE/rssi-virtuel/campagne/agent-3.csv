@@ -1,127 +1,127 @@
 cellule;resultat;constat;commentaire
 pilotage/audit-pronostic|principal|rssi|vide|bureau;ok;;157 mesures (33 clauses, 93 annexe A 37/8/14/34, 31 HDS), légende Certain 0 / Très probable 93 / Systématique 64 , cycle par défaut 2025-2027 et organisme « AFNOR » imposés (voir C3)
-pilotage/audit-pronostic|principal|rssi|rempli|bureau;;;
-pilotage/audit-pronostic|principal|rssi|erreur|bureau;;;
+pilotage/audit-pronostic|principal|rssi|rempli|bureau;ok;;Après saisie (cycle 2026-2029, A.8.13 auditée en interne 2026, créneau A.8.13) : légende et cases recalculées , détail A.8.13 « Score 60 », motifs, preuves types (remarques C3-14 : AFNOR codé en dur, preuves validées non reprises)
+pilotage/audit-pronostic|principal|rssi|erreur|bureau;defaut;C3-15;Fenêtre « Cycle d’audit » : libellé de 2026 vidé et date d’audit interne 2030 acceptés sans contrôle (rétablis ensuite)
 pilotage/audit-pronostic|sous-perimetre|rssi|vide|bureau;ok;;157 mesures (33 clauses, 93 annexe A 37/8/14/34, 31 HDS), légende Certain 0 / Très probable 93 / Systématique 64 , cycle par défaut 2025-2027 et organisme « AFNOR » imposés (voir C3)
-pilotage/audit-pronostic|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audit-pronostic|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-pronostic|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal (cycle, préparation)
+pilotage/audit-pronostic|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal : la fenêtre « Cycle d’audit » modifie le cycle commun
 pilotage/audit-couverture|principal|rssi|vide|bureau;ok;;157 mesures affichées, toutes « non auditée » , en-têtes de tableau en cellules simples
-pilotage/audit-couverture|principal|rssi|rempli|bureau;;;
-pilotage/audit-couverture|principal|rssi|erreur|bureau;;;
+pilotage/audit-couverture|principal|rssi|rempli|bureau;ok;;Pastille A.8.13 interne 2026 : non auditée → prévue → auditée , colonnes 2025-2029 reprennent les libellés du cycle
+pilotage/audit-couverture|principal|rssi|erreur|bureau;ok;;Recherche sans résultat : « Aucune mesure ne correspond à ces filtres. » , même fenêtre « Cycle d’audit » que la carte (C3-15)
 pilotage/audit-couverture|sous-perimetre|rssi|vide|bureau;ok;;157 mesures affichées, toutes « non auditée » , en-têtes de tableau en cellules simples
-pilotage/audit-couverture|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audit-couverture|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-couverture|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal (A.8.13 interne 2026 : auditée)
+pilotage/audit-couverture|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/audit-deroule|principal|rssi|vide|bureau;ok;;Plan 2027 « Projet », 3 jours vides, alerte 157 mesures sans créneau
-pilotage/audit-deroule|principal|rssi|rempli|bureau;;;
-pilotage/audit-deroule|principal|rssi|erreur|bureau;;;
+pilotage/audit-deroule|principal|rssi|rempli|bureau;ok;;Jour 1 daté 15/03/2027, créneau 11h-12h « Sauvegardes et restauration (A.8.13) » avec participant , alerte passée de 157 à 156 mesures sans créneau
+pilotage/audit-deroule|principal|rssi|erreur|bureau;defaut;C3-08;Fin 10:00 avant début 11:00 refusée, mais message « Données invalides — end : La fin du créneau précède son début. » (nom technique du champ)
 pilotage/audit-deroule|sous-perimetre|rssi|vide|bureau;ok;;Plan 2027 « Projet », 3 jours vides, alerte 157 mesures sans créneau
-pilotage/audit-deroule|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audit-deroule|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-deroule|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal (même créneau, même participant)
+pilotage/audit-deroule|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/audit-planning|principal|rssi|vide|bureau;ok;;« Aucun créneau. » et bouton « Ajouter un créneau »
-pilotage/audit-planning|principal|rssi|rempli|bureau;;;
-pilotage/audit-planning|principal|rssi|erreur|bureau;;;
+pilotage/audit-planning|principal|rssi|rempli|bureau;ok;;Créneau 11h00–12h00 affiché dans « Planning de l’audit » (remarque : bouton dans un élément img)
+pilotage/audit-planning|principal|rssi|erreur|bureau;defaut;C3-08;Même fenêtre de créneau que le déroulé : message « end : … » technique
 pilotage/audit-planning|sous-perimetre|rssi|vide|bureau;ok;;« Aucun créneau. » et bouton « Ajouter un créneau »
-pilotage/audit-planning|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audit-planning|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-planning|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
+pilotage/audit-planning|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/audit-participants|principal|rssi|vide|bureau;ok;;« Aucune personne : ajoutez les interlocuteurs de l’audit. » et bouton « Ajouter une personne »
-pilotage/audit-participants|principal|rssi|rempli|bureau;;;
-pilotage/audit-participants|principal|rssi|erreur|bureau;;;
+pilotage/audit-participants|principal|rssi|rempli|bureau;ok;;Personne ajoutée (nom, fonction), créneau et temps mobilisé repris , personne de test retirée avec confirmation , conservé après rechargement
+pilotage/audit-participants|principal|rssi|erreur|bureau;defaut;C3-09;Nom vidé : retour silencieux à la valeur précédente, aucun message
 pilotage/audit-participants|sous-perimetre|rssi|vide|bureau;ok;;« Aucune personne : ajoutez les interlocuteurs de l’audit. » et bouton « Ajouter une personne »
-pilotage/audit-participants|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audit-participants|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/referentiels|principal|rssi|vide|bureau;;;
-pilotage/referentiels|principal|rssi|rempli|bureau;;;
-pilotage/referentiels|principal|rssi|erreur|bureau;;;
-pilotage/referentiels|sous-perimetre|rssi|vide|bureau;;;
-pilotage/referentiels|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/referentiels|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audit-participants|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
+pilotage/audit-participants|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
+pilotage/referentiels|principal|rssi|vide|bureau;defaut;C3-07;Lien « Consulter le référentiel historique » vers /legacy/ : « Page introuvable » , ReCyF « Actif dans le socle historique » sans action du RSSI
+pilotage/referentiels|principal|rssi|rempli|bureau;defaut;C3-03;ISO et HDS attribués et appliqués : liste « Référentiel publié » vide , seul le référentiel créé ici (fictif) apparaît
+pilotage/referentiels|principal|rssi|erreur|bureau;defaut;C3-08;Nom vide : « Données invalides — name : Trop petit : chaîne de caractères doit avoir >=1 caractères »
+pilotage/referentiels|sous-perimetre|rssi|vide|bureau;ok;;Formulaire vide « Référentiel publié » et « Créer un référentiel » , pas de message d’état vide
+pilotage/referentiels|sous-perimetre|rssi|rempli|bureau;defaut;C3-03;Copies ISO et HDS héritées du parent absentes , référentiel du principal non visible (isolation correcte)
+pilotage/referentiels|sous-perimetre|rssi|erreur|bureau;defaut;C3-08;Même éditeur que sous le principal : message avec nom de champ technique
 pilotage/bibliotheque|principal|rssi|vide|bureau;ok;;0 référentiel, trois standards proposés avec bouton d’ajout
-pilotage/bibliotheque|principal|rssi|rempli|bureau;;;
-pilotage/bibliotheque|principal|rssi|erreur|bureau;;;
+pilotage/bibliotheque|principal|rssi|rempli|bureau;ok;;ISO/IEC 27001:2022 (126 exigences) et HDS v2 (31) ajoutés, figés , « Copies dans les périmètres » = 2 , consultation des exigences
+pilotage/bibliotheque|principal|rssi|erreur|bureau;ok;;JSON invalide : « Le texte saisi n’est pas un JSON valide. » , JSON incomplet : champs manquants listés (clés techniques, acceptable pour un éditeur JSON)
 pilotage/bibliotheque|sous-perimetre|rssi|vide|bureau;ok;;0 référentiel, trois standards proposés (ISO/IEC 27001:2022, HDS v2, ReCyF) avec bouton d’ajout
-pilotage/bibliotheque|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/bibliotheque|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/bibliotheque|sous-perimetre|rssi|rempli|bureau;ok;;Bibliothèque commune à l’organisation (annoncé à l’écran) : mêmes référentiels
+pilotage/bibliotheque|sous-perimetre|rssi|erreur|bureau;ok;;Standard déjà ajouté : bouton retiré, pas de doublon possible
 pilotage/dda-iso|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-iso|principal|rssi|rempli|bureau;;;
-pilotage/dda-iso|principal|rssi|erreur|bureau;;;
+pilotage/dda-iso|principal|rssi|rempli|bureau;defaut;C3-02;4.3 « Total », 6.1.2 « Partiel » : 3 % (1/33) , la Couverture affiche ISO-4.3 « Non implémenté »
+pilotage/dda-iso|principal|rssi|erreur|bureau;ok;;Clauses obligatoires : aucune applicabilité modifiable, exclusion impossible
 pilotage/dda-iso|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-iso|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/dda-iso|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-iso|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal (DdA du socle, /api/dda sans périmètre)
+pilotage/dda-iso|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/dda-annexe-a|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-annexe-a|principal|rssi|rempli|bureau;;;
-pilotage/dda-annexe-a|principal|rssi|erreur|bureau;;;
+pilotage/dda-annexe-a|principal|rssi|rempli|bureau;defaut;BUG-017 BUG-019 BUG-033 C3-06;93 mesures (37/8/14/34) , jeu fictif saisi : « 3 % » (3/92) au lieu de 60 % (3/5) , écart affiché par UUID , document rattaché à A.5.1 absent , écart lié à « A-5.15 · 5.15 » ignoré
+pilotage/dda-annexe-a|principal|rssi|erreur|bureau;defaut;BUG-016 C3-04;A.6.7 « Non » sans justification accepté (Exclue) , niveau « Total » sans applicabilité accepté et compté (4 %), absent des « Non renseignées » (86) , rétabli par l’API
 pilotage/dda-annexe-a|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-annexe-a|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/dda-annexe-a|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-annexe-a|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal : A.6.7 mis à « Oui » sous Hébergement HDS apparaît sous le principal
+pilotage/dda-annexe-a|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/dda-hds|principal|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-hds|principal|rssi|rempli|bureau;;;
-pilotage/dda-hds|principal|rssi|erreur|bureau;;;
+pilotage/dda-hds|principal|rssi|rempli|bureau;defaut;C3-02;HDS 01 Oui/Partiel justifié : « 0 % » , Couverture HDS : 31 exigences « à déterminer »
+pilotage/dda-hds|principal|rssi|erreur|bureau;defaut;BUG-016;HDS 30 « Non » sans justification accepté (Exclue) , rétabli par l’API
 pilotage/dda-hds|sous-perimetre|rssi|vide|bureau;defaut;BUG-017;Aucune mesure examinée : « 0 % en mise en œuvre totale » affiché au lieu de « non évalué » , aucun compteur « non renseignées » dans le bandeau
-pilotage/dda-hds|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/dda-hds|sous-perimetre|rssi|erreur|bureau;;;
-pilotage/applicabilite|principal|rssi|vide|bureau;;;
-pilotage/applicabilite|principal|rssi|rempli|bureau;;;
-pilotage/applicabilite|principal|rssi|erreur|bureau;;;
-pilotage/applicabilite|sous-perimetre|rssi|vide|bureau;;;
-pilotage/applicabilite|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/applicabilite|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/dda-hds|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
+pilotage/dda-hds|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
+pilotage/applicabilite|principal|rssi|vide|bureau;defaut;BUG-017;157 fiches « Existant » , A-5.2 jamais examinée affichée « Applicable » coché (RSSI-13)
+pilotage/applicabilite|principal|rssi|rempli|bureau;defaut;BUG-027 C3-05;Fiche A-8.13 onglet Liens : « Erreur Origine de référence inconnue. » (422 links?ref=legacy:dda:A-8.13) , enregistrer A-5.2 sans rien changer écrit app=oui
+pilotage/applicabilite|principal|rssi|erreur|bureau;defaut;BUG-016;A-5.2 décochée « Applicable » sans justification : enregistrée app=non (rétablie par l’API) , aucun message après enregistrement
+pilotage/applicabilite|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter déclaration d’applicabilité » (alors que la DdA du même périmètre affiche 157 mesures : C3-02)
+pilotage/applicabilite|sous-perimetre|rssi|rempli|bureau;defaut;C3-02;Fiche A-8.30 non applicable justifiée, liée à A-8.30 : non reprise par la DdA (Annexe A affiche la justification du principal) ni par la Couverture , colonne d’état « — »
+pilotage/applicabilite|sous-perimetre|rssi|erreur|bureau;defaut;BUG-016;Fiche créée non applicable sans justification : enregistrée (applicable=false, reason vide)
 pilotage/mesures|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter mesure » (registre vide à côté des 93 mesures de la DdA : remarque connue)
-pilotage/mesures|principal|rssi|rempli|bureau;;;
-pilotage/mesures|principal|rssi|erreur|bureau;;;
+pilotage/mesures|principal|rssi|rempli|bureau;defaut;C3-13;Mesures créées, liées (« Met en œuvre » A-8.13), reprises par la Couverture , ni export ni archivage à l’écran (mesure de test non supprimable)
+pilotage/mesures|principal|rssi|erreur|bureau;defaut;C3-09;Intitulé vide ou espaces : Enregistrer grisé, aucun message, champ non marqué obligatoire
 pilotage/mesures|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter mesure » (registre vide à côté des 93 mesures de la DdA : remarque connue)
-pilotage/mesures|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/mesures|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/mesures|sous-perimetre|rssi|rempli|bureau;defaut;C3-13;2 mesures sous Hébergement HDS, invisibles sous le principal (isolation correcte) , ni export ni archivage
+pilotage/mesures|sous-perimetre|rssi|erreur|bureau;defaut;C3-09;Intitulé d’espaces : Enregistrer grisé sans message
 pilotage/correspondances|principal|rssi|vide|bureau;ok;;Formulaire de proposition vide , aucune liste de correspondances existantes sur cet écran
-pilotage/correspondances|principal|rssi|rempli|bureau;;;
-pilotage/correspondances|principal|rssi|erreur|bureau;;;
+pilotage/correspondances|principal|rssi|rempli|bureau;defaut;C3-03;« Référentiel source » vide malgré ISO et HDS appliqués , seul le référentiel créé sur la page Référentiels est proposé : aucune correspondance ISO↔HDS possible
+pilotage/correspondances|principal|rssi|erreur|bureau;defaut;C3-08;« source.frameworkId : UUID invalide , target.frameworkId : UUID invalide , justification : Trop petit… , sourceUrl : URL invalide »
 pilotage/correspondances|sous-perimetre|rssi|vide|bureau;ok;;Formulaire de proposition vide , aucune liste de correspondances existantes sur cet écran
-pilotage/correspondances|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/correspondances|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/correspondances|sous-perimetre|rssi|rempli|bureau;defaut;C3-03;Aucun référentiel proposé (copies héritées absentes)
+pilotage/correspondances|sous-perimetre|rssi|erreur|bureau;defaut;C3-08;Même message technique que sous le principal
 pilotage/rapprochements|principal|rssi|vide|bureau;ok;;« Aucun rapprochement à valider. »
-pilotage/rapprochements|principal|rssi|rempli|bureau;;;
-pilotage/rapprochements|principal|rssi|erreur|bureau;;;
+pilotage/rapprochements|principal|rssi|rempli|bureau;ok;;Correspondance A-5.24→HDS-11 validée + mesure « Met en œuvre » A-5.24 : rapprochement proposé, confirmé, repris par la Couverture HDS-11
+pilotage/rapprochements|principal|rssi|erreur|bureau;sans-objet;;Plus aucun rapprochement en attente sous le principal après confirmation , règle du motif de rejet vérifiée sous le sous-périmètre
 pilotage/rapprochements|sous-perimetre|rssi|vide|bureau;ok;;« Aucun rapprochement à valider. »
-pilotage/rapprochements|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/rapprochements|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/rapprochements|sous-perimetre|rssi|rempli|bureau;ok;;Rapprochement propre au sous-périmètre proposé (mesure du sous-périmètre), laissé « à valider » , absent du principal
+pilotage/rapprochements|sous-perimetre|rssi|erreur|bureau;ok;;Rejet sans motif : bouton « Rejeter » grisé, consigne « 5 caractères au moins » affichée
 pilotage/couverture|principal|rssi|vide|bureau;ok;;« Aucun référentiel n’est appliqué et actif dans ce périmètre… » avec la marche à suivre
-pilotage/couverture|principal|rssi|rempli|bureau;;;
-pilotage/couverture|principal|rssi|erreur|bureau;;;
+pilotage/couverture|principal|rssi|rempli|bureau;defaut;C3-02;Évaluations versionnées A-5.1 (Testé) et A-8.30 (Exclue justifiée) , mais 92 exigences « à déterminer » alors que la DdA en déclare 6 , mesures reliées reprises
+pilotage/couverture|principal|rssi|erreur|bureau;ok;;Exclusion : justification exigée (bouton grisé) , validation métier sur exigence partielle refusée avec message clair
 pilotage/couverture|sous-perimetre|rssi|vide|bureau;ok;;« Aucun référentiel n’est appliqué et actif dans ce périmètre… » avec la marche à suivre
-pilotage/couverture|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/couverture|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/couverture|sous-perimetre|rssi|rempli|bureau;ok;;Copies héritées suivies , A-7.4 évaluée sous le sous-périmètre, absente du principal (isolation correcte)
+pilotage/couverture|sous-perimetre|rssi|erreur|bureau;ok;;« La validation métier suppose une exigence applicable, complètement mise en œuvre et testée conforme. »
 pilotage/analyser-service|principal|rssi|vide|bureau;ok;;Assistant en 4 étapes, Suivant désactivé tant que le nom est vide , parent = périmètre affiché
-pilotage/analyser-service|principal|rssi|rempli|bureau;;;
-pilotage/analyser-service|principal|rssi|erreur|bureau;;;
+pilotage/analyser-service|principal|rssi|rempli|bureau;ok;;Service créé en périmètre enfant, ISO et HDS proposés puis appliqués, lien vers sa Couverture
+pilotage/analyser-service|principal|rssi|erreur|bureau;defaut;C3-11;Même nom de service sous le même parent : second périmètre homonyme créé (renommé « Doublon de test (agent 3) - à ignorer », non supprimable)
 pilotage/analyser-service|sous-perimetre|rssi|vide|bureau;ok;;Assistant en 4 étapes, Suivant désactivé tant que le nom est vide , parent = périmètre affiché
-pilotage/analyser-service|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/analyser-service|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/analyser-service|sous-perimetre|rssi|rempli|bureau;ok;;Service « Sauvegarde externalisée… » créé sous Hébergement HDS (parent = périmètre affiché)
+pilotage/analyser-service|sous-perimetre|rssi|erreur|bureau;ok;;Nom vide : Suivant désactivé , doublon testé sous le principal (C3-11)
 pilotage/gap-applications|principal|rssi|vide|bureau;ok;;« Aucune application. Lancez un nouveau GAP guidé… » avec trois boutons de création
-pilotage/gap-applications|principal|rssi|rempli|bureau;;;
-pilotage/gap-applications|principal|rssi|erreur|bureau;;;
+pilotage/gap-applications|principal|rssi|rempli|bureau;ok;;GAP guidé : 32 points de contrôle, 1 écart identifié, avancement 0 % , application de test supprimée avec confirmation
+pilotage/gap-applications|principal|rssi|erreur|bureau;defaut;C3-11;Application homonyme acceptée (« Ajouter sans questionnaire » crée APP02 au même nom)
 pilotage/gap-applications|sous-perimetre|rssi|vide|bureau;ok;;« Aucune application. Lancez un nouveau GAP guidé… » avec trois boutons de création
-pilotage/gap-applications|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/gap-applications|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/gap-applications|sous-perimetre|rssi|rempli|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal (application du principal listée)
+pilotage/gap-applications|sous-perimetre|rssi|erreur|bureau;defaut;C3-01;Sélecteur « Périmètre affiché » sans effet : mêmes données que sous le périmètre principal
 pilotage/correspondances-bibliotheque|principal|rssi|vide|bureau;ok;;« Aucune correspondance dans cet état. » , « Proposer une correspondance » désactivé (bibliothèque vide), sans explication à l’écran
-pilotage/correspondances-bibliotheque|principal|rssi|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|principal|rssi|erreur|bureau;;;
+pilotage/correspondances-bibliotheque|principal|rssi|rempli|bureau;ok;;A-5.24→HDS-11 partielle 50 % proposée puis validée avec motif (remarque : validée par la personne qui l’a proposée)
+pilotage/correspondances-bibliotheque|principal|rssi|erreur|bureau;ok;;Justification < 10 caractères ou adresse http : « Proposer » grisé, consignes affichées
 pilotage/correspondances-bibliotheque|sous-perimetre|rssi|vide|bureau;ok;;Idem périmètre principal
-pilotage/correspondances-bibliotheque|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/correspondances-bibliotheque|sous-perimetre|rssi|rempli|bureau;ok;;Correspondances communes à l’organisation (annoncé) : correspondance validée visible
+pilotage/correspondances-bibliotheque|sous-perimetre|rssi|erreur|bureau;ok;;Validation sans motif : bouton grisé, consigne « 10 caractères au moins »
 pilotage/preuves|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter preuve »
-pilotage/preuves|principal|rssi|rempli|bureau;;;
-pilotage/preuves|principal|rssi|erreur|bureau;;;
+pilotage/preuves|principal|rssi|rempli|bureau;ok;;Preuve liée à A-8.13, version de document choisie, relation « Démontre » la mesure, examinée « Validé » , export JSON (objets + décisions, sans les relations : remarque)
+pilotage/preuves|principal|rssi|erreur|bureau;defaut;C3-09;Examen sans observation : « Confirmer » grisé sans message , preuve « À examiner » enregistrée sans version de document
 pilotage/preuves|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter preuve »
-pilotage/preuves|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/preuves|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/preuves|sous-perimetre|rssi|rempli|bureau;ok;;Preuve du sous-périmètre isolée , export du sous-périmètre limité à sa preuve
+pilotage/preuves|sous-perimetre|rssi|erreur|bureau;defaut;C3-09;Intitulé d’espaces : Enregistrer grisé sans message , examen sans observation : Confirmer grisé
 pilotage/controles|principal|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter contrôle »
-pilotage/controles|principal|rssi|rempli|bureau;;;
-pilotage/controles|principal|rssi|erreur|bureau;;;
+pilotage/controles|principal|rssi|rempli|bureau;defaut;C3-10;Contrôle mensuel réalisé (Réussi, justificatif) : « Prochaine échéance » reste 01/11/2026, état « À préparer » , export JSON ok
+pilotage/controles|principal|rssi|erreur|bureau;ok;;Date de réalisation future : « Une réalisation ne peut être datée dans le futur. » , date invalide refusée par le champ date
 pilotage/controles|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message vide et bouton « Ajouter contrôle »
-pilotage/controles|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/controles|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/controles|sous-perimetre|rssi|rempli|bureau;defaut;C3-12;Contrôle trimestriel « Non réussi » enregistré sans écart ni action, sans alerte , isolation correcte
+pilotage/controles|sous-perimetre|rssi|erreur|bureau;ok;;« Définissez l’objectif, la méthode et les critères du contrôle. » puis « Reliez au moins une preuve ou un enregistrement au résultat. »
 pilotage/audits|principal|rssi|vide|bureau;ok;;Programme 9.2 : « 0/0 réalisé(s) en 2026 », 0 fiches, bouton « Ajouter audit »
-pilotage/audits|principal|rssi|rempli|bureau;;;
-pilotage/audits|principal|rssi|erreur|bureau;;;
+pilotage/audits|principal|rssi|rempli|bureau;defaut;BUG-030 C3-13;Fiche « Audit interne 2026 » combinée ISO+HDS créée (référentiels proposés) mais Programme « 0/0 réalisé(s) en 2026, 0 au total » , programme saisi à part (PL-AUD-001) , ni export ni archivage de la fiche
+pilotage/audits|principal|rssi|erreur|bureau;defaut;C3-09;Intitulé vide : Enregistrer grisé sans message
 pilotage/audits|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, bouton « Ajouter audit » , pas de bandeau Programme d’audit sous le sous-périmètre
-pilotage/audits|sous-perimetre|rssi|rempli|bureau;;;
-pilotage/audits|sous-perimetre|rssi|erreur|bureau;;;
+pilotage/audits|sous-perimetre|rssi|rempli|bureau;ok;;Audit HDS 2027 créé sous le sous-périmètre, absent du principal , référentiels hérités proposés
+pilotage/audits|sous-perimetre|rssi|erreur|bureau;defaut;C3-09;Intitulé d’espaces : Enregistrer grisé sans message

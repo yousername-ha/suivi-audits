@@ -137,9 +137,9 @@ systeme/securite|principal|rssi|erreur|bureau;defaut;C6-15;Longueur 8 → 12 et 
 systeme/securite|sous-perimetre|rssi|vide|bureau;;;
 systeme/securite|sous-perimetre|rssi|rempli|bureau;;;
 systeme/securite|sous-perimetre|rssi|erreur|bureau;;;
-systeme/sessions|principal|rssi|vide|bureau;;;
-systeme/sessions|principal|rssi|rempli|bureau;;;
-systeme/sessions|principal|rssi|erreur|bureau;;;
+systeme/sessions|principal|rssi|vide|bureau;ok;;Une seule session, celle du RSSI, marquée « vous », sans bouton de fermeture
+systeme/sessions|principal|rssi|rempli|bureau;ok;;Session API de test6-verrou (navigateur « Session-de-test-agent-6 ») listée avec IP et activité , « Fermer » la supprime aussitôt (GET /api/admin/sessions : seule la session courante reste) , les sessions sont bien closes à la déconnexion. Remarque : ni confirmation ni message après fermeture, bouton « Fermer » sans nom de compte
+systeme/sessions|principal|rssi|erreur|bureau;sans-objet;;Aucune saisie sur cet écran , la session courante n'a pas de bouton de fermeture (refus par construction)
 systeme/sessions|sous-perimetre|rssi|vide|bureau;;;
 systeme/sessions|sous-perimetre|rssi|rempli|bureau;;;
 systeme/sessions|sous-perimetre|rssi|erreur|bureau;;;
@@ -149,42 +149,42 @@ systeme/journal|principal|rssi|erreur|bureau;defaut;C6-14;Filtre Du 13/11/2026 a
 systeme/journal|sous-perimetre|rssi|vide|bureau;;;
 systeme/journal|sous-perimetre|rssi|rempli|bureau;;;
 systeme/journal|sous-perimetre|rssi|erreur|bureau;;;
-systeme/journaux-techniques|principal|rssi|vide|bureau;;;
-systeme/journaux-techniques|principal|rssi|rempli|bureau;;;
-systeme/journaux-techniques|principal|rssi|erreur|bureau;;;
+systeme/journaux-techniques|principal|rssi|vide|bureau;sans-objet;;Le tampon n'est jamais vide (4 231 entrées depuis le démarrage) , filtre sans résultat testé en erreur
+systeme/journaux-techniques|principal|rssi|rempli|bureau;ok;;Entrées Info lisibles (requêtes, contexte JSON) , seul avertissement : WebAuthn non proposé sur adresse IP , aucune erreur ni 5xx , aucun mot de passe ni clé privée dans les 5 000 dernières entrées , seuil passé à « Avertissements et erreurs » (« Seuil de journalisation appliqué. ») puis remis à Info
+systeme/journaux-techniques|principal|rssi|erreur|bureau;ok;;Recherche d'un texte absent : « 1 entrée(s) affichée(s) », la requête de recherche elle-même (comportement cohérent) , pas d'autre saisie libre (listes fermées)
 systeme/journaux-techniques|sous-perimetre|rssi|vide|bureau;;;
 systeme/journaux-techniques|sous-perimetre|rssi|rempli|bureau;;;
 systeme/journaux-techniques|sous-perimetre|rssi|erreur|bureau;;;
-systeme/modules|principal|rssi|vide|bureau;;;
-systeme/modules|principal|rssi|rempli|bureau;;;
-systeme/modules|principal|rssi|erreur|bureau;;;
+systeme/modules|principal|rssi|vide|bureau;ok;;Tous les modules activés, dépendances obligatoires et facultatives listées, « Historique des activations : Aucun changement enregistré. »
+systeme/modules|principal|rssi|rempli|bureau;defaut;C6-23;Fournisseurs désactivé (aperçu des conséquences, saisie VALIDER) : menu masqué, API bloquée (409 « Ce module est désactivé. ») , puis réactivé (GET /api/modules : disabled vide, historique v2 et v3) , mais /pilotage/fournisseurs ouvert directement affiche le titre seul, sans dire que le module est désactivé
+systeme/modules|principal|rssi|erreur|bureau;ok;;Désactiver Audit : aperçu « Plan d'audit nécessite Audit (référentiels et couverture). », saisie VALIDER et Appliquer désactivés , annulation par « Annuler les changements »
 systeme/modules|sous-perimetre|rssi|vide|bureau;;;
 systeme/modules|sous-perimetre|rssi|rempli|bureau;;;
 systeme/modules|sous-perimetre|rssi|erreur|bureau;;;
-systeme/details|principal|rssi|vide|bureau;;;
-systeme/details|principal|rssi|rempli|bureau;;;
-systeme/details|principal|rssi|erreur|bureau;;;
+systeme/details|principal|rssi|vide|bureau;sans-objet;;Écran de relevé sans état vide : il affiche toujours les versions et la volumétrie
+systeme/details|principal|rssi|rempli|bureau;defaut;C6-24;Briques confirmées : Node.js v26.12.1, PostgreSQL 18.6, version « local » , volumétrie à jour (6 comptes, 129 entrées d'audit, 7 versions) , mais « Migrations appliquées » vide alors que GET /api/admin/info en liste 54 , volumétrie en JSON brut, clés techniques de l'ancienne interface, unités mêlées « 14 MB » / « 14 Mo »
+systeme/details|principal|rssi|erreur|bureau;sans-objet;;Écran en lecture seule, aucune saisie
 systeme/details|sous-perimetre|rssi|vide|bureau;;;
 systeme/details|sous-perimetre|rssi|rempli|bureau;;;
 systeme/details|sous-perimetre|rssi|erreur|bureau;;;
-route/setup|principal|rssi|vide|bureau;;;
-route/setup|principal|rssi|rempli|bureau;;;
-route/setup|principal|rssi|erreur|bureau;;;
-route/setup|sous-perimetre|rssi|vide|bureau;;;
-route/setup|sous-perimetre|rssi|rempli|bureau;;;
-route/setup|sous-perimetre|rssi|erreur|bureau;;;
-route/login|principal|rssi|vide|bureau;;;
-route/login|principal|rssi|rempli|bureau;;;
-route/login|principal|rssi|erreur|bureau;;;
-route/login|sous-perimetre|rssi|vide|bureau;;;
-route/login|sous-perimetre|rssi|rempli|bureau;;;
-route/login|sous-perimetre|rssi|erreur|bureau;;;
-route/account|principal|rssi|vide|bureau;;;
-route/account|principal|rssi|rempli|bureau;;;
-route/account|principal|rssi|erreur|bureau;;;
-route/account|sous-perimetre|rssi|vide|bureau;;;
-route/account|sous-perimetre|rssi|rempli|bureau;;;
-route/account|sous-perimetre|rssi|erreur|bureau;;;
+route/setup|principal|rssi|vide|bureau;defaut;BUG-018;Installation complète sur pile vierge (GET /api/setup needed true, adminExists false) : poivre, clé de secours, jeton, compte rssi, TOTP , « Toggle password visibility » sur « Votre poivre », « Mot de passe » et « Confirmation » , étape clé de sécurité absente sur adresse IP (attendu)
+route/setup|principal|rssi|rempli|bureau;ok;;Après installation : GET /api/setup needed false, adminExists true, poivre et clé de secours définis , /setup redirige vers l'accueil , journal : setup.admin_created, securite.poivre_defini, sauvegarde.cle_secours_definie, account.mfa_enrolled
+route/setup|principal|rssi|erreur|bureau;ok;;Fin de poivre fausse : « Ne correspond pas à la fin du poivre. » , poivre saisi trop court : entropie et règles listées , fin de clé privée fausse refusée , mot de passe court « À corriger : au moins 12 caractères. » , confirmation différente , jeton absent ou faux (401, « Jeton d'installation invalide… ») , code TOTP faux « Code incorrect. Vérifiez l'heure du téléphone » , tentative tracée setup.failed
+route/setup|sous-perimetre|rssi|vide|bureau;sans-objet;;L'installation précède toute notion de périmètre (le périmètre racine est créé par l'application)
+route/setup|sous-perimetre|rssi|rempli|bureau;sans-objet;;L'installation précède toute notion de périmètre , sous-périmètre Hébergement HDS créé ensuite dans Périmètres
+route/setup|sous-perimetre|rssi|erreur|bureau;sans-objet;;L'installation précède toute notion de périmètre
+route/login|principal|rssi|vide|bureau;ok;;Écran Connexion : Identifiant, Mot de passe, « Afficher la saisie » (nom français), « Mot de passe oublié ou compte verrouillé ? Un administrateur peut le réinitialiser. » , retour à la page demandée (next=/systeme) après connexion
+route/login|principal|rssi|rempli|bureau;ok;;Première connexion de test6-verrou : mot de passe temporaire, enrôlement TOTP, changement de mot de passe imposé, puis tableau de bord , reconnexion rssi avec TOTP , last_login_at renseigné à la connexion
+route/login|principal|rssi|erreur|bureau;ok;;6 mauvais mots de passe sur test6-verrou puis le bon : message générique « Identifiant ou mot de passe incorrect, ou compte temporairement verrouillé… » (pas d'énumération) , alerte au RSSI « Compte verrouillé : test6-verrou… 5 échecs… Fin prévue 22:04 » , état « verrouillé » et bouton Déverrouiller dans Utilisateurs (déverrouillage sans confirmation ni message) , changement de mot de passe : « Mot de passe actuel incorrect. » , boutons « Toggle password visibility » sur l'écran de changement (BUG-018)
+route/login|sous-perimetre|rssi|vide|bureau;sans-objet;;La connexion ne dépend d'aucun périmètre
+route/login|sous-perimetre|rssi|rempli|bureau;sans-objet;;La connexion ne dépend d'aucun périmètre (accès au sous-périmètre testé dans Configuration du pilotage)
+route/login|sous-perimetre|rssi|erreur|bureau;sans-objet;;La connexion ne dépend d'aucun périmètre
+route/account|principal|rssi|vide|bureau;ok;;Mon compte : affichage (taille, densité, thème « Organisation »), notifications « Non défini (hérite) » avec résultat calculé, « Aucune adresse courriel », mot de passe, double authentification, clés FIDO2 non proposées sur IP (message), sessions ouvertes « cette session »
+route/account|principal|rssi|rempli|bureau;ok;;Densité Compacte et thème Sombre enregistrés aussitôt (GET /api/account/preferences : compacte, sombre , capture relue) puis remis à « Organisation » , alerte de sécurité « Compte verrouillé : test6-verrou » marquée comme lue
+route/account|principal|rssi|erreur|bureau;defaut;BUG-018;Confirmation différente : « Les deux saisies ne correspondent pas. » , mot de passe actuel faux : « Mot de passe actuel incorrect. » (401) , nouveau téléphone avec mot de passe faux : « Mot de passe incorrect. » (401) , quatre boutons « Toggle password visibility » (mot de passe actuel, nouveau, confirmation, double authentification)
+route/account|sous-perimetre|rssi|vide|bureau;sans-objet;;Préférences personnelles indépendantes du périmètre
+route/account|sous-perimetre|rssi|rempli|bureau;sans-objet;;Préférences personnelles indépendantes du périmètre
+route/account|sous-perimetre|rssi|erreur|bureau;sans-objet;;Préférences personnelles indépendantes du périmètre
 route/aide|principal|rssi|vide|bureau;;;
 route/aide|principal|rssi|rempli|bureau;;;
 route/aide|principal|rssi|erreur|bureau;;;
