@@ -118,6 +118,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : lecture des PDF** : le texte des PDF déposés est lu comme celui des autres documents (500 pages au plus).
+  Les PDF numérisés, protégés par mot de passe ou illisibles sont signalés « non lus ». Nouvelle dépendance de l'API,
+  `pdfjs-dist` (Mozilla, Apache-2.0), exécutée seulement dans le processus d'extraction isolé ; choix à confirmer par le RSSI.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : vue d'ensemble de la gouvernance** : l'assistant lit en un appel l'état de tous les périmètres (retards,
   risques à revoir, couverture) et les échéances d'audit. Il lit aussi, avec les droits de la personne, le plan d'audit, les
   incidents, les évaluations des fournisseurs et les applications à intégrer. Ces rubriques d'organisation ne sont ouvertes

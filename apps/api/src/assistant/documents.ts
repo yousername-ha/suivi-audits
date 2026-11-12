@@ -6,6 +6,8 @@
      profil y est autorisé, et jusqu'au niveau de classification réglé pour ce profil.
    - Aucun texte de norme n'est reconstitué : seul ce que l'organisation a déposé est lu. */
 import { spawn } from 'node:child_process';
+import { existsSync, realpathSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sql } from 'kysely';
@@ -16,6 +18,7 @@ import type { Db } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 import { extraireTexte, type Extraction } from './extraction.js';
+import { extrairePdf } from './extraction-pdf.js';
 import type { Assistant } from './index.js';
 import type { LectureDocuments } from './outils.js';
 
@@ -31,6 +34,20 @@ const ENTREE = fileURLToPath(new URL('../assistant-extracteur.js', import.meta.u
     courant. L'isolation par processus séparé vaut pour l'image construite (dist). */
 const ISOLE = !import.meta.url.endsWith('.ts');
 
+/** Dossiers que le processus d'extraction peut lire : le code de l'application et la bibliothèque PDF, rien d'autre. */
+function dossiersLisibles(entree: string): string[] {
+  const dossiers = [path.dirname(entree)];
+  // pnpm installe par lien symbolique : Node lit le lien (dans un dossier node_modules parent) puis sa cible. Les deux
+  // doivent être lisibles ; rien d'autre de node_modules ne l'est.
+  for (const base of createRequire(import.meta.url).resolve.paths('pdfjs-dist') ?? []) {
+    const lien = path.join(base, 'pdfjs-dist');
+    if (!existsSync(lien)) continue;
+    dossiers.push(lien, realpathSync(lien));
+    break;
+  }
+  return [...new Set(dossiers)];
+}
+
 /** Extraction dans un processus fils sans droits : pas d'écriture, lecture limitée au code de l'application, pas de
     processus fils, aucune variable d'environnement, mémoire et durée bornées. */
 export function extraireIsole(ext: string, buf: Buffer, entree = ENTREE): Promise<Extraction> {
@@ -38,7 +55,13 @@ export function extraireIsole(ext: string, buf: Buffer, entree = ENTREE): Promis
     const echec = (motif: string) => resolve({ etat: 'non_lu', motif });
     const fils = spawn(
       process.execPath,
-      ['--permission', `--allow-fs-read=${path.dirname(entree)}`, '--max-old-space-size=256', entree, ext],
+      [
+        '--permission',
+        ...dossiersLisibles(entree).map((d) => `--allow-fs-read=${d}`),
+        '--max-old-space-size=384',
+        entree,
+        ext,
+      ],
       { env: {}, stdio: ['pipe', 'pipe', 'ignore'], timeout: DELAI_MS },
     );
     const morceaux: Buffer[] = [];
@@ -127,7 +150,11 @@ export class DocumentsAssistant {
             `doc:${v.id}:${v.version}`,
           );
           const ext = v.filename.split('.').pop() ?? '';
-          r = ISOLE ? await extraireIsole(ext, clair) : extraireTexte(ext, clair);
+          r = ISOLE
+            ? await extraireIsole(ext, clair)
+            : ext.toLowerCase() === 'pdf'
+              ? await extrairePdf(clair)
+              : extraireTexte(ext, clair);
         } catch (e) {
           this.log.warn({ id: v.id, err: (e as Error).message }, 'assistant : extraction impossible');
           r = { etat: 'non_lu', motif: 'Le document n’a pas pu être déchiffré.' };

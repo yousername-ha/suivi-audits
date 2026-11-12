@@ -226,8 +226,8 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
             Profils et périmètres
           </Title>
           <Text size="sm" c="dimmed">
-            Documents : {d.indexDocuments.extraits} lus, {d.indexDocuments.nonLus} non lus (PDF, anciens formats,
-            images), {d.indexDocuments.enAttente} en attente de lecture.
+            Documents : {d.indexDocuments.extraits} lus, {d.indexDocuments.nonLus} non lus (anciens formats, images, PDF
+            numérisés), {d.indexDocuments.enAttente} en attente de lecture.
           </Text>
           <Text size="sm" c="dimmed">
             Un profil est un rôle de l’assistant, avec ses propres accès, sa mémoire et ses missions. Les deux profils
@@ -273,7 +273,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                 />
                 <Switch
                   label={`Le profil « ${p.libelle} » peut lire les documents`}
-                  description="Coché (par défaut) : l’assistant cherche et lit le texte des documents déposés (hors PDF et images). Ce texte est gardé en clair dans la base pour la recherche, et les extraits lus partent chez le fournisseur du modèle. Décoché pour les deux profils : cet index est effacé."
+                  description="Coché (par défaut) : l’assistant cherche et lit le texte des documents déposés (PDF compris ; pas les images ni les PDF numérisés). Ce texte est gardé en clair dans la base pour la recherche, et les extraits lus partent chez le fournisseur du modèle. Décoché pour les deux profils : cet index est effacé."
                   checked={p.documents}
                   onChange={(e) => maj({ documents: e.currentTarget.checked })}
                   disabled={!p.actif}

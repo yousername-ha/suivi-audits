@@ -430,3 +430,22 @@ Demande du RSSI : l'assistant doit avoir une vue globale de la gouvernance. Réa
   périmètres** ; un profil limité à une liste de périmètres n'a pas de vue d'organisation.
 - **Non couvert** : gestion de crise, retours d'expérience, cartographie, PESTEL.
 - Vérifié par les tests automatisés avec un faux modèle ; les rubriques étaient vides dans ces tests, sauf les actions.
+
+## Addendum du 12/11/2026 — lecture des PDF (point 12, suite du lot A4)
+
+Le RSSI a demandé, le 12/11/2026, de réaliser la lecture des PDF à la suite de la vue d'ensemble et des rubriques
+d'organisation. **Le choix de la bibliothèque est proposé par la session et reste à confirmer par le RSSI** à la relecture.
+
+- **Dépendance nouvelle : `pdfjs-dist` 6.5.438** (Mozilla, Apache-2.0, celle de Firefox), dans l'API. Aucune dépendance
+  obligatoire ; son module graphique natif facultatif `@napi-rs/canvas` n'est ni résolu ni installé
+  (`ignoredOptionalDependencies`). Version publiée le 01/11/2026, donc conforme au délai de sept jours du dépôt. Poids :
+  environ 38 Mo de plus dans l'image de l'API. Écrire un lecteur de PDF dans le projet a été écarté : format trop vaste pour
+  être lu de façon fiable et sûre par du code maison.
+- **Isolation inchangée** : la bibliothèque n'est chargée que par le processus d'extraction (`assistant-extracteur`), lancé
+  avec le modèle de permissions de Node. Il peut lire le code de l'application et le dossier de cette bibliothèque, rien
+  d'autre. Vérifié sur une construction locale : un PDF fictif est lu ; `/etc/passwd`, une autre bibliothèque de
+  `node_modules` et un fichier du dépôt sont refusés. Mémoire portée à 384 Mo pour ce processus.
+- **Bornes** : 500 pages, 400 000 caractères. Un PDF numérisé (images sans texte), protégé par mot de passe ou illisible est
+  marqué « non lu » avec son motif. Aucune reconnaissance de caractères.
+- **Non vérifié** : la construction de l'image Docker avec cette dépendance, et des PDF réels variés (un seul PDF fictif,
+  texte simple).

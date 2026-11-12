@@ -1,7 +1,7 @@
 /* Extraction du texte d'un document (ADR 0086, point 12). Fonctions pures, bibliothèque standard de Node uniquement, sans
-   accès au réseau ni au disque : elles reçoivent des octets et rendent du texte borné. Formats lus : texte brut et formats
-   bureautiques ouverts (archives ZIP de fichiers XML). PDF, anciens formats binaires et images ne sont pas lus : ils
-   demandent une bibliothèque tierce (dépendance nouvelle, à décider par addendum). En production, ce code s'exécute dans un
+   accès au réseau ni au disque : elles reçoivent des octets et rendent du texte borné. Formats lus ici : texte brut et formats
+   bureautiques ouverts (archives ZIP de fichiers XML). Le PDF est lu à part (extraction-pdf.ts, par pdfjs-dist). Anciens
+   formats binaires et images ne sont pas lus. En production, ce code s'exécute dans un
    processus séparé et sans droits (assistant-extracteur). */
 import { inflateRawSync } from 'node:zlib';
 
@@ -14,7 +14,6 @@ export type Extraction = { etat: 'extrait'; texte: string } | { etat: 'non_lu'; 
 
 const TEXTE = new Set(['txt', 'md', 'csv', 'json', 'xml', 'log', 'eml']);
 const NON_LUS: Record<string, string> = {
-  pdf: 'Le format PDF n’est pas encore lu par l’assistant.',
   doc: 'L’ancien format Word (.doc) n’est pas lu : enregistrer le document en .docx.',
   xls: 'L’ancien format Excel (.xls) n’est pas lu : enregistrer le document en .xlsx.',
   ppt: 'L’ancien format PowerPoint (.ppt) n’est pas lu : enregistrer le document en .pptx.',

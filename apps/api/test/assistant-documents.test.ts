@@ -5,6 +5,7 @@ import { deflateRawSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { ReglagesAssistantDto } from '@suivi/shared';
 import { extraireTexte } from '../src/assistant/extraction.js';
+import { extrairePdf } from '../src/assistant/extraction-pdf.js';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
@@ -45,6 +46,37 @@ function zip(entrees: Record<string, string>, o: { tailleDeclaree?: number; drap
   fin.writeUInt32LE(decalage, 16);
   return Buffer.concat([...locaux, cd, fin]);
 }
+/** PDF fictif d'une page, sans compression, avec la phrase donnée (encodage WinAnsi). */
+function pdf(phrase: string): Buffer {
+  const flux = Buffer.concat([
+    Buffer.from('BT /F1 12 Tf 72 760 Td ('),
+    Buffer.from(phrase, 'latin1'),
+    Buffer.from(') Tj ET'),
+  ]);
+  const objets = [
+    Buffer.from('<< /Type /Catalog /Pages 2 0 R >>'),
+    Buffer.from('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'),
+    Buffer.from(
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    ),
+    Buffer.concat([Buffer.from(`<< /Length ${flux.length} >>\nstream\n`), flux, Buffer.from('\nendstream')]),
+    Buffer.from('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'),
+  ];
+  let sortie = Buffer.from('%PDF-1.4\n');
+  const positions: number[] = [];
+  objets.forEach((o, i) => {
+    positions.push(sortie.length);
+    sortie = Buffer.concat([sortie, Buffer.from(`${i + 1} 0 obj\n`), o, Buffer.from('\nendobj\n')]);
+  });
+  const xref = sortie.length;
+  const table = positions.map((p) => String(p).padStart(10, '0') + ' 00000 n \n').join('');
+  return Buffer.concat([
+    sortie,
+    Buffer.from(
+      `xref\n0 6\n0000000000 65535 f \n${table}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`,
+    ),
+  ]);
+}
 const DOCX = zip({
   '[Content_Types].xml': '<Types/>',
   'word/document.xml':
@@ -52,6 +84,18 @@ const DOCX = zip({
 });
 
 describe('extraction du texte d’un document', () => {
+  it('lit le texte d’un PDF, et dit pourquoi un PDF illisible ne l’est pas', async () => {
+    expect(await extrairePdf(pdf('Politique fictive : test de restauration chaque trimestre.'))).toEqual({
+      etat: 'extrait',
+      texte: 'Politique fictive : test de restauration chaque trimestre.',
+    });
+    expect(await extrairePdf(Buffer.from('%PDF-1.4 fichier fictif tronqué'))).toEqual({
+      etat: 'non_lu',
+      motif: 'Le PDF n’a pas pu être lu.',
+    });
+    expect(await extrairePdf(pdf(' '))).toMatchObject({ etat: 'non_lu' });
+  });
+
   it('lit le texte brut et le borne', () => {
     expect(extraireTexte('txt', Buffer.from('Procédure fictive\n\n\n\nÉtape 1\u0000'))).toEqual({
       etat: 'extrait',
@@ -90,10 +134,6 @@ describe('extraction du texte d’un document', () => {
   });
 
   it('dit pourquoi un format n’est pas lu, et ne lève jamais sur un fichier piégé', () => {
-    expect(extraireTexte('pdf', Buffer.from('%PDF-1.4'))).toEqual({
-      etat: 'non_lu',
-      motif: 'Le format PDF n’est pas encore lu par l’assistant.',
-    });
     expect(extraireTexte('png', Buffer.alloc(10))).toMatchObject({ etat: 'non_lu' });
     // Archive tronquée, entrée annoncée énorme, archive chiffrée, bombe de décompression.
     expect(extraireTexte('docx', DOCX.subarray(0, 40))).toMatchObject({ etat: 'non_lu' });
@@ -190,7 +230,7 @@ const textes = async () =>
     )
   ).rows;
 
-let politique: string, secret: string, pdf: string;
+let politique: string, secret: string, rapportPdf: string;
 
 beforeAll(async () => {
   modele = new FauxModele();
@@ -210,7 +250,7 @@ beforeAll(async () => {
     title: 'Note fictive confidentielle',
     classification: 'confidentiel',
   });
-  pdf = await deposer(
+  rapportPdf = await deposer(
     'rapport-fictif.pdf',
     Buffer.from('%PDF-1.4\n% test\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n'),
     {
@@ -238,7 +278,7 @@ describe('assistant : index des documents', () => {
     expect(await t.svc.assistantDocuments.indexer()).toBe(0);
     const l = await textes();
     expect(l.find((x) => x.document_id === politique)).toMatchObject({ version: 1, etat: 'extrait' });
-    expect(l.find((x) => x.document_id === pdf)).toMatchObject({ etat: 'non_lu' });
+    expect(l.find((x) => x.document_id === rapportPdf)).toMatchObject({ etat: 'non_lu' });
     expect(((await admin.get(`${base}/reglages`)).json() as ReglagesAssistantDto).indexDocuments).toEqual({
       extraits: 2,
       nonLus: 1,
@@ -262,9 +302,9 @@ describe('assistant : index des documents', () => {
       parties: 1,
       titre: 'Politique fictive de sauvegarde',
     });
-    expect(await outil(admin, 'lire_document', { id: pdf })).toMatchObject({
+    expect(await outil(admin, 'lire_document', { id: rapportPdf })).toMatchObject({
       lisible: false,
-      motif: 'Le format PDF n’est pas encore lu par l’assistant.',
+      motif: 'Le PDF n’a pas pu être lu.',
     });
 
     await regler({ classificationMax: 'confidentiel' });
@@ -273,6 +313,21 @@ describe('assistant : index des documents', () => {
     };
     expect(large.documents.map((d) => d.id).sort()).toEqual([politique, secret].sort());
     await regler({ classificationMax: 'interne' });
+  });
+
+  it('lit un PDF déposé comme les autres documents', async () => {
+    const id = await deposer('procedure-fictive.pdf', pdf('Procédure fictive de gestion des habilitations.'), {
+      title: 'Procédure fictive des habilitations',
+    });
+    expect(await t.svc.assistantDocuments.indexer()).toBe(1);
+    const r = (await outil(admin, 'chercher_documents', { recherche: 'habilitations' })) as {
+      documents: { id: string }[];
+    };
+    expect(r.documents.map((d) => d.id)).toContain(id);
+    expect(await outil(admin, 'lire_document', { id })).toMatchObject({
+      lisible: true,
+      texte: 'Procédure fictive de gestion des habilitations.',
+    });
   });
 
   it('refuse les documents à une personne qui n’a pas le droit de les lire', async () => {
