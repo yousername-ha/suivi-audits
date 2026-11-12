@@ -1,211 +1,211 @@
 cellule;resultat;constat;commentaire
-pilotage/audit-pronostic|principal|administrateur|rempli|bureau;;;
-pilotage/audit-pronostic|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audit-pronostic|principal|contributeur|rempli|bureau;;;
-pilotage/audit-pronostic|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audit-pronostic|principal|lecteur|rempli|bureau;;;
-pilotage/audit-pronostic|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audit-pronostic|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audit-pronostic|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audit-pronostic|restreint|contributeur|rempli|bureau;;;
-pilotage/audit-pronostic|principal|rssi|rempli|telephone;;;
-pilotage/audit-couverture|principal|administrateur|rempli|bureau;;;
-pilotage/audit-couverture|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audit-couverture|principal|contributeur|rempli|bureau;;;
-pilotage/audit-couverture|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audit-couverture|principal|lecteur|rempli|bureau;;;
-pilotage/audit-couverture|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audit-couverture|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audit-couverture|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audit-couverture|restreint|contributeur|rempli|bureau;;;
-pilotage/audit-couverture|principal|rssi|rempli|telephone;;;
-pilotage/audit-deroule|principal|administrateur|rempli|bureau;;;
-pilotage/audit-deroule|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audit-deroule|principal|contributeur|rempli|bureau;;;
-pilotage/audit-deroule|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audit-deroule|principal|lecteur|rempli|bureau;;;
-pilotage/audit-deroule|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audit-deroule|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audit-deroule|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audit-deroule|restreint|contributeur|rempli|bureau;;;
-pilotage/audit-deroule|principal|rssi|rempli|telephone;;;
-pilotage/audit-planning|principal|administrateur|rempli|bureau;;;
-pilotage/audit-planning|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audit-planning|principal|contributeur|rempli|bureau;;;
-pilotage/audit-planning|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audit-planning|principal|lecteur|rempli|bureau;;;
-pilotage/audit-planning|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audit-planning|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audit-planning|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audit-planning|restreint|contributeur|rempli|bureau;;;
-pilotage/audit-planning|principal|rssi|rempli|telephone;;;
-pilotage/audit-participants|principal|administrateur|rempli|bureau;;;
-pilotage/audit-participants|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audit-participants|principal|contributeur|rempli|bureau;;;
-pilotage/audit-participants|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audit-participants|principal|lecteur|rempli|bureau;;;
-pilotage/audit-participants|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audit-participants|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audit-participants|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audit-participants|restreint|contributeur|rempli|bureau;;;
-pilotage/audit-participants|principal|rssi|rempli|telephone;;;
-pilotage/referentiels|principal|administrateur|rempli|bureau;;;
-pilotage/referentiels|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/referentiels|principal|contributeur|rempli|bureau;;;
-pilotage/referentiels|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/referentiels|principal|lecteur|rempli|bureau;;;
-pilotage/referentiels|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/referentiels|principal|auditeur_externe|rempli|bureau;;;
-pilotage/referentiels|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/referentiels|restreint|contributeur|rempli|bureau;;;
-pilotage/referentiels|principal|rssi|rempli|telephone;;;
-pilotage/bibliotheque|principal|administrateur|rempli|bureau;;;
-pilotage/bibliotheque|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/bibliotheque|principal|contributeur|rempli|bureau;;;
-pilotage/bibliotheque|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/bibliotheque|principal|lecteur|rempli|bureau;;;
-pilotage/bibliotheque|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/bibliotheque|principal|auditeur_externe|rempli|bureau;;;
-pilotage/bibliotheque|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/bibliotheque|restreint|contributeur|rempli|bureau;;;
-pilotage/bibliotheque|principal|rssi|rempli|telephone;;;
-pilotage/dda-iso|principal|administrateur|rempli|bureau;;;
-pilotage/dda-iso|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/dda-iso|principal|contributeur|rempli|bureau;;;
-pilotage/dda-iso|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/dda-iso|principal|lecteur|rempli|bureau;;;
-pilotage/dda-iso|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/dda-iso|principal|auditeur_externe|rempli|bureau;;;
-pilotage/dda-iso|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/dda-iso|restreint|contributeur|rempli|bureau;;;
-pilotage/dda-iso|principal|rssi|rempli|telephone;;;
-pilotage/dda-annexe-a|principal|administrateur|rempli|bureau;;;
-pilotage/dda-annexe-a|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/dda-annexe-a|principal|contributeur|rempli|bureau;;;
-pilotage/dda-annexe-a|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/dda-annexe-a|principal|lecteur|rempli|bureau;;;
-pilotage/dda-annexe-a|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/dda-annexe-a|principal|auditeur_externe|rempli|bureau;;;
-pilotage/dda-annexe-a|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/dda-annexe-a|restreint|contributeur|rempli|bureau;;;
-pilotage/dda-annexe-a|principal|rssi|rempli|telephone;;;
-pilotage/dda-hds|principal|administrateur|rempli|bureau;;;
-pilotage/dda-hds|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/dda-hds|principal|contributeur|rempli|bureau;;;
-pilotage/dda-hds|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/dda-hds|principal|lecteur|rempli|bureau;;;
-pilotage/dda-hds|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/dda-hds|principal|auditeur_externe|rempli|bureau;;;
-pilotage/dda-hds|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/dda-hds|restreint|contributeur|rempli|bureau;;;
-pilotage/dda-hds|principal|rssi|rempli|telephone;;;
-pilotage/applicabilite|principal|administrateur|rempli|bureau;;;
-pilotage/applicabilite|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/applicabilite|principal|contributeur|rempli|bureau;;;
-pilotage/applicabilite|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/applicabilite|principal|lecteur|rempli|bureau;;;
-pilotage/applicabilite|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/applicabilite|principal|auditeur_externe|rempli|bureau;;;
-pilotage/applicabilite|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/applicabilite|restreint|contributeur|rempli|bureau;;;
-pilotage/applicabilite|principal|rssi|rempli|telephone;;;
-pilotage/mesures|principal|administrateur|rempli|bureau;;;
-pilotage/mesures|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/mesures|principal|contributeur|rempli|bureau;;;
-pilotage/mesures|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/mesures|principal|lecteur|rempli|bureau;;;
-pilotage/mesures|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/mesures|principal|auditeur_externe|rempli|bureau;;;
-pilotage/mesures|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/mesures|restreint|contributeur|rempli|bureau;;;
-pilotage/mesures|principal|rssi|rempli|telephone;;;
-pilotage/correspondances|principal|administrateur|rempli|bureau;;;
-pilotage/correspondances|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/correspondances|principal|contributeur|rempli|bureau;;;
-pilotage/correspondances|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/correspondances|principal|lecteur|rempli|bureau;;;
-pilotage/correspondances|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/correspondances|principal|auditeur_externe|rempli|bureau;;;
-pilotage/correspondances|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/correspondances|restreint|contributeur|rempli|bureau;;;
-pilotage/correspondances|principal|rssi|rempli|telephone;;;
-pilotage/rapprochements|principal|administrateur|rempli|bureau;;;
-pilotage/rapprochements|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/rapprochements|principal|contributeur|rempli|bureau;;;
-pilotage/rapprochements|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/rapprochements|principal|lecteur|rempli|bureau;;;
-pilotage/rapprochements|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/rapprochements|principal|auditeur_externe|rempli|bureau;;;
-pilotage/rapprochements|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/rapprochements|restreint|contributeur|rempli|bureau;;;
-pilotage/rapprochements|principal|rssi|rempli|telephone;;;
-pilotage/couverture|principal|administrateur|rempli|bureau;;;
-pilotage/couverture|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/couverture|principal|contributeur|rempli|bureau;;;
-pilotage/couverture|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/couverture|principal|lecteur|rempli|bureau;;;
-pilotage/couverture|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/couverture|principal|auditeur_externe|rempli|bureau;;;
-pilotage/couverture|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/couverture|restreint|contributeur|rempli|bureau;;;
-pilotage/couverture|principal|rssi|rempli|telephone;;;
-pilotage/analyser-service|principal|administrateur|rempli|bureau;;;
-pilotage/analyser-service|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/analyser-service|principal|contributeur|rempli|bureau;;;
-pilotage/analyser-service|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/analyser-service|principal|lecteur|rempli|bureau;;;
-pilotage/analyser-service|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/analyser-service|principal|auditeur_externe|rempli|bureau;;;
-pilotage/analyser-service|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/analyser-service|restreint|contributeur|rempli|bureau;;;
-pilotage/analyser-service|principal|rssi|rempli|telephone;;;
-pilotage/gap-applications|principal|administrateur|rempli|bureau;;;
-pilotage/gap-applications|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/gap-applications|principal|contributeur|rempli|bureau;;;
-pilotage/gap-applications|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/gap-applications|principal|lecteur|rempli|bureau;;;
-pilotage/gap-applications|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/gap-applications|principal|auditeur_externe|rempli|bureau;;;
-pilotage/gap-applications|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/gap-applications|restreint|contributeur|rempli|bureau;;;
-pilotage/gap-applications|principal|rssi|rempli|telephone;;;
-pilotage/correspondances-bibliotheque|principal|administrateur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|principal|contributeur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|principal|lecteur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|principal|auditeur_externe|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|restreint|contributeur|rempli|bureau;;;
-pilotage/correspondances-bibliotheque|principal|rssi|rempli|telephone;;;
-pilotage/preuves|principal|administrateur|rempli|bureau;;;
-pilotage/preuves|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/preuves|principal|contributeur|rempli|bureau;;;
-pilotage/preuves|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/preuves|principal|lecteur|rempli|bureau;;;
-pilotage/preuves|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/preuves|principal|auditeur_externe|rempli|bureau;;;
-pilotage/preuves|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/preuves|restreint|contributeur|rempli|bureau;;;
-pilotage/preuves|principal|rssi|rempli|telephone;;;
-pilotage/controles|principal|administrateur|rempli|bureau;;;
-pilotage/controles|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/controles|principal|contributeur|rempli|bureau;;;
-pilotage/controles|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/controles|principal|lecteur|rempli|bureau;;;
-pilotage/controles|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/controles|principal|auditeur_externe|rempli|bureau;;;
-pilotage/controles|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/controles|restreint|contributeur|rempli|bureau;;;
-pilotage/controles|principal|rssi|rempli|telephone;;;
-pilotage/audits|principal|administrateur|rempli|bureau;;;
-pilotage/audits|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/audits|principal|contributeur|rempli|bureau;;;
-pilotage/audits|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/audits|principal|lecteur|rempli|bureau;;;
-pilotage/audits|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/audits|principal|auditeur_externe|rempli|bureau;;;
-pilotage/audits|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/audits|restreint|contributeur|rempli|bureau;;;
-pilotage/audits|principal|rssi|rempli|telephone;;;
+pilotage/audit-pronostic|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audit-pronostic|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-pronostic|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audit-pronostic|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-pronostic|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audit-pronostic|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-pronostic|principal|auditeur_externe|rempli|bureau;defaut;T3-06;Lecture seule correcte, mais A.5.15 affichée « Très probable » au lieu de « Certain, écart ouvert » (écarts non lisibles par l’auditeur, sans le signaler)
+pilotage/audit-pronostic|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T3-06 C3-01;Lecture seule correcte, mais A.5.15 affichée « Très probable » au lieu de « Certain, écart ouvert » (écarts non lisibles par l’auditeur, sans le signaler), données du principal (C3-01)
+pilotage/audit-pronostic|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audit-pronostic|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/audit-couverture|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audit-couverture|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-couverture|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audit-couverture|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-couverture|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audit-couverture|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-couverture|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/audit-couverture|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-couverture|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audit-couverture|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/audit-deroule|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audit-deroule|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-deroule|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audit-deroule|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-deroule|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audit-deroule|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-deroule|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/audit-deroule|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-deroule|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audit-deroule|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/audit-planning|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audit-planning|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-planning|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audit-planning|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-planning|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audit-planning|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-planning|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/audit-planning|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-planning|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audit-planning|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/audit-participants|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audit-participants|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-participants|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audit-participants|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-participants|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audit-participants|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-participants|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/audit-participants|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/audit-participants|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audit-participants|principal|rssi|rempli|telephone;defaut;T3-04;390 × 844 : champs Nom et Fonction réduits à quelques caractères (« Pilot », « P ») dans le tableau défilant
+pilotage/referentiels|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/referentiels|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/referentiels|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/referentiels|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/referentiels|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/referentiels|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/referentiels|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/referentiels|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/referentiels|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/referentiels|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/bibliotheque|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/bibliotheque|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/bibliotheque|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/bibliotheque|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/bibliotheque|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/bibliotheque|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/bibliotheque|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/bibliotheque|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/bibliotheque|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/bibliotheque|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/dda-iso|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/dda-iso|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-iso|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/dda-iso|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-iso|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/dda-iso|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-iso|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/dda-iso|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-iso|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/dda-iso|principal|rssi|rempli|telephone;defaut;T3-03;390 × 844 : valeurs choisies « Applicable » / « Mise en œuvre » invisibles (listes de 52 et 42 px, seule la croix d’effacement s’affiche), pas de défilement horizontal de la page
+pilotage/dda-annexe-a|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/dda-annexe-a|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-annexe-a|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/dda-annexe-a|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-annexe-a|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/dda-annexe-a|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-annexe-a|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/dda-annexe-a|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-annexe-a|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/dda-annexe-a|principal|rssi|rempli|telephone;defaut;T3-03;390 × 844 : valeurs choisies « Applicable » / « Mise en œuvre » invisibles (listes de 52 et 42 px, seule la croix d’effacement s’affiche), pas de défilement horizontal de la page
+pilotage/dda-hds|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/dda-hds|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-hds|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/dda-hds|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-hds|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/dda-hds|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-hds|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/dda-hds|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/dda-hds|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/dda-hds|principal|rssi|rempli|telephone;defaut;T3-03;390 × 844 : valeurs choisies « Applicable » / « Mise en œuvre » invisibles (listes de 52 et 42 px, seule la croix d’effacement s’affiche), pas de défilement horizontal de la page
+pilotage/applicabilite|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/applicabilite|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/applicabilite|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/applicabilite|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/applicabilite|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/applicabilite|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/applicabilite|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/applicabilite|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/applicabilite|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/applicabilite|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/mesures|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/mesures|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/mesures|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/mesures|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/mesures|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/mesures|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/mesures|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/mesures|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/mesures|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/mesures|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/correspondances|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/correspondances|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/correspondances|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/correspondances|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/correspondances|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/correspondances|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/correspondances|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/correspondances|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/correspondances|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/correspondances|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/rapprochements|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/rapprochements|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/rapprochements|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/rapprochements|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/rapprochements|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/rapprochements|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/rapprochements|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/rapprochements|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/rapprochements|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/rapprochements|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/couverture|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/couverture|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/couverture|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/couverture|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/couverture|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/couverture|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/couverture|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/couverture|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/couverture|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/couverture|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/analyser-service|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/analyser-service|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/analyser-service|principal|contributeur|rempli|bureau;defaut;T3-02;« Créer le service » actif pour le contributeur puis refus POST /api/grc/smsis 403 « Droit requis : pilotage:administrer » en fin d’assistant
+pilotage/analyser-service|sous-perimetre|contributeur|rempli|bureau;defaut;T3-02;« Créer le service » actif pour le contributeur puis refus POST /api/grc/smsis 403 « Droit requis : pilotage:administrer » en fin d’assistant
+pilotage/analyser-service|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/analyser-service|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/analyser-service|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/analyser-service|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/analyser-service|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/analyser-service|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/gap-applications|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/gap-applications|sous-perimetre|administrateur|rempli|bureau;defaut;C3-01;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/gap-applications|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/gap-applications|sous-perimetre|contributeur|rempli|bureau;defaut;C3-01;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/gap-applications|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/gap-applications|sous-perimetre|lecteur|rempli|bureau;defaut;C3-01;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/gap-applications|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/gap-applications|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C3-01;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre), droits respectés, mais données du principal affichées (C3-01)
+pilotage/gap-applications|restreint|contributeur|rempli|bureau;defaut;T3-01 C3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/gap-applications|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/correspondances-bibliotheque|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/correspondances-bibliotheque|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/correspondances-bibliotheque|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/correspondances-bibliotheque|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/correspondances-bibliotheque|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/correspondances-bibliotheque|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/correspondances-bibliotheque|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/correspondances-bibliotheque|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/correspondances-bibliotheque|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/correspondances-bibliotheque|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
+pilotage/preuves|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/preuves|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/preuves|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/preuves|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/preuves|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/preuves|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/preuves|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/preuves|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/preuves|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/preuves|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/controles|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/controles|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/controles|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/controles|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/controles|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/controles|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/controles|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/controles|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/controles|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/controles|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue
+pilotage/audits|principal|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide)
+pilotage/audits|sous-perimetre|administrateur|rempli|bureau;ok;;Écran identique au rssi (mêmes contrôles actifs, aucun 4xx/5xx ni erreur JS), sondes API : écritures acceptées (412 sur version périmée, 422 sur corps invalide), sous « Hébergement HDS » (accès administrateur au périmètre)
+pilotage/audits|principal|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter
+pilotage/audits|sous-perimetre|contributeur|rempli|bureau;ok;;Lecture et modification comme le rssi, sans suppression ni export (boutons Supprimer ce jour, Retirer, Exporter, rapport imprimable, Promouvoir absents), API : PUT 412 (droit accordé), DELETE 403 « Droit requis : …:supprimer », export 403 import_export:exporter, sous « Hébergement HDS » (accès Écriture au périmètre)
+pilotage/audits|principal|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export)
+pilotage/audits|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture seule : boutons d’ajout absents, champs et sélecteurs désactivés, fiches sans Enregistrer, API : toutes les écritures 403 (PUT/DELETE fiches, PATCH /api/dda, /api/audit-suivi/*, /api/gap, bibliothèque, export), sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/audits|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée
+pilotage/audits|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule des 5 modules ouverts (audit, plan_audit, pilotage, conformite, documents), jusqu’au 31/12/2026, mêmes contrôles masqués que le lecteur, API : écritures 403, lecture des écarts/incidents/fournisseurs 403, date d’expiration passée : connexion refusée, sous « Hébergement HDS » (accès Lecture au périmètre)
+pilotage/audits|restreint|contributeur|rempli|bureau;defaut;T3-01;Contributeur membre du seul « Hébergement HDS » : voit le périmètre principal dans « Périmètre affiché », écran identique au contributeur sous le principal, écritures acceptées hors sous-périmètre (PUT fiches du principal 412, PATCH /api/dda/A-5.1 200)
+pilotage/audits|principal|rssi|rempli|telephone;ok;;390 × 844 : page à 375 px sans défilement horizontal, aucun élément hors écran hors zone défilante, capture relue (onglet actif de la rubrique coupé, remarque T3-05)
