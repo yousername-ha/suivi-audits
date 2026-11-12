@@ -238,19 +238,8 @@ export class RondesAssistant {
       if (!derniere?.debut) continue;
       const depuis = new Date(derniere.debut);
       if (maintenant.getTime() - depuis.getTime() < EVENEMENT_INTERVALLE_HEURES * 3_600_000) continue;
-      // Compte fait par la plateforme, sur les seuls périmètres du profil : il ne révèle aucun contenu.
-      const { retards, ecarts } = await this.db.k
-        .selectFrom('grc_objects as o')
-        .select([
-          sql<number>`count(*) FILTER (WHERE o.kind = 'action' AND (o.data->>'dueAt')::timestamptz > ${depuis} AND (o.data->>'dueAt')::timestamptz <= ${maintenant})::int`.as(
-            'retards',
-          ),
-          sql<number>`count(*) FILTER (WHERE o.kind = 'nonconformity' AND o.created_at > ${depuis})::int`.as('ecarts'),
-        ])
-        .where('o.smsi_id', 'in', p.perimetres)
-        .where('o.archived', '=', false)
-        .where('o.kind', 'in', ['action', 'nonconformity'])
-        .executeTakeFirstOrThrow();
+      // Compte fait par le module du registre, sur les seuls périmètres du profil : il ne révèle aucun contenu.
+      const { retards, ecarts } = await this.grc.tasks.evenementsDepuis(p.perimetres, depuis, maintenant);
       if (!retards && !ecarts) continue;
       return this.demarrer(
         id,

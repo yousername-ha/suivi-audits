@@ -485,6 +485,27 @@ export class GrcTasks {
       await this.g.notificationsMetier?.diffuser(c, emises);
     }, 'Automate SMSI');
   }
+  /** Compte des événements survenus dans des périmètres entre deux instants : actions dont l'échéance vient d'être dépassée,
+      écarts créés. Sert à décider d'une ronde de l'assistant (ADR 0086) ; ne rend aucun contenu, seulement deux nombres. */
+  async evenementsDepuis(
+    smsis: readonly string[],
+    depuis: Date,
+    jusqua: Date,
+  ): Promise<{ retards: number; ecarts: number }> {
+    if (!smsis.length) return { retards: 0, ecarts: 0 };
+    return this.g.db.k
+      .selectFrom('grc_objects as o')
+      .select([
+        sql<number>`count(*) FILTER (WHERE o.kind = 'action' AND (o.data->>'dueAt')::timestamptz > ${depuis} AND (o.data->>'dueAt')::timestamptz <= ${jusqua})::int`.as(
+          'retards',
+        ),
+        sql<number>`count(*) FILTER (WHERE o.kind = 'nonconformity' AND o.created_at > ${depuis})::int`.as('ecarts'),
+      ])
+      .where('o.smsi_id', 'in', [...smsis])
+      .where('o.archived', '=', false)
+      .where('o.kind', 'in', ['action', 'nonconformity'])
+      .executeTakeFirstOrThrow();
+  }
   async notifications(user: SessionUser) {
     const rows = await this.g.db.k
       .selectFrom('grc_notifications')
