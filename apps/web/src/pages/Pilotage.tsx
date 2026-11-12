@@ -126,13 +126,9 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
     kind: 'control',
     description: 'Définissez les contrôles, leur échéance et leurs critères, puis enregistrez les résultats.',
   },
-  bia: {
-    kind: 'bia',
-    description: 'Évaluez les conséquences d’une interruption et définissez vos besoins de continuité.',
-  },
   continuite: {
     kind: 'continuity_plan',
-    description: 'Préparez vos stratégies et procédures de continuité ou de reprise à partir des BIA.',
+    description: 'Préparez vos stratégies et procédures de continuité ou de reprise de vos activités.',
   },
   exercices: {
     kind: 'continuity_exercise',
@@ -327,9 +323,7 @@ export function PilotagePage() {
                     onSchedule={setSchedule}
                   />
                 )}
-                {['bia', 'continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(
-                  section,
-                ) &&
+                {['continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(section) &&
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}
               </>
             )}

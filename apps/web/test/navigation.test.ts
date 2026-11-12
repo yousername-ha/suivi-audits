@@ -67,7 +67,6 @@ const INVENTAIRE = [
   'actions|plan-actions|actions|/pilotage/actions|ecarts|lire',
   'actions|recurrences|recurrences|/pilotage/recurrences|ecarts|lire',
   'actions|registres|registres|/registres|-|lire',
-  'resilience|continuite|bia|/pilotage/bia|pilotage|lire',
   'resilience|continuite|continuite|/pilotage/continuite|pilotage|lire',
   'resilience|continuite|exercices|/pilotage/exercices|pilotage|lire',
   'resilience|incidents|incidents-registre|/pilotage/incidents-registre|incidents|lire',

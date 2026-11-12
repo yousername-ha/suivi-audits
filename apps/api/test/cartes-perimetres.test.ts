@@ -106,7 +106,6 @@ describe('cartes de périmètres', () => {
     });
     await t.svc.grc.tasks.tick(new Date(Date.now() + 7 * 86400000));
     await admin.post(`/api/grc/${A}/objects`, { kind: 'nonconformity', name: 'Écart ouvert', data: { cause: 'c' } });
-    await admin.post(`/api/grc/${A}/objects`, { kind: 'bia', name: 'BIA carte', data: {} });
     // Seuls les plans de type PCRA sont comptés par la tuile Continuité (décision du 21/10/2026).
     for (const [name, planType] of [
       ['PCA carte', 'pca'],
@@ -150,7 +149,7 @@ describe('cartes de périmètres', () => {
   it('compte les écarts ouverts, la continuité et laisse la couverture indisponible sans référentiel effectif', async () => {
     const a = await carte(admin, A);
     expect(a.compteurs.ecarts).toMatchObject({ ouverts: 1, enRetard: 0 });
-    expect(a.compteurs.continuite).toEqual({ bia: 1, pcra: 1 });
+    expect(a.compteurs.continuite).toEqual({ pcra: 1 });
     expect(a.compteurs.couverture).toBeNull();
   });
 
@@ -161,7 +160,7 @@ describe('cartes de périmètres', () => {
       enRetard: 0,
       parClassification: { majeure: 0, mineure: 0, point_sensible: 0, non_classe: 0 },
     });
-    expect(b.compteurs.continuite).toEqual({ bia: 0, pcra: 0 });
+    expect(b.compteurs.continuite).toEqual({ pcra: 0 });
     expect(b.parentId).toBe(A);
   });
 

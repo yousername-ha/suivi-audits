@@ -405,7 +405,7 @@ test('Pilotage K : parcours qualité enregistré, repris et validation humaine c
     await ctx.close();
   }
 });
-test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans débordement', async ({ browser }) => {
+test('Pilotage E : plan de continuité sur téléphone et rapport imprimable sans débordement', async ({ browser }) => {
   const ctx = await browser.newContext({
     storageState: (await sessionAdmin(browser)).state,
     ignoreHTTPSErrors: true,
@@ -414,27 +414,8 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const root = await scope(page, 'QA-Pilotage-BIA-');
-    await page.goto('/pilotage/bia');
-    const rubriques = page.getByRole('navigation', { name: 'Rubriques : Continuité d’activité', exact: true });
-    await expect(rubriques.getByRole('link', { name: 'Impacts sur l’activité — BIA', exact: true })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    await page.getByRole('button', { name: 'Ajouter analyse d’impact sur l’activité', exact: true }).click();
+    await scope(page, 'QA-Pilotage-Continuite-');
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Intitulé', { exact: true }).fill('BIA activité de recette');
-    await dialog.getByLabel('Activité', { exact: true }).fill('Accueil métier');
-    await dialog.getByLabel('Scénario d’interruption', { exact: true }).fill('Indisponibilité du service');
-    await dialog.getByLabel('Durée maximale d’interruption (heures)', { exact: true }).fill('24');
-    await dialog.getByLabel('Objectif de reprise (heures)', { exact: true }).fill('4');
-    await dialog.getByLabel('Service minimum attendu', { exact: true }).fill('Accueil de secours');
-    await dialog.getByRole('button', { name: 'Ajouter une durée d’interruption', exact: true }).click();
-    await dialog.getByLabel('Impact métier', { exact: true }).fill('Dossiers en attente et service dégradé');
-    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
-    const bia = (await (await page.request.get(root + '/objects?kind=bia')).json()).items[0];
-    expect(bia.data.impacts[0].hours).toBe(24);
     await page.goto('/pilotage/continuite');
     await page.getByRole('button', { name: 'Ajouter plan de continuité ou de reprise', exact: true }).click();
     await dialog.getByLabel('Intitulé', { exact: true }).fill('PRA activité de recette');
@@ -442,8 +423,6 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
     await dialog
       .getByLabel('Procédures et ordre des opérations', { exact: true })
       .fill('Restaurer puis vérifier le service métier');
-    await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
-    await choose(page, 'Éléments liés', 'BIA activité de recette');
     await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     const download = page.waitForEvent('download');
@@ -452,10 +431,8 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
     expect(file.suggestedFilename()).toBe('pilotage-continuity_plan.html');
     const html = await (await import('node:fs/promises')).readFile((await file.path())!, 'utf8');
     expect(html).toContain('Restaurer puis vérifier le service métier');
-    expect(html).toContain('object:' + bia.id);
     expect(html).not.toContain('<script');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.screenshot({ path: '/work/onboarding-suivi/ghke-bia-mobile.png', fullPage: true });
     await expect(page).toHaveScreenshot('pilotage-continuite-mobile.png', {
       fullPage: true,
       animations: 'disabled',

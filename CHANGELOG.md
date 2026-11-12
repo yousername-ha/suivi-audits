@@ -14,6 +14,9 @@ mise à jour est le seul retour arrière. Les droits `crrc` et `investissements`
 Même chose pour la migration `054` (retrait du module « Revues des accès » des applications, [ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) :
 la table des revues est **supprimée définitivement** ; les revues d’accès se suivent par une tâche récurrente du Pilotage, et l’export de la revue
 des accès des comptes (Administration) est inchangé.
+**Retrait du BIA** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : le type d'objet « analyse d'impact sur l'activité » disparaît du Pilotage. **Pas de migration**
+(application pas encore en production) : une instance de test qui contient des fiches BIA doit être **réinstallée**. Les plans de continuité et les
+exercices sont conservés.
 _(Session « Projet audit_suivi Coeur ».)_
 
 **Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
@@ -151,6 +154,7 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Retiré
 
+- **Analyse d'impact sur l'activité (BIA)** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : type d'objet, formulaire, règles de validation, liens, export, rubrique « Impacts sur l'activité — BIA » du menu Continuité d'activité et compteurs (cartes de périmètre, synthèse, tableau de bord : seuls les PCRA sont comptés). Les plans de continuité et les exercices restent. _(Session « Projet audit_suivi Coeur ».)_
 - **Module « Revues des accès »** des applications (page Pilotage → Organisation, routes `/api/revues-acces*`, table, rubrique d'export Excel,
   données de démonstration), sur décision du RSSI ([ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) : ces revues se suivent par une
   tâche récurrente du Pilotage. La clé `accessReviews` d'un fichier de l'outil historique est écartée sans rien dire à l'import. La revue des accès des

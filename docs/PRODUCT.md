@@ -25,7 +25,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Risques | Registre, opportunités, études EBIOS RM, cartographie des risques, traitements, scénarios et actifs, configuration des analyses |
 | Écarts et actions | Amélioration continue, plan d'actions, tâches récurrentes |
 | Preuves et contrôles | Registre des preuves, plan de contrôle |
-| Plans et revues | BIA, continuité, exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |
+| Plans et revues | Continuité (PCA, PRA, PCRA), exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |
 | Incidents et crise | Registre, qualification, cellule de crise, contacts, scénarios et check-lists |
 | Outils | Mes rappels, import et rapports ; la configuration du pilotage est une carte de la page Plateforme |
 

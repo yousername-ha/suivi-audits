@@ -630,21 +630,19 @@ Restriction : L’avancement ne constitue ni conformité ni certification ; rece
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-026.
 
-## FCT-027 — BIA, continuité, exercices et RETEX E
+## FCT-027 — Continuité, exercices et RETEX E (le BIA est retiré)
 
 Objectif : Formulaires génériques, impacts temporels, objectifs cohérents, validations et rapports HTML/JSON testés.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/pilotage/bia ; /pilotage/continuite ; /pilotage/exercices**.
+Accès : **/pilotage/continuite ; /pilotage/exercices**.
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Dans BIA, renseigner activité/service/scénario/dépendances et impacts dans le temps.
-2. Fixer service minimum, durée maximale d’interruption et objectifs de reprise/perte compatibles.
-3. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
-4. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
-5. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
+1. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
+2. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
+3. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
 
 Champs/paramètres : Activité, Service rendu, Périmètre, Scénario d’interruption, Criticité de l’activité, Durée maximale d’interruption (heures), Objectif de reprise (heures), Perte de données acceptable (heures), Service minimum attendu, Ressources nécessaires, Dépendances et fournisseurs, État, Justification
 Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
@@ -932,7 +930,7 @@ Emplacements descriptifs, **aucune fausse capture générée** :
 | Risque/carte                 | Fiche fictive, méthode/version, légende, brut/résiduel et détail au clic.     |
 | Preuve/contrôle              | Versions documentaires fictives, résultat et action liée.                     |
 | Parcours qualité             | Étape et validation fictive ; aucun faux score de conformité.                 |
-| Continuité                   | BIA et plan fictifs, objectifs, dépendances, rapport imprimable.              |
+| Continuité                   | Plan fictif, exercices, rapport imprimable.                                   |
 | Exploitation                 | État final anonymisé ; aucun chemin privé, secret ou token affiché.           |
 
 Les références visuelles existantes tests/e2e/specs/**captures** prouvent des

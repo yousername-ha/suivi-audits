@@ -395,7 +395,7 @@ export const GUIDE_AUDIT: Record<string, GuideAudit> = {
   'A.5.29': {
     preuves: [
       "PCA incluant la sécurité de l'information",
-      'BIA avec scénario sinistre du datacenter de l’hébergeur',
+      'Analyse d’impact avec scénario sinistre du datacenter de l’hébergeur',
       'Procédures de fonctionnement en mode dégradé sécurisé',
     ],
     questions: [

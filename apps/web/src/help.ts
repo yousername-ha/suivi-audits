@@ -124,13 +124,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
   },
   {
     id: 'continuite',
-    title: 'BIA, continuité, reprise et exercices',
+    title: 'Continuité, reprise et exercices',
     permission: 'pilotage:lire',
-    link: '/pilotage/bia',
+    link: '/pilotage/continuite',
     steps: [
-      'Décrivez les activités, services, scénarios, ressources, dépendances et impacts pour plusieurs durées d’interruption.',
-      'Fixez la durée maximale d’interruption, l’objectif de reprise et la perte de données acceptable.',
-      'Préparez un PCA, PRA, PCRA cadre ou plan propre à une activité ; reliez les BIA, actifs, risques et documents existants.',
+      'Préparez un PCA, PRA, PCRA cadre ou plan propre à une activité ; reliez les actifs, risques et documents existants.',
       'Planifiez les exercices et enregistrez leurs résultats et le RETEX. Créez des actions suivies pour les améliorations.',
       'Cette première étape E fournit des formulaires génériques ; les kits ANS et le programme CaRE ne sont pas incorporés.',
     ],
