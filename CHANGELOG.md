@@ -6,26 +6,39 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `053` et `054`, destructives** (retrait des modules CRRC et Investissements,
-[ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les établissements, ressources, sauvegardes,
-restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés définitivement** à la mise à jour.
-Exporter avant (Exports Excel de la version précédente) si ces données doivent être conservées ; la sauvegarde automatique d'avant
-mise à jour est le seul retour arrière. Les droits `crrc` et `investissements` disparaissent des rôles et des attributions.
-Même chose pour la migration `054` (retrait du module « Revues des accès » des applications, [ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) :
-la table des revues est **supprimée définitivement** ; les revues d’accès se suivent par une tâche récurrente du Pilotage, et l’export de la revue
-des accès des comptes (Administration) est inchangé.
-**Retrait du BIA** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : le type d'objet « analyse d'impact sur l'activité » disparaît du Pilotage. **Pas de migration**
-(application pas encore en production) : une instance de test qui contient des fiches BIA doit être **réinstallée**. Les plans de continuité et les
-exercices sont conservés.
-_(Session « Projet audit_suivi Coeur ».)_
+Aucune action.
 
-**Aucune action sur le serveur.** **Migration automatique `052`** (référentiels des périmètres) : appliquée au démarrage de
-`app`, durée négligeable. Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce périmètre, nommée « <référentiel> (PRIVE -
-<périmètre>) », au statut
-« appliqué » (il reste suivi en conformité comme avant) ; un « Désactiver ici » d'un référentiel hérité reste une surcharge
-qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement n'est réécrit. Retour arrière : restauration
-de la sauvegarde d'avant mise à jour. Les intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent
-désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel library management ».)_
+## [6.3.0] — 2026-11-12
+
+Version mineure : trois migrations SQL (`052` additive, `053` et `054` destructives), aucune nouvelle dépendance. Elle apporte la **porte de lecture
+autorisée entre modules** ([ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md)) et le durcissement des droits, des registres, de
+l'authentification et de l'exploitation issus d'un audit externe, les **référentiels de périmètre en copie** ([ADR 0082](docs/adr/0082-referentiels-du-perimetre-copie-et-application.md)),
+le support de **Rocky Linux 10** comme serveur ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md)), et retire les modules **CRRC**, **Investissements**
+(Budget) et **Revues des accès** ainsi que le **BIA**. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Mise à jour depuis la 6.2.1** (depuis l'interface web ou `scripts/mettre-a-jour.sh`) : **aucune action sur le serveur**, mais **trois migrations
+automatiques**, appliquées au démarrage de `app` : `052` (additive) et **`053` et `054`, destructives**. La sauvegarde automatique d'avant mise à
+jour précède la mise à jour et reste le seul retour arrière.
+
+- **`052` : référentiels des périmètres** (additive, durée négligeable). Chaque référentiel déjà rattaché à un périmètre devient la **copie** de ce
+  périmètre, nommée « <référentiel> (PRIVE - <périmètre>) », au statut « appliqué » (il reste suivi en conformité comme avant) ; un « Désactiver ici »
+  d'un référentiel hérité reste une surcharge qui suit la copie du parent. Aucune évaluation, aucun lien, aucun rapprochement n'est réécrit. Les
+  intégrations qui rattachent un référentiel par l'API puis l'évaluent doivent désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel
+  library management ».)_
+- **`053` : retrait des modules CRRC et Investissements** ([ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md)) : les
+  établissements, ressources, sauvegardes, restaurations, alertes et offres CRRC et le plan d'investissement (Budget) sont **supprimés
+  définitivement**. Exporter avant (Exports Excel de la version précédente) si ces données doivent être conservées. Les droits `crrc` et
+  `investissements` disparaissent des rôles et des attributions.
+- **`054` : retrait du module « Revues des accès »** des applications ([ADR 0087](docs/adr/0087-retrait-du-module-revues-des-acces.md)) : la table des
+  revues est **supprimée définitivement** ; les revues d'accès se suivent par une tâche récurrente du Pilotage, et l'export de la revue des accès des
+  comptes (Administration) est inchangé.
+- **Retrait du BIA** ([ADR 0088](docs/adr/0088-retrait-du-bia.md)) : le type d'objet « analyse d'impact sur l'activité » disparaît du Pilotage.
+  **Pas de migration** : une instance de test qui contient des fiches BIA doit être **réinstallée** ; les plans de continuité et les exercices sont
+  conservés.
+
+_(Session « Projet audit_suivi Coeur ».)_
 
 ### Sécurité
 
@@ -57,11 +70,6 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
   de module, le périmètre, le registre restreint et le rôle attribué, et sur laquelle les lectures transverses seront
   branchées une à une. Fondation seule : aucun branchement, aucun changement de comportement, aucune migration. Aucune
   action sur le serveur. _(Session « Projet audit_suivi Coeur ».)_
-- **Images `web` et `updater`** : `golang.org/x/net` passe de 0.60.0 à 0.62.0 dans la compilation de Caddy et de cosign (avis
-  publié depuis la dernière version, relevé par l'analyse Trivy de la chaîne de publication). Aucune autre modification des
-  images. Aucune action sur le serveur : les images sont reconstruites à la publication suivante.
-  _(Session « Projet audit_suivi Coeur ».)_
-
 - **Exploitation et chaîne de mise à jour** : le mot de passe SMTP est lié à son relais (changer serveur, port, chiffrement,
   compte ou autorité le supprime : il faut le ressaisir) ; une restauration lancée depuis l'interface exige un code de
   double authentification ; après une restauration, la clé de secours et l'adresse du site en service sur le serveur font foi
