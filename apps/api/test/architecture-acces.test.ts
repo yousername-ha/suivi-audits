@@ -44,6 +44,11 @@ const LISTE_BLANCHE: Record<string, Entree> = {
     raison: 'Garde de purge d’un document : doit voir toutes les citations, quel que soit le lecteur.',
   },
   'jeu-de-test.ts': { categorie: 'systeme', raison: 'Jeu de données de démonstration chargé par un administrateur.' },
+  'jeu-externe.ts': {
+    categorie: 'systeme',
+    raison:
+      'Jeu de données externe chargé par un administrateur sur une instance de test vide : pose l’état d’un écart créé par l’API, comme le jeu de test.',
+  },
   'legacy/store.ts': {
     categorie: 'systeme',
     raison:
