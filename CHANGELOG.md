@@ -10,8 +10,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
-**partent chez le fournisseur du modèle** : ouvrir le flux sortant vers son hôte et n'ouvrir à l'assistant aucun périmètre pouvant
-contenir des données de santé tant que ce fournisseur n'est pas qualifié pour cela. Les rôles personnalisés ne reçoivent pas le nouveau
+**partent chez le fournisseur du modèle** : ouvrir le flux sortant vers son hôte et n'ouvrir à l'assistant que les périmètres dont
+le contenu peut être confié à ce fournisseur. Les rôles personnalisés ne reçoivent pas le nouveau
 droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 
 **Aucune action sur le serveur.** **Migrations automatiques `053` et `054`, destructives** (retrait des modules CRRC et Investissements,

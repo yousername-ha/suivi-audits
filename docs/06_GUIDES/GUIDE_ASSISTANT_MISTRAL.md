@@ -37,9 +37,10 @@ droits de la personne qui l'interroge. Les comptes, les mots de passe, les secre
 
 Avant d'aller plus loin :
 
-1. Choisissez **un seul périmètre** pour le premier essai, qui **ne contient aucune donnée de santé** ni de patient.
-2. Lisez les conditions de l'API de Mistral et son accord de traitement des données (liens en fin de guide). Aucune
-   certification HDS de Mistral n'a été trouvée : c'est à votre organisation, avec son DPO, de décider ce qui peut être envoyé.
+1. Choisissez **un seul périmètre** pour le premier essai. La plateforme ne stocke pas de données de santé ; ce qui part
+   chez Mistral, ce sont des informations sur votre sécurité (écarts, risques, extraits de politiques).
+2. Lisez les conditions de l'API de Mistral et son accord de traitement des données (liens en fin de guide). C'est à
+   votre organisation de décider ce qui peut être envoyé.
 3. Inscrivez ce flux dans votre appréciation des risques.
 
 ## Étape 2 — Obtenir une clé chez Mistral
@@ -166,7 +167,7 @@ Pour qu'il devienne meilleur avec le temps, toujours dans **Plateforme > Assista
 - lisez les **fiches de méthode** qu'il propose, corrigez-les, puis validez ou refusez : il ne suit que les fiches validées ;
 - regardez le tableau **Mesure** une fois par mois.
 
-Ces textes partent chez Mistral comme le reste : n'y écrivez ni donnée de santé ni donnée personnelle.
+Ces textes partent chez Mistral comme le reste : n'y écrivez aucune donnée personnelle.
 
 Pour tout arrêter d'un geste : interrupteur **Mettre l'assistant en pause**. Chaque personne peut couper les rappels de
 l'assistant dans **Mon compte > Notifications**. Une ronde consomme plus de jetons qu'une question : surveillez la
@@ -207,7 +208,7 @@ jetons consommés, sans le contenu.
 
 - Une clé réservée à la plateforme, jamais réutilisée ailleurs, avec une date d'expiration.
 - Un plafond de dépense chez Mistral **et** un budget quotidien dans la plateforme.
-- Ouvrez les périmètres un par un, et aucun qui puisse contenir des données de santé.
+- Ouvrez les périmètres un par un.
 - Le droit d'utiliser l'assistant n'est donné qu'aux rôles Administrateur et RSSI ; pour une autre personne, créez un rôle
   personnalisé avec le droit « Assistant RSSI : Lire ».
 

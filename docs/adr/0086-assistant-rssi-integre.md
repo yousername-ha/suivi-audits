@@ -375,3 +375,14 @@ Réalisé sur `claude/assistant-rssi` (migration `063`) :
 - **Jeu d'évaluation** (lot A3) : `apps/api/test/evaluation/assistant-evaluation.ts`, résultats publiés dans
   [EVALUATION_ASSISTANT](../05_RECETTE/EVALUATION_ASSISTANT.md) : 60 contrôles sur 60 avec `mistral-small-latest` (5 passes),
   35 sur 36 avec `mistral-large-latest` (3 passes). Jeu petit ; limites décrites dans ce document.
+
+## Addendum du 12/11/2026 — pas de données de santé dans la plateforme
+
+Précision du RSSI (12/11/2026) : la plateforme **ne stocke pas de données de santé** ; elle n'en a ni la vocation ni l'utilité.
+Les mises en garde « ne pas ouvrir un périmètre pouvant contenir des données de santé » (conséquences ci-dessus, cadrage, écrans,
+guide) étaient donc sans objet : elles sont retirées des écrans et du guide. La qualification HDS du fournisseur du modèle
+n'est pas une condition d'emploi de l'assistant. Ce qui part chez le fournisseur reste sensible à un autre titre :
+informations sur la sécurité de l'organisation (écarts, risques, extraits de politiques) et, à la marge, des données
+personnelles (réponses saisies par des personnes). Les garde-fous qui s'y rapportent sont inchangés : périmètres explicites
+par profil, classification maximale des documents, identité des responsables non transmise, refus de l'entraînement chez le
+fournisseur.

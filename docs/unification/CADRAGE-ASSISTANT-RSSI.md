@@ -97,7 +97,7 @@ Un auditeur n'audite pas son propre travail (ISO/IEC 27001, 9.2 ; ISO 19011).
 
 | Risque | Parade |
 |---|---|
-| Extraits du SMSI envoyés au fournisseur | Périmètres explicites par profil ; fournisseur affiché ; périmètres à données de santé non ouverts ; contrat et option sans conservation à vérifier |
+| Extraits du SMSI envoyés au fournisseur | Périmètres explicites par profil ; fournisseur affiché ; contrat et option sans conservation à vérifier |
 | Usage par une personne non prévue | Droit dédié `assistant:lire` ; refus par l'API |
 | Chat qui révèle plus que les droits de la personne | Lectures bornées à l'intersection des portées |
 | Injection par un contenu lu | Aucun outil d'écriture directe, aucune navigation, une seule sortie ; décision humaine avec sources |

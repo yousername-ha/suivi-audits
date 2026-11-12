@@ -261,7 +261,8 @@ export function MissionsAssistant({ profils }: { profils: Profils }) {
         </Title>
         <Text size="sm" c="dimmed">
           Une mission est une consigne durable, par exemple « suivre le plan d’action du dernier audit ». L’assistant la
-          reprend à chaque ronde, jusqu’à sa clôture. N’y écrivez aucune donnée de santé.
+          reprend à chaque ronde, jusqu’à sa clôture. Elle part chez le fournisseur du modèle : n’y écrivez aucune
+          donnée personnelle.
         </Text>
         <ErrorAlert error={q.error ?? erreur} />
         {(q.data ?? []).map((m) => (
@@ -521,7 +522,7 @@ export function MethodesAssistant({ profils }: { profils: Profils }) {
         />
         <Textarea
           label="Texte de la nouvelle fiche"
-          description="Ce texte part chez le fournisseur du modèle : aucune donnée de santé ni donnée personnelle."
+          description="Ce texte part chez le fournisseur du modèle : n’y écrivez aucune donnée personnelle."
           value={contenu}
           onChange={(e) => setContenu(e.currentTarget.value)}
           maxLength={METHODE_CONTENU_MAX}

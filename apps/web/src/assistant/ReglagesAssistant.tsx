@@ -161,8 +161,8 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
       <Alert color="orange" title="Ce qui quitte le serveur">
         Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus
         (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit que les périmètres choisis ci-dessous,
-        avec les droits de la personne qui l’interroge. N’ouvrez pas un périmètre qui peut contenir des données de santé
-        tant que le fournisseur n’est pas qualifié pour cela.
+        avec les droits de la personne qui l’interroge. N’ouvrez que les périmètres dont le contenu peut être confié à
+        ce fournisseur.
         {fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}
       </Alert>
       {!d.relaisDeclare && (
@@ -348,7 +348,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           />
           <Textarea
             label="Contexte de l’organisation"
-            description="Relu par l’assistant à chaque ronde et à chaque conversation : périmètre de certification, vocabulaire, priorités de l’année. Ce texte part chez le fournisseur du modèle : aucune donnée de santé ni donnée personnelle."
+            description="Relu par l’assistant à chaque ronde et à chaque conversation : périmètre de certification, vocabulaire, priorités de l’année. Ce texte part chez le fournisseur du modèle : n’y écrivez aucune donnée personnelle."
             value={saisie.contexte}
             onChange={(e) => changer({ contexte: e.currentTarget.value })}
             maxLength={CONTEXTE_ASSISTANT_MAX}

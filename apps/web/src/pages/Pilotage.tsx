@@ -851,7 +851,7 @@ function ReponseQuestion({
     <Stack gap="xs">
       <Textarea
         label="Votre réponse à l’assistant"
-        description="Elle sera lue par l’assistant et par le RSSI, et envoyée au fournisseur du modèle : n’y écrivez aucune donnée de santé."
+        description="Elle sera lue par l’assistant et par le RSSI, et envoyée au fournisseur du modèle : n’y écrivez aucune donnée personnelle."
         value={texte}
         onChange={(e) => setTexte(e.currentTarget.value)}
         maxLength={REPONSE_QUESTION_MAX}
