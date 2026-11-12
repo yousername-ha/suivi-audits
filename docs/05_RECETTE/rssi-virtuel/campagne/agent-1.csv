@@ -67,7 +67,7 @@ pilotage/processus|sous-perimetre|rssi|rempli|bureau;defaut;BUG-037;processus HD
 pilotage/processus|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
 pilotage/objectifs|principal|rssi|vide|bureau;ok;;même vue que Objectifs par processus (onglet Par objectif), vue à 0/0 avant saisie
 pilotage/objectifs|principal|rssi|rempli|bureau;ok;;OBJ1 et OBJ2 : échéance, responsable, processus, enjeux, indicateurs , suppression d’un objectif de test ok , export Excel Objectifs ok
-pilotage/objectifs|principal|rssi|erreur|bureau;defaut;C1-21;« Ajouter un objectif » crée OBJ3 « Nouvel objectif » qui subsiste après Fermer sans enregistrer , intitulé vide : Enregistrer grisé
+pilotage/objectifs|principal|rssi|erreur|bureau;defaut;C1-20;« Ajouter un objectif » crée OBJ3 « Nouvel objectif » qui subsiste après Fermer sans enregistrer , intitulé vide : Enregistrer grisé
 pilotage/objectifs|sous-perimetre|rssi|vide|bureau;ok;;0 fiches, message
 pilotage/objectifs|sous-perimetre|rssi|rempli|bureau;defaut;C1-10;objectif HDS : formulaire différent (Résultat attendu), ni processus ni indicateur, aucune synthèse , lien Démontre avec l’indicateur ok
 pilotage/objectifs|sous-perimetre|rssi|erreur|bureau;defaut;C1-09;intitulé vide : Enregistrer grisé sans message
