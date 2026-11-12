@@ -220,6 +220,21 @@ uniquement. « Piste » = endroit repéré par la recette en lisant le code, san
   alerte. Question : alerte, matrice par défaut, ou jugement libre assumé ?
 - **Rôle d'auditeur interne** : aucun rôle ne permet de saisir des constats sans pouvoir modifier la DdA auditée.
 
+## 4 bis. Ajout du 12/11 au soir : rattachement des processus (BUG-037, majeur, P1)
+
+Demande expresse du RSSI : un processus doit être rattaché à un périmètre.
+
+- Reproduire : créer un sous-périmètre (Organisation → Périmètres → « Ajouter un enfant »), puis Organisation → Processus avec
+  ce sous-périmètre dans « Périmètre affiché ».
+- Observé : page blanche. Les processus de la racine sont dans le registre historique (`suivi_processus`, sans colonne de
+  périmètre, fiche sans champ de périmètre) ; ceux d'un sous-périmètre sont des objets du Pilotage créés depuis « Objectifs
+  par processus », avec un autre formulaire. Les deux registres s'ignorent.
+- Attendu : périmètre porté par chaque processus et visible dans sa fiche ; page « Processus » utilisable pour tout
+  périmètre ; un seul registre.
+- Piste (cause confirmée) : `apps/web/src/pages/Pilotage.tsx`, conditions `smsi === SOCLE` autour de `CartesProcessus` et
+  d'`ObjectifsProcessus`. Changement de modèle de données probable : à cadrer par une ADR avant de coder.
+- Test de recette : `specs/30-recette-2026-11-12.spec.ts`, « RSSI-23 ouvert ».
+
 ## 5 bis. Défauts graphiques
 
 Vingt-trois constats d'affichage (GR-01 à GR-23), avec captures : [dossier graphique](DOSSIER-GRAPHIQUE-2026-11-12.md), relevé sur

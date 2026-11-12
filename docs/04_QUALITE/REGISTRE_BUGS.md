@@ -481,3 +481,14 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Statut | OUVERT |
 | Cause / niveau | Non analysée. |
 | Non-régression | à écrire |
+
+## BUG-037 — Processus du périmètre racine sans périmètre ; page Processus blanche sous un sous-périmètre (RSSI-23)
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | Organisation → Processus, Objectifs par processus ; MAJEURE ; P1 |
+| Statut | OUVERT |
+| Détection | 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7jw824ozEWpfF`), version 6.3.0, à la demande du RSSI |
+| Observé | Processus de la racine dans le registre historique (`suivi_processus`, aucune colonne de périmètre) ; sous un sous-périmètre, page « Processus » blanche et second registre de processus (objets du Pilotage) sans lien avec le premier. Détail : [rapport du 12/11/2026, complément](../05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md). |
+| Cause / niveau | CONFIRMÉE : `apps/web/src/pages/Pilotage.tsx` (`smsi === SOCLE`). |
+| Non-régression | `30-recette-2026-11-12.spec.ts`, « RSSI-23 ouvert » (`test.fail`). |

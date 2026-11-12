@@ -72,3 +72,38 @@ test('RSSI-15 ouvert : la fiche d’une tâche récurrente affiche des noms tech
     await ctx.close();
   }
 });
+
+test('RSSI-23 ouvert : la page Processus est vide dès qu’un sous-périmètre est affiché', async ({ browser }) => {
+  // Les processus de la page « Processus » vivent dans le registre historique, sans périmètre ; la page ne s'affiche que
+  // pour le périmètre racine. Sous un sous-périmètre (ex. hébergement HDS), elle est blanche : ni liste, ni bouton, ni
+  // message. Attendu au minimum : pouvoir créer un processus du périmètre affiché, ou lire pourquoi la page est vide.
+  test.fail(true, 'RSSI-23 ouvert : page Processus blanche sous un sous-périmètre');
+  const { state } = await sessionAdmin(browser);
+  const ctx = await browser.newContext({ storageState: state });
+  const page = await ctx.newPage();
+  try {
+    await page.goto('/pilotage/perimetres');
+    await page
+      .getByRole('button', { name: /^Ajouter un périmètre enfant à / })
+      .first()
+      .click();
+    const creation = page.getByRole('dialog');
+    await creation.getByRole('textbox', { name: 'Nom', exact: true }).fill('Hébergement HDS (fictif)');
+    await creation.getByRole('button', { name: 'Créer', exact: true }).click();
+    await expect(creation).toHaveCount(0);
+
+    await page.goto('/pilotage/processus-cartes');
+    const perimetre = page.getByRole('combobox', { name: 'Périmètre affiché' });
+    await perimetre.click();
+    await page.getByRole('option', { name: 'Hébergement HDS (fictif)', exact: true }).click();
+    await expect(perimetre).toHaveValue('Hébergement HDS (fictif)');
+    await expect(
+      page
+        .getByRole('button', { name: /processus/i })
+        .or(page.getByText(/aucun processus|processus de l’organisation|périmètre racine/i))
+        .first(),
+    ).toBeVisible({ timeout: 5000 });
+  } finally {
+    await ctx.close();
+  }
+});
