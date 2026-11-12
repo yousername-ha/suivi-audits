@@ -1,11 +1,16 @@
-/* Dossiers 002 et 003 : action issue d'un traitement avec choix du plan d'accueil, socle de sécurité de l'étude
-   (atelier 1) saisi dans la fiche et restitué dans l'atelier. Données fictives. */
+/* Dossiers 002 et 003 : action issue d'un traitement avec choix du plan d'accueil (depuis le plan d'action du risque dans
+   le Registre, ADR 0090), socle de sécurité de l'étude (atelier 1) saisi dans la fiche et restitué dans l'atelier.
+   Données fictives. */
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
-async function post(page: Page, path: string, data: unknown) {
+async function post(page: Page, path: string, data: unknown, version?: number) {
   const r = await page.request.post(path, {
-    headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
+    headers: {
+      Origin: new URL(page.url()).origin,
+      'X-CSRF-Token': await csrfOf(page.request),
+      ...(version !== undefined ? { 'If-Match': `"${version}"` } : {}),
+    },
     data,
   });
   expect(r.ok(), await r.text()).toBe(true);
@@ -20,9 +25,10 @@ test('Traitement : action générée dans le plan choisi ; étude : socle de sé
     perimetre = `Périmètre traitement ${suffixe}`,
     plan = `Plan des traitements ${suffixe}`,
     traitement = `Durcir les accès ${suffixe}`,
+    risqueNom = `Risque du plan ${suffixe}`,
     etude = `Étude du socle ${suffixe}`;
   try {
-    await page.goto('/pilotage/traitements');
+    await page.goto('/pilotage/risques');
     const p = await post(page, '/api/grc/smsis', {
       name: perimetre,
       nature: 'SMSI',
@@ -38,6 +44,45 @@ test('Traitement : action générée dans le plan choisi ; étude : socle de sé
       name: traitement,
       data: { description: 'Traitement de recette' },
     });
+    // Un risque, avec la méthode EBIOS RM publiée, auquel le traitement est rattaché (lien « Traite »).
+    const definition = await (await page.request.get('/api/grc/methods/templates/ebios_rm')).json();
+    const apercu = await post(page, `/api/grc/${p.id}/methods/preview`, { id: null, definition });
+    const methode = await post(
+      page,
+      `/api/grc/${p.id}/methods/publish`,
+      {
+        id: null,
+        definition,
+        previewId: apercu.previewId,
+        reason: 'Publication EBIOS RM de recette',
+        confirm: 'PUBLIER',
+      },
+      0,
+    );
+    const risque = await post(page, `/api/grc/${p.id}/objects`, {
+      kind: 'risk',
+      name: risqueNom,
+      data: {
+        description: 'Risque de recette',
+        code: 'QA-R2',
+        ownerId: null,
+        methodId: methode.methodId,
+        methodVersion: 1,
+        domain: 'SSI',
+        entity: 'Équipe',
+        scope: 'Recette',
+        strategy: 'reduce',
+        acceptanceReason: '',
+        reviewAt: '2027-01-01',
+        stages: {},
+      },
+    });
+    await post(page, `/api/grc/${p.id}/links`, {
+      source: 'object:' + t.id,
+      target: 'object:' + risque.id,
+      type: 'treats',
+      note: 'Traitement de recette',
+    });
     await post(page, `/api/grc/${p.id}/objects`, {
       kind: 'risk_study',
       name: etude,
@@ -47,7 +92,9 @@ test('Traitement : action générée dans le plan choisi ; étude : socle de sé
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: perimetre, exact: true }).click();
-    await page.getByRole('button', { name: 'Générer une action de traitement' }).first().click();
+    await page.getByRole('button', { name: `Plan d’action de ${risqueNom}`, exact: true }).click();
+    await expect(page.getByRole('dialog').getByText(traitement)).toBeVisible();
+    await page.getByRole('button', { name: `Générer une action pour ${traitement}`, exact: true }).click();
     const dialogue = page.getByRole('dialog');
     await expect(dialogue.getByLabel('Nom de l’action')).toHaveValue(`Mettre en œuvre : ${traitement}`);
     await dialogue.getByRole('combobox', { name: /Plan d.actions d.accueil/ }).click();

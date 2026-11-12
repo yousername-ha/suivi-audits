@@ -22,7 +22,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Gestion de l'audit | Carte du prochain audit, couverture du cycle, déroulé, planning, participants |
 | Conformité | Bibliothèque de référentiels avec la **couverture par exigence** du périmètre, déclaration d'applicabilité (ISO 27001, Annexe A, HDS), mesures |
 | Fournisseurs | Fournisseurs de l'organisation et du périmètre, critères, évaluations par le clausier |
-| Risques | Registre, opportunités, études EBIOS RM, cartographie des risques, traitements, scénarios et actifs, configuration des analyses |
+| Risques | Registre des risques (avec le plan d'action de chaque risque), études EBIOS RM, cartographie des risques |
 | Écarts et actions | Amélioration continue, plan d'actions, tâches récurrentes |
 | Preuves et contrôles | Registre des preuves, plan de contrôle |
 | Plans et revues | Continuité (PCA, PRA, PCRA), exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |

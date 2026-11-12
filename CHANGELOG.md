@@ -17,6 +17,12 @@ Aucune action.
   bibliothèque » disparaissent de l'interface, avec le bandeau et la pastille de menu des rapprochements. Aucun changement de serveur ni de données dans ce lot.
   _(Session « Projet audit_suivi Coeur ».)_
 
+- **Menu Gestion des risques simplifié, lot 1 : interface** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : les pages
+  « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » disparaissent du menu (la configuration reste dans Paramètres →
+  Configuration GRC). Chaque risque du **Registre** a un **Plan d'action** : mesures en place, actions rattachées, génération d'une action depuis un traitement.
+  Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
+  _(Session « Projet audit_suivi Coeur ».)_
+
 ### Corrigé
 
 - **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,

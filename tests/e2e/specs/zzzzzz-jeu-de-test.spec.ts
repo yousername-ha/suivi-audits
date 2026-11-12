@@ -95,7 +95,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await capture(page, '08-fiche-fournisseur');
     await page.keyboard.press('Escape');
 
-    // Contexte : PESTEL, parties intéressées, opportunités.
+    // Contexte : PESTEL, parties intéressées.
     await page.goto('/pilotage/pestel');
     await expect(page.getByText('Le PESTEL n’est pas exigé par la norme ISO 9001:2015')).toBeVisible();
     await expect(page.getByLabel('Enjeux internes')).toBeVisible();
@@ -103,9 +103,6 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await page.goto('/pilotage/parties');
     await expect(page.getByLabel('Synthèse des parties intéressées')).toContainText('non revues depuis un an');
     await capture(page, '10-parties-interessees');
-    await page.goto('/pilotage/opportunites');
-    await expect(page.getByText('Ouverture à la téléconsultation').first()).toBeVisible();
-    await capture(page, '11-opportunites');
 
     // Séries proposées sans fréquence, revue de direction préparée, audits.
     await page.goto('/pilotage/recurrences');

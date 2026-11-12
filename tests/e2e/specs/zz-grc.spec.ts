@@ -74,19 +74,13 @@ test('Pilotage : objet relié, indicateurs et rapport comité utilisables', asyn
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.goto('/pilotage/scenarios');
-    await page.getByRole('combobox', { name: 'Type de fiche', exact: true }).click();
-    await page.getByRole('option', { name: 'Bien support', exact: true }).click();
-    await page.getByRole('button', { name: 'Créer bien support', exact: true }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Intitulé', { exact: true }).fill('Bien support lié de recette');
-    await dialog.getByLabel('Description', { exact: true }).fill('Objet du socle relié à un processus');
-    await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
-    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).click();
-    await page.getByRole('option', { name: process.name, exact: true }).click();
-    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).press('Escape');
-    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
+    // La page « Scénarios et actifs » est retirée (ADR 0090) : les biens sont saisis dans les études EBIOS RM ; la fiche
+    // reste créable par l'API et son lien vers un processus est conservé.
+    await request(page, prefix + '/objects', {
+      kind: 'support_asset',
+      name: 'Bien support lié de recette',
+      data: { description: 'Objet du socle relié à un processus', refs: ['object:' + process.id] },
+    });
     const assets = await (await page.request.get(prefix + '/objects?kind=support_asset')).json();
     expect(assets.items[0].data.refs).toEqual(['object:' + process.id]);
     await page.goto('/pilotage/synthese');
