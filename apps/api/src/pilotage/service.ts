@@ -211,14 +211,13 @@ export class Pilotage {
         reopen: ['nonconformity'],
         step_validation: ['journey', 'risk_study'],
         risk_acceptance: ['risk'],
-        approval: ['bia', 'continuity_plan', 'management_review'],
+        approval: ['continuity_plan', 'management_review'],
         action_create: [
           'nonconformity',
           'control',
           'management_review',
           'continuity_exercise',
           'continuity_plan',
-          'bia',
           'objective',
         ],
       };
@@ -335,21 +334,11 @@ export class Pilotage {
           throw new HttpError(422, 'Décision de validation attendue.');
         if (input.result === 'accepted') {
           const required =
-            source.kind === 'bia'
-              ? ['activity', 'scenario', 'minimumService']
-              : source.kind === 'continuity_plan'
-                ? ['scope', 'trigger', 'strategy', 'procedures', 'roles', 'returnToNormal']
-                : ['inputs', 'decisions'];
+            source.kind === 'continuity_plan'
+              ? ['scope', 'trigger', 'strategy', 'procedures', 'roles', 'returnToNormal']
+              : ['inputs', 'decisions'];
           if (required.some((k) => !String(data[k] ?? '').trim()) || !input.refs.length)
             throw new HttpError(422, 'Complétez les informations et justificatifs avant validation.');
-          if (
-            source.kind === 'bia' &&
-            (!Array.isArray(data.impacts) ||
-              !data.impacts.length ||
-              data.recoveryHours == null ||
-              data.maxInterruptionHours == null)
-          )
-            throw new HttpError(422, 'Décrivez les impacts dans le temps et les objectifs d’interruption/reprise.');
         }
         data.status = input.result === 'accepted' ? 'validated' : 'draft';
         data.justification = input.note;

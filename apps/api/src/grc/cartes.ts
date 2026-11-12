@@ -25,7 +25,6 @@ export interface Ligne {
   ecartsMajeurs: number;
   ecartsMineurs: number;
   ecartsSensibles: number;
-  bia: number;
   pcra: number;
 }
 
@@ -64,7 +63,6 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='majeure')::int AS "ecartsMajeurs",
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='mineure')::int AS "ecartsMineurs",
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='point_sensible')::int AS "ecartsSensibles",
-       count(*) FILTER (WHERE o.kind='bia')::int AS bia,
        count(*) FILTER (WHERE o.kind='continuity_plan' AND o.data->>'planType'='pcra')::int AS pcra
      FROM grc_objects o
      JOIN grc_smsis s ON s.id=o.smsi_id
@@ -98,7 +96,7 @@ function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): Car
       },
     };
   }
-  if (pilotage) c.continuite = { bia: l.bia, pcra: l.pcra };
+  if (pilotage) c.continuite = { pcra: l.pcra };
   return c;
 }
 

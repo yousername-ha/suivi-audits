@@ -161,7 +161,7 @@ export const FAMILLES: Famille[] = [
     id: 'resilience',
     label: 'Résilience',
     destinations: [
-      dest('continuite', 'Continuité d’activité', [p('bia'), p('continuite'), p('exercices')]),
+      dest('continuite', 'Continuité d’activité', [p('continuite'), p('exercices')]),
       dest('incidents', 'Incidents et crise', [
         p('incidents-registre'),
         p('incidents-qualifier'),

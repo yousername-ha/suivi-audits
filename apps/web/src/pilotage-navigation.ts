@@ -100,7 +100,6 @@ export const PILOTAGE_NAV = [
   {
     label: 'Plans et revues',
     items: [
-      { id: 'bia', label: 'Impacts sur l’activité — BIA', module: 'pilotage' },
       { id: 'continuite', label: 'Continuité et reprise', module: 'pilotage' },
       { id: 'exercices', label: 'Exercices et RETEX', module: 'pilotage' },
       { id: 'plans-calendrier', label: 'Calendrier des plans', module: 'pilotage' },

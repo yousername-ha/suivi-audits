@@ -1018,7 +1018,7 @@ export class Grc {
       if (
         (kind === 'evidence' && ['validated', 'rejected'].includes(String(data.status))) ||
         (kind === 'nonconformity' && (data.status === 'closed' || data.effectiveness !== 'pending')) ||
-        (['bia', 'continuity_plan', 'management_review'].includes(kind) && data.status === 'validated')
+        (['continuity_plan', 'management_review'].includes(kind) && data.status === 'validated')
       ) {
         throw new HttpError(422, 'Utilisez la commande de vérification ou validation pour conserver la décision.');
       }
