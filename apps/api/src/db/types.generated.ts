@@ -120,6 +120,7 @@ export interface AssistantRondes {
   avis_motif: Generated<string>;
   avis_par: Generated<string>;
   methodes: Generated<number>;
+  actions: ColumnType<JsonValue, string | undefined, string>;
 }
 
 export interface AuditLog {

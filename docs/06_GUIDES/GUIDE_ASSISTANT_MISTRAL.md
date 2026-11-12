@@ -9,9 +9,10 @@ Mistral ni réglé l'assistant.
 > - L'assistant n'est dans **aucune version publiée** à ce jour : il existe sur la branche `claude/assistant-rssi`. Ce guide
 >   servira tel quel quand une version le contiendra ; d'ici là, il vaut pour un serveur de recette construit depuis cette
 >   branche (annexe A).
-> - Ce guide **n'a pas été rejoué de bout en bout** : aucun appel réel à Mistral n'a été fait pendant le développement, et le
->   service Docker n'a pas été démarré. Les étapes côté Mistral viennent de sa documentation, relue le 11/11/2026 ; ses écrans
->   peuvent avoir changé.
+> - Ce guide **n'a pas été rejoué de bout en bout** : le service Docker du relais n'a pas été démarré. En revanche, l'assistant
+>   a été essayé le 12/11/2026 avec une clé Mistral de test, sur des données fictives : test de connexion, conversation et
+>   ronde fonctionnent avec `mistral-small-latest` et `mistral-large-latest`. Les étapes côté Mistral viennent de sa
+>   documentation, relue le 11/11/2026 ; ses écrans peuvent avoir changé.
 > - Une fois l'assistant activé, **vos questions et les extraits qu'il lit partent chez Mistral**. Lisez l'étape 1.
 
 Temps à prévoir : environ 30 minutes. Il vous faut : un accès au serveur en ligne de commande, un compte de la plateforme

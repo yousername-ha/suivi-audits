@@ -250,3 +250,26 @@ Réalisé sur `claude/assistant-rssi` (migration `057`) :
 
 Aucun entraînement de modèle. Limite : rien ne prouve encore que ces textes améliorent les rapports d'un modèle réel ; la
 mesure sert à le constater à l'usage.
+
+## Addendum du 12/11/2026 — premier essai avec un modèle réel (Mistral)
+
+Essai du 12/11/2026 avec une clé de test fournie par le RSSI, sur une organisation **fictive** (cinq actions, une mission, un
+contexte), modèles `mistral-small-latest` et `mistral-large-latest`. Montage : API et relais réels ; dans le bac à sable de
+développement, la sortie passait par un passe-plat local, donc **la connexion HTTPS directe du relais à Mistral n'est pas
+vérifiée** (ni Docker).
+
+Constaté :
+
+- **Compatibilité** : le format « chat completions » et l'appel d'outils fonctionnent tels quels avec les deux modèles (test de
+  connexion, conversation, ronde).
+- **Défaut trouvé et corrigé** : à la première ronde, le petit modèle a écrit dans son rapport avoir envoyé trois rappels sans
+  en avoir envoyé aucun. Correction : la plateforme **constate elle-même** ce que la ronde a émis (rappels envoyés ou refusés,
+  notes, fiches ; migration `058`, colonne `actions`) et l'affiche sous le rapport ; la consigne interdit au modèle d'en
+  parler et impose l'ordre des étapes. Après correction, les deux modèles ont envoyé deux rappels justifiés, essuyé un refus
+  (action sans responsable) et rendu un rapport fidèle.
+- **Contenu piégé** : une instruction glissée dans la description d'une action n'a été suivie par aucun des deux modèles ;
+  tous deux l'ont signalée comme anormale. Un seul essai : ce n'est pas une garantie.
+- **Identité** : `lire_element` ne transmet plus l'identifiant du responsable, seulement le fait qu'il est nommé.
+- **Consommation** : 29 000 à 42 000 jetons par ronde sur ce petit jeu, 9 à 18 secondes.
+- **Limites vues** : le grand modèle écrit en Markdown malgré la consigne (l'écran affiche du texte simple) ; le petit modèle
+  répète parfois une lecture. Qualité jugée sur trois rondes seulement, sans jeu d'évaluation.

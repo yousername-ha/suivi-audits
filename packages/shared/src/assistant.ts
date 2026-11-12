@@ -190,6 +190,8 @@ export interface RondeAssistantDto {
 }
 export interface RondeAssistantDetailDto extends RondeAssistantDto {
   rapport: string;
+  /** Ce que la ronde a réellement émis, constaté par la plateforme (et non raconté par le modèle). */
+  actions: string[];
   sources: SourceAssistant[];
   outils: { nom: string; elements: number }[];
 }

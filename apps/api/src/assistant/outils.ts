@@ -171,7 +171,9 @@ export const OUTILS: readonly Outil[] = [
           creeLe: o.createdAt,
           modifieLe: o.updatedAt,
           archive: o.archived,
-          champs: o.data,
+          // L'identifiant d'une personne n'apprend rien au modèle et n'a pas à sortir : seul le fait qu'un responsable
+          // est nommé est transmis.
+          champs: { ...o.data, ownerId: o.data.ownerId ? 'responsable nommé (identité non transmise)' : null },
         },
         elements: 1,
         sources: [{ perimetre: a.perimetre, objet: o.id, type: o.kind, nom: o.name }],

@@ -74,6 +74,22 @@ function Rapport({ id }: { id: string }) {
     <Stack gap="xs">
       {d.erreur && <Text c="red">{d.erreur}</Text>}
       {d.rapport && <Text className="assistant-message__texte">{d.rapport}</Text>}
+      {d.etat === 'terminee' && (
+        <Stack gap="xs">
+          <Text size="sm" fw={600}>
+            Constaté par la plateforme
+          </Text>
+          {d.actions.length === 0 ? (
+            <Text size="sm">Aucun rappel envoyé, aucune note ni fiche écrite pendant cette ronde.</Text>
+          ) : (
+            d.actions.map((a, i) => (
+              <Text key={i} size="sm">
+                {a}
+              </Text>
+            ))
+          )}
+        </Stack>
+      )}
       {d.outils.length > 0 && (
         <Text size="xs" c="dimmed">
           Lectures et envois faits : {d.outils.map((o) => `${o.nom} (${o.elements})`).join(' ; ')}

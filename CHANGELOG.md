@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `057`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `058`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -118,6 +118,10 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : constat par la plateforme** : sous chaque rapport de ronde, la plateforme affiche elle-même les rappels
+  réellement envoyés ou refusés, les notes et les fiches écrites. Un premier essai avec un modèle réel a montré qu'un modèle
+  peut annoncer un rappel qu'il n'a pas envoyé. L'identifiant du responsable d'un élément n'est plus transmis au modèle.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : amélioration avec l'usage** (ADR 0086, second addendum du 12/11/2026) : fiches de méthode que l'assistant
   propose et qu'il ne suit qu'après validation par le RSSI, contexte de l'organisation relu à chaque ronde et à chaque
   conversation, avis « utile ou pas utile » sur chaque ronde et sur chaque rappel, tableau de mesure sur six mois. Aucun
