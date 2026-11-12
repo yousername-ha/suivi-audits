@@ -152,7 +152,6 @@ export const pilotageRoutes = [
     params: scope,
     query: z.object({
       kind: z.enum([
-        'bia',
         'continuity_plan',
         'continuity_exercise',
         'evidence',

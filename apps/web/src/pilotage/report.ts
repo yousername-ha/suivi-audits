@@ -31,14 +31,6 @@ export function pilotageReport(input: unknown) {
           return [f.label, typeof value === 'object' ? '' : value];
         });
       return `<article><h2>${escape(o.name)}</h2><p>${escape(data.description)}</p><p>Fiche version ${escape(o.version)} · Dernière modification : ${escape(o.updated_at ?? o.updatedAt)} · ${escape(o.updated_by ?? o.updatedBy)}</p>${table(['Information', 'Valeur'], details)}
-      ${
-        kind === 'bia'
-          ? `<h3>Impacts dans le temps</h3>${table(
-              ['Interruption (heures)', 'Métier', 'Financier', 'Juridique', 'Réputation'],
-              rows(data.impacts).map((r) => [r.hours, r.business, r.financial, r.legal, r.reputation]),
-            )}`
-          : ''
-      }
       <h3>Références et versions documentaires</h3>${table(
         ['Référence conservée'],
         [

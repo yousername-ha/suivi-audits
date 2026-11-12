@@ -80,6 +80,6 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour l'organisation du dépôt, les test
 ## Limites connues de la livraison actuelle
 
 - Les données historiques de contexte, parties intéressées, responsabilités, processus, objectifs, indicateurs, preuves, constats et revues sont éditées directement depuis Pilotage ; leurs champs supplémentaires sont conservés. L’écran historique `/legacy` est retiré ([ADR 0042](docs/adr/0042-retrait-de-lecran-legacy.md)) ; son archive testable est sur la branche `archive/outil-legacy-autonome`.
-- Le lot E est partiel : BIA, plans et exercices génériques ; les grilles officielles indisponibles restent à intégrer. D/J/I/F sont exclus de cette livraison.
+- Le lot E est partiel : plans et exercices génériques (le BIA est retiré, ADR 0088) ; les grilles officielles indisponibles restent à intégrer. D/J/I/F sont exclus de cette livraison.
 - La CSP est stricte pour toute l'application (aucun script ni style en ligne).
 - La fédération d'identité (OIDC) est prévue en phase 4.

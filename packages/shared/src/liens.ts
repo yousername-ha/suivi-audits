@@ -35,13 +35,13 @@ export const RELATIONS = {
     libelle: 'Supporte',
     inverse: 'Est supporté par',
     sources: ['support_asset', 'supplier', 'process', 'governance', 'measure', 'control', 'ecosystem_party'],
-    cibles: ['business_asset', 'process', 'objective', 'context', 'stakeholder', 'bia', 'continuity_plan'],
+    cibles: ['business_asset', 'process', 'objective', 'context', 'stakeholder', 'continuity_plan'],
   },
   impacts: {
     libelle: 'Impacte',
     inverse: 'Est impacté par',
     sources: [...A_TRAITER, 'risk_source', 'sr_ov', 'swot'],
-    cibles: [...ACTIFS, ...PILOTES, 'stakeholder', 'context', 'bia', 'continuity_plan'],
+    cibles: [...ACTIFS, ...PILOTES, 'stakeholder', 'context', 'continuity_plan'],
   },
   applies_to: {
     libelle: 'S’applique à',
@@ -52,8 +52,8 @@ export const RELATIONS = {
   depends_on: {
     libelle: 'Dépend de',
     inverse: 'Est nécessaire à',
-    sources: [...ACTIFS, ...TRAITANTS, 'bia', 'audit', 'continuity_exercise'],
-    cibles: [...ACTIFS, ...TRAITANTS, 'bia', 'governance', 'ecosystem_party'],
+    sources: [...ACTIFS, ...TRAITANTS, 'audit', 'continuity_exercise'],
+    cibles: [...ACTIFS, ...TRAITANTS, 'governance', 'ecosystem_party'],
   },
   implements: {
     libelle: 'Met en œuvre',
