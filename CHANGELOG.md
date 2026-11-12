@@ -6,7 +6,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur.** **Migration automatique `058`, destructive** (retrait du module « Applications à intégrer » et des applications de la
+cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : la table `suivi_app_gaps` est **supprimée définitivement** et les
+nœuds « application » sont retirés des cartes enregistrées et de leurs versions. La sauvegarde de la mise à jour précède la migration, c'est le seul retour
+arrière ; pour garder une trace, exporter avant la rubrique Excel « GAP — Applications » de la version précédente.
 
 ### Modifié
 
@@ -22,6 +25,15 @@ Aucune action.
   Configuration GRC). Chaque risque du **Registre** a un **Plan d'action** : mesures en place, actions rattachées, génération d'une action depuis un traitement.
   Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
   _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Module « Applications à intégrer » (analyse d'écart GAP) et applications de la cartographie**, sur décision du RSSI du 12/11/2026
+  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : service, routes `/api/gap*`, table `suivi_app_gaps` (migration `058`), schéma partagé,
+  rubrique d'export Excel « GAP — Applications » (groupe `apps`), démonstration, jeu de test et tests. Les **nœuds « application »** disparaissent de la
+  cartographie (type d'objet, génération, palette « Construire », fiche, légende), de même que le lien application → fournisseur ; les cartes déjà enregistrées
+  sont nettoyées par la migration. La clé `appGaps` d'un fichier de l'outil historique est écartée sans rien dire à l'import. Les fournisseurs, sites et
+  infrastructures de la cartographie sont inchangés. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Corrigé
 

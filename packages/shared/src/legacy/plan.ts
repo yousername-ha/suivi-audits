@@ -206,7 +206,7 @@ export interface PlanOptions {
   envelope: boolean;
 }
 
-/** Modules de l'ancien outil qui n'existent plus (constats, CRRC, investissements : ADR 0084) : ignorés à l'import, sans trace. */
+/** Modules de l'ancien outil qui n'existent plus (constats, CRRC, investissements : ADR 0084 ; revues des accès : ADR 0087 ; applications à intégrer, GAP : ADR 0089) : ignorés à l'import, sans trace. */
 const CLES_RETIREES = ['findings', 'findingsRev', 'crrc', 'invest', 'accessReviews', 'appGaps'] as const;
 
 /** Calcule l'état résultant d'un import et son rapport. Ne modifie ni « current » ni « incoming ». */

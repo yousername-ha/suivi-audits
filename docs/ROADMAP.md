@@ -10,8 +10,8 @@ consolidation documentaire (H5, ci-dessous).
 **Reste à faire, par ordre de priorité**
 
 1. Recette de l'ensemble sur le serveur du RSSI, puis étiquette de version `v4.2.0` (par le RSSI) portant les migrations 034 et 035 (la 3.6.1, publiée, portait les migrations 022 à 033 ; la 4.1.0 ajoute la 034).
-2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic, du clausier fournisseurs et du
-   GAP applications sont repris ; ReCyF est couvert par la page Couverture.
+2. Exports de comité à la charte du modèle interne (COPIL). Les exports Excel du pronostic et du clausier fournisseurs
+   sont repris ; ReCyF est couvert par la page Couverture.
 3. Normalisation des sous-structures encore en JSON dans des tables liées ([ADR 0040](adr/0040-sortie-du-json-plat-modules-en-tables.md)) :
    tâches des écarts et valeurs d'indicateurs faites (migration 028) ; restent le plan d'audit (jours, personnes, créneaux) puis
    les autres colonnes JSON du cœur (preuves de créneaux, contrôles des fournisseurs, sections des revues…).
@@ -98,8 +98,8 @@ Modules repris : `dda`, `processes`, `objectives`, `indicators`, `suppliers`, `r
 
 ## Phase 3 — Conformité étendue, risques et crise
 
-Modules repris : `frameworks` (ReCyF et autres), `appGaps`, `ai`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`. La cartographie passe alors de l'état legacy aux tables pour ces objets, sans changer les cartes (`CARTO-02`), et la nature des enjeux devient un champ de l'enjeu (`CARTO-12`).
-- ReCyF et analyse d'écarts (GAP) multi-référentiels.
+Modules repris : `frameworks` (ReCyF et autres), ~~`appGaps`~~ (retiré, ADR 0089), `ai`, `incidents`, `crisis`, `swots`, `interested`, `scope`, `plans`, `supEvals`. La cartographie passe alors de l'état legacy aux tables pour ces objets, sans changer les cartes (`CARTO-02`), et la nature des enjeux devient un champ de l'enjeu (`CARTO-12`).
+- ReCyF et analyse d'écarts multi-référentiels (l'analyse d'écart applicative « GAP » est retirée, [ADR 0089](adr/0089-simplification-du-menu-conformite.md)).
 - IA : registre des systèmes, évaluations, plan, politiques.
 - ~~**CRRC** et **Investissements** (`CRRC-01` à `CRRC-04`, `INV-01`, `INV-02`)~~ : modules retirés le 11/11/2026 ([ADR 0084](adr/0084-retrait-des-modules-crrc-et-investissements.md)), exigences abandonnées.
 - **Incidents, PCA/PRA, événements** :

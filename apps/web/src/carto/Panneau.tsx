@@ -87,7 +87,7 @@ export function Panneau(p: PanneauProps) {
           ['Processus', n((o) => o.type === 'process' || o.type === 'subprocess')],
           ['Parties intéressées', n((o) => o.type === 'stakeholder')],
           ['Enjeux', n((o) => /issue/.test(o.type))],
-          ['Applications et SI', n((o) => ['application', 'infrastructure', 'site'].includes(o.type))],
+          ['Sites et systèmes', n((o) => ['infrastructure', 'site'].includes(o.type))],
           ['Fournisseurs', n((o) => o.type === 'supplier')],
         ]
       : [

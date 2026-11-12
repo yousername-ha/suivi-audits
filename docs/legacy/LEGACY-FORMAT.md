@@ -32,7 +32,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `schema` | int |  |
 | `iso27001Certified` | bool |  |
 | `plan` | objet | 5 |
-| `appGaps` | liste | 2 |
 | `reviews` | liste | 1 |
 | `branding` | objet | 0 |
 | `plans` | liste | 0 |
@@ -360,20 +359,6 @@ Sert de contrat pour l'import dans la refonte. La clé `maps` (cartographie, mod
 | `$.plan.people[].id` | texte | 11 |
 | `$.plan.people[].name` | texte | 11 |
 | `$.plan.people[].role` | texte | 11 |
-| `$.appGaps` | liste | 1 |
-| `$.appGaps[]` | objet | 2 |
-| `$.appGaps[].id` | texte | 2 |
-| `$.appGaps[].createdAt` | texte | 2 |
-| `$.appGaps[].name` | texte | 2 |
-| `$.appGaps[].supplier` | texte | 2 |
-| `$.appGaps[].dscp` | texte | 2 |
-| `$.appGaps[].cloud` | texte | 2 |
-| `$.appGaps[].status` | texte | 2 |
-| `$.appGaps[].owner` | texte | 2 |
-| `$.appGaps[].target` | texte | 2 |
-| `$.appGaps[].desc` | texte | 2 |
-| `$.appGaps[].lines` | objet | 2 |
-| `$.appGaps[].custom` | liste | 2 |
 | `$.reviews` | liste | 1 |
 | `$.reviews[]` | objet | 1 |
 | `$.reviews[].id` | texte | 1 |

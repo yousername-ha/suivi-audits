@@ -29,7 +29,6 @@ export const OBJECT_TYPES = [
   'stakeholder',
   'external_issue',
   'internal_issue',
-  'application',
   'infrastructure',
   'site',
   'supplier',
@@ -53,7 +52,6 @@ export const TYPE_LABELS: Record<NodeType | 'missing', string> = {
   stakeholder: 'Partie intéressée',
   external_issue: 'Enjeu externe',
   internal_issue: 'Enjeu interne',
-  application: 'Application / service',
   infrastructure: 'Infrastructure',
   site: 'Site',
   supplier: 'Fournisseur',
@@ -67,7 +65,6 @@ export const TYPE_ICONS: Partial<Record<NodeType | 'missing', string>> = {
   stakeholder: 'users',
   external_issue: 'alert',
   internal_issue: 'target',
-  application: 'app',
   infrastructure: 'server',
   site: 'pin',
   supplier: 'box',
@@ -245,11 +242,7 @@ export interface ObjectDetails {
   sso?: string;
   mfa?: string;
   certs?: string[];
-  apps?: { id: string; name: string }[];
   status?: string;
-  supplier?: string;
-  healthData?: string;
-  hosting?: string;
 }
 export interface CartoObject {
   riskColor?: string;
@@ -262,7 +255,6 @@ export interface CartoObject {
   family?: string;
   parent?: string;
   scope?: ScopeState;
-  scopeLabel?: string;
   std: Referentiel[];
   ic?: string;
   nObj?: number;
@@ -275,7 +267,6 @@ export interface CartoObject {
   crit?: boolean;
   hds?: boolean;
   saas?: boolean;
-  supRef?: string;
   src?: IssueSource[];
   procs?: string[];
   /** Nature déduite d'un enjeu, avant correction manuelle (CARTO-12). */
@@ -377,6 +368,5 @@ export const REF_MODULES: Record<string, Module> = {
   infra: 'pilotage',
   scope: 'pilotage',
   sup: 'fournisseurs',
-  app: 'conformite',
 };
 export const refModule = (ref: string): Module | null => REF_MODULES[refPrefix(ref)] ?? null;

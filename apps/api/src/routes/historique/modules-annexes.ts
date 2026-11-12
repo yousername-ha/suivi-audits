@@ -1,8 +1,4 @@
-import {
-  ActionPlanCreation,
-  ActionPlanModification,
-  DecalagePlan,
-} from '@suivi/shared';
+import { ActionPlanCreation, ActionPlanModification, DecalagePlan } from '@suivi/shared';
 import { route } from '../../http/route.js';
 import { tags, user, idPlan } from './commun.js';
 
