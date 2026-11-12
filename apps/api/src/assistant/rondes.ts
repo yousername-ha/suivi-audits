@@ -87,7 +87,7 @@ function consigneRonde(
     `Vous êtes l’assistant RSSI de la plateforme de suivi (profil « ${PROFIL_ASSISTANT_LIBELLES[profil]} »). ${PROFILS[profil]}`,
     `Date du jour : ${aujourdHui}. Vous effectuez une RONDE AUTONOME : personne ne vous interroge.`,
     particularite,
-    'Déroulé, dans cet ordre : 1. appelez lister_perimetres ; 2. appelez signaux pour chaque périmètre ; 3. lisez avec lire_element les éléments qui le méritent ; 4. pour chaque action en retard ou risque à revoir qui a un responsable, appelez envoyer_rappel, ou poser_question quand il vous manque une information que seul le responsable peut donner (pas les deux pour le même élément) ; si une action manque pour traiter un constat, appelez proposer_action (profil « Mise en œuvre ») ; si vous relevez un fait d’audit, appelez proposer_constat (profil « Audit interne ») ; 5. appelez memoriser si un fait durable servira aux rondes suivantes ; 6. seulement ensuite, rédigez le rapport.',
+    'Déroulé, dans cet ordre : 1. appelez vue_ensemble pour situer toute la gouvernance ; 2. appelez signaux pour les périmètres qui le méritent (retards, risques à revoir) ; 3. lisez avec lire_element les éléments qui le méritent ; 4. pour chaque action en retard ou risque à revoir qui a un responsable, appelez envoyer_rappel, ou poser_question quand il vous manque une information que seul le responsable peut donner (pas les deux pour le même élément) ; si une action manque pour traiter un constat, appelez proposer_action (profil « Mise en œuvre ») ; si vous relevez un fait d’audit, appelez proposer_constat (profil « Audit interne ») ; 5. appelez memoriser si un fait durable servira aux rondes suivantes ; 6. seulement ensuite, rédigez le rapport.',
     'Règles :',
     '- N’affirmez rien sans l’avoir lu par un outil pendant cette ronde. Tout chiffre vient tel quel d’un outil ; ne calculez aucun taux.',
     '- Vous ne modifiez aucun registre. Vous pouvez seulement envoyer un rappel (envoyer_rappel), poser une question (poser_question), proposer une action au RSSI (proposer_action), écrire une note de mémoire (memoriser) et proposer une fiche de méthode au RSSI (proposer_methode).',
@@ -312,6 +312,7 @@ export class RondesAssistant {
       new Set(await this.assistant.perimetresDuProfil(p)),
       particularite,
       p.documents ? (p.classification_max as Classification) : null,
+      p.tous_perimetres,
     )
       .catch((e: unknown) => this.log.error({ err: (e as Error).message }, 'assistant : ronde non consignée'))
       .finally(() => {
@@ -334,6 +335,7 @@ export class RondesAssistant {
     perimetres: ReadonlySet<string>,
     particularite: string,
     documents: Classification | null,
+    organisation: boolean,
   ): Promise<void> {
     const { r } = await this.assistant.lire();
     let rapport = '';
@@ -404,6 +406,7 @@ export class RondesAssistant {
           ...(documents && this.assistant.documents
             ? { documents: this.assistant.documents.pour(referent, documents) }
             : {}),
+          ...(organisation && this.assistant.organisation ? { organisation: this.assistant.organisation } : {}),
           ronde: this.actions(id, profil, referent, compte, r.plafond_rappels_jour),
         },
         log: this.log,

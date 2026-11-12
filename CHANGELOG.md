@@ -118,6 +118,11 @@ désormais l'appliquer (`statut: "applique"`). _(Session « Référentiel librar
 
 ### Ajouté
 
+- **Assistant RSSI : vue d'ensemble de la gouvernance** : l'assistant lit en un appel l'état de tous les périmètres (retards,
+  risques à revoir, couverture) et les échéances d'audit. Il lit aussi, avec les droits de la personne, le plan d'audit, les
+  incidents, les évaluations des fournisseurs et les applications à intégrer. Ces rubriques d'organisation ne sont ouvertes
+  qu'à un profil qui lit tous les périmètres. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 - **Assistant RSSI : accès par défaut et réglages** : par défaut, les deux profils lisent tous les périmètres (y compris ceux
   créés plus tard) et tous les documents, toujours dans la limite des droits de la personne ; un profil se restreint par une
   liste de périmètres ou un niveau de classification. Chaque option de l'écran de réglages porte une explication.

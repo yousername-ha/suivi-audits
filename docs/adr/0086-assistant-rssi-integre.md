@@ -412,3 +412,21 @@ réponse 3 ci-dessus (« un profil n'a aucun périmètre par défaut ») et le d
 - **Écran de réglages** : défaut corrigé (après « Enregistrer », le formulaire réaffichait les anciennes valeurs comme des
   modifications en attente, et un second clic les aurait rétablies) ; le formulaire reprend désormais la réponse du serveur.
   L'erreur s'affiche à côté du bouton. Chaque option porte une explication.
+
+## Addendum du 12/11/2026 — vue d'ensemble de la gouvernance et rubriques d'organisation (point 6)
+
+Demande du RSSI : l'assistant doit avoir une vue globale de la gouvernance. Réalisé sur `claude/assistant-rssi`, sans migration :
+
+- **Outil `vue_ensemble`** : en un appel, pour chaque périmètre lisible (25 au plus), les compteurs de la plateforme, les actions
+  en retard et sans responsable, les risques dont la revue est dépassée et la couverture des référentiels ; puis, pour
+  l'organisation, les échéances d'audit, les constats par statut, le nombre d'incidents et de fournisseurs évalués. Les rondes
+  commencent par cet outil. Tout est calculé par la plateforme.
+- **Rubriques communes à toute l'organisation**, jusque-là invisibles pour l'assistant : outils `plan_audit` (dates, cycle,
+  constats, plans d'actions annuels), `incidents`, `evaluations_fournisseurs`, `applications_a_integrer`. Chacun appelle la vue
+  existante du module **avec les droits de la personne** (ou du référent) : sans le droit du module, la rubrique est refusée, et
+  simplement absente de la vue d'ensemble. Seuls les champs simples sont transmis, textes raccourcis, listes comptées ; les
+  champs qui désignent une personne (identifiant, courriel, téléphone) sont retirés.
+- **Règle d'accès** : ces rubriques n'appartiennent à aucun périmètre. Elles ne sont ouvertes qu'à un profil qui **lit tous les
+  périmètres** ; un profil limité à une liste de périmètres n'a pas de vue d'organisation.
+- **Non couvert** : gestion de crise, retours d'expérience, cartographie, PESTEL.
+- Vérifié par les tests automatisés avec un faux modèle ; les rubriques étaient vides dans ces tests, sauf les actions.

@@ -78,6 +78,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   assistant.rondes = assistantRondes;
   const assistantDocuments = new DocumentsAssistant(db, vault, cfg, assistant, log);
   assistant.documents = assistantDocuments;
+  assistant.organisation = historique;
   return {
     cfg,
     log,

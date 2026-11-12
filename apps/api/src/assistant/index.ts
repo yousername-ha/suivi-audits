@@ -22,6 +22,7 @@ import type { Logger } from 'pino';
 import type { SessionUser } from '../auth.js';
 import type { Actor, Db } from '../db/db.js';
 import type { Grc } from '../grc/core.js';
+import type { Historique } from '../historique/index.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 import { consigne, repondre } from './agent.js';
@@ -50,6 +51,9 @@ export class Assistant {
   private readonly taches = new Map<string, Promise<void>>();
   /** Rondes autonomes (lot A3) : branchées par les services, elles valident le référent d'un profil. */
   rondes?: RondesAssistant;
+  /** Rubriques communes à toute l'organisation : branchées par les services, ouvertes aux seuls profils qui lisent tous
+      les périmètres. */
+  organisation?: Historique;
   /** Contenu des documents (lot A4) : branché par les services. */
   documents?: DocumentsAssistant;
 
@@ -485,6 +489,7 @@ export class Assistant {
       cle,
       perimetres: new Set(await this.perimetresDuProfil(p)),
       documents: p.documents ? (p.classification_max as Classification) : null,
+      organisation: p.tous_perimetres,
     }).finally(() => this.taches.delete(id));
     this.taches.set(id, tache);
     return this.detail(id, user);
@@ -506,6 +511,7 @@ export class Assistant {
     cle: string;
     perimetres: ReadonlySet<string>;
     documents: Classification | null;
+    organisation: boolean;
   }): Promise<void> {
     let contenu: string;
     let erreur = false;
@@ -535,6 +541,7 @@ export class Assistant {
           user: t.user,
           perimetres: t.perimetres,
           ...(t.documents && this.documents ? { documents: this.documents.pour(t.user, t.documents) } : {}),
+          ...(t.organisation && this.organisation ? { organisation: this.organisation } : {}),
         },
         log: this.log,
       });

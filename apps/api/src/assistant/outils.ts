@@ -8,12 +8,16 @@ import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from '../grc/core.js';
 import { dashboard } from '../grc/dashboard.js';
+import type { Historique } from '../historique/index.js';
 
 export interface ContexteOutil {
   g: Grc;
   user: SessionUser;
   /** Périmètres ouverts au profil de l'assistant. */
   perimetres: ReadonlySet<string>;
+  /** Rubriques communes à toute l'organisation (plan d'audit, incidents, fournisseurs, applications). Présent seulement
+      quand le profil lit tous les périmètres : un profil limité à quelques périmètres n'a pas de vue d'organisation. */
+  organisation?: Historique;
   /** Présent quand le profil est autorisé à lire les documents (ADR 0086, point 12). */
   documents?: LectureDocuments;
   /** Présent pendant une ronde autonome seulement : ce que l'assistant peut émettre seul (rappel, note de mémoire). */
@@ -72,6 +76,48 @@ function exiger(ctx: ContexteOutil, smsi: string) {
   if (!ctx.perimetres.has(smsi)) throw new HttpError(403, 'Ce périmètre n’est pas ouvert à ce profil de l’assistant.');
 }
 const outil = <A>(o: Outil<A>): Outil => o as Outil;
+
+const PERIMETRES_VUE_MAX = 25;
+const LIGNES_RUBRIQUE_MAX = 60;
+/** Champs qui désignent une personne : ils n'apprennent rien au modèle et n'ont pas à sortir. */
+const CHAMP_PERSONNE = /(^|_)(owner|user|email|mail|telephone|phone)(id)?$|ownerId$|userId$/i;
+
+/** Aperçu d'une fiche d'une rubrique d'organisation : champs simples seulement, textes raccourcis, listes comptées. */
+function apercu(o: unknown): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (!o || typeof o !== 'object') return out;
+  for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
+    if (CHAMP_PERSONNE.test(k) || v === null || v === undefined || v === '') continue;
+    if (typeof v === 'string') out[k] = v.length > 240 ? v.slice(0, 240) + '…' : v;
+    else if (typeof v === 'number' || typeof v === 'boolean') out[k] = v;
+    else if (Array.isArray(v)) {
+      if (v.length) out[k] = `${v.length} élément(s)`;
+    }
+  }
+  return out;
+}
+function exigerOrganisation(ctx: ContexteOutil): Historique {
+  if (!ctx.organisation)
+    throw new HttpError(
+      403,
+      'Ce profil est limité à certains périmètres : il ne lit pas les rubriques communes à toute l’organisation.',
+    );
+  return ctx.organisation;
+}
+/** Lit une rubrique avec les droits de la personne ; un refus d'accès rend null (la rubrique est simplement absente). */
+async function sansRefus<T>(lire: () => Promise<T>): Promise<T | null> {
+  try {
+    return await lire();
+  } catch (e) {
+    if (e instanceof HttpError) return null;
+    throw e;
+  }
+}
+const compter = (valeurs: readonly string[]) => {
+  const n: Record<string, number> = {};
+  for (const v of valeurs) n[v || 'non renseigné'] = (n[v || 'non renseigné'] ?? 0) + 1;
+  return n;
+};
 
 /** Parcourt les actions d'un périmètre (nombre de pages borné) : en retard, et sans responsable nommé. */
 async function parcourirActions(ctx: ContexteOutil, smsi: string) {
@@ -282,6 +328,175 @@ export const OUTILS: readonly Outil[] = [
         },
         elements: detail ? detail.length : c.frameworks.length,
         sources: [{ perimetre: a.perimetre, nom: s.name }],
+      };
+    },
+  }),
+  outil({
+    nom: 'vue_ensemble',
+    description:
+      'Vue d’ensemble de la gouvernance, en un seul appel : pour chaque périmètre que vous pouvez consulter, les compteurs de la plateforme (actions, risques, contrôles, preuves), les actions en retard, les risques dont la revue est dépassée et la couverture des référentiels ; puis, pour l’organisation, la prochaine échéance d’audit et les incidents non clos. À appeler en premier pour un bilan, une synthèse ou une question transversale.',
+    parametres: z.object({}).strict(),
+    async executer(ctx) {
+      const tous = (await ctx.g.listSmsis(ctx.user)).filter((s) => ctx.perimetres.has(s.id));
+      const liste = tous.slice(0, PERIMETRES_VUE_MAX);
+      const aujourdHui = new Date().toISOString().slice(0, 10);
+      const perimetres = [];
+      for (const s of liste) {
+        const compteurs = await sansRefus(async () => (await dashboard(ctx.g, s.id, ctx.user)).sections);
+        const actions = await sansRefus(() => parcourirActions(ctx, s.id));
+        const risques = await sansRefus(async () => {
+          let depassees = 0;
+          let offset: number | null = 0;
+          for (let page = 0; page < PAGES_MAX_RETARD && offset !== null; page++) {
+            const r = await ctx.g.listObjects(s.id, ctx.user, 'risk', '', offset);
+            for (const o of r.items) {
+              const revue = typeof o.data.reviewAt === 'string' ? o.data.reviewAt.slice(0, 10) : '';
+              if (revue && revue < aujourdHui) depassees++;
+            }
+            offset = r.nextOffset;
+          }
+          return depassees;
+        });
+        const referentiels = await sansRefus(async () =>
+          (await ctx.g.rapprochements.coverage(s.id, ctx.user)).frameworks.map((f) => ({
+            nom: f.name,
+            exigences: f.requirements,
+            couvertes: f.covered,
+            aValider: f.toValidate,
+            nonCouvertes: f.uncovered,
+          })),
+        );
+        perimetres.push({
+          id: s.id,
+          nom: s.name,
+          nature: s.nature,
+          ...(compteurs ? { compteurs } : {}),
+          ...(actions
+            ? {
+                actionsEnRetard: actions.retard.length,
+                actionsSansResponsable: actions.sansResponsable.length,
+                // Au-delà de la limite d'examen, les nombres sont partiels : à dire tel quel.
+                ...(actions.examinees < actions.total ? { actionsPartiel: true } : {}),
+              }
+            : {}),
+          ...(risques === null ? {} : { risquesRevueDepassee: risques }),
+          ...(referentiels ? { referentiels } : {}),
+        });
+      }
+      const organisation: Record<string, unknown> = {};
+      if (ctx.organisation) {
+        const audit = await sansRefus(() => ctx.organisation!.audit.vue(ctx.user));
+        if (audit)
+          organisation.audit = {
+            prochainAudit: audit.nextDate || null,
+            auditInterne: audit.internalDate || null,
+            echeanceDeCloture: audit.closeDeadline || null,
+            constatsParStatut: compter(audit.findings.map((f) => f.status)),
+          };
+        const incidents = await sansRefus(() => ctx.organisation!.incidents.vue(ctx.user));
+        if (incidents) organisation.incidents = { nombre: incidents.incidents.length };
+        const evaluations = await sansRefus(() => ctx.organisation!.evaluations.vue(ctx.user));
+        if (evaluations)
+          organisation.fournisseurs = {
+            fournisseurs: evaluations.fournisseurs.length,
+            evaluations: evaluations.evaluations.length,
+          };
+      }
+      return {
+        donnees: {
+          perimetres,
+          ...(tous.length > liste.length ? { perimetresNonDetailles: tous.length - liste.length } : {}),
+          ...(Object.keys(organisation).length ? { organisation } : {}),
+        },
+        elements: perimetres.length,
+        sources: liste.map((s) => ({ perimetre: s.id, nom: s.name })),
+      };
+    },
+  }),
+  outil({
+    nom: 'plan_audit',
+    description:
+      'Plan et programme d’audit de l’organisation : dates du prochain audit, de l’audit interne et de clôture, années du cycle, constats par statut et par source, mesures auditables et leur préparation, plans d’actions annuels et tâches récurrentes. Rubrique commune à toute l’organisation.',
+    parametres: z.object({}).strict(),
+    async executer(ctx) {
+      const h = exigerOrganisation(ctx);
+      const a = await h.audit.vue(ctx.user);
+      const plans = await sansRefus(() => h.plans.vue(ctx.user));
+      return {
+        donnees: {
+          prochainAudit: a.nextDate || null,
+          auditInterne: a.internalDate || null,
+          echeanceDeCloture: a.closeDeadline || null,
+          annees: a.years.map((y) => ({ annee: y, libelle: a.yearLabels[String(y)] ?? '' })),
+          mesuresAuditables: a.items.length,
+          constats: {
+            nombre: a.findings.length,
+            parStatut: compter(a.findings.map((f) => f.status)),
+            parSource: compter(a.findings.map((f) => f.source)),
+            derniers: a.findings.slice(-LIGNES_RUBRIQUE_MAX / 2).map((f) => apercu(f)),
+          },
+          ...(plans
+            ? {
+                plansDActions: plans.plans.slice(0, LIGNES_RUBRIQUE_MAX).map((p) => apercu(p)),
+                tachesRecurrentes: plans.recurrences.length,
+              }
+            : {}),
+        },
+        elements: a.findings.length + (plans?.plans.length ?? 0),
+        sources: [],
+      };
+    },
+  }),
+  outil({
+    nom: 'incidents',
+    description:
+      'Registre des incidents de sécurité de l’organisation : pour chaque incident, ses champs simples (qualification, catégorie, statut, dates, impact) et le statut de l’action liée au registre des écarts. Rubrique commune à toute l’organisation.',
+    parametres: z.object({}).strict(),
+    async executer(ctx) {
+      const v = await exigerOrganisation(ctx).incidents.vue(ctx.user);
+      const lignes = v.incidents.slice(-LIGNES_RUBRIQUE_MAX);
+      return {
+        donnees: {
+          nombre: v.incidents.length,
+          ...(v.incidents.length > lignes.length ? { seulsLesPlusRecents: lignes.length } : {}),
+          incidents: lignes.map((i) => ({
+            ...apercu(i),
+            ...(v.ecarts[i.findingId] ? { statutActionLiee: v.ecarts[i.findingId] } : {}),
+          })),
+        },
+        elements: lignes.length,
+        sources: [],
+      };
+    },
+  }),
+  outil({
+    nom: 'evaluations_fournisseurs',
+    description:
+      'Évaluations des fournisseurs de l’organisation : fournisseurs suivis et, pour chaque évaluation, ses champs simples et son score calculé par la plateforme. Rubrique commune à toute l’organisation.',
+    parametres: z.object({}).strict(),
+    async executer(ctx) {
+      const v = await exigerOrganisation(ctx).evaluations.vue(ctx.user);
+      return {
+        donnees: {
+          fournisseurs: v.fournisseurs.slice(0, LIGNES_RUBRIQUE_MAX).map((f) => apercu(f)),
+          evaluations: v.evaluations.slice(0, LIGNES_RUBRIQUE_MAX).map((e) => ({ ...apercu(e), score: e.score })),
+        },
+        elements: v.evaluations.length,
+        sources: [],
+      };
+    },
+  }),
+  outil({
+    nom: 'applications_a_integrer',
+    description:
+      'Applications à intégrer (analyses d’écart avant mise en service) : pour chaque application, ses champs simples et le nombre de points de contrôle. Rubrique commune à toute l’organisation.',
+    parametres: z.object({}).strict(),
+    async executer(ctx) {
+      const v = await exigerOrganisation(ctx).gap.vue(ctx.user);
+      return {
+        donnees: { applications: v.apps.slice(0, LIGNES_RUBRIQUE_MAX).map((a) => apercu(a)) },
+        elements: v.apps.length,
+        sources: [],
       };
     },
   }),
