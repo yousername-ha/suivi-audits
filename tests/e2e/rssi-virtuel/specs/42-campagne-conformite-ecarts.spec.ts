@@ -249,14 +249,34 @@ test('CAMP-C4-02 ouvert : une action de plan saisie sous un sous-périmètre n�
   }
 });
 
-test('CAMP-C4-05 ouvert : la revue de direction d’un sous-périmètre a ses entrées préparées', async ({ browser }) => {
-  // ISO/IEC 27001:2022, 9.3.2. Sous un sous-périmètre, la page « Revues de direction » n'a ni bandeau « Préparer la
-  // prochaine revue » ni entrées 9.3.2 : l'API répond « Ces données appartiennent au pilotage commun. ».
-  test.fail(true, 'CAMP-C4-05 ouvert : GET …/pilotage/revue/entrees répond 404 sous le sous-périmètre');
+test('CAMP-C4-05 ouvert : un périmètre enfant sans héritage des référentiels a sa propre revue de direction', async ({
+  browser,
+}) => {
+  // ISO/IEC 27001:2022, 9.3.2. Arbitrage du RSSI du 13/11/2026 (BUG-042) : chaque périmètre enfant a sa propre revue, sauf
+  // s'il hérite des référentiels du parent (ses entrées remontent alors dans la revue du parent, test suivant). Sous un
+  // périmètre enfant, la page « Revues de direction » n'a ni bandeau « Préparer la prochaine revue » ni entrées 9.3.2 :
+  // l'API répond « Ces données appartiennent au pilotage commun. ».
+  test.fail(true, 'CAMP-C4-05 ouvert : GET …/pilotage/revue/entrees répond 404 sous un périmètre enfant');
   const { ctx, rq, csrf } = await admin(browser);
   try {
-    const sous = await sousPerimetre(rq, csrf);
-    const r = await rq.get(`/api/grc/${sous}/pilotage/revue/entrees`);
+    const nom = 'Campagne C4-05 périmètre enfant sans héritage (fictif)';
+    const liste = (await (await rq.get('/api/grc/smsis')).json()) as { id: string; name: string }[];
+    let enfant = liste.find((s) => s.name === nom)?.id;
+    if (!enfant) {
+      const c = await rq.post('/api/grc/smsis', {
+        headers: entetes(csrf),
+        data: {
+          name: nom,
+          scope: 'Périmètre enfant fictif de la campagne, sans héritage des référentiels',
+          parentId: PERIMETRE_COMMUN,
+          inheritFrameworks: false,
+          timezone: 'Europe/Paris',
+        },
+      });
+      expect(c.ok(), `création du périmètre enfant : ${await c.text()}`).toBe(true);
+      enfant = ((await c.json()) as { id: string }).id;
+    }
+    const r = await rq.get(`/api/grc/${enfant}/pilotage/revue/entrees`);
     expect(r.status(), await r.text()).toBe(200);
   } finally {
     await ctx.close();
@@ -266,8 +286,9 @@ test('CAMP-C4-05 ouvert : la revue de direction d’un sous-périmètre a ses en
 test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les écarts ouverts de ses sous-périmètres', async ({
   browser,
 }) => {
-  // ISO/IEC 27001:2022, 9.3.2 c) (non-conformités et actions correctives). La seule revue préparée (racine) ne compte que
-  // les écarts de la racine : une non-conformité majeure ouverte sous le périmètre d'hébergement n'entre dans aucune revue,
+  // ISO/IEC 27001:2022, 9.3.2 c) (non-conformités et actions correctives). Arbitrage du RSSI du 13/11/2026 (BUG-042) : un
+  // périmètre enfant qui hérite des référentiels du parent n'a pas sa propre revue, ses entrées remontent dans celle du
+  // parent. La seule revue préparée (racine) ne compte que les écarts de la racine : une non-conformité majeure ouverte sous le périmètre d'hébergement n'entre dans aucune revue,
   // sans que l'entrée le dise.
   test.fail(true, 'CAMP-C4-05 ouvert : l’écart ouvert du sous-périmètre est absent de l’entrée 9.3.2 c 4 de la racine');
   const { ctx, rq, csrf } = await admin(browser);
