@@ -53,11 +53,12 @@ describe('Méthodes indépendantes et nomenclatures', () => {
       expect(m.source.normative).toBe(false);
     },
   );
-  it('ne force pas un jugement qualitatif dans une multiplication', () => {
+  it('impose le niveau de la matrice, jamais un niveau choisi librement (BUG-024)', () => {
     const m = methodTemplate('mehari');
+    expect(m.calculation.kind).toBe('matrix');
     expect(
       evaluateMethod(m, { dimensions: { severity: 'impact_4' }, likelihood: 'likelihood_4', level: 'low', inputs: {} }),
-    ).toMatchObject({ level: 'low', score: null });
+    ).toMatchObject({ level: 'high', score: null });
   });
   it('rejette une matrice incomplète ou des échelles ambiguës', () => {
     const m = methodTemplate('ebios_rm');
