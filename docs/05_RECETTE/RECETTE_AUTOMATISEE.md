@@ -56,7 +56,7 @@ Tenu à jour à chaque livraison : ce que chaque évolution a ajouté comme cont
 | Modules en tables (migrations 022 à 029) | `apps/api/test/reprise-tables-*.test.ts`, `reprise-sous-listes.test.ts`, `registres-droits.test.ts` (registres, périmètres hérités, rôles lecteur/contributeur/gestionnaire, groupes, registre restreint, reprise 029), `historique-*.test.ts` ; job CI « Montée de version » (dernière version publiée vers la version courante) | Mise à jour réelle sur le serveur du RSSI, avec sauvegarde |
 | Couverture par exigence | `packages/shared/test/couverture.test.ts`, `apps/api/test/couverture-exigences.test.ts`, `tests/e2e/specs/zzzzzzzzzzzzzzzz-couverture-exigences.spec.ts` | Justesse métier des états et de la validation |
 | Exports de revue de direction (Word, PowerPoint, Excel) | `apps/api/test/export-revue.test.ts` (structure des archives, rubriques vides) | Ouverture dans Word, PowerPoint et Excel sans demande de réparation |
-| Exports Excel par rubrique, dont pronostic de l'audit, GAP applications et évaluations fournisseurs | `apps/api/test/export-suivi.test.ts`, `export-suivi-complements.test.ts`, `tests/e2e/specs/zzzzzzzzzzzzzzzzz-exports-excel.spec.ts` | Ouverture dans Excel, lisibilité du mode pro à l'impression |
+| Exports Excel par rubrique, dont pronostic de l'audit et évaluations fournisseurs | `apps/api/test/export-suivi.test.ts`, `export-suivi-complements.test.ts`, `tests/e2e/specs/zzzzzzzzzzzzzzzzz-exports-excel.spec.ts` | Ouverture dans Excel, lisibilité du mode pro à l'impression |
 | Retrait de l'écran `/legacy` | `apps/api/test/suivi-lecture.test.ts`, parcours Playwright adaptés (aucune écriture par l'ancienne route) | Parcours d'un utilisateur habitué à l'ancien outil |
 
 ## Ce qui reste manuel

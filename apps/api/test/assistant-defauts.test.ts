@@ -191,11 +191,10 @@ describe('assistant : vue d’ensemble de la gouvernance', () => {
     expect(JSON.stringify(v)).not.toMatch(/ownerId|userId/);
   });
 
-  it('lit le plan d’audit, les incidents, les fournisseurs et les applications avec les droits de la personne', async () => {
+  it('lit le plan d’audit, les incidents et les fournisseurs avec les droits de la personne', async () => {
     expect(await outil(admin, 'plan_audit')).toHaveProperty('constats');
     expect(await outil(admin, 'incidents')).toMatchObject({ nombre: 0, incidents: [] });
     expect(await outil(admin, 'evaluations_fournisseurs')).toHaveProperty('evaluations');
-    expect(await outil(admin, 'applications_a_integrer')).toHaveProperty('applications');
     // L'invité n'a pas le droit des incidents : refus du service, et la vue d'ensemble n'en dit rien.
     expect(await outil(invite, 'incidents')).toHaveProperty('erreur');
     const v = (await outil(invite, 'vue_ensemble')) as { organisation?: Record<string, unknown> };

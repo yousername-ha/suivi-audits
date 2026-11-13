@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, ecartCommun, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
-let t: TestApp, admin: Agent, seulAudit: Agent, auditEcritureSeule: Agent, seulConformite: Agent;
+let t: TestApp, admin: Agent, seulAudit: Agent, auditEcritureSeule: Agent, seulIncidents: Agent;
 let idEcart = '';
 const item = (id: string, ref: string, num: string) => ({
   id,
@@ -22,7 +22,7 @@ beforeAll(async () => {
   admin = await login(t, await makeUser(t, 'dc_admin', 'admin'));
   seulAudit = await login(t, await makeUser(t, 'dc_audit', 'ro', { modules: ['audit'] }));
   auditEcritureSeule = await login(t, await makeUser(t, 'dc_audit_rw', 'rw', { modules: ['audit'] }));
-  seulConformite = await login(t, await makeUser(t, 'dc_conformite', 'ro', { modules: ['conformite'] }));
+  seulIncidents = await login(t, await makeUser(t, 'dc_incidents', 'ro', { modules: ['incidents'] }));
   const s = (await admin.get('/api/suivi/etat')).json();
   s.items = [item('A-5.1', 'A', '5.1'), item('A-5.2', 'A', '5.2')];
   s.dda = { 'A-5.1': { app: 'oui', level: 'Total', just: 'Justification fictive' } };
@@ -51,11 +51,11 @@ describe('écarts : réservés à ecarts:lire dans toutes les vues', () => {
     expect(d.json().ecarts).toEqual([]);
   });
 
-  it('GAP et incidents ne donnent pas l’état des écarts à qui n’a pas ecarts:lire', async () => {
-    const gap = await seulConformite.get('/api/gap');
-    expect(gap.statusCode, gap.body).toBe(200);
-    expect(gap.json().ecarts).toEqual({});
-    expect(gap.body).not.toContain(idEcart);
+  it('les incidents ne donnent pas l’état des écarts à qui n’a pas ecarts:lire', async () => {
+    const r = await seulIncidents.get('/api/incidents');
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().ecarts).toEqual({});
+    expect(r.body).not.toContain(idEcart);
   });
 });
 

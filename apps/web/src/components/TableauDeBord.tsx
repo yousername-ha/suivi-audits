@@ -567,7 +567,6 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
                 detail="revues échues"
               />
             )}
-            {c && <ChiffreCle valeur={String(c.bia)} detail="analyses d’impact (BIA)" />}
             {c && <ChiffreCle valeur={String(c.pcra)} detail="plans de continuité et de reprise" />}
           </div>
         </Dalle>

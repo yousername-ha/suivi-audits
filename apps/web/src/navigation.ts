@@ -101,32 +101,13 @@ export const FAMILLES: Famille[] = [
   {
     id: 'risques',
     label: 'Risques',
-    destinations: [
-      dest('risques', 'Gestion des risques', [
-        p('risques'),
-        p('opportunites'),
-        p('etudes'),
-        p('carte'),
-        p('traitements'),
-        p('scenarios'),
-        p('configuration-analyses'),
-      ]),
-    ],
+    destinations: [dest('risques', 'Gestion des risques', [p('risques'), p('etudes'), p('carte')])],
   },
   {
     id: 'conformite',
     label: 'Conformité et audits',
     destinations: [
-      dest('referentiels', 'Référentiels et exigences', [
-        p('referentiels'),
-        p('bibliotheque'),
-        p('correspondances'),
-        p('rapprochements'),
-        p('couverture'),
-        p('analyser-service'),
-        p('gap-applications'),
-        p('correspondances-bibliotheque'),
-      ]),
+      dest('referentiels', 'Bibliothèque de référentiels', [p('bibliotheque')]),
       dest('applicabilite', 'Applicabilité et mesures', [
         p('dda-iso'),
         p('dda-annexe-a'),
@@ -161,11 +142,9 @@ export const FAMILLES: Famille[] = [
     id: 'resilience',
     label: 'Résilience',
     destinations: [
-      dest('continuite', 'Continuité d’activité', [p('bia'), p('continuite'), p('exercices')]),
+      dest('continuite', 'Continuité d’activité', [p('continuite'), p('exercices')]),
       dest('incidents', 'Incidents et crise', [
         p('incidents-registre'),
-        p('incidents-qualifier'),
-        p('incidents-retex'),
         p('crise-cellule'),
         p('crise-contacts'),
         p('crise-scenarios'),

@@ -233,7 +233,6 @@ export class GrcCopiesReferentiels {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
       return { frameworkId, version, requirements: definition.requirements.length };
     }, user.username);
   }

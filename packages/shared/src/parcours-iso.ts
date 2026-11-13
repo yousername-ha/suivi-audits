@@ -241,7 +241,7 @@ export const ETAPES_PARCOURS: readonly EtapeParcours[] = [
           'Une méthode et des critères de risque identifiables, utilisant les versions du catalogue et les décisions d’acceptation retenues par l’organisation.',
         livrable: 'Méthode et références de configuration',
         repere: 0,
-        vers: { rubrique: 'configuration-analyses' },
+        vers: { chemin: '/parametres/configuration-grc', module: 'parametres' },
         kinds: [],
       },
       {
@@ -317,7 +317,7 @@ export const ETAPES_PARCOURS: readonly EtapeParcours[] = [
           'Un plan de traitement relié aux risques et aux mesures retenues, avec les actions qui permettent d’en suivre la réalisation.',
         livrable: 'Plan de traitement et actions liées',
         repere: 0,
-        vers: { rubrique: 'traitements' },
+        vers: { rubrique: 'risques' },
         kinds: ['treatment'],
       },
       {
@@ -542,13 +542,13 @@ export const ETAPES_PARCOURS: readonly EtapeParcours[] = [
       {
         id: 'hds-smsi-1',
         titre: 'Relier les compléments',
-        description: 'Associer HDS aux travaux du SMSI.',
+        description: 'Relier les mesures du SMSI aux exigences HDS.',
         attendu:
-          'Les compléments du chapitre 5 sont reliés aux travaux ISO correspondants, sans créer un second jeu de preuves.',
-        livrable: 'Correspondances et documents existants',
+          'Les compléments du chapitre 5 sont couverts par des mesures du SMSI déjà en place, reliées aux exigences HDS dans la Bibliothèque de référentiels, sans créer un second jeu de preuves.',
+        livrable: 'Mesures existantes reliées aux exigences HDS',
         repere: 0,
-        vers: { rubrique: 'correspondances' },
-        kinds: ['mapping'],
+        vers: { rubrique: 'bibliotheque' },
+        kinds: ['measure'],
       },
     ],
   },

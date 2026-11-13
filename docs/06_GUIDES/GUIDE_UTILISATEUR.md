@@ -459,20 +459,20 @@ Restriction : Recette du serveur utilisateur non reçue.
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-019.
 
-## FCT-020 — Référentiels, exigences et correspondances
+## FCT-020 — Référentiels, exigences et couverture
 
-Objectif : Publications, activation, mappings révisables, simulations/imports ; sources normatives sous licence non redistribuées.
+Objectif : Publications, activation, simulations/imports ; sources normatives sous licence non redistribuées. Les correspondances entre référentiels sont retirées (ADR 0089, lot 3).
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/pilotage/referentiels ; /pilotage/correspondances**.
+Accès : **/pilotage/bibliotheque** (les pages « Référentiels et exigences » et « Correspondances » sont retirées, ADR 0089).
 Profils : Session complète, lecture du domaine conformite ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Ouvrir Pilotage → Référentiels et exigences et sélectionner le référentiel/version.
+1. Ouvrir Pilotage → Conformité → Bibliothèque de référentiels et consulter les exigences du référentiel/version.
 2. Préparer les exigences organisationnelles ou l’import autorisé, simuler et vérifier les sources/droits de réutilisation.
 3. Publier avec justification/confirmation ; activer seulement les versions retenues.
-4. Dans Correspondances, relier les exigences, justifier et réviser le mapping en conservant son historique.
+4. Pour le périmètre affiché, « Voir la couverture » ouvre le détail exigence par exigence, avec l’évaluation et son historique.
 
 Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
 Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
@@ -513,7 +513,7 @@ et le cas TEST-021.
 Objectif : EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action.
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/pilotage/risques ; /pilotage/scenarios ; /pilotage/traitements**.
+Accès : **/pilotage/risques ; /pilotage/etudes** (les pages « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » sont retirées, ADR 0090 ; les fiches « opportunité » sont supprimées du serveur).
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
@@ -521,7 +521,7 @@ un environnement de recette autorisé pour les opérations sensibles.
 1. Ouvrir Registre des risques ; sélectionner une méthode publiée adaptée au périmètre.
 2. Renseigner les étapes/champs exigés ; EBIOS RM suit cinq ateliers et les scénarios/sources/biens associés.
 3. Apprécier le risque brut et résiduel selon la méthode, justifier et valider selon les droits.
-4. Relier les mesures et actions de traitement ; consulter les évaluations antérieures.
+4. Dans le Registre, « Plan d’action » d’un risque : mesures en place pour l’atténuer et actions rattachées (« Générer une action » depuis un traitement) ; consulter les évaluations antérieures.
 5. Après réalisation d’un traitement, déclencher une réévaluation explicite ; aucun résiduel automatiquement diminué.
 
 Champs/paramètres : Champs exacts dans le formulaire courant ou le contrat API ; pour une famille historique, inventaire détaillé restant à recetter.
@@ -630,21 +630,19 @@ Restriction : L’avancement ne constitue ni conformité ni certification ; rece
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-026.
 
-## FCT-027 — BIA, continuité, exercices et RETEX E
+## FCT-027 — Continuité, exercices et RETEX E (le BIA est retiré)
 
 Objectif : Formulaires génériques, impacts temporels, objectifs cohérents, validations et rapports HTML/JSON testés.
 
 État : **PARTIEL**, uniquement dans ce périmètre.
-Accès : **/pilotage/bia ; /pilotage/continuite ; /pilotage/exercices**.
+Accès : **/pilotage/continuite ; /pilotage/exercices**.
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.
 
-1. Dans BIA, renseigner activité/service/scénario/dépendances et impacts dans le temps.
-2. Fixer service minimum, durée maximale d’interruption et objectifs de reprise/perte compatibles.
-3. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
-4. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
-5. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
+1. Créer un plan PCA/PRA/PCRA/activité relié, avec déclenchement, stratégie, procédures et responsabilités.
+2. Enregistrer exercice et RETEX, relier les améliorations à des actions puis valider avec les justificatifs.
+3. Exporter le rapport HTML imprimable ou JSON ; les grilles officielles manquantes ne sont pas simulées.
 
 Champs/paramètres : Activité, Service rendu, Périmètre, Scénario d’interruption, Criticité de l’activité, Durée maximale d’interruption (heures), Objectif de reprise (heures), Perte de données acceptable (heures), Service minimum attendu, Ressources nécessaires, Dépendances et fournisseurs, État, Justification
 Résultat attendu : fiche/décision/rapport dans la source décrite, visible selon
@@ -932,7 +930,7 @@ Emplacements descriptifs, **aucune fausse capture générée** :
 | Risque/carte                 | Fiche fictive, méthode/version, légende, brut/résiduel et détail au clic.     |
 | Preuve/contrôle              | Versions documentaires fictives, résultat et action liée.                     |
 | Parcours qualité             | Étape et validation fictive ; aucun faux score de conformité.                 |
-| Continuité                   | BIA et plan fictifs, objectifs, dépendances, rapport imprimable.              |
+| Continuité                   | Plan fictif, exercices, rapport imprimable.                                   |
 | Exploitation                 | État final anonymisé ; aucun chemin privé, secret ou token affiché.           |
 
 Les références visuelles existantes tests/e2e/specs/**captures** prouvent des

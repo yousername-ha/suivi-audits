@@ -17,6 +17,8 @@ export const LAYOUT_LIMITS = {
 } as const;
 
 // Référence : préfixe connu, puis 1 à 200 caractères imprimables (aucun caractère de contrôle, pas d'espace en tête).
+// Le préfixe `app` (applications, retirées par l'ADR 0089) reste accepté pour qu'une carte importée d'un fichier de l'outil
+// historique puisse encore être enregistrée : ses nœuds s'affichent comme des objets indisponibles, à retirer de la carte.
 const REF_RE = /^(isms|scope|(process|pi|sup|app|issue|site|infra|lane|band|zone|note|frame):\S[^\p{Cc}]{0,199})$/u;
 /** Note ou cadre libre : identifiant court sans espace. */
 export const FREE_REF_RE = /^(note|frame):[A-Za-z0-9_-]{1,40}$/;
@@ -165,7 +167,6 @@ export const CartoObjectSchema = z.object({
   family: z.string().optional(),
   parent: z.string().optional(),
   scope: z.enum(['in', 'out', 'unk']).optional(),
-  scopeLabel: z.string().optional(),
   std: z.array(z.enum(REFERENTIELS)),
   ic: z.string().optional(),
   nObj: z.number().optional(),
@@ -177,7 +178,6 @@ export const CartoObjectSchema = z.object({
   crit: z.boolean().optional(),
   hds: z.boolean().optional(),
   saas: z.boolean().optional(),
-  supRef: z.string().optional(),
   src: z.array(IssueSourceSchema).optional(),
   procs: z.array(z.string()).optional(),
   auto: z.enum(['ext', 'int']).optional(),

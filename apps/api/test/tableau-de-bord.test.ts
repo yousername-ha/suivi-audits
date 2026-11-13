@@ -78,7 +78,6 @@ describe('tableau de bord natif', () => {
        VALUES ($1,'risk','pilotage','Risque fictif','{}','test','test')`,
       [A],
     );
-    await admin.post(`/api/grc/${A}/objects`, { kind: 'bia', name: 'BIA fictif', data: {} });
     membre = await login(t, membreUser);
   });
   afterAll(() => t.close());
@@ -128,7 +127,7 @@ describe('tableau de bord natif', () => {
   it('risques et continuité', async () => {
     const s = await synthese(admin);
     expect(s.risques).toMatchObject({ total: 1, sansDecision: 1 });
-    expect(s.continuite).toEqual({ bia: 1, pcra: 0 });
+    expect(s.continuite).toEqual({ pcra: 0 });
     expect(s.pilotage).toMatchObject({ constatsOuverts: 4, risques: 1, actionsEnRetard: 1 });
   });
 

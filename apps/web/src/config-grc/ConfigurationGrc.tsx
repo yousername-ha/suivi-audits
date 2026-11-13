@@ -1,6 +1,5 @@
-/* Configuration GRC : échelles, matrices, correspondances, critères et taxonomies versionnés (ADR 0038). Cet écran est
-   monté à deux endroits (Paramètres → Configuration GRC et Gestion des risques → Configuration des analyses) : mêmes API,
-   même stockage, mêmes droits. Aucune valeur n'est fournie par défaut ; des modèles peuvent être adoptés à la demande. */
+/* Configuration GRC : échelles, matrices, correspondances, critères et taxonomies versionnés (ADR 0038). Cet écran se
+   trouve dans Paramètres → Configuration GRC (la rubrique « Configuration des analyses » du menu Risques est retirée, ADR 0090). Aucune valeur n'est fournie par défaut ; des modèles peuvent être adoptés à la demande. */
 import {
   Alert,
   Anchor,
@@ -66,11 +65,9 @@ const CLE_FORMAT = /^[a-z][a-z0-9_]{0,63}$/;
 export function ConfigurationGrc({
   kind,
   onKind,
-  contexte,
 }: {
   kind: CfgKind | 'modeles';
   onKind: (k: CfgKind | 'modeles') => void;
-  contexte: 'plateforme' | 'analyses';
 }) {
   const [ouvert, setOuvert] = useState<string | null>(null);
   const [creer, setCreer] = useState(false);
@@ -79,11 +76,9 @@ export function ConfigurationGrc({
   return (
     <Stack className="grille-formulaire">
       <Text>
-        {contexte === 'plateforme'
-          ? 'Définissez une fois les échelles, matrices, critères et catégories ; toutes les méthodes d’analyse les réutilisent.'
-          : 'Ce sont les mêmes éléments que dans les paramètres de la plateforme : une modification faite ici est visible là-bas, et inversement.'}{' '}
-        Une version publiée ne change jamais ; les méthodes et analyses restent épinglées à la version qu’elles
-        utilisent.
+        Définissez une fois les échelles, matrices, critères et catégories ; toutes les méthodes d’analyse les
+        réutilisent. Une version publiée ne change jamais ; les méthodes et analyses restent épinglées à la version
+        qu’elles utilisent.
       </Text>
       <Tabs value={kind} onChange={(v) => v && (setOuvert(null), onKind(v as CfgKind | 'modeles'))} keepMounted={false}>
         <Tabs.List>

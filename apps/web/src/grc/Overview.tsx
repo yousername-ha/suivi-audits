@@ -66,7 +66,7 @@ export function Overview({ smsi }: { smsi: string }) {
           risks?: Summary;
           controls?: Summary;
           evidence?: Summary;
-          frameworks?: { id: string; name: string; version: number; requirements: number; mapped: number }[];
+          frameworks?: { id: string; name: string; version: number; requirements: number }[];
         };
       }>(`/api/grc/${smsi}/dashboard`),
   });
@@ -119,11 +119,7 @@ export function Overview({ smsi }: { smsi: string }) {
       {sections?.frameworks && (
         <Card withBorder>
           <Stack>
-            <Text fw={600}>Référentiels activés et correspondances revues</Text>
-            <Text size="sm">
-              La couverture ci-dessous mesure les exigences ayant une correspondance humaine validée. Elle ne constitue
-              pas un taux de conformité.
-            </Text>
+            <Text fw={600}>Référentiels activés</Text>
             <Table.ScrollContainer
               minWidth={600}
               scrollAreaProps={{
@@ -136,7 +132,6 @@ export function Overview({ smsi }: { smsi: string }) {
                     <Table.Th>Référentiel</Table.Th>
                     <Table.Th>Version</Table.Th>
                     <Table.Th>Exigences</Table.Th>
-                    <Table.Th>Correspondances revues</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -145,7 +140,6 @@ export function Overview({ smsi }: { smsi: string }) {
                       <Table.Td>{f.name}</Table.Td>
                       <Table.Td>{f.version}</Table.Td>
                       <Table.Td>{f.requirements}</Table.Td>
-                      <Table.Td>{f.mapped}</Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>

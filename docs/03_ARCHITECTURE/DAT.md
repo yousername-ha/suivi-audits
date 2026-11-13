@@ -56,15 +56,15 @@ existants est progressif ; seul le module existe à ce stade.
 
 | Technologie                   | Version de source vérifiée                                                  |
 | ----------------------------- | --------------------------------------------------------------------------- |
-| Node                          | minimum 24 ; images node:24-alpine, version exacte de patch dépend du build |
-| pnpm / TypeScript             | 10.34.6 / 5.9.3                                                             |
-| Fastify / zod / pg            | 5.12.5 / 4.6.5 / 8.23.1                                                     |
-| Kysely                        | 0.29.7 (ADR 0062)                                                                      |
-| React / Mantine               | 19.3.0 / 8.3.18                                                             |
-| TanStack Query / React Router | 5.104.1 / 7.18.4                                                            |
-| Vite / Vitest / Playwright    | 7.3.7 / 3.2.7 / 1.56.1                                                      |
-| PostgreSQL                    | 17, image 17-alpine                                                         |
-| Caddy                         | 2.11.7, recompilé avec Go 1.26.10                                            |
+| Node                          | minimum 26 ; images node:26-alpine, version exacte de patch dépend du build |
+| pnpm / TypeScript             | 10.34.6 / 6.0.3                                                             |
+| Fastify / zod / pg            | 5.12.7 / 4.6.7 / 8.23.1                                                     |
+| Kysely                        | 0.29.7 (ADR 0062)                                                           |
+| React / Mantine               | 19.3.1 / 9.7.3                                                              |
+| TanStack Query / React Router | 5.104.4 / 8.5.0                                                             |
+| Vite / Vitest / Playwright    | 8.3.4 / 5.0.5 / 1.56.1                                                      |
+| PostgreSQL                    | 18, image 18-alpine                                                         |
+| Caddy                         | 2.11.7, recompilé avec Go 1.26.10                                           |
 | Trivy                         | 0.75.0, binaire officiel à empreinte vérifiée (ADR 0063)                    |
 
 Versions déclarées/épinglées dans package.json/lockfiles/Dockerfiles ; elles ne

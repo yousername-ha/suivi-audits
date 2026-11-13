@@ -34,7 +34,7 @@ Un commit ou une PR qui traite une exigence de [docs/archive/BACKLOG-FONCTIONNEL
 Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § 2. En résumé : `packages/shared` (schémas zod, format legacy), `apps/api` (Fastify), `apps/web` (React), `tests/e2e` (Playwright). L'outil historique est retiré du dépôt ; ses fonctions de référence figées servent aux tests de parité (`packages/shared/test/reference`).
 
 ## Environnement de développement
-Prérequis : Node 24, pnpm 10 (`corepack enable`), Docker.
+Prérequis : Node 26, pnpm 10 (`corepack enable`), Docker.
 
 ```bash
 pnpm install

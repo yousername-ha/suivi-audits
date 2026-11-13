@@ -322,7 +322,6 @@ function Risques({ s }: { s: Synthese }) {
           />
         )}
         {r && <Chiffre valeur={r.revueEchue} libelle="revues échues" etat={r.revueEchue ? 'attention' : undefined} />}
-        {c && <Chiffre valeur={c.bia} libelle="analyses d’impact (BIA)" />}
         {c && <Chiffre valeur={c.pcra} libelle="plans de continuité et de reprise (PCRA)" />}
       </div>
     </Carte>

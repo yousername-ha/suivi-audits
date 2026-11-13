@@ -45,10 +45,9 @@ converti, le nombre indiqué correspond aux appels SQL directs conservés volont
 | `grc/frameworks.ts` | 0 | Converti (lot 20) |
 | `grc/kit-ia.ts` | 0 | Converti (lot 23) |
 | `grc/legacy-tasks.ts` | 0 | Converti (lot 25) |
-| `grc/library-mappings.ts` | 0 | Converti (lot 20) |
 | `grc/library.ts` | 0 | Converti (lot 8) |
 | `grc/parcours.ts` | 0 | Converti (lot 20) |
-| `grc/rapprochements.ts` | 0 | Converti (lot 12) |
+| `grc/couverture.ts` | 0 | Converti (lot 12, issu de `rapprochements.ts` retiré par l'ADR 0089) |
 | `grc/registres.ts` | 0 | Converti (lot 7) ; objectColumns retiré de core.ts |
 | `grc/report.ts` | 0 | Converti (lot 25) |
 | `grc/sources.ts` | 0 | Converti (lot 23) |

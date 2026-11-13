@@ -1,8 +1,9 @@
 /* Menu à sept familles : aucune rubrique du Pilotage perdue ni doublée, droits et adresses d'origine conservés. */
-import type { Action, Module } from '@suivi/shared';
+import { ETAPES_PARCOURS, type Action, type Module } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { PILOTAGE_DANS_ADMINISTRATION } from '../src/administration-droits';
 import { deplacerDansMenu, FAMILLES, famillesVisibles, localiser, ordonnerMenu, placer } from '../src/navigation';
+import { resoudreDestination } from '../src/parcours-iso/destinations';
 import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
 const tout = () => true;
@@ -36,20 +37,9 @@ const INVENTAIRE = [
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
-  'risques|risques|opportunites|/pilotage/opportunites|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
-  'risques|risques|traitements|/pilotage/traitements|pilotage|lire',
-  'risques|risques|scenarios|/pilotage/scenarios|pilotage|lire',
-  'risques|risques|configuration-analyses|/pilotage/configuration-analyses|pilotage|lire',
-  'conformite|referentiels|referentiels|/pilotage/referentiels|conformite|lire',
   'conformite|referentiels|bibliotheque|/pilotage/bibliotheque|conformite|lire',
-  'conformite|referentiels|correspondances|/pilotage/correspondances|conformite|lire',
-  'conformite|referentiels|rapprochements|/pilotage/rapprochements|conformite|lire',
-  'conformite|referentiels|couverture|/pilotage/couverture|conformite|lire',
-  'conformite|referentiels|analyser-service|/pilotage/analyser-service|conformite|lire',
-  'conformite|referentiels|gap-applications|/pilotage/gap-applications|conformite|lire',
-  'conformite|referentiels|correspondances-bibliotheque|/pilotage/correspondances-bibliotheque|conformite|lire',
   'conformite|applicabilite|dda-iso|/pilotage/dda-iso|audit|lire',
   'conformite|applicabilite|dda-annexe-a|/pilotage/dda-annexe-a|audit|lire',
   'conformite|applicabilite|dda-hds|/pilotage/dda-hds|audit|lire',
@@ -67,12 +57,9 @@ const INVENTAIRE = [
   'actions|plan-actions|actions|/pilotage/actions|ecarts|lire',
   'actions|recurrences|recurrences|/pilotage/recurrences|ecarts|lire',
   'actions|registres|registres|/registres|-|lire',
-  'resilience|continuite|bia|/pilotage/bia|pilotage|lire',
   'resilience|continuite|continuite|/pilotage/continuite|pilotage|lire',
   'resilience|continuite|exercices|/pilotage/exercices|pilotage|lire',
   'resilience|incidents|incidents-registre|/pilotage/incidents-registre|incidents|lire',
-  'resilience|incidents|incidents-qualifier|/pilotage/incidents-qualifier|incidents|lire',
-  'resilience|incidents|incidents-retex|/pilotage/incidents-retex|incidents|lire',
   'resilience|incidents|crise-cellule|/pilotage/crise-cellule|incidents|lire',
   'resilience|incidents|crise-contacts|/pilotage/crise-contacts|incidents|lire',
   'resilience|incidents|crise-scenarios|/pilotage/crise-scenarios|incidents|lire',
@@ -241,5 +228,10 @@ describe('ordre du menu choisi par la personne', () => {
     expect(famillesVisibles(() => false, ordre).map((f) => f.famille.id)).toEqual(['actions']);
     // L'ordre ne change ni les adresses ni la famille désignée par une adresse.
     expect(localiser('/pilotage/perimetres')?.famille.id).toBe('organisation');
+  });
+
+  it('chaque étape du parcours ISO pointe vers une rubrique qui existe encore', () => {
+    for (const e of ETAPES_PARCOURS)
+      for (const s of e.sousActions) expect([s.id, resoudreDestination(s.vers) !== null]).toEqual([s.id, true]);
   });
 });

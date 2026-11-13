@@ -15,7 +15,7 @@ export interface ContexteOutil {
   user: SessionUser;
   /** Périmètres ouverts au profil de l'assistant. */
   perimetres: ReadonlySet<string>;
-  /** Rubriques communes à toute l'organisation (plan d'audit, incidents, fournisseurs, applications). Présent seulement
+  /** Rubriques communes à toute l'organisation (plan d'audit, incidents, fournisseurs). Présent seulement
       quand le profil lit tous les périmètres : un profil limité à quelques périmètres n'a pas de vue d'organisation. */
   organisation?: Historique;
   /** Présent quand le profil est autorisé à lire les documents (ADR 0086, point 12). */
@@ -298,12 +298,12 @@ export const OUTILS: readonly Outil[] = [
   outil({
     nom: 'couverture_referentiels',
     description:
-      'Couverture des exigences par référentiel rattaché au périmètre (nombre d’exigences, couvertes, à valider, non couvertes, états d’évaluation). Avec « referentiel », rend aussi le détail exigence par exigence (300 au plus).',
+      'Couverture des exigences par référentiel rattaché au périmètre (nombre d’exigences, couvertes, non couvertes, états d’évaluation). Avec « referentiel », rend aussi le détail exigence par exigence (300 au plus).',
     parametres: z.object({ perimetre, referentiel: z.uuid().optional() }).strict(),
     async executer(ctx, a) {
       exiger(ctx, a.perimetre);
       const s = await ctx.g.access(a.perimetre, ctx.user);
-      const c = await ctx.g.rapprochements.coverage(a.perimetre, ctx.user, a.referentiel);
+      const c = await ctx.g.couverture.coverage(a.perimetre, ctx.user, a.referentiel);
       const detail = c.detail?.slice(0, 300).map((e) => ({
         id: e.id,
         intitule: texte(e.title, 160),
@@ -322,7 +322,6 @@ export const OUTILS: readonly Outil[] = [
             version: f.version,
             exigences: f.requirements,
             couvertes: f.covered,
-            aValider: f.toValidate,
             nonCouvertes: f.uncovered,
             etats: f.etats,
           })),
@@ -360,11 +359,10 @@ export const OUTILS: readonly Outil[] = [
           return depassees;
         });
         const referentiels = await sansRefus(async () =>
-          (await ctx.g.rapprochements.coverage(s.id, ctx.user)).frameworks.map((f) => ({
+          (await ctx.g.couverture.coverage(s.id, ctx.user)).frameworks.map((f) => ({
             nom: f.name,
             exigences: f.requirements,
             couvertes: f.covered,
-            aValider: f.toValidate,
             nonCouvertes: f.uncovered,
           })),
         );
@@ -489,20 +487,6 @@ export const OUTILS: readonly Outil[] = [
     },
   }),
   outil({
-    nom: 'applications_a_integrer',
-    description:
-      'Applications à intégrer (analyses d’écart avant mise en service) : pour chaque application, ses champs simples et le nombre de points de contrôle. Rubrique commune à toute l’organisation.',
-    parametres: z.object({}).strict(),
-    async executer(ctx) {
-      const v = await exigerOrganisation(ctx).gap.vue(ctx.user);
-      return {
-        donnees: { applications: v.apps.slice(0, LIGNES_RUBRIQUE_MAX).map((a) => apercu(a)) },
-        elements: v.apps.length,
-        sources: [],
-      };
-    },
-  }),
-  outil({
     nom: 'applicabilite_hds',
     description:
       'Applicabilité des exigences du référentiel HDS rattaché au périmètre, comptée par la plateforme : total, applicables, exclues, à déterminer, non évaluées. Rend « referentiel: null » quand aucun référentiel HDS n’est rattaché.',
@@ -555,7 +539,7 @@ export const OUTILS: readonly Outil[] = [
   outil({
     nom: 'signaux',
     description:
-      'Points d’attention d’un périmètre, calculés par la plateforme : actions en retard, actions sans responsable, risques dont la revue est dépassée, exigences non couvertes ou à valider par référentiel. À appeler en début de ronde ou de bilan.',
+      'Points d’attention d’un périmètre, calculés par la plateforme : actions en retard, actions sans responsable, risques dont la revue est dépassée, exigences non couvertes par référentiel. À appeler en début de ronde ou de bilan.',
     parametres: z.object({ perimetre }).strict(),
     async executer(ctx, a) {
       exiger(ctx, a.perimetre);
@@ -580,12 +564,11 @@ export const OUTILS: readonly Outil[] = [
       // La couverture relève du module Conformité : sans ce droit, le signal est simplement absent.
       let referentiels: unknown[] | null = null;
       try {
-        referentiels = (await ctx.g.rapprochements.coverage(a.perimetre, ctx.user)).frameworks.map((f) => ({
+        referentiels = (await ctx.g.couverture.coverage(a.perimetre, ctx.user)).frameworks.map((f) => ({
           id: f.frameworkId,
           nom: f.name,
           exigences: f.requirements,
           nonCouvertes: f.uncovered,
-          aValider: f.toValidate,
         }));
       } catch (e) {
         if (!(e instanceof HttpError)) throw e;

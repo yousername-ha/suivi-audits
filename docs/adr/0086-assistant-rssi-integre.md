@@ -458,3 +458,25 @@ contiennent tous les mots cherchés. **La page visée n'est jamais ouverte** : l
 l'assistant a pour consigne de donner l'adresse sans rien affirmer sur son contenu. Mêmes conditions que les documents : profil
 autorisé à lire les documents et droit `documents:lire` de la personne ; les liens n'ont pas de classification. Écarté : lire
 des adresses autorisées par un service isolé (sortie réseau supplémentaire, à décider à part si le besoin se confirme).
+
+## Addendum du 13/11/2026 — réalignement sur `claude-suivi-smsi` (version 6.3.0 et suivantes)
+
+À la demande du RSSI, la branche `claude/assistant-rssi` a repris `claude-suivi-smsi` (29 commits : version 6.3.0, retrait du
+BIA, des fiches « opportunité », des applications à intégrer et de la cartographie applicative, des correspondances et
+rapprochements entre référentiels ; ADR 0088 à 0091). Conséquences pour l'assistant :
+
+- **Migrations renumérotées.** L'application a pris les numéros `058` et `059`. Les migrations de l'assistant, jamais
+  publiées, deviennent : `055` (socle), `056` (rondes), `057` (apprentissage), puis `060` (constat des actions de ronde, ex-058),
+  `061` (questions, ex-059), `062` (propositions, ex-060), `063` (événements, ex-061), `064` (documents, ex-062), `065`
+  (constats, ex-063), `066` (accès par défaut, ex-064). Les numéros cités dans les addenda précédents sont ceux d'avant ce
+  réalignement. **Une recette locale construite avant ce réalignement doit être effacée et recréée** : sa base a enregistré les
+  anciens noms de migrations.
+- **Outil `applications_a_integrer` retiré**, la rubrique n'existant plus (ADR 0089, lot 2).
+- **Couverture** : les outils `couverture_referentiels`, `signaux` et `vue_ensemble` lisent désormais `Grc.couverture` ; le
+  compteur « à valider », qui venait des rapprochements, disparaît (ADR 0089, lot 3). Le type de notification
+  « Rapprochements à valider » n'existe plus : restent, pour l'assistant, « Rappel » et « Question ».
+- Les types d'éléments retirés (BIA, opportunité, correspondance) disparaissent d'eux-mêmes de `lister_elements`, qui lit la
+  liste partagée.
+
+Contrôles du 13/11/2026 (Node 22, PostgreSQL 16) : API 159 fichiers 1 186/1 186, partagé 602/602, interface commune 235/235,
+web 231/231. Non rejoué : jeu d'évaluation avec un modèle réel, recette navigateur, Docker.

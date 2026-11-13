@@ -248,6 +248,8 @@ export const IncidentModification = z
     cause: t(5000),
     resolvedAt: heure,
     retex: t(10000),
+    /** Réponses du questionnaire de qualification guidée (remplacées en bloc ; la qualification reste à `kind`). */
+    answers: reponses,
   })
   .partial()
   .strict();

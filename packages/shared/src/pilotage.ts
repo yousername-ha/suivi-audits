@@ -87,43 +87,6 @@ export const ImprovementData = common
     closedAt: date,
   })
   .passthrough();
-export const BiaData = common
-  .extend({
-    scope: text.default(''),
-    activity: text.default(''),
-    service: text.default(''),
-    scenario: text.default(''),
-    criticality: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
-    maxInterruptionHours: z.number().min(0).max(87600).nullable().default(null),
-    recoveryHours: z.number().min(0).max(87600).nullable().default(null),
-    dataLossHours: z.number().min(0).max(87600).nullable().default(null),
-    minimumService: text.default(''),
-    resources: text.default(''),
-    dependencies: text.default(''),
-    impacts: z
-      .array(
-        z
-          .object({
-            hours: z.number().min(0).max(87600),
-            business: text,
-            financial: text,
-            legal: text,
-            reputation: text,
-          })
-          .strict(),
-      )
-      .max(30)
-      .default([]),
-    status: z.enum(['draft', 'review', 'validated']).default('draft'),
-    justification: text.default(''),
-  })
-  .passthrough()
-  .superRefine((d, c) => {
-    if (d.recoveryHours !== null && d.maxInterruptionHours !== null && d.recoveryHours > d.maxInterruptionHours)
-      c.addIssue({ code: 'custom', message: 'L’objectif de reprise doit respecter la durée maximale d’interruption.' });
-    if (new Set(d.impacts.map((i) => i.hours)).size !== d.impacts.length)
-      c.addIssue({ code: 'custom', message: 'Un seul impact par durée d’interruption.' });
-  });
 export const ContinuityData = common
   .extend({
     planType: z.enum(['pca', 'pra', 'pcra', 'activity']).default('pca'),
@@ -163,25 +126,11 @@ export const JourneyData = common
     hdsApplicability: text.default(''),
   })
   .passthrough();
-/** Opportunité (ISO 9001:2015, 6.1.1 b et 6.1.2) : objet plus léger que le risque, traité avec lui dans la vue « Risques et
-    opportunités ». La norme n'impose ni échelle ni méthode : le niveau de précision est celui de l'organisme. */
-export const OpportunityData = common
-  .extend({
-    source: text.default(''),
-    benefit: text.default(''),
-    status: z.enum(['identified', 'evaluated', 'pursued', 'realised', 'dropped']).default('identified'),
-    decision: text.default(''),
-    reviewAt: date,
-    dueAt: date,
-  })
-  .passthrough();
 export const PILOTAGE_SCHEMAS = {
-  opportunity: OpportunityData,
   evidence: ProofData,
   control: ControlData,
   management_review: ManagementReviewData,
   nonconformity: ImprovementData,
-  bia: BiaData,
   continuity_plan: ContinuityData,
   continuity_exercise: ExerciseData,
   journey: JourneyData,
@@ -399,20 +348,6 @@ const niveauChamp = (key: string, label: string, echelle: readonly string[], hin
 const ECHELLE_CRITERE = ['1 — faible', '2 — moyen', '3 — fort', '4 — très fort'];
 const etude = (kind: GrcKind) => lien(kind, 'studyRef', 'Étude EBIOS RM');
 export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
-  opportunity: [
-    field('source', 'Origine', 'text', undefined),
-    field('benefit', 'Bénéfice attendu'),
-    status([
-      ['identified', 'Identifiée'],
-      ['evaluated', 'Évaluée'],
-      ['pursued', 'Poursuivie (actions en cours)'],
-      ['realised', 'Réalisée'],
-      ['dropped', 'Écartée'],
-    ]),
-    field('decision', 'Décision et justification'),
-    field('dueAt', 'Échéance', 'date'),
-    field('reviewAt', 'Prochaine revue', 'date'),
-  ],
   treatment: [
     etude('treatment'),
     field('strategy', 'Stratégie', 'select', [
@@ -657,26 +592,6 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
       ['progress', 'Actions en cours'],
       ['effectiveness', 'À vérifier'],
     ]),
-  ],
-  bia: [
-    field('activity', 'Activité'),
-    field('service', 'Service rendu'),
-    field('scope', 'Périmètre'),
-    field('scenario', 'Scénario d’interruption'),
-    field('criticality', 'Criticité de l’activité', 'select', [
-      { value: 'low', label: 'Faible' },
-      { value: 'medium', label: 'Moyenne' },
-      { value: 'high', label: 'Haute' },
-      { value: 'critical', label: 'Critique' },
-    ]),
-    field('maxInterruptionHours', 'Durée maximale d’interruption (heures)', 'number'),
-    field('recoveryHours', 'Objectif de reprise (heures)', 'number'),
-    field('dataLossHours', 'Perte de données acceptable (heures)', 'number'),
-    field('minimumService', 'Service minimum attendu'),
-    field('resources', 'Ressources nécessaires'),
-    field('dependencies', 'Dépendances et fournisseurs'),
-    draftReview,
-    field('justification', 'Justification'),
   ],
   continuity_plan: [
     field('planType', 'Type de plan', 'select', [

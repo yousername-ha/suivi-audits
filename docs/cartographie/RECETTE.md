@@ -2,7 +2,7 @@
 
 Jeu de données : fixture legacy anonymisée (`tests/fixtures/legacy-fixture.json`) complétée de données fictives :
 6 processus (2 pilotage, 2 réalisation, 2 support dont un avec 2 sous-processus), périmètre incluant 2 processus,
-4 parties intéressées, 2 SWOT, 8 fournisseurs (dont 1 HDS critique), 2 applications GAP, 1 site, 1 système.
+4 parties intéressées, 2 SWOT, 8 fournisseurs (dont 1 HDS critique), 1 site, 1 système.
 Aucune donnée réelle.
 
 | # | Parcours | Résultat attendu | Exigence |

@@ -160,7 +160,7 @@ const ISO: Referentiel[] = ['ISO 27001'];
 const BOTH: Referentiel[] = ['ISO 27001', 'HDS'];
 
 /** Objets de la plateforme, dans l'ordre de la bêta (SMSI, périmètre, processus, parties intéressées, enjeux,
- *  fournisseurs, applications, sites, systèmes). `state` est l'état legacy déjà filtré selon les droits. */
+ *  fournisseurs, sites, systèmes). `state` est l'état legacy déjà filtré selon les droits. */
 export function buildObjects(state: unknown, opts: BuildOptions): Map<string, CartoObject> {
   const S: Rec = isRec(state) ? state : {};
   const M = new Map<string, CartoObject>();
@@ -358,9 +358,7 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
   for (const i of opts.mapIssues ?? [])
     addIssue(i.label, i.desc ?? '', i.kind, { k: 'map', id: 'carte', l: 'Créé sur la carte' }, []);
 
-  const suppliers = arr(S.suppliers),
-    appGaps = arr(S.appGaps);
-  const supByName = new Map(suppliers.map((s) => [str(s.name).toLowerCase(), s]));
+  const suppliers = arr(S.suppliers);
   for (const s of suppliers) {
     const hds = isYes(s.hds),
       crit = isYes(s.critical);
@@ -385,31 +383,6 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
         certs: strs(s.certs).map((x) =>
           typeof x === 'string' ? x : isRec(x) ? str(x.name) || str(x.t) || 'Certificat' : 'Certificat',
         ),
-        apps: appGaps
-          .filter((a) => str(a.supplier).toLowerCase() === str(s.name).toLowerCase())
-          .map((a) => ({ id: String(a.id), name: str(a.name) || String(a.id) })),
-      };
-  }
-  for (const a of appGaps) {
-    const sp = supByName.get(str(a.supplier).toLowerCase());
-    const scp: ScopeState = a.status === 'Intégrée' ? 'in' : a.status === 'Écartée' ? 'out' : 'unk';
-    const o = add({
-      ref: 'app:' + String(a.id),
-      type: 'application',
-      name: str(a.name) || String(a.id),
-      sub: [a.supplier, a.status].filter(Boolean).join(' · '),
-      scope: scp,
-      supRef: sp ? 'sup:' + String(sp.id) : '',
-      owner: str(a.owner),
-      std: /oui|dscp/i.test(str(a.dscp)) ? [...BOTH] : [...ISO],
-      scopeLabel: scp === 'unk' ? str(a.status) || 'À étudier' : '',
-    });
-    if (det)
-      o.details = {
-        status: str(a.status) || 'À étudier',
-        supplier: str(a.supplier),
-        healthData: str(a.dscp),
-        hosting: str(a.cloud),
       };
   }
   for (const l of splitLines(sc.sites))
@@ -446,11 +419,9 @@ export function deriveRelations(M: ReadonlyMap<string, CartoObject>): DerivedRel
   for (const o of M.values()) {
     if (o.type === 'process' && o.scope !== 'out') r(o.ref, 'isms', 'part_of');
     if (o.type === 'subprocess') r(o.parent, o.ref, 'contains');
-    if ((o.type === 'application' || o.type === 'infrastructure' || o.type === 'site') && o.scope === 'in')
-      r(o.ref, 'isms', 'part_of');
+    if ((o.type === 'infrastructure' || o.type === 'site') && o.scope === 'in') r(o.ref, 'isms', 'part_of');
     if (o.type === 'stakeholder') r(o.ref, 'scope', 'interacts_with');
     if (o.type === 'supplier') r(o.ref, 'scope', 'supports');
-    if (o.type === 'application' && o.supRef) r(o.ref, o.supRef, 'depends_on');
     if (o.type === 'external_issue' || o.type === 'internal_issue') {
       r(o.ref, 'scope', 'impacts');
       for (const p of o.procs ?? []) r(o.ref, 'process:' + p, 'impacts', true);

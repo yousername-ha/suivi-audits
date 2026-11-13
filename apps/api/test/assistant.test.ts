@@ -429,7 +429,6 @@ describe('assistant : garde-fous de construction', () => {
       'plan_audit',
       'incidents',
       'evaluations_fournisseurs',
-      'applications_a_integrer',
       'applicabilite_hds',
       'chercher_documents',
       'lire_document',

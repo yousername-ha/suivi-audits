@@ -46,19 +46,12 @@ export const PILOTAGE_NAV = [
   {
     label: 'Conformité',
     items: [
-      { id: 'referentiels', label: 'Référentiels et exigences', module: 'conformite' },
       { id: 'bibliotheque', label: 'Bibliothèque de référentiels', module: 'conformite' },
       { id: 'dda-iso', label: 'Clauses ISO 27001 (DdA)', module: 'audit' },
       { id: 'dda-annexe-a', label: 'Annexe A (DdA)', module: 'audit' },
       { id: 'dda-hds', label: 'HDS (DdA)', module: 'audit' },
       { id: 'applicabilite', label: 'Applicabilité et justifications', module: 'pilotage' },
       { id: 'mesures', label: 'Mesures', module: 'audit' },
-      { id: 'correspondances', label: 'Correspondances entre exigences', module: 'conformite' },
-      { id: 'rapprochements', label: 'Rapprochements à valider', module: 'conformite' },
-      { id: 'couverture', label: 'Couverture par référentiel', module: 'conformite' },
-      { id: 'analyser-service', label: 'Analyser un service', module: 'conformite' },
-      { id: 'gap-applications', label: 'Applications à intégrer', module: 'conformite' },
-      { id: 'correspondances-bibliotheque', label: 'Correspondances de la bibliothèque', module: 'conformite' },
     ],
   },
   {
@@ -74,12 +67,8 @@ export const PILOTAGE_NAV = [
     label: 'Risques',
     items: [
       { id: 'risques', label: 'Registre des risques', module: 'pilotage' },
-      { id: 'opportunites', label: 'Opportunités', module: 'pilotage' },
       { id: 'etudes', label: 'Études EBIOS RM', module: 'pilotage' },
       { id: 'carte', label: 'Cartographie des risques', module: 'cartographie' },
-      { id: 'traitements', label: 'Traitements', module: 'pilotage' },
-      { id: 'scenarios', label: 'Scénarios et actifs', module: 'pilotage' },
-      { id: 'configuration-analyses', label: 'Configuration des analyses', module: 'pilotage' },
     ],
   },
   {
@@ -100,7 +89,6 @@ export const PILOTAGE_NAV = [
   {
     label: 'Plans et revues',
     items: [
-      { id: 'bia', label: 'Impacts sur l’activité — BIA', module: 'pilotage' },
       { id: 'continuite', label: 'Continuité et reprise', module: 'pilotage' },
       { id: 'exercices', label: 'Exercices et RETEX', module: 'pilotage' },
       { id: 'plans-calendrier', label: 'Calendrier des plans', module: 'pilotage' },
@@ -115,8 +103,6 @@ export const PILOTAGE_NAV = [
     label: 'Incidents et crise',
     items: [
       { id: 'incidents-registre', label: 'Registre des incidents', module: 'incidents' },
-      { id: 'incidents-qualifier', label: 'Qualifier un signalement', module: 'incidents' },
-      { id: 'incidents-retex', label: 'RETEX et chronologie', module: 'incidents' },
       { id: 'crise-cellule', label: 'Cellule de crise', module: 'incidents' },
       { id: 'crise-contacts', label: 'Contacts de crise', module: 'incidents' },
       { id: 'crise-scenarios', label: 'Scénarios et check-lists', module: 'incidents' },

@@ -179,7 +179,7 @@ export async function tableauDeBordNatif(
     }));
   }
   if (pilotage && l) {
-    sortie.continuite = { bia: l.bia, pcra: l.pcra };
+    sortie.continuite = { pcra: l.pcra };
     const r = await g.db.one<{ total: number; sansDecision: number; revueEchue: number }>(
       `SELECT count(*)::int total,
               count(*) FILTER (WHERE NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int "sansDecision",

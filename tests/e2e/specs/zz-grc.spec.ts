@@ -13,7 +13,7 @@ async function request(page: Page, path: string, body: unknown, version?: number
   expect(r.ok(), await r.text()).toBeTruthy();
   return r.json();
 }
-test('Pilotage : objet relié, correspondance revue, indicateurs et rapport comité utilisables', async ({ browser }) => {
+test('Pilotage : objet relié, indicateurs et rapport comité utilisables', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
   const page = await ctx.newPage(),
     problems = watchPage(page);
@@ -74,78 +74,23 @@ test('Pilotage : objet relié, correspondance revue, indicateurs et rapport comi
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
-    await page.goto('/pilotage/scenarios');
-    await page.getByRole('combobox', { name: 'Type de fiche', exact: true }).click();
-    await page.getByRole('option', { name: 'Bien support', exact: true }).click();
-    await page.getByRole('button', { name: 'Créer bien support', exact: true }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Intitulé', { exact: true }).fill('Bien support lié de recette');
-    await dialog.getByLabel('Description', { exact: true }).fill('Objet du socle relié à un processus');
-    await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
-    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).click();
-    await page.getByRole('option', { name: process.name, exact: true }).click();
-    await dialog.getByRole('combobox', { name: 'Éléments liés', exact: true }).press('Escape');
-    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
+    // La page « Scénarios et actifs » est retirée (ADR 0090) : les biens sont saisis dans les études EBIOS RM ; la fiche
+    // reste créable par l'API et son lien vers un processus est conservé.
+    await request(page, prefix + '/objects', {
+      kind: 'support_asset',
+      name: 'Bien support lié de recette',
+      data: { description: 'Objet du socle relié à un processus', refs: ['object:' + process.id] },
+    });
     const assets = await (await page.request.get(prefix + '/objects?kind=support_asset')).json();
     expect(assets.items[0].data.refs).toEqual(['object:' + process.id]);
-    await page.goto('/pilotage/correspondances');
-    for (const [direction, framework] of [
-      ['source', 'PSSI-source'],
-      ['cible', 'PSSI-cible'],
-    ]) {
-      await page.getByRole('combobox', { name: 'Référentiel ' + direction, exact: true }).click();
-      await page.getByRole('option', { name: framework!, exact: true }).click();
-      await page.getByRole('combobox', { name: 'Exigence ' + direction, exact: true }).click();
-      await page.getByRole('option', { name: 'REQ1 · Revue de test', exact: true }).click();
-    }
-    await page
-      .getByLabel('Justification de la correspondance', { exact: true })
-      .fill('Critères partiels examinés dans le cadre de la recette');
-    await page
-      .getByLabel('Source officielle ou organisationnelle', { exact: true })
-      .fill('https://example.invalid/revue');
-    await page.getByRole('button', { name: 'Enregistrer la proposition', exact: true }).click();
-    await page.getByRole('button', { name: 'Revue humaine', exact: true }).click();
-    await page
-      .getByRole('dialog')
-      .getByLabel('Décision et justification de la revue humaine', { exact: true })
-      .fill('Validation humaine documentée pour le comité');
-    await page.getByRole('button', { name: 'Confirmer la validation humaine', exact: true }).click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Historique et détail', exact: true }).click();
-    await expect(page.getByRole('dialog').getByText(/Version 2/)).toBeVisible();
-    await page.getByRole('dialog').getByRole('button', { name: 'Fermer l’historique' }).click();
-    await page.getByRole('button', { name: 'Modifier la correspondance', exact: true }).click();
-    await page
-      .getByRole('dialog')
-      .getByLabel('Justification de la correspondance', { exact: true })
-      .fill('Critères partiels examinés après révision de recette');
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Enregistrer et soumettre à nouveau à revue', exact: true })
-      .click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    const revised = await (await page.request.get(prefix + '/objects?kind=mapping')).json();
-    expect(revised.items[0].data.status).toBe('proposed');
-    expect(revised.items[0].version).toBe(3);
-    await page.getByRole('button', { name: 'Revue humaine', exact: true }).click();
-    await page
-      .getByRole('dialog')
-      .getByLabel('Décision et justification de la revue humaine', { exact: true })
-      .fill('Nouvelle validation motivée après modification');
-    await page.getByRole('button', { name: 'Confirmer la validation humaine', exact: true }).click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.goto('/pilotage/synthese');
-    await expect(page.getByText('Référentiels activés et correspondances revues', { exact: true })).toBeVisible();
+    await expect(page.getByText('Référentiels activés', { exact: true })).toBeVisible();
     await page.goto('/pilotage/imports');
     const promise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Rapport de pilotage / audit', exact: true }).click();
     const download = await promise;
     expect(download.suggestedFilename()).toBe('rapport-comite-smsi.html');
     const html = await (await import('node:fs/promises')).readFile((await download.path())!, 'utf8');
-    expect(html).toContain('Correspondances validées');
-    expect(html).toContain('Critères partiels examinés après révision de recette');
     expect(html).not.toContain('<script');
     expect(problems).toEqual([]);
   } finally {

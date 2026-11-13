@@ -69,6 +69,13 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
   « Aucun bug ouvert enregistré » ne signifie pas « aucun bug possible ».
 - Résultat du test du serveur utilisateur **NON REÇU** ; aucun PV accepté.
 
+## Assistant RSSI : réalignement du 13/11/2026
+
+`claude/assistant-rssi` a repris `claude-suivi-smsi` (6.3.0, ADR 0088 à 0091). Migrations de l'assistant renumérotées :
+`055` à `057`, puis `060` à `066` (l'application a pris `058` et `059`). Outil `applications_a_integrer` retiré ; couverture lue
+par `Grc.couverture`. Détail : dernier addendum de l'ADR 0086. Une recette locale antérieure doit être recréée. La copie
+construite de `packages/shared` se refait par `pnpm --filter @suivi/shared build` (les tests web la lisent).
+
 ## Assistant RSSI : panneau global (12/11/2026, branche `claude/assistant-rssi`)
 
 Portage de l'interface validée du paquet « assistant-ia-implementation-2026-11-12 » (frontend de référence `04a310f` sur
@@ -146,7 +153,7 @@ node --test scripts/tests/publication.test.mjs
 python3 -m unittest discover -s scripts/tests -p test_updates.py
 ```
 
-Ces commandes supposent Node 24+, pnpm 10.34.6 et un clone de développement.
+Ces commandes supposent Node 26+, pnpm 10.34.6 et un clone de développement.
 L’installation de dépendances accède aux registres externes ; elle n’a pas été
 rejouée pendant l’audit, car les dépendances étaient présentes. Les tests API,
 `pnpm test` et les recettes Docker demandent une base et un environnement

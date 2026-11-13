@@ -294,7 +294,7 @@ test('Pilotage : bibliothèque de référentiels, import, attribution d’une co
     await dialog.getByLabel('Motif de la publication').fill('Publication de recette automatisée');
     await dialog.getByRole('button', { name: 'Publier', exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole('row').filter({ hasText: nom })).toContainText('QA-BIBLIO');
+    await expect(page.getByLabel(`Référentiel ${nom}`, { exact: true })).toContainText('QA-BIBLIO');
     await page.goto('/pilotage/perimetres');
     await page.getByText('Liste', { exact: true }).click(); // le graphe est la vue par défaut
     await page.getByRole('button', { name: /^Référentiels rattachés au périmètre Pilotage de l/ }).click();
@@ -405,7 +405,7 @@ test('Pilotage K : parcours qualité enregistré, repris et validation humaine c
     await ctx.close();
   }
 });
-test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans débordement', async ({ browser }) => {
+test('Pilotage E : plan de continuité sur téléphone et rapport imprimable sans débordement', async ({ browser }) => {
   const ctx = await browser.newContext({
     storageState: (await sessionAdmin(browser)).state,
     ignoreHTTPSErrors: true,
@@ -414,27 +414,8 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    const root = await scope(page, 'QA-Pilotage-BIA-');
-    await page.goto('/pilotage/bia');
-    const rubriques = page.getByRole('navigation', { name: 'Rubriques : Continuité d’activité', exact: true });
-    await expect(rubriques.getByRole('link', { name: 'Impacts sur l’activité — BIA', exact: true })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    await page.getByRole('button', { name: 'Ajouter analyse d’impact sur l’activité', exact: true }).click();
+    await scope(page, 'QA-Pilotage-Continuite-');
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Intitulé', { exact: true }).fill('BIA activité de recette');
-    await dialog.getByLabel('Activité', { exact: true }).fill('Accueil métier');
-    await dialog.getByLabel('Scénario d’interruption', { exact: true }).fill('Indisponibilité du service');
-    await dialog.getByLabel('Durée maximale d’interruption (heures)', { exact: true }).fill('24');
-    await dialog.getByLabel('Objectif de reprise (heures)', { exact: true }).fill('4');
-    await dialog.getByLabel('Service minimum attendu', { exact: true }).fill('Accueil de secours');
-    await dialog.getByRole('button', { name: 'Ajouter une durée d’interruption', exact: true }).click();
-    await dialog.getByLabel('Impact métier', { exact: true }).fill('Dossiers en attente et service dégradé');
-    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
-    const bia = (await (await page.request.get(root + '/objects?kind=bia')).json()).items[0];
-    expect(bia.data.impacts[0].hours).toBe(24);
     await page.goto('/pilotage/continuite');
     await page.getByRole('button', { name: 'Ajouter plan de continuité ou de reprise', exact: true }).click();
     await dialog.getByLabel('Intitulé', { exact: true }).fill('PRA activité de recette');
@@ -442,8 +423,6 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
     await dialog
       .getByLabel('Procédures et ordre des opérations', { exact: true })
       .fill('Restaurer puis vérifier le service métier');
-    await dialog.getByRole('tab', { name: 'Liens et justificatifs', exact: true }).click();
-    await choose(page, 'Éléments liés', 'BIA activité de recette');
     await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     const download = page.waitForEvent('download');
@@ -452,10 +431,8 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
     expect(file.suggestedFilename()).toBe('pilotage-continuity_plan.html');
     const html = await (await import('node:fs/promises')).readFile((await file.path())!, 'utf8');
     expect(html).toContain('Restaurer puis vérifier le service métier');
-    expect(html).toContain('object:' + bia.id);
     expect(html).not.toContain('<script');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.screenshot({ path: '/work/onboarding-suivi/ghke-bia-mobile.png', fullPage: true });
     await expect(page).toHaveScreenshot('pilotage-continuite-mobile.png', {
       fullPage: true,
       animations: 'disabled',
@@ -470,128 +447,6 @@ test('Pilotage E : BIA sur téléphone, plan relié et rapport imprimable sans d
         page.locator('.mantine-Notifications-root'),
       ],
     });
-    expect(problems).toEqual([]);
-  } finally {
-    await ctx.close();
-  }
-});
-test('Pilotage : correspondance validée, rapprochement proposé puis confirmé par le pilote', async ({ browser }) => {
-  const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
-  const page = await ctx.newPage(),
-    problems = watchPage(page);
-  const stamp = Date.now();
-  const definition = (identifier: string, id: string) => ({
-    name: `Référentiel ${identifier}`,
-    identifier,
-    source: {
-      organisation: 'Organisation fictive',
-      document: 'Document fictif',
-      url: 'https://example.invalid/qa',
-      version: '1',
-      date: '2026-10-13',
-      license: 'Exemple fictif libre',
-      verifiedAt: '',
-      normative: false,
-      status: 'organisation',
-    },
-    domains: [{ id: 'gouvernance', label: 'Gouvernance' }],
-    requirements: [
-      {
-        id,
-        domain: 'gouvernance',
-        title: `Exigence ${id}`,
-        description: 'Exemple',
-        applicability: 'Tout',
-        measureRefs: [],
-      },
-    ],
-  });
-  const publier = async (identifier: string, id: string) => {
-    const def = definition(identifier, id);
-    const apercu = await post(page, '/api/library/frameworks/preview', { id: null, definition: def });
-    const r = await page.request.post('/api/library/frameworks/publish', {
-      headers: {
-        Origin: new URL(page.url()).origin,
-        'X-CSRF-Token': await csrfOf(page.request),
-        'If-Match': '"0"',
-      },
-      data: {
-        id: null,
-        definition: def,
-        previewId: apercu.previewId,
-        reason: 'Publication fictive de recette automatisée',
-        confirm: 'PUBLIER',
-      },
-    });
-    expect(r.ok(), await r.text()).toBeTruthy();
-    return (await r.json()) as { id: string };
-  };
-  try {
-    await page.goto('/pilotage/synthese');
-    const a = await publier(`QA-RAP-A-${stamp}`, 'RA-1'),
-      b = await publier(`QA-RAP-B-${stamp}`, 'RB-1');
-    const perimetre = await post(page, '/api/grc/smsis', {
-      name: `Périmètre rapprochements ${stamp}`,
-      scope: 'Fixture privée de recette',
-      nature: 'SMI',
-      timezone: 'Europe/Paris',
-    });
-    for (const fw of [a.id, b.id]) {
-      const r = await page.request.put(`/api/grc/${perimetre.id}/framework-attachments/${fw}`, {
-        headers: { Origin: new URL(page.url()).origin, 'X-CSRF-Token': await csrfOf(page.request) },
-        data: { version: 1, statut: 'applique', confirm: 'RATTACHER' },
-      });
-      expect(r.ok(), await r.text()).toBeTruthy();
-    }
-    const mesure = await post(page, `/api/grc/${perimetre.id}/objects`, {
-      kind: 'measure',
-      name: `Mesure rapprochement ${stamp}`,
-      data: {},
-    });
-    await post(page, `/api/library/mappings`, {
-      source: { frameworkId: a.id, version: 1, requirementId: 'RA-1' },
-      target: { frameworkId: b.id, version: 1, requirementId: 'RB-1' },
-      type: 'equivalent',
-      justification: 'Correspondance fictive de recette automatisée',
-      coverage: 100,
-      origin: 'human',
-      sourceUrl: 'https://example.invalid/correspondance',
-    });
-    await page.evaluate((id) => sessionStorage.setItem('pilotage-scope', id), perimetre.id);
-
-    // 1. La correspondance proposée se valide une seule fois, avec un motif.
-    await page.goto('/pilotage/correspondances-bibliotheque');
-    await expect(page.getByRole('heading', { name: 'Correspondances de la bibliothèque', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: /^Valider la correspondance RA-1 vers RB-1$/ }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Motif').fill('Correspondance examinée par le responsable');
-    await dialog.getByRole('button', { name: 'Valider', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
-
-    // 2. Une mesure reliée à l'exigence source : aucune couverture n'est affirmée, une proposition apparaît.
-    await post(page, `/api/grc/${perimetre.id}/links`, {
-      source: 'object:' + mesure.id,
-      target: `requirement:${a.id}:1:RA-1`,
-      type: 'implements',
-      note: 'Lien de recette',
-    });
-    await page.goto('/pilotage/synthese');
-    await expect(page.getByRole('status').filter({ hasText: 'Rapprochements à valider' })).toBeVisible();
-    await page.getByRole('link', { name: 'Examiner les rapprochements' }).click();
-    await expect(page.getByRole('heading', { name: 'Rapprochements à valider', exact: true })).toBeVisible();
-    const ligne = page.getByRole('row').filter({ hasText: `Mesure rapprochement ${stamp}` });
-    await expect(ligne).toContainText('RB-1');
-
-    // 3. Le pilote confirme : le lien explicite est créé et la proposition quitte la file.
-    await page
-      .getByRole('button', {
-        name: new RegExp(`^Confirmer le rapprochement vers RB-1 pour Mesure rapprochement ${stamp}`),
-      })
-      .click();
-    await expect(page.getByText('Aucun rapprochement à valider.')).toBeVisible();
-    await page.goto('/pilotage/couverture');
-    await expect(page.getByRole('heading', { name: 'Couverture par référentiel', exact: true })).toBeVisible();
-    await expect(page.getByText(`Référentiel QA-RAP-B-${stamp}`).first()).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
@@ -716,7 +571,7 @@ test('Pilotage : les standards sont disponibles d’emblée et figés dans la bi
       page.locator('.mantine-Alert-root[data-variant]').filter({ hasText: /non importable|erreur/i }),
     ).toHaveCount(0);
     await page.getByRole('button', { name: `Ajouter ${nom} à la bibliothèque`, exact: true }).click();
-    const ligne = page.getByRole('row').filter({ hasText: nom });
+    const ligne = page.getByLabel(`Référentiel ${nom}`, { exact: true });
     await expect(ligne.getByText('Figé', { exact: true })).toBeVisible();
     // La bibliothèque est figée (ADR 0082) : ni copie ni ajout d'exigence ; la personnalisation se fait dans la copie
     // attribuée à un périmètre.
@@ -724,7 +579,7 @@ test('Pilotage : les standards sont disponibles d’emblée et figés dans la bi
     await expect(
       ligne.getByRole('button', { name: `Créer une copie personnalisable de ${nom}`, exact: true }),
     ).toHaveCount(0);
-    await expect(ligne.getByRole('cell', { name: '1', exact: true }).first()).toBeVisible();
+    await expect(ligne).toContainText('exigences au catalogue');
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

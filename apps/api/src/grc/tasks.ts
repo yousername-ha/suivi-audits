@@ -549,9 +549,7 @@ export class GrcTasks {
             ? undefined
             : r.kind === 'risk_review'
               ? 'pilotage'
-              : r.kind === 'rapprochement'
-                ? 'conformite'
-                : 'ecarts',
+              : 'ecarts',
         ))
       )
         visible.push(r);

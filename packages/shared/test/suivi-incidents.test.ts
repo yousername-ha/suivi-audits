@@ -86,6 +86,10 @@ describe('priorité et états', () => {
     expect(
       IncidentModification.safeParse({ impact: '', urgency: 'Moyen', detectedAt: '2026-10-14T08:30' }).success,
     ).toBe(true);
+    expect(IncidentModification.safeParse({ answers: { cia: 'oui', dcp: 'nsp' } }).success).toBe(true);
+    expect(IncidentModification.safeParse({ answers: {} }).success).toBe(true);
+    expect(IncidentModification.safeParse({ answers: { cia: 'peut-être' } }).success).toBe(false);
+    expect(IncidentModification.safeParse({ answers: { inconnue: 'oui' } }).success).toBe(false);
     expect(IncidentCreation.safeParse({ answers: { cia: 'peut-être' } }).success).toBe(false);
     expect(IncidentCreation.safeParse({ answers: { cia: 'oui' }, title: 'Titre fictif' }).success).toBe(true);
   });

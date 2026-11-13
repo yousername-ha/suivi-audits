@@ -231,15 +231,16 @@ describe('construire de zéro : créer et renommer depuis la carte (CARTO-15, CA
     expect((await a.post('/api/carto/objects', { type: 'site', name: '' })).statusCode).toBe(422);
   });
 
-  it('fournisseur, application, processus et sous-processus au format de l’outil historique', async () => {
+  it('fournisseur, processus et sous-processus au format de l’outil historique ; le type « application » est refusé', async () => {
     const f = await rssi.post('/api/carto/objects', { type: 'supplier', name: 'Hébergeur fictif', hds: true });
     expect(f.statusCode, f.body).toBe(201);
+    // Applications retirées de la cartographie (ADR 0089, lot 2).
     const app = await rssi.post('/api/carto/objects', {
       type: 'application',
       name: 'Application fictive',
       supplier: 'Hébergeur fictif',
     });
-    expect(app.statusCode, app.body).toBe(201);
+    expect(app.statusCode, app.body).toBe(422);
     const p = await rssi.post('/api/carto/objects', { type: 'process', name: 'Processus fictif', family: 'Support' });
     const sp = await rssi.post('/api/carto/objects', {
       type: 'subprocess',
@@ -248,7 +249,6 @@ describe('construire de zéro : créer et renommer depuis la carte (CARTO-15, CA
     });
     expect(sp.statusCode, sp.body).toBe(201);
     const o = await objets(rssi);
-    expect(o.find((x) => x.ref === app.json().ref)).toMatchObject({ supRef: f.json().ref });
     expect(o.find((x) => x.ref === sp.json().ref)).toMatchObject({ type: 'subprocess', family: 'Support' });
     const sup = (await etat()).suppliers!.find((x) => 'sup:' + x.id === f.json().ref)!;
     expect((sup.controls as { id: string }[]).map((c) => c.id)).toContain('hds');
@@ -419,13 +419,15 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '055_assistant.sql',
         '056_assistant_rondes.sql',
         '057_assistant_apprentissage.sql',
-        '058_assistant_rondes_actions.sql',
-        '059_assistant_questions.sql',
-        '060_assistant_propositions.sql',
-        '061_assistant_evenements.sql',
-        '062_assistant_documents.sql',
-        '063_assistant_constats.sql',
-        '064_assistant_acces_par_defaut.sql',
+        '058_retrait_gap_applications.sql',
+        '059_retrait_correspondances_rapprochements.sql',
+        '060_assistant_rondes_actions.sql',
+        '061_assistant_questions.sql',
+        '062_assistant_propositions.sql',
+        '063_assistant_evenements.sql',
+        '064_assistant_documents.sql',
+        '065_assistant_constats.sql',
+        '066_assistant_acces_par_defaut.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

@@ -419,42 +419,12 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     expect(reset.steps[0].state).toBe('todo');
     expect(reset.history).toHaveLength(1);
   });
-  it('valide BIA et plan de reprise avec impacts temporels, références et limites cohérentes', async () => {
+  it('valide le plan de reprise avec références, refuse le type BIA retiré et protège les exports', async () => {
+    // Le type « bia » est retiré (ADR 0088) : sa création est refusée.
     expect(
-      (
-        await a.post(base + '/objects', {
-          kind: 'bia',
-          name: 'Reprise incohérente',
-          data: { maxInterruptionHours: 4, recoveryHours: 8 },
-        })
-      ).statusCode,
-    ).toBe(422);
-    const r = await a.post(base + '/objects', {
-      kind: 'bia',
-      name: 'Activité de recette',
-      data: {
-        activity: 'Service métier',
-        scenario: 'Indisponibilité',
-        minimumService: 'Accueil minimal',
-        maxInterruptionHours: 24,
-        recoveryHours: 4,
-        dataLossHours: 1,
-        impacts: [
-          {
-            hours: 4,
-            business: 'Service dégradé',
-            financial: 'Coût limité',
-            legal: 'Délais',
-            reputation: 'Réclamations',
-          },
-        ],
-        refs: [document],
-      },
-    });
-    expect(r.statusCode, r.body).toBe(200);
-    expect((await decide('object:' + r.json().id, 'approval', 'accepted', 1, {}, writer)).statusCode).toBe(403);
-    const approved = await decide('object:' + r.json().id, 'approval', 'accepted', 1);
-    expect(approved.statusCode, approved.body).toBe(200);
+      (await a.post(base + '/objects', { kind: 'bia', name: 'BIA retiré', data: {} })).statusCode,
+    ).toBeGreaterThanOrEqual(400);
+    expect((await a.get(base + '/pilotage/export?kind=bia')).statusCode).toBe(422);
     const plan = await a.post(base + '/objects', {
       kind: 'continuity_plan',
       name: 'PRA métier',
@@ -466,12 +436,13 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
         procedures: 'Étapes vérifiées',
         roles: 'Pilote et suppléant',
         returnToNormal: 'Vérifier les résultats',
-        refs: ['object:' + r.json().id],
+        refs: [document],
       },
     });
     expect(plan.statusCode, plan.body).toBe(200);
+    expect((await decide('object:' + plan.json().id, 'approval', 'accepted', 1, {}, writer)).statusCode).toBe(403);
     expect((await decide('object:' + plan.json().id, 'approval', 'accepted', 1)).statusCode).toBe(200);
-    expect((await a.get(base + '/pilotage/export?kind=bia')).json().objects[0].name).toBe('Activité de recette');
+    expect((await a.get(base + '/pilotage/export?kind=continuity_plan')).json().objects[0].name).toBe('PRA métier');
     expect(
       (
         await a.post(base + '/objects', {
@@ -500,7 +471,7 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     });
     expect(improve.statusCode, improve.body).toBe(200);
     expect(improve.json().generatedRefs[0]).toMatch(/^object:/);
-    expect((await reader.get(base + '/pilotage/export?kind=bia')).statusCode).toBe(403);
+    expect((await reader.get(base + '/pilotage/export?kind=continuity_plan')).statusCode).toBe(403);
   });
   it('refuse de falsifier une réalisation ou une validation par une édition générique', async () => {
     for (const [kind, data] of [

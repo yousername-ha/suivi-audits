@@ -488,7 +488,6 @@ export class GrcLibrary {
         if (statut && statut !== previous.status) {
           await this.ecrireStatut(c, smsi, id, statut, user, ip);
           await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-          await this.g.resynchroniser(smsi, c);
         }
         return;
       }
@@ -545,7 +544,6 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -593,7 +591,6 @@ export class GrcLibrary {
       if (row.status === statut) return;
       await this.ecrireStatut(c, smsi, id, statut, user, ip);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -627,7 +624,6 @@ export class GrcLibrary {
       }
       await this.g.db.audit(user, ip, 'library.framework.enabled', smsi, { frameworkId: id, enabled }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -677,7 +673,6 @@ export class GrcLibrary {
             .execute();
       await this.g.db.audit(user, ip, 'library.framework.detached', smsi, { frameworkId: id }, c);
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
     }, user.username);
     return this.attachments(smsi, user);
   }
@@ -805,7 +800,6 @@ export class GrcLibrary {
         c,
       );
       await this.g.notify(c, smsi, 0, smsi, 'conformite', user.username);
-      await this.g.resynchroniser(smsi, c);
       return { libraryFrameworkId: libraryId, version: 1, droppedMeasureRefs: again.droppedMeasureRefs };
     }, user.username);
   }

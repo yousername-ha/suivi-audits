@@ -171,7 +171,7 @@ export class PilotageRevue {
       );
     } else faits.c7.push('Données fournisseurs non accessibles avec vos droits.');
 
-    // e) risques et opportunités ; f) opportunités d'amélioration.
+    // e) risques ; f) constats d'amélioration (les fiches « opportunité » sont retirées, ADR 0090).
     const risques = await this.g.db.k
       .selectFrom('grc_objects')
       .select(sql<number>`count(*)::int`.as('n'))
@@ -179,22 +179,10 @@ export class PilotageRevue {
       .where('kind', '=', 'risk')
       .where('archived', '=', false)
       .executeTakeFirst();
-    const opportunites = await this.g.db.k
-      .selectFrom('grc_objects')
-      .select([sql<string>`data->>'status'`.as('status'), sql<number>`count(*)::int`.as('n')])
-      .where('smsi_id', '=', smsi)
-      .where('kind', '=', 'opportunity')
-      .where('archived', '=', false)
-      .groupBy(sql`1`)
-      .execute();
     faits.e.push(`${pluriel(risques?.n ?? 0, 'risque enregistré', 'risques enregistrés')} dans le registre commun.`);
-    const parStatut = (s: string) => opportunites.find((o) => o.status === s)?.n ?? 0;
-    faits.e.push(
-      `Opportunités : ${parStatut('identified')} identifiée(s), ${parStatut('evaluated')} évaluée(s), ${parStatut('pursued')} poursuivie(s), ${parStatut('realised')} réalisée(s), ${parStatut('dropped')} écartée(s).`,
-    );
     const ameliorations = ecarts.filter((f) => ['observation', 'opportunity'].includes(String(f.findingType))).length;
     faits.f.push(
-      `${pluriel(ameliorations, 'constat de type observation ou opportunité', 'constats de type observation ou opportunité')} ; ${parStatut('identified') + parStatut('evaluated')} opportunité(s) à traiter.`,
+      `${pluriel(ameliorations, 'constat de type observation ou opportunité', 'constats de type observation ou opportunité')}.`,
     );
     faits.d.push('Adéquation des ressources : à apprécier par la direction (aucune donnée calculée).');
 

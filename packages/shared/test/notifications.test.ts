@@ -19,7 +19,6 @@ describe('types et canaux', () => {
     expect(NOTIFICATION_TYPES.map((t) => t.id)).toEqual([
       'task_due',
       'risk_review',
-      'rapprochement',
       'retex_contribution',
       'assistant_rappel',
       'assistant_question',
