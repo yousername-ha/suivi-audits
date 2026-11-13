@@ -365,14 +365,16 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Cause / niveau | Non analysée. |
 | Non-régression | à écrire |
 
-## BUG-024 — Appréciation « Grave × Probable = Faible, acceptable » acceptée sans alerte (à arbitrer) (RSSI-09)
+## BUG-024 — Appréciation « Grave × Probable = Faible, acceptable » acceptée sans alerte (arbitré le 13/11/2026 : matrice obligatoire) (RSSI-09)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Appréciation des risques, modèle ISO 27005 ; MAJEURE ; P2 |
 | Statut | OUVERT |
-| Cause / niveau | Le modèle n'a pas de matrice : niveau choisi librement. |
-| Non-régression | à écrire |
+| Arbitrage du RSSI (13/11/2026) | La matrice est obligatoire pour apprécier un risque. |
+| Attendu | Aucune appréciation sans matrice : méthode sans matrice refusée (aperçu ou publication), ou niveau imposé par la matrice ; le modèle « ISO/IEC 27005 » fournit une matrice. |
+| Cause / niveau | Le modèle n'a pas de matrice (`calculation.kind: 'judgement'`, `packages/shared/src/risk-methods.ts`) : niveau choisi librement. |
+| Non-régression | `41-campagne-organisation-risques.spec.ts`, « RSSI-09 ouvert » (`test.fail`), ajouté le 13/11/2026 |
 
 ## BUG-025 — Refus de validation du risque sans désigner l'étape ni le champ (RSSI-10)
 

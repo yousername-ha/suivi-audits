@@ -48,7 +48,7 @@ Conséquences pour le développement :
 | 4. Libellés | BUG-029, BUG-018 | Interface en français |
 | 5. Indicateurs et actions | BUG-028, BUG-034, BUG-035 | Chiffres et saisies ambigus |
 | 6. Revue de direction | BUG-032 | Message de validation |
-| En attente d'arbitrage du RSSI | BUG-031, BUG-024 | **Ne pas corriger avant décision** (voir § 5) |
+| En attente d'arbitrage du RSSI | BUG-031 (BUG-024 arbitré le 13/11/2026 : matrice obligatoire, à corriger) | **Ne pas corriger avant décision** (voir § 5) |
 
 ## 4. Fiches
 
@@ -218,6 +218,8 @@ uniquement. « Piste » = endroit repéré par la recette en lisant le code, san
   traitement et les incidents de sécurité) quand le périmètre porte ce référentiel ?
 - **BUG-024** : le modèle de méthode « ISO/IEC 27005 » laisse déclarer « Grave × Probable = Faible, acceptable » sans
   alerte. Question : alerte, matrice par défaut, ou jugement libre assumé ?
+  **Arbitré par le RSSI le 13/11/2026 : la matrice est obligatoire pour apprécier un risque.** Test : `specs/41-campagne-organisation-risques.spec.ts`,
+  « RSSI-09 ouvert ».
 - **Rôle d'auditeur interne** : aucun rôle ne permet de saisir des constats sans pouvoir modifier la DdA auditée.
 
 ## 4 bis. Ajout du 12/11 au soir : rattachement des processus (BUG-037, majeur, P1)

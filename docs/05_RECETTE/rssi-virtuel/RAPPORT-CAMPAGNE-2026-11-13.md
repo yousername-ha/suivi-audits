@@ -186,11 +186,12 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver et le désarchiver ;
 BUG-042, chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent (ses
-entrées remontent alors dans la revue du parent). Restent attendus :
+entrées remontent alors dans la revue du parent) ; BUG-024 (recette du 12/11), la matrice est obligatoire pour apprécier
+un risque (test RSSI-09 ajouté au fichier 41). Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-024, BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
+| BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
 
 ## 7. Tests de non-régression
 

@@ -388,11 +388,14 @@ lui aussi au gestionnaire (commande à créer). À traiter au lot 1.
 **Rendu le 13/11/2026, BUG-042** : chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des
 référentiels du parent ; ses entrées remontent alors dans la revue du parent. À traiter au lot 4.
 
+**Rendu le 13/11/2026, BUG-024** (recette du 12/11) : la matrice est obligatoire pour apprécier un risque. À traiter avec
+le lot 2 ; test `specs/41-campagne-organisation-risques.spec.ts`, « RSSI-09 ouvert ».
+
 Restent à obtenir :
 
 | Fiche | Question |
 | --- | --- |
-| BUG-024, BUG-031 | Toujours ouverts (demande du 12/11). |
+| BUG-031 | Toujours ouvert (demande du 12/11). |
 
 ## 6. Outillage de recette (pour information, déjà corrigé par la recette)
 
