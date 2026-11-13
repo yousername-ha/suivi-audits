@@ -513,7 +513,7 @@ et le cas TEST-021.
 Objectif : EBIOS cinq ateliers, jugement/matrice/règles distincts, brut/résiduel immuables ; aucune réévaluation automatique après action.
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
-Accès : **/pilotage/risques ; /pilotage/etudes** (les pages « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » sont retirées, ADR 0090).
+Accès : **/pilotage/risques ; /pilotage/etudes** (les pages « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » sont retirées, ADR 0090 ; les fiches « opportunité » sont supprimées du serveur).
 Profils : Session complète, lecture du domaine pilotage ; opérations soumises aux permissions modifier/exporter/administrer et au périmètre. Une validation peut exiger un rôle de validation distinct.
 Prérequis : module activé, accès au périmètre et données nécessaires disponibles ;
 un environnement de recette autorisé pour les opérations sensibles.

@@ -37,7 +37,6 @@ export const GRC_KINDS = [
   'risk_study',
   'sr_ov',
   'ecosystem_party',
-  'opportunity',
 ] as const;
 export type GrcKind = (typeof GRC_KINDS)[number];
 export const GRC_MODULES: Record<GrcKind, Module> = {
@@ -75,7 +74,6 @@ export const GRC_MODULES: Record<GrcKind, Module> = {
   risk_study: 'pilotage',
   sr_ov: 'pilotage',
   ecosystem_party: 'pilotage',
-  opportunity: 'pilotage',
 };
 export const GRC_LABELS: Record<GrcKind, string> = {
   framework: 'Référentiel',
@@ -112,7 +110,6 @@ export const GRC_LABELS: Record<GrcKind, string> = {
   risk_study: 'Étude EBIOS RM',
   sr_ov: 'Couple source de risque / objectif visé',
   ecosystem_party: 'Partie prenante de l’écosystème',
-  opportunity: 'Opportunité',
 };
 export const GrcKey = z
   .string()

@@ -30,13 +30,19 @@ Le menu « Gestion des risques » comptait sept pages. Le RSSI garde le **Regist
   GRC) ; un test vérifie désormais que chaque étape du parcours mène à une rubrique qui existe.
 - Tests de navigation et de bout en bout adaptés (l'action de traitement se génère depuis le plan d'action du risque).
 
-**Lot 2 (à venir)** : retrait du code serveur et des données devenus inutiles (fiches « opportunité », « traitement » comme
-objet distinct ou non, biens et scénarios hors EBIOS RM), après une question dédiée sur chaque donnée ; migration à numéroter hors
-055–057 (Assistant RSSI).
+**Lot 2 (fait)** : retrait des fiches « opportunité » du serveur (décision du RSSI du 12/11/2026).
+- Type de fiche `opportunity` retiré du schéma partagé (types, droits, libellés, champs du formulaire) : l'API refuse d'en créer ;
+  le bilan préparatoire de la revue de direction ne compte plus d'opportunités (les constats de type « observation ou
+  opportunité » du registre des écarts, qui sont une nature d'écart, restent) ; le jeu de données de démonstration n'en crée plus.
+- **Conservés** : les fiches « traitement » (le plan d'action du Registre s'appuie dessus) et les éléments EBIOS RM (valeurs
+  métier, biens supports, sources de risque, événements redoutés, scénarios stratégiques et opérationnels), qui vivent dans les
+  études.
+- **Pas de migration** : les fiches « opportunité » déjà saisies vivent dans l'historique immuable des objets, qu'on ne contourne
+  pas ; l'application n'étant pas encore en production, elles restent inertes jusqu'à la réinstallation.
 
 ## Ce qui n'est pas fait
 
-- Pas de suppression de donnée ni de route dans le lot 1 : les fiches « opportunité » restent en base, sans page.
+- Pas de suppression de donnée ni de route dans le lot 1 (le lot 2 retire le code ; aucune donnée n'est effacée).
 - Pas de colonne « Actions » (nombre, retard) dans le tableau du Registre : elle demanderait une évolution de l'API.
 
 ## Conséquences
