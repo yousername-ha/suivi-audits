@@ -97,7 +97,7 @@ l'installation seulement.
 | Vitest `packages/shared`                                                     | 606/606                                                                                        |
 | Script de recette du lot 2 (23 contrôles)                                    | 23/23, détail ci-dessous                                                                       |
 | Grille : fiche ouverte depuis sa ligne, 11 tailles                           | 11/11 de 1024×768 à 2560×1440, plus 1920×800, zoom 150 %, tablette et 390 px : titre visible, bas atteint par le voile, aucun défilement interne, aucun débordement, aucune erreur |
-| E2E concernés (27 suites, 62 tests, captures de référence ignorées)          | voir § 4.1                                                                                     |
+| E2E concernés (27 suites, 62 tests, captures de référence ignorées)          | 58/62 ; les 4 échecs viennent de l'état de la base (§ 4.1)                                      |
 
 Détail des 23 contrôles du script de recette, sur la page Revues de direction (registre commun) :
 
@@ -115,7 +115,22 @@ Détail des 23 contrôles du script de recette, sur la page Revues de direction 
 
 ### 4.1 Tests e2e
 
-_(résultats complétés à la fin de l'exécution)_
+Les 27 suites ont été choisies parce qu'elles passent par les fenêtres, les listes ou les fichiers modifiés : pilotage,
+risques, EBIOS, accessibilité (axe), configuration GRC, plans, audit, incidents et crise, registres, responsables, accès,
+administration, calendriers, kit IA, plan des écarts, RETEX, menu clavier, coque, fiabilisation… Elles ont été jouées
+avec `--ignore-snapshots`, sur le bundle du lot 2.
+
+**58 tests sur 62 réussis**, dont les trois tests RETEX (« générer et diffuser la chronologie » compris), axe sur les
+écrans, menu au clavier et coque. Aucun des quatre échecs n'est une régression de l'interface : tous viennent de l'état de
+la base de recette, qui contient le jeu de démonstration et les traces des passages précédents. Chaque échec a été rejoué
+pour le prouver.
+
+| Test en échec                                                     | Cause                                                                                                   | Rejeu                                                       |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `z-fiabilisation` A6 (panneau droit de la cartographie)          | Une liaison de la carte, générée pendant la recette, recouvre le premier nœud que le test veut cliquer | même échec sur la base `967de1d`                            |
+| `zzz-pilotage` bibliothèque de référentiels                        | Le jeu de démonstration a déjà attribué des référentiels au périmètre ; le test attend une installation neuve | même échec sur la base `967de1d`                            |
+| `acces-sujets` vue des accès                                       | Le test cherche le compte « Responsable SSI » de l'installation de la CI ; ici, le compte s'appelle « Démonstration » | même échec sur la base `967de1d`                            |
+| `zzz-pilotage` fournisseur évalué une fois                         | Le nouveau fournisseur a reçu l'identifiant SUP-001, puis SUP-003. Le jeu de démonstration avait laissé une évaluation sur ces identifiants après une restauration | **réussi sur le lot 2** dès que l'identifiant est libre (SUP-004) ; réussi sur la base avec SUP-002 |
 
 ### Non exécutés
 
@@ -151,6 +166,10 @@ Elles sont transmises dans la conversation et ne sont pas versionnées (poids).
 - Les tests e2e tournent sur une base qui contient déjà le jeu de démonstration et les traces des passages précédents. Des
   tests qui attendent une installation neuve échouent pour cette raison (§ 4.1) ; la CI de la PR les rejouera sur une base
   neuve.
+- Observation hors périmètre : sur cette base, une évaluation de fournisseur peut rester attachée à un identifiant
+  (`SUP-00n`) quand le fournisseur a été remplacé par une restauration partielle. Un nouveau fournisseur qui reprend
+  l'identifiant hérite alors de l'évaluation. C'est un état de données de la recette, sans lien avec l'interface ; à
+  vérifier côté serveur si la situation peut se produire en exploitation.
 - Les décisions ont été vérifiées sur un échantillon de fenêtres (registre, risques, documents, administration,
   cartographie) et de tailles. Toutes les fenêtres n'ont pas été vérifiées individuellement, ni toutes les combinaisons de
   droits.
