@@ -599,12 +599,10 @@ test('CAMP-C2-09 ouvert : un scénario G4 × V2 des échelles publiées se place
 test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit pas dans le périmètre principal', async ({
   browser,
 }) => {
-  // ISO/IEC 27001:2022, A.5.15, A.5.18 et A.8.3 (moindre privilège) ; HDS v2 (cloisonnement des activités
-  // d'hébergement). EN ATTENTE D'ARBITRAGE DU RSSI : aucun document ne promet ce cloisonnement (ADR 0039 : pas de
-  // propagation des droits ; ADR 0010 : portée par module seulement ; ADR 0043 : registres restreints) et le périmètre
-  // commun est créé « Toute l'organisation » (`visibility: 'instance'`), sans réglage possible. Ce test décrit le
-  // comportement attendu SI le cloisonnement est retenu ; si la limite est assumée, il sera remplacé par un test de
-  // l'avertissement de l'écran « Accès au périmètre ». Constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02.
+  // ISO/IEC 27001:2022, A.5.15, A.5.18 et A.8.3 (moindre privilège). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-051) : un
+  // compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants.
+  // Aujourd'hui le périmètre commun est créé « Toute l'organisation » (`visibility: 'instance'`), sans réglage possible,
+  // et le membre du seul enfant y écrit. Constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02.
   test.fail(true, 'CAMP-T1-01 ouvert : le membre du seul sous-périmètre crée une fiche au principal (HTTP 200)');
   const s = await admin(browser);
   const compte = `campagne-t1-01-${Date.now().toString(36)}`;
@@ -637,6 +635,50 @@ test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit
       });
       if (principal.ok()) await archiver(s, PERIMETRE_COMMUN, await principal.json());
       expect(principal.status(), await principal.text()).toBe(404);
+    } finally {
+      await cctx.close();
+    }
+  } finally {
+    await s.fermer();
+  }
+});
+
+test('CAMP-T1-02 ouvert : un compte rattaché à un périmètre parent voit aussi ses périmètres enfants', async ({
+  browser,
+}) => {
+  // ISO/IEC 27001:2022, A.5.15 et A.5.18. ARBITRAGE DU RSSI DU 13/11/2026 (BUG-051) : rattaché au parent, un compte voit le
+  // parent et les enfants qui lui sont rattachés. Aujourd'hui l'appartenance ne se propage pas (ADR 0039) : le membre du
+  // parent reçoit 404 sur l'enfant (constaté au rejeu de C5-06 et en phase 2 pour un compte non membre).
+  test.fail(true, 'CAMP-T1-02 ouvert : le membre du seul périmètre parent reçoit 404 sur le périmètre enfant');
+  const s = await admin(browser);
+  const compte = `campagne-t1-02-${Date.now().toString(36)}`;
+  try {
+    const cree = await ok<{ id: string; temporaryPassword: string }>(
+      await ecrire(s, 'POST', '/api/admin/users', {
+        username: compte,
+        displayName: 'Contributeur rattaché au périmètre parent (fictif)',
+        roles: [{ roleId: 'contributeur' }],
+      }),
+      'création du compte',
+    );
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const { secret } = await preparerCompte(ctx, compte, cree.temporaryPassword);
+    await ctx.close();
+    const parent = await creerPerimetre(s, `Campagne T1-02 périmètre parent ${EXECUTION} (fictif)`);
+    const enfant = await creerPerimetre(s, `Campagne T1-02 périmètre enfant ${EXECUTION} (fictif)`, parent.id);
+    await ok(await ecrire(s, 'PUT', `/api/grc/${parent.id}/members`, { userId: cree.id, write: true }), 'adhésion');
+    const nom = 'Campagne T1-02 fiche du périmètre enfant (fictif)';
+    await creerObjet(s, enfant.id, 'stakeholder', nom);
+
+    const c = await sessionCompte(browser, compte, secret);
+    const cctx = await browser.newContext({ storageState: c.state, ignoreHTTPSErrors: true });
+    try {
+      const sienne = await cctx.request.get(`/api/grc/${parent.id}/objects?kind=stakeholder`);
+      expect(sienne.ok(), `lecture du parent : ${sienne.status()} ${await sienne.text()}`).toBe(true);
+      const r = await cctx.request.get(`/api/grc/${enfant.id}/objects?kind=stakeholder`);
+      const texte = await r.text();
+      expect(r.status(), `lecture de l’enfant : ${texte}`).toBe(200);
+      expect(texte).toContain(nom);
     } finally {
       await cctx.close();
     }
