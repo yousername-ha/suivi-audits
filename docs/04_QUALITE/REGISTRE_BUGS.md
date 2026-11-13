@@ -757,13 +757,13 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Objectifs, indicateurs ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Sous le principal, objectifs et indicateurs du registre historique ; sous un sous-périmètre, objets du Pilotage ; la Synthèse du sous-périmètre n'a pas de carte « Objectifs et indicateurs ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Un seul modèle, quel que soit le périmètre. |
 | Cause / niveau | PISTE : même cause que BUG-037 (`smsi === SOCLE`). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-10 ouvert » (`test.fail`) |
-| Correctif | Carte « Objectifs et indicateurs » dans la Synthèse de tout périmètre (fiches du périmètre). **Reste** : un seul modèle (processus, mesures, méthode d’évaluation des objectifs historiques absents des fiches du Pilotage). |
-| Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C1-10` à rejouer par la recette |
+| Correctif | Un seul modèle, celui de l’outil de suivi, dans tous les périmètres (ADR 0094) : chaque fiche porte son périmètre, liens limités au périmètre, lectures (état, Synthèse, export, revue, cartes) filtrées. |
+| Tests de la correction | `apps/api/test/pilotage-objectifs.test.ts`, `apps/api/test/processus-cartes.test.ts` ; `CAMP-C1-10` à rejouer par la recette |
 | Commit | 99c426a |
 
 ## BUG-056 — « Créer les actions pour les écarts » du clausier : aucune action, écart sans responsable ni échéance, dupliqué (C1-12)

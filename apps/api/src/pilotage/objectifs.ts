@@ -14,9 +14,10 @@ import {
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import type { Client } from '../db/db.js';
-import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import type { Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { verrouillerEtat } from '../legacy/store.js';
+import { perimetreDe } from '../historique/registre.js';
 
 type Cle = 'processes' | 'objectives' | 'indicators';
 const PREFIXE: Record<Cle, string> = { processes: 'PR', objectives: 'OBJ', indicators: 'IND' };
@@ -26,15 +27,17 @@ const NOM_PAR_DEFAUT: Record<Cle, string> = {
   indicators: 'Nouvel indicateur',
 };
 const LIBELLE: Record<Cle, string> = { processes: 'Processus', objectives: 'Objectif', indicators: 'Indicateur' };
-const liste = (state: JsonObject, cle: Cle): JsonObject[] =>
-  (Array.isArray(state[cle]) ? (state[cle] as unknown[]) : []).filter(isObject);
+/** Lignes de la clé `cle` ; avec `smsi`, seulement celles de ce périmètre (BUG-055 : un seul modèle, une fiche par périmètre). */
+const liste = (state: JsonObject, cle: Cle, smsi?: string): JsonObject[] =>
+  (Array.isArray(state[cle]) ? (state[cle] as unknown[]) : [])
+    .filter(isObject)
+    .filter((l) => !smsi || perimetreDe(l) === smsi);
 
 export class PilotageObjectifs {
   constructor(private readonly g: Grc) {}
 
   /** `droit` : « supprimer » pour une suppression (ADR 0010), « modifier » pour toute autre écriture. */
   private async ouvrir(smsi: string, user: SessionUser, c: Client, droit: 'modifier' | 'supprimer' = 'modifier') {
-    if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user, true, c);
     await this.g.permission(user, GRC_MODULES.indicator, droit);
     await verrouillerEtat(c);
@@ -49,11 +52,12 @@ export class PilotageObjectifs {
     ip: string,
     action: string,
     ref: string,
+    smsi: string,
   ) {
     const r = await this.g.legacy.nativeWrite(c, state.data, user, state.version);
     if (r.conflict) throw new HttpError(412, 'Le registre a changé. Rechargez avant de modifier.');
     await this.g.db.audit(user, ip, action, ref, { version: r.version }, c);
-    await this.g.notify(c, ref, r.version, DEFAULT_SMSI, GRC_MODULES.indicator, user.username);
+    await this.g.notify(c, ref, r.version, smsi, GRC_MODULES.indicator, user.username);
     return r.version;
   }
   /** Les champs écrits ici l'emportent sur une copie ancienne de la fiche native (`pilotage`) : on la tient à jour. */
@@ -68,15 +72,15 @@ export class PilotageObjectifs {
     return suivant;
   }
   /** Références valides : objectif existant pour un indicateur, processus existants pour un objectif ou un indicateur. */
-  private verifier(state: JsonObject, cle: Cle, body: Record<string, unknown>) {
+  private verifier(state: JsonObject, cle: Cle, body: Record<string, unknown>, smsi: string) {
     if (
       cle === 'indicators' &&
       typeof body.obj === 'string' &&
-      !liste(state, 'objectives').some((o) => o.id === body.obj)
+      !liste(state, 'objectives', smsi).some((o) => o.id === body.obj)
     )
       throw new HttpError(422, 'Objectif inconnu.');
     if (cle !== 'processes' && Array.isArray(body.processes)) {
-      const connus = new Set(liste(state, 'processes').map((p) => p.id));
+      const connus = new Set(liste(state, 'processes', smsi).map((p) => p.id));
       if ((body.processes as string[]).some((p) => !connus.has(p))) throw new HttpError(422, 'Processus inconnu.');
     }
   }
@@ -90,22 +94,22 @@ export class PilotageObjectifs {
       const state = await this.ouvrir(smsi, user, c);
       const lignes = liste(state.data, cle);
       if (cle === 'indicators') {
-        const objectifs = liste(state.data, 'objectives');
+        const objectifs = liste(state.data, 'objectives', smsi);
         if (!objectifs.length) throw new HttpError(422, 'Créez d’abord un objectif.');
         body.obj = typeof body.obj === 'string' ? body.obj : String(objectifs[0]!.id);
       }
-      this.verifier(state.data, cle, body);
+      this.verifier(state.data, cle, body, smsi);
       if (cle === 'processes') await verifierTypeProcessus(c, body.family);
       let k = 1;
       while (lignes.some((r) => r.id === PREFIXE[cle] + k)) k++;
       const id = PREFIXE[cle] + k;
-      const base: JsonObject = { id, createdAt: new Date().toISOString(), name: NOM_PAR_DEFAUT[cle] };
+      const base: JsonObject = { id, smsi, createdAt: new Date().toISOString(), name: NOM_PAR_DEFAUT[cle] };
       if (cle === 'processes') Object.assign(base, { owner: '' });
       if (cle === 'objectives') Object.assign(base, { due: '', owner: '', processes: [], enjeux: [] });
       if (cle === 'indicators') Object.assign(base, { obj: body.obj, target: '', dir: '', values: [] });
       const ligne = this.ecrire(base, body, user.username);
       state.data[cle] = [...lignes, ligne];
-      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.created`, `legacy:${cle}:${id}`);
+      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.created`, `legacy:${cle}:${id}`, smsi);
       return { id, ref: `legacy:${cle}:${id}` };
     }, user.username);
   }
@@ -116,13 +120,13 @@ export class PilotageObjectifs {
     return this.g.db.tx(async (c) => {
       const state = await this.ouvrir(smsi, user, c);
       const lignes = liste(state.data, cle);
-      const avant = lignes.find((r) => r.id === id);
+      const avant = liste(state.data, cle, smsi).find((r) => r.id === id);
       if (!avant) throw new HttpError(404, `${LIBELLE[cle]} introuvable.`);
-      this.verifier(state.data, cle, body);
+      this.verifier(state.data, cle, body, smsi);
       if (cle === 'processes') await verifierTypeProcessus(c, body.family, avant.family);
       const patch = { ...body };
       state.data[cle] = lignes.map((r) => (r === avant ? this.ecrire(r, patch, user.username) : r));
-      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.updated`, `legacy:${cle}:${id}`);
+      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.updated`, `legacy:${cle}:${id}`, smsi);
       return { id, ref: `legacy:${cle}:${id}` };
     }, user.username);
   }
@@ -132,7 +136,7 @@ export class PilotageObjectifs {
     return this.g.db.tx(async (c) => {
       const state = await this.ouvrir(smsi, user, c, 'supprimer');
       const lignes = liste(state.data, cle);
-      const cible = lignes.find((r) => r.id === id);
+      const cible = liste(state.data, cle, smsi).find((r) => r.id === id);
       if (!cible) throw new HttpError(404, `${LIBELLE[cle]} introuvable.`);
       let indicateursSupprimes = 0;
       state.data[cle] = lignes.filter((r) => r !== cible);
@@ -153,7 +157,7 @@ export class PilotageObjectifs {
             : i,
         );
       }
-      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.deleted`, `legacy:${cle}:${id}`);
+      await this.enregistrer(c, state, user, ip, `pilotage.${cle}.deleted`, `legacy:${cle}:${id}`, smsi);
       return { id, indicateursSupprimes };
     }, user.username);
   }
@@ -163,7 +167,7 @@ export class PilotageObjectifs {
     return this.g.db.tx(async (c) => {
       const state = await this.ouvrir(smsi, user, c);
       const lignes = liste(state.data, 'indicators');
-      const ind = lignes.find((r) => r.id === id);
+      const ind = liste(state.data, 'indicators', smsi).find((r) => r.id === id);
       if (!ind) throw new HttpError(404, 'Indicateur introuvable.');
       if (ind.calc && ind.auto !== false)
         throw new HttpError(
@@ -178,7 +182,7 @@ export class PilotageObjectifs {
       state.data.indicators = lignes.map((r) =>
         r === ind ? this.ecrire(r, { values: [...valeurs, entree] }, user.username) : r,
       );
-      await this.enregistrer(c, state, user, ip, 'pilotage.indicators.value-added', `legacy:indicators:${id}`);
+      await this.enregistrer(c, state, user, ip, 'pilotage.indicators.value-added', `legacy:indicators:${id}`, smsi);
       return { id, valeur: v };
     }, user.username);
   }
@@ -187,14 +191,14 @@ export class PilotageObjectifs {
     return this.g.db.tx(async (c) => {
       const state = await this.ouvrir(smsi, user, c, 'supprimer');
       const lignes = liste(state.data, 'indicators');
-      const ind = lignes.find((r) => r.id === id);
+      const ind = liste(state.data, 'indicators', smsi).find((r) => r.id === id);
       if (!ind) throw new HttpError(404, 'Indicateur introuvable.');
       const valeurs = Array.isArray(ind.values) ? ind.values : [];
       if (rang < 0 || rang >= valeurs.length) throw new HttpError(404, 'Valeur introuvable.');
       state.data.indicators = lignes.map((r) =>
         r === ind ? this.ecrire(r, { values: valeurs.filter((_, k) => k !== rang) }, user.username) : r,
       );
-      await this.enregistrer(c, state, user, ip, 'pilotage.indicators.value-deleted', `legacy:indicators:${id}`);
+      await this.enregistrer(c, state, user, ip, 'pilotage.indicators.value-deleted', `legacy:indicators:${id}`, smsi);
       return { id };
     }, user.username);
   }

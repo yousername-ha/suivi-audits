@@ -1,40 +1,24 @@
-/* Carte « Objectifs et indicateurs » de la Synthèse d'un périmètre (ISO/IEC 27001:2022, 6.2 et 9.1, BUG-055) : objectifs et
-   indicateurs saisis comme fiches du Pilotage dans ce périmètre. Au périmètre commun, la carte des indicateurs de l'outil
-   historique reste affichée à côté. */
+/* Carte « Objectifs et indicateurs » de la Synthèse d'un périmètre (ISO/IEC 27001:2022, 6.2 et 9.1, BUG-055) : un seul
+   modèle, celui des objectifs et indicateurs de l'outil de suivi, rattachés à un périmètre. */
 import { Card, Stack, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
-import type { GrcObject } from '@suivi/shared';
+import { indicateursSynthese, objectifsPilotage } from '@suivi/shared';
 import { get } from '../api';
 import { useCan } from '../session';
-
-interface Page {
-  items: GrcObject[];
-  total: number;
-}
+import { etatDePerimetre } from './perimetre-etat';
 
 export function ObjectifsPerimetre({ smsi }: { smsi: string }) {
   const can = useCan();
   const autorise = can('pilotage', 'lire');
-  const objectifs = useQuery({
-    queryKey: ['grc', smsi, 'objects', 'objective', 'synthese'],
-    queryFn: () => get<Page>(`/api/grc/${smsi}/objects?kind=objective`),
+  const q = useQuery({
+    queryKey: ['grc', smsi, 'legacy-objectifs', 'synthese'],
+    queryFn: async () => etatDePerimetre(await get<Record<string, unknown>>('/api/suivi/etat'), smsi),
     enabled: autorise,
   });
-  const indicateurs = useQuery({
-    queryKey: ['grc', smsi, 'objects', 'indicator', 'synthese'],
-    queryFn: () => get<Page>(`/api/grc/${smsi}/objects?kind=indicator`),
-    enabled: autorise,
-  });
-  if (!autorise || !objectifs.data || !indicateurs.data) return null;
-  if (!objectifs.data.total && !indicateurs.data.total) return null;
-  const atteint = (o: GrcObject) => {
-    const v = Number(o.data.value),
-      cible = Number(o.data.target);
-    return o.data.value !== '' && o.data.target !== '' && Number.isFinite(v) && Number.isFinite(cible)
-      ? v >= cible
-      : null;
-  };
-  const mesures = indicateurs.data.items.map(atteint);
+  if (!autorise || !q.data) return null;
+  const objectifs = objectifsPilotage(q.data);
+  const synthese = indicateursSynthese(q.data);
+  if (!objectifs.length && !synthese.total) return null;
   return (
     <Card withBorder aria-label="Objectifs et indicateurs du périmètre">
       <Stack gap="xs">
@@ -42,19 +26,18 @@ export function ObjectifsPerimetre({ smsi }: { smsi: string }) {
           Objectifs et indicateurs
         </Text>
         <Text>
-          {objectifs.data.total} objectif{objectifs.data.total > 1 ? 's' : ''} et {indicateurs.data.total} indicateur
-          {indicateurs.data.total > 1 ? 's' : ''} saisis pour ce périmètre.
+          {objectifs.length} objectif{objectifs.length > 1 ? 's' : ''} et {synthese.total} indicateur
+          {synthese.total > 1 ? 's' : ''} saisis pour ce périmètre.
         </Text>
-        {indicateurs.data.total > 0 && (
+        {synthese.total > 0 && (
           <Text size="sm" c="dimmed">
-            {mesures.filter((m) => m === true).length} atteint(s) · {mesures.filter((m) => m === false).length} non
-            atteint(s) · {mesures.filter((m) => m === null).length} sans valeur ou sans cible.
+            {synthese.atteints} atteint(s) · {synthese.nonAtteints} non atteint(s) · {synthese.nonMesures} sans valeur
+            ou sans cible.
           </Text>
         )}
-        {objectifs.data.items.slice(0, 5).map((o) => (
+        {objectifs.slice(0, 5).map((o) => (
           <Text key={o.id} size="sm">
-            {o.name}
-            {typeof o.data.target === 'string' && o.data.target ? ` — ${o.data.target}` : ''}
+            {o.nom}
           </Text>
         ))}
       </Stack>

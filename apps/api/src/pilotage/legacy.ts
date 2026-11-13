@@ -5,6 +5,7 @@ import type { Client } from '../db/db.js';
 import { DEFAULT_SMSI, hash, type Grc } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { verrouillerEtat } from '../legacy/store.js';
+import { CLES_PILOTAGE, perimetreDe } from '../historique/registre.js';
 
 const LEGACY_PILOTAGE = {
   scope: {
@@ -80,6 +81,10 @@ export class PilotageLegacy {
     if (key === 'evidences') await this.g.permission(user, 'pilotage', write ? 'modifier' : 'lire');
     if (key === 'dda') await this.g.permission(user, 'audit', 'lire');
     return { def, state: await this.g.legacy.recompose(c) };
+  }
+  /** Processus, objectifs et indicateurs portent un périmètre (BUG-055) ; les autres listes historiques sont communes. */
+  dansPerimetre(key: string, r: JsonObject, smsi: string): boolean {
+    return !(CLES_PILOTAGE as readonly string[]).includes(key) || perimetreDe(r) === smsi;
   }
   rows(data: JsonObject, key: string): JsonObject[] {
     if (key === 'scope') return isObject(data.scope) ? [{ ...data.scope, id: 'instance' }] : [];
@@ -172,7 +177,9 @@ export class PilotageLegacy {
   }
   async list(smsi: string, key: string, user: SessionUser, search = '', offset = 0) {
     const { state } = await this.state(smsi, key, user);
-    const rows = this.rows(state?.data ?? {}, key).filter((r) => typeof r.id === 'string');
+    const rows = this.rows(state?.data ?? {}, key)
+      .filter((r) => typeof r.id === 'string')
+      .filter((r) => this.dansPerimetre(key, r, smsi));
     const items = rows
       .map((r) => this.dto(smsi, key, r, state?.version ?? 0))
       .filter((r) => (r.name + ' ' + String(r.data.description)).toLowerCase().includes(search.toLowerCase()));
@@ -184,7 +191,9 @@ export class PilotageLegacy {
   }
   async get(smsi: string, key: string, id: string, user: SessionUser, c?: Client, write = false) {
     const { state } = await this.state(smsi, key, user, c, write);
-    const rows = this.rows(state?.data ?? {}, key).filter((r) => r.id === id);
+    const rows = this.rows(state?.data ?? {}, key)
+      .filter((r) => r.id === id)
+      .filter((r) => this.dansPerimetre(key, r, smsi));
     if (rows.length !== 1) throw new HttpError(404, 'Fiche historique absente ou identifiant ambigu.');
     return { object: this.dto(smsi, key, rows[0]!, state!.version), raw: rows[0]!, state: state! };
   }

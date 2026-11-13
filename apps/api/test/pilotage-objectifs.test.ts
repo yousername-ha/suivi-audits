@@ -16,16 +16,23 @@ beforeAll(async () => {
 afterAll(() => t.close());
 
 describe('objectifs et indicateurs', () => {
-  it('refuse la lecture seule et un périmètre qui n’est pas le pilotage commun', async () => {
+  it('refuse la lecture seule ; chaque périmètre a ses propres fiches (BUG-055)', async () => {
     expect((await ro.post(`${base}/processes`, { name: 'Refusé' })).statusCode).toBe(403);
-    const autre = await a.post('/api/grc/smsis', {
-      name: 'Autre périmètre fictif',
-      scope: 'x',
-      timezone: 'Europe/Paris',
-    });
-    expect((await a.post(`/api/grc/${autre.json().id}/pilotage/objectifs/processes`, { name: 'Non' })).statusCode).toBe(
-      404,
-    );
+    const autre = (
+      await a.post('/api/grc/smsis', { name: 'Autre périmètre fictif', scope: 'x', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    const ici = `/api/grc/${autre}/pilotage/objectifs`;
+    const c = await a.post(`${ici}/processes`, { name: 'Processus du sous-périmètre' });
+    expect(c.statusCode, c.body).toBe(200);
+    expect((await etat()).processes?.find((p) => p.id === c.json().id)?.smsi).toBe(autre);
+    // Hors de son périmètre : introuvable, ni modifiable ni supprimable depuis le périmètre commun.
+    expect((await a.patch(`${base}/processes/${c.json().id}`, { name: 'Détourné' })).statusCode).toBe(404);
+    expect((await a.del(`${base}/processes/${c.json().id}?confirm=SUPPRIMER`)).statusCode).toBe(404);
+    // Un objectif d'un autre périmètre ne peut pas être cité par un indicateur du périmètre commun.
+    const o = await a.post(`${ici}/objectives`, { name: 'Objectif du sous-périmètre' });
+    expect((await a.post(`${base}/indicators`, { name: 'Indicateur', obj: o.json().id })).statusCode).toBe(422);
+    expect((await a.del(`${ici}/objectives/${o.json().id}?confirm=SUPPRIMER`)).statusCode).toBe(200);
+    expect((await a.del(`${ici}/processes/${c.json().id}?confirm=SUPPRIMER`)).statusCode).toBe(200);
   });
   it('crée un processus, un objectif lié, puis un indicateur, avec les identifiants de l’outil historique', async () => {
     const p = await a.post(`${base}/processes`, { name: 'Gestion des accès', owner: 'RSSI', family: 'Support' });
@@ -233,5 +240,31 @@ describe('boîtes de pilotage par processus', () => {
       prochaineEcheance: null,
     });
     expect((await ro.get(`${racine}/pilotage/boites`)).statusCode).toBe(200);
+  });
+});
+
+describe('lecture par périmètre (BUG-055)', () => {
+  it('l’état du suivi ne sert pas les fiches d’un périmètre auquel la personne n’est pas rattachée', async () => {
+    const sous = (
+      await a.post('/api/grc/smsis', { name: 'Hébergement fictif', scope: 'h', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    const c = await a.post(`/api/grc/${sous}/pilotage/objectifs/objectives`, { name: 'Objectif confidentiel' });
+    expect(c.statusCode, c.body).toBe(200);
+    const id = c.json().id as string;
+    const membre = await makeUser(t, 'obj_membre', 'rw', { rattache: false });
+    const etranger = await makeUser(t, 'obj_etranger', 'rw', { rattache: false });
+    expect((await a.put(`/api/grc/${sous}/members`, { userId: membre.id, write: true })).statusCode).toBe(204);
+    const ids = async (u: typeof membre) =>
+      (((await (await login(t, u)).get('/api/suivi/etat')).json().objectives ?? []) as { id: string }[]).map(
+        (o) => o.id,
+      );
+    expect(await ids(membre)).toContain(id);
+    expect(await ids(etranger)).not.toContain(id);
+    // Revue de direction : le périmètre compte ses propres objectifs.
+    const revue = (await a.get(`/api/grc/${sous}/pilotage/revue/entrees`)).json();
+    expect(JSON.stringify(revue)).toContain('1 objectif');
+    expect((await a.del(`/api/grc/${sous}/pilotage/objectifs/objectives/${id}?confirm=SUPPRIMER`)).statusCode).toBe(
+      200,
+    );
   });
 });

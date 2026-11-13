@@ -53,7 +53,16 @@ import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 const SOCLE = '00000000-0000-4000-8000-000000000001';
 /** Rubriques dont les données sont communes à toute l'organisation (registres historiques sans périmètre) : sous un autre
     périmètre, la page le dit au lieu de laisser croire que le sélecteur la filtre (BUG-062). */
-const RUBRIQUES_COMMUNES = new Set(['evaluations-clausier', 'fournisseurs', 'criteres-fournisseurs']);
+const RUBRIQUES_COMMUNES = new Set([
+  'audit-pronostic',
+  'audit-couverture',
+  'audit-deroule',
+  'audit-planning',
+  'audit-participants',
+  'evaluations-clausier',
+  'fournisseurs',
+  'criteres-fournisseurs',
+]);
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -298,12 +307,9 @@ export function PilotagePage() {
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
                 {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
-                {section === 'audits' && can('pilotage', 'lire') && smsi === SOCLE && (
-                  <PlansSmsi vue="audit" smsi={smsi} />
-                )}
-                {section === 'exercices' && smsi === SOCLE && <PlansSmsi vue="exo" smsi={smsi} />}
-                {(smsi !== '00000000-0000-4000-8000-000000000001' ||
-                  !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
+                {section === 'audits' && can('pilotage', 'lire') && <PlansSmsi vue="audit" smsi={smsi} />}
+                {section === 'exercices' && <PlansSmsi vue="exo" smsi={smsi} />}
+                {!['processus', 'objectifs', 'indicateurs'].includes(section) && (
                   <BusinessRegistry
                     key={smsi + section}
                     smsi={smsi}
@@ -319,7 +325,7 @@ export function PilotagePage() {
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}
               </>
             )}
-            {section === 'processus-cartes' && smsi === SOCLE && <CartesProcessus smsi={smsi} />}
+            {section === 'processus-cartes' && <CartesProcessus smsi={smsi} />}
             {section === 'parcours-iso' && <ParcoursIso key={smsi} smsi={smsi} />}
             {section === 'synthese' && (
               <>

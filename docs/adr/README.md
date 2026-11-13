@@ -97,3 +97,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0091](0091-simplification-du-menu-resilience-incidents.md) | Simplification du menu Résilience (Incidents et crise) : « Qualifier un signalement » et « RETEX et chronologie » deviennent des onglets de la fiche de l'incident, dans le Registre ; interface seule | Acceptée |
 | [0092](0092-acces-aux-perimetres-hierarchiques.md) | Accès aux périmètres hiérarchiques : un rattachement ouvre le périmètre et ses descendants, un compte rattaché à un enfant ne voit que l'enfant (amende l'ADR 0039) | Acceptée |
 | [0093](0093-declaration-d-applicabilite-par-perimetre.md) | Déclaration d'applicabilité par périmètre : la DdA historique au périmètre commun, une table par périmètre ailleurs, sans héritage | Acceptée |
+| [0094](0094-objectifs-indicateurs-processus-par-perimetre.md) | Objectifs, indicateurs et processus : un seul modèle (celui de l'outil de suivi), une fiche par périmètre | Acceptée |

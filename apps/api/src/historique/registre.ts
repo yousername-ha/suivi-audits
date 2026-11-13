@@ -20,6 +20,33 @@ export interface EtatHistorique {
     périmètre commun, où vivent les entrées saisies avant que le périmètre existe (BUG-044). */
 export const perimetreDe = (e: JsonObject): string => (typeof e.smsi === 'string' && e.smsi ? e.smsi : DEFAULT_SMSI);
 
+/** Processus, objectifs et indicateurs de l'outil de suivi : un seul modèle, une fiche par périmètre (BUG-055). */
+export const CLES_PILOTAGE = ['processes', 'objectives', 'indicators'] as const;
+
+/** Listes de l'état historique dont chaque entrée porte un périmètre : jamais servies hors des périmètres lisibles. */
+const CLES_PAR_PERIMETRE = [...CLES_PILOTAGE, 'plans', 'incidents'] as const;
+
+/** Copie de l'état dont les processus, objectifs et indicateurs sont limités aux périmètres donnés. */
+export function etatPilotageDe(etat: JsonObject, perimetres: Iterable<string>): JsonObject {
+  return limiterAuxPerimetres(etat, perimetres, CLES_PILOTAGE);
+}
+
+/** Copie de l'état dont les listes rattachées à un périmètre sont limitées aux périmètres lisibles (BUG-044, 055, 062). */
+export function etatLisibleDe(etat: JsonObject, perimetres: Iterable<string>): JsonObject {
+  return limiterAuxPerimetres(etat, perimetres, CLES_PAR_PERIMETRE);
+}
+
+function limiterAuxPerimetres(etat: JsonObject, perimetres: Iterable<string>, cles: readonly string[]): JsonObject {
+  const gardes = new Set(perimetres);
+  const sortie: JsonObject = { ...etat };
+  for (const cle of cles)
+    if (Array.isArray(etat[cle]))
+      sortie[cle] = (etat[cle] as unknown[]).filter(
+        (l) => !isObject(l) || gardes.has(perimetreDe(l as JsonObject)),
+      ) as never;
+  return sortie;
+}
+
 export class RegistreHistorique {
   constructor(readonly g: Grc) {}
 

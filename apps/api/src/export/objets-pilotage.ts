@@ -2,6 +2,7 @@
    intéressées, SWOT, rôles, risques, traitements, études, plans de continuité, exercices, revues) sont des objets GRC d'un
    périmètre, pas des entrées du registre historique que les anciennes rubriques lisaient. Ce module lit les objets que le
    lecteur peut ouvrir, pour le périmètre demandé, et les ajoute à l'état d'export sous des clés dédiées. */
+import { etatPilotageDe } from '../historique/registre.js';
 import type { GrcKind, GrcObject } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -106,7 +107,7 @@ export async function etatAvecObjetsPilotage(
   const historique = smsi === DEFAULT_SMSI;
   const anciennes = (k: string) => (historique && Array.isArray(etat[k]) ? (etat[k] as JsonObject[]) : []);
   return {
-    ...etat,
+    ...etatPilotageDe(etat, [smsi]),
     interested: [
       ...anciennes('interested'),
       ...parties.map((o) => ({

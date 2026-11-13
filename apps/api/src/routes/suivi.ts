@@ -1,5 +1,7 @@
 /* État du suivi en lecture pour la nouvelle interface (recomposé depuis les tables, filtré selon les droits), modules
    repris et référentiels de rattachement. */
+import { PorteeLecture } from '../acces/portee.js';
+import { etatLisibleDe } from '../historique/registre.js';
 import { legacyKeyModule, RefOut, type Module } from '@suivi/shared';
 import { isObject, LEGACY_MODULES, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { z } from 'zod';
@@ -37,7 +39,10 @@ export const suiviRoutes = [
         .header('ETag', `"v${r.version}"`)
         .header('Cache-Control', 'no-store')
         .header('Content-Type', 'application/json; charset=utf-8');
-      return reply.send(JSON.stringify(redactLegacy(r.data, (s as Session).user.rights)));
+      const u = (s as Session).user;
+      // Processus, objectifs, indicateurs, plans et incidents : seulement ceux des périmètres que la personne peut ouvrir.
+      const lisibles = await PorteeLecture.pour(svc.grc, u).perimetresLisibles();
+      return reply.send(JSON.stringify(etatLisibleDe(redactLegacy(r.data, u.rights), lisibles)));
     },
   }),
   route({

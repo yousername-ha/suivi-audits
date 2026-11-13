@@ -9,13 +9,13 @@ import {
   type ProcessusCartes,
   type Rattache,
 } from '@suivi/shared';
-import { isObject } from '@suivi/shared/legacy';
+import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import { perimetreDe } from '../historique/registre.js';
+import type { Grc } from '../grc/core.js';
 import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
-import { HttpError } from '../http/errors.js';
 
 type Obj = Record<string, unknown>;
 const lignes = (v: unknown): Obj[] => (Array.isArray(v) ? v.filter(isObject) : []);
@@ -27,16 +27,15 @@ export class PilotageProcessusCartes {
   constructor(private readonly g: Grc) {}
 
   async lire(smsi: string, user: SessionUser): Promise<Omit<ProcessusCartes, 'types'>> {
-    if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user);
     await this.g.permission(user, 'pilotage', 'lire');
     const portee = PorteeLecture.pour(this.g, user);
     const etat = (await portee.etatHistorique()).data;
     const peutFournisseurs = user.rights.can('fournisseurs', 'lire');
 
-    const processus = lignes(etat.processes).filter((p) => texte(p.id));
-    const objectifs = lignes(etat.objectives).filter((o) => texte(o.id));
-    const indicateurs = lignes(etat.indicators).filter((i) => texte(i.id));
+    const processus = lignes(etat.processes).filter((p) => texte(p.id) && perimetreDe(p as JsonObject) === smsi);
+    const objectifs = lignes(etat.objectives).filter((o) => texte(o.id) && perimetreDe(o as JsonObject) === smsi);
+    const indicateurs = lignes(etat.indicators).filter((i) => texte(i.id) && perimetreDe(i as JsonObject) === smsi);
     const swots = lignes(etat.swots).filter((s) => texte(s.id));
     const fournisseurs = lignes(etat.suppliers).filter((f) => texte(f.id));
 

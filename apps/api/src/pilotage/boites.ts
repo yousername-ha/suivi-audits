@@ -5,10 +5,10 @@ import { GRC_MODULES, Recurrence, prochaineOccurrence } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
+import type { Grc } from '../grc/core.js';
 import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
-import { HttpError } from '../http/errors.js';
+import { perimetreDe } from '../historique/registre.js';
 
 export interface BoitePilotage {
   ref: string;
@@ -24,14 +24,13 @@ export class PilotageBoites {
   constructor(private readonly g: Grc) {}
 
   async lister(smsi: string, user: SessionUser): Promise<BoitePilotage[]> {
-    if (smsi !== DEFAULT_SMSI) throw new HttpError(404, 'Ces données appartiennent au pilotage commun.');
     await this.g.access(smsi, user);
     await this.g.permission(user, GRC_MODULES.process, 'lire');
     const portee = PorteeLecture.pour(this.g, user);
     const etat = await portee.etatHistorique();
     const refs = (Array.isArray(etat.data.processes) ? (etat.data.processes as unknown[]) : [])
       .filter(isObject)
-      .filter((p) => typeof p.id === 'string')
+      .filter((p) => typeof p.id === 'string' && perimetreDe(p) === smsi)
       .map((p) => `legacy:processes:${p.id}`);
     const lire = (m: 'ecarts' | 'pilotage') => user.rights.can(m, 'lire');
     const politique = (await this.g.policy(smsi, user)).definition;

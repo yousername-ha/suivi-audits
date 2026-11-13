@@ -15,7 +15,7 @@ import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { compter } from '../grc/cartes.js';
-import { perimetreDe } from '../historique/registre.js';
+import { etatPilotageDe, perimetreDe } from '../historique/registre.js';
 import { PorteeLecture } from '../acces/portee.js';
 
 const lignes = (v: unknown): JsonObject[] => (Array.isArray(v) ? v.filter(isObject) : []);
@@ -147,10 +147,12 @@ export class PilotageRevue {
     );
 
     // d4) objectifs et indicateurs (historiques au commun) ; e) retours (satisfaction, prestataires).
-    if (racine) {
-      const objectifs = objectifsPilotage(etat);
-      const synthese = indicateursSynthese(etat);
-      const indicateurs = lignes(etat.indicators);
+    {
+      // Processus, objectifs et indicateurs du périmètre et de ses enfants héritiers (un seul modèle, BUG-055).
+      const etatObj = etatPilotageDe(etat, ids);
+      const objectifs = objectifsPilotage(etatObj);
+      const synthese = indicateursSynthese(etatObj);
+      const indicateurs = lignes(etatObj.indicators);
       faits.d4.push(
         `${synthese.atteints}/${synthese.total} indicateur(s) atteint(s), ${synthese.nonAtteints} non atteint(s), ${synthese.nonMesures} non mesuré(s) ou sans cible.`,
         `${pluriel(objectifs.length, 'objectif', 'objectifs')} : ${objectifs.filter((o) => o.indicateurs.length && o.atteints === o.indicateurs.length).length} entièrement atteint(s).`,
@@ -162,7 +164,7 @@ export class PilotageRevue {
             .map((i) => i.id)
             .join(', ')} non atteint(s).`,
         );
-      const nonMesures = indicateurs.filter((i) => etatIndicateur(i, etat) === 'na');
+      const nonMesures = indicateurs.filter((i) => etatIndicateur(i, etatObj) === 'na');
       faits.d2.push(
         nonMesures.length
           ? `${pluriel(nonMesures.length, 'indicateur non mesuré', 'indicateurs non mesurés')} : ${nonMesures.map((i) => String(i.id)).join(', ')}.`
@@ -182,14 +184,6 @@ export class PilotageRevue {
           `${pluriel(fournisseurs.length, 'fournisseur', 'fournisseurs')} : ${evalues} évalué(s), ${fournisseurs.length - evalues} non évalué(s), ${fournisseurs.filter((f) => f.toReview).length} à réévaluer.`,
         );
       } else faits.e.push('Données fournisseurs non accessibles avec vos droits.');
-    } else {
-      faits.d4.push(
-        `${pluriel(await natifs('objective'), 'objectif', 'objectifs')} et ${pluriel(await natifs('indicator'), 'indicateur', 'indicateurs')} saisis pour ce périmètre${suffixe}.`,
-      );
-      faits.d2.push(
-        'Aucune donnée de surveillance propre à ce périmètre : les indicateurs historiques relèvent du périmètre commun.',
-      );
-      faits.e.push('Aucune donnée propre à ce périmètre.');
     }
 
     // d3) audits : plans d'audit de l'année du périmètre et de ses périmètres enfants héritiers (BUG-062).

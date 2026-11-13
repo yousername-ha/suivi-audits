@@ -14,7 +14,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { PorteeLecture } from '../acces/portee.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
-import { perimetreDe } from '../historique/registre.js';
+import { etatPilotageDe, perimetreDe } from '../historique/registre.js';
 import type { Session, SessionUser } from '../auth.js';
 import { CSP_STRICT } from '../http/security.js';
 import { HttpError } from '../http/errors.js';
@@ -48,6 +48,8 @@ export async function synthese(svc: Services, rights: Rights, user: SessionUser 
           .execute()
       : [];
     const visibles = new Set(lisibles);
+    // Processus, objectifs et indicateurs des périmètres lisibles seulement (BUG-055).
+    Object.assign(data, etatPilotageDe(data, lisibles));
     data.plans = [
       // Actions de plan des périmètres lisibles seulement (BUG-062).
       ...(Array.isArray(data.plans) ? data.plans : []).filter(

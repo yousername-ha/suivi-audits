@@ -1429,8 +1429,10 @@ export class Grc {
       .limit(500)
       .execute();
     const historicalParents: { source_ref: string; target_ref: string }[] = [];
-    if (smsi === DEFAULT_SMSI) {
+    {
       const state = (await this.legacy.recompose())?.data ?? {};
+      // Processus, objectifs et indicateurs portent leur périmètre (BUG-055) ; les autres listes relèvent du périmètre commun.
+      const parPerimetre = ['processes', 'objectives', 'indicators'];
       for (const key of [
         'items',
         'processes',
@@ -1441,7 +1443,14 @@ export class Grc {
         'recurring',
         'reviews',
       ]) {
-        const values = (Array.isArray(state[key]) ? state[key] : []).filter(isObject);
+        if (!parPerimetre.includes(key) && smsi !== DEFAULT_SMSI) continue;
+        const values = (Array.isArray(state[key]) ? state[key] : [])
+          .filter(isObject)
+          .filter(
+            (row) =>
+              !parPerimetre.includes(key) ||
+              (typeof row.smsi === 'string' && row.smsi ? row.smsi : DEFAULT_SMSI) === smsi,
+          );
         for (const row of values) {
           if (typeof row.id === 'string' && grcReferences(row).includes(ref) && historicalParents.length < 500)
             historicalParents.push({ source_ref: `legacy:${key}:${row.id}`, target_ref: ref });
