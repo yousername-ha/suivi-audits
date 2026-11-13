@@ -1,5 +1,5 @@
-/* RETEX d'un incident, côté pilote (droit de modification des incidents) : liste des RETEX, ouverture (seul ou avec des
-   contributeurs d'autres pôles), saisie de la chronologie, contributeurs (invitation, relance, retrait), file à valider
+/* RETEX d'un incident, côté pilote (droit de modification des incidents), dans l'onglet « Chronologie et RETEX » de la
+   fiche de l'incident (ADR 0091) : ouverture (seul ou avec des contributeurs d'autres pôles), saisie de la chronologie, contributeurs (invitation, relance, retrait), file à valider
    (accepter, corriger puis accepter, déjà connu, rejeter), récupération d'éléments (fiche de l'incident, main courante de
    crise), clôture, diffusion et chronologie animée générée. Données dans l'incident (champs `timeline` et `retexCollecte`
    de l'état historique), sous verrou, par les routes /api/incidents/:id/retex…. */
@@ -26,7 +26,6 @@ import {
   chronologieRetex,
   dateHeureRetex,
   dureeRetex,
-  filtrerIncidents,
   indicateursRetex,
   obligationsIncident,
   syntheseCollecte,
@@ -42,9 +41,9 @@ import { ConfirmButton, DataTable } from '@suivi/ui';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { get } from '../api';
-import { ErrorAlert } from '../components/common';
 import { ChampTexte, ChampZone, useModule } from '../historique/champs';
-import { useCan } from '../session';
+import type { Agir, Donnees } from './donnees';
+import { etatRetexIncident } from './etat-retex';
 import { ChronologieRetex, TEINTE_TYPE_RETEX } from './ChronologieRetex';
 import {
   FormulaireEvenementRetex,
@@ -64,13 +63,6 @@ import {
   type TonRetex,
 } from './RetexHabillage';
 
-interface Donnees {
-  version: number;
-  incidents: Incident[];
-  categorieEntite: string;
-  ecarts: Record<string, string>;
-}
-type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
 type Vue = 'saisie' | 'contributeurs' | 'valider' | 'recuperer' | 'chronologie';
 const VUES: Vue[] = ['saisie', 'contributeurs', 'valider', 'recuperer', 'chronologie'];
 const ETAT_PROPOSITION: Record<StatutProposition, TonRetex> = {
@@ -92,181 +84,83 @@ export const TypeRetex = ({ type }: { type: string }) => (
 export const StatutPropositionChip = ({ p }: { p: Pick<PropositionRetex, 'statut'> }) => (
   <EtatRetex ton={ETAT_PROPOSITION[p.statut]}>{LIBELLES_PROPOSITION[p.statut]}</EtatRetex>
 );
-const ChipCollecte = ({ c }: { c: CollecteRetex | null }) =>
-  !c ? (
-    <EtatRetex ton="neutre">Saisie seule</EtatRetex>
-  ) : c.statut === 'cloturee' ? (
-    <EtatRetex ton="succes">{c.diffusee ? 'Close · diffusée' : 'Collecte close'}</EtatRetex>
-  ) : (
-    <EtatRetex ton="attention">Collecte ouverte</EtatRetex>
-  );
+/** Pastille de l'état du RETEX d'un incident (pas de RETEX, saisie seule, collecte ouverte ou close). */
+export function EtatRetexIncident({ i }: { i: Pick<Incident, 'collecte' | 'timeline'> }) {
+  const e = etatRetexIncident(i);
+  return <EtatRetex ton={e.ton}>{e.libelle}</EtatRetex>;
+}
 /** Listes déroulantes rendues dans l'espace (sans portail) pour en reprendre l'habillage. */
 const SANS_PORTAIL = { withinPortal: false } as const;
 
-/* ================================================================================================ page */
-export function RetexIncidents() {
-  const can = useCan(),
-    modifiable = can('incidents', 'modifier'),
-    [params, setParams] = useSearchParams(),
-    { d, agir, erreur } = useModule<Donnees>('incidents', '/api/incidents'),
-    [ouverture, setOuverture] = useState<string | null>(null),
+/* ================================================================================================ onglet */
+/** Contenu de l'onglet « Chronologie et RETEX » de la fiche d'un incident. La rubrique interne est portée par l'adresse
+    (`?vue=`), l'incident et l'onglet par la page qui l'accueille. */
+export function RetexIncident({ incident, modifiable, agir }: { incident: Incident; modifiable: boolean; agir: Agir }) {
+  const [params, setParams] = useSearchParams(),
+    [ouverture, setOuverture] = useState(false),
     [plein, setPlein] = useState(false);
-  const incident = d?.incidents.find((i) => i.id === params.get('incident')) ?? null;
   const vue: Vue = VUES.includes(params.get('vue') as Vue) ? (params.get('vue') as Vue) : 'saisie';
-  const aller = (id: string | null, v: Vue = 'saisie') =>
-    setParams(id ? { incident: id, ...(v !== 'saisie' ? { vue: v } : {}) } : {}, { replace: true });
-
+  const aller = (v: Vue) =>
+    setParams(
+      (p) => {
+        const n = new URLSearchParams(p);
+        if (v === 'saisie') n.delete('vue');
+        else n.set('vue', v);
+        return n;
+      },
+      { replace: true },
+    );
   return (
     <EspaceRetex>
-      <ErrorAlert error={erreur} />
-      {!incident ? (
-        <ListeRetex d={d} modifiable={modifiable} ouvrir={(id) => aller(id)} nouveau={() => setOuverture('')} />
-      ) : (
-        <FicheRetex
-          i={incident}
-          vue={vue}
-          modifiable={modifiable}
-          agir={agir}
-          aller={(v) => aller(incident.id, v)}
-          retour={() => aller(null)}
-          ouvrirCollecte={() => setOuverture(incident.id)}
-          pleinEcran={() => setPlein(true)}
-        />
-      )}
-      {d && ouverture !== null && (
+      <FicheRetex
+        i={incident}
+        vue={vue}
+        modifiable={modifiable}
+        agir={agir}
+        aller={aller}
+        ouvrirCollecte={() => setOuverture(true)}
+        pleinEcran={() => setPlein(true)}
+      />
+      {ouverture && (
         <OuvertureRetex
-          d={d}
-          incidentId={ouverture}
+          incident={incident}
           agir={agir}
-          fermer={(id) => {
-            setOuverture(null);
-            if (id) aller(id, 'contributeurs');
+          fermer={(ouvert) => {
+            setOuverture(false);
+            if (ouvert) aller('contributeurs');
           }}
         />
       )}
-      {incident && (
-        <Modal
-          withinPortal={false}
-          classNames={{ content: 'retex-modal' }}
-          opened={plein && vue === 'chronologie'}
-          onClose={() => setPlein(false)}
-          fullScreen
-          lockScroll={false}
-          title="Chronologie du RETEX"
-        >
-          <ChronologieRetex
-            titre={`${incident.id} — ${incident.title || '(sans titre)'}`}
-            points={chronologieRetex(incident.timeline)}
-            indicateurs={indicateursRetex(incident.timeline)}
-          />
-        </Modal>
-      )}
-    </EspaceRetex>
-  );
-}
-
-/* ================================================================================================ liste */
-function ListeRetex({
-  d,
-  modifiable,
-  ouvrir,
-  nouveau,
-}: {
-  d: Donnees | undefined;
-  modifiable: boolean;
-  ouvrir: (id: string) => void;
-  nouveau: () => void;
-}) {
-  const liste = (d ? filtrerIncidents(d.incidents, 'all') : []).filter((i) => i.collecte || i.timeline.length);
-  const ouverts = liste.filter((i) => i.collecte?.statut === 'ouverte');
-  const attente = liste.reduce((n, i) => n + syntheseCollecte(i.collecte).enAttente, 0);
-  const contributeurs = liste.reduce((n, i) => n + syntheseCollecte(i.collecte).contributeurs, 0);
-  return (
-    <>
-      <EnteteRetex
-        surtitre="Incidents et crise · Retour d’expérience"
-        titre="Retours d’expérience"
-        sousTitre="Ouvrez un RETEX sur un incident, remplissez-le seul ou invitez des personnes d’autres pôles. Chacune ajoute ses éléments sans voir le reste ; vous validez, puis vous générez la chronologie."
-        actions={modifiable && <Button onClick={nouveau}>Ouvrir un RETEX</Button>}
-      />
-      <IndicateursRetex
-        items={[
-          ['RETEX', liste.length],
-          ['Collectes ouvertes', ouverts.length],
-          ['Contributeurs', contributeurs],
-          ['À valider', attente, attente ? 'orange' : undefined],
-        ]}
-      />
-      <SectionRetex
-        numero="01"
-        titre="Registre des RETEX"
-        aide="Un RETEX par incident ; ouvrez-le pour suivre la collecte."
+      <Modal
+        withinPortal={false}
+        classNames={{ content: 'retex-modal' }}
+        opened={plein && vue === 'chronologie'}
+        onClose={() => setPlein(false)}
+        fullScreen
+        lockScroll={false}
+        title="Chronologie du RETEX"
       >
-        <DataTable label="Retours d’expérience">
-          <Table highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Incident</Table.Th>
-                <Table.Th>Pilote</Table.Th>
-                <Table.Th>Collecte</Table.Th>
-                <Table.Th>Contributeurs</Table.Th>
-                <Table.Th>À valider</Table.Th>
-                <Table.Th>Échéance</Table.Th>
-                <Table.Th>Chronologie</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {liste.map((i) => {
-                const s = syntheseCollecte(i.collecte);
-                return (
-                  <Table.Tr key={i.id}>
-                    <Table.Td>
-                      <button type="button" className="retex-lien-ligne" onClick={() => ouvrir(i.id)}>
-                        <span className="retex-lien-ligne__id">{i.id}</span>
-                        <span className="retex-lien-ligne__titre">{i.title || '(sans titre)'}</span>
-                      </button>
-                    </Table.Td>
-                    <Table.Td>{i.collecte?.piloteNom || '–'}</Table.Td>
-                    <Table.Td>
-                      <ChipCollecte c={i.collecte} />
-                    </Table.Td>
-                    <Table.Td className="retex-chiffre">
-                      {s.contributeurs ? `${s.termines} / ${s.contributeurs}` : '–'}
-                    </Table.Td>
-                    <Table.Td>
-                      {s.enAttente ? <EtatRetex ton="attention">{s.enAttente} en attente</EtatRetex> : '–'}
-                    </Table.Td>
-                    <Table.Td className="retex-chiffre">{dateJour(i.collecte?.echeance ?? '') || '–'}</Table.Td>
-                    <Table.Td className="retex-chiffre">{i.timeline.length} événement(s)</Table.Td>
-                  </Table.Tr>
-                );
-              })}
-              {!liste.length && (
-                <Table.Tr>
-                  <Table.Td colSpan={7}>Aucun RETEX. Ouvrez-en un depuis un incident du registre.</Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
-      </SectionRetex>
-    </>
+        <ChronologieRetex
+          titre={`${incident.id} — ${incident.title || '(sans titre)'}`}
+          points={chronologieRetex(incident.timeline)}
+          indicateurs={indicateursRetex(incident.timeline)}
+        />
+      </Modal>
+    </EspaceRetex>
   );
 }
 
 /* ================================================================================================ ouverture */
 function OuvertureRetex({
-  d,
-  incidentId,
+  incident,
   agir,
   fermer,
 }: {
-  d: Donnees;
-  incidentId: string;
+  incident: Incident;
   agir: Agir;
-  fermer: (id?: string) => void;
+  /** `true` quand le RETEX vient d'être ouvert. */
+  fermer: (ouvert?: boolean) => void;
 }) {
-  const [id, setId] = useState<string | null>(incidentId || null);
   const [mode, setMode] = useState<'seul' | 'collectif'>('collectif');
   const [consigne, setConsigne] = useState(
     'Ajoutez les événements que votre pôle a vécus pendant l’incident : ce que vous avez constaté, décidé ou fait, avec la date et l’heure les plus précises possible.',
@@ -275,7 +169,6 @@ function OuvertureRetex({
   const [invites, setInvites] = useState<string[]>([]);
   const [envoi, setEnvoi] = useState(false);
   const candidats = useCandidats(mode === 'collectif');
-  const choix = filtrerIncidents(d.incidents, 'all').filter((i) => !i.collecte);
   return (
     <Modal
       withinPortal={false}
@@ -287,16 +180,9 @@ function OuvertureRetex({
       title="Ouvrir un RETEX"
     >
       <Stack>
-        <Select
-          label="Incident"
-          placeholder="Choisir un incident du registre"
-          searchable
-          required
-          comboboxProps={SANS_PORTAIL}
-          value={id}
-          onChange={setId}
-          data={choix.map((i) => ({ value: i.id, label: `${i.id} — ${i.title || '(sans titre)'}` }))}
-        />
+        <Text size="sm">
+          Incident : <b>{incident.id}</b> — {incident.title || '(sans titre)'}
+        </Text>
         <OngletsRetex
           libelle="Mode de collecte"
           valeur={mode}
@@ -338,18 +224,17 @@ function OuvertureRetex({
             Annuler
           </Button>
           <Button
-            disabled={!id || (mode === 'collectif' && !invites.length)}
+            disabled={mode === 'collectif' && !invites.length}
             loading={envoi}
             onClick={async () => {
-              if (!id) return;
               setEnvoi(true);
               try {
                 const corps = mode === 'collectif' ? { consigne: consigne.trim(), echeance } : {};
-                const ok = await agir(`POST`, `${urlRetex(id)}/ouverture`, corps);
+                const ok = await agir(`POST`, `${urlRetex(incident.id)}/ouverture`, corps);
                 if (!ok) return;
                 if (mode === 'collectif' && invites.length)
-                  await agir('POST', `${urlRetex(id)}/invitations`, { utilisateurs: invites });
-                fermer(id);
+                  await agir('POST', `${urlRetex(incident.id)}/invitations`, { utilisateurs: invites });
+                fermer(true);
               } finally {
                 setEnvoi(false);
               }
@@ -389,7 +274,6 @@ function FicheRetex({
   modifiable,
   agir,
   aller,
-  retour,
   ouvrirCollecte,
   pleinEcran,
 }: {
@@ -398,7 +282,6 @@ function FicheRetex({
   modifiable: boolean;
   agir: Agir;
   aller: (v: Vue) => void;
-  retour: () => void;
   ouvrirCollecte: () => void;
   pleinEcran: () => void;
 }) {
@@ -409,10 +292,9 @@ function FicheRetex({
   return (
     <Stack gap="lg">
       <EnteteRetex
-        retour={{ libelle: 'Tous les RETEX', action: retour }}
         surtitre={`Retour d’expérience · ${i.id}`}
-        titre={i.title || '(sans titre)'}
-        etat={<ChipCollecte c={c} />}
+        titre="Chronologie et RETEX"
+        etat={<EtatRetexIncident i={i} />}
         sousTitre={
           c
             ? `Pilote : ${c.piloteNom} · ouvert le ${dateCourte(c.ouverteLe)}${c.echeance ? ` · échéance de la collecte : ${dateJour(c.echeance)}` : ''}`
@@ -421,7 +303,7 @@ function FicheRetex({
         actions={
           modifiable && (
             <>
-              {!c && <Button onClick={ouvrirCollecte}>Inviter des contributeurs</Button>}
+              {!c && <Button onClick={ouvrirCollecte}>Ouvrir un RETEX</Button>}
               {c?.statut === 'ouverte' && (
                 <Button
                   variant="default"

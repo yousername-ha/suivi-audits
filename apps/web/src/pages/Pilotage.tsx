@@ -41,8 +41,7 @@ import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
 import { CelluleCriseVue, ContactsCrise, ScenariosCrise } from '../incidents/Crise';
-import { QualifierSignalement, RegistreIncidents } from '../incidents/Incidents';
-import { RetexIncidents } from '../incidents/Retex';
+import { RegistreIncidents } from '../incidents/Incidents';
 import { DeclarationApplicabilite } from '../dda/Dda';
 import { EvaluationsClausier } from '../pilotage/EvaluationsClausier';
 import { CouvertureCycle } from '../audit/Couverture';
@@ -411,8 +410,6 @@ export function PilotagePage() {
             {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
             {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
             {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
-            {section === 'incidents-qualifier' && can('incidents', 'lire') && <QualifierSignalement />}
-            {section === 'incidents-retex' && can('incidents', 'lire') && <RetexIncidents />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}

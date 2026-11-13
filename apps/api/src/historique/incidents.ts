@@ -115,7 +115,8 @@ export class Incidents {
       { module: 'incidents', action: 'incident.updated', reference: (x) => `legacy:incidents:${x.id}` },
       (data) => {
         const i = this.trouver(data, id);
-        const suivant: JsonObject = { ...i, ...body };
+        const { answers, ...champs } = body;
+        const suivant: JsonObject = { ...i, ...champs, ...(answers ? { answers: answers as JsonObject } : {}) };
         if (body.status && ['Résolu', 'Clos'].includes(body.status) && !str(suivant.resolvedAt))
           suivant.resolvedAt = maintenant16();
         remplacerEntree(data, 'incidents', id, suivant);

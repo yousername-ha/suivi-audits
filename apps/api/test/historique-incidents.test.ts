@@ -76,6 +76,15 @@ describe('registre des incidents', () => {
     expect((await writer.patch('/api/incidents/INC-2026-001', { status: 'Autre' })).statusCode).toBe(422);
     expect((await writer.patch('/api/incidents/INC-9', { title: 'x' })).statusCode).toBe(404);
   });
+  it('enregistre les réponses de la qualification guidée par PATCH, sans changer la qualification', async () => {
+    const r = await writer.patch(`/api/incidents/${incident}`, { answers: { cia: 'non', dcp: 'oui', nsp: 'oui' } });
+    expect(r.statusCode, r.body).toBe(422);
+    const a = await writer.patch(`/api/incidents/${incident}`, { answers: { cia: 'non', dcp: 'oui' } });
+    expect(a.statusCode, a.body).toBe(200);
+    expect(a.json()).toMatchObject({ kind: 'Incident de sécurité', answers: { cia: 'non', dcp: 'oui' } });
+    const b = await writer.patch(`/api/incidents/${incident}`, { answers: { cia: 'oui', dcp: 'oui' } });
+    expect(b.json().answers).toEqual({ cia: 'oui', dcp: 'oui' });
+  });
   it('marque une obligation comme traitée puis non traitée', async () => {
     const a = await writer.put(`/api/incidents/${incident}/obligations/1`, { traitee: true });
     expect(a.statusCode, a.body).toBe(200);

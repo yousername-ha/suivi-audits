@@ -11,6 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router';
 import { ApiError } from './api';
 import { MesContributionsRetexPage } from './incidents/MesContributionsRetex';
+import { RedirectionQualifier, RedirectionRetex } from './incidents/anciennes-adresses';
 import { Layout } from './components/Layout';
 import { AccountPage } from './pages/Account';
 import { AdminPage } from './pages/Admin';
@@ -75,6 +76,9 @@ const router = createBrowserRouter([
       { path: '/documents/:id', element: <DocumentsPage /> },
       { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
+      // Anciennes rubriques du menu Résilience, devenues des onglets de la fiche de l'incident (ADR 0091).
+      { path: '/pilotage/incidents-retex', element: <RedirectionRetex /> },
+      { path: '/pilotage/incidents-qualifier', element: <RedirectionQualifier /> },
       {
         path: '/pilotage/:section?',
         element: (

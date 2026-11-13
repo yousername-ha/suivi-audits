@@ -26,7 +26,7 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Écarts et actions | Amélioration continue, plan d'actions, tâches récurrentes |
 | Preuves et contrôles | Registre des preuves, plan de contrôle |
 | Plans et revues | Continuité (PCA, PRA, PCRA), exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |
-| Incidents et crise | Registre, qualification, cellule de crise, contacts, scénarios et check-lists |
+| Incidents et crise | Registre des incidents (fiche à onglets : qualification guidée, chronologie et RETEX), cellule de crise, contacts, scénarios et check-lists |
 | Outils | Mes rappels, import et rapports ; la configuration du pilotage est une carte de la page Plateforme |
 
 À côté : tableau de bord, documents et liens (chiffrés), cartographie du SMSI, évaluations IA, **exports Excel**, écran mural,

@@ -1,4 +1,5 @@
-/* RETEX d'un incident (ADR 0080) : le pilote ouvre un RETEX et invite un compte sans droit sur les incidents ; ce
+/* RETEX d'un incident (ADR 0080, ADR 0091) : depuis la fiche de l'incident (onglet « Chronologie et RETEX » du registre),
+   le pilote ouvre un RETEX et invite un compte sans droit sur les incidents ; ce
    contributeur voit le bandeau, propose un élément et déclare sa contribution terminée ; un compte non invité reçoit 404 ;
    le pilote valide la proposition, récupère la main courante de crise, clôt la collecte, génère la chronologie et la
    diffuse au contributeur. Comptes, incident et cellule de crise FICTIFS, posés par l'API. */
@@ -145,12 +146,16 @@ test.afterAll(async () => {
 
 test('Pilote : ouvrir un RETEX et inviter un contributeur d’un autre pôle', async () => {
   const { page, problems } = pilote;
-  await page.goto('/pilotage/incidents-retex');
-  await expect(page.getByRole('heading', { name: 'Retours d’expérience' })).toBeVisible();
+  await page.goto('/pilotage/incidents-registre');
+  // L'incident fictif est résolu : « Tous » l'affiche. Aucun RETEX n'est encore ouvert.
+  await page.getByText('Tous', { exact: true }).click();
+  const ligne = page.getByRole('row', { name: new RegExp(INCIDENT) });
+  await expect(ligne).toContainText('Pas de RETEX');
+  await ligne.getByRole('button', { name: INCIDENT }).click();
+  await page.getByRole('tab', { name: 'Chronologie et RETEX' }).click();
+  await expect(page).toHaveURL(new RegExp(`incident=${INCIDENT}&onglet=retex`));
   await page.getByRole('button', { name: 'Ouvrir un RETEX' }).click();
   const fenetre = page.getByRole('dialog', { name: 'Ouvrir un RETEX' });
-  await fenetre.getByRole('combobox', { name: 'Incident' }).click();
-  await fenetre.getByRole('option', { name: new RegExp(INCIDENT) }).click();
   await fenetre.getByRole('combobox', { name: 'Contributeurs' }).click();
   await fenetre.getByRole('combobox', { name: 'Contributeurs' }).fill(CONTRIBUTEUR);
   await fenetre.getByRole('option', { name: `Compte ${CONTRIBUTEUR}` }).click();
@@ -158,12 +163,15 @@ test('Pilote : ouvrir un RETEX et inviter un contributeur d’un autre pôle', a
   await fenetre.getByRole('button', { name: 'Ouvrir et envoyer les invitations' }).click();
   await expect(fenetre).toBeHidden();
 
-  // Fiche du RETEX, onglet des contributeurs : l'invité est listé, sa contribution n'est pas terminée.
+  // Fiche de l'incident, onglet RETEX, rubrique des contributeurs : l'invité est listé, sa contribution n'est pas terminée.
   await expect(page.getByRole('heading', { name: TITRE })).toBeVisible();
   const table = page.getByRole('region', { name: 'Contributeurs du RETEX' });
   await expect(table.getByRole('row', { name: new RegExp(`Compte ${CONTRIBUTEUR}`) })).toBeVisible();
   // Le compte non invité ne figure pas dans la collecte.
   await expect(table.getByText(`Compte ${TIERS}`)).toHaveCount(0);
+  // Le registre indique l'état du RETEX de l'incident.
+  await page.getByRole('button', { name: '← Registre des incidents' }).click();
+  await expect(page.getByRole('row', { name: new RegExp(INCIDENT) })).toContainText('Collecte ouverte');
   expect(problems).toEqual([]);
 });
 
@@ -229,7 +237,11 @@ test('Contributeur : bandeau, proposition, contribution terminée ; compte non i
 
 test('Pilote : valider la proposition, récupérer la main courante, clore, générer et diffuser la chronologie', async () => {
   const { page, problems } = pilote;
+  // Ancienne adresse de la page « RETEX et chronologie » : redirigée vers l'onglet RETEX de la fiche.
   await page.goto(`/pilotage/incidents-retex?incident=${INCIDENT}&vue=valider`);
+  await expect(page).toHaveURL(
+    new RegExp(`/pilotage/incidents-registre\\?incident=${INCIDENT}&onglet=retex&vue=valider$`),
+  );
   const proposition = page.locator('article.retex-proposition', { hasText: PROPOSITION });
   await expect(proposition).toContainText(`Compte ${CONTRIBUTEUR}`);
   await proposition.getByRole('button', { name: 'Accepter', exact: true }).click();
@@ -267,7 +279,7 @@ test('Pilote : valider la proposition, récupérer la main courante, clore, gén
   const diffusion = page.getByRole('switch', { name: 'Diffuser aux contributeurs' });
   await diffusion.click();
   await expect(diffusion).toBeChecked();
-  await expect(page.getByText('Close · diffusée')).toBeVisible();
+  await expect(page.getByText('Close · diffusée', { exact: true })).toBeVisible();
   expect(problems).toEqual([]);
 
   // Le contributeur retrouve la chronologie diffusée, en lecture seule.
