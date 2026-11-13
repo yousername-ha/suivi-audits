@@ -483,13 +483,16 @@ test('CAMP-C2-09 ouvert : un scénario G4 × V2 des échelles publiées se place
   try {
     const adoption = await ecrire(s, 'POST', '/api/config-grc/templates/ebios-rm-gravite-vraisemblance/adopt');
     expect([201, 409], `adoption : ${adoption.status()} ${await adoption.text()}`).toContain(adoption.status());
-    const elements = await ok(await s.req.get('/api/config-grc/items?kind=scale'), 'catalogue des échelles');
+    type Echelle = { id: string; key: string; scope: string; currentVersion: number | null };
+    const reponse = await ok<Echelle[] | { items: Echelle[] }>(
+      await s.req.get('/api/config-grc/items?kind=scale'),
+      'catalogue des échelles',
+    );
+    const elements = Array.isArray(reponse) ? reponse : reponse.items;
     const echelle = (cle: string) => {
-      const e = (elements.items ?? elements).find(
-        (x: { key: string; scope: string; currentVersion: number | null }) => x.key === cle && x.scope === 'instance',
-      );
+      const e = elements.find((x) => x.key === cle && x.scope === 'instance');
       expect(e?.currentVersion, `échelle ${cle} publiée`).toBeTruthy();
-      return { item: e.id as string, version: e.currentVersion as number };
+      return { item: e!.id, version: e!.currentVersion! };
     };
     const p = await creerPerimetre(s, 'Campagne C2-09 étude EBIOS RM (fictif)');
     const etude = await creerObjet(s, p.id, 'risk_study', 'Campagne C2-09 étude (fictif)', {
@@ -533,7 +536,7 @@ test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit
   const s = await admin(browser);
   const compte = `campagne-t1-01-${Date.now().toString(36)}`;
   try {
-    const cree = await ok(
+    const cree = await ok<{ id: string; temporaryPassword: string }>(
       await ecrire(s, 'POST', '/api/admin/users', {
         username: compte,
         displayName: 'Contributeur limité au sous-périmètre (fictif)',
