@@ -1,351 +1,351 @@
 cellule;resultat;constat;commentaire
-pilotage/configuration|principal|administrateur|rempli|bureau;;;
-pilotage/configuration|sous-perimetre|administrateur|rempli|bureau;;;
-pilotage/configuration|principal|contributeur|rempli|bureau;;;
-pilotage/configuration|sous-perimetre|contributeur|rempli|bureau;;;
-pilotage/configuration|principal|lecteur|rempli|bureau;;;
-pilotage/configuration|sous-perimetre|lecteur|rempli|bureau;;;
-pilotage/configuration|principal|auditeur_externe|rempli|bureau;;;
-pilotage/configuration|sous-perimetre|auditeur_externe|rempli|bureau;;;
-pilotage/configuration|restreint|contributeur|rempli|bureau;;;
-pilotage/configuration|principal|rssi|rempli|telephone;;;
-plateforme/general|principal|administrateur|rempli|bureau;;;
-plateforme/general|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/general|principal|contributeur|rempli|bureau;;;
-plateforme/general|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/general|principal|lecteur|rempli|bureau;;;
-plateforme/general|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/general|principal|auditeur_externe|rempli|bureau;;;
-plateforme/general|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/general|restreint|contributeur|rempli|bureau;;;
-plateforme/general|principal|rssi|rempli|telephone;;;
-plateforme/cycle|principal|administrateur|rempli|bureau;;;
-plateforme/cycle|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/cycle|principal|contributeur|rempli|bureau;;;
-plateforme/cycle|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/cycle|principal|lecteur|rempli|bureau;;;
-plateforme/cycle|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/cycle|principal|auditeur_externe|rempli|bureau;;;
-plateforme/cycle|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/cycle|restreint|contributeur|rempli|bureau;;;
-plateforme/cycle|principal|rssi|rempli|telephone;;;
-plateforme/referentiels|principal|administrateur|rempli|bureau;;;
-plateforme/referentiels|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/referentiels|principal|contributeur|rempli|bureau;;;
-plateforme/referentiels|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/referentiels|principal|lecteur|rempli|bureau;;;
-plateforme/referentiels|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/referentiels|principal|auditeur_externe|rempli|bureau;;;
-plateforme/referentiels|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/referentiels|restreint|contributeur|rempli|bureau;;;
-plateforme/referentiels|principal|rssi|rempli|telephone;;;
-plateforme/echelles|principal|administrateur|rempli|bureau;;;
-plateforme/echelles|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/echelles|principal|contributeur|rempli|bureau;;;
-plateforme/echelles|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/echelles|principal|lecteur|rempli|bureau;;;
-plateforme/echelles|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/echelles|principal|auditeur_externe|rempli|bureau;;;
-plateforme/echelles|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/echelles|restreint|contributeur|rempli|bureau;;;
-plateforme/echelles|principal|rssi|rempli|telephone;;;
-plateforme/configuration-pilotage|principal|administrateur|rempli|bureau;;;
-plateforme/configuration-pilotage|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/configuration-pilotage|principal|contributeur|rempli|bureau;;;
-plateforme/configuration-pilotage|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/configuration-pilotage|principal|lecteur|rempli|bureau;;;
-plateforme/configuration-pilotage|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/configuration-pilotage|principal|auditeur_externe|rempli|bureau;;;
-plateforme/configuration-pilotage|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/configuration-pilotage|restreint|contributeur|rempli|bureau;;;
-plateforme/configuration-pilotage|principal|rssi|rempli|telephone;;;
-plateforme/utilisateurs|principal|administrateur|rempli|bureau;;;
-plateforme/utilisateurs|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/utilisateurs|principal|contributeur|rempli|bureau;;;
-plateforme/utilisateurs|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/utilisateurs|principal|lecteur|rempli|bureau;;;
-plateforme/utilisateurs|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/utilisateurs|principal|auditeur_externe|rempli|bureau;;;
-plateforme/utilisateurs|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/utilisateurs|restreint|contributeur|rempli|bureau;;;
-plateforme/utilisateurs|principal|rssi|rempli|telephone;;;
-plateforme/groupes|principal|administrateur|rempli|bureau;;;
-plateforme/groupes|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/groupes|principal|contributeur|rempli|bureau;;;
-plateforme/groupes|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/groupes|principal|lecteur|rempli|bureau;;;
-plateforme/groupes|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/groupes|principal|auditeur_externe|rempli|bureau;;;
-plateforme/groupes|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/groupes|restreint|contributeur|rempli|bureau;;;
-plateforme/groupes|principal|rssi|rempli|telephone;;;
-plateforme/fonctions|principal|administrateur|rempli|bureau;;;
-plateforme/fonctions|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/fonctions|principal|contributeur|rempli|bureau;;;
-plateforme/fonctions|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/fonctions|principal|lecteur|rempli|bureau;;;
-plateforme/fonctions|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/fonctions|principal|auditeur_externe|rempli|bureau;;;
-plateforme/fonctions|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/fonctions|restreint|contributeur|rempli|bureau;;;
-plateforme/fonctions|principal|rssi|rempli|telephone;;;
-plateforme/roles|principal|administrateur|rempli|bureau;;;
-plateforme/roles|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/roles|principal|contributeur|rempli|bureau;;;
-plateforme/roles|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/roles|principal|lecteur|rempli|bureau;;;
-plateforme/roles|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/roles|principal|auditeur_externe|rempli|bureau;;;
-plateforme/roles|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/roles|restreint|contributeur|rempli|bureau;;;
-plateforme/roles|principal|rssi|rempli|telephone;;;
-plateforme/conservation|principal|administrateur|rempli|bureau;;;
-plateforme/conservation|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/conservation|principal|contributeur|rempli|bureau;;;
-plateforme/conservation|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/conservation|principal|lecteur|rempli|bureau;;;
-plateforme/conservation|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/conservation|principal|auditeur_externe|rempli|bureau;;;
-plateforme/conservation|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/conservation|restreint|contributeur|rempli|bureau;;;
-plateforme/conservation|principal|rssi|rempli|telephone;;;
-plateforme/calendriers|principal|administrateur|rempli|bureau;;;
-plateforme/calendriers|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/calendriers|principal|contributeur|rempli|bureau;;;
-plateforme/calendriers|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/calendriers|principal|lecteur|rempli|bureau;;;
-plateforme/calendriers|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/calendriers|principal|auditeur_externe|rempli|bureau;;;
-plateforme/calendriers|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/calendriers|restreint|contributeur|rempli|bureau;;;
-plateforme/calendriers|principal|rssi|rempli|telephone;;;
-plateforme/types-processus|principal|administrateur|rempli|bureau;;;
-plateforme/types-processus|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/types-processus|principal|contributeur|rempli|bureau;;;
-plateforme/types-processus|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/types-processus|principal|lecteur|rempli|bureau;;;
-plateforme/types-processus|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/types-processus|principal|auditeur_externe|rempli|bureau;;;
-plateforme/types-processus|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/types-processus|restreint|contributeur|rempli|bureau;;;
-plateforme/types-processus|principal|rssi|rempli|telephone;;;
-plateforme/apparence|principal|administrateur|rempli|bureau;;;
-plateforme/apparence|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/apparence|principal|contributeur|rempli|bureau;;;
-plateforme/apparence|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/apparence|principal|lecteur|rempli|bureau;;;
-plateforme/apparence|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/apparence|principal|auditeur_externe|rempli|bureau;;;
-plateforme/apparence|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/apparence|restreint|contributeur|rempli|bureau;;;
-plateforme/apparence|principal|rssi|rempli|telephone;;;
-plateforme/notifications|principal|administrateur|rempli|bureau;;;
-plateforme/notifications|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/notifications|principal|contributeur|rempli|bureau;;;
-plateforme/notifications|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/notifications|principal|lecteur|rempli|bureau;;;
-plateforme/notifications|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/notifications|principal|auditeur_externe|rempli|bureau;;;
-plateforme/notifications|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/notifications|restreint|contributeur|rempli|bureau;;;
-plateforme/notifications|principal|rssi|rempli|telephone;;;
-plateforme/notifications-destinataires|principal|administrateur|rempli|bureau;;;
-plateforme/notifications-destinataires|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/notifications-destinataires|principal|contributeur|rempli|bureau;;;
-plateforme/notifications-destinataires|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/notifications-destinataires|principal|lecteur|rempli|bureau;;;
-plateforme/notifications-destinataires|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/notifications-destinataires|principal|auditeur_externe|rempli|bureau;;;
-plateforme/notifications-destinataires|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/notifications-destinataires|restreint|contributeur|rempli|bureau;;;
-plateforme/notifications-destinataires|principal|rssi|rempli|telephone;;;
-plateforme/murs|principal|administrateur|rempli|bureau;;;
-plateforme/murs|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/murs|principal|contributeur|rempli|bureau;;;
-plateforme/murs|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/murs|principal|lecteur|rempli|bureau;;;
-plateforme/murs|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/murs|principal|auditeur_externe|rempli|bureau;;;
-plateforme/murs|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/murs|restreint|contributeur|rempli|bureau;;;
-plateforme/murs|principal|rssi|rempli|telephone;;;
-plateforme/import|principal|administrateur|rempli|bureau;;;
-plateforme/import|sous-perimetre|administrateur|rempli|bureau;;;
-plateforme/import|principal|contributeur|rempli|bureau;;;
-plateforme/import|sous-perimetre|contributeur|rempli|bureau;;;
-plateforme/import|principal|lecteur|rempli|bureau;;;
-plateforme/import|sous-perimetre|lecteur|rempli|bureau;;;
-plateforme/import|principal|auditeur_externe|rempli|bureau;;;
-plateforme/import|sous-perimetre|auditeur_externe|rempli|bureau;;;
-plateforme/import|restreint|contributeur|rempli|bureau;;;
-plateforme/import|principal|rssi|rempli|telephone;;;
-systeme/sauvegardes|principal|administrateur|rempli|bureau;;;
-systeme/sauvegardes|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/sauvegardes|principal|contributeur|rempli|bureau;;;
-systeme/sauvegardes|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/sauvegardes|principal|lecteur|rempli|bureau;;;
-systeme/sauvegardes|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/sauvegardes|principal|auditeur_externe|rempli|bureau;;;
-systeme/sauvegardes|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/sauvegardes|restreint|contributeur|rempli|bureau;;;
-systeme/sauvegardes|principal|rssi|rempli|telephone;;;
-systeme/courriel|principal|administrateur|rempli|bureau;;;
-systeme/courriel|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/courriel|principal|contributeur|rempli|bureau;;;
-systeme/courriel|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/courriel|principal|lecteur|rempli|bureau;;;
-systeme/courriel|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/courriel|principal|auditeur_externe|rempli|bureau;;;
-systeme/courriel|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/courriel|restreint|contributeur|rempli|bureau;;;
-systeme/courriel|principal|rssi|rempli|telephone;;;
-systeme/mises-a-jour|principal|administrateur|rempli|bureau;;;
-systeme/mises-a-jour|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/mises-a-jour|principal|contributeur|rempli|bureau;;;
-systeme/mises-a-jour|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/mises-a-jour|principal|lecteur|rempli|bureau;;;
-systeme/mises-a-jour|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/mises-a-jour|principal|auditeur_externe|rempli|bureau;;;
-systeme/mises-a-jour|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/mises-a-jour|restreint|contributeur|rempli|bureau;;;
-systeme/mises-a-jour|principal|rssi|rempli|telephone;;;
-systeme/certificats|principal|administrateur|rempli|bureau;;;
-systeme/certificats|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/certificats|principal|contributeur|rempli|bureau;;;
-systeme/certificats|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/certificats|principal|lecteur|rempli|bureau;;;
-systeme/certificats|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/certificats|principal|auditeur_externe|rempli|bureau;;;
-systeme/certificats|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/certificats|restreint|contributeur|rempli|bureau;;;
-systeme/certificats|principal|rssi|rempli|telephone;;;
-systeme/securite|principal|administrateur|rempli|bureau;;;
-systeme/securite|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/securite|principal|contributeur|rempli|bureau;;;
-systeme/securite|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/securite|principal|lecteur|rempli|bureau;;;
-systeme/securite|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/securite|principal|auditeur_externe|rempli|bureau;;;
-systeme/securite|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/securite|restreint|contributeur|rempli|bureau;;;
-systeme/securite|principal|rssi|rempli|telephone;;;
-systeme/sessions|principal|administrateur|rempli|bureau;;;
-systeme/sessions|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/sessions|principal|contributeur|rempli|bureau;;;
-systeme/sessions|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/sessions|principal|lecteur|rempli|bureau;;;
-systeme/sessions|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/sessions|principal|auditeur_externe|rempli|bureau;;;
-systeme/sessions|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/sessions|restreint|contributeur|rempli|bureau;;;
-systeme/sessions|principal|rssi|rempli|telephone;;;
-systeme/journal|principal|administrateur|rempli|bureau;;;
-systeme/journal|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/journal|principal|contributeur|rempli|bureau;;;
-systeme/journal|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/journal|principal|lecteur|rempli|bureau;;;
-systeme/journal|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/journal|principal|auditeur_externe|rempli|bureau;;;
-systeme/journal|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/journal|restreint|contributeur|rempli|bureau;;;
-systeme/journal|principal|rssi|rempli|telephone;;;
-systeme/journaux-techniques|principal|administrateur|rempli|bureau;;;
-systeme/journaux-techniques|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/journaux-techniques|principal|contributeur|rempli|bureau;;;
-systeme/journaux-techniques|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/journaux-techniques|principal|lecteur|rempli|bureau;;;
-systeme/journaux-techniques|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/journaux-techniques|principal|auditeur_externe|rempli|bureau;;;
-systeme/journaux-techniques|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/journaux-techniques|restreint|contributeur|rempli|bureau;;;
-systeme/journaux-techniques|principal|rssi|rempli|telephone;;;
-systeme/modules|principal|administrateur|rempli|bureau;;;
-systeme/modules|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/modules|principal|contributeur|rempli|bureau;;;
-systeme/modules|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/modules|principal|lecteur|rempli|bureau;;;
-systeme/modules|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/modules|principal|auditeur_externe|rempli|bureau;;;
-systeme/modules|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/modules|restreint|contributeur|rempli|bureau;;;
-systeme/modules|principal|rssi|rempli|telephone;;;
-systeme/details|principal|administrateur|rempli|bureau;;;
-systeme/details|sous-perimetre|administrateur|rempli|bureau;;;
-systeme/details|principal|contributeur|rempli|bureau;;;
-systeme/details|sous-perimetre|contributeur|rempli|bureau;;;
-systeme/details|principal|lecteur|rempli|bureau;;;
-systeme/details|sous-perimetre|lecteur|rempli|bureau;;;
-systeme/details|principal|auditeur_externe|rempli|bureau;;;
-systeme/details|sous-perimetre|auditeur_externe|rempli|bureau;;;
-systeme/details|restreint|contributeur|rempli|bureau;;;
-systeme/details|principal|rssi|rempli|telephone;;;
-route/setup|principal|administrateur|rempli|bureau;;;
-route/setup|sous-perimetre|administrateur|rempli|bureau;;;
-route/setup|principal|contributeur|rempli|bureau;;;
-route/setup|sous-perimetre|contributeur|rempli|bureau;;;
-route/setup|principal|lecteur|rempli|bureau;;;
-route/setup|sous-perimetre|lecteur|rempli|bureau;;;
-route/setup|principal|auditeur_externe|rempli|bureau;;;
-route/setup|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/setup|restreint|contributeur|rempli|bureau;;;
-route/setup|principal|rssi|rempli|telephone;;;
-route/login|principal|administrateur|rempli|bureau;;;
-route/login|sous-perimetre|administrateur|rempli|bureau;;;
-route/login|principal|contributeur|rempli|bureau;;;
-route/login|sous-perimetre|contributeur|rempli|bureau;;;
-route/login|principal|lecteur|rempli|bureau;;;
-route/login|sous-perimetre|lecteur|rempli|bureau;;;
-route/login|principal|auditeur_externe|rempli|bureau;;;
-route/login|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/login|restreint|contributeur|rempli|bureau;;;
-route/login|principal|rssi|rempli|telephone;;;
-route/account|principal|administrateur|rempli|bureau;;;
-route/account|sous-perimetre|administrateur|rempli|bureau;;;
-route/account|principal|contributeur|rempli|bureau;;;
-route/account|sous-perimetre|contributeur|rempli|bureau;;;
-route/account|principal|lecteur|rempli|bureau;;;
-route/account|sous-perimetre|lecteur|rempli|bureau;;;
-route/account|principal|auditeur_externe|rempli|bureau;;;
-route/account|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/account|restreint|contributeur|rempli|bureau;;;
-route/account|principal|rssi|rempli|telephone;;;
-route/aide|principal|administrateur|rempli|bureau;;;
-route/aide|sous-perimetre|administrateur|rempli|bureau;;;
-route/aide|principal|contributeur|rempli|bureau;;;
-route/aide|sous-perimetre|contributeur|rempli|bureau;;;
-route/aide|principal|lecteur|rempli|bureau;;;
-route/aide|sous-perimetre|lecteur|rempli|bureau;;;
-route/aide|principal|auditeur_externe|rempli|bureau;;;
-route/aide|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/aide|restreint|contributeur|rempli|bureau;;;
-route/aide|principal|rssi|rempli|telephone;;;
-route/parametres/configuration-grc/:kind?|principal|administrateur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|sous-perimetre|administrateur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|principal|contributeur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|sous-perimetre|contributeur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|principal|lecteur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|sous-perimetre|lecteur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|principal|auditeur_externe|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|restreint|contributeur|rempli|bureau;;;
-route/parametres/configuration-grc/:kind?|principal|rssi|rempli|telephone;;;
-route/parametres/:section?|principal|administrateur|rempli|bureau;;;
-route/parametres/:section?|sous-perimetre|administrateur|rempli|bureau;;;
-route/parametres/:section?|principal|contributeur|rempli|bureau;;;
-route/parametres/:section?|sous-perimetre|contributeur|rempli|bureau;;;
-route/parametres/:section?|principal|lecteur|rempli|bureau;;;
-route/parametres/:section?|sous-perimetre|lecteur|rempli|bureau;;;
-route/parametres/:section?|principal|auditeur_externe|rempli|bureau;;;
-route/parametres/:section?|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/parametres/:section?|restreint|contributeur|rempli|bureau;;;
-route/parametres/:section?|principal|rssi|rempli|telephone;;;
-route/admin/:tab?|principal|administrateur|rempli|bureau;;;
-route/admin/:tab?|sous-perimetre|administrateur|rempli|bureau;;;
-route/admin/:tab?|principal|contributeur|rempli|bureau;;;
-route/admin/:tab?|sous-perimetre|contributeur|rempli|bureau;;;
-route/admin/:tab?|principal|lecteur|rempli|bureau;;;
-route/admin/:tab?|sous-perimetre|lecteur|rempli|bureau;;;
-route/admin/:tab?|principal|auditeur_externe|rempli|bureau;;;
-route/admin/:tab?|sous-perimetre|auditeur_externe|rempli|bureau;;;
-route/admin/:tab?|restreint|contributeur|rempli|bureau;;;
-route/admin/:tab?|principal|rssi|rempli|telephone;;;
+pilotage/configuration|principal|administrateur|rempli|bureau;ok;;test7-admin : méthodes Créer EBIOS RM / ISO 27005 / MÉHARI / personnalisée, politique métier, accès au périmètre , POST /api/grc/<périmètre>/methods/preview -> 422 (validation)
+pilotage/configuration|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin, Hébergement HDS : EBIOS RM v1 publiée, accès au périmètre (4 comptes test7 listés), Attribuer/Révoquer , methods/preview -> 422
+pilotage/configuration|principal|contributeur|rempli|bureau;ok;;test7-contrib : lecture seule (contributeur sans pilotage:administrer) : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+pilotage/configuration|sous-perimetre|contributeur|rempli|bureau;defaut;T6-03;test7-contrib : non membre de HDS, périmètre HDS resté choisi par le compte précédent : page sans sélecteur, « Méthode publiée » vide, sans message , GET …/methods 404, …/rapprochements/summary 404 à chaque écran , PUT …/method 403
+pilotage/configuration|principal|lecteur|rempli|bureau;ok;;test7-lecteur : lecture seule, membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+pilotage/configuration|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : lecture seule, membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+pilotage/configuration|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : lecture seule (module Pilotage ouvert, expiration 31/12/2026), membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer » , expiration ramenée au 11/11/2026 par test7-admin : connexion refusée (message générique, auth.login_failed au journal), rétablie au 31/12/2026
+pilotage/configuration|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : lecture seule (module Pilotage ouvert, expiration 31/12/2026), membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+pilotage/configuration|restreint|contributeur|rempli|bureau;defaut;T6-02;test7-restreint : Configuration du pilotage : « Périmètre affiché » propose SMSI Groupement Santé Fictif et Hébergement HDS , GET /api/grc/<principal>/methods et /policy 200 : le périmètre commun reste lisible , écritures 403 (pilotage:administrer)
+pilotage/configuration|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/general|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Général, 7 champs actifs, Changer/Retirer le logo, Enregistrer , PUT /api/settings/general sans If-Match -> 428
+plateforme/general|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Général, 7 champs actifs, Changer/Retirer le logo, Enregistrer , PUT /api/settings/general sans If-Match -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/general|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403
+plateforme/general|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/general|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403
+plateforme/general|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/general|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403
+plateforme/general|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/general|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/settings/general 403, PUT 403
+plateforme/general|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/cycle|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Cycle de certification, 8 champs actifs, Enregistrer , PUT /api/settings/cycle -> 428
+plateforme/cycle|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Cycle de certification, 8 champs actifs, Enregistrer , PUT /api/settings/cycle -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/cycle|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403
+plateforme/cycle|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/cycle|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403
+plateforme/cycle|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/cycle|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403
+plateforme/cycle|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/cycle|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/cycle 403
+plateforme/cycle|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/referentiels|principal|administrateur|rempli|bureau;defaut;C6-04;test7-admin : fenêtre Référentiels, tableau des référentiels et listes, Enregistrer , PUT /api/settings/referentiels -> 428 , liste « Référentiel complémentaire actif » vide (Aucun)
+plateforme/referentiels|sous-perimetre|administrateur|rempli|bureau;defaut;C6-04;test7-admin : fenêtre Référentiels, tableau des référentiels et listes, Enregistrer , PUT /api/settings/referentiels -> 428 , liste « Référentiel complémentaire actif » vide (Aucun) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/referentiels|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403
+plateforme/referentiels|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/referentiels|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403
+plateforme/referentiels|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/referentiels|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403
+plateforme/referentiels|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/referentiels|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/referentiels 403
+plateforme/referentiels|principal|rssi|rempli|telephone;defaut;C6-04;rssi 390x844 : lisible sans débord, mais « Référentiel complémentaire actif : Aucun » alors que ReCyF est actif
+plateforme/echelles|principal|administrateur|rempli|bureau;defaut;C6-06;test7-admin : grille Plateforme sans fenêtre ni redirection , adresse de la carte : grille sans fenêtre
+plateforme/echelles|sous-perimetre|administrateur|rempli|bureau;defaut;C6-06;test7-admin : grille Plateforme sans fenêtre ni redirection , adresse de la carte : grille sans fenêtre , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/echelles|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05)
+plateforme/echelles|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/echelles|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05)
+plateforme/echelles|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/echelles|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05)
+plateforme/echelles|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/echelles|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/config-grc/items (portée instance) 403 « Droit requis : parametres:modifier » , l écran /parametres/configuration-grc reste lisible sans lien (T6-05)
+plateforme/echelles|principal|rssi|rempli|telephone;defaut;C6-06;rssi 390x844 : adresse de la carte : grille sans fenêtre, lisible sans débord
+plateforme/configuration-pilotage|principal|administrateur|rempli|bureau;defaut;C6-06;test7-admin : grille Plateforme sans fenêtre ni redirection , adresse de la carte : grille sans fenêtre
+plateforme/configuration-pilotage|sous-perimetre|administrateur|rempli|bureau;defaut;C6-06;test7-admin : grille Plateforme sans fenêtre ni redirection , adresse de la carte : grille sans fenêtre
+plateforme/configuration-pilotage|principal|contributeur|rempli|bureau;defaut;C6-06;test7-contrib : la carte reste sur la grille (C6-06) puis lecture seule (contributeur sans pilotage:administrer) : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+plateforme/configuration-pilotage|sous-perimetre|contributeur|rempli|bureau;defaut;C6-06;test7-contrib : la carte reste sur la grille (C6-06) puis non membre de HDS : GET /api/grc/<HDS>/methods 404 « Périmètre introuvable ou non accessible », /api/grc/smsis ne renvoie que le principal
+plateforme/configuration-pilotage|principal|lecteur|rempli|bureau;defaut;C6-06;test7-lecteur : la carte reste sur la grille (C6-06) puis lecture seule, membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+plateforme/configuration-pilotage|sous-perimetre|lecteur|rempli|bureau;defaut;C6-06;test7-lecteur : la carte reste sur la grille (C6-06) puis lecture seule, membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+plateforme/configuration-pilotage|principal|auditeur_externe|rempli|bureau;defaut;C6-06;test7-auditeur : la carte reste sur la grille (C6-06) puis lecture seule (module Pilotage ouvert, expiration 31/12/2026), membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+plateforme/configuration-pilotage|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C6-06;test7-auditeur : la carte reste sur la grille (C6-06) puis lecture seule (module Pilotage ouvert, expiration 31/12/2026), membre HDS en lecture : aucun bouton Créer/Publier/Attribuer, champs désactivés , methods/preview 403, PUT …/method 403, PUT …/policy 403, GET/PUT …/members 403 « pilotage:administrer »
+plateforme/configuration-pilotage|restreint|contributeur|rempli|bureau;defaut;T6-02;test7-restreint : la carte reste sur la grille (C6-06) puis Configuration du pilotage : « Périmètre affiché » propose SMSI Groupement Santé Fictif et Hébergement HDS , GET /api/grc/<principal>/methods et /policy 200 : le périmètre commun reste lisible , écritures 403 (pilotage:administrer)
+plateforme/configuration-pilotage|principal|rssi|rempli|telephone;defaut;C6-06;rssi 390x844 : adresse de la carte : grille sans fenêtre, lisible sans débord
+plateforme/utilisateurs|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Utilisateurs, Nouveau compte, revue des accès Excel/CSV, actions par compte , POST /api/admin/users {} -> 422 username
+plateforme/utilisateurs|sous-perimetre|administrateur|rempli|bureau;defaut;C6-12;test7-admin : fenêtre Utilisateurs, Nouveau compte, revue des accès Excel/CSV, actions par compte , POST /api/admin/users {} -> 422 username , aucune colonne ni export ne montre les accès au périmètre Hébergement HDS , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/utilisateurs|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403
+plateforme/utilisateurs|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/utilisateurs|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403
+plateforme/utilisateurs|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/utilisateurs|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403
+plateforme/utilisateurs|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/utilisateurs|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/users 403, POST 403, PATCH 403, DELETE 403, GET access-review 403
+plateforme/utilisateurs|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : tableau des comptes 317/903 px : colonne Actions entièrement hors champ, aucune indication de défilement
+plateforme/groupes|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Groupes, Nouveau groupe, Modifier, Supprimer , POST /api/admin/groups {} -> 422
+plateforme/groupes|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Groupes, Nouveau groupe, Modifier, Supprimer , POST /api/admin/groups {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/groupes|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403
+plateforme/groupes|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/groupes|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403
+plateforme/groupes|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/groupes|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403
+plateforme/groupes|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/groupes|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/groups 403
+plateforme/groupes|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : bouton Supprimer coupé au bord droit (tableau 317/396 px)
+plateforme/fonctions|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Fonctions, Nouvelle fonction, Modifier, Archiver , POST /api/admin/fonctions {} -> 422
+plateforme/fonctions|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Fonctions, Nouvelle fonction, Modifier, Archiver , POST /api/admin/fonctions {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/fonctions|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403
+plateforme/fonctions|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/fonctions|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403
+plateforme/fonctions|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/fonctions|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403
+plateforme/fonctions|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/fonctions|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/fonctions 403
+plateforme/fonctions|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : boutons Archiver coupés au bord droit (tableau 317/342 px)
+plateforme/roles|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Rôles et droits, Voir la matrice, Dupliquer, compteurs d attribution exacts (Administrateur 2, Contributeur 4, Lecteur 4, Auditeur externe 1) , POST /api/admin/roles {} -> 422
+plateforme/roles|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Rôles et droits, Voir la matrice, Dupliquer, compteurs d attribution exacts (Administrateur 2, Contributeur 4, Lecteur 4, Auditeur externe 1) , POST /api/admin/roles {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/roles|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403
+plateforme/roles|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/roles|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403
+plateforme/roles|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/roles|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403
+plateforme/roles|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/roles|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST /api/admin/roles 403
+plateforme/roles|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : colonne Attribué à coupée, actions hors champ (tableau 317/646 px)
+plateforme/conservation|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Conservation, 3 réglages, aperçu de purge , PUT /api/settings/conservation -> 428
+plateforme/conservation|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Conservation, 3 réglages, aperçu de purge , PUT /api/settings/conservation -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/conservation|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403
+plateforme/conservation|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/conservation|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403
+plateforme/conservation|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/conservation|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403
+plateforme/conservation|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/conservation|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/conservation 403
+plateforme/conservation|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/calendriers|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Calendriers, Nouveau calendrier, Mettre à jour, Historique , POST /api/calendriers-plateforme {} -> 422
+plateforme/calendriers|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Calendriers, Nouveau calendrier, Mettre à jour, Historique , POST /api/calendriers-plateforme {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/calendriers|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth)
+plateforme/calendriers|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/calendriers|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth)
+plateforme/calendriers|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/calendriers|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth)
+plateforme/calendriers|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/calendriers|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/calendriers-plateforme 403 (lecture des calendriers ouverte, accès auth)
+plateforme/calendriers|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : colonne Actions coupée (Mettre à jour, Historique, Supprimer) (317/392 px)
+plateforme/types-processus|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Types de processus, Nouveau type, Monter/Descendre, Modifier, Archiver, Supprimer , POST /api/types-processus {} -> 422
+plateforme/types-processus|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Types de processus, Nouveau type, Monter/Descendre, Modifier, Archiver, Supprimer , POST /api/types-processus {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/types-processus|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth)
+plateforme/types-processus|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/types-processus|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth)
+plateforme/types-processus|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/types-processus|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth)
+plateforme/types-processus|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/types-processus|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : POST /api/types-processus 403 (lecture ouverte, accès auth)
+plateforme/types-processus|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : seules les colonnes Type et Code visibles, actions hors champ (317/635 px)
+plateforme/apparence|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Apparence, 8 réglages, Enregistrer , PUT /api/settings/apparence -> 428
+plateforme/apparence|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Apparence, 8 réglages, Enregistrer , PUT /api/settings/apparence -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/apparence|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403
+plateforme/apparence|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/apparence|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403
+plateforme/apparence|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/apparence|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403
+plateforme/apparence|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/apparence|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/apparence 403
+plateforme/apparence|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/notifications|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Notifications, 4 réglages, Enregistrer , PUT /api/settings/notifications -> 428
+plateforme/notifications|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Notifications, 4 réglages, Enregistrer , PUT /api/settings/notifications -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403
+plateforme/notifications|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403
+plateforme/notifications|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403
+plateforme/notifications|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : PUT /api/settings/notifications 403
+plateforme/notifications|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/notifications-destinataires|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Destinataires des notifications, choix du groupe ou du rôle
+plateforme/notifications-destinataires|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Destinataires des notifications, choix du groupe ou du rôle , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications-destinataires|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403
+plateforme/notifications-destinataires|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications-destinataires|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403
+plateforme/notifications-destinataires|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications-destinataires|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403
+plateforme/notifications-destinataires|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/notifications-destinataires|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET …/notifications/etat 403, PUT …/reglages 403
+plateforme/notifications-destinataires|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+plateforme/murs|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Écrans muraux, création et Révoquer , POST /api/admin/murs {} -> 422
+plateforme/murs|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Écrans muraux, création et Révoquer , POST /api/admin/murs {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/murs|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403
+plateforme/murs|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/murs|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403
+plateforme/murs|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/murs|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403
+plateforme/murs|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/murs|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET/POST/DELETE /api/admin/murs 403
+plateforme/murs|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : bouton Révoquer coupé au bord droit (317/411 px)
+plateforme/import|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Import et export, export legacy, dépôt, simulation, import Tenacy , PUT /api/settings/import_export -> 428
+plateforme/import|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Import et export, export legacy, dépôt, simulation, import Tenacy , PUT /api/settings/import_export -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/import|principal|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403
+plateforme/import|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/import|principal|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403
+plateforme/import|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/import|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403
+plateforme/import|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+plateforme/import|restreint|contributeur|rempli|bureau;ok;;test7-restreint : carte absente : la grille Plateforme ne montre que « Configuration du pilotage », aucun message (T6-06) , API : GET /api/admin/import 403, POST …/simulate 403, GET …/export/legacy 403
+plateforme/import|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+systeme/sauvegardes|principal|administrateur|rempli|bureau;defaut;C6-20;test7-admin : fenêtre Sauvegardes et restauration, clé de secours, demandes, remise à vide , PUT /api/settings/sauvegardes -> 428 , « Exécutant serveur indisponible », GET /api/admin/sauvegardes -> worker.available false
+systeme/sauvegardes|sous-perimetre|administrateur|rempli|bureau;defaut;C6-20;test7-admin : fenêtre Sauvegardes et restauration, clé de secours, demandes, remise à vide , PUT /api/settings/sauvegardes -> 428 , « Exécutant serveur indisponible », GET /api/admin/sauvegardes -> worker.available false , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sauvegardes|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403
+systeme/sauvegardes|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sauvegardes|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403
+systeme/sauvegardes|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sauvegardes|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403
+systeme/sauvegardes|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sauvegardes|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sauvegardes 403, PUT /api/settings/sauvegardes 403, POST …/cle-secours 403
+systeme/sauvegardes|principal|rssi|rempli|telephone;defaut;C6-20;rssi 390x844 : lisible sans débord , « Exécutant serveur indisponible » toujours affiché après redémarrage de la pile
+systeme/courriel|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Courriel, 11 champs actifs, message de test , PUT /api/settings/courriel -> 428
+systeme/courriel|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Courriel, 11 champs actifs, message de test , PUT /api/settings/courriel -> 428 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/courriel|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403
+systeme/courriel|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/courriel|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403
+systeme/courriel|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/courriel|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403
+systeme/courriel|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/courriel|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/courriel 403, POST …/courriel/test 403
+systeme/courriel|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+systeme/mises-a-jour|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Mises à jour et versions, Vérifier, Télécharger, Restaurer
+systeme/mises-a-jour|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Mises à jour et versions, Vérifier, Télécharger, Restaurer , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/mises-a-jour|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403
+systeme/mises-a-jour|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/mises-a-jour|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403
+systeme/mises-a-jour|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/mises-a-jour|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403
+systeme/mises-a-jour|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/mises-a-jour|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/versions 403, POST …/updates/install 403
+systeme/mises-a-jour|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : tableau des versions coupé, actions Télécharger/Restaurer hors champ (317/544 px)
+systeme/certificats|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Certificats et opérations, adresse du site, politique, TLS
+systeme/certificats|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Certificats et opérations, adresse du site, politique, TLS , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/certificats|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403
+systeme/certificats|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/certificats|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403
+systeme/certificats|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/certificats|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403
+systeme/certificats|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/certificats|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/exploitation 403, POST …/operations 403, POST /api/admin/adresse-site 403
+systeme/certificats|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+systeme/securite|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Sécurité, politique, poivre, clés FIDO2 , PUT /api/settings/securite -> 428, PUT /api/admin/webauthn/policy {} -> 422
+systeme/securite|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Sécurité, politique, poivre, clés FIDO2 , PUT /api/settings/securite -> 428, PUT /api/admin/webauthn/policy {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/securite|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403
+systeme/securite|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/securite|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403
+systeme/securite|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/securite|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403
+systeme/securite|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/securite|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET/PUT /api/settings/securite 403, GET /api/admin/poivre 403, POST …/poivre/changer 403
+systeme/securite|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+systeme/sessions|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Sessions actives, sessions de tous les comptes, Fermer , DELETE /api/admin/sessions/<id> -> 422 (format)
+systeme/sessions|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Sessions actives, sessions de tous les comptes, Fermer , DELETE /api/admin/sessions/<id> -> 422 (format) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sessions|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403
+systeme/sessions|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sessions|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403
+systeme/sessions|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sessions|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403
+systeme/sessions|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/sessions|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/sessions 403, DELETE 403
+systeme/sessions|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : colonnes Activité et Fermer hors champ (317/422 px)
+systeme/journal|principal|administrateur|rempli|bureau;defaut;C6-13;test7-admin : fenêtre Journal d audit, filtres, exports CSV et JSON , actions en codes, cibles en identifiants
+systeme/journal|sous-perimetre|administrateur|rempli|bureau;defaut;C6-13;test7-admin : fenêtre Journal d audit, filtres, exports CSV et JSON , actions en codes, cibles en identifiants , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journal|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403
+systeme/journal|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journal|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403
+systeme/journal|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journal|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403
+systeme/journal|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journal|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/audit 403
+systeme/journal|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : colonnes Cible et IP hors champ (317/692 px) , actions en codes (C6-13)
+systeme/journaux-techniques|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Journaux techniques, seuil, débogage, téléchargement NDJSON , PUT …/niveau {} -> 422
+systeme/journaux-techniques|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Journaux techniques, seuil, débogage, téléchargement NDJSON , PUT …/niveau {} -> 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journaux-techniques|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403
+systeme/journaux-techniques|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journaux-techniques|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403
+systeme/journaux-techniques|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journaux-techniques|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403
+systeme/journaux-techniques|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/journaux-techniques|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/journaux-techniques 403, PUT …/niveau 403
+systeme/journaux-techniques|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : contenu des entrées hors champ (317/1078 px)
+systeme/modules|principal|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Modules, activation et prévisualisation
+systeme/modules|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : fenêtre Modules, activation et prévisualisation , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/modules|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403
+systeme/modules|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/modules|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403
+systeme/modules|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/modules|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403
+systeme/modules|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/modules|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET …/modules/history 403, PUT /api/admin/modules 403
+systeme/modules|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+systeme/details|principal|administrateur|rempli|bureau;defaut;C6-24;test7-admin : fenêtre Détails techniques , volumétrie en JSON brut
+systeme/details|sous-perimetre|administrateur|rempli|bureau;defaut;C6-24;test7-admin : fenêtre Détails techniques , volumétrie en JSON brut , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/details|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403
+systeme/details|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/details|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403
+systeme/details|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/details|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403
+systeme/details|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+systeme/details|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/info et /systeme 403
+systeme/details|principal|rssi|rempli|telephone;defaut;C6-24;rssi 390x844 : valeurs longues coupées (317/597 px, T6-04) , volumétrie en JSON brut, 14 MB et 14 Mo mêlés
+route/setup|principal|administrateur|rempli|bureau;ok;;test7-admin : /setup redirige vers l accueil (installation terminée), POST /api/setup sans jeton refusé 422
+route/setup|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : /setup redirige vers l accueil (installation terminée), POST /api/setup sans jeton refusé 422 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/setup|principal|contributeur|rempli|bureau;ok;;test7-contrib : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07)
+route/setup|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/setup|principal|lecteur|rempli|bureau;ok;;test7-lecteur : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07)
+route/setup|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/setup|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07)
+route/setup|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07) , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/setup|restreint|contributeur|rempli|bureau;ok;;test7-restreint : /setup redirige vers l accueil , GET /api/setup public (needed false) , POST /api/setup {} -> 422 (validation avant refus, remarque T6-07)
+route/setup|principal|rssi|rempli|telephone;ok;;rssi 390x844 : session fermée : /setup redirige vers /login, écran de connexion lisible sans débord
+route/login|principal|administrateur|rempli|bureau;ok;;test7-admin : /login redirige vers l accueil quand la session est ouverte
+route/login|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : /login redirige vers l accueil quand la session est ouverte , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/login|principal|contributeur|rempli|bureau;ok;;test7-contrib : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran
+route/login|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/login|principal|lecteur|rempli|bureau;ok;;test7-lecteur : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran
+route/login|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/login|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran
+route/login|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/login|restreint|contributeur|rempli|bureau;ok;;test7-restreint : /login redirige vers l accueil, connexion TOTP et changement du mot de passe temporaire faits à l écran
+route/login|principal|rssi|rempli|telephone;ok;;rssi 390x844 : session fermée : formulaire entier visible, aucun débord
+route/account|principal|administrateur|rempli|bureau;defaut;BUG-018;test7-admin : Mon compte : affichage, notifications, mot de passe, TOTP, sessions personnelles , boutons « Toggle password visibility »
+route/account|sous-perimetre|administrateur|rempli|bureau;defaut;BUG-018;test7-admin : Mon compte : affichage, notifications, mot de passe, TOTP, sessions personnelles , boutons « Toggle password visibility » , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/account|principal|contributeur|rempli|bureau;defaut;BUG-018;test7-contrib : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility »
+route/account|sous-perimetre|contributeur|rempli|bureau;defaut;BUG-018;test7-contrib : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility » , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/account|principal|lecteur|rempli|bureau;defaut;BUG-018;test7-lecteur : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility »
+route/account|sous-perimetre|lecteur|rempli|bureau;defaut;BUG-018;test7-lecteur : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility » , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/account|principal|auditeur_externe|rempli|bureau;defaut;BUG-018;test7-auditeur : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility »
+route/account|sous-perimetre|auditeur_externe|rempli|bureau;defaut;BUG-018;test7-auditeur : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility » , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/account|restreint|contributeur|rempli|bureau;defaut;BUG-018;test7-restreint : Mon compte limité à son compte (aucune donnée d un autre compte) , boutons « Toggle password visibility »
+route/account|principal|rssi|rempli|telephone;defaut;BUG-018;rssi 390x844 : boutons « Toggle password visibility » , tableau des sessions coupé (Dernière activité tronquée, T6-04)
+route/aide|principal|administrateur|rempli|bureau;ok;;test7-admin : Guide d utilisation accessible, recherche active
+route/aide|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : Guide d utilisation accessible, recherche active , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/aide|principal|contributeur|rempli|bureau;ok;;test7-contrib : guide accessible en lecture, aucune action
+route/aide|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : guide accessible en lecture, aucune action , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/aide|principal|lecteur|rempli|bureau;ok;;test7-lecteur : guide accessible en lecture, aucune action
+route/aide|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : guide accessible en lecture, aucune action , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/aide|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : guide accessible en lecture, aucune action
+route/aide|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : guide accessible en lecture, aucune action , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/aide|restreint|contributeur|rempli|bureau;ok;;test7-restreint : guide accessible en lecture, aucune action
+route/aide|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+route/parametres/configuration-grc/:kind?|principal|administrateur|rempli|bureau;ok;;test7-admin : Configuration GRC : 6 onglets, Nouvel élément : échelle, Ouvrir
+route/parametres/configuration-grc/:kind?|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : Configuration GRC : 6 onglets, Nouvel élément : échelle, Ouvrir
+route/parametres/configuration-grc/:kind?|principal|contributeur|rempli|bureau;ok;;test7-contrib : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 5 éléments (échelle du périmètre HDS masquée, non membre) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 5 éléments (échelle du périmètre HDS masquée, non membre) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|principal|lecteur|rempli|bureau;ok;;test7-lecteur : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 6 éléments (membre de HDS) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 6 éléments (membre de HDS) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 6 éléments (membre de HDS) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 6 éléments (membre de HDS) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|restreint|contributeur|rempli|bureau;ok;;test7-restreint : lecture seule (Ouvrir, pas de Nouvel élément) , GET /api/config-grc/items 6 éléments (membre de HDS) , POST items portée instance 403 parametres:modifier, portée périmètre 403 pilotage:administrer (T6-05 : aucun lien vers cet écran)
+route/parametres/configuration-grc/:kind?|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : colonne Portée coupée au bord droit
+route/parametres/:section?|principal|administrateur|rempli|bureau;ok;;test7-admin : /parametres et /parametres/securite : sections et formulaires modifiables
+route/parametres/:section?|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : /parametres et /parametres/securite : sections et formulaires modifiables , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/parametres/:section?|principal|contributeur|rempli|bureau;defaut;T6-01;test7-contrib : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403
+route/parametres/:section?|sous-perimetre|contributeur|rempli|bureau;defaut;T6-01;test7-contrib : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/parametres/:section?|principal|lecteur|rempli|bureau;defaut;T6-01;test7-lecteur : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403
+route/parametres/:section?|sous-perimetre|lecteur|rempli|bureau;defaut;T6-01;test7-lecteur : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/parametres/:section?|principal|auditeur_externe|rempli|bureau;defaut;T6-01;test7-auditeur : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403
+route/parametres/:section?|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T6-01;test7-auditeur : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/parametres/:section?|restreint|contributeur|rempli|bureau;defaut;T6-01;test7-restreint : écran ouvert avec les onglets des sections et l alerte « Droits insuffisants : vous ne pouvez pas consulter dans « Paramètres » » (GET /api/settings/general 403) , PUT /api/settings/* 403
+route/parametres/:section?|principal|rssi|rempli|telephone;ok;;rssi 390x844 : capture relue : rien de coupé, aucun débord (page 390/390 px)
+route/admin/:tab?|principal|administrateur|rempli|bureau;ok;;test7-admin : /admin et /admin/audit : 10 onglets, Utilisateurs et Journal fonctionnels
+route/admin/:tab?|sous-perimetre|administrateur|rempli|bureau;ok;;test7-admin : /admin et /admin/audit : 10 onglets, Utilisateurs et Journal fonctionnels , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/admin/:tab?|principal|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403
+route/admin/:tab?|sous-perimetre|contributeur|rempli|bureau;ok;;test7-contrib : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/admin/:tab?|principal|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403
+route/admin/:tab?|sous-perimetre|lecteur|rempli|bureau;ok;;test7-lecteur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/admin/:tab?|principal|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403
+route/admin/:tab?|sous-perimetre|auditeur_externe|rempli|bureau;ok;;test7-auditeur : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403 , rendu et refus identiques avec Hébergement HDS sélectionné (écran d instance sans périmètre)
+route/admin/:tab?|restreint|contributeur|rempli|bureau;ok;;test7-restreint : redirection silencieuse vers l accueil (T6-06) , API : GET /api/admin/users et /audit 403
+route/admin/:tab?|principal|rssi|rempli|telephone;defaut;T6-04;rssi 390x844 : onglet Utilisateurs : colonne Actions coupée (« Droits… » au bord)
