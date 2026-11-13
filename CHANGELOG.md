@@ -10,6 +10,14 @@ Aucune action.
 
 ### Modifié
 
+- **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
+  « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
+  onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**
+  (chronologie, contributeurs, file à valider, récupération d'éléments, chronologie générée, ouverture d'un RETEX). « Nouvel incident » crée une fiche vide et l'ouvre ; le
+  registre affiche l'état du RETEX de chaque incident et se filtre dessus. Les anciennes adresses sont redirigées. Seul changement d'API : `PATCH /api/incidents/:id`
+  accepte `answers` (réponses du questionnaire). Aucune migration ; la page « Mes contributions RETEX » et la cellule de crise sont inchangées.
+  _(Session « Projet audit_suivi Coeur ».)_
+
 - **Menu Conformité simplifié, lot 1 : interface** ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md)) : la destination « Référentiels et exigences » ne garde
   que la **Bibliothèque de référentiels**, qui affiche une carte par référentiel avec la **couverture du périmètre** (barre des états, clauses
   obligatoires, mesures reliées, « Voir la couverture » pour le détail exigence par exigence). Les pages « Référentiels et exigences », « Correspondances entre
