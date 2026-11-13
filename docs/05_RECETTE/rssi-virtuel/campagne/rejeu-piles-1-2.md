@@ -2,14 +2,20 @@
 
 | Élément | Valeur |
 | --- | --- |
-| Code de l’application testé | `2e63e86` (branche `claude/recette-rssi-2026-11-12`, HEAD `e61b008` : documentation et outillage de recette seulement) |
-| Date | 13/11/2026, à partir de 01:15 (Europe/Paris) |
+| Code de l’application testé | `2e63e86` (branche `claude/recette-rssi-2026-11-12`, HEAD `e61b008` au début, `8a4f53a` à la reprise : documentation et outillage de recette seulement) |
+| Date | 13/11/2026, de 01:15 à 01:49 (Europe/Paris), avec une interruption (redémarrage de la machine) |
 | Piles | pile 1 `https://127.0.0.11` (pilote 9334, `.pilote-1`), pile 2 `https://127.0.0.12` (pilote 9335, `.pilote-2`), remplies par les phases 1 et 2 |
 | Comptes | `rssi` (administrateur), comptes `test7-*` de la phase 2 ; aucun secret recopié ici |
 | Outillage | `pilote.mjs` (écran, arbre d’accessibilité, API) ; scripts Playwright reliés au Chrome du pilote ou à une session API par compte, gardés dans le bloc-notes (préfixe `r12-`), hors du dépôt |
 | Règle | rejouer avant d’inscrire (CAMPAGNE-MULTI-AGENT.md §5, phase 3, point 2) ; aucune modification de l’application ni des tests |
 
-Rejeu en cours : le tableau et les sections sont complétés au fil des constats.
+Interruption : la machine a redémarré pendant le rejeu (après C2-07) ; piles relancées par la session principale, données
+intactes ; Chrome du pilote relancé et comptes reconnectés, puis reprise à C2-08 sans refaire les constats déjà écrits.
+
+Objets créés pour le rejeu, tous retirés ensuite (archivés ou supprimés) : pile 1, une fiche SWOT « rejeu C1-03 … », une
+évaluation par le clausier « rejeu C1-12 … » et l’écart FOU-02 qu’elle a produit, une partie intéressée « rejeu T1-01 … » ;
+pile 2, deux risques « rejeu C2-01 … » et « rejeu C2-03 … » (la décision d’acceptation de ce dernier reste dans
+l’historique, immuable), une opportunité « rejeu T2-01 … ». Les données des phases 1 et 2 n’ont pas été modifiées.
 
 ## Synthèse
 
@@ -30,6 +36,21 @@ Rejeu en cours : le tableau et les sections sont complétés au fil des constats
 | C2-07 | reproduit (157 options au lieu de 160) | majeur → majeur | volet « liens » : même famille que BUG-026 (mesure du traitement invisible dans la DdA) | oui (page et API) |
 | C2-08 | reproduit en partie (pile 2 seulement : aucun référentiel appliqué ; sur la pile 1, le sous-périmètre propose les mesures héritées) | majeur → mineur | aucun dans la liste ; voisin de C2-07 (deux sources de mesures selon le périmètre) | oui (API) |
 | C2-09 | reproduit | majeur → majeur | aucun | oui (page) |
+| C2-10 | reproduit | majeur → majeur | même cause que C1-03 (fiche générique du Pilotage sans « Archiver la fiche ») | oui (page) |
+| C2-17 | reproduit | majeur → mineur | même famille que BUG-035 (compteurs de sources différentes sur un même écran) | oui (API) |
+
+Bilan : **17 constats rejoués : 15 reproduits, 2 reproduits en partie (C1-12, C2-08), 0 non reproduit, 0 outillage.**
+
+- Gravités modifiées : C1-12 bloquant → majeur (l’écart est dans la DdA ; l’échec d’INV-08 est un faux positif de
+  l’invariant) ; C2-03 majeur → bloquant (acceptation formelle d’un risque jamais apprécié) ; C2-08 majeur → mineur (les
+  mesures sont proposées dès qu’un référentiel est appliqué au parent) ; C2-17 majeur → mineur (chaque nombre est juste
+  pour sa portée, la portée n’est pas dite). T1-01 et T2-01 restent majeurs, à arbitrer par le RSSI (aucun document ne
+  promet le cloisonnement ; voir la section).
+- Doublons : C1-03 = C2-10 (même fiche générique) ; T1-01 = T2-01 ; C1-04 et C2-05 (exports qui ignorent les objets du
+  Pilotage) ; C1-04 et C1-05 de la famille de BUG-020 ; C1-10 de BUG-037 ; C2-01 du mécanisme de BUG-022 ; C2-06 extension
+  de BUG-023 ; C2-07 (volet liens) de BUG-026 ; C2-17 de BUG-035 ; C1-12 recoupe BUG-034 et BUG-035.
+- INV-08 (pile 1) : **faux positif** ; l’invariant compare l’identifiant UUID de l’objet du registre à l’identifiant
+  historique (« FOU-01 ») des écarts de la DdA ; il faut chercher par `legacyId ?? id` (détail à la section C1-12).
 
 ## Détail par constat
 
@@ -602,3 +623,64 @@ onglet « Suivi, matrice et cercle » ; attendu après correction : la ligne `ro
 « Scénario 1 : … » dans la colonne V2, et aucun texte « Non placés dans la matrice » ; observé : ligne vide et
 paragraphe « Non placés … : 1. … ». Un test unitaire de `lignes()` (`modele.ts`) avec `severityLevel`/`likelihoodLevel`
 suffit aussi.
+
+### C2-10 — Traitements, actifs, sources, opportunités : ni archivage ni suppression (pile 2)
+
+Fait (compte `rssi`, principal) : `/pilotage/opportunites`, `cliquer button "Autres actions pour Opportunité à supprimer
+(test)"` et ouverture de sa fiche (script `r12-fiche.mjs`) ; `/pilotage/scenarios` et `/pilotage/traitements`,
+`cliquer button "Ouvrir la fiche"` ; `/pilotage/etudes`, « Ouvrir l’étude », onglet « 2. Sources de risque »,
+`button "Ouvrir"` ; témoin : fiche d’un risque du registre (`button "Ouvrir"` sur `/pilotage/risques`).
+
+Vu :
+
+- Opportunité : `menu "Autres actions pour …"` → seul `menuitem "Décisions et réalisations"` ; fiche « Fiche —
+  Opportunité », boutons `["Fermer la fiche","Fermer","Enregistrer"]`.
+- `dialog "Fiche — Valeur métier"`, `dialog "Fiche — Traitement"`, `dialog "Fiche — Source de risque"` : `button
+  "Fermer la fiche"`, `button "Fermer"`, `button "Enregistrer"` ; aucun archivage.
+- Témoin : `dialog "Fiche — Risque"` → `button "Archiver la fiche"` présent.
+- L’API archive ces types : `DELETE /api/grc/00000000-…-0001/objects/c72a7050-… [If-Match "1"]` (opportunité de rejeu
+  de T2-01) → **HTTP 200**, `archived: true` ; même résultat pour une fiche `swot` à la section C1-03.
+
+Gravité : majeur confirmé : une fiche créée par erreur (l’opportunité de test de la phase 1 est toujours là) ne peut
+être retirée que par l’API ; pas de donnée fausse.
+
+Doublon : même cause que C1-03 (même fiche générique, `apps/web/src/grc/ObjectEditor.tsx` l. 591 porte le bouton que
+cette fiche n’affiche pas) : une seule correction.
+
+Test déterministe (page) : en `rssi`, `POST /api/grc/00000000-0000-4000-8000-000000000001/objects`
+`{"kind":"opportunity","name":"Opportunité fictive à archiver"}`, `goto /pilotage/opportunites?perimetre=…`, ouvrir sa
+fiche ; attendu après correction : `getByRole('button', { name: 'Archiver la fiche' })` visible (ou `menuitem` d’archivage
+dans « Autres actions ») ; observé : absent. Même assertion pour `treatment`, `business_asset`, `risk_source`.
+
+### C2-17 — Synthèse : 7 risques et 5 risques sur le même écran (pile 2)
+
+Fait (compte `rssi`) : `pilote.mjs ouvrir "/pilotage/synthese?perimetre=00000000-…-0001"`, puis sous HDS
+(`4dbcd8d1-…`), puis `/` (tableau de bord) ; relevé des requêtes de la page (script `r12-reqs.mjs`) ; recomptage par
+l’API.
+
+Vu :
+
+- Synthèse du principal : `region "Risques et continuité"` → « 7 risques », « 7 sans appréciation validée » ; plus bas
+  `img "Risques : Appréciation validée : 0, À valider : 5"` « 5 risques » ; menu `link "Risques 7 risques sans
+  décision"`.
+- Synthèse sous HDS : pas de région « Risques et continuité » ; `img "Risques : Appréciation validée : 0, À valider :
+  2"` « 2 risques » ; menu toujours « Risques 7 risques sans décision ».
+- Tableau de bord `/` : « Risques et continuité » « 7 risques », « 7 sans appréciation validée ».
+- Sources : la région et le menu lisent `GET /api/mur/synthese` → `"risques":{"total":7,"sansDecision":7,…}` (tous les
+  périmètres lisibles) ; l’anneau lit `GET /api/grc/00000000-…-0001/dashboard` → `"risks":{"total":5,
+  "awaitingReview":5,"overdue":0}`. Registre : principal 5 (R-01 à R-05), HDS 2 (HDS-R-01, HDS-R-02) : 7 = 5 + 2.
+
+Gravité : **baissée de majeur à mineur** : chaque nombre est juste pour sa propre portée (organisation entière ou
+périmètre affiché) et le RSSI peut mener l’étape ; le défaut est l’absence de mention de la portée sur un écran qui
+affiche un « Périmètre affiché » (à remonter si le RSSI considère « 7 risques » sous le principal comme une donnée
+fausse remise à un auditeur).
+
+Doublon : même famille que BUG-035 (« Actions » : nombres différents selon l’écran, sources différentes) ; à traiter
+ensemble (règle de portée des compteurs).
+
+Test déterministe (API) : avec deux périmètres ayant chacun au moins un risque, comparer
+`GET /api/mur/synthese` (`risques.total`) à `GET /api/grc/<principal>/dashboard` (`risks.total`) et à la longueur de
+`GET /api/grc/<principal>/risks/register` (`items`) ; observé : 7 / 5 / 5. Test de page : sous
+`/pilotage/synthese?perimetre=<principal>`, attendu après correction : le nombre de la région « Risques et continuité »
+égal à celui de l’`img` « Risques : … », ou un libellé « tous périmètres » ; observé : 7 et 5 sans mention. Invariant
+proposé : pour chaque périmètre, `dashboard.risks.total` = nombre de lignes non archivées du registre.
