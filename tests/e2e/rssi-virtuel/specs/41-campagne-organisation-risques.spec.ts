@@ -144,14 +144,14 @@ function lireClasseur(buf: Buffer): Map<string, string[][]> {
 
 /* ------------------------------------------------------------------------------- organisation et contexte (pile 1) */
 
-test('CAMP-C1-03 ouvert : une fiche du contexte ou des risques créée par erreur s’archive depuis l’écran', async ({
+test('CAMP-C1-03 ouvert : une fiche du contexte créée par erreur s’archive depuis l’écran', async ({
   browser,
 }) => {
   // ISO/IEC 27001:2022, 7.5.3 (maîtrise des informations documentées, retrait des informations obsolètes). La fiche
-  // générique des registres du Pilotage (SWOT, parties intéressées, rôles, contexte, et aussi traitements, actifs,
-  // sources de risque, opportunités : constat C2-10, même cause) n'offre que « Fermer » et « Enregistrer », alors que
-  // l'API archive (DELETE …/objects/:id) et que la fiche d'un risque porte « Archiver la fiche ».
-  test.fail(true, 'CAMP-C1-03 ouvert : aucun « Archiver la fiche » dans la fiche SWOT ni dans la fiche opportunité');
+  // générique des registres du Pilotage (SWOT, parties intéressées, rôles, contexte : constat C2-10, même cause)
+  // n'offre que « Fermer » et « Enregistrer », alors que l'API archive (DELETE …/objects/:id) et que la fiche d'un
+  // risque porte « Archiver la fiche ». Le cas « opportunité » est retiré avec le type de fiche (ADR 0090, lot 2).
+  test.fail(true, 'CAMP-C1-03 ouvert : aucun « Archiver la fiche » dans la fiche SWOT');
   const s = await admin(browser);
   const fiches: { id: string; version: number }[] = [];
   try {
@@ -161,12 +161,6 @@ test('CAMP-C1-03 ouvert : une fiche du contexte ou des risques créée par erreu
         page: '/pilotage/swot',
         fiche: 'Fiche — Analyse SWOT',
         nom: 'Campagne C1-03 SWOT à archiver (fictif)',
-      },
-      {
-        kind: 'opportunity',
-        page: '/pilotage/opportunites',
-        fiche: 'Fiche — Opportunité',
-        nom: 'Campagne C2-10 opportunité à archiver (fictif)',
       },
     ];
     for (const c of cas) fiches.push(await creerObjet(s, PERIMETRE_COMMUN, c.kind, c.nom));
@@ -612,12 +606,56 @@ test('CAMP-C2-06 ouvert : l’éditeur de méthode nomme ses boutons sans clé t
 test('CAMP-C2-07 ouvert : les mesures proposées à un traitement portent leur référence', async ({ browser }) => {
   // ISO/IEC 27001:2022, 6.1.3 b) et c) (comparaison avec l'annexe A) : au périmètre commun, la liste « Mesures de
   // sécurité (mesures, DdA) » propose « Sauvegarde des informations » sans « A.8.13 », des homonymes (« Généralités »
-  // trois fois) et des exigences HDS tronquées.
+  // trois fois) et des exigences HDS tronquées. Depuis l'ADR 0090, le traitement s'ajoute par le plan d'action d'un risque,
+  // dans le Registre des risques : le test saisit un risque au périmètre commun, avec une méthode publiée de ce périmètre
+  // (celle qui existe déjà, sinon le modèle ISO/IEC 27005, publié sans être choisi par défaut).
   test.fail(true, 'CAMP-C2-07 ouvert : option « Sauvegarde des informations » sans référence');
   const s = await admin(browser);
+  const root = `/api/grc/${PERIMETRE_COMMUN}`;
+  const nom = 'Campagne C2-07 risque à traiter (fictif)';
+  let risque: { id: string; version: number } | undefined;
   try {
-    await s.page.goto(`/pilotage/traitements?perimetre=${PERIMETRE_COMMUN}`);
-    await s.page.getByRole('button', { name: 'Ajouter un traitement' }).click();
+    let methode = (await ok<{ methodId: string; version: number }[]>(await s.req.get(`${root}/methods`), 'méthodes'))[0];
+    if (!methode) {
+      const definition = await ok(await s.req.get('/api/grc/methods/templates/iso27005'), 'modèle de méthode');
+      const apercu = await ok(await ecrire(s, 'POST', `${root}/methods/preview`, { id: null, definition }), 'aperçu');
+      const publiee = await ok(
+        await ecrire(
+          s,
+          'POST',
+          `${root}/methods/publish`,
+          { id: null, definition, previewId: apercu.previewId, reason: 'Méthode de la campagne', confirm: 'PUBLIER' },
+          0,
+        ),
+        'publication de la méthode',
+      );
+      methode = { methodId: publiee.methodId as string, version: 1 };
+    }
+    risque = await creerObjet(s, PERIMETRE_COMMUN, 'risk', nom, {
+      description: 'Risque fictif de la campagne, sans appréciation',
+      code: 'CAMP-C2-07',
+      ownerId: null,
+      domain: '',
+      entity: '',
+      scope: '',
+      methodId: methode.methodId,
+      methodVersion: methode.version,
+      strategy: 'reduce',
+      acceptanceReason: '',
+      reviewAt: null,
+      stages: Object.fromEntries(
+        [1, 2, 3, 4, 5].map((i) => [
+          `stage_${i}`,
+          { status: 'draft', values: { [`notes_stage_${i}`]: 'Justification fictive' }, comment: '' },
+        ]),
+      ),
+    });
+    await s.page.goto(`/pilotage/risques?perimetre=${PERIMETRE_COMMUN}`);
+    await s.page.getByRole('button', { name: `Plan d’action de ${nom}`, exact: true }).click();
+    await s.page
+      .getByRole('dialog', { name: `Plan d’action : ${nom}` })
+      .getByRole('button', { name: 'Ajouter un traitement ou une mesure' })
+      .click();
     const fiche = s.page.getByRole('dialog', { name: 'Ajouter — Traitement' });
     await fiche
       .getByRole('combobox', { name: 'Mesures de sécurité (mesures, DdA)' })
@@ -629,6 +667,7 @@ test('CAMP-C2-07 ouvert : les mesures proposées à un traitement portent leur r
     );
     expect(sansReference).toEqual([]);
   } finally {
+    await archiver(s, PERIMETRE_COMMUN, risque);
     await s.fermer();
   }
 });

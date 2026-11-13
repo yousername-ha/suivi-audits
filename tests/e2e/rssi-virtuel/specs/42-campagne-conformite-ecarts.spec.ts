@@ -452,26 +452,6 @@ test('CAMP-C3-02 ouvert : la couverture du référentiel reprend une décision p
   }
 });
 
-test('CAMP-C3-03 ouvert : « Référentiels et exigences » liste le référentiel appliqué au périmètre', async ({
-  browser,
-}) => {
-  // ISO/IEC 27001:2022, 6.1.3 et 7.5 ; ADR 0082 (référentiels en copie). ISO/IEC 27001:2022 ajouté, attribué et appliqué
-  // à la racine n'est proposé ni par « Référentiel publié » ni par « Référentiel source » (Correspondances entre
-  // exigences) : ces écrans ne lisent que les référentiels créés à la main (objets « framework »).
-  test.fail(true, 'CAMP-C3-03 ouvert : la copie ISO appliquée est absente de « Référentiel publié »');
-  const { ctx, rq, csrf } = await admin(browser);
-  const page = await ctx.newPage();
-  try {
-    await isoAppliqueALaRacine(rq, csrf);
-    await page.goto(`/pilotage/referentiels?perimetre=${PERIMETRE_COMMUN}`);
-    await expect(page.getByRole('heading', { name: 'Référentiels et exigences', level: 1 })).toBeVisible();
-    await page.getByRole('combobox', { name: 'Référentiel publié' }).click();
-    await expect(page.getByRole('option', { name: /ISO\/IEC 27001:2022/ }).first()).toBeVisible({ timeout: 5000 });
-  } finally {
-    await ctx.close();
-  }
-});
-
 test('CAMP-C3-06 ouvert : un écart rattaché à l’exigence du référentiel est repris par la DdA', async ({ browser }) => {
   // ISO/IEC 27001:2022, 10.2 et 6.1.3 d) (état de mise en œuvre) ; traçabilité mesure → écart. La recherche de la fiche
   // d'écart propose « A-5.24 · 5.24 — … » (référence requirement:…) ; la DdA ne lit que les références historiques

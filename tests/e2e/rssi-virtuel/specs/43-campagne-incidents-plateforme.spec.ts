@@ -336,18 +336,21 @@ test('CAMP-C5-06 ouvert : un incident saisi sous un périmètre restreint n’es
     const nonMembre = await cctx.request.get(`/api/grc/${smsi}/objects?kind=continuity_plan`);
     expect(nonMembre.status(), 'le contributeur n’est pas membre du périmètre restreint').toBe(404);
 
-    // Saisie par l'écran, le périmètre restreint étant affiché.
+    // Saisie par l'écran, le périmètre restreint étant affiché : « Nouvel incident » crée une fiche vide et l'ouvre en
+    // page du registre (ADR 0091).
     await page.goto(`/pilotage/incidents-registre?perimetre=${smsi}`);
     await expect(page.getByRole('combobox', { name: 'Périmètre affiché' })).toHaveValue(PERIMETRE_CAMPAGNE);
-    await page.getByRole('button', { name: 'Saisir directement', exact: true }).click();
-    const fiche = page.getByRole('dialog', { name: /^INC-/ });
-    await expect(fiche).toBeVisible();
-    id = (await fiche.getByRole('heading', { level: 2 }).innerText()).trim();
+    const [cree] = await Promise.all([
+      page.waitForResponse((r) => r.request().method() === 'POST' && r.url().endsWith('/api/incidents')),
+      page.getByRole('button', { name: 'Nouvel incident', exact: true }).click(),
+    ]);
+    id = (await okJson<{ id: string }>(cree, 'création de l’incident par l’écran')).id;
+    await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^${id} — `) })).toBeVisible();
     const enregistre = page.waitForResponse(
       (r) => r.request().method() === 'PATCH' && r.url().endsWith(`/api/incidents/${id}`),
     );
-    await fiche.getByRole('textbox', { name: 'Intitulé', exact: true }).fill(titre);
-    await fiche.getByRole('textbox', { name: 'Signalé par', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Intitulé', exact: true }).fill(titre);
+    await page.getByRole('textbox', { name: 'Signalé par', exact: true }).click();
     expect((await enregistre).ok()).toBe(true);
 
     const vue = await okJson<{ incidents: Incident[] }>(await cctx.request.get('/api/incidents'), 'incidents lus');
