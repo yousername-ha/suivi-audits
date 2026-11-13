@@ -541,16 +541,17 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Cause / niveau | PISTE : la DdA ne lit que les rattachements `legacy:items:`. Famille de BUG-026. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-06 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-04 ouvert » (`test.fail`) |
 
-## BUG-042 — Revue de direction : rien de préparé sous un sous-périmètre, et ses non-conformités absentes des entrées du principal (C4-05)
+## BUG-042 — Revue de direction : rien de préparé sous un périmètre enfant, et ses non-conformités absentes de la revue du parent (C4-05)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; BLOQUANTE ; P1 |
 | Statut | OUVERT |
 | Observé | La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
-| Attendu | Les entrées 9.3.2 reprennent les non-conformités de tout le SMSI, ou le sous-périmètre a sa propre revue. |
-| Cause / niveau | PISTE : fonction réservée au périmètre racine (famille de BUG-037). Gravité à revoir si le RSSI décide qu'un sous-périmètre a sa propre revue. |
-| Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-05 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-05 ouvert » (`test.fail`) |
+| Arbitrage du RSSI (13/11/2026) | Chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent : ses entrées remontent alors dans la revue du parent. |
+| Attendu | Enfant sans héritage : revue propre, entrées 9.3.2 préparées. Enfant avec héritage : ses non-conformités et actions comptées dans les entrées du parent. |
+| Cause / niveau | PISTE : fonction réservée au périmètre racine (famille de BUG-037) ; la règle dépend de l'héritage des référentiels (`inheritFrameworks`). |
+| Non-régression | `42-campagne-conformite-ecarts.spec.ts`, deux tests « CAMP-C4-05 ouvert » : revue propre d'un enfant sans héritage ; entrée 9.3.2 c du parent comptant l'écart d'un enfant qui hérite (`test.fail`) |
 
 ## BUG-043 — Compteur « Continuité » limité aux plans PCRA (C5-01)
 

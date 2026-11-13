@@ -85,7 +85,7 @@ R6-03, mineurs), une en défaut sur T6-04 (téléphone). Les chiffres ci-dessus 
 | BUG-039 | Un risque jamais apprécié peut être formellement accepté | C2-03 |
 | BUG-040 | Enregistrer une fiche d'applicabilité sans rien changer déclare la mesure « Applicable » | C3-05 |
 | BUG-041 | Écart rattaché à l'exigence d'un référentiel ignoré par la DdA | C3-06, C4-04 |
-| BUG-042 | Revue de direction : rien sous un sous-périmètre, ses non-conformités absentes des entrées du principal | C4-05 |
+| BUG-042 | Revue de direction : rien sous un périmètre enfant sans héritage ; non-conformités d'un enfant qui hérite absentes de la revue du parent | C4-05 |
 | BUG-043 | Compteur « Continuité » limité aux plans PCRA | C5-01 |
 | BUG-044 | Incidents et crise sans périmètre : un non-membre lit les incidents d'un sous-périmètre | C5-06 |
 | BUG-045 | RETEX : gravité « Faible » affichée pour un incident critique sans gravité saisie | C5-11 |
@@ -184,12 +184,13 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 ## 6. Arbitrages du RSSI
 
-Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver.
-Restent attendus :
+Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver ;
+BUG-042, chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent (ses
+entrées remontent alors dans la revue du parent). Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
+| BUG-049 (suite) | Le désarchivage d'un registre est-il prévu, et réservé à qui ? |
 | BUG-024, BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
 
 ## 7. Tests de non-régression

@@ -16,7 +16,7 @@
 > **Recette du 12-13/11/2026** : campagne à plusieurs agents sur les piles Docker, 1 712 cases couvertes, 40 défauts inscrits
 > (BUG-038 à BUG-077) et 46 tests `test.fail` ; [rapport](docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md),
 > [demande de correctifs](docs/05_RECETTE/rssi-virtuel/DEMANDE-CORRECTIFS-2026-11-13.md). BUG-051 arbitré par le RSSI le 13/11
-> (cloisonnement par périmètre, visibilité du parent vers ses enfants). BUG-049 arbitré (seul le gestionnaire archive un registre). Prochaine action : arbitrage BUG-042, puis correction par la session de développement (DEV-014).
+> (cloisonnement par périmètre, visibilité du parent vers ses enfants). BUG-049 arbitré (seul le gestionnaire archive un registre). BUG-042 arbitré (revue propre à chaque enfant, sauf héritage des référentiels). Prochaine action : correction par la session de développement (DEV-014).
 
 Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.
 Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.

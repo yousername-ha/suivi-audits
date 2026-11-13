@@ -36,10 +36,9 @@ Derrière un proxy TLS, construire d'abord les images avec le secret BuildKit `b
 | 1. Droits | BUG-051, BUG-049, BUG-050, BUG-075, BUG-044 | Écritures ou lectures hors de ce qu'un RSSI attend du rôle ; à traiter d'abord (règle d'AGENTS.md : garde serveur, le menu ne vaut pas permission). |
 | 2. Données et chiffres faux | BUG-040, BUG-041, BUG-039, BUG-043, BUG-045, BUG-047, BUG-048, BUG-065 | Bloquants d'audit : DdA (6.1.3 d), acceptation du risque (6.1.3 f, 8.3), compteurs et réglages enregistrés différemment de ce qui est affiché. |
 | 3. Exports | BUG-038, BUG-046, BUG-058 | Ce qui est remis à un auditeur doit refléter les fiches saisies ; même cause que BUG-020. |
-| 4. Périmètres | BUG-062, BUG-055, BUG-068, BUG-071 | Registres sans périmètre derrière le sélecteur ; même famille que BUG-037. |
+| 4. Périmètres | BUG-042, BUG-062, BUG-055, BUG-068, BUG-071 | Registres sans périmètre derrière le sélecteur ; même famille que BUG-037. |
 | 5. Une seule source par objet | BUG-053, BUG-063, BUG-064, BUG-066, BUG-070, BUG-056, BUG-077 | Écrans qui lisent le registre historique alors que les formulaires écrivent les objets du Pilotage (invariant d'AGENTS.md : une seule source modifiable par objet). |
 | 6. Écrans | BUG-052, BUG-054, BUG-057, BUG-059, BUG-060, BUG-061, BUG-067, BUG-069, BUG-072, BUG-073, BUG-074, BUG-076 | Saisie perdue, page qui plante, libellés techniques, fonctions annoncées absentes. |
-| En attente d'arbitrage du RSSI | BUG-042 | **Ne pas corriger avant décision** (§ 5). |
 
 ## 4. Fiches
 
@@ -180,6 +179,14 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-C2-05 ouvert ».
 
 ### 4. Périmètres
+
+**BUG-042 — Revue de direction : rien de préparé sous un périmètre enfant, et ses non-conformités absentes de la revue du parent** (bloquant, P1 ; constats C4-05)
+
+- Observé : La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée.
+- Attendu : Arbitrage du RSSI du 13/11/2026 : chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent ; ses entrées remontent alors dans la revue du parent.
+- Piste : fonction réservée au périmètre racine (famille de BUG-037) ; la règle dépend de l'héritage des référentiels (`inheritFrameworks`).
+- Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section C4-05.
+- Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-05 ouvert ».
 
 **BUG-062 — Sélecteur « Périmètre affiché » sans effet sur la DdA, l'audit et les plans annuels** (majeur, P1 ; constats C3-01, C4-02)
 
@@ -369,16 +376,6 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Reproduire : [`campagne/rejeu-piles-5-6.md`](campagne/rejeu-piles-5-6.md), section T5-03.
 - Test de recette : `specs/43-campagne-incidents-plateforme.spec.ts`, « CAMP-T5-03 ouvert ».
 
-### En attente d'arbitrage du RSSI
-
-**BUG-042 — Revue de direction : rien de préparé sous un sous-périmètre, et ses non-conformités absentes des entrées du principal** (bloquant, P1 ; constats C4-05)
-
-- Observé : La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée.
-- Attendu : Les entrées 9.3.2 reprennent les non-conformités de tout le SMSI, ou le sous-périmètre a sa propre revue.
-- Piste : fonction réservée au périmètre racine (famille de BUG-037). Gravité à revoir si le RSSI décide qu'un sous-périmètre a sa propre revue.
-- Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section C4-05.
-- Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-05 ouvert ».
-
 ## 5. Arbitrages du RSSI
 
 **Rendu le 13/11/2026, BUG-051** : un compte est rattaché à un périmètre ; rattaché à un périmètre enfant, il ne voit
@@ -388,11 +385,14 @@ une ADR qui amende l'ADR 0039 (numéro à annoncer au RSSI).
 **Rendu le 13/11/2026, BUG-049** : seul le gestionnaire du registre peut l'archiver. À traiter au lot 1. Le désarchivage
 n'a pas été arbitré (proposition de la recette).
 
-À obtenir avant correction :
+**Rendu le 13/11/2026, BUG-042** : chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des
+référentiels du parent ; ses entrées remontent alors dans la revue du parent. À traiter au lot 4.
+
+Restent à obtenir :
 
 | Fiche | Question |
 | --- | --- |
-| BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
+| BUG-049 (suite) | Le désarchivage d'un registre est-il prévu, et réservé à qui ? |
 | BUG-024, BUG-031 | Toujours ouverts (demande du 12/11). |
 
 ## 6. Outillage de recette (pour information, déjà corrigé par la recette)
