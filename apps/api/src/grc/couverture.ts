@@ -11,7 +11,7 @@ import {
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
-import type { Grc } from './core.js';
+import { DEFAULT_SMSI, type Grc } from './core.js';
 
 /** « requirement:<référentiel>:<version>:<identifiant> » : l'identifiant d'exigence peut contenir « : ». */
 export function parseRequirementRef(ref: string) {
@@ -80,10 +80,19 @@ export class GrcCouverture {
     );
     // Déclaration d'applicabilité (une seule source de l'applicabilité et du niveau, BUG-063) : à défaut d'évaluation enregistrée
     // pour l'exigence, la couverture reprend la décision de la DdA portant le même identifiant (A-6.8…).
-    const dda = ((await this.g.legacy.recompose())?.data.dda ?? {}) as Record<
-      string,
-      Record<string, unknown> | undefined
-    >;
+    // Déclaration du périmètre : celle de l'outil de suivi au périmètre commun, celle du périmètre sinon (BUG-062).
+    const dda: Record<string, Record<string, unknown> | undefined> =
+      smsi === DEFAULT_SMSI
+        ? (((await this.g.legacy.recompose())?.data.dda ?? {}) as Record<string, Record<string, unknown> | undefined>)
+        : Object.fromEntries(
+            (
+              await this.g.db.k
+                .selectFrom('dda_perimetres')
+                .select(['mesure_id', 'data'])
+                .where('smsi_id', '=', smsi)
+                .execute()
+            ).map((l) => [l.mesure_id, l.data as Record<string, unknown>]),
+          );
     const depuisDda = (id: string): EvaluationExigence | null => {
       const d = dda[id];
       if (!d || (d.app !== 'oui' && d.app !== 'non')) return null;

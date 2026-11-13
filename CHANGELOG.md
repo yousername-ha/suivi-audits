@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migration automatique `060` (fonctions SQL de lecture, non destructive) : un compte rattaché à un périmètre ne voit plus que ce périmètre et ses descendants (ADR 0092) ; vérifier les rattachements des comptes avant la mise à jour.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
+**Aucune action sur le serveur.** **Migrations automatiques `060` (fonctions SQL de lecture et rattachement des comptes sans rattachement au périmètre commun) et `061` (table `dda_perimetres`), non destructives : un compte rattaché à un périmètre ne voit plus que ce périmètre et ses descendants (ADR 0092) ; vérifier les rattachements des comptes avant la mise à jour.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
 applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
 les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
 lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
@@ -99,7 +99,7 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   - **BUG-031 et BUG-042, revue de direction** : les entrées sont celles de l'ISO/IEC 27001:2022, 9.3.2 (l'ISO 9001 n'est plus suivie pour le moment, ADR 0036 amendée) ;
     chaque périmètre prépare sa propre revue, et un périmètre enfant qui hérite des référentiels du parent remonte dans la revue du parent. **BUG-070** : les incidents
     entrent dans la revue (entrée d 2), au tableau de bord et à la synthèse du mur (`incidents`).
-  - **BUG-062** : les rubriques communes à toute l'organisation (DdA, plans d'audit et annuels, clausier, fournisseurs) le disent sous un autre périmètre
+  - **BUG-062** : les rubriques communes à toute l'organisation (plans d'audit et annuels, clausier, fournisseurs) le disent sous un autre périmètre
     au lieu de laisser croire que le sélecteur les filtre. **BUG-071** : la revue des accès indique les accès aux périmètres de chaque compte.
   - **BUG-056** : « Créer les actions pour les écarts » du clausier crée une action par point (responsable : la personne qui crée ; échéance : 30 jours) au plan d'actions, et ne se
     rejoue pas (409). **BUG-077** : un identifiant d'écart archivé n'est jamais réattribué (plus d'erreur 500).
@@ -120,6 +120,9 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
     (outil historique au périmètre commun, fiches du Pilotage ailleurs) subsistent. **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
     cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture et ne sont pas encore comptés dans « Plans du SMSI ».
     _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **BUG-062, déclaration d'applicabilité par périmètre** ([ADR 0093](docs/adr/0093-declaration-d-applicabilite-par-perimetre.md), décision du RSSI) : le périmètre commun garde la DdA de l'outil
+  de suivi, chaque autre périmètre a la sienne (migration `061`, table `dda_perimetres`, additive) ; une mesure sans décision y reste « non examinée ». `GET /api/dda` et
+  `PATCH /api/dda/:id` acceptent `smsi` ; la couverture d'un référentiel reprend la DdA du périmètre. Aucune reprise de la DdA du parent. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Compléments (BUG-070, BUG-059)** : le rapport de pilotage contient une section « Incidents » du périmètre ; le mode de calcul d'une méthode s'affiche en français dans l'éditeur ;
   la phrase annonçant une diapositive « Revue des incidents » inexistante est remplacée. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du

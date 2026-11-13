@@ -59,12 +59,20 @@ beforeAll(async () => {
     confirm: 'RATTACHER',
   });
   expect(att.statusCode, att.body).toBe(200);
-  const etat = (await admin.get('/api/suivi/etat')).json();
-  etat.dda = {
-    R1: { app: 'oui', level: 'Total', just: 'Décision fictive' },
-    R2: { app: 'non', just: 'Hors périmètre fictif' },
-  };
-  await seedState(t, etat);
+  // La déclaration est celle du périmètre (BUG-062) : les décisions se prennent sous ce périmètre.
+  await seedState(t, {
+    items: [
+      { id: 'R1', ref: 'A', num: '1', title: 'Mesure R1', afnor: {}, interne: {} },
+      { id: 'R2', ref: 'A', num: '2', title: 'Mesure R2', afnor: {}, interne: {} },
+    ],
+  });
+  expect((await admin.patch(`/api/dda/R1?smsi=${smsi}`, { app: 'oui' })).statusCode).toBe(200);
+  expect((await admin.patch(`/api/dda/R1?smsi=${smsi}`, { level: 'Total', just: 'Décision fictive' })).statusCode).toBe(
+    200,
+  );
+  expect(
+    (await admin.patch(`/api/dda/R2?smsi=${smsi}`, { app: 'non', just: 'Hors périmètre fictif' })).statusCode,
+  ).toBe(200);
 });
 afterAll(() => t.close());
 

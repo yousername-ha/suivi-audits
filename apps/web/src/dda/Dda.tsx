@@ -50,10 +50,14 @@ function LienDocument({ url, libelle = 'Ouvrir le document' }: { url: string; li
   ) : null;
 }
 
-export function DeclarationApplicabilite({ reference }: { reference: ReferenceDda }) {
+/** `smsi` : périmètre affiché ; chaque périmètre a sa déclaration, une mesure sans décision y reste « non examinée » (BUG-062). */
+export function DeclarationApplicabilite({ reference, smsi }: { reference: ReferenceDda; smsi?: string }) {
   const can = useCan(),
     modifiable = can('audit', 'modifier'),
-    { d, agir, erreur } = useModule<Donnees>(`dda-${reference}`, `/api/dda?reference=${reference}`),
+    { d, agir, erreur } = useModule<Donnees>(
+      `dda-${reference}:${smsi ?? ''}`,
+      `/api/dda?reference=${reference}${smsi ? `&smsi=${smsi}` : ''}`,
+    ),
     [filtre, setFiltre] = useState<FiltreDda>('all'),
     [fiche, setFiche] = useState<string | null>(null);
   const dda = d?.dda ?? {};
@@ -61,7 +65,7 @@ export function DeclarationApplicabilite({ reference }: { reference: ReferenceDd
   const liste = d ? filtrerMesures(d.mesures, dda, d.ecarts, reference, filtre) : [];
   const incoherentes = d ? d.mesures.filter((m) => incoherente(m, dda, d.ecarts)).length : 0;
   const maj = (id: string, champ: Record<string, unknown>) =>
-    void agir('PATCH', `/api/dda/${encodeURIComponent(id)}`, champ);
+    void agir('PATCH', `/api/dda/${encodeURIComponent(id)}${smsi ? `?smsi=${smsi}` : ''}`, champ);
   const ouverte = d?.mesures.find((m) => m.id === fiche) ?? null;
   const iso = reference === 'ISO';
   return (

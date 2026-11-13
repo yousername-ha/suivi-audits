@@ -858,14 +858,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, audit, plans annuels ; MAJEURE ; P1 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Sous « Hébergement HDS », la DdA (clauses, annexe A, HDS), la gestion de l'audit, les applications à intégrer et les plans annuels montrent le principal ; une modification faite sous le sous-périmètre change le principal (`/api/dda` sans paramètre de périmètre). Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Chaque écran filtre sur le périmètre affiché, ou dit qu'il est commun à toute l'organisation. |
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-01 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-02 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
-| Correctif | Les rubriques communes à l’organisation (DdA, audit, plans, clausier, fournisseurs) l’indiquent sous un autre périmètre ; pas de DdA par périmètre (choix documenté, à arbitrer si le RSSI veut une DdA par périmètre). |
-| Tests de la correction | Aucun test automatisé (message d’interface) ; `CAMP-C3-01` à rejouer par la recette |
+| Correctif | DdA par périmètre (ADR 0093, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; les autres rubriques communes (plans d’audit et annuels, clausier, fournisseurs) l’indiquent sous un autre périmètre. |
+| Tests de la correction | `apps/api/test/dda-perimetres.test.ts`, `apps/api/test/couverture-dda.test.ts` ; `CAMP-C3-01` à rejouer par la recette |
 | Commit | 02aed39 |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)

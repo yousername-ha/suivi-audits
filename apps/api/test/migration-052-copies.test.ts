@@ -98,6 +98,7 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         '058_retrait_gap_applications.sql',
         '059_retrait_correspondances_rapprochements.sql',
         '060_acces_perimetres_descendants.sql',
+        '061_dda_par_perimetre.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

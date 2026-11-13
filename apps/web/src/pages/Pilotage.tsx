@@ -54,9 +54,6 @@ const SOCLE = '00000000-0000-4000-8000-000000000001';
 /** Rubriques dont les données sont communes à toute l'organisation (registres historiques sans périmètre) : sous un autre
     périmètre, la page le dit au lieu de laisser croire que le sélecteur la filtre (BUG-062). */
 const RUBRIQUES_COMMUNES = new Set([
-  'dda-iso',
-  'dda-annexe-a',
-  'dda-hds',
   'audit-pronostic',
   'audit-couverture',
   'audit-deroule',
@@ -431,9 +428,11 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
-            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
-            {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
-            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
+            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" smsi={smsi} />}
+            {section === 'dda-annexe-a' && can('audit', 'lire') && (
+              <DeclarationApplicabilite reference="A" smsi={smsi} />
+            )}
+            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" smsi={smsi} />}
             {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue smsi={smsi} />}
             {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise smsi={smsi} />}
             {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise smsi={smsi} />}
