@@ -51,6 +51,17 @@ export class PilotageProcessusCartes {
       .orderBy(sql`lower(name)`)
       .limit(2000)
       .execute();
+    // SWOT saisis à l'écran (objets du Pilotage) : rattachables au processus par un lien, comme les risques (BUG-053).
+    const swotsNatifs = await this.g.db.k
+      .selectFrom('grc_objects')
+      .select(['id', 'name'])
+      .where('smsi_id', '=', smsi)
+      .where('kind', '=', 'swot')
+      .where('archived', '=', false)
+      .where(horsRegistresMasques(masques))
+      .orderBy(sql`lower(name)`)
+      .limit(2000)
+      .execute();
     const liens = await this.g.db.k
       .selectFrom('grc_links')
       .select(['id', 'source_ref', 'target_ref', 'type'])
@@ -65,12 +76,18 @@ export class PilotageProcessusCartes {
       ['indicateurs', new Map(indicateurs.map((i) => [`legacy:indicators:${texte(i.id)}`, cand('indicators', i)]))],
       [
         'swots',
-        new Map(
-          swots.map((s) => [
-            `legacy:swots:${texte(s.id)}`,
-            { ref: `legacy:swots:${texte(s.id)}`, id: texte(s.id), name: texte(s.name) || `SWOT ${texte(s.id)}` },
-          ]),
-        ),
+        new Map<string, Candidat>([
+          ...swots.map(
+            (s) =>
+              [
+                `legacy:swots:${texte(s.id)}`,
+                { ref: `legacy:swots:${texte(s.id)}`, id: texte(s.id), name: texte(s.name) || `SWOT ${texte(s.id)}` },
+              ] as [string, Candidat],
+          ),
+          ...swotsNatifs.map(
+            (n) => [`object:${n.id}`, { ref: `object:${n.id}`, id: n.id, name: n.name }] as [string, Candidat],
+          ),
+        ]),
       ],
       ['risques', new Map(risques.map((r) => [`object:${r.id}`, { ref: `object:${r.id}`, id: r.id, name: r.name }]))],
       ['fournisseurs', new Map(fournisseurs.map((f) => [`legacy:suppliers:${texte(f.id)}`, cand('suppliers', f)]))],

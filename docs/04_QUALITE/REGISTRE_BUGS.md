@@ -729,11 +729,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Contexte ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | « Rattacher : SWOT » grisé ; la cartographie et la fiche processus n'affichent pas les SWOT et enjeux saisis. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Les fiches saisies alimentent le PESTEL, la cartographie et les processus. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-05 ouvert » (`test.fail`) |
+| Correctif | PESTEL (menaces, opportunités et enjeux de contexte saisis à l’écran, classement par périmètre, plus de 404 hors périmètre commun), carte du contexte (enjeux et parties saisis), fiche processus (SWOT saisis rattachables par lien). |
+| Tests de la correction | `apps/api/test/pilotage-pestel.test.ts`, `apps/api/test/processus-cartes.test.ts`, `apps/api/test/carto-fiches-pilotage.test.ts` ; `CAMP-C1-05` à rejouer par la recette |
+| Commit | COMMIT_LOT5 |
 
 ## BUG-054 — Évaluation d'un fournisseur : la page plante au troisième clic sur un critère (C1-07)
 
@@ -754,11 +757,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Objectifs, indicateurs ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Sous le principal, objectifs et indicateurs du registre historique ; sous un sous-périmètre, objets du Pilotage ; la Synthèse du sous-périmètre n'a pas de carte « Objectifs et indicateurs ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Un seul modèle, quel que soit le périmètre. |
 | Cause / niveau | PISTE : même cause que BUG-037 (`smsi === SOCLE`). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-10 ouvert » (`test.fail`) |
+| Correctif | Carte « Objectifs et indicateurs » dans la Synthèse de tout périmètre (fiches du périmètre). **Reste** : un seul modèle (processus, mesures, méthode d’évaluation des objectifs historiques absents des fiches du Pilotage). |
+| Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C1-10` à rejouer par la recette |
+| Commit | COMMIT_LOT5 |
 
 ## BUG-056 — « Créer les actions pour les écarts » du clausier : aucune action, écart sans responsable ni échéance, dupliqué (C1-12)
 
@@ -867,11 +873,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, couverture ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | DdA, « Applicabilité et justifications » et « Couverture par référentiel » se saisissent séparément ; la Couverture affiche « 92 à déterminer » malgré la DdA remplie. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Une seule source de l'applicabilité. |
 | Cause / niveau | PISTE : famille de BUG-036. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-02 ouvert » (`test.fail`) |
+| Correctif | La couverture reprend la DdA (applicabilité et niveau) pour les exigences sans évaluation enregistrée ; « Applicabilité et justifications » et DdA partagent déjà la source `dda`. |
+| Tests de la correction | `apps/api/test/couverture-dda.test.ts` ; `CAMP-C3-02` à rejouer par la recette |
+| Commit | COMMIT_LOT5 |
 
 ## BUG-064 — « Référentiels et exigences » ignore les référentiels attribués et appliqués (C3-03)
 
@@ -904,11 +913,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Continuité, exercices ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Exercice du registre réalisé : compté ni au bandeau, ni dans « Plans du SMSI », ni dans la cellule de crise (l'API refuse tout exercice du registre, 422), ni à l'export ; seul le plan historique `PL-EXO` est lu. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Un seul registre d'exercices, repris partout. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020 et BUG-058). |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-04 ouvert » (`test.fail`) |
+| Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. **Reste** : marquage « Réalisé » à la clôture, comptage dans « Plans du SMSI » et le bandeau. |
+| Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-04` à rejouer par la recette |
+| Commit | COMMIT_LOT5 |
 
 ## BUG-067 — Scénario de crise : responsable d'une action perdu sans message (C5-05)
 

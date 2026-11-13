@@ -111,6 +111,15 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
     leur référence (A.8.13, HDS 12…), sans doublon d'exigence. **BUG-061** : un scénario EBIOS RM dont les niveaux viennent d'échelles publiées de quatre niveaux se place dans
     la matrice. **BUG-059** : acceptabilité, option de traitement et état de l'appréciation en français (carte, étude, rapport). **BUG-057** : messages de validation en français,
     avec le libellé du champ. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Une seule source par objet (campagne de recette, lot 5)** :
+  - **BUG-053** : le PESTEL reprend les menaces et opportunités des SWOT et les enjeux des fiches de contexte saisis à l'écran, pour tout périmètre (classement par périmètre) ;
+    la carte du contexte reprend ces enjeux et les parties intéressées saisies ; un SWOT saisi à l'écran se rattache à un processus par un lien.
+  - **BUG-063** : la couverture d'un référentiel reprend, pour une exigence non évaluée, l'applicabilité et le niveau de la déclaration d'applicabilité portant le même
+    identifiant (une évaluation enregistrée l'emporte) ; la page « Applicabilité et justifications » et la DdA écrivent déjà la même source.
+  - **BUG-055** (partiel) : la Synthèse de tout périmètre affiche une carte « Objectifs et indicateurs » des fiches saisies dans ce périmètre ; les deux modèles
+    (outil historique au périmètre commun, fiches du Pilotage ailleurs) subsistent. **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
+    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture et ne sont pas encore comptés dans « Plans du SMSI ».
+    _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du
   traitement, import…) gardent leur valeur ; un test interdit désormais toute liste sans `allowDeselect={false}` ou `clearable`. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 

@@ -7,6 +7,7 @@ import {
   exclusionInterdite,
   syntheseEtats,
   type EntreeSynthese,
+  type EvaluationExigence,
 } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -77,6 +78,35 @@ export class GrcCouverture {
       smsi,
       attached.map((a) => a.framework_id),
     );
+    // Déclaration d'applicabilité (une seule source de l'applicabilité et du niveau, BUG-063) : à défaut d'évaluation enregistrée
+    // pour l'exigence, la couverture reprend la décision de la DdA portant le même identifiant (A-6.8…).
+    const dda = ((await this.g.legacy.recompose())?.data.dda ?? {}) as Record<
+      string,
+      Record<string, unknown> | undefined
+    >;
+    const depuisDda = (id: string): EvaluationExigence | null => {
+      const d = dda[id];
+      if (!d || (d.app !== 'oui' && d.app !== 'non')) return null;
+      const niveau =
+        d.level === 'Total' ? 'complete' : d.level === 'Partiel' || d.level === 'Insuffisant' ? 'partielle' : 'aucune';
+      return {
+        version: 0,
+        applicability: d.app === 'non' ? 'exclue' : 'applicable',
+        justification: typeof d.just === 'string' ? d.just : '',
+        implementation: d.app === 'non' ? 'aucune' : niveau,
+        implementationNote: '',
+        testedAt: null,
+        testResult: null,
+        testNote: '',
+        testRef: '',
+        validatedAt: null,
+        validatedBy: null,
+        validationNote: '',
+        reason: 'Déclaration d’applicabilité',
+        createdBy: 'Déclaration d’applicabilité',
+        createdAt: '',
+      };
+    };
     const frameworks = attached.map((a) => {
       const definition = defs.get(`${a.framework_id}:${a.version}`);
       const reqs = definition?.requirements ?? [];
@@ -86,7 +116,10 @@ export class GrcCouverture {
         const ref = requirementRef(a.framework_id, a.version, r.id);
         if (explicit.has(ref)) covered++;
         const obligatoire = !!definition && exclusionInterdite(definition, r.domain);
-        const evaluation = evaluationEffective(evaluations.get(`${a.framework_id}:${r.id}`) ?? null, obligatoire);
+        const evaluation = evaluationEffective(
+          evaluations.get(`${a.framework_id}:${r.id}`) ?? depuisDda(r.id),
+          obligatoire,
+        );
         etats.push({
           etat: etatExigence(evaluation),
           applicability: evaluation?.applicability ?? 'a_determiner',
@@ -115,7 +148,7 @@ export class GrcCouverture {
             const ref = requirementRef(a.framework_id, a.version, r.id);
             const measures = (explicit.get(ref) ?? []).map((m) => ({ ref: m, name: measureNames.get(m) ?? '' }));
             const obligatoire = !!definition && exclusionInterdite(definition, r.domain);
-            const enregistree = evaluations.get(`${a.framework_id}:${r.id}`) ?? null;
+            const enregistree = evaluations.get(`${a.framework_id}:${r.id}`) ?? depuisDda(r.id);
             const evaluation = evaluationEffective(enregistree, obligatoire);
             const etat = etatExigence(evaluation);
             return {

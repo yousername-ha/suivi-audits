@@ -162,3 +162,31 @@ describe('contacts et scénarios de crise par périmètre', () => {
     expect((await vue(libre)).contacts.some((c) => c.rang === Number(autreContact.json().id))).toBe(true);
   });
 });
+
+describe('exercices de continuité et cellule de crise (BUG-066)', () => {
+  it('un exercice saisi à l’écran est proposé à l’ouverture d’une cellule et s’y rattache', async () => {
+    const ex = await admin.post(`/api/grc/${COMMUN}/objects`, {
+      kind: 'continuity_exercise',
+      name: 'Exercice fictif de bascule',
+      data: { plannedAt: '2026-12-01' },
+    });
+    expect(ex.statusCode, ex.body).toBe(200);
+    const ref = `object:${ex.json().id}`;
+    const vue = (await libre.get('/api/crise')).json() as { exercices: { id: string; title: string }[] };
+    expect(vue.exercices).toContainEqual({ id: ref, title: 'Exercice fictif de bascule' });
+    const cellule = await libre.post('/api/crise/cellules', {
+      mode: 'Exercice',
+      title: 'Exercice de bascule',
+      plan: ref,
+    });
+    expect(cellule.statusCode, cellule.body).toBe(201);
+    expect(
+      (
+        await libre.post('/api/crise/cellules', {
+          mode: 'Exercice',
+          plan: 'object:11111111-1111-4111-8111-111111111111',
+        })
+      ).statusCode,
+    ).toBe(422);
+  });
+});

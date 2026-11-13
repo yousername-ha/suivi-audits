@@ -17,6 +17,7 @@ import {
   type EtatCrise,
 } from '@suivi/shared';
 import { isObject, nextLegacyId, type Json, type JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
@@ -92,9 +93,24 @@ export class Crise {
         const e = lireEtatCrise({ ...crise, cells: cellules, scenarios: liste(crise.scenarios).filter(visible) });
         return { ...e, contacts: e.contacts.filter((x) => rangsVisibles.has(x.rang)) };
       })(),
-      exercices: entrees(data, 'plans')
-        .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
-        .map((p) => ({ id: str(p.id), title: str(p.title) })),
+      // Exercices planifiés : ceux de l'outil historique et les exercices de continuité saisis à l'écran, un seul registre (BUG-066).
+      exercices: [
+        ...entrees(data, 'plans')
+          .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
+          .map((p) => ({ id: str(p.id), title: str(p.title) })),
+        ...(
+          await this.r.g.db.k
+            .selectFrom('grc_objects')
+            .select(['id', 'name'])
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .where('smsi_id', 'in', [...lisibles])
+            .where(sql<string>`COALESCE(data->>'status','planned')`, '<>', 'done')
+            .orderBy('name')
+            .limit(200)
+            .execute()
+        ).map((o) => ({ id: `object:${o.id}`, title: o.name })),
+      ],
       fournisseursCritiques: entrees(data, 'suppliers')
         .filter((s) => s.critical === 'Oui' || s.hds === 'Oui')
         .map((s) => str(s.name)),
@@ -144,7 +160,18 @@ export class Crise {
         await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         if (body.scenario)
           await this.r.exigerPerimetre(user, parId(c.scenarios, body.scenario, 'Scénario'), false, 'Scénario absent.');
-        if (body.plan && !entrees(data, 'plans').some((p) => p.id === body.plan && p.type === 'exo'))
+        if (body.plan?.startsWith('object:')) {
+          const lisibles = [...(await this.r.perimetresLisibles(user))];
+          const natif = await this.r.g.db.k
+            .selectFrom('grc_objects')
+            .select('id')
+            .where('id', '=', body.plan.slice(7))
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .where('smsi_id', 'in', lisibles)
+            .executeTakeFirst();
+          if (!natif) throw new HttpError(422, 'Exercice planifié absent.');
+        } else if (body.plan && !entrees(data, 'plans').some((p) => p.id === body.plan && p.type === 'exo'))
           throw new HttpError(422, 'Exercice planifié absent.');
         const start = now();
         const cell: JsonObject = {

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ObjectifsPerimetre } from '../pilotage/ObjectifsPerimetre';
 import { useCan } from '../session';
 import { PILOTAGE_LABELS } from '../pilotage-navigation';
 import { Overview } from '../grc/Overview';
@@ -358,6 +359,7 @@ export function PilotagePage() {
                   </Stack>
                 </Card>
                 {smsi === '00000000-0000-4000-8000-000000000001' && <TableauPilotage />}
+                <ObjectifsPerimetre smsi={smsi} />
                 <Overview smsi={smsi} />
               </>
             )}
