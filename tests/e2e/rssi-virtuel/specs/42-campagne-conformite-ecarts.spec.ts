@@ -467,7 +467,7 @@ test('CAMP-T4-02 ouvert : un contributeur ne peut pas archiver un registre dont 
   browser,
 }) => {
   // ADR 0043, point 4 (le gestionnaire archive) ; ADR 0010 et 0068 (un Contributeur ne supprime pas) ; ISO/IEC 27001:2022
-  // 7.5.3. Le même compte est refusé (403) pour archiver une seule action, mais archive le registre entier, sans retour
+  // 7.5.3. Arbitrage du RSSI du 13/11/2026 (BUG-049) : seul le gestionnaire du registre peut l'archiver. Le même compte est refusé (403) pour archiver une seule action, mais archive le registre entier, sans retour
   // possible (aucune commande de désarchivage).
   test.fail(true, 'CAMP-T4-02 ouvert : POST /api/registres/:id/archivage par un contributeur répond 200');
   const { ctx, rq, csrf } = await admin(browser);

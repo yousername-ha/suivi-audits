@@ -625,8 +625,9 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Fonction, gravité, priorité | Registres, droits ; BLOQUANTE ; P1 |
 | Statut | OUVERT |
 | Observé | `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
-| Attendu | Archivage réservé au gestionnaire du registre ou à l'administrateur ; désarchivage possible. |
-| Cause / niveau | PISTE : le code lit le point 5 de l'ADR 0043 comme un droit d'archivage pour tout contributeur : à confirmer par le RSSI. |
+| Arbitrage du RSSI (13/11/2026) | Seul le gestionnaire du registre peut l'archiver. |
+| Attendu | Refus (403) pour tout autre compte. Désarchivage à prévoir (proposition de la recette, non arbitrée). |
+| Cause / niveau | PISTE : le code lit le point 5 de l'ADR 0043 comme un droit d'archivage pour tout contributeur ; lecture écartée par le RSSI. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-T4-02 ouvert » (`test.fail`) |
 
 ## BUG-050 — Un contributeur retire des événements de la chronologie RETEX sans le droit « supprimer » (T5-02)

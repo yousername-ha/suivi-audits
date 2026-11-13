@@ -33,13 +33,13 @@ Derrière un proxy TLS, construire d'abord les images avec le secret BuildKit `b
 
 | Lot | Fiches | Motif |
 | --- | --- | --- |
-| 1. Droits | BUG-051, BUG-050, BUG-075, BUG-044 | Écritures ou lectures hors de ce qu'un RSSI attend du rôle ; à traiter d'abord (règle d'AGENTS.md : garde serveur, le menu ne vaut pas permission). |
+| 1. Droits | BUG-051, BUG-049, BUG-050, BUG-075, BUG-044 | Écritures ou lectures hors de ce qu'un RSSI attend du rôle ; à traiter d'abord (règle d'AGENTS.md : garde serveur, le menu ne vaut pas permission). |
 | 2. Données et chiffres faux | BUG-040, BUG-041, BUG-039, BUG-043, BUG-045, BUG-047, BUG-048, BUG-065 | Bloquants d'audit : DdA (6.1.3 d), acceptation du risque (6.1.3 f, 8.3), compteurs et réglages enregistrés différemment de ce qui est affiché. |
 | 3. Exports | BUG-038, BUG-046, BUG-058 | Ce qui est remis à un auditeur doit refléter les fiches saisies ; même cause que BUG-020. |
 | 4. Périmètres | BUG-062, BUG-055, BUG-068, BUG-071 | Registres sans périmètre derrière le sélecteur ; même famille que BUG-037. |
 | 5. Une seule source par objet | BUG-053, BUG-063, BUG-064, BUG-066, BUG-070, BUG-056, BUG-077 | Écrans qui lisent le registre historique alors que les formulaires écrivent les objets du Pilotage (invariant d'AGENTS.md : une seule source modifiable par objet). |
 | 6. Écrans | BUG-052, BUG-054, BUG-057, BUG-059, BUG-060, BUG-061, BUG-067, BUG-069, BUG-072, BUG-073, BUG-074, BUG-076 | Saisie perdue, page qui plante, libellés techniques, fonctions annoncées absentes. |
-| En attente d'arbitrage du RSSI | BUG-049, BUG-042 | **Ne pas corriger avant décision** (§ 5). |
+| En attente d'arbitrage du RSSI | BUG-042 | **Ne pas corriger avant décision** (§ 5). |
 
 ## 4. Fiches
 
@@ -54,6 +54,14 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Piste : visibilité `instance` du périmètre racine ; ADR 0039 (sans propagation) à amender par une ADR de la session de développement, numéro annoncé au RSSI.
 - Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section T1-01.
 - Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » et « CAMP-T1-02 ouvert ».
+
+**BUG-049 — Un contributeur archive un registre (plan d'actions) qu'il n'a pas créé** (bloquant, P1 ; constats T4-02)
+
+- Observé : `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage.
+- Attendu : Arbitrage du RSSI du 13/11/2026 : seul le gestionnaire du registre peut l'archiver. Désarchivage à prévoir (proposition de la recette, non arbitrée).
+- Piste : le code lit le point 5 de l'ADR 0043 comme un droit d'archivage pour tout contributeur ; lecture écartée par le RSSI le 13/11/2026.
+- Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section T4-02.
+- Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-T4-02 ouvert ».
 
 **BUG-050 — Un contributeur retire des événements de la chronologie RETEX sans le droit « supprimer »** (bloquant, P1 ; constats T5-02)
 
@@ -363,14 +371,6 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 
 ### En attente d'arbitrage du RSSI
 
-**BUG-049 — Un contributeur archive un registre (plan d'actions) qu'il n'a pas créé** (bloquant, P1 ; constats T4-02)
-
-- Observé : `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage.
-- Attendu : Archivage réservé au gestionnaire du registre ou à l'administrateur ; désarchivage possible.
-- Piste : le code lit le point 5 de l'ADR 0043 comme un droit d'archivage pour tout contributeur : à confirmer par le RSSI.
-- Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section T4-02.
-- Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-T4-02 ouvert ».
-
 **BUG-042 — Revue de direction : rien de préparé sous un sous-périmètre, et ses non-conformités absentes des entrées du principal** (bloquant, P1 ; constats C4-05)
 
 - Observé : La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée.
@@ -385,11 +385,13 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 que ce périmètre ; rattaché au parent, il voit le parent et les enfants rattachés à ce parent. À traiter au lot 1, avec
 une ADR qui amende l'ADR 0039 (numéro à annoncer au RSSI).
 
+**Rendu le 13/11/2026, BUG-049** : seul le gestionnaire du registre peut l'archiver. À traiter au lot 1. Le désarchivage
+n'a pas été arbitré (proposition de la recette).
+
 À obtenir avant correction :
 
 | Fiche | Question |
 | --- | --- |
-| BUG-049 | Le point 5 de l'ADR 0043 donne-t-il à tout contributeur le droit d'archiver un registre partagé ? Dans tous les cas, prévoir le désarchivage. |
 | BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
 | BUG-024, BUG-031 | Toujours ouverts (demande du 12/11). |
 

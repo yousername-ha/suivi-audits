@@ -184,11 +184,11 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 ## 6. Arbitrages du RSSI
 
-Rendu le 13/11/2026 : BUG-051 (voir § 2, bloquants). Restent attendus :
+Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver.
+Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-049 | Le point 5 de l'ADR 0043 donne-t-il à tout contributeur le droit d'archiver un registre partagé ? |
 | BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
 | BUG-024, BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
 
