@@ -232,6 +232,9 @@ test('CAMP-C1-07 ouvert : cocher, décocher et recocher un critère d’évaluat
   const s = await admin(browser);
   const erreurs: string[] = [];
   s.page.on('pageerror', (e) => erreurs.push(e.message));
+  s.page.on('console', (m) => {
+    if (m.type() === 'error') erreurs.push(m.text().split('\n')[0]!);
+  });
   try {
     const fournisseur = 'Campagne C1-07 fournisseur (fictif)';
     const critere = 'Campagne C1-07 critère d’évaluation (fictif)';
@@ -373,6 +376,12 @@ test('CAMP-C2-03 ouvert : un risque jamais apprécié ne peut pas être formelle
       ]),
     );
     const risque = await creerObjet(s, p.id, 'risk', 'Campagne C2-03 risque jamais apprécié (fictif)', {
+      description: 'Risque fictif saisi sans appréciation',
+      code: 'CAMP-C2-03',
+      ownerId: null,
+      domain: '',
+      entity: '',
+      scope: '',
       methodId,
       methodVersion: 1,
       strategy: 'accept',
