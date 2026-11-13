@@ -39,6 +39,7 @@ import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { MarqueOrganisation } from './MarqueOrganisation';
 import { useMouvementMenu } from './mouvement-menu';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
@@ -162,9 +163,7 @@ export function Layout({ children }: { children: ReactNode }) {
       onClickCapture={tri.surClicCapture}
     >
       <Link to="/" className="nav-marque" onClick={close} aria-label={`${me.appName} — accueil`}>
-        <span className="brand-mark" aria-hidden="true">
-          S
-        </span>
+        <MarqueOrganisation />
         <span>
           <strong>{me.appName}</strong>
           <small>Qualité, sécurité et référentiels</small>
@@ -299,9 +298,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 aria-label={`${me.appName} — accueil`}
               >
                 <Group gap="xs" wrap="nowrap">
-                  <span className="brand-mark" aria-hidden="true">
-                    S
-                  </span>
+                  <MarqueOrganisation />
                   <div className="brand-wordmark">
                     <Text fw={700} visibleFrom="xs">
                       {me.appName}

@@ -108,6 +108,11 @@
     height: 2.375rem;
     border-radius: 0.8125rem;
   }
+  .nav-marque .brand-mark--logo {
+    width: auto;
+    min-width: 2.375rem;
+    max-width: 6.5rem;
+  }
   .nav-marque strong {
     display: block;
     font-size: 1.0625rem;
@@ -133,6 +138,29 @@
   .entete-marque {
     display: none;
   }
+}
+
+/* Logo de l'organisation (Plateforme > Général) à la place de la pastille : posé sur une tuile claire pour rester lisible
+   sur le bleu nuit comme sur l'en-tête, quelle que soit la couleur du fichier ; proportions conservées. */
+.brand-mark.brand-mark--logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: var(--suivi-marque);
+  max-width: 6.5rem;
+  padding: 0.1875rem;
+  background: var(--mantine-color-white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--menu-trait) 35%, transparent);
+  overflow: hidden;
+}
+.brand-mark--logo img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* ---------------------------------------------------------------- Intitulés de section */

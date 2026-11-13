@@ -1,7 +1,8 @@
 /* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
    disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
-   cours. Plus de colonnes sur les grands écrans. Refonte Neon : une seconde présentation, la vue analytique, se choisit
-   au-dessus du tableau ; le choix est mémorisé dans ce navigateur (confort d'affichage), la disposition reste par défaut. */
+   cours. Plus de colonnes sur les grands écrans. Refonte Neon (ADR 0092) : une seconde présentation, la vue analytique, se
+   choisit au-dessus du tableau ; le choix est une préférence du compte (tous les appareils), la disposition reste le défaut.
+   Sans droit de lecture métier, aucune des deux présentations n'est affichée. */
 import { Button, Card, NativeSelect, SegmentedControl, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import {
   ConfirmButton,
@@ -12,7 +13,7 @@ import {
   Page,
   PageHeader,
 } from '@suivi/ui';
-import type { DispositionEnregistree, DispositionsOut, TableauPartage } from '@suivi/shared';
+import type { DispositionEnregistree, DispositionsOut, Preferences, TableauPartage } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -24,24 +25,9 @@ import { NeonAnalytics } from '../components/NeonAnalytics';
 import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
 import { TableauDeBordConformite } from '../components/TableauDeBord';
 import { useLive, usePresence } from '../realtime';
-import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
+import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
 
-type VueAccueil = 'analytique' | 'personnalisee';
-const CLE_VUE = 'accueil-vue';
-function lireVue(): VueAccueil {
-  try {
-    return localStorage.getItem(CLE_VUE) === 'analytique' ? 'analytique' : 'personnalisee';
-  } catch {
-    return 'personnalisee';
-  }
-}
-function ecrireVue(vue: VueAccueil) {
-  try {
-    localStorage.setItem(CLE_VUE, vue);
-  } catch {
-    // Stockage indisponible : le choix vaut pour la page ouverte.
-  }
-}
+type VueAccueil = NonNullable<Preferences['accueil']>;
 
 const RESOURCE_LABELS: [RegExp, string][] = [
   [/^documents\/.+/, 'un document'],
@@ -138,10 +124,11 @@ export function HomePage() {
   const disposition = affiche?.disposition ?? null;
   const recu = d?.partages.find((p) => p.id === affiche?.id) ?? null;
   const choix = d ? choixTableaux(d) : [];
-  const [vue, setVue] = useState<VueAccueil>(lireVue);
+  // Présentation choisie par la personne (préférence du compte), sinon le tableau personnalisable.
+  const { prefs, save } = usePreferences();
+  const vue: VueAccueil = prefs.accueil ?? 'personnalisee';
   const choisirVue = (v: VueAccueil) => {
-    setVue(v);
-    ecrireVue(v);
+    if (v !== vue) void save({ accueil: v });
   };
   const analytique = vue === 'analytique';
 
