@@ -196,13 +196,13 @@ un risque (test RSSI-09 ajouté au fichier 41) ; BUG-031 (recette du 12/11), les
 
 ## 7. Tests de non-régression
 
-46 tests `test.fail` ajoutés au harnais, un ou plusieurs par fiche (BUG-038 à BUG-077), écrits par les agents de rejeu
+48 tests `test.fail` ajoutés au harnais (46 de la campagne et 2 pour les défauts du 12/11 arbitrés le 13/11, RSSI-09 et RSSI-18), un ou plusieurs par fiche (BUG-038 à BUG-077), écrits par les agents de rejeu
 à partir de leurs recettes et nommés « CAMP-<constat> ouvert : <comportement attendu> » :
 
 | Fichier | Tests | Fiches |
 | --- | --- | --- |
-| `specs/41-campagne-organisation-risques.spec.ts` | 15 | organisation, fournisseurs, risques, EBIOS RM, cloisonnement par périmètre (CAMP-T1-01 et CAMP-T1-02, ajouté après l'arbitrage de BUG-051), BUG-077 (CAMP-R12-01) |
-| `specs/42-campagne-conformite-ecarts.spec.ts` | 13 | DdA, référentiels, écarts, plans, revue de direction, registres |
+| `specs/41-campagne-organisation-risques.spec.ts` | 16 | organisation, fournisseurs, risques, EBIOS RM, cloisonnement par périmètre (CAMP-T1-01 et CAMP-T1-02, ajouté après l'arbitrage de BUG-051), BUG-077 (CAMP-R12-01), BUG-024 (RSSI-09) |
+| `specs/42-campagne-conformite-ecarts.spec.ts` | 14 | DdA, référentiels, écarts, plans, revue de direction (dont BUG-031, RSSI-18), registres |
 | `specs/43-campagne-incidents-plateforme.spec.ts` | 18 | continuité, incidents, crise, exports, Plateforme, Système |
 
 Chaque fichier ne dépend que de l'installation : il crée ses données fictives, ses périmètres et ses comptes, et archive ce
@@ -211,10 +211,9 @@ existe et **devient rouge le jour où il est corrigé**, ce qui oblige à retire
 aucun `test.skip`.
 
 **Exécution du harnais complet** : `sudo CI=1 tests/e2e/rssi-virtuel/lancer.sh --images-locales` sur une pile vierge
-`https://localhost`, quatre passages : **65 passed** puis, après l'ajout de CAMP-T1-02 et l'alignement de CAMP-C4-05
-sur les arbitrages, **66 passed**, code retour 0
-(12 tests verts, dont les invariants INV-01 à INV-08 ; 54 échecs attendus, 8 de la recette du 12/11 et 46 de la
-campagne). Le message d'échec de chacun des 54 a été relu dans
+`https://localhost`, six passages : **65 passed** au départ, puis, au fil des arbitrages du 13/11 (CAMP-T1-02, CAMP-C4-05
+réaligné, RSSI-09, RSSI-18), jusqu'à **68 passed**, code retour 0 (12 tests verts, dont les invariants INV-01 à INV-08 ;
+56 échecs attendus, 8 de la recette du 12/11 et 48 ajoutés). Le message d'échec de chacun des 56 a été relu dans
 `test-results/resultats.json` : c'est l'assertion du défaut dans tous les cas, jamais une préparation
 ([relevé](campagne/harnais-2026-11-13.md)).
 
