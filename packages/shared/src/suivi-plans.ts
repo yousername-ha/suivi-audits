@@ -83,6 +83,8 @@ const NIVEAU_STATUT: Record<string, NiveauPlan> = {
     chaînes (saisie libre dans l'outil historique : « 12 », « 85 % »). */
 export interface ActionPlan {
   id: string;
+  /** Périmètre de l'action (vide : périmètre commun, pour les actions saisies avant que le périmètre existe). */
+  smsi: string;
   type: TypePlan;
   title: string;
   kind: string;
@@ -146,7 +148,12 @@ const CHAMPS_ACTION = {
   retex: taille(5000),
 };
 export const ActionPlanCreation = z
-  .object({ type: z.enum(TYPES_ACTION_PLAN), ...z.object(CHAMPS_ACTION).partial().shape })
+  .object({
+    type: z.enum(TYPES_ACTION_PLAN),
+    /** Périmètre de l'action (BUG-062) ; à défaut, le périmètre commun. Il ne se modifie pas ensuite. */
+    smsi: z.string().uuid().optional(),
+    ...z.object(CHAMPS_ACTION).partial().shape,
+  })
   .strict();
 export type ActionPlanCreation = z.infer<typeof ActionPlanCreation>;
 export const ActionPlanModification = z.object(CHAMPS_ACTION).partial().strict();
@@ -168,6 +175,7 @@ export function identifiantPlan(type: TypePlan, existants: readonly string[]): s
 export function actionPlanVierge(type: TypePlan, id: string, maintenant: string): ActionPlan {
   return {
     id,
+    smsi: '',
     type,
     createdAt: maintenant,
     title: '',

@@ -864,8 +864,8 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-01 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-02 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
-| Correctif | DdA par périmètre (ADR 0093, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; les autres rubriques communes (plans d’audit et annuels, clausier, fournisseurs) l’indiquent sous un autre périmètre. |
-| Tests de la correction | `apps/api/test/dda-perimetres.test.ts`, `apps/api/test/couverture-dda.test.ts` ; `CAMP-C3-01` à rejouer par la recette |
+| Correctif | DdA par périmètre (ADR 0093, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; plans d’audit et annuels par périmètre (`smsi` sur chaque action) ; clausier et fournisseurs restent communs et l’indiquent sous un autre périmètre. |
+| Tests de la correction | `apps/api/test/dda-perimetres.test.ts`, `apps/api/test/couverture-dda.test.ts`, `apps/api/test/historique-incidents-perimetre.test.ts` (plans) ; `CAMP-C3-01` à rejouer par la recette |
 | Commit | 02aed39 |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)
@@ -918,7 +918,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Un seul registre d'exercices, repris partout. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020 et BUG-058). |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-04 ouvert » (`test.fail`) |
-| Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. **Reste** : marquage « Réalisé » à la clôture, comptage dans « Plans du SMSI » et le bandeau. |
+| Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. Comptage dans « Plans du SMSI » ; la clôture d’une cellule propose de compléter la fiche. **Reste** : l’exercice n’est pas marqué « Réalisé » automatiquement (choix : pas de résultat inventé). |
 | Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-04` à rejouer par la recette |
 | Commit | 99c426a |
 

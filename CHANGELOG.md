@@ -118,8 +118,11 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
     identifiant (une évaluation enregistrée l'emporte) ; la page « Applicabilité et justifications » et la DdA écrivent déjà la même source.
   - **BUG-055** (partiel) : la Synthèse de tout périmètre affiche une carte « Objectifs et indicateurs » des fiches saisies dans ce périmètre ; les deux modèles
     (outil historique au périmètre commun, fiches du Pilotage ailleurs) subsistent. **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
-    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture et ne sont pas encore comptés dans « Plans du SMSI ».
+    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture ; ils sont désormais comptés dans « Plans du SMSI » et la clôture d'une cellule propose de compléter la fiche de l'exercice (aucun résultat inventé).
     _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **BUG-062, plans d'audit et annuels par périmètre** (décision du RSSI) : chaque action de plan (audit, exercice, formation, sensibilisation, calendrier) porte un périmètre (`smsi`, périmètre
+  commun par défaut) ; `GET /api/plans` et `POST /api/plans` acceptent `smsi`, les opérations par identifiant refusent (404) un périmètre non lisible, et la Synthèse ne compte que les
+  actions des périmètres lisibles. Les pages concernées ne sont plus signalées « communes ». Clausier et fournisseurs restent communs. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **BUG-062, déclaration d'applicabilité par périmètre** ([ADR 0093](docs/adr/0093-declaration-d-applicabilite-par-perimetre.md), décision du RSSI) : le périmètre commun garde la DdA de l'outil
   de suivi, chaque autre périmètre a la sienne (migration `061`, table `dda_perimetres`, additive) ; une mesure sans décision y reste « non examinée ». `GET /api/dda` et
   `PATCH /api/dda/:id` acceptent `smsi` ; la couverture d'un référentiel reprend la DdA du périmètre. Aucune reprise de la DdA du parent. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_

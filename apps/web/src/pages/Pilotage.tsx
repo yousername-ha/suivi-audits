@@ -53,20 +53,7 @@ import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 const SOCLE = '00000000-0000-4000-8000-000000000001';
 /** Rubriques dont les données sont communes à toute l'organisation (registres historiques sans périmètre) : sous un autre
     périmètre, la page le dit au lieu de laisser croire que le sélecteur la filtre (BUG-062). */
-const RUBRIQUES_COMMUNES = new Set([
-  'audit-pronostic',
-  'audit-couverture',
-  'audit-deroule',
-  'audit-planning',
-  'audit-participants',
-  'plans-calendrier',
-  'plans-planning',
-  'plans-formation',
-  'plans-sensibilisation',
-  'evaluations-clausier',
-  'fournisseurs',
-  'criteres-fournisseurs',
-]);
+const RUBRIQUES_COMMUNES = new Set(['evaluations-clausier', 'fournisseurs', 'criteres-fournisseurs']);
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -311,8 +298,10 @@ export function PilotagePage() {
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
                 {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
-                {section === 'audits' && can('pilotage', 'lire') && smsi === SOCLE && <PlansSmsi vue="audit" />}
-                {section === 'exercices' && smsi === SOCLE && <PlansSmsi vue="exo" />}
+                {section === 'audits' && can('pilotage', 'lire') && smsi === SOCLE && (
+                  <PlansSmsi vue="audit" smsi={smsi} />
+                )}
+                {section === 'exercices' && smsi === SOCLE && <PlansSmsi vue="exo" smsi={smsi} />}
                 {(smsi !== '00000000-0000-4000-8000-000000000001' ||
                   !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
                   <BusinessRegistry
@@ -443,10 +432,10 @@ export function PilotagePage() {
             {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}
             {section === 'audit-planning' && can('plan_audit', 'lire') && <Organisation vue="planning" />}
             {section === 'audit-participants' && can('plan_audit', 'lire') && <Organisation vue="participants" />}
-            {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" />}
-            {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" />}
-            {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" />}
-            {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" />}
+            {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" smsi={smsi} />}
+            {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" smsi={smsi} />}
+            {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" smsi={smsi} />}
+            {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" smsi={smsi} />}
             {section === 'imports' && can('import_export', 'lire') && <Imports smsi={smsi} />}
             {section === 'configuration' && can('pilotage', 'lire') && (
               <>

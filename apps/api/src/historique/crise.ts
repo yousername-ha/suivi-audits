@@ -213,7 +213,12 @@ export class Crise {
   }
 
   /** Clôture : un exercice planifié lié est marqué « Réalisé » avec la synthèse de la main courante. */
-  cloturer(id: string, input: unknown, user: SessionUser, ip: string): Promise<{ id: string; plan: string }> {
+  cloturer(
+    id: string,
+    input: unknown,
+    user: SessionUser,
+    ip: string,
+  ): Promise<{ id: string; plan: string; exercice?: { ref: string; synthese: string } }> {
     const b = AuteurCrise.parse(input);
     return this.r.modifier(
       user,
@@ -237,6 +242,12 @@ export class Crise {
             done: fin.slice(0, 10),
             retex: str(plan.retex) || syntheseRetex(lue, fin),
           });
+        }
+        // Exercice saisi à l'écran : sa fiche est à compléter par une personne (date, résultat, retour d'expérience) ; la synthèse
+        // de la main courante est proposée, aucun résultat n'est inventé (BUG-066).
+        if (planId.startsWith('object:')) {
+          const lue = lireEtatCrise({ cells: [{ ...cell, log }] }).cells[0]!;
+          return { id, plan: '', exercice: { ref: planId, synthese: syntheseRetex(lue, fin) } };
         }
         return { id, plan: plan ? planId : '' };
       },

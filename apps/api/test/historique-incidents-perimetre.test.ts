@@ -180,6 +180,17 @@ describe('exercices de continuité et cellule de crise (BUG-066)', () => {
       plan: ref,
     });
     expect(cellule.statusCode, cellule.body).toBe(201);
+    // « Plans du SMSI » compte l'exercice saisi à l'écran (BUG-066).
+    const synthese = (await libre.get('/api/mur/synthese')).json();
+    const exo = synthese.plans.types.find((x: { type: string }) => x.type === 'exo');
+    expect(exo.realises + exo.enRetard + exo.aVenir).toBeGreaterThanOrEqual(1);
+    // À la clôture, la fiche est à compléter par une personne : la synthèse est proposée, aucun résultat n'est inventé.
+    const cloture = await libre.post(`/api/crise/cellules/${cellule.json().id}/cloture`, { author: 'Test' });
+    expect(cloture.statusCode, cloture.body).toBeLessThan(300);
+    expect(cloture.json().exercice).toMatchObject({ ref });
+    expect(cloture.json().exercice.synthese).toBeTruthy();
+    const apres = (await admin.get(`/api/grc/${COMMUN}/objects/${ex.json().id}`)).json();
+    expect(apres.data.status).not.toBe('done');
     expect(
       (
         await libre.post('/api/crise/cellules', {
@@ -188,5 +199,22 @@ describe('exercices de continuité et cellule de crise (BUG-066)', () => {
         })
       ).statusCode,
     ).toBe(422);
+  });
+});
+
+describe('plans d’audit et annuels par périmètre (BUG-062)', () => {
+  it('une action créée sous un périmètre y reste : invisible et intouchable depuis un autre périmètre', async () => {
+    const c = await membre.post('/api/plans', { type: 'audit', smsi: enfant });
+    expect(c.statusCode, c.body).toBe(201);
+    const id = c.json().id as string;
+    expect(c.json().smsi).toBe(enfant);
+    const mienne = (await membre.get(`/api/plans?smsi=${enfant}`)).json();
+    expect(mienne.plans.map((p: { id: string }) => p.id)).toContain(id);
+    expect((await autre.get(`/api/plans?smsi=${enfant}`)).statusCode).toBe(404);
+    const vueAutre = (await autre.get('/api/plans')).json();
+    expect(vueAutre.plans.map((p: { id: string }) => p.id)).not.toContain(id);
+    expect((await autre.post('/api/plans', { type: 'audit', smsi: enfant })).statusCode).toBe(404);
+    expect((await autre.patch(`/api/plans/${id}`, { title: 'Détourné' })).statusCode).toBe(404);
+    expect((await admin.del(`/api/plans/${id}`)).statusCode).toBe(200);
   });
 });

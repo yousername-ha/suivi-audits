@@ -12,6 +12,9 @@ import {
 import type { JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import { z } from 'zod';
+import { PorteeLecture } from '../acces/portee.js';
+import { DEFAULT_SMSI } from '../grc/core.js';
+import { perimetreDe } from '../historique/registre.js';
 import type { Session, SessionUser } from '../auth.js';
 import { CSP_STRICT } from '../http/security.js';
 import { HttpError } from '../http/errors.js';
@@ -31,6 +34,41 @@ export async function synthese(svc: Services, rights: Rights, user: SessionUser 
   const st = await svc.legacy.recompose();
   const data = redactLegacy((st?.data ?? {}) as JsonObject, rights);
   const aujourdHui = new Date();
+  // Exercices de continuité saisis à l'écran : comptés avec les exercices de l'outil de suivi dans « Plans du SMSI » (BUG-066).
+  if (rights.can('pilotage', 'lire') || rights.can('incidents', 'lire')) {
+    const lisibles = user ? [...(await PorteeLecture.pour(svc.grc, user).perimetresLisibles())] : [DEFAULT_SMSI];
+    const natifs = lisibles.length
+      ? await svc.grc.db.k
+          .selectFrom('grc_objects')
+          .select(['id', 'name', 'data'])
+          .where('kind', '=', 'continuity_exercise')
+          .where('archived', '=', false)
+          .where('smsi_id', 'in', lisibles)
+          .limit(1000)
+          .execute()
+      : [];
+    const visibles = new Set(lisibles);
+    data.plans = [
+      // Actions de plan des périmètres lisibles seulement (BUG-062).
+      ...(Array.isArray(data.plans) ? data.plans : []).filter(
+        (p) => !user || !p || typeof p !== 'object' || Array.isArray(p) || visibles.has(perimetreDe(p as JsonObject)),
+      ),
+      ...natifs.map((o) => {
+        const d = o.data as Record<string, unknown>;
+        const fait = d.status === 'done';
+        return {
+          id: `object:${o.id}`,
+          type: 'exo',
+          title: o.name,
+          start: typeof d.plannedAt === 'string' ? d.plannedAt : '',
+          end: typeof d.plannedAt === 'string' ? d.plannedAt : '',
+          done: fait && typeof d.performedAt === 'string' ? d.performedAt : '',
+          status: fait ? 'Réalisé' : 'Planifié',
+          scenario: typeof d.scenario === 'string' ? d.scenario : '',
+        };
+      }),
+    ] as JsonObject[string];
+  }
   const base = computeSynthese(data, {
     organisation: svc.settings.get('general').orgName,
     aujourdHui,

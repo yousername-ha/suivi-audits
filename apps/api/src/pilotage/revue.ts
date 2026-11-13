@@ -182,15 +182,6 @@ export class PilotageRevue {
           `${pluriel(fournisseurs.length, 'fournisseur', 'fournisseurs')} : ${evalues} évalué(s), ${fournisseurs.length - evalues} non évalué(s), ${fournisseurs.filter((f) => f.toReview).length} à réévaluer.`,
         );
       } else faits.e.push('Données fournisseurs non accessibles avec vos droits.');
-      // d3) audits : plans de l'année (outil historique, commun).
-      const annee = new Date().getFullYear();
-      const types = plansAnnee(etat, annee, aujourdhui).filter((t) => t.type === 'audit');
-      if (types.length)
-        for (const t of types)
-          faits.d3.push(
-            `${t.libelle} ${annee} : ${t.realises} réalisé(s), ${t.aVenir} à venir, ${t.enRetard} en retard.`,
-          );
-      else faits.d3.push(`Aucun plan d’audit enregistré pour ${annee}.`);
     } else {
       faits.d4.push(
         `${pluriel(await natifs('objective'), 'objectif', 'objectifs')} et ${pluriel(await natifs('indicator'), 'indicateur', 'indicateurs')} saisis pour ce périmètre${suffixe}.`,
@@ -198,8 +189,24 @@ export class PilotageRevue {
       faits.d2.push(
         'Aucune donnée de surveillance propre à ce périmètre : les indicateurs historiques relèvent du périmètre commun.',
       );
-      faits.d3.push('Aucun plan d’audit propre à ce périmètre : les plans d’audit relèvent du périmètre commun.');
       faits.e.push('Aucune donnée propre à ce périmètre.');
+    }
+
+    // d3) audits : plans d'audit de l'année du périmètre et de ses périmètres enfants héritiers (BUG-062).
+    {
+      const annee = new Date().getFullYear();
+      const concernes = new Set(ids);
+      const types = plansAnnee(
+        { ...etat, plans: lignes(etat.plans).filter((p) => concernes.has(perimetreDe(p))) },
+        annee,
+        aujourdhui,
+      ).filter((t) => t.type === 'audit');
+      if (types.some((t) => t.realises + t.aVenir + t.enRetard > 0))
+        for (const t of types)
+          faits.d3.push(
+            `${t.libelle} ${annee} : ${t.realises} réalisé(s), ${t.aVenir} à venir, ${t.enRetard} en retard.`,
+          );
+      else faits.d3.push(`Aucun plan d’audit enregistré pour ${annee}.`);
     }
 
     // d1) non-conformités et actions correctives des périmètres concernés (objets natifs ; au commun, la projection historique

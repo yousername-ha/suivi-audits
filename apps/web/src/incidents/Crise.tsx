@@ -1,3 +1,4 @@
+import { notifications } from '@mantine/notifications';
 /* Cellule de crise (reprise des pages « Cellule de crise », « Contacts » et « Scénarios » de l'outil de suivi) :
    main courante horodatée, temps écoulé et échéances, check-list du scénario, contacts de crise et scénarios.
    Données lues et écrites dans l'état historique (clé `crisis`), sous verrou. L'export Excel de la main courante et
@@ -308,7 +309,18 @@ function DetailCellule({
               </ConfirmButton>
               <ConfirmButton
                 message="Clôturer la cellule de crise ?"
-                onConfirm={() => agir('POST', `${base}/cloture`, { author: auteur })}
+                onConfirm={async () => {
+                  const r = await agir<{ exercice?: { ref: string; synthese: string } }>('POST', `${base}/cloture`, {
+                    author: auteur,
+                  });
+                  if (r?.exercice)
+                    notifications.show({
+                      color: 'blue',
+                      autoClose: false,
+                      title: 'Complétez la fiche de l’exercice',
+                      message: `Synthèse de la main courante à reporter dans le retour d’expérience (Continuité › Exercices) : ${r.exercice.synthese}`,
+                    });
+                }}
               >
                 Clôturer la cellule
               </ConfirmButton>
