@@ -867,7 +867,9 @@ export class Grc {
     }
     return out;
   }
-  async checkOwner(smsi: string, owner: unknown, c: Client) {
+  /** `ouvert` (actions et tâches récurrentes, ADR 0092 lot 2) : « Attribuer à » accepte tout compte actif, car la
+      désignation donne à la personne l'accès à l'élément ; ailleurs, le responsable doit déjà accéder au périmètre. */
+  async checkOwner(smsi: string, owner: unknown, c: Client, ouvert = false) {
     if (owner == null) return;
     if (
       typeof owner !== 'string' ||
@@ -879,13 +881,19 @@ export class Grc {
         .where(actif)
         .where((eb) =>
           eb.or([
+            sql<boolean>`${ouvert}`,
             eb('s.visibility', '=', 'instance'),
             eb(accesPerimetre(sql.ref('s.id'), sql.ref('u.id')), 'is not', null),
           ]),
         )
         .executeTakeFirst())
     )
-      throw new HttpError(422, 'Le responsable doit être un compte actif autorisé dans ce SMSI.');
+      throw new HttpError(
+        422,
+        ouvert
+          ? 'Le responsable doit être un compte actif.'
+          : 'Le responsable doit être un compte actif autorisé dans ce SMSI.',
+      );
   }
   async normalize(
     smsi: string,
@@ -917,7 +925,7 @@ export class Grc {
       if (previous && (previous.data.seriesId !== d.seriesId || previous.data.occurrenceKey !== d.occurrenceKey))
         throw new HttpError(422, 'L’origine de l’occurrence est immuable.');
       await this.annuaires.normaliser(smsi, d, c);
-      await this.checkOwner(smsi, d.ownerId, c);
+      await this.checkOwner(smsi, d.ownerId, c, true);
       if (new Set(d.dependencies).size !== d.dependencies.length) throw new HttpError(422, 'Dépendances dupliquées.');
       if (previous && d.dependencies.length) {
         // Parcours des dépendances (jsonb) depuis les dépendances déclarées : retrouver l'action elle-même = cycle.
@@ -944,7 +952,7 @@ export class Grc {
       if (!policy.catalogues.actionCategories.some((x) => x.id === d.category))
         throw new HttpError(422, 'Catégorie de récurrence inconnue.');
       await this.annuaires.normaliser(smsi, d, c);
-      await this.checkOwner(smsi, d.ownerId, c);
+      await this.checkOwner(smsi, d.ownerId, c, true);
       for (const ref of d.refs) await this.resolve(smsi, ref, user, c);
       return d;
     }
@@ -1091,8 +1099,8 @@ export class Grc {
       return o;
     }, user.username);
   }
-  /** Registre d'accueil d'une création : celui qui est choisi (gestion du registre exigée, périmètre de référence = périmètre
-      de l'URL) ou, sans choix, le registre par défaut (droit de module et accès au périmètre exigés). */
+  /** Registre d'accueil d'une création : celui qui est choisi (gestion ou attribution du registre exigée, périmètre de
+      référence = périmètre de l'URL) ou, sans choix, le registre par défaut (droit de module et accès au périmètre exigés). */
   async registreDeCreation(
     c: Client,
     smsi: string,
@@ -1111,7 +1119,11 @@ export class Grc {
     if (!reg || reg.archived) throw new HttpError(404, 'Registre introuvable, archivé ou non accessible.');
     if (reg.kind !== famille || reg.referenceId !== smsi)
       throw new HttpError(422, 'Ce registre n’accueille pas ce type d’élément pour ce périmètre.');
-    await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[kind]);
+    // Qui gère le registre y crée ; la personne à qui le registre est attribué aussi (ADR 0092, lot 2) : elle gère ensuite
+    // ce qu'elle a créé, sans pouvoir modifier ce que d'autres y ont créé.
+    if (!(await this.registres.designeSurRegistre(user, reg, c)))
+      await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[kind]);
+    else await this.modules.assert(GRC_MODULES[kind]);
     return reg.id;
   }
   async insert(

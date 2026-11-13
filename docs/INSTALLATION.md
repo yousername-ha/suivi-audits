@@ -489,6 +489,8 @@ Pour un besoin particulier, onglet **Rôles** : **Dupliquer** un rôle proche, p
 
 **9.3 Groupes** (onglet **Groupes**) : un groupe porte un ou plusieurs rôles, accordés à tous ses membres. Exemple : un groupe « Pilotes de processus » avec le rôle Contributeur.
 
+**Périmètres et attribution** ([ADR 0092](adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : l'accès donné à un compte sur un périmètre (écran **Membres** du périmètre) vaut aussi pour **tous ses périmètres enfants** ; il se retire sur le périmètre où il a été donné. Le champ **Attribuer à** d'une action, d'une tâche récurrente ou d'un registre ouvre cet élément à la personne, au groupe ou à la fonction désignés : ils le consultent et le renseignent, sans rôle ni accès au périmètre, et gèrent ce qu'ils créent dans un registre qui leur est attribué. Retirer l'attribution retire l'accès.
+
 **9.4 Garde-fous**, appliqués par le serveur :
 - il reste toujours au moins un administrateur actif **sans date d'expiration** ;
 - personne ne peut modifier ses propres droits : demandez à un autre administrateur ;

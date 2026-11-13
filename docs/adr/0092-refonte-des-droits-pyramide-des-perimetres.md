@@ -1,11 +1,12 @@
 # ADR 0092 — Refonte des droits : trois profils et pyramide des périmètres
 
-- Statut : **lot 1 accepté** (demande du RSSI du 13/11/2026) ; **modèle cible proposé**, lots 2 et 3 à décider (questions ouvertes en fin de document)
+- Statut : **acceptée** (décisions du RSSI du 13/11/2026). Lot 1 livré ; lot 2 livré côté serveur (écran du contributeur à faire) ; lot 3 décidé, non livré
 - Date : 2026-11-13
 - Rédaction : session « Refonte des droits d'accès » (`session_01EnWdzeZgHxzTs1KxQ6ja6Z`)
 - Amende le point 4 de l'[ADR 0039](0039-hierarchie-des-perimetres.md) (« droits et membres ne se propagent pas »), pour les seuls membres.
-  Ne retire rien aux [ADR 0010](0010-droits-rbac.md), [0043](0043-registres-perimetres-herites-et-droits-par-ressource.md) et
-  [0067](0067-attribution-des-droits-par-ressource-reservee.md) tant que les lots 2 et 3 ne sont pas décidés.
+  Amende aussi les [ADR 0043](0043-registres-perimetres-herites-et-droits-par-ressource.md) et
+  [0067](0067-attribution-des-droits-par-ressource-reservee.md) (lot 2 : « Attribuer à » vaut rôle de contributeur). L'[ADR 0010](0010-droits-rbac.md)
+  reste en vigueur jusqu'au lot 3.
 
 ## Contexte
 
@@ -45,34 +46,81 @@ Le RSSI demande de **repartir d'un modèle simple** :
 Un compte désigné sur un périmètre parent **avant** cette version reçoit l'accès à tous les descendants à la mise à jour. C'est
 l'effet recherché ; relire les membres des périmètres de tête avant de mettre à jour un serveur déjà peuplé.
 
-## Modèle cible proposé (lots 2 et 3, non livrés)
+## Décisions du RSSI (13/11/2026)
 
-| Profil         | Attribution                 | Ce qu'il voit                                               | Ce qu'il fait                                                                 |
-| -------------- | --------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Administrateur | sur la plateforme           | tout                                                        | configure tout (comptes, périmètres, paramètres, modules)                     |
-| Pilote         | sur un périmètre            | tout le périmètre et ses enfants                            | crée, modifie, supprime dans cette branche ; désigne pilotes et contributeurs |
-| Contributeur   | sur un périmètre, ou aucune | les actions et tâches récurrentes qu'il a créées ou qu'on lui a confiées | modifie ce qu'il a créé ; lit et renseigne ce qu'un pilote a créé |
+1. **Rôles** : trois profils (administrateur, pilote, contributeur) **plus l'auditeur externe** (lecture seule, date d'expiration).
+   RSSI, Lecteur et rôles personnalisés seront retirés (lot 3). **Un pilote peut être administrateur ou non** : l'administration
+   de la plateforme et le pilotage d'un périmètre sont deux attributions indépendantes.
+2. **Contributeur** : ce qu'il doit alimenter est ce qui lui est confié par le champ **« Attribuer à »** des actions et des tâches,
+   où l'on choisit une personne ou un groupe.
+3. **Création** : il crée là où il est attribué (registre d'actions ou de tâches récurrentes, action, tâche récurrente).
+4. **Administrateur et données communes** : l'administrateur voit et modifie tout ; le périmètre commun devient le **sommet de la
+   pyramide**, réservé à ses pilotes et aux administrateurs (lot 3).
 
-- **Lot 2, le contributeur.** Le socle existe : commande de contribution (statut, compte rendu, commentaire, preuve) et
-  validation des occurrences (ADR 0043). Reste à faire dépendre l'accès du **responsable** et du **créateur** de l'élément au
-  lieu d'un droit attribué à la main, et à réduire son écran à « ce que je dois alimenter ».
-- **Lot 3, les trois profils remplacent la matrice.** Le pilote n'a plus besoin d'un rôle global : sa désignation sur le
-  périmètre suffit. La matrice module × action, les rôles personnalisés et les droits par ressource sont retirés ou masqués
-  selon les réponses ci-dessous.
+## Décision (lot 2, livré côté serveur) : le contributeur par « Attribuer à »
 
-## Questions ouvertes (à trancher par le RSSI avant les lots 2 et 3)
+- **« Attribuer à » vaut rôle de contributeur**, sans aucune ligne de droit : la personne désignée sur une action (occurrence
+  d'une tâche récurrente comprise), une tâche récurrente ou un registre, en personne, par l'un de ses groupes ou par l'une de ses
+  fonctions, **lit l'élément et le renseigne** (avancement, commentaire, preuve, validation d'occurrence : commandes de
+  l'ADR 0043). Elle n'a besoin ni d'un rôle global ni d'un accès au périmètre, et ne voit rien d'autre.
+- **Registre attribué** : le champ existait pour les plans d'actions, il est ouvert à toutes les familles de registres. La
+  personne lit et renseigne tout le registre et **y crée** des éléments. Elle ne gère pas le registre (ni renommage, ni
+  périmètres, ni archivage).
+- **Ce que la personne a créé, elle le gère** (modifier, archiver), tant qu'elle reste contributrice du registre ou de
+  l'élément. Ce qu'un pilote ou un autre contributeur a créé, elle le renseigne sans le modifier. Le créateur est le compte
+  inscrit à la création de l'élément (`created_by`).
+- **Calcul à chaque accès** : retirer l'attribution, sortir la personne du groupe ou archiver la fonction retire l'accès
+  immédiatement, y compris à ce qu'elle avait créé.
+- **Qui peut être désigné** : tout compte actif, pour une action, une tâche récurrente ou un registre (auparavant : un compte
+  ayant déjà accès au périmètre). L'annuaire des responsables propose donc tous les comptes actifs. Pour les autres objets
+  (risques, écarts…), la règle d'origine est conservée : le responsable doit accéder au périmètre.
+- **Rappels d'échéance** : la personne désignée sur une action les reçoit même sans accès au périmètre.
+- **Jamais d'autorité sur les droits** : un rôle tenu de « Attribuer à » ou de la création ne permet ni d'attribuer des droits,
+  ni de régler « restreint » (ADR 0067 inchangée sur ce point). Un registre restreint reste ouvert à la personne à qui il est
+  attribué : l'attribution est une désignation explicite.
+- **API** : `GET /api/registres/mes-elements` liste ce qui est attribué au compte, par échéance, avec ce qu'il peut y faire ;
+  `peutCreer` s'ajoute à la description d'un registre. Créer, modifier et archiver une fiche demandent une session complète,
+  le service restant seul juge (registre, droits de module, périmètres).
 
-1. **Rôles actuels** : RSSI, Lecteur, Auditeur externe (lecture limitée dans le temps), rôles personnalisés et groupes
-   disparaissent-ils, ou certains restent-ils (l'auditeur externe répond à un besoin d'audit de certification) ?
-2. **Lecture seule sur un périmètre** : la garde-t-on à côté du pilote, ou tout membre d'un périmètre est-il pilote ?
-3. **Contributeur** : « ce qu'il doit alimenter » = les éléments dont il est responsable (en personne, par groupe ou par
-   fonction) ? Dans quel périmètre crée-t-il ses propres actions ?
-4. **Données communes** (périmètre « Pilotage de l'organisation », visible de tous aujourd'hui, et modules historiques sans
-   périmètre) : réservées à l'administrateur, ou ouvertes aux pilotes de tête ?
-5. **Administrateur** : voit-il aussi toutes les données métier (c'est le cas aujourd'hui), ou seulement la configuration ?
+### Conséquences à connaître (lot 2)
 
-## Preuves (lot 1)
+- **Désigner quelqu'un lui ouvre l'élément** : c'est désormais une habilitation. Qui gère un élément (pilote, créateur) peut donc
+  en ouvrir la lecture et la contribution à tout compte actif. À la mise à jour, les responsables déjà désignés sur des actions,
+  des tâches et des plans d'actions deviennent contributeurs de ces éléments.
+- Le créateur est reconnu par son identifiant de connexion : un compte renommé perd la gestion de ce qu'il a créé.
+- « Créer sur une action » n'a pas d'équivalent dans le modèle actuel (pas de sous-action) : la création se fait dans un
+  registre attribué. À revoir si des sous-actions sont souhaitées.
+- **Non livré** : l'écran du contributeur (page « Ce que je dois alimenter », bouton de création, statuts du périmètre lisibles
+  sans accès au périmètre), le temps réel pour qui n'a qu'une attribution (limite connue de l'ADR 0043).
+
+## Lot 3 (décidé, non livré) : les quatre profils remplacent la matrice
+
+| Profil           | Attribution                         | Ce qu'il voit                                   | Ce qu'il fait                                                                 |
+| ---------------- | ----------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
+| Administrateur   | sur la plateforme                   | tout                                            | configure tout ; voit et modifie toutes les données                           |
+| Pilote           | sur un périmètre                    | tout le périmètre et ses enfants                | crée, modifie, supprime dans cette branche ; désigne pilotes et contributeurs |
+| Contributeur     | par « Attribuer à »                 | ce qui lui est attribué et ce qu'il y a créé    | renseigne ce qu'on lui confie ; gère ce qu'il a créé                          |
+| Auditeur externe | sur la plateforme, date d'expiration | les modules ouverts à l'attribution, en lecture | consulte                                                                      |
+
+À faire : la désignation du pilote sur un périmètre suffit, sans rôle global ; le périmètre commun passe de « visible de tous » à
+« sommet de la pyramide » ; retrait des rôles RSSI et Lecteur, des rôles personnalisés et de la matrice module × action à
+l'écran ; devenir des droits par ressource (lecteur, contributeur, gestionnaire) et des registres restreints ; reprise des
+comptes existants (migration). Chaque point touche des comptes en place : plan de reprise à valider avant d'écrire la migration.
+
+## Questions restantes
+
+1. **Lecture seule sur un périmètre** : la garde-t-on à côté du pilote ? Le lot 1 la conserve et la fait descendre aux enfants.
+2. **Reprise des comptes** au lot 3 : que deviennent les comptes RSSI (administrateur ? pilote du sommet ?) et Lecteur
+   (lecture seule du sommet ? retirés ?) ?
+3. **Écarts** : le contributeur les alimente-t-il comme les actions, par le même champ ?
+
+## Preuves
 
 `apps/api/test/perimetres-pyramide.test.ts` : descente de l'écriture et de la lecture seule, absence de remontée, voisins et
 périmètres étrangers en 404, niveau le plus élevé, liste des membres hérités, responsable hérité accepté, effet immédiat d'un
 déplacement et d'un retrait. Suite complète exécutée le 13/11/2026 (voir la [reprise](../01_REPRISE_IA/REPRISE-2026-11-13.md)).
+
+Lot 2 : `apps/api/test/contributeur-attribue.test.ts` : désignation d'un compte sans accès au périmètre, contribution sans
+modification ni archivage, rien d'autre de visible (404), groupe (accès perdu en quittant le groupe), registre attribué (lecture,
+contribution, création, pas de gestion), gestion de ce que l'on a créé, pas de création ailleurs, retrait de l'attribution,
+registre de tâches récurrentes attribué, aucune autorité sur les droits.

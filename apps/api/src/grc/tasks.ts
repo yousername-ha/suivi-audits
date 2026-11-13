@@ -434,6 +434,8 @@ export class GrcTasks {
       // Notifications réellement créées à ce passage (les doublons sont ignorés) : seules elles sont diffusées (ADR 0058).
       // Ces INSERT … SELECT (jointure latérale, jsonb_array_elements, make_interval) restent en SQL paramétré : Kysely les
       // exprimerait par fragments sans gain de vérification (ADR 0062 §5).
+      // Rappels d'action : la personne désignée (« Attribuer à ») les reçoit même sans accès au périmètre, puisque la
+      // désignation lui ouvre l'élément (ADR 0092, lot 2). Le rappel de risque exige toujours l'accès au périmètre.
       const emises: NotificationEmise[] = [];
       const noter = (r: { rows: NotificationEmise[] }) => void emises.push(...r.rows);
       noter(
@@ -445,7 +447,7 @@ export class GrcTasks {
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR grc_acces_perimetre(s.id,u.id) IS NOT NULL) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+   ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
           [now],
         ),
       );
@@ -466,7 +468,7 @@ export class GrcTasks {
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR grc_acces_perimetre(s.id,u.id) IS NOT NULL) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+   ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
           [now],
         ),
       );

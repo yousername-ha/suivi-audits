@@ -14,7 +14,9 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 « GAP — Applications » de la version précédente et relever les correspondances utiles.
 
 **Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
-**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants.
+**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants. De même, les
+personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
+éléments (lot 2).
 
 ### Modifié
 
@@ -23,6 +25,13 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   et ne passe pas aux périmètres voisins. Le niveau le plus élevé de la chaîne l'emporte. L'écran **Membres** d'un périmètre liste les comptes dont l'accès vient d'un
   parent (« accès hérité d'un périmètre parent »), sans bouton de révocation. `GET /api/grc/:smsi/members` renvoie `herite` pour chaque ligne. Les droits de module,
   le périmètre commun, les droits par registre et l'héritage des référentiels sont inchangés.
+  _(Session « Refonte des droits d'accès ».)_
+- **Droits : le contributeur par « Attribuer à »** (ADR 0092, lot 2, côté serveur) : la personne désignée sur une action, une tâche récurrente ou un registre, en
+  personne, par son groupe ou par sa fonction, **lit l'élément et le renseigne** sans rôle global ni accès au périmètre, et ne voit rien d'autre. Un registre attribué
+  (champ ouvert à toutes les familles de registres) lui permet d'**y créer** ; elle **gère ce qu'elle a créé** et renseigne sans le modifier ce qu'un pilote a créé.
+  Retirer l'attribution retire l'accès aussitôt. Tout compte actif peut être désigné sur une action, une tâche ou un registre, et reçoit ses rappels d'échéance.
+  API : `GET /api/registres/mes-elements` (ce qui m'est attribué), `peutCreer` sur un registre ; créer, modifier et archiver une fiche demandent une session complète,
+  le service restant seul juge. L'écran du contributeur n'est pas encore livré. Aucune migration.
   _(Session « Refonte des droits d'accès ».)_
 - **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
   « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois

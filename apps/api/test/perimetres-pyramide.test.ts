@@ -109,11 +109,13 @@ describe('pyramide des périmètres', () => {
       action('Portée par le pilote', { ownerId: piloteUser.id }),
     );
     expect(r.statusCode, r.body).toBe(200);
-    // Un compte sans accès à la chaîne reste refusé comme responsable.
-    const autre = await makeUser(t, 'pyr_autre', 'rw');
-    expect((await admin.post(`/api/grc/${service}/objects`, action('Refusée', { ownerId: autre.id }))).statusCode).toBe(
-      422,
-    );
+    // Une action s'attribue à tout compte actif : la désignation lui ouvre l'élément (lot 2), pas le périmètre.
+    const autreUser = await makeUser(t, 'pyr_autre', null);
+    const confiee = await admin.post(`/api/grc/${service}/objects`, action('Confiée', { ownerId: autreUser.id }));
+    expect(confiee.statusCode, confiee.body).toBe(200);
+    const autre = await login(t, autreUser);
+    expect((await autre.get(`/api/grc/${service}/objects/${confiee.json().id}`)).statusCode).toBe(200);
+    expect((await autre.get(`/api/grc/${service}/objects/${r.json().id}`)).statusCode).toBe(404);
   });
 
   it('déplacer un périmètre hors de la branche retire l’accès hérité ; le retirer au parent aussi', async () => {

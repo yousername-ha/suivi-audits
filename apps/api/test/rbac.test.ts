@@ -103,6 +103,8 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'POST /api/registres/:id/archivage',
     'GET /api/registres/:id/elements',
     'GET /api/registres/elements',
+    // Éléments attribués à l'utilisateur (ADR 0092, lot 2) : testé dans contributeur-attribue.test.ts.
+    'GET /api/registres/mes-elements',
     // Annuaire des responsables : désigner exige modifier sur un module métier ou un rôle de registre du périmètre (403
     // sinon), testé dans responsables-droits.test.ts.
     'GET /api/grc/:smsi/responsables',
@@ -119,6 +121,11 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'GET /api/grc/:smsi/objects/:id/contributions',
     'POST /api/grc/:smsi/objects/:id/contributions/commentaire',
     'POST /api/grc/:smsi/objects/:id/contributions/preuve',
+    // Création, modification, archivage : registre attribué ou créateur (ADR 0092, lot 2), sinon droits de module et
+    // périmètres ; évalués par le service, testés dans contributeur-attribue.test.ts et grc-security.test.ts.
+    'POST /api/grc/:smsi/objects',
+    'PUT /api/grc/:smsi/objects/:id',
+    'DELETE /api/grc/:smsi/objects/:id',
     'GET /api/grc/:smsi/objects/:id', // droit de lecture attribué sur un registre ou droits de module : évalué par le service
     // Contributions à un RETEX : habilitation sur un seul RETEX (contributeur invité), vérifiée par le service sous verrou.
     'GET /api/retex/invitations',
