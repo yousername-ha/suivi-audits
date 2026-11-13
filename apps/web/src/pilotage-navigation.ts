@@ -103,8 +103,6 @@ export const PILOTAGE_NAV = [
     label: 'Incidents et crise',
     items: [
       { id: 'incidents-registre', label: 'Registre des incidents', module: 'incidents' },
-      { id: 'incidents-qualifier', label: 'Qualifier un signalement', module: 'incidents' },
-      { id: 'incidents-retex', label: 'RETEX et chronologie', module: 'incidents' },
       { id: 'crise-cellule', label: 'Cellule de crise', module: 'incidents' },
       { id: 'crise-contacts', label: 'Contacts de crise', module: 'incidents' },
       { id: 'crise-scenarios', label: 'Scénarios et check-lists', module: 'incidents' },

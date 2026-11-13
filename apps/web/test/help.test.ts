@@ -21,6 +21,6 @@ describe('guide embarqué', () => {
     expect(permitted.find((a) => a.id === 'retex-contribution')?.link).toBe('/retex');
     const pilote = HELP_ARTICLES.find((a) => a.id === 'retex-incidents');
     expect(pilote?.permission).toBe('incidents:modifier');
-    expect(pilote?.link).toBe('/pilotage/incidents-retex');
+    expect(pilote?.link).toBe('/pilotage/incidents-registre?onglet=retex');
   });
 });
