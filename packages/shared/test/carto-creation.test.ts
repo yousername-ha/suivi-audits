@@ -85,16 +85,8 @@ describe('création dans la plateforme (CARTO-15)', () => {
     expect(() => creer(vide.data, { type: 'supplier', name: 'hébergeur fictif' })).toThrow('déjà');
   });
 
-  it('application : APPnn, fournisseur choisi dans la liste', () => {
-    const f = creer({}, { type: 'supplier', name: 'Éditeur fictif' });
-    const a = creer(f.data, { type: 'application', name: 'Application fictive', supplier: 'éditeur fictif' });
-    expect(a.ref).toBe('app:APP01');
-    expect((a.data.appGaps as Record<string, unknown>[])[0]).toMatchObject({
-      supplier: 'Éditeur fictif',
-      status: 'À étudier',
-    });
-    expect(objets(a.data).get('app:APP01')).toMatchObject({ supRef: 'sup:SUP01' });
-    expect(() => creer(f.data, { type: 'application', name: 'X', supplier: 'Inconnu' })).toThrow(CreationError);
+  it('application : type retiré (ADR 0089), la création est refusée', () => {
+    expect(CreateObjectBody.safeParse({ type: 'application', name: 'Application fictive' }).success).toBe(false);
   });
 
   it('site et système : ajoutés aux lignes du périmètre, sans doublon', () => {
@@ -154,19 +146,16 @@ describe('création dans la plateforme (CARTO-15)', () => {
 });
 
 describe('renommage (CARTO-18)', () => {
-  it('modifie le module d’origine ; un fournisseur renommé reste lié à ses applications', () => {
+  it('modifie le module d’origine', () => {
     const f = creer({}, { type: 'supplier', name: 'Ancien nom fictif' });
-    const a = creer(f.data, { type: 'application', name: 'App fictive', supplier: 'Ancien nom fictif' });
-    const r = renameInLegacy(a.data, 'sup:SUP01', 'Nouveau nom fictif');
+    const r = renameInLegacy(f.data, 'sup:SUP01', 'Nouveau nom fictif');
     expect(r.old).toBe('Ancien nom fictif');
-    expect(objets(r.data).get('app:APP01')).toMatchObject({ supRef: 'sup:SUP01' });
-    expect((r.data.appGaps as Record<string, unknown>[])[0]!.supplier).toBe('Nouveau nom fictif');
-    const sansApp = renameInLegacy(f.data, 'sup:SUP01', 'Autre');
-    expect('appGaps' in sansApp.data).toBe(false);
+    expect(objets(r.data).get('sup:SUP01')).toMatchObject({ name: 'Nouveau nom fictif' });
   });
   it('refuse les objets repérés par leur libellé et les objets absents', () => {
     expect(canRename('process:PR1')).toBe(true);
     expect(canRename('issue:abc')).toBe(false);
+    expect(canRename('app:APP01')).toBe(false);
     expect(() => renameInLegacy(DONNEES, 'site:abc', 'x')).toThrow(CreationError);
     expect(() => renameInLegacy(DONNEES, 'pi:inexistant', 'x')).toThrow('introuvable');
   });

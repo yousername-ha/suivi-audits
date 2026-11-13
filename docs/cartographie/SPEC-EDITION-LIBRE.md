@@ -7,7 +7,7 @@
 
 ## 1. Constat
 - La carte n'affiche que des objets **déjà saisis** dans la plateforme (processus, parties intéressées, fournisseurs,
-  applications, enjeux, sites, systèmes) ; l'édition se limite à les placer, les relier, les masquer ou les retirer
+  enjeux, sites, systèmes) ; l'édition se limite à les placer, les relier, les masquer ou les retirer
   (CARTO-07, CARTO-09). Les objets se saisissent aujourd'hui dans l'outil historique (`/legacy`), modules non repris.
 - Sur une installation neuve, la carte est donc vide et **rien ne permet de la construire** depuis l'écran
   Cartographie : il faut d'abord remplir plusieurs modules ailleurs.

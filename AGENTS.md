@@ -36,7 +36,7 @@ travaillent sur le dépôt :
 3. Les PR Dependabot visent `claude-suivi-smsi` (`target-branch` de `.github/dependabot.yml`) ; une PR Dependabot
    ouverte vers `main` avant ce réglage est fermée.
 4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Aucun fichier
-   n'est tenu par une autre session depuis le 27/10/2026 (`apps/api/src/historique/gap.ts`, GAP IA, était tenu par la session
+   n'est tenu par une autre session depuis le 27/10/2026 (le service GAP, retiré le 12/11/2026 par l'ADR 0089, était tenu par la session
    Sonnet, aujourd'hui seule active).
 5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
 6. Dossier de reprise commun : le plus récent de `docs/01_REPRISE_IA/REPRISE-*.md`.

@@ -11,8 +11,6 @@ const ROUTES: [string, string][] = [
   ['jour du plan d’audit', `/api/audit-suivi/plan/jours/${ID}`],
   ['créneau du plan d’audit', `/api/audit-suivi/plan/creneaux/${ID}`],
   ['personne du plan d’audit', `/api/audit-suivi/plan/personnes/${ID}`],
-  ['GAP', `/api/gap/${ID}`],
-  ['point du GAP', `/api/gap/${ID}/points/${ID}`],
   ['incident', `/api/incidents/${ID}`],
   ['échéance de crise', `/api/crise/cellules/${ID}/echeances/0`],
   ['contact de crise', '/api/crise/contacts/0'],

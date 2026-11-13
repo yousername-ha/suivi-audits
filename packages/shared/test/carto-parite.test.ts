@@ -96,13 +96,6 @@ function etatAleatoire(seed: number, n: number): Record<string, unknown> {
     critical: r() < 0.3 ? 'Oui' : r() < 0.5 ? 'non' : '',
     mfa: r() < 0.5 ? 'Oui' : 'Non',
   }));
-  const appGaps = Array.from({ length: Math.floor(r() * 5) }, (_, i) => ({
-    id: `APP-${i}`,
-    name: `Application ${i}`,
-    supplier: suppliers.length && r() < 0.7 ? `Fournisseur ${Math.floor(r() * suppliers.length)}` : '',
-    status: pick(['Intégrée', 'Écartée', 'À étudier', '']),
-    dscp: r() < 0.5 ? 'Oui' : 'Non',
-  }));
   const inScope = r() < 0.8 ? ids.filter(() => r() < 0.4) : [];
   return {
     processes,
@@ -117,7 +110,6 @@ function etatAleatoire(seed: number, n: number): Record<string, unknown> {
     })),
     swots,
     suppliers,
-    appGaps,
     findings: [],
     scope: {
       processes: inScope,
@@ -194,7 +186,7 @@ describe.each(ETATS)('%s', (_nom, S) => {
     ['context', {}],
     ['context', { depth: 1 }],
     ['context', { depth: 3, sups: 'all', subprocess: true }],
-    ['context', { iss_swot: false, application: false, assets: false }],
+    ['context', { iss_swot: false, assets: false }],
     ['process', {}],
     ['process', { subprocess: false, lanes: false }],
   ];

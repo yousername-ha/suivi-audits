@@ -88,7 +88,6 @@ export function Assistant({
               {cb('supplier', 'Fournisseurs', sp.length)}
               {cb('external_issue', 'Enjeux externes', compte(objs, 'external_issue'))}
               {cb('internal_issue', 'Enjeux internes', compte(objs, 'internal_issue'))}
-              {cb('application', 'Applications (GAP)', compte(objs, 'application'))}
               {cb('assets', 'Sites et infrastructures', compte(objs, 'site') + compte(objs, 'infrastructure'))}
             </div>
             <Title order={4} size="h6">
@@ -104,10 +103,7 @@ export function Assistant({
               onChange={(v) => set({ sups: v as 'crit' | 'all' })}
             >
               <Stack gap="2xs" mt="2xs">
-                <Radio
-                  value="crit"
-                  label={`Critiques ou hébergeurs HDS, et ceux liés à une application (${spc} qualifié${spc > 1 ? 's' : ''})`}
-                />
+                <Radio value="crit" label={`Critiques ou hébergeurs HDS (${spc} qualifié${spc > 1 ? 's' : ''})`} />
                 <Radio value="all" label={`Tous les fournisseurs (${sp.length})`} />
               </Stack>
             </Radio.Group>

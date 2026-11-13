@@ -48,10 +48,6 @@
     { "id": "SUP-107", "name": "Téléphonie Êta", "rattachement": "Télécom", "saas": true, "hds": "-", "critical": "" },
     { "id": "SUP-108", "name": "Archivage Thêta", "rattachement": "Archivage", "saas": false, "hds": "", "critical": "" }
   ],
-  "appGaps": [
-    { "id": "APP-101", "name": "Portail patient fictif", "supplier": "Logiciel Gamma", "dscp": "Oui", "cloud": "SaaS", "status": "Intégrée", "owner": "Chef de projet" },
-    { "id": "APP-102", "name": "Outil de planification", "supplier": "Inconnu", "dscp": "Non", "cloud": "Interne", "status": "À étudier" }
-  ],
   "findings": [
     { "id": "ECA-101", "source": "Interne", "year": 2026, "type": "NC maj", "status": "Ouvert" },
     { "id": "ECA-102", "source": "AFNOR", "year": 2025, "type": "NC min", "status": "Clos" }

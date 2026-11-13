@@ -32,7 +32,7 @@ export function presetsDe(view: MapView): { k: string; l: string; ic: string }[]
   ];
 }
 
-const IN_SCOPE_TYPES = new Set(['process', 'subprocess', 'application', 'infrastructure', 'site']);
+const IN_SCOPE_TYPES = new Set(['process', 'subprocess', 'infrastructure', 'site']);
 /** L'objet reste-t-il net avec ce préréglage (sinon : atténué, jamais déplacé) ? */
 export function presetMatch(view: MapView, preset: string, o: MapObject | undefined): boolean {
   if (preset === 'all' || !o) return true;

@@ -157,7 +157,7 @@ const scopeChip = (o: CartoObject): [string, Puce] | null =>
     : o.scope === 'out'
       ? ['Hors périmètre', 'out']
       : o.scope === 'unk'
-        ? [o.scopeLabel || 'Périmètre à confirmer', 'unk']
+        ? ['Périmètre à confirmer', 'unk']
         : null;
 
 /* ---------------------------------------------------------------- Teintes */
@@ -168,7 +168,6 @@ export function teinteOf(o: MapObject | undefined): string {
     case 'isms':
       return 'marine';
     case 'scope':
-    case 'application':
     case 'infrastructure':
     case 'site':
       return 'bleu';
@@ -345,7 +344,7 @@ function corps(ref: string, n: MapNode, o: MapObject | undefined, st: EtatNoeud)
       </g>
     );
   }
-  // Objet de la plateforme (processus, partie intéressée, enjeu, application, fournisseur…).
+  // Objet de la plateforme (processus, partie intéressée, enjeu, fournisseur…).
   const c = o as CartoObject;
   const cont = st.cont,
     tall = !cont && w >= 180 && h >= 118,

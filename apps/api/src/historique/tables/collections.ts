@@ -65,26 +65,6 @@ export const COLLECTIONS: readonly CollectionSpec[] = [
     ],
   },
   {
-    key: 'appGaps',
-    table: 'suivi_app_gaps',
-    cols: [
-      { f: 'id', c: 'id', t: 'text' },
-      { f: 'name', c: 'name', t: 'text' },
-      { f: 'supplier', c: 'supplier', t: 'text' },
-      { f: 'dscp', c: 'dscp', t: 'text' },
-      { f: 'cloud', c: 'cloud', t: 'text' },
-      { f: 'status', c: 'status', t: 'text' },
-      { f: 'owner', c: 'owner', t: 'text' },
-      { f: 'target', c: 'target', t: 'text' },
-      { f: 'desc', c: 'description', t: 'text' },
-      { f: 'lines', c: 'lines', t: 'json' },
-      { f: 'custom', c: 'custom', t: 'json' },
-      { f: 'planFd', c: 'plan_fd', t: 'text' },
-      { f: 'profile', c: 'profile', t: 'json' },
-      { f: 'profileAt', c: 'profile_at', t: 'text' },
-    ],
-  },
-  {
     key: 'supEvals',
     table: 'suivi_clausier_evals',
     cols: [

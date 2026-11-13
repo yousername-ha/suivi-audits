@@ -31,8 +31,20 @@ Applications à intégrer (GAP), Correspondances de la bibliothèque.
   des fournisseurs, est extrait dans son propre fichier.
 - **Pas de changement de serveur** dans ce lot : API, tables et données de ces fonctions restent en place, sans interface.
 
-**Lot 2 (à venir)** : retrait complet des « Applications à intégrer » (GAP) : service, schéma partagé, routes `/api/gap*`, table
-`suivi_app_gaps`, clé `appGaps` de l'ancien outil, export et démonstration.
+**Lot 2 (fait, 12/11/2026)** : retrait complet des « Applications à intégrer » (GAP) et des applications de la cartographie.
+- Serveur : service `historique/gap.ts`, routes `/api/gap*`, collection `appGaps`, rubriques d'export Excel `gapApps` et `gapLignes` (groupe
+  « GAP — Applications »), données de démonstration et du jeu de test supprimés.
+- **Migration `058_retrait_gap_applications.sql`, destructive** : `DROP TABLE suivi_app_gaps`, suppression de la clé `appGaps` (présence et état
+  historique) ; le module relevait de `conformite` (pas de droit propre à retirer). La même migration retire des cartes enregistrées (`maps`) et de
+  leurs versions figées (`map_versions`) les nœuds `app:*`, les relations graphiques qui les touchent et leurs masquages ou relations ignorées. Pas de
+  reprise de données : l'application n'est pas en production, la sauvegarde de la mise à jour reste le seul retour arrière.
+- Schéma partagé : `suivi-gap.ts` supprimé ; `appGaps` rejoint `CLES_RETIREES` (clé écartée à l'import d'un fichier de l'outil historique), contrat
+  d'import régénéré.
+- Cartographie : le type d'objet `application`, sa création, son renommage (préfixe `app`), la propagation du renommage d'un fournisseur vers ses
+  applications, le lien application → fournisseur, la génération (case « Applications »), la fiche, la légende et l'icône sont retirés ; la section
+  « Applications liées » de la fiche d'un fournisseur disparaît. Les fournisseurs critiques ou HDS restent les seuls retenus par la génération « critiques ».
+  Le préfixe `app` reste toléré dans la validation d'une référence de carte (fichier historique importé) : un tel nœud s'affiche comme objet indisponible et se
+  retire de la carte.
 
 **Lot 3 (à venir)** : retrait complet du système de correspondances et de rapprochements : tables `lib_mappings`,
 `lib_mapping_history` et `grc_rapprochements`, objets `mapping`, routes, notifications et fournisseurs liés. Attention : le calcul de

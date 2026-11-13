@@ -880,7 +880,7 @@ function CartographieContenu() {
   const titre = MAP_VIEW_TITLES[view];
   const sousTitre =
     view === 'context'
-      ? 'Périmètre • Parties intéressées • Enjeux • Applications • Fournisseurs'
+      ? 'Périmètre • Parties intéressées • Enjeux • Sites et systèmes • Fournisseurs'
       : 'Pilotage • Réalisation • Support • Sous-processus et flux';
 
   const barreVue = (
@@ -1109,7 +1109,7 @@ function CartographieContenu() {
         </Title>
         <Text c="dimmed" ta="center" size="sm">
           {view === 'context'
-            ? 'Générez une première carte à partir du périmètre, des processus, des parties intéressées, des enjeux (objectifs et SWOT), des applications et des fournisseurs déjà saisis.'
+            ? 'Générez une première carte à partir du périmètre, des processus, des parties intéressées, des enjeux (objectifs et SWOT), des sites et systèmes et des fournisseurs déjà saisis.'
             : 'Générez la carte à partir des processus de la plateforme : bandes pilotage, réalisation et support, sous-processus regroupés dans leur parent.'}{' '}
           Vous pourrez ensuite tout déplacer, relier et masquer. Vous pouvez aussi construire la carte de zéro : les
           objets créés sur la carte (parties intéressées, fournisseurs, processus…) sont enregistrés dans la plateforme.
