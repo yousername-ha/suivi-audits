@@ -26,6 +26,11 @@ arrière ; pour garder une trace, exporter avant la rubrique Excel « GAP — Ap
   Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
   _(Session « Projet audit_suivi Coeur ».)_
 
+- **Menu Gestion des risques simplifié, lot 2 : fiches « opportunité » retirées du serveur** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : l'API ne crée plus de fiche
+  « opportunité » ; la revue de direction et le jeu de démonstration n'en parlent plus. Les traitements et les éléments EBIOS RM sont conservés. Aucune migration : les
+  fiches déjà saisies restent inertes.
+  _(Session « Projet audit_suivi Coeur ».)_
+
 ### Retiré
 
 - **Module « Applications à intégrer » (analyse d'écart GAP) et applications de la cartographie**, sur décision du RSSI du 12/11/2026

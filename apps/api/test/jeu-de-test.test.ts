@@ -29,11 +29,10 @@ describe('jeu de données de test', () => {
       actions: 5,
       ecarts: 6,
       serie: 1,
-      opportunites: 3,
       criteres: 3,
       evaluations: 2,
     });
-    expect(bilan.liens).toBeGreaterThanOrEqual(8);
+    expect(bilan.liens).toBeGreaterThanOrEqual(6);
     // ISO 27001 / HDS : référentiels de la bibliothèque, couverture par exigence, déclaration d'applicabilité, étude EBIOS RM.
     expect(bilan.normes).toMatchObject({
       referentiels: ['iso-27001-2022', 'hds'],
