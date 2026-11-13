@@ -764,7 +764,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-10 ouvert » (`test.fail`) |
 | Correctif | Un seul modèle, celui de l’outil de suivi, dans tous les périmètres (ADR 0094) : chaque fiche porte son périmètre, liens limités au périmètre, lectures (état, Synthèse, export, revue, cartes) filtrées. |
 | Tests de la correction | `apps/api/test/pilotage-objectifs.test.ts`, `apps/api/test/processus-cartes.test.ts` ; `CAMP-C1-10` à rejouer par la recette |
-| Commit | 99c426a |
+| Commit | 9bc62c4 |
 
 ## BUG-056 — « Créer les actions pour les écarts » du clausier : aucune action, écart sans responsable ni échéance, dupliqué (C1-12)
 
@@ -866,7 +866,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
 | Correctif | DdA par périmètre (ADR 0093, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; plans d’audit et annuels par périmètre (`smsi` sur chaque action) ; clausier et fournisseurs restent communs et l’indiquent sous un autre périmètre. |
 | Tests de la correction | `apps/api/test/dda-perimetres.test.ts`, `apps/api/test/couverture-dda.test.ts`, `apps/api/test/historique-incidents-perimetre.test.ts` (plans) ; `CAMP-C3-01` à rejouer par la recette |
-| Commit | 02aed39 |
+| Commit | 454addf |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)
 
@@ -920,7 +920,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-04 ouvert » (`test.fail`) |
 | Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. Comptage dans « Plans du SMSI » ; la clôture d’une cellule propose de compléter la fiche. **Reste** : l’exercice n’est pas marqué « Réalisé » automatiquement (choix : pas de résultat inventé). |
 | Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-04` à rejouer par la recette |
-| Commit | 99c426a |
+| Commit | 454addf |
 
 ## BUG-067 — Scénario de crise : responsable d'une action perdu sans message (C5-05)
 
