@@ -6,10 +6,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migration automatique `058`, destructive** (retrait du module « Applications à intégrer » et des applications de la
-cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : la table `suivi_app_gaps` est **supprimée définitivement** et les
-nœuds « application » sont retirés des cartes enregistrées et de leurs versions. La sauvegarde de la mise à jour précède la migration, c'est le seul retour
-arrière ; pour garder une trace, exporter avant la rubrique Excel « GAP — Applications » de la version précédente.
+**Aucune action sur le serveur.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
+applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
+les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
+lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
+valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
+« GAP — Applications » de la version précédente et relever les correspondances utiles.
 
 ### Modifié
 
@@ -40,6 +42,17 @@ arrière ; pour garder une trace, exporter avant la rubrique Excel « GAP — Ap
   _(Session « Projet audit_suivi Coeur ».)_
 
 ### Retiré
+
+- **Correspondances entre référentiels et rapprochements**, sur décision du RSSI du 12/11/2026
+  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 3) : services, routes `/api/library/mappings*`, `/api/grc/:smsi/rapprochements*` et
+  `/api/grc/:smsi/mappings/:id/validate`, tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements` (migration `059`), type de fiche « mapping »,
+  champ `mappings` du format d'import d'un référentiel (JSON et feuille Excel « Correspondances »), section « correspondances » du rapport de comité, colonne
+  « correspondances revues » de la synthèse, notification « Rapprochements à valider » (rappels et réglages supprimés par la migration), schémas partagés et
+  tests. Le **kit IA** importe toujours ses contrôles et ses annexes de veille, mais plus ses correspondances vers l'ISO/IEC 27001 et l'HDS (un fichier de
+  correspondances est ignoré). Sont conservés : les référentiels, les liens « met en œuvre » faits à la main d'une mesure vers une exigence et la couverture par
+  exigence de la Bibliothèque, déplacée dans son propre module ; dans sa réponse (`GET /api/grc/:smsi/couverture`), `toValidate` et l'état `to_validate`
+  disparaissent (une exigence est couverte ou non couverte). La Configuration GRC (tables de correspondance des méthodes de risque) est inchangée. Les fiches
+  « mapping » déjà importées restent inertes dans l'historique immuable. _(Session « Projet audit_suivi Coeur ».)_
 
 - **Module « Applications à intégrer » (analyse d'écart GAP) et applications de la cartographie**, sur décision du RSSI du 12/11/2026
   ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : service, routes `/api/gap*`, table `suivi_app_gaps` (migration `058`), schéma partagé,

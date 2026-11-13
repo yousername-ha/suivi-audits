@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { methodTemplate, type FrameworkDefinition } from '@suivi/shared';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
-let t: TestApp, a: Agent, reader: Agent, scope: string, sourceId: string, targetId: string, mappingId: string;
+let t: TestApp, a: Agent, scope: string, targetId: string;
 const root = () => `/api/grc/${scope}`;
 const definition = (identifier: string): FrameworkDefinition => ({
   name: identifier,
@@ -30,17 +30,6 @@ const definition = (identifier: string): FrameworkDefinition => ({
     },
   ],
 });
-const mapping = () => ({
-  source: { frameworkId: sourceId, version: 1, requirementId: 'REQ1' },
-  target: { frameworkId: targetId, version: 1, requirementId: 'REQ1' },
-  type: 'partial',
-  justification: 'Couverture partielle des critères documentés',
-  coverage: 50,
-  origin: 'ai',
-  status: 'proposed',
-  sourceUrl: 'https://example.invalid/source',
-  reviewNote: '',
-});
 async function framework(identifier: string) {
   const d = definition(identifier),
     p = await a.post(root() + '/frameworks/preview', { id: null, definition: d });
@@ -61,73 +50,40 @@ async function framework(identifier: string) {
 beforeAll(async () => {
   t = await createTestApp();
   a = await login(t, await makeUser(t, 'grcf_admin', 'admin'));
-  reader = await login(t, await makeUser(t, 'grcf_reader', 'ro'));
   scope = (
     await a.post('/api/grc/smsis', { name: 'Référentiels de test', scope: 'Recette isolée', timezone: 'Europe/Paris' })
   ).json().id;
-  sourceId = await framework('PSSI-SOURCE');
   targetId = await framework('ISO9001-FICTIF');
 });
 afterAll(async () => t.close());
-it('une proposition IA ne contribue pas à la couverture avant revue humaine', async () => {
-  const r = await a.post(root() + '/objects', { kind: 'mapping', name: 'Proposition IA', data: mapping() });
-  expect(r.statusCode, r.body).toBe(200);
-  mappingId = r.json().id;
-  const dashboard = await a.get(root() + '/dashboard');
-  expect(dashboard.json().sections.frameworks.find((f: { id: string }) => f.id === targetId).mapped).toBe(0);
+it('les correspondances entre référentiels n’existent plus : plus de fiche « mapping », plus de route de validation', async () => {
+  // ADR 0089, lot 3 : le type de fiche est inconnu, les routes de correspondances et de rapprochements ont disparu.
+  const r = await a.post(root() + '/objects', {
+    kind: 'mapping',
+    name: 'Correspondance',
+    data: { type: 'partial', status: 'proposed' },
+  });
+  expect(r.statusCode, r.body).toBe(422);
+  expect((await a.get(root() + '/objects?kind=mapping')).statusCode).toBe(422);
   expect(
     (
-      await a.post(root() + '/objects', {
-        kind: 'mapping',
-        name: 'Auto validation',
-        data: { ...mapping(), status: 'validated' },
-      })
-    ).statusCode,
-  ).toBe(422);
-});
-it('une validation est versionnée, justifiée et réservée au droit serveur', async () => {
-  expect(
-    (
-      await reader.post(
-        root() + `/mappings/${mappingId}/validate`,
+      await a.post(
+        root() + '/mappings/00000000-0000-4000-8000-000000000001/validate',
         { note: 'Revue documentée de la correspondance', confirm: 'VALIDER' },
         { 'if-match': '"1"' },
       )
     ).statusCode,
-  ).toBe(403);
-  const r = await a.post(
-    root() + `/mappings/${mappingId}/validate`,
-    { note: 'Critères de couverture examinés par un responsable', confirm: 'VALIDER' },
-    { 'if-match': '"1"' },
-  );
-  expect(r.statusCode, r.body).toBe(200);
-  expect(r.json().data.validatedBy).toBe('grcf_admin');
-  expect(r.json().data.status).toBe('validated');
-  expect((await a.get(root() + `/objects/${mappingId}/history`)).json()).toHaveLength(2);
-  expect(
-    (await a.get(root() + '/dashboard')).json().sections.frameworks.find((f: { id: string }) => f.id === targetId)
-      .mapped,
-  ).toBe(1);
-});
-it('rejette les versions ou exigences inexistantes et préserve les anciennes publications', async () => {
-  expect(
-    (
-      await a.post(root() + '/objects', {
-        kind: 'mapping',
-        name: 'Version absente',
-        data: { ...mapping(), target: { ...mapping().target, version: 99 } },
-      })
-    ).statusCode,
   ).toBe(404);
-  expect(
-    (
-      await a.post(root() + '/objects', {
-        kind: 'mapping',
-        name: 'Exigence absente',
-        data: { ...mapping(), target: { ...mapping().target, requirementId: 'ABSENT' } },
-      })
-    ).statusCode,
-  ).toBe(422);
+  expect((await a.get(root() + '/rapprochements')).statusCode).toBe(404);
+  expect((await a.get('/api/library/mappings')).statusCode).toBe(404);
+  // Le tableau de bord ne porte plus de décompte de correspondances.
+  const f = (await a.get(root() + '/dashboard'))
+    .json()
+    .sections.frameworks.find((x: { id: string }) => x.id === targetId);
+  expect(f).toBeDefined();
+  expect(f).not.toHaveProperty('mapped');
+});
+it('préserve les anciennes publications quand le référentiel est désactivé', async () => {
   const r = await a.put(root() + `/frameworks/${targetId}/activation`, { enabled: false }, { 'if-match': '"1"' });
   expect(r.statusCode, r.body).toBe(200);
   expect((await a.get(root() + `/frameworks/${targetId}/versions/1`)).json().definition.requirements).toHaveLength(1);
@@ -135,10 +91,11 @@ it('rejette les versions ou exigences inexistantes et préserve les anciennes pu
     (await a.get(root() + '/dashboard')).json().sections.frameworks.some((f: { id: string }) => f.id === targetId),
   ).toBe(false);
 });
-it('importe atomiquement après simulation et refuse contenu altéré, doublons et validation importée', async () => {
-  const data = { definition: definition('IMPORT-RECETTE'), mappings: [mapping()] };
+it('importe atomiquement après simulation et refuse contenu altéré et doublons', async () => {
+  const data = { definition: definition('IMPORT-RECETTE') };
   const p = await a.post(root() + '/import/preview', { data });
   expect(p.statusCode, p.body).toBe(200);
+  expect(p.json()).not.toHaveProperty('mappings');
   expect(
     (
       await a.post(root() + '/import/commit', {
@@ -151,10 +108,11 @@ it('importe atomiquement après simulation et refuse contenu altéré, doublons 
   const r = await a.post(root() + '/import/commit', { data, previewId: p.json().previewId, confirm: 'IMPORTER' });
   expect(r.statusCode, r.body).toBe(200);
   expect((await a.post(root() + '/import/preview', { data })).json().canImport).toBe(false);
+  // Un fichier qui porterait encore des correspondances est refusé : le format ne les prévoit plus.
   expect(
     (
       await a.post(root() + '/import/preview', {
-        data: { definition: definition('INVALIDE'), mappings: [{ ...mapping(), status: 'validated' }] },
+        data: { definition: definition('INVALIDE'), mappings: [{ type: 'partial' }] },
       })
     ).statusCode,
   ).toBe(422);

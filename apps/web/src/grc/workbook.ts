@@ -1,5 +1,5 @@
 import { Unzip, UnzipInflate, strFromU8, strToU8, zipSync } from 'fflate';
-import type { FrameworkDefinition, MappingData } from '@suivi/shared';
+import type { FrameworkDefinition } from '@suivi/shared';
 const xml = (s: unknown) =>
   String(s ?? '').replace(
     /[<>&"']/g,
@@ -13,7 +13,7 @@ const column = (i: number) => {
 const sheet = (rows: unknown[][]) =>
   `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows.map((row, i) => `<row r="${i + 1}">${row.map((v, j) => `<c r="${column(j)}${i + 1}" t="inlineStr"><is><t xml:space="preserve">${xml(v)}</t></is></c>`).join('')}</row>`).join('')}</sheetData></worksheet>`;
 /** Gabarit OOXML limité aux trois feuilles documentées, compatible Excel et LibreOffice. */
-export function frameworkWorkbook(d: FrameworkDefinition, mappings: MappingData[] = []) {
+export function frameworkWorkbook(d: FrameworkDefinition) {
   const rows = [
     [
       ['Champ', 'Valeur'],
@@ -35,20 +35,6 @@ export function frameworkWorkbook(d: FrameworkDefinition, mappings: MappingData[
       ]),
     ],
   ];
-  rows.push([
-    ['source', 'target', 'type', 'justification', 'coverage', 'origin', 'status', 'sourceUrl', 'reviewNote'],
-    ...mappings.map((m) => [
-      JSON.stringify(m.source),
-      JSON.stringify(m.target),
-      m.type,
-      m.justification,
-      String(m.coverage),
-      m.origin,
-      'proposed',
-      m.sourceUrl,
-      m.reviewNote,
-    ]),
-  ]);
   const files: Record<string, Uint8Array> = {};
   files['[Content_Types].xml'] = strToU8(
     `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${rows.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`,
@@ -57,7 +43,7 @@ export function frameworkWorkbook(d: FrameworkDefinition, mappings: MappingData[
     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
   );
   files['xl/workbook.xml'] = strToU8(
-    `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${['Métadonnées', 'Domaines', 'Exigences', 'Correspondances'].map((name, i) => `<sheet name="${name}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
+    `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${['Métadonnées', 'Domaines', 'Exigences'].map((name, i) => `<sheet name="${name}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
   );
   files['xl/_rels/workbook.xml.rels'] = strToU8(
     `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rows.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}</Relationships>`,
@@ -199,22 +185,6 @@ export function readFrameworkWorkbook(bytes: Uint8Array) {
           measureRefs: JSON.parse(r[5] || '[]'),
         })),
     },
-    mappings: classeur.feuilles().includes('Correspondances')
-      ? rows('Correspondances')
-          .slice(1)
-          .filter((r) => r[0])
-          .map((r) => ({
-            source: JSON.parse(r[0]!),
-            target: JSON.parse(r[1]!),
-            type: r[2],
-            justification: r[3],
-            coverage: Number(r[4]),
-            origin: r[5],
-            status: 'proposed',
-            sourceUrl: r[7],
-            reviewNote: r[8] ?? '',
-          }))
-      : [],
   };
 }
 export function saveWorkbook(name: string, bytes: Uint8Array) {

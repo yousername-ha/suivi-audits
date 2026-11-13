@@ -542,13 +542,13 @@ export const ETAPES_PARCOURS: readonly EtapeParcours[] = [
       {
         id: 'hds-smsi-1',
         titre: 'Relier les compléments',
-        description: 'Associer HDS aux travaux du SMSI.',
+        description: 'Relier les mesures du SMSI aux exigences HDS.',
         attendu:
-          'Les compléments du chapitre 5 sont reliés aux travaux ISO correspondants, sans créer un second jeu de preuves.',
-        livrable: 'Correspondances et documents existants',
+          'Les compléments du chapitre 5 sont couverts par des mesures du SMSI déjà en place, reliées aux exigences HDS dans la Bibliothèque de référentiels, sans créer un second jeu de preuves.',
+        livrable: 'Mesures existantes reliées aux exigences HDS',
         repere: 0,
         vers: { rubrique: 'bibliotheque' },
-        kinds: ['mapping'],
+        kinds: ['measure'],
       },
     ],
   },

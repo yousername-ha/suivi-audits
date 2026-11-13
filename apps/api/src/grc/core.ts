@@ -10,7 +10,6 @@ import {
   TaskData,
   SeriesData,
   RiskData,
-  MappingData,
   PILOTAGE_SCHEMAS,
   GRC_LABELS,
   cibleAutorisee,
@@ -49,10 +48,9 @@ import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcCopiesReferentiels } from './copies-referentiels.js';
 import { GrcKitIa } from './kit-ia.js';
-import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
 import { GrcPlanEcarts } from './plan-ecarts.js';
-import { GrcRapprochements } from './rapprochements.js';
+import { GrcCouverture } from './couverture.js';
 import type { NotificationsMetier } from '../notifications-metier.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
@@ -227,9 +225,8 @@ export class Grc {
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
   readonly copies: GrcCopiesReferentiels;
-  readonly libraryMappings: GrcLibraryMappings;
   readonly kitIa: GrcKitIa;
-  readonly rapprochements: GrcRapprochements;
+  readonly couverture: GrcCouverture;
   readonly planEcarts: GrcPlanEcarts;
   readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
@@ -251,9 +248,8 @@ export class Grc {
     this.frameworks = new GrcFrameworks(this);
     this.library = new GrcLibrary(this);
     this.copies = new GrcCopiesReferentiels(this);
-    this.libraryMappings = new GrcLibraryMappings(this);
     this.kitIa = new GrcKitIa(this);
-    this.rapprochements = new GrcRapprochements(this);
+    this.couverture = new GrcCouverture(this);
     this.planEcarts = new GrcPlanEcarts(this);
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
@@ -418,7 +414,6 @@ export class Grc {
         .executeTakeFirstOrThrow();
       await k.insertInto('grc_members').values({ smsi_id: row.id, user_id: user.id, can_write: true }).execute();
       await this.db.audit(user, ip, 'grc.smsi.created', row.id, { parentId }, c);
-      if (parentId && input.inheritFrameworks) await this.rapprochements.sync(row.id, c);
       await this.notify(c, row.id, 1, row.id, 'pilotage', user.username);
       return this.access(row.id, user, true, c);
     }, user.username);
@@ -559,11 +554,6 @@ export class Grc {
       .execute();
     return rows.map((r) => r.id);
   }
-  /** Recalcule les rapprochements du périmètre et de ceux qui héritent de lui. */
-  async resynchroniser(smsi: string, c: Client) {
-    await this.rapprochements.sync(smsi, c);
-    for (const h of await this.heritiers(smsi, c)) await this.rapprochements.sync(h, c);
-  }
   /** Modifie le nom, le texte, le fuseau, la place dans l'arbre, le type et la fiche fournisseur reliée d'un périmètre
       (version attendue ; membres et rattachements de référentiels inchangés). La nature absente reste inchangée. */
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
@@ -629,8 +619,6 @@ export class Grc {
         },
         c,
       );
-      if (parentId !== current.parentId || inheritFrameworks !== current.inheritFrameworks)
-        await this.resynchroniser(id, c);
       await this.notify(c, id, current.version + 1, id, 'pilotage', user.username);
       return this.access(id, user, false, c);
     }, user.username);
@@ -979,13 +967,6 @@ export class Grc {
       return d;
     }
     if (kind === 'framework') throw new HttpError(409, 'Utilisez la publication versionnée du référentiel.');
-    if (kind === 'mapping') {
-      const d = MappingData.parse(data);
-      if (d.status === 'validated')
-        throw new HttpError(422, 'Validez le mapping par la commande de revue humaine dédiée.');
-      await this.frameworks.validateMapping(smsi, d, user, c);
-      return d;
-    }
     if (kind === 'requirement')
       throw new HttpError(409, 'Les exigences se publient avec leur référentiel pour conserver la version exacte.');
     if (kind in PILOTAGE_SCHEMAS) {
@@ -1560,7 +1541,7 @@ export class Grc {
     await this.access(smsi, user, true);
     return this.db.tx((c) => this.linkIn(c, smsi, source, target, type, note, user, ip), user.username);
   }
-  /** Crée la relation dans la transaction de l'appelant (une décision de rapprochement la partage). */
+  /** Crée la relation dans la transaction de l'appelant. */
   async linkIn(
     c: Client,
     smsi: string,
@@ -1627,7 +1608,6 @@ export class Grc {
         c,
       );
       await this.notify(c, r.id, 1, smsi, from.module, user.username);
-      await this.rapprochements.sync(smsi, c);
       return r;
     }
   }
@@ -1648,7 +1628,6 @@ export class Grc {
       await k.deleteFrom('grc_links').where('id', '=', id).execute();
       await this.db.audit(user, ip, 'grc.link.deleted', id, { smsiId: smsi, ...row }, c);
       await this.notify(c, id, 1, smsi, source.module, user.username);
-      await this.rapprochements.sync(smsi, c);
     }, user.username);
   }
 }

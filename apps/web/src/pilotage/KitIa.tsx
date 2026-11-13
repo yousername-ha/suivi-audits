@@ -1,7 +1,7 @@
 /* Kit d'intégration IA (ADR 0055) : chargement de fichiers JSON depuis l'interface, aperçu, import confirmé, puis lecture
-   des annexes de veille. Rien n'est versionné dans le dépôt ni conservé dans le navigateur. Les correspondances sont
-   importées « proposées » (validation humaine dans les correspondances de la bibliothèque) ; les sources et les deltas HDS
-   2.1 sont toujours « à revérifier » et ne deviennent jamais des exigences en vigueur. */
+   des annexes de veille. Rien n'est versionné dans le dépôt ni conservé dans le navigateur. Les correspondances d'un ancien
+   kit ne sont plus importées (ADR 0089, lot 3) ; les sources et les deltas HDS 2.1 sont toujours « à revérifier » et ne
+   deviennent jamais des exigences en vigueur. */
 import { Alert, Badge, Button, FileInput, Group, List, Modal, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -23,15 +23,6 @@ interface Apercu {
     identique: boolean;
     previewId: string;
     warning: string | null;
-  };
-  correspondances: {
-    total: number;
-    resolues: number;
-    dejaPresentes: number;
-    nouvelles: number;
-    themesIso42001: number;
-    nonResolues: { controle: string; type: string; indication: string; raison: string }[];
-    nonResoluesTotal: number;
   };
   annexes: { actions: number; scenarios: number; deltas: number; memosHds: number; questions: number; sources: number };
   avertissements: string[];
@@ -76,8 +67,8 @@ export function KitIa() {
         </Text>
       ) : (
         <Text size="sm">
-          Aucun kit importé. Chargez les fichiers du kit : un aperçu s’affiche avant toute écriture, et rien n’est
-          validé automatiquement.
+          Aucun kit importé. Chargez les fichiers du kit : un aperçu s’affiche avant toute écriture, et rien n’est écrit
+          sans votre confirmation.
         </Text>
       )}
       <Group>
@@ -127,13 +118,13 @@ function ImportKit({ onClose }: { onClose: () => void }) {
     setEnvoi(true);
     try {
       setErreur(null);
-      const r = await api<{ statut: string; mappings: number }>('POST', '/api/library/ia-kit/import', {
+      const r = await api<{ statut: string; controles: number }>('POST', '/api/library/ia-kit/import', {
         body: { kit: charge.kit, previewId: apercu.referentiel.previewId, reason: motif, confirm: 'IMPORTER' },
       });
       setResultat(
         r.statut === 'deja_importe'
           ? 'Ce kit était déjà importé : rien n’a été modifié.'
-          : `Kit importé. ${r.mappings} correspondance(s) proposée(s), à valider une par une.`,
+          : `Kit importé : ${r.controles} contrôle(s) dans le référentiel « Contrôles IA internes ».`,
       );
       await qc.invalidateQueries({ queryKey: ['library'] });
     } catch (e) {
@@ -147,8 +138,9 @@ function ImportKit({ onClose }: { onClose: () => void }) {
       <Stack>
         <ErrorAlert error={erreur} />
         <Text size="sm">
-          Choisissez les fichiers JSON du kit (le kit complet, ou ses listes : contrôles, correspondances, actions,
-          scénarios, deltas HDS, mémos, questionnaire, sources). Ils sont reconnus d’après leur contenu.
+          Choisissez les fichiers JSON du kit (le kit complet, ou ses listes : contrôles, actions, scénarios, deltas
+          HDS, mémos, questionnaire, sources). Ils sont reconnus d’après leur contenu. Les correspondances vers
+          l’ISO/IEC 27001 et l’HDS ne sont plus importées : un fichier de correspondances est ignoré.
         </Text>
         <FileInput label="Fichiers du kit" accept=".json" multiple clearable onChange={lire} />
         {charge && (
@@ -160,6 +152,11 @@ function ImportKit({ onClose }: { onClose: () => void }) {
                 </List.Item>
               ))}
             </List>
+            {charge.ignorees.map((f) => (
+              <Alert key={f} color="blue">
+                {f} : correspondances reconnues mais ignorées (elles ne sont plus importées).
+              </Alert>
+            ))}
             {charge.problemes.map((p) => (
               <Alert key={p} color="red">
                 {p}
@@ -178,34 +175,6 @@ function ImportKit({ onClose }: { onClose: () => void }) {
                 : ''}
               .
             </Text>
-            <Text size="sm">
-              Correspondances : {apercu.correspondances.resolues} rattachée(s) à une exigence de la bibliothèque (
-              {apercu.correspondances.nouvelles} nouvelle(s), {apercu.correspondances.dejaPresentes} déjà présente(s)),{' '}
-              {apercu.correspondances.themesIso42001} indication(s) de thème ISO/IEC 42001 conservée(s) sans
-              rattachement, {apercu.correspondances.nonResoluesTotal} non reconnue(s).
-            </Text>
-            {apercu.correspondances.nonResolues.length > 0 && (
-              <DataTable label="Indications non rattachées">
-                <Table>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Contrôle</Table.Th>
-                      <Table.Th>Indication du kit</Table.Th>
-                      <Table.Th>Raison</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {apercu.correspondances.nonResolues.map((n, i) => (
-                      <Table.Tr key={`${n.controle}-${i}`}>
-                        <Table.Td>{n.controle}</Table.Td>
-                        <Table.Td>{n.indication}</Table.Td>
-                        <Table.Td>{n.raison}</Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </DataTable>
-            )}
             {apercu.referentiel.warning && <Alert color="orange">{apercu.referentiel.warning}</Alert>}
             {apercu.avertissements.map((a) => (
               <Alert key={a} color="blue">

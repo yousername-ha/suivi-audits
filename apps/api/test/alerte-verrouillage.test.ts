@@ -190,7 +190,7 @@ describe('alerte de verrouillage', () => {
     const actif = await avecCourriel('verrou-adm-actif', 'admin', 'actif@exemple.test');
     await avecCourriel('verrou-adm-off', 'admin', 'desactive@exemple.test', { disabled: true });
     await t.svc.db.q(
-      "INSERT INTO notification_reglages(portee_kind, portee_id, type, canal, valeur, updated_by) SELECT 'utilisateur', $1, t, 'courriel', false, 'test' FROM unnest(ARRAY['task_due','risk_review','rapprochement','compte_verrouille']) t",
+      "INSERT INTO notification_reglages(portee_kind, portee_id, type, canal, valeur, updated_by) SELECT 'utilisateur', $1, t, 'courriel', false, 'test' FROM unnest(ARRAY['task_due','risk_review','retex_contribution','compte_verrouille']) t",
       [actif.id],
     );
     await verrouillerParMotDePasse(await compte());

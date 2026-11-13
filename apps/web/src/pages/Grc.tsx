@@ -47,7 +47,7 @@ export function Registry({
             value={kind}
             onChange={(v) => v && setKind(v as GrcKind)}
             data={(choices ?? GRC_KINDS)
-              .filter((k) => !['framework', 'requirement', 'mapping'].includes(k) && can(GRC_MODULES[k], 'lire'))
+              .filter((k) => !['framework', 'requirement'].includes(k) && can(GRC_MODULES[k], 'lire'))
               .map((k) => ({ value: k, label: GRC_LABELS[k] }))}
           />
           {can(GRC_MODULES[k], 'modifier') && (

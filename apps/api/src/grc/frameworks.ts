@@ -1,4 +1,4 @@
-import { FrameworkDefinition, FrameworkImport, MappingData, type GrcObject } from '@suivi/shared';
+import { FrameworkDefinition, FrameworkImport, type GrcObject } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { sql } from 'kysely';
 import { surConnexion, type Client, type Kdb } from '../db/db.js';
@@ -55,16 +55,6 @@ export class GrcFrameworks {
       .executeTakeFirst();
     if (!row) throw new HttpError(404, 'Version publiée introuvable.');
     return row as { definition: FrameworkDefinition; version: number };
-  }
-  async validateMapping(smsi: string, input: unknown, user: SessionUser, c?: Client) {
-    const d = MappingData.parse(input);
-    for (const endpoint of [d.source, d.target]) {
-      const f = await this.version(smsi, endpoint.frameworkId, endpoint.version, user, c);
-      if (!f.definition.requirements.some((r) => r.id === endpoint.requirementId))
-        throw new HttpError(422, 'Exigence absente de cette version publiée.');
-    }
-    if (JSON.stringify(d.source) === JSON.stringify(d.target))
-      throw new HttpError(422, 'Deux exigences distinctes sont requises.');
   }
   async preview(smsi: string, id: string | null, input: unknown, user: SessionUser) {
     await this.g.access(smsi, user, true);
@@ -142,46 +132,15 @@ export class GrcFrameworks {
       return this.g.write(c, locked, locked.name, { ...locked.data, enabled }, user, ip, 'Activation du référentiel');
     }, user.username);
   }
-  async validate(smsi: string, id: string, expected: number, note: string, user: SessionUser, ip: string) {
-    await this.g.permission(user, 'conformite', 'administrer');
-    return this.g.db.tx(async (c) => {
-      await this.g.object(smsi, id, user, true, c);
-      const o = await this.g.raw(id, c, true);
-      if (!o || o.version !== expected) throw new HttpError(412, 'Version obsolète.');
-      if (o.kind !== 'mapping' || o.archived) throw new HttpError(422, 'Correspondance active attendue.');
-      await this.validateMapping(smsi, o.data, user, c);
-      return this.g.write(
-        c,
-        o,
-        o.name,
-        {
-          ...o.data,
-          status: 'validated',
-          reviewNote: note,
-          validatedBy: user.username,
-          validatedAt: new Date().toISOString(),
-        },
-        user,
-        ip,
-        'Validation humaine de la correspondance',
-      );
-    }, user.username);
-  }
   async importPreview(smsi: string, input: unknown, user: SessionUser) {
     await this.g.permission(user, 'import_export', 'modifier');
     const d = FrameworkImport.parse(input);
     const p = await this.preview(smsi, null, d.definition, user);
-    for (const mapping of d.mappings) {
-      if (mapping.status === 'validated')
-        throw new HttpError(422, 'Une importation ne valide pas les correspondances.');
-      await this.validateMapping(smsi, mapping, user);
-    }
     const duplicate = !!(await memeIdentifiant(this.g.db.k, smsi, d.definition.identifier));
     return {
       ...p,
       previewId: hash({ smsi, import: d }),
       duplicate,
-      mappings: d.mappings.length,
       canImport: !duplicate,
     };
   }
@@ -206,8 +165,6 @@ export class GrcFrameworks {
         ip,
       );
       await publierVersion(k, o.id, smsi, 1, d.definition, 'Importation simulée et confirmée', user.username);
-      for (const mapping of d.mappings)
-        await this.g.insert(c, smsi, 'mapping', 'Correspondance importée', mapping, user, ip);
       return o;
     }, user.username);
   }

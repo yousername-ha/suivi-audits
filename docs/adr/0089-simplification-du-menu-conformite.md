@@ -46,14 +46,38 @@ Applications à intégrer (GAP), Correspondances de la bibliothèque.
   Le préfixe `app` reste toléré dans la validation d'une référence de carte (fichier historique importé) : un tel nœud s'affiche comme objet indisponible et se
   retire de la carte.
 
-**Lot 3 (à venir)** : retrait complet du système de correspondances et de rapprochements : tables `lib_mappings`,
-`lib_mapping_history` et `grc_rapprochements`, objets `mapping`, routes, notifications et fournisseurs liés. Attention : le calcul de
-couverture (`coverage`) vit aujourd'hui dans `grc/rapprochements.ts` et reste nécessaire à la Bibliothèque : il sera déplacé.
+**Lot 3 (fait, 12/11/2026)** : retrait complet des correspondances entre référentiels et des rapprochements qui en découlent.
+- Ce qui part : les tables `lib_mappings`, `lib_mapping_history` (historique immuable) et `grc_rapprochements`, le service `library-mappings.ts`
+  et le service `rapprochements.ts` (synchronisation, notification, décision), les routes `/api/library/mappings*`,
+  `/api/grc/:smsi/rapprochements*` et `/api/grc/:smsi/mappings/:id/validate`, les appels de resynchronisation (création d'un périmètre qui hérite,
+  changement de hiérarchie, de lien, d'attribution ou de copie de référentiel), le type de fiche `mapping` (`GRC_KINDS`, modules, libellés,
+  `MappingData`), le champ `mappings` du format d'import d'un référentiel (JSON et feuille Excel « Correspondances »), la section `mappings` du
+  rapport de comité, la colonne « correspondances revues » du tableau de bord, la notification « Rapprochements à valider » (type, réglages et
+  rappels) et les schémas partagés `LibraryMappingBody` et `RapprochementDecision`.
+- Ce qui reste : les référentiels (bibliothèque, copies de périmètre, application) ; les liens « met en œuvre » faits à la main d'une mesure vers
+  une exigence ; la **couverture par exigence** de la Bibliothèque, **déplacée** dans son propre module `grc/couverture.ts` (même route
+  `GET /api/grc/:smsi/couverture`, mêmes calculs d'états) ; le **kit IA**, qui importe toujours ses contrôles (référentiel de la bibliothèque) et
+  ses annexes de veille, mais plus ses correspondances vers l'ISO/IEC 27001 et l'HDS (un fichier ou une rubrique « correspondances » d'un ancien kit
+  est ignoré) ; la **Configuration GRC** (table de correspondance d'une méthode de risque, `severityMapping`), qui est un autre concept et n'est pas
+  modifiée.
+- Forme de la réponse de couverture : la notion « à valider » disparaît (`toValidate` par référentiel, état `to_validate` d'une exigence). Une
+  exigence est **couverte** si une mesure lui est reliée, sinon **non couverte** ; `uncovered = requirements - covered`.
+- Parcours ISO : l'étape HDS « Relier les compléments » ne parle plus de correspondances ; elle demande de relier les mesures du SMSI aux exigences
+  HDS dans la Bibliothèque (travaux existants : les mesures).
+- **Migration `059_retrait_correspondances_rapprochements.sql`, destructive** : `DROP TABLE` de `grc_rapprochements`, `lib_mapping_history` puis
+  `lib_mappings` (ordre des clés étrangères ; la table d'historique est protégée par des déclencheurs d'immutabilité, mais c'est la table entière qui
+  disparaît, sans jamais les contourner), suppression des rappels `rapprochement` (et de leurs courriels en file, en cascade) et des réglages de
+  notification de ce type. Pas de reprise de données : l'application n'est pas en production, la sauvegarde de la mise à jour reste le seul retour
+  arrière. Aucun droit à retirer (module `conformite`).
+- Les **fiches `mapping`** déjà importées avec un référentiel vivent dans l'historique immuable des objets : elles ne sont pas supprimées. Le type n'existe
+  plus, le code les ignore (aucune liste, aucun export, aucune route ne les retourne) et elles restent inertes.
 
 ## Ce qui n'est pas fait
 
-- Aucune suppression de donnée dans le lot 1 ; les lots 2 et 3 diront, chacun, ce que devient la donnée (l'application n'étant pas
-  encore en production, une réinstallation est acceptée).
+- Aucune suppression de donnée dans le lot 1 ; les lots 2 et 3 suppriment les tables de leur fonction (migrations `058` et `059`) sans
+  reprise de données (l'application n'étant pas encore en production).
+- Lot 3 : les fiches `mapping` de l'historique immuable des objets restent en base, inertes ; un fichier d'import d'un référentiel qui porte encore
+  une clé `mappings` est refusé (le format ne la prévoit plus) ; un fichier ou une feuille « Correspondances » d'un ancien kit ou classeur est ignoré.
 - Pas de sélecteur de périmètre propre à la Bibliothèque : la maquette en montrait un ; l'application a déjà le sien.
 
 ## Conséquences

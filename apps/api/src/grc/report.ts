@@ -1,4 +1,3 @@
-import { sql } from 'kysely';
 import { PorteeLecture } from '../acces/portee.js';
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
@@ -32,19 +31,6 @@ export async function report(g: Grc, smsi: string, user: SessionUser, ip: string
       ).execute()
     ).map((r) => ({ ...r, data: r.data as Record<string, unknown> }));
     sections.frameworks = rows;
-    sections.mappings = await (
-      await portee.filtrerObjets(
-        g.db.k
-          .selectFrom('grc_objects')
-          .select(['id', 'name', 'data', 'version', 'updated_by as updatedBy', 'updated_at as updatedAt'])
-          .where('smsi_id', '=', smsi)
-          .where('kind', '=', 'mapping')
-          .where('archived', '=', false)
-          .where(sql<string>`data->>'status'`, '=', 'validated')
-          .orderBy('id')
-          .limit(1000),
-      )
-    ).execute();
   }
   await g.db.audit(user, ip, 'grc.report.exported', smsi, { sections: Object.keys(sections) });
   return {
@@ -56,7 +42,6 @@ export async function report(g: Grc, smsi: string, user: SessionUser, ip: string
     sections,
     notes: [
       'Les critères, couleurs et niveaux appartiennent à chaque version méthodologique.',
-      'Les propositions de correspondance ne constituent pas des équivalences normatives validées.',
       'Les actions de traitement ne modifient pas automatiquement le risque résiduel.',
       'Les registres volumineux sont plafonnés à 1 000 lignes par section ; les totaux et indicateurs portent sur le périmètre complet.',
     ],

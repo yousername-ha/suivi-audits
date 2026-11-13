@@ -10,8 +10,8 @@ repris, les exigences se chargent par import avec leurs droits.
 - Référentiels standards sélectionnables d'emblée ; la bibliothèque est **figée** : chaque édition publiée est immuable et ne
   se personnalise pas ([ADR 0031](adr/0031-bibliotheque-de-referentiels.md), [ADR 0082](adr/0082-referentiels-du-perimetre-copie-et-application.md)).
   Une nouvelle édition s'importe comme une nouvelle version immuable.
-- Correspondances entre exigences : les propositions automatiques passent par une **revue humaine** (« Rapprochements à
-  valider »).
+- Pas de correspondances automatiques entre référentiels : elles sont retirées ([ADR 0089](adr/0089-simplification-du-menu-conformite.md), lot 3).
+  Une mesure se relie à la main à chaque exigence qu'elle couvre, dans le référentiel concerné.
 
 ## Référentiels d'un périmètre : copie, puis application
 
@@ -20,8 +20,8 @@ repris, les exigences se chargent par import avec leurs droits.
    bibliothèque n'est pas modifiée.
 2. **Modifier la copie** librement : ajouter, modifier ou retirer des exigences, créer un domaine, renommer. Chaque
    modification est une version immuable de la copie (historique consultable). La copie garde l'identifiant du référentiel :
-   évaluations, mesures reliées et rapprochements suivent chaque exigence par son identifiant.
-3. **Appliquer** la copie : elle devient un **référentiel suivi en conformité** (couverture, évaluations, rapprochements, plan
+   évaluations et mesures reliées suivent chaque exigence par son identifiant.
+3. **Appliquer** la copie : elle devient un **référentiel suivi en conformité** (couverture, évaluations, plan
    d'écarts). Elle reste modifiable ; la repasser en préparation la sort du suivi sans rien effacer.
 4. **Renommer le périmètre** : l'écran demande s'il faut aussi renommer ses copies avec le nouveau nom ; seules celles qui
    portent encore « (PRIVE - <ancien nom>) » sont concernées.

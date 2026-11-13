@@ -1,55 +1,10 @@
-/* Kit d'intégration IA (ADR 0055) : aperçu, import idempotent, correspondances proposées, annexes « à revérifier ».
+/* Kit d'intégration IA (ADR 0055) : aperçu, import idempotent, annexes « à revérifier » ; les correspondances du kit ne sont
+   plus importées (ADR 0089, lot 3).
    Toutes les données sont fictives : le kit réel ne figure jamais dans le dépôt. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { FrameworkDefinition } from '@suivi/shared';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, lecteur: Agent;
-const source = {
-  organisation: 'Organisation fictive',
-  document: 'Document de recette',
-  url: 'https://example.invalid/recette',
-  version: '1',
-  date: '2026-10-21',
-  license: 'Données fictives de test',
-  verifiedAt: '',
-  normative: false,
-  status: 'organisation' as const,
-};
-const iso: FrameworkDefinition = {
-  name: 'ISO fictif',
-  identifier: 'iso-27001-fictif',
-  source,
-  domains: [
-    { id: 'clause_5', label: 'Clause 5' },
-    { id: 'annexe_a_5', label: 'Annexe A 5' },
-  ],
-  requirements: [
-    { id: 'C5-2', domain: 'clause_5', title: '5.2 — Politique', description: '', applicability: '', measureRefs: [] },
-    {
-      id: 'A5-1',
-      domain: 'annexe_a_5',
-      title: '5.1 — Politiques',
-      description: '',
-      applicability: '',
-      measureRefs: [],
-    },
-  ],
-};
-const hds: FrameworkDefinition = {
-  name: 'HDS fictif',
-  identifier: 'hds-fictif',
-  source,
-  domains: [{ id: 'exi', label: 'Exigences' }],
-  requirements: ['01', '02', '03'].map((n) => ({
-    id: `EXI_${n}`,
-    domain: 'exi',
-    title: `EXI ${n} — Thème fictif`,
-    description: '',
-    applicability: '',
-    measureRefs: [],
-  })),
-};
 const controle = (n: number, extra: Record<string, unknown> = {}) => ({
   id: `IA-${String(n).padStart(3, '0')}`,
   domain: '01 Gouvernance',
@@ -65,10 +20,9 @@ const controle = (n: number, extra: Record<string, unknown> = {}) => ({
 const kit = () => ({
   version: 'fictif-1',
   controls: [controle(1), controle(2, { eligible_scopes: ['external'] })],
+  // Fichier de correspondances d'un ancien kit : toléré, ignoré.
   correspondances: [
     { internal_control_id: 'IA-001', target_reference_type: 'ISO27001', reference_hint_raw: '§5.2 ; A.5.1' },
-    { internal_control_id: 'IA-001', target_reference_type: 'HDS_V2_0', reference_hint_raw: 'EXI 02-03 si hébergeur' },
-    { internal_control_id: 'IA-002', target_reference_type: 'ISO27001', reference_hint_raw: 'A.9.9' },
     { internal_control_id: 'IA-002', target_reference_type: 'ISO42001_THEME', reference_hint_raw: 'Gouvernance IA' },
   ],
   deltas: [
@@ -86,17 +40,6 @@ const apercu = (k: unknown) => admin.post('/api/library/ia-kit/preview', { kit: 
 const importer = (k: unknown, previewId: string) =>
   admin.post('/api/library/ia-kit/import', { kit: k, previewId, reason: 'Import du kit fictif', confirm: 'IMPORTER' });
 
-async function publier(def: FrameworkDefinition) {
-  const p = await admin.post('/api/library/frameworks/preview', { id: null, definition: def });
-  const r = await admin.post(
-    '/api/library/frameworks/publish',
-    { id: null, definition: def, previewId: p.json().previewId, reason: 'Publication fictive', confirm: 'PUBLIER' },
-    { 'if-match': '"0"' },
-  );
-  expect(r.statusCode, r.body).toBe(200);
-  return r.json().id as string;
-}
-
 beforeAll(async () => {
   t = await createTestApp();
   admin = await login(t, await makeUser(t, 'kit_admin', 'admin'));
@@ -111,13 +54,8 @@ describe('kit IA', () => {
     expect((await apercu(normatif)).statusCode).toBe(422);
     const delta = { ...kit(), deltas: [{ ...kit().deltas[0], import_as_enforceable_HDS_2_1_control: true }] };
     expect((await apercu(delta)).statusCode).toBe(422);
-    const inconnu = {
-      ...kit(),
-      correspondances: [
-        { internal_control_id: 'IA-099', target_reference_type: 'ISO27001', reference_hint_raw: '§5.2' },
-      ],
-    };
-    expect((await apercu(inconnu)).statusCode).toBe(422);
+    const doublon = { ...kit(), controls: [controle(1), controle(1)] };
+    expect((await apercu(doublon)).statusCode).toBe(422);
   });
 
   it('refuse le caractère nul, que PostgreSQL ne saurait pas stocker dans les annexes', async () => {
@@ -140,55 +78,30 @@ describe('kit IA', () => {
     expect(r.statusCode).toBe(403);
   });
 
-  it('sans ISO ni HDS en bibliothèque : tout est non résolu, rien n’est inventé', async () => {
+  it('l’aperçu ne parle plus de correspondances et ne rattache rien à l’ISO ni à l’HDS', async () => {
     const p = (await apercu(kit())).json();
     expect(p.controles).toBe(2);
-    expect(p.correspondances.resolues).toBe(0);
-    expect(p.correspondances.themesIso42001).toBe(1);
-    expect(p.correspondances.nonResolues.length).toBe(3);
+    expect(p).not.toHaveProperty('correspondances');
+    expect(JSON.stringify(p.avertissements)).not.toMatch(/correspondance/i);
     expect(p.avertissements.join(' ')).toMatch(/revérifier/);
     expect(p.annexes.deltas).toBe(1);
   });
 
-  it('importe le référentiel puis, une fois ISO et HDS présents, rattache les correspondances « proposées »', async () => {
+  it('importe le référentiel et les annexes, sans correspondance, puis reste idempotent', async () => {
     const k = kit();
     const p1 = (await apercu(k)).json();
     const r1 = await importer(k, p1.referentiel.previewId);
     expect(r1.statusCode, r1.body).toBe(200);
     expect(r1.json().statut).toBe('importe');
-    expect(r1.json().mappings).toBe(0);
+    expect(r1.json().controles).toBe(2);
+    expect(r1.json()).not.toHaveProperty('mappings');
     // Rejeu à l'identique : rien ne s'écrit de plus.
     const p2 = (await apercu(k)).json();
     expect(p2.dejaImporte).toBe(true);
     const r2 = await importer(k, p2.referentiel.previewId);
     expect(r2.json().statut).toBe('deja_importe');
-
-    await publier(iso);
-    await publier(hds);
-    const p3 = (await apercu(k)).json();
-    // IA-001 : §5.2 (clause), A.5.1 (annexe), EXI 02 et 03 ; IA-002 : A.9.9 ne correspond à rien.
-    expect(p3.correspondances.resolues).toBe(4);
-    expect(p3.correspondances.nouvelles).toBe(4);
-    expect(p3.correspondances.nonResolues.map((x: { indication: string }) => x.indication)).toEqual(['A.9.9']);
-    expect(p3.dejaImporte).toBe(false);
-    expect(p3.referentiel.identique).toBe(true);
-    const r3 = await importer(k, p3.referentiel.previewId);
-    expect(r3.statusCode, r3.body).toBe(200);
-    expect(r3.json().mappings).toBe(4);
-    expect(r3.json().version).toBe(1); // le rejeu après import tardif ne republie pas le référentiel
-
-    const fw = r3.json().frameworkId as string;
-    const liste = (await admin.get(`/api/library/mappings?frameworkId=${fw}`)).json() as {
-      status: string;
-      origin: string;
-      coverage: number;
-    }[];
-    expect(liste.length).toBe(4);
-    expect(liste.every((m) => m.status === 'proposed' && m.coverage === 0)).toBe(true);
-
-    // Nouveau rejeu : plus rien à rattacher.
-    const p4 = (await apercu(k)).json();
-    expect(p4.dejaImporte).toBe(true);
+    // Les routes de correspondances ont disparu.
+    expect((await admin.get('/api/library/mappings')).statusCode).toBe(404);
   });
 
   it('garde les annexes de veille « à revérifier » et ne fait pas du delta une exigence', async () => {

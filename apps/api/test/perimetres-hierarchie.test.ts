@@ -1,5 +1,5 @@
 /* Hiérarchie des périmètres (lot H1) : parent/enfant sans boucle, niveau, héritage explicite des référentiels (le
-   rattachement local l'emporte), propagation aux rapprochements, protections de la base. Données fictives. */
+   rattachement local l'emporte), protections de la base. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FrameworkDefinition } from '@suivi/shared';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
