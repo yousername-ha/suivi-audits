@@ -12,6 +12,10 @@ import { PERIMETRE_COMMUN } from '../invariants';
 
 /* ------------------------------------------------------------------------------------------------------ outils */
 
+/** Suffixe d'exécution : les registres de l'organisation (fournisseurs, critères) refusent les doublons de nom, et le
+    fichier doit pouvoir se rejouer sur une pile déjà utilisée. */
+const EXECUTION = Date.now().toString(36);
+
 type Session = { req: APIRequestContext; csrf: string; page: Page; fermer: () => Promise<void> };
 
 /** Contexte administrateur (session partagée de l'installation) avec sa page et son jeton CSRF. */
@@ -236,8 +240,8 @@ test('CAMP-C1-07 ouvert : cocher, décocher et recocher un critère d’évaluat
     if (m.type() === 'error') erreurs.push(m.text().split('\n')[0]!);
   });
   try {
-    const fournisseur = 'Campagne C1-07 fournisseur (fictif)';
-    const critere = 'Campagne C1-07 critère d’évaluation (fictif)';
+    const fournisseur = `Campagne C1-07 fournisseur ${EXECUTION} (fictif)`;
+    const critere = `Campagne C1-07 critère d’évaluation ${EXECUTION} (fictif)`;
     await ok(await ecrire(s, 'POST', '/api/suppliers', { name: fournisseur }), 'création du fournisseur');
     await ok(
       await ecrire(s, 'POST', '/api/suppliers/criteria', {
@@ -292,9 +296,8 @@ test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une éva
   // figure bien dans la DdA sur A.5.19 à A.5.22 (l'échec d'INV-08 relevé en phase 1 était un faux positif).
   test.fail(true, 'CAMP-C1-12 ouvert : aucune action créée, seulement un écart sans responsable ni échéance');
   const s = await admin(browser);
-  let ecart: { id: string; version: number } | undefined;
   try {
-    const nom = 'Campagne C1-12 fournisseur (fictif)';
+    const nom = `Campagne C1-12 fournisseur ${EXECUTION} (fictif)`;
     const f = await ok(await ecrire(s, 'POST', '/api/suppliers', { name: nom }), 'création du fournisseur');
     const evaluation = await ok(
       await ecrire(s, 'POST', '/api/evaluations-clausier', { supplier: f.id }),
@@ -315,15 +318,17 @@ test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une éva
       await s.req.get(`/api/grc/${PERIMETRE_COMMUN}/objects?kind=nonconformity`),
       'lecture des écarts',
     );
-    ecart = (ecarts.items as { id: string; version: number; legacyId: string | null }[]).find(
+    const ecart = (ecarts.items as { id: string; version: number; legacyId: string | null }[]).find(
       (e) => e.legacyId === cree.action,
     );
     expect(ecart, `écart ${cree.action} créé`).toBeTruthy();
     const actions = await ok(await s.req.get(`/api/grc/${PERIMETRE_COMMUN}/objects?kind=action`), 'plan d’actions');
     expect((actions.items as { name: string }[]).map((a) => a.name).filter((n) => n.includes(nom))).not.toEqual([]);
   } finally {
-    // L'écart ouvert sans responsable sur A.5.19 à A.5.22 ne doit pas rester pour les invariants (90).
-    await archiver(s, PERIMETRE_COMMUN, ecart);
+    // L'écart (piste de progrès, type PP) reste ouvert : INV-05 ne vise que les NC et points sensibles, INV-06 n'en fait
+    // qu'un avertissement. Il n'est pas archivé : l'identifiant historique FOU-0n d'un écart archivé est réattribué à
+    // l'écart suivant et sa création échoue alors en 500 (clé `grc_objects_smsi_id_legacy_key_legacy_id_key`, constat
+    // relevé pendant l'écriture de ce test).
     await s.fermer();
   }
 });
@@ -386,27 +391,34 @@ test('CAMP-C2-03 ouvert : un risque jamais apprécié ne peut pas être formelle
       methodVersion: 1,
       strategy: 'accept',
       acceptanceReason: 'Justification fictive de l’acceptation',
+      reviewAt: null,
       stages: notes,
     });
     const registre = await ok(await s.req.get(`/api/grc/${p.id}/risks/register`), 'registre');
     const ligne = (registre.items as { id: string; brut: unknown }[]).find((r) => r.id === risque.id);
     expect(ligne?.brut, 'risque sans appréciation').toBeNull();
-    const decision = await ecrire(s, 'POST', `/api/grc/${p.id}/pilotage/decisions`, {
-      ref: `object:${risque.id}`,
-      decision: {
-        operation: 'risk_acceptance',
-        step: '',
-        requestId: randomUUID(),
-        note: 'Décision fictive de la campagne',
-        date: new Date().toISOString().slice(0, 10),
-        result: 'accepted',
-        refs: [],
-        createFinding: false,
-        createAction: false,
-        until: `${new Date().getFullYear() + 1}-12-31`,
-        confirm: 'ENREGISTRER',
+    const decision = await ecrire(
+      s,
+      'POST',
+      `/api/grc/${p.id}/pilotage/decisions`,
+      {
+        ref: `object:${risque.id}`,
+        decision: {
+          operation: 'risk_acceptance',
+          step: '',
+          requestId: randomUUID(),
+          note: 'Décision fictive de la campagne',
+          date: new Date().toISOString().slice(0, 10),
+          result: 'accepted',
+          refs: [],
+          createFinding: false,
+          createAction: false,
+          until: `${new Date().getFullYear() + 1}-12-31`,
+          confirm: 'ENREGISTRER',
+        },
       },
-    });
+      risque.version,
+    );
     expect([409, 422], `décision : ${decision.status()} ${await decision.text()}`).toContain(decision.status());
   } finally {
     await s.fermer();

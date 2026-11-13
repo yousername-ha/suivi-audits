@@ -684,3 +684,24 @@ Test déterministe (API) : avec deux périmètres ayant chacun au moins un risqu
 `/pilotage/synthese?perimetre=<principal>`, attendu après correction : le nombre de la région « Risques et continuité »
 égal à celui de l’`img` « Risques : … », ou un libellé « tous périmètres » ; observé : 7 et 5 sans mention. Invariant
 proposé : pour chaque périmètre, `dashboard.risks.total` = nombre de lignes non archivées du registre.
+
+## Constat nouveau relevé pendant l’écriture des tests (13/11/2026)
+
+### Écart du clausier : identifiant historique réattribué après archivage, création en erreur 500 (pile 2)
+
+- Gravité proposée : majeur (erreur HTTP 5xx ; le RSSI ne peut plus créer l’écart d’une évaluation sans contournement)
+- Référence : ISO/IEC 27001:2022, 10.2 et A.5.19 à A.5.22 ; règle « aucune réponse 5xx »
+- Observé : test `CAMP-C1-12` (fichier `tests/e2e/rssi-virtuel/specs/41-campagne-organisation-risques.spec.ts`) exécuté
+  deux fois sur la pile 2. Premier passage : `POST /api/evaluations-clausier/<id>/action` → 201, écart FOU-01 créé, puis
+  archivé par le test (`DELETE /api/grc/00000000-…-0001/objects/<id>` avec `If-Match` → 200). Second passage, nouvelle
+  évaluation d’un autre fournisseur fictif : `POST /api/evaluations-clausier/<id>/action` → **HTTP 500** `{"error":"Erreur
+  interne."}` ; journal de l’API : `duplicate key value violates unique constraint
+  "grc_objects_smsi_id_legacy_key_legacy_id_key"`. Cause probable : `identifiantActionFournisseur`
+  (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain FOU-0n sur les `findings` restants, sans tenir
+  compte de l’objet archivé qui garde `legacyId` FOU-01.
+- Conséquence sur les piles : la pile 2 (FOU-01 archivé par le test) et, selon la même cause, la pile 1 (FOU-02 archivé
+  par le rejeu de C1-12) ne peuvent plus créer d’écart depuis le clausier (pile 1 : non rejoué, déduit).
+- Attendu : un identifiant jamais réattribué, ou l’écart archivé réutilisé ; jamais une erreur 500.
+- Reproductible par : test déterministe à écrire (créer l’écart d’une évaluation, l’archiver, créer l’écart d’une
+  seconde évaluation : attendu 201, observé 500). Le test `CAMP-C1-12` n’archive plus son écart pour ne pas provoquer
+  ce défaut dans la suite du harnais.
