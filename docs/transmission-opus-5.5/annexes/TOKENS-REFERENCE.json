@@ -1,0 +1,4859 @@
+{
+  "note": "Inventaire statique de déclarations ; dépend des sélecteurs et médias, pas une palette finale calculée. Utiliser la charte cible et MENU-FINAL.json pour le menu retenu.",
+  "declarations": [
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 94,
+      "variable": "--na-hauteur",
+      "declaration": "19rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 476,
+      "variable": "--serie",
+      "declaration": "var(--neon-rose);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 479,
+      "variable": "--serie",
+      "declaration": "var(--neon-violet);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 482,
+      "variable": "--serie",
+      "declaration": "var(--neon-bleu);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 485,
+      "variable": "--serie",
+      "declaration": "var(--neon-cyan);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 488,
+      "variable": "--serie",
+      "declaration": "var(--neon-orange);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 491,
+      "variable": "--serie",
+      "declaration": "var(--neon-menthe);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 555,
+      "variable": "--na-hauteur",
+      "declaration": "20rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 630,
+      "variable": "--na-hauteur",
+      "declaration": "17rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 646,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-vert-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 649,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-bleu-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 652,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-violet-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 655,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-orange-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 658,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-rouge-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "ligne": 661,
+      "variable": "--graph-neon",
+      "declaration": "var(--carte-gris-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 3,
+      "variable": "--as-paper",
+      "declaration": "#fbfdfd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 4,
+      "variable": "--as-surface",
+      "declaration": "#f0f5fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 5,
+      "variable": "--as-ink",
+      "declaration": "#172c46;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 6,
+      "variable": "--as-muted",
+      "declaration": "#52667f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 7,
+      "variable": "--as-edge",
+      "declaration": "#afc3d7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 8,
+      "variable": "--as-accent",
+      "declaration": "#126c7c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 9,
+      "variable": "--as-accent-bg",
+      "declaration": "#e0f1f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 10,
+      "variable": "--as-blue",
+      "declaration": "#37659d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 11,
+      "variable": "--as-blue-bg",
+      "declaration": "#e7effb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 12,
+      "variable": "--as-green",
+      "declaration": "#16674f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 13,
+      "variable": "--as-green-bg",
+      "declaration": "#e3f3eb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 14,
+      "variable": "--as-amber",
+      "declaration": "#8a511b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 15,
+      "variable": "--as-amber-bg",
+      "declaration": "#f9eedc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 16,
+      "variable": "--as-red",
+      "declaration": "#ad3441;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 17,
+      "variable": "--as-shadow",
+      "declaration": "0 18px 54px -24px #24496b55;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 18,
+      "variable": "--as-width",
+      "declaration": "clamp(29rem, 31vw, 36rem);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 21,
+      "variable": "--as-paper",
+      "declaration": "#102137;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 22,
+      "variable": "--as-surface",
+      "declaration": "#14283f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 23,
+      "variable": "--as-ink",
+      "declaration": "#edf4ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 24,
+      "variable": "--as-muted",
+      "declaration": "#afc1d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 25,
+      "variable": "--as-edge",
+      "declaration": "#385472;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 26,
+      "variable": "--as-accent",
+      "declaration": "#8bdfdc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 27,
+      "variable": "--as-accent-bg",
+      "declaration": "#173e46;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 28,
+      "variable": "--as-blue",
+      "declaration": "#aecdf7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 29,
+      "variable": "--as-blue-bg",
+      "declaration": "#1e3656;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 30,
+      "variable": "--as-green",
+      "declaration": "#9bdfbe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 31,
+      "variable": "--as-green-bg",
+      "declaration": "#193b34;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 32,
+      "variable": "--as-amber",
+      "declaration": "#f1bf80;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 33,
+      "variable": "--as-amber-bg",
+      "declaration": "#3f332a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 34,
+      "variable": "--as-red",
+      "declaration": "#ffb0ba;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 35,
+      "variable": "--as-shadow",
+      "declaration": "0 18px 65px -20px #0009;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 1044,
+      "variable": "--as-width",
+      "declaration": "510px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 1068,
+      "variable": "--as-width",
+      "declaration": "465px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-assistant.css",
+      "ligne": 1151,
+      "variable": "--as-width",
+      "declaration": "calc(100vw - 24px);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 3,
+      "variable": "--page",
+      "declaration": "#f5f7fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 4,
+      "variable": "--panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 5,
+      "variable": "--soft",
+      "declaration": "#f0f5fb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 6,
+      "variable": "--row",
+      "declaration": "#fbfcfe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 7,
+      "variable": "--ink",
+      "declaration": "#1b2f4b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 8,
+      "variable": "--muted",
+      "declaration": "#526880;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 9,
+      "variable": "--edge",
+      "declaration": "#cbd6e4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 10,
+      "variable": "--border",
+      "declaration": "#b5c5d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 11,
+      "variable": "--bb-blue",
+      "declaration": "#355f9c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 12,
+      "variable": "--bb-blue-bg",
+      "declaration": "#eaf0fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 13,
+      "variable": "--bb-green",
+      "declaration": "#21634f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 14,
+      "variable": "--bb-green-bg",
+      "declaration": "#e8f3ed;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 15,
+      "variable": "--bb-amber",
+      "declaration": "#8a4c17;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 16,
+      "variable": "--bb-amber-bg",
+      "declaration": "#fcf0dc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 17,
+      "variable": "--bb-red",
+      "declaration": "#a83e43;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 18,
+      "variable": "--bb-red-bg",
+      "declaration": "#fcecef;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 19,
+      "variable": "--bb-teal",
+      "declaration": "#186e77;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 20,
+      "variable": "--bb-teal-bg",
+      "declaration": "#e6f3f4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 21,
+      "variable": "--bb-violet",
+      "declaration": "#635598;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 22,
+      "variable": "--bb-violet-bg",
+      "declaration": "#efecf8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 23,
+      "variable": "--bb-track",
+      "declaration": "#e7edf5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 24,
+      "variable": "--bb-ombre",
+      "declaration": "0 3px 10px -7px #17314c55;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 27,
+      "variable": "--page",
+      "declaration": "#0d182a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 28,
+      "variable": "--panel",
+      "declaration": "#13243a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 29,
+      "variable": "--soft",
+      "declaration": "#172c45;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 30,
+      "variable": "--row",
+      "declaration": "#15273e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 31,
+      "variable": "--ink",
+      "declaration": "#e8f0fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 32,
+      "variable": "--muted",
+      "declaration": "#b0c2d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 33,
+      "variable": "--edge",
+      "declaration": "#365371;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 34,
+      "variable": "--border",
+      "declaration": "#4b6685;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 35,
+      "variable": "--bb-blue",
+      "declaration": "#b4d0f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 36,
+      "variable": "--bb-blue-bg",
+      "declaration": "#213b5e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 37,
+      "variable": "--bb-green",
+      "declaration": "#a2dfbe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 38,
+      "variable": "--bb-green-bg",
+      "declaration": "#1b3b33;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 39,
+      "variable": "--bb-amber",
+      "declaration": "#efc68c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 40,
+      "variable": "--bb-amber-bg",
+      "declaration": "#40352b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 41,
+      "variable": "--bb-red",
+      "declaration": "#ffb7bb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 42,
+      "variable": "--bb-red-bg",
+      "declaration": "#432e3b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 43,
+      "variable": "--bb-teal",
+      "declaration": "#9adddf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 44,
+      "variable": "--bb-teal-bg",
+      "declaration": "#193e48;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 45,
+      "variable": "--bb-violet",
+      "declaration": "#c8bff0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 46,
+      "variable": "--bb-violet-bg",
+      "declaration": "#302e4c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 47,
+      "variable": "--bb-track",
+      "declaration": "#30445f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 48,
+      "variable": "--bb-ombre",
+      "declaration": "0 5px 15px -10px #0009;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 980,
+      "variable": "--bs-tone",
+      "declaration": "var(--bb-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 981,
+      "variable": "--bs-tint",
+      "declaration": "var(--bb-blue-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 998,
+      "variable": "--bs-tone",
+      "declaration": "var(--bb-teal);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 999,
+      "variable": "--bs-tint",
+      "declaration": "var(--bb-teal-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1138,
+      "variable": "--bs-state",
+      "declaration": "var(--muted);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1150,
+      "variable": "--bs-state",
+      "declaration": "var(--bb-red);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1153,
+      "variable": "--bs-state",
+      "declaration": "var(--bb-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1156,
+      "variable": "--bs-state",
+      "declaration": "var(--bb-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1159,
+      "variable": "--bs-state",
+      "declaration": "var(--bb-teal);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-bibliotheque.css",
+      "ligne": 1162,
+      "variable": "--bs-state",
+      "declaration": "var(--bb-green);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 4,
+      "variable": "--dda-surface",
+      "declaration": "#09182f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 5,
+      "variable": "--dda-panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 6,
+      "variable": "--dda-row",
+      "declaration": "#0d1e37;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 7,
+      "variable": "--dda-edge",
+      "declaration": "#2b4260;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 8,
+      "variable": "--dda-text",
+      "declaration": "#edf7ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 9,
+      "variable": "--dda-muted",
+      "declaration": "#a9bcd1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 10,
+      "variable": "--dda-secondary",
+      "declaration": "#a9bcd1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 11,
+      "variable": "--dda-accent",
+      "declaration": "#8b9aff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 12,
+      "variable": "--dda-doux",
+      "declaration": "#263257;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 13,
+      "variable": "--dda-grid",
+      "declaration": "#273a54;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 14,
+      "variable": "--dda-total",
+      "declaration": "#29b28f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 15,
+      "variable": "--dda-partiel",
+      "declaration": "#efad55;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 16,
+      "variable": "--dda-erreur",
+      "declaration": "#e47a6f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 17,
+      "variable": "--dda-danger",
+      "declaration": "#ff8d80;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 18,
+      "variable": "--dda-shadow",
+      "declaration": "0 4px 20px rgb(0 0 0 / 18%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 19,
+      "variable": "--dda-icone",
+      "declaration": "#c0b6ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 20,
+      "variable": "--dda-choix-bg",
+      "declaration": "#354b68;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 21,
+      "variable": "--dda-choix-bord",
+      "declaration": "#6483a1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 22,
+      "variable": "--dda-choix-texte",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 28,
+      "variable": "--dda-surface",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 29,
+      "variable": "--dda-panel",
+      "declaration": "#f8f5fe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 30,
+      "variable": "--dda-row",
+      "declaration": "#fcfbff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 31,
+      "variable": "--dda-edge",
+      "declaration": "#ded4eb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 32,
+      "variable": "--dda-text",
+      "declaration": "#25213d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 33,
+      "variable": "--dda-muted",
+      "declaration": "#71617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 34,
+      "variable": "--dda-secondary",
+      "declaration": "#756284;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 35,
+      "variable": "--dda-accent",
+      "declaration": "#6950d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 36,
+      "variable": "--dda-doux",
+      "declaration": "#eee7fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 37,
+      "variable": "--dda-grid",
+      "declaration": "#e9e5f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 38,
+      "variable": "--dda-danger",
+      "declaration": "#b94a40;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 39,
+      "variable": "--dda-icone",
+      "declaration": "#76589b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 40,
+      "variable": "--dda-shadow",
+      "declaration": "0 3px 6px rgb(37 31 85 / 6%), 0 13px 28px -12px rgb(55 44 100 / 24%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 41,
+      "variable": "--dda-choix-bg",
+      "declaration": "#e5dfef;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 42,
+      "variable": "--dda-choix-bord",
+      "declaration": "#c9bbda;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 43,
+      "variable": "--dda-choix-texte",
+      "declaration": "#6e577f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 211,
+      "variable": "--dda-tone",
+      "declaration": "var(--dda-total);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 212,
+      "variable": "--dda-from",
+      "declaration": "#8edbc7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 215,
+      "variable": "--dda-tone",
+      "declaration": "var(--dda-partiel);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 216,
+      "variable": "--dda-from",
+      "declaration": "#f9d7a0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 219,
+      "variable": "--dda-tone",
+      "declaration": "var(--dda-erreur);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 220,
+      "variable": "--dda-from",
+      "declaration": "#edb6aa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 223,
+      "variable": "--dda-tone",
+      "declaration": "#a9a1ba;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 224,
+      "variable": "--dda-from",
+      "declaration": "#dad4e7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 707,
+      "variable": "--input-bg",
+      "declaration": "transparent;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 708,
+      "variable": "--dda-choice-bg",
+      "declaration": "var(--dda-choix-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 709,
+      "variable": "--dda-choice-edge",
+      "declaration": "var(--dda-choix-bord);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 710,
+      "variable": "--dda-choice-ink",
+      "declaration": "var(--dda-choix-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 714,
+      "variable": "--dda-choice-bg",
+      "declaration": "#0d6b3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 715,
+      "variable": "--dda-choice-edge",
+      "declaration": "#35df88;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 716,
+      "variable": "--dda-choice-ink",
+      "declaration": "#effff4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 719,
+      "variable": "--dda-choice-bg",
+      "declaration": "#9b4a10;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 720,
+      "variable": "--dda-choice-edge",
+      "declaration": "#ffad44;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 721,
+      "variable": "--dda-choice-ink",
+      "declaration": "#fff5e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 724,
+      "variable": "--dda-choice-bg",
+      "declaration": "#b32025;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 725,
+      "variable": "--dda-choice-edge",
+      "declaration": "#ff5148;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 726,
+      "variable": "--dda-choice-ink",
+      "declaration": "#fff5f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 729,
+      "variable": "--dda-choice-bg",
+      "declaration": "#acdcbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 730,
+      "variable": "--dda-choice-edge",
+      "declaration": "#7dbd9d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 731,
+      "variable": "--dda-choice-ink",
+      "declaration": "#185e42;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 734,
+      "variable": "--dda-choice-bg",
+      "declaration": "#f7cd92;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 735,
+      "variable": "--dda-choice-edge",
+      "declaration": "#dfad67;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 736,
+      "variable": "--dda-choice-ink",
+      "declaration": "#7c4712;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 739,
+      "variable": "--dda-choice-bg",
+      "declaration": "#edb6a9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 740,
+      "variable": "--dda-choice-edge",
+      "declaration": "#d99787;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "ligne": 741,
+      "variable": "--dda-choice-ink",
+      "declaration": "#823125;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 4,
+      "variable": "--modal-size-lg",
+      "declaration": "50rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 5,
+      "variable": "--modal-size-xl",
+      "declaration": "64rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 188,
+      "variable": "--modal-x-offset",
+      "declaration": "0.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 189,
+      "variable": "--modal-y-offset",
+      "declaration": "0.75rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 225,
+      "variable": "--modal-size-xl",
+      "declaration": "76rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 228,
+      "variable": "--contexte-surface",
+      "declaration": "color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 229,
+      "variable": "--contexte-filet",
+      "declaration": "color-mix(in srgb, var(--mantine-color-encre-9) 18%, var(--suivi-trait));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 232,
+      "variable": "--modal-inner-y-offset",
+      "declaration": "1rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 360,
+      "variable": "--contexte-repere-fond",
+      "declaration": "var(--neon-doux);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 447,
+      "variable": "--contexte-repere-fond",
+      "declaration": "color-mix(in srgb, var(--neon-bleu) 13%, var(--suivi-surface));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 455,
+      "variable": "--contexte-repere-fond",
+      "declaration": "color-mix(in srgb, var(--neon-cyan) 14%, var(--suivi-surface));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 463,
+      "variable": "--contexte-repere-fond",
+      "declaration": "color-mix(in srgb, var(--neon-violet) 13%, var(--suivi-surface));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 474,
+      "variable": "--categorie-accent",
+      "declaration": "var(--neon-violet);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 483,
+      "variable": "--categorie-accent",
+      "declaration": "var(--neon-rose);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 486,
+      "variable": "--categorie-accent",
+      "declaration": "var(--neon-cyan);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 489,
+      "variable": "--categorie-accent",
+      "declaration": "var(--neon-bleu);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 537,
+      "variable": "--categorie-accent",
+      "declaration": "var(--suivi-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 543,
+      "variable": "--contexte-repere-fond",
+      "declaration": "color-mix(in srgb, var(--neon-rose) 12%, var(--suivi-surface));"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 668,
+      "variable": "--contexte-cadre-coupe",
+      "declaration": "18px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "ligne": 853,
+      "variable": "--fenetre-coupe",
+      "declaration": "18px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 3,
+      "variable": "--compact-ink",
+      "declaration": "#243552;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 4,
+      "variable": "--compact-muted",
+      "declaration": "#52647d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 5,
+      "variable": "--compact-edge",
+      "declaration": "#b9cadd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 6,
+      "variable": "--compact-accent",
+      "declaration": "#14798b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 7,
+      "variable": "--compact-active",
+      "declaration": "#e2f1f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 8,
+      "variable": "--compact-hover",
+      "declaration": "#edf5f8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 9,
+      "variable": "--panel",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 10,
+      "variable": "--soft",
+      "declaration": "var(--suivi-surface-douce);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 11,
+      "variable": "--fs-good",
+      "declaration": "#146349;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 12,
+      "variable": "--fs-good-bg",
+      "declaration": "#e1f2e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 13,
+      "variable": "--fs-warn",
+      "declaration": "#845019;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 14,
+      "variable": "--fs-warn-bg",
+      "declaration": "#f8ead5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 15,
+      "variable": "--fs-bad",
+      "declaration": "#ac303a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 16,
+      "variable": "--fs-bad-bg",
+      "declaration": "#fbe8e9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 17,
+      "variable": "--fs-blue",
+      "declaration": "#285b97;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 18,
+      "variable": "--fs-blue-bg",
+      "declaration": "#e8effb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 27,
+      "variable": "--compact-ink",
+      "declaration": "#edf3ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 28,
+      "variable": "--compact-muted",
+      "declaration": "#afbed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 29,
+      "variable": "--compact-edge",
+      "declaration": "#3a506b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 30,
+      "variable": "--compact-accent",
+      "declaration": "#7bd5dd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 31,
+      "variable": "--compact-active",
+      "declaration": "#193b48;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 32,
+      "variable": "--compact-hover",
+      "declaration": "#1b344c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 33,
+      "variable": "--fs-good",
+      "declaration": "#94dfbd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 34,
+      "variable": "--fs-good-bg",
+      "declaration": "#163b34;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 35,
+      "variable": "--fs-warn",
+      "declaration": "#f1bd7d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 36,
+      "variable": "--fs-warn-bg",
+      "declaration": "#3e3027;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 37,
+      "variable": "--fs-bad",
+      "declaration": "#ffabb0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 38,
+      "variable": "--fs-bad-bg",
+      "declaration": "#412933;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 39,
+      "variable": "--fs-blue",
+      "declaration": "#b2cfff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 40,
+      "variable": "--fs-blue-bg",
+      "declaration": "#1d3456;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 60,
+      "variable": "--tone",
+      "declaration": "var(--compact-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 105,
+      "variable": "--tone",
+      "declaration": "var(--fs-good);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 108,
+      "variable": "--tone",
+      "declaration": "var(--fs-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 258,
+      "variable": "--tone",
+      "declaration": "var(--compact-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fournisseurs.css",
+      "ligne": 263,
+      "variable": "--tone",
+      "declaration": "var(--fs-warn);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 101,
+      "variable": "--objectifs-panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 102,
+      "variable": "--objectifs-soft",
+      "declaration": "#172841;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 103,
+      "variable": "--objectifs-row",
+      "declaration": "#14243d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 104,
+      "variable": "--objectifs-texte",
+      "declaration": "#edf2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 105,
+      "variable": "--objectifs-muted",
+      "declaration": "#b1bed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 106,
+      "variable": "--objectifs-structure",
+      "declaration": "#3b4b69;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 107,
+      "variable": "--objectifs-accent",
+      "declaration": "#b39afc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 108,
+      "variable": "--objectifs-tint",
+      "declaration": "#343354;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 109,
+      "variable": "--objectifs-succes",
+      "declaration": "#72d1a4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 110,
+      "variable": "--objectifs-erreur",
+      "declaration": "#ff9b8f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 111,
+      "variable": "--objectifs-attention",
+      "declaration": "#f5bc6e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 112,
+      "variable": "--objectifs-cible",
+      "declaration": "#eee1ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 113,
+      "variable": "--objectifs-cible-fond",
+      "declaration": "#443562;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 114,
+      "variable": "--objectifs-cible-trait",
+      "declaration": "#9274c4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 115,
+      "variable": "--objectifs-vert-fond",
+      "declaration": "#0d6b3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 116,
+      "variable": "--objectifs-vert-trait",
+      "declaration": "#35c985;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 117,
+      "variable": "--objectifs-vert-texte",
+      "declaration": "#effff4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 118,
+      "variable": "--objectifs-rouge-fond",
+      "declaration": "#972d31;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 119,
+      "variable": "--objectifs-rouge-trait",
+      "declaration": "#ee6e62;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 120,
+      "variable": "--objectifs-rouge-texte",
+      "declaration": "#fff5f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 121,
+      "variable": "--objectifs-orange-fond",
+      "declaration": "#9b4a10;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 122,
+      "variable": "--objectifs-orange-trait",
+      "declaration": "#e9a145;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 123,
+      "variable": "--objectifs-orange-texte",
+      "declaration": "#fff5e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 124,
+      "variable": "--objectifs-neutre-fond",
+      "declaration": "#35445f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 125,
+      "variable": "--objectifs-neutre-trait",
+      "declaration": "#627795;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 126,
+      "variable": "--objectifs-neutre",
+      "declaration": "#e6edf9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 127,
+      "variable": "--objectifs-piste",
+      "declaration": "#2d3c56;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 128,
+      "variable": "--objectifs-ombre",
+      "declaration": "0 5px 24px rgb(0 0 0 / 18%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 129,
+      "variable": "--objectifs-reflet",
+      "declaration": "rgb(255 255 255 / 28%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 132,
+      "variable": "--objectifs-panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 133,
+      "variable": "--objectifs-soft",
+      "declaration": "#f8f5fe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 134,
+      "variable": "--objectifs-row",
+      "declaration": "#fcfbff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 135,
+      "variable": "--objectifs-texte",
+      "declaration": "#25213d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 136,
+      "variable": "--objectifs-muted",
+      "declaration": "#71617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 137,
+      "variable": "--objectifs-structure",
+      "declaration": "#d9cee8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 138,
+      "variable": "--objectifs-accent",
+      "declaration": "#6950d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 139,
+      "variable": "--objectifs-tint",
+      "declaration": "#eee7fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 140,
+      "variable": "--objectifs-succes",
+      "declaration": "#246e50;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 141,
+      "variable": "--objectifs-erreur",
+      "declaration": "#b4483b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 142,
+      "variable": "--objectifs-attention",
+      "declaration": "#a06321;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 143,
+      "variable": "--objectifs-cible",
+      "declaration": "#59369c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 144,
+      "variable": "--objectifs-cible-fond",
+      "declaration": "#d9ccf2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 145,
+      "variable": "--objectifs-cible-trait",
+      "declaration": "#b39ad9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 146,
+      "variable": "--objectifs-vert-fond",
+      "declaration": "#acdcbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 147,
+      "variable": "--objectifs-vert-trait",
+      "declaration": "#7dbd9d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 148,
+      "variable": "--objectifs-vert-texte",
+      "declaration": "#185e42;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 149,
+      "variable": "--objectifs-rouge-fond",
+      "declaration": "#edb6a9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 150,
+      "variable": "--objectifs-rouge-trait",
+      "declaration": "#d99787;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 151,
+      "variable": "--objectifs-rouge-texte",
+      "declaration": "#823125;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 152,
+      "variable": "--objectifs-orange-fond",
+      "declaration": "#f7cd92;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 153,
+      "variable": "--objectifs-orange-trait",
+      "declaration": "#dfad67;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 154,
+      "variable": "--objectifs-orange-texte",
+      "declaration": "#7c4712;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 155,
+      "variable": "--objectifs-neutre-fond",
+      "declaration": "#e5dfef;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 156,
+      "variable": "--objectifs-neutre-trait",
+      "declaration": "#c9bbda;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 157,
+      "variable": "--objectifs-neutre",
+      "declaration": "#6e577f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 158,
+      "variable": "--objectifs-piste",
+      "declaration": "#e9e5f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 159,
+      "variable": "--objectifs-ombre",
+      "declaration": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 630,
+      "variable": "--objectifs-donnee-fond",
+      "declaration": "var(--objectifs-neutre-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 631,
+      "variable": "--objectifs-donnee-bord",
+      "declaration": "var(--objectifs-neutre-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 632,
+      "variable": "--objectifs-donnee-texte",
+      "declaration": "var(--objectifs-neutre);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 649,
+      "variable": "--objectifs-donnee-fond",
+      "declaration": "var(--objectifs-cible-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 650,
+      "variable": "--objectifs-donnee-bord",
+      "declaration": "var(--objectifs-cible-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 651,
+      "variable": "--objectifs-donnee-texte",
+      "declaration": "var(--objectifs-cible);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 654,
+      "variable": "--objectifs-donnee-fond",
+      "declaration": "var(--objectifs-vert-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 655,
+      "variable": "--objectifs-donnee-bord",
+      "declaration": "var(--objectifs-vert-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 656,
+      "variable": "--objectifs-donnee-texte",
+      "declaration": "var(--objectifs-vert-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 659,
+      "variable": "--objectifs-donnee-fond",
+      "declaration": "var(--objectifs-rouge-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 660,
+      "variable": "--objectifs-donnee-bord",
+      "declaration": "var(--objectifs-rouge-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 661,
+      "variable": "--objectifs-donnee-texte",
+      "declaration": "var(--objectifs-rouge-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 664,
+      "variable": "--objectifs-donnee-fond",
+      "declaration": "var(--objectifs-orange-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 665,
+      "variable": "--objectifs-donnee-bord",
+      "declaration": "var(--objectifs-orange-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "ligne": 666,
+      "variable": "--objectifs-donnee-texte",
+      "declaration": "var(--objectifs-orange-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 4,
+      "variable": "--pi-ink",
+      "declaration": "#243552;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 5,
+      "variable": "--pi-muted",
+      "declaration": "#586b85;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 6,
+      "variable": "--pi-panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 7,
+      "variable": "--pi-soft",
+      "declaration": "#f0f5fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 8,
+      "variable": "--pi-edge",
+      "declaration": "#c8d5e3;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 9,
+      "variable": "--pi-cyan",
+      "declaration": "#14798b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 10,
+      "variable": "--pi-cyan-bg",
+      "declaration": "#e4f2f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 11,
+      "variable": "--pi-blue",
+      "declaration": "#3864a6;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 12,
+      "variable": "--pi-blue-bg",
+      "declaration": "#eaf0fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 13,
+      "variable": "--pi-wire",
+      "declaration": "#8eacbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 14,
+      "variable": "--pi-amber",
+      "declaration": "#8b5117;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 19,
+      "variable": "--pi-ink",
+      "declaration": "#edf3ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 20,
+      "variable": "--pi-muted",
+      "declaration": "#afbed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 21,
+      "variable": "--pi-panel",
+      "declaration": "#14243d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 22,
+      "variable": "--pi-soft",
+      "declaration": "#182c45;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 23,
+      "variable": "--pi-edge",
+      "declaration": "#3a506b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 24,
+      "variable": "--pi-cyan",
+      "declaration": "#7bd5dd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 25,
+      "variable": "--pi-cyan-bg",
+      "declaration": "#193b48;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 26,
+      "variable": "--pi-blue",
+      "declaration": "#a6c3ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 27,
+      "variable": "--pi-blue-bg",
+      "declaration": "#233a5c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 28,
+      "variable": "--pi-wire",
+      "declaration": "#496d89;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 29,
+      "variable": "--pi-amber",
+      "declaration": "#f1b978;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-parties.css",
+      "ligne": 754,
+      "variable": "--modal-size",
+      "declaration": "72rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 384,
+      "variable": "--perim-panel",
+      "declaration": "#1a2942;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 385,
+      "variable": "--perim-soft",
+      "declaration": "#202e49;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 386,
+      "variable": "--perim-ink",
+      "declaration": "#edf2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 387,
+      "variable": "--perim-muted",
+      "declaration": "#b6bfd4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 388,
+      "variable": "--perim-edge",
+      "declaration": "#3c4b69;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 389,
+      "variable": "--perim-accent",
+      "declaration": "#b39afc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 390,
+      "variable": "--perim-tint",
+      "declaration": "#343354;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 391,
+      "variable": "--perim-wire",
+      "declaration": "#8b79c3;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 392,
+      "variable": "--perim-dots",
+      "declaration": "#34405a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 393,
+      "variable": "--perim-orange",
+      "declaration": "#f5bc6e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 394,
+      "variable": "--perim-red",
+      "declaration": "#ff9b8f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 395,
+      "variable": "--perim-green",
+      "declaration": "#7bd5b2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 396,
+      "variable": "--perim-shadow",
+      "declaration": "0 4px 18px rgb(0 0 0 / 15%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 401,
+      "variable": "--perim-panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 402,
+      "variable": "--perim-soft",
+      "declaration": "#f7f5fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 403,
+      "variable": "--perim-ink",
+      "declaration": "#28253f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 404,
+      "variable": "--perim-muted",
+      "declaration": "#6e617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 405,
+      "variable": "--perim-edge",
+      "declaration": "#ddd4ed;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 406,
+      "variable": "--perim-accent",
+      "declaration": "#6c49c4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 407,
+      "variable": "--perim-tint",
+      "declaration": "#ece5fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 408,
+      "variable": "--perim-wire",
+      "declaration": "#b9a7dc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 409,
+      "variable": "--perim-dots",
+      "declaration": "#dcd5eb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 410,
+      "variable": "--perim-orange",
+      "declaration": "#a5651d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 411,
+      "variable": "--perim-red",
+      "declaration": "#b7493e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 412,
+      "variable": "--perim-green",
+      "declaration": "#267e60;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "ligne": 413,
+      "variable": "--perim-shadow",
+      "declaration": "0 4px 7px rgb(48 31 85 / 4%), 0 12px 25px -15px rgb(48 31 85 / 23%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 3,
+      "variable": "--page",
+      "declaration": "#f0f1fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 4,
+      "variable": "--panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 5,
+      "variable": "--soft",
+      "declaration": "#f8f5fe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 6,
+      "variable": "--row",
+      "declaration": "#fcfbff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 7,
+      "variable": "--ink",
+      "declaration": "#25213d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 8,
+      "variable": "--muted",
+      "declaration": "#71617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 9,
+      "variable": "--edge",
+      "declaration": "#d9cee8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 10,
+      "variable": "--accent",
+      "declaration": "#6950d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 11,
+      "variable": "--tint",
+      "declaration": "#eee7fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 12,
+      "variable": "--teal",
+      "declaration": "#1c6d5d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 13,
+      "variable": "--teal-bg",
+      "declaration": "#e0f0e9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 14,
+      "variable": "--green",
+      "declaration": "#246e50;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 15,
+      "variable": "--green-bg",
+      "declaration": "#acdcbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 16,
+      "variable": "--green-ink",
+      "declaration": "#185e42;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 17,
+      "variable": "--amber",
+      "declaration": "#90571f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 18,
+      "variable": "--amber-bg",
+      "declaration": "#f7cd92;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 19,
+      "variable": "--amber-ink",
+      "declaration": "#7c4712;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 20,
+      "variable": "--red",
+      "declaration": "#b4483b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 21,
+      "variable": "--red-bg",
+      "declaration": "#edb6a9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 22,
+      "variable": "--red-ink",
+      "declaration": "#823125;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 23,
+      "variable": "--blue",
+      "declaration": "#37639d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 24,
+      "variable": "--blue-bg",
+      "declaration": "#e4ecf9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 25,
+      "variable": "--track",
+      "declaration": "#e9e5f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 26,
+      "variable": "--shadow",
+      "declaration": "0 3px 6px rgb(37 31 85 / 4%), 0 12px 24px -12px rgb(55 44 100 / 18%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 30,
+      "variable": "--page",
+      "declaration": "#0c1428;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 31,
+      "variable": "--panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 32,
+      "variable": "--soft",
+      "declaration": "#172841;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 33,
+      "variable": "--row",
+      "declaration": "#14243d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 34,
+      "variable": "--ink",
+      "declaration": "#edf2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 35,
+      "variable": "--muted",
+      "declaration": "#b1bed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 36,
+      "variable": "--edge",
+      "declaration": "#3b4b69;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 37,
+      "variable": "--accent",
+      "declaration": "#b39afc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 38,
+      "variable": "--tint",
+      "declaration": "#343354;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 39,
+      "variable": "--teal",
+      "declaration": "#7bd5b2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 40,
+      "variable": "--teal-bg",
+      "declaration": "#21433f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 41,
+      "variable": "--green",
+      "declaration": "#72d1a4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 42,
+      "variable": "--green-bg",
+      "declaration": "#0d6b3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 43,
+      "variable": "--green-ink",
+      "declaration": "#effff4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 44,
+      "variable": "--amber",
+      "declaration": "#f1ba72;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 45,
+      "variable": "--amber-bg",
+      "declaration": "#9b4a10;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 46,
+      "variable": "--amber-ink",
+      "declaration": "#fff5e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 47,
+      "variable": "--red",
+      "declaration": "#ff9b8f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 48,
+      "variable": "--red-bg",
+      "declaration": "#972d31;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 49,
+      "variable": "--red-ink",
+      "declaration": "#fff5f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 50,
+      "variable": "--blue",
+      "declaration": "#99b9f0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 51,
+      "variable": "--blue-bg",
+      "declaration": "#233a5c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 52,
+      "variable": "--track",
+      "declaration": "#2d3c56;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 53,
+      "variable": "--shadow",
+      "declaration": "0 5px 22px rgb(0 0 0 / 15%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 58,
+      "variable": "--tone-p",
+      "declaration": "#37649e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 59,
+      "variable": "--tone-e",
+      "declaration": "#995916;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 60,
+      "variable": "--tone-s",
+      "declaration": "#087663;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 61,
+      "variable": "--tone-t",
+      "declaration": "#4665bd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 62,
+      "variable": "--tone-env",
+      "declaration": "#477536;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 63,
+      "variable": "--tone-l",
+      "declaration": "#b7453d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 64,
+      "variable": "--stage-line",
+      "declaration": "#9aaec6;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 67,
+      "variable": "--tone-p",
+      "declaration": "#8ab7ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 68,
+      "variable": "--tone-e",
+      "declaration": "#ffc06d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 69,
+      "variable": "--tone-s",
+      "declaration": "#69d7b6;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 70,
+      "variable": "--tone-t",
+      "declaration": "#9fb2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 71,
+      "variable": "--tone-env",
+      "declaration": "#a3cc7a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 72,
+      "variable": "--tone-l",
+      "declaration": "#ff978a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 73,
+      "variable": "--stage-line",
+      "declaration": "#526887;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 76,
+      "variable": "--tone",
+      "declaration": "var(--tone-p);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 79,
+      "variable": "--tone",
+      "declaration": "var(--tone-e);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 82,
+      "variable": "--tone",
+      "declaration": "var(--tone-s);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 85,
+      "variable": "--tone",
+      "declaration": "var(--tone-t);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 88,
+      "variable": "--tone",
+      "declaration": "var(--tone-env);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 91,
+      "variable": "--tone",
+      "declaration": "var(--tone-l);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 711,
+      "variable": "--tone",
+      "declaration": "var(--amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1543,
+      "variable": "--pestel-count",
+      "declaration": "1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1546,
+      "variable": "--pestel-count",
+      "declaration": "1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1549,
+      "variable": "--pestel-count",
+      "declaration": "2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1552,
+      "variable": "--pestel-count",
+      "declaration": "3;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1555,
+      "variable": "--pestel-count",
+      "declaration": "4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1558,
+      "variable": "--pestel-count",
+      "declaration": "5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1561,
+      "variable": "--pestel-count",
+      "declaration": "6;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1564,
+      "variable": "--pestel-index",
+      "declaration": "0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1567,
+      "variable": "--pestel-index",
+      "declaration": "1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1570,
+      "variable": "--pestel-index",
+      "declaration": "2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1573,
+      "variable": "--pestel-index",
+      "declaration": "3;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1576,
+      "variable": "--pestel-index",
+      "declaration": "4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-pestel.css",
+      "ligne": 1579,
+      "variable": "--pestel-index",
+      "declaration": "5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 3,
+      "variable": "--compact-ink",
+      "declaration": "#243552;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 4,
+      "variable": "--compact-muted",
+      "declaration": "#586b85;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 5,
+      "variable": "--compact-edge",
+      "declaration": "#c8d5e3;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 6,
+      "variable": "--compact-accent",
+      "declaration": "#14798b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 7,
+      "variable": "--compact-active",
+      "declaration": "#e4f2f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 8,
+      "variable": "--compact-hover",
+      "declaration": "#edf5f8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 9,
+      "variable": "--panel",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 10,
+      "variable": "--soft",
+      "declaration": "var(--suivi-surface-douce);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 11,
+      "variable": "--pr-blue",
+      "declaration": "#3168ac;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 12,
+      "variable": "--pr-blue-bg",
+      "declaration": "#e9f0fc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 13,
+      "variable": "--pr-green",
+      "declaration": "#197f72;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 14,
+      "variable": "--pr-green-bg",
+      "declaration": "#e6f5f0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 15,
+      "variable": "--pr-violet",
+      "declaration": "#7964ad;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 16,
+      "variable": "--pr-violet-bg",
+      "declaration": "#f0ebf9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 20,
+      "variable": "--compact-ink",
+      "declaration": "#edf3ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 21,
+      "variable": "--compact-muted",
+      "declaration": "#afbed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 22,
+      "variable": "--compact-edge",
+      "declaration": "#3a506b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 23,
+      "variable": "--compact-accent",
+      "declaration": "#7bd5dd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 24,
+      "variable": "--compact-active",
+      "declaration": "#193b48;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 25,
+      "variable": "--compact-hover",
+      "declaration": "#1b344c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 26,
+      "variable": "--pr-blue",
+      "declaration": "#9bc4ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 27,
+      "variable": "--pr-blue-bg",
+      "declaration": "#1c3553;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 28,
+      "variable": "--pr-green",
+      "declaration": "#79dac5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 29,
+      "variable": "--pr-green-bg",
+      "declaration": "#163b3a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 30,
+      "variable": "--pr-violet",
+      "declaration": "#c7b5ed;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 31,
+      "variable": "--pr-violet-bg",
+      "declaration": "#302e48;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 88,
+      "variable": "--pr-type",
+      "declaration": "#9b5919;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 89,
+      "variable": "--pr-type-bg",
+      "declaration": "#fff1df;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 92,
+      "variable": "--pr-type",
+      "declaration": "#b13f3a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 93,
+      "variable": "--pr-type-bg",
+      "declaration": "#fbeae8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 96,
+      "variable": "--pr-type",
+      "declaration": "#586b85;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 97,
+      "variable": "--pr-type-bg",
+      "declaration": "var(--soft);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 255,
+      "variable": "--pr-type",
+      "declaration": "var(--pr-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 256,
+      "variable": "--pr-type-bg",
+      "declaration": "var(--pr-blue-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 259,
+      "variable": "--pr-type",
+      "declaration": "var(--pr-green);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 260,
+      "variable": "--pr-type-bg",
+      "declaration": "var(--pr-green-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 263,
+      "variable": "--pr-type",
+      "declaration": "var(--pr-violet);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 264,
+      "variable": "--pr-type-bg",
+      "declaration": "var(--pr-violet-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 825,
+      "variable": "--pr-type",
+      "declaration": "#f0b875;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 826,
+      "variable": "--pr-type-bg",
+      "declaration": "#45352b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 829,
+      "variable": "--pr-type",
+      "declaration": "#ff9b8f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 830,
+      "variable": "--pr-type-bg",
+      "declaration": "#442d34;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 833,
+      "variable": "--pr-type",
+      "declaration": "#afbed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-processus.css",
+      "ligne": 851,
+      "variable": "--modal-size",
+      "declaration": "72rem;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 4,
+      "variable": "--rfs-panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 5,
+      "variable": "--rfs-soft",
+      "declaration": "#172841;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 6,
+      "variable": "--rfs-row",
+      "declaration": "#14243d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 7,
+      "variable": "--rfs-ink",
+      "declaration": "#edf2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 8,
+      "variable": "--rfs-muted",
+      "declaration": "#b1bed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 9,
+      "variable": "--rfs-edge",
+      "declaration": "#3b4b69;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 10,
+      "variable": "--rfs-accent",
+      "declaration": "#b39afc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 11,
+      "variable": "--rfs-tint",
+      "declaration": "#343354;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 12,
+      "variable": "--rfs-green",
+      "declaration": "#72d1a4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 13,
+      "variable": "--rfs-green-bg",
+      "declaration": "#0d6b3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 14,
+      "variable": "--rfs-green-edge",
+      "declaration": "#35c985;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 15,
+      "variable": "--rfs-green-ink",
+      "declaration": "#effff4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 16,
+      "variable": "--rfs-amber",
+      "declaration": "#f1ba72;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 17,
+      "variable": "--rfs-amber-tint",
+      "declaration": "#4a382b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 18,
+      "variable": "--rfs-amber-edge",
+      "declaration": "#92734f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 19,
+      "variable": "--rfs-teal",
+      "declaration": "#7bd5b2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 20,
+      "variable": "--rfs-teal-tint",
+      "declaration": "#21433f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 21,
+      "variable": "--rfs-teal-edge",
+      "declaration": "#467e6b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 22,
+      "variable": "--rfs-shadow",
+      "declaration": "0 5px 24px rgb(0 0 0 / 18%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 26,
+      "variable": "--rfs-panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 27,
+      "variable": "--rfs-soft",
+      "declaration": "#f8f5fe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 28,
+      "variable": "--rfs-row",
+      "declaration": "#fcfbff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 29,
+      "variable": "--rfs-ink",
+      "declaration": "#25213d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 30,
+      "variable": "--rfs-muted",
+      "declaration": "#71617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 31,
+      "variable": "--rfs-edge",
+      "declaration": "#d9cee8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 32,
+      "variable": "--rfs-accent",
+      "declaration": "#6950d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 33,
+      "variable": "--rfs-tint",
+      "declaration": "#eee7fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 34,
+      "variable": "--rfs-green",
+      "declaration": "#246e50;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 35,
+      "variable": "--rfs-green-bg",
+      "declaration": "#acdcbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 36,
+      "variable": "--rfs-green-edge",
+      "declaration": "#7dbd9d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 37,
+      "variable": "--rfs-green-ink",
+      "declaration": "#185e42;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 38,
+      "variable": "--rfs-amber",
+      "declaration": "#90571f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 39,
+      "variable": "--rfs-amber-tint",
+      "declaration": "#fbebd4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 40,
+      "variable": "--rfs-amber-edge",
+      "declaration": "#e4c8a1;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 41,
+      "variable": "--rfs-teal",
+      "declaration": "#1c6d5d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 42,
+      "variable": "--rfs-teal-tint",
+      "declaration": "#dcefe7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 43,
+      "variable": "--rfs-teal-edge",
+      "declaration": "#a7cdbd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 44,
+      "variable": "--rfs-shadow",
+      "declaration": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 91,
+      "variable": "--rfs-ton",
+      "declaration": "var(--rfs-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 92,
+      "variable": "--rfs-ton-fond",
+      "declaration": "var(--rfs-tint);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 93,
+      "variable": "--rfs-ton-bord",
+      "declaration": "var(--rfs-edge);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 102,
+      "variable": "--rfs-ton",
+      "declaration": "var(--rfs-teal);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 103,
+      "variable": "--rfs-ton-fond",
+      "declaration": "var(--rfs-teal-tint);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 104,
+      "variable": "--rfs-ton-bord",
+      "declaration": "var(--rfs-teal-edge);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 107,
+      "variable": "--rfs-ton",
+      "declaration": "var(--rfs-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 108,
+      "variable": "--rfs-ton-fond",
+      "declaration": "var(--rfs-amber-tint);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "ligne": 109,
+      "variable": "--rfs-ton-bord",
+      "declaration": "var(--rfs-amber-edge);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 3,
+      "variable": "--page",
+      "declaration": "#f0f1fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 4,
+      "variable": "--panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 5,
+      "variable": "--soft",
+      "declaration": "#f8f5fe;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 6,
+      "variable": "--row",
+      "declaration": "#fcfbff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 7,
+      "variable": "--ink",
+      "declaration": "#25213d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 8,
+      "variable": "--muted",
+      "declaration": "#71617f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 9,
+      "variable": "--edge",
+      "declaration": "#d9cee8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 10,
+      "variable": "--accent",
+      "declaration": "#6950d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 11,
+      "variable": "--tint",
+      "declaration": "#eee7fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 12,
+      "variable": "--teal",
+      "declaration": "#1c6d5d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 13,
+      "variable": "--teal-bg",
+      "declaration": "#e0f0e9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 14,
+      "variable": "--green",
+      "declaration": "#246e50;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 15,
+      "variable": "--green-bg",
+      "declaration": "#acdcbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 16,
+      "variable": "--green-ink",
+      "declaration": "#185e42;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 17,
+      "variable": "--amber",
+      "declaration": "#90571f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 18,
+      "variable": "--amber-bg",
+      "declaration": "#f7cd92;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 19,
+      "variable": "--amber-ink",
+      "declaration": "#7c4712;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 20,
+      "variable": "--red",
+      "declaration": "#b4483b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 21,
+      "variable": "--red-bg",
+      "declaration": "#edb6a9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 22,
+      "variable": "--red-ink",
+      "declaration": "#823125;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 23,
+      "variable": "--blue",
+      "declaration": "#37639d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 24,
+      "variable": "--blue-bg",
+      "declaration": "#e4ecf9;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 25,
+      "variable": "--track",
+      "declaration": "#e9e5f2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 26,
+      "variable": "--shadow",
+      "declaration": "0 3px 6px rgb(37 31 85 / 4%), 0 12px 24px -12px rgb(55 44 100 / 18%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 30,
+      "variable": "--page",
+      "declaration": "#0c1428;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 31,
+      "variable": "--panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 32,
+      "variable": "--soft",
+      "declaration": "#172841;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 33,
+      "variable": "--row",
+      "declaration": "#14243d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 34,
+      "variable": "--ink",
+      "declaration": "#edf2ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 35,
+      "variable": "--muted",
+      "declaration": "#b1bed4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 36,
+      "variable": "--edge",
+      "declaration": "#3b4b69;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 37,
+      "variable": "--accent",
+      "declaration": "#b39afc;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 38,
+      "variable": "--tint",
+      "declaration": "#343354;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 39,
+      "variable": "--teal",
+      "declaration": "#7bd5b2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 40,
+      "variable": "--teal-bg",
+      "declaration": "#21433f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 41,
+      "variable": "--green",
+      "declaration": "#72d1a4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 42,
+      "variable": "--green-bg",
+      "declaration": "#0d6b3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 43,
+      "variable": "--green-ink",
+      "declaration": "#effff4;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 44,
+      "variable": "--amber",
+      "declaration": "#f1ba72;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 45,
+      "variable": "--amber-bg",
+      "declaration": "#9b4a10;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 46,
+      "variable": "--amber-ink",
+      "declaration": "#fff5e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 47,
+      "variable": "--red",
+      "declaration": "#ff9b8f;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 48,
+      "variable": "--red-bg",
+      "declaration": "#972d31;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 49,
+      "variable": "--red-ink",
+      "declaration": "#fff5f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 50,
+      "variable": "--blue",
+      "declaration": "#99b9f0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 51,
+      "variable": "--blue-bg",
+      "declaration": "#233a5c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 52,
+      "variable": "--track",
+      "declaration": "#2d3c56;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 53,
+      "variable": "--shadow",
+      "declaration": "0 5px 22px rgb(0 0 0 / 15%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 56,
+      "variable": "--matrix-line",
+      "declaration": "#b8c5d8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 57,
+      "variable": "--matrix-dots",
+      "declaration": "#d5d7e8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 58,
+      "variable": "--sector-green",
+      "declaration": "#087b62;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 59,
+      "variable": "--sector-amber",
+      "declaration": "#9c590d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 60,
+      "variable": "--sector-blue",
+      "declaration": "#285cbf;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 61,
+      "variable": "--sector-red",
+      "declaration": "#bd3c39;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 62,
+      "variable": "--sector-green-bg",
+      "declaration": "#e8f6f0;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 63,
+      "variable": "--sector-amber-bg",
+      "declaration": "#fcf2e2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 64,
+      "variable": "--sector-blue-bg",
+      "declaration": "#eaf0ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 65,
+      "variable": "--sector-red-bg",
+      "declaration": "#fbeceb;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 66,
+      "variable": "--hero",
+      "declaration": "#f0f6f7;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 69,
+      "variable": "--matrix-line",
+      "declaration": "#46617c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 70,
+      "variable": "--matrix-dots",
+      "declaration": "#2b425e;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 71,
+      "variable": "--sector-green",
+      "declaration": "#70dbb8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 72,
+      "variable": "--sector-amber",
+      "declaration": "#ffc071;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 73,
+      "variable": "--sector-blue",
+      "declaration": "#8eafff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 74,
+      "variable": "--sector-red",
+      "declaration": "#ff9790;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 75,
+      "variable": "--sector-green-bg",
+      "declaration": "#123f3a;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 76,
+      "variable": "--sector-amber-bg",
+      "declaration": "#423329;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 77,
+      "variable": "--sector-blue-bg",
+      "declaration": "#1d355d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 78,
+      "variable": "--sector-red-bg",
+      "declaration": "#442a38;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 79,
+      "variable": "--hero",
+      "declaration": "#142c3d;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 206,
+      "variable": "--swot-centre-size",
+      "declaration": "184px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 207,
+      "variable": "--swot-centre-clearance",
+      "declaration": "calc(var(--swot-centre-size) / 2 + 20px);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 208,
+      "variable": "--swot-matrix-gap",
+      "declaration": "60px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 209,
+      "variable": "--swot-inner-safe",
+      "declaration": "70px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 358,
+      "variable": "--wire",
+      "declaration": "var(--sector-green);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 361,
+      "variable": "--wire",
+      "declaration": "var(--sector-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 364,
+      "variable": "--wire",
+      "declaration": "var(--sector-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 367,
+      "variable": "--wire",
+      "declaration": "var(--sector-red);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 386,
+      "variable": "--sector",
+      "declaration": "var(--sector-green);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 387,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-green-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 388,
+      "variable": "--swot-cut-x",
+      "declaration": "calc(100% + var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 389,
+      "variable": "--swot-cut-y",
+      "declaration": "calc(100% + var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 414,
+      "variable": "--sector",
+      "declaration": "var(--sector-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 415,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-amber-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 416,
+      "variable": "--swot-cut-x",
+      "declaration": "calc(0px - var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 419,
+      "variable": "--sector",
+      "declaration": "var(--sector-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 420,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-blue-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 421,
+      "variable": "--swot-cut-y",
+      "declaration": "calc(0px - var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 424,
+      "variable": "--sector",
+      "declaration": "var(--sector-red);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 425,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-red-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 426,
+      "variable": "--swot-cut-x",
+      "declaration": "calc(0px - var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 427,
+      "variable": "--swot-cut-y",
+      "declaration": "calc(0px - var(--swot-matrix-gap) / 2);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 643,
+      "variable": "--hub",
+      "declaration": "var(--teal);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 719,
+      "variable": "--hub",
+      "declaration": "var(--blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 799,
+      "variable": "--sector",
+      "declaration": "var(--sector-green);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 800,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-green-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 803,
+      "variable": "--sector",
+      "declaration": "var(--sector-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 804,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-amber-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 807,
+      "variable": "--sector",
+      "declaration": "var(--sector-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 808,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-blue-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 811,
+      "variable": "--sector",
+      "declaration": "var(--sector-red);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 812,
+      "variable": "--sector-bg",
+      "declaration": "var(--sector-red-bg);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1116,
+      "variable": "--swot-centre-size",
+      "declaration": "134px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1117,
+      "variable": "--swot-matrix-gap",
+      "declaration": "46px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1118,
+      "variable": "--swot-inner-safe",
+      "declaration": "52px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1240,
+      "variable": "--swot-centre-size",
+      "declaration": "120px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1241,
+      "variable": "--swot-matrix-gap",
+      "declaration": "13px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-swot.css",
+      "ligne": 1242,
+      "variable": "--swot-inner-safe",
+      "declaration": "0px;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 3,
+      "variable": "--task-panel",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 4,
+      "variable": "--task-soft",
+      "declaration": "#f4f6fd;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 5,
+      "variable": "--task-alt",
+      "declaration": "#edf1fa;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 6,
+      "variable": "--task-ink",
+      "declaration": "#282a45;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 7,
+      "variable": "--task-muted",
+      "declaration": "#58637c;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 8,
+      "variable": "--task-edge",
+      "declaration": "#b6c6df;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 9,
+      "variable": "--task-blue",
+      "declaration": "#315fa8;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 10,
+      "variable": "--task-teal",
+      "declaration": "#17796b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 11,
+      "variable": "--task-amber",
+      "declaration": "#a85a0b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 12,
+      "variable": "--task-red",
+      "declaration": "#ba3932;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 13,
+      "variable": "--task-gray",
+      "declaration": "#697589;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 14,
+      "variable": "--task-shadow",
+      "declaration": "0 2px 3px rgb(31 47 80 / 7%), 0 10px 22px -16px rgb(35 48 87 / 34%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 19,
+      "variable": "--task-panel",
+      "declaration": "#102039;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 20,
+      "variable": "--task-soft",
+      "declaration": "#172841;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 21,
+      "variable": "--task-alt",
+      "declaration": "#1c2f4b;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 22,
+      "variable": "--task-ink",
+      "declaration": "#edf3ff;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 23,
+      "variable": "--task-muted",
+      "declaration": "#b2c2da;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 24,
+      "variable": "--task-edge",
+      "declaration": "#4b6482;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 25,
+      "variable": "--task-blue",
+      "declaration": "#91b8f5;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 26,
+      "variable": "--task-teal",
+      "declaration": "#6cdbba;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 27,
+      "variable": "--task-amber",
+      "declaration": "#ffbb63;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 28,
+      "variable": "--task-red",
+      "declaration": "#ff9585;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 29,
+      "variable": "--task-gray",
+      "declaration": "#b2bfd2;"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 30,
+      "variable": "--task-shadow",
+      "declaration": "0 6px 22px rgb(0 0 0 / 17%);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 33,
+      "variable": "--task-tone",
+      "declaration": "var(--task-amber);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 34,
+      "variable": "--task-fill",
+      "declaration": "linear-gradient(125deg, #b96a1d, #92450c);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 37,
+      "variable": "--task-tone",
+      "declaration": "var(--task-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 38,
+      "variable": "--task-fill",
+      "declaration": "linear-gradient(125deg, #4976bb, #2d5391);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 41,
+      "variable": "--task-tone",
+      "declaration": "var(--task-teal);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 42,
+      "variable": "--task-fill",
+      "declaration": "linear-gradient(125deg, #228d76, #12634e);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 45,
+      "variable": "--task-tone",
+      "declaration": "var(--task-red);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 46,
+      "variable": "--task-fill",
+      "declaration": "linear-gradient(125deg, #c34b3b, #a42c2a);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 49,
+      "variable": "--task-tone",
+      "declaration": "var(--task-gray);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 50,
+      "variable": "--task-fill",
+      "declaration": "linear-gradient(125deg, #66758e, #49566b);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 117,
+      "variable": "--task-tone",
+      "declaration": "var(--task-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 485,
+      "variable": "--task-tone",
+      "declaration": "var(--task-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon-taches.css",
+      "ligne": 587,
+      "variable": "--task-tone",
+      "declaration": "var(--task-blue);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 14,
+      "variable": "--neon-signature",
+      "declaration": "linear-gradient(115deg, var(--neon-violet), var(--neon-rose) 65%, var(--neon-orange));"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 15,
+      "variable": "--suivi-ombre",
+      "declaration": "0 4px 18px color-mix(in srgb, var(--suivi-encre) 7%, transparent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 16,
+      "variable": "--suivi-ombre-haute",
+      "declaration": "0 18px 48px color-mix(in srgb, var(--suivi-encre) 16%, transparent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 17,
+      "variable": "--suivi-turquoise",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 18,
+      "variable": "--suivi-turquoise-nav",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 19,
+      "variable": "--suivi-marine",
+      "declaration": "var(--neon-titre);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 76,
+      "variable": "--table-border-color",
+      "declaration": "var(--suivi-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 103,
+      "variable": "--tdb-verre-haut",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 104,
+      "variable": "--tdb-verre-milieu",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 105,
+      "variable": "--tdb-verre-bas",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 106,
+      "variable": "--tdb-verre-bord",
+      "declaration": "var(--suivi-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 107,
+      "variable": "--tdb-lueur",
+      "declaration": "var(--neon-violet);"
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "ligne": 108,
+      "variable": "--tdb-rail",
+      "declaration": "color-mix(in srgb, var(--mantine-color-text) 12%, transparent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 26,
+      "variable": "--grc-colonne-min",
+      "declaration": "14.375rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 27,
+      "variable": "--grc-jour-min",
+      "declaration": "7.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 28,
+      "variable": "--grc-jour-hauteur",
+      "declaration": "6.875rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 29,
+      "variable": "--grc-planning-min",
+      "declaration": "53.125rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 30,
+      "variable": "--grc-canevas-hauteur",
+      "declaration": "40.625rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 31,
+      "variable": "--grc-canevas-min",
+      "declaration": "25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 32,
+      "variable": "--grc-canevas-mobile",
+      "declaration": "29.375rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 33,
+      "variable": "--suivi-entete-h",
+      "declaration": "3.75rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 34,
+      "variable": "--suivi-nav-l",
+      "declaration": "15.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 35,
+      "variable": "--suivi-largeur-formulaire",
+      "declaration": "45rem; /* formulaires simples : 720 px */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 36,
+      "variable": "--suivi-largeur-connexion",
+      "declaration": "36rem; /* panneau de connexion : 576 px */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 37,
+      "variable": "--suivi-ecart-onde",
+      "declaration": "3rem; /* connexion : espace entre le titre et la première carte */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 38,
+      "variable": "--suivi-largeur-lecture",
+      "declaration": "75ch; /* textes : environ 75 caractères par ligne */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 39,
+      "variable": "--suivi-champ-xs",
+      "declaration": "8rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 40,
+      "variable": "--suivi-champ-s",
+      "declaration": "12.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 41,
+      "variable": "--suivi-champ-m",
+      "declaration": "16.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 42,
+      "variable": "--suivi-champ-l",
+      "declaration": "26.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 43,
+      "variable": "--suivi-marque",
+      "declaration": "1.875rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 44,
+      "variable": "--suivi-qr",
+      "declaration": "12.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 45,
+      "variable": "--suivi-trait-l",
+      "declaration": "1px;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 46,
+      "variable": "--suivi-trait-focus",
+      "declaration": "2px;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 47,
+      "variable": "--grc-zone-hauteur",
+      "declaration": "min(70vh, 42rem); /* zones à défilement propre : timeline, Kanban */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 48,
+      "variable": "--suivi-nav-repliee",
+      "declaration": "4.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 49,
+      "variable": "--suivi-marge-page",
+      "declaration": "clamp(0.75rem, 0.5rem + 1vw, 2.5rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 50,
+      "variable": "--suivi-carte-min",
+      "declaration": "24rem; /* cartes de tableau de bord : 320 à 480 px environ */"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 51,
+      "variable": "--suivi-fiche-l",
+      "declaration": "clamp(26rem, 32vw, 48rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 52,
+      "variable": "--suivi-panneau-l",
+      "declaration": "clamp(20rem, 22vw, 34rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 53,
+      "variable": "--suivi-echelle",
+      "declaration": "1;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 55,
+      "variable": "--carte-panneau-l",
+      "declaration": "clamp(14rem, 16vw, 20rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 56,
+      "variable": "--carte-inspecteur-l",
+      "declaration": "clamp(20rem, 24vw, 28rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 57,
+      "variable": "--carte-hauteur",
+      "declaration": "clamp(30rem, calc(100dvh - 16rem), 90rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 58,
+      "variable": "--carte-hauteur-mobile",
+      "declaration": "max(26rem, 68dvh);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 59,
+      "variable": "--carte-hauteur-plein-ecran",
+      "declaration": "calc(100dvh - 12rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 60,
+      "variable": "--carte-relation-l",
+      "declaration": "6rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 61,
+      "variable": "--carte-mini-l",
+      "declaration": "11.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 62,
+      "variable": "--carte-mini-h",
+      "declaration": "7.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 63,
+      "variable": "--carte-echantillon",
+      "declaration": "1.375rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 64,
+      "variable": "--carte-icone",
+      "declaration": "1.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 65,
+      "variable": "--carte-recherche",
+      "declaration": "17rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 66,
+      "variable": "--carte-vide-icone",
+      "declaration": "2.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 69,
+      "variable": "--parcours-toile-min",
+      "declaration": "62rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 70,
+      "variable": "--parcours-carte-l",
+      "declaration": "min(22rem, 92%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 71,
+      "variable": "--parcours-texte",
+      "declaration": "0.9375rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 72,
+      "variable": "--parcours-texte-enfant",
+      "declaration": "0.8125rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 73,
+      "variable": "--parcours-titre",
+      "declaration": "1.0625rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 74,
+      "variable": "--parcours-halo-duree",
+      "declaration": "950ms;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 75,
+      "variable": "--ebios-toile-min",
+      "declaration": "40rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 76,
+      "variable": "--ebios-cercle-largeur",
+      "declaration": "20rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 90,
+      "variable": "--suivi-echelle",
+      "declaration": "0.9;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 93,
+      "variable": "--suivi-echelle",
+      "declaration": "1;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 96,
+      "variable": "--suivi-echelle",
+      "declaration": "1.15;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 99,
+      "variable": "--suivi-echelle",
+      "declaration": "1.3;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 102,
+      "variable": "--suivi-echelle",
+      "declaration": "1.5;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 106,
+      "variable": "--suivi-echelle",
+      "declaration": "1.15;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 111,
+      "variable": "--suivi-echelle",
+      "declaration": "1.3;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 116,
+      "variable": "--suivi-echelle",
+      "declaration": "1.5;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 375,
+      "variable": "--mantine-spacing-xs",
+      "declaration": "0.375rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 376,
+      "variable": "--mantine-spacing-sm",
+      "declaration": "0.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 377,
+      "variable": "--mantine-spacing-md",
+      "declaration": "0.75rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 378,
+      "variable": "--mantine-spacing-lg",
+      "declaration": "1rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 381,
+      "variable": "--mantine-spacing-xs",
+      "declaration": "0.625rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 382,
+      "variable": "--mantine-spacing-sm",
+      "declaration": "1rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 383,
+      "variable": "--mantine-spacing-md",
+      "declaration": "1.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 384,
+      "variable": "--mantine-spacing-lg",
+      "declaration": "2rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 521,
+      "variable": "--mantine-color-dimmed",
+      "declaration": "var(--mantine-color-text);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 522,
+      "variable": "--mantine-color-default-border",
+      "declaration": "var(--mantine-color-text);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 523,
+      "variable": "--suivi-trait-l",
+      "declaration": "2px;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 546,
+      "variable": "--suivi-chiffre-taille",
+      "declaration": "3.25rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 583,
+      "variable": "--suivi-entete-h",
+      "declaration": "4.5rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 584,
+      "variable": "--suivi-nav-l",
+      "declaration": "15rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 585,
+      "variable": "--suivi-marque",
+      "declaration": "2.35rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 586,
+      "variable": "--suivi-marge-page",
+      "declaration": "clamp(1rem, 2.35vw, 3rem);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 587,
+      "variable": "--suivi-carte-min",
+      "declaration": "21rem;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 588,
+      "variable": "--suivi-nav-fond",
+      "declaration": "var(--neon-navigation);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 589,
+      "variable": "--suivi-nav-texte",
+      "declaration": "var(--neon-titre);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 590,
+      "variable": "--suivi-nav-secondaire",
+      "declaration": "var(--neon-secondaire);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 591,
+      "variable": "--suivi-nav-active",
+      "declaration": "var(--neon-doux);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 592,
+      "variable": "--suivi-nav-survol",
+      "declaration": "var(--neon-doux);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 593,
+      "variable": "--suivi-nav-repere",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 594,
+      "variable": "--suivi-famille-pilotage",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 595,
+      "variable": "--suivi-famille-organisation",
+      "declaration": "var(--carte-bleu-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 596,
+      "variable": "--suivi-famille-risques",
+      "declaration": "var(--carte-orange-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 597,
+      "variable": "--suivi-famille-conformite",
+      "declaration": "var(--carte-bleu-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 598,
+      "variable": "--suivi-famille-actions",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 599,
+      "variable": "--suivi-famille-resilience",
+      "declaration": "var(--carte-vert-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 600,
+      "variable": "--suivi-famille-documents",
+      "declaration": "var(--neon-accent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 601,
+      "variable": "--suivi-surface-douce",
+      "declaration": "var(--mantine-color-gray-0);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 602,
+      "variable": "--suivi-ombre",
+      "declaration": "0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 603,
+      "variable": "--suivi-ombre-haute",
+      "declaration": "0 18px 54px rgb(27 54 37 / 12%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 604,
+      "variable": "--suivi-motion",
+      "declaration": "180ms;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 605,
+      "variable": "--suivi-motion-entree",
+      "declaration": "360ms;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 606,
+      "variable": "--suivi-ease",
+      "declaration": "cubic-bezier(0.2, 0.7, 0.2, 1);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 609,
+      "variable": "--suivi-surface-douce",
+      "declaration": "var(--mantine-color-dark-6);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 610,
+      "variable": "--suivi-nav-fond",
+      "declaration": "var(--neon-navigation);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 611,
+      "variable": "--suivi-nav-active",
+      "declaration": "var(--neon-doux);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 612,
+      "variable": "--suivi-ombre",
+      "declaration": "0 2px 5px rgb(0 0 0 / 9%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 613,
+      "variable": "--suivi-ombre-haute",
+      "declaration": "0 18px 54px rgb(0 0 0 / 26%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 909,
+      "variable": "--table-border-color",
+      "declaration": "var(--suivi-trait);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1278,
+      "variable": "--mantine-color-text",
+      "declaration": "var(--suivi-nav-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1279,
+      "variable": "--mantine-color-dimmed",
+      "declaration": "var(--suivi-nav-secondaire);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1280,
+      "variable": "--mantine-color-green-text",
+      "declaration": "var(--mantine-color-green-3);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1281,
+      "variable": "--mantine-color-red-text",
+      "declaration": "var(--mantine-color-red-3);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1472,
+      "variable": "--loader-color",
+      "declaration": "var(--suivi-nav-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1583,
+      "variable": "--input-bg",
+      "declaration": "var(--suivi-nav-fond);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1584,
+      "variable": "--input-bd",
+      "declaration": "var(--suivi-nav-active);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1585,
+      "variable": "--input-bd-focus",
+      "declaration": "var(--suivi-nav-repere);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1586,
+      "variable": "--input-color",
+      "declaration": "var(--suivi-nav-texte);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1933,
+      "variable": "--suivi-fond-page",
+      "declaration": "#faf9fc;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1934,
+      "variable": "--suivi-trait",
+      "declaration": "#dce5e9;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1935,
+      "variable": "--suivi-surface-douce",
+      "declaration": "#f5f2fa;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1942,
+      "variable": "--suivi-turquoise",
+      "declaration": "#00a8b0;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1943,
+      "variable": "--suivi-turquoise-nav",
+      "declaration": "#2cc4cb;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 1944,
+      "variable": "--suivi-marine",
+      "declaration": "#142f61;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2090,
+      "variable": "--badge-bg",
+      "declaration": "#c92a2a;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2091,
+      "variable": "--badge-color",
+      "declaration": "#fff;"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2118,
+      "variable": "--tdb-verre-haut",
+      "declaration": "rgb(255 255 255 / 52%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2119,
+      "variable": "--tdb-verre-milieu",
+      "declaration": "rgb(255 255 255 / 28%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2120,
+      "variable": "--tdb-verre-bas",
+      "declaration": "rgb(255 255 255 / 38%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2121,
+      "variable": "--tdb-verre-bord",
+      "declaration": "rgb(255 255 255 / 50%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2122,
+      "variable": "--tdb-reflet-bord",
+      "declaration": "rgb(255 255 255 / 100%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2123,
+      "variable": "--tdb-lumiere",
+      "declaration": "rgb(255 255 255 / 95%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2124,
+      "variable": "--tdb-ombre",
+      "declaration": "var(--suivi-encre);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2125,
+      "variable": "--tdb-filet",
+      "declaration": "rgb(16 30 24 / 14%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2126,
+      "variable": "--tdb-rail",
+      "declaration": "color-mix(in srgb, var(--mantine-color-text) 12%, transparent);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2127,
+      "variable": "--tdb-lueur",
+      "declaration": "rgb(140 124 230);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2130,
+      "variable": "--tdb-verre-haut",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2131,
+      "variable": "--tdb-verre-milieu",
+      "declaration": "var(--suivi-surface);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2132,
+      "variable": "--tdb-verre-bas",
+      "declaration": "var(--neon-doux);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2133,
+      "variable": "--tdb-verre-bord",
+      "declaration": "rgb(255 255 255 / 14%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2134,
+      "variable": "--tdb-reflet-bord",
+      "declaration": "rgb(255 255 255 / 45%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2135,
+      "variable": "--tdb-lumiere",
+      "declaration": "rgb(255 255 255 / 22%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2136,
+      "variable": "--tdb-ombre",
+      "declaration": "rgb(0 0 0);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2137,
+      "variable": "--tdb-filet",
+      "declaration": "rgb(0 0 0 / 35%);"
+    },
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "ligne": 2138,
+      "variable": "--tdb-rail",
+      "declaration": "rgb(255 255 255 / 12%);"
+    }
+  ]
+}

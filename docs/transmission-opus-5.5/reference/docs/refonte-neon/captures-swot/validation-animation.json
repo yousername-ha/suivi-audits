@@ -1,0 +1,16 @@
+{
+  "applicationIntegree": true,
+  "codeCommit": "016d69c50c7775a62640e9e2d75d2875e9c85374",
+  "video": {
+    "duration": 7.4,
+    "width": 1136,
+    "height": 648,
+    "decodedFrames": 35
+  },
+  "gif": {
+    "width": 1136,
+    "height": 648,
+    "imagesDifferentes": true
+  },
+  "errors": []
+}

@@ -1,0 +1,960 @@
+{
+  "applicationIntegree": true,
+  "dateUTC": "2026-11-10T20:05:26.099Z",
+  "timezone": "Europe/Paris",
+  "views": [
+    {
+      "name": "light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-lecture-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-lecture-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-processus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-fiche-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-fiche-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-lecture-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-lecture-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-processus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-fiche-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-fiche-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "survol-S",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "survol-W",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "survol-O",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "survol-T",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "contenus-longs-dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    }
+  ],
+  "centres": [
+    {
+      "name": "light-1440",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "light-390",
+      "width": 390,
+      "diameter": 120,
+      "radius": 81,
+      "centerX": 0,
+      "centerY": 376.5,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "light-768",
+      "width": 768,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.359375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "light-1024",
+      "width": 1024,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.421875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "light-1280",
+      "width": 1280,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.28125,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "light-1920",
+      "width": 1920,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.109375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-1440",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-390",
+      "width": 390,
+      "diameter": 120,
+      "radius": 81,
+      "centerX": 0,
+      "centerY": 376.5,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-768",
+      "width": 768,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.359375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-1024",
+      "width": 1024,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.421875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-1280",
+      "width": 1280,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.28125,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "dark-1920",
+      "width": 1920,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.109375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "survol-S",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "survol-W",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "survol-O",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "survol-T",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-light-1440",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-light-1280",
+      "width": 1280,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.28125,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-light-1024",
+      "width": 1024,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.421875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-light-768",
+      "width": 768,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.359375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-light-390",
+      "width": 390,
+      "diameter": 120,
+      "radius": 81,
+      "centerX": 0,
+      "centerY": 1108.5,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-dark-1440",
+      "width": 1440,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.171875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-dark-1280",
+      "width": 1280,
+      "diameter": 184,
+      "radius": 113,
+      "centerX": 0.28125,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-dark-1024",
+      "width": 1024,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.421875,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-dark-768",
+      "width": 768,
+      "diameter": 134,
+      "radius": 88,
+      "centerX": 0.359375,
+      "centerY": 0,
+      "overlaps": [],
+      "headerOverlaps": []
+    },
+    {
+      "name": "contenus-longs-dark-390",
+      "width": 390,
+      "diameter": 120,
+      "radius": 81,
+      "centerX": 0,
+      "centerY": 1108.5,
+      "overlaps": [],
+      "headerOverlaps": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-main",
+      "violations": []
+    },
+    {
+      "name": "light-lecture",
+      "violations": []
+    },
+    {
+      "name": "light-processus",
+      "violations": []
+    },
+    {
+      "name": "light-fiche",
+      "violations": []
+    },
+    {
+      "name": "light-registre",
+      "violations": []
+    },
+    {
+      "name": "dark-main",
+      "violations": []
+    },
+    {
+      "name": "dark-lecture",
+      "violations": []
+    },
+    {
+      "name": "dark-processus",
+      "violations": []
+    },
+    {
+      "name": "dark-fiche",
+      "violations": []
+    },
+    {
+      "name": "dark-registre",
+      "violations": []
+    },
+    {
+      "name": "light-contenus-longs",
+      "violations": []
+    },
+    {
+      "name": "dark-contenus-longs",
+      "violations": []
+    }
+  ],
+  "fixtureSetup": {
+    "scopes": 1,
+    "processes": 1,
+    "analyses": 1,
+    "links": 1,
+    "sourceHistoriqueInchangee": true,
+    "fixtureLongueInchangee": true
+  },
+  "errors": [],
+  "httpErrors": [],
+  "environmentWarnings": [
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    }
+  ],
+  "writes": [],
+  "preferenceWrites": [
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    }
+  ],
+  "animations": {
+    "active": true,
+    "pause": true,
+    "reprise": true,
+    "reduction": true
+  },
+  "appCommit": "51d70229aa560cd466a92478b7e0a8d333e03014",
+  "controleCentreEtTextes": {
+    "dateUTC": "2026-11-10T20:03:30.740Z",
+    "timezone": "Europe/Paris",
+    "applicationIntegree": true,
+    "checks": [
+      {
+        "name": "source-light-390",
+        "width": 390,
+        "diameter": 120,
+        "radius": 81,
+        "centerX": 0,
+        "centerY": 376.5,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-light-768",
+        "width": 768,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.359375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-light-1024",
+        "width": 1024,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.421875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-light-1280",
+        "width": 1280,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.28125,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-light-1440",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-light-1920",
+        "width": 1920,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.109375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-light-S",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-light-W",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-light-O",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-light-T",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-390",
+        "width": 390,
+        "diameter": 120,
+        "radius": 81,
+        "centerX": 0,
+        "centerY": 376.5,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-768",
+        "width": 768,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.359375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-1024",
+        "width": 1024,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.421875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-1280",
+        "width": 1280,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.28125,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-1440",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "source-dark-1920",
+        "width": 1920,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.109375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-dark-S",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-dark-W",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-dark-O",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "survol-dark-T",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-390",
+        "width": 390,
+        "diameter": 120,
+        "radius": 81,
+        "centerX": 0,
+        "centerY": 1108.5,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-768",
+        "width": 768,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.359375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-1024",
+        "width": 1024,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.421875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-1280",
+        "width": 1280,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.28125,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-1440",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-light-1920",
+        "width": 1920,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.109375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-390",
+        "width": 390,
+        "diameter": 120,
+        "radius": 81,
+        "centerX": 0,
+        "centerY": 1108.5,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-768",
+        "width": 768,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.359375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-1024",
+        "width": 1024,
+        "diameter": 134,
+        "radius": 88,
+        "centerX": 0.421875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-1280",
+        "width": 1280,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.28125,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-1440",
+        "width": 1440,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.171875,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      },
+      {
+        "name": "longue-dark-1920",
+        "width": 1920,
+        "diameter": 184,
+        "radius": 113,
+        "centerX": 0.109375,
+        "centerY": 0,
+        "overlaps": [],
+        "headerOverlaps": []
+      }
+    ]
+  },
+  "imagesPubliees": [
+    "matrice-light-hd.png",
+    "matrice-dark-hd.png"
+  ],
+  "imagesPriveesDeRecette": [
+    "swot-light-1440.png",
+    "matrice-light.png",
+    "swot-light-mobile.png",
+    "lecture-light.png",
+    "fiche-light.png",
+    "registre-light.png",
+    "swot-light-hd.png",
+    "swot-dark-1440.png",
+    "matrice-dark.png",
+    "swot-dark-mobile.png",
+    "lecture-dark.png",
+    "fiche-dark.png",
+    "registre-dark.png",
+    "swot-dark-hd.png"
+  ],
+  "testsUnitaires": {
+    "web": 240,
+    "ui": 243
+  },
+  "parcoursE2E": {
+    "reussis": 3,
+    "rejeux": 0
+  }
+}

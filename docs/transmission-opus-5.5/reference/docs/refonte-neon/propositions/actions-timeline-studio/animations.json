@@ -1,0 +1,17 @@
+{
+  "dateUTC": "2026-11-11T00:10:31.568Z",
+  "maquetteAutonome": true,
+  "active": {
+    "play": "running",
+    "name": "studio-orbit"
+  },
+  "paused": {
+    "play": "paused",
+    "name": "studio-orbit"
+  },
+  "reduced": {
+    "play": "paused",
+    "name": "none"
+  },
+  "repriseSousReductionSansAnimation": true
+}

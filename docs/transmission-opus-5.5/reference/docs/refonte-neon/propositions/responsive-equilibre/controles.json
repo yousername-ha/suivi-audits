@@ -1,0 +1,345 @@
+{
+  "scope": "Maquette autonome uniquement ; aucune intégration ni test applicatif",
+  "date": "2026-11-11",
+  "dispositions": [
+    {
+      "width": 320,
+      "height": 700,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 320,
+      "height": 700,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 105.078125,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 105.078125,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 44,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 44,
+        "height": 44
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "titleSize": 16,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "titleSize": 16,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "theme": "light",
+      "titleSize": 16,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "not-needed",
+      "filterFits": true
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "theme": "dark",
+      "titleSize": 16,
+      "metaSize": 12,
+      "target": {
+        "width": 40,
+        "height": 40
+      },
+      "pageOverflow": false,
+      "shortHeightFallback": false,
+      "independentListScroll": "not-needed",
+      "filterFits": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "theme": "light",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 44,
+        "height": 44
+      },
+      "pageOverflow": true,
+      "shortHeightFallback": true,
+      "independentListScroll": "verified",
+      "filterFits": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "theme": "dark",
+      "titleSize": 15,
+      "metaSize": 12,
+      "target": {
+        "width": 44,
+        "height": 44
+      },
+      "pageOverflow": true,
+      "shortHeightFallback": true,
+      "independentListScroll": "verified",
+      "filterFits": true
+    }
+  ],
+  "axe": [
+    {
+      "name": "mobile-clair",
+      "violations": []
+    },
+    {
+      "name": "mobile-choix-vue",
+      "violations": []
+    },
+    {
+      "name": "mobile-filtres",
+      "violations": []
+    },
+    {
+      "name": "portable-clair",
+      "violations": []
+    },
+    {
+      "name": "bureau-clair",
+      "violations": []
+    },
+    {
+      "name": "grand-sombre",
+      "violations": []
+    },
+    {
+      "name": "recurrences-mobile",
+      "violations": []
+    }
+  ],
+  "interactions": [
+    "Mobile : choix de vue à taille confortable ; liste puis Timeline ; période 2 semaines ; filtre et remise à zéro.",
+    "Échelles des récurrences accessibles sur mobile.",
+    "Redimensionnement sans rechargement ni perte de vue ; Kanban en colonnes adaptées."
+  ],
+  "apiRequests": 0,
+  "errors": [],
+  "applicationUnchanged": "23b33b5ce4fd4cf5eeee0af97c9638b18852b61a",
+  "priority": "PC ; téléphone non prioritaire, premiers rendus conservés en annexe"
+}

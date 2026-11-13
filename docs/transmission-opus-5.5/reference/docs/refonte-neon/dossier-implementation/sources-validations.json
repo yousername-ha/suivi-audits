@@ -1,0 +1,919 @@
+{
+  "edition": "2026-11-09",
+  "commitApplicatif": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "commitDocumentsEtCaptures": "c11277f4143c0ba620237b61fad2a36a8d66a8e6",
+  "branche": "codex/refonte-neon-main",
+  "portee": "Dossier documentaire ; instantanés de référence pour comparaison, pas une installation complète.",
+  "captures": "Images natives existantes, aucune retouche ; données fictives et dates des lots précisées pour chaque fichier.",
+  "tests": "Résultats applicatifs historiques, non rejoués pour constituer ce dossier.",
+  "fichiers": [
+    {
+      "origine": "dashboard-actuel-clair.png",
+      "cheminArchive": "visuels/dashboard-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Dashboard réel de la copie de refonte, thème clair. Données fictives.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 346246,
+      "sha256": "fc29c3f9dda78da540c6984fd4ca11ba1af2379102b58a2d4c71369e0a926384",
+      "largeur": 1920,
+      "hauteur": 1354
+    },
+    {
+      "origine": "dashboard-actuel-sombre.png",
+      "cheminArchive": "visuels/dashboard-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Dashboard réel de la copie de refonte, thème sombre.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 363294,
+      "sha256": "b73f7497fa0f67d45cdc0db146ea86f0b0db38523dec2fd83ee5a61d51cdce60",
+      "largeur": 1920,
+      "hauteur": 1354
+    },
+    {
+      "origine": "docs/refonte-neon/captures-categories/light-1440.png",
+      "cheminArchive": "visuels/contexte-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Contexte : Biseau et quatre catégories explicites, en clair.",
+      "dateCaptureOuLot": "01/11/2026",
+      "octets": 349876,
+      "sha256": "3f4690a5c702c253c2efd397ddcaaadbe27b68bf8f5953f9ac7ab4b7bc88c43c",
+      "largeur": 1440,
+      "hauteur": 1400
+    },
+    {
+      "origine": "docs/refonte-neon/captures-categories/dark-1440.png",
+      "cheminArchive": "visuels/contexte-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Contexte : Biseau et quatre catégories explicites, en sombre.",
+      "dateCaptureOuLot": "01/11/2026",
+      "octets": 346035,
+      "sha256": "bd46aca2bdd7714f8a63ad1efd865e143c41eba0a78e7b6d6698af257578a87a",
+      "largeur": 1440,
+      "hauteur": 1400
+    },
+    {
+      "origine": "docs/refonte-neon/captures-categories/historique-a-preciser.png",
+      "cheminArchive": "visuels/contexte-a-preciser.png",
+      "nature": "capture réelle existante",
+      "legende": "Ancien texte conservé dans À préciser, sans classement inventé.",
+      "dateCaptureOuLot": "01/11/2026",
+      "octets": 340465,
+      "sha256": "74c4e807c2afd0415369805205c155ae12e3b6ba01a8107f7e3edb77304e66b8",
+      "largeur": 1440,
+      "hauteur": 1400
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/graphe-replie-light-1440.png",
+      "cheminArchive": "visuels/perimetres-replies-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Périmètres : graphe centré et cartes repliées.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 86497,
+      "sha256": "e111c83839f3c4b547ced1b74c60c180a72e7ab650eb813433deb09b77bc05d1",
+      "largeur": 1133,
+      "hauteur": 783
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/graphe-replie-dark-1440.png",
+      "cheminArchive": "visuels/perimetres-replies-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Périmètres : graphe replié en sombre.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 84581,
+      "sha256": "9f7bd61b3a8cc05939fdf153565e2d25f9f28f8633fa5f4d5a94acebf27f1b38",
+      "largeur": 1133,
+      "hauteur": 783
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/graphe-deplie-light-1440.png",
+      "cheminArchive": "visuels/perimetres-deplies-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Dépliage en largeur et commande centrée en pied de carte.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 123120,
+      "sha256": "cc9031efb02f791f598f2df9002da7f41b37b4ada4bfda429aa2b28a8a5c0d52",
+      "largeur": 1133,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/graphe-deplie-dark-1440.png",
+      "cheminArchive": "visuels/perimetres-deplies-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Dépliage en largeur en sombre.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 122345,
+      "sha256": "724463840f06802d7af06d5fd371bcb684282eb79cc16584846b01afe62d5f85",
+      "largeur": 1133,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/deplie-light-390.png",
+      "cheminArchive": "visuels/perimetres-mobile.png",
+      "nature": "capture réelle existante",
+      "legende": "Périmètres sur téléphone : hauteur naturelle et zones réorganisées.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 194806,
+      "sha256": "14e182be68ef9afa3f76ea4260af206aa53339dd3ac724542383a4ec24a77b93",
+      "largeur": 390,
+      "hauteur": 2445
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/objectifs-light-1440.png",
+      "cheminArchive": "visuels/objectifs-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Objectifs Studio : vue compacte, cible violette, mesures et états remplis.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 445046,
+      "sha256": "3a6b4450f8d0bdb2da13de1d0442d57928b3390a98b6ecbd56153d580b54548c",
+      "largeur": 1440,
+      "hauteur": 1712
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/objectifs-dark-1440.png",
+      "cheminArchive": "visuels/objectifs-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Objectifs Studio : même structure en sombre.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 308090,
+      "sha256": "d2691aee3119a09d032bfc5d4479d298846d9e352f0ee8f6a2ca5ec1534afa4b",
+      "largeur": 1440,
+      "hauteur": 1704
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/objectifs-light-390.png",
+      "cheminArchive": "visuels/objectifs-mobile.png",
+      "nature": "capture réelle existante",
+      "legende": "Objectifs Studio en vue compacte sur téléphone.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 219629,
+      "sha256": "bf6b52509e10b1ace8e74e96863aa03308c7c8206b36bf9460d5e5328c4d8090",
+      "largeur": 390,
+      "hauteur": 2154
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/objectifs-fiche-indicateur-light.png",
+      "cheminArchive": "visuels/objectifs-fiche.png",
+      "nature": "capture réelle existante",
+      "legende": "Fiche d’indicateur assortie à la vue compacte.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 278629,
+      "sha256": "2a562fde684cd7786e3013c6bec28847209c8dfb7317cac150cf04111a5d8ec4",
+      "largeur": 1440,
+      "hauteur": 1785
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/dda-annexe-a-light-1440.png",
+      "cheminArchive": "visuels/dda-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "DdA Studio : quatre synthèses et registre de mesures en lignes.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 338873,
+      "sha256": "d1dea54412bba287ef166bf64345654981b647fe8a59619c74231f7c56648055",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/dda-annexe-a-dark-1440.png",
+      "cheminArchive": "visuels/dda-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "DdA Studio en sombre.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 213447,
+      "sha256": "1b0b5824d1f0957ccbda1a53c039e54cfff70b703f43d914807b39f55617c7c3",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/mesures-light-1440.png",
+      "cheminArchive": "visuels/dda-lignes-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Détail des lignes : choix Applicable et Mise en œuvre remplis.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 219168,
+      "sha256": "b96d865f833811c489940184099235a8b9b5aa2eb4ba1718e81b5a35b0d69b8b",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/mesures-dark-1440.png",
+      "cheminArchive": "visuels/dda-lignes-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Détail des lignes en sombre, contrastes et états conservés.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 195076,
+      "sha256": "f329fbb899ae18151f712f4b17dcdfd04d5c20fe71a3a31f3872f24c4230fe09",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/mesures-light-390.png",
+      "cheminArchive": "visuels/dda-mobile.png",
+      "nature": "capture réelle existante",
+      "legende": "DdA : adaptation des mesures sur téléphone.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 65208,
+      "sha256": "b491b246810f8d423ef2068a894678992cced4fe032e40ee3d506223748d06b1",
+      "largeur": 390,
+      "hauteur": 1080
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/fiche-light-hd.png",
+      "cheminArchive": "visuels/dda-fiche-hd.png",
+      "nature": "capture réelle existante",
+      "legende": "Fiche DdA complète et champs existants.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 223034,
+      "sha256": "590fe8c8b48c33127bc496db4a0a62520b928ade6ebf1d78ad896b500eac3f1d",
+      "largeur": 2048,
+      "hauteur": 2038
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/application-light-hd.png",
+      "cheminArchive": "visuels/dda-clair-hd.png",
+      "nature": "capture réelle existante",
+      "legende": "DdA Studio, capture HD de 3 840 px de large.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 1266004,
+      "sha256": "bb0f9e049a132bad7bc0e160e7af71484c14c554afb0727bfbb664df715d30c5",
+      "largeur": 3840,
+      "hauteur": 2880
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/application-dark-hd.png",
+      "cheminArchive": "visuels/dda-sombre-hd.png",
+      "nature": "capture réelle existante",
+      "legende": "DdA sombre, capture HD de 3 840 px de large.",
+      "dateCaptureOuLot": "04/11/2026",
+      "octets": 710353,
+      "sha256": "54e2a26ebb7e3af3146f31c43c899d45dab0f05cc7180bbbb3ba43f8cfb2e197",
+      "largeur": 3840,
+      "hauteur": 2880
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/apercu-light-1440.png",
+      "cheminArchive": "visuels/referentiels-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Référentiels Studio : catalogue et exigences, périmètre fictif dédié.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 405383,
+      "sha256": "d3a6d971ae09a583490b0495c19c26e1cabe66bf8533734103672c83b2e6c76c",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/apercu-dark-1440.png",
+      "cheminArchive": "visuels/referentiels-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Référentiels Studio : thème sombre.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 254787,
+      "sha256": "23848fbe1b457eb23377d7aa20ee5931af515c585f3005c99ad72cfc45362106",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/source-light-1440.png",
+      "cheminArchive": "visuels/referentiels-provenance.png",
+      "nature": "capture réelle existante",
+      "legende": "Source et publication : métadonnées réelles de la démonstration.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 212284,
+      "sha256": "569b509caa736560c82378c422be95ce2926dd35138c5d8905dd8b217cdc4213",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/referentiels-light-mobile.png",
+      "cheminArchive": "visuels/referentiels-mobile.png",
+      "nature": "capture réelle existante",
+      "legende": "Référentiels sur téléphone : code, intitulé et domaine lisibles.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 288446,
+      "sha256": "b34d69a873349269d5b01d9ce273ed6df10fee333d6db569a4afa36f236d25cc",
+      "largeur": 390,
+      "hauteur": 3059
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/referentiels-light-hd.png",
+      "cheminArchive": "visuels/referentiels-clair-hd.png",
+      "nature": "capture réelle existante",
+      "legende": "Référentiels, page entière HD.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 1598830,
+      "sha256": "0f3af1f7a7d1a938e965bad5a19809e8664c22f9eddd3938e2d617be168f9b05",
+      "largeur": 3840,
+      "hauteur": 5504
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/referentiels-dark-hd.png",
+      "cheminArchive": "visuels/referentiels-sombre-hd.png",
+      "nature": "capture réelle existante",
+      "legende": "Référentiels sombres, page entière HD.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 1202540,
+      "sha256": "7024a304b926f1d1a85c3a6bcbc53ba00529f81f1ec086ab200af5df2d002365",
+      "largeur": 3840,
+      "hauteur": 5488
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/bibliotheque-light-1440.png",
+      "cheminArchive": "visuels/bibliotheque-clair.png",
+      "nature": "capture réelle existante",
+      "legende": "Bibliothèque distincte des publications locales ; objets fictifs de recette visibles.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 1075720,
+      "sha256": "f5faf4db00430f2017b745f08b1e09f99276e98b50f5df8cb5ff515fddafa236",
+      "largeur": 1440,
+      "hauteur": 2705
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/bibliotheque-dark-1440.png",
+      "cheminArchive": "visuels/bibliotheque-sombre.png",
+      "nature": "capture réelle existante",
+      "legende": "Bibliothèque : versions, exigences, rattachements et commandes en sombre.",
+      "dateCaptureOuLot": "05/11/2026",
+      "octets": 911596,
+      "sha256": "46976ffd2fe246f3e838a9ce8a6c96c7bc3100342de576241054e61c4b8d2fc1",
+      "largeur": 1440,
+      "hauteur": 2847
+    },
+    {
+      "origine": "docs/refonte-neon/captures-cadres/validation-animations/animations-5-icones.mp4",
+      "cheminArchive": "animations/contexte-5-icones.mp4",
+      "nature": "vidéo de validation existante",
+      "legende": "Cinq icônes du Contexte, agrandies pour observer leur animation.",
+      "dateCaptureOuLot": "01/11/2026",
+      "octets": 213342,
+      "sha256": "c0ba6d0f343f8d67328030ad56564ad107fc419c53decc8f6d3db5b7ff3a42b1"
+    },
+    {
+      "origine": "docs/refonte-neon/captures-cadres/validation-animations/poster.png",
+      "cheminArchive": "animations/contexte-poster.png",
+      "nature": "capture réelle existante",
+      "legende": "Repère des cinq animations du Contexte.",
+      "dateCaptureOuLot": "01/11/2026",
+      "octets": 41615,
+      "sha256": "f11f10e3098c90bbc1abfad9899faedafee29428ec578c0792eeb812865a2632",
+      "largeur": 1280,
+      "hauteur": 386
+    },
+    {
+      "origine": "docs/refonte-neon/propositions/referentiels-studio/inter.woff2",
+      "cheminArchive": "assets/inter.woff2",
+      "nature": "police locale",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 48256,
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+    },
+    {
+      "origine": "docs/refonte-neon/propositions/referentiels-studio/OFL.txt",
+      "cheminArchive": "assets/OFL-Inter.txt",
+      "nature": "licence de police",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 4477,
+      "sha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345"
+    },
+    {
+      "origine": "packages/ui/src/tokens.ts",
+      "cheminArchive": "sources/packages/ui/src/tokens.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 19608,
+      "sha256": "d3483890363b7705742a16f33513acdf2eba4590bba61bec175d5a77c8d82187"
+    },
+    {
+      "origine": "packages/ui/src/theme.ts",
+      "cheminArchive": "sources/packages/ui/src/theme.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5211,
+      "sha256": "f470a6ae59277b2529b06d6e6b4ba483a0c3e2935d513ebdcd01b63b781fdc88"
+    },
+    {
+      "origine": "packages/ui/src/styles.css",
+      "cheminArchive": "sources/packages/ui/src/styles.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 74848,
+      "sha256": "89ea30ba62a568e0e01b223cba7834524d0a49945d3ef6237ba6a6838cbae562"
+    },
+    {
+      "origine": "packages/ui/src/components.tsx",
+      "cheminArchive": "sources/packages/ui/src/components.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5692,
+      "sha256": "ecc67172d8b8968812060823992933f5f0ffae11b74219108c6ccb22c920a2a1"
+    },
+    {
+      "origine": "packages/ui/src/neon.css",
+      "cheminArchive": "sources/packages/ui/src/neon.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 4446,
+      "sha256": "44771a96180e2dc22742bbe324cdf653f6d78062eed73f76e005ed29ed6dfa75"
+    },
+    {
+      "origine": "packages/ui/src/neon-analytics.css",
+      "cheminArchive": "sources/packages/ui/src/neon-analytics.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 13616,
+      "sha256": "bffaef9b7fe088f73aad61e2f6431e5dbab36af460bb9c646ce1b4a890df2aac"
+    },
+    {
+      "origine": "packages/ui/src/neon-graphiques.tsx",
+      "cheminArchive": "sources/packages/ui/src/neon-graphiques.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 11536,
+      "sha256": "4765b089117d9129c7358f9f78e4030a08b1072bd2febe37ebdeabd82b298318"
+    },
+    {
+      "origine": "packages/ui/src/neon-fenetres.css",
+      "cheminArchive": "sources/packages/ui/src/neon-fenetres.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 25276,
+      "sha256": "112ae5ac3047fc11b5a00cfc2b2aa288d07c686bb1f3900d1cb7df7bd12135ad"
+    },
+    {
+      "origine": "packages/ui/src/neon-perimetres.css",
+      "cheminArchive": "sources/packages/ui/src/neon-perimetres.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 25762,
+      "sha256": "628e45d800c13440c88c9cf332498d3d9ecc53d631508ae5680402b29d8df52e"
+    },
+    {
+      "origine": "packages/ui/src/neon-objectifs.css",
+      "cheminArchive": "sources/packages/ui/src/neon-objectifs.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 29134,
+      "sha256": "1be813d54eda33e499a87f4feb586b4b1d40bd0b7a49b00e1728d9b62058ebd7"
+    },
+    {
+      "origine": "packages/ui/src/neon-dda.css",
+      "cheminArchive": "sources/packages/ui/src/neon-dda.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 31756,
+      "sha256": "c1f2691bf7e9b8e6605c61e366e6d50bf4e5138337bfe0f4e7806011fea8db76"
+    },
+    {
+      "origine": "packages/ui/src/neon-referentiels.css",
+      "cheminArchive": "sources/packages/ui/src/neon-referentiels.css",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 20085,
+      "sha256": "379a5d7b885db7f4d3fb9b623f8fe44f069554ed07467c2e57a1bfbbf7c42497"
+    },
+    {
+      "origine": "packages/ui/package.json",
+      "cheminArchive": "sources/packages/ui/package.json",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 1298,
+      "sha256": "01f415f29a75d29c17295e445bbcfedbdf215dcef3d1030712aef63275bd6556"
+    },
+    {
+      "origine": "apps/web/src/main.tsx",
+      "cheminArchive": "sources/apps/web/src/main.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5548,
+      "sha256": "4f88b0e320f7a4cd176cf8a592b7f4f868ed2a4b06757f975c1a273f7a615ff4"
+    },
+    {
+      "origine": "apps/web/scripts/mantine-css-vars.ts",
+      "cheminArchive": "sources/apps/web/scripts/mantine-css-vars.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2803,
+      "sha256": "a7c036522531ab83d1d916d0e12cd7b2fb49239a21dabea6f552b1b2d17b9eec"
+    },
+    {
+      "origine": "apps/web/src/navigation.ts",
+      "cheminArchive": "sources/apps/web/src/navigation.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 10878,
+      "sha256": "cb3e9eec47b1135f4190f600c785d6b293fe6dfd11de10a9865156f6339658f4"
+    },
+    {
+      "origine": "apps/web/src/pages/Pilotage.tsx",
+      "cheminArchive": "sources/apps/web/src/pages/Pilotage.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 35384,
+      "sha256": "9f9ffc16b9f8461afef7621a133a9a069f5753abcf8390ef4262fd952b2d8185"
+    },
+    {
+      "origine": "apps/web/src/components/NeonAnalytics.tsx",
+      "cheminArchive": "sources/apps/web/src/components/NeonAnalytics.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 18311,
+      "sha256": "000692daa285605670c7813ba73766cdf45c70ea4799760a148352f43931689e"
+    },
+    {
+      "origine": "apps/web/src/components/neon-donnees.ts",
+      "cheminArchive": "sources/apps/web/src/components/neon-donnees.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2021,
+      "sha256": "def53bc846090caa4e5b2e6e099b3349172b3f22325be15f169f8553c3f72f09"
+    },
+    {
+      "origine": "apps/web/src/pilotage/ContextPresentation.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/ContextPresentation.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 13430,
+      "sha256": "3dff5981d82a8d58b5244be8f4eec9f4ae065e202c4300758b70ac5b6ad46d64"
+    },
+    {
+      "origine": "apps/web/src/pilotage/categories-contexte.ts",
+      "cheminArchive": "sources/apps/web/src/pilotage/categories-contexte.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2575,
+      "sha256": "90a5edf2ef2c9d4b6d641edda6e0e9b825f8624eb6bfa44304067c8a6a4622d7"
+    },
+    {
+      "origine": "apps/web/src/pilotage/RecordEditor.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/RecordEditor.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 12561,
+      "sha256": "462f78115992a7acb939b92fd2c3137386134e18377db5bba676c7047a16a025"
+    },
+    {
+      "origine": "apps/web/src/pilotage/Registry.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/Registry.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 22443,
+      "sha256": "392fe22e859daa70f14cddfc4f5cdc51f654a87c48b80c86c7305ea0c5b0307a"
+    },
+    {
+      "origine": "apps/web/src/pilotage/CartesPerimetres.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/CartesPerimetres.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 44809,
+      "sha256": "fbdf67f5924eb776aad71508f7d5d5cd1df5e7888298b78276829cc883aa4bbe"
+    },
+    {
+      "origine": "apps/web/src/pilotage/Perimetres.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/Perimetres.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 14895,
+      "sha256": "5ad5d8cdd1c279cc04fe16779fe28aec872d3f0a1a57fe6b6225bb17a908a61a"
+    },
+    {
+      "origine": "apps/web/src/pilotage/ObjectifsProcessus.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/ObjectifsProcessus.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 35616,
+      "sha256": "4e5c05b2f6d630cac5173ea9f61b6b12a13420c184f0ceaaa412b3be69c0f1ff"
+    },
+    {
+      "origine": "apps/web/src/dda/Dda.tsx",
+      "cheminArchive": "sources/apps/web/src/dda/Dda.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 18407,
+      "sha256": "16132bd31b854c0728a7b88fd9944c55c6798ab6ede6fd5f1fe43b336682119f"
+    },
+    {
+      "origine": "apps/web/src/dda/DdaSynthese.tsx",
+      "cheminArchive": "sources/apps/web/src/dda/DdaSynthese.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 7141,
+      "sha256": "64fd8879f3d136a50e826b2b839ad4cb1186b4e4112db10311199047e461a72f"
+    },
+    {
+      "origine": "apps/web/src/dda/DdaIcone.tsx",
+      "cheminArchive": "sources/apps/web/src/dda/DdaIcone.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 821,
+      "sha256": "a24880b35bd2e89d00056d19fbb3873d71abce3e51377198e8001d5da425c774"
+    },
+    {
+      "origine": "apps/web/src/grc/Publication.tsx",
+      "cheminArchive": "sources/apps/web/src/grc/Publication.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 20120,
+      "sha256": "2355c39b7a633ddf02ed0bc8ad29d9ec1285860e57077b64de11ce20dfe130e9"
+    },
+    {
+      "origine": "apps/web/src/grc/ReferentielsStudio.tsx",
+      "cheminArchive": "sources/apps/web/src/grc/ReferentielsStudio.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 4795,
+      "sha256": "29b47d3f65363be25b37ea9853c1aa3f120a0b20ef731fb04510fd2180a613a3"
+    },
+    {
+      "origine": "apps/web/src/grc/LegacyFrameworks.tsx",
+      "cheminArchive": "sources/apps/web/src/grc/LegacyFrameworks.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 3240,
+      "sha256": "8a538652952b8f1064b45a6ae9b914ef666c23d135606ed2828a1d0e1d1c0a13"
+    },
+    {
+      "origine": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "cheminArchive": "sources/apps/web/src/pilotage/Bibliotheque.tsx",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 30256,
+      "sha256": "976aa8fd8d8a2d7c0d000d591e2e1a1adfe6634b5f38dde3ebea68d373dc2e82"
+    },
+    {
+      "origine": "apps/web/test/charte.test.ts",
+      "cheminArchive": "sources/apps/web/test/charte.test.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2261,
+      "sha256": "f3b85ed88658be2e1c16fb93ad1854d9912cc5f9e1ba6dff1e470ff5c3c315f9"
+    },
+    {
+      "origine": "apps/web/test/categories-contexte.test.ts",
+      "cheminArchive": "sources/apps/web/test/categories-contexte.test.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2411,
+      "sha256": "de1ef0d9cbec8b9ab84cf658347fb8c8218780aab02a488064c98469388fa31f"
+    },
+    {
+      "origine": "apps/web/test/disposition-perimetres.test.ts",
+      "cheminArchive": "sources/apps/web/test/disposition-perimetres.test.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 6572,
+      "sha256": "5ca504d872af638a33f5eb242f3dac5a0e40623ed3551ce020caa041982ee050"
+    },
+    {
+      "origine": "apps/web/test/neon-donnees.test.ts",
+      "cheminArchive": "sources/apps/web/test/neon-donnees.test.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 1365,
+      "sha256": "821c18ceba8c5cf5d5395a83380d6bf3a1ff67cf6028e4d9121f4825426cb1e5"
+    },
+    {
+      "origine": "apps/web/test/neon-graphiques-rendu.test.ts",
+      "cheminArchive": "sources/apps/web/test/neon-graphiques-rendu.test.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 1017,
+      "sha256": "fde2f458af5499af405aeeca8bd7d106ff01985bab2996326733b9ecee1ad09c"
+    },
+    {
+      "origine": "tests/e2e/specs/dda-neon.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/dda-neon.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 7218,
+      "sha256": "221d0eff7c6368d1cd36f71f0e9f956a8b3f3dc17eee8d6e166de6140623a5e2"
+    },
+    {
+      "origine": "tests/e2e/specs/objectifs-neon.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/objectifs-neon.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 7299,
+      "sha256": "b09a1959dd3611cb77b9b121ecd9b0416d297b836d9eed8015290145fb6e4c36"
+    },
+    {
+      "origine": "tests/e2e/specs/referentiels-studio.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/referentiels-studio.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 8376,
+      "sha256": "e59d5971981d29b977117e6399a73e4fc2883e9155005c64f652c620a4442070"
+    },
+    {
+      "origine": "tests/e2e/specs/zzz-pilotage.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/zzz-pilotage.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 35634,
+      "sha256": "538466f06ca696008e744d9bdd5e9e5aaf870b3a65fa20e2cd12c0ca37153366"
+    },
+    {
+      "origine": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzz-contexte-presentation.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzz-contexte-presentation.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 13856,
+      "sha256": "ee9ea1b00b2f04210953782b20943fa8aa5200121a4c0e8e01b1fed9532118da"
+    },
+    {
+      "origine": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzz-cartes-perimetres.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzz-cartes-perimetres.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 13739,
+      "sha256": "af2265ea7b84a44d30601df42ca479a412d614cd1d518aa16c7ed79609223d43"
+    },
+    {
+      "origine": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-kit-ia.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-kit-ia.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 4856,
+      "sha256": "689cfb000243dcf94023e6b19573fc2573a003d6d060f2c104990d9ce50630c8"
+    },
+    {
+      "origine": "tests/e2e/specs/zzzzzzzz-configuration-grc.spec.ts",
+      "cheminArchive": "sources/tests/e2e/specs/zzzzzzzz-configuration-grc.spec.ts",
+      "nature": "instantané de source de référence",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 12449,
+      "sha256": "1ab85709c4686ea83cfffc338b7eefa5fb0201508b15d34bb8b40542c1fe8c39"
+    },
+    {
+      "origine": "docs/refonte-neon/PROTOTYPE-INTEGRE.md",
+      "cheminArchive": "rapports/PROTOTYPE-INTEGRE.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 7589,
+      "sha256": "263b75099a7cdab0f0602a25aaa6e1c7c42194fce47b6366907e786d0f1515d0"
+    },
+    {
+      "origine": "docs/refonte-neon/CONTEXTE-CATEGORIES.md",
+      "cheminArchive": "rapports/CONTEXTE-CATEGORIES.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 4823,
+      "sha256": "d656ffbce65a3b4daacd078f0fdbafd5c42e620592efc75f904091b28e6bcfd0"
+    },
+    {
+      "origine": "docs/refonte-neon/CADRES-NEON.md",
+      "cheminArchive": "rapports/CADRES-NEON.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 9795,
+      "sha256": "b6db4893586c88df834c675d3140b87fbd78177388d4116df96b793a7a8f2e1d"
+    },
+    {
+      "origine": "docs/refonte-neon/FENETRES.md",
+      "cheminArchive": "rapports/FENETRES.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 9083,
+      "sha256": "83d5b2f896a5bd9d000005e5b749b20aae0c8dcf2e9813edc1375270c82ccecc"
+    },
+    {
+      "origine": "docs/refonte-neon/FENETRES-GLOBALES.md",
+      "cheminArchive": "rapports/FENETRES-GLOBALES.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5732,
+      "sha256": "ab1957f0b7bf9bb07b202d80ef7f34514a0e2b176efb38fbd477f8af18d84ef5"
+    },
+    {
+      "origine": "docs/refonte-neon/OBJECTIFS-VERSION-B.md",
+      "cheminArchive": "rapports/OBJECTIFS-VERSION-B.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5706,
+      "sha256": "a705981023a572321e4ef2383d2bb8767e680dc650e0090ff510f313da946f53"
+    },
+    {
+      "origine": "docs/refonte-neon/OBJECTIFS-VUE-COMPACTE.md",
+      "cheminArchive": "rapports/OBJECTIFS-VUE-COMPACTE.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 2800,
+      "sha256": "28c7ba69fc60476b3d7e2e2c916978092cb765a67284f77379f1f0d9369360ed"
+    },
+    {
+      "origine": "docs/refonte-neon/HORIZONTAL-STUDIO-INTEGRE.md",
+      "cheminArchive": "rapports/HORIZONTAL-STUDIO-INTEGRE.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 8717,
+      "sha256": "254ca66bcc1ae3c945bccfd5536d7ea961abf39a1caa5f38374fbab9f9dea200"
+    },
+    {
+      "origine": "docs/refonte-neon/DDA-STUDIO-INTEGREE.md",
+      "cheminArchive": "rapports/DDA-STUDIO-INTEGREE.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 6741,
+      "sha256": "fa77b2399ebd1442f189faf5ff6d69f0d92e94730a049e690cd45d817050073e"
+    },
+    {
+      "origine": "docs/refonte-neon/REFERENTIELS-INTEGRES.md",
+      "cheminArchive": "rapports/REFERENTIELS-INTEGRES.md",
+      "nature": "compte rendu historique",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 10583,
+      "sha256": "1062e0cd5f8b65d5d554cb900e9f125d90bf356ecf6769f646e55473c5656083"
+    },
+    {
+      "origine": "docs/refonte-neon/captures-dda-studio/validation.json",
+      "cheminArchive": "preuves/dda-studio.json",
+      "nature": "reçu historique public",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 5005,
+      "sha256": "d310e71083a4e981f3c7335f0898805e9dcc72d8f7de97b363384b5ba12327f5"
+    },
+    {
+      "origine": "docs/refonte-neon/captures-horizontal-studio/validation.json",
+      "cheminArchive": "preuves/horizontal-studio.json",
+      "nature": "reçu historique public",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 50707,
+      "sha256": "d3ea2dbc11512f20f96d1bbe7053f513c96c0f644f4957fc9f54a3b0d9ca9a09"
+    },
+    {
+      "origine": "docs/refonte-neon/captures-referentiels/validation.json",
+      "cheminArchive": "preuves/referentiels.json",
+      "nature": "reçu historique public",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 40422,
+      "sha256": "4e7d508afce20f91ed5297a76474e6795bf31754fc183683f27db0133bc4fd6f"
+    },
+    {
+      "origine": "AGENTS.md",
+      "cheminArchive": "rapports/AGENTS-reference.md",
+      "nature": "consigne existante du dépôt",
+      "legende": "",
+      "dateCaptureOuLot": "",
+      "octets": 7879,
+      "sha256": "8cf1bca50b49d2b4c083c27d66cefe62db1deba7e58d226a83f7f4b7103cb7bd"
+    }
+  ]
+}

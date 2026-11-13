@@ -1,0 +1,272 @@
+{
+  "scope": "Application compilée Docker, données fictives",
+  "layouts": [
+    {
+      "mode": "light",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 327,
+      "regionScroll": 1758,
+      "bottom": 699.453125,
+      "titleFont": "15.248px"
+    },
+    {
+      "mode": "dark",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 327,
+      "regionScroll": 1758,
+      "bottom": 699.453125,
+      "titleFont": "15.248px"
+    },
+    {
+      "mode": "light",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 291,
+      "regionScroll": 1187,
+      "bottom": 689.5,
+      "titleFont": "15.932px"
+    },
+    {
+      "mode": "dark",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 291,
+      "regionScroll": 1187,
+      "bottom": 689.5,
+      "titleFont": "15.932px"
+    },
+    {
+      "mode": "light",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 550,
+      "regionScroll": 1137,
+      "bottom": 988.296875,
+      "titleFont": "17px"
+    },
+    {
+      "mode": "dark",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 550,
+      "regionScroll": 1137,
+      "bottom": 988.296875,
+      "titleFont": "17px"
+    },
+    {
+      "mode": "light",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 823,
+      "regionScroll": 1360,
+      "bottom": 1331.53125,
+      "titleFont": "20.7px"
+    },
+    {
+      "mode": "dark",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 823,
+      "regionScroll": 1360,
+      "bottom": 1331.53125,
+      "titleFont": "20.7px"
+    }
+  ],
+  "center": [
+    {
+      "mode": "light",
+      "width": 1024,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "dark",
+      "width": 1024,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "light",
+      "width": 1366,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "dark",
+      "width": 1366,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "light",
+      "width": 1920,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "dark",
+      "width": 1920,
+      "dx": 0,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "light",
+      "width": 2560,
+      "dx": 0.0078125,
+      "dy": 0,
+      "collisions": 0
+    },
+    {
+      "mode": "dark",
+      "width": 2560,
+      "dx": 0.0078125,
+      "dy": 0,
+      "collisions": 0
+    }
+  ],
+  "axe": [
+    {
+      "name": "cartes-light",
+      "violations": []
+    },
+    {
+      "name": "fiche-light",
+      "violations": []
+    },
+    {
+      "name": "cartes-dark",
+      "violations": []
+    },
+    {
+      "name": "fiche-dark",
+      "violations": []
+    }
+  ],
+  "cases": [
+    {
+      "name": "fiche-sans-defilement-interieur-light"
+    },
+    {
+      "name": "fiche-sans-defilement-interieur-dark"
+    },
+    {
+      "name": "preference-taille-150",
+      "page": 1440,
+      "width": 1440,
+      "title": 25.5
+    },
+    {
+      "name": "categorie-inaccessible-simulee"
+    },
+    {
+      "name": "lecteur-interface-simule",
+      "serverRightsRetested": false
+    }
+  ],
+  "errors": [],
+  "http": [],
+  "writes": [],
+  "date": "2026-11-12T01:14:06+01:00",
+  "baseGit": "8289ff9",
+  "etat": "Intégré dans le code, frontend compilé exécuté dans Docker de recette",
+  "tests": {
+    "web": {
+      "fichiers": 35,
+      "reussis": 279
+    },
+    "ui": {
+      "fichiers": 5,
+      "reussis": 246
+    },
+    "e2e": {
+      "startTime": "2026-11-12T00:10:47.480Z",
+      "duration": 86720.51800000001,
+      "expected": 6,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "focusTroisPassages": {
+      "startTime": "2026-11-12T00:08:27.890Z",
+      "duration": 22375.293,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "typePersonnalise": {
+    "scenario": "Réponse simulée : type avec espaces, long, archivé et teinte orange",
+    "width": 1366,
+    "page": 1366,
+    "header": {
+      "x": 327.8125,
+      "y": 1357.734375,
+      "width": 255.046875,
+      "height": 74.109375,
+      "top": 1357.734375,
+      "right": 582.859375,
+      "bottom": 1431.84375,
+      "left": 327.8125
+    },
+    "errors": []
+  },
+  "capture": {
+    "source": "Application compilée dans le Docker de recette",
+    "theme": "dark",
+    "native": [
+      3840,
+      2160
+    ],
+    "fictif": true,
+    "processus": "18",
+    "errors": [],
+    "fichier": "processus-studio-sombre-hd.png",
+    "dimensions": [
+      3840,
+      2160
+    ],
+    "octets": 1134032,
+    "sha256": "41abae0056ebb172be0c0a89843de5fc2f69ea999b745705f097acf31c1e484f"
+  },
+  "codesRetour": {
+    "typescriptWeb": 0,
+    "typescriptUI": 0,
+    "typescriptE2E": 0,
+    "eslintComplet": 0,
+    "prettierComplet": 0,
+    "generateurCSS": 0,
+    "compilationViteInterfaces": 0
+  },
+  "porteeWrites": "Mutations métier /api/grc et /api/suivi ; les préférences de thème du compte fictif sont hors de ce compteur.",
+  "limites": [
+    "Permissions de lecture et catégorie inaccessible simulées dans le contrôle complémentaire, gardes serveur inchangées",
+    "Frontend copié dans le conteneur de recette existant, image complète non reconstruite",
+    "Suite API, suite E2E intégrale, CI distante et essai Docker Desktop Windows non exécutés",
+    "Aucun nouveau ZIP, push ou déploiement"
+  ]
+}

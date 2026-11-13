@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr" data-theme="dark" data-motion="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Fournisseurs — proposition Studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css" />
+    <link rel="stylesheet" href="../commandes-discretes/commandes.css" />
+    <link rel="stylesheet" href="../responsive-equilibre/responsive.css" />
+    <link rel="stylesheet" href="../responsabilites-studio/responsabilites.css" />
+    <link rel="stylesheet" href="fournisseurs.css" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navigation illustrative" tabindex="0">
+      <div class="brand">
+        <span class="brand-mark">✧</span
+        ><span
+          ><strong>Suivi des audits<br />SMSI</strong><small>ISO 27001 / HDS</small></span
+        >
+      </div>
+      <div class="nav-caption">Espace de travail</div>
+      <div class="nav-item">◈ Tableau de bord</div>
+      <div class="nav-item active">⌘ Organisation <span>8</span></div>
+      <div class="nav-sub">Contexte de l’organisation</div>
+      <div class="nav-sub">Périmètres</div>
+      <div class="nav-sub">Processus</div>
+      <div class="nav-sub">Rôles et responsabilités</div>
+      <div class="nav-sub">Cartographie du SMSI</div>
+      <div class="nav-sub current">Fournisseurs</div>
+      <div class="nav-sub">Revues des accès</div>
+      <div class="nav-sub">Plans annuels</div>
+      <div class="nav-item">⌁ Pilotage</div>
+      <div class="nav-item">◇ Risques</div>
+      <div class="nav-item">✓ Conformité et audits</div>
+      <div class="nav-item">☷ Actions</div>
+      <div class="nav-item">↶ Résilience</div>
+      <div class="nav-item">▤ Documents</div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+    <div class="shell" id="shell">
+      <header class="topbar">
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions">
+          <span class="demo-note">Maquette · À valider</span
+          ><button type="button" class="button" id="theme">Mode clair</button>
+        </div>
+      </header>
+      <main data-active-view="fournisseurs">
+        <div class="breadcrumb">Organisation <span>/</span>Fournisseurs</div>
+        <header class="page-heading">
+          <div>
+            <h1>Fournisseurs et applications</h1>
+            <p>Une lecture claire des accès, des justificatifs et du suivi de chaque prestataire.</p>
+          </div>
+          <span class="fs-org">À l’échelle de l’organisation</span>
+        </header>
+        <section class="fs-summary" id="summary" aria-label="Indicateurs des fournisseurs"></section>
+        <section class="workspace slab fs-workspace" aria-label="Registre des fournisseurs">
+          <div class="compact-toolbar">
+            <div class="view-cluster">
+              <div class="rr-views" role="group" aria-label="Densité du registre">
+                <button
+                  type="button"
+                  class="rr-tool"
+                  data-density="compact"
+                  aria-label="Vue compacte"
+                  aria-pressed="true"
+                  title="Compacte"
+                >
+                  <span data-icon="list"></span></button
+                ><button
+                  type="button"
+                  class="rr-tool"
+                  data-density="detail"
+                  aria-label="Vue détaillée"
+                  aria-pressed="false"
+                  title="Détaillée"
+                >
+                  <span data-icon="detail"></span>
+                </button>
+              </div>
+              <span id="view-label">Registre compact</span
+              ><span class="fs-note">Évaluations communes à tous les périmètres</span>
+            </div>
+            <div class="toolbar-actions">
+              <button
+                type="button"
+                class="rr-tool"
+                id="search-toggle"
+                aria-label="Rechercher un fournisseur"
+                aria-expanded="false"
+                aria-controls="search-box"
+                title="Rechercher"
+              >
+                <span data-icon="search"></span></button
+              ><button
+                type="button"
+                class="rr-tool"
+                id="filter-toggle"
+                aria-label="Filtres fournisseurs"
+                aria-expanded="false"
+                aria-controls="filter-box"
+                title="Filtres"
+              >
+                <span data-icon="filter"></span>
+              </button>
+            </div>
+          </div>
+          <div class="fs-criteria" id="criteria" hidden>
+            <span id="criteria-text"></span><button type="button" class="button" id="reset">Tout effacer</button>
+          </div>
+          <div class="fs-scroll" tabindex="0" role="region" aria-label="Lignes des fournisseurs">
+            <div class="fs-list" id="content"></div>
+          </div>
+          <footer class="rr-footer">
+            <span id="result" aria-live="polite"></span><span>Jeu fictif · États conservés depuis l’export</span>
+          </footer>
+        </section>
+      </main>
+    </div>
+    <div class="rr-popup" id="search-box" role="dialog" aria-labelledby="search-title" hidden>
+      <label for="query" id="search-title">Rechercher un fournisseur</label
+      ><input id="query" type="search" placeholder="Nom du fournisseur…" /><small>Échap pour fermer</small>
+    </div>
+    <div class="rr-popup" id="filter-box" role="dialog" aria-labelledby="filter-title" hidden>
+      <header>
+        <h2 id="filter-title">Affiner le registre</h2>
+        <button type="button" class="rr-tool" data-close-popup aria-label="Fermer les filtres">×</button>
+      </header>
+      <label for="situation">Situation</label
+      ><select id="situation">
+        <option value="all">Tous les fournisseurs</option>
+        <option value="nomfa">Sans MFA confirmée</option>
+        <option value="ctl">Contrôles à faire</option>
+        <option value="cert">Certificats à traiter</option>
+        <option value="crit">Fournisseurs critiques</option></select
+      ><label for="type">Type</label
+      ><select id="type">
+        <option value="all">Tous les types</option>
+        <option value="saas">Services SaaS</option>
+        <option value="autre">Hors SaaS</option>
+      </select>
+    </div>
+    <dialog id="detail" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+    <script src="donnees.js"></script>
+    <script src="fournisseurs.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1782 @@
+[
+  {
+    "sha": "55d43eebbc77fa2e367037b246e5396ced79abc8",
+    "date": "2026-11-12T23:30:51Z",
+    "titre": "docs(neon): montrer le Dashboard dans les deux thèmes avec le menu retenu"
+  },
+  {
+    "sha": "9d125e06b3ec5b4eea5c95307a371c223c947aec",
+    "date": "2026-11-12T23:18:46Z",
+    "titre": "docs(neon): comparer le bleu retenu à une variante translucide"
+  },
+  {
+    "sha": "e100b286f1ffff262020298ab0dde6325b498e2c",
+    "date": "2026-11-12T23:11:51Z",
+    "titre": "docs(neon): essayer le menu bleu nuit sur interface claire"
+  },
+  {
+    "sha": "cd76dde97d379b7f4e885e1bceb367c7079dd22d",
+    "date": "2026-11-12T22:55:36Z",
+    "titre": "docs(neon): renforcer et différencier les couleurs des icônes"
+  },
+  {
+    "sha": "6c82975f048b715e765313bd60ecbf258be11919",
+    "date": "2026-11-12T22:52:33Z",
+    "titre": "docs(neon): remplacer le fond jaune du menu par un blanc net"
+  },
+  {
+    "sha": "5c10f808700e59e3c980f7f272fb26d11d6a0cc8",
+    "date": "2026-11-12T22:46:41Z",
+    "titre": "docs(neon): réchauffer le menu et animer ses pictogrammes"
+  },
+  {
+    "sha": "f2203a1e36ba54cd2723913560b026bda98a21d8",
+    "date": "2026-11-12T22:36:53Z",
+    "titre": "docs(neon): proposer des icônes futuristes bicolores"
+  },
+  {
+    "sha": "cae83d172d51451b31ddb1fdf74999cf86ed038b",
+    "date": "2026-11-12T22:30:04Z",
+    "titre": "docs(neon): épurer les icônes du menu clair"
+  },
+  {
+    "sha": "5208c623593f366da231900395dc0d0fbf236b1e",
+    "date": "2026-11-12T22:15:51Z",
+    "titre": "docs(neon): renforcer le contraste du menu clair"
+  },
+  {
+    "sha": "85e7280e07809b955243831fb39366c72a1fd3c0",
+    "date": "2026-11-12T22:01:22Z",
+    "titre": "docs(neon): proposer des icônes colorées et un fond dégradé au menu"
+  },
+  {
+    "sha": "d9d14786fb92950f00f293e66955339c3fb671c9",
+    "date": "2026-11-12T21:51:06Z",
+    "titre": "feat(web): appliquer les habillages validés et préparer le menu final"
+  },
+  {
+    "sha": "c8e32a0bd1a122809b6f5914908443623846c0bc",
+    "date": "2026-11-12T21:32:13Z",
+    "titre": "docs(neon): ajuster la bibliothèque et proposer l'assistant Neon"
+  },
+  {
+    "sha": "5ba115004b2b4801bf4b506e3d4f0fd0e4661498",
+    "date": "2026-11-12T16:59:50Z",
+    "titre": "docs(neon): recentrer le style SWOT et PESTEL sur la bibliothèque"
+  },
+  {
+    "sha": "3d2a0925ba959417d25df9fe0a8adca5d8695131",
+    "date": "2026-11-12T16:51:27Z",
+    "titre": "docs(neon): proposer un menu inspiré du SWOT et du PESTEL"
+  },
+  {
+    "sha": "35e700c526c50dd9877fee2d67ab2b0cad2f529b",
+    "date": "2026-11-12T16:00:05Z",
+    "titre": "feat(web): réunir bibliothèque et couverture, proposer un menu latéral commun"
+  },
+  {
+    "sha": "41126909647896658a1eac6be2c018f65c7027bb",
+    "date": "2026-11-12T15:04:29Z",
+    "titre": "docs(refonte): réunir bibliothèque et couverture en proposition"
+  },
+  {
+    "sha": "f9167a4325fa1ebf230c5746d00ec2d7fe82de49",
+    "date": "2026-11-12T14:13:05Z",
+    "titre": "docs(assistant): livrer le dossier d’implémentation IA isolé"
+  },
+  {
+    "sha": "04a310fe14efaf9878268bd3c20589c87fcd127c",
+    "date": "2026-11-12T13:45:24Z",
+    "titre": "feat(web): intégrer l’assistant RSSI global Neon"
+  },
+  {
+    "sha": "338f40d87c3a2f2836209b0e50ab788747a0fbb2",
+    "date": "2026-11-12T12:42:22Z",
+    "titre": "docs(refonte): proposer l’assistant RSSI global Studio"
+  },
+  {
+    "sha": "ee8b524b7fe151f9bdf50d4d4b50fc016335030f",
+    "date": "2026-11-12T11:01:08Z",
+    "titre": "feat(neon): intègre le registre Fournisseurs Studio"
+  },
+  {
+    "sha": "f8734e6a8a78c0e87c560be2d47fb9fab7a49275",
+    "date": "2026-11-12T09:39:46Z",
+    "titre": "docs(neon): nettoie les lignes blanches des aperçus figés"
+  },
+  {
+    "sha": "9999ff5dc3d336b9253f95f3ca1d7a3e738b9406",
+    "date": "2026-11-12T09:39:23Z",
+    "titre": "docs(neon): propose l’habillage de la carte et Fournisseurs Studio"
+  },
+  {
+    "sha": "a0d774753d52a85e0b36697f074063c9bae144ff",
+    "date": "2026-11-12T09:06:51Z",
+    "titre": "docs(neon): conserve la cartographie actuelle et sa génération"
+  },
+  {
+    "sha": "1b637ef9043e50c8ec280c74e652002c91a1265d",
+    "date": "2026-11-12T08:32:42Z",
+    "titre": "docs(neon): propose la cartographie Studio"
+  },
+  {
+    "sha": "166990f4bfdb61b5665cab29d0325cfe01601449",
+    "date": "2026-11-12T07:53:32Z",
+    "titre": "docs(neon): propose Rôles et responsabilités Studio"
+  },
+  {
+    "sha": "67a334aeaf7f9ded2e8caf96f466816e4abc6d8d",
+    "date": "2026-11-12T00:14:53Z",
+    "titre": "feat(neon): intègre Processus Studio et le cercle centré"
+  },
+  {
+    "sha": "8289ff98eec64b7a53a7a66a7dbd12a34cf560ff",
+    "date": "2026-11-11T23:40:13Z",
+    "titre": "docs(neon): centre le cercle et prépare Processus Studio"
+  },
+  {
+    "sha": "81ea06a7816a35e56844006c54e70397a093d9fb",
+    "date": "2026-11-11T23:16:23Z",
+    "titre": "feat(neon): intègre les parties intéressées Studio"
+  },
+  {
+    "sha": "041c331cb9a8d0c7d6af631e5f1d01bf783f6eed",
+    "date": "2026-11-11T21:52:14Z",
+    "titre": "docs(neon): anime le flux des liaisons alignées"
+  },
+  {
+    "sha": "bfa724ffc65a41a9a845230f743e764a6941bf2c",
+    "date": "2026-11-11T21:29:53Z",
+    "titre": "docs(neon): aligne les liaisons des parties intéressées"
+  },
+  {
+    "sha": "f7e11c1eb6c8b35f47b338713e1bda8a2ff6e3e3",
+    "date": "2026-11-11T20:47:45Z",
+    "titre": "docs(neon): propose la lecture Studio des parties intéressées"
+  },
+  {
+    "sha": "e73b1efff253709d825fbc5eb1afaaba745eeea1",
+    "date": "2026-11-11T18:42:03Z",
+    "titre": "docs(neon): consigner le ZIP complet actualisé pour Claude"
+  },
+  {
+    "sha": "96a8143dd0edc25f9cfaaaa4d71e316debe7b9c1",
+    "date": "2026-11-11T17:52:30Z",
+    "titre": "docs(neon): consigner le dossier livré pour la reprise Claude"
+  },
+  {
+    "sha": "4ed05d4a6ad38dc10e20d7b69330605f5c4d7edc",
+    "date": "2026-11-11T17:47:56Z",
+    "titre": "docs(neon): préparer la reprise Claude des interfaces PC"
+  },
+  {
+    "sha": "d72f05f30a1fbc467216447b412f4d18d76d9408",
+    "date": "2026-11-11T14:39:42Z",
+    "titre": "docs(neon): proposer des vues en icônes et des filtres discrets"
+  },
+  {
+    "sha": "23dc6228dc42826773374cee759152cbd377177d",
+    "date": "2026-11-11T14:00:58Z",
+    "titre": "docs(neon): consigne la livraison des registres et validations"
+  },
+  {
+    "sha": "23b33b5ce4fd4cf5eeee0af97c9638b18852b61a",
+    "date": "2026-11-11T13:55:32Z",
+    "titre": "feat(neon): ouvre les fiches par ligne et valide depuis la Timeline"
+  },
+  {
+    "sha": "1df2757db5cbbcb2852e0072fc32eb2310643559",
+    "date": "2026-11-11T08:12:32Z",
+    "titre": "docs(refonte): consigne la livraison du Docker compilé vérifié"
+  },
+  {
+    "sha": "9052a18a21c1c9f0c918c12037faf005a0dc44c0",
+    "date": "2026-11-11T08:05:27Z",
+    "titre": "fix(docker): vérifie le démarrage du profil interfaces compilé"
+  },
+  {
+    "sha": "6de75b07c2eea569bc6ddf1fe51e7654c15bb2f4",
+    "date": "2026-11-11T01:55:20Z",
+    "titre": "docs(refonte): consigne le ZIP des interfaces et sa recette"
+  },
+  {
+    "sha": "5ed760b234627510afb7b13578c151b9b7abeae4",
+    "date": "2026-11-11T01:52:15Z",
+    "titre": "feat(web): intègre les Timelines Studio et le Docker de test sans connexion"
+  },
+  {
+    "sha": "da12d9042ca566e02e5210bbc166410f462017e6",
+    "date": "2026-11-11T00:41:57Z",
+    "titre": "docs(refonte): adapte la Timeline à la périodicité des récurrences"
+  },
+  {
+    "sha": "78865ff6dbc079333dd8f1843a478be7cf7268ff",
+    "date": "2026-11-11T00:20:29Z",
+    "titre": "docs(refonte): anime les états orange À faire de la maquette"
+  },
+  {
+    "sha": "a4d4dc25bee0646b1cbdcd086863cfc1416ecb9d",
+    "date": "2026-11-11T00:13:17Z",
+    "titre": "docs(refonte): propose une Timeline inspirée du SWOT et du PESTEL"
+  },
+  {
+    "sha": "9d7394336920190957d5611e6f0971de34357c77",
+    "date": "2026-11-10T22:37:06Z",
+    "titre": "docs(refonte): place la Timeline au premier plan des actions"
+  },
+  {
+    "sha": "247dd72a17bd224fc1da889ae4db4886b3f49c02",
+    "date": "2026-11-10T22:16:44Z",
+    "titre": "docs(refonte): propose les registres Actions et Récurrences Studio"
+  },
+  {
+    "sha": "b9d08b578eca91fdf1d2c7ec9daa16e16a66a117",
+    "date": "2026-11-10T21:29:12Z",
+    "titre": "docs(refonte): livre le PESTEL Studio intégré et vérifié"
+  },
+  {
+    "sha": "5dd1c68350730f6a59ff204a5e721a482b3125eb",
+    "date": "2026-11-10T21:17:29Z",
+    "titre": "feat(refonte): intègre le PESTEL Studio validé"
+  },
+  {
+    "sha": "11b2809c1f5d1d1b7b09a0339e8c16710247748d",
+    "date": "2026-11-10T20:09:36Z",
+    "titre": "docs(refonte): livre le SWOT au centre agrandi après validation"
+  },
+  {
+    "sha": "51d70229aa560cd466a92478b7e0a8d333e03014",
+    "date": "2026-11-10T20:04:06Z",
+    "titre": "feat(refonte): intègre le centre SWOT agrandi validé"
+  },
+  {
+    "sha": "944274ecafd01ed946489a7b65e925c211009b08",
+    "date": "2026-11-10T18:55:54Z",
+    "titre": "docs(refonte): propose le PESTEL Studio interactif"
+  },
+  {
+    "sha": "67d04bae4a0fce35b55e67c2e4c43393d30a28b9",
+    "date": "2026-11-10T09:39:25Z",
+    "titre": "docs(refonte): propose un centre SWOT agrandi sans chevauchement"
+  },
+  {
+    "sha": "c60dc32a46cbf794c2e1eb4095d70f34878a3b35",
+    "date": "2026-11-10T05:23:37Z",
+    "titre": "docs(refonte): consigne le SWOT intégré et ses captures réelles"
+  },
+  {
+    "sha": "016d69c50c7775a62640e9e2d75d2875e9c85374",
+    "date": "2026-11-10T00:00:38Z",
+    "titre": "feat(web): intègre la matrice SWOT Studio validée"
+  },
+  {
+    "sha": "82981f74d084cfa7b7166ef8ae02def0f913f193",
+    "date": "2026-11-09T23:16:37Z",
+    "titre": "docs(refonte): propose une matrice SWOT Studio animée"
+  },
+  {
+    "sha": "d3a4271c3debe4ad6bcfc88eb956cf6057befdb3",
+    "date": "2026-11-09T22:49:43Z",
+    "titre": "docs(refonte): explicite le rattachement du SWOT aux processus"
+  },
+  {
+    "sha": "ce644ceac6ce28b93dcf1f91add08d077edc8b1e",
+    "date": "2026-11-09T22:26:37Z",
+    "titre": "docs(refonte): propose les premiers onglets Organisation en Studio"
+  },
+  {
+    "sha": "e930a14a2e37c3712a593c9757bfe8451dd1cc20",
+    "date": "2026-11-09T21:35:57Z",
+    "titre": "docs(refonte): formalise la charte Neon et les choix validés"
+  },
+  {
+    "sha": "c11277f4143c0ba620237b61fad2a36a8d66a8e6",
+    "date": "2026-11-05T17:52:08Z",
+    "titre": "docs(refonte): consigne les contrôles et captures des référentiels intégrés"
+  },
+  {
+    "sha": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+    "date": "2026-11-05T17:47:57Z",
+    "titre": "refactor(web): harmonise les référentiels dans le style Studio validé"
+  },
+  {
+    "sha": "1ba2edd40dc8be6c4d60f07dd265eba1d1155711",
+    "date": "2026-11-04T23:48:47Z",
+    "titre": "docs(web): proposer les référentiels dans le style Studio"
+  },
+  {
+    "sha": "efb8f9539a185284449c65c6de12a70043ef5728",
+    "date": "2026-11-04T22:33:21Z",
+    "titre": "docs(web): livrer les captures des deux intégrations Studio"
+  },
+  {
+    "sha": "eed9f219c597d111475a6a00454421de49576afe",
+    "date": "2026-11-04T22:30:45Z",
+    "titre": "feat(web): intégrer les périmètres horizontaux et les objectifs Studio"
+  },
+  {
+    "sha": "225173a9f1e9a41766eff1b8154525f24a641486",
+    "date": "2026-11-04T22:08:02Z",
+    "titre": "docs(web): proposer les objectifs dans le style Studio"
+  },
+  {
+    "sha": "97426861195837e8ce148b41602bddcc309ff8b0",
+    "date": "2026-11-04T21:42:53Z",
+    "titre": "docs(web): tracer la vue compacte initiale et la validation des périmètres"
+  },
+  {
+    "sha": "36a92362db38944e1dfa9522e83308480092beed",
+    "date": "2026-11-04T21:41:51Z",
+    "titre": "fix(web): ouvrir le menu objectifs sur la vue compacte"
+  },
+  {
+    "sha": "74bc2eef04f9f7615c59816756a46433e65f2ab2",
+    "date": "2026-11-04T21:37:26Z",
+    "titre": "fix(web): ouvrir les objectifs en vue compacte"
+  },
+  {
+    "sha": "889243aaf67f785e20f648fbe72c3456f5814f91",
+    "date": "2026-11-04T21:21:39Z",
+    "titre": "docs(web): proposer le dépliage horizontal des cartes périmètres"
+  },
+  {
+    "sha": "6710b802cb25e576265bdc4a2061cb9833d1d9fb",
+    "date": "2026-11-04T15:15:29Z",
+    "titre": "docs(web): documenter et illustrer les périmètres compacts intégrés"
+  },
+  {
+    "sha": "495427d54a68d8382fa9e49d9ba417f53c5e789a",
+    "date": "2026-11-04T15:10:10Z",
+    "titre": "feat(web): intégrer les cartes périmètres compactes et centrées"
+  },
+  {
+    "sha": "8f85a6913d3736013787c8b598f026d7ff9c733d",
+    "date": "2026-11-04T14:16:42Z",
+    "titre": "docs(web): proposer des cartes périmètres compactes et centrées"
+  },
+  {
+    "sha": "d4ced292841baae78cd52f40c20c0a597c42bf14",
+    "date": "2026-11-04T11:33:26Z",
+    "titre": "docs(neon): livrer les preuves de la DdA Studio intégrée"
+  },
+  {
+    "sha": "008cc3039ff79b9ed2d3c85860ed087dfbf05c3d",
+    "date": "2026-11-04T11:31:10Z",
+    "titre": "feat(web): intégrer la DdA Studio validée"
+  },
+  {
+    "sha": "fbda4f405343abd4c23512241c3e3534152853ad",
+    "date": "2026-11-04T10:59:52Z",
+    "titre": "docs(neon): foncer les choix d’applicabilité et de mise en œuvre"
+  },
+  {
+    "sha": "bba5341157b990fd2999d9ffbd0bce238ed40c0f",
+    "date": "2026-11-04T09:30:32Z",
+    "titre": "docs(neon): renforcer légèrement le contraste de la nouvelle DdA"
+  },
+  {
+    "sha": "f37db87b8c45e866ecb2a86d64d46465aa847c55",
+    "date": "2026-11-04T09:16:19Z",
+    "titre": "docs(neon): reconstruire la maquette DdA sur les nouvelles références"
+  },
+  {
+    "sha": "af2f7eb51acc2a8ad2fa0f7d162dbe6ec81ef38b",
+    "date": "2026-11-04T08:41:27Z",
+    "titre": "docs(neon): proposer une DdA blanc cassé et sauge"
+  },
+  {
+    "sha": "5d2cabfd3bd8d62983561b8e826d949f73c0b685",
+    "date": "2026-11-03T21:51:43Z",
+    "titre": "docs(neon): harmoniser les dégradés vert et orange"
+  },
+  {
+    "sha": "30da12ae2e90eb9728b83449076eba4ec326e4d9",
+    "date": "2026-11-03T21:47:02Z",
+    "titre": "docs(neon): adoucir le gris avec un fond en dégradé"
+  },
+  {
+    "sha": "fc253cb54cf48ba4b2f83826fe89028317360253",
+    "date": "2026-11-03T21:40:21Z",
+    "titre": "docs(neon): proposer une DdA claire plus contrastée"
+  },
+  {
+    "sha": "b81a1a1540fa521275b288c7027ab34613061b6b",
+    "date": "2026-11-03T20:48:31Z",
+    "titre": "docs(neon): fournir les captures réelles de la DdA intégrée"
+  },
+  {
+    "sha": "4a1304ba80a9bc476fb9a3d3ab504ebb33c06c67",
+    "date": "2026-11-03T20:46:19Z",
+    "titre": "feat(web): intégrer la DdA Neon validée"
+  },
+  {
+    "sha": "08ef98abc9e705e9b2af2383f5343866c5d0ed9b",
+    "date": "2026-11-03T14:28:26Z",
+    "titre": "docs(neon): atténuer la lueur des barres DdA"
+  },
+  {
+    "sha": "f901c547cc413af3482126fe21b41594969a3cbb",
+    "date": "2026-11-03T14:16:52Z",
+    "titre": "docs(neon): fournir les vues intégrales HD de la DdA"
+  },
+  {
+    "sha": "2862f8d0b549dd45b3e5b9dafe226af3d3241a6b",
+    "date": "2026-11-03T14:11:08Z",
+    "titre": "docs(neon): reprendre les références claires de la DdA"
+  },
+  {
+    "sha": "16075403a340341c9be6e9a677d015eec17f3874",
+    "date": "2026-11-03T14:01:42Z",
+    "titre": "docs(neon): atténuer les halos et ajouter les dégradés DdA"
+  },
+  {
+    "sha": "f8f59692cb89463d743d347691dea2dabc7f6586",
+    "date": "2026-11-03T13:56:21Z",
+    "titre": "docs(neon): rapprocher le clair DdA du modèle fourni"
+  },
+  {
+    "sha": "9dd3291732a531c2270f51c55da05aa2c629e2bf",
+    "date": "2026-11-03T13:42:47Z",
+    "titre": "docs(neon): reprendre les références des lignes DdA"
+  },
+  {
+    "sha": "5f175c0a603608074ceb23df83aadd012fcbe7e3",
+    "date": "2026-11-03T13:32:21Z",
+    "titre": "docs(neon): distinguer l’applicabilité et renforcer les lignes DdA"
+  },
+  {
+    "sha": "87ef6e03449bebf8be773d52ba38214889b47655",
+    "date": "2026-11-03T13:26:07Z",
+    "titre": "docs(neon): remplir les champs de niveau dans la maquette DdA"
+  },
+  {
+    "sha": "6f0a976eb11062dddf134406c2481c3a7642ca76",
+    "date": "2026-11-03T09:43:52Z",
+    "titre": "docs(neon): foncer légèrement les fonds des lignes DdA"
+  },
+  {
+    "sha": "cdf11372cc3d9809e879fadcd65a72eb1c49a107",
+    "date": "2026-11-03T09:30:33Z",
+    "titre": "docs(neon): proposer les mesures DdA en lignes compactes"
+  },
+  {
+    "sha": "4e40916eb5e6303c5cd61714391175da7474923d",
+    "date": "2026-11-03T09:17:49Z",
+    "titre": "docs(neon): proposer des cartes graphiques pour les mesures DdA"
+  },
+  {
+    "sha": "6e489c2f18d9ed1fbf1379d5b9a4a5573563e7dc",
+    "date": "2026-11-03T08:59:35Z",
+    "titre": "docs(neon): proposer une nouvelle DdA inspirée des images"
+  },
+  {
+    "sha": "0191610d009daea9e4bff5406968eecd1323891d",
+    "date": "2026-11-03T08:21:31Z",
+    "titre": "docs(neon): remplacer le rose par du rouge dans la maquette DdA"
+  },
+  {
+    "sha": "b07e35d397575b244003fea1d5668ca87a75956e",
+    "date": "2026-11-03T07:21:00Z",
+    "titre": "docs(neon): retrouver la lumière néon dans la maquette DdA"
+  },
+  {
+    "sha": "1ed71994f1830c9f787a8b9d9b74fcd1c6520e0a",
+    "date": "2026-11-03T07:12:00Z",
+    "titre": "docs(neon): proposer du relief pour le tableau DdA clair"
+  },
+  {
+    "sha": "44414c9c4d889d327dd95ad186ea6ad4071a65ea",
+    "date": "2026-11-03T07:04:33Z",
+    "titre": "docs(neon): renforcer le contraste du tableau DdA clair"
+  },
+  {
+    "sha": "298b1c86ba851af4f082da4919e63015b0dfec36",
+    "date": "2026-11-02T21:37:23Z",
+    "titre": "docs(neon): proposer la DdA dans le thème Dashboard original"
+  },
+  {
+    "sha": "aaac67cfe8e4edc130cc6e68094be2f670d7b633",
+    "date": "2026-11-02T21:35:26Z",
+    "titre": "refactor(web): intégrer les en-têtes Dashboard validés"
+  },
+  {
+    "sha": "564a50f311e1236ef06c2e745ea8a279acd4d3f7",
+    "date": "2026-11-02T21:09:18Z",
+    "titre": "docs(ui): rapprocher les en-têtes du Dashboard de référence"
+  },
+  {
+    "sha": "28b460df89db5875c12ba63eb71ee08926ce147b",
+    "date": "2026-11-02T21:02:36Z",
+    "titre": "docs(ui): proposer une barre d’en-têtes Biseau"
+  },
+  {
+    "sha": "eaadcf23c412dc9ac3f06003c9d8c34bcf919a6d",
+    "date": "2026-11-02T08:34:04Z",
+    "titre": "fix(ui): appliquer la version B des objectifs"
+  },
+  {
+    "sha": "fc52fd289bb754826933a478ed4d5c75860fb3c4",
+    "date": "2026-11-02T07:45:51Z",
+    "titre": "docs(ui): comparer les titres agrandis et les blocs réduits"
+  },
+  {
+    "sha": "4d4a4d4a147b1d3ecbf3714cd8536dddd63b2006",
+    "date": "2026-11-02T06:29:01Z",
+    "titre": "docs(ui): proposer des blocs mieux proportionnés aux intitulés"
+  },
+  {
+    "sha": "03b6640af352ce0e7a31754b97c5301d58fd551c",
+    "date": "2026-11-02T06:11:39Z",
+    "titre": "feat(web): intégrer la présentation validée des objectifs"
+  },
+  {
+    "sha": "1669dbc272ffa9b2d3df570e43a2b83716bb8f5a",
+    "date": "2026-11-02T06:05:46Z",
+    "titre": "docs(ui): proposer des fonds d’indicateurs plus soutenus"
+  },
+  {
+    "sha": "55e22416792dfa1bab9e812a744b8229f1a02ac2",
+    "date": "2026-11-01T22:50:56Z",
+    "titre": "docs(ui): harmoniser les contours internes de la maquette"
+  },
+  {
+    "sha": "b861767f9f620f2df401b7015c680b281936a355",
+    "date": "2026-11-01T22:47:06Z",
+    "titre": "docs(ui): renforcer les contours Biseau de la maquette"
+  },
+  {
+    "sha": "3762b14e84297190990dc55572c24feed304e725",
+    "date": "2026-11-01T22:41:20Z",
+    "titre": "docs(ui): restaurer la cible violette et renforcer l’alerte proposée"
+  },
+  {
+    "sha": "5f2551d48494feff0970f59c5cd889e6c5fc91f5",
+    "date": "2026-11-01T22:30:49Z",
+    "titre": "docs(ui): atténuer le violet et diversifier la palette proposée"
+  },
+  {
+    "sha": "4e543e123d059f64c7b8a7aac8b52fc7d909a3fa",
+    "date": "2026-11-01T22:21:33Z",
+    "titre": "docs(ui): proposer les titres alignés et la vue compacte animée"
+  },
+  {
+    "sha": "2bcfe438bc00ffc44453157e7a76b1ac0bda963d",
+    "date": "2026-11-01T22:05:36Z",
+    "titre": "docs(ui): uniformiser les trois encadrés dans la maquette"
+  },
+  {
+    "sha": "9f64e91a42ec92061e6e6ee411f40bd746468adb",
+    "date": "2026-11-01T21:56:26Z",
+    "titre": "docs(ui): encadrer les mesures dans la proposition visuelle"
+  },
+  {
+    "sha": "4ba064ce5c9f0d45e34535d717973f7c250dd17b",
+    "date": "2026-11-01T21:50:39Z",
+    "titre": "docs(ui): proposer une cible renforcée avant validation"
+  },
+  {
+    "sha": "34921129f6117b8093e3d63216f827c76abbec4c",
+    "date": "2026-11-01T21:30:54Z",
+    "titre": "fix(web): colorer les chiffres et tendances des objectifs"
+  },
+  {
+    "sha": "9fc57ab375d16256d09fd6227574a42c690e4dcc",
+    "date": "2026-11-01T21:08:45Z",
+    "titre": "feat(web): retravailler la présentation des objectifs et indicateurs"
+  },
+  {
+    "sha": "31d580aa0c56b5a6a2c626627a8a01a0b33a1268",
+    "date": "2026-11-01T20:37:19Z",
+    "titre": "docs(ui): consigner la validation des catégories du contexte"
+  },
+  {
+    "sha": "e5dabd2bc94bf240e8a9aa34ac874d5911501c50",
+    "date": "2026-11-01T19:55:45Z",
+    "titre": "fix(web): distinguer les catégories du contexte à la lecture"
+  },
+  {
+    "sha": "fede36115ae543c6a0485571160eef9657bd3252",
+    "date": "2026-11-01T16:46:59Z",
+    "titre": "fix(ui): généraliser Biseau et supprimer le défilement interne"
+  },
+  {
+    "sha": "90f5befbf24e9b3baa4bb9779aabf3aa45887093",
+    "date": "2026-11-01T15:09:35Z",
+    "titre": "docs(web): confirmer les animations validées dans la refonte"
+  },
+  {
+    "sha": "6c644d15f1ddfc2aee9c35f90c8fd96f1f2baa79",
+    "date": "2026-11-01T14:54:32Z",
+    "titre": "docs(web): fournir un aperçu lisible des cinq animations"
+  },
+  {
+    "sha": "7f5fb78c9eb04be48abb9670dfb4391948ea8dcd",
+    "date": "2026-11-01T14:19:38Z",
+    "titre": "refactor(web): retenir le cadre biseauté choisi par le demandeur"
+  },
+  {
+    "sha": "e73f7ef259b8091af4640189548b52f7684c9854",
+    "date": "2026-11-01T13:43:30Z",
+    "titre": "refactor(web): proposer trois cadres néon et animer les pictogrammes"
+  },
+  {
+    "sha": "bf7530595e517c4fcfd8a3213f8e9e116de8639c",
+    "date": "2026-11-01T13:13:58Z",
+    "titre": "refactor(web): renforcer les fonds et unifier les listes du contexte"
+  },
+  {
+    "sha": "deb68f1851ddf2c8454b3551b24c915f7bea4c7f",
+    "date": "2026-11-01T12:49:06Z",
+    "titre": "refactor(web): rééquilibrer les rubriques du dossier de contexte"
+  },
+  {
+    "sha": "d4cd20dc771242edeac33ae47137e9fcbea9c1c3",
+    "date": "2026-11-01T12:09:51Z",
+    "titre": "refactor(web): composer le contexte comme un dossier d’audit"
+  },
+  {
+    "sha": "37bd0311f71a3e87f8aeefba33f2ff4093e82799",
+    "date": "2026-11-01T10:45:47Z",
+    "titre": "feat(web): séparer la présentation du contexte de son édition"
+  },
+  {
+    "sha": "466dc663f7e798d0e1600da905b452f32109fe0c",
+    "date": "2026-11-01T07:12:22Z",
+    "titre": "refactor(web): harmoniser les fenêtres avec la charte Neon"
+  },
+  {
+    "sha": "af34ebe6b1806ae2a72c06bc3aa5af138988f70f",
+    "date": "2026-10-31T23:28:30Z",
+    "titre": "refactor(web): clarifier la typographie des dalles de périmètre"
+  },
+  {
+    "sha": "f30190546b2087720b5e8067c9942372016b626f",
+    "date": "2026-10-31T23:17:54Z",
+    "titre": "refactor(web): retravailler les dalles du graphe des périmètres"
+  },
+  {
+    "sha": "ff6f19e2221e5f22ec1126d13933807c8fe1a409",
+    "date": "2026-10-31T22:49:02Z",
+    "titre": "refactor(web): intégrer les graphiques et menus du prototype Neon"
+  },
+  {
+    "sha": "81b646b40ebc7a1b29a8b74aac68b6adc6d068b5",
+    "date": "2026-10-31T22:05:07Z",
+    "titre": "refactor(web): appliquer la charte globale Neon clair et sombre"
+  },
+  {
+    "sha": "bd35e5387e59af8256f0befab71cef7ebe922e5c",
+    "date": "2026-10-31T08:40:49Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/fervent-fermi-x9myw1"
+  },
+  {
+    "sha": "e56d17c6ec2a29f129087b12835c120cbcd413b8",
+    "date": "2026-10-31T02:51:20Z",
+    "titre": "Merge origin/claude-suivi-smsi dans claude/admiring-faraday-2rtepr (menu)"
+  },
+  {
+    "sha": "60b48236beff60049157e777c1ea9bae99fbd2b5",
+    "date": "2026-10-31T03:43:01+01:00",
+    "titre": "Merge pull request #201 : menu (Organisation en tête, Périmètres, ordre au glisser-déposer, sans barre de défilement)"
+  },
+  {
+    "sha": "c335af9ca2c40b9b2de96e0a659c16852dc0de0b",
+    "date": "2026-10-30T23:04:50Z",
+    "titre": "style(revue): capsules de verre fidèles aux maquettes, sombre allégé"
+  },
+  {
+    "sha": "45896bc69bf3df75e03cde11f20860a9acd1c3c0",
+    "date": "2026-10-30T22:58:35Z",
+    "titre": "feat(revue): vrai fond de page et capsules de verre pour la revue de direction"
+  },
+  {
+    "sha": "98d62ee6ee66ece83d5bf7211d97839efc0e7c91",
+    "date": "2026-10-30T22:32:20Z",
+    "titre": "feat(revue): habillage RETEX et dalles en verre pour la préparation de la revue"
+  },
+  {
+    "sha": "31d117647c7d38bdb215a671e5482ec4599789c3",
+    "date": "2026-10-30T22:26:39Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/admiring-faraday-2rtepr"
+  },
+  {
+    "sha": "c41243f63370644791dac97e517187176bbc98d8",
+    "date": "2026-10-30T21:55:07Z",
+    "titre": "feat(menu): « Parcours guidé » regroupe les parcours, ISO 27001 / HDS en premier"
+  },
+  {
+    "sha": "b272d52150d9db410ae2951b3620fcb7d258dcd3",
+    "date": "2026-10-30T21:52:02Z",
+    "titre": "feat(revue): préparation de la revue de direction plus lisible"
+  },
+  {
+    "sha": "ee07ab6ecf06cfd89016fac474494973ff29c05b",
+    "date": "2026-10-30T21:48:07Z",
+    "titre": "feat(navigation): Périmètres dans l'Organisation, ordre du menu au glisser-déposer"
+  },
+  {
+    "sha": "360effbd7cb5f735896b1829771b00c9cba5138f",
+    "date": "2026-10-30T21:45:19Z",
+    "titre": "feat(menu): « Parcours guidé » devient un onglet du Pilotage, avec le parcours ISO 27001 / HDS"
+  },
+  {
+    "sha": "16e2d6f79893c977df6fd5020b3cf884c7a4eb5f",
+    "date": "2026-10-30T21:40:07Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/cool-planck-9m64g1"
+  },
+  {
+    "sha": "bd691f99d494631fc82a688a95e62f84976473d0",
+    "date": "2026-10-30T21:39:34Z",
+    "titre": "feat(navigation): la famille Organisation passe au-dessus du Pilotage"
+  },
+  {
+    "sha": "48535219031f42279d04d67e9cb6fe15caaf36ef",
+    "date": "2026-10-30T21:37:37Z",
+    "titre": "fix(interface): le menu latéral n'affiche plus de barre de défilement"
+  },
+  {
+    "sha": "ca28fd65dd99c6f04ae86551a2497d2071dcd968",
+    "date": "2026-10-30T21:27:48Z",
+    "titre": "security(web): aucun exemple de format dans le champ identifiant"
+  },
+  {
+    "sha": "04fa845822eb6ba533ea87d0c287ecc97e76978c",
+    "date": "2026-10-30T16:00:42Z",
+    "titre": "feat(accueil): seuils, cible et visualisation par dalle du tableau de bord (ADR 0078, lot 2c)"
+  },
+  {
+    "sha": "36c79fc24f92718ff8b4cb287684355da61c9c6a",
+    "date": "2026-10-30T13:08:01Z",
+    "titre": "fix(accueil): retour au défaut sans le droit tableau_de_bord:modifier ; reprise du 30/10"
+  },
+  {
+    "sha": "60d9890962ae2a914e88e38d31c5680757f1872d",
+    "date": "2026-10-30T13:03:54Z",
+    "titre": "feat(accueil): partage du tableau de bord et droit dédié (ADR 0078, lot 2b)"
+  },
+  {
+    "sha": "2c53de7a643c2098ebf36c2e9aebdc8ac54ad827",
+    "date": "2026-10-30T08:45:24Z",
+    "titre": "Merge origin/claude-suivi-smsi dans claude/retex-incidents"
+  },
+  {
+    "sha": "f873058a5e2a2d4d39252fef55fe6a012deddaf5",
+    "date": "2026-10-30T09:28:23+01:00",
+    "titre": "Merge pull request #188 : disposition du tableau de bord (ADR 0078, lot 2a)"
+  },
+  {
+    "sha": "922b03f251c5d699fb93c88284a72c9090e9c41c",
+    "date": "2026-10-30T07:39:16Z",
+    "titre": "fix(web): deux filtres d'adresse changés coup sur coup ne s'écrasent plus"
+  },
+  {
+    "sha": "734ea1f8c608990e645306dfe63f42f5a15ea43a",
+    "date": "2026-10-30T07:33:04Z",
+    "titre": "Merge origin/claude-suivi-smsi dans claude/retex-incidents"
+  },
+  {
+    "sha": "91b979b3801bc4665dbfbfa6a63fa6bb95f9ac93",
+    "date": "2026-10-30T07:30:38Z",
+    "titre": "Merge origin/claude-suivi-smsi dans claude/tableau-de-bord-disposition"
+  },
+  {
+    "sha": "620d64c9db7744b8794ce83fa517ea0499dcf70f",
+    "date": "2026-10-30T02:50:07Z",
+    "titre": "Merge origin/claude-suivi-smsi dans claude/tableau-de-bord-disposition"
+  },
+  {
+    "sha": "aa6d06ef037a8a7078830db4cafa1d90558e4347",
+    "date": "2026-10-30T02:08:13Z",
+    "titre": "docs(web): guide d'utilisation du RETEX (pilote et contributeur)"
+  },
+  {
+    "sha": "ab0db8ea126d84185111ac39a141577244c29398",
+    "date": "2026-10-30T02:05:45Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/intelligent-gauss-6dgh4w"
+  },
+  {
+    "sha": "c0ee4356222977a0e63bab938292dd018bd8b328",
+    "date": "2026-10-30T01:45:14Z",
+    "titre": "fix(web): résumé de la carte Sécurité inchangé (captures de référence)"
+  },
+  {
+    "sha": "3d10e0cb2d449211ac83bcc330a1ad9861ca7ab6",
+    "date": "2026-10-30T01:21:51Z",
+    "titre": "style(incidents): habillage des écrans RETEX aligné sur la chronologie générée"
+  },
+  {
+    "sha": "705ace7fb15ec8b1ca2b772cb72ff9ce7edbe6f6",
+    "date": "2026-10-30T01:09:06Z",
+    "titre": "feat(incidents): collecte du RETEX (pilote, contributeurs d'autres pôles, file à valider, récupération)"
+  },
+  {
+    "sha": "50526c02c56ae4a0bd1cb6c0a33afdb4e6ef114a",
+    "date": "2026-10-29T23:23:49Z",
+    "titre": "feat(incidents): RETEX et chronologie animée d'incident"
+  },
+  {
+    "sha": "36226c6990bdbf31fe13b6a61ab1c820880ac9c6",
+    "date": "2026-10-30T01:06:18Z",
+    "titre": "feat(web): clés de sécurité à la connexion, sécurité du compte et administration (ADR 0079)"
+  },
+  {
+    "sha": "6476675be4247406a231101fb63df246408766a3",
+    "date": "2026-10-29T23:27:13Z",
+    "titre": "docs(web): suivi de la refonte de la connexion et captures des étapes"
+  },
+  {
+    "sha": "bdad8cf7523f51bba59c32e534cac5c7c80c867b",
+    "date": "2026-10-29T23:09:05Z",
+    "titre": "feat(web): onde signée de la connexion, placée entre le titre et la carte"
+  },
+  {
+    "sha": "73adf0bba3efc5bd84881ebcdf7fd0e4e4af2d99",
+    "date": "2026-10-29T22:55:27Z",
+    "titre": "feat(web): onde en fond du panneau de connexion et barres larges du fond"
+  },
+  {
+    "sha": "e4171b138ec1cc9791b22802d1fee421ea49da16",
+    "date": "2026-10-29T22:34:55Z",
+    "titre": "feat(web): refonte de l'écran de connexion en panneau unique centré"
+  },
+  {
+    "sha": "0935ff053c092f60a5b5317ed5e0e027bcff6cc9",
+    "date": "2026-10-29T21:29:54Z",
+    "titre": "fix(accueil): barre d'outils de la dalle sans titre en double (mode Modifier la disposition)"
+  },
+  {
+    "sha": "00fc593e4058c21fcc9b08f5dd6d741eabbaa84b",
+    "date": "2026-10-29T21:14:41Z",
+    "titre": "feat(accueil): disposition du tableau de bord par personne et par défaut (ADR 0078, lot 2a)"
+  },
+  {
+    "sha": "7d99e2931162d33a947d06cf561f428704efa3ba",
+    "date": "2026-10-29T18:00:17Z",
+    "titre": "fix: réserves de l'audit des ADR 0070 à 0075 sur les fichiers de l'ADR 0077"
+  },
+  {
+    "sha": "fd5e7586ea56cbff579efb26e9de69a5c8d42637",
+    "date": "2026-10-29T14:39:20Z",
+    "titre": "feat(installation): commande unique installer.sh et adresse du site dans l'assistant (ADR 0077, étape 2)"
+  },
+  {
+    "sha": "c0a7fd8f1f43e84939a867a598d8fe7419f5fa55",
+    "date": "2026-10-29T14:08:12Z",
+    "titre": "fix(sauvegardes): route de la clé de secours hors de /api/admin/sauvegardes, bandeau sans rafraîchissement périodique"
+  },
+  {
+    "sha": "1c61dc2c82fa0730aa6d8287f4d3aff8c70b9cd8",
+    "date": "2026-10-29T13:26:57Z",
+    "titre": "feat(sauvegardes): clés de sauvegarde sans commande, clé de secours générée par le navigateur (ADR 0077)"
+  },
+  {
+    "sha": "52d33e92fffc087908b5772844399e13be0cfafe",
+    "date": "2026-10-29T05:00:51+01:00",
+    "titre": "Merge pull request #165 : carte phare (prochain audit et taux global) et grille des écarts (ADR 0069)"
+  },
+  {
+    "sha": "e7e10c851350a80ec969bdc6f0348ab7aace2b82",
+    "date": "2026-10-28T23:41:34Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/demo-premier-lancement"
+  },
+  {
+    "sha": "32a707d1fd70f3b3369d978490b006d36192d52b",
+    "date": "2026-10-28T23:02:35Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/securite-composition-mdp"
+  },
+  {
+    "sha": "137533d5a78b15d09dd32ae2a480eec2efed1a84",
+    "date": "2026-10-29T00:02:09+01:00",
+    "titre": "Merge pull request #162 : alerte de verrouillage dans l'application (L7, suite)"
+  },
+  {
+    "sha": "996a9c94ce4598ac5d33948255c5090e4f096424",
+    "date": "2026-10-28T23:00:12Z",
+    "titre": "Merge branche claude-suivi-smsi dans claude/tableau-de-bord-carte-audit"
+  },
+  {
+    "sha": "ae474aa07274624b475ecc52d28cc537dce0db17",
+    "date": "2026-10-28T22:51:20Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/demo-premier-lancement"
+  },
+  {
+    "sha": "f1ac23c0f3bb98e9852c783c91deb1c88dbcf9ad",
+    "date": "2026-10-28T22:21:21Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/securite-composition-mdp"
+  },
+  {
+    "sha": "60530cef66ac698b81482ec5863c205a9164cc7d",
+    "date": "2026-10-28T22:21:20Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/securite-notification-verrouillage"
+  },
+  {
+    "sha": "8ffa3b11eecb70e2cb90aa0ab62eadf63ccfd9b5",
+    "date": "2026-10-28T21:56:19Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/retrait-references-organisation"
+  },
+  {
+    "sha": "eea370b508995216dd9b2539ca14bc34b31ef987",
+    "date": "2026-10-28T21:41:10Z",
+    "titre": "feat(accueil): carte « Écarts » en grille 2 × 2, au style verre et relief"
+  },
+  {
+    "sha": "0185ee755957883664332b25285ea0bd7f0662fd",
+    "date": "2026-10-28T21:37:03Z",
+    "titre": "feat(accueil): carte phare vert profond, prochain audit puis taux de conformité global"
+  },
+  {
+    "sha": "f65ffbc06ad11d2c97ff9dd7c07dd8e13b415736",
+    "date": "2026-10-28T20:13:53Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/securite-poivre"
+  },
+  {
+    "sha": "ac82e2cba31c8c4fb33789aea58de5e9614e1321",
+    "date": "2026-10-28T20:02:58Z",
+    "titre": "feat(securite): aligner la composition des mots de passe sur les règles du poivre"
+  },
+  {
+    "sha": "131291aa25d4bb6af12d46e433960c5523c4879e",
+    "date": "2026-10-28T19:51:56Z",
+    "titre": "feat(securite): notifier dans l'application les administrateurs d'un compte verrouillé"
+  },
+  {
+    "sha": "036bfa577cf4e954e9b7cd5c61610583049de1f6",
+    "date": "2026-10-28T19:34:36Z",
+    "titre": "Merge remote-tracking branch 'origin/claude-suivi-smsi' into claude/securite-sauvegardes-age"
+  },
+  {
+    "sha": "00fa276fd9daa14d4239470894a742ddcc756110",
+    "date": "2026-10-28T17:09:11Z",
+    "titre": "feat(securite): poivre des mots de passe défini à l'installation et changeable depuis l'administration"
+  },
+  {
+    "sha": "a1ccbcd84f6888c0a8e52fa6162f29fceb39ca78",
+    "date": "2026-10-28T16:40:58Z",
+    "titre": "style: rétablir la mise en forme de quatre fichiers étrangers au lot"
+  },
+  {
+    "sha": "f95785707b5bfa6b6eac58bb9803de608cd0c347",
+    "date": "2026-10-28T16:37:46Z",
+    "titre": "feat(securite)!: chiffrer les sauvegardes avec age, avec une clé de secours hors serveur"
+  },
+  {
+    "sha": "46ade3a7ee01eba1a106f15288523e3cd5f5a404",
+    "date": "2026-10-28T16:12:12Z",
+    "titre": "Merge branche claude-suivi-smsi dans claude/retrait-references-organisation"
+  },
+  {
+    "sha": "2d4073860fdefb0b0056d7f40b282caf28cf002d",
+    "date": "2026-10-28T16:11:27Z",
+    "titre": "Merge branche claude-suivi-smsi dans claude/demo-premier-lancement"
+  },
+  {
+    "sha": "26966805c6efd1c635100b3b713a5afb12dd5145",
+    "date": "2026-10-28T16:08:35Z",
+    "titre": "Merge branche claude-suivi-smsi dans claude/securite-alerte-verrouillage"
+  },
+  {
+    "sha": "39f3e92ed3b0b36756dec7181690cac0a5d4761a",
+    "date": "2026-10-28T15:28:10Z",
+    "titre": "feat(installation): proposer des données de démonstration ISO 27001, HDS et EBIOS RM"
+  },
+  {
+    "sha": "ffd81bc51b05e64d90556a1e7570e110082ad807",
+    "date": "2026-10-28T14:23:04Z",
+    "titre": "refactor: retirer les références à une organisation réelle"
+  },
+  {
+    "sha": "16edaa9bc40b030740df01221116d80cb0e828e5",
+    "date": "2026-10-28T13:39:23Z",
+    "titre": "fix(auth): réponse de connexion uniforme et alerte de verrouillage de compte"
+  },
+  {
+    "sha": "f4d102cef9a43d90e1000f7ca271a5def807b904",
+    "date": "2026-10-28T11:00:05Z",
+    "titre": "Merge branche claude-suivi-smsi dans claude/tableau-de-bord-verre"
+  },
+  {
+    "sha": "98d253a4a4e65c3f847a12a590122eb7f98184e3",
+    "date": "2026-10-28T09:39:21Z",
+    "titre": "fix(tableau-de-bord): jauge seule sur la demi-rangée, compte à rebours masqué dans les captures"
+  },
+  {
+    "sha": "5952eb45803f036a2130616bbabdf4d03088a1c8",
+    "date": "2026-10-28T08:26:39Z",
+    "titre": "Merge branche claude/securite-finitions dans claude/securite-droits-registres"
+  },
+  {
+    "sha": "8c3886bda621c7e99f5f4de7bfc418c5471b6674",
+    "date": "2026-10-28T00:17:31Z",
+    "titre": "security(droits): toute suppression d'un enregistrement exige le droit « supprimer »"
+  },
+  {
+    "sha": "13e7f8617fedc885efc78e752ac3b67df2d622ac",
+    "date": "2026-10-28T00:07:35Z",
+    "titre": "security(droits): attribution des droits par ressource réservée au gestionnaire attribué ou à qui administre le module"
+  },
+  {
+    "sha": "efbf032892596e43047384820a1932a19c167630",
+    "date": "2026-10-27T23:59:07Z",
+    "titre": "feat(accueil): taux de conformité global, moyenne des taux par référentiel (ADR 0066)"
+  },
+  {
+    "sha": "9ec35692069a1624257b3a2fb1bc602b8e0ee7b7",
+    "date": "2026-10-27T23:25:23Z",
+    "titre": "feat(accueil): tableau de bord « verre et relief » (ADR 0066, étape 1)"
+  },
+  {
+    "sha": "9fde773e87b2fbb90862d8e344e99ee15458ebf0",
+    "date": "2026-10-27T18:42:44Z",
+    "titre": "Merge claude-suivi-smsi into claude/exploitation-alertes-courriel"
+  },
+  {
+    "sha": "3ade2dd272053513cebcad36c4222d7d234e22d1",
+    "date": "2026-10-27T18:58:35+01:00",
+    "titre": "Merge pull request #139 from yousername-ha/claude/exploitation-stack-versions"
+  },
+  {
+    "sha": "a1b5b5c2622816cb36e5dbabcb73e4a1d7d646cc",
+    "date": "2026-10-27T18:54:11+01:00",
+    "titre": "Merge pull request #138 from yousername-ha/claude/exploitation-motifs-exclusion"
+  },
+  {
+    "sha": "c63e08987e5a85c0f4c2aaec9d23601026beeba1",
+    "date": "2026-10-27T17:38:43Z",
+    "titre": "feat(admin): alertes d'exploitation envoyées au contact technique (012-09)"
+  },
+  {
+    "sha": "9a85946e53d0a897616fd334d9dbd393f5125f47",
+    "date": "2026-10-27T17:25:39Z",
+    "titre": "feat(admin): version de ClamAV et répartition base, pièces, journaux (012-03)"
+  },
+  {
+    "sha": "b41d35f0892c72e1f812fedc4703931ce2aa572d",
+    "date": "2026-10-27T17:22:45Z",
+    "titre": "feat(admin): motifs d'exclusion dans l'aperçu de conservation (012-07)"
+  },
+  {
+    "sha": "373c0ee4f2c22a4fb58c4d03dacf44081a8961b7",
+    "date": "2026-10-27T17:19:46Z",
+    "titre": "feat(admin): remise à vide de la base pour la recette (ADR 0065)"
+  },
+  {
+    "sha": "6dc5fdf382f8e58a03bd7c6a6706e6fea92ce936",
+    "date": "2026-10-26T17:42:03Z",
+    "titre": "Merge claude/maj-web-securisee (mise à jour depuis claude-suivi-smsi) dans claude/chaine-publication"
+  },
+  {
+    "sha": "437f37444d31c07647926721c8fdead3a5dc08a3",
+    "date": "2026-10-26T17:41:53Z",
+    "titre": "Merge claude-suivi-smsi (dont #102) dans claude/maj-web-securisee"
+  },
+  {
+    "sha": "cd600e092000c1a3a671e3db823b2ac353bd0339",
+    "date": "2026-10-26T16:07:05Z",
+    "titre": "GAP IA ISO 27001 / HDS : questionnaire par cas d'usage réel, points pré-évalués sur des faits, plan d'action (ADR 0064)"
+  },
+  {
+    "sha": "643883baee8bba3e4d818618c0a4b7c5073de28c",
+    "date": "2026-10-26T12:07:38Z",
+    "titre": "fix(web): reçus de mise à jour sans SBOM affichés sans erreur"
+  },
+  {
+    "sha": "f6fbeb76055d8a83f5fd3c616a9e61a3788922c9",
+    "date": "2026-10-26T11:28:29Z",
+    "titre": "Merge branch 'claude/maj-web-securisee' into claude/chaine-publication"
+  },
+  {
+    "sha": "5083edc3482e1bcd446df85ea65111bc666065d8",
+    "date": "2026-10-26T11:28:27Z",
+    "titre": "fix(web): champ du code TOTP sans maxLength (code collé avec espace tronqué)"
+  },
+  {
+    "sha": "5b20798f26f2818d077cf56126af698fe0492133",
+    "date": "2026-10-26T11:04:47Z",
+    "titre": "security(ci): chaîne de publication durcie — actions par empreinte, Trivy isolé, attestation SBOM exigée"
+  },
+  {
+    "sha": "9939e53977b24c9cc023b410b50504fcf7085d57",
+    "date": "2026-10-26T09:55:17Z",
+    "titre": "security(docker): mise à jour web renforcée — TOTP, fenêtre de maintenance, exécutant sans identifiants, reçu"
+  },
+  {
+    "sha": "1debb9df5a059314b0c6d7dd2e663cd5541a888e",
+    "date": "2026-10-26T08:56:24Z",
+    "titre": "Cartes de périmètres : couverture agrégée avec les sous-périmètres, provenance et détail par référentiel (ADR 0060, L10)"
+  },
+  {
+    "sha": "4d815c74dec1817f4728b41d5caf4b6815b8f63f",
+    "date": "2026-10-26T08:51:04Z",
+    "titre": "Relance automatique des courriels de notification (ADR 0059, migration 045)"
+  },
+  {
+    "sha": "c00b8644076dd5f69d4eeab1371b17269f2d18a9",
+    "date": "2026-10-26T05:50:54+01:00",
+    "titre": "Retrait de la page Conformité IA, notifications métier, contrôle de secrets en CI (ADR 0057, 0058) (#90)"
+  },
+  {
+    "sha": "6a3afd9f1c13b824ff82cc4c237fc578916e120c",
+    "date": "2026-10-26T00:58:54+01:00",
+    "titre": "Écart registre/matrice, clôture avec liens ouverts, bibliothèque de sources, kit IA, analyse de service, fériés en fond (ADR 0052 à 0056) (#89)"
+  },
+  {
+    "sha": "5b9a51db8f3f80daefc6af78622929271e468395",
+    "date": "2026-10-26T00:17:40+01:00",
+    "titre": "Couche visuelle EBIOS RM : chemins, pictogrammes, cercle et flux animés (ADR 0051) (#88)"
+  },
+  {
+    "sha": "6fc22b3cd09acce676d1c699ce417e257dbb2ee4",
+    "date": "2026-10-25T22:54:02+01:00",
+    "titre": "Certificats TLS : autorité interne et ACME choisis dans l'interface (migration 041, ADR 0050) (#87)"
+  },
+  {
+    "sha": "2fddc553d99182e40adfea7c1c07ab463a89da4e",
+    "date": "2026-10-25T21:57:09+01:00",
+    "titre": "Courriel SMTP/SMTPS : tout se règle dans l'interface, envoi par l'exécutant d'exploitation du serveur, message de test réel (migration 040, ADR 0049) (#86)"
+  },
+  {
+    "sha": "c0079af3bade5968485999e23c556df9c7f7b892",
+    "date": "2026-10-25T19:26:35Z",
+    "titre": "Conservation : durées réglables par catégorie et aperçu de ce qui serait purgé, sans aucune purge automatique (ADR 0048)"
+  },
+  {
+    "sha": "b8bcfcc0deef49b58c578392dc528a91f64d9c60",
+    "date": "2026-10-25T19:03:22Z",
+    "titre": "Calendriers de plateforme : jours fériés français calculés, import iCalendar, reprise par les séries (migration 039, ADR 0047)"
+  },
+  {
+    "sha": "39dcfd87d641f97ad246d69b3bd6f5ea94bf30ca",
+    "date": "2026-10-25T17:29:29Z",
+    "titre": "Parcours ISO / HDS : associations fiche/preuve ↔ sous-action et applicabilité HDS en lecture seule (migration 038)"
+  },
+  {
+    "sha": "00285a624a9e7bd26d8bfb4e5dbb8b5f8724ebbf",
+    "date": "2026-10-25T17:29:29Z",
+    "titre": "Retrait du catalogue Environnement et des évaluations IA versionnées (migration 037, ADR 0046)"
+  },
+  {
+    "sha": "9debd273ea082c4f8cd55ff3c6bb8dcb569dd772",
+    "date": "2026-10-25T14:31:47Z",
+    "titre": "Timeline : guide pointillé par ligne et carrés d'occurrence selon la validation (018-02)"
+  },
+  {
+    "sha": "a34fa2ffde580dd97af5be7ec62602bf91306301",
+    "date": "2026-10-25T14:27:51Z",
+    "titre": "Liens : applicabilité de l'exigence dans le périmètre lue à côté du lien (002-02)"
+  },
+  {
+    "sha": "91808eb252bfdf0f27121de10652bc34620a1001",
+    "date": "2026-10-25T14:25:47Z",
+    "titre": "EBIOS RM : échelles de vraisemblance et de gravité des scénarios épinglées par l'étude ; catalogue Environnement nommé"
+  },
+  {
+    "sha": "d75686644439bcb470a03fcb790935888506a54d",
+    "date": "2026-10-25T12:23:51Z",
+    "titre": "Parcours guidé ISO 27001 / HDS (dossier 024) : arbre, liste, fiche, travaux par périmètre, HDS, mouvement"
+  },
+  {
+    "sha": "79e51b4b6eb62a1c800c2fb5ee3b1377f2eead54",
+    "date": "2026-10-25T11:10:35Z",
+    "titre": "Collaborateur : commentaire et preuve jointe à une action (migration 036), refus testés"
+  },
+  {
+    "sha": "193b91bfec4518e58a1dde1156c4f13d0dec7430",
+    "date": "2026-10-25T10:51:27Z",
+    "titre": "Tuile Continuité : seuls les plans de type PCRA sont comptés"
+  },
+  {
+    "sha": "0e51f7e0ffb81425ffe2340d5232f1add60188f2",
+    "date": "2026-10-25T08:17:08Z",
+    "titre": "Mises à jour : retour visuel de la vérification et ouverture immédiate de l'écran de mise à jour"
+  },
+  {
+    "sha": "ec30c066a4c973c5c91eacb6ddf12c1615d1ded6",
+    "date": "2026-10-22T07:16:08Z",
+    "titre": "Cartographie : les bandes de la vue processus suivent les types de la Plateforme ; version 4.2.0"
+  },
+  {
+    "sha": "3b1a4c98b62afcd79fbd3d6d9ebaa8d3b7398b32",
+    "date": "2026-10-22T07:01:45Z",
+    "titre": "Processus en cartes : page sans style en ligne, nom accessible des notifications, parcours Playwright"
+  },
+  {
+    "sha": "b863fa2225c9bfd0a42250e1747bdad24ca4b3ce",
+    "date": "2026-10-22T06:51:30Z",
+    "titre": "Processus en cartes : onglet Organisation, cartes par type, sous-processus, rattachements"
+  },
+  {
+    "sha": "dc6778c707ced2e9703e7f1f3c6b93d76222abbd",
+    "date": "2026-10-22T06:34:31Z",
+    "titre": "Types de processus : registre de la Plateforme (migration 035), carte d'administration, contrôle du type"
+  },
+  {
+    "sha": "61c02b708ab68c6f66ef0d54a87e17dd7a50d2e9",
+    "date": "2026-10-21T21:53:01Z",
+    "titre": "Journaux techniques : niveau réglable à chaud, consultation et téléchargement"
+  },
+  {
+    "sha": "be7978a58ac610f4aa982f2e3a9f7fe77b955eb6",
+    "date": "2026-10-21T21:30:12Z",
+    "titre": "Administration : deux pages à cartes (Plateforme, Configuration système)"
+  },
+  {
+    "sha": "4a5c4a831eea38a218a69cf1fb382a5693f002fb",
+    "date": "2026-10-21T19:28:09Z",
+    "titre": "Couverture : alerte et état clause par clause pour les clauses 4 à 10 de l'ISO 27001"
+  },
+  {
+    "sha": "34c85929eb88e117d34a1138bc35cca36ac49fdd",
+    "date": "2026-10-21T18:07:19Z",
+    "titre": "Couverture : clauses 4 à 10 de l'ISO 27001 non excluables, exigences à déterminer signalées"
+  },
+  {
+    "sha": "dc484f8007255eb0a0d91ba08615f559433696f8",
+    "date": "2026-10-21T14:27:36Z",
+    "titre": "Corrections issues de la suite complète : parcours récurrences aligné sur le bouton de validation désactivé, charte (jetons de longueur et d'espacement), test de disposition sans Map.groupBy"
+  },
+  {
+    "sha": "2c45cef4e305cb42291a9c84915c257e8c8012c2",
+    "date": "2026-10-21T13:51:21Z",
+    "titre": "ASTRA L8/L10 (suite) : validation dite dans la Timeline, fenêtre compacte d'une occurrence, test de disposition du graphe, état du projet"
+  },
+  {
+    "sha": "83af0579a7f3ca634b26afb78a2aa203690f6273",
+    "date": "2026-10-21T13:46:48Z",
+    "titre": "ASTRA L8 (suite) : filtre par registre et filtres conservés dans l'adresse sur l'écran des tâches"
+  },
+  {
+    "sha": "b8a16d7317887234c92d5e68d2170500dffb1155",
+    "date": "2026-10-21T13:42:09Z",
+    "titre": "ASTRA L10 (suite) : aperçu du certificat TLS avant installation, test de non-régression écart/action/exigence sans évaluation automatique"
+  },
+  {
+    "sha": "0607105404bff640a7c9eb27e372449481bdef2c",
+    "date": "2026-10-21T13:35:12Z",
+    "titre": "ASTRA L8 (suite) et L11 : preuve choisie dans une liste et intitulé au journal, occurrence suivante dans la liste courante, Kanban piloté par la politique, suivi d'avancement honnête du prompt ASTRA"
+  },
+  {
+    "sha": "8689174affa802641ab9e10aca2b28c4d1b37f50",
+    "date": "2026-10-21T13:15:22Z",
+    "titre": "ASTRA L10 : cartes de périmètres (couverture réelle, écarts par classification, compteurs cliquables, fuseau), journal d'audit (période, compte, pagination, export JSON), détails techniques datés, partie prenante avec mesures référencées"
+  },
+  {
+    "sha": "d66b49b419ac557ef4e072520937f9b7a8459f93",
+    "date": "2026-10-21T12:59:33Z",
+    "titre": "ASTRA L9 : mesure de traitement vers une exigence publiée, action de traitement avec plan d'accueil, règles de pertinence retenue, socle de sécurité, validation d'atelier caduque après modification, filtre étude du registre"
+  },
+  {
+    "sha": "41edf7408e5c7a0111b0563094fd514b86a9ee55",
+    "date": "2026-10-21T12:47:02Z",
+    "titre": "ASTRA L8 : périodicité personnalisée réellement sélectionnable, compteur rouge du menu contrasté, e2e périodicité et Timeline, journal des modifications L4 à L8"
+  },
+  {
+    "sha": "42f1b0d05cbf21f725a5fcfa19f783de6bdabdc6",
+    "date": "2026-10-21T12:31:27Z",
+    "titre": "ASTRA L8 : sélecteur de périodicité (sept préréglages, personnalisée) avec aperçu des échéances, validation visible dans les listes, bouton de validation expliqué hors fenêtre"
+  },
+  {
+    "sha": "a2a54daf0b9d115aedd7f23c5cd9d106a6e62af0",
+    "date": "2026-10-21T12:23:56Z",
+    "titre": "ASTRA L7 : classification d'écart en rouge, orange foncé et violet avec légende, récidive et audit d'origine lisibles des deux côtés, tests action terminée / rouverte"
+  },
+  {
+    "sha": "5593947b275da15f4d446997f72d41e3f229cb3c",
+    "date": "2026-10-21T12:20:26Z",
+    "titre": "ASTRA L6 : Timeline à intitulés fixes et zone bornée, retard et état en toutes lettres, légende"
+  },
+  {
+    "sha": "96fb3871bb977ffcc1ba4126f4b7fb3e5579c8de",
+    "date": "2026-10-21T12:15:07Z",
+    "titre": "ASTRA L4 : tests du catalogue (modifier sans administrer, matrice 5×4, archivage sans effet sur les risques) ; usages dans la confirmation d'archivage"
+  },
+  {
+    "sha": "ff5a5fd62091329503453866de985dc19ec5b39b",
+    "date": "2026-10-21T12:12:14Z",
+    "titre": "ASTRA L5 : registres partagés visibles sous chaque périmètre, choix du registre d'accueil, fiche avec périmètres hérités"
+  },
+  {
+    "sha": "aa7d69686194ed65f72591078872ff5a09108ae6",
+    "date": "2026-10-21T11:55:47Z",
+    "titre": "ASTRA L3 : aperçu d'une attribution de droit (avant/après, personnes concernées, rôles qui subsistent, motif)"
+  },
+  {
+    "sha": "474cf92fa52291d795bda3827266d34edadb2f92",
+    "date": "2026-10-21T11:51:17Z",
+    "titre": "ASTRA L3 : vue des accès d'une personne ou d'un groupe (022-01), accessibilité du graphe des périmètres"
+  },
+  {
+    "sha": "a1e9891c96add7e4803608d42e0347984ecac2bb",
+    "date": "2026-10-21T11:37:21Z",
+    "titre": "ASTRA L3 : graphe des périmètres (modifier, flèches et flux, fournisseurs), parent inaccessible, tests de droits"
+  },
+  {
+    "sha": "24c4b417178e4abb84b62632100ee7303a65e5e7",
+    "date": "2026-10-21T11:23:48Z",
+    "titre": "ASTRA L2 : style Clair en direct et contrastes, menu borné en tablette, inventaire du menu, audit des droits dans la transaction"
+  },
+  {
+    "sha": "e25e5b17611bc5fe33140606ae2a0a1aaeb0ec20",
+    "date": "2026-10-21T08:26:20Z",
+    "titre": "Audit ASTRA du 21/10 et corrections de confidentialité et d'intégrité"
+  },
+  {
+    "sha": "dd6b50e5d3e9caf2e2e0777ff94a488863cbea70",
+    "date": "2026-10-20T21:25:57Z",
+    "titre": "Tableau de bord sur les fiches de registre et import Tenacy natif"
+  },
+  {
+    "sha": "baf3bd5b514a46ce263f59a60b2f1364e4b5d9f4",
+    "date": "2026-10-20T12:39:02Z",
+    "titre": "Epuration : suppression des constats historiques, les ecarts n'ont plus qu'une source"
+  },
+  {
+    "sha": "1b1c5e2b1b14047ab6ec7c6aa33ea2c8e86af90d",
+    "date": "2026-10-20T11:12:43Z",
+    "titre": "Cartes : total par carte parent sans doublon ; RRULE : jours de rang et dernier jour du mois"
+  },
+  {
+    "sha": "19aa346d65cf7b1861e9b4d148db34a95cf3f858",
+    "date": "2026-10-20T10:55:31Z",
+    "titre": "Recurrences et cartes : RRULE developpees, total general sans doublon, parcours recidive"
+  },
+  {
+    "sha": "b435d11931dfadf9861314a38824614c12dd4560",
+    "date": "2026-10-20T09:20:44Z",
+    "titre": "Recette R01-R18 complète, captures de l'administration, version 3.6.0 préparée"
+  },
+  {
+    "sha": "79bf2d640631c3876d1ceb1b0ff132b016b162b9",
+    "date": "2026-10-20T08:57:58Z",
+    "titre": "Filtres de liste dans l'adresse, enchaînement automatique facultatif, registres multi-périmètres par famille"
+  },
+  {
+    "sha": "e6115b8a0da4c9d0570add8df52efc7f4154a2c2",
+    "date": "2026-10-20T08:55:20Z",
+    "titre": "Registres restreints dans les compteurs et le temps réel, contexte de retour, Timeline explicite, menu au clavier (lot F, R05/R06/R07/R15)"
+  },
+  {
+    "sha": "9501933e5be842d8da7b1b12f9624b0a99a4878f",
+    "date": "2026-10-20T08:41:54Z",
+    "titre": "Graphe des périmètres et compteurs de synthèse (lot E, R16/R17)"
+  },
+  {
+    "sha": "78be1b6599ee03c0a46daf7dfe04577177ab17a6",
+    "date": "2026-10-20T08:22:14Z",
+    "titre": "Récurrences : fenêtres de réalisation, jours exclus, import iCalendar et enchaînement (lot D, R11/R12/R14)"
+  },
+  {
+    "sha": "1ff1f92468c65f7deb10f07bc96f0ce1ac08e967",
+    "date": "2026-10-20T08:01:12Z",
+    "titre": "Plan d'actions conteneur (période, statut, responsable, actions ordonnées) ; écart depuis un audit et récidive (lot C, R09/R10)"
+  },
+  {
+    "sha": "c5297862bb723949587666f2181fb925d41d1a27",
+    "date": "2026-10-20T07:39:57Z",
+    "titre": "Responsable d'une action ou d'une série : personne, groupe ou fonction (lot B, R08)"
+  },
+  {
+    "sha": "15b50d92acc27a35994b773782b71a9608d2e767",
+    "date": "2026-10-20T07:26:46Z",
+    "titre": "feat: déplacer un élément entre registres (aperçu, motif, liens) et éléments filtrés par périmètre et registres"
+  },
+  {
+    "sha": "257848a5d59070ca5e243129befe153b45378a26",
+    "date": "2026-10-20T05:04:28Z",
+    "titre": "fix(api): la preuve d'une validation d'occurrence est une référence résolue par le serveur"
+  },
+  {
+    "sha": "874d06066eea01d06f4855f20f7421b9fc73dba2",
+    "date": "2026-10-20T05:01:09Z",
+    "titre": "feat: écarts — classification, audit d'origine, récidive, réouverture motivée"
+  },
+  {
+    "sha": "33a3f069e14455b09e14aea91940cf36edd068cd",
+    "date": "2026-10-20T04:52:08Z",
+    "titre": "feat: validation OK/KO/NA des occurrences récurrentes (journal immuable, idempotence, réouverture motivée)"
+  },
+  {
+    "sha": "0fbe06069ccaf06b0494e34a64b47e37954b666c",
+    "date": "2026-10-20T04:36:22Z",
+    "titre": "feat(web): contribution à une action, droits par élément, vue Timeline des actions"
+  },
+  {
+    "sha": "5e543bd71c91360fe6b91d62077cefc2f675b784",
+    "date": "2026-10-19T23:20:16Z",
+    "titre": "feat(web): écran des registres (liste, fiche, périmètres avec aperçu, droits) et annuaire des titulaires pour les gestionnaires"
+  },
+  {
+    "sha": "e24df331c9cdaf458422773efc64fac938dd17de",
+    "date": "2026-10-19T22:50:21Z",
+    "titre": "Menu à sept familles : navigation pilotée par les données, onglets de rubriques, pastilles par destination"
+  },
+  {
+    "sha": "b7f3e7af7ba6d25bc6272da17804834c006502f3",
+    "date": "2026-10-19T17:25:39Z",
+    "titre": "chore(deps): Mantine 9.7.3"
+  },
+  {
+    "sha": "0e0e55339b7758e3e1d85ea5713caa4bd4be2451",
+    "date": "2026-10-19T10:41:54Z",
+    "titre": "chore(deps): ESLint 10, @eslint/js 10, globals 17, eslint-plugin-react-hooks 7"
+  },
+  {
+    "sha": "8cb740956ef9645f038b67ce0105ab472bc8a363",
+    "date": "2026-10-19T06:39:18Z",
+    "titre": "feat(export): exports Excel du pronostic d'audit, du GAP applications et des évaluations par le clausier"
+  },
+  {
+    "sha": "4a112b220fae16e4cf8d25dc4a8d1b49e33220d8",
+    "date": "2026-10-18T20:11:32Z",
+    "titre": "Interface : plus aucun lien vers l'ancien outil /legacy (menu, accueil, aide, cartographie, évaluations IA)"
+  },
+  {
+    "sha": "f847b01414b06bf3dff87f547d039fc318790835",
+    "date": "2026-10-18T20:09:38Z",
+    "titre": "Fusion de claude-suivi-smsi (exports Excel) dans la branche de retrait de /legacy"
+  },
+  {
+    "sha": "7ffdef8fb263604b12354dd87c5a3ec3a72ef7fe",
+    "date": "2026-10-18T20:04:03Z",
+    "titre": "Exports Excel par rubrique dans la nouvelle interface (classique et pro, export complet)"
+  },
+  {
+    "sha": "3ecac7b7b6112790da99c5284ae93dc83ed2bb82",
+    "date": "2026-10-18T19:26:07Z",
+    "titre": "Lecture de l'état du suivi par /api/suivi/etat et /api/suivi/modules (nouvelle interface, sans passer par /api/legacy)"
+  },
+  {
+    "sha": "e3454f63a4d094f8e69e2465584385dbab058986",
+    "date": "2026-10-18T18:41:52Z",
+    "titre": "Exports natifs d'une revue de direction (Word, PowerPoint, Excel) sans fichier à réparer"
+  },
+  {
+    "sha": "a003ca84db1efbe8b99b639739931fddb4f9c5bd",
+    "date": "2026-10-18T18:14:13Z",
+    "titre": "Évaluation des exigences et états de couverture (lot H3)"
+  },
+  {
+    "sha": "79a23f3d4aa51d6579ddcfe299191627c9126a45",
+    "date": "2026-10-18T11:09:41Z",
+    "titre": "Hiérarchie des périmètres et héritage explicite des référentiels (lot H1)"
+  },
+  {
+    "sha": "c14e61a3dbc9e863329d30244c39ebc318a7fe5e",
+    "date": "2026-10-15T07:35:03Z",
+    "titre": "feat(dda-fournisseurs): reprise de la déclaration d'applicabilité et évaluation facultative par le clausier"
+  },
+  {
+    "sha": "c16a684a58a3456b6f9b028c7ef2c2280fdc5916",
+    "date": "2026-10-15T06:38:15Z",
+    "titre": "feat(incidents-crise): reprise du registre des incidents et de la cellule de crise"
+  },
+  {
+    "sha": "949a0e1db58363aad7505fa7c15b265f1540607d",
+    "date": "2026-10-15T06:16:09Z",
+    "titre": "feat(invest-crrc): reprise du plan d'investissement et de la gestion CRRC"
+  },
+  {
+    "sha": "4d0055378857bc071ee4519e534d1365aa687d4f",
+    "date": "2026-10-15T05:03:20Z",
+    "titre": "feat(gap-ia): reprise des applications à intégrer et de la conformité IA"
+  },
+  {
+    "sha": "396a49049d978833b488da66beaa6e336f6948e8",
+    "date": "2026-10-15T04:49:37Z",
+    "titre": "feat(acces): reprise des revues des accès dans la nouvelle interface"
+  },
+  {
+    "sha": "c768603f4ed2aff24e9322aec061bfadc7088261",
+    "date": "2026-10-15T04:46:18Z",
+    "titre": "feat(audit): reprise de la gestion de l'audit dans la nouvelle interface"
+  },
+  {
+    "sha": "3c8e6180eb738468a1dd3507c22cb89058a6ce26",
+    "date": "2026-10-15T04:34:14Z",
+    "titre": "feat(plans): reprise des plans du SMSI dans la nouvelle interface"
+  },
+  {
+    "sha": "7c5bc0a195d956f5ca748b97f83280a30ce5fc83",
+    "date": "2026-10-14T17:05:56Z",
+    "titre": "feat(risques): migration explicite d'une étude vers une nouvelle version de configuration ; objets et livrables des méthodes"
+  },
+  {
+    "sha": "936e9a2ea28e93450092efc68eed8bb0dbbdbadf",
+    "date": "2026-10-14T15:27:25Z",
+    "titre": "refactor(web): sélecteurs partagés de responsable et de périmètre ; test e2e de l'éditeur de méthodes"
+  },
+  {
+    "sha": "71a1e6686517648d4037abfdd212f44b8a60eb1a",
+    "date": "2026-10-14T15:15:14Z",
+    "titre": "feat(web): épinglage des échelles et de la matrice du catalogue dans l'éditeur de méthodes (ISO 27005, méthodes personnalisées)"
+  },
+  {
+    "sha": "6dc39c2af08d129df88891d6f91ecc36159c1a6c",
+    "date": "2026-10-14T15:11:51Z",
+    "titre": "feat(risques): atelier 1 sur le catalogue (correspondance impact → gravité épinglée par l'étude)"
+  },
+  {
+    "sha": "fe47decc143bba9d2ca9ed54e635f2e37e4e73cb",
+    "date": "2026-10-14T14:02:26Z",
+    "titre": "feat(risques): atelier 2 sur le catalogue (matrice de pertinence épinglée par l'étude)"
+  },
+  {
+    "sha": "02d745face79a695deb6d9c9a6781b2fc5e634fa",
+    "date": "2026-10-14T13:51:15Z",
+    "titre": "fix(web): grille de formulaire de la configuration GRC (champs sur plusieurs colonnes)"
+  },
+  {
+    "sha": "184df982224ebec85bcde9ff8589d2dacddca0ef",
+    "date": "2026-10-14T13:02:49Z",
+    "titre": "feat(web): pages Configuration GRC (échelles, matrices, correspondances, critères, taxonomies)"
+  },
+  {
+    "sha": "5b4ac51fb201b38605b4440518f1e85fdc203ecf",
+    "date": "2026-10-14T09:54:56Z",
+    "titre": "feat(config): catalogue de configuration GRC transversal (échelles, matrices, correspondances, critères, taxonomies) versionné, avec usages, variantes et modèle de pertinence EBIOS RM adopté à la demande"
+  },
+  {
+    "sha": "efb801fe1bae12a7938d3dc45a8467f935dc735c",
+    "date": "2026-10-14T01:40:28Z",
+    "titre": "fix: calcul de l'espace disque de la mise à jour (un seul dossier de base avant la migration vers PostgreSQL 18), blocs du guide d'installation non rejoués, remplacement de tous les « % » des valeurs saisies"
+  },
+  {
+    "sha": "8023e026c3df77933f634558963f42f3c1ad2bb2",
+    "date": "2026-10-14T00:50:46Z",
+    "titre": "test(e2e): références visuelles à la police réduite, menu masqué sur les captures de registre, lien Pilotage avec pastille ; fournisseurs : colonne des actions toujours visible"
+  },
+  {
+    "sha": "71d4b90369bc4a517dfebfda38bf39757968c7a1",
+    "date": "2026-10-13T22:16:16Z",
+    "titre": "fix: libellé « en attente de relecture », sélecteurs compacts des fournisseurs, décision de revue du jeu de test, en-tête de la CLI"
+  },
+  {
+    "sha": "66e438bc4d5d9194575d2c21742211b652cedc82",
+    "date": "2026-10-13T21:46:11Z",
+    "titre": "chore(lint): import inutilisé"
+  },
+  {
+    "sha": "40ac5d02473b956514efdaa448c6764dc773b10a",
+    "date": "2026-10-13T21:38:49Z",
+    "titre": "feat(pilotage): M8 — préparation de la revue de direction, audit combiné (référentiels audités)"
+  },
+  {
+    "sha": "7ce8601ec9654f7d93038342dfc56f37e7ba1823",
+    "date": "2026-10-13T21:34:56Z",
+    "titre": "feat(pilotage): M7 — PESTEL des enjeux externes, objet Opportunité, séries proposées sans fréquence, parties intéressées enrichies"
+  },
+  {
+    "sha": "5e9b999377de2ae6a274371538e620c9b190956e",
+    "date": "2026-10-13T21:28:52Z",
+    "titre": "feat(carto): calque santé des indicateurs sur les processus, filtre ISO 9001 quand un référentiel 9001 est rattaché"
+  },
+  {
+    "sha": "1274f9f817e52846598503e07e86e02b55fca2a2",
+    "date": "2026-10-13T21:25:19Z",
+    "titre": "feat(pilotage): boîtes de pilotage par processus (actions, risques, séries, prochaine échéance)"
+  },
+  {
+    "sha": "6f9906191d4364b829fce803b670368c93a6b80e",
+    "date": "2026-10-13T21:22:55Z",
+    "titre": "feat(pilotage): interface des objectifs de l'ancienne version (trois vues, fiches, mesures), fournisseurs avec colonnes et filtres, filtres des listes"
+  },
+  {
+    "sha": "c757a0d0dd44bbbd5406b7bf82d3ab783894371a",
+    "date": "2026-10-13T21:11:03Z",
+    "titre": "feat(bibliotheque): standards disponibles d'emblée, versions sources verrouillées, copie personnalisable et ajout d'exigences"
+  },
+  {
+    "sha": "b29e8219adb5c75a307fa3c64d3d64639c85f99d",
+    "date": "2026-10-13T21:07:10Z",
+    "titre": "feat(menu): sections exclusives, pastilles collées aux libellés (rouge si indicateur mauvais), police réduite ; fix(carte): zone de la cartographie des risques contenue dans son cadre"
+  },
+  {
+    "sha": "b1219b104ee4f1c48c30e635085372e1f85e4d2a",
+    "date": "2026-10-13T17:41:03Z",
+    "titre": "fix(accessibilite): rétablir les correctifs de contraste, de liens et d'onglet actif sombre"
+  },
+  {
+    "sha": "550808789797354f7412103de856124327c9229b",
+    "date": "2026-10-13T17:39:24Z",
+    "titre": "fix(bibliotheque): import robuste aux identifiants en double ; captures de référence du nouveau design"
+  },
+  {
+    "sha": "cbbe6327da7134d7d5dd97afa3e5ab263406efe1",
+    "date": "2026-10-13T17:07:34Z",
+    "titre": "feat(apparence): identité Référence 08, style global sauge/clair et matrice des risques à cases pleines"
+  },
+  {
+    "sha": "7a97a07ef3dea19b61592b881d7e4cbcdc80fc39",
+    "date": "2026-10-13T16:57:17Z",
+    "titre": "feat(bibliotheque): importer depuis l'outil de suivi ISO 27001:2022, HDS et ReCyF"
+  },
+  {
+    "sha": "5edd9e2596cc17eb85b114e6176639f7e58e1c46",
+    "date": "2026-10-13T16:50:17Z",
+    "titre": "feat(fournisseurs): suite donnée à une évaluation (action ou série de réévaluation)"
+  },
+  {
+    "sha": "af282be6bc63797b45f689b31d55b6845a4f2b0f",
+    "date": "2026-10-13T15:20:20Z",
+    "titre": "feat(fournisseurs): évaluation des fournisseurs de l'organisation, indépendante des périmètres (lot M4)"
+  },
+  {
+    "sha": "545e6fb6f8d4d4e2a8658a6f59e0e1834731ddc9",
+    "date": "2026-10-13T13:39:40Z",
+    "titre": "fix(web): menu sans changement de mise en page et puces de contraste suffisant"
+  },
+  {
+    "sha": "2c6296ab90487eb23465e1bb8ea66c2b0e7fcd4e",
+    "date": "2026-10-13T13:07:28Z",
+    "titre": "feat(bibliotheque): déclarer une fois, rapprochements proposés et validés par le pilote (lot M3)"
+  },
+  {
+    "sha": "4a29e7bb74f60899882383536eed1c15e412e254",
+    "date": "2026-10-13T12:18:31Z",
+    "titre": "feat(conformite) : bibliothèque de référentiels de l'organisation (lot M2, ADR 0031)"
+  },
+  {
+    "sha": "a89927127ea609d71797acd650b4839a086bc5bc",
+    "date": "2026-10-13T12:01:18Z",
+    "titre": "feat(pilotage) : page « Périmètres », nature libre d'un périmètre (lot M1, ADR 0030)"
+  },
+  {
+    "sha": "eda78342dc59b411727ee6b82eb82def24b2be0a",
+    "date": "2026-10-12T13:02:19Z",
+    "titre": "revert(ui) : correctifs visuels d'accessibilité retirés, reportés (graphisme en cours dans legacy)"
+  },
+  {
+    "sha": "5182f8abf5ad0a38e36f8bd10b187732bc759995",
+    "date": "2026-10-12T12:23:02Z",
+    "titre": "feat(recette) : recette automatisée (serveur, performance, accessibilité) et correctifs d'accessibilité"
+  },
+  {
+    "sha": "184eaf3ee4abcfec7e451ca418d14a0cbad099ab",
+    "date": "2026-10-11T13:34:12Z",
+    "titre": "feat(liens) : catalogue des relations autorisées, sens explicite, archivés et responsables (lot U4)"
+  },
+  {
+    "sha": "f23ad4e79b6f3945cef004298148918554ef6c23",
+    "date": "2026-10-11T13:34:11Z",
+    "titre": "fix(risques) : tableaux du registre et de l'étude EBIOS RM, accès aux liens d'un risque (RISK-04, RISK-08, CARTO-16)"
+  },
+  {
+    "sha": "023cdfb4f212a9d3e2250f514ce701ca57eaed00",
+    "date": "2026-10-11T13:19:28Z",
+    "titre": "feat(pilotage) : DdA historique, objectifs par processus, plans et graphiques (FCT-019, FCT-028, FCT-030, FCT-038)"
+  },
+  {
+    "sha": "92936bb1f338d70dc8ef051e533531f0f1a77784",
+    "date": "2026-10-11T13:00:51Z",
+    "titre": "feat(risques) : études EBIOS RM par ateliers, processus ISO/IEC 27005 et acceptation formelle, registre commun (RISK-01 à RISK-10)"
+  },
+  {
+    "sha": "33a43b093fa8aaaceaec5812c62af423eb317ac0",
+    "date": "2026-10-11T08:38:03Z",
+    "titre": "feat(interface) : tableau de bord unifié avec les graphiques historiques et menu donnant accès aux pages encore historiques (UI-02)"
+  },
+  {
+    "sha": "f4a4a9bda3e90fa528a1869bf98e539a89a819f3",
+    "date": "2026-10-11T08:24:03Z",
+    "titre": "feat(carto) : construire une carte de zéro, intégré depuis feat/carto-edition (CARTO-15 à CARTO-19)"
+  },
+  {
+    "sha": "4d1237a7d37b65c4ed19b731582e066fd39ccdf6",
+    "date": "2026-10-10T15:50:02Z",
+    "titre": "fix(pilotage): rétablit le menu et active les sauvegardes intégrées"
+  },
+  {
+    "sha": "e0d1d51d3b8654ee169d286bc1a7fe0f46106f23",
+    "date": "2026-10-10T14:36:18Z",
+    "titre": "feat(pilotage): reprendre le menu métier et intégrer G H K avec le début E"
+  },
+  {
+    "sha": "3dffcf790c2f49c84099b5ce6c060d6fe8bcc813",
+    "date": "2026-10-10T10:15:30Z",
+    "titre": "feat(grc): revise mappings with accessible version history"
+  },
+  {
+    "sha": "92997e3c7fcdfcaf7bca4118c32d69e402b64c46",
+    "date": "2026-10-10T09:57:08Z",
+    "titre": "fix(grc): sérialiser politiques et récurrences activées"
+  },
+  {
+    "sha": "0efc79a159a936ba9ab846379eea6cad93df2251",
+    "date": "2026-10-10T09:51:19Z",
+    "titre": "feat(grc): intégrer référentiels, tâches et risques versionnés par SMSI"
+  },
+  {
+    "sha": "e9c605d6a2f92b6aeeca4b85b8b00c26e7c13db5",
+    "date": "2026-10-10T06:25:11Z",
+    "titre": "feat(ia): conserver des décisions liées aux configurations versionnées (B2b)"
+  },
+  {
+    "sha": "d6e9240117f495a382c3d30ef8439494e6a4086a",
+    "date": "2026-10-10T05:26:55Z",
+    "titre": "feat(configuration): publier des échelles et matrices immuables (B2a)"
+  },
+  {
+    "sha": "675d6b369f839a5b1e7dd8bb994cb5f4baf572cd",
+    "date": "2026-10-10T00:57:31Z",
+    "titre": "fix: sécuriser les clés et permettre les réessais de mise à jour"
+  },
+  {
+    "sha": "d460cfcdc01d6cd244cd57d95df57fd86d0b3cb7",
+    "date": "2026-10-10T00:46:33Z",
+    "titre": "feat: intégrer les mises à jour web et la maintenance indépendante"
+  },
+  {
+    "sha": "df32fcb82fa66bf6ad178069b6855ac21607ce6b",
+    "date": "2026-10-09T23:38:13Z",
+    "titre": "docs(ui): préciser l'actualisation des écrans avant confirmation"
+  },
+  {
+    "sha": "a5a3df1dd65845fb89758e7ac496006cc925af83",
+    "date": "2026-10-09T23:32:40Z",
+    "titre": "fix(modules): préserver les paramètres des dépendances facultatives actives"
+  },
+  {
+    "sha": "6f579a01fcc52c3c6d4897af726caa15ec741623",
+    "date": "2026-10-09T23:23:37Z",
+    "titre": "fix(realtime): recharger la présence après reconfiguration et reconnexion"
+  },
+  {
+    "sha": "a1cebe6edafa8b445d305ad0cd2ce36f592349ac",
+    "date": "2026-10-09T23:20:18Z",
+    "titre": "fix(realtime): conserver la présence initiale filtrée du serveur"
+  },
+  {
+    "sha": "e94ff67ae37c6ae9bba774b8011d96ae1280f62b",
+    "date": "2026-10-09T23:02:18Z",
+    "titre": "fix(web): préserver le cache initial quand les droits SSE sont inchangés"
+  },
+  {
+    "sha": "80c2f75be0cf96fcd3de70d994939fe4b26d1c5a",
+    "date": "2026-10-09T22:40:40Z",
+    "titre": "feat(modules): activation versionnée, dépendances et conservation du socle v2"
+  },
+  {
+    "sha": "0e62c28659f6b7cc586131c0829376abbd04c369",
+    "date": "2026-10-09T19:04:38Z",
+    "titre": "feat(exploitation): achever le lot A sauvegardes restauration et TLS"
+  },
+  {
+    "sha": "5cb1a52e79b043984ad6485a3dc25d7e1d1ea9b4",
+    "date": "2026-10-09T17:20:05Z",
+    "titre": "feat: vérifier et sécuriser les restaurations serveur (A1b1, EXPL-08)"
+  },
+  {
+    "sha": "56f610cfe240fd7c35523d4d30d5abcb54bd760a",
+    "date": "2026-10-09T16:34:44Z",
+    "titre": "feat: piloter les demandes de sauvegarde chiffrée (A1a, EXPL-08)"
+  },
+  {
+    "sha": "5effddb76c51e6ad9c1eb73c2857b794d12da04e",
+    "date": "2026-10-09T15:39:28Z",
+    "titre": "fix: fiabiliser les parcours Sauge (A3–A6, CARTO-10)"
+  },
+  {
+    "sha": "278f374bf0ae50bed1f27989b34fe8cd5dae6ad7",
+    "date": "2026-10-09T14:48:52Z",
+    "titre": "chore(legacy): intégrer la base Sauge et conserver intégralement la v2"
+  }
+]

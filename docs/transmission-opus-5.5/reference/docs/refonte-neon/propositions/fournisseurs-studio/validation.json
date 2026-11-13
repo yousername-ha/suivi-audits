@@ -1,0 +1,109 @@
+{
+  "scope": "Maquette fournisseurs uniquement",
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "font": "14px"
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "font": "14px"
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "font": "14px"
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "font": "14px"
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "font": "15px"
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "font": "15px"
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "font": "17px"
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "font": "17px"
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "view": "registre",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "view": "fiche",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "view": "registre",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "view": "fiche",
+      "violations": []
+    }
+  ],
+  "cases": [
+    "lecture complète et focus clavier",
+    "recherche sans accents et réinitialisation",
+    "certificats à traiter, état figé export",
+    "densité sans mutation des données",
+    {
+      "name": "60 lignes, défilement local",
+      "local": 600,
+      "page": 0,
+      "height": 768,
+      "viewport": 768
+    }
+  ],
+  "errors": [],
+  "api": [],
+  "http": [],
+  "passed": true,
+  "date": "2026-11-12",
+  "applicationUnchanged": "67a334a",
+  "sourceHashes": {
+    "fournisseurs.js": "70d55823d1faf2096b9164014ab72dabe6e13cd18ffaed3d4f10afdf7e8144c9",
+    "index.html": "cdee0a2167a7817de69729387545479288106812ea13d108ebb9978ad745a2d7",
+    "apercu-autonome.html": "4d0008eb5e08a5d6f05c2213399aec0d37fdc8c7930a1f210abd5dc215d987f0",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "donnees.js": "ced13312c41892250b67d35e56e20561057ceae49ca443e939aaae883c84d445",
+    "fournisseurs.css": "274e4a7de7efacc20d8255f54066b0bd719cc3bd33ec57e5889c69407657e737"
+  },
+  "export": {
+    "scope": "Export autonome fournisseurs",
+    "requests": 1,
+    "errors": [],
+    "passed": true
+  },
+  "sourceExportHash": "37beb491a86c3ae8508395fb91efdac1c80269c6e00bf8cd6e96ea672927d71b"
+}

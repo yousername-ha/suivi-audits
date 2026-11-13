@@ -1,0 +1,210 @@
+{
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "images": [
+    {
+      "fichier": "apercu-parties-dark.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "b06bebb7792f25a1f613a4e62fb14a62d6c359ec85ee12fb039a58d558c19837"
+    },
+    {
+      "fichier": "apercu-parties-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "2abeeae3406b177ff90cc8618c1b8099f65e1f59fedc9a0ed42267e0cef716ab"
+    },
+    {
+      "fichier": "apercu-pestel-dark.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "a86423624ca69b453cc089c1b2eeab63c9ed93063eaeb2b683759e7ea3f9de22"
+    },
+    {
+      "fichier": "apercu-pestel-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "55c505ee2dab948004a03bc8a28985cf844c55491fb38d9990cfb86cc1f9fe94"
+    },
+    {
+      "fichier": "apercu-swot-dark.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "e7dad656ba4c4744243a4d34afe5a63097ab3d2521fa22b5052f7c4cd6360421"
+    },
+    {
+      "fichier": "apercu-swot-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "affddf0cb473e72f0633f4e02e3fe03ad13112c217d2187def00dc4e2a27786c"
+    },
+    {
+      "fichier": "fiche-partie-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "db6cbdd2fcac65fb175958ddf1349f35f8b2bd6e15e944db0b2e7b5da0cb2de6"
+    },
+    {
+      "fichier": "fiche-swot-processus-dark.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "4a132376546f45cd16dce0db09d65f32b102d84b22c8a59d26cbb2f94a64efae"
+    },
+    {
+      "fichier": "fiche-swot-processus-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "c778ba16babaebe6e5c19a6b8b42d5d328fec53b82c2db3ae93aec54cb99b9ff"
+    },
+    {
+      "fichier": "parties-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1302,
+      "sha256": "249326af183a1854e1e8f242a4dabb97e001e34e1338263a0613e5fe64c31bd0"
+    },
+    {
+      "fichier": "parties-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 2632,
+      "sha256": "49cd9631ffd62906724c55a99370d3701955e3a5aa5dcd5df14146573876772a"
+    },
+    {
+      "fichier": "parties-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 2387,
+      "sha256": "8d2fe885bc78b280e51daef161b51f8692bc3655da60b9a273774c9d11d7f779"
+    },
+    {
+      "fichier": "parties-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1302,
+      "sha256": "2696a5d1e36bd9a75258e8e2334c4a7dbd864eb0c1a37cf6414db52a6f43fa98"
+    },
+    {
+      "fichier": "parties-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 2632,
+      "sha256": "62f87cf0cd769fec90b13c630b5d9337784ada5d3a54f5c3a54c0da882f4ab60"
+    },
+    {
+      "fichier": "parties-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 2387,
+      "sha256": "b44262012a6acddbdaa0906281ca03037c01f8bffb969a42aa184c0a601ccdcf"
+    },
+    {
+      "fichier": "pestel-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1247,
+      "sha256": "ffd43b9a5fa83cd62e1ae626c19da67c50a9ee22b9b41dfc5adc45be2e3fe8ba"
+    },
+    {
+      "fichier": "pestel-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 2494,
+      "sha256": "1a9a2631ac3b0b717e13748cc608d9cb28488f15b43ee81b9e877f9b8bf2ec84"
+    },
+    {
+      "fichier": "pestel-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 2115,
+      "sha256": "bd98acc23f7af2f6ecf1df9781be63d3da5488f463a4aa4c8b161e985b1414a7"
+    },
+    {
+      "fichier": "pestel-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1247,
+      "sha256": "576da6a7c792cd3cb06de19536d58d87fb6f73fb75084824f5f96ecc6f0c5c93"
+    },
+    {
+      "fichier": "pestel-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 2494,
+      "sha256": "6a0d5217c877da275691597e0747064ff573e5af68915295b53087588d22596d"
+    },
+    {
+      "fichier": "pestel-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 2115,
+      "sha256": "76cfcb35479abd2c52469f529c224468095a001f5adc1968b90cef65694daf08"
+    },
+    {
+      "fichier": "swot-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1162,
+      "sha256": "770fce2dedc075ee1945a39fe35fc4e0a63a633770d929db2b0d9043abfc5a5c"
+    },
+    {
+      "fichier": "swot-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 2326,
+      "sha256": "5bc8bbb0a01ccd486c24240f944c15cb802b6a25788b6ad7b9df12b5a7b02939"
+    },
+    {
+      "fichier": "swot-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 1569,
+      "sha256": "94db5fa7d7ea15f5e4cb39921927d5c914a673fdd7e3eba0d4e8699e5eb7b4a0"
+    },
+    {
+      "fichier": "swot-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1162,
+      "sha256": "a14401e7a9983611afb51788a84f41d1f347daf545f6e34a1e3ff074e6effca2"
+    },
+    {
+      "fichier": "swot-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 2326,
+      "sha256": "60194fddf20c633fbff3cedb9c92e56640753fa9250399249c1368d20d96d3c6"
+    },
+    {
+      "fichier": "swot-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 1569,
+      "sha256": "1931fbcbbe58d04673a54a5668f7bda8a33c1a17299b683104fc1badf952119a"
+    },
+    {
+      "fichier": "swot-processus-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1326,
+      "sha256": "98bfd594fb222f98bf4aa0ca34ce51586c404eb617a64d4dbb46a46dc3964161"
+    },
+    {
+      "fichier": "swot-processus-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 2656,
+      "sha256": "3b55f019771588653eeaf4b0684104a98f80d19aa96cf9eefc3db290101bfcf9"
+    },
+    {
+      "fichier": "swot-processus-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 1874,
+      "sha256": "7455db9ed1221912655873219fa41591cfb3cee2d01baded968a0fb729871978"
+    },
+    {
+      "fichier": "swot-processus-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1326,
+      "sha256": "73119930ae590033dbebb4606feb5e07cad0824d2d7cdafba8606ea45446a254"
+    },
+    {
+      "fichier": "swot-processus-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 2656,
+      "sha256": "8a51ce83b8d7564d9595b7ef0ea83b686c10a4fa6ff1327924b60475aa1a49f3"
+    },
+    {
+      "fichier": "swot-processus-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 1874,
+      "sha256": "f7abaaa2827b06d5d1b2cf3da03404395e6203982a78f22e60797f952d9bb348"
+    },
+    {
+      "fichier": "swot-processus-sans-analyse-light.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "a8177b7189a9f6e47fca79f9e39caf09b1cb5187a591ec714248ffdc06953ac2"
+    }
+  ]
+}

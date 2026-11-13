@@ -1,0 +1,6 @@
+/* Deux points au maximum ; les liaisons et les informations restent immobiles. */
+.pi-flow-layer{pointer-events:none}
+.pi-flow-layer path{stroke:none!important;fill:none!important;animation:none!important}
+.pi-wires .pi-flow-dot{fill:#d7ffff;stroke:#218da6;stroke-width:1.2;filter:drop-shadow(0 0 2px #2fbdce66)}
+[data-theme=dark] .pi-wires .pi-flow-dot{fill:#d9ffff;stroke:#8ae1e8;filter:drop-shadow(0 0 2px #6ed8e566)}
+@media(prefers-reduced-motion:reduce){.pi-flow-layer{display:none!important}}

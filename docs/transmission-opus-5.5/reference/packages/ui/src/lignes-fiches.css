@@ -1,0 +1,49 @@
+/* Même interaction pour les fiches de tous les menus, sans modifier la géométrie des listes. */
+[data-fiche-ouvrable] {
+  cursor: pointer;
+}
+[data-fiche-ouvrable]:hover {
+  background-color: color-mix(in srgb, var(--neon-accent) 7%, var(--suivi-surface));
+}
+[data-fiche-ouvrable]:focus-visible {
+  outline: 2px solid var(--neon-accent);
+  outline-offset: -2px;
+  background-color: color-mix(in srgb, var(--neon-accent) 10%, var(--suivi-surface));
+}
+
+[data-liste-fiches]:has([data-fiche-ouvrable]) {
+  max-block-size: var(--liste-fiches-hauteur, 60dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+[data-liste-fiches] thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: var(--suivi-surface);
+}
+[data-liste-fiches] tr[data-fiche-ouvrable] > :is(td, th) {
+  padding-block: 6px;
+}
+.task-timeline-rows[data-liste-fiches] {
+  gap: 9px;
+  padding: 3px;
+}
+.task-timeline-rows .task-identity {
+  padding-block: 12px;
+}
+[data-liste-fiches] .task-compact-labels {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: var(--task-panel);
+}
+.fiches-mobiles > .mantine-Card-root + .mantine-Card-root {
+  margin-block-start: var(--mantine-spacing-xs);
+}
+.actions-ligne-compactes {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+}

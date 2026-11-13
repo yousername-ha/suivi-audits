@@ -1,0 +1,270 @@
+/* Habillage autonome du compagnon uniquement ; menu et canevas non modifiés. */
+.as-dock {
+  border: 2px solid color-mix(in srgb, var(--as-accent) 57%, var(--as-edge));
+  border-radius: 24px 6px 24px 6px;
+  background: var(--as-paper);
+  box-shadow:
+    0 12px 35px -20px #102c4d66,
+    0 0 0 4px color-mix(in srgb, var(--as-accent) 5%, transparent);
+}
+.as-dock::before {
+  height: 3px;
+  left: 30px;
+  right: 35%;
+  background: linear-gradient(90deg, var(--as-accent), var(--as-blue));
+}
+.as-dock::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: 28px;
+  width: 55px;
+  height: 3px;
+  background: var(--as-blue);
+  pointer-events: none;
+}
+.as-head {
+  padding: 15px 17px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--as-accent) 44%, var(--as-edge));
+  background: linear-gradient(
+    115deg,
+    color-mix(in srgb, var(--as-accent) 13%, var(--as-paper)),
+    color-mix(in srgb, var(--as-blue) 6%, var(--as-paper))
+  );
+  gap: 12px;
+}
+.as-head .as-avatar {
+  width: 60px;
+  height: 60px;
+}
+.as-avatar {
+  filter: none;
+  width: 48px;
+  height: 48px;
+}
+.as-avatar > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+.an-orbit {
+  transform-origin: 48px 48px;
+  animation: an-orbit-breathe 7s ease-in-out infinite;
+}
+.an-eyes {
+  transform-origin: 48px 44px;
+  animation: an-blink 9s ease-in-out infinite;
+}
+.as-icon {
+  stroke-width: 1.9;
+}
+.as-identity h2 {
+  font-size: 19px;
+}
+.as-identity > span {
+  font-size: 11px;
+}
+.as-head-tools {
+  gap: 5px;
+}
+.as-head-tools .as-icon-button {
+  border: 1px solid color-mix(in srgb, var(--as-accent) 27%, var(--as-edge));
+  border-radius: 9px 3px;
+  background: color-mix(in srgb, var(--as-paper) 82%, transparent);
+  width: 30px;
+  height: 32px;
+}
+.as-icon-button,
+.as-sources button,
+.as-prompt-list button {
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.as-icon-button:hover,
+.as-sources button:hover,
+.as-prompt-list button:hover {
+  transform: translateY(-1px);
+  border-color: var(--as-accent);
+  box-shadow: 0 3px 6px -4px color-mix(in srgb, var(--as-accent) 35%, transparent);
+}
+.as-context {
+  border-bottom: 1px solid var(--as-edge);
+  padding: 10px 16px;
+}
+.as-profile-label select {
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--as-blue) 55%, var(--as-edge));
+  border-radius: 8px 3px;
+}
+.as-tabs {
+  border-bottom: 1.5px solid var(--as-edge);
+  background: color-mix(in srgb, var(--as-accent) 3%, var(--as-paper));
+}
+.as-tabs > button[aria-selected='true'] {
+  border-bottom-width: 3px;
+}
+.as-thread {
+  padding: 16px 18px 20px;
+  background-image: radial-gradient(color-mix(in srgb, var(--as-edge) 32%, transparent) 0.6px, transparent 0.6px);
+  background-size: 15px 15px;
+}
+.as-message[data-role='assistant'] {
+  position: relative;
+  padding: 15px;
+  border: 1.5px solid color-mix(in srgb, var(--as-accent) 42%, var(--as-edge));
+  border-radius: 15px 4px 15px 4px;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--as-accent) 5%, var(--as-paper)), var(--as-paper) 75%);
+  box-shadow:
+    inset 0 1px #ffffff25,
+    0 4px 12px -10px #183d5b66;
+}
+.as-message[data-role='assistant']::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: -1px;
+  width: 26px;
+  height: 2px;
+  background: var(--as-accent);
+}
+.as-message-head .as-avatar {
+  width: 32px;
+  height: 32px;
+}
+.as-message-head .an-orbit,
+.as-message-head .an-eyes {
+  animation: none;
+}
+.as-message[data-role='utilisateur'] {
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--as-blue) 45%, var(--as-edge));
+  background: color-mix(in srgb, var(--as-blue) 11%, var(--as-paper));
+}
+.as-answer-text p {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.as-sources button {
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--as-blue) 40%, var(--as-edge));
+  border-radius: 8px 3px;
+  color: var(--as-blue);
+  background: var(--as-blue-bg);
+  min-height: 31px;
+}
+.as-question,
+.as-inbox-card {
+  border-width: 1.5px;
+  border-radius: 13px 4px;
+}
+.as-question {
+  background: linear-gradient(120deg, var(--as-amber-bg), color-mix(in srgb, var(--as-amber-bg) 50%, var(--as-paper)));
+  border-color: color-mix(in srgb, var(--as-amber) 58%, var(--as-edge));
+}
+.as-compose {
+  border-top: 1.5px solid color-mix(in srgb, var(--as-accent) 37%, var(--as-edge));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--as-accent) 5%, var(--as-paper)), var(--as-paper));
+}
+.as-compose form {
+  border: 1.5px solid color-mix(in srgb, var(--as-accent) 50%, var(--as-edge));
+  border-radius: 13px 4px;
+  box-shadow: inset 0 1px #ffffff30;
+}
+.as-compose form:focus-within {
+  border-color: var(--as-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--as-accent) 9%, transparent);
+}
+.as-bottom {
+  border-top: 1px solid var(--as-edge);
+}
+.as-launcher {
+  border: 2px solid color-mix(in srgb, var(--as-accent) 65%, var(--as-edge));
+  border-radius: 18px 5px;
+  box-shadow:
+    0 5px 15px -10px #163e5b77,
+    0 0 0 3px color-mix(in srgb, var(--as-accent) 6%, transparent);
+}
+.as-launcher .as-avatar {
+  width: 48px;
+  height: 48px;
+}
+.as-launcher:hover {
+  border-color: var(--as-accent);
+}
+.as-empty-discussion > .as-avatar {
+  width: 88px;
+  height: 88px;
+}
+html[data-assistant-motion='off'] .an-orbit,
+html[data-assistant-motion='off'] .an-eyes {
+  animation-play-state: paused;
+}
+@keyframes an-orbit-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes an-blink {
+  0%,
+  43%,
+  47%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.15);
+  }
+}
+@media (max-width: 1150px) {
+  .as-head {
+    gap: 9px;
+    padding: 13px;
+  }
+  .as-head .as-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  .as-head-tools {
+    gap: 3px;
+  }
+  .as-head-tools .as-icon-button {
+    width: 28px;
+    height: 30px;
+  }
+  .as-identity h2 {
+    font-size: 17px;
+  }
+}
+@media (max-height: 800px) {
+  .as-head {
+    padding-block: 10px;
+  }
+  .as-head .as-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .an-orbit,
+  .an-eyes {
+    animation: none !important;
+  }
+  .as-icon-button,
+  .as-sources button,
+  .as-prompt-list button {
+    transition: none;
+  }
+  .as-icon-button:hover,
+  .as-sources button:hover,
+  .as-prompt-list button:hover {
+    transform: none;
+  }
+}

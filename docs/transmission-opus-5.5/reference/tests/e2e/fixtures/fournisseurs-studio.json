@@ -1,0 +1,533 @@
+{
+  "comment": "Données exclusivement FICTIVES. Tests du frontend compilé avec API interceptée ; aucun serveur métier.",
+  "me": {
+    "stage": "ok",
+    "csrf": "apercu-ui-sans-session",
+    "user": {
+      "id": "00000000-0000-4000-8000-000000000099",
+      "username": "demo_ui",
+      "displayName": "Démonstration",
+      "totpEnabled": true,
+      "cles": 0,
+      "mustChangePassword": false,
+      "roles": ["Administrateur"],
+      "expiresAt": null
+    },
+    "preferences": {
+      "taille": "auto",
+      "densite": "organisation",
+      "theme": "sombre",
+      "colonnes": {},
+      "cartographie": {},
+      "parcoursIso": {}
+    },
+    "permissions": [
+      "audit:lire",
+      "audit:modifier",
+      "audit:supprimer",
+      "audit:exporter",
+      "audit:administrer",
+      "ecarts:lire",
+      "ecarts:modifier",
+      "ecarts:supprimer",
+      "ecarts:exporter",
+      "ecarts:administrer",
+      "plan_audit:lire",
+      "plan_audit:modifier",
+      "plan_audit:supprimer",
+      "plan_audit:exporter",
+      "plan_audit:administrer",
+      "pilotage:lire",
+      "pilotage:modifier",
+      "pilotage:supprimer",
+      "pilotage:exporter",
+      "pilotage:administrer",
+      "fournisseurs:lire",
+      "fournisseurs:modifier",
+      "fournisseurs:supprimer",
+      "fournisseurs:exporter",
+      "fournisseurs:administrer",
+      "conformite:lire",
+      "conformite:modifier",
+      "conformite:supprimer",
+      "conformite:exporter",
+      "conformite:administrer",
+      "incidents:lire",
+      "incidents:modifier",
+      "incidents:supprimer",
+      "incidents:exporter",
+      "incidents:administrer",
+      "cartographie:lire",
+      "cartographie:modifier",
+      "cartographie:supprimer",
+      "cartographie:exporter",
+      "cartographie:administrer",
+      "documents:lire",
+      "documents:modifier",
+      "documents:supprimer",
+      "documents:exporter",
+      "documents:administrer",
+      "import_export:lire",
+      "import_export:modifier",
+      "import_export:supprimer",
+      "import_export:exporter",
+      "import_export:administrer",
+      "administration:lire",
+      "administration:modifier",
+      "administration:supprimer",
+      "administration:exporter",
+      "administration:administrer",
+      "parametres:lire",
+      "parametres:modifier",
+      "parametres:supprimer",
+      "parametres:exporter",
+      "parametres:administrer",
+      "tableau_de_bord:lire",
+      "tableau_de_bord:modifier",
+      "tableau_de_bord:supprimer",
+      "tableau_de_bord:exporter",
+      "tableau_de_bord:administrer"
+    ],
+    "mfaRequired": true,
+    "webauthn": true,
+    "passwordMinLength": 12,
+    "appName": "Suivi des audits SMSI",
+    "orgName": "Mon organisation",
+    "orgSite": "",
+    "appearance": {
+      "theme": "auto",
+      "densite": "normale",
+      "style": "sage"
+    },
+    "version": "3.0.0-test"
+  },
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "Hébergeur de données fictif",
+      "saas": true,
+      "rattachement": "Cloud",
+      "critical": "Oui",
+      "hds": "Oui",
+      "contact": "contact@exemple.invalid",
+      "notes": "Hébergement des dossiers (fictif).",
+      "sso": "Oui",
+      "mfa": "Oui",
+      "certs": [
+        {
+          "type": "HDS",
+          "scope": "Hébergement",
+          "location": "",
+          "received": "2026-09-11",
+          "validUntil": "2027-12-05"
+        }
+      ],
+      "controls": [
+        {
+          "t": "Vérifier l’activation de l’authentification multifacteur",
+          "id": "ctl-1",
+          "ref": "",
+          "freq": 12,
+          "last": "2026-07-23",
+          "result": "Conforme",
+          "comment": ""
+        },
+        {
+          "t": "Revue des accès",
+          "id": "ctl-2",
+          "ref": "",
+          "freq": 6,
+          "last": "2026-02-23",
+          "result": "Conforme",
+          "comment": ""
+        }
+      ],
+      "certificateState": ["Valide", "ok"],
+      "controlSummary": {
+        "enRetard": 1,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 2,
+        "prochain": "2026-08-23"
+      },
+      "current": {
+        "id": "a3b8e436-a0ce-4221-967c-83d478ba6c40",
+        "supplierId": "SUP-001",
+        "evaluatedAt": "2026-10-11",
+        "evaluator": "rssi_demo",
+        "nextReviewAt": "2027-10-06",
+        "items": 3,
+        "meets": 2,
+        "notMeets": 0,
+        "notAssessed": 1
+      },
+      "toReview": false,
+      "scopes": []
+    },
+    {
+      "id": "SUP-003",
+      "name": "Logiciel de dossiers fictif",
+      "saas": true,
+      "rattachement": "Cloud",
+      "critical": "Oui",
+      "hds": "Oui",
+      "contact": "",
+      "notes": "MFA à activer.",
+      "sso": "Non",
+      "mfa": "Non",
+      "certs": [
+        {
+          "type": "ISO 27001",
+          "scope": "",
+          "location": "",
+          "received": "2025-09-26",
+          "validUntil": "2026-10-11"
+        }
+      ],
+      "controls": [],
+      "certificateState": ["Expiré", "bad"],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 0,
+        "prochain": null
+      },
+      "current": {
+        "id": "01a6a4df-d5ba-4132-8d23-4974a74aa1da",
+        "supplierId": "SUP-003",
+        "evaluatedAt": "2026-10-11",
+        "evaluator": "rssi_demo",
+        "nextReviewAt": "2026-10-26",
+        "items": 2,
+        "meets": 0,
+        "notMeets": 2,
+        "notAssessed": 0
+      },
+      "toReview": true,
+      "scopes": []
+    },
+    {
+      "id": "SUP-002",
+      "name": "Messagerie collaborative fictive",
+      "saas": true,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "En cours",
+      "mfa": "Oui",
+      "certs": [],
+      "controls": [
+        {
+          "t": "Vérifier l’intégration au SSO",
+          "id": "ctl-3",
+          "ref": "",
+          "freq": 12,
+          "last": "",
+          "result": "",
+          "comment": ""
+        }
+      ],
+      "certificateState": ["", ""],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 1,
+        "nonConformes": 0,
+        "total": 1,
+        "prochain": null
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": []
+    },
+    {
+      "id": "SUP-005",
+      "name": "Outil de visioconférence fictif",
+      "saas": true,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "Oui",
+      "mfa": "Oui",
+      "certs": [],
+      "controls": [
+        {
+          "t": "Revue du service",
+          "id": "ctl-4",
+          "ref": "",
+          "freq": 12,
+          "last": "2025-09-26",
+          "result": "Non conforme",
+          "comment": ""
+        }
+      ],
+      "certificateState": ["", ""],
+      "controlSummary": {
+        "enRetard": 1,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 1,
+        "prochain": "2026-09-26"
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": []
+    },
+    {
+      "id": "SUP-004",
+      "name": "Prestataire de maintenance fictif",
+      "saas": false,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "",
+      "mfa": "",
+      "certs": [],
+      "controls": [],
+      "certificateState": ["", ""],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 0,
+        "prochain": null
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": []
+    }
+  ],
+  "criteria": [
+    {
+      "id": "00cef85b-a755-41fc-8f0b-99dbcf0e382f",
+      "label": "Authentification multifacteur",
+      "description": "Critère fictif.",
+      "purposes": ["evaluation", "surveillance"],
+      "requirementRefs": ["requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-8.5"],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.617Z"
+    },
+    {
+      "id": "8c77290a-e729-42fd-9b11-a88d65201672",
+      "label": "Certificat valide",
+      "description": "Critère fictif.",
+      "purposes": ["selection", "reevaluation"],
+      "requirementRefs": ["requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-5.22"],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.625Z"
+    },
+    {
+      "id": "cb91be96-98ea-43ab-94b7-cf17a44f76d9",
+      "label": "Plan de continuité documenté",
+      "description": "Critère fictif.",
+      "purposes": ["evaluation"],
+      "requirementRefs": ["requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-5.30"],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.631Z"
+    }
+  ],
+  "scopes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "Pilotage de l’organisation",
+      "scope": "Données historiques et nouvelles relations communes",
+      "nature": "",
+      "parentId": null,
+      "entityKind": "perimetre",
+      "inheritFrameworks": false,
+      "visibility": "instance",
+      "timezone": "Europe/Paris",
+      "businessVersion": 1,
+      "riskMethodId": null,
+      "riskMethodVersion": null,
+      "version": 1,
+      "createdBy": "système"
+    }
+  ],
+  "policy": {
+    "definition": {
+      "name": "Organisation — nomenclatures métier",
+      "statuses": [
+        {
+          "id": "todo",
+          "label": "À faire",
+          "terminal": false,
+          "color": "#718975"
+        },
+        {
+          "id": "progress",
+          "label": "En cours",
+          "terminal": false,
+          "color": "#637D90"
+        },
+        {
+          "id": "blocked",
+          "label": "Bloquée",
+          "terminal": false,
+          "color": "#A18A65"
+        },
+        {
+          "id": "done",
+          "label": "Terminée",
+          "terminal": true,
+          "color": "#527E63"
+        },
+        {
+          "id": "cancelled",
+          "label": "Annulée",
+          "terminal": true,
+          "color": "#858B85"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "todo",
+          "to": "progress"
+        },
+        {
+          "from": "todo",
+          "to": "cancelled"
+        },
+        {
+          "from": "progress",
+          "to": "blocked"
+        },
+        {
+          "from": "progress",
+          "to": "done"
+        },
+        {
+          "from": "progress",
+          "to": "cancelled"
+        },
+        {
+          "from": "blocked",
+          "to": "progress"
+        },
+        {
+          "from": "done",
+          "to": "progress"
+        }
+      ],
+      "catalogues": {
+        "actionCategories": [
+          {
+            "id": "action",
+            "label": "Action SMSI"
+          }
+        ],
+        "measureCategories": [
+          {
+            "id": "security",
+            "label": "Sécurité"
+          }
+        ],
+        "proofCategories": [
+          {
+            "id": "document",
+            "label": "Document"
+          },
+          {
+            "id": "record",
+            "label": "Enregistrement"
+          }
+        ],
+        "controlTypes": [
+          {
+            "id": "review",
+            "label": "Revue"
+          },
+          {
+            "id": "test",
+            "label": "Test"
+          }
+        ],
+        "frequencies": [
+          {
+            "id": "monthly",
+            "label": "Mensuelle"
+          },
+          {
+            "id": "quarterly",
+            "label": "Trimestrielle"
+          },
+          {
+            "id": "yearly",
+            "label": "Annuelle"
+          }
+        ],
+        "riskDomains": [
+          {
+            "id": "information",
+            "label": "Sécurité de l’information"
+          }
+        ],
+        "pestelFactors": [
+          {
+            "id": "politique",
+            "label": "Politique"
+          },
+          {
+            "id": "economique",
+            "label": "Économique"
+          },
+          {
+            "id": "social",
+            "label": "Social"
+          },
+          {
+            "id": "technologique",
+            "label": "Technologique"
+          },
+          {
+            "id": "environnemental",
+            "label": "Environnemental"
+          },
+          {
+            "id": "legal",
+            "label": "Légal"
+          }
+        ]
+      },
+      "dashboard": {
+        "cards": ["tasks", "risks", "frameworks", "controls", "evidence"],
+        "showOverdue": true,
+        "showUnvalidated": true
+      },
+      "notifications": {
+        "enabled": true,
+        "leadDays": 7,
+        "title": "Échéance SMSI",
+        "message": "Une action vous est attribuée. Consultez sa fiche pour connaître son échéance et ses liens."
+      },
+      "templates": [
+        {
+          "id": "review",
+          "label": "Revue périodique",
+          "category": "action",
+          "text": "Décrire le contrôle réalisé et joindre ses justificatifs."
+        }
+      ],
+      "display": {
+        "defaultTaskView": "list",
+        "weekStartsOn": 1,
+        "showClosed": false
+      }
+    }
+  }
+}

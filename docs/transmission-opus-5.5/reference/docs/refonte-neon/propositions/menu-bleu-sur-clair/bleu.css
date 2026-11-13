@@ -1,0 +1,103 @@
+/* Essai hybride : dégradé sombre dans la navigation, contenu de l'application en clair. */
+html[data-theme='light'] .mh-sidebar {
+  --mh-surface: #142c45;
+  --mh-edge: #42617b;
+  --mh-ink: #edf4ff;
+  --mh-muted: #bdcfe0;
+  --mh-hover: #213e53;
+  background:
+    radial-gradient(ellipse 115% 40% at 0% 100%, #173f45 0%, transparent 86%),
+    linear-gradient(163deg, #14233d 0%, #142c45 56%, #143239 100%) !important;
+  border-right-color: #42617b !important;
+  box-shadow:
+    inset -1px 0 #ffffff08,
+    4px 0 16px -14px #000a !important;
+}
+html[data-theme='light'] .mh-sidebar .brand,
+html[data-theme='light'] .mh-sidebar .mh-comptes,
+html[data-theme='light'] .mh-sidebar .mh-footer {
+  border-color: #42617b;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='dashboard'] {
+  --mc-tone: #bb96f5;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='organisation'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='organisation'] {
+  --mc-tone: #78d69a;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='pilotage'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='pilotage'] {
+  --mc-tone: #7aafff;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='risques'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='risques'] {
+  --mc-tone: #f2be57;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='conformite'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='conformite'] {
+  --mc-tone: #62d4dc;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='actions'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='actions'] {
+  --mc-tone: #f0a265;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='resilience'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='resilience'] {
+  --mc-tone: #f37b86;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-family='documents'],
+html[data-theme='light'] .mh-sidebar [data-mh-group='documents'] {
+  --mc-tone: #d0b28b;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='plateforme'] {
+  --mc-tone: #b5c1d6;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='parametres'] {
+  --mc-tone: #b6d17d;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='compte'] {
+  --mc-tone: #cfb4f4;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='aide'] {
+  --mc-tone: #cab0d7;
+}
+html[data-theme='light'] .mh-sidebar [data-mh-page='mur'] {
+  --mc-tone: #7fc5ef;
+}
+html[data-theme='light'] .mh-sidebar .mh-family {
+  color: var(--mh-ink);
+}
+html[data-theme='light'] .mh-sidebar .mh-destination {
+  color: #c4d5e6;
+}
+html[data-theme='light'] .mh-sidebar .mh-family:hover,
+html[data-theme='light'] .mh-sidebar .mh-destination:hover {
+  color: #fff;
+  background: #213e53;
+  border-color: #56758d;
+  box-shadow: none;
+}
+html[data-theme='light'] .mh-sidebar .mh-family[aria-current='true'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--mc-tone) 52%, #284959);
+  border-left-color: var(--mc-tone);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--mc-tone) 17%, #142b40), #173244);
+  box-shadow: inset 0 1px #ffffff0d;
+}
+html[data-theme='light'] .mh-sidebar .mh-destination[aria-current='page'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--mc-tone) 60%, #284959);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--mc-tone) 26%, #102b40), #204351);
+  box-shadow:
+    inset 0 1px #ffffff15,
+    0 4px 9px -7px #0008;
+}
+html[data-theme='light'] .mh-sidebar .mh-footer button {
+  color: #e2eff9;
+  border-color: #52758b;
+  background: linear-gradient(145deg, #213e53, #1a3447);
+  box-shadow: inset 0 1px #ffffff0d;
+}
+html[data-theme='light'] .mh-sidebar :focus-visible {
+  outline-color: #a9e6f2;
+}

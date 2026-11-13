@@ -1,0 +1,45 @@
+{
+  "source": "Maquette autonome uniquement ; aucun chargement applicatif ou API.",
+  "captures": [
+    {
+      "fichier": "clair-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "lignes-clair-1440.png",
+      "largeur": 1370,
+      "hauteur": 650
+    },
+    {
+      "fichier": "alertes-clair-1440.png",
+      "largeur": 1370,
+      "hauteur": 650
+    },
+    {
+      "fichier": "clair-apercu-4k.png",
+      "largeur": 3840,
+      "hauteur": 2160
+    },
+    {
+      "fichier": "clair-integrale-hd.png",
+      "largeur": 3840,
+      "hauteur": 14698
+    },
+    {
+      "fichier": "clair-390.png",
+      "largeur": 390,
+      "hauteur": 1200
+    },
+    {
+      "fichier": "lignes-clair-390.png",
+      "largeur": 390,
+      "hauteur": 1200
+    },
+    {
+      "fichier": "applicabilite-clair-1440.png",
+      "largeur": 1370,
+      "hauteur": 317
+    }
+  ]
+}

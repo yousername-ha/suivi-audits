@@ -1,0 +1,252 @@
+{
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "testsApplicatifs": false,
+  "vues": [
+    {
+      "nom": "parties-light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "parties-dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "swot-dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "nom": "pestel-dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    }
+  ],
+  "analyses": [
+    {
+      "nom": "parties-light",
+      "violations": []
+    },
+    {
+      "nom": "swot-light",
+      "violations": []
+    },
+    {
+      "nom": "pestel-light",
+      "violations": []
+    },
+    {
+      "nom": "parties-dark",
+      "violations": []
+    },
+    {
+      "nom": "swot-dark",
+      "violations": []
+    },
+    {
+      "nom": "pestel-dark",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "writes": []
+}

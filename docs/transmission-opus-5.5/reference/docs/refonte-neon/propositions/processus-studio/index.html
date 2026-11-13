@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr" data-theme="dark" data-motion="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Processus — Studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css" />
+    <link rel="stylesheet" href="../commandes-discretes/commandes.css" />
+    <link rel="stylesheet" href="../responsive-equilibre/responsive.css" />
+    <link rel="stylesheet" href="processus.css" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navigation illustrative" tabindex="0">
+      <div class="brand">
+        <span class="brand-mark">✧</span
+        ><span
+          ><strong>Suivi des audits<br />SMSI</strong><small>ISO 27001 / HDS</small></span
+        >
+      </div>
+      <div class="nav-caption">Espace de travail</div>
+      <div class="nav-item">◈ Tableau de bord</div>
+      <div class="nav-item active">⌘ Organisation <span>8</span></div>
+      <div class="nav-sub">Contexte de l’organisation</div>
+      <div class="nav-sub">Périmètres</div>
+      <div class="nav-sub current">Processus</div>
+      <div class="nav-sub">Rôles et responsabilités</div>
+      <div class="nav-sub">Cartographie du SMSI</div>
+      <div class="nav-sub">Fournisseurs</div>
+      <div class="nav-sub">Revues des accès</div>
+      <div class="nav-sub">Plans annuels</div>
+      <div class="nav-item">⌁ Pilotage</div>
+      <div class="nav-item">◇ Risques</div>
+      <div class="nav-item">✓ Conformité et audits</div>
+      <div class="nav-item">☷ Actions</div>
+      <div class="nav-item">↶ Résilience</div>
+      <div class="nav-item">▤ Documents</div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+    <div class="shell" id="shell">
+      <header class="topbar">
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions">
+          <span class="demo-note">Maquette · À valider</span
+          ><button type="button" class="button" id="theme">Mode clair</button>
+        </div>
+      </header>
+      <main data-active-view="processus">
+        <div class="breadcrumb">Organisation <span>/</span>Processus</div>
+        <header class="page-heading">
+          <div>
+            <h1>Les processus de l’organisation</h1>
+            <p>Une lecture des activités, de leurs pilotes et des éléments qui leur sont rattachés.</p>
+          </div>
+          <button type="button" class="button primary" id="create">+ Nouveau processus</button>
+        </header>
+        <section class="pr-overview" aria-label="Repères des processus">
+          <div class="pr-overview-identity">
+            <span class="pr-scope-icon" aria-hidden="true" data-icon="tree"></span>
+            <div><span class="pr-kicker">Périmètre affiché</span><strong id="scope-name"></strong></div>
+          </div>
+          <div id="summary" class="pr-summary"></div>
+          <span class="pr-overview-orbit" aria-hidden="true"></span>
+        </section>
+        <section class="workspace slab pr-workspace" aria-label="Répertoire des processus">
+          <div class="compact-toolbar">
+            <div class="view-cluster">
+              <div class="pr-views" role="group" aria-label="Vues des processus">
+                <button
+                  type="button"
+                  class="pr-tool"
+                  data-view="cards"
+                  aria-label="Vue cartes"
+                  aria-pressed="true"
+                  title="Cartes"
+                >
+                  <span data-icon="grid"></span></button
+                ><button
+                  type="button"
+                  class="pr-tool"
+                  data-view="list"
+                  aria-label="Vue liste compacte"
+                  aria-pressed="false"
+                  title="Liste compacte"
+                >
+                  <span data-icon="list"></span>
+                </button>
+              </div>
+              <span class="active-view-label" id="view-label">Vue par type</span>
+            </div>
+            <div class="toolbar-actions">
+              <button
+                type="button"
+                class="pr-tool"
+                id="search-toggle"
+                aria-label="Rechercher un processus"
+                aria-expanded="false"
+                aria-controls="search-box"
+                title="Rechercher"
+              >
+                <span data-icon="search"></span></button
+              ><button
+                type="button"
+                class="pr-tool"
+                id="filter-toggle"
+                aria-label="Filtres"
+                aria-expanded="false"
+                aria-controls="filter-box"
+                title="Filtres"
+              >
+                <span data-icon="filter"></span><b id="filter-count" hidden></b></button
+              ><button
+                type="button"
+                class="pr-tool"
+                id="motion-toggle"
+                aria-label="Pause animations"
+                title="Pause animations"
+              >
+                <span data-icon="pause"></span>
+              </button>
+            </div>
+          </div>
+          <div class="pr-chips" id="chips" hidden></div>
+          <div class="pr-content" id="content" tabindex="0" role="region" aria-label="Processus affichés"></div>
+          <footer class="pr-footer">
+            <span id="result" aria-live="polite"></span
+            ><span>Les rattachements restent dans leurs fiches d’origine.</span>
+          </footer>
+        </section>
+      </main>
+    </div>
+    <div class="pr-popup" id="search-box" role="dialog" aria-labelledby="search-title" hidden>
+      <label for="query" id="search-title">Rechercher un processus</label
+      ><input id="query" type="search" placeholder="Nom, code, pilote, finalité…" /><small>Échap pour fermer</small>
+    </div>
+    <div class="pr-popup" id="filter-box" role="dialog" aria-labelledby="filter-title" hidden>
+      <header>
+        <h2 id="filter-title">Affiner la vue</h2>
+        <button type="button" class="pr-tool" data-close-popup aria-label="Fermer les filtres">×</button>
+      </header>
+      <label for="family">Type de processus</label
+      ><select id="family">
+        <option value="">Tous les types</option></select
+      ><label for="owner">Pilote</label
+      ><select id="owner">
+        <option value="">Tous les pilotes</option></select
+      ><label for="relation">Rattachement présent</label
+      ><select id="relation">
+        <option value="">Tous</option></select
+      ><button type="button" class="button" data-reset>Réinitialiser</button>
+    </div>
+    <dialog class="pr-dialog" id="detail" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+    <div class="notice" id="notice" role="status" hidden></div>
+    <script src="donnees.js"></script>
+    <script src="processus.js"></script>
+  </body>
+</html>

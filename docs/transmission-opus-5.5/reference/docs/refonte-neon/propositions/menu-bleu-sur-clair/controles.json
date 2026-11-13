@@ -1,0 +1,192 @@
+{
+  "scope": "Maquette hybride : navigation bleu nuit et contenu clair",
+  "running": "mw-action",
+  "paused": "paused",
+  "reduced": "none",
+  "animations": [
+    {
+      "class": "mf-fill mw-motion mw-tiles",
+      "name": "mw-tiles",
+      "play": "running"
+    },
+    {
+      "class": "mf-fill mw-motion mw-organisation",
+      "name": "mw-node",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-pilotage",
+      "name": "mw-progress",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-risque",
+      "name": "mw-blink",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-check",
+      "name": "mw-check",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-action",
+      "name": "mw-action",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-resilience",
+      "name": "mw-rotate",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-document",
+      "name": "mw-document",
+      "play": "running"
+    }
+  ],
+  "palette": [
+    {
+      "key": "dashboard",
+      "stroke": "rgb(187, 150, 245)",
+      "width": "1.95px"
+    },
+    {
+      "key": "organisation",
+      "stroke": "rgb(120, 214, 154)",
+      "width": "1.95px"
+    },
+    {
+      "key": "pilotage",
+      "stroke": "rgb(122, 175, 255)",
+      "width": "1.95px"
+    },
+    {
+      "key": "risques",
+      "stroke": "rgb(242, 190, 87)",
+      "width": "1.95px"
+    },
+    {
+      "key": "conformite",
+      "stroke": "rgb(98, 212, 220)",
+      "width": "1.95px"
+    },
+    {
+      "key": "actions",
+      "stroke": "rgb(240, 162, 101)",
+      "width": "1.95px"
+    },
+    {
+      "key": "resilience",
+      "stroke": "rgb(243, 123, 134)",
+      "width": "1.95px"
+    },
+    {
+      "key": "documents",
+      "stroke": "rgb(208, 178, 139)",
+      "width": "1.95px"
+    },
+    {
+      "key": "plateforme",
+      "stroke": "rgb(181, 193, 214)",
+      "width": "1.95px"
+    },
+    {
+      "key": "parametres",
+      "stroke": "rgb(182, 209, 125)",
+      "width": "1.95px"
+    },
+    {
+      "key": "compte",
+      "stroke": "rgb(207, 180, 244)",
+      "width": "1.95px"
+    },
+    {
+      "key": "aide",
+      "stroke": "rgb(202, 176, 215)",
+      "width": "1.95px"
+    },
+    {
+      "key": "mur",
+      "stroke": "rgb(127, 197, 239)",
+      "width": "1.95px"
+    }
+  ],
+  "oldBackground": "radial-gradient(115% 32% at 120% 25%, rgb(231, 240, 252) 0%, rgba(0, 0, 0, 0) 88%), radial-gradient(140% 26% at -35% 105%, rgb(226, 240, 236) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(155deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 48%, rgb(248, 251, 255) 78%, rgb(245, 250, 248) 100%)",
+  "newBackground": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+  "originalDarkBackground": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+  "originalLibrary": "794b7997e9e2f9bb5daed1dcb08e0f067b4f568fc94c28c74620f346013fcff1",
+  "candidateLibrary": "794b7997e9e2f9bb5daed1dcb08e0f067b4f568fc94c28c74620f346013fcff1",
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(187, 150, 245)",
+    "strokeWidth": "1.95px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "sha256": {
+    "menu-detail-hd.png": "5c996efe273ee711970a173cb38505da82e6b0afe6eb9a489c99fc63ed1f4c35",
+    "bleu.css": "a109e38bf2b152f3f313495eac7846ced98cad1b59378d6d5640216beb250513",
+    "index.html": "6e1396f2dc6230d1c01729ca1f560fea72d7b11cd28e9a8e98225d26444041bc",
+    "apercu-autonome.html": "11227304545736dbea5f3ed5699a16781ed2af3d7f780280e4e77ccc9f00c4ec",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "3c3cfde6a1376c40058c24681dc02509f6de09dcfa8ddb99a5d28cd1e67f63b2",
+    "menu-clair-hd.png": "1ffb0de408eab43e66037efda2214bbd274e5298d3eec3ba6cb78b1252d2611d"
+  }
+}

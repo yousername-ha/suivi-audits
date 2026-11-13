@@ -1,0 +1,37 @@
+{
+  "dateUTC": "2026-11-10T22:34:35.232Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "decisionVueParDefaut": "timeline",
+  "imagesCompletesNatives": true,
+  "media": [
+    {
+      "file": "timeline-actions-light-hd.png",
+      "width": 3840,
+      "height": 3504,
+      "bytes": 1843543,
+      "sha256": "80f518671365e8d3671092e32c6adea9f2f7d3ede85dd60db0abd4e3b82fa28d"
+    },
+    {
+      "file": "timeline-actions-dark-hd.png",
+      "width": 3840,
+      "height": 3504,
+      "bytes": 2232068,
+      "sha256": "349027d6d49a1a9d13113390264e615bcba723518e1335b700a4a3ec600f660f"
+    },
+    {
+      "file": "timeline-recurrences-light-hd.png",
+      "width": 3840,
+      "height": 2992,
+      "bytes": 1437582,
+      "sha256": "14057874229ba0a5e8974526905596214761f07b475134953de223d540ba4424"
+    },
+    {
+      "file": "timeline-recurrences-dark-hd.png",
+      "width": 3840,
+      "height": 2992,
+      "bytes": 1821528,
+      "sha256": "da9e0cbd99942a7cdff11d698c99a47c66125001276ae113115972694791ee91"
+    }
+  ]
+}

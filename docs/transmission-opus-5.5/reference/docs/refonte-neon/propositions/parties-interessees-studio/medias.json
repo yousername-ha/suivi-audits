@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-11",
+  "scope": "captures natives de maquette",
+  "media": [
+    {
+      "file": "fiche-1920-clair.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 331981,
+      "sha256": "81222b15cbcb2cac9aed2e590c32db3aabc2ba91e764232d2f00393a04924705"
+    },
+    {
+      "file": "fiche-1920-sombre.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 342502,
+      "sha256": "a4622e20ab35263e61187de598680c8fee076b50549e99555df83301c6ff924c"
+    },
+    {
+      "file": "filtres-portable-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 166727,
+      "sha256": "b8dd071ed0c000f21b34637b3cfbc61246e4982dac5efb0adfe67c33c4871fa9"
+    },
+    {
+      "file": "panorama-1920-clair.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 248054,
+      "sha256": "ebbfae1620d0f5e1999bdc18a27257ba36c94ba3d98afd4cc8babd862b485ad8"
+    },
+    {
+      "file": "panorama-1920-sombre.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 249431,
+      "sha256": "139abdcee27952ad13fc817571e068b9d121d77448ef14867942a6a32b6c69a4"
+    },
+    {
+      "file": "panorama-portable-1366-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 209078,
+      "sha256": "96cc4a04f0b93f1b62388f66b88b78daf23c2654534575411c88e72a71176ad6"
+    },
+    {
+      "file": "registre-portable-1366-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 225319,
+      "sha256": "ef49a73db3465073fd43db7f1ead366579a024d183c630e2fb765db2bca21b4c"
+    }
+  ]
+}

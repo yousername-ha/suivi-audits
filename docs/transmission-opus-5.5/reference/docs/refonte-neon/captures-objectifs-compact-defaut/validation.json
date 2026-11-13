@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-04T21:41:11.058Z",
+  "entreeMenu": "/pilotage/objectifs",
+  "ordreOngletsConserve": true,
+  "objectifsDefaut": "compacte",
+  "indicateursDefaut": "compacte",
+  "processusDefaut": "processus",
+  "basculeVerifiee": [
+    "Par objectif",
+    "Par processus",
+    "Boîtes de pilotage",
+    "Vue compacte"
+  ],
+  "rechargementCompact": true,
+  "donneesMetierInchangees": true,
+  "problems": [],
+  "writes": [],
+  "codeCommit": "36a92362db38944e1dfa9522e83308480092beed",
+  "reglageInitial": "74bc2eef04f9f7615c59816756a46433e65f2ab2",
+  "controles": {
+    "typescriptWeb": 0,
+    "eslintCible": 0,
+    "prettierCible": 0,
+    "buildWeb": 0,
+    "testsNavigationReussis": 16,
+    "e2eReussis": 2,
+    "rejeux": 0
+  },
+  "donnees": "Démonstration fictive, base de recette isolée"
+}

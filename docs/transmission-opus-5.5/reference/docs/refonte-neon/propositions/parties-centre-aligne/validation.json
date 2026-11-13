@@ -1,0 +1,94 @@
+{
+  "report": [
+    {
+      "width": 1024,
+      "height": 768,
+      "cx": 435.828125,
+      "cy": 588.265625,
+      "middleX": 435.828125,
+      "middleY": 588.265625,
+      "errorX": 0,
+      "errorY": 0,
+      "branches": 6,
+      "pageWidth": 1024,
+      "pageHeight": 768
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "cx": 660.265625,
+      "cy": 494.84375,
+      "middleX": 660.265625,
+      "middleY": 494.84375,
+      "errorX": 0,
+      "errorY": 0,
+      "branches": 6,
+      "pageWidth": 1366,
+      "pageHeight": 768
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "cx": 891,
+      "cy": 663.984375,
+      "middleX": 891,
+      "middleY": 663.984375,
+      "errorX": 0,
+      "errorY": 0,
+      "branches": 6,
+      "pageWidth": 1920,
+      "pageHeight": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "cx": 1225.328125,
+      "cy": 699.03125,
+      "middleX": 1225.328125,
+      "middleY": 699.03125,
+      "errorX": 0,
+      "errorY": 0,
+      "branches": 6,
+      "pageWidth": 2560,
+      "pageHeight": 1440
+    }
+  ],
+  "errors": [],
+  "liaisons": [
+    {
+      "width": 1024,
+      "crosses": 0,
+      "centerY": 588.265625,
+      "cardsY": 588.265625
+    },
+    {
+      "width": 1366,
+      "crosses": 0,
+      "centerY": 494.84375,
+      "cardsY": 494.84375
+    },
+    {
+      "width": 1920,
+      "crosses": 0,
+      "centerY": 663.984375,
+      "cardsY": 663.984375
+    },
+    {
+      "width": 2560,
+      "crosses": 0,
+      "centerY": 699.03125,
+      "cardsY": 699.03125
+    }
+  ],
+  "etat": "Maquette isolée, application inchangée à 81ea06a",
+  "image": {
+    "fichier": "apercu-centre-sombre-hd.png",
+    "dimensions": [
+      3840,
+      2160
+    ],
+    "sha256": "26338ad93c76c7e37ba22bb07c21e7c136732210b1ae7ff10e1e86ad6a88c344"
+  },
+  "imagesFournies": 1,
+  "testsApplicatifsExecutés": false
+}

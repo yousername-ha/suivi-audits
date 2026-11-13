@@ -14,6 +14,8 @@ export default tseslint.config(
       '**/test-results/**',
       'tests/e2e/.tmp-e2e/**',
       'docs/cartographie/**',
+      // Instantanés documentaires figés : leur intégrité est vérifiée par le manifeste du dossier.
+      'docs/transmission-opus-5.5/**',
       'apps/web/src/generated/**',
       '**/*.generated.ts',
     ],

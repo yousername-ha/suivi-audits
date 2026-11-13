@@ -1,0 +1,269 @@
+{
+  "date": "2026-11-12T14:59:25.905Z",
+  "scope": "Maquette indépendante ; aucun build/test applicatif",
+  "checks": [
+    "Une seule entrée Bibliothèque, aucun des six onglets barrés, couverture dans chaque référentiel",
+    "Catalogue inchangé sans périmètre ; pas de faux zéros de couverture",
+    "Recherche à la demande, critère visible après Échap et réinitialisation",
+    "Détail des états et liens distincts ; Échap rend le focus",
+    "Référentiel non actif dans le périmètre reste au catalogue, couverture absente explicite",
+    "Version active distincte de la version du catalogue, jointure par identifiant",
+    "Liste longue défile dans son espace sans déplacer la page",
+    "Dalle cliquable et clavier ; commandes internes indépendantes"
+  ],
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "listWidth": 739,
+      "listScrollWidth": 739,
+      "listHeight": 405,
+      "footerBottom": 716
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "listWidth": 739,
+      "listScrollWidth": 739,
+      "listHeight": 405,
+      "footerBottom": 716
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "light",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "listWidth": 943,
+      "listScrollWidth": 943,
+      "listHeight": 373,
+      "footerBottom": 668
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "dark",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "listWidth": 943,
+      "listScrollWidth": 943,
+      "listHeight": 373,
+      "footerBottom": 668
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "listWidth": 1009,
+      "listScrollWidth": 1009,
+      "listHeight": 417,
+      "footerBottom": 716
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "listWidth": 1009,
+      "listScrollWidth": 1009,
+      "listHeight": 417,
+      "footerBottom": 716
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "listWidth": 1080,
+      "listScrollWidth": 1080,
+      "listHeight": 419,
+      "footerBottom": 836
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "listWidth": 1080,
+      "listScrollWidth": 1080,
+      "listHeight": 419,
+      "footerBottom": 836
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "light",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "listWidth": 1173,
+      "listScrollWidth": 1173,
+      "listHeight": 383,
+      "footerBottom": 800
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "dark",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "listWidth": 1173,
+      "listScrollWidth": 1173,
+      "listHeight": 383,
+      "footerBottom": 800
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "listWidth": 1521,
+      "listScrollWidth": 1521,
+      "listHeight": 599,
+      "footerBottom": 1016
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "listWidth": 1521,
+      "listScrollWidth": 1521,
+      "listHeight": 599,
+      "footerBottom": 1016
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "listWidth": 1510,
+      "listScrollWidth": 1510,
+      "listHeight": 959,
+      "footerBottom": 1376
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "listWidth": 1510,
+      "listScrollWidth": 1510,
+      "listHeight": 959,
+      "footerBottom": 1376
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "listWidth": 1521,
+      "listScrollWidth": 1521,
+      "listHeight": 449,
+      "footerBottom": 748
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "listWidth": 1521,
+      "listScrollWidth": 1521,
+      "listHeight": 449,
+      "footerBottom": 748
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "view": "catalogue",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "view": "detail",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "view": "catalogue",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "view": "detail",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "apiRequests": 0,
+  "nonLocalRequests": [],
+  "screenshot": {
+    "width": 3840,
+    "height": 2160,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "dpr": 2,
+    "count": 1
+  },
+  "statut": "Maquette proposée, application inchangée, validation préalable attendue",
+  "baseApplication": "04a310f",
+  "baseDepot": "f9167a4",
+  "navigationProposee": {
+    "conservee": "Bibliothèque de référentiels",
+    "fusionnee": "Couverture par référentiel",
+    "masquees": [
+      "Référentiels et exigences",
+      "Correspondances entre exigences",
+      "Rapprochements à valider",
+      "Analyser un service",
+      "Applications à intégrer",
+      "Correspondances de la bibliothèque"
+    ]
+  },
+  "prConsultee": {
+    "numero": 260,
+    "type": "Publication 6.3.0",
+    "fichiers": 267,
+    "handOverPartageModifie": true,
+    "memePropositionIdentifiee": false
+  },
+  "nonExecutes": [
+    "Intégration de navigation applicative",
+    "Build et tests applicatifs",
+    "API, DB et droits serveur",
+    "Docker/Windows",
+    "Publication ou déploiement"
+  ],
+  "sha256": {
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/index.html": "b023a33d66c7c84256176a327a8d0ced8716ae17a33d2b42234407e7cb6ac9bc",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/bibliotheque.css": "469a9cd91e6678760480a89683de184b22e855801bd66b9944ebb2db1e9724a1",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/bibliotheque.js": "2a223d1ba80a00ac3720fe3508963607ac947c785befc1ca03f4d58ef30a62a9",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/donnees.js": "04d03a3485c94e0f7dd53eaed95b9746baabf69553394a2b254b73fd14b02010",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/apercu-autonome.html": "1b484752ed543ede1217006175e48c7726a2d89ed84613bb320c6baf39de77ad",
+    "docs/refonte-neon/propositions/bibliotheque-unifiee/bibliotheque-clair-hd.png": "c52205c7f9bc03c01d268a4e84c7f1d9cd379a49a8d8c69e396a5dcb3a44eff1",
+    "docs/refonte-neon/propositions/commandes-discretes/prototype.css": "c2e0e4846c5e9fb425bb06507fcc7d0053989e9447f3830cf59e64823bcb37cf",
+    "docs/refonte-neon/propositions/responsive-equilibre/responsive.css": "92632d7901f94caa7bf5364d749be52305f3dac80bdbf18796b6ad07ceb04630",
+    "docs/refonte-neon/propositions/responsabilites-studio/responsabilites.css": "b8c584dec8180b325e35790a636eb4c6757a82d78c8cc2b1105c2178273115f3",
+    "docs/refonte-neon/propositions/organisation-contexte-studio/inter.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+  }
+}

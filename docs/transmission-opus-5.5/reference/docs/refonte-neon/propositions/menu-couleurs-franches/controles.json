@@ -1,0 +1,203 @@
+{
+  "scope": "Maquette claire : treize couleurs distinctes et traits renforcés",
+  "running": "mw-action",
+  "paused": "paused",
+  "reduced": "none",
+  "animations": [
+    {
+      "class": "mf-fill mw-motion mw-tiles",
+      "name": "mw-tiles",
+      "play": "running"
+    },
+    {
+      "class": "mf-fill mw-motion mw-organisation",
+      "name": "mw-node",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-pilotage",
+      "name": "mw-progress",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-risque",
+      "name": "mw-blink",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-check",
+      "name": "mw-check",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-action",
+      "name": "mw-action",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-resilience",
+      "name": "mw-rotate",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-document",
+      "name": "mw-document",
+      "play": "running"
+    }
+  ],
+  "palette": [
+    {
+      "key": "dashboard",
+      "stroke": "rgb(116, 57, 181)",
+      "width": "1.95px"
+    },
+    {
+      "key": "organisation",
+      "stroke": "rgb(40, 118, 69)",
+      "width": "1.95px"
+    },
+    {
+      "key": "pilotage",
+      "stroke": "rgb(36, 93, 181)",
+      "width": "1.95px"
+    },
+    {
+      "key": "risques",
+      "stroke": "rgb(157, 107, 6)",
+      "width": "1.95px"
+    },
+    {
+      "key": "conformite",
+      "stroke": "rgb(8, 125, 134)",
+      "width": "1.95px"
+    },
+    {
+      "key": "actions",
+      "stroke": "rgb(182, 82, 18)",
+      "width": "1.95px"
+    },
+    {
+      "key": "resilience",
+      "stroke": "rgb(181, 43, 53)",
+      "width": "1.95px"
+    },
+    {
+      "key": "documents",
+      "stroke": "rgb(121, 82, 46)",
+      "width": "1.95px"
+    },
+    {
+      "key": "plateforme",
+      "stroke": "rgb(77, 85, 108)",
+      "width": "1.95px"
+    },
+    {
+      "key": "parametres",
+      "stroke": "rgb(71, 118, 36)",
+      "width": "1.95px"
+    },
+    {
+      "key": "compte",
+      "stroke": "rgb(90, 59, 132)",
+      "width": "1.95px"
+    },
+    {
+      "key": "aide",
+      "stroke": "rgb(131, 62, 98)",
+      "width": "1.95px"
+    },
+    {
+      "key": "mur",
+      "stroke": "rgb(49, 100, 132)",
+      "width": "1.95px"
+    }
+  ],
+  "oldBackground": "radial-gradient(115% 32% at 120% 25%, rgb(231, 240, 252) 0%, rgba(0, 0, 0, 0) 88%), radial-gradient(140% 26% at -35% 105%, rgb(226, 240, 236) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(155deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 48%, rgb(248, 251, 255) 78%, rgb(245, 250, 248) 100%)",
+  "newBackground": "radial-gradient(115% 32% at 120% 25%, rgb(231, 240, 252) 0%, rgba(0, 0, 0, 0) 88%), radial-gradient(140% 26% at -35% 105%, rgb(226, 240, 236) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(155deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 48%, rgb(248, 251, 255) 78%, rgb(245, 250, 248) 100%)",
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(116, 57, 181)",
+    "strokeWidth": "1.95px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "animationCapture": {
+    "method": "Captures natives successives de Chromium à densité 2, durées réelles conservées",
+    "frames": 66,
+    "durationSeconds": 10.055932938,
+    "width": 496,
+    "height": 1240
+  },
+  "gif": {
+    "width": 372,
+    "height": 930,
+    "frames": 121,
+    "loop": 0
+  },
+  "sha256": {
+    "couleurs.css": "b8ad7ba2c3e948d16a3a69b3e07e761e629eb6fbfe8d51ebb3e792436ff938fa",
+    "menu-detail-hd.png": "b391257087d108bc308eadad55267c906ac784d2c7c821e399b558672159f6af",
+    "index.html": "7ac3ea074a726767280275a02a1b2d71592a2c624a61658cdf76b3d72df2107c",
+    "apercu-autonome.html": "d398470e2e589ce8ef27e9b060ead09c5545d34ff39507d96d1cb847114629b5",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "1635e2d4621aa32686d7241fbf9cbca909bfa38fac3bbe86eae3094717c92e99",
+    "menu-clair-hd.png": "a55134ffc474e844be905f634dbafef3efb651976cf762d91226a1e27827c67a",
+    "animation.gif": "fad03e6ce907e452886e1c7f7de5bc2ca3dc8f03aa72bb10183f70d64ec70b0c"
+  }
+}

@@ -1,0 +1,523 @@
+{
+  "applicationIntegree": true,
+  "dateUTC": "2026-11-10T21:13:01.439Z",
+  "timezone": "Europe/Paris",
+  "views": [
+    {
+      "name": "light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-politique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-economique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-social",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-technologique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-environnemental",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-legal",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-registre-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-registre-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "light-internes-methode-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-politique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-economique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-social",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-technologique",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-environnemental",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-legal",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-registre-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-registre-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-internes-methode-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-nomenclature-longue-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-nomenclature-longue-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-nomenclature-longue-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-nomenclature-longue-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-sans-facteurs-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-sans-facteurs-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-sans-facteurs-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-sans-facteurs-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-contenus-longs-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-contenus-longs-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-contenus-longs-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    },
+    {
+      "name": "simule-contenus-longs-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlap": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-mobile",
+      "violations": []
+    },
+    {
+      "name": "light-main",
+      "violations": []
+    },
+    {
+      "name": "light-registre",
+      "violations": []
+    },
+    {
+      "name": "light-internes-methode",
+      "violations": []
+    },
+    {
+      "name": "dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "dark-main",
+      "violations": []
+    },
+    {
+      "name": "dark-registre",
+      "violations": []
+    },
+    {
+      "name": "dark-internes-methode",
+      "violations": []
+    },
+    {
+      "name": "simule-nomenclature-longue-light",
+      "violations": []
+    },
+    {
+      "name": "simule-nomenclature-longue-dark",
+      "violations": []
+    },
+    {
+      "name": "simule-sans-facteurs-light",
+      "violations": []
+    },
+    {
+      "name": "simule-sans-facteurs-dark",
+      "violations": []
+    },
+    {
+      "name": "simule-contenus-longs-light",
+      "violations": []
+    },
+    {
+      "name": "simule-contenus-longs-dark",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "environmentWarnings": [
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    }
+  ],
+  "writes": [],
+  "preferenceWrites": [
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    }
+  ],
+  "fixtureSetup": {
+    "affectationsIllustratives": 2,
+    "enjeuxCrees": 0,
+    "sourceRestituee": true
+  },
+  "animations": {
+    "active": true,
+    "pause": true,
+    "reprise": true,
+    "reduction": true
+  },
+  "appCommit": "5dd1c68350730f6a59ff204a5e721a482b3125eb",
+  "imagesPriveesDeRecette": [
+    "pestel-light-1440.png",
+    "pestel-light-mobile.png",
+    "registre-light.png",
+    "pestel-light-hd.png",
+    "pestel-dark-1440.png",
+    "pestel-dark-mobile.png",
+    "registre-dark.png",
+    "pestel-dark-hd.png"
+  ],
+  "imagesPubliees": [
+    "pestel-light-hd.png",
+    "pestel-dark-hd.png"
+  ],
+  "testsUnitaires": {
+    "web": 240,
+    "ui": 243
+  },
+  "parcoursE2E": {
+    "pestel": 4,
+    "swot": 3,
+    "rejeux": 0
+  }
+}

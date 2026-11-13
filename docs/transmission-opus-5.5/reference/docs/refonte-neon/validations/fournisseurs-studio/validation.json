@@ -1,0 +1,253 @@
+{
+  "date": "2026-11-12",
+  "timezone": "UTC",
+  "sourceBase": "f8734e6",
+  "branch": "codex/refonte-neon-main",
+  "scope": "Frontend Fournisseurs intégré, données fictives, toutes API interceptées",
+  "realDatabaseTested": false,
+  "dockerImageBuilt": false,
+  "unitTests": {
+    "web": 279,
+    "ui": 246
+  },
+  "typechecks": [
+    "web",
+    "ui",
+    "e2e"
+  ],
+  "lint": "ciblé, réussi",
+  "format": "sources modifiées contrôlées",
+  "build": "Vite 8.3.4, Node 26.13.0, réussi",
+  "cases": [
+    {
+      "name": "lecture clavier, rubriques séparées et retour du focus sans écriture",
+      "status": "passed",
+      "durationMs": 4468
+    },
+    {
+      "name": "édition directe isolée du clic ligne et formulaire conservant certificats et contrôles",
+      "status": "passed",
+      "durationMs": 4233
+    },
+    {
+      "name": "ajout, évaluation et rattachement restent les actions existantes",
+      "status": "passed",
+      "durationMs": 5795
+    },
+    {
+      "name": "lecteur : consultation et historique sans commandes d’écriture",
+      "status": "passed",
+      "durationMs": 2290
+    },
+    {
+      "name": "recherche, filtres et soixante lignes gardent le défilement dans le registre",
+      "status": "passed",
+      "durationMs": 10871
+    },
+    {
+      "name": "indisponibilité du registre : ne pas afficher des zéros comme un résultat chargé",
+      "status": "passed",
+      "durationMs": 5461
+    },
+    {
+      "name": "dimensions PC et accessibilité du registre et de la consultation",
+      "status": "passed",
+      "durationMs": 17553
+    }
+  ],
+  "details": {
+    "layouts": [
+      {
+        "viewportWidth": 1024,
+        "viewportHeight": 768,
+        "theme": "clair",
+        "width": 1024,
+        "height": 768,
+        "pageY": 0,
+        "regionHeight": 239,
+        "regionWidth": 711,
+        "contentWidth": 1010,
+        "font": "14.295px",
+        "modal": {
+          "top": 38.390625,
+          "bottom": 719.578125,
+          "client": 679,
+          "scroll": 679
+        }
+      },
+      {
+        "viewportWidth": 1024,
+        "viewportHeight": 768,
+        "theme": "sombre",
+        "width": 1024,
+        "height": 768,
+        "pageY": 0,
+        "regionHeight": 239,
+        "regionWidth": 711,
+        "contentWidth": 1010,
+        "font": "14.295px",
+        "modal": {
+          "top": 38.390625,
+          "bottom": 719.578125,
+          "client": 679,
+          "scroll": 679
+        }
+      },
+      {
+        "viewportWidth": 1366,
+        "viewportHeight": 768,
+        "theme": "clair",
+        "width": 1366,
+        "height": 768,
+        "pageY": 0,
+        "regionHeight": 211,
+        "regionWidth": 1025,
+        "contentWidth": 1055,
+        "font": "14.9362px",
+        "modal": {
+          "top": 38.390625,
+          "bottom": 566.734375,
+          "client": 526,
+          "scroll": 526
+        }
+      },
+      {
+        "viewportWidth": 1366,
+        "viewportHeight": 768,
+        "theme": "sombre",
+        "width": 1366,
+        "height": 768,
+        "pageY": 0,
+        "regionHeight": 211,
+        "regionWidth": 1025,
+        "contentWidth": 1055,
+        "font": "14.9362px",
+        "modal": {
+          "top": 38.390625,
+          "bottom": 566.734375,
+          "client": 526,
+          "scroll": 526
+        }
+      },
+      {
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "theme": "clair",
+        "width": 1920,
+        "height": 1080,
+        "pageY": 0,
+        "regionHeight": 468,
+        "regionWidth": 1552,
+        "contentWidth": 1552,
+        "font": "16px",
+        "modal": {
+          "top": 54,
+          "bottom": 585.703125,
+          "client": 530,
+          "scroll": 530
+        }
+      },
+      {
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "theme": "sombre",
+        "width": 1920,
+        "height": 1080,
+        "pageY": 0,
+        "regionHeight": 468,
+        "regionWidth": 1552,
+        "contentWidth": 1552,
+        "font": "16px",
+        "modal": {
+          "top": 54,
+          "bottom": 585.703125,
+          "client": 530,
+          "scroll": 530
+        }
+      },
+      {
+        "viewportWidth": 2560,
+        "viewportHeight": 1440,
+        "theme": "clair",
+        "width": 2560,
+        "height": 1440,
+        "pageY": 0,
+        "regionHeight": 731,
+        "regionWidth": 2130,
+        "contentWidth": 2130,
+        "font": "18.4px",
+        "modal": {
+          "top": 72,
+          "bottom": 681.8125,
+          "client": 608,
+          "scroll": 608
+        }
+      },
+      {
+        "viewportWidth": 2560,
+        "viewportHeight": 1440,
+        "theme": "sombre",
+        "width": 2560,
+        "height": 1440,
+        "pageY": 0,
+        "regionHeight": 731,
+        "regionWidth": 2130,
+        "contentWidth": 2130,
+        "font": "18.4px",
+        "modal": {
+          "top": 72,
+          "bottom": 681.8125,
+          "client": 608,
+          "scroll": 608
+        }
+      }
+    ],
+    "axe": [
+      {
+        "theme": "clair",
+        "view": "registre",
+        "violations": []
+      },
+      {
+        "theme": "clair",
+        "view": "consultation",
+        "violations": []
+      },
+      {
+        "theme": "sombre",
+        "view": "registre",
+        "violations": []
+      },
+      {
+        "theme": "sombre",
+        "view": "consultation",
+        "violations": []
+      }
+    ]
+  },
+  "image": {
+    "path": "fournisseurs-hd.png",
+    "pixels": [
+      3840,
+      2160
+    ],
+    "sha256": "7bbdf98a0fa359343d2a20651a0b8bfb2dbb27c529e68b65a942da50f5b21806",
+    "source": "Frontend fraîchement compilé + réponses API fictives interceptées"
+  },
+  "sourceHashes": {
+    "apps/web/src/pilotage/Fournisseurs.tsx": "6b214d162331a8cc68bdd155022765e13c7ebca6727118941b1cc094b8ec1383",
+    "apps/web/src/pilotage/FournisseursStudio.tsx": "573df63a1419fb0b28363831689a2e5989b304221d05789aa6c39b46f6c62c56",
+    "apps/web/src/pilotage/fournisseurs-types.ts": "a761d744bc09bc49ac0c2a705b64588045dab92eda44594d951d7850149ba29e",
+    "packages/ui/src/neon-fournisseurs.css": "61296e4ab43ae7f00818ee94ea6866ab5b6c1adf4dd93558580daeaa76a321d8",
+    "packages/ui/src/neon.css": "9d2e68e5bdc35785b882a109e90d0fa2665e64c9915e6f37f7760d890ff08b29",
+    "tests/e2e/interface/fournisseurs-fixture.ts": "a01040c98f99cb6d57a13ccdadab2d4200b1a2b254ebeabf80ec1dd06f022a7e",
+    "tests/e2e/interface/fournisseurs-studio.spec.ts": "1ead3071325c608cb763476cdcaad9a3221e89bbcd9319872b913830952668af",
+    "tests/e2e/interface/serve-built-web.py": "8f78b028600e43723292e3c1d3b997516d8fd637fab2be45b60134524698ff4c",
+    "tests/e2e/playwright.interface.config.ts": "d12cc7a774a11df50824cdc1267dbe02361635abfecacf39076d5ca33e8c3e02",
+    "tests/e2e/fixtures/fournisseurs-studio.json": "0efb2b157c8100c85598e645650aed8624982d8f77882cbd0f4f5c73b781792c",
+    "tests/e2e/specs/zzz-pilotage.spec.ts": "34ff83692ba74bb210eb8b16c72ebe3483240647c9a0e8e047666f4dfc6585a9",
+    "tests/e2e/specs/neon-lignes-validation.spec.ts": "fd8c6155d83949d183099ea3e9c850ff4f0306c9418406af8aca1d3d73d1b559",
+    "tests/e2e/specs/zzzzzz-jeu-de-test.spec.ts": "f6ee03162df34b5cdf103b438bca033c3c21e06b3ba1a4412ec8809729dcc28a",
+    "tests/e2e/tsconfig.json": "b7e192a91ac9d9db9fa434b5bfb3d435bddc3090b648514fb3a25b45b207f012"
+  }
+}

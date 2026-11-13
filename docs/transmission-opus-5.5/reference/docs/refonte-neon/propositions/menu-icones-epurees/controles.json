@@ -1,0 +1,74 @@
+{
+  "scope": "Maquette claire : icônes sans plaques",
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(60, 99, 178)",
+    "strokeWidth": "1.8px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "sha256": {
+    "index.html": "49539337712741f6fd4772d5c320c0d309e284ceb0e2c4693df713755c306824",
+    "apercu-autonome.html": "6b8bb6a06ad127eb01032cda7826af339da259b6bc63cfb250a236cde03ffe73",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "22fe12ee7015af2040cfb852a6c01ad8e7a3bd4e1a1b670b5a1bdba1001fdea2",
+    "icones.css": "d1c50ee6da8efe7ead72044c98e820372c85f6f7d78bc82d2b5b70582d483532",
+    "menu-clair-hd.png": "1cfb2d1e163c0afed10040cc1a85cb63afd99934881080cf9d763ab55323e8c0"
+  }
+}

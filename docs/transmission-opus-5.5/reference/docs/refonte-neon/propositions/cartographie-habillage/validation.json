@@ -1,0 +1,68 @@
+{
+  "scope": "Aperçu figé habillage, aucun test applicatif",
+  "comparisons": [
+    {
+      "view": "index",
+      "theme": "dark",
+      "nodes": 9,
+      "svgUnchanged": true,
+      "canvasBoundsUnchanged": true,
+      "nodeBoundsUnchanged": true
+    },
+    {
+      "view": "index",
+      "theme": "light",
+      "nodes": 9,
+      "svgUnchanged": true,
+      "canvasBoundsUnchanged": true,
+      "nodeBoundsUnchanged": true
+    },
+    {
+      "view": "contexte",
+      "theme": "dark",
+      "nodes": 22,
+      "svgUnchanged": true,
+      "canvasBoundsUnchanged": true,
+      "nodeBoundsUnchanged": true
+    },
+    {
+      "view": "contexte",
+      "theme": "light",
+      "nodes": 22,
+      "svgUnchanged": true,
+      "canvasBoundsUnchanged": true,
+      "nodeBoundsUnchanged": true
+    }
+  ],
+  "errors": [],
+  "api": [],
+  "resources": [
+    "http://localhost:5210/cartographie-habillage/index.html",
+    "http://localhost:5210/cartographie-habillage/index.html",
+    "http://localhost:5210/cartographie-habillage/contexte.html",
+    "http://localhost:5210/cartographie-habillage/contexte.html"
+  ],
+  "passed": true,
+  "date": "2026-11-12",
+  "applicationUnchanged": "67a334a",
+  "sourceHashes": {
+    "habillage.css": "cbf0e7962c0dee87e29df854c0e842a88a388032b9da30198e7c392deac822e9",
+    "contexte.html": "b38243a3707f0b84d8020c7b725f4d5926d88ccd163b612920221332aef97764",
+    "index.html": "d27ea909b18dbd59a1f314d0e3b1c7db5e3d3be48832e570f39a1384a28f66cd",
+    "apercu.js": "3cf26923dde41a03c96e246bf14336cd2820f0b9175ef840bd1fb95523fb596c",
+    "exporter.py": "2353e55d2655e9a9f4625858f5f0ffe88ff78b014dbf51e052a28725408d84a0"
+  },
+  "bundleSource": "apps/web/dist, existant, sans reconstruction",
+  "renderedViews": {
+    "contexte": 22,
+    "processus": 9
+  },
+  "generationFunctions": "cartoContext/defaultGenerateOptions/selectForGeneration/generateLayout, dist/carto/edit.js",
+  "lastCartographySourceChange": "fede361",
+  "reexportWithoutPrivateSnapshots": "identique",
+  "imagePixels": [
+    3840,
+    2756
+  ],
+  "formatNote": "Lignes blanches nettoyées lors de l’export, sans modification du SVG."
+}

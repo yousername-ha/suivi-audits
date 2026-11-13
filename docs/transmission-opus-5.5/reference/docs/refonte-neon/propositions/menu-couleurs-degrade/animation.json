@@ -1,0 +1,109 @@
+{
+  "scope": "Maquette du menu uniquement",
+  "motion": {
+    "zero": "matrix(1, 0, 0, 1, 0, 0.5)",
+    "middle": "matrix(1, 0, 0, 1, 0, -0.5)",
+    "duration": "6.8s"
+  },
+  "colors": {
+    "light": [
+      "rgb(41, 125, 114)",
+      "rgb(60, 99, 178)",
+      "rgb(158, 101, 39)",
+      "rgb(25, 122, 136)",
+      "rgb(63, 128, 85)",
+      "rgb(166, 84, 80)",
+      "rgb(101, 105, 174)"
+    ],
+    "dark": [
+      "rgb(131, 213, 187)",
+      "rgb(158, 190, 250)",
+      "rgb(233, 189, 123)",
+      "rgb(136, 216, 223)",
+      "rgb(160, 213, 168)",
+      "rgb(233, 166, 160)",
+      "rgb(190, 188, 240)"
+    ]
+  },
+  "axe": [
+    {
+      "theme": "light",
+      "familyPage": "perimetres",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "objectifs",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "risques",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "actions",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "continuite",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "familyPage": "documents",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "perimetres",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "objectifs",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "risques",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "actions",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "continuite",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "familyPage": "documents",
+      "violations": []
+    }
+  ],
+  "manualPause": "paused / running",
+  "reducedMotion": "none, commande désactivée",
+  "video": {
+    "frames": 48,
+    "width": 1440,
+    "height": 900,
+    "elapsedSeconds": 12.34,
+    "capture": "Captures natives, durées réelles préservées"
+  }
+}

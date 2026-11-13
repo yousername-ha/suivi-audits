@@ -1,0 +1,655 @@
+{
+  "date": "2026-11-04T15:08:56.829Z",
+  "fuseau": "Europe/Paris",
+  "codeCommit": "495427d54a68d8382fa9e49d9ba417f53c5e789a",
+  "session": "Codex (01a193c1-316c-7677-831f-2f31592aa052)",
+  "autorisation": "Go intégration, après présentation des trois visuels de maquette",
+  "environnement": "Copie isolée de main, application compilée, API et base PostgreSQL 18 de recette séparées. Jeu de démonstration et données fictives.",
+  "qualite": {
+    "typescriptWeb": 0,
+    "eslintComplet": 0,
+    "prettierComplet": 0,
+    "buildWeb": 0,
+    "vitestWeb": {
+      "fichiers": 30,
+      "passes": 232
+    },
+    "e2ePerimetres": {
+      "passes": 4,
+      "rejeux": 0
+    }
+  },
+  "analysesAxe": [
+    {
+      "vue": "replie-light-1440",
+      "violations": 0
+    },
+    {
+      "vue": "deplie-light-1440",
+      "violations": 0
+    },
+    {
+      "vue": "replie-light-390",
+      "violations": 0
+    },
+    {
+      "vue": "deplie-light-390",
+      "violations": 0
+    },
+    {
+      "vue": "replie-dark-1440",
+      "violations": 0
+    },
+    {
+      "vue": "deplie-dark-1440",
+      "violations": 0
+    },
+    {
+      "vue": "replie-dark-390",
+      "violations": 0
+    },
+    {
+      "vue": "deplie-dark-390",
+      "violations": 0
+    }
+  ],
+  "lectureSeule": {
+    "lecture": true,
+    "perimetresAutorises": 1,
+    "centragePerimetreUnique": 0,
+    "grapheParDefaut": true,
+    "depliagePermis": true,
+    "commandesAdministrationAbsentes": true,
+    "fournisseursNonDemandes": true,
+    "compteursNonAutorises": null,
+    "ecritureRefusee": 403,
+    "donneesInchangees": true,
+    "problems": []
+  },
+  "vues": [
+    {
+      "nom": "replie-light-1440",
+      "largeurFenetre": 1440,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-light-1440",
+      "largeurFenetre": 1440,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 808
+        }
+      ]
+    },
+    {
+      "nom": "replie-light-1024",
+      "largeurFenetre": 1024,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-light-1024",
+      "largeurFenetre": 1024,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 798.828125
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "replie-light-390",
+      "largeurFenetre": 390,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-light-390",
+      "largeurFenetre": 390,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 784.375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "replie-dark-1440",
+      "largeurFenetre": 1440,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-dark-1440",
+      "largeurFenetre": 1440,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 808
+        }
+      ]
+    },
+    {
+      "nom": "replie-dark-1024",
+      "largeurFenetre": 1024,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-dark-1024",
+      "largeurFenetre": 1024,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 798.828125
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "replie-dark-390",
+      "largeurFenetre": 390,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 205.859375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "deplie-dark-390",
+      "largeurFenetre": 390,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 176,
+          "hauteur": 80
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 260,
+          "hauteur": 784.375
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 260,
+          "hauteur": 196.859375
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 260,
+          "hauteur": 196.859375
+        }
+      ]
+    },
+    {
+      "nom": "replie-light-hd",
+      "largeurFenetre": 1920,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 175.975830078125,
+          "hauteur": 79.989013671875
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 259.9642333984375,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 259.96417236328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 259.964111328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 259.96417236328125,
+          "hauteur": 205.8310546875
+        }
+      ]
+    },
+    {
+      "nom": "deplie-light-hd",
+      "largeurFenetre": 1920,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 175.975830078125,
+          "hauteur": 79.989013671875
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 259.9642333984375,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 259.96417236328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 259.964111328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 259.96417236328125,
+          "hauteur": 807.8887329101562
+        }
+      ]
+    },
+    {
+      "nom": "replie-dark-hd",
+      "largeurFenetre": 1920,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 175.975830078125,
+          "hauteur": 79.989013671875
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 259.9642333984375,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 259.96417236328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 259.964111328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 259.96417236328125,
+          "hauteur": 205.8310546875
+        }
+      ]
+    },
+    {
+      "nom": "deplie-dark-hd",
+      "largeurFenetre": 1920,
+      "centrage": 0,
+      "chevauchements": 0,
+      "horsCadre": 0,
+      "defilementsInternes": 0,
+      "debordementPage": false,
+      "cartes": [
+        {
+          "libelle": "Fournisseur Hébergeur fictif",
+          "largeur": 175.975830078125,
+          "hauteur": 79.989013671875
+        },
+        {
+          "libelle": "Périmètre Établissement de santé",
+          "largeur": 259.9642333984375,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Hébergement de données",
+          "largeur": 259.96417236328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Services support",
+          "largeur": 259.964111328125,
+          "hauteur": 196.832275390625
+        },
+        {
+          "libelle": "Périmètre Pilotage de l’organisation",
+          "largeur": 259.96417236328125,
+          "hauteur": 807.8887329101562
+        }
+      ]
+    }
+  ],
+  "erreursJavaScript": [],
+  "violationsCsp": [],
+  "ecrituresMetierPendantCaptures": [],
+  "limites": [
+    "CI GitHub non déclenchée, aucune publication ni fusion.",
+    "Recette Docker Desktop Windows à effectuer par le demandeur.",
+    "Contrôles bornés au module et aux scénarios décrits ; aucune attestation globale d’accessibilité."
+  ]
+}

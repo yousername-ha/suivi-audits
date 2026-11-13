@@ -1,0 +1,466 @@
+{
+  "scope": "Maquette autonome du menu latéral principal uniquement, application non harmonisée à ce stade",
+  "pages": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "actions",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "recurrences",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "perimetres",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "fournisseurs",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "parametres",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "cartographie",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "actions",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "recurrences",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "perimetres",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "fournisseurs",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "parametres",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "cartographie",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 630
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 630
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "light",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 553
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "dark",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 553
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 601
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 601
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 727
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 727
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "light",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 691
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "dark",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 691
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 907
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 907
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1267
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1267
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "apiRequests": 0,
+  "externalRequests": [],
+  "screenshot": {
+    "count": 1,
+    "width": 3840,
+    "height": 2160
+  },
+  "sha256": {
+    "menu.js": "ff7d26448628d09646c9c7aed36b47d2118afad0c5cf66cf0408d5e188c926b5",
+    "menu.css": "dedecc33844c084a3fb3016ea22a276f9c4798d79f441aa67ff044209fdc7396",
+    "index.html": "b22adbba089c0cdeb191801b6ca0c9d0b926b741b2afcf5a063a7b06c80f7af3",
+    "apercu-autonome.html": "b11d5d0703ef4aaabf84182df2324f4dd2c4ed9d46cb73b280879fba33a58d28",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "185da5d8841fd9116d281027465885a747d87f5130eaa3c3e5c86c3be0ac676e",
+    "menu-commun-hd.png": "3841bb721b0ea60084058be419230a906bc7b93f3435d6d6a35388ba975737b9"
+  }
+}

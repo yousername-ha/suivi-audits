@@ -1,0 +1,61 @@
+{
+  "dateUTC": "2026-11-10T22:07:35.721Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "imagesNativesCompletes": true,
+  "media": [
+    {
+      "file": "actions-light-hd.png",
+      "width": 3840,
+      "height": 3456,
+      "bytes": 1960401,
+      "sha256": "2f9b82f55752868b448322e33a8a6dbaa177a3b2a9d49753d2cf4eaef848a894"
+    },
+    {
+      "file": "actions-dark-hd.png",
+      "width": 3840,
+      "height": 3456,
+      "bytes": 2312784,
+      "sha256": "df99274e03635c3dc59f269180c01f05580bd3415c3e2b429646beaa672410da"
+    },
+    {
+      "file": "recurrences-light-hd.png",
+      "width": 3840,
+      "height": 3438,
+      "bytes": 1901693,
+      "sha256": "de8deee52b0681803681b732ca6c975127e39e4edbd298959cb8c6cbb6fef3d3"
+    },
+    {
+      "file": "recurrences-dark-hd.png",
+      "width": 3840,
+      "height": 3438,
+      "bytes": 2234863,
+      "sha256": "2180cf63eb17d19829528fb98b6a02c3f90f78032d1ea5241481720c5017dc48"
+    },
+    {
+      "file": "series-light-hd.png",
+      "width": 3840,
+      "height": 2982,
+      "bytes": 1626117,
+      "sha256": "7dcccf0092c02c648f2e38040d2fa9a4de6c224d09cf58b720aade6cb8ddbf13"
+    },
+    {
+      "file": "series-dark-hd.png",
+      "width": 3840,
+      "height": 2982,
+      "bytes": 1883286,
+      "sha256": "53486474a7d7fca1a5ddc89b15164be37961855b2bdbe7fd0f585e1629f47655"
+    },
+    {
+      "file": "actions-recurrences-studio.mp4",
+      "bytes": 3341131,
+      "sha256": "4c5be2f13c0858cfbd79e51bd2ecceb8c35037fb31a0b1a04938fc28ce961752",
+      "codec_name": "h264",
+      "width": 1660,
+      "height": 1508,
+      "color_range": "tv",
+      "color_space": "bt470bg",
+      "duration": 17.36
+    }
+  ]
+}

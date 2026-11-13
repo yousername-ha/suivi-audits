@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-11",
+  "scope": "captures natives de maquette",
+  "media": [
+    {
+      "file": "bureau-1920-clair.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 437012,
+      "sha256": "59de733b8f2c4693b363f28095325b3fe7a06e944139a9ffe9346d02384f84e8"
+    },
+    {
+      "file": "choix-vue-mobile.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 90407,
+      "sha256": "d136ad8b3873acf3046f5b50bc36c84d0f3f7d806cb6c9633c0eb2f66dc20938"
+    },
+    {
+      "file": "filtres-mobile-clair.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 56426,
+      "sha256": "655429203cbd3b62b103e795e2e0bc06912c6534179150917783c7bedb5ff6aa"
+    },
+    {
+      "file": "grand-ecran-2560-sombre.png",
+      "width": 2560,
+      "height": 1440,
+      "bytes": 761929,
+      "sha256": "5cabbcae6e7fa3560b704538a459a0585122045ce14c49188c6e42e7c6f3fd9b"
+    },
+    {
+      "file": "kanban-1920-clair.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 160612,
+      "sha256": "63640c815a1d13e565e7d1c2a3ab80f859faba7a37b45c166c8562cba29e81a2"
+    },
+    {
+      "file": "liste-portable-1366-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 263275,
+      "sha256": "a8a1b2aa4621b1e23b6fd000d4f48eef91a1d7d317bcef073818338a89996c14"
+    },
+    {
+      "file": "mobile-390-clair.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 108683,
+      "sha256": "93dc9763ae20de7b329fdd5bb2df6a9143e9f54b480b22eeb08049abed0b2d8b"
+    },
+    {
+      "file": "mobile-390-sombre.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 112422,
+      "sha256": "43bb81621c3b049427cacb9b454bf8232b5a6fc5a5cb4ffa8dd013143f09144c"
+    },
+    {
+      "file": "portable-1366-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 294073,
+      "sha256": "35de2245d9e0d16fe6cc1b20f03aa96d436e733fa0e5b5b01af99a6d2859268b"
+    },
+    {
+      "file": "recurrences-mobile-sombre.png",
+      "width": 390,
+      "height": 844,
+      "bytes": 110663,
+      "sha256": "9464c5bbfd0fd95dde28a6d60ac28b5c1643129b9be16f7aec7b67c6b68477f6"
+    },
+    {
+      "file": "tablette-1024-clair.png",
+      "width": 1024,
+      "height": 768,
+      "bytes": 214621,
+      "sha256": "0f4fdf6df601525f3c9a059d26e314196fde8f550cf5a025905e9d807ea0733c"
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "scope": "géométrie de la maquette uniquement",
+  "date": "2026-11-11",
+  "layouts": [
+    {
+      "name": "1024-light",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1024-dark",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1280-light",
+      "width": 1280,
+      "height": 800,
+      "pageWidth": 1280,
+      "pageHeight": 800,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1280-dark",
+      "width": 1280,
+      "height": 800,
+      "pageWidth": 1280,
+      "pageHeight": 800,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1366-light",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1366-dark",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1920-light",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "1920-dark",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "2560-light",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "2560-dark",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "internes-seuls",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "cards": 2,
+      "expectedBranches": 2,
+      "ports": 1,
+      "branches": 2,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6"
+      ]
+    },
+    {
+      "name": "externes-deux-rangees",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "cards": 4,
+      "expectedBranches": 4,
+      "ports": 1,
+      "branches": 4,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "externes-une-rangee",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "cards": 2,
+      "expectedBranches": 2,
+      "ports": 1,
+      "branches": 2,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI1",
+        "PI5"
+      ]
+    },
+    {
+      "name": "une-seule-carte",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "cards": 1,
+      "expectedBranches": 1,
+      "ports": 1,
+      "branches": 1,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI4"
+      ]
+    },
+    {
+      "name": "redimensionnement-1920",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "redimensionnement-1024",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "redimensionnement-1366",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    },
+    {
+      "name": "recalcul-apres-reflux-des-titres",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "cards": 6,
+      "expectedBranches": 6,
+      "ports": 2,
+      "branches": 6,
+      "allAxisAligned": true,
+      "allConnected": true,
+      "collisions": [],
+      "branchIds": [
+        "PI3",
+        "PI6",
+        "PI1",
+        "PI4",
+        "PI2",
+        "PI5"
+      ]
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "apiRequests": 0,
+  "applicationUnchanged": "23b33b5ce4fd4cf5eeee0af97c9638b18852b61a"
+}

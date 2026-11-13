@@ -1,0 +1,557 @@
+{
+  "dateUTC": "2026-11-10T22:34:35.232Z",
+  "timezone": "Europe/Paris",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "decisionVueParDefaut": "timeline",
+  "applicationCommit": "5dd1c68350730f6a59ff204a5e721a482b3125eb",
+  "views": [
+    {
+      "name": "actions-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-zoom-14",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-zoom-91",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-periode-suivante",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-light-synthese-ouverte-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-zoom-14",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-zoom-91",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-periode-suivante",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-light-synthese-ouverte-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-zoom-14",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-zoom-91",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-periode-suivante",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "actions-dark-synthese-ouverte-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-zoom-14",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-zoom-91",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-periode-suivante",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "recurrences-dark-synthese-ouverte-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "simule-sans-date-dates-inversees-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "simule-occurrences-concomitantes-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    },
+    {
+      "name": "simule-occurrences-concomitantes-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "cutMarks": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "actions-light-mobile",
+      "violations": []
+    },
+    {
+      "name": "actions-light-main",
+      "violations": []
+    },
+    {
+      "name": "actions-light-detail",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-mobile",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-main",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-detail",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-main",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-detail",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-main",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-detail",
+      "violations": []
+    },
+    {
+      "name": "simule-sans-date-dates-inversees",
+      "violations": []
+    },
+    {
+      "name": "simule-occurrences-concomitantes",
+      "violations": []
+    }
+  ],
+  "images": [
+    "timeline-actions-light-hd.png",
+    "timeline-recurrences-light-hd.png",
+    "timeline-actions-dark-hd.png",
+    "timeline-recurrences-dark-hd.png"
+  ],
+  "errors": [],
+  "unexpectedRequests": [],
+  "interactions": {
+    "defautInitialEtRechargement": true,
+    "defautChangementRubrique": true,
+    "listeToujoursAccessible": true,
+    "seriesEtRetourOccurrences": true,
+    "selectionClavierEtRetourFocus": true,
+    "ficheDansTimeline": true,
+    "zoomEtNavigation": true,
+    "toutAfficherSansPerte": true,
+    "KOdistinctDuRetard": true,
+    "validationEnMemoire": true,
+    "filtres": true,
+    "datesNonPlaceablesAccessibles": true,
+    "occurrencesConcomitantesSansChevauchement": true
+  },
+  "donnees": {
+    "originalesInchangees": true,
+    "actions": 8,
+    "series": 6,
+    "occurrences": 8,
+    "casSimulesHorsCaptures": true
+  }
+}

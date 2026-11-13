@@ -1,0 +1,40 @@
+{
+  "origine": "Captures natives Chromium de la maquette PESTEL Studio",
+  "applicationModifiee": false,
+  "fichiers": [
+    {
+      "fichier": "pestel-light-hd.png",
+      "octets": 1206502,
+      "sha256": "7d51cb990084b0e897549298163eeb378b9b38c8f9e2a40502a5d550a4ddbbd2",
+      "largeur": 3840,
+      "hauteur": 2724
+    },
+    {
+      "fichier": "pestel-dark-hd.png",
+      "octets": 1464654,
+      "sha256": "f1682067d087a80e1034b159e83d9eb1c089f11fbf859d8975c62b0679d1d90b",
+      "largeur": 3840,
+      "hauteur": 2724
+    },
+    {
+      "fichier": "pestel-video.mp4",
+      "octets": 2496956,
+      "sha256": "6e01bf8f5f40b8c1544c248135435192b06c626b70734048724d5bee7142f247",
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1920,
+            "height": 1280,
+            "r_frame_rate": "25/1"
+          }
+        ],
+        "format": {
+          "duration": "13.360000"
+        }
+      }
+    }
+  ]
+}

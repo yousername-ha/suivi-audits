@@ -1,0 +1,7 @@
+/* Correction du fond clair uniquement. Palette et mouvements des icônes conservés. */
+html[data-theme='light'] .mh-sidebar {
+  background:
+    radial-gradient(ellipse 115% 32% at 120% 25%, #e7f0fc 0%, transparent 88%),
+    radial-gradient(ellipse 140% 26% at -35% 105%, #e2f0ec 0%, transparent 86%),
+    linear-gradient(155deg, #fff 0%, #fff 48%, #f8fbff 78%, #f5faf8 100%) !important;
+}

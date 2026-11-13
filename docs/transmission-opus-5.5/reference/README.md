@@ -1,0 +1,85 @@
+# Suivi des audits et pilotage multi-référentiels
+
+Application web auto-hébergée de pilotage d'un système de management de la sécurité de l'information et de la qualité : qualité, sécurité et référentiels, préparation et suivi des audits, écarts et actions, documents et preuves. Le menu Pilotage accompagne les démarches SMQ (ISO 9001), SMSI (ISO 27001), HDS et intégrées, sans imposer la création d’un SMSI. Elle remplace, module par module, l'outil historique en fichier unique, qui reste disponible sous `/legacy` pendant la transition.
+
+- **Reprise du projet : [HANDOVER.md](HANDOVER.md)** — [état](PROJECT_STATUS.md), [index documentaire](docs/00_INDEX.md), [consignes IA](AGENTS.md)
+- **Comprendre le produit** : [PRODUCT](docs/PRODUCT.md), [référentiels](docs/REFERENTIALS.md), [décisions](docs/DECISIONS.md), [feuille de route](docs/ROADMAP.md) ; les documents de travail terminés sont dans [docs/archive](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/archive/README.md)
+- **Installation pas à pas : [docs/INSTALLATION.md](docs/INSTALLATION.md)** (guide pour débutant, rejoué automatiquement en CI)
+- Guide métier : [docs/PILOTAGE.md](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/PILOTAGE.md) — [lots G/H/K et début E, limites](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/LOT-G-H-K-DEBUT-E.md)
+- Architecture et modèle de sécurité : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Feuille de route : [docs/ROADMAP.md](docs/ROADMAP.md) — décisions : [docs/adr/](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/adr/README.md)
+- Reprise des données de l'ancien outil : [docs/legacy/IMPORT-LEGACY.md](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/legacy/IMPORT-LEGACY.md), [format](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/legacy/LEGACY-FORMAT.md), [correspondance](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/legacy/MAPPING-LEGACY.md)
+- Contribuer : [CONTRIBUTING.md](CONTRIBUTING.md) — versions : [CHANGELOG.md](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/CHANGELOG.md)
+
+## En bref
+
+| | |
+|---|---|
+| **Interface** | React, en français, accessible et utilisable au téléphone ; mise à jour en temps réel entre utilisateurs, avec indication de présence |
+| **Sécurité** | Comptes nominatifs, **double authentification TOTP obligatoire**, jeton d'installation à usage unique (aucun mot de passe par défaut), droits par module (rôles, groupes, revue des accès), CSRF, journal d'audit en ajout seul, documents chiffrés en AES-256-GCM, CSP stricte |
+| **Données** | PostgreSQL 18, un enregistrement par élément (concurrence par enregistrement), historique et sauvegardes chiffrées |
+| **Déploiement** | Docker Compose : images signées publiées sur GHCR, conteneurs non root en lecture seule, seul le frontal HTTPS (Caddy) est exposé |
+
+```
+navigateur → gateway (HTTPS + maintenance) → web (interface React) → app (API) → db
+                                                                       └→ clamav (facultatif)
+updater : mises à jour et exploitation ; données persistantes dans DATA_DIR
+```
+
+## Droits
+
+Les droits sont des permissions **module × action** (lire, créer et modifier, supprimer, exporter, administrer). Ils sont regroupés en **rôles**, attribués directement ou par des **groupes**, et contrôlés par le serveur sur chaque requête ([ADR 0010](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/adr/0010-droits-rbac.md)).
+
+| Rôle prédéfini | Droits |
+|---|---|
+| Administrateur | tout, y compris comptes, groupes, rôles, sessions, journal |
+| RSSI | tout, sauf l'administration technique |
+| Contributeur | lire et modifier les modules métier, les documents et les liens |
+| Lecteur | lecture seule |
+| Auditeur externe | lecture des modules choisis, compte à date d'expiration obligatoire |
+
+Pour un besoin particulier, on crée des rôles personnalisés par duplication, puis on les ajuste dans une matrice. La revue des accès (ISO 27001 A.5.18) s'exporte en Excel et en CSV.
+
+## Installation et exploitation (résumé)
+
+Le guide complet, avec les prérequis et les résultats attendus, est [docs/INSTALLATION.md](docs/INSTALLATION.md).
+
+Sur un serveur où Docker et git sont installés ([ADR 0077](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/adr/0077-installation-sans-ligne-de-commande.md)) :
+
+```bash
+sudo git clone https://github.com/yousername-ha/suivi-audits.git /opt/suivi-audits
+cd /opt/suivi-audits && sudo git checkout v<version>
+sudo ./installer.sh            # vérifie, configure, démarre, puis affiche l'adresse https://…/setup et le jeton
+```
+
+Tout le reste se fait dans le navigateur : adresse du site, poivre des mots de passe, clé de secours des sauvegardes (générée par le navigateur), compte administrateur et double authentification.
+
+| Tâche | Commande |
+|---|---|
+| État | `sudo docker compose ps -a` |
+| Journaux | `sudo docker compose logs -f app` |
+| Commandes d'exploitation | `sudo docker compose exec app suivi help` (`users`, `reset-password`, `reset-mfa`, `unlock`, `disable`, `enable`, `sessions-purge`) |
+| Administrateur de secours | `sudo docker compose exec app setup-token --recovery` |
+| Sauvegarde chiffrée | Administration → Sauvegardes et restauration (planification : Certificats et opérations) ; en ligne de commande : `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
+| Restauration | `sudo ./scripts/restore.sh <archive>.tar.age` |
+| Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
+| Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
+
+La vue SQL `v_documents` permet d'interroger les documents en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_documents"`.
+
+## Développement
+
+```bash
+corepack enable && pnpm install
+pnpm lint && pnpm typecheck && pnpm test            # Vitest : PostgreSQL de test requis, voir CONTRIBUTING.md
+docker compose -f docker-compose.dev.yml up         # pile de développement avec rechargement à chaud
+```
+
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour l'organisation du dépôt, les tests et les conventions.
+
+## Limites connues de la livraison actuelle
+
+- Les données historiques de contexte, parties intéressées, responsabilités, processus, objectifs, indicateurs, preuves, constats et revues sont éditées directement depuis Pilotage ; leurs champs supplémentaires sont conservés. L’écran historique `/legacy` est retiré ([ADR 0042](https://github.com/yousername-ha/suivi-audits/blob/55d43eebbc77fa2e367037b246e5396ced79abc8/docs/adr/0042-retrait-de-lecran-legacy.md)) ; son archive testable est sur la branche `archive/outil-legacy-autonome`.
+- Le lot E est partiel : BIA, plans et exercices génériques ; les grilles officielles indisponibles restent à intégrer. D/J/I/F sont exclus de cette livraison.
+- La CSP est stricte pour toute l'application (aucun script ni style en ligne).
+- La fédération d'identité (OIDC) est prévue en phase 4.

@@ -1,0 +1,317 @@
+{
+  "generated": "2026-11-04T23:47:00.810Z",
+  "timezone": "Europe/Paris",
+  "sourceCommit": "efb8f9539a185284449c65c6de12a70043ef5728",
+  "scope": "Maquette autonome. Aucun code, build ou test applicatif. Intitulés du jeu fictif fourni, publications et rattachements illustratifs.",
+  "browser": "151.0.7922.173",
+  "pages": [
+    {
+      "name": "referentiels-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 248,
+          "y": 365.75
+        },
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 640.328125,
+          "y": 365.75
+        },
+        {
+          "width": 377.34375,
+          "height": 223.09375,
+          "x": 1032.65625,
+          "y": 365.75
+        }
+      ]
+    },
+    {
+      "name": "apercu-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "crop": "Fenêtre native, suite des exigences disponible dans la vue intégrale."
+    },
+    {
+      "name": "referentiels-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 248,
+          "y": 365.75
+        },
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 640.328125,
+          "y": 365.75
+        },
+        {
+          "width": 377.34375,
+          "height": 223.09375,
+          "x": 1032.65625,
+          "y": 365.75
+        }
+      ]
+    },
+    {
+      "name": "apercu-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "crop": "Fenêtre native, suite des exigences disponible dans la vue intégrale."
+    },
+    {
+      "name": "annexe-a-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 248,
+          "y": 365.75
+        },
+        {
+          "width": 377.328125,
+          "height": 223.09375,
+          "x": 640.328125,
+          "y": 365.75
+        },
+        {
+          "width": 377.34375,
+          "height": 223.09375,
+          "x": 1032.65625,
+          "y": 365.75
+        }
+      ]
+    },
+    {
+      "name": "source-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "modal": {
+        "scroll": false,
+        "horizontal": false
+      }
+    },
+    {
+      "name": "source-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "modal": {
+        "scroll": false,
+        "horizontal": false
+      }
+    },
+    {
+      "name": "edition-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "modal": {
+        "scroll": false,
+        "horizontal": false
+      }
+    },
+    {
+      "name": "bibliotheque-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": []
+    },
+    {
+      "name": "bibliotheque-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": []
+    },
+    {
+      "name": "referentiels-light-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 483.328125,
+          "height": 233.28125,
+          "x": 329,
+          "y": 377.5
+        },
+        {
+          "width": 483.328125,
+          "height": 233.28125,
+          "x": 827.328125,
+          "y": 377.5
+        },
+        {
+          "width": 483.34375,
+          "height": 233.28125,
+          "x": 1325.65625,
+          "y": 377.5
+        }
+      ]
+    },
+    {
+      "name": "referentiels-dark-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 483.328125,
+          "height": 233.28125,
+          "x": 329,
+          "y": 377.5
+        },
+        {
+          "width": 483.328125,
+          "height": 233.28125,
+          "x": 827.328125,
+          "y": 377.5
+        },
+        {
+          "width": 483.34375,
+          "height": 233.28125,
+          "x": 1325.65625,
+          "y": 377.5
+        }
+      ]
+    },
+    {
+      "name": "referentiels-light-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 420.9375
+        },
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 581.9375
+        },
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 742.9375
+        }
+      ]
+    },
+    {
+      "name": "referentiels-dark-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": [
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 420.9375
+        },
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 581.9375
+        },
+        {
+          "width": 364,
+          "height": 152,
+          "x": 13,
+          "y": 742.9375
+        }
+      ]
+    },
+    {
+      "name": "bibliotheque-dark-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "pageOverflow": false,
+      "internal": [],
+      "overflow": [],
+      "outside": [],
+      "cards": []
+    }
+  ],
+  "checks": [
+    "ISO : 33 exigences ; Annexe A : 50 puis 93 via la commande de chargement existante.",
+    "Recherche du socle historique : un code ISO, puis les 37 intitulés de la famille A.5 ; aucune écriture."
+  ],
+  "errors": [],
+  "requests": []
+}

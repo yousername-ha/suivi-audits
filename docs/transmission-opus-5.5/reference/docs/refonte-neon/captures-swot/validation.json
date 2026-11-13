@@ -1,0 +1,284 @@
+{
+  "applicationIntegree": true,
+  "dateUTC": "2026-11-09T23:55:32.913Z",
+  "timezone": "Europe/Paris",
+  "views": [
+    {
+      "name": "light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-lecture-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-lecture-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-processus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-fiche-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-fiche-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-lecture-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-lecture-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-processus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-fiche-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-fiche-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-main",
+      "violations": []
+    },
+    {
+      "name": "light-lecture",
+      "violations": []
+    },
+    {
+      "name": "light-processus",
+      "violations": []
+    },
+    {
+      "name": "light-fiche",
+      "violations": []
+    },
+    {
+      "name": "light-registre",
+      "violations": []
+    },
+    {
+      "name": "dark-main",
+      "violations": []
+    },
+    {
+      "name": "dark-lecture",
+      "violations": []
+    },
+    {
+      "name": "dark-processus",
+      "violations": []
+    },
+    {
+      "name": "dark-fiche",
+      "violations": []
+    },
+    {
+      "name": "dark-registre",
+      "violations": []
+    }
+  ],
+  "images": [
+    "swot-light-1440.png",
+    "matrice-light.png",
+    "swot-light-mobile.png",
+    "lecture-light.png",
+    "fiche-light.png",
+    "registre-light.png",
+    "swot-light-hd.png",
+    "swot-dark-1440.png",
+    "matrice-dark.png",
+    "swot-dark-mobile.png",
+    "lecture-dark.png",
+    "fiche-dark.png",
+    "registre-dark.png",
+    "swot-dark-hd.png"
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "environmentWarnings": [
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    },
+    {
+      "url": "/update/client.js",
+      "status": 404
+    }
+  ],
+  "writes": [],
+  "preferenceWrites": [
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    },
+    {
+      "method": "PUT",
+      "url": "/api/account/preferences"
+    }
+  ],
+  "animations": {
+    "active": true,
+    "pause": true,
+    "reprise": true,
+    "reduction": true
+  },
+  "codeCommit": "016d69c50c7775a62640e9e2d75d2875e9c85374",
+  "environnement": "Cloud Codex ; Node 26.13.0 ; Chromium système ; PostgreSQL 18, base isolée suivi_neon_perimetres_compacts",
+  "unitaire": {
+    "web": {
+      "fichiers": 31,
+      "tests": 240
+    },
+    "ui": {
+      "fichiers": 4,
+      "tests": 243
+    }
+  },
+  "e2e": {
+    "expected": 3,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "duration": 51761.249,
+    "retries": 0
+  },
+  "commandes": [
+    {
+      "commande": "node node_modules/typescript/bin/tsc -p apps/web/tsconfig.json --noEmit",
+      "codeRetour": 0
+    },
+    {
+      "commande": "node node_modules/eslint/bin/eslint.js . --max-warnings 0",
+      "codeRetour": 0
+    },
+    {
+      "commande": "node node_modules/prettier/bin/prettier.cjs --check .",
+      "codeRetour": 0
+    },
+    {
+      "commande": "node scripts/mantine-css-vars.ts puis node node_modules/vite/bin/vite.js build (apps/web)",
+      "codeRetour": 0
+    },
+    {
+      "commande": "node node_modules/vitest/vitest.mjs run (apps/web puis packages/ui)",
+      "codeRetour": 0
+    },
+    {
+      "commande": "Playwright, configuration privée neon-swot-instance/playwright.config.mjs, un worker et zéro rejeu",
+      "codeRetour": 0
+    }
+  ]
+}

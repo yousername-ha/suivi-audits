@@ -1,0 +1,52 @@
+{
+  "scope": "Finition PC de la maquette uniquement",
+  "date": "2026-11-11",
+  "errors": [],
+  "screens": [
+    {
+      "name": "portable-1366-clair",
+      "width": 1366,
+      "pageWidth": 1366,
+      "height": 768,
+      "pageHeight": 768
+    },
+    {
+      "name": "bureau-1920-clair",
+      "width": 1920,
+      "pageWidth": 1920,
+      "height": 1080,
+      "pageHeight": 1080
+    },
+    {
+      "name": "grand-ecran-2560-sombre",
+      "width": 2560,
+      "pageWidth": 2560,
+      "height": 1440,
+      "pageHeight": 1440
+    },
+    {
+      "name": "tablette-1024-clair",
+      "width": 1024,
+      "pageWidth": 1024,
+      "height": 768,
+      "pageHeight": 768
+    }
+  ],
+  "axe": [
+    {
+      "name": "portable-1366-clair",
+      "width": 1366,
+      "violations": []
+    },
+    {
+      "name": "bureau-1920-clair",
+      "width": 1920,
+      "violations": []
+    },
+    {
+      "name": "grand-ecran-2560-sombre",
+      "width": 2560,
+      "violations": []
+    }
+  ]
+}

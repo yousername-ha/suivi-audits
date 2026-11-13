@@ -1,0 +1,12 @@
+/* Gouttières réservées aux branches, tracés fixes et partagés par colonne. */
+.pi-group-cards{row-gap:26px}
+.external .pi-group-cards{column-gap:34px;row-gap:26px}
+.pi-cluster>header{margin-bottom:22px}
+.pi-wires path{stroke-width:1.35;stroke-dasharray:none;animation:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.85}
+.pi-wires [data-side=internal]{--pi-link:color-mix(in srgb,var(--pi-blue) 62%,var(--pi-wire))}
+.pi-wires [data-side=external]{--pi-link:color-mix(in srgb,var(--pi-cyan) 62%,var(--pi-wire))}
+.pi-wires path[data-side]{stroke:var(--pi-link)}
+.pi-wires circle[data-side]{fill:var(--pi-link)}
+.pi-wires [data-role=hub-port]{stroke:var(--panel);stroke-width:1}
+.pi-wires [data-role=card-port]{stroke:var(--panel);stroke-width:.6}
+@media(prefers-reduced-motion:reduce){.pi-wires path{animation:none}}

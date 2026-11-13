@@ -1,0 +1,186 @@
+{
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "testsApplicatifs": false,
+  "dateUTC": "2026-11-10T09:34:42.978Z",
+  "checks": [
+    {
+      "name": "light-1440",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "light-390",
+      "width": 390,
+      "diameter": 120,
+      "centerX": 0,
+      "centerY": 376.5,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "light-768",
+      "width": 768,
+      "diameter": 134,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "light-1024",
+      "width": 1024,
+      "diameter": 134,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "light-1280",
+      "width": 1280,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "light-1920",
+      "width": 1920,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-1440",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-390",
+      "width": 390,
+      "diameter": 120,
+      "centerX": 0,
+      "centerY": 376.5,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-768",
+      "width": 768,
+      "diameter": 134,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-1024",
+      "width": 1024,
+      "diameter": 134,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-1280",
+      "width": 1280,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "dark-1920",
+      "width": 1920,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "survol-S",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "survol-W",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "survol-O",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    },
+    {
+      "name": "survol-T",
+      "width": 1440,
+      "diameter": 184,
+      "centerX": 0,
+      "centerY": 0,
+      "pageOverflow": false,
+      "internal": [],
+      "panels": [],
+      "overlaps": []
+    }
+  ],
+  "errors": [],
+  "requests": []
+}

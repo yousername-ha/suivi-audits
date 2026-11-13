@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr" data-theme="dark" data-motion="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cartographie du SMSI — Studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css" />
+    <link rel="stylesheet" href="../commandes-discretes/commandes.css" />
+    <link rel="stylesheet" href="../responsive-equilibre/responsive.css" />
+    <link rel="stylesheet" href="../responsabilites-studio/responsabilites.css" />
+    <link rel="stylesheet" href="cartographie.css" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navigation illustrative" tabindex="0">
+      <div class="brand">
+        <span class="brand-mark">✧</span
+        ><span
+          ><strong>Suivi des audits<br />SMSI</strong><small>ISO 27001 / HDS</small></span
+        >
+      </div>
+      <div class="nav-caption">Espace de travail</div>
+      <div class="nav-item">◈ Tableau de bord</div>
+      <div class="nav-item active">⌘ Organisation <span>8</span></div>
+      <div class="nav-sub">Contexte de l’organisation</div>
+      <div class="nav-sub">Périmètres</div>
+      <div class="nav-sub">Processus</div>
+      <div class="nav-sub">Rôles et responsabilités</div>
+      <div class="nav-sub current">Cartographie du SMSI</div>
+      <div class="nav-sub">Fournisseurs</div>
+      <div class="nav-sub">Revues des accès</div>
+      <div class="nav-sub">Plans annuels</div>
+      <div class="nav-item">⌁ Pilotage</div>
+      <div class="nav-item">◇ Risques</div>
+      <div class="nav-item">✓ Conformité et audits</div>
+      <div class="nav-item">☷ Actions</div>
+      <div class="nav-item">↶ Résilience</div>
+      <div class="nav-item">▤ Documents</div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+    <div class="shell" id="shell">
+      <header class="topbar">
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions">
+          <span class="demo-note">Maquette · À valider</span
+          ><button type="button" class="button" id="theme">Mode clair</button>
+        </div>
+      </header>
+      <main data-active-view="cartographie">
+        <div class="breadcrumb">Organisation <span>/</span>Cartographie du SMSI</div>
+        <header class="page-heading">
+          <div>
+            <h1>Cartographie du SMSI</h1>
+            <p>Lire le contexte, explorer les processus et retrouver leurs relations.</p>
+          </div>
+          <span class="mc-mode"><span></span>Consultation · Maquette</span>
+        </header>
+        <section class="mc-summary" aria-label="Repères de la cartographie">
+          <div><span class="rr-kicker">Une lecture d’ensemble</span><strong>Le SMSI et son écosystème</strong></div>
+          <div id="summary"></div>
+        </section>
+        <section class="workspace slab mc-workspace" aria-label="Espace de cartographie">
+          <div class="compact-toolbar">
+            <div class="view-cluster">
+              <div class="rr-views" role="group" aria-label="Vues de la cartographie">
+                <button
+                  class="rr-tool"
+                  type="button"
+                  data-view="context"
+                  aria-label="Vue contexte"
+                  aria-pressed="true"
+                  title="Contexte"
+                >
+                  <span data-icon="context"></span></button
+                ><button
+                  class="rr-tool"
+                  type="button"
+                  data-view="process"
+                  aria-label="Vue processus"
+                  aria-pressed="false"
+                  title="Processus"
+                >
+                  <span data-icon="process"></span>
+                </button>
+              </div>
+              <strong id="view-label">Vue contexte</strong
+              ><span class="mc-toolbar-note">Les relations restent lisibles</span>
+            </div>
+            <div class="toolbar-actions">
+              <button
+                class="rr-tool"
+                id="search-toggle"
+                type="button"
+                aria-label="Rechercher sur la carte"
+                aria-controls="search-box"
+                aria-expanded="false"
+                title="Rechercher"
+              >
+                <span data-icon="search"></span></button
+              ><button
+                class="rr-tool"
+                id="filter-toggle"
+                type="button"
+                aria-label="Filtres de la carte"
+                aria-controls="filter-box"
+                aria-expanded="false"
+                title="Filtres"
+              >
+                <span data-icon="filter"></span></button
+              ><button
+                class="rr-tool"
+                id="motion-toggle"
+                type="button"
+                aria-label="Pause animations"
+                title="Pause animations"
+              >
+                <span data-icon="pause"></span></button
+              ><button
+                class="rr-tool"
+                id="focus-toggle"
+                type="button"
+                aria-label="Agrandir la carte"
+                aria-pressed="false"
+                title="Agrandir"
+              >
+                <span data-icon="expand"></span>
+              </button>
+            </div>
+          </div>
+          <div class="mc-criteria" id="criteria" hidden>
+            <span id="criteria-text"></span><button class="button" type="button" id="reset">Tout effacer</button>
+          </div>
+          <div class="mc-scroll" id="map-scroll" role="region" tabindex="0" aria-label="Carte et objets">
+            <div id="map" class="mc-map"></div>
+          </div>
+          <footer class="rr-footer">
+            <span id="result" aria-live="polite"></span
+            ><span id="map-legend">Traits : relations dérivées regroupées par famille</span>
+          </footer>
+        </section>
+      </main>
+    </div>
+    <div class="rr-popup" id="search-box" role="dialog" aria-labelledby="search-title" hidden>
+      <label for="query" id="search-title">Rechercher sur la carte</label
+      ><input id="query" type="search" placeholder="Un objet, un code, un responsable…" /><small
+        >Échap pour fermer · Recherche sans accents</small
+      >
+    </div>
+    <div class="rr-popup" id="filter-box" role="dialog" aria-labelledby="filter-title" hidden>
+      <header>
+        <h2 id="filter-title">Affiner la carte</h2>
+        <button type="button" class="rr-tool" data-close-popup aria-label="Fermer les filtres">×</button>
+      </header>
+      <label for="reference">Référentiel</label
+      ><select id="reference">
+        <option value="">Tous les référentiels</option>
+        <option>ISO 27001</option>
+        <option>HDS</option></select
+      ><label for="nature">Nature d’objet</label
+      ><select id="nature">
+        <option value="">Toutes les natures</option>
+        <option value="stakeholder">Parties intéressées</option>
+        <option value="issue">Enjeux internes et externes</option>
+        <option value="supplier">Fournisseurs</option>
+        <option value="si">Applications et SI</option>
+        <option value="process">Processus et sous-processus</option>
+      </select>
+      <p>Le regroupement est une lecture de la carte, pas une modification des relations métier.</p>
+    </div>
+    <dialog id="detail" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+    <script src="donnees.js"></script>
+    <script src="cartographie.js"></script>
+  </body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "scope": "maquette autonome",
+  "media": [
+    {
+      "file": "animation.mp4",
+      "bytes": 825943,
+      "sha256": "ca1737b17eb468a62ec04b8ae84e071b5a1c2b3620fba44aa96198c9afb837bf"
+    },
+    {
+      "file": "apercu-clair.png",
+      "bytes": 132153,
+      "sha256": "31ab98655a0cc80eff61051a49a4097303417c645864a9cdd515684bf5775975",
+      "width": 1250,
+      "height": 486
+    },
+    {
+      "file": "apercu-sombre.png",
+      "bytes": 134362,
+      "sha256": "b9f0c188009a3833c4444f5b6d3800f0c518c690c990fb39f30963d96e2b72b4",
+      "width": 1250,
+      "height": 486
+    }
+  ]
+}

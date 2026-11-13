@@ -1,0 +1,142 @@
+/* Proposition indépendante : palette plus chaude et mouvements des formes SVG elles-mêmes. */
+html[data-theme='light'] {
+  --mc-blue: #80649a;
+  --mc-green: #657b3d;
+  --mc-amber: #ad750b;
+  --mc-cyan: #32796a;
+  --mc-action: #ae5836;
+  --mc-red: #b04b35;
+  --mc-indigo: #916b3d;
+}
+html[data-theme='light'] [data-mh-family='pilotage'] {
+  --mc-tone: #ae642a;
+}
+html[data-theme='light'] .mh-sidebar {
+  background:
+    radial-gradient(ellipse 130% 35% at 120% 20%, #f5e7ce 0%, transparent 90%),
+    radial-gradient(ellipse 140% 30% at -30% 105%, #e1e9d5 0%, transparent 85%),
+    linear-gradient(155deg, #fffefa, #fcfaf5 60%, #f7faf4) !important;
+}
+html[data-theme='light'] .mh-family > .mh-icon {
+  stroke: #4a4037;
+  animation: none;
+}
+html[data-theme='light'] .mh-family .mf-signal {
+  animation: none;
+}
+html[data-theme='light'] .mw-motion {
+  transform-box: view-box;
+  transform-origin: 16px 16px;
+}
+html[data-theme='light'] .mw-tiles {
+  animation: mw-tiles 4.8s ease-in-out infinite;
+}
+html[data-theme='light'] .mw-organisation {
+  transform-origin: 16px 9px;
+  animation: mw-node 4.6s ease-in-out -1s infinite;
+}
+html[data-theme='light'] .mw-pilotage {
+  animation: mw-progress 4.2s ease-in-out -0.8s infinite;
+}
+html[data-theme='light'] .mw-risque {
+  animation: mw-blink 2.8s ease-in-out infinite;
+}
+html[data-theme='light'] .mw-check {
+  stroke-dasharray: 20;
+  animation: mw-check 4.8s ease-in-out -1.6s infinite;
+}
+html[data-theme='light'] .mw-action {
+  animation: mw-action 3.4s ease-in-out infinite;
+}
+html[data-theme='light'] .mw-resilience {
+  animation: mw-rotate 10s linear infinite;
+}
+html[data-theme='light'] .mw-document {
+  animation: mw-document 5s ease-in-out -2s infinite;
+}
+@keyframes mw-tiles {
+  0%,
+  65%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+}
+@keyframes mw-node {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15);
+  }
+}
+@keyframes mw-progress {
+  0%,
+  70%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(1px, -1px);
+  }
+}
+@keyframes mw-blink {
+  0%,
+  65%,
+  100% {
+    opacity: 1;
+  }
+  32% {
+    opacity: 0.35;
+  }
+}
+@keyframes mw-check {
+  0%,
+  8%,
+  100% {
+    stroke-dashoffset: 20;
+  }
+  35%,
+  85% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes mw-action {
+  0%,
+  100% {
+    transform: translateX(-1.5px);
+  }
+  50% {
+    transform: translateX(1.5px);
+  }
+}
+@keyframes mw-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes mw-document {
+  0%,
+  80%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 0.45;
+    transform: translateY(1px);
+  }
+}
+html[data-theme='light'][data-mh-motion='off'] .mw-motion {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='light'] .mw-motion {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}

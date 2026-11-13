@@ -1,0 +1,136 @@
+import { Recurrence, type Recurrence as RecurrenceType } from './grc.js';
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function formatter(zone: string) {
+  let f = formatters.get(zone);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-CA', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    });
+    formatters.set(zone, f);
+  }
+  return f;
+}
+function parts(ms: number, zone: string) {
+  return Object.fromEntries(
+    formatter(zone)
+      .formatToParts(new Date(ms))
+      .filter((p) => ['year', 'month', 'day', 'hour', 'minute'].includes(p.type))
+      .map((p) => [p.type, Number(p.value)]),
+  ) as Record<'year' | 'month' | 'day' | 'hour' | 'minute', number>;
+}
+function stamp(y: number, m: number, d: number, h = 0, min = 0) {
+  const t = new Date(0);
+  t.setUTCFullYear(y, m - 1, d);
+  t.setUTCHours(h, min, 0, 0);
+  return t.getTime();
+}
+/** Heure ambiguë : première occurrence. Heure inexistante : premier instant local valide suivant (max. 24 h). */
+export function localDue(date: string, time: string, zone: string): string {
+  const [y, m, d] = date.split('-').map(Number),
+    [h, min] = time.split(':').map(Number);
+  const base = stamp(y!, m!, d!, h!, min!);
+  const offsets = new Set<number>();
+  for (let i = -36; i <= 36; i += 6) {
+    const sample = base + i * 3600000,
+      p = parts(sample, zone);
+    offsets.add(stamp(p.year, p.month, p.day, p.hour, p.minute) - sample);
+  }
+  for (let shift = 0; shift <= 1440; shift++) {
+    const target = base + shift * 60000;
+    const matches: number[] = [];
+    for (const offset of offsets) {
+      const candidate = target - offset,
+        p = parts(candidate, zone);
+      if (stamp(p.year, p.month, p.day, p.hour, p.minute) === target) matches.push(candidate);
+    }
+    if (matches.length) return new Date(Math.min(...matches)).toISOString();
+  }
+  throw new Error('Impossible de résoudre cette échéance dans le fuseau choisi.');
+}
+/** Index depuis la date d’origine : fins de mois bornées sans dérive (31 janvier → 28 février → 31 mars). */
+export function recurrenceSlot(input: RecurrenceType, index: number) {
+  const r = Recurrence.parse(input);
+  if (!Number.isInteger(index) || index < 0 || index > 100000) throw new Error('Index de récurrence invalide.');
+  if (r.count !== null && index >= r.count) return null;
+  const [y, m, d] = r.start.split('-').map(Number);
+  let date: Date;
+  if (r.unit === 'day' || r.unit === 'week')
+    date = new Date(stamp(y!, m!, d!) + index * r.interval * (r.unit === 'week' ? 7 : 1) * 86400000);
+  else {
+    const monthIndex = m! - 1 + index * r.interval * (r.unit === 'year' ? 12 : 1),
+      year = y! + Math.floor(monthIndex / 12),
+      month = ((monthIndex % 12) + 12) % 12;
+    const maxDay = new Date(stamp(year, month + 2, 1) - 86400000).getUTCDate();
+    date = new Date(stamp(year, month + 1, Math.min(d!, maxDay)));
+  }
+  if (!Number.isFinite(date.getTime()) || date.getUTCFullYear() > 9999) throw new Error('Échéance hors limites.');
+  const nominal = date.toISOString().slice(0, 10);
+  const day = jourDisponible(r, nominal);
+  if (r.until !== null && day > r.until) return null;
+  return {
+    key: `${day}T${r.time}[${r.timezone}]`,
+    local: day,
+    nominal,
+    decalee: day !== nominal,
+    dueAt: localDue(day, r.time, r.timezone),
+  };
+}
+const jourSuivant = (day: string) => new Date(Date.parse(day + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
+const jourSemaine = (day: string) => new Date(day + 'T12:00:00Z').getUTCDay();
+/** Premier jour disponible à partir de `day` : les jours exclus (dates et jours de la semaine) sont sautés. Le report est
+    borné (un an) pour qu'une configuration absurde ne boucle jamais. */
+export function jourDisponible(r: Pick<RecurrenceType, 'excludedDays' | 'excludedWeekdays'>, day: string): string {
+  if (!r.excludedDays?.length && !r.excludedWeekdays?.length) return day;
+  const dates = new Set(r.excludedDays ?? []);
+  const semaine = new Set(r.excludedWeekdays ?? []);
+  let jour = day;
+  for (let i = 0; i < 366; i++) {
+    if (!dates.has(jour) && !semaine.has(jourSemaine(jour))) return jour;
+    jour = jourSuivant(jour);
+  }
+  throw new Error('Aucun jour disponible : trop de jours exclus.');
+}
+
+export type EtatFenetre = 'a_venir' | 'ouverte' | 'fermee';
+export interface FenetreOccurrence {
+  /** Début et fin de la fenêtre (ISO) ; nuls quand la série n'a pas de fenêtre. */
+  ouvreLe: string | null;
+  fermeLe: string | null;
+  etat: EtatFenetre;
+}
+/** Disponibilité d'une occurrence à un instant donné, d'après la fenêtre de sa série et l'échéance de l'occurrence. */
+export function fenetreOccurrence(
+  r: Pick<RecurrenceType, 'window'>,
+  dueAt: string,
+  maintenant: Date = new Date(),
+): FenetreOccurrence {
+  if (!r.window) return { ouvreLe: null, fermeLe: null, etat: 'ouverte' };
+  const echeance = Date.parse(dueAt);
+  const ouvre = echeance - r.window.openDays * 86400000;
+  const ferme = echeance + r.window.closeDays * 86400000;
+  const t = maintenant.getTime();
+  return {
+    ouvreLe: new Date(ouvre).toISOString(),
+    fermeLe: new Date(ferme).toISOString(),
+    etat: t < ouvre ? 'a_venir' : t > ferme ? 'fermee' : 'ouverte',
+  };
+}
+
+/** Prochaine occurrence d'une série à partir d'un jour donné (AAAA-MM-JJ) : nulle si la série est inactive, terminée ou
+    hors limites. Aucune fréquence n'est supposée : tout vient de la récurrence saisie par l'organisme. */
+export function prochaineOccurrence(input: RecurrenceType, aujourdhui: string): string | null {
+  const r = Recurrence.parse(input);
+  if (!r.active) return null;
+  for (let i = 0; i < 20000; i++) {
+    const slot = recurrenceSlot(r, i);
+    if (!slot) return null;
+    if (slot.local >= aujourdhui) return slot.local;
+  }
+  return null;
+}

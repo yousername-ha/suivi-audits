@@ -1,0 +1,19 @@
+/* Icônes vectorielles sans plaque : variante claire isolée, gabarit et sombre préservés. */
+html[data-theme='light'] .mh-family > .mh-icon {
+  padding: 2px;
+  stroke: var(--mc-tone);
+  stroke-width: 1.8;
+  border-color: transparent;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-theme='light'] .mh-family:hover > .mh-icon,
+html[data-theme='light'] .mh-family[aria-current='true'] > .mh-icon {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+html[data-theme='light'] .mh-comptes .mh-icon {
+  stroke-width: 1.8;
+}

@@ -1,0 +1,202 @@
+{
+  "scope": "Maquette hybride : essai bleu translucide et comparaison au fond retenu",
+  "running": "mw-action",
+  "paused": "paused",
+  "reduced": "none",
+  "animations": [
+    {
+      "class": "mf-fill mw-motion mw-tiles",
+      "name": "mw-tiles",
+      "play": "running"
+    },
+    {
+      "class": "mf-fill mw-motion mw-organisation",
+      "name": "mw-node",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-pilotage",
+      "name": "mw-progress",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-risque",
+      "name": "mw-blink",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-check",
+      "name": "mw-check",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-action",
+      "name": "mw-action",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-resilience",
+      "name": "mw-rotate",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-document",
+      "name": "mw-document",
+      "play": "running"
+    }
+  ],
+  "palette": [
+    {
+      "key": "dashboard",
+      "stroke": "rgb(187, 150, 245)",
+      "width": "1.95px"
+    },
+    {
+      "key": "organisation",
+      "stroke": "rgb(120, 214, 154)",
+      "width": "1.95px"
+    },
+    {
+      "key": "pilotage",
+      "stroke": "rgb(122, 175, 255)",
+      "width": "1.95px"
+    },
+    {
+      "key": "risques",
+      "stroke": "rgb(242, 190, 87)",
+      "width": "1.95px"
+    },
+    {
+      "key": "conformite",
+      "stroke": "rgb(98, 212, 220)",
+      "width": "1.95px"
+    },
+    {
+      "key": "actions",
+      "stroke": "rgb(240, 162, 101)",
+      "width": "1.95px"
+    },
+    {
+      "key": "resilience",
+      "stroke": "rgb(243, 123, 134)",
+      "width": "1.95px"
+    },
+    {
+      "key": "documents",
+      "stroke": "rgb(208, 178, 139)",
+      "width": "1.95px"
+    },
+    {
+      "key": "plateforme",
+      "stroke": "rgb(181, 193, 214)",
+      "width": "1.95px"
+    },
+    {
+      "key": "parametres",
+      "stroke": "rgb(182, 209, 125)",
+      "width": "1.95px"
+    },
+    {
+      "key": "compte",
+      "stroke": "rgb(207, 180, 244)",
+      "width": "1.95px"
+    },
+    {
+      "key": "aide",
+      "stroke": "rgb(202, 176, 215)",
+      "width": "1.95px"
+    },
+    {
+      "key": "mur",
+      "stroke": "rgb(127, 197, 239)",
+      "width": "1.95px"
+    }
+  ],
+  "oldBackground": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+  "newBackground": "radial-gradient(115% 40% at 0% 100%, rgba(51, 130, 137, 0.12) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgba(20, 35, 61, 0.78) 0%, rgba(20, 44, 69, 0.78) 56%, rgba(20, 50, 57, 0.8) 100%)",
+  "originalDarkBackground": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+  "originalLibrary": "794b7997e9e2f9bb5daed1dcb08e0f067b4f568fc94c28c74620f346013fcff1",
+  "candidateLibrary": "794b7997e9e2f9bb5daed1dcb08e0f067b4f568fc94c28c74620f346013fcff1",
+  "glassStyle": {
+    "opacity": "1",
+    "filter": "blur(10px) saturate(1.15)",
+    "background": "radial-gradient(115% 40% at 0% 100%, rgba(51, 130, 137, 0.12) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgba(20, 35, 61, 0.78) 0%, rgba(20, 44, 69, 0.78) 56%, rgba(20, 50, 57, 0.8) 100%)"
+  },
+  "retainedBackground": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+  "restoredBackground": "radial-gradient(115% 40% at 0% 100%, rgba(51, 130, 137, 0.12) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgba(20, 35, 61, 0.78) 0%, rgba(20, 44, 69, 0.78) 56%, rgba(20, 50, 57, 0.8) 100%)",
+  "retainedHash": "b5eff292c8e67651e44ab1b4132058176bdca2ed538b441cf1456215db2cfbc0",
+  "referenceHash": "b5eff292c8e67651e44ab1b4132058176bdca2ed538b441cf1456215db2cfbc0",
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(187, 150, 245)",
+    "strokeWidth": "1.95px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "sha256": {
+    "menu-detail-hd.png": "324a00580c9027e6c3e9af402de974ebbc31cd125d175bafcf6f044da8305a22",
+    "index.html": "c1860b5cb7db606daf7e6777ed2468450d8d2cf3504f015fa58ef29349c4cc4d",
+    "apercu-autonome.html": "fb458f5e37cea55e46475ba3f2c93e0ed3c8f4481998d3495b16cd90aeeef19a",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "6e0c27c878acc671585d32257e3fd3f9deca0f3de1d05a7494e5757d73dfc0b5",
+    "transparent.css": "7dee1ebcc1661bebc619e05974cde18cc18c8514fda972da0e34f6afa558488b",
+    "menu-clair-hd.png": "674148ed9fea2256e023dc092bbfa2c8ded376a139a1fe9e50a52faf9e3e1af9",
+    "comparaison.js": "4f66ef0ce9e7ac891509e67682bbd3fc18bd1dccf48259a9dabf06ededfc6f41"
+  }
+}

@@ -1,0 +1,283 @@
+/* Navigation de l'application : sept familles (ordre validé le 19/10/2026, Organisation avant Pilotage depuis le 30/10/2026) -> destinations -> rubriques.
+   Chaque rubrique garde son adresse et son droit de lecture d'origine : réorganiser le menu ne crée aucune adresse
+   et n'ouvre aucun accès. Les rubriques du Pilotage sont décrites dans pilotage-navigation.ts (libellé et module) ;
+   ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée. */
+import type { Action, Module, OrdreMenu } from '@suivi/shared';
+import { SECTIONS_REGROUPEES_BIBLIOTHEQUE } from './modules-interface';
+import { PILOTAGE_NAV } from './pilotage-navigation';
+
+export type FamilleId = 'pilotage' | 'organisation' | 'risques' | 'conformite' | 'actions' | 'resilience' | 'documents';
+
+export interface Rubrique {
+  /** Identifiant du Pilotage (`/pilotage/<id>`) ou, hors Pilotage, chemin sans barre initiale. */
+  id: string;
+  label: string;
+  to: string;
+  /** Droit de lecture du module ; absent : la rubrique est ouverte à toute personne connectée (l'API contrôle l'accès à
+      chaque ressource, par exemple les registres attribués par droit). */
+  module?: Module;
+  action: Action;
+  /** Second droit exigé (la cartographie des risques demande aussi la lecture du Pilotage). */
+  aussi?: [Module, Action];
+  /** Préfixe d'adresse qui désigne la rubrique (pages à sous-adresses) ; sinon l'adresse exacte. */
+  prefixe?: boolean;
+  /** Adresses supplémentaires qui désignent la même rubrique. */
+  alias?: string[];
+}
+export interface Destination {
+  id: string;
+  label: string;
+  rubriques: Rubrique[];
+  /** Rubrique d'entrée privilégiée, si elle est lisible ; l'ordre des onglets reste celui de `rubriques`. */
+  initiale?: string;
+}
+export interface Famille {
+  id: FamilleId;
+  label: string;
+  destinations: Destination[];
+}
+
+const pilotage = new Map(PILOTAGE_NAV.flatMap((g) => g.items.map((i) => [i.id, i] as const)));
+/** Rubrique du Pilotage décrite dans pilotage-navigation.ts. */
+const p = (id: string): Rubrique => {
+  const i = pilotage.get(id);
+  if (!i) throw new Error(`Rubrique du Pilotage inconnue : ${id}`);
+  return {
+    id,
+    label: i.label,
+    to: '/pilotage/' + id,
+    module: i.module,
+    action: 'lire',
+    ...(id === 'carte' ? { aussi: ['pilotage', 'lire'] as [Module, Action] } : {}),
+    ...(id === 'synthese' ? { alias: ['/pilotage'] } : {}),
+    ...(id === 'bibliotheque'
+      ? { alias: SECTIONS_REGROUPEES_BIBLIOTHEQUE.map((section) => '/pilotage/' + section) }
+      : {}),
+  };
+};
+const page = (
+  id: string,
+  label: string,
+  to: string,
+  module: Module,
+  action: Action = 'lire',
+  prefixe = false,
+): Rubrique => ({ id, label, to, module, action, prefixe });
+const dest = (id: string, label: string, rubriques: Rubrique[], initiale?: string): Destination => ({
+  id,
+  label,
+  rubriques,
+  ...(initiale ? { initiale } : {}),
+});
+
+export const FAMILLES: Famille[] = [
+  {
+    id: 'organisation',
+    label: 'Organisation',
+    destinations: [
+      dest('contexte', 'Contexte de l’organisation', [p('contexte'), p('parties'), p('swot'), p('pestel')]),
+      dest('perimetres', 'Périmètres', [p('perimetres')]),
+      dest('processus', 'Processus', [p('processus-cartes')]),
+      dest('responsabilites', 'Rôles et responsabilités', [p('responsabilites')]),
+      dest('cartographie', 'Cartographie du SMSI', [
+        page('cartographie', 'Cartographie du SMSI', '/cartographie', 'cartographie', 'lire', true),
+      ]),
+      dest('fournisseurs', 'Fournisseurs', [
+        p('fournisseurs'),
+        p('criteres-fournisseurs'),
+        p('fournisseurs-perimetre'),
+        p('evaluations-clausier'),
+      ]),
+      dest('revues-acces', 'Revues des accès', [p('revues-acces')]),
+      dest('plans', 'Plans annuels', [
+        p('plans-calendrier'),
+        p('plans-planning'),
+        p('plans-formation'),
+        p('plans-sensibilisation'),
+      ]),
+    ],
+  },
+  {
+    id: 'pilotage',
+    label: 'Pilotage',
+    destinations: [
+      dest('synthese', 'Synthèse', [p('synthese')]),
+      dest('parcours', 'Parcours guidé', [p('parcours-iso'), p('parcours')]),
+      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')], 'objectifs'),
+      dest('revues', 'Revues de direction', [p('revues')]),
+      dest('rappels', 'Rappels et configuration', [p('rappels'), p('configuration')]),
+    ],
+  },
+  {
+    id: 'risques',
+    label: 'Risques',
+    destinations: [
+      dest('risques', 'Gestion des risques', [
+        p('risques'),
+        p('opportunites'),
+        p('etudes'),
+        p('carte'),
+        p('traitements'),
+        p('scenarios'),
+        p('configuration-analyses'),
+      ]),
+    ],
+  },
+  {
+    id: 'conformite',
+    label: 'Conformité et audits',
+    destinations: [
+      dest('referentiels', 'Bibliothèque de référentiels', [p('bibliotheque')]),
+      dest('applicabilite', 'Applicabilité et mesures', [
+        p('dda-iso'),
+        p('dda-annexe-a'),
+        p('dda-hds'),
+        p('applicabilite'),
+        p('mesures'),
+      ]),
+      dest('audits', 'Gestion de l’audit', [
+        p('audit-pronostic'),
+        p('audit-couverture'),
+        p('audit-deroule'),
+        p('audit-planning'),
+        p('audit-participants'),
+        p('audits'),
+      ]),
+      dest('preuves', 'Preuves et contrôles', [p('preuves'), p('controles')]),
+    ],
+  },
+  {
+    id: 'actions',
+    label: 'Actions',
+    destinations: [
+      dest('amelioration', 'Amélioration continue', [p('amelioration')]),
+      dest('plan-actions', 'Plan d’actions', [p('actions')]),
+      dest('recurrences', 'Tâches récurrentes', [p('recurrences')]),
+      dest('registres', 'Registres et droits', [
+        { id: 'registres', label: 'Registres et droits', to: '/registres', action: 'lire', prefixe: true },
+      ]),
+    ],
+  },
+  {
+    id: 'resilience',
+    label: 'Résilience',
+    destinations: [
+      dest('continuite', 'Continuité d’activité', [p('bia'), p('continuite'), p('exercices')]),
+      dest('incidents', 'Incidents et crise', [
+        p('incidents-registre'),
+        p('incidents-qualifier'),
+        p('incidents-retex'),
+        p('crise-cellule'),
+        p('crise-contacts'),
+        p('crise-scenarios'),
+      ]),
+    ],
+  },
+  {
+    id: 'documents',
+    label: 'Documents',
+    destinations: [
+      dest('documents', 'Documents et liens', [
+        page('documents', 'Documents et liens', '/documents', 'documents', 'lire', true),
+      ]),
+      dest('echanges', 'Imports et exports', [
+        p('imports'),
+        page('exports', 'Exports Excel', '/exports', 'import_export', 'exporter'),
+      ]),
+    ],
+  },
+];
+
+type Can = (module: Module, action: Action) => boolean;
+
+const rubriqueVisible = (r: Rubrique, can: Can) =>
+  (!r.module || can(r.module, r.action)) && (!r.aussi || can(r.aussi[0], r.aussi[1]));
+
+/** Rubriques affichables d'une destination, dans l'ordre du menu. */
+export const rubriquesVisibles = (d: Destination, can: Can) => d.rubriques.filter((r) => rubriqueVisible(r, can));
+
+/** Classe des éléments selon l'ordre choisi ; ceux qu'il ne cite pas (ajoutés depuis) suivent, dans l'ordre d'origine. */
+function classer<T extends { id: string }>(elements: T[], ordre: readonly string[] | undefined): T[] {
+  if (!ordre?.length) return elements;
+  const rang = (x: T, i: number) => {
+    const r = ordre.indexOf(x.id);
+    return r >= 0 ? r : ordre.length + i;
+  };
+  return elements
+    .map((x, i) => [x, rang(x, i)] as const)
+    .sort((a, b) => a[1] - b[1])
+    .map(([x]) => x);
+}
+
+/** Familles et destinations dans l'ordre choisi par la personne (préférence `menu`), sinon dans l'ordre par défaut. */
+export function ordonnerMenu(ordre: OrdreMenu | undefined): Famille[] {
+  return classer(FAMILLES, ordre?.familles).map((f) => ({
+    ...f,
+    destinations: classer(f.destinations, ordre?.destinations?.[f.id]),
+  }));
+}
+
+/** Place `id` avant `cible` (ou après), dans une liste d'identifiants. */
+export function placer(ids: readonly string[], id: string, cible: string, apres = false): string[] {
+  if (id === cible || !ids.includes(id) || !ids.includes(cible)) return [...ids];
+  const reste = ids.filter((x) => x !== id);
+  const i = reste.indexOf(cible) + (apres ? 1 : 0);
+  return [...reste.slice(0, i), id, ...reste.slice(i)];
+}
+
+/** Ordre du menu après le déplacement d'une famille (sans `famille`) ou d'une destination de `famille`, avant ou après
+    une cible. */
+export function deplacerDansMenu(
+  ordre: OrdreMenu | undefined,
+  element: { famille?: FamilleId; id: string },
+  cible: string,
+  apres = false,
+): OrdreMenu {
+  const menu = ordonnerMenu(ordre);
+  if (!element.famille)
+    return {
+      ...ordre,
+      familles: placer(
+        menu.map((f) => f.id),
+        element.id,
+        cible,
+        apres,
+      ),
+    };
+  const ids = menu.find((f) => f.id === element.famille)?.destinations.map((d) => d.id) ?? [];
+  return {
+    ...ordre,
+    destinations: { ...ordre?.destinations, [element.famille]: placer(ids, element.id, cible, apres) },
+  };
+}
+
+/** Menu réduit à ce que la personne peut lire : une destination ou une famille sans rubrique lisible disparaît. L'ordre
+    est celui de la personne (`ordre`), sinon l'ordre par défaut. */
+export function famillesVisibles(
+  can: Can,
+  ordre?: OrdreMenu,
+): { famille: Famille; destinations: (Destination & { to: string })[] }[] {
+  return ordonnerMenu(ordre).flatMap((famille) => {
+    const destinations = famille.destinations.flatMap((d) => {
+      const visibles = rubriquesVisibles(d, can);
+      const entree = visibles.find((r) => r.id === d.initiale) ?? visibles[0];
+      return entree ? [{ ...d, rubriques: visibles, to: entree.to }] : [];
+    });
+    return destinations.length ? [{ famille, destinations }] : [];
+  });
+}
+
+const correspond = (r: Rubrique, chemin: string) => {
+  const adresses = [r.to, ...(r.alias ?? [])];
+  return adresses.some((a) => (r.prefixe ? chemin === a || chemin.startsWith(a + '/') : chemin === a));
+};
+
+/** Famille, destination et rubrique désignées par une adresse (indéfini hors menu : compte, aide, paramètres…). */
+export function localiser(chemin: string) {
+  for (const famille of FAMILLES)
+    for (const destination of famille.destinations) {
+      const rubrique = destination.rubriques.find((r) => correspond(r, chemin));
+      if (rubrique) return { famille, destination, rubrique };
+    }
+  return undefined;
+}

@@ -1,0 +1,1524 @@
+{
+  "dateUTC": "2026-11-05T17:50:35.249507+00:00",
+  "fuseauUtilisateur": "Europe/Paris",
+  "commitApplicatif": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "environnement": "Base PostgreSQL 18 séparée, application compilée et API réelle, Node 26 / Chromium système",
+  "donnees": "Démonstration fictive fournie et publications de recette dans un périmètre dédié, absentes de l’archive de sources",
+  "controles": {
+    "typecheckWeb": 0,
+    "lintComplet": 0,
+    "prettierComplet": 0,
+    "buildWeb": 0,
+    "vitestWeb": {
+      "fichiers": 30,
+      "tests": 234,
+      "echecs": 0
+    },
+    "e2e": {
+      "scenariosDistinctsReussis": 5,
+      "rejeuxAutomatiques": 0,
+      "seriesCiblees": true,
+      "parcours": [
+        "Publication, export, révision, historique, promotion avant activation et activation",
+        "Import bibliothèque et rattachement persistant",
+        "Source verrouillée, copie et nouvelle exigence",
+        "Publication méthode ISO 27005 et épinglages",
+        "Kit IA : aperçu, confirmation, import, idempotence, veille"
+      ]
+    },
+    "lectureSeule": {
+      "lecture": true,
+      "referentielsVisibles": 3,
+      "exigencesConsultees": 33,
+      "provenanceConsultee": true,
+      "bibliothequeLecture": true,
+      "exigencesBibliotheque": 31,
+      "commandesEcritureAbsentes": true,
+      "exportSansDroitDesactive": true,
+      "activationRefusee": 403,
+      "donneesInchangees": true,
+      "problems": []
+    },
+    "visuel": {
+      "vues": [
+        {
+          "nom": "referentiels-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 489.09375,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": 489.09375,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": 489.09375,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-light-720",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 79.125,
+              "y": 448,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            },
+            {
+              "x": 79.125,
+              "y": 595.09375,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            },
+            {
+              "x": 79.125,
+              "y": 742.1875,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 602,
+              "maxHeight": "none",
+              "hauteur": 1695,
+              "contenu": 1695
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-light-768",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 80.671875,
+              "y": 451.796875,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            },
+            {
+              "x": 80.671875,
+              "y": 599.828125,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            },
+            {
+              "x": 80.671875,
+              "y": 747.859375,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 647,
+              "maxHeight": "none",
+              "hauteur": 1704,
+              "contenu": 1704
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-light-1024",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 252.78125,
+              "y": 472.640625,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            },
+            {
+              "x": 506.59375,
+              "y": 472.640625,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            },
+            {
+              "x": 760.40625,
+              "y": 472.640625,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 705,
+              "maxHeight": "none",
+              "hauteur": 1470,
+              "contenu": 1470
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-light-1280",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 266.46875,
+              "y": 473.8125,
+              "width": 317.96875,
+              "height": 217.5,
+              "overflow": false
+            },
+            {
+              "x": 599.203125,
+              "y": 473.8125,
+              "width": 317.96875,
+              "height": 217.5,
+              "overflow": false
+            },
+            {
+              "x": 931.9375,
+              "y": 473.8125,
+              "width": 317.984375,
+              "height": 217.5,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 940,
+              "maxHeight": "none",
+              "hauteur": 1509,
+              "contenu": 1509
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-light-1920",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 285.109375,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 820.03125,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1354.953125,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1546,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        },
+        {
+          "nom": "source-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "annexe-a-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 489.09375,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": 489.09375,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": 489.09375,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 2472,
+              "contenu": 2472
+            }
+          ]
+        },
+        {
+          "nom": "annexe-a-complete-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": -2064.90625,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": -2064.90625,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": -2064.90625,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 4450,
+              "contenu": 4450
+            }
+          ]
+        },
+        {
+          "nom": "bibliotheque-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 519.53125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 669.46875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 819.40625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 969.34375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1119.28125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1269.21875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1419.15625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1569.09375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1719.03125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1868.96875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2018.90625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2168.84375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2318.78125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2468.71875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "bibliotheque-exigences-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 742,
+              "maxHeight": "none",
+              "hauteur": 1966,
+              "contenu": 1966
+            }
+          ]
+        },
+        {
+          "nom": "bibliotheque-mobile-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 14,
+              "y": -285.453125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": -94.5,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 96.453125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 287.40625,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 478.359375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 669.3125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 860.265625,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1051.21875,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1242.171875,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1433.125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1624.078125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1815.03125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 2005.984375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 2196.9375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "referentiels-mobile-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 14,
+              "y": 28.234375,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 169.203125,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 310.171875,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 341,
+              "maxHeight": "none",
+              "hauteur": 1629,
+              "contenu": 1629
+            }
+          ]
+        },
+        {
+          "nom": "source-mobile-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "sans-publication-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "referentiels-hd-light",
+          "theme": "light",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 285.109375,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 820.03125,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1354.953125,
+              "y": 509.390625,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1546,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 481.1875,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": 481.1875,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": 481.1875,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark-720",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 79.125,
+              "y": 440.875,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            },
+            {
+              "x": 79.125,
+              "y": 587.96875,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            },
+            {
+              "x": 79.125,
+              "y": 735.0625,
+              "width": 623.96875,
+              "height": 138.859375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 602,
+              "maxHeight": "none",
+              "hauteur": 1695,
+              "contenu": 1695
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark-768",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 80.671875,
+              "y": 444.625,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            },
+            {
+              "x": 80.671875,
+              "y": 592.65625,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            },
+            {
+              "x": 80.671875,
+              "y": 740.6875,
+              "width": 669.28125,
+              "height": 139.75,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 647,
+              "maxHeight": "none",
+              "hauteur": 1704,
+              "contenu": 1704
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark-1024",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 252.78125,
+              "y": 465.1875,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            },
+            {
+              "x": 506.59375,
+              "y": 465.1875,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            },
+            {
+              "x": 760.40625,
+              "y": 465.1875,
+              "width": 239.53125,
+              "height": 213.0625,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 705,
+              "maxHeight": "none",
+              "hauteur": 1470,
+              "contenu": 1470
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark-1280",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 266.46875,
+              "y": 466.078125,
+              "width": 317.96875,
+              "height": 217.5,
+              "overflow": false
+            },
+            {
+              "x": 599.203125,
+              "y": 466.078125,
+              "width": 317.96875,
+              "height": 217.5,
+              "overflow": false
+            },
+            {
+              "x": 931.9375,
+              "y": 466.078125,
+              "width": 317.984375,
+              "height": 217.5,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 940,
+              "maxHeight": "none",
+              "hauteur": 1509,
+              "contenu": 1509
+            }
+          ]
+        },
+        {
+          "nom": "referentiels-dark-1920",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 285.109375,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 820.03125,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1354.953125,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1546,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        },
+        {
+          "nom": "source-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "annexe-a-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 481.1875,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": 481.1875,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": 481.1875,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 2472,
+              "contenu": 2472
+            }
+          ]
+        },
+        {
+          "nom": "annexe-a-complete-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": -2064.8125,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 656.265625,
+              "y": -2064.8125,
+              "width": 367.453125,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1038.71875,
+              "y": -2064.8125,
+              "width": 367.4375,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1088,
+              "maxHeight": "none",
+              "hauteur": 4450,
+              "contenu": 4450
+            }
+          ]
+        },
+        {
+          "nom": "bibliotheque-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 273.828125,
+              "y": 511.625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 661.5625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 811.5,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 961.4375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1111.375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1261.3125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1411.25,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1561.1875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1711.125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 1861.0625,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2011,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2160.9375,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2310.875,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2460.8125,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            },
+            {
+              "x": 273.828125,
+              "y": 2610.75,
+              "width": 1132.34375,
+              "height": 136.9375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "bibliotheque-exigences-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 742,
+              "maxHeight": "none",
+              "hauteur": 1966,
+              "contenu": 1966
+            }
+          ]
+        },
+        {
+          "nom": "bibliotheque-mobile-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 14,
+              "y": -284.234375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": -93.28125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 97.671875,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 288.625,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 479.578125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 670.53125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 861.484375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1052.4375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1243.390625,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1434.34375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1625.296875,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 1816.25,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 2007.203125,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 2198.15625,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 2389.109375,
+              "width": 362,
+              "height": 179.578125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "referentiels-mobile-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 14,
+              "y": 441.453125,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 582.421875,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            },
+            {
+              "x": 14,
+              "y": 723.390625,
+              "width": 362,
+              "height": 133.09375,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 341,
+              "maxHeight": "none",
+              "hauteur": 1629,
+              "contenu": 1629
+            }
+          ]
+        },
+        {
+          "nom": "source-mobile-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "sans-publication-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [],
+          "registreContientSonPied": true,
+          "tableaux": []
+        },
+        {
+          "nom": "referentiels-hd-dark",
+          "theme": "dark",
+          "pageOverflow": false,
+          "internal": [],
+          "cards": [
+            {
+              "x": 285.109375,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 820.03125,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            },
+            {
+              "x": 1354.953125,
+              "y": 501.484375,
+              "width": 519.921875,
+              "height": 220.828125,
+              "overflow": false
+            }
+          ],
+          "registreContientSonPied": true,
+          "tableaux": [
+            {
+              "largeur": 1546,
+              "maxHeight": "none",
+              "hauteur": 1562,
+              "contenu": 1562
+            }
+          ]
+        }
+      ],
+      "analyses": [
+        {
+          "nom": "referentiels-light",
+          "violations": []
+        },
+        {
+          "nom": "source-light",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-light",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-exigences-light",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-mobile-light",
+          "violations": []
+        },
+        {
+          "nom": "referentiels-mobile-light",
+          "violations": []
+        },
+        {
+          "nom": "source-mobile-light",
+          "violations": []
+        },
+        {
+          "nom": "referentiels-dark",
+          "violations": []
+        },
+        {
+          "nom": "source-dark",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-dark",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-exigences-dark",
+          "violations": []
+        },
+        {
+          "nom": "bibliotheque-mobile-dark",
+          "violations": []
+        },
+        {
+          "nom": "referentiels-mobile-dark",
+          "violations": []
+        },
+        {
+          "nom": "source-mobile-dark",
+          "violations": []
+        }
+      ],
+      "errors": [],
+      "csp": [],
+      "writes": []
+    }
+  },
+  "limiteMetierOuverte": {
+    "sujet": "Promotion après changement d’activation",
+    "statutHTTPObserve": 404,
+    "message": "Version publiée introuvable.",
+    "cause": "Version de fiche incrémentée sans nouvelle version publiée, puis utilisée par la recherche de promotion",
+    "apiIdentiqueA": "eed9f219c597d111475a6a00454421de49576afe",
+    "corrigee": false
+  },
+  "nonExecutes": [
+    "Docker Desktop Windows du demandeur",
+    "Suite API complète",
+    "Recette exhaustive des autres rubriques",
+    "CI distante"
+  ],
+  "images": [
+    {
+      "fichier": "apercu-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "d3a6d971ae09a583490b0495c19c26e1cabe66bf8533734103672c83b2e6c76c"
+    },
+    {
+      "fichier": "referentiels-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 2720,
+      "sha256": "d1f1dcf2dc009fdebd2c2303f907c69a40a603a5607ed4f3c28de4323c2012f7"
+    },
+    {
+      "fichier": "referentiels-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 5504,
+      "sha256": "0f3af1f7a7d1a938e965bad5a19809e8664c22f9eddd3938e2d617be168f9b05"
+    },
+    {
+      "fichier": "referentiels-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 3059,
+      "sha256": "b34d69a873349269d5b01d9ce273ed6df10fee333d6db569a4afa36f236d25cc"
+    },
+    {
+      "fichier": "annexe-a-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 3654,
+      "sha256": "8b8a40ee10f4bcf106614491a3981ddaee24664b89f74880b2ec1ceedaa2846b"
+    },
+    {
+      "fichier": "bibliotheque-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 2705,
+      "sha256": "f5faf4db00430f2017b745f08b1e09f99276e98b50f5df8cb5ff515fddafa236"
+    },
+    {
+      "fichier": "bibliotheque-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 3269,
+      "sha256": "2a9d1dff5d3e74149589158bb42e83e2ba02888f68550f5190c71852af901136"
+    },
+    {
+      "fichier": "source-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "569b509caa736560c82378c422be95ce2926dd35138c5d8905dd8b217cdc4213"
+    },
+    {
+      "fichier": "sans-publication-light-mobile.png",
+      "largeur": 390,
+      "hauteur": 844,
+      "sha256": "cc14d0d4810c0f66e17ee2fff991a57ec6e9f077e858a48438c4a19a0ef13954"
+    },
+    {
+      "fichier": "apercu-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "23848fbe1b457eb23377d7aa20ee5931af515c585f3005c99ad72cfc45362106"
+    },
+    {
+      "fichier": "referentiels-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 2712,
+      "sha256": "50433d070fde9f3b0e4afc4a62a1cf9e820b0a96189eb6d6e9b741002af2bc50"
+    },
+    {
+      "fichier": "referentiels-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 5488,
+      "sha256": "7024a304b926f1d1a85c3a6bcbc53ba00529f81f1ec086ab200af5df2d002365"
+    },
+    {
+      "fichier": "referentiels-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 3052,
+      "sha256": "512cc59aa1a1b14ca7f68a2278bf78fb7e58523b7ca0bdc9e4c48c7cc5b9e831"
+    },
+    {
+      "fichier": "annexe-a-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 3646,
+      "sha256": "c4f14d4888faedd456b88edc4a82f87bde99d53b90aabd8c1d7bb1dfc2002871"
+    },
+    {
+      "fichier": "bibliotheque-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 2847,
+      "sha256": "46976ffd2fe246f3e838a9ce8a6c96c7bc3100342de576241054e61c4b8d2fc1"
+    },
+    {
+      "fichier": "bibliotheque-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 3453,
+      "sha256": "9a8eb3dd3efb0c68b0d4dc25c945c69d09624f999bb5c678efdc78dc6eb5b146"
+    },
+    {
+      "fichier": "source-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1100,
+      "sha256": "1a1035f9cf59a0ed2ea259ce0b5b17c17b190c220a1389f26eda27a8526e5e31"
+    },
+    {
+      "fichier": "sans-publication-dark-mobile.png",
+      "largeur": 390,
+      "hauteur": 844,
+      "sha256": "67ead7904239f10bd5dce65b1b9daaf337cbc82d283cbcbf793b4d1d316c0d18"
+    }
+  ]
+}

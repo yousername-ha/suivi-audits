@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Menu latéral — couleurs et dégradé</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css" />
+    <link rel="stylesheet" href="../responsive-equilibre/responsive.css" />
+    <link rel="stylesheet" href="../responsabilites-studio/responsabilites.css" />
+    <link rel="stylesheet" href="../bibliotheque-unifiee/bibliotheque.css" />
+    <link rel="stylesheet" href="../menu-final/menu.css" />
+    <link rel="stylesheet" href="../bibliotheque-studio/studio.css" />
+    <link rel="stylesheet" href="../menu-couleurs-degrade/couleurs.css" />
+    <link rel="stylesheet" href="../menu-clair-signature/clair.css" />
+    <link rel="stylesheet" href="../menu-icones-epurees/icones.css" />
+    <link rel="stylesheet" href="../menu-futuriste/futuriste.css" />
+    <link rel="stylesheet" href="chaud.css" />
+  </head>
+  <body data-mh-page="bibliotheque">
+    <aside class="sidebar mh-sidebar" aria-label="Navigation principale proposée">
+      <div class="brand">
+        <span class="brand-mark">✧</span
+        ><span
+          ><strong>Suivi des audits<br />SMSI</strong><small>ISO 27001 / HDS</small></span
+        >
+      </div>
+      <div class="mh-menu-scroll">
+        <div class="nav-caption">Espace de travail</div>
+        <nav id="mh-menu" aria-label="Navigation principale"></nav>
+        <div class="mh-comptes">
+          <span class="nav-caption">Compte et administration</span>
+          <button type="button" class="mh-destination" data-mh-page="plateforme">Plateforme</button>
+          <button type="button" class="mh-destination" data-mh-page="parametres">Configuration système</button>
+          <button type="button" class="mh-destination" data-mh-page="compte">Mon compte</button>
+          <button type="button" class="mh-destination" data-mh-page="aide">Guide d’utilisation</button>
+          <button type="button" class="mh-destination" data-mh-page="mur">Écran mural</button>
+        </div>
+      </div>
+      <footer class="mh-footer">
+        <strong>Mon organisation</strong>
+        <div class="mc-footer-controls">
+          <button type="button" data-mh-theme>Thème : clair</button
+          ><button type="button" data-mh-motion aria-label="Suspendre les animations" title="Suspendre les animations">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M8 5v14M16 5v14" />
+            </svg>
+          </button>
+        </div>
+        <small>Version de démonstration · Menu à valider</small>
+      </footer>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions">
+          <span class="demo-note">Menu couleurs · À valider</span
+          ><button type="button" class="button" id="theme">Mode sombre</button>
+        </div>
+      </header>
+      <main>
+        <section id="mh-library" class="mh-page">
+          <div class="breadcrumb">Conformité et audits <span>/</span> Bibliothèque</div>
+          <header class="page-heading">
+            <div>
+              <h1>Bibliothèque de référentiels</h1>
+              <p>Vos référentiels et leur couverture, réunis dans une seule vue.</p>
+            </div>
+            <button type="button" class="bb-primary" id="importer">
+              <span data-bb-icon="plus"></span>Importer un référentiel
+            </button>
+          </header>
+          <section class="bb-workspace" aria-label="Catalogue et couverture des référentiels">
+            <header class="bb-toolbar">
+              <div class="bb-catalogue-title">
+                <span data-bb-icon="library"></span><strong>Catalogue de l’organisation</strong
+                ><span id="bb-total">2 référentiels</span>
+              </div>
+              <div class="bb-tools">
+                <div class="bb-search" id="search-box" hidden>
+                  <label for="query" class="bb-sr">Rechercher un référentiel</label
+                  ><input id="query" type="search" placeholder="Nom ou identifiant…" />
+                </div>
+                <button
+                  type="button"
+                  class="bb-icon-button"
+                  id="search-toggle"
+                  aria-label="Rechercher un référentiel"
+                  aria-expanded="false"
+                  aria-controls="search-box"
+                >
+                  <span data-bb-icon="search"></span>
+                </button>
+              </div>
+            </header>
+            <div class="bb-scope">
+              <div>
+                <div class="bb-scope-title">
+                  <span data-bb-icon="chart"></span><strong>Couverture dans le périmètre</strong>
+                </div>
+                <p>Les états ci-dessous concernent uniquement le périmètre choisi.</p>
+              </div>
+              <label
+                ><span class="bb-sr">Périmètre de la couverture</span
+                ><select id="scope">
+                  <option value="socle">Pilotage de l’organisation</option>
+                  <option value="">Catalogue sans périmètre</option>
+                </select></label
+              >
+            </div>
+            <div class="bb-criteria" id="criteria" hidden>
+              <span id="criteria-label"></span><button type="button" id="clear-query">Effacer la recherche ×</button>
+            </div>
+            <div
+              class="bb-scroll"
+              id="scroll"
+              tabindex="0"
+              role="region"
+              aria-label="Référentiels et états de couverture"
+            >
+              <div id="records"></div>
+              <details class="bb-import-tools">
+                <summary><span data-bb-icon="code"></span>Outils d’import et kit d’intégration IA</summary>
+                <p>
+                  Les commandes d’import, de simulation et de confirmation existantes sont conservées. Cette maquette ne
+                  réalise aucun import.
+                </p>
+              </details>
+            </div>
+            <footer class="bb-footer">
+              <span id="result" aria-live="polite">2 référentiels affichés</span
+              ><span>États d’évaluation · Aucun score de certification</span>
+            </footer>
+          </section>
+          <p class="bb-demo">
+            Données fictives du jeu de recette · Bibliothèque commune à l’organisation, couverture propre au périmètre.
+          </p>
+        </section>
+        <section id="mh-other" class="mh-page" hidden></section>
+      </main>
+    </div>
+    <dialog id="detail" class="bb-dialog" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+    <script src="../bibliotheque-unifiee/donnees.js"></script>
+    <script src="../bibliotheque-unifiee/bibliotheque.js"></script>
+    <script src="../menu-couleurs-degrade/menu.js"></script>
+    <script src="icones.js"></script>
+  </body>
+</html>

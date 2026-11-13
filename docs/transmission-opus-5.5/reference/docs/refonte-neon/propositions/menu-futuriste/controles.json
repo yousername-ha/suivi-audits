@@ -1,0 +1,79 @@
+{
+  "scope": "Maquette claire : icônes géométriques bicolores",
+  "running": "mf-signal",
+  "paused": "paused",
+  "reduced": "none",
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(41, 67, 88)",
+    "strokeWidth": "1.65px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "sha256": {
+    "menu-detail-hd.png": "18960ce2f2bd70e9b3342424c9f369c5a4d8b3d048670ffbf2a20127375f2d69",
+    "index.html": "b6ebf8203177a9e73c7a6ddf54f79a3ab048cb7ba2c7de843bfb6f12134c56e2",
+    "futuriste.css": "012ea7b14e4164a9d7a69f077427467042d58c9869b06fdb68121f5b0e8297e6",
+    "apercu-autonome.html": "71740b5be5154df04add83b551d240e66280c045c91e44deaee68aed5e4822da",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "14c781deab49e5eaa5df74cfe91d125b746c3b4ea792b88fe056af3bf857df37",
+    "menu-clair-hd.png": "257e9dca2213ad4393e2ef5d519d78c29edd3f38e68bb03a21ecb5629a687d24",
+    "futuriste.js": "018f5cd666a37f0ee6228bbda825501faaf2570ecc51e89f1f37badf29042818"
+  }
+}

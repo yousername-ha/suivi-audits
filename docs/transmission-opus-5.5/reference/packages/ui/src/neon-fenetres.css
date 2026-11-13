@@ -1,0 +1,961 @@
+/* Habillage commun des fenêtres, sans modification des formulaires ni des droits.
+   Les petits dialogues conservent leur largeur ; les fiches lg/xl gagnent de l'espace. */
+.mantine-Modal-root {
+  --modal-size-lg: 50rem;
+  --modal-size-xl: 64rem;
+}
+.mantine-Modal-content,
+.mantine-Drawer-content {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--suivi-trait);
+  box-shadow: var(--suivi-ombre-haute);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.mantine-Modal-content[data-full-screen],
+.mantine-Drawer-content {
+  min-height: 100dvh;
+}
+.mantine-Modal-content {
+  margin-block: var(--modal-inner-y-offset, var(--modal-y-offset));
+}
+.mantine-Modal-overlay,
+.mantine-Drawer-overlay {
+  background-color: color-mix(in srgb, var(--suivi-encre) 38%, transparent);
+  backdrop-filter: blur(4px);
+}
+.mantine-Modal-header,
+.mantine-Drawer-header {
+  flex: none;
+  gap: 1rem;
+  min-height: 5rem;
+  margin-bottom: 0;
+  padding: 1.35rem 1.75rem;
+  border-bottom: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+.mantine-Modal-header .mantine-Modal-title,
+.mantine-Drawer-header .mantine-Drawer-title {
+  color: var(--neon-titre);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.mantine-Modal-close,
+.mantine-Drawer-close {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.75rem;
+  background: var(--suivi-surface-douce);
+  color: var(--mantine-color-dimmed);
+}
+.mantine-Modal-close:hover,
+.mantine-Drawer-close:hover {
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+}
+.mantine-Modal-body,
+.mantine-Drawer-body {
+  flex: none;
+  min-height: auto;
+  padding: 1.5rem 1.75rem;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+/* Hiérarchie commune : texte neutre, libellés nets, aides plus discrètes.
+   Les couleurs d'erreur, les champs désactivés et les variantes gardent leur sémantique. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-label {
+  margin-bottom: 0.45rem;
+  color: var(--neon-titre);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input {
+  border-color: var(--suivi-trait);
+  border-radius: 0.7rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input:not([data-error]):focus-within {
+  border-color: var(--neon-accent);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) textarea.mantine-Input-input {
+  padding-block: 0.65rem;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) :is(.mantine-InputWrapper-description, .mantine-InputWrapper-error) {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Button-root {
+  border-radius: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: normal;
+}
+/* Un lien reste reconnaissable sans la couleur : contour et flèche permanents.
+   Les liens des dalles, déjà validés, gardent leur propre présentation. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien) {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.35rem;
+  background: var(--suivi-surface-douce);
+  color: var(--neon-titre);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien)::after {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-inline-start: 0.45em;
+  vertical-align: 0.1em;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  background: linear-gradient(135deg, transparent 42%, currentColor 42%, currentColor 58%, transparent 58%);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root):not(.perimetre-lien):hover {
+  background: var(--neon-doux);
+  text-decoration: none;
+}
+/* Les onglets restent identifiables par leur forme et leur état actif, même sans couleur. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.85rem;
+  background: var(--suivi-surface-douce);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-list:not([data-orientation='vertical'])::before {
+  display: none;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab {
+  padding: 0.7rem 0.95rem;
+  border-radius: 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab[data-active] {
+  background: var(--suivi-surface);
+  border-color: transparent;
+  color: var(--neon-titre);
+  box-shadow: var(--suivi-ombre);
+  font-weight: 650;
+}
+/* Fiches des registres : hauteur naturelle, sans défilement imbriqué dans les onglets. */
+.fenetre-fiche-corps {
+  padding-bottom: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root {
+  min-width: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root > .mantine-Tabs-root {
+  padding: 0.2rem;
+}
+.fenetre-fiche-corps .mantine-Tabs-panel > .mantine-Stack-root {
+  gap: 1.25rem;
+}
+.fenetre-actions {
+  flex: none;
+  padding-block: 1rem;
+  border-top: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+@media (max-width: 36em) {
+  .mantine-Modal-root {
+    --modal-x-offset: 0.5rem;
+    --modal-y-offset: 0.75rem;
+  }
+  .mantine-Modal-header,
+  .mantine-Drawer-header {
+    min-height: 4.25rem;
+    padding: 1rem;
+  }
+  .mantine-Modal-header .mantine-Modal-title,
+  .mantine-Drawer-header .mantine-Drawer-title {
+    font-size: 1rem;
+  }
+  .mantine-Modal-body,
+  .mantine-Drawer-body {
+    padding: 1rem;
+  }
+  .fenetre-fiche-corps {
+    padding-bottom: 0;
+  }
+  :is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-Tabs-tab {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+  }
+  .fenetre-actions .mantine-Button-root {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mantine-Modal-overlay,
+  .mantine-Drawer-overlay {
+    backdrop-filter: none;
+  }
+}
+
+/* Dossier de contexte : cinq sections identifiables, avec la même hiérarchie de lecture.
+   Les accents et pictogrammes sont décoratifs, sans portée d'état ou de criticité. */
+.contexte-fenetre {
+  --modal-size-xl: 76rem;
+}
+.contexte-presentation {
+  --contexte-surface: color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface));
+  --contexte-filet: color-mix(in srgb, var(--mantine-color-encre-9) 18%, var(--suivi-trait));
+}
+.contexte-fenetre .mantine-Modal-inner {
+  --modal-inner-y-offset: 1rem;
+}
+.contexte-presentation > .mantine-Modal-header {
+  min-height: 4rem;
+  padding-block: 1rem;
+}
+.contexte-presentation .mantine-Modal-title {
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
+.contexte-presentation-corps {
+  padding-bottom: 0;
+}
+.contexte-presentation-corps > .mantine-Stack-root {
+  min-width: 0;
+}
+.contexte-presentation-corps > .mantine-Stack-root > .mantine-Tabs-root {
+  padding: 0.2rem;
+}
+.contexte-presentation .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--suivi-trait);
+  border-radius: 0;
+  background: transparent;
+}
+.contexte-presentation .mantine-Tabs-tab {
+  padding: 0.8rem 0.1rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+.contexte-presentation .mantine-Tabs-tab[data-active] {
+  background: transparent;
+  color: var(--neon-titre);
+  box-shadow: inset 0 -2px var(--neon-accent);
+  font-weight: 600;
+}
+.contexte-document {
+  display: grid;
+  gap: 1rem;
+  padding: 0.25rem 0 1.25rem;
+}
+.contexte-entete {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2rem;
+  padding: 0.5rem 0 1rem;
+  border-bottom: 1px solid var(--suivi-trait);
+}
+.contexte-repere {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.contexte-repere::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--neon-accent);
+}
+.contexte-entete h3 {
+  max-width: 32ch;
+  margin: 0.75rem 0 0;
+  color: var(--neon-titre);
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.contexte-description,
+.contexte-texte {
+  margin: 0;
+  color: var(--mantine-color-text);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.contexte-description {
+  max-width: 68ch;
+  margin-top: 1rem;
+  color: var(--mantine-color-dimmed);
+}
+.contexte-meta {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--suivi-trait);
+}
+.contexte-meta dt,
+.contexte-responsable dt {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.68rem;
+  font-weight: 450;
+}
+.contexte-meta dd,
+.contexte-responsable dd {
+  margin: 0.2rem 0 0;
+  color: var(--neon-titre);
+  font-size: 0.8rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.contexte-meta > div:last-child dd {
+  font-size: 1rem;
+  letter-spacing: -0.025em;
+}
+.contexte-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+.contexte-section {
+  --contexte-repere-fond: var(--neon-doux);
+  min-width: 0;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--contexte-filet);
+  border-radius: 0.8rem;
+  background: var(--contexte-surface);
+}
+.contexte-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--contexte-filet);
+  color: var(--neon-titre);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
+.contexte-pictogramme {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid color-mix(in srgb, var(--neon-accent) 10%, transparent);
+  border-radius: 0.6rem;
+  background: var(--contexte-repere-fond);
+  color: var(--neon-titre);
+}
+.contexte-pictogramme svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.contexte-section-titre {
+  min-width: 0;
+}
+.contexte-section-numero {
+  flex: none;
+  margin-left: auto;
+  padding-left: 0.4rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.contexte-section[data-champ='organisation'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.38fr);
+  grid-column: 1 / -1;
+  gap: 0.5rem 2rem;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--mantine-color-encre-9) 5%, var(--neon-doux)),
+    var(--contexte-surface) 65%
+  );
+}
+.contexte-section[data-champ='organisation'] h4 {
+  grid-column: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.contexte-section[data-champ='organisation'] > .contexte-texte,
+.contexte-section[data-champ='organisation'] > .contexte-vide {
+  grid-column: 1;
+}
+.contexte-section[data-champ='organisation'] > .contexte-texte {
+  color: var(--neon-titre);
+  font-size: 1rem;
+  font-weight: 550;
+}
+.contexte-responsable {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  margin: 0;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+  border-left: 1px solid var(--contexte-filet);
+}
+.contexte-responsable dd {
+  font-size: 0.875rem;
+}
+.contexte-section[data-champ='scope'] {
+  --contexte-repere-fond: color-mix(in srgb, var(--neon-bleu) 13%, var(--suivi-surface));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--neon-bleu) 8%, var(--contexte-surface)),
+    var(--contexte-surface) 70%
+  );
+}
+.contexte-section[data-champ='interfaces'] {
+  --contexte-repere-fond: color-mix(in srgb, var(--neon-cyan) 14%, var(--suivi-surface));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--neon-cyan) 8%, var(--contexte-surface)),
+    var(--contexte-surface) 70%
+  );
+}
+.contexte-section[data-champ='issues'] {
+  --contexte-repere-fond: color-mix(in srgb, var(--neon-violet) 13%, var(--suivi-surface));
+}
+.contexte-section:is([data-champ='interfaces'], [data-champ='issues']) {
+  grid-column: 1 / -1;
+}
+.contexte-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.contexte-categorie {
+  --categorie-accent: var(--neon-violet);
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--contexte-filet);
+  border-left: 3px solid var(--categorie-accent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--categorie-accent) 4%, var(--suivi-surface));
+}
+.contexte-categorie[data-nature='externe'] {
+  --categorie-accent: var(--neon-rose);
+}
+.contexte-categorie[data-nature='interface'] {
+  --categorie-accent: var(--neon-cyan);
+}
+.contexte-categorie[data-nature='dependance'] {
+  --categorie-accent: var(--neon-bleu);
+}
+.contexte-categorie > header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+.contexte-categorie > header > div {
+  min-width: 0;
+}
+.contexte-categorie h5 {
+  margin: 0;
+  color: var(--neon-titre);
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.contexte-categorie > header p {
+  margin: 0.1rem 0 0;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.contexte-categorie-repere {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid color-mix(in srgb, var(--categorie-accent) 30%, var(--contexte-filet));
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--categorie-accent) 10%, var(--suivi-surface));
+  color: var(--neon-titre);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+}
+.contexte-categorie-nombre {
+  margin-left: auto;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.contexte-categorie .contexte-puces li::before {
+  background: var(--categorie-accent);
+}
+.contexte-categorie--a-preciser {
+  --categorie-accent: var(--suivi-trait);
+  grid-column: 1 / -1;
+  border-left-style: dashed;
+  background: var(--suivi-surface-douce);
+}
+.contexte-section[data-champ='exclusions'] {
+  --contexte-repere-fond: color-mix(in srgb, var(--neon-rose) 12%, var(--suivi-surface));
+  background: color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface-douce));
+}
+.contexte-puces {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contexte-puces li {
+  position: relative;
+  padding: 0.25rem 0.5rem 0.25rem 1.2rem;
+  border-bottom: 1px solid var(--contexte-filet);
+  color: var(--mantine-color-text);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.contexte-puces li::before {
+  content: '';
+  position: absolute;
+  top: 0.82rem;
+  left: 0;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--neon-accent);
+}
+.contexte-puces li:last-child {
+  border-bottom: 0;
+}
+.contexte-vide {
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+.contexte-references,
+.contexte-historique {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.contexte-references li,
+.contexte-historique li {
+  padding: 1rem 0.5rem;
+  border-bottom: 1px solid var(--suivi-trait);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.contexte-historique li > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.75rem;
+}
+.contexte-actions {
+  flex: none;
+}
+.contexte-presentation[data-full-screen] .contexte-document {
+  width: 100%;
+  max-width: 84rem;
+  margin-inline: auto;
+}
+.contexte-presentation[data-full-screen] .contexte-texte,
+.contexte-presentation[data-full-screen] .contexte-puces li {
+  font-size: 1rem;
+}
+@media (max-width: 48em) {
+  .contexte-document {
+    gap: 1.25rem;
+  }
+  .contexte-entete {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+  .contexte-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .contexte-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contexte-categories {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contexte-section {
+    padding: 1rem;
+  }
+  .contexte-section[data-champ='organisation'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
+    gap: 0.6rem 1rem;
+  }
+  .contexte-section[data-champ='organisation'] h4 {
+    grid-column: 1 / -1;
+  }
+  .contexte-responsable {
+    grid-row: 2;
+    padding-left: 1rem;
+  }
+  .contexte-section h4 {
+    font-size: 0.875rem;
+  }
+  .contexte-presentation .mantine-Tabs-list:not([data-orientation='vertical']) {
+    gap: 1rem;
+  }
+  .contexte-presentation .mantine-Tabs-tab {
+    padding-inline: 0;
+  }
+  .contexte-actions > .mantine-Group-root {
+    flex: 2;
+  }
+}
+
+/* Cadre biseauté retenu par le demandeur pour la fenêtre de contexte. */
+.contexte-presentation {
+  position: relative;
+  isolation: isolate;
+  --contexte-cadre-coupe: 18px;
+}
+.contexte-cadre {
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.contexte-cadre::before,
+.contexte-cadre::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+.contexte-cadre-coin {
+  position: absolute;
+  width: var(--contexte-cadre-coupe);
+  height: var(--contexte-cadre-coupe);
+  color: var(--neon-violet);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--neon-violet) 40%, transparent));
+}
+.contexte-cadre-coin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.contexte-cadre-coin--haut-gauche {
+  top: 0;
+  left: 0;
+}
+.contexte-cadre-coin--haut-droite {
+  top: 0;
+  right: 0;
+  color: var(--neon-cyan);
+  transform: rotate(90deg);
+}
+.contexte-cadre-coin--bas-droite {
+  bottom: 0;
+  right: 0;
+  color: var(--neon-cyan);
+  transform: rotate(180deg);
+}
+.contexte-cadre-coin--bas-gauche {
+  bottom: 0;
+  left: 0;
+  transform: rotate(270deg);
+}
+/* Biseau : coupe géométrique et traits cyan/violet sur le contour. */
+.contexte-fenetre[data-cadre='biseau'] .contexte-presentation {
+  border-color: transparent;
+  border-radius: 0;
+  clip-path: polygon(
+    var(--contexte-cadre-coupe) 0,
+    calc(100% - var(--contexte-cadre-coupe)) 0,
+    100% var(--contexte-cadre-coupe),
+    100% calc(100% - var(--contexte-cadre-coupe)),
+    calc(100% - var(--contexte-cadre-coupe)) 100%,
+    var(--contexte-cadre-coupe) 100%,
+    0 calc(100% - var(--contexte-cadre-coupe)),
+    0 var(--contexte-cadre-coupe)
+  );
+}
+.contexte-fenetre[data-cadre='biseau'] .contexte-cadre::before {
+  inset: 0 var(--contexte-cadre-coupe);
+  border-block: 1.5px solid transparent;
+  border-image: linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) 1;
+}
+.contexte-fenetre[data-cadre='biseau'] .contexte-cadre::after {
+  inset: var(--contexte-cadre-coupe) 0;
+  border-inline: 1.5px solid transparent;
+  border-image: linear-gradient(160deg, var(--neon-violet), var(--neon-cyan)) 1;
+}
+/* Les pictogrammes s'activent brièvement à l'ouverture, puis au survol.
+   Les textes, les données et le cadre restent immobiles. */
+.contexte-pictogramme svg [class^='contexte-icone-'] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-duration: 3.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+.contexte-icone-fenetres {
+  animation-name: contexte-veille;
+}
+.contexte-icone-cible {
+  animation-name: contexte-focalisation;
+}
+.contexte-icone-noeud {
+  animation-name: contexte-connexion;
+}
+.contexte-icone-noeud--b {
+  animation-delay: 0.18s;
+}
+.contexte-icone-noeud--c {
+  animation-delay: 0.36s;
+}
+.contexte-icone-boussole {
+  animation-name: contexte-orientation;
+}
+.contexte-icone-sortie {
+  animation-name: contexte-ouverture;
+}
+.contexte-pictogramme:hover svg [class^='contexte-icone-'] {
+  animation-iteration-count: infinite;
+}
+@keyframes contexte-veille {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  70% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes contexte-focalisation {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.82);
+  }
+  65% {
+    transform: scale(1.06);
+  }
+}
+@keyframes contexte-connexion {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.5;
+    transform: scale(0.88);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.13);
+  }
+}
+@keyframes contexte-orientation {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-14deg);
+  }
+  65% {
+    transform: rotate(9deg);
+  }
+}
+@keyframes contexte-ouverture {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contexte-pictogramme svg [class^='contexte-icone-'] {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .contexte-fenetre[data-cadre] .contexte-presentation {
+    border-color: CanvasText;
+    clip-path: none;
+  }
+  .contexte-cadre {
+    display: none;
+  }
+}
+
+/* Biseau commun aux fenêtres, panneaux et dalles. Le Contexte garde son cadre SVG validé. */
+:is(.mantine-Modal-content, .mantine-Drawer-content, .perimetre-dalle, .neon-cadre-biseau) {
+  --fenetre-coupe: 18px;
+  position: relative;
+  isolation: isolate;
+}
+:is(
+  .mantine-Modal-content:not(.contexte-presentation),
+  .mantine-Drawer-content,
+  .graphe-carte.perimetre-dalle,
+  .neon-cadre-biseau
+) {
+  border-color: transparent;
+  border-radius: 0;
+  clip-path: polygon(
+    var(--fenetre-coupe) 0,
+    calc(100% - var(--fenetre-coupe)) 0,
+    100% var(--fenetre-coupe),
+    100% calc(100% - var(--fenetre-coupe)),
+    calc(100% - var(--fenetre-coupe)) 100%,
+    var(--fenetre-coupe) 100%,
+    0 calc(100% - var(--fenetre-coupe)),
+    0 var(--fenetre-coupe)
+  );
+}
+:is(
+  .mantine-Modal-content:not(.contexte-presentation),
+  .mantine-Drawer-content,
+  .graphe-carte.perimetre-dalle,
+  .neon-cadre-biseau
+)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  pointer-events: none;
+  background:
+    linear-gradient(
+        135deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-violet) calc(50% - 0.75px),
+        var(--neon-violet) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      top left / 18px 18px,
+    linear-gradient(
+        45deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      top right / 18px 18px,
+    linear-gradient(
+        135deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      bottom right / 18px 18px,
+    linear-gradient(
+        45deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-violet) calc(50% - 0.75px),
+        var(--neon-violet) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      bottom left / 18px 18px,
+    linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) top center / calc(100% - 36px) 1.5px,
+    linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) bottom center / calc(100% - 36px) 1.5px,
+    linear-gradient(var(--neon-violet), var(--neon-violet)) left center / 1.5px calc(100% - 36px),
+    linear-gradient(var(--neon-cyan), var(--neon-cyan)) right center / 1.5px calc(100% - 36px);
+  background-repeat: no-repeat;
+}
+/* La hauteur vient du contenu. Seul le voile extérieur défile pour les fiches longues. */
+.mantine-Modal-inner,
+.mantine-Drawer-inner {
+  inset-inline-start: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--suivi-trait) transparent;
+}
+/* La marge appartient au cadre : le titre collant rejoint le bord de l'écran pendant le défilement. */
+.mantine-Modal-inner {
+  padding-block: 0;
+}
+/* « safe » garde les petits dialogues centrés et aligne les longs en haut sans couper leur titre. */
+.mantine-Modal-root[data-centered] .mantine-Modal-inner {
+  align-items: safe center;
+}
+@media (forced-colors: active) {
+  :is(
+    .mantine-Modal-content:not(.contexte-presentation),
+    .mantine-Drawer-content,
+    .graphe-carte.perimetre-dalle,
+    .neon-cadre-biseau
+  ) {
+    border-color: CanvasText;
+    clip-path: none;
+  }
+  :is(
+    .mantine-Modal-content:not(.contexte-presentation),
+    .mantine-Drawer-content,
+    .graphe-carte.perimetre-dalle,
+    .neon-cadre-biseau
+  )::before {
+    display: none;
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "scope": "Maquette claire : fond blanc, couleurs et mouvements conservés",
+  "running": "mw-action",
+  "paused": "paused",
+  "reduced": "none",
+  "animations": [
+    {
+      "class": "mf-fill mw-motion mw-tiles",
+      "name": "mw-tiles",
+      "play": "running"
+    },
+    {
+      "class": "mf-fill mw-motion mw-organisation",
+      "name": "mw-node",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-pilotage",
+      "name": "mw-progress",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-risque",
+      "name": "mw-blink",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-check",
+      "name": "mw-check",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-action",
+      "name": "mw-action",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-resilience",
+      "name": "mw-rotate",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-document",
+      "name": "mw-document",
+      "play": "running"
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(74, 64, 55)",
+    "strokeWidth": "1.65px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "sha256": {
+    "fond.css": "83c92f3ad989b2fa9d6b33265dad072d00b6e44f3ebe0831c47439f1a10b8b3c",
+    "menu-detail-hd.png": "5ebc3af131e5fc6d61fe8a2471215f14673a837fd9292808501407146b332ef5",
+    "index.html": "a588e41747971cf75efef10751413bf0ea7416955784bff35b40e840363a5d50",
+    "apercu-autonome.html": "182fe78500c28a51328b9ae62a35d0a96b43f4ba648536b26405d1e69616f4b7",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "00b7984f389806596550d4b87398005251468ef9e1cdf331068f19403dd6473b",
+    "menu-clair-hd.png": "9ecb99c93cdd03e1a48978bb06103102f7ecba0ce78c262426b615187c232f3b"
+  },
+  "sourcesReutilisees": {
+    "docs/refonte-neon/propositions/menu-chaud-anime/icones.js": "ce4e47fb043e8a881b3b78145ed9be233975188d3e64829fbc893b0a1e40daef",
+    "docs/refonte-neon/propositions/menu-chaud-anime/chaud.css": "75a3fa695b8f50552e60f0b4d56403a9d6b47feef3ecc43d8bf9a4d3b964ef49"
+  }
+}

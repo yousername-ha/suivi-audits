@@ -1,0 +1,40 @@
+{
+  "origine": "Captures natives Chromium de maquette indépendante",
+  "applicationModifiee": false,
+  "fichiers": [
+    {
+      "fichier": "centre-light-hd.png",
+      "octets": 1089123,
+      "sha256": "0018dc7a1c94072e593094d909643399a4ad318ac008d504e6d763783e439bf9",
+      "largeur": 3040,
+      "hauteur": 1410
+    },
+    {
+      "fichier": "centre-dark-hd.png",
+      "octets": 1172533,
+      "sha256": "6c3c5d37b1802103f3c3e42900293a9ff920755000b0f2b245d56ad5306e07d9",
+      "largeur": 3040,
+      "hauteur": 1410
+    },
+    {
+      "fichier": "centre-video.mp4",
+      "octets": 1492245,
+      "sha256": "93b817eb37a423e5e0e44acce088968ee4bde467597a50a411ef2545b6eb3781",
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1522,
+            "height": 706,
+            "r_frame_rate": "25/1"
+          }
+        ],
+        "format": {
+          "duration": "9.000000"
+        }
+      }
+    }
+  ]
+}

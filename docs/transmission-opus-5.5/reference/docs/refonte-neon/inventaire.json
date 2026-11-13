@@ -1,0 +1,57 @@
+{
+  "base": "6a59d3f919523fdb2da0987659c190e2ad5bea37",
+  "fichiers_tsx": 162,
+  "pages": [
+    "apps/web/src/pages/Grc.tsx",
+    "apps/web/src/pages/AdminTypesProcessus.tsx",
+    "apps/web/src/pages/AdminFonctions.tsx",
+    "apps/web/src/pages/AdminBackups.tsx",
+    "apps/web/src/pages/AdminImport.tsx",
+    "apps/web/src/pages/AdminModules.tsx",
+    "apps/web/src/pages/Setup.tsx",
+    "apps/web/src/pages/Administration.tsx",
+    "apps/web/src/pages/Documents.tsx",
+    "apps/web/src/pages/ConfigurationGrc.tsx",
+    "apps/web/src/pages/AdminMurs.tsx",
+    "apps/web/src/pages/AdminImportTenacy.tsx",
+    "apps/web/src/pages/AdminNotifications.tsx",
+    "apps/web/src/pages/AdminJournauxTechniques.tsx",
+    "apps/web/src/pages/AdminCalendriers.tsx",
+    "apps/web/src/pages/Home.tsx",
+    "apps/web/src/pages/Login.tsx",
+    "apps/web/src/pages/Exports.tsx",
+    "apps/web/src/pages/AdminAccess.tsx",
+    "apps/web/src/pages/Help.tsx",
+    "apps/web/src/pages/Mur.tsx",
+    "apps/web/src/pages/Settings.tsx",
+    "apps/web/src/pages/Admin.tsx",
+    "apps/web/src/pages/Cartographie.tsx",
+    "apps/web/src/pages/Pilotage.tsx",
+    "apps/web/src/pages/NotFound.tsx",
+    "apps/web/src/pages/AdminOperations.tsx",
+    "apps/web/src/pages/Account.tsx"
+  ],
+  "composants_partages": [
+    "packages/ui/src/graphiques.tsx",
+    "packages/ui/src/index.ts",
+    "packages/ui/src/styles.css",
+    "packages/ui/src/tableau-de-bord.tsx",
+    "packages/ui/src/theme.ts",
+    "packages/ui/src/tokens.ts",
+    "packages/ui/src/neon.css",
+    "packages/ui/src/icones.tsx",
+    "packages/ui/src/components.tsx"
+  ],
+  "styles_metiers": [
+    "apps/web/src/app.css"
+  ],
+  "familles": [
+    "Organisation",
+    "Pilotage",
+    "Risques",
+    "Conformité et audits",
+    "Actions",
+    "Résilience",
+    "Documents"
+  ]
+}

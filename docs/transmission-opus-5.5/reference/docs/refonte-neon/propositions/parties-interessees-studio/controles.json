@@ -1,0 +1,126 @@
+{
+  "scope": "maquette autonome Parties intéressées uniquement",
+  "date": "2026-11-11",
+  "errors": [],
+  "httpErrors": [],
+  "apiRequests": 0,
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 228.328125
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 228.328125
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 257.9375
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 257.9375
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 285.453125
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "pageOverflow": false,
+      "cardFont": 15,
+      "maxCardWidth": 285.453125
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "pageOverflow": false,
+      "cardFont": 16,
+      "maxCardWidth": 378
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "pageOverflow": false,
+      "cardFont": 16,
+      "maxCardWidth": 378
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "pageOverflow": false,
+      "cardFont": 17,
+      "maxCardWidth": 369.328125
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "pageOverflow": false,
+      "cardFont": 17,
+      "maxCardWidth": 369.328125
+    }
+  ],
+  "axe": [
+    {
+      "name": "panorama-portable",
+      "violations": []
+    },
+    {
+      "name": "registre-portable",
+      "violations": []
+    },
+    {
+      "name": "panorama-light",
+      "violations": []
+    },
+    {
+      "name": "fiche-light",
+      "violations": []
+    },
+    {
+      "name": "panorama-dark",
+      "violations": []
+    },
+    {
+      "name": "fiche-dark",
+      "violations": []
+    },
+    {
+      "name": "filtres",
+      "violations": []
+    }
+  ],
+  "interactions": [
+    "Nature et état combinés ; pastilles et suppression ; recherche / et Entrée ; résultat vide et reset ; Échap et retour du focus.",
+    "Fiche de lecture distincte de l’édition ; sauvegarde fictive ; propriétaire et champs non édités préservés ; focus rendu à la carte.",
+    "Nature absente conservée dans À préciser ; défilement limité au registre.",
+    "Animations présentes, pause et réduction des mouvements respectées."
+  ],
+  "applicationUnchanged": "23b33b5ce4fd4cf5eeee0af97c9638b18852b61a"
+}

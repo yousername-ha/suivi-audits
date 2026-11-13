@@ -1,0 +1,30 @@
+{
+  "applicationIntegree": true,
+  "appCommit": "5dd1c68350730f6a59ff204a5e721a482b3125eb",
+  "imagesCompletesNatives": true,
+  "media": [
+    {
+      "fichier": "pestel-light-hd.png",
+      "bytes": 1151500,
+      "sha256": "be8bf3b4507bbba0469f0f826db220124bbb65e2625c5d3a45df44986796b059",
+      "width": 3840,
+      "height": 2904
+    },
+    {
+      "fichier": "pestel-dark-hd.png",
+      "bytes": 1152181,
+      "sha256": "89303ec59696f8c73d98c1a59691bb6bf32eec36ec165026db900d8e5477d574",
+      "width": 3840,
+      "height": 2904
+    },
+    {
+      "fichier": "pestel-integre.mp4",
+      "bytes": 1852381,
+      "sha256": "8a82d95da4e267ce56b092102d1a7a8ad222b6dc4eed5e64a0757db914211d74",
+      "codec_name": "h264",
+      "width": 1592,
+      "height": 1028,
+      "duration": 13.2
+    }
+  ]
+}

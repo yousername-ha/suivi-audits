@@ -1,0 +1,204 @@
+{
+  "generated": "2026-11-04T22:07:41.585Z",
+  "timezone": "Europe/Paris",
+  "sourceCommit": "9742686",
+  "scope": "Maquette autonome. Application inchangée. Aucun build ou test applicatif. Données fictives.",
+  "browser": "151.0.7922.173",
+  "pages": [
+    {
+      "name": "objectifs-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "registre-light-1440",
+      "crop": {
+        "x": 248,
+        "y": 519.34375,
+        "width": 1162,
+        "height": 1029.5
+      }
+    },
+    {
+      "name": "objectifs-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "registre-dark-1440",
+      "crop": {
+        "x": 248,
+        "y": 519.34375,
+        "width": 1162,
+        "height": 1029.5
+      }
+    },
+    {
+      "name": "par-objectif-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "par-objectif-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "documentWidth": 1440,
+      "viewportWidth": 1440,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fiche-indicateur-light",
+      "dialog": {
+        "width": 880,
+        "overflow": "visible",
+        "scroll": false
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1538
+      }
+    },
+    {
+      "name": "fiche-indicateur-dark",
+      "dialog": {
+        "width": 880,
+        "overflow": "visible",
+        "scroll": false
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1538
+      }
+    },
+    {
+      "name": "objectifs-light-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "scale": 2,
+      "documentWidth": 1920,
+      "viewportWidth": 1920,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "objectifs-dark-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "scale": 2,
+      "documentWidth": 1920,
+      "viewportWidth": 1920,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "objectifs-light-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scale": 2,
+      "documentWidth": 390,
+      "viewportWidth": 390,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        84.5078125,
+        185.53125,
+        297.015625
+      ]
+    },
+    {
+      "name": "objectifs-dark-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scale": 2,
+      "documentWidth": 390,
+      "viewportWidth": 390,
+      "internal": [],
+      "overflows": [],
+      "outside": [],
+      "centers": [
+        84.5078125,
+        185.53125,
+        297.015625
+      ]
+    }
+  ],
+  "checks": [
+    "Filtres : 2 atteints, 4 non atteints, 1 non mesuré, 1 cible à définir, 8 au total.",
+    "Fiches indicateur / objectif et fermeture Échap ; aucune écriture serveur.",
+    "Dimensions 720px : aucun débordement ou défilement interne.",
+    "Dimensions 768px : aucun débordement ou défilement interne.",
+    "Dimensions 1024px : aucun débordement ou défilement interne.",
+    "Dimensions 1280px : aucun débordement ou défilement interne.",
+    "Dimensions 1440px : aucun débordement ou défilement interne.",
+    "Dimensions 1920px : aucun débordement ou défilement interne.",
+    "Animation rouge de Non atteint, flèches de tendance et pause ; mouvement réduit respecté dans les captures."
+  ],
+  "errors": [],
+  "requests": []
+}

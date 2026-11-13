@@ -1,0 +1,19 @@
+{
+  "scope": "animation de maquette uniquement",
+  "errors": [],
+  "apiRequests": 0,
+  "crop": {
+    "x": 294,
+    "y": 396,
+    "width": 1250,
+    "height": 484
+  },
+  "movingPoints": true,
+  "maximumPoints": 2,
+  "fixedLinks": true,
+  "pause": true,
+  "resume": true,
+  "filteredSingleStream": true,
+  "resize": true,
+  "reducedMotion": true
+}

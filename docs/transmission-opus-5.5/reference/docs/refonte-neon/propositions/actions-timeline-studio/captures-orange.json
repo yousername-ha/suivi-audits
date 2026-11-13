@@ -1,0 +1,15 @@
+{
+  "dateUTC": "2026-11-11T00:20:09.446Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "file": "animation-a-faire.mp4",
+  "bytes": 1591613,
+  "sha256": "434ec998005e4ac47b73fc0f98d0caa4b82ffd2c9cf54760d24d13858d274a06",
+  "video": {
+    "duration": 11.48,
+    "width": 1510,
+    "height": 748,
+    "decodedFrames": 29,
+    "error": null
+  }
+}

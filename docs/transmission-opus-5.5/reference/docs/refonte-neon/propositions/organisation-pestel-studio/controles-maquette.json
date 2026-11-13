@@ -1,0 +1,276 @@
+{
+  "dateUTC": "2026-11-10T18:52:23.491Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "testsApplicatifs": false,
+  "layouts": [
+    {
+      "name": "light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-politique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-economique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-social",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-technologique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-environnemental",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-legal",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-mobile-legal",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "light-registre-mobile",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-politique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-economique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-social",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-technologique",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-environnemental",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-legal",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-mobile-legal",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "dark-registre-mobile",
+      "width": 390,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    },
+    {
+      "name": "internes-deplies",
+      "width": 1440,
+      "pageOverflow": false,
+      "overflow": [],
+      "scroll": [],
+      "overlap": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-desktop",
+      "violations": []
+    },
+    {
+      "name": "light-mobile",
+      "violations": []
+    },
+    {
+      "name": "light-registre",
+      "violations": []
+    },
+    {
+      "name": "dark-desktop",
+      "violations": []
+    },
+    {
+      "name": "dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "dark-registre",
+      "violations": []
+    }
+  ],
+  "interactions": [
+    "Choix du facteur au clavier et maintien du focus",
+    "Registre de cinq enjeux, recherche et résultat vide",
+    "Classement local répercuté sur les compteurs, le graphique et le registre",
+    "Déclassement local sans perte d’enjeu",
+    "Enjeux internes séparés, sans sélecteur de facteur",
+    "Pause, reprise et préférence de mouvement réduit"
+  ],
+  "errors": [],
+  "requests": []
+}

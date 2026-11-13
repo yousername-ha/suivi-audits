@@ -1,0 +1,58 @@
+{
+  "dateUTC": "2026-11-09T21:34:37.548022+00:00",
+  "edition": "1.0",
+  "commitApplicatifDeReference": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "commitCapturesEtRapports": "c11277f4143c0ba620237b61fad2a36a8d66a8e6",
+  "dossierDocumentaire": true,
+  "codeApplicatifModifie": false,
+  "testsApplicatifsRelances": false,
+  "referencesVerifieesSHA256": 94,
+  "sourcesDeCode": 46,
+  "capturesSelectionnees": 30,
+  "declarationsCSSExtraites": 392,
+  "liensMarkdownCanoniquesVerifies": 25,
+  "renduHTML": {
+    "document": true,
+    "applicationModifiee": false,
+    "images": 23,
+    "liensLocauxVerifies": 41,
+    "dimensions": [
+      {
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "width": 768,
+        "overflow": false
+      },
+      {
+        "width": 1440,
+        "overflow": false
+      }
+    ],
+    "errors": [],
+    "failed": [],
+    "external": []
+  },
+  "pdf": {
+    "pages": 27,
+    "octets": 5816713,
+    "texteExtractible": true,
+    "marqueursVerifies": [
+      "Biseau",
+      "Interfaces",
+      "Dépendances",
+      "620 px",
+      "Vue compacte",
+      "Non atteint",
+      "Mise en œuvre",
+      "Source et publication",
+      "Version B",
+      "Docker Desktop",
+      "Version publiée introuvable"
+    ],
+    "sha256": "fa655633b44012165a0dd7bf76d44ebcb7b3c80471a23e88016c7453de8707fa"
+  },
+  "revueVisuellePDF": "Couverture et palette contrôlées visuellement ; pagination et chapitres vérifiés par extraction de texte.",
+  "rapportsHistoriques": "Conservés tels quels ; certaines anciennes pièces liées ne sont pas incluses dans la sélection."
+}

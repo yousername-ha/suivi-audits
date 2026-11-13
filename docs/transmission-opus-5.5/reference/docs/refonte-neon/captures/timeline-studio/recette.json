@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-11",
+  "timezone": "Europe/Paris",
+  "branche": "codex/refonte-neon-main",
+  "application": "Intégration réelle, API existante, données fictives sur base isolée suivi_interfaces",
+  "testsWeb": 250,
+  "testsUI": 243,
+  "parcoursE2E": {
+    "reussis": 9,
+    "detail": "Sept parcours au premier passage, deux parcours cent actions après correction du liseré de 2 px. Aucun rejeu automatique."
+  },
+  "geometrie": {
+    "dispositions": 24,
+    "debordements": 0
+  },
+  "accessibilite": {
+    "analyses": 4,
+    "violations": 0
+  },
+  "erreursJS": [],
+  "authentification": {
+    "apiDirecteAnonyme": true,
+    "accesDirectSansSession": 401,
+    "postSansCsrf": 403,
+    "fichierSessionNonServi": 403,
+    "profilNormalConnexionConservee": true
+  },
+  "animation": {
+    "periodeSecondes": 2.2,
+    "ombresDistinctesMesurees": 5,
+    "pauseEtReductionMouvements": "Vérifiées par E2E"
+  },
+  "docker": {
+    "imageConstruite": "sha256:389a34c3a9ef509a03ecfd4b3606ad4e4b53ff59698f1c8a1f538a8f133d3e04",
+    "demarrageCompletCompose": "NON VALIDÉ : capacité disque du cloud insuffisante, nettoyage manuel interne refusé par le contrôle automatique",
+    "initialisationEtOuvertureDirecte": "VÉRIFIÉES avec la même entrée applicative, exécutée nativement dans le cloud, sur PostgreSQL 18 dans Docker."
+  },
+  "limites": [
+    "Docker Desktop Windows à essayer par le demandeur",
+    "CI distante et suites API/E2E intégrales non relancées",
+    "Aucun push, aucune publication ni déploiement"
+  ]
+}

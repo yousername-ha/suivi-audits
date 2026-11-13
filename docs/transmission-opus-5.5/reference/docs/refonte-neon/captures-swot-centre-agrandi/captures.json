@@ -1,0 +1,40 @@
+{
+  "applicationIntegree": true,
+  "appCommit": "51d70229aa560cd466a92478b7e0a8d333e03014",
+  "fichiers": [
+    {
+      "fichier": "matrice-light-hd.png",
+      "octets": 1132444,
+      "sha256": "c66f6c3ea9fa95715809eacc16c2d0ba7409c644263250db81fdc1e012af3dea",
+      "largeur": 3180,
+      "hauteur": 1404
+    },
+    {
+      "fichier": "matrice-dark-hd.png",
+      "octets": 1226728,
+      "sha256": "d1fcdd6fc9b4e9469276e3cc362fb9d6f9e3ce715f85adefb5356e3477b4c354",
+      "largeur": 3180,
+      "hauteur": 1404
+    },
+    {
+      "fichier": "animation-integree.mp4",
+      "octets": 1239110,
+      "sha256": "6ae0fa4515c858e4b59d6f03d600e4a1041041c9c3948a89b42e9cf41d3706e2",
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1592,
+            "height": 704,
+            "r_frame_rate": "25/1"
+          }
+        ],
+        "format": {
+          "duration": "12.720000"
+        }
+      }
+    }
+  ]
+}

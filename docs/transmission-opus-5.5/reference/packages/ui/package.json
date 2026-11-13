@@ -1,0 +1,46 @@
+{
+  "name": "@suivi/ui",
+  "version": "6.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Charte graphique : jetons, thème Mantine (clair et sombre), styles statiques et composants communs",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./theme": {
+      "types": "./src/theme.ts",
+      "default": "./src/theme.ts"
+    },
+    "./tokens": {
+      "types": "./src/tokens.ts",
+      "default": "./src/tokens.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./neon.css": "./src/neon.css",
+    "./neon-analytics.css": "./src/neon-analytics.css",
+    "./neon-perimetres.css": "./src/neon-perimetres.css",
+    "./neon-fenetres.css": "./src/neon-fenetres.css",
+    "./neon-objectifs.css": "./src/neon-objectifs.css",
+    "./neon-dda.css": "./src/neon-dda.css",
+    "./neon-referentiels.css": "./src/neon-referentiels.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@mantine/core": "9.7.3",
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@mantine/core": "9.7.3",
+    "@mantine/hooks": "9.7.3",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "vitest": "5.0.5"
+  }
+}

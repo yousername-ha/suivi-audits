@@ -1,0 +1,827 @@
+{
+  "generated": "2026-11-04T21:19:13.616Z",
+  "timezone": "Europe/Paris",
+  "sourceCommit": "6710b802cb25e576265bdc4a2061cb9833d1d9fb",
+  "scope": "Maquette autonome. Aucune exécution ou modification de l’application, aucune API. Données fictives.",
+  "browser": "151.0.7922.173",
+  "pages": [
+    {
+      "name": "graphe-replie-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "false",
+          "x": 584,
+          "y": 376.75,
+          "right": 844,
+          "bottom": 578.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 298,
+          "y": 654.75,
+          "right": 558,
+          "bottom": 856.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 584,
+          "y": 654.75,
+          "right": 844,
+          "bottom": 844.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 870,
+          "y": 654.75,
+          "right": 1130,
+          "bottom": 844.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-deplie-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 404,
+          "y": 366.75,
+          "right": 1024,
+          "bottom": 735.453125,
+          "width": 620,
+          "height": 368.703125,
+          "naturalWidth": 620,
+          "naturalHeight": 369,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 298,
+          "y": 811.75,
+          "right": 558,
+          "bottom": 1013.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 584,
+          "y": 811.75,
+          "right": 844,
+          "bottom": 1001.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 870,
+          "y": 811.75,
+          "right": 1130,
+          "bottom": 1001.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-deplie-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 404,
+          "y": 366.75,
+          "right": 1024,
+          "bottom": 735.453125,
+          "width": 620,
+          "height": 368.703125,
+          "naturalWidth": 620,
+          "naturalHeight": 369,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 298,
+          "y": 811.75,
+          "right": 558,
+          "bottom": 1013.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 584,
+          "y": 811.75,
+          "right": 844,
+          "bottom": 1001.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 870,
+          "y": 811.75,
+          "right": 1130,
+          "bottom": 1001.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "deux-cartes-depliees-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 487.125,
+          "y": 366.75,
+          "right": 983.8295288085938,
+          "bottom": 662.1314697265625,
+          "width": 496.70452880859375,
+          "height": 295.3814697265625,
+          "naturalWidth": 620,
+          "naturalHeight": 369,
+          "toggleCenter": 0,
+          "toggleBottom": 12.81817626953125,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "true",
+          "x": 258,
+          "y": 723.2556762695312,
+          "right": 754.70458984375,
+          "bottom": 986.5917358398438,
+          "width": 496.70458984375,
+          "height": 263.3360595703125,
+          "naturalWidth": 620,
+          "naturalHeight": 329,
+          "toggleCenter": 0.0000152587890625,
+          "toggleBottom": 12.81817626953125,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 775.5341186523438,
+          "y": 723.2556762695312,
+          "right": 983.8295288085938,
+          "bottom": 875.621826171875,
+          "width": 208.29541015625,
+          "height": 152.36614990234375,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 10.414794921875,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 1004.6591186523438,
+          "y": 723.2556762695312,
+          "right": 1212.95458984375,
+          "bottom": 875.621826171875,
+          "width": 208.29547119140625,
+          "height": 152.36614990234375,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0.000030517578125,
+          "toggleBottom": 10.414794921875,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-replie-dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "false",
+          "x": 584,
+          "y": 376.75,
+          "right": 844,
+          "bottom": 578.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 298,
+          "y": 654.75,
+          "right": 558,
+          "bottom": 856.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 584,
+          "y": 654.75,
+          "right": 844,
+          "bottom": 844.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 870,
+          "y": 654.75,
+          "right": 1130,
+          "bottom": 844.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "sous-totaux-deplies-light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 404,
+          "y": 366.75,
+          "right": 1024,
+          "bottom": 790.046875,
+          "width": 620,
+          "height": 423.296875,
+          "naturalWidth": 620,
+          "naturalHeight": 423,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 298,
+          "y": 865.75,
+          "right": 558,
+          "bottom": 1067.9375,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 584,
+          "y": 865.75,
+          "right": 844,
+          "bottom": 1055.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 870,
+          "y": 865.75,
+          "right": 1130,
+          "bottom": 1055.9375,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-deplie-light-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 644,
+          "y": 382.5,
+          "right": 1264,
+          "bottom": 751.203125,
+          "width": 620,
+          "height": 368.703125,
+          "naturalWidth": 620,
+          "naturalHeight": 369,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 538,
+          "y": 827.5,
+          "right": 798,
+          "bottom": 1029.6875,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 824,
+          "y": 827.5,
+          "right": 1084,
+          "bottom": 1017.6875,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 1110,
+          "y": 827.5,
+          "right": 1370,
+          "bottom": 1017.6875,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-deplie-dark-hd",
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 644,
+          "y": 382.5,
+          "right": 1264,
+          "bottom": 751.203125,
+          "width": 620,
+          "height": 368.703125,
+          "naturalWidth": 620,
+          "naturalHeight": 369,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 538,
+          "y": 827.5,
+          "right": 798,
+          "bottom": 1029.6875,
+          "width": 260,
+          "height": 202.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 202,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 824,
+          "y": 827.5,
+          "right": 1084,
+          "bottom": 1017.6875,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 1110,
+          "y": 827.5,
+          "right": 1370,
+          "bottom": 1017.6875,
+          "width": 260,
+          "height": 190.1875,
+          "naturalWidth": 260,
+          "naturalHeight": 190,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-replie-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "false",
+          "x": 57,
+          "y": 494.25,
+          "right": 317,
+          "bottom": 697.640625,
+          "width": 260,
+          "height": 203.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 203,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 73,
+          "y": 723.25,
+          "right": 333,
+          "bottom": 926.640625,
+          "width": 260,
+          "height": 203.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 203,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 73,
+          "y": 952.25,
+          "right": 333,
+          "bottom": 1143.640625,
+          "width": 260,
+          "height": 191.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 191,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 73,
+          "y": 1169.25,
+          "right": 333,
+          "bottom": 1360.640625,
+          "width": 260,
+          "height": 191.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 191,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    },
+    {
+      "name": "graphe-deplie-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "nodes": [
+        {
+          "id": "organisation",
+          "open": "true",
+          "x": 36,
+          "y": -156.75,
+          "right": 354,
+          "bottom": 453.28125,
+          "width": 318,
+          "height": 610.03125,
+          "naturalWidth": 318,
+          "naturalHeight": 610,
+          "toggleCenter": 0,
+          "toggleBottom": 16,
+          "scroll": false
+        },
+        {
+          "id": "soins",
+          "open": "false",
+          "x": 81,
+          "y": 479.25,
+          "right": 341,
+          "bottom": 682.640625,
+          "width": 260,
+          "height": 203.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 203,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "hebergement",
+          "open": "false",
+          "x": 81,
+          "y": 708.25,
+          "right": 341,
+          "bottom": 899.640625,
+          "width": 260,
+          "height": 191.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 191,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        },
+        {
+          "id": "support",
+          "open": "false",
+          "x": 81,
+          "y": 925.25,
+          "right": 341,
+          "bottom": 1116.640625,
+          "width": 260,
+          "height": 191.390625,
+          "naturalWidth": 260,
+          "naturalHeight": 191,
+          "toggleCenter": 0,
+          "toggleBottom": 13,
+          "scroll": false
+        }
+      ],
+      "center": 0,
+      "overlap": [],
+      "outside": 0,
+      "overflow": false
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "comparatif-light-1000",
+      "theme": "light",
+      "scale": 1,
+      "measurements": [
+        {
+          "width": 260,
+          "height": 202.1875,
+          "center": 0,
+          "bottom": 13,
+          "scroll": false
+        },
+        {
+          "width": 620,
+          "height": 368.703125,
+          "center": 0,
+          "bottom": 16,
+          "scroll": false
+        }
+      ]
+    },
+    {
+      "name": "comparatif-dark-1000",
+      "theme": "dark",
+      "scale": 1,
+      "measurements": [
+        {
+          "width": 260,
+          "height": 202.1875,
+          "center": 0,
+          "bottom": 13,
+          "scroll": false
+        },
+        {
+          "width": 620,
+          "height": 368.703125,
+          "center": 0,
+          "bottom": 16,
+          "scroll": false
+        }
+      ]
+    },
+    {
+      "name": "comparatif-light-hd",
+      "theme": "light",
+      "scale": 2,
+      "measurements": [
+        {
+          "width": 260,
+          "height": 202.1875,
+          "center": 0,
+          "bottom": 13,
+          "scroll": false
+        },
+        {
+          "width": 620,
+          "height": 368.703125,
+          "center": 0,
+          "bottom": 16,
+          "scroll": false
+        }
+      ]
+    },
+    {
+      "name": "comparatif-dark-hd",
+      "theme": "dark",
+      "scale": 2,
+      "measurements": [
+        {
+          "width": 260,
+          "height": 202.1875,
+          "center": 0,
+          "bottom": 13,
+          "scroll": false
+        },
+        {
+          "width": 620,
+          "height": 368.703125,
+          "center": 0,
+          "bottom": 16,
+          "scroll": false
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "requests": []
+}

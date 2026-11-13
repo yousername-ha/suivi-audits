@@ -1,0 +1,180 @@
+@import './neon-bibliotheque.css';
+@import './neon-assistant.css';
+@import './neon-taches.css';
+@import './neon-parties.css';
+@import './neon-processus.css';
+@import './neon-fournisseurs.css';
+@import './neon-pestel.css';
+@import './neon-swot.css';
+@import './lignes-fiches.css';
+
+/* Finition globale Neon. Les dimensions, l'ordre des contenus et les interactions restent ceux de l'application.
+   Chargée après les styles métiers pour couvrir aussi les panneaux spécialisés. Palette unique : tokens.ts. */
+:root {
+  --neon-signature: linear-gradient(115deg, var(--neon-violet), var(--neon-rose) 65%, var(--neon-orange));
+  --suivi-ombre: 0 4px 18px color-mix(in srgb, var(--suivi-encre) 7%, transparent);
+  --suivi-ombre-haute: 0 18px 48px color-mix(in srgb, var(--suivi-encre) 16%, transparent);
+  --suivi-turquoise: var(--neon-accent);
+  --suivi-turquoise-nav: var(--neon-accent);
+  --suivi-marine: var(--neon-titre);
+}
+.shell-header {
+  background: var(--suivi-surface);
+  box-shadow: 0 1px 12px color-mix(in srgb, var(--neon-violet) 4%, transparent);
+}
+.shell-header .ui-test-badge {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 15rem;
+  height: auto;
+  padding-block: 0.25rem;
+}
+.ui-test-badge .mantine-Badge-label {
+  white-space: normal;
+}
+.shell-nav {
+  border-inline-end: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.shell-nav .mantine-NavLink-root[data-active] {
+  background: linear-gradient(
+    100deg,
+    var(--neon-doux),
+    color-mix(in srgb, var(--neon-rose) 7%, var(--neon-navigation))
+  );
+  color: var(--neon-accent);
+  box-shadow: inset 3px 0 var(--neon-accent);
+}
+.brand-mark {
+  background: var(--neon-signature);
+  color: var(--mantine-color-white);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--neon-violet) 20%, transparent);
+}
+h1,
+h2,
+h3,
+h4,
+.mantine-Title-root {
+  color: var(--neon-titre);
+}
+.mantine-Card-root,
+.mantine-Paper-root,
+.mantine-Modal-content,
+.mantine-Drawer-content,
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown,
+.mantine-Combobox-dropdown,
+.mantine-Notification-root {
+  background-color: var(--suivi-surface);
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+.mantine-Table-th {
+  background: var(--suivi-surface-douce);
+  color: var(--neon-titre);
+}
+.mantine-Table-tr {
+  --table-border-color: var(--suivi-trait);
+}
+.mantine-Input-input {
+  background-color: var(--suivi-surface);
+}
+.mantine-Tabs-tab[data-active] {
+  color: var(--neon-accent);
+  border-color: var(--neon-accent);
+}
+:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-focus);
+}
+/* Les graphes conservent leurs valeurs, légendes et alternatives tabulaires. */
+.app-main:has(.tdb),
+[data-mantine-color-scheme='dark'] .app-main:has(.tdb),
+[data-mantine-color-scheme='dark'] .app-main:has(.revue-ecran) {
+  background-color: var(--suivi-fond-page);
+  background-image: radial-gradient(
+    ellipse at 95% 0%,
+    color-mix(in srgb, var(--neon-violet) 6%, transparent),
+    transparent 55%
+  );
+}
+.tdb,
+[data-mantine-color-scheme='dark'] .tdb,
+[data-mantine-color-scheme='dark'] .revue-ecran.tdb {
+  --tdb-verre-haut: var(--suivi-surface);
+  --tdb-verre-milieu: var(--suivi-surface);
+  --tdb-verre-bas: var(--suivi-surface);
+  --tdb-verre-bord: var(--suivi-trait);
+  --tdb-lueur: var(--neon-violet);
+  --tdb-rail: color-mix(in srgb, var(--mantine-color-text) 12%, transparent);
+}
+.tdb-dalle,
+.tdb-dalle:hover {
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--suivi-ombre);
+  backdrop-filter: none;
+}
+.tdb-dalle::before,
+.tdb-dalle::after {
+  display: none;
+}
+.tdb-dalle.tdb-phare {
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+  border-color: var(--suivi-trait);
+  border-top: 3px solid var(--neon-violet);
+}
+.tdb-phare-titre,
+.tdb-phare-valeur,
+.tdb-phare-detail {
+  color: var(--mantine-color-text);
+}
+.tdb-phare .mantine-Text-root {
+  color: var(--mantine-color-dimmed);
+}
+.tdb-phare-taux {
+  color: var(--neon-accent);
+}
+/* Retirer le relief métallique : traits nets et lueur discrète sur les tracés en sombre. */
+.tdb-barre-remplie,
+.tdb-jauge-arc-contour,
+.tdb-jauge-curseur {
+  filter: none;
+}
+.tdb-reflet {
+  display: none;
+}
+.tdb-barre-remplie {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: neon-barre var(--suivi-motion-entree) var(--suivi-ease) both;
+}
+@keyframes neon-barre {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+[data-mantine-color-scheme='dark'] .tdb-jauge-arc {
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--neon-violet) 28%, transparent));
+}
+@media (max-width: 36em) {
+  .tdb-barre-remplie {
+    animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .tdb-dalle {
+    box-shadow: none;
+  }
+}

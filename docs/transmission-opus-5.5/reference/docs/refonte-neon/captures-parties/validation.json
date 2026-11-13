@@ -1,0 +1,354 @@
+{
+  "kind": "application compilée dans Docker, données fictives",
+  "layouts": [
+    {
+      "name": "1024-light",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "scrollX": 0,
+      "regionHeight": 304,
+      "regionTop": 395.625,
+      "regionBottom": 699.453125,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.248px"
+    },
+    {
+      "name": "1024-dark",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "scrollX": 0,
+      "regionHeight": 304,
+      "regionTop": 395.625,
+      "regionBottom": 699.453125,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.248px"
+    },
+    {
+      "name": "1280-light",
+      "width": 1280,
+      "height": 800,
+      "pageWidth": 1280,
+      "pageHeight": 800,
+      "scrollX": 0,
+      "regionHeight": 309,
+      "regionTop": 415.34375,
+      "regionBottom": 724.015625,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.76px"
+    },
+    {
+      "name": "1280-dark",
+      "width": 1280,
+      "height": 800,
+      "pageWidth": 1280,
+      "pageHeight": 800,
+      "scrollX": 0,
+      "regionHeight": 309,
+      "regionTop": 415.34375,
+      "regionBottom": 724.015625,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.76px"
+    },
+    {
+      "name": "1366-light",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "scrollX": 0,
+      "regionHeight": 268,
+      "regionTop": 421.875,
+      "regionBottom": 689.5,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.932px"
+    },
+    {
+      "name": "1366-dark",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "scrollX": 0,
+      "regionHeight": 268,
+      "regionTop": 421.875,
+      "regionBottom": 689.5,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "15.932px"
+    },
+    {
+      "name": "1920-light",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "scrollX": 0,
+      "regionHeight": 548,
+      "regionTop": 439.9375,
+      "regionBottom": 988.296875,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "16px"
+    },
+    {
+      "name": "1920-dark",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "scrollX": 0,
+      "regionHeight": 548,
+      "regionTop": 439.9375,
+      "regionBottom": 988.296875,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "16px"
+    },
+    {
+      "name": "2560-light",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "scrollX": 0,
+      "regionHeight": 821,
+      "regionTop": 510.15625,
+      "regionBottom": 1331.53125,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "18.4px"
+    },
+    {
+      "name": "2560-dark",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "scrollX": 0,
+      "regionHeight": 821,
+      "regionTop": 510.15625,
+      "regionBottom": 1331.53125,
+      "axis": true,
+      "collisions": [],
+      "branches": 6,
+      "knownCards": 6,
+      "cardCount": 6,
+      "ports": 2,
+      "titleFont": "18.4px"
+    }
+  ],
+  "axe": [
+    {
+      "name": "liste-portable",
+      "violations": []
+    },
+    {
+      "name": "panorama-light",
+      "violations": []
+    },
+    {
+      "name": "fiche-light",
+      "violations": []
+    },
+    {
+      "name": "panorama-dark",
+      "violations": []
+    },
+    {
+      "name": "fiche-dark",
+      "violations": []
+    }
+  ],
+  "cases": [
+    {
+      "name": "fiche-light",
+      "innerScroll": []
+    },
+    {
+      "name": "fiche-dark",
+      "innerScroll": []
+    },
+    {
+      "name": "animation",
+      "moving": true,
+      "linesStable": true,
+      "pause": true,
+      "resume": true,
+      "reduced": true
+    },
+    {
+      "name": "externes-seuls",
+      "width": 1440,
+      "height": 1000,
+      "pageWidth": 1440,
+      "pageHeight": 1000,
+      "scrollX": 0,
+      "regionHeight": 436,
+      "regionTop": 483.9375,
+      "regionBottom": 919.578125,
+      "axis": true,
+      "collisions": [],
+      "branches": 4,
+      "knownCards": 4,
+      "cardCount": 4,
+      "ports": 1,
+      "titleFont": "16px"
+    },
+    {
+      "name": "externes-une-rangee",
+      "width": 1440,
+      "height": 1000,
+      "pageWidth": 1440,
+      "pageHeight": 1000,
+      "scrollX": 0,
+      "regionHeight": 436,
+      "regionTop": 483.9375,
+      "regionBottom": 919.578125,
+      "axis": true,
+      "collisions": [],
+      "branches": 2,
+      "knownCards": 2,
+      "cardCount": 2,
+      "ports": 1,
+      "titleFont": "16px"
+    },
+    {
+      "name": "droits-interface-simules",
+      "addHidden": true,
+      "modifyHidden": true,
+      "serverRightsRetested": false
+    }
+  ],
+  "errors": [],
+  "http": [],
+  "writes": [],
+  "captures": [
+    {
+      "fichier": "parties-light-hd.png",
+      "octets": 1052616,
+      "sha256": "d60d94a505ff6996116e946ce5c4adc8749cca066c418acaa7786036d2e9033b"
+    },
+    {
+      "fichier": "parties-dark-hd.png",
+      "octets": 902650,
+      "sha256": "a62607a050baf24dff0909c02e4005b4d8e8766f7d3168bf59b84b4679ab0bfb"
+    },
+    {
+      "fichier": "parties-portable.png",
+      "octets": 221562,
+      "sha256": "94d80824312b8377db624de507a1556b9b00ff4aef4755637b99b05554399336"
+    },
+    {
+      "fichier": "liste-portable.png",
+      "octets": 166281,
+      "sha256": "e7aa17b5c1278b62ff8d8d36e81812f3f7ae22af67bdf367d0925a1e73df4d17"
+    },
+    {
+      "fichier": "fiche-light-hd.png",
+      "octets": 1019507,
+      "sha256": "98a051a883776ef5e273d63c6ea9060a14ae9ea0fe3b0123400590b13103ec13"
+    },
+    {
+      "fichier": "fiche-dark-hd.png",
+      "octets": 1059619,
+      "sha256": "8c496657a02c3d926e283368057e61e2d64afb3f79db43b996053bc07106f36d"
+    },
+    {
+      "fichier": "parties-integrees-animees.mp4",
+      "octets": 848599,
+      "sha256": "67525b211f05e52e2a1d781e0e02d3586bc3011bba5fbfbc6b7ae1e5dda1ac14"
+    }
+  ],
+  "video": {
+    "dimensions": [
+      1588,
+      672
+    ],
+    "dureeSecondes": 16,
+    "source": "Capture Chromium native de l’application Docker, recadrée sur la dalle ; aucun écran reconstruit",
+    "decodageComplet": "code 0"
+  },
+  "tests": {
+    "web": {
+      "fichiers": 34,
+      "testsReussis": 271
+    },
+    "ui": {
+      "fichiers": 4,
+      "testsReussis": 243
+    },
+    "e2e": {
+      "testsReussis": 6,
+      "rejeux": 0,
+      "port": "5174",
+      "description": "3 Parties, 1 Contexte, 1 SWOT et 1 PESTEL"
+    }
+  },
+  "baseGit": "041c331",
+  "date": "2026-11-12T00:15:19+01:00",
+  "fuseau": "Europe/Paris",
+  "limites": [
+    "Droits d’interface simulés seulement dans le contrôle complémentaire ; gardes serveur inchangées, pas de nouvelle recette multi-comptes",
+    "Image Docker non reconstruite : frontend copié dans le conteneur de recette existant",
+    "Suite API et suite E2E complète non exécutées",
+    "Docker Desktop Windows, publication et déploiement non exécutés",
+    "Ancien ZIP inchangé"
+  ],
+  "qualite": {
+    "typescriptWeb": 0,
+    "typescriptUI": 0,
+    "typescriptE2E": 0,
+    "prettierComplet": 0,
+    "eslintComplet": 0,
+    "generateurCSSNodeDirect": 0,
+    "viteInterfaces": 0,
+    "compilationFinaleIdentiqueAuxCaptures": true,
+    "artefactsCompiles": 9
+  },
+  "writesScope": "Mutations métier /api/grc et /api/suivi seulement ; préférences de thème du compte fictif exclues."
+}

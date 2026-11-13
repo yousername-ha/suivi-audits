@@ -1,0 +1,1642 @@
+.pestel-studio {
+  color-scheme: light;
+  --page: #f0f1fa;
+  --panel: #fff;
+  --soft: #f8f5fe;
+  --row: #fcfbff;
+  --ink: #25213d;
+  --muted: #71617f;
+  --edge: #d9cee8;
+  --accent: #6950d8;
+  --tint: #eee7fa;
+  --teal: #1c6d5d;
+  --teal-bg: #e0f0e9;
+  --green: #246e50;
+  --green-bg: #acdcbf;
+  --green-ink: #185e42;
+  --amber: #90571f;
+  --amber-bg: #f7cd92;
+  --amber-ink: #7c4712;
+  --red: #b4483b;
+  --red-bg: #edb6a9;
+  --red-ink: #823125;
+  --blue: #37639d;
+  --blue-bg: #e4ecf9;
+  --track: #e9e5f2;
+  --shadow: 0 3px 6px rgb(37 31 85 / 4%), 0 12px 24px -12px rgb(55 44 100 / 18%);
+}
+[data-mantine-color-scheme='dark'] .pestel-studio {
+  color-scheme: dark;
+  --page: #0c1428;
+  --panel: #102039;
+  --soft: #172841;
+  --row: #14243d;
+  --ink: #edf2ff;
+  --muted: #b1bed4;
+  --edge: #3b4b69;
+  --accent: #b39afc;
+  --tint: #343354;
+  --teal: #7bd5b2;
+  --teal-bg: #21433f;
+  --green: #72d1a4;
+  --green-bg: #0d6b3d;
+  --green-ink: #effff4;
+  --amber: #f1ba72;
+  --amber-bg: #9b4a10;
+  --amber-ink: #fff5e8;
+  --red: #ff9b8f;
+  --red-bg: #972d31;
+  --red-ink: #fff5f5;
+  --blue: #99b9f0;
+  --blue-bg: #233a5c;
+  --track: #2d3c56;
+  --shadow: 0 5px 22px rgb(0 0 0 / 15%);
+}
+
+/* PESTEL Studio validé : styles locaux dans la charte graphique commune. */
+.pestel-studio {
+  --tone-p: #37649e;
+  --tone-e: #995916;
+  --tone-s: #087663;
+  --tone-t: #4665bd;
+  --tone-env: #477536;
+  --tone-l: #b7453d;
+  --stage-line: #9aaec6;
+}
+[data-mantine-color-scheme='dark'] .pestel-studio {
+  --tone-p: #8ab7ff;
+  --tone-e: #ffc06d;
+  --tone-s: #69d7b6;
+  --tone-t: #9fb2ff;
+  --tone-env: #a3cc7a;
+  --tone-l: #ff978a;
+  --stage-line: #526887;
+}
+.pestel-studio [data-tone='politique'] {
+  --tone: var(--tone-p);
+}
+.pestel-studio [data-tone='economique'] {
+  --tone: var(--tone-e);
+}
+.pestel-studio [data-tone='social'] {
+  --tone: var(--tone-s);
+}
+.pestel-studio [data-tone='technologique'] {
+  --tone: var(--tone-t);
+}
+.pestel-studio [data-tone='environnemental'] {
+  --tone: var(--tone-env);
+}
+.pestel-studio [data-tone='legal'] {
+  --tone: var(--tone-l);
+}
+.pestel-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--stage-line);
+  border-radius: 13px;
+  background: linear-gradient(112deg, var(--panel), var(--soft));
+  box-shadow: var(--shadow);
+  margin-bottom: 19px;
+  padding: 18px 4px;
+}
+.pestel-overview > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 23px;
+  border-right: 1px solid var(--edge);
+  color: var(--blue);
+  min-width: 0;
+}
+.pestel-overview > div:last-child {
+  border-right: 0;
+  color: var(--muted);
+}
+.pestel-overview .pestel-metric-green {
+  color: var(--teal);
+}
+.pestel-overview .pestel-metric-amber {
+  color: var(--amber);
+}
+.pestel-metric-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 39px;
+  height: 41px;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 45%, var(--edge));
+  border-radius: 10px;
+  background: linear-gradient(145deg, var(--panel), color-mix(in srgb, currentColor 9%, var(--panel)));
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 20%),
+    0 3px 6px rgb(31 45 75 / 5%);
+}
+.pestel-metric-icon .pestel-icon {
+  width: 21px;
+  height: 21px;
+}
+.pestel-overview b {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 670;
+  font-variant-numeric: tabular-nums;
+}
+.pestel-overview small {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.pestel-stage {
+  position: relative;
+  border: 1px solid var(--stage-line);
+  border-radius: 19px 5px 19px 5px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 23px 25px 18px;
+  isolation: isolate;
+}
+.pestel-stage:before,
+.pestel-stage:after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  width: 22px;
+  height: 3px;
+  background: var(--tone-s);
+  left: 23px;
+  top: -2px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--tone-s) 25%, transparent);
+}
+.pestel-stage:after {
+  top: auto;
+  left: auto;
+  bottom: -2px;
+  right: 23px;
+  background: var(--tone-t);
+}
+.pestel-stage-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--edge);
+}
+.pestel-eyebrow {
+  text-transform: uppercase;
+  display: block;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.pestel-stage-heading h2 {
+  font-size: 18px;
+  font-weight: 650;
+  margin-top: 5px;
+}
+.pestel-stage-heading .pestel-button {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 55%, var(--edge));
+  font-size: 9px;
+}
+.pestel-explorer {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.9fr) minmax(0, 1.1fr);
+  gap: 29px;
+  align-items: center;
+  padding: 20px 0;
+}
+.pestel-graph-panel {
+  min-width: 0;
+}
+.pestel-constellation {
+  position: relative;
+  width: min(100%, 440px);
+  aspect-ratio: 440/404;
+  margin: auto;
+  background-image: radial-gradient(var(--edge) 0.7px, transparent 0.7px);
+  background-size: 17px 17px;
+  border-radius: 50%;
+  isolation: isolate;
+}
+.pestel-connections {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: -1;
+}
+.pestel-orbit {
+  fill: none;
+  stroke: var(--stage-line);
+  stroke-width: 0.7;
+  stroke-dasharray: 2 6;
+  opacity: 0.6;
+}
+.pestel-orbit-inner {
+  fill: none;
+  stroke: var(--edge);
+  stroke-width: 0.8;
+}
+.pestel-ray {
+  fill: none;
+  stroke: var(--tone);
+  opacity: 0.23;
+  stroke-width: 1.5;
+}
+.pestel-flow {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2;
+  stroke-dasharray: 3 138;
+  stroke-linecap: round;
+  opacity: 0.7;
+  animation: pestel-flow 5s linear infinite;
+  animation-delay: var(--delay);
+}
+.pestel-current .pestel-ray {
+  opacity: 0.6;
+  stroke-width: 2;
+}
+.pestel-current .pestel-flow {
+  stroke-width: 3;
+  opacity: 1;
+}
+.pestel-context-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 129px;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--teal) 65%, var(--stage-line));
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--panel), color-mix(in srgb, var(--teal) 13%, var(--panel)));
+  box-shadow:
+    0 0 0 7px var(--panel),
+    0 0 0 8px var(--edge),
+    inset 0 1px rgb(255 255 255 / 20%),
+    0 7px 14px rgb(28 67 68 / 9%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.pestel-context-hub > span {
+  color: var(--teal);
+}
+.pestel-context-hub .pestel-icon {
+  width: 24px;
+  height: 24px;
+}
+.pestel-context-hub strong {
+  font-size: 32px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+.pestel-context-hub small {
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.pestel-context-hub i {
+  position: absolute;
+  inset: -13px;
+  border: 1px dashed color-mix(in srgb, var(--teal) 40%, var(--edge));
+  border-radius: 50%;
+  animation: pestel-orbit 42s linear infinite;
+}
+.pestel-factor-node {
+  position: absolute;
+  left: calc(50% + cos(calc(-90deg + var(--pestel-index) * 360deg / var(--pestel-count))) * 32.272727%);
+  top: calc(50% + sin(calc(-90deg + var(--pestel-index) * 360deg / var(--pestel-count))) * 35.148515%);
+  transform: translate(-50%, -50%);
+  width: 117px;
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 8px;
+  border: 1px solid color-mix(in srgb, var(--tone) 55%, var(--edge));
+  border-radius: 12px 5px 12px 5px;
+  background: linear-gradient(145deg, var(--panel), color-mix(in srgb, var(--tone) 7%, var(--panel)));
+  color: var(--tone);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 25%),
+    0 3px 6px rgb(21 41 70 / 7%);
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+  z-index: 1;
+}
+.pestel-node-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.pestel-node-top .pestel-icon {
+  width: 20px;
+  height: 20px;
+}
+.pestel-node-top b {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.pestel-factor-node strong {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pestel-factor-node[aria-pressed='true'] {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tone) 17%, var(--panel)),
+    color-mix(in srgb, var(--tone) 7%, var(--panel))
+  );
+  border: 2px solid var(--tone);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--tone) 9%, transparent),
+    0 5px 13px color-mix(in srgb, var(--tone) 13%, transparent);
+}
+.pestel-factor-node:hover,
+.pestel-factor-node:focus-visible {
+  transform: translate(-50%, calc(-50% - 4px));
+  border-color: var(--tone);
+  box-shadow: 0 6px 13px color-mix(in srgb, var(--tone) 20%, transparent);
+}
+.pestel-factor-node:hover .pestel-icon,
+.pestel-factor-node:focus-visible .pestel-icon {
+  animation: pestel-icon-lift 1.8s ease-in-out infinite;
+}
+.pestel-graph-caption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.pestel-graph-caption .pestel-icon {
+  width: 13px;
+  height: 13px;
+}
+.pestel-factor-focus {
+  min-width: 0;
+  background: linear-gradient(130deg, color-mix(in srgb, var(--tone) 8%, var(--panel)), var(--panel) 68%);
+  border: 1px solid color-mix(in srgb, var(--tone) 48%, var(--edge));
+  border-radius: 15px;
+  box-shadow:
+    inset 3px 0 var(--tone),
+    0 6px 13px rgb(26 43 75 / 4%);
+  padding: 22px;
+}
+.pestel-factor-focus > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--tone) 25%, var(--edge));
+}
+.pestel-focus-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--tone) 55%, var(--edge));
+  border-radius: 11px;
+  background: linear-gradient(145deg, var(--panel), color-mix(in srgb, var(--tone) 16%, var(--panel)));
+  color: var(--tone);
+  box-shadow: 0 3px 6px rgb(27 34 73 / 8%);
+}
+.pestel-focus-icon .pestel-icon {
+  width: 23px;
+  height: 23px;
+}
+.pestel-factor-heading {
+  min-width: 0;
+}
+.pestel-factor-heading .pestel-eyebrow {
+  font-size: 7px;
+}
+.pestel-factor-heading h2 {
+  color: var(--tone);
+  font-size: 23px;
+  line-height: 1.3;
+  margin-top: 5px;
+}
+.pestel-focus-count {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--tone);
+  font-size: 9px;
+  white-space: nowrap;
+}
+.pestel-focus-count b {
+  font-size: 23px;
+  font-weight: 650;
+}
+.pestel-focus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding-top: 17px;
+  min-height: 243px;
+}
+.pestel-focus-issue {
+  padding: 15px 14px;
+  border: 1px solid color-mix(in srgb, var(--tone) 23%, var(--edge));
+  border-radius: 10px;
+  background: var(--panel);
+  min-width: 0;
+  box-shadow: 0 2px 5px rgb(28 36 65 / 3%);
+}
+.pestel-issue-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.pestel-issue-pin {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 27px;
+  flex: none;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 9%, var(--panel));
+  border-radius: 6px;
+}
+.pestel-issue-pin .pestel-icon {
+  width: 15px;
+  height: 15px;
+}
+.pestel-issue-title h3 {
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 610;
+  letter-spacing: -0.015em;
+}
+.pestel-focus-issue > p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.pestel-issue-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+.pestel-process-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.pestel-process-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--muted);
+  min-width: 0;
+}
+.pestel-process-tag .pestel-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--teal);
+  flex: none;
+}
+.pestel-process-tag b {
+  font-size: 8px;
+  padding: 2px 4px;
+  color: var(--teal);
+  border-radius: 4px;
+  background: var(--teal-bg);
+  flex: none;
+}
+.pestel-process-tag > span {
+  overflow-wrap: anywhere;
+}
+.pestel-assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 0 137px;
+  font-size: 8px;
+  color: var(--muted);
+}
+.pestel-assignment .mantine-Select-input {
+  width: 100%;
+  font-size: 9px;
+  font-weight: 550;
+  border-color: color-mix(in srgb, var(--tone, var(--amber)) 35%, var(--edge));
+  background: var(--soft);
+  padding: 7px 6px;
+}
+.pestel-factor-focus > footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 8px;
+  margin-top: 18px;
+}
+.pestel-factor-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+.pestel-no-process {
+  color: var(--muted);
+  font-size: 9px;
+}
+.pestel-factor-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 25px 8px;
+  gap: 12px;
+  color: var(--muted);
+  flex: 1;
+}
+.pestel-factor-empty > .pestel-icon {
+  width: 33px;
+  height: 33px;
+  color: var(--tone);
+}
+.pestel-factor-empty h3 {
+  font-size: 14px;
+  color: var(--ink);
+}
+.pestel-factor-empty p {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.pestel-factor-empty .pestel-button {
+  margin-top: 6px;
+}
+.pestel-factor-legend {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  border-top: 1px solid var(--edge);
+  padding-top: 15px;
+}
+.pestel-factor-legend button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 9px;
+  transition: transform 0.2s;
+}
+.pestel-factor-legend button > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 24px;
+  border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--edge));
+  border-radius: 5px;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 7%, var(--panel));
+  font-size: 11px;
+  font-weight: 600;
+  flex: none;
+}
+.pestel-factor-legend b {
+  color: var(--tone);
+  margin-left: auto;
+  font-size: 10px;
+}
+.pestel-factor-legend button[aria-pressed='true'] {
+  border-color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 9%, var(--panel));
+  color: var(--tone);
+}
+.pestel-factor-legend button:hover {
+  transform: translateY(-2px);
+  border-color: var(--tone);
+}
+.pestel-unclassified {
+  margin-top: 17px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 17px 21px;
+  border: 1px solid color-mix(in srgb, var(--amber) 47%, var(--edge));
+  border-radius: 12px;
+  box-shadow:
+    inset 3px 0 var(--amber),
+    var(--shadow);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--amber) 9%, var(--panel)), var(--panel) 75%);
+}
+.pestel-unclassified > header {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  flex: 0 0 250px;
+}
+.pestel-unclassified .pestel-metric-icon {
+  color: var(--amber);
+  width: 33px;
+  height: 35px;
+}
+.pestel-unclassified .pestel-metric-icon .pestel-icon {
+  width: 18px;
+  height: 18px;
+}
+.pestel-unclassified .pestel-eyebrow {
+  font-size: 7px;
+  color: var(--amber);
+}
+.pestel-unclassified h2 {
+  font-size: 13px;
+  margin-top: 5px;
+  font-weight: 600;
+}
+.pestel-unclassified h2 > b {
+  font-size: 11px;
+  color: var(--amber);
+  border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--edge));
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin-left: 4px;
+}
+.pestel-unknown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid var(--edge);
+  padding-left: 22px;
+}
+.pestel-unknown-row h3 {
+  font-size: 12px;
+  font-weight: 580;
+  margin-bottom: 6px;
+}
+.pestel-unknown-row .pestel-assignment {
+  flex-basis: 145px;
+  --tone: var(--amber);
+}
+.pestel-all-classified {
+  color: var(--teal);
+  font-size: 11px;
+}
+.pestel-internal-shelf {
+  margin-top: 13px;
+  border: 1px solid var(--stage-line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.pestel-internal-shelf > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 20px;
+  text-align: left;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+}
+.pestel-internal-shelf .pestel-metric-icon {
+  width: 31px;
+  height: 33px;
+  color: var(--teal);
+}
+.pestel-internal-shelf .pestel-metric-icon .pestel-icon {
+  width: 17px;
+  height: 17px;
+}
+.pestel-internal-shelf strong {
+  display: block;
+  font-weight: 600;
+  font-size: 12px;
+}
+.pestel-internal-shelf strong b {
+  font-size: 10px;
+  color: var(--teal);
+  background: var(--teal-bg);
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.pestel-internal-shelf small {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.pestel-shelf-plus {
+  margin-left: auto;
+  color: var(--blue);
+  font-size: 22px;
+}
+.pestel-internal-shelf > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 0 20px 18px;
+}
+.pestel-internal-shelf article {
+  border-top: 1px solid var(--edge);
+  padding-top: 13px;
+  min-width: 0;
+}
+.pestel-internal-shelf article h3 {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.pestel-internal-shelf article p {
+  font-size: 10px;
+  color: var(--muted);
+}
+.pestel-registry {
+  margin-top: 17px;
+  scroll-margin-top: 20px;
+}
+.pestel-registry > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.pestel-registry h2 {
+  font-size: 18px;
+  margin-top: 5px;
+}
+.pestel-registry h2 span {
+  font-size: 12px;
+  color: var(--blue);
+  margin-left: 7px;
+}
+.pestel-registry > header > label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--muted);
+  min-width: 0;
+}
+.pestel-registry input[type='search'] {
+  width: 260px;
+  font-size: 11px;
+  background: var(--soft);
+}
+.pestel-registry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 15px 0;
+  border-top: 1px solid var(--edge);
+}
+.pestel-registry-row > div {
+  min-width: 0;
+}
+.pestel-registry-row h3 {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.pestel-registry-row .pestel-assignment {
+  flex-basis: 190px;
+  flex-shrink: 0;
+}
+.pestel-registry > p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+.pestel-methodology {
+  margin: 17px 1px 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+.pestel-methodology summary {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  cursor: pointer;
+}
+.pestel-methodology summary .pestel-icon {
+  width: 14px;
+  height: 14px;
+}
+.pestel-methodology summary > span {
+  margin-left: auto;
+  font-size: 8px;
+}
+.pestel-methodology p {
+  padding: 13px 0;
+  max-width: 1000px;
+  line-height: 1.8;
+  font-size: 10px;
+}
+.pestel-page-footer {
+  margin-top: 22px;
+}
+@keyframes pestel-flow {
+  to {
+    stroke-dashoffset: -141;
+  }
+}
+@keyframes pestel-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pestel-icon-lift {
+  50% {
+    transform: translateY(-2px);
+  }
+}
+.pestel-studio[data-motion='off'] .pestel-flow,
+.pestel-studio[data-motion='off'] .pestel-context-hub i,
+.pestel-studio[data-motion='off'] .pestel-icon {
+  animation-play-state: paused;
+}
+@media (min-width: 1800px) {
+  .pestel-stage {
+    padding: 25px 29px 19px;
+  }
+  .pestel-stage-heading h2 {
+    font-size: 20px;
+  }
+  .pestel-explorer {
+    gap: 45px;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    padding: 24px 0;
+  }
+  .pestel-constellation {
+    width: 440px;
+  }
+  .pestel-factor-focus {
+    padding: 25px;
+  }
+  .pestel-focus-list {
+    min-height: 261px;
+  }
+  .pestel-issue-title h3 {
+    font-size: 13px;
+  }
+  .pestel-factor-heading h2 {
+    font-size: 26px;
+  }
+  .pestel-factor-legend button {
+    font-size: 10px;
+    padding: 9px 12px;
+  }
+  .pestel-process-tag {
+    font-size: 10px;
+  }
+  .pestel-overview small {
+    font-size: 11px;
+  }
+  .pestel-unclassified h2 {
+    font-size: 14px;
+  }
+  .pestel-unknown-row h3 {
+    font-size: 13px;
+  }
+}
+@media (max-width: 1300px) {
+  .pestel-overview > div {
+    padding-inline: 17px;
+    gap: 10px;
+  }
+  .pestel-overview small {
+    font-size: 9px;
+  }
+  .pestel-explorer {
+    grid-template-columns: minmax(285px, 0.85fr) minmax(0, 1.15fr);
+    gap: 20px;
+  }
+  .pestel-stage {
+    padding: 20px 18px 16px;
+  }
+  .pestel-factor-focus {
+    padding: 18px;
+  }
+  .pestel-factor-heading h2 {
+    font-size: 21px;
+  }
+  .pestel-factor-focus > header {
+    gap: 9px;
+  }
+  .pestel-focus-icon {
+    width: 34px;
+    height: 37px;
+  }
+  .pestel-focus-icon .pestel-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .pestel-focus-count {
+    font-size: 8px;
+  }
+  .pestel-focus-count b {
+    font-size: 20px;
+  }
+  .pestel-factor-legend {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pestel-issue-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pestel-assignment {
+    flex-basis: auto;
+  }
+  .pestel-focus-list {
+    min-height: 270px;
+  }
+  .pestel-unclassified > header {
+    flex-basis: 220px;
+  }
+  .pestel-unknown-row {
+    gap: 13px;
+    padding-left: 16px;
+  }
+}
+@media (max-width: 1040px) {
+  .pestel-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 19px 0;
+  }
+  .pestel-overview > div:nth-child(2) {
+    border-right: 0;
+  }
+  .pestel-explorer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 23px;
+  }
+  .pestel-constellation {
+    width: min(100%, 440px);
+  }
+  .pestel-factor-focus {
+    padding: 21px;
+  }
+  .pestel-focus-list {
+    min-height: 0;
+  }
+  .pestel-issue-bottom {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .pestel-assignment {
+    flex: 0 0 150px;
+  }
+  .pestel-unclassified {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .pestel-unclassified > header {
+    flex-basis: auto;
+  }
+  .pestel-unknown-row {
+    padding: 15px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--edge);
+  }
+  .pestel-unknown-row .pestel-assignment {
+    flex: 0 0 150px;
+  }
+  .pestel-internal-shelf > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pestel-registry input[type='search'] {
+    width: 220px;
+  }
+}
+@media (max-width: 760px) {
+  .pestel-overview {
+    padding: 15px 0;
+    gap: 19px 0;
+    margin-bottom: 15px;
+  }
+  .pestel-overview > div {
+    padding-inline: 13px;
+    gap: 8px;
+  }
+  .pestel-metric-icon {
+    width: 28px;
+    height: 31px;
+    border-radius: 8px;
+  }
+  .pestel-metric-icon .pestel-icon {
+    width: 16px;
+    height: 16px;
+  }
+  .pestel-overview b {
+    font-size: 25px;
+  }
+  .pestel-overview small {
+    font-size: 8px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .pestel-stage {
+    padding: 16px 13px 14px;
+    border-radius: 15px 4px 15px 4px;
+  }
+  .pestel-stage-heading {
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  .pestel-stage-heading h2 {
+    font-size: 17px;
+  }
+  .pestel-stage-heading .pestel-button {
+    font-size: 8px;
+    padding: 6px 8px;
+  }
+  .pestel-eyebrow {
+    font-size: 7px;
+  }
+  .pestel-explorer {
+    padding: 20px 0 16px;
+    gap: 23px;
+  }
+  .pestel-factor-node {
+    width: 98px;
+    min-height: 62px;
+    padding: 8px 6px;
+  }
+  .pestel-factor-node strong {
+    font-size: 8px;
+  }
+  .pestel-node-top {
+    gap: 18px;
+  }
+  .pestel-node-top b {
+    font-size: 15px;
+  }
+  .pestel-node-top .pestel-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .pestel-context-hub {
+    width: 97px;
+    gap: 2px;
+  }
+  .pestel-context-hub strong {
+    font-size: 27px;
+  }
+  .pestel-context-hub .pestel-icon {
+    width: 21px;
+    height: 21px;
+  }
+  .pestel-context-hub small {
+    font-size: 6px;
+  }
+  .pestel-context-hub i {
+    inset: -12px;
+  }
+  .pestel-graph-caption {
+    font-size: 8px;
+    gap: 6px;
+    margin-top: 11px;
+  }
+  .pestel-graph-caption .pestel-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .pestel-factor-focus {
+    padding: 17px 14px;
+  }
+  .pestel-factor-heading h2 {
+    font-size: 21px;
+  }
+  .pestel-factor-heading .pestel-eyebrow {
+    font-size: 6px;
+  }
+  .pestel-factor-focus > header {
+    gap: 9px;
+    padding-bottom: 15px;
+  }
+  .pestel-focus-icon {
+    width: 33px;
+    height: 35px;
+  }
+  .pestel-focus-count {
+    font-size: 8px;
+  }
+  .pestel-focus-count b {
+    font-size: 21px;
+  }
+  .pestel-focus-list {
+    gap: 11px;
+    padding-top: 14px;
+  }
+  .pestel-focus-issue {
+    padding: 13px 11px;
+  }
+  .pestel-issue-title h3 {
+    font-size: 12px;
+  }
+  .pestel-issue-bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .pestel-assignment {
+    flex-basis: auto;
+  }
+  .pestel-assignment span {
+    font-size: 8px;
+  }
+  .pestel-assignment .mantine-Select-input {
+    font-size: 11px;
+    padding: 9px 8px;
+  }
+  .pestel-process-tag {
+    font-size: 9px;
+  }
+  .pestel-factor-focus > footer {
+    font-size: 7px;
+    line-height: 1.6;
+    margin-top: 15px;
+  }
+  .pestel-factor-legend {
+    gap: 6px;
+  }
+  .pestel-factor-legend button {
+    font-size: 7px;
+    padding: 7px 5px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .pestel-factor-legend button > span {
+    width: 17px;
+    height: 20px;
+    font-size: 10px;
+  }
+  .pestel-factor-legend b {
+    font-size: 9px;
+  }
+  .pestel-unclassified {
+    padding: 16px;
+    gap: 12px;
+  }
+  .pestel-unclassified h2 {
+    font-size: 13px;
+  }
+  .pestel-unknown-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pestel-unknown-row .pestel-assignment {
+    flex-basis: auto;
+  }
+  .pestel-unknown-row h3 {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .pestel-internal-shelf > summary {
+    padding: 14px 15px;
+    gap: 10px;
+  }
+  .pestel-internal-shelf small {
+    font-size: 8px;
+    line-height: 1.7;
+  }
+  .pestel-internal-shelf strong {
+    font-size: 11px;
+  }
+  .pestel-internal-shelf .pestel-metric-icon {
+    width: 28px;
+    height: 30px;
+  }
+  .pestel-internal-shelf > div {
+    padding-inline: 15px;
+  }
+  .pestel-registry > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pestel-registry input[type='search'] {
+    width: 100%;
+  }
+  .pestel-registry-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .pestel-registry-row .pestel-assignment {
+    flex-basis: auto;
+  }
+  .pestel-methodology {
+    font-size: 8px;
+    line-height: 1.7;
+  }
+  .pestel-methodology summary {
+    gap: 6px;
+  }
+  .pestel-methodology summary > span {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pestel-studio:not([data-motion='on']) .pestel-flow,
+  .pestel-studio:not([data-motion='on']) .pestel-context-hub i,
+  .pestel-studio:not([data-motion='on']) .pestel-icon {
+    animation-play-state: paused;
+  }
+  .pestel-studio button {
+    transition: none !important;
+  }
+}
+/* Le centre et les six commandes gardent leur réserve lorsque le graphe se resserre. */
+.pestel-constellation {
+  container-type: inline-size;
+}
+.pestel-context-hub {
+  width: 27cqw;
+}
+.pestel-factor-node {
+  width: 26.6cqw;
+}
+.pestel-factor-node strong {
+  font-size: clamp(7px, 2.27cqw, 10px);
+}
+.pestel-context-hub strong {
+  font-size: clamp(25px, 7.27cqw, 32px);
+}
+@media (max-width: 760px) {
+  .pestel-factor-node strong {
+    font-size: 8px;
+  }
+  .pestel-context-hub strong {
+    font-size: 27px;
+  }
+}
+.pestel-studio {
+  color: var(--ink);
+  line-height: 1.5;
+  min-width: 0;
+}
+.pestel-studio button,
+.pestel-studio input {
+  font-family: inherit;
+}
+.pestel-factor-node,
+.pestel-factor-legend button {
+  line-height: 1.5;
+}
+.pestel-studio h2,
+.pestel-studio h3,
+.pestel-studio p {
+  margin: 0;
+}
+.pestel-studio h2,
+.pestel-studio h3 {
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+.pestel-studio [hidden] {
+  display: none !important;
+}
+.pestel-studio .pestel-stage-heading h2 {
+  margin-top: 5px;
+  color: var(--ink);
+}
+.pestel-studio .pestel-factor-heading h2 {
+  margin-top: 5px;
+  color: var(--tone);
+}
+.pestel-studio .pestel-unclassified h2 {
+  margin-top: 5px;
+  color: var(--ink);
+}
+.pestel-studio .pestel-registry h2 {
+  margin-top: 5px;
+  color: var(--ink);
+}
+.pestel-studio .pestel-internal-shelf h3,
+.pestel-studio .pestel-issue-title h3,
+.pestel-studio .pestel-unknown-row h3,
+.pestel-studio .pestel-registry-row h3 {
+  color: var(--ink);
+}
+.pestel-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+  flex: none;
+}
+.pestel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 540;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 3px rgb(38 22 78 / 4%);
+}
+.pestel-button .pestel-icon {
+  width: 14px;
+  height: 14px;
+}
+.pestel-button:hover {
+  border-color: var(--accent);
+  background: var(--soft);
+}
+.pestel-button.pestel-small {
+  font-size: 10px;
+  padding: 6px 9px;
+}
+.pestel-studio button:focus-visible,
+.pestel-studio summary:focus-visible,
+.pestel-studio [tabindex='-1']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.pestel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.pestel-status {
+  font-size: 11px;
+  color: var(--teal);
+}
+.pestel-assignment .mantine-Select-root {
+  min-width: 0;
+  width: 100%;
+}
+.pestel-studio .pestel-assignment .mantine-Select-label {
+  font-size: 9px;
+  font-weight: 450;
+  color: var(--muted);
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+.pestel-studio .pestel-assignment .mantine-Select-input {
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink);
+  height: auto;
+  min-height: 33px;
+  padding-block: 6px;
+  background: var(--soft);
+}
+.pestel-static-factor {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  flex: none;
+  font-size: 10px;
+  color: var(--tone, var(--muted));
+  padding: 6px 9px;
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+  background: var(--soft);
+}
+.pestel-studio .pestel-focus-issue > p,
+.pestel-issue-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin-top: 8px !important;
+}
+.pestel-unknown-rows {
+  flex: 1;
+  min-width: 0;
+}
+.pestel-unknown-row > div {
+  min-width: 0;
+}
+.pestel-unknown-row + .pestel-unknown-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--edge);
+}
+.pestel-unclassified > header {
+  align-self: flex-start;
+}
+.pestel-unknown-row h3,
+.pestel-registry-row h3 {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pestel-internal-shelf > summary {
+  cursor: pointer;
+  list-style: none;
+  font: inherit;
+  color: var(--ink);
+}
+.pestel-internal-shelf > summary::-webkit-details-marker {
+  display: none;
+}
+.pestel-shelf-plus:before {
+  content: '+';
+}
+.pestel-internal-shelf[open] .pestel-shelf-plus:before {
+  content: '−';
+}
+.pestel-internal-shelf article p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+.pestel-internal-shelf article h3 {
+  white-space: pre-wrap;
+}
+.pestel-registry {
+  padding: 21px;
+  border: 1px solid var(--edge);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.pestel-registry input[type='search'] {
+  background: var(--soft);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  min-width: 0;
+}
+.pestel-registry > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--edge);
+  padding-top: 15px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.pestel-studio .pestel-methodology p {
+  padding: 13px 0;
+  line-height: 1.8;
+}
+.pestel-source-empty {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 15px !important;
+}
+.pestel-factor-legend button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pestel-constellation[data-count='0'] {
+  --pestel-count: 1;
+}
+.pestel-constellation[data-count='1'] {
+  --pestel-count: 1;
+}
+.pestel-constellation[data-count='2'] {
+  --pestel-count: 2;
+}
+.pestel-constellation[data-count='3'] {
+  --pestel-count: 3;
+}
+.pestel-constellation[data-count='4'] {
+  --pestel-count: 4;
+}
+.pestel-constellation[data-count='5'] {
+  --pestel-count: 5;
+}
+.pestel-constellation[data-count='6'] {
+  --pestel-count: 6;
+}
+.pestel-factor-node[data-index='0'] {
+  --pestel-index: 0;
+}
+.pestel-factor-node[data-index='1'] {
+  --pestel-index: 1;
+}
+.pestel-factor-node[data-index='2'] {
+  --pestel-index: 2;
+}
+.pestel-factor-node[data-index='3'] {
+  --pestel-index: 3;
+}
+.pestel-factor-node[data-index='4'] {
+  --pestel-index: 4;
+}
+.pestel-factor-node[data-index='5'] {
+  --pestel-index: 5;
+}
+.pestel-constellation-dense {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  aspect-ratio: auto;
+  background: none;
+  border-radius: 0;
+  padding: 16px 0;
+}
+.pestel-constellation-dense .pestel-context-hub {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  grid-column: 1/-1;
+  justify-self: center;
+  width: 129px;
+  margin: 5px auto 20px;
+}
+.pestel-constellation-dense .pestel-factor-node {
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  min-width: 0;
+}
+.pestel-constellation-dense .pestel-factor-node strong {
+  white-space: normal;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.pestel-constellation-dense .pestel-factor-node:hover,
+.pestel-constellation-dense .pestel-factor-node:focus-visible {
+  transform: translateY(-3px);
+}
+@media (max-width: 760px) {
+  .pestel-registry {
+    padding: 16px 13px;
+  }
+  .pestel-registry > footer {
+    font-size: 9px;
+  }
+  .pestel-unknown-rows {
+    width: 100%;
+  }
+  .pestel-toolbar {
+    gap: 8px;
+  }
+  .pestel-status {
+    font-size: 9px;
+  }
+  .pestel-studio .pestel-assignment .mantine-Select-input {
+    font-size: 11px;
+    min-height: 35px;
+  }
+  .pestel-constellation-dense .pestel-context-hub {
+    width: 115px;
+  }
+  .pestel-constellation-dense .pestel-factor-node strong {
+    font-size: 10px;
+  }
+}

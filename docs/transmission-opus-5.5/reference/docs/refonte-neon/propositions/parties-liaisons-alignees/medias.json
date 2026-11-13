@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-11",
+  "scope": "captures natives de maquette",
+  "media": [
+    {
+      "file": "complet-dark.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 244121,
+      "sha256": "5ba23629da5c5dbd5e3eb9f1ae263212dd5f21845290a52a2e447ce67b1b4ea9"
+    },
+    {
+      "file": "complet-light.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 242249,
+      "sha256": "08cbf7d07f977f0890e3f23b1cfd974c1c3155f56df55ec09bca89bab9c23caa"
+    },
+    {
+      "file": "detail-dark.png",
+      "width": 1340,
+      "height": 487,
+      "bytes": 137585,
+      "sha256": "092d3024c1666498a1a42b57c00955cdcaaf478581b8a38390a76aab177d15d3"
+    },
+    {
+      "file": "detail-light.png",
+      "width": 1340,
+      "height": 487,
+      "bytes": 135198,
+      "sha256": "56953f06bca43858a4fa66ed1665ead6a2d51bae5737ae08b3ed41a79114522b"
+    },
+    {
+      "file": "portable-clair.png",
+      "width": 1366,
+      "height": 768,
+      "bytes": 207261,
+      "sha256": "39ef45c85ec65770592f7626061951766eaa9823f295f93aeefb9aeea302f3fa"
+    }
+  ]
+}

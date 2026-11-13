@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-11",
+  "scope": "rendus natifs de la maquette autonome",
+  "media": [
+    {
+      "file": "actions-dark-hd.png",
+      "bytes": 1288710,
+      "sha256": "75a05d65d51a5b42ea8c1bf3724070b51b419f5bbc66d3ba2b77f46fb9319bb8",
+      "width": 3840,
+      "height": 2400
+    },
+    {
+      "file": "actions-light-hd.png",
+      "bytes": 1279096,
+      "sha256": "22e5e45b60ff27a4b8aa6cdd3988493cd2de59256c558f450ba67957e91ef2e7",
+      "width": 3840,
+      "height": 2400
+    },
+    {
+      "file": "commandes-discretes.mp4",
+      "bytes": 1256132,
+      "sha256": "b788cc29def40075bf90036490e6aeeaf81ef0a5c12c3ed82d3520b3fef60685"
+    },
+    {
+      "file": "filtres-dark-hd.png",
+      "bytes": 1007417,
+      "sha256": "70f78f4e4d74d0468f1b9926aa96415bc3aeca463eae7f054d51e9ce4013f03d",
+      "width": 3840,
+      "height": 2400
+    },
+    {
+      "file": "filtres-light-hd.png",
+      "bytes": 1274035,
+      "sha256": "ed66902e898535b66bbc725c7ada69baa0980c54648a11afdc01f8fec9919b7b",
+      "width": 3840,
+      "height": 2400
+    },
+    {
+      "file": "mobile-filtres-light.png",
+      "bytes": 53528,
+      "sha256": "8b79ca72bf7970e99ed6cbccb3bd13f01994cef0e12654d463824d1e3717492a",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "mobile-light.png",
+      "bytes": 102834,
+      "sha256": "372d9c7a24cbcf2b19eb1e3ba4ef23288784fc77c221d19670bb33a68369b7e4",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "recurrences-dark-hd.png",
+      "bytes": 1240212,
+      "sha256": "fbc7c1d4412349e3115a55cfc69f3cf838d954d20b2e2daa2f681ca5f2eaacae",
+      "width": 3840,
+      "height": 2400
+    }
+  ]
+}

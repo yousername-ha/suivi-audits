@@ -1,0 +1,366 @@
+{
+  "dateUTC": "2026-11-11T00:33:43.040Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "layouts": [
+    {
+      "name": "light-day-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-day-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-day-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-week-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-week-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-week-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-month-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-month-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-month-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-year-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-year-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "light-year-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-day-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-day-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-day-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-week-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-week-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-week-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-month-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-month-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-month-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-year-390",
+      "width": 390,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-year-768",
+      "width": 768,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "dark-year-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "auto-REC-001",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "auto-REC-002",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "auto-REC-003",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "auto-REC-004",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "auto-REC-006",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "tout-afficher-journalier",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "simule-annee-bissextile",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    },
+    {
+      "name": "mensuel-fiche-ouverte",
+      "width": 1440,
+      "pageOverflow": false,
+      "scroll": [],
+      "overflow": [],
+      "overlaps": [],
+      "crossedText": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-day",
+      "violations": []
+    },
+    {
+      "name": "light-week",
+      "violations": []
+    },
+    {
+      "name": "light-month",
+      "violations": []
+    },
+    {
+      "name": "light-year",
+      "violations": []
+    },
+    {
+      "name": "dark-day",
+      "violations": []
+    },
+    {
+      "name": "dark-week",
+      "violations": []
+    },
+    {
+      "name": "dark-month",
+      "violations": []
+    },
+    {
+      "name": "dark-year",
+      "violations": []
+    },
+    {
+      "name": "auto-annuel-sans-occurrence",
+      "violations": []
+    }
+  ],
+  "images": [
+    "recurrences-day-light-hd.png",
+    "recurrences-week-light-hd.png",
+    "recurrences-month-dark-hd.png",
+    "recurrences-year-dark-hd.png"
+  ],
+  "errors": [],
+  "requests": [],
+  "interactions": {
+    "autoSelonSerie": true,
+    "changementPeriodicite": true,
+    "quatreEchelles": true,
+    "conservationDesOccurrences": true,
+    "serieAnnuelleEnPauseExplicite": true,
+    "calendrierBissextile": true,
+    "navigationCalendaires": true,
+    "toutAfficher": true,
+    "focusClavier": true,
+    "animationRecurrences": true,
+    "pauseRepriseReduction": true,
+    "actionsPrecedentesConservees": true
+  },
+  "donnees": {
+    "sourceInchangee": true,
+    "occurrencesGenerees": 0,
+    "casBissextileSimuleHorsMedias": true
+  },
+  "clavierHorsPeriode": {
+    "dateUTC": "2026-11-11T00:41:03.071Z",
+    "lecture": true,
+    "retourApresReplier": true,
+    "retourApresBascule": true
+  }
+}

@@ -1,0 +1,473 @@
+{
+  "scope": "Frontend compilé, seuls les habillages validés Bibliothèque/Assistant intégrés ; menu final encore proposé",
+  "tests": {
+    "web": 289,
+    "ui": 246,
+    "e2eFrontendAPIInterceptee": 25,
+    "capturesComplementaires": 2,
+    "typecheckWebEtE2E": "réussi",
+    "lintFormatCibles": "réussis",
+    "buildWeb": "réussi"
+  },
+  "bibliotheque": {
+    "scope": "Frontend compilé, API fictive interceptée",
+    "layouts": [
+      {
+        "width": 1024,
+        "height": 768,
+        "theme": "light",
+        "listWidth": 745,
+        "listScrollWidth": 745,
+        "listHeight": 373,
+        "footerBottom": 742.921875
+      },
+      {
+        "width": 1024,
+        "height": 768,
+        "theme": "dark",
+        "listWidth": 745,
+        "listScrollWidth": 745,
+        "listHeight": 373,
+        "footerBottom": 742.921875
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "theme": "light",
+        "listWidth": 981,
+        "listScrollWidth": 981,
+        "listHeight": 323,
+        "footerBottom": 688.90625
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "theme": "dark",
+        "listWidth": 981,
+        "listScrollWidth": 981,
+        "listHeight": 323,
+        "footerBottom": 688.90625
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "theme": "light",
+        "listWidth": 1061,
+        "listScrollWidth": 1061,
+        "listHeight": 365,
+        "footerBottom": 734.890625
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "theme": "dark",
+        "listWidth": 1061,
+        "listScrollWidth": 1061,
+        "listHeight": 365,
+        "footerBottom": 734.890625
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "theme": "light",
+        "listWidth": 1130,
+        "listScrollWidth": 1130,
+        "listHeight": 477,
+        "footerBottom": 865.171875
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "theme": "dark",
+        "listWidth": 1130,
+        "listScrollWidth": 1130,
+        "listHeight": 477,
+        "footerBottom": 865.171875
+      },
+      {
+        "width": 1536,
+        "height": 864,
+        "theme": "light",
+        "listWidth": 1222,
+        "listScrollWidth": 1222,
+        "listHeight": 435,
+        "footerBottom": 826.90625
+      },
+      {
+        "width": 1536,
+        "height": 864,
+        "theme": "dark",
+        "listWidth": 1222,
+        "listScrollWidth": 1222,
+        "listHeight": 435,
+        "footerBottom": 826.90625
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "theme": "light",
+        "listWidth": 1588,
+        "listScrollWidth": 1588,
+        "listHeight": 625,
+        "footerBottom": 1033.890625
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "theme": "dark",
+        "listWidth": 1588,
+        "listScrollWidth": 1588,
+        "listHeight": 625,
+        "footerBottom": 1033.890625
+      },
+      {
+        "width": 2560,
+        "height": 1440,
+        "theme": "light",
+        "listWidth": 2172,
+        "listScrollWidth": 2172,
+        "listHeight": 933,
+        "footerBottom": 1383.796875
+      },
+      {
+        "width": 2560,
+        "height": 1440,
+        "theme": "dark",
+        "listWidth": 2172,
+        "listScrollWidth": 2172,
+        "listHeight": 933,
+        "footerBottom": 1383.796875
+      },
+      {
+        "width": 1920,
+        "height": 800,
+        "theme": "light",
+        "listWidth": 1588,
+        "listScrollWidth": 1588,
+        "listHeight": 361,
+        "footerBottom": 753.890625
+      },
+      {
+        "width": 1920,
+        "height": 800,
+        "theme": "dark",
+        "listWidth": 1588,
+        "listScrollWidth": 1588,
+        "listHeight": 361,
+        "footerBottom": 753.890625
+      }
+    ],
+    "errors": [],
+    "screenshot": {
+      "width": 3840,
+      "height": 2160,
+      "count": 2
+    }
+  },
+  "assistant": {
+    "scope": "Frontend compilé, API fictive interceptée ; aucun Mistral/DB/Docker",
+    "layouts": [
+      {
+        "width": 465,
+        "height": 768,
+        "theme": "dark",
+        "pageWidth": 1024,
+        "x": 544,
+        "y": 88.609375,
+        "right": 1009,
+        "bottom": 682,
+        "threadHeight": 274,
+        "threadWidth": 461,
+        "threadScrollWidth": 461,
+        "composerBottom": 648,
+        "footerBottom": 680,
+        "pinned": null
+      },
+      {
+        "width": 465,
+        "height": 768,
+        "theme": "light",
+        "pageWidth": 1024,
+        "x": 544,
+        "y": 88.609375,
+        "right": 1009,
+        "bottom": 682,
+        "threadHeight": 274,
+        "threadWidth": 461,
+        "threadScrollWidth": 461,
+        "composerBottom": 648,
+        "footerBottom": 680,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 720,
+        "theme": "dark",
+        "pageWidth": 1280,
+        "x": 746,
+        "y": 90.90625,
+        "right": 1256,
+        "bottom": 634,
+        "threadHeight": 222,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 600,
+        "footerBottom": 632,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 720,
+        "theme": "light",
+        "pageWidth": 1280,
+        "x": 746,
+        "y": 90.90625,
+        "right": 1256,
+        "bottom": 634,
+        "threadHeight": 222,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 600,
+        "footerBottom": 632,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 768,
+        "theme": "dark",
+        "pageWidth": 1366,
+        "x": 832,
+        "y": 91.6875,
+        "right": 1342,
+        "bottom": 682,
+        "threadHeight": 270,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 648,
+        "footerBottom": 680,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 768,
+        "theme": "light",
+        "pageWidth": 1366,
+        "x": 832,
+        "y": 91.6875,
+        "right": 1342,
+        "bottom": 682,
+        "threadHeight": 270,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 648,
+        "footerBottom": 680,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 900,
+        "theme": "dark",
+        "pageWidth": 1440,
+        "x": 906,
+        "y": 92,
+        "right": 1416,
+        "bottom": 807,
+        "threadHeight": 334,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 766,
+        "footerBottom": 805,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 900,
+        "theme": "light",
+        "pageWidth": 1440,
+        "x": 906,
+        "y": 92,
+        "right": 1416,
+        "bottom": 807,
+        "threadHeight": 334,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 766,
+        "footerBottom": 805,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 864,
+        "theme": "dark",
+        "pageWidth": 1536,
+        "x": 1002,
+        "y": 92,
+        "right": 1512,
+        "bottom": 771,
+        "threadHeight": 298,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 730,
+        "footerBottom": 769,
+        "pinned": null
+      },
+      {
+        "width": 510,
+        "height": 864,
+        "theme": "light",
+        "pageWidth": 1536,
+        "x": 1002,
+        "y": 92,
+        "right": 1512,
+        "bottom": 771,
+        "threadHeight": 298,
+        "threadWidth": 506,
+        "threadScrollWidth": 506,
+        "composerBottom": 730,
+        "footerBottom": 769,
+        "pinned": null
+      },
+      {
+        "width": 576,
+        "height": 1080,
+        "theme": "dark",
+        "pageWidth": 1920,
+        "x": 1320,
+        "y": 92,
+        "right": 1896,
+        "bottom": 987,
+        "threadHeight": 511,
+        "threadWidth": 572,
+        "threadScrollWidth": 572,
+        "composerBottom": 946,
+        "footerBottom": 985,
+        "pinned": "true"
+      },
+      {
+        "width": 576,
+        "height": 1080,
+        "theme": "light",
+        "pageWidth": 1920,
+        "x": 1320,
+        "y": 92,
+        "right": 1896,
+        "bottom": 987,
+        "threadHeight": 511,
+        "threadWidth": 572,
+        "threadScrollWidth": 572,
+        "composerBottom": 946,
+        "footerBottom": 985,
+        "pinned": "true"
+      },
+      {
+        "width": 662.390625,
+        "height": 1440,
+        "theme": "dark",
+        "pageWidth": 2560,
+        "x": 1873.609375,
+        "y": 102.796875,
+        "right": 2536,
+        "bottom": 1347,
+        "threadHeight": 860,
+        "threadWidth": 658,
+        "threadScrollWidth": 658,
+        "composerBottom": 1306,
+        "footerBottom": 1345,
+        "pinned": "true"
+      },
+      {
+        "width": 662.390625,
+        "height": 1440,
+        "theme": "light",
+        "pageWidth": 2560,
+        "x": 1873.609375,
+        "y": 102.796875,
+        "right": 2536,
+        "bottom": 1347,
+        "threadHeight": 860,
+        "threadWidth": 658,
+        "threadScrollWidth": 658,
+        "composerBottom": 1306,
+        "footerBottom": 1345,
+        "pinned": "true"
+      },
+      {
+        "width": 576,
+        "height": 800,
+        "theme": "dark",
+        "pageWidth": 1920,
+        "x": 1320,
+        "y": 92,
+        "right": 1896,
+        "bottom": 714,
+        "threadHeight": 298,
+        "threadWidth": 572,
+        "threadScrollWidth": 572,
+        "composerBottom": 680,
+        "footerBottom": 712,
+        "pinned": "true"
+      },
+      {
+        "width": 576,
+        "height": 800,
+        "theme": "light",
+        "pageWidth": 1920,
+        "x": 1320,
+        "y": 92,
+        "right": 1896,
+        "bottom": 714,
+        "threadHeight": 298,
+        "threadWidth": 572,
+        "threadScrollWidth": 572,
+        "composerBottom": 680,
+        "footerBottom": 712,
+        "pinned": "true"
+      }
+    ],
+    "axe": [
+      {
+        "view": "dashboard + discussion",
+        "theme": "dark",
+        "violations": []
+      }
+    ],
+    "scaled": {
+      "right": 1896,
+      "bottom": 987,
+      "thread": 475,
+      "scroll": 692,
+      "width": 692
+    },
+    "errors": [],
+    "screenshot": {
+      "width": 3840,
+      "height": 2160,
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "dpr": 2,
+      "count": 2
+    }
+  },
+  "nonExecutes": [
+    "API/DB réelle",
+    "Mistral réel",
+    "Docker Desktop Windows",
+    "CI distante",
+    "déploiement",
+    "harmonisation applicative du nouveau menu"
+  ],
+  "sha256": {
+    "apps/web/src/assistant/IdentiteAssistant.tsx": "2389fedb967b782a94750a795db6719fbc7b02f8d73a474963cf0f940e8c16b0",
+    "apps/web/src/pilotage/BibliothequeStudio.tsx": "c8caede9ffc2418be7ef5652c09fe48a552f75b4a921ed944cf4a93f8401680c",
+    "packages/ui/src/neon-assistant.css": "ff8514abb57a03fce8bc56aae7f97ff76ceb9cea8585f932ccb3b39160e1ebeb",
+    "packages/ui/src/neon-bibliotheque.css": "00ec2853904ab535337fe3f1cdacadf3ec452359ff739728bd6d93895a138f54",
+    "tests/e2e/interface/assistant-global.spec.ts": "9db06854c747cad2cd65181d1dda69a1de571d2e5e422e45f848e660916c4a5b",
+    "tests/e2e/interface/bibliotheque-unifiee.spec.ts": "35a2bb07cc40eb9e039e001b7c60c6485fc2acec11ad254e39a4c2b306a7cdbd",
+    "docs/refonte-neon/preuves/studio-integre/bibliotheque-clair-hd.png": "8d94fb435a85a366d66bc34849854d99595282471c147efdd0b8ab50b1010b96",
+    "docs/refonte-neon/preuves/studio-integre/bibliotheque-sombre-hd.png": "04d958b0e6621b4549e9b342b82d3984fd318ae3fd1c999b7b601d2cecc9a2ae",
+    "docs/refonte-neon/preuves/studio-integre/assistant-clair-hd.png": "b37a902bb3633d74fc695b761b14a5ea4622f50d98515ca18db12717d00c06c0",
+    "docs/refonte-neon/preuves/studio-integre/assistant-sombre-hd.png": "228bd42b35850b3677fe29e17e5e8566ea9c54db42f1a56620c005df1deb218a"
+  }
+}

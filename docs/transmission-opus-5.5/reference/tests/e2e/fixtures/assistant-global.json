@@ -1,0 +1,387 @@
+{
+  "reference": "575154f42a1c5d4ebe5ec218b7d18e2fae7b26a5",
+  "date": "2026-11-12",
+  "etat": {
+    "actif": true,
+    "pret": true,
+    "motif": null,
+    "fournisseur": "api.mistral.ai",
+    "modele": "mistral-small-latest",
+    "enPause": false,
+    "profils": [
+      {
+        "id": "mise_en_oeuvre",
+        "libelle": "Mise en œuvre",
+        "perimetres": [
+          {
+            "id": "demo-perimetre",
+            "nom": "Pilotage de l’organisation"
+          }
+        ]
+      },
+      {
+        "id": "audit_interne",
+        "libelle": "Audit interne",
+        "perimetres": [
+          {
+            "id": "demo-perimetre",
+            "nom": "Pilotage de l’organisation"
+          }
+        ]
+      }
+    ],
+    "jetonsDuJour": 0,
+    "budgetJetonsJour": 500000
+  },
+  "conversations": [
+    {
+      "id": "demo-mise-en-oeuvre",
+      "profil": "mise_en_oeuvre",
+      "titre": "Point avant la revue de direction",
+      "etat": "pret",
+      "createdAt": "2026-11-12T08:40:00+01:00",
+      "updatedAt": "2026-11-12T08:45:00+01:00",
+      "messages": [
+        {
+          "id": "demo-user-1",
+          "role": "utilisateur",
+          "contenu": "Avant la revue de direction, quel point mérite mon attention ?",
+          "sources": [],
+          "outils": [],
+          "erreur": false,
+          "createdAt": "2026-11-12T08:40:00+01:00"
+        },
+        {
+          "id": "demo-answer-1",
+          "role": "assistant",
+          "contenu": "Je commencerais par la revue des accès. Son échéance est dépassée et une réponse du responsable est attendue.\n\nUne proposition d’action est également prête à être examinée. Tu peux la compléter avant de décider.",
+          "sources": [
+            {
+              "perimetre": "demo-perimetre",
+              "objet": "demo-action-acces",
+              "type": "task",
+              "nom": "Revue des accès"
+            },
+            {
+              "perimetre": "demo-perimetre",
+              "objet": "demo-preuve-acces",
+              "type": "evidence",
+              "nom": "Procédure de gestion des accès — fiche documentaire"
+            }
+          ],
+          "outils": [
+            {
+              "nom": "lire_element",
+              "elements": 2
+            }
+          ],
+          "erreur": false,
+          "createdAt": "2026-11-12T08:45:00+01:00"
+        }
+      ]
+    },
+    {
+      "id": "demo-audit",
+      "profil": "audit_interne",
+      "titre": "Préparer un audit interne",
+      "etat": "pret",
+      "createdAt": "2026-11-12T08:30:00+01:00",
+      "updatedAt": "2026-11-12T08:30:00+01:00",
+      "messages": []
+    }
+  ],
+  "notifications": [
+    {
+      "id": "demo-notification-question",
+      "smsiId": "demo-perimetre",
+      "objectId": "demo-action-acces",
+      "kind": "assistant_question",
+      "title": "Une précision sur la revue des accès",
+      "message": "La revue des accès a-t-elle été réalisée ? Si oui, quelle preuve permet de le vérifier ?",
+      "reponse": null,
+      "avis": null,
+      "readAt": null
+    },
+    {
+      "id": "demo-notification-rappel",
+      "smsiId": "demo-perimetre",
+      "objectId": "demo-action-acces",
+      "kind": "assistant_rappel",
+      "title": "Revue des accès à suivre",
+      "message": "L’action est échue depuis le 10 novembre. Un rappel vous a été adressé par l’assistant.",
+      "reponse": null,
+      "avis": null,
+      "readAt": null
+    }
+  ],
+  "propositions": [
+    {
+      "id": "demo-proposition",
+      "profil": "mise_en_oeuvre",
+      "perimetre": "demo-perimetre",
+      "type": "action",
+      "titre": "Organiser la revue des accès avec le responsable",
+      "description": "Préciser les accès à revoir, le responsable et la preuve attendue avant de clôturer le point.",
+      "echeance": "2026-11-20",
+      "sourceNom": "Revue des accès",
+      "etat": "en_attente",
+      "decidedBy": "",
+      "decisionNote": "",
+      "objetCree": null,
+      "createdAt": "2026-11-12T08:45:00+01:00",
+      "nature": "",
+      "sourceIssueAssistant": false
+    }
+  ],
+  "dashboard": {
+    "organisation": "Mon organisation",
+    "genereLe": "2026-10-31T20:03:49.178Z",
+    "prochainAudit": {
+      "date": "",
+      "annee": 2027,
+      "libelle": "Surveillance 2"
+    },
+    "auditInterne": null,
+    "ecarts": {
+      "total": 7,
+      "ouverts": 6,
+      "enRetard": 1,
+      "aEcheance": 1,
+      "parStatut": {
+        "Clos": 1,
+        "Ouvert": 5,
+        "Actions en cours": 1
+      },
+      "parType": {
+        "Non-conformité majeure": 2,
+        "Constat ou opportunité": 3,
+        "Non-conformité mineure": 2
+      },
+      "parSource": {
+        "Audit de certification": 1,
+        "Non précisé": 1,
+        "Audit interne": 5
+      }
+    },
+    "echeances": [
+      {
+        "id": "object:a29dc01d-f6be-4d60-aba1-16bb058f5573",
+        "texte": "Procédure de revue des accès non appliquée",
+        "echeance": "2026-10-01",
+        "pilote": "",
+        "statut": "Ouvert",
+        "enRetard": true,
+        "type": "Écart",
+        "perimetre": "Pilotage de l’organisation"
+      },
+      {
+        "id": "object:ab69f9c1-bd18-4e52-96ea-6979f57de415",
+        "texte": "Revoir les comptes à privilèges",
+        "echeance": "2026-10-16",
+        "pilote": "",
+        "statut": "Actions en cours",
+        "enRetard": true,
+        "type": "Action",
+        "perimetre": "Pilotage de l’organisation"
+      },
+      {
+        "id": "object:87a593d8-c8b3-43c1-ab40-de623f4e9cc6",
+        "texte": "Registre des prestataires incomplet",
+        "echeance": "2026-11-10",
+        "pilote": "",
+        "statut": "Ouvert",
+        "enRetard": false,
+        "type": "Écart",
+        "perimetre": "Pilotage de l’organisation"
+      },
+      {
+        "id": "object:e9391366-6cf8-47ac-8806-e7668c373a65",
+        "texte": "Mettre à jour le registre des prestataires",
+        "echeance": "2026-11-12",
+        "pilote": "",
+        "statut": "todo",
+        "enRetard": false,
+        "type": "Action",
+        "perimetre": "Pilotage de l’organisation"
+      },
+      {
+        "id": "object:f5e247f7-2507-4f91-8659-ea66039b510c",
+        "texte": "Activer la MFA du logiciel de dossiers",
+        "echeance": "2026-11-30",
+        "pilote": "",
+        "statut": "todo",
+        "enRetard": false,
+        "type": "Action",
+        "perimetre": "Pilotage de l’organisation"
+      },
+      {
+        "id": "object:50ce57f7-5e00-4109-94dc-aa553f041c67",
+        "texte": "Revoir les accès distants des prestataires",
+        "echeance": "2026-11-30",
+        "pilote": "",
+        "statut": "todo",
+        "enRetard": false,
+        "type": "Action",
+        "perimetre": "Pilotage de l’organisation"
+      }
+    ],
+    "plan": {
+      "statut": "Projet",
+      "jours": [
+        {
+          "label": "Jour 1",
+          "date": "",
+          "creneaux": 0
+        },
+        {
+          "label": "Jour 2",
+          "date": "",
+          "creneaux": 0
+        },
+        {
+          "label": "Jour 3",
+          "date": "",
+          "creneaux": 0
+        }
+      ]
+    },
+    "mesures": {
+      "total": 157,
+      "parReferentiel": {
+        "ISO": 33,
+        "A": 93,
+        "HDS": 31
+      }
+    },
+    "conformite": [
+      {
+        "ref": "ISO",
+        "libelle": "Clauses ISO 27001",
+        "exigences": 33,
+        "applicables": 33,
+        "total": 27,
+        "partiel": 6,
+        "insuffisant": 0,
+        "nonRenseigne": 0
+      },
+      {
+        "ref": "A",
+        "libelle": "Annexe A",
+        "exigences": 93,
+        "applicables": 91,
+        "total": 55,
+        "partiel": 27,
+        "insuffisant": 9,
+        "nonRenseigne": 0
+      },
+      {
+        "ref": "HDS",
+        "libelle": "HDS",
+        "exigences": 31,
+        "applicables": 31,
+        "total": 0,
+        "partiel": 0,
+        "insuffisant": 0,
+        "nonRenseigne": 31
+      }
+    ],
+    "ecartsOuverts": {
+      "ouverts": 6,
+      "parType": [
+        {
+          "type": "NC maj",
+          "libelle": "NC majeure",
+          "n": 1
+        },
+        {
+          "type": "NC min",
+          "libelle": "NC mineure",
+          "n": 2
+        },
+        {
+          "type": "PS",
+          "libelle": "Point sensible",
+          "n": 0
+        },
+        {
+          "type": "PP",
+          "libelle": "Piste de progrès",
+          "n": 1
+        },
+        {
+          "type": "Remarque",
+          "libelle": "Remarque",
+          "n": 2
+        }
+      ],
+      "actionsRealisees": 0,
+      "actionsTotal": 10
+    },
+    "actions": {
+      "total": 10,
+      "ouvertes": 10,
+      "enRetard": 1,
+      "terminees": 0
+    },
+    "recurrences": {
+      "series": 1,
+      "occurrencesOuvertes": 0,
+      "occurrencesEnRetard": 0
+    },
+    "risques": {
+      "total": 7,
+      "sansDecision": 7,
+      "revueEchue": 0
+    },
+    "continuite": {
+      "bia": 0,
+      "pcra": 0
+    },
+    "indicateurs": {
+      "total": 8,
+      "atteints": 2,
+      "nonAtteints": 4,
+      "nonMesures": 2
+    },
+    "plans": {
+      "annee": 2026,
+      "types": [
+        {
+          "type": "formation",
+          "libelle": "Formation",
+          "realises": 0,
+          "enRetard": 0,
+          "aVenir": 1
+        },
+        {
+          "type": "sensi",
+          "libelle": "Sensibilisation",
+          "realises": 1,
+          "enRetard": 0,
+          "aVenir": 0
+        },
+        {
+          "type": "audit",
+          "libelle": "Audit interne",
+          "realises": 1,
+          "enRetard": 0,
+          "aVenir": 1
+        },
+        {
+          "type": "exo",
+          "libelle": "Exercice",
+          "realises": 0,
+          "enRetard": 1,
+          "aVenir": 0
+        }
+      ]
+    },
+    "pilotage": {
+      "constatsOuverts": 6,
+      "risques": 7,
+      "risquesSansDecision": 7,
+      "actionsEnRetard": 1
+    },
+    "ecran": null
+  }
+}

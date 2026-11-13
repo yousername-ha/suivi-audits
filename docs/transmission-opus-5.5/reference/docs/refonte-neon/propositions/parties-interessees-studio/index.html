@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr" data-theme="light" data-motion="on">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Parties intéressées — proposition Studio</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../commandes-discretes/prototype.css"><link rel="stylesheet" href="../commandes-discretes/commandes.css"><link rel="stylesheet" href="../responsive-equilibre/responsive.css"><link rel="stylesheet" href="parties.css"></head>
+<body>
+    <aside class="sidebar" aria-label="Navigation illustrative" tabindex="0">
+      <div class="brand"><span class="brand-mark">✧</span><span><strong>Suivi des audits<br>SMSI</strong><small>ISO 27001 / HDS</small></span></div>
+      <div class="nav-caption">Espace de travail</div>
+      <div class="nav-item"><i data-icon="dashboard"></i>Tableau de bord</div>
+      <div class="nav-item active"><i data-icon="tree"></i>Organisation<span>8</span></div>
+      <div class="nav-sub current">Contexte de l’organisation</div>
+      <div class="nav-sub">Périmètres</div><div class="nav-sub">Processus</div>
+      <div class="nav-sub">Rôles et responsabilités</div><div class="nav-sub">Cartographie du SMSI</div>
+      <div class="nav-sub">Fournisseurs</div><div class="nav-sub">Revues des accès</div><div class="nav-sub">Plans annuels</div>
+      <div class="nav-item"><i data-icon="chart"></i>Pilotage<span>5</span></div>
+      <div class="nav-item"><i data-icon="shield"></i>Risques<span>1</span></div>
+      <div class="nav-item"><i data-icon="check"></i>Conformité et audits<span>4</span></div>
+      <div class="nav-item"><i data-icon="list"></i>Actions<span>4</span></div>
+      <div class="nav-item"><i data-icon="restore"></i>Résilience<span>2</span></div>
+      <div class="nav-item"><i data-icon="document"></i>Documents<span>2</span></div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+
+<div class="shell" id="shell">
+<header class="topbar"><strong><span></span>Mon organisation</strong><div class="top-actions"><span class="demo-note">Maquette · À valider</span><button class="button" id="theme"><i data-icon="moon"></i><span>Mode sombre</span></button></div></header>
+<main data-active-view="parties">
+<nav class="page-tabs" aria-label="Rubriques du contexte"><button data-retained="Contexte">Contexte</button><button aria-current="page">Parties intéressées</button><button data-retained="SWOT">SWOT</button><button data-retained="PESTEL">PESTEL</button></nav>
+<div class="breadcrumb">Organisation <span>/</span> Contexte de l’organisation</div>
+<header class="page-heading"><div><h1>Parties intéressées</h1><p>Identifier les acteurs, comprendre leurs attentes et suivre leur prise en compte.</p></div><button class="button primary" id="create"><i data-icon="plus"></i>Ajouter une partie</button></header>
+<div class="context-line"><div class="scope-line"><label for="scope"><i data-icon="tree"></i>Périmètre affiché</label><select id="scope"><option>Pilotage de l’organisation</option></select></div><div id="pi-summary" aria-label="Synthèse du périmètre, hors filtres"></div></div>
+<section class="workspace slab" aria-label="Parties intéressées du périmètre">
+<div class="compact-toolbar"><div class="view-cluster"><div class="pi-views" role="group" aria-label="Vues des parties intéressées"><button data-mode="panorama" aria-label="Panorama" data-hint="Panorama" aria-pressed="true"><i data-icon="network"></i></button><button data-mode="list" aria-label="Liste compacte" data-hint="Liste compacte" aria-pressed="false"><i data-icon="list"></i></button></div><span class="active-view-label" id="pi-view-label">Panorama</span></div><div class="toolbar-actions"><button class="utility" id="search-trigger" aria-label="Rechercher" aria-expanded="false" aria-controls="pi-search" aria-haspopup="dialog" data-hint="Rechercher · /"><i data-icon="search"></i></button><button class="utility filter-trigger" id="filter-trigger" aria-label="Filtres" aria-expanded="false" aria-controls="pi-filters" aria-haspopup="dialog"><i data-icon="filter"></i>Filtres<b class="filter-count" id="pi-filter-count" hidden></b></button><button class="utility" id="options-trigger" aria-label="Options d’affichage" aria-expanded="false" aria-controls="pi-options" aria-haspopup="dialog" data-hint="Options"><i data-icon="more"></i></button></div></div>
+<div class="active-filters" id="pi-active-filters" hidden></div>
+<div id="pi-content" tabindex="-1"></div>
+<footer class="pi-footer"><span id="pi-result" aria-live="polite"></span><span>Situation illustrative au 09/11/2026</span></footer>
+</section>
+</main>
+</div>
+<div class="flyout search-flyout" id="pi-search" role="dialog" aria-label="Recherche" hidden><label><span class="sr-only">Rechercher</span><i data-icon="search"></i><input id="pi-query" type="search" placeholder="Acteur, besoin, exigence…"></label><small>Rechercher dans les fiches <kbd>Échap</kbd></small></div>
+<div class="flyout pi-filter-panel" id="pi-filters" role="dialog" aria-labelledby="pi-filter-title" hidden><header class="flyout-heading"><h2 id="pi-filter-title">Affiner la vue</h2><button class="close-flyout" data-close-popup aria-label="Fermer les filtres"><i data-icon="close"></i></button></header><form id="pi-filter-form"><label>Nature<select id="pi-nature"><option value="">Toutes les natures</option><option>Interne</option><option>Externe</option><option value="unknown">À préciser</option></select></label><label>Exigences traitées<select id="pi-addressed"><option value="">Tous les états</option><option value="Oui">Traitées</option><option value="Partiel">Partiellement traitées</option><option value="Non">Non traitées</option><option value="unknown">Non renseigné</option></select></label><label>Dernière revue<select id="pi-review"><option value="">Toutes les revues</option><option value="check">Plus d’un an ou date absente</option><option value="recent">Revue dans l’année</option><option value="missing">Date non renseignée</option></select></label><details id="pi-more-filters"><summary>Plus de critères</summary><label>Catégorie<select id="pi-category"><option value="">Toutes les catégories</option></select></label><label>Responsable<select id="pi-owner"><option value="">Tous les responsables</option></select></label></details><button class="clear-filters" type="reset">Réinitialiser</button></form><footer class="flyout-footer"><span id="pi-filter-results"></span><button class="button primary" data-close-popup>Afficher les résultats</button></footer></div>
+<div class="flyout more-flyout" id="pi-options" role="dialog" aria-label="Options d’affichage" hidden><button class="menu-choice" id="pi-motion" aria-pressed="false"><i data-icon="pause"></i><span>Suspendre les animations</span></button></div>
+<div class="pi-veil" id="pi-veil" hidden><section class="pi-modal" id="pi-modal" role="dialog" aria-modal="true" aria-labelledby="pi-modal-title" tabindex="-1"></section></div>
+<div class="notice" id="notice" role="status" hidden></div>
+<script src="../organisation-contexte-studio/donnees.js"></script><script src="parties.js"></script>
+</body></html>

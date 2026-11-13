@@ -1,0 +1,934 @@
+{
+  "dateUTC": "2026-11-10T22:07:35.721Z",
+  "timezone": "Europe/Paris",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "applicationCommit": "5dd1c68350730f6a59ff204a5e721a482b3125eb",
+  "views": [
+    {
+      "name": "actions-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Kanban-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Kanban-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Calendrier-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Calendrier-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Timeline-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Timeline-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Planning / Gantt-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Planning / Gantt-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Synthèse-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-light-Synthèse-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Kanban-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Kanban-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Calendrier-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Calendrier-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Timeline-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Timeline-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Planning / Gantt-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Planning / Gantt-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Synthèse-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-light-Synthèse-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-light-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Kanban-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Kanban-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Calendrier-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Calendrier-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Timeline-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Timeline-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Planning / Gantt-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Planning / Gantt-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Synthèse-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "actions-dark-Synthèse-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Kanban-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Kanban-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Calendrier-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Calendrier-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Timeline-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Timeline-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Planning / Gantt-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Planning / Gantt-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Synthèse-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "recurrences-dark-Synthèse-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-1280",
+      "width": 1280,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-detail-1440",
+      "width": 1440,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-detail-390",
+      "width": 390,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-detail-768",
+      "width": 768,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-detail-1024",
+      "width": 1024,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    },
+    {
+      "name": "series-dark-detail-1920",
+      "width": 1920,
+      "pageOverflow": false,
+      "nestedScroll": [],
+      "overflow": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "actions-light-mobile",
+      "violations": []
+    },
+    {
+      "name": "actions-light-main",
+      "violations": []
+    },
+    {
+      "name": "actions-light-detail",
+      "violations": []
+    },
+    {
+      "name": "actions-light-Kanban",
+      "violations": []
+    },
+    {
+      "name": "actions-light-Calendrier",
+      "violations": []
+    },
+    {
+      "name": "actions-light-Timeline",
+      "violations": []
+    },
+    {
+      "name": "actions-light-Planning / Gantt",
+      "violations": []
+    },
+    {
+      "name": "actions-light-Synthèse",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-mobile",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-main",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-detail",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-Kanban",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-Calendrier",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-Timeline",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-Planning / Gantt",
+      "violations": []
+    },
+    {
+      "name": "recurrences-light-Synthèse",
+      "violations": []
+    },
+    {
+      "name": "series-light-mobile",
+      "violations": []
+    },
+    {
+      "name": "series-light-main",
+      "violations": []
+    },
+    {
+      "name": "series-light-detail",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-main",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-detail",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-Kanban",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-Calendrier",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-Timeline",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-Planning / Gantt",
+      "violations": []
+    },
+    {
+      "name": "actions-dark-Synthèse",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-main",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-detail",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-Kanban",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-Calendrier",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-Timeline",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-Planning / Gantt",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark-Synthèse",
+      "violations": []
+    },
+    {
+      "name": "series-dark-mobile",
+      "violations": []
+    },
+    {
+      "name": "series-dark-main",
+      "violations": []
+    },
+    {
+      "name": "series-dark-detail",
+      "violations": []
+    }
+  ],
+  "images": [
+    "actions-light-hd.png",
+    "recurrences-light-hd.png",
+    "series-light-hd.png",
+    "actions-dark-hd.png",
+    "recurrences-dark-hd.png",
+    "series-dark-hd.png"
+  ],
+  "errors": [],
+  "requests": [],
+  "interactions": {
+    "recherche": true,
+    "filtreRetard": true,
+    "filtreResponsable": true,
+    "actionsCloses": true,
+    "KOdistinctDuRetard": true,
+    "validationEnMemoire": true,
+    "serieEnPause": true,
+    "vuesSix": true,
+    "depliage": true,
+    "animationsPauseRepriseReduction": true,
+    "menuMobile": true
+  },
+  "donnees": {
+    "entierementFictives": true,
+    "actions": 8,
+    "series": 6,
+    "occurrences": 8
+  }
+}

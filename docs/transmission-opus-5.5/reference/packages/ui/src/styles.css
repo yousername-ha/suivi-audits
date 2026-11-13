@@ -1,0 +1,2883 @@
+/* Police Inter variable, hébergée avec l'application (SIL OFL, licence dans fonts/). */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-latin-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Charte graphique — styles statiques (CSP « style-src 'self' » : aucun style injecté).
+   Couleurs : variables --suivi-* et --mantine-* générées depuis tokens.ts (mantine-vars.css). */
+
+:root {
+  --grc-colonne-min: 14.375rem;
+  --grc-jour-min: 7.5rem;
+  --grc-jour-hauteur: 6.875rem;
+  --grc-planning-min: 53.125rem;
+  --grc-canevas-hauteur: 40.625rem;
+  --grc-canevas-min: 25rem;
+  --grc-canevas-mobile: 29.375rem;
+  --suivi-entete-h: 3.75rem;
+  --suivi-nav-l: 15.5rem;
+  --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
+  --suivi-largeur-connexion: 36rem; /* panneau de connexion : 576 px */
+  --suivi-ecart-onde: 3rem; /* connexion : espace entre le titre et la première carte */
+  --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
+  --suivi-champ-xs: 8rem;
+  --suivi-champ-s: 12.5rem;
+  --suivi-champ-m: 16.25rem;
+  --suivi-champ-l: 26.25rem;
+  --suivi-marque: 1.875rem;
+  --suivi-qr: 12.5rem;
+  --suivi-trait-l: 1px;
+  --suivi-trait-focus: 2px;
+  --grc-zone-hauteur: min(70vh, 42rem); /* zones à défilement propre : timeline, Kanban */
+  --suivi-nav-repliee: 4.25rem;
+  --suivi-marge-page: clamp(0.75rem, 0.5rem + 1vw, 2.5rem);
+  --suivi-carte-min: 24rem; /* cartes de tableau de bord : 320 à 480 px environ */
+  --suivi-fiche-l: clamp(26rem, 32vw, 48rem);
+  --suivi-panneau-l: clamp(20rem, 22vw, 34rem);
+  --suivi-echelle: 1;
+  /* Cartographie (ADR 0013) : panneau latéral, fiche détaillée, hauteur du canevas, aperçu, échantillons. */
+  --carte-panneau-l: clamp(14rem, 16vw, 20rem);
+  --carte-inspecteur-l: clamp(20rem, 24vw, 28rem);
+  --carte-hauteur: clamp(30rem, calc(100dvh - 16rem), 90rem);
+  --carte-hauteur-mobile: max(26rem, 68dvh);
+  --carte-hauteur-plein-ecran: calc(100dvh - 12rem);
+  --carte-relation-l: 6rem;
+  --carte-mini-l: 11.25rem;
+  --carte-mini-h: 7.5rem;
+  --carte-echantillon: 1.375rem;
+  --carte-icone: 1.5rem;
+  --carte-recherche: 17rem;
+  --carte-vide-icone: 2.5rem;
+  /* Parcours ISO / HDS (024) : largeur minimale de la toile (l'arbre garde une échelle lisible, la zone défile), carte
+     compacte et tailles de texte dans le dessin. */
+  --parcours-toile-min: 62rem;
+  --parcours-carte-l: min(22rem, 92%);
+  --parcours-texte: 0.9375rem;
+  --parcours-texte-enfant: 0.8125rem;
+  --parcours-titre: 1.0625rem;
+  --parcours-halo-duree: 950ms;
+  --ebios-toile-min: 40rem;
+  --ebios-cercle-largeur: 20rem;
+}
+
+/* ---------------------------------------------------------------- Taille d'affichage et typographie fluide
+   Base fluide bornée (14 à 16 px selon la largeur), multipliée par la taille d'affichage choisie.
+   « Automatique » : agrandissement progressif au-delà de 2560 px (lisible à 2 m sur un écran de 55 pouces). */
+html {
+  font-size: calc(clamp(87.5%, 82.5% + 0.2vw, 100%) * var(--suivi-echelle));
+}
+/* Écran mural : texte agrandi d'un quart en plus de la taille d'affichage. */
+html[data-mur] {
+  font-size: calc(clamp(87.5%, 82.5% + 0.2vw, 100%) * var(--suivi-echelle) * 1.25);
+}
+html[data-taille='90'] {
+  --suivi-echelle: 0.9;
+}
+html[data-taille='100'] {
+  --suivi-echelle: 1;
+}
+html[data-taille='115'] {
+  --suivi-echelle: 1.15;
+}
+html[data-taille='130'] {
+  --suivi-echelle: 1.3;
+}
+html[data-taille='150'] {
+  --suivi-echelle: 1.5;
+}
+@media (min-width: 160em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.15;
+  }
+}
+@media (min-width: 200em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.3;
+  }
+}
+@media (min-width: 240em) {
+  html[data-taille='auto'] {
+    --suivi-echelle: 1.5;
+  }
+}
+
+body {
+  background: var(--suivi-fond-page);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+}
+
+/* Chiffres tabulaires : colonnes de nombres alignées. */
+table,
+.chiffres {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- Coquille de l'application
+   Téléphone (< 36em) : menu en tiroir. Tablette (36 à 64em) : menu replié en icônes. Bureau (≥ 64em) : menu déplié. */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--suivi-entete-h);
+  flex: none;
+  background: var(--suivi-surface);
+  border-bottom: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.shell-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.shell-nav {
+  display: none;
+}
+.shell-nav-inner {
+  display: flex;
+  flex-direction: column;
+}
+.shell-main {
+  min-width: 0;
+  padding: var(--suivi-marge-page);
+}
+.nav-icone {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.nav-icone svg {
+  width: 100%;
+  height: 100%;
+}
+@media (min-width: 36em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-repliee) minmax(0, 1fr);
+  }
+  .shell-nav {
+    display: block;
+    padding: var(--mantine-spacing-xs);
+    border-right: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    background: var(--suivi-surface);
+  }
+  .shell-nav-inner {
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-sm));
+  }
+  /* Menu replié : icônes seules (libellés lus par les lecteurs d'écran et affichés au survol). */
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: center;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin: 0;
+  }
+}
+@media (min-width: 64em) {
+  .shell-body {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .shell-nav {
+    padding: var(--mantine-spacing-sm);
+  }
+  .shell-nav .nav-libelle,
+  .shell-nav .nav-annexe {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  .shell-nav .mantine-NavLink-root {
+    justify-content: flex-start;
+  }
+  .shell-nav .mantine-NavLink-section {
+    margin-inline-end: var(--mantine-spacing-sm);
+  }
+}
+.brand-mark {
+  width: var(--suivi-marque);
+  height: var(--suivi-marque);
+  border-radius: var(--mantine-radius-sm);
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--suivi-marque-texte);
+  background: var(--suivi-marque-fond);
+}
+
+/* ---------------------------------------------------------------- Pages */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  width: 100%;
+}
+.page--formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.page-header__titre {
+  min-width: 0;
+}
+.lecture {
+  max-width: var(--suivi-largeur-lecture);
+}
+.formulaire {
+  max-width: var(--suivi-largeur-formulaire);
+}
+
+/* ---------------------------------------------------------------- Tableaux */
+.data-table {
+  padding: 0;
+  overflow: hidden;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.data-table thead th {
+  background: var(--suivi-surface);
+}
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Sections de formulaire */
+.form-section__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-sm);
+  border-top: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  padding-top: var(--mantine-spacing-sm);
+}
+
+/* ---------------------------------------------------------------- Largeurs de champs */
+.champ-xs {
+  width: var(--suivi-champ-xs);
+  max-width: 100%;
+}
+.champ-s {
+  width: var(--suivi-champ-s);
+  max-width: 100%;
+}
+.champ-m {
+  width: var(--suivi-champ-m);
+  max-width: 100%;
+}
+.champ-l {
+  width: var(--suivi-champ-l);
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------- Divers */
+.mono {
+  font-family: var(--mantine-font-family-monospace);
+}
+.pre {
+  white-space: pre-wrap;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  max-height: 20rem;
+  overflow: auto;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Page à sections (Paramètres) */
+.settings {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.settings-nav {
+  display: none;
+}
+.settings-content {
+  min-width: 0;
+}
+@media (min-width: 64em) {
+  .settings {
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+  }
+  .settings-nav {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    padding: var(--mantine-spacing-xs);
+    background: var(--suivi-surface);
+    border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+    border-radius: var(--mantine-radius-lg);
+  }
+  .settings-select {
+    display: none;
+  }
+  .settings-content {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+.settings-logo {
+  max-width: var(--suivi-champ-s);
+  max-height: 6rem;
+}
+
+/* ---------------------------------------------------------------- Densité (Paramètres > Apparence, préférences) */
+html[data-densite='compacte'] {
+  --mantine-spacing-xs: 0.375rem;
+  --mantine-spacing-sm: 0.5rem;
+  --mantine-spacing-md: 0.75rem;
+  --mantine-spacing-lg: 1rem;
+}
+html[data-densite='confortable'] {
+  --mantine-spacing-xs: 0.625rem;
+  --mantine-spacing-sm: 1rem;
+  --mantine-spacing-md: 1.25rem;
+  --mantine-spacing-lg: 2rem;
+}
+
+/* Une puce d'état n'est jamais tronquée dans une cellule étroite. */
+.mantine-Badge-root {
+  flex-shrink: 0;
+  overflow: visible;
+}
+.mantine-Badge-label {
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------------- Grilles
+   Tableaux de bord : on ajoute des colonnes au lieu d'élargir les cartes. */
+.grille-cartes {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--suivi-carte-min), 100%), 1fr));
+  align-items: start;
+}
+.carte-large {
+  grid-column: 1 / -1;
+}
+/* Formulaires longs : 1 colonne, puis 2 ou 3 selon la largeur de leur conteneur. */
+.grille-formulaire {
+  container-type: inline-size;
+}
+.grille-formulaire .grille-formulaire__champs {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+}
+@container (min-width: 40rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width: 72rem) {
+  .grille-formulaire .grille-formulaire__champs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------- Liste et fiche (maître-détail)
+   Large (≥ 90em) : liste et fiche côte à côte. Ultra (≥ 160em) : troisième panneau (historique, éléments liés). */
+.maitre-detail {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.maitre-detail__fiche,
+.maitre-detail__annexe {
+  display: none;
+}
+@media (min-width: 90em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__fiche {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+    max-height: calc(100vh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+    overflow: auto;
+  }
+}
+@media (min-width: 160em) {
+  .maitre-detail--ouvert {
+    grid-template-columns: minmax(0, 1fr) var(--suivi-fiche-l) var(--suivi-panneau-l);
+  }
+  .maitre-detail--ouvert .maitre-detail__annexe {
+    display: block;
+    position: sticky;
+    top: calc(var(--suivi-entete-h) + var(--mantine-spacing-md));
+  }
+}
+
+/* ---------------------------------------------------------------- Tableaux : en-têtes et première colonne figés,
+   colonnes supplémentaires affichées selon la largeur disponible (requêtes de conteneur). */
+.data-table {
+  container-type: inline-size;
+}
+.data-table .table-wrap {
+  max-height: min(75vh, 60rem);
+  overflow: auto;
+}
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.data-table tbody td:first-child,
+.data-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--suivi-surface);
+}
+.data-table thead th:first-child {
+  z-index: 3;
+}
+.col-p2,
+.col-p3 {
+  display: none;
+}
+@container (min-width: 48rem) {
+  .col-p2 {
+    display: table-cell;
+  }
+}
+@container (min-width: 80rem) {
+  .col-p3 {
+    display: table-cell;
+  }
+}
+/* Colonnes choisies explicitement par la personne : toujours affichées ; les autres sont masquées. */
+.col-choisie {
+  display: table-cell;
+}
+.col-masquee {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Réglages du système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --mantine-color-dimmed: var(--mantine-color-text);
+    --mantine-color-default-border: var(--mantine-color-text);
+    --suivi-trait-l: 2px;
+  }
+}
+@media (forced-colors: active) {
+  .brand-mark,
+  .mantine-Badge-root {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------------------------------------------------------------- Chiffres clés (tableau de bord) */
+.chiffre-cle {
+  min-width: 6rem;
+}
+.chiffre-cle__valeur {
+  font-size: var(--suivi-chiffre-taille, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* ---------------------------------------------------------------- Écran mural (/mur)
+   Plein écran, sans menu, texte agrandi (lisible à distance), aucune action de modification. */
+.mur {
+  --suivi-chiffre-taille: 3.25rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+}
+.mur-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+}
+.mur-message {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--suivi-marge-page);
+  background: var(--suivi-fond-page);
+  text-align: center;
+}
+
+/* Liste avec fiche ouverte : ligne sélectionnée mise en évidence. */
+.ligne-choisie > td {
+  background: var(--mantine-primary-color-light);
+}
+.pousse-droite {
+  margin-left: auto;
+}
+
+/* ========================================================================
+   NEON — surfaces indigo, signature violette, rose et cyan.
+   Couche visuelle uniquement. Aucun changement des dimensions métier du SVG.
+   ======================================================================== */
+:root {
+  --suivi-entete-h: 4.5rem;
+  --suivi-nav-l: 15rem;
+  --suivi-marque: 2.35rem;
+  --suivi-marge-page: clamp(1rem, 2.35vw, 3rem);
+  --suivi-carte-min: 21rem;
+  --suivi-nav-fond: var(--neon-navigation);
+  --suivi-nav-texte: var(--neon-titre);
+  --suivi-nav-secondaire: var(--neon-secondaire);
+  --suivi-nav-active: var(--neon-doux);
+  --suivi-nav-survol: var(--neon-doux);
+  --suivi-nav-repere: var(--neon-accent);
+  --suivi-famille-pilotage: var(--neon-accent);
+  --suivi-famille-organisation: var(--carte-bleu-accent);
+  --suivi-famille-risques: var(--carte-orange-accent);
+  --suivi-famille-conformite: var(--carte-bleu-accent);
+  --suivi-famille-actions: var(--neon-accent);
+  --suivi-famille-resilience: var(--carte-vert-accent);
+  --suivi-famille-documents: var(--neon-accent);
+  --suivi-surface-douce: var(--mantine-color-gray-0);
+  --suivi-ombre: 0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%);
+  --suivi-ombre-haute: 0 18px 54px rgb(27 54 37 / 12%);
+  --suivi-motion: 180ms;
+  --suivi-motion-entree: 360ms;
+  --suivi-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+[data-mantine-color-scheme='dark'] {
+  --suivi-surface-douce: var(--mantine-color-dark-6);
+  --suivi-nav-fond: var(--neon-navigation);
+  --suivi-nav-active: var(--neon-doux);
+  --suivi-ombre: 0 2px 5px rgb(0 0 0 / 9%);
+  --suivi-ombre-haute: 0 18px 54px rgb(0 0 0 / 26%);
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
+}
+h1,
+h2,
+h3,
+.mantine-Title-root {
+  letter-spacing: -0.035em;
+}
+.mantine-Title-root:is(h1) {
+  font-weight: 650;
+  font-size: clamp(1.65rem, 2.2vw, 2.45rem);
+  line-height: 1.2;
+}
+.mantine-Title-root:is(h2, h3, h4) {
+  font-weight: 600;
+}
+::selection {
+  background: var(--mantine-color-suivi-1);
+  color: var(--suivi-encre);
+}
+.shell-header {
+  border-color: var(--suivi-trait);
+}
+.shell-header > .mantine-Group-root {
+  padding-inline: var(--mantine-spacing-lg);
+}
+.brand-mark {
+  border-radius: 0.7rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+.brand-wordmark {
+  line-height: 1.1;
+}
+.brand-wordmark > .mantine-Text-root:first-child {
+  font-size: 0.91rem;
+  letter-spacing: -0.02em;
+}
+.brand-subtitle {
+  color: var(--mantine-color-dimmed);
+  margin-top: 0.16rem;
+  font-size: 0.68rem;
+}
+.header-user {
+  border-inline-start: 1px solid var(--suivi-trait);
+  padding-inline-start: var(--mantine-spacing-md);
+}
+.live-badge {
+  border: 0;
+  background: var(--suivi-surface-douce);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.shell-nav {
+  background: var(--suivi-nav-fond);
+  border: 0;
+}
+.shell-nav-inner {
+  gap: var(--mantine-spacing-xs);
+}
+.nav-caption {
+  font-size: 0.61rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 0.65rem 0.75rem 0.8rem;
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav-inner .mantine-NavLink-root {
+  border-radius: var(--mantine-radius-md);
+  padding: 0.76rem 0.85rem;
+  transition:
+    background var(--suivi-motion),
+    color var(--suivi-motion);
+}
+.shell-nav-inner .mantine-NavLink-label {
+  font-size: 0.84rem;
+}
+.shell-nav-inner .mantine-NavLink-root:hover {
+  background: var(--suivi-surface-douce);
+}
+.shell-nav .mantine-NavLink-root {
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav .mantine-NavLink-root:hover {
+  background: var(--suivi-nav-survol);
+  color: var(--suivi-nav-texte);
+}
+.shell-nav .mantine-NavLink-root[data-active] {
+  color: var(--suivi-nav-texte);
+  background: var(--suivi-nav-active);
+  box-shadow: inset 3px 0 var(--suivi-nav-repere);
+}
+.shell-nav .mantine-NavLink-root[data-active] .mantine-NavLink-label {
+  font-weight: 600;
+}
+.shell-nav .mantine-NavLink-description {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.67rem;
+  line-height: 1.6;
+}
+.nav-footer {
+  padding-top: var(--mantine-spacing-md);
+}
+/* Familles du menu : icône teintée (décorative), sous-entrées en retrait, séparation de l'administration. */
+.nav-famille[data-famille='pilotage'] .nav-icone {
+  color: var(--suivi-famille-pilotage);
+}
+.nav-famille[data-famille='organisation'] .nav-icone {
+  color: var(--suivi-famille-organisation);
+}
+.nav-famille[data-famille='risques'] .nav-icone {
+  color: var(--suivi-famille-risques);
+}
+.nav-famille[data-famille='conformite'] .nav-icone {
+  color: var(--suivi-famille-conformite);
+}
+.nav-famille[data-famille='actions'] .nav-icone {
+  color: var(--suivi-famille-actions);
+}
+.nav-famille[data-famille='resilience'] .nav-icone {
+  color: var(--suivi-famille-resilience);
+}
+.nav-famille[data-famille='documents'] .nav-icone {
+  color: var(--suivi-famille-documents);
+}
+.nav-administration {
+  margin-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--suivi-nav-active);
+}
+.nav-signature {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  border-top: 1px solid var(--suivi-nav-active);
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-xs);
+}
+.nav-signature__mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 50%;
+  background: var(--suivi-nav-active);
+}
+.shell-nav .nav-signature {
+  color: var(--suivi-nav-texte);
+}
+.shell-nav .nav-signature .mantine-Text-root:last-child {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.68rem;
+}
+.shell-nav .nav-footer .mantine-Button-root {
+  color: var(--suivi-nav-secondaire);
+}
+.shell-nav .nav-footer .mantine-Button-root:hover {
+  background: var(--suivi-nav-survol);
+}
+.shell-nav .app-version {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.63rem;
+  padding-top: var(--mantine-spacing-xs);
+}
+@media (min-width: 36em) {
+  .shell-nav {
+    padding-block: var(--mantine-spacing-md);
+  }
+  .shell-nav-inner {
+    min-height: calc(100dvh - var(--suivi-entete-h) - 2 * var(--mantine-spacing-md));
+  }
+  .nav-footer {
+    margin-top: auto;
+  }
+}
+@media (min-width: 36em) and (max-width: 63.99em) {
+  .shell-nav .nav-signature {
+    display: none;
+  }
+  .shell-nav .mantine-NavLink-root {
+    padding-inline: 0;
+  }
+  .shell-nav .mantine-NavLink-body {
+    flex: 0;
+  }
+}
+@media (min-width: 64em) {
+  .shell-nav {
+    padding-inline: var(--mantine-spacing-sm);
+  }
+}
+.page {
+  gap: var(--mantine-spacing-lg);
+}
+.page-header {
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  padding-bottom: var(--mantine-spacing-xs);
+}
+.page-header__titre {
+  min-width: 0;
+}
+.page-header__titre .lecture {
+  margin-top: 0.6rem;
+  line-height: 1.6;
+}
+.page-eyebrow {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.page > .page-eyebrow {
+  margin-bottom: calc(-1 * var(--mantine-spacing-sm));
+}
+.section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  flex-wrap: wrap;
+  padding-top: var(--mantine-spacing-lg);
+  padding-bottom: var(--mantine-spacing-2xs);
+}
+.section-label > .mantine-Text-root:last-child {
+  font-size: 0.75rem;
+}
+.mantine-Card-root {
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+  padding: var(--mantine-spacing-lg);
+  background: var(--suivi-surface);
+}
+.mantine-Card-root .mantine-Title-root:is(h2, h3, h4) {
+  line-height: 1.4;
+}
+.mantine-Button-root {
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  transition:
+    background-color var(--suivi-motion),
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+.mantine-Button-root[data-variant='default'] {
+  border-color: var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+.mantine-Button-root[data-variant='default']:hover:not(:disabled) {
+  border-color: var(--mantine-color-suivi-5);
+  background: var(--suivi-surface-douce);
+}
+.mantine-Button-root[data-variant='filled']:not(:disabled):hover {
+  box-shadow: 0 4px 12px rgb(18 63 41 / 14%);
+}
+.mantine-Button-root:disabled,
+.mantine-Button-root[data-disabled] {
+  box-shadow: none;
+}
+.mantine-Input-input {
+  border-radius: var(--mantine-radius-md);
+  transition:
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+.mantine-Input-input:focus-within {
+  box-shadow: 0 0 0 3px var(--mantine-primary-color-light);
+}
+.mantine-InputWrapper-label {
+  margin-bottom: var(--mantine-spacing-2xs);
+  font-weight: 550;
+  font-size: 0.82rem;
+}
+.mantine-Badge-root {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 550;
+  max-width: 100%;
+  height: auto;
+  min-height: 1.3rem;
+  padding-block: 0.18rem;
+}
+.mantine-Badge-label {
+  white-space: normal;
+  line-height: 1.35;
+}
+.mantine-Table-table {
+  --table-border-color: var(--suivi-trait);
+  font-size: 0.82rem;
+}
+.mantine-Table-th {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  color: var(--mantine-color-dimmed);
+  padding-block: var(--mantine-spacing-sm);
+}
+.mantine-Table-td {
+  padding-block: var(--mantine-spacing-sm);
+  line-height: 1.6;
+}
+.mantine-Table-tr {
+  transition: background-color var(--suivi-motion);
+}
+.data-table.mantine-Card-root {
+  padding: 0;
+}
+.data-table thead th,
+.data-table thead th:first-child {
+  background: var(--suivi-surface-douce);
+}
+.mantine-Tabs-list {
+  border-bottom: 1px solid var(--suivi-trait);
+  gap: var(--mantine-spacing-sm);
+}
+.mantine-Tabs-tab {
+  font-weight: 550;
+  padding-block: var(--mantine-spacing-sm);
+}
+.mantine-Tabs-tab[data-active] {
+  color: var(--mantine-primary-color-filled);
+}
+/* En sombre, le vert plein (nuance 7) n'atteint que 2,6 sur le fond : nuance claire (WCAG 1.4.3). */
+[data-mantine-color-scheme='dark'] .mantine-Tabs-tab[data-active] {
+  color: var(--mantine-color-suivi-light-color);
+}
+.mantine-Modal-content,
+.mantine-Drawer-content {
+  box-shadow: var(--suivi-ombre-haute);
+}
+.mantine-Modal-title,
+.mantine-Drawer-title {
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.mantine-Modal-header,
+.mantine-Drawer-header {
+  border-bottom: 1px solid var(--suivi-trait);
+  margin-bottom: var(--mantine-spacing-md);
+}
+.mantine-Modal-overlay,
+.mantine-Drawer-overlay {
+  background: rgb(11 31 23 / 30%);
+}
+.settings-nav {
+  border-color: var(--suivi-trait);
+}
+.settings-nav .mantine-NavLink-root {
+  border-radius: var(--mantine-radius-sm);
+  padding-block: var(--mantine-spacing-sm);
+}
+.form-section__pied {
+  border-color: var(--suivi-trait);
+  margin-top: var(--mantine-spacing-xs);
+}
+
+/* Tableau de bord : un rendez-vous prioritaire et quatre indicateurs distincts. */
+.synthese-grille {
+  align-items: stretch;
+  gap: var(--mantine-spacing-lg);
+}
+.synthese-grille > .carte {
+  min-width: 0;
+}
+.synthese-grille .carte > h2 {
+  font-size: 0.93rem;
+  margin-bottom: var(--mantine-spacing-lg);
+}
+.audit-carte {
+  position: relative;
+  overflow: hidden;
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  border-color: var(--suivi-nav-fond);
+  min-height: 13.5rem;
+}
+.audit-carte::after {
+  content: '';
+  position: absolute;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 50%;
+  border: 1px solid var(--suivi-nav-active);
+  right: -5rem;
+  bottom: -8rem;
+  box-shadow: 0 0 0 2rem var(--suivi-nav-survol);
+  pointer-events: none;
+}
+.audit-carte > h2 {
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.72rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.audit-carte .mantine-Text-root {
+  color: var(--suivi-nav-secondaire) !important;
+}
+.audit-carte .chiffre-cle__valeur {
+  color: var(--suivi-nav-texte) !important;
+  font-size: clamp(1.75rem, 2.3vw, 2.8rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin-top: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+.audit-symbole {
+  position: absolute;
+  top: var(--mantine-spacing-lg);
+  right: var(--mantine-spacing-lg);
+  color: var(--suivi-nav-repere);
+}
+.audit-carte > .mantine-Stack-root {
+  position: relative;
+  z-index: 1;
+}
+.chiffres-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.chiffre-cle {
+  min-width: 0;
+  padding-inline-start: var(--mantine-spacing-md);
+  border-inline-start: 2px solid var(--suivi-trait);
+}
+.chiffre-cle .chiffre-cle__valeur {
+  font-size: 2rem;
+  font-weight: 550;
+  letter-spacing: -0.05em;
+  margin-bottom: 0.35rem;
+}
+.chiffre-cle > .mantine-Text-root:last-child {
+  font-size: 0.73rem;
+}
+.chiffre-cle--erreur {
+  border-color: var(--mantine-color-red-4);
+}
+.chiffre-cle--attention {
+  border-color: var(--mantine-color-orange-4);
+}
+.chiffre-cle--erreur .chiffre-cle__valeur {
+  color: var(--mantine-color-red-8);
+}
+.chiffre-cle--attention .chiffre-cle__valeur {
+  color: var(--mantine-color-orange-9);
+}
+[data-mantine-color-scheme='dark'] .chiffre-cle--erreur .chiffre-cle__valeur {
+  color: var(--mantine-color-red-3);
+}
+[data-mantine-color-scheme='dark'] .chiffre-cle--attention .chiffre-cle__valeur {
+  color: var(--mantine-color-orange-3);
+}
+.repartition-carte .mantine-Table-td {
+  border: 0;
+  padding: 0 0 var(--mantine-spacing-md);
+}
+.repartition-carte .mantine-Table-td:first-child {
+  width: 100%;
+}
+.repartition-carte .mantine-Table-td:last-child {
+  font-size: 1.1rem;
+  padding-left: var(--mantine-spacing-lg);
+  font-weight: 550;
+  vertical-align: middle;
+}
+.repartition-label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-size: 0.79rem;
+}
+.repartition-barre {
+  display: block;
+  width: 100%;
+  height: 0.32rem;
+  overflow: visible;
+}
+.repartition-piste {
+  fill: var(--suivi-surface-douce);
+}
+.repartition-valeur {
+  fill: var(--mantine-color-suivi-6);
+}
+.repartition-carte tr:nth-child(2) .repartition-valeur {
+  fill: var(--mantine-color-suivi-4);
+}
+.repartition-carte tr:nth-child(3) .repartition-valeur {
+  fill: var(--mantine-color-suivi-3);
+}
+.acces-carte {
+  display: flex;
+  flex-direction: column;
+}
+.acces-carte > .mantine-Stack-root {
+  flex: 1;
+  align-items: start;
+}
+.acces-carte .mantine-Text-root {
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.acces-carte .mantine-Button-root {
+  margin-top: auto;
+}
+.acces-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: var(--mantine-primary-color-light);
+  color: var(--mantine-primary-color-light-color);
+  border-radius: 0.7rem;
+}
+.presence-liste {
+  background: var(--suivi-surface-douce);
+  box-shadow: none;
+}
+.reprise-carte {
+  box-shadow: none;
+}
+.reprise-carte .table-wrap {
+  margin-top: var(--mantine-spacing-xs);
+}
+@media (min-width: 90em) {
+  .synthese-grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .synthese-grille .ecarts-carte {
+    grid-column: span 2;
+  }
+  .chiffres-grille {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: 100%;
+    align-items: center;
+  }
+  .chiffre-cle .chiffre-cle__valeur {
+    font-size: 2.75rem;
+  }
+  .synthese-grille .echeances-carte:not(.carte-large) {
+    grid-column: span 2;
+  }
+}
+@media (min-width: 160em) {
+  .synthese-grille {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .synthese-grille .ecarts-carte {
+    grid-column: span 3;
+  }
+}
+@media (max-width: 35.99em) {
+  .shell-header > .mantine-Group-root {
+    padding-inline: var(--mantine-spacing-sm);
+  }
+  .shell-header .mantine-Button-root {
+    font-size: 0.7rem;
+  }
+  .mantine-Card-root {
+    padding: var(--mantine-spacing-md);
+  }
+  .page {
+    gap: var(--mantine-spacing-md);
+  }
+  .synthese-grille {
+    gap: var(--mantine-spacing-md);
+  }
+  .audit-carte {
+    min-height: 12rem;
+  }
+  .chiffres-grille {
+    gap: var(--mantine-spacing-lg);
+  }
+  .mantine-Drawer-root .nav-caption {
+    color: var(--mantine-color-dimmed);
+  }
+  .mantine-Drawer-root .nav-signature {
+    border-color: var(--suivi-trait);
+  }
+  .mantine-Drawer-root .nav-signature__mark {
+    background: var(--mantine-primary-color-light);
+  }
+}
+
+/* Cartographie : commandes lisibles, canevas net ; géométrie et exports préservés. */
+.carte-page .carte-outils {
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--suivi-surface);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-vues {
+  padding: var(--mantine-spacing-2xs);
+  border: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+  border-radius: var(--mantine-radius-lg);
+}
+.carte-page .carte-vues .mantine-Button-root {
+  border: 0;
+}
+.carte-page .carte-vues .mantine-Button-root[aria-pressed='false'] {
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+}
+.carte-page .carte-canevas,
+.carte-page .carte-panneau,
+.carte-page .carte-inspecteur {
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-canevas {
+  border-radius: var(--mantine-radius-lg);
+}
+.carte-page .page-header {
+  margin-bottom: var(--mantine-spacing-xs);
+}
+.carte-page .carte-vide {
+  border-style: solid;
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+.carte-page .carte-vide-icone {
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.5rem;
+  background: var(--mantine-primary-color-light);
+  margin-bottom: var(--mantine-spacing-sm);
+}
+.carte-page .carte-vide-icone svg {
+  color: var(--mantine-primary-color-filled);
+}
+.carte-page .carte-grille {
+  gap: var(--mantine-spacing-md);
+}
+
+/* Connexion : panneau unique centré (fond de la navigation) sur un fond animé décoratif, sans ressource distante.
+   Le formulaire prend la place des trois cartes empilées ; les autres étapes s'affichent dans le même panneau. */
+.auth-wrap.auth-connexion {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(1rem, 3vw, 2.5rem);
+  padding-inline: max(var(--mantine-spacing-md), env(safe-area-inset-left, 0px))
+    max(var(--mantine-spacing-md), env(safe-area-inset-right, 0px));
+}
+.auth-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.auth-panneau {
+  /* Panneau toujours sombre : textes et champs Mantine de l'étape lisibles sur le vert profond, dans les deux modes. */
+  --mantine-color-text: var(--suivi-nav-texte);
+  --mantine-color-dimmed: var(--suivi-nav-secondaire);
+  --mantine-color-green-text: var(--mantine-color-green-3);
+  --mantine-color-red-text: var(--mantine-color-red-3);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--suivi-largeur-connexion), 100%);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-radius: var(--mantine-radius-xl);
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  box-shadow: var(--suivi-ombre-haute);
+  text-align: start;
+}
+.auth-panneau > :not(.auth-sceau, .onde-menu) {
+  position: relative;
+  z-index: 1;
+}
+/* Onde en fond de panneau (OndeMenu) : sous le sceau et le texte, masquée sans mouvement et à l'impression. */
+.onde-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.onde-menu__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.auth-kicker {
+  color: var(--suivi-nav-repere);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.auth-accroche {
+  margin: 1rem 0 0;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.05em;
+}
+
+/* Sceau : en haut à droite, derrière le texte. */
+.auth-panneau > .auth-sceau {
+  position: absolute;
+  z-index: 0;
+  top: -0.35rem;
+  right: -0.6rem;
+  width: clamp(7.5rem, 26vw, 10.75rem);
+  height: auto;
+  pointer-events: none;
+}
+.auth-sceau__deco {
+  opacity: 0.45;
+}
+.auth-sceau__drapeau {
+  opacity: 0.82;
+}
+.auth-sceau__bleu {
+  fill: var(--suivi-sceau-bleu);
+}
+.auth-sceau__blanc {
+  fill: var(--suivi-sceau-blanc);
+}
+.auth-sceau__rouge {
+  fill: var(--suivi-sceau-rouge);
+}
+.auth-sceau__ombre {
+  fill: var(--suivi-nav-fond);
+  opacity: 0.28;
+}
+.auth-sceau__anneau,
+.auth-sceau__bord {
+  fill: none;
+  stroke: var(--suivi-nav-repere);
+  stroke-width: 1.5;
+}
+.auth-sceau__bord {
+  opacity: 0.7;
+}
+.auth-sceau__fin {
+  fill: none;
+  stroke: var(--suivi-nav-active);
+  stroke-width: 1;
+}
+.auth-sceau__coeur {
+  fill: var(--suivi-nav-survol);
+  stroke: var(--suivi-nav-active);
+  stroke-width: 1;
+}
+.auth-sceau__coche-fond,
+.auth-sceau__coche {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.auth-sceau__coche-fond {
+  stroke: var(--suivi-nav-fond);
+  stroke-width: 6.5;
+}
+.auth-sceau__coche {
+  stroke: var(--mantine-color-white);
+  stroke-width: 3.2;
+}
+.auth-sceau__texte {
+  font-family: var(--mantine-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  fill: var(--suivi-nav-repere);
+}
+.auth-sceau__tourne {
+  transform-origin: 120px 120px;
+  animation: auth-sceau-tourne 40s linear infinite;
+}
+@keyframes auth-sceau-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Les trois cartes empilées : identifiant, mot de passe (décalée), bouton (décalée encore). */
+.auth-pile {
+  display: flex;
+  flex-direction: column;
+  /* 3rem entre le titre et la première carte : place de l'onde du panneau. */
+  margin-block: var(--suivi-ecart-onde) 1rem;
+}
+.auth-carte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: min(24rem, calc(100% - 3rem));
+  padding: 0.85rem 1rem 1.15rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.75rem;
+}
+.auth-carte--identifiant {
+  z-index: 1;
+  background: var(--suivi-nav-survol);
+}
+.auth-carte--mot-de-passe {
+  z-index: 2;
+  margin: -0.6rem 0 0 1.5rem;
+  padding-top: 1.2rem;
+  background: var(--suivi-nav-active);
+}
+.auth-carte--valider {
+  z-index: 3;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: -0.6rem 0 0 3rem;
+  padding: 1.35rem 1.1rem 1rem;
+  border-color: var(--suivi-nav-repere);
+  background: var(--suivi-nav-repere);
+  color: var(--suivi-nav-fond);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    transform var(--suivi-motion) var(--suivi-ease),
+    box-shadow var(--suivi-motion) var(--suivi-ease);
+}
+.auth-carte--valider:disabled {
+  cursor: progress;
+}
+@media (hover: hover) {
+  .auth-carte--valider:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--suivi-ombre-haute);
+  }
+}
+.auth-carte--valider:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-texte);
+  outline-offset: 3px;
+}
+.auth-carte--valider svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.auth-carte--valider .auth-attente {
+  --loader-color: var(--suivi-nav-fond);
+}
+.auth-label,
+.auth-etape .mantine-InputWrapper-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--suivi-nav-repere);
+}
+.auth-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.auth-majuscules {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--suivi-famille-conformite);
+}
+.auth-boite {
+  position: relative;
+}
+.auth-icone {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  translate: 0 -50%;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  color: var(--suivi-nav-secondaire);
+  pointer-events: none;
+}
+.auth-champ {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 0.85rem 0 2.5rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.55rem;
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  font: inherit;
+  /* 16 px au moins : pas d'agrandissement automatique au toucher sur téléphone. */
+  font-size: max(1rem, 16px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: border-color var(--suivi-motion) var(--suivi-ease);
+}
+.auth-champ::placeholder {
+  color: var(--suivi-nav-secondaire);
+  opacity: 0.6;
+  font-weight: 400;
+}
+.auth-champ--secret {
+  padding-inline-end: 2.6rem;
+  border-color: var(--suivi-nav-survol);
+}
+.auth-champ:hover {
+  border-color: var(--suivi-nav-secondaire);
+}
+.auth-champ:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-repere);
+  outline-offset: 1px;
+}
+.auth-oeil {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--suivi-nav-secondaire);
+  cursor: pointer;
+}
+.auth-oeil svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.auth-oeil:hover {
+  color: var(--suivi-nav-texte);
+}
+.auth-oeil:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--suivi-nav-repere);
+  outline-offset: 0;
+}
+.auth-aide {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--suivi-nav-secondaire);
+}
+.auth-panneau > .mantine-Alert-root {
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+/* Autres étapes (code, enrôlement, mot de passe imposé) : une carte du panneau, champs et boutons Mantine adaptés. */
+.auth-etape {
+  margin-top: var(--suivi-ecart-onde);
+  padding: 1rem;
+  border: var(--suivi-trait-l) solid var(--suivi-nav-active);
+  border-radius: 0.75rem;
+  background: var(--suivi-nav-survol);
+}
+.auth-panneau .auth-etape .mantine-Input-wrapper[data-variant] {
+  --input-bg: var(--suivi-nav-fond);
+  --input-bd: var(--suivi-nav-active);
+  --input-bd-focus: var(--suivi-nav-repere);
+  --input-color: var(--suivi-nav-texte);
+}
+/* Variante pleine : Mantine ne pose data-variant que hors variante par défaut. */
+.auth-panneau .mantine-Button-root:is([data-variant='filled'], :not([data-variant])):not(:disabled, [data-disabled]) {
+  background: var(--suivi-nav-repere);
+  color: var(--suivi-nav-fond);
+}
+/* Œil des champs de mot de passe : le gris de Mantine en mode clair disparaît sur le champ sombre. */
+.auth-panneau .mantine-PasswordInput-visibilityToggle {
+  color: var(--suivi-nav-secondaire);
+}
+.auth-panneau .mantine-PasswordInput-visibilityToggle:hover {
+  background: var(--suivi-nav-active);
+  color: var(--suivi-nav-texte);
+}
+.auth-panneau .mantine-Button-root[data-variant='subtle'] {
+  color: var(--suivi-nav-repere);
+}
+.auth-panneau .mantine-Button-root[data-variant='subtle']:hover {
+  background: var(--suivi-nav-active);
+}
+@media (max-width: 30em) {
+  .auth-carte {
+    width: calc(100% - 1.5rem);
+  }
+  .auth-carte--mot-de-passe {
+    margin-inline-start: 0.75rem;
+  }
+  .auth-carte--valider {
+    margin-inline-start: 1.5rem;
+  }
+  .auth-panneau > .auth-sceau {
+    top: -0.4rem;
+    right: -0.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onde-menu {
+    display: none;
+  }
+  .auth-sceau__tourne {
+    animation: none;
+  }
+  .auth-carte--valider {
+    transition: none;
+  }
+}
+@media print {
+  .auth-fond,
+  .onde-menu {
+    display: none;
+  }
+}
+.auth-wrap .auth-card {
+  padding: clamp(1.25rem, 3vw, 3rem);
+  box-shadow: var(--suivi-ombre-haute);
+}
+.auth-card .mantine-Title-root {
+  margin-block: var(--mantine-spacing-sm);
+}
+.auth-card .mantine-Stepper-stepLabel {
+  font-size: 0.65rem;
+}
+.auth-card .mantine-Stepper-root {
+  margin-block: var(--mantine-spacing-sm);
+}
+/* Mouvement uniquement à l'apparition ; aucun défilement imposé ni boucle décorative. */
+@keyframes suivi-arrivee {
+  from {
+    opacity: 0;
+    translate: 0 0.45rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .page-header,
+  .page > .mantine-Group-root:first-child,
+  .auth-card,
+  .auth-panneau {
+    animation: suivi-arrivee var(--suivi-motion-entree) var(--suivi-ease) both;
+  }
+  .synthese-grille > .mantine-Card-root {
+    animation: suivi-arrivee var(--suivi-motion-entree) var(--suivi-ease) both;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(2) {
+    animation-delay: 35ms;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(3) {
+    animation-delay: 70ms;
+  }
+  .synthese-grille > .mantine-Card-root:nth-child(4) {
+    animation-delay: 105ms;
+  }
+}
+@media (prefers-contrast: more) {
+  .mantine-Card-root,
+  .data-table,
+  .carte-page .carte-outils {
+    border-color: var(--mantine-color-text);
+  }
+  .shell-nav .mantine-NavLink-root {
+    color: var(--suivi-nav-texte);
+  }
+}
+@media print {
+  .shell-header,
+  .shell-nav,
+  .nav-footer {
+    display: none;
+  }
+  .shell-body {
+    display: block;
+  }
+  .shell-main {
+    padding: 0;
+  }
+  .mantine-Card-root {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .audit-carte {
+    print-color-adjust: exact;
+  }
+}
+
+/* Libellés et légendes restent lisibles même quand Mantine définit leur couleur. */
+.shell-nav .app-version {
+  color: var(--suivi-nav-secondaire) !important;
+}
+.carte-page .carte-panneau .mantine-Card-root {
+  padding: var(--mantine-spacing-md);
+}
+.carte-page .carte-prereglages .mantine-Button-root {
+  padding-inline: var(--mantine-spacing-xs);
+}
+.carte-page .carte-prereglages .mantine-Button-label {
+  white-space: normal;
+  line-height: 1.25;
+}
+.carte-page .carte-prereglages .mantine-Button-section {
+  margin-inline-end: var(--mantine-spacing-2xs);
+}
+.data-table .mantine-Table-td:first-child,
+.data-table .mantine-Table-th:first-child {
+  padding-inline-start: var(--mantine-spacing-lg);
+}
+.data-table .mantine-Table-td:last-child,
+.data-table .mantine-Table-th:last-child {
+  padding-inline-end: var(--mantine-spacing-lg);
+}
+.data-table .mantine-Table-td .mantine-UnstyledButton-root {
+  font-size: 0.88rem;
+}
+
+.data-table .mantine-Table-td .mantine-Anchor-root {
+  font-size: 0.88rem;
+}
+
+/* Étapes de connexion : trois colonnes lisibles sur téléphone. */
+@media (max-width: 35.99em) {
+  .auth-card .mantine-Stepper-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--mantine-spacing-xs);
+    align-items: start;
+  }
+  .auth-card .mantine-Stepper-separator {
+    display: none;
+  }
+  .auth-card .mantine-Stepper-step {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mantine-spacing-xs);
+  }
+  .auth-card .mantine-Stepper-stepBody {
+    margin: 0;
+  }
+  .auth-card .mantine-Stepper-stepLabel {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.5;
+  }
+}
+
+/* ---------------------------------------------------------------- Graphiques du tableau de bord (UI-02)
+   Teintes de la charte (--carte-<teinte>-accent, clair et sombre), aucun style en ligne. */
+.graph-anneau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+}
+.graph-anneau svg {
+  width: clamp(7.5rem, 30%, 10rem);
+  flex: none;
+}
+.graph-piste {
+  fill: none;
+  stroke: var(--suivi-surface-douce);
+  stroke-width: 12;
+}
+.graph-arc {
+  fill: none;
+  stroke-width: 12;
+}
+.graph-centre {
+  font-size: 1.05rem;
+  font-weight: 650;
+  fill: var(--mantine-color-text);
+}
+.graph-sous-centre {
+  font-size: 0.5rem;
+  fill: var(--mantine-color-dimmed);
+}
+.graph-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+  flex: 1;
+  min-width: 10rem;
+  font-size: var(--mantine-font-size-sm);
+}
+.graph-legende li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.graph-legende-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  font-size: var(--mantine-font-size-xs);
+}
+.graph-legende-ligne li {
+  display: inline-flex;
+}
+.graph-legende-pourcent {
+  color: var(--mantine-color-dimmed);
+  min-width: 2.75rem;
+  text-align: right;
+}
+.graph-pastille {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+}
+.graph-histogramme svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.graph-grille {
+  stroke: var(--suivi-trait);
+  stroke-width: 1;
+}
+.graph-axe {
+  font-size: 10.5px;
+  fill: var(--mantine-color-dimmed);
+}
+.graph-total {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--mantine-color-text);
+}
+.graph-vide {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  margin: 0;
+}
+.graph-jauge + .graph-jauge {
+  margin-top: var(--mantine-spacing-sm);
+}
+.graph-jauge-tete {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+  margin-bottom: var(--mantine-spacing-2xs);
+}
+.graph-jauge svg {
+  display: block;
+  width: 100%;
+  height: 0.4rem;
+}
+.graph-piste-jauge {
+  fill: var(--suivi-surface-douce);
+}
+.graph-cible {
+  stroke: var(--mantine-color-text);
+  stroke-width: 0.6;
+}
+.graph-jauge-detail {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  margin-top: var(--mantine-spacing-2xs);
+}
+.graph-vert {
+  fill: var(--carte-vert-accent);
+  stroke: var(--carte-vert-accent);
+  background: var(--carte-vert-accent);
+}
+.graph-bleu {
+  fill: var(--carte-bleu-accent);
+  stroke: var(--carte-bleu-accent);
+  background: var(--carte-bleu-accent);
+}
+.graph-violet {
+  fill: var(--carte-violet-accent);
+  stroke: var(--carte-violet-accent);
+  background: var(--carte-violet-accent);
+}
+.graph-orange {
+  fill: var(--carte-orange-accent);
+  stroke: var(--carte-orange-accent);
+  background: var(--carte-orange-accent);
+}
+.graph-rouge {
+  fill: var(--carte-rouge-accent);
+  stroke: var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+}
+.graph-gris {
+  fill: var(--carte-gris-accent);
+  stroke: var(--carte-gris-accent);
+  background: var(--carte-gris-accent);
+}
+.graph-arc.graph-vert,
+.graph-arc.graph-bleu,
+.graph-arc.graph-violet,
+.graph-arc.graph-orange,
+.graph-arc.graph-rouge,
+.graph-arc.graph-gris {
+  fill: none;
+}
+
+/* ---------------------------------------------------------------- Style global « clair bleuté »
+   Choix de l'instance (Paramètres > Apparence), posé sur <html data-style>. Ne remplace que les fonds et bordures du
+   mode clair : navigation vert profond, couleurs métier, graphiques et cartographie restent inchangés. Le mode sombre
+   garde ses variables. */
+html[data-style='clair'][data-mantine-color-scheme='light'] {
+  --suivi-fond-page: #faf9fc;
+  --suivi-trait: #dce5e9;
+  --suivi-surface-douce: #f5f2fa;
+}
+
+/* ---------------------------------------------------------------- Identité Référence 08 (signature, filets, repère actif)
+   Turquoise décoratif : filets et carré de signature. Sur la navigation sombre, une teinte plus claire garde 3:1 au moins
+   avec le fond de l'entrée active ; la sélection reste aussi portée par le fond, le texte et aria-current. */
+:root {
+  --suivi-turquoise: #00a8b0;
+  --suivi-turquoise-nav: #2cc4cb;
+  --suivi-marine: #142f61;
+}
+.org-signature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: var(--mantine-spacing-md);
+  padding-inline-start: var(--mantine-spacing-md);
+  border-inline-start: 1px solid var(--suivi-trait);
+}
+.org-signature__carre {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--suivi-turquoise);
+}
+.org-signature__nom {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--suivi-marine);
+}
+[data-mantine-color-scheme='dark'] .org-signature__nom {
+  color: var(--mantine-color-text);
+}
+.shell-nav .mantine-NavLink-root[data-active] {
+  box-shadow: inset 3px 0 var(--suivi-turquoise-nav);
+}
+.shell-nav .mantine-NavLink-root[data-active] .nav-icone {
+  color: var(--suivi-turquoise-nav);
+}
+.carte > .mantine-Title-root::after {
+  content: '';
+  display: block;
+  width: 1.75rem;
+  height: 3px;
+  margin-top: 0.4rem;
+  background: var(--suivi-turquoise);
+}
+
+/* ---------------------------------------------------------------- Matrice des risques : cases pleines (couleur du niveau)
+   La couleur de chaque case est un fond SVG (fill) issu de la méthode publiée ; ici seulement la géométrie, le texte et
+   la sélection. Aucun voile ni mélange : la case garde la couleur exacte du niveau. */
+.matrice-defilement {
+  overflow-x: auto;
+}
+.matrice-risques {
+  border-collapse: separate;
+  border-spacing: 4px;
+  min-width: 40rem;
+}
+.matrice-risques th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.4rem;
+}
+.matrice-cellule-td {
+  padding: 0;
+}
+.matrice-cellule {
+  position: relative;
+  min-height: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+}
+.matrice-fond {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.matrice-cellule > :not(.matrice-fond) {
+  position: relative;
+}
+.matrice-texte-fonce {
+  color: #173f34;
+}
+.matrice-texte-clair {
+  color: #ffffff;
+}
+.matrice-choix,
+.matrice-ref {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: start;
+}
+.matrice-choix {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 4px;
+}
+.matrice-niveau {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.matrice-nombre {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.matrice-refs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+}
+.matrice-ref {
+  text-decoration: underline;
+}
+.matrice-cellule:has(.matrice-choix[aria-pressed='true']) {
+  outline: 3px solid #326899;
+  outline-offset: 1px;
+}
+.matrice-choix:focus-visible,
+.matrice-ref:focus-visible {
+  outline: 3px solid #326899;
+  outline-offset: 2px;
+  background: rgb(255 255 255 / 25%);
+}
+
+/* Menu : lignes alignées à gauche, pastilles collées au libellé, rouge quand un indicateur est mauvais. */
+.shell-nav .mantine-NavLink-body {
+  text-align: start;
+}
+.shell-nav .mantine-NavLink-children {
+  padding-inline-start: var(--mantine-spacing-xs);
+}
+.nav-libelle-alerte {
+  justify-content: flex-start;
+}
+.nav-pastille {
+  flex-shrink: 0;
+}
+.shell-nav .nav-pastille[data-alerte='rouge'] {
+  /* #c92a2a (jeton « red.fond ») : 5,9:1 avec le texte blanc, contre 3,8:1 pour le rouge de base de Mantine. */
+  --badge-bg: #c92a2a;
+  --badge-color: #fff;
+  background: #c92a2a;
+  color: #fff;
+}
+
+/* ========================================================================
+   TABLEAU DE BORD « VERRE ET RELIEF » (accueil, ADR 0069)
+   Dalles en verre épais (reflet des bords, lumière haute, ombre portée), métriques fines cernées d'un contour sombre,
+   teintes des seuils --tdb-* (tokens.ts, clair et sombre). Limité à l'accueil : classe « tdb » sur le conteneur.
+   ======================================================================== */
+.app-main:has(.tdb) {
+  background-color: var(--suivi-fond-page);
+  background-image:
+    radial-gradient(56rem 40rem at 4% -6%, color-mix(in srgb, var(--neon-violet) 7%, transparent), transparent 62%),
+    radial-gradient(48rem 38rem at 104% 2%, rgb(235 232 249 / 90%), transparent 58%),
+    radial-gradient(56rem 50rem at 58% 108%, color-mix(in srgb, var(--neon-rose) 5%, transparent), transparent 62%),
+    radial-gradient(39rem 32rem at 30% 55%, rgb(248 243 230 / 85%), transparent 62%),
+    radial-gradient(32rem 26rem at 84% 60%, rgb(228 240 245 / 85%), transparent 60%);
+}
+[data-mantine-color-scheme='dark'] .app-main:has(.tdb) {
+  background-image:
+    radial-gradient(56rem 40rem at 4% -6%, color-mix(in srgb, var(--neon-violet) 8%, transparent), transparent 62%),
+    radial-gradient(48rem 38rem at 104% 2%, rgb(60 52 110 / 45%), transparent 58%),
+    radial-gradient(56rem 50rem at 58% 108%, color-mix(in srgb, var(--neon-bleu) 6%, transparent), transparent 62%),
+    radial-gradient(32rem 26rem at 84% 60%, rgb(36 60 78 / 40%), transparent 60%);
+}
+.tdb {
+  --tdb-verre-haut: rgb(255 255 255 / 52%);
+  --tdb-verre-milieu: rgb(255 255 255 / 28%);
+  --tdb-verre-bas: rgb(255 255 255 / 38%);
+  --tdb-verre-bord: rgb(255 255 255 / 50%);
+  --tdb-reflet-bord: rgb(255 255 255 / 100%);
+  --tdb-lumiere: rgb(255 255 255 / 95%);
+  --tdb-ombre: var(--suivi-encre);
+  --tdb-filet: rgb(16 30 24 / 14%);
+  --tdb-rail: color-mix(in srgb, var(--mantine-color-text) 12%, transparent);
+  --tdb-lueur: rgb(140 124 230);
+}
+[data-mantine-color-scheme='dark'] .tdb {
+  --tdb-verre-haut: var(--suivi-surface);
+  --tdb-verre-milieu: var(--suivi-surface);
+  --tdb-verre-bas: var(--neon-doux);
+  --tdb-verre-bord: rgb(255 255 255 / 14%);
+  --tdb-reflet-bord: rgb(255 255 255 / 45%);
+  --tdb-lumiere: rgb(255 255 255 / 22%);
+  --tdb-ombre: rgb(0 0 0);
+  --tdb-filet: rgb(0 0 0 / 35%);
+  --tdb-rail: rgb(255 255 255 / 12%);
+}
+.tdb-grille {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--mantine-spacing-lg);
+  align-items: stretch;
+}
+.tdb-grille > * {
+  grid-column: span 12;
+  min-width: 0;
+}
+@media (min-width: 48em) {
+  .tdb-grille > .tdb-l3,
+  .tdb-grille > .tdb-l4,
+  .tdb-grille > .tdb-l6 {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 64em) {
+  .tdb-grille > .tdb-l3 {
+    grid-column: span 3;
+  }
+  .tdb-grille > .tdb-l4 {
+    grid-column: span 4;
+  }
+  .tdb-grille > .tdb-l8 {
+    grid-column: span 8;
+  }
+}
+
+/* Mode « Modifier la disposition » (ADR 0078) : barre d'outils, cases en pointillé autour des dalles, poignée de
+   glissé (pointeur et clavier). Le glissé réordonne la grille : aucun élément n'est positionné par script. */
+.tdb-edition-barre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  margin-block-end: var(--mantine-spacing-lg);
+}
+.tdb-reglages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+}
+.tdb-reglages-paliers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.tdb-reglages-paliers legend {
+  padding: 0;
+  margin-block-end: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.tdb-tableau {
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-tableau .tdb-tableau-nombre {
+  text-align: end;
+  white-space: nowrap;
+}
+.tdb-choix {
+  max-inline-size: 24rem;
+  margin-block-end: var(--mantine-spacing-md);
+}
+.tdb-masquees {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.tdb-case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-lg);
+  border: var(--suivi-trait-l) dashed var(--mantine-color-default-border);
+}
+.tdb-case > .tdb-dalle {
+  flex: 1;
+}
+.tdb-case--glissee {
+  border-style: solid;
+  border-color: var(--mantine-primary-color-filled);
+  opacity: 0.7;
+}
+.tdb-case-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+/* Le titre de la dalle reste visible dans la dalle elle-même : la barre ne porte que les outils. */
+.tdb-case-largeur {
+  flex: 1;
+  min-width: 0;
+  max-inline-size: 14em;
+}
+.tdb-poignee {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--mantine-spacing-xl);
+  block-size: var(--mantine-spacing-xl);
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+  color: inherit;
+  cursor: grab;
+  /* Au doigt, le glissé déplace la dalle au lieu de faire défiler la page. */
+  touch-action: none;
+}
+.tdb-case--glissee .tdb-poignee {
+  cursor: grabbing;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tdb-case {
+    transition:
+      border-color 120ms ease,
+      opacity 120ms ease;
+  }
+}
+
+/* Dalle en verre : fond translucide flouté, liseré lumineux des bords (::before), reflet haut (::after). */
+.tdb-dalle {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg) var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-lg);
+  border: var(--suivi-trait-l) solid var(--tdb-verre-bord);
+  background: linear-gradient(160deg, var(--tdb-verre-haut) 0%, var(--tdb-verre-milieu) 55%, var(--tdb-verre-bas) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  box-shadow:
+    0 0 0 1px var(--tdb-filet),
+    inset 0 1px 0 var(--tdb-lumiere),
+    inset 0 1rem 1.5rem -1.125rem var(--tdb-lumiere),
+    inset 0 -1.125rem 1.75rem -1.25rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 1px 1px rgb(from var(--tdb-ombre) r g b / 5%),
+    0 0.5rem 1.125rem -0.375rem rgb(from var(--tdb-ombre) r g b / 12%),
+    0 1.875rem 3.75rem -1.5rem rgb(from var(--tdb-ombre) r g b / 26%);
+  transition:
+    transform var(--suivi-motion) var(--suivi-ease),
+    box-shadow var(--suivi-motion) var(--suivi-ease);
+}
+.tdb-dalle::before,
+.tdb-dalle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.tdb-dalle::before {
+  z-index: 2;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    var(--tdb-reflet-bord) 0%,
+    rgb(255 255 255 / 40%) 20%,
+    transparent 42%,
+    rgb(255 255 255 / 12%) 68%,
+    rgb(255 255 255 / 90%) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+[data-mantine-color-scheme='dark'] .tdb-dalle::before {
+  opacity: 0.4;
+}
+.tdb-dalle::after {
+  z-index: 1;
+  background: radial-gradient(120% 70% at 16% -12%, rgb(255 255 255 / 50%), transparent 55%);
+  mix-blend-mode: soft-light;
+}
+.tdb-dalle:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgb(from var(--tdb-filet) r g b / 18%),
+    inset 0 1px 0 var(--tdb-lumiere),
+    inset 0 1rem 1.5rem -1.125rem var(--tdb-lumiere),
+    inset 0 -1.125rem 1.75rem -1.25rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 2px 2px rgb(from var(--tdb-ombre) r g b / 5%),
+    0 0.875rem 1.625rem -0.5rem rgb(from var(--tdb-ombre) r g b / 16%),
+    0 2.5rem 4.375rem -1.625rem rgb(from var(--tdb-ombre) r g b / 32%);
+}
+/* Lueur violette dans la dalle : voile centré et diffus, sans halo extérieur. */
+.tdb-dalle--lueur::after {
+  background:
+    radial-gradient(
+      75% 85% at 50% 55%,
+      rgb(from var(--tdb-lueur) r g b / 20%) 0%,
+      rgb(from var(--tdb-lueur) r g b / 12%) 35%,
+      rgb(from var(--tdb-lueur) r g b / 4%) 60%,
+      transparent 80%
+    ),
+    radial-gradient(120% 70% at 16% -12%, rgb(255 255 255 / 50%), transparent 55%);
+  mix-blend-mode: normal;
+}
+/* Carte phare (accueil) : style de l'ancienne carte « Prochain audit », fond vert profond de la navigation, arc
+   décoratif en bas à droite ; prochain audit en haut, taux de conformité global dessous. */
+.tdb-dalle.tdb-phare {
+  overflow: hidden;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-lg);
+  min-height: 13.5rem;
+  background: var(--suivi-nav-fond);
+  color: var(--suivi-nav-texte);
+  border-color: var(--suivi-nav-fond);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.tdb-dalle.tdb-phare::before {
+  opacity: 0.25;
+}
+.tdb-dalle.tdb-phare::after {
+  inset: auto -5rem -8rem auto;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 50%;
+  border: 1px solid var(--suivi-nav-active);
+  background: none;
+  box-shadow: 0 0 0 2rem var(--suivi-nav-survol);
+  mix-blend-mode: normal;
+  z-index: 0;
+}
+.tdb-phare-symbole {
+  position: absolute;
+  top: var(--mantine-spacing-lg);
+  right: var(--mantine-spacing-lg);
+  color: var(--suivi-nav-repere);
+}
+.tdb-phare-bloc {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-phare-taux {
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--suivi-nav-active);
+}
+.tdb-phare-titre {
+  margin: 0 0 var(--mantine-spacing-2xs);
+  color: var(--suivi-nav-secondaire);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.tdb-phare-valeur {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  color: var(--suivi-nav-texte);
+  font-size: clamp(1.75rem, 2.3vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+.tdb-phare-valeur .tdb-puce {
+  letter-spacing: normal;
+}
+.tdb-phare-detail,
+.tdb-phare-legende {
+  margin: 0;
+  color: var(--suivi-nav-secondaire);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-phare-legende {
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-dalle-tete {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-dalle-titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.tdb-dalle-sous-titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-dalle-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  flex: 1;
+  min-height: 0;
+}
+
+/* Teintes des seuils : texte (t), remplissage (f), trait (s), fond de pastille (b), puce douce (p). */
+.tdb-t-vert {
+  color: var(--tdb-vert-texte);
+  fill: var(--tdb-vert-texte);
+}
+.tdb-t-orange {
+  color: var(--tdb-orange-texte);
+  fill: var(--tdb-orange-texte);
+}
+.tdb-t-rouge {
+  color: var(--tdb-rouge-texte);
+  fill: var(--tdb-rouge-texte);
+}
+.tdb-t-violet {
+  color: var(--tdb-violet-texte);
+  fill: var(--tdb-violet-texte);
+}
+.tdb-t-bleu {
+  color: var(--tdb-bleu-texte);
+  fill: var(--tdb-bleu-texte);
+}
+.tdb-t-gris {
+  color: var(--tdb-gris-texte);
+  fill: var(--tdb-gris-texte);
+}
+.tdb-f-vert {
+  fill: var(--tdb-vert-remplissage);
+}
+.tdb-f-orange {
+  fill: var(--tdb-orange-remplissage);
+}
+.tdb-f-rouge {
+  fill: var(--tdb-rouge-remplissage);
+}
+.tdb-f-violet {
+  fill: var(--tdb-violet-remplissage);
+}
+.tdb-f-bleu {
+  fill: var(--tdb-bleu-remplissage);
+}
+.tdb-f-gris {
+  fill: var(--tdb-gris-remplissage);
+}
+.tdb-s-vert {
+  stroke: var(--tdb-vert-remplissage);
+}
+.tdb-s-orange {
+  stroke: var(--tdb-orange-remplissage);
+}
+.tdb-s-rouge {
+  stroke: var(--tdb-rouge-remplissage);
+}
+.tdb-s-violet {
+  stroke: var(--tdb-violet-remplissage);
+}
+.tdb-s-bleu {
+  stroke: var(--tdb-bleu-remplissage);
+}
+.tdb-s-gris {
+  stroke: var(--tdb-gris-remplissage);
+}
+.tdb-b-vert {
+  background: var(--tdb-vert-remplissage);
+}
+.tdb-b-orange {
+  background: var(--tdb-orange-remplissage);
+}
+.tdb-b-rouge {
+  background: var(--tdb-rouge-remplissage);
+}
+.tdb-b-violet {
+  background: var(--tdb-violet-remplissage);
+}
+.tdb-b-bleu {
+  background: var(--tdb-bleu-remplissage);
+}
+.tdb-b-gris {
+  background: var(--tdb-gris-remplissage);
+}
+.tdb-p-vert {
+  background: var(--tdb-vert-doux);
+  color: var(--tdb-vert-texte);
+}
+.tdb-p-orange {
+  background: var(--tdb-orange-doux);
+  color: var(--tdb-orange-texte);
+}
+.tdb-p-rouge {
+  background: var(--tdb-rouge-doux);
+  color: var(--tdb-rouge-texte);
+}
+.tdb-p-violet {
+  background: var(--tdb-violet-doux);
+  color: var(--tdb-violet-texte);
+}
+.tdb-p-bleu {
+  background: var(--tdb-bleu-doux);
+  color: var(--tdb-bleu-texte);
+}
+.tdb-p-gris {
+  background: var(--tdb-gris-doux);
+  color: var(--tdb-gris-texte);
+}
+
+/* Chiffre clé : grand, serré, légèrement gravé. */
+.tdb-chiffre {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-chiffre-valeur {
+  margin: 0;
+  font-size: clamp(2.25rem, 2.6vw, 2.875rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-shadow:
+    0 1px 0 rgb(255 255 255 / 90%),
+    0 0.5rem 1.125rem rgb(from var(--tdb-ombre) r g b / 12%);
+}
+[data-mantine-color-scheme='dark'] .tdb-chiffre-valeur {
+  text-shadow: 0 0.5rem 1.125rem rgb(0 0 0 / 35%);
+}
+.tdb-chiffre-detail,
+.tdb-chiffre-legende {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-chiffre-legende {
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--mantine-spacing-md);
+}
+/* Grille de chiffres de l'ancienne carte « Écarts » : deux colonnes, filet vertical à la teinte du seuil. */
+.tdb-grille-chiffres {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-lg) var(--mantine-spacing-md);
+}
+.tdb-grille-chiffre {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-2xs);
+  padding-left: var(--mantine-spacing-sm);
+  border-left: 2px solid rgb(from var(--tdb-contour) r g b / 22%);
+}
+.tdb-grille-chiffre[class*='tdb-t-'] {
+  border-left-color: currentColor;
+}
+.tdb-grille-chiffre-valeur {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.tdb-grille-chiffre-libelle {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-chiffres .tdb-chiffre-valeur {
+  font-size: 1.75rem;
+}
+
+/* Jauge en arc fin : rail et arc cernés, zones de seuils en filet, curseur blanc cerclé. */
+.tdb-jauge {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-jauge svg {
+  display: block;
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+  overflow: visible;
+}
+.tdb-jauge-rail-contour,
+.tdb-jauge-rail,
+.tdb-jauge-bande,
+.tdb-jauge-arc-contour,
+.tdb-jauge-arc {
+  fill: none;
+  stroke-linecap: round;
+}
+.tdb-jauge-rail-contour {
+  stroke: rgb(from var(--tdb-contour) r g b / 22%);
+  stroke-width: 9;
+}
+.tdb-jauge-rail {
+  stroke: var(--suivi-surface-douce);
+  stroke-width: 7;
+}
+.tdb-jauge-bande {
+  stroke-width: 2.5;
+  opacity: 0.95;
+}
+.tdb-jauge-arc-contour {
+  stroke: rgb(from var(--tdb-contour) r g b / 55%);
+  stroke-width: 9.5;
+  filter: drop-shadow(0 2px 2px rgb(from var(--tdb-ombre) r g b / 25%));
+}
+.tdb-jauge-arc {
+  stroke-width: 7;
+}
+.tdb-jauge-curseur {
+  fill: var(--mantine-color-body);
+  stroke: rgb(from var(--tdb-contour) r g b / 75%);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 1px 2px rgb(from var(--tdb-ombre) r g b / 35%));
+}
+.tdb-jauge-valeur {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.tdb-jauge-borne {
+  font-size: 11px;
+  fill: var(--mantine-color-dimmed);
+}
+.tdb-jauge-detail {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  text-align: center;
+}
+.tdb-cible {
+  stroke: var(--tdb-violet-remplissage);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Barres fines en relief : rail en creux, remplissage cerné, reflet sur la moitié haute. */
+.tdb-barres,
+.tdb-empile-lignes,
+.tdb-legende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tdb-barres {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-barre-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-barre-ligne .tdb-barre {
+  grid-column: 1 / -1;
+}
+.tdb-barre-libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tdb-barre-valeur {
+  font-weight: 600;
+  text-align: right;
+}
+.tdb-barre {
+  display: block;
+  width: 100%;
+  height: 0.375rem;
+  overflow: visible;
+}
+.tdb-rail {
+  fill: var(--tdb-rail);
+  stroke: rgb(from var(--tdb-contour) r g b / 12%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.tdb-barre-remplie {
+  stroke: rgb(from var(--tdb-contour) r g b / 32%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 1px 1.5px rgb(from var(--tdb-ombre) r g b / 35%));
+}
+.tdb-reflet {
+  fill: rgb(255 255 255 / 26%);
+  pointer-events: none;
+}
+.tdb-empile {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-empile-lignes {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-empile-ligne {
+  display: grid;
+  grid-template-columns: minmax(6rem, 28%) minmax(0, 1fr) 3rem;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.tdb-legende-note {
+  color: var(--mantine-color-dimmed);
+}
+.tdb-pastille {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(from var(--tdb-contour) r g b / 30%);
+}
+
+/* Graphiques communs (anneau, histogramme) dans le tableau de bord : teintes des seuils, traits plus fins. */
+.tdb .graph-vert {
+  fill: var(--tdb-vert-remplissage);
+  stroke: var(--tdb-vert-remplissage);
+  background: var(--tdb-vert-remplissage);
+}
+.tdb .graph-orange {
+  fill: var(--tdb-orange-remplissage);
+  stroke: var(--tdb-orange-remplissage);
+  background: var(--tdb-orange-remplissage);
+}
+.tdb .graph-rouge {
+  fill: var(--tdb-rouge-remplissage);
+  stroke: var(--tdb-rouge-remplissage);
+  background: var(--tdb-rouge-remplissage);
+}
+.tdb .graph-violet {
+  fill: var(--tdb-violet-remplissage);
+  stroke: var(--tdb-violet-remplissage);
+  background: var(--tdb-violet-remplissage);
+}
+.tdb .graph-bleu {
+  fill: var(--tdb-bleu-remplissage);
+  stroke: var(--tdb-bleu-remplissage);
+  background: var(--tdb-bleu-remplissage);
+}
+.tdb .graph-gris {
+  fill: var(--tdb-gris-remplissage);
+  stroke: var(--tdb-gris-remplissage);
+  background: var(--tdb-gris-remplissage);
+}
+.tdb .graph-piste {
+  stroke: var(--tdb-rail);
+  stroke-width: 8;
+}
+.tdb .graph-arc {
+  fill: none;
+  stroke-width: 8;
+  filter: drop-shadow(0 0 0.5px rgb(from var(--tdb-contour) r g b / 70%));
+}
+.tdb .graph-barre {
+  stroke: rgb(from var(--tdb-contour) r g b / 32%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.tdb .graph-pastille {
+  box-shadow: 0 0 0 1px rgb(from var(--tdb-contour) r g b / 30%);
+}
+
+/* Liste des échéances : pastille d'état, référence et objet, pilote, date, puce d'état. */
+.tdb-echeances {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.tdb-echeance {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  padding-block: var(--mantine-spacing-xs);
+  border-bottom: var(--suivi-trait-l) solid var(--tdb-rail);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-echeance:last-child {
+  border-bottom: 0;
+}
+.tdb-echeance-objet {
+  min-width: 0;
+}
+.tdb-echeance-objet > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tdb-echeance-meta {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+.tdb-puce {
+  padding: 0.125rem var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xl);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tdb-dalle {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--mantine-color-body);
+  }
+}
+@media (forced-colors: active) {
+  .tdb-dalle {
+    border: 1px solid CanvasText;
+  }
+}

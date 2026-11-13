@@ -1,0 +1,104 @@
+{
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "dateUTC": "2026-11-09T23:16:16.478590+00:00",
+  "fichiers": [
+    {
+      "fichier": "animation-swot.gif",
+      "octets": 5693357,
+      "sha256": "578ed87dbb2860a0cf3a1989490c59c120a2c162cf407e7649f46a081b833cc3"
+    },
+    {
+      "fichier": "animation-swot.mp4",
+      "octets": 862189,
+      "sha256": "076ab46cd0b84babbddc99ce7f8da1e767e36f196a50399de93eaa9c7fb99e84"
+    },
+    {
+      "fichier": "detail-matrice-dark.png",
+      "octets": 300928,
+      "sha256": "d92b81d81ef3bb737b2b18853e2c78504bc7b3343d825eba62f24f115e2846d9",
+      "largeur": 1166,
+      "hauteur": 650
+    },
+    {
+      "fichier": "detail-matrice-light.png",
+      "octets": 292531,
+      "sha256": "d8734b90413defd050bca570bd91f074cace2a2396b9c70bd6cdf0b6eb019719",
+      "largeur": 1166,
+      "hauteur": 650
+    },
+    {
+      "fichier": "index.html",
+      "octets": 3678,
+      "sha256": "143ea17916becc8e1ed635c45b7fccf4f37873c50d43db246176457be4cb7b79"
+    },
+    {
+      "fichier": "lecture-forces-dark.png",
+      "octets": 251844,
+      "sha256": "3b565d6fe7648643770e977e7ab9c1a3e6fce3d02854d313d4a61e11b46c1a11",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "lecture-forces-light.png",
+      "octets": 239230,
+      "sha256": "30cc2b9920a65b0c069b1345eb61ab4b14a0a842bc94706d6504150508a9aeed",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "matrice-dark-1440.png",
+      "octets": 688219,
+      "sha256": "196f5cccca501fc4aadd797acffe5f6387a4be9cf0c1a93382bcfa08b9a5baee",
+      "largeur": 1440,
+      "hauteur": 1238
+    },
+    {
+      "fichier": "matrice-dark-hd.png",
+      "octets": 2491330,
+      "sha256": "8bb41166f27b6f035f6185f0af7b4d4a847408c450d615f7959c9e702b28e7a0",
+      "largeur": 3840,
+      "hauteur": 2602
+    },
+    {
+      "fichier": "matrice-dark-mobile.png",
+      "octets": 321728,
+      "sha256": "6ba60909056b0a62d64f5f3b22309d4732bfc671651a18043a176a51bd0c3a77",
+      "largeur": 390,
+      "hauteur": 1882
+    },
+    {
+      "fichier": "matrice-light-1440.png",
+      "octets": 583271,
+      "sha256": "d33331f52104cba622901a9c26046faf159a5cabc77d03b9b2a54e7f16d68ec7",
+      "largeur": 1440,
+      "hauteur": 1238
+    },
+    {
+      "fichier": "matrice-light-hd.png",
+      "octets": 1927374,
+      "sha256": "782b1213f6d8be858a1ffe83cb72a0d7f9493a0a4d5dc65258ca0e434ee5ed17",
+      "largeur": 3840,
+      "hauteur": 2602
+    },
+    {
+      "fichier": "matrice-light-mobile.png",
+      "octets": 307286,
+      "sha256": "26980b4accafae9fc3f524262c166a7a47d8ca17c6ca54e473f909a7aa715d19",
+      "largeur": 390,
+      "hauteur": 1882
+    },
+    {
+      "fichier": "prototype.css",
+      "octets": 22113,
+      "sha256": "ec187686c20ecbef647f709f106775370301560185217533be3cfb8757916a16"
+    },
+    {
+      "fichier": "prototype.js",
+      "octets": 18394,
+      "sha256": "b5912c54fafbec252fde0ed797cce82f2e4d25ffc04696cbc258c3d46a646a6d",
+      "sha256AvantAnnotationESLint": "4312d80f755daa18c4dcef102450aeb902acd240cca21d1fa8b601de4b6b4165",
+      "note": "Déclaration des globales navigateur uniquement ; rendu de la proposition inchangé."
+    }
+  ]
+}

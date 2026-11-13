@@ -1,0 +1,42 @@
+{
+  "dateUTC": "2026-11-11T00:17:41.806Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "checks": [
+    {
+      "theme": "light",
+      "width": 390,
+      "overflow": false,
+      "scroll": []
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "scroll": []
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "overflow": false,
+      "scroll": []
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "scroll": []
+    }
+  ],
+  "erreurs": [],
+  "animation": {
+    "contourReelVariable": true,
+    "texteStable": true,
+    "geometrieStable": true,
+    "orangeSeul": true,
+    "barresEtOccurrences": true,
+    "pause": true,
+    "reprise": true,
+    "reduction": true
+  }
+}

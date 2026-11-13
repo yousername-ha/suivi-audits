@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr" data-theme="light" data-motion="on">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Interface adaptative — Proportions équilibrées</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css">
+    <link rel="stylesheet" href="../commandes-discretes/timeline.css">
+    <link rel="stylesheet" href="../commandes-discretes/studio.css">
+    <link rel="stylesheet" href="../commandes-discretes/orange-motion.css">
+    <link rel="stylesheet" href="../commandes-discretes/adaptive-scale.css">
+    <link rel="stylesheet" href="../commandes-discretes/commandes.css">
+    <link rel="stylesheet" href="responsive.css">
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navigation illustrative">
+      <div class="brand"><span class="brand-mark">✧</span><span><strong>Suivi des audits<br>SMSI</strong><small>ISO 27001 / HDS</small></span></div>
+      <div class="nav-caption">Espace de travail</div>
+      <div class="nav-item"><i data-icon="dashboard"></i>Tableau de bord</div>
+      <div class="nav-item"><i data-icon="tree"></i>Organisation<span>8</span></div>
+      <div class="nav-item"><i data-icon="chart"></i>Pilotage<span>5</span></div>
+      <div class="nav-item"><i data-icon="shield"></i>Risques<span>1</span></div>
+      <div class="nav-item"><i data-icon="check"></i>Conformité et audits<span>4</span></div>
+      <div class="nav-item active"><i data-icon="list"></i>Actions<span>4</span></div>
+      <div class="nav-sub">Amélioration continue</div>
+      <button class="nav-sub" data-page="actions">Plan d’actions</button>
+      <button class="nav-sub" data-page="recurrences">Tâches récurrentes</button>
+      <div class="nav-sub">Registres et droits</div>
+      <div class="nav-item"><i data-icon="restore"></i>Résilience<span>2</span></div>
+      <div class="nav-item"><i data-icon="document"></i>Documents<span>2</span></div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <button class="mobile-menu icon-button" id="menu" aria-label="Ouvrir le menu"><i data-icon="list"></i></button>
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions"><span class="demo-note">Maquette · À valider</span><button class="button" id="motion"><i data-icon="pause"></i><span>Pause animations</span></button><button class="button" id="theme"><i data-icon="moon"></i><span>Mode sombre</span></button></div>
+      </header>
+      <main id="main">
+        <nav class="page-tabs" aria-label="Rubriques Actions"><button data-page="actions">Plan d’actions</button><button data-page="recurrences">Tâches récurrentes</button></nav>
+        <div class="breadcrumb">Actions <span>/</span> Pilotage opérationnel</div>
+        <header class="page-heading"><div><h1 id="title">Plan d’actions</h1><p id="subtitle"></p></div><button class="button primary" id="create"><i data-icon="plus"></i><span>Ajouter une action</span></button></header>
+        <div class="scope-line"><label for="scope"><i data-icon="tree"></i>Périmètre affiché</label><select id="scope"><option>Pilotage de l’organisation</option></select><span><i data-icon="calendar"></i>Données fictives</span></div>
+        <div class="quiet-meta"><div id="mini-stats"></div><button id="toggle-summary" class="quiet-button" aria-expanded="false" aria-controls="overview"><i data-icon="chart"></i>Synthèse</button></div>
+        <div id="overview" hidden></div>
+        <section class="workspace slab" aria-labelledby="register-title">
+          <header class="workspace-heading"><div><span class="eyebrow" id="register-eyebrow"></span><h2 id="register-title"></h2></div><div class="heading-end"><span class="count" id="result-count"></span><div class="subviews" id="subviews" aria-label="Contenu des tâches"></div></div></header>
+          <div class="view-choices" id="views" aria-label="Vues du registre"></div>
+          <form class="filters" id="filters" role="search"><label class="search"><span class="sr-only">Rechercher</span><i data-icon="search"></i><input id="search" type="search" placeholder="Rechercher une action, une référence…"></label><label><span class="sr-only">Registre</span><select id="plan"><option value="">Tous les plans</option></select></label><label><span class="sr-only">Responsable</span><select id="owner"><option value="">Tous les responsables</option></select></label><label><span class="sr-only">État</span><select id="status"><option value="">Tous les états</option></select></label><button class="button quiet small" type="reset"><i data-icon="reset"></i>Réinitialiser</button></form>
+          <div class="registry-toolbar"><div class="quick-filters" id="quick-filters" aria-label="Filtres rapides"></div><label class="switch"><input id="closed" type="checkbox" checked><span class="switch-track"></span><span id="closed-label">Afficher les actions closes</span></label></div>
+          <div id="registry"></div>
+          <footer class="registry-footer"><span id="footer-count"></span><span>Les états, échéances et validations restent distincts.</span></footer>
+        </section>
+        <details class="method"><summary><i data-icon="info"></i>Comprendre cette lecture <span>États · Retard · Validation</span></summary><p>Le retard dépend de l’échéance et de l’état de l’action ; il ne remplace pas son état. Une occurrence validée n’est plus en retard, y compris avec un résultat KO. Le résultat OK / KO / NA est affiché séparément. Les fenêtres, exclusions, rappels et enchaînements restent accessibles dans la fiche de la série. Les compteurs de cette proposition utilisent uniquement le jeu fictif présenté, sans taux de conformité ni historique inventé.</p></details>
+        <footer class="page-footer"><span><i class="dot"></i>Jeu de démonstration · Maquette autonome</span><span>Charte Studio · Proposition avant intégration</span></footer>
+      </main>
+    </div>
+    <div class="notice" role="status" id="notice" hidden></div>
+    <script src="../commandes-discretes/donnees.js"></script>
+    <script src="../commandes-discretes/adaptive-scale.js"></script>
+    <script src="../commandes-discretes/timeline.js"></script>
+    <script src="../commandes-discretes/prototype.js"></script>
+    <script src="../commandes-discretes/commandes.js"></script>
+    <script src="responsive.js"></script>
+  </body>
+</html>

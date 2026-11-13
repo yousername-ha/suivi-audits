@@ -1,0 +1,3008 @@
+{
+  "edition": "2026-11-09",
+  "commitApplicatif": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "description": "Extraction des déclarations CSS existantes, sans ajout de palette. Les états et la cascade restent définis par les sources CSS.",
+  "typographie": {
+    "police": "Inter",
+    "source": "packages/ui/src/tokens.ts",
+    "unites": "rem et racine responsive existante"
+  },
+  "palettesRacines": {
+    "dda": {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "sombre": {
+        "--dda-surface": "#09182f",
+        "--dda-panel": "#102039",
+        "--dda-row": "#0d1e37",
+        "--dda-edge": "#2b4260",
+        "--dda-text": "#edf7ff",
+        "--dda-muted": "#a9bcd1",
+        "--dda-secondary": "#a9bcd1",
+        "--dda-accent": "#8b9aff",
+        "--dda-doux": "#263257",
+        "--dda-grid": "#273a54",
+        "--dda-total": "#29b28f",
+        "--dda-partiel": "#efad55",
+        "--dda-erreur": "#e47a6f",
+        "--dda-danger": "#ff8d80",
+        "--dda-shadow": "0 4px 20px rgb(0 0 0 / 18%)",
+        "--dda-icone": "#c0b6ff",
+        "--dda-choix-bg": "#354b68",
+        "--dda-choix-bord": "#6483a1",
+        "--dda-choix-texte": "#fff"
+      },
+      "clair": {
+        "--dda-surface": "#fff",
+        "--dda-panel": "#f8f5fe",
+        "--dda-row": "#fcfbff",
+        "--dda-edge": "#ded4eb",
+        "--dda-text": "#25213d",
+        "--dda-muted": "#71617f",
+        "--dda-secondary": "#756284",
+        "--dda-accent": "#6950d8",
+        "--dda-doux": "#eee7fa",
+        "--dda-grid": "#e9e5f2",
+        "--dda-total": "#29b28f",
+        "--dda-partiel": "#efad55",
+        "--dda-erreur": "#e47a6f",
+        "--dda-danger": "#b94a40",
+        "--dda-shadow": "0 3px 6px rgb(37 31 85 / 6%), 0 13px 28px -12px rgb(55 44 100 / 24%)",
+        "--dda-icone": "#76589b",
+        "--dda-choix-bg": "#e5dfef",
+        "--dda-choix-bord": "#c9bbda",
+        "--dda-choix-texte": "#6e577f"
+      },
+      "note": "Palette racine du module uniquement ; les états et variantes gardent leurs règles CSS spécifiques."
+    },
+    "objectifs": {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "sombre": {
+        "--objectifs-panel": "#102039",
+        "--objectifs-soft": "#172841",
+        "--objectifs-row": "#14243d",
+        "--objectifs-texte": "#edf2ff",
+        "--objectifs-muted": "#b1bed4",
+        "--objectifs-structure": "#3b4b69",
+        "--objectifs-accent": "#b39afc",
+        "--objectifs-tint": "#343354",
+        "--objectifs-succes": "#72d1a4",
+        "--objectifs-erreur": "#ff9b8f",
+        "--objectifs-attention": "#f5bc6e",
+        "--objectifs-cible": "#eee1ff",
+        "--objectifs-cible-fond": "#443562",
+        "--objectifs-cible-trait": "#9274c4",
+        "--objectifs-vert-fond": "#0d6b3d",
+        "--objectifs-vert-trait": "#35c985",
+        "--objectifs-vert-texte": "#effff4",
+        "--objectifs-rouge-fond": "#972d31",
+        "--objectifs-rouge-trait": "#ee6e62",
+        "--objectifs-rouge-texte": "#fff5f5",
+        "--objectifs-orange-fond": "#9b4a10",
+        "--objectifs-orange-trait": "#e9a145",
+        "--objectifs-orange-texte": "#fff5e8",
+        "--objectifs-neutre-fond": "#35445f",
+        "--objectifs-neutre-trait": "#627795",
+        "--objectifs-neutre": "#e6edf9",
+        "--objectifs-piste": "#2d3c56",
+        "--objectifs-ombre": "0 5px 24px rgb(0 0 0 / 18%)",
+        "--objectifs-reflet": "rgb(255 255 255 / 28%)"
+      },
+      "clair": {
+        "--objectifs-panel": "#fff",
+        "--objectifs-soft": "#f8f5fe",
+        "--objectifs-row": "#fcfbff",
+        "--objectifs-texte": "#25213d",
+        "--objectifs-muted": "#71617f",
+        "--objectifs-structure": "#d9cee8",
+        "--objectifs-accent": "#6950d8",
+        "--objectifs-tint": "#eee7fa",
+        "--objectifs-succes": "#246e50",
+        "--objectifs-erreur": "#b4483b",
+        "--objectifs-attention": "#a06321",
+        "--objectifs-cible": "#59369c",
+        "--objectifs-cible-fond": "#d9ccf2",
+        "--objectifs-cible-trait": "#b39ad9",
+        "--objectifs-vert-fond": "#acdcbf",
+        "--objectifs-vert-trait": "#7dbd9d",
+        "--objectifs-vert-texte": "#185e42",
+        "--objectifs-rouge-fond": "#edb6a9",
+        "--objectifs-rouge-trait": "#d99787",
+        "--objectifs-rouge-texte": "#823125",
+        "--objectifs-orange-fond": "#f7cd92",
+        "--objectifs-orange-trait": "#dfad67",
+        "--objectifs-orange-texte": "#7c4712",
+        "--objectifs-neutre-fond": "#e5dfef",
+        "--objectifs-neutre-trait": "#c9bbda",
+        "--objectifs-neutre": "#6e577f",
+        "--objectifs-piste": "#e9e5f2",
+        "--objectifs-ombre": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%)",
+        "--objectifs-reflet": "rgb(255 255 255 / 28%)"
+      },
+      "note": "Palette racine du module uniquement ; les états et variantes gardent leurs règles CSS spécifiques."
+    },
+    "referentiels": {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "sombre": {
+        "--rfs-panel": "#102039",
+        "--rfs-soft": "#172841",
+        "--rfs-row": "#14243d",
+        "--rfs-ink": "#edf2ff",
+        "--rfs-muted": "#b1bed4",
+        "--rfs-edge": "#3b4b69",
+        "--rfs-accent": "#b39afc",
+        "--rfs-tint": "#343354",
+        "--rfs-green": "#72d1a4",
+        "--rfs-green-bg": "#0d6b3d",
+        "--rfs-green-edge": "#35c985",
+        "--rfs-green-ink": "#effff4",
+        "--rfs-amber": "#f1ba72",
+        "--rfs-amber-tint": "#4a382b",
+        "--rfs-amber-edge": "#92734f",
+        "--rfs-teal": "#7bd5b2",
+        "--rfs-teal-tint": "#21433f",
+        "--rfs-teal-edge": "#467e6b",
+        "--rfs-shadow": "0 5px 24px rgb(0 0 0 / 18%)"
+      },
+      "clair": {
+        "--rfs-panel": "#fff",
+        "--rfs-soft": "#f8f5fe",
+        "--rfs-row": "#fcfbff",
+        "--rfs-ink": "#25213d",
+        "--rfs-muted": "#71617f",
+        "--rfs-edge": "#d9cee8",
+        "--rfs-accent": "#6950d8",
+        "--rfs-tint": "#eee7fa",
+        "--rfs-green": "#246e50",
+        "--rfs-green-bg": "#acdcbf",
+        "--rfs-green-edge": "#7dbd9d",
+        "--rfs-green-ink": "#185e42",
+        "--rfs-amber": "#90571f",
+        "--rfs-amber-tint": "#fbebd4",
+        "--rfs-amber-edge": "#e4c8a1",
+        "--rfs-teal": "#1c6d5d",
+        "--rfs-teal-tint": "#dcefe7",
+        "--rfs-teal-edge": "#a7cdbd",
+        "--rfs-shadow": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%)"
+      },
+      "note": "Palette racine du module uniquement ; les états et variantes gardent leurs règles CSS spécifiques."
+    },
+    "perimetres": {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "sombre": {
+        "--perim-panel": "#1a2942",
+        "--perim-soft": "#202e49",
+        "--perim-ink": "#edf2ff",
+        "--perim-muted": "#b6bfd4",
+        "--perim-edge": "#3c4b69",
+        "--perim-accent": "#b39afc",
+        "--perim-tint": "#343354",
+        "--perim-wire": "#8b79c3",
+        "--perim-dots": "#34405a",
+        "--perim-orange": "#f5bc6e",
+        "--perim-red": "#ff9b8f",
+        "--perim-green": "#7bd5b2",
+        "--perim-shadow": "0 4px 18px rgb(0 0 0 / 15%)"
+      },
+      "clair": {
+        "--perim-panel": "#fff",
+        "--perim-soft": "#f7f5fc",
+        "--perim-ink": "#28253f",
+        "--perim-muted": "#6e617f",
+        "--perim-edge": "#ddd4ed",
+        "--perim-accent": "#6c49c4",
+        "--perim-tint": "#ece5fa",
+        "--perim-wire": "#b9a7dc",
+        "--perim-dots": "#dcd5eb",
+        "--perim-orange": "#a5651d",
+        "--perim-red": "#b7493e",
+        "--perim-green": "#267e60",
+        "--perim-shadow": "0 4px 7px rgb(48 31 85 / 4%), 0 12px 25px -15px rgb(48 31 85 / 23%)"
+      },
+      "note": "Palette racine du module uniquement ; les états et variantes gardent leurs règles CSS spécifiques."
+    }
+  },
+  "fichiers": [
+    {
+      "fichier": "packages/ui/src/styles.css",
+      "declarations": [
+        {
+          "variable": "--grc-colonne-min",
+          "valeur": "14.375rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 25
+        },
+        {
+          "variable": "--grc-jour-min",
+          "valeur": "7.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 26
+        },
+        {
+          "variable": "--grc-jour-hauteur",
+          "valeur": "6.875rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 27
+        },
+        {
+          "variable": "--grc-planning-min",
+          "valeur": "53.125rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 28
+        },
+        {
+          "variable": "--grc-canevas-hauteur",
+          "valeur": "40.625rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 29
+        },
+        {
+          "variable": "--grc-canevas-min",
+          "valeur": "25rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 30
+        },
+        {
+          "variable": "--grc-canevas-mobile",
+          "valeur": "29.375rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 31
+        },
+        {
+          "variable": "--suivi-entete-h",
+          "valeur": "3.75rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 32
+        },
+        {
+          "variable": "--suivi-nav-l",
+          "valeur": "15.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 33
+        },
+        {
+          "variable": "--suivi-largeur-formulaire",
+          "valeur": "45rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 34
+        },
+        {
+          "variable": "--suivi-largeur-connexion",
+          "valeur": "36rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 35
+        },
+        {
+          "variable": "--suivi-ecart-onde",
+          "valeur": "3rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 36
+        },
+        {
+          "variable": "--suivi-largeur-lecture",
+          "valeur": "75ch",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 37
+        },
+        {
+          "variable": "--suivi-champ-xs",
+          "valeur": "8rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 38
+        },
+        {
+          "variable": "--suivi-champ-s",
+          "valeur": "12.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 39
+        },
+        {
+          "variable": "--suivi-champ-m",
+          "valeur": "16.25rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 40
+        },
+        {
+          "variable": "--suivi-champ-l",
+          "valeur": "26.25rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 41
+        },
+        {
+          "variable": "--suivi-marque",
+          "valeur": "1.875rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 42
+        },
+        {
+          "variable": "--suivi-qr",
+          "valeur": "12.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 43
+        },
+        {
+          "variable": "--suivi-trait-l",
+          "valeur": "1px",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 44
+        },
+        {
+          "variable": "--suivi-trait-focus",
+          "valeur": "2px",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 45
+        },
+        {
+          "variable": "--grc-zone-hauteur",
+          "valeur": "min(70vh, 42rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 46
+        },
+        {
+          "variable": "--suivi-nav-repliee",
+          "valeur": "4.25rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 47
+        },
+        {
+          "variable": "--suivi-marge-page",
+          "valeur": "clamp(0.75rem, 0.5rem + 1vw, 2.5rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 48
+        },
+        {
+          "variable": "--suivi-carte-min",
+          "valeur": "24rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 49
+        },
+        {
+          "variable": "--suivi-fiche-l",
+          "valeur": "clamp(26rem, 32vw, 48rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 50
+        },
+        {
+          "variable": "--suivi-panneau-l",
+          "valeur": "clamp(20rem, 22vw, 34rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 51
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 52
+        },
+        {
+          "variable": "--carte-panneau-l",
+          "valeur": "clamp(14rem, 16vw, 20rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 53
+        },
+        {
+          "variable": "--carte-inspecteur-l",
+          "valeur": "clamp(20rem, 24vw, 28rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 55
+        },
+        {
+          "variable": "--carte-hauteur",
+          "valeur": "clamp(30rem, calc(100dvh - 16rem), 90rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 56
+        },
+        {
+          "variable": "--carte-hauteur-mobile",
+          "valeur": "max(26rem, 68dvh)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 57
+        },
+        {
+          "variable": "--carte-hauteur-plein-ecran",
+          "valeur": "calc(100dvh - 12rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 58
+        },
+        {
+          "variable": "--carte-relation-l",
+          "valeur": "6rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 59
+        },
+        {
+          "variable": "--carte-mini-l",
+          "valeur": "11.25rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 60
+        },
+        {
+          "variable": "--carte-mini-h",
+          "valeur": "7.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 61
+        },
+        {
+          "variable": "--carte-echantillon",
+          "valeur": "1.375rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 62
+        },
+        {
+          "variable": "--carte-icone",
+          "valeur": "1.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 63
+        },
+        {
+          "variable": "--carte-recherche",
+          "valeur": "17rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 64
+        },
+        {
+          "variable": "--carte-vide-icone",
+          "valeur": "2.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 65
+        },
+        {
+          "variable": "--parcours-toile-min",
+          "valeur": "62rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 66
+        },
+        {
+          "variable": "--parcours-carte-l",
+          "valeur": "min(22rem, 92%)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 69
+        },
+        {
+          "variable": "--parcours-texte",
+          "valeur": "0.9375rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 70
+        },
+        {
+          "variable": "--parcours-texte-enfant",
+          "valeur": "0.8125rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 71
+        },
+        {
+          "variable": "--parcours-titre",
+          "valeur": "1.0625rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 72
+        },
+        {
+          "variable": "--parcours-halo-duree",
+          "valeur": "950ms",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 73
+        },
+        {
+          "variable": "--ebios-toile-min",
+          "valeur": "40rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 74
+        },
+        {
+          "variable": "--ebios-cercle-largeur",
+          "valeur": "20rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 75
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "0.9",
+          "selecteur": "html[data-taille='90']",
+          "contexte": [],
+          "ligne": 89
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1",
+          "selecteur": "html[data-taille='100']",
+          "contexte": [],
+          "ligne": 92
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.15",
+          "selecteur": "html[data-taille='115']",
+          "contexte": [],
+          "ligne": 95
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.3",
+          "selecteur": "html[data-taille='130']",
+          "contexte": [],
+          "ligne": 98
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.5",
+          "selecteur": "html[data-taille='150']",
+          "contexte": [],
+          "ligne": 101
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.15",
+          "selecteur": "html[data-taille='auto']",
+          "contexte": [
+            "@media (min-width: 160em)"
+          ],
+          "ligne": 105
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.3",
+          "selecteur": "html[data-taille='auto']",
+          "contexte": [
+            "@media (min-width: 200em)"
+          ],
+          "ligne": 110
+        },
+        {
+          "variable": "--suivi-echelle",
+          "valeur": "1.5",
+          "selecteur": "html[data-taille='auto']",
+          "contexte": [
+            "@media (min-width: 240em)"
+          ],
+          "ligne": 115
+        },
+        {
+          "variable": "--mantine-spacing-xs",
+          "valeur": "0.375rem",
+          "selecteur": "html[data-densite='compacte']",
+          "contexte": [],
+          "ligne": 374
+        },
+        {
+          "variable": "--mantine-spacing-sm",
+          "valeur": "0.5rem",
+          "selecteur": "html[data-densite='compacte']",
+          "contexte": [],
+          "ligne": 375
+        },
+        {
+          "variable": "--mantine-spacing-md",
+          "valeur": "0.75rem",
+          "selecteur": "html[data-densite='compacte']",
+          "contexte": [],
+          "ligne": 376
+        },
+        {
+          "variable": "--mantine-spacing-lg",
+          "valeur": "1rem",
+          "selecteur": "html[data-densite='compacte']",
+          "contexte": [],
+          "ligne": 377
+        },
+        {
+          "variable": "--mantine-spacing-xs",
+          "valeur": "0.625rem",
+          "selecteur": "html[data-densite='confortable']",
+          "contexte": [],
+          "ligne": 380
+        },
+        {
+          "variable": "--mantine-spacing-sm",
+          "valeur": "1rem",
+          "selecteur": "html[data-densite='confortable']",
+          "contexte": [],
+          "ligne": 381
+        },
+        {
+          "variable": "--mantine-spacing-md",
+          "valeur": "1.25rem",
+          "selecteur": "html[data-densite='confortable']",
+          "contexte": [],
+          "ligne": 382
+        },
+        {
+          "variable": "--mantine-spacing-lg",
+          "valeur": "2rem",
+          "selecteur": "html[data-densite='confortable']",
+          "contexte": [],
+          "ligne": 383
+        },
+        {
+          "variable": "--mantine-color-dimmed",
+          "valeur": "var(--mantine-color-text)",
+          "selecteur": ":root",
+          "contexte": [
+            "@media (prefers-contrast: more)"
+          ],
+          "ligne": 520
+        },
+        {
+          "variable": "--mantine-color-default-border",
+          "valeur": "var(--mantine-color-text)",
+          "selecteur": ":root",
+          "contexte": [
+            "@media (prefers-contrast: more)"
+          ],
+          "ligne": 521
+        },
+        {
+          "variable": "--suivi-trait-l",
+          "valeur": "2px",
+          "selecteur": ":root",
+          "contexte": [
+            "@media (prefers-contrast: more)"
+          ],
+          "ligne": 522
+        },
+        {
+          "variable": "--suivi-chiffre-taille",
+          "valeur": "3.25rem",
+          "selecteur": ".mur",
+          "contexte": [],
+          "ligne": 545
+        },
+        {
+          "variable": "--suivi-entete-h",
+          "valeur": "4.5rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 582
+        },
+        {
+          "variable": "--suivi-nav-l",
+          "valeur": "15rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 583
+        },
+        {
+          "variable": "--suivi-marque",
+          "valeur": "2.35rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 584
+        },
+        {
+          "variable": "--suivi-marge-page",
+          "valeur": "clamp(1rem, 2.35vw, 3rem)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 585
+        },
+        {
+          "variable": "--suivi-carte-min",
+          "valeur": "21rem",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 586
+        },
+        {
+          "variable": "--suivi-nav-fond",
+          "valeur": "var(--neon-navigation)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 587
+        },
+        {
+          "variable": "--suivi-nav-texte",
+          "valeur": "var(--neon-titre)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 588
+        },
+        {
+          "variable": "--suivi-nav-secondaire",
+          "valeur": "var(--neon-secondaire)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 589
+        },
+        {
+          "variable": "--suivi-nav-active",
+          "valeur": "var(--neon-doux)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 590
+        },
+        {
+          "variable": "--suivi-nav-survol",
+          "valeur": "var(--neon-doux)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 591
+        },
+        {
+          "variable": "--suivi-nav-repere",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 592
+        },
+        {
+          "variable": "--suivi-famille-pilotage",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 593
+        },
+        {
+          "variable": "--suivi-famille-organisation",
+          "valeur": "var(--carte-bleu-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 594
+        },
+        {
+          "variable": "--suivi-famille-risques",
+          "valeur": "var(--carte-orange-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 595
+        },
+        {
+          "variable": "--suivi-famille-conformite",
+          "valeur": "var(--carte-bleu-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 596
+        },
+        {
+          "variable": "--suivi-famille-actions",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 597
+        },
+        {
+          "variable": "--suivi-famille-resilience",
+          "valeur": "var(--carte-vert-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 598
+        },
+        {
+          "variable": "--suivi-famille-documents",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 599
+        },
+        {
+          "variable": "--suivi-surface-douce",
+          "valeur": "var(--mantine-color-gray-0)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 600
+        },
+        {
+          "variable": "--suivi-ombre",
+          "valeur": "0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 601
+        },
+        {
+          "variable": "--suivi-ombre-haute",
+          "valeur": "0 18px 54px rgb(27 54 37 / 12%)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 602
+        },
+        {
+          "variable": "--suivi-motion",
+          "valeur": "180ms",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 603
+        },
+        {
+          "variable": "--suivi-motion-entree",
+          "valeur": "360ms",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 604
+        },
+        {
+          "variable": "--suivi-ease",
+          "valeur": "cubic-bezier(0.2, 0.7, 0.2, 1)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 605
+        },
+        {
+          "variable": "--suivi-surface-douce",
+          "valeur": "var(--mantine-color-dark-6)",
+          "selecteur": "[data-mantine-color-scheme='dark']",
+          "contexte": [],
+          "ligne": 608
+        },
+        {
+          "variable": "--suivi-nav-fond",
+          "valeur": "var(--neon-navigation)",
+          "selecteur": "[data-mantine-color-scheme='dark']",
+          "contexte": [],
+          "ligne": 609
+        },
+        {
+          "variable": "--suivi-nav-active",
+          "valeur": "var(--neon-doux)",
+          "selecteur": "[data-mantine-color-scheme='dark']",
+          "contexte": [],
+          "ligne": 610
+        },
+        {
+          "variable": "--suivi-ombre",
+          "valeur": "0 2px 5px rgb(0 0 0 / 9%)",
+          "selecteur": "[data-mantine-color-scheme='dark']",
+          "contexte": [],
+          "ligne": 611
+        },
+        {
+          "variable": "--suivi-ombre-haute",
+          "valeur": "0 18px 54px rgb(0 0 0 / 26%)",
+          "selecteur": "[data-mantine-color-scheme='dark']",
+          "contexte": [],
+          "ligne": 612
+        },
+        {
+          "variable": "--table-border-color",
+          "valeur": "var(--suivi-trait)",
+          "selecteur": ".mantine-Table-table",
+          "contexte": [],
+          "ligne": 908
+        },
+        {
+          "variable": "--mantine-color-text",
+          "valeur": "var(--suivi-nav-texte)",
+          "selecteur": ".auth-panneau",
+          "contexte": [],
+          "ligne": 1276
+        },
+        {
+          "variable": "--mantine-color-dimmed",
+          "valeur": "var(--suivi-nav-secondaire)",
+          "selecteur": ".auth-panneau",
+          "contexte": [],
+          "ligne": 1278
+        },
+        {
+          "variable": "--mantine-color-green-text",
+          "valeur": "var(--mantine-color-green-3)",
+          "selecteur": ".auth-panneau",
+          "contexte": [],
+          "ligne": 1279
+        },
+        {
+          "variable": "--mantine-color-red-text",
+          "valeur": "var(--mantine-color-red-3)",
+          "selecteur": ".auth-panneau",
+          "contexte": [],
+          "ligne": 1280
+        },
+        {
+          "variable": "--loader-color",
+          "valeur": "var(--suivi-nav-fond)",
+          "selecteur": ".auth-carte--valider .auth-attente",
+          "contexte": [],
+          "ligne": 1471
+        },
+        {
+          "variable": "--input-bg",
+          "valeur": "var(--suivi-nav-fond)",
+          "selecteur": ".auth-panneau .auth-etape .mantine-Input-wrapper[data-variant]",
+          "contexte": [],
+          "ligne": 1582
+        },
+        {
+          "variable": "--input-bd",
+          "valeur": "var(--suivi-nav-active)",
+          "selecteur": ".auth-panneau .auth-etape .mantine-Input-wrapper[data-variant]",
+          "contexte": [],
+          "ligne": 1583
+        },
+        {
+          "variable": "--input-bd-focus",
+          "valeur": "var(--suivi-nav-repere)",
+          "selecteur": ".auth-panneau .auth-etape .mantine-Input-wrapper[data-variant]",
+          "contexte": [],
+          "ligne": 1584
+        },
+        {
+          "variable": "--input-color",
+          "valeur": "var(--suivi-nav-texte)",
+          "selecteur": ".auth-panneau .auth-etape .mantine-Input-wrapper[data-variant]",
+          "contexte": [],
+          "ligne": 1585
+        },
+        {
+          "variable": "--suivi-fond-page",
+          "valeur": "#faf9fc",
+          "selecteur": "html[data-style='clair'][data-mantine-color-scheme='light']",
+          "contexte": [],
+          "ligne": 1932
+        },
+        {
+          "variable": "--suivi-trait",
+          "valeur": "#dce5e9",
+          "selecteur": "html[data-style='clair'][data-mantine-color-scheme='light']",
+          "contexte": [],
+          "ligne": 1933
+        },
+        {
+          "variable": "--suivi-surface-douce",
+          "valeur": "#f5f2fa",
+          "selecteur": "html[data-style='clair'][data-mantine-color-scheme='light']",
+          "contexte": [],
+          "ligne": 1934
+        },
+        {
+          "variable": "--suivi-turquoise",
+          "valeur": "#00a8b0",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 1941
+        },
+        {
+          "variable": "--suivi-turquoise-nav",
+          "valeur": "#2cc4cb",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 1942
+        },
+        {
+          "variable": "--suivi-marine",
+          "valeur": "#142f61",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 1943
+        },
+        {
+          "variable": "--badge-bg",
+          "valeur": "#c92a2a",
+          "selecteur": ".shell-nav .nav-pastille[data-alerte='rouge']",
+          "contexte": [],
+          "ligne": 2088
+        },
+        {
+          "variable": "--badge-color",
+          "valeur": "#fff",
+          "selecteur": ".shell-nav .nav-pastille[data-alerte='rouge']",
+          "contexte": [],
+          "ligne": 2090
+        },
+        {
+          "variable": "--tdb-verre-haut",
+          "valeur": "rgb(255 255 255 / 52%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2117
+        },
+        {
+          "variable": "--tdb-verre-milieu",
+          "valeur": "rgb(255 255 255 / 28%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2118
+        },
+        {
+          "variable": "--tdb-verre-bas",
+          "valeur": "rgb(255 255 255 / 38%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2119
+        },
+        {
+          "variable": "--tdb-verre-bord",
+          "valeur": "rgb(255 255 255 / 50%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2120
+        },
+        {
+          "variable": "--tdb-reflet-bord",
+          "valeur": "rgb(255 255 255 / 100%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2121
+        },
+        {
+          "variable": "--tdb-lumiere",
+          "valeur": "rgb(255 255 255 / 95%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2122
+        },
+        {
+          "variable": "--tdb-ombre",
+          "valeur": "var(--suivi-encre)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2123
+        },
+        {
+          "variable": "--tdb-filet",
+          "valeur": "rgb(16 30 24 / 14%)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2124
+        },
+        {
+          "variable": "--tdb-rail",
+          "valeur": "color-mix(in srgb, var(--mantine-color-text) 12%, transparent)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2125
+        },
+        {
+          "variable": "--tdb-lueur",
+          "valeur": "rgb(140 124 230)",
+          "selecteur": ".tdb",
+          "contexte": [],
+          "ligne": 2126
+        },
+        {
+          "variable": "--tdb-verre-haut",
+          "valeur": "var(--suivi-surface)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2129
+        },
+        {
+          "variable": "--tdb-verre-milieu",
+          "valeur": "var(--suivi-surface)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2130
+        },
+        {
+          "variable": "--tdb-verre-bas",
+          "valeur": "var(--neon-doux)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2131
+        },
+        {
+          "variable": "--tdb-verre-bord",
+          "valeur": "rgb(255 255 255 / 14%)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2132
+        },
+        {
+          "variable": "--tdb-reflet-bord",
+          "valeur": "rgb(255 255 255 / 45%)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2133
+        },
+        {
+          "variable": "--tdb-lumiere",
+          "valeur": "rgb(255 255 255 / 22%)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2134
+        },
+        {
+          "variable": "--tdb-ombre",
+          "valeur": "rgb(0 0 0)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2135
+        },
+        {
+          "variable": "--tdb-filet",
+          "valeur": "rgb(0 0 0 / 35%)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2136
+        },
+        {
+          "variable": "--tdb-rail",
+          "valeur": "rgb(255 255 255 / 12%)",
+          "selecteur": "[data-mantine-color-scheme='dark'] .tdb",
+          "contexte": [],
+          "ligne": 2137
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon.css",
+      "declarations": [
+        {
+          "variable": "--neon-signature",
+          "valeur": "linear-gradient(115deg, var(--neon-violet), var(--neon-rose) 65%, var(--neon-orange))",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 3
+        },
+        {
+          "variable": "--suivi-ombre",
+          "valeur": "0 4px 18px color-mix(in srgb, var(--suivi-encre) 7%, transparent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 4
+        },
+        {
+          "variable": "--suivi-ombre-haute",
+          "valeur": "0 18px 48px color-mix(in srgb, var(--suivi-encre) 16%, transparent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 5
+        },
+        {
+          "variable": "--suivi-turquoise",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 6
+        },
+        {
+          "variable": "--suivi-turquoise-nav",
+          "valeur": "var(--neon-accent)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 7
+        },
+        {
+          "variable": "--suivi-marine",
+          "valeur": "var(--neon-titre)",
+          "selecteur": ":root",
+          "contexte": [],
+          "ligne": 8
+        },
+        {
+          "variable": "--table-border-color",
+          "valeur": "var(--suivi-trait)",
+          "selecteur": ".mantine-Table-tr",
+          "contexte": [],
+          "ligne": 55
+        },
+        {
+          "variable": "--tdb-verre-haut",
+          "valeur": "var(--suivi-surface)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 82
+        },
+        {
+          "variable": "--tdb-verre-milieu",
+          "valeur": "var(--suivi-surface)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 83
+        },
+        {
+          "variable": "--tdb-verre-bas",
+          "valeur": "var(--suivi-surface)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 84
+        },
+        {
+          "variable": "--tdb-verre-bord",
+          "valeur": "var(--suivi-trait)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 85
+        },
+        {
+          "variable": "--tdb-lueur",
+          "valeur": "var(--neon-violet)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 86
+        },
+        {
+          "variable": "--tdb-rail",
+          "valeur": "color-mix(in srgb, var(--mantine-color-text) 12%, transparent)",
+          "selecteur": ".tdb,\n[data-mantine-color-scheme='dark'] .tdb,\n[data-mantine-color-scheme='dark'] .revue-ecran.tdb",
+          "contexte": [],
+          "ligne": 87
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-analytics.css",
+      "declarations": [
+        {
+          "variable": "--na-hauteur",
+          "valeur": "19rem",
+          "selecteur": ".neon-analytics",
+          "contexte": [],
+          "ligne": 93
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-rose)",
+          "selecteur": ".neon-serie-0",
+          "contexte": [],
+          "ligne": 475
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-violet)",
+          "selecteur": ".neon-serie-1",
+          "contexte": [],
+          "ligne": 478
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-bleu)",
+          "selecteur": ".neon-serie-2",
+          "contexte": [],
+          "ligne": 481
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-cyan)",
+          "selecteur": ".neon-serie-3",
+          "contexte": [],
+          "ligne": 484
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-orange)",
+          "selecteur": ".neon-serie-4",
+          "contexte": [],
+          "ligne": 487
+        },
+        {
+          "variable": "--serie",
+          "valeur": "var(--neon-menthe)",
+          "selecteur": ".neon-serie-5",
+          "contexte": [],
+          "ligne": 490
+        },
+        {
+          "variable": "--na-hauteur",
+          "valeur": "20rem",
+          "selecteur": ".neon-analytics",
+          "contexte": [
+            "@media (min-width: 120em)"
+          ],
+          "ligne": 554
+        },
+        {
+          "variable": "--na-hauteur",
+          "valeur": "17rem",
+          "selecteur": ".neon-analytics",
+          "contexte": [],
+          "ligne": 629
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-vert-accent)",
+          "selecteur": ".graph-neon-vert",
+          "contexte": [],
+          "ligne": 645
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-bleu-accent)",
+          "selecteur": ".graph-neon-bleu",
+          "contexte": [],
+          "ligne": 648
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-violet-accent)",
+          "selecteur": ".graph-neon-violet",
+          "contexte": [],
+          "ligne": 651
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-orange-accent)",
+          "selecteur": ".graph-neon-orange",
+          "contexte": [],
+          "ligne": 654
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-rouge-accent)",
+          "selecteur": ".graph-neon-rouge",
+          "contexte": [],
+          "ligne": 657
+        },
+        {
+          "variable": "--graph-neon",
+          "valeur": "var(--carte-gris-accent)",
+          "selecteur": ".graph-neon-gris",
+          "contexte": [],
+          "ligne": 660
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "declarations": [
+        {
+          "variable": "--modal-size-lg",
+          "valeur": "50rem",
+          "selecteur": ".mantine-Modal-root",
+          "contexte": [],
+          "ligne": 3
+        },
+        {
+          "variable": "--modal-size-xl",
+          "valeur": "64rem",
+          "selecteur": ".mantine-Modal-root",
+          "contexte": [],
+          "ligne": 4
+        },
+        {
+          "variable": "--modal-x-offset",
+          "valeur": "0.5rem",
+          "selecteur": ".mantine-Modal-root",
+          "contexte": [
+            "@media (max-width: 36em)"
+          ],
+          "ligne": 187
+        },
+        {
+          "variable": "--modal-y-offset",
+          "valeur": "0.75rem",
+          "selecteur": ".mantine-Modal-root",
+          "contexte": [
+            "@media (max-width: 36em)"
+          ],
+          "ligne": 188
+        },
+        {
+          "variable": "--modal-size-xl",
+          "valeur": "76rem",
+          "selecteur": ".contexte-fenetre",
+          "contexte": [],
+          "ligne": 224
+        },
+        {
+          "variable": "--contexte-surface",
+          "valeur": "color-mix(in srgb, var(--mantine-color-encre-9) 6%, var(--suivi-surface))",
+          "selecteur": ".contexte-presentation",
+          "contexte": [],
+          "ligne": 227
+        },
+        {
+          "variable": "--contexte-filet",
+          "valeur": "color-mix(in srgb, var(--mantine-color-encre-9) 18%, var(--suivi-trait))",
+          "selecteur": ".contexte-presentation",
+          "contexte": [],
+          "ligne": 228
+        },
+        {
+          "variable": "--modal-inner-y-offset",
+          "valeur": "1rem",
+          "selecteur": ".contexte-fenetre .mantine-Modal-inner",
+          "contexte": [],
+          "ligne": 231
+        },
+        {
+          "variable": "--contexte-repere-fond",
+          "valeur": "var(--neon-doux)",
+          "selecteur": ".contexte-section",
+          "contexte": [],
+          "ligne": 359
+        },
+        {
+          "variable": "--contexte-repere-fond",
+          "valeur": "color-mix(in srgb, var(--neon-bleu) 13%, var(--suivi-surface))",
+          "selecteur": ".contexte-section[data-champ='scope']",
+          "contexte": [],
+          "ligne": 446
+        },
+        {
+          "variable": "--contexte-repere-fond",
+          "valeur": "color-mix(in srgb, var(--neon-cyan) 14%, var(--suivi-surface))",
+          "selecteur": ".contexte-section[data-champ='interfaces']",
+          "contexte": [],
+          "ligne": 454
+        },
+        {
+          "variable": "--contexte-repere-fond",
+          "valeur": "color-mix(in srgb, var(--neon-violet) 13%, var(--suivi-surface))",
+          "selecteur": ".contexte-section[data-champ='issues']",
+          "contexte": [],
+          "ligne": 462
+        },
+        {
+          "variable": "--categorie-accent",
+          "valeur": "var(--neon-violet)",
+          "selecteur": ".contexte-categorie",
+          "contexte": [],
+          "ligne": 473
+        },
+        {
+          "variable": "--categorie-accent",
+          "valeur": "var(--neon-rose)",
+          "selecteur": ".contexte-categorie[data-nature='externe']",
+          "contexte": [],
+          "ligne": 482
+        },
+        {
+          "variable": "--categorie-accent",
+          "valeur": "var(--neon-cyan)",
+          "selecteur": ".contexte-categorie[data-nature='interface']",
+          "contexte": [],
+          "ligne": 485
+        },
+        {
+          "variable": "--categorie-accent",
+          "valeur": "var(--neon-bleu)",
+          "selecteur": ".contexte-categorie[data-nature='dependance']",
+          "contexte": [],
+          "ligne": 488
+        },
+        {
+          "variable": "--categorie-accent",
+          "valeur": "var(--suivi-trait)",
+          "selecteur": ".contexte-categorie--a-preciser",
+          "contexte": [],
+          "ligne": 536
+        },
+        {
+          "variable": "--contexte-repere-fond",
+          "valeur": "color-mix(in srgb, var(--neon-rose) 12%, var(--suivi-surface))",
+          "selecteur": ".contexte-section[data-champ='exclusions']",
+          "contexte": [],
+          "ligne": 542
+        },
+        {
+          "variable": "--contexte-cadre-coupe",
+          "valeur": "18px",
+          "selecteur": ".contexte-presentation",
+          "contexte": [],
+          "ligne": 667
+        },
+        {
+          "variable": "--fenetre-coupe",
+          "valeur": "18px",
+          "selecteur": ":is(.mantine-Modal-content, .mantine-Drawer-content, .perimetre-dalle, .neon-cadre-biseau)",
+          "contexte": [],
+          "ligne": 852
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-perimetres.css",
+      "declarations": [
+        {
+          "variable": "--perim-panel",
+          "valeur": "#1a2942",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 383
+        },
+        {
+          "variable": "--perim-soft",
+          "valeur": "#202e49",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 384
+        },
+        {
+          "variable": "--perim-ink",
+          "valeur": "#edf2ff",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 385
+        },
+        {
+          "variable": "--perim-muted",
+          "valeur": "#b6bfd4",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 386
+        },
+        {
+          "variable": "--perim-edge",
+          "valeur": "#3c4b69",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 387
+        },
+        {
+          "variable": "--perim-accent",
+          "valeur": "#b39afc",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 388
+        },
+        {
+          "variable": "--perim-tint",
+          "valeur": "#343354",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 389
+        },
+        {
+          "variable": "--perim-wire",
+          "valeur": "#8b79c3",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 390
+        },
+        {
+          "variable": "--perim-dots",
+          "valeur": "#34405a",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 391
+        },
+        {
+          "variable": "--perim-orange",
+          "valeur": "#f5bc6e",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 392
+        },
+        {
+          "variable": "--perim-red",
+          "valeur": "#ff9b8f",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 393
+        },
+        {
+          "variable": "--perim-green",
+          "valeur": "#7bd5b2",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 394
+        },
+        {
+          "variable": "--perim-shadow",
+          "valeur": "0 4px 18px rgb(0 0 0 / 15%)",
+          "selecteur": ".perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 395
+        },
+        {
+          "variable": "--perim-panel",
+          "valeur": "#fff",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 400
+        },
+        {
+          "variable": "--perim-soft",
+          "valeur": "#f7f5fc",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 401
+        },
+        {
+          "variable": "--perim-ink",
+          "valeur": "#28253f",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 402
+        },
+        {
+          "variable": "--perim-muted",
+          "valeur": "#6e617f",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 403
+        },
+        {
+          "variable": "--perim-edge",
+          "valeur": "#ddd4ed",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 404
+        },
+        {
+          "variable": "--perim-accent",
+          "valeur": "#6c49c4",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 405
+        },
+        {
+          "variable": "--perim-tint",
+          "valeur": "#ece5fa",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 406
+        },
+        {
+          "variable": "--perim-wire",
+          "valeur": "#b9a7dc",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 407
+        },
+        {
+          "variable": "--perim-dots",
+          "valeur": "#dcd5eb",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 408
+        },
+        {
+          "variable": "--perim-orange",
+          "valeur": "#a5651d",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 409
+        },
+        {
+          "variable": "--perim-red",
+          "valeur": "#b7493e",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 410
+        },
+        {
+          "variable": "--perim-green",
+          "valeur": "#267e60",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 411
+        },
+        {
+          "variable": "--perim-shadow",
+          "valeur": "0 4px 7px rgb(48 31 85 / 4%), 0 12px 25px -15px rgb(48 31 85 / 23%)",
+          "selecteur": "[data-mantine-color-scheme='light'] .perimetres-graphe-compact",
+          "contexte": [],
+          "ligne": 412
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-objectifs.css",
+      "declarations": [
+        {
+          "variable": "--objectifs-panel",
+          "valeur": "#102039",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 100
+        },
+        {
+          "variable": "--objectifs-soft",
+          "valeur": "#172841",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 101
+        },
+        {
+          "variable": "--objectifs-row",
+          "valeur": "#14243d",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 102
+        },
+        {
+          "variable": "--objectifs-texte",
+          "valeur": "#edf2ff",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 103
+        },
+        {
+          "variable": "--objectifs-muted",
+          "valeur": "#b1bed4",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 104
+        },
+        {
+          "variable": "--objectifs-structure",
+          "valeur": "#3b4b69",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 105
+        },
+        {
+          "variable": "--objectifs-accent",
+          "valeur": "#b39afc",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 106
+        },
+        {
+          "variable": "--objectifs-tint",
+          "valeur": "#343354",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 107
+        },
+        {
+          "variable": "--objectifs-succes",
+          "valeur": "#72d1a4",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 108
+        },
+        {
+          "variable": "--objectifs-erreur",
+          "valeur": "#ff9b8f",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 109
+        },
+        {
+          "variable": "--objectifs-attention",
+          "valeur": "#f5bc6e",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 110
+        },
+        {
+          "variable": "--objectifs-cible",
+          "valeur": "#eee1ff",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 111
+        },
+        {
+          "variable": "--objectifs-cible-fond",
+          "valeur": "#443562",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 112
+        },
+        {
+          "variable": "--objectifs-cible-trait",
+          "valeur": "#9274c4",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 113
+        },
+        {
+          "variable": "--objectifs-vert-fond",
+          "valeur": "#0d6b3d",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 114
+        },
+        {
+          "variable": "--objectifs-vert-trait",
+          "valeur": "#35c985",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 115
+        },
+        {
+          "variable": "--objectifs-vert-texte",
+          "valeur": "#effff4",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 116
+        },
+        {
+          "variable": "--objectifs-rouge-fond",
+          "valeur": "#972d31",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 117
+        },
+        {
+          "variable": "--objectifs-rouge-trait",
+          "valeur": "#ee6e62",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 118
+        },
+        {
+          "variable": "--objectifs-rouge-texte",
+          "valeur": "#fff5f5",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 119
+        },
+        {
+          "variable": "--objectifs-orange-fond",
+          "valeur": "#9b4a10",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 120
+        },
+        {
+          "variable": "--objectifs-orange-trait",
+          "valeur": "#e9a145",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 121
+        },
+        {
+          "variable": "--objectifs-orange-texte",
+          "valeur": "#fff5e8",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 122
+        },
+        {
+          "variable": "--objectifs-neutre-fond",
+          "valeur": "#35445f",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 123
+        },
+        {
+          "variable": "--objectifs-neutre-trait",
+          "valeur": "#627795",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 124
+        },
+        {
+          "variable": "--objectifs-neutre",
+          "valeur": "#e6edf9",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 125
+        },
+        {
+          "variable": "--objectifs-piste",
+          "valeur": "#2d3c56",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 126
+        },
+        {
+          "variable": "--objectifs-ombre",
+          "valeur": "0 5px 24px rgb(0 0 0 / 18%)",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 127
+        },
+        {
+          "variable": "--objectifs-reflet",
+          "valeur": "rgb(255 255 255 / 28%)",
+          "selecteur": ".objectifs-module,\n.objectifs-fiche",
+          "contexte": [],
+          "ligne": 128
+        },
+        {
+          "variable": "--objectifs-panel",
+          "valeur": "#fff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 131
+        },
+        {
+          "variable": "--objectifs-soft",
+          "valeur": "#f8f5fe",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 132
+        },
+        {
+          "variable": "--objectifs-row",
+          "valeur": "#fcfbff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 133
+        },
+        {
+          "variable": "--objectifs-texte",
+          "valeur": "#25213d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 134
+        },
+        {
+          "variable": "--objectifs-muted",
+          "valeur": "#71617f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 135
+        },
+        {
+          "variable": "--objectifs-structure",
+          "valeur": "#d9cee8",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 136
+        },
+        {
+          "variable": "--objectifs-accent",
+          "valeur": "#6950d8",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 137
+        },
+        {
+          "variable": "--objectifs-tint",
+          "valeur": "#eee7fa",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 138
+        },
+        {
+          "variable": "--objectifs-succes",
+          "valeur": "#246e50",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 139
+        },
+        {
+          "variable": "--objectifs-erreur",
+          "valeur": "#b4483b",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 140
+        },
+        {
+          "variable": "--objectifs-attention",
+          "valeur": "#a06321",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 141
+        },
+        {
+          "variable": "--objectifs-cible",
+          "valeur": "#59369c",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 142
+        },
+        {
+          "variable": "--objectifs-cible-fond",
+          "valeur": "#d9ccf2",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 143
+        },
+        {
+          "variable": "--objectifs-cible-trait",
+          "valeur": "#b39ad9",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 144
+        },
+        {
+          "variable": "--objectifs-vert-fond",
+          "valeur": "#acdcbf",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 145
+        },
+        {
+          "variable": "--objectifs-vert-trait",
+          "valeur": "#7dbd9d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 146
+        },
+        {
+          "variable": "--objectifs-vert-texte",
+          "valeur": "#185e42",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 147
+        },
+        {
+          "variable": "--objectifs-rouge-fond",
+          "valeur": "#edb6a9",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 148
+        },
+        {
+          "variable": "--objectifs-rouge-trait",
+          "valeur": "#d99787",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 149
+        },
+        {
+          "variable": "--objectifs-rouge-texte",
+          "valeur": "#823125",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 150
+        },
+        {
+          "variable": "--objectifs-orange-fond",
+          "valeur": "#f7cd92",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 151
+        },
+        {
+          "variable": "--objectifs-orange-trait",
+          "valeur": "#dfad67",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 152
+        },
+        {
+          "variable": "--objectifs-orange-texte",
+          "valeur": "#7c4712",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 153
+        },
+        {
+          "variable": "--objectifs-neutre-fond",
+          "valeur": "#e5dfef",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 154
+        },
+        {
+          "variable": "--objectifs-neutre-trait",
+          "valeur": "#c9bbda",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 155
+        },
+        {
+          "variable": "--objectifs-neutre",
+          "valeur": "#6e577f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 156
+        },
+        {
+          "variable": "--objectifs-piste",
+          "valeur": "#e9e5f2",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 157
+        },
+        {
+          "variable": "--objectifs-ombre",
+          "valeur": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%)",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.objectifs-module, .objectifs-fiche)",
+          "contexte": [],
+          "ligne": 158
+        },
+        {
+          "variable": "--objectifs-donnee-fond",
+          "valeur": "var(--objectifs-neutre-fond)",
+          "selecteur": ".objectifs-donnee",
+          "contexte": [],
+          "ligne": 629
+        },
+        {
+          "variable": "--objectifs-donnee-bord",
+          "valeur": "var(--objectifs-neutre-trait)",
+          "selecteur": ".objectifs-donnee",
+          "contexte": [],
+          "ligne": 630
+        },
+        {
+          "variable": "--objectifs-donnee-texte",
+          "valeur": "var(--objectifs-neutre)",
+          "selecteur": ".objectifs-donnee",
+          "contexte": [],
+          "ligne": 631
+        },
+        {
+          "variable": "--objectifs-donnee-fond",
+          "valeur": "var(--objectifs-cible-fond)",
+          "selecteur": ".objectifs-donnee--cible",
+          "contexte": [],
+          "ligne": 648
+        },
+        {
+          "variable": "--objectifs-donnee-bord",
+          "valeur": "var(--objectifs-cible-trait)",
+          "selecteur": ".objectifs-donnee--cible",
+          "contexte": [],
+          "ligne": 649
+        },
+        {
+          "variable": "--objectifs-donnee-texte",
+          "valeur": "var(--objectifs-cible)",
+          "selecteur": ".objectifs-donnee--cible",
+          "contexte": [],
+          "ligne": 650
+        },
+        {
+          "variable": "--objectifs-donnee-fond",
+          "valeur": "var(--objectifs-vert-fond)",
+          "selecteur": ".objectifs-donnee[data-etat='ok']",
+          "contexte": [],
+          "ligne": 653
+        },
+        {
+          "variable": "--objectifs-donnee-bord",
+          "valeur": "var(--objectifs-vert-trait)",
+          "selecteur": ".objectifs-donnee[data-etat='ok']",
+          "contexte": [],
+          "ligne": 654
+        },
+        {
+          "variable": "--objectifs-donnee-texte",
+          "valeur": "var(--objectifs-vert-texte)",
+          "selecteur": ".objectifs-donnee[data-etat='ok']",
+          "contexte": [],
+          "ligne": 655
+        },
+        {
+          "variable": "--objectifs-donnee-fond",
+          "valeur": "var(--objectifs-rouge-fond)",
+          "selecteur": ".objectifs-donnee[data-etat='ko']",
+          "contexte": [],
+          "ligne": 658
+        },
+        {
+          "variable": "--objectifs-donnee-bord",
+          "valeur": "var(--objectifs-rouge-trait)",
+          "selecteur": ".objectifs-donnee[data-etat='ko']",
+          "contexte": [],
+          "ligne": 659
+        },
+        {
+          "variable": "--objectifs-donnee-texte",
+          "valeur": "var(--objectifs-rouge-texte)",
+          "selecteur": ".objectifs-donnee[data-etat='ko']",
+          "contexte": [],
+          "ligne": 660
+        },
+        {
+          "variable": "--objectifs-donnee-fond",
+          "valeur": "var(--objectifs-orange-fond)",
+          "selecteur": ".objectifs-donnee[data-etat='undef']",
+          "contexte": [],
+          "ligne": 663
+        },
+        {
+          "variable": "--objectifs-donnee-bord",
+          "valeur": "var(--objectifs-orange-trait)",
+          "selecteur": ".objectifs-donnee[data-etat='undef']",
+          "contexte": [],
+          "ligne": 664
+        },
+        {
+          "variable": "--objectifs-donnee-texte",
+          "valeur": "var(--objectifs-orange-texte)",
+          "selecteur": ".objectifs-donnee[data-etat='undef']",
+          "contexte": [],
+          "ligne": 665
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-dda.css",
+      "declarations": [
+        {
+          "variable": "--dda-surface",
+          "valeur": "#09182f",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 3
+        },
+        {
+          "variable": "--dda-panel",
+          "valeur": "#102039",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 4
+        },
+        {
+          "variable": "--dda-row",
+          "valeur": "#0d1e37",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 5
+        },
+        {
+          "variable": "--dda-edge",
+          "valeur": "#2b4260",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 6
+        },
+        {
+          "variable": "--dda-text",
+          "valeur": "#edf7ff",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 7
+        },
+        {
+          "variable": "--dda-muted",
+          "valeur": "#a9bcd1",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 8
+        },
+        {
+          "variable": "--dda-secondary",
+          "valeur": "#a9bcd1",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 9
+        },
+        {
+          "variable": "--dda-accent",
+          "valeur": "#8b9aff",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 10
+        },
+        {
+          "variable": "--dda-doux",
+          "valeur": "#263257",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 11
+        },
+        {
+          "variable": "--dda-grid",
+          "valeur": "#273a54",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 12
+        },
+        {
+          "variable": "--dda-total",
+          "valeur": "#29b28f",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 13
+        },
+        {
+          "variable": "--dda-partiel",
+          "valeur": "#efad55",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 14
+        },
+        {
+          "variable": "--dda-erreur",
+          "valeur": "#e47a6f",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 15
+        },
+        {
+          "variable": "--dda-danger",
+          "valeur": "#ff8d80",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 16
+        },
+        {
+          "variable": "--dda-shadow",
+          "valeur": "0 4px 20px rgb(0 0 0 / 18%)",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 17
+        },
+        {
+          "variable": "--dda-icone",
+          "valeur": "#c0b6ff",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 18
+        },
+        {
+          "variable": "--dda-choix-bg",
+          "valeur": "#354b68",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 19
+        },
+        {
+          "variable": "--dda-choix-bord",
+          "valeur": "#6483a1",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 20
+        },
+        {
+          "variable": "--dda-choix-texte",
+          "valeur": "#fff",
+          "selecteur": ".dda-module,\n.dda-modal",
+          "contexte": [],
+          "ligne": 21
+        },
+        {
+          "variable": "--dda-surface",
+          "valeur": "#fff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 27
+        },
+        {
+          "variable": "--dda-panel",
+          "valeur": "#f8f5fe",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 28
+        },
+        {
+          "variable": "--dda-row",
+          "valeur": "#fcfbff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 29
+        },
+        {
+          "variable": "--dda-edge",
+          "valeur": "#ded4eb",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 30
+        },
+        {
+          "variable": "--dda-text",
+          "valeur": "#25213d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 31
+        },
+        {
+          "variable": "--dda-muted",
+          "valeur": "#71617f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 32
+        },
+        {
+          "variable": "--dda-secondary",
+          "valeur": "#756284",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 33
+        },
+        {
+          "variable": "--dda-accent",
+          "valeur": "#6950d8",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 34
+        },
+        {
+          "variable": "--dda-doux",
+          "valeur": "#eee7fa",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 35
+        },
+        {
+          "variable": "--dda-grid",
+          "valeur": "#e9e5f2",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 36
+        },
+        {
+          "variable": "--dda-danger",
+          "valeur": "#b94a40",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 37
+        },
+        {
+          "variable": "--dda-icone",
+          "valeur": "#76589b",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 38
+        },
+        {
+          "variable": "--dda-shadow",
+          "valeur": "0 3px 6px rgb(37 31 85 / 6%), 0 13px 28px -12px rgb(55 44 100 / 24%)",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 39
+        },
+        {
+          "variable": "--dda-choix-bg",
+          "valeur": "#e5dfef",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 40
+        },
+        {
+          "variable": "--dda-choix-bord",
+          "valeur": "#c9bbda",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 41
+        },
+        {
+          "variable": "--dda-choix-texte",
+          "valeur": "#6e577f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.dda-module, .dda-modal)",
+          "contexte": [],
+          "ligne": 42
+        },
+        {
+          "variable": "--dda-tone",
+          "valeur": "var(--dda-total)",
+          "selecteur": ".dda-tone-total",
+          "contexte": [],
+          "ligne": 210
+        },
+        {
+          "variable": "--dda-from",
+          "valeur": "#8edbc7",
+          "selecteur": ".dda-tone-total",
+          "contexte": [],
+          "ligne": 211
+        },
+        {
+          "variable": "--dda-tone",
+          "valeur": "var(--dda-partiel)",
+          "selecteur": ".dda-tone-partiel",
+          "contexte": [],
+          "ligne": 214
+        },
+        {
+          "variable": "--dda-from",
+          "valeur": "#f9d7a0",
+          "selecteur": ".dda-tone-partiel",
+          "contexte": [],
+          "ligne": 215
+        },
+        {
+          "variable": "--dda-tone",
+          "valeur": "var(--dda-erreur)",
+          "selecteur": ".dda-tone-insuffisant",
+          "contexte": [],
+          "ligne": 218
+        },
+        {
+          "variable": "--dda-from",
+          "valeur": "#edb6aa",
+          "selecteur": ".dda-tone-insuffisant",
+          "contexte": [],
+          "ligne": 219
+        },
+        {
+          "variable": "--dda-tone",
+          "valeur": "#a9a1ba",
+          "selecteur": ".dda-tone-inconnu",
+          "contexte": [],
+          "ligne": 222
+        },
+        {
+          "variable": "--dda-from",
+          "valeur": "#dad4e7",
+          "selecteur": ".dda-tone-inconnu",
+          "contexte": [],
+          "ligne": 223
+        },
+        {
+          "variable": "--input-bg",
+          "valeur": "transparent",
+          "selecteur": ".dda-choix",
+          "contexte": [],
+          "ligne": 706
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "var(--dda-choix-bg)",
+          "selecteur": ".dda-choix",
+          "contexte": [],
+          "ligne": 707
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "var(--dda-choix-bord)",
+          "selecteur": ".dda-choix",
+          "contexte": [],
+          "ligne": 708
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "var(--dda-choix-texte)",
+          "selecteur": ".dda-choix",
+          "contexte": [],
+          "ligne": 709
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#0d6b3d",
+          "selecteur": ".dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 713
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#35df88",
+          "selecteur": ".dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 714
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#effff4",
+          "selecteur": ".dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 715
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#9b4a10",
+          "selecteur": ".dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 718
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#ffad44",
+          "selecteur": ".dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 719
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#fff5e8",
+          "selecteur": ".dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 720
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#b32025",
+          "selecteur": ".dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 723
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#ff5148",
+          "selecteur": ".dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 724
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#fff5f5",
+          "selecteur": ".dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 725
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#acdcbf",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 728
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#7dbd9d",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 729
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#185e42",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='total']",
+          "contexte": [],
+          "ligne": 730
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#f7cd92",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 733
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#dfad67",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 734
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#7c4712",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='partiel']",
+          "contexte": [],
+          "ligne": 735
+        },
+        {
+          "variable": "--dda-choice-bg",
+          "valeur": "#edb6a9",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 738
+        },
+        {
+          "variable": "--dda-choice-edge",
+          "valeur": "#d99787",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 739
+        },
+        {
+          "variable": "--dda-choice-ink",
+          "valeur": "#823125",
+          "selecteur": "[data-mantine-color-scheme='light'] .dda-choix[data-tone='insuffisant']",
+          "contexte": [],
+          "ligne": 740
+        }
+      ]
+    },
+    {
+      "fichier": "packages/ui/src/neon-referentiels.css",
+      "declarations": [
+        {
+          "variable": "--rfs-panel",
+          "valeur": "#102039",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 3
+        },
+        {
+          "variable": "--rfs-soft",
+          "valeur": "#172841",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 4
+        },
+        {
+          "variable": "--rfs-row",
+          "valeur": "#14243d",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 5
+        },
+        {
+          "variable": "--rfs-ink",
+          "valeur": "#edf2ff",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 6
+        },
+        {
+          "variable": "--rfs-muted",
+          "valeur": "#b1bed4",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 7
+        },
+        {
+          "variable": "--rfs-edge",
+          "valeur": "#3b4b69",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 8
+        },
+        {
+          "variable": "--rfs-accent",
+          "valeur": "#b39afc",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 9
+        },
+        {
+          "variable": "--rfs-tint",
+          "valeur": "#343354",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 10
+        },
+        {
+          "variable": "--rfs-green",
+          "valeur": "#72d1a4",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 11
+        },
+        {
+          "variable": "--rfs-green-bg",
+          "valeur": "#0d6b3d",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 12
+        },
+        {
+          "variable": "--rfs-green-edge",
+          "valeur": "#35c985",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 13
+        },
+        {
+          "variable": "--rfs-green-ink",
+          "valeur": "#effff4",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 14
+        },
+        {
+          "variable": "--rfs-amber",
+          "valeur": "#f1ba72",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 15
+        },
+        {
+          "variable": "--rfs-amber-tint",
+          "valeur": "#4a382b",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 16
+        },
+        {
+          "variable": "--rfs-amber-edge",
+          "valeur": "#92734f",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 17
+        },
+        {
+          "variable": "--rfs-teal",
+          "valeur": "#7bd5b2",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 18
+        },
+        {
+          "variable": "--rfs-teal-tint",
+          "valeur": "#21433f",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 19
+        },
+        {
+          "variable": "--rfs-teal-edge",
+          "valeur": "#467e6b",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 20
+        },
+        {
+          "variable": "--rfs-shadow",
+          "valeur": "0 5px 24px rgb(0 0 0 / 18%)",
+          "selecteur": ".referentiels-studio,\n.referentiels-fiche",
+          "contexte": [],
+          "ligne": 21
+        },
+        {
+          "variable": "--rfs-panel",
+          "valeur": "#fff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 25
+        },
+        {
+          "variable": "--rfs-soft",
+          "valeur": "#f8f5fe",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 26
+        },
+        {
+          "variable": "--rfs-row",
+          "valeur": "#fcfbff",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 27
+        },
+        {
+          "variable": "--rfs-ink",
+          "valeur": "#25213d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 28
+        },
+        {
+          "variable": "--rfs-muted",
+          "valeur": "#71617f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 29
+        },
+        {
+          "variable": "--rfs-edge",
+          "valeur": "#d9cee8",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 30
+        },
+        {
+          "variable": "--rfs-accent",
+          "valeur": "#6950d8",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 31
+        },
+        {
+          "variable": "--rfs-tint",
+          "valeur": "#eee7fa",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 32
+        },
+        {
+          "variable": "--rfs-green",
+          "valeur": "#246e50",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 33
+        },
+        {
+          "variable": "--rfs-green-bg",
+          "valeur": "#acdcbf",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 34
+        },
+        {
+          "variable": "--rfs-green-edge",
+          "valeur": "#7dbd9d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 35
+        },
+        {
+          "variable": "--rfs-green-ink",
+          "valeur": "#185e42",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 36
+        },
+        {
+          "variable": "--rfs-amber",
+          "valeur": "#90571f",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 37
+        },
+        {
+          "variable": "--rfs-amber-tint",
+          "valeur": "#fbebd4",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 38
+        },
+        {
+          "variable": "--rfs-amber-edge",
+          "valeur": "#e4c8a1",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 39
+        },
+        {
+          "variable": "--rfs-teal",
+          "valeur": "#1c6d5d",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 40
+        },
+        {
+          "variable": "--rfs-teal-tint",
+          "valeur": "#dcefe7",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 41
+        },
+        {
+          "variable": "--rfs-teal-edge",
+          "valeur": "#a7cdbd",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 42
+        },
+        {
+          "variable": "--rfs-shadow",
+          "valeur": "0 3px 6px rgb(37 31 85 / 5%), 0 13px 28px -12px rgb(55 44 100 / 20%)",
+          "selecteur": "[data-mantine-color-scheme='light'] :is(.referentiels-studio, .referentiels-fiche)",
+          "contexte": [],
+          "ligne": 43
+        },
+        {
+          "variable": "--rfs-ton",
+          "valeur": "var(--rfs-accent)",
+          "selecteur": ".rfs-catalogue-carte",
+          "contexte": [],
+          "ligne": 90
+        },
+        {
+          "variable": "--rfs-ton-fond",
+          "valeur": "var(--rfs-tint)",
+          "selecteur": ".rfs-catalogue-carte",
+          "contexte": [],
+          "ligne": 91
+        },
+        {
+          "variable": "--rfs-ton-bord",
+          "valeur": "var(--rfs-edge)",
+          "selecteur": ".rfs-catalogue-carte",
+          "contexte": [],
+          "ligne": 92
+        },
+        {
+          "variable": "--rfs-ton",
+          "valeur": "var(--rfs-teal)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='1']",
+          "contexte": [],
+          "ligne": 101
+        },
+        {
+          "variable": "--rfs-ton-fond",
+          "valeur": "var(--rfs-teal-tint)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='1']",
+          "contexte": [],
+          "ligne": 102
+        },
+        {
+          "variable": "--rfs-ton-bord",
+          "valeur": "var(--rfs-teal-edge)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='1']",
+          "contexte": [],
+          "ligne": 103
+        },
+        {
+          "variable": "--rfs-ton",
+          "valeur": "var(--rfs-amber)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='2']",
+          "contexte": [],
+          "ligne": 106
+        },
+        {
+          "variable": "--rfs-ton-fond",
+          "valeur": "var(--rfs-amber-tint)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='2']",
+          "contexte": [],
+          "ligne": 107
+        },
+        {
+          "variable": "--rfs-ton-bord",
+          "valeur": "var(--rfs-amber-edge)",
+          "selecteur": ".rfs-catalogue-carte[data-ton='2']",
+          "contexte": [],
+          "ligne": 108
+        }
+      ]
+    }
+  ]
+}

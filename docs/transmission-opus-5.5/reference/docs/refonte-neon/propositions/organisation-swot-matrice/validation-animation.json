@@ -1,0 +1,16 @@
+{
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "video": {
+    "duration": 7.48,
+    "width": 1168,
+    "height": 652,
+    "decodedFrames": 27
+  },
+  "gif": {
+    "width": 1168,
+    "height": 652,
+    "imagesDifferentes": true
+  },
+  "errors": []
+}

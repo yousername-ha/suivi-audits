@@ -1,0 +1,624 @@
+{
+  "scope": "Variante autonome du menu : icônes colorées, dégradé statique et animation légère ; aucun code applicatif modifié",
+  "pages": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "actions",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "recurrences",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "perimetres",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "fournisseurs",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "parametres",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "cartographie",
+      "style": {
+        "background": "radial-gradient(120% 36% at 0% 100%, rgb(215, 238, 234) 0%, rgba(0, 0, 0, 0) 85%), linear-gradient(163deg, rgb(252, 253, 255) 0%, rgb(234, 240, 251) 56%, rgb(230, 238, 245) 100%)",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(185, 203, 220)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "actions",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "recurrences",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "perimetres",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "fournisseurs",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "parametres",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "cartographie",
+      "style": {
+        "background": "radial-gradient(115% 40% at 0% 100%, rgb(23, 63, 69) 0%, rgba(0, 0, 0, 0) 86%), linear-gradient(163deg, rgb(20, 35, 61) 0%, rgb(20, 44, 69) 56%, rgb(20, 50, 57) 100%)",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(66, 97, 123)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 571
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 571
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "light",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 494
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "dark",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 494
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 542
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 542
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 669
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 669
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "light",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "dark",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 849
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 849
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1209
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1209
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 574
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 574
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "apiRequests": 0,
+  "externalRequests": [],
+  "screenshot": {
+    "count": 2,
+    "width": 3840,
+    "height": 2160
+  },
+  "structure": {
+    "families": 7,
+    "destinations": 26,
+    "accountEntries": 5,
+    "oneExpandedFamily": true,
+    "activeDestination": true,
+    "themeButton": true,
+    "budgetCrrcAbsent": true,
+    "labels": [
+      "Tableau de bord",
+      "Organisation8⌄",
+      "Contexte de l’organisation",
+      "Périmètres",
+      "Processus",
+      "Rôles et responsabilités",
+      "Cartographie du SMSI",
+      "Fournisseurs",
+      "Revues des accès",
+      "Plans annuels",
+      "Pilotage5›",
+      "Synthèse",
+      "Parcours guidé",
+      "Objectifs et indicateurs",
+      "Revues de direction",
+      "Rappels et configuration",
+      "Risques1›",
+      "Gestion des risques",
+      "Conformité et audits4›",
+      "Bibliothèque de référentiels",
+      "Applicabilité et mesures",
+      "Gestion de l’audit",
+      "Preuves et contrôles",
+      "Actions4›",
+      "Amélioration continue",
+      "Plan d’actions",
+      "Tâches récurrentes",
+      "Registres et droits",
+      "Résilience2›",
+      "Continuité d’activité",
+      "Incidents et crise",
+      "Documents2›",
+      "Documents et liens",
+      "Imports et exports"
+    ]
+  },
+  "animation": {
+    "scope": "Maquette du menu uniquement",
+    "motion": {
+      "zero": "matrix(1, 0, 0, 1, 0, 0.5)",
+      "middle": "matrix(1, 0, 0, 1, 0, -0.5)",
+      "duration": "6.8s"
+    },
+    "colors": {
+      "light": [
+        "rgb(41, 125, 114)",
+        "rgb(60, 99, 178)",
+        "rgb(158, 101, 39)",
+        "rgb(25, 122, 136)",
+        "rgb(63, 128, 85)",
+        "rgb(166, 84, 80)",
+        "rgb(101, 105, 174)"
+      ],
+      "dark": [
+        "rgb(131, 213, 187)",
+        "rgb(158, 190, 250)",
+        "rgb(233, 189, 123)",
+        "rgb(136, 216, 223)",
+        "rgb(160, 213, 168)",
+        "rgb(233, 166, 160)",
+        "rgb(190, 188, 240)"
+      ]
+    },
+    "axe": [
+      {
+        "theme": "light",
+        "familyPage": "perimetres",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "objectifs",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "risques",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "bibliotheque",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "actions",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "continuite",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "familyPage": "documents",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "perimetres",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "objectifs",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "risques",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "bibliotheque",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "actions",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "continuite",
+        "violations": []
+      },
+      {
+        "theme": "dark",
+        "familyPage": "documents",
+        "violations": []
+      }
+    ],
+    "manualPause": "paused / running",
+    "reducedMotion": "none, commande désactivée",
+    "video": {
+      "frames": 48,
+      "width": 1440,
+      "height": 900,
+      "elapsedSeconds": 12.34,
+      "capture": "Captures natives, durées réelles préservées"
+    }
+  },
+  "lintFormat": "réussis",
+  "sha256": {
+    "menu.js": "b6054714e3b6c0941b8b4601b6c5004233e92ec3da9320607692abd4f2f074bc",
+    "couleurs.css": "bbb798163f34d725808a71cd099e66e4ca0b3f0160f1e86e791fea09ff396ec4",
+    "menu-sombre-hd.png": "eb0fc62c0e34e66838f91c52d506970ef56362bd257c2276994118cc65ab6bbf",
+    "index.html": "a116b5f58e22602a7b7ecb670d041c38befbf18e9582a0aed6d5408b72ba6efd",
+    "animation.json": "590b8805ce24b5664e77e24ca352be713893d7bae6e94cb14cf1af7dd7d83475",
+    "apercu-autonome.html": "86860aefde84913fd1f27bc63853972f6eac365b63ce63d27e973dece4492476",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "3c27e69c694113b905eeebe1ca425571437a20b245047e17fc95385553d7acfa",
+    "menu-clair-hd.png": "38467fcef50d11a303d82ef45e3c1bcd0429f9d4f31c915ff48c31a5cd668514",
+    "menu-animation.mp4": "ac616c6936e2c61c52538d4d6e34f17c55afb355c942bd9197e96f81bd6fb578"
+  }
+}

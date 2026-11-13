@@ -1,0 +1,72 @@
+/* Proposition isolée : les en-têtes, les cartes et le cercle ont chacun leur rangée.
+   La légende ne participe plus au centrage du cercle. Aucun décalage calculé à la main. */
+.pi-panorama {
+  grid-template-rows: auto minmax(340px, 1fr);
+  row-gap: 22px;
+  align-items: center;
+}
+.pi-cluster {
+  display: contents;
+}
+.pi-cluster > header {
+  grid-row: 1;
+  margin: 0;
+  align-self: end;
+}
+.pi-cluster > .pi-group-cards {
+  grid-row: 2;
+}
+.internal > header,
+.internal > .pi-group-cards {
+  grid-column: 1;
+}
+.external > header,
+.external > .pi-group-cards {
+  grid-column: 3;
+}
+.pi-hub {
+  grid-row: 2;
+  grid-column: 2;
+  justify-self: center;
+  min-height: 0;
+  width: 100%;
+}
+.pi-hub-caption {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 144px;
+}
+.pi-hub-caption strong {
+  max-width: 100%;
+}
+.pi-hub-label {
+  margin-top: 0;
+}
+.pi-unknown {
+  grid-row: 3;
+}
+.pi-panorama[data-groups='external'] .external > header,
+.pi-panorama[data-groups='external'] .external > .pi-group-cards {
+  grid-column: 2;
+}
+.pi-panorama[data-groups='external'] .pi-hub {
+  grid-column: 1;
+}
+.pi-panorama[data-groups='unknown'] {
+  grid-template-rows: auto auto;
+}
+.pi-panorama[data-groups='unknown'] .pi-hub {
+  grid-row: 1;
+  grid-column: 1;
+  margin-bottom: 115px;
+}
+.pi-panorama[data-groups='unknown'] .pi-unknown {
+  grid-row: 2;
+}

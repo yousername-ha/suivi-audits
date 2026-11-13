@@ -1,0 +1,125 @@
+/* Habillage seul : aucune propriété de géométrie, dimension, affichage ou placement du canevas. */
+html[data-mantine-color-scheme='dark'][data-habillage='on'] .carte-page {
+  --carte-canevas: #0c192b;
+  --carte-boite: #14263d;
+  --carte-texte: #e8effb;
+  --carte-secondaire: #b0bfd5;
+  --carte-bleu-accent: #8dcfe8;
+  --carte-bleu-doux: #1b3c50;
+  --carte-bleu-fond: #152c43;
+  --carte-bleu-trait: #4f8199;
+  --carte-vert-accent: #89d8bb;
+  --carte-vert-doux: #1b3c38;
+  --carte-vert-fond: #16332f;
+  --carte-vert-trait: #4f8f7b;
+  --carte-violet-accent: #c2b4ed;
+  --carte-violet-doux: #322d49;
+  --carte-violet-fond: #29263b;
+  --carte-violet-trait: #7e72a5;
+  --carte-orange-accent: #efba79;
+  --carte-orange-doux: #413329;
+  --carte-orange-fond: #332b29;
+  --carte-orange-trait: #9b7955;
+  --carte-marine-accent: #a5c9ed;
+  --carte-marine-fond: #142c43;
+  --carte-sur-marine: #eaf3ff;
+  --carte-sur-marine-secondaire: #b5cde4;
+  --suivi-trait: #344a63;
+  --suivi-surface: #102037;
+  --suivi-ombre: 0 8px 22px -18px #0008;
+}
+html[data-mantine-color-scheme='light'][data-habillage='on'] .carte-page {
+  --carte-canevas: #f4f8fc;
+  --carte-boite: #fff;
+  --carte-texte: #172b45;
+  --carte-secondaire: #50647b;
+  --carte-bleu-accent: #15647e;
+  --carte-bleu-doux: #dcecf5;
+  --carte-bleu-fond: #edf5fb;
+  --carte-bleu-trait: #6694af;
+  --carte-vert-accent: #23694f;
+  --carte-vert-doux: #e0f0e8;
+  --carte-vert-fond: #edf6f1;
+  --carte-vert-trait: #699b83;
+  --carte-violet-accent: #614b94;
+  --carte-violet-doux: #eae5f5;
+  --carte-violet-fond: #f4f1fb;
+  --carte-violet-trait: #9b89bd;
+  --carte-orange-accent: #865019;
+  --carte-orange-doux: #f8ead6;
+  --carte-orange-fond: #fbf3e6;
+  --carte-orange-trait: #b68a53;
+  --carte-marine-accent: #24496c;
+  --carte-marine-fond: #183b59;
+  --carte-sur-marine: #fff;
+  --carte-sur-marine-secondaire: #dceaf6;
+  --suivi-trait: #abc0d4;
+  --suivi-surface: #fff;
+  --suivi-ombre: 0 8px 22px -18px #26476a70;
+}
+html[data-habillage='on'] .carte-page .carte-outils,
+html[data-habillage='on'] .carte-page .carte-vues,
+html[data-habillage='on'] .carte-page .carte-panneau .mantine-Card-root {
+  border-color: var(--suivi-trait);
+  background: var(--suivi-surface);
+  box-shadow: var(--suivi-ombre);
+}
+html[data-habillage='on'] .carte-page .mantine-Button-root {
+  font-weight: 600;
+  border-color: var(--suivi-trait);
+}
+html[data-habillage='on'] .carte-page .mantine-Button-root[data-variant='default'] {
+  background: var(--carte-boite);
+  color: var(--carte-texte);
+}
+html[data-habillage='on'] .carte-page .carte-vues .mantine-Button-root[aria-pressed='true'] {
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+  box-shadow: inset 0 -2px var(--carte-bleu-accent);
+}
+html[data-habillage='on'] .carte-page .carte-canevas {
+  border-color: var(--suivi-trait);
+  box-shadow: var(--suivi-ombre);
+}
+html[data-habillage='on'] .carte-page .carte-panneau .mantine-Title-root {
+  color: var(--carte-texte);
+}
+/* Surcouche de l’aperçu isolé, extérieure au canevas applicatif. */
+.preview-switch {
+  position: fixed;
+  top: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #45617c;
+  border-radius: 10px;
+  background: #102037;
+  color: #e8effb;
+  font:
+    12px/1.4 Inter,
+    system-ui,
+    sans-serif;
+  box-shadow: 0 4px 15px #0003;
+}
+.preview-switch button,
+.preview-switch a {
+  font: inherit;
+  min-height: 32px;
+  border: 1px solid #526d89;
+  background: #1a324b;
+  color: #dceaf8;
+  border-radius: 6px;
+  padding: 5px 9px;
+  text-decoration: none;
+}
+.preview-switch button[aria-pressed='true'] {
+  border-color: #7adbd8;
+  color: #9ce7e4;
+}
+.preview-switch span {
+  color: #bdccdf;
+}

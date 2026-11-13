@@ -1,0 +1,172 @@
+{
+  "scope": "Maquette claire : palette chaude et mouvements des SVG",
+  "running": "mw-action",
+  "paused": "paused",
+  "reduced": "none",
+  "animations": [
+    {
+      "class": "mf-fill mw-motion mw-tiles",
+      "name": "mw-tiles",
+      "play": "running"
+    },
+    {
+      "class": "mf-fill mw-motion mw-organisation",
+      "name": "mw-node",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-pilotage",
+      "name": "mw-progress",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-risque",
+      "name": "mw-blink",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-check",
+      "name": "mw-check",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-action",
+      "name": "mw-action",
+      "play": "running"
+    },
+    {
+      "class": "mf-accent mw-motion mw-resilience",
+      "name": "mw-rotate",
+      "play": "running"
+    },
+    {
+      "class": "mw-motion mw-document",
+      "name": "mw-document",
+      "play": "running"
+    }
+  ],
+  "first": [
+    {
+      "opacity": "1",
+      "transform": "none"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(1, 0, 0, 1, -1.5, 0)"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)"
+    }
+  ],
+  "second": [
+    {
+      "opacity": "0.413793",
+      "transform": "none"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(1, 0, 0, 1, -0.447373, 0)"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(0.904816, 0.425802, -0.425802, 0.904816, 0, 0)"
+    }
+  ],
+  "frozenFirst": [
+    {
+      "opacity": "0.377169",
+      "transform": "none"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(1, 0, 0, 1, -0.252072, 0)"
+    },
+    {
+      "opacity": "1",
+      "transform": "matrix(0.88621, 0.463283, -0.463283, 0.88621, 0, 0)"
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 2560,
+      "height": 1440
+    }
+  ],
+  "errors": [],
+  "paint": {
+    "background": "none",
+    "shadow": "none",
+    "stroke": "rgb(74, 64, 55)",
+    "strokeWidth": "1.65px"
+  },
+  "darkSidebarPixelIdentical": true,
+  "beforeSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "afterSha256": "fe44cfa2546d8fba7e7f78f9340d925ed8f73fddc37613c73c274f52a1737ab2",
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "dpr": 1
+  },
+  "axe": [
+    {
+      "page": "perimetres",
+      "violations": []
+    },
+    {
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "page": "risques",
+      "violations": []
+    },
+    {
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "page": "actions",
+      "violations": []
+    },
+    {
+      "page": "continuite",
+      "violations": []
+    },
+    {
+      "page": "documents",
+      "violations": []
+    }
+  ],
+  "video": {
+    "method": "Captures natives successives de Chromium à densité 2, durées réelles conservées",
+    "frames": 61,
+    "durationSeconds": 10.008793847,
+    "width": 496,
+    "height": 1240
+  },
+  "sha256": {
+    "icones.js": "ce4e47fb043e8a881b3b78145ed9be233975188d3e64829fbc893b0a1e40daef",
+    "chaud.css": "75a3fa695b8f50552e60f0b4d56403a9d6b47feef3ecc43d8bf9a4d3b964ef49",
+    "menu-detail-hd.png": "eb5260ce43a7e4c1416051e4c294ad682fb596d54d7fe9895291b4b5f83324fa",
+    "index.html": "54207c392ca6be2fd32671380bf90da466c8a15a3298c9d7cd50a7dfc49c8131",
+    "apercu-autonome.html": "ebefda3977720f0423acd43e699772f58056d56ca0617708a2ee81400eac48e3",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "becbeefa37af9f37104e154f0bc7e73eba7c0673e09352a3796f366353d47504",
+    "animation.mp4": "f875ca2ac2934da01945b5f2e6d493b8de1a66a3339ffe933140bd75e6b45e76",
+    "menu-clair-hd.png": "857e096296b22873975b5008c5ed4c73dcc999c2485157a332b28bb2b1783ccd",
+    "animation.gif": "63053215edee492d6ebe8977465796d7f3c83f0124fd300bcb5e01fe8e070e19"
+  }
+}

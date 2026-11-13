@@ -1,0 +1,23 @@
+/* Essai distinct du bleu retenu : transparence du fond seulement, textes opaques. */
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar {
+  --mh-muted: #d2dfec;
+  background:
+    radial-gradient(ellipse 115% 40% at 0% 100%, rgb(51 130 137 / 12%) 0%, transparent 86%),
+    linear-gradient(163deg, rgb(20 35 61 / 78%) 0%, rgb(20 44 69 / 78%) 56%, rgb(20 50 57 / 80%) 100%) !important;
+  border-right-color: #8da9bc !important;
+  box-shadow:
+    inset -1px 0 #ffffff26,
+    4px 0 18px -14px #26465c55 !important;
+  backdrop-filter: blur(10px) saturate(115%);
+}
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar .brand,
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar .mh-comptes,
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar .mh-footer {
+  border-color: #a9c4d14d;
+}
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar .mh-destination {
+  color: #d7e3ee;
+}
+html[data-theme='light']:not([data-menu-glass='off']) .mh-sidebar .mh-destination[aria-current='page'] {
+  color: #fff;
+}

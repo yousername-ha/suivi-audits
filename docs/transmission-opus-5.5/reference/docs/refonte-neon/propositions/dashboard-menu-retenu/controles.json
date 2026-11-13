@@ -1,0 +1,34 @@
+{
+  "scope": "Projection visuelle native : Dashboard compilé existant et menu de maquette retenu en iframe isolée ; API fictive interceptée",
+  "metrics": [
+    {
+      "theme": "light",
+      "width": 1920,
+      "height": 1701,
+      "viewportHeight": 1352,
+      "dashboardBottom": 1331.6875,
+      "dalles": 12
+    },
+    {
+      "theme": "dark",
+      "width": 1920,
+      "height": 1701,
+      "viewportHeight": 1352,
+      "dashboardBottom": 1331.6875,
+      "dalles": 12
+    }
+  ],
+  "errors": [],
+  "writes": [],
+  "date": "2026-11-13T00:30:35.606637+01:00",
+  "sourceApplication": "d9d1478",
+  "fixtureSha256": {
+    "tests/e2e/fixtures/assistant-global.json": "7faf0902b5e55401f1d6beea5865b8cadab1d5a4e6d331f1e1d0245bb96a0276",
+    "tests/e2e/fixtures/fournisseurs-studio.json": "0efb2b157c8100c85598e645650aed8624982d8f77882cbd0f4f5c73b781792c"
+  },
+  "sha256": {
+    "dashboard-clair-hd.png": "80e5713b9db2f7fc94e958ce17bea29471727848cce56f751f2978c5abc3f4d0",
+    "README.md": "8cb6b2fd0b41b74c2865d8773691febb01087fbe878723b4ca2c6d11202d5e3c",
+    "dashboard-sombre-hd.png": "c204974bf66ec2203e98ed3a67bce2622fad93422219a5bf859700f6b3111825"
+  }
+}

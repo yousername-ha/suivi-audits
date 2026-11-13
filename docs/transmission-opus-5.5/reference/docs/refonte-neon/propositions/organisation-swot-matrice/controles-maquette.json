@@ -1,0 +1,196 @@
+{
+  "dateUTC": "2026-11-09T23:15:18.707Z",
+  "dateLocale": "2026-11-10",
+  "timezone": "Europe/Paris",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "testsApplicatifs": false,
+  "applicationReference": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "views": [
+    {
+      "name": "light-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-focus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-focus-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-form-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-form-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "light-empty-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-768",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1024",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1280",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-1920",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-focus-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-focus-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-form-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-form-390",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    },
+    {
+      "name": "dark-empty-1440",
+      "overflow": false,
+      "internal": [],
+      "panels": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-main",
+      "violations": []
+    },
+    {
+      "name": "light-focus",
+      "violations": []
+    },
+    {
+      "name": "light-form",
+      "violations": []
+    },
+    {
+      "name": "dark-main",
+      "violations": []
+    },
+    {
+      "name": "dark-focus",
+      "violations": []
+    },
+    {
+      "name": "dark-form",
+      "violations": []
+    }
+  ],
+  "images": [
+    "matrice-light-1440.png",
+    "detail-matrice-light.png",
+    "matrice-light-mobile.png",
+    "lecture-forces-light.png",
+    "matrice-light-hd.png",
+    "matrice-dark-1440.png",
+    "detail-matrice-dark.png",
+    "matrice-dark-mobile.png",
+    "lecture-forces-dark.png",
+    "matrice-dark-hd.png"
+  ],
+  "errors": [],
+  "external": [],
+  "writes": [],
+  "mouvement": "Actif, pause, reprise et préférence de réduction vérifiés",
+  "environnement": "Cloud Codex ; serveur statique local 127.0.0.1:8134 ; Node 26.13.0 ; Chromium /usr/bin/chromium",
+  "commandes": [
+    {
+      "commande": "/workspace/work/runtime/bin/node --check docs/refonte-neon/propositions/organisation-swot-matrice/prototype.js",
+      "codeRetour": 0
+    },
+    {
+      "commande": "/workspace/work/runtime/bin/node /workspace/work/organisation-contexte-studio/rendre-matrice.mjs",
+      "codeRetour": 0
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "dateUTC": "2026-11-11T00:07:47.662Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "styleInspireSwotPestel": true,
+  "imagesCompletesNatives": true,
+  "media": [
+    {
+      "file": "studio-actions-light-hd.png",
+      "width": 3840,
+      "height": 4254,
+      "bytes": 2674467,
+      "sha256": "bf87dce6df5f5320515e3893402d6439d20b470673fa877b5699e3e6b177630a"
+    },
+    {
+      "file": "studio-actions-dark-hd.png",
+      "width": 3840,
+      "height": 4254,
+      "bytes": 3156938,
+      "sha256": "86b3883646fd541d2f149a922dbaa83694c4deb0e6806c64eaf8dcf4d687688a"
+    },
+    {
+      "file": "studio-recurrences-light-hd.png",
+      "width": 3840,
+      "height": 3794,
+      "bytes": 2217410,
+      "sha256": "28996ef03ed253840f8a0f968f3c1c08d4dc95c13d136c81379de3680214eebf"
+    },
+    {
+      "file": "studio-recurrences-dark-hd.png",
+      "width": 3840,
+      "height": 3794,
+      "bytes": 2845826,
+      "sha256": "a237310fa771417e6f1b2dab1704a9f0b3c33f029451a0de5c53298d52a747e7"
+    },
+    {
+      "file": "timeline-studio.mp4",
+      "bytes": 2950574,
+      "sha256": "5fc77df25b02c2e259a06f7aca73d8edd234264f8a3f84cc687d2680d5373b59",
+      "codec_name": "h264",
+      "width": 1558,
+      "height": 1300,
+      "color_range": "tv",
+      "color_space": "bt470bg",
+      "duration": 18.88
+    }
+  ]
+}

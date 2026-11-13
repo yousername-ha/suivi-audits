@@ -1,0 +1,512 @@
+{
+  "scope": "Maquette du menu final, à valider avant intégration globale",
+  "pages": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "actions",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "recurrences",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "perimetres",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "fournisseurs",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "parametres",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "light",
+      "page": "cartographie",
+      "style": {
+        "background": "none",
+        "color": "rgb(37, 59, 85)",
+        "width": "248px",
+        "border": "rgb(211, 222, 234)",
+        "backgroundColor": "rgb(255, 255, 255)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "actions",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "recurrences",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "perimetres",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "fournisseurs",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "parametres",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    },
+    {
+      "theme": "dark",
+      "page": "cartographie",
+      "style": {
+        "background": "none",
+        "color": "rgb(232, 241, 255)",
+        "width": "248px",
+        "border": "rgb(51, 78, 106)",
+        "backgroundColor": "rgb(16, 33, 55)",
+        "font": "13px",
+        "fontFamily": "Inter, system-ui, sans-serif"
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 571
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 191,
+      "menuScroll": 191,
+      "menuHeight": 571
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "light",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 494
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "dark",
+      "pageWidth": 1280,
+      "pageHeight": 720,
+      "navBottom": 720,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 494
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 542
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "navBottom": 768,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 542
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 669
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "pageWidth": 1440,
+      "pageHeight": 900,
+      "navBottom": 900,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 669
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "light",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "dark",
+      "pageWidth": 1536,
+      "pageHeight": 864,
+      "navBottom": 864,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 633
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 849
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "navBottom": 1080,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 849
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1209
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "navBottom": 1440,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 1209
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "light",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 574
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "dark",
+      "pageWidth": 1920,
+      "pageHeight": 800,
+      "navBottom": 800,
+      "menuClient": 221,
+      "menuScroll": 221,
+      "menuHeight": 574
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "light",
+      "page": "objectifs",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "bibliotheque",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "dda",
+      "violations": []
+    },
+    {
+      "theme": "dark",
+      "page": "objectifs",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "apiRequests": 0,
+  "externalRequests": [],
+  "screenshot": {
+    "count": 2,
+    "width": 3840,
+    "height": 2160
+  },
+  "structure": {
+    "families": 7,
+    "destinations": 26,
+    "accountEntries": 5,
+    "oneExpandedFamily": true,
+    "activeDestination": true,
+    "themeButton": true,
+    "budgetCrrcAbsent": true,
+    "labels": [
+      "Tableau de bord",
+      "Organisation8⌄",
+      "Contexte de l’organisation",
+      "Périmètres",
+      "Processus",
+      "Rôles et responsabilités",
+      "Cartographie du SMSI",
+      "Fournisseurs",
+      "Revues des accès",
+      "Plans annuels",
+      "Pilotage5›",
+      "Synthèse",
+      "Parcours guidé",
+      "Objectifs et indicateurs",
+      "Revues de direction",
+      "Rappels et configuration",
+      "Risques1›",
+      "Gestion des risques",
+      "Conformité et audits4›",
+      "Bibliothèque de référentiels",
+      "Applicabilité et mesures",
+      "Gestion de l’audit",
+      "Preuves et contrôles",
+      "Actions4›",
+      "Amélioration continue",
+      "Plan d’actions",
+      "Tâches récurrentes",
+      "Registres et droits",
+      "Résilience2›",
+      "Continuité d’activité",
+      "Incidents et crise",
+      "Documents2›",
+      "Documents et liens",
+      "Imports et exports"
+    ]
+  },
+  "sha256": {
+    "menu.js": "5112e5daaaa4385263222d85b08a84e86628f9eed5f272cf82d082931e707ae2",
+    "menu.css": "36e20ad71df5eb23b91b4702304a043bb3e33c811d84f5c1b62ebe3b16299f15",
+    "menu-sombre-hd.png": "39efc5ee9abafcae3ce10528a8d694a28dd72ba26ade26502e207558cc29df66",
+    "index.html": "fc8163f39a167f349a2102d4e21c8cb8117e7ceb639ab36b0934d5fa56ec1847",
+    "apercu-autonome.html": "1d028d78384922cc8d22fb2445ff2af649db29663779f60d51f951733915cb57",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "README.md": "f8e4b23acb262a7f97b3289d4e00df95d263469d96133819b2de48b2c89b6615",
+    "menu-clair-hd.png": "f4b9a833eacecf2bf3f9befe93fc078f89726bb28e653d8851c5c5846be9a66c"
+  }
+}

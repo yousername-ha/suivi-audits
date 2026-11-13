@@ -1,0 +1,203 @@
+{
+  "scope": "Maquette indépendante Rôles et responsabilités, pas application",
+  "layouts": [
+    {
+      "mode": "light",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 416,
+      "scroll": 928,
+      "bottom": 714,
+      "font": "21px"
+    },
+    {
+      "mode": "dark",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 416,
+      "scroll": 928,
+      "bottom": 714,
+      "font": "21px"
+    },
+    {
+      "mode": "light",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 416,
+      "scroll": 468,
+      "bottom": 714,
+      "font": "21px"
+    },
+    {
+      "mode": "dark",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 416,
+      "scroll": 468,
+      "bottom": 714,
+      "font": "21px"
+    },
+    {
+      "mode": "light",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 633,
+      "scroll": 633,
+      "bottom": 1020,
+      "font": "23px"
+    },
+    {
+      "mode": "dark",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 633,
+      "scroll": 633,
+      "bottom": 1020,
+      "font": "23px"
+    },
+    {
+      "mode": "light",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 990,
+      "scroll": 990,
+      "bottom": 1380,
+      "font": "25px"
+    },
+    {
+      "mode": "dark",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 990,
+      "scroll": 990,
+      "bottom": 1380,
+      "font": "25px"
+    }
+  ],
+  "axe": [
+    {
+      "name": "synthese-light",
+      "violations": []
+    },
+    {
+      "name": "fiche-light",
+      "violations": []
+    },
+    {
+      "name": "synthese-dark",
+      "violations": []
+    },
+    {
+      "name": "fiche-dark",
+      "violations": []
+    }
+  ],
+  "cases": [
+    {
+      "name": "depliage-horizontal",
+      "width": 1024,
+      "mode": "light",
+      "ratio": 2.040621266427718
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 1024,
+      "mode": "dark",
+      "ratio": 2.040621266427718
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 1366,
+      "mode": "light",
+      "ratio": 3.102936309045345
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 1366,
+      "mode": "dark",
+      "ratio": 3.102936309045345
+    },
+    {
+      "name": "lecture-annulation-focus-recherche-filtres-liste-et-lecture-seule"
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 1920,
+      "mode": "light",
+      "ratio": 3.0876552466016887
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 1920,
+      "mode": "dark",
+      "ratio": 3.0876552466016887
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 2560,
+      "mode": "light",
+      "ratio": 3.104171230090434
+    },
+    {
+      "name": "depliage-horizontal",
+      "width": 2560,
+      "mode": "dark",
+      "ratio": 3.104171230090434
+    }
+  ],
+  "errors": [],
+  "http": [],
+  "api": [],
+  "date": "2026-11-12",
+  "applicationUnchanged": "67a334a",
+  "complement": [
+    "édition en mémoire, champs distincts, id/ref/extra conservés, rechargement original",
+    "recherche vide et retour du focus après réinitialisation",
+    {
+      "name": "40 lignes, défilement du registre seul",
+      "local": 500,
+      "window": 0,
+      "page": 768,
+      "height": 768
+    },
+    "préférence de mouvement réduit respectée"
+  ],
+  "export": {
+    "autonomous": true,
+    "externalRequests": 0,
+    "errors": [],
+    "viewport": [
+      1920,
+      1080
+    ],
+    "deviceScaleFactor": 2,
+    "png": [
+      3840,
+      2160
+    ]
+  },
+  "sourceHashes": {
+    "responsabilites.css": "b8c584dec8180b325e35790a636eb4c6757a82d78c8cc2b1105c2178273115f3",
+    "index.html": "9c8a8d36d9ef8d996c118395893423103cdd8e0dd9f34cba51e7f8613e7072f3",
+    "apercu-autonome.html": "c4014fa768e2ef9ee2a4b1a52ca747dba9f0f718e92313fbbbd7d02e8a35bc30",
+    "exporter.py": "0777f6f91f6e86cce5ea0c1356870979d02fb9f23944e055ec966ae08615f0f2",
+    "donnees.js": "7891afa52cef55056b32e0950f8d514bf1867ec5ba27ea2572a9fd6ce687df4e",
+    "responsabilites.js": "e0e0c0243381bd54e340352d1d3ca853917ca42906bb1e5dc207ec0dcf575b54"
+  }
+}

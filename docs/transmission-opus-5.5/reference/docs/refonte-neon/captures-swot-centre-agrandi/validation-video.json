@@ -1,0 +1,13 @@
+{
+  "dateUTC": "2026-11-10T20:08:02.194Z",
+  "applicationIntegree": true,
+  "appCommit": "51d70229aa560cd466a92478b7e0a8d333e03014",
+  "lectureChromium": {
+    "duration": 12.72,
+    "width": 1592,
+    "height": 704,
+    "decodedFrames": 25,
+    "currentTime": 0.815107,
+    "error": null
+  }
+}

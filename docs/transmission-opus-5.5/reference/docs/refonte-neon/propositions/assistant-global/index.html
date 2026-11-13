@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="fr" data-theme="dark" data-motion="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Assistant RSSI — présence globale Studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../commandes-discretes/prototype.css" />
+    <link rel="stylesheet" href="../commandes-discretes/commandes.css" />
+    <link rel="stylesheet" href="../responsive-equilibre/responsive.css" />
+    <link rel="stylesheet" href="../responsabilites-studio/responsabilites.css" />
+    <link rel="stylesheet" href="../fournisseurs-studio/fournisseurs.css" />
+    <link rel="stylesheet" href="assistant.css" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navigation illustrative" tabindex="0">
+      <div class="brand">
+        <span class="brand-mark">✧</span
+        ><span
+          ><strong>Suivi des audits<br />SMSI</strong><small>ISO 27001 / HDS</small></span
+        >
+      </div>
+      <div class="nav-caption">Espace de travail</div>
+      <button type="button" class="nav-item as-nav" data-as-nav="dashboard">◈ Tableau de bord</button>
+      <div class="nav-item active" id="as-organisation-group">⌘ Organisation <span>8</span></div>
+      <div class="nav-sub">Contexte de l’organisation</div>
+      <div class="nav-sub">Périmètres</div>
+      <div class="nav-sub">Processus</div>
+      <div class="nav-sub">Rôles et responsabilités</div>
+      <div class="nav-sub">Cartographie du SMSI</div>
+      <button type="button" class="nav-sub current as-nav" data-as-nav="fournisseurs" aria-current="page">
+        Fournisseurs
+      </button>
+      <div class="nav-sub">Revues des accès</div>
+      <div class="nav-sub">Plans annuels</div>
+      <div class="nav-item">⌁ Pilotage</div>
+      <div class="nav-item">◇ Risques</div>
+      <div class="nav-item">✓ Conformité et audits</div>
+      <div class="nav-item">☷ Actions</div>
+      <div class="nav-item">↶ Résilience</div>
+      <div class="nav-item">▤ Documents</div>
+      <div class="sidebar-bottom"><span></span>Maquette · Données fictives</div>
+    </aside>
+    <div class="shell" id="shell">
+      <header class="topbar">
+        <strong><span></span>Mon organisation</strong>
+        <div class="top-actions">
+          <span class="demo-note">Maquette · À valider</span
+          ><button type="button" class="button" id="theme">Mode clair</button>
+        </div>
+      </header>
+      <main data-active-view="fournisseurs" id="fournisseurs-stage">
+        <div class="breadcrumb">Organisation <span>/</span>Fournisseurs</div>
+        <header class="page-heading">
+          <div>
+            <h1>Fournisseurs et applications</h1>
+            <p>Une lecture claire des accès, des justificatifs et du suivi de chaque prestataire.</p>
+          </div>
+          <span class="fs-org">À l’échelle de l’organisation</span>
+        </header>
+        <section class="fs-summary" id="summary" aria-label="Indicateurs des fournisseurs"></section>
+        <section class="workspace slab fs-workspace" aria-label="Registre des fournisseurs">
+          <div class="compact-toolbar">
+            <div class="view-cluster">
+              <div class="rr-views" role="group" aria-label="Densité du registre">
+                <button
+                  type="button"
+                  class="rr-tool"
+                  data-density="compact"
+                  aria-label="Vue compacte"
+                  aria-pressed="true"
+                  title="Compacte"
+                >
+                  <span data-icon="list"></span></button
+                ><button
+                  type="button"
+                  class="rr-tool"
+                  data-density="detail"
+                  aria-label="Vue détaillée"
+                  aria-pressed="false"
+                  title="Détaillée"
+                >
+                  <span data-icon="detail"></span>
+                </button>
+              </div>
+              <span id="view-label">Registre compact</span
+              ><span class="fs-note">Évaluations communes à tous les périmètres</span>
+            </div>
+            <div class="toolbar-actions">
+              <button
+                type="button"
+                class="rr-tool"
+                id="search-toggle"
+                aria-label="Rechercher un fournisseur"
+                aria-expanded="false"
+                aria-controls="search-box"
+                title="Rechercher"
+              >
+                <span data-icon="search"></span></button
+              ><button
+                type="button"
+                class="rr-tool"
+                id="filter-toggle"
+                aria-label="Filtres fournisseurs"
+                aria-expanded="false"
+                aria-controls="filter-box"
+                title="Filtres"
+              >
+                <span data-icon="filter"></span>
+              </button>
+            </div>
+          </div>
+          <div class="fs-criteria" id="criteria" hidden>
+            <span id="criteria-text"></span><button type="button" class="button" id="reset">Tout effacer</button>
+          </div>
+          <div class="fs-scroll" tabindex="0" role="region" aria-label="Lignes des fournisseurs">
+            <div class="fs-list" id="content"></div>
+          </div>
+          <footer class="rr-footer">
+            <span id="result" aria-live="polite"></span><span>Jeu fictif · États conservés depuis l’export</span>
+          </footer>
+        </section>
+      </main>
+      <main data-active-view="dashboard" id="dashboard-stage" hidden>
+        <div class="breadcrumb">Pilotage <span>/</span>Vue d’ensemble</div>
+        <header class="page-heading">
+          <div>
+            <h1>Tableau de bord</h1>
+            <p>Votre organisation, ses priorités et les points à suivre.</p>
+          </div>
+        </header>
+        <section class="as-demo-dashboard" aria-label="Tableau de bord fictif">
+          <div class="as-dash-welcome">
+            <div>
+              <span class="rr-kicker">Pilotage de l’organisation</span>
+              <h2>Une vue claire sur vos priorités.</h2>
+              <p>Revue des accès, justificatifs et préparation de la revue de direction.</p>
+            </div>
+            <span class="as-dash-orbit" aria-hidden="true"></span>
+          </div>
+          <div class="as-dash-stats">
+            <article><small>Action en retard</small><strong>1</strong><span>Revue des accès</span></article>
+            <article><small>Question à préciser</small><strong>1</strong><span>Une réponse attendue</span></article>
+            <article><small>Proposition à examiner</small><strong>1</strong><span>Revue des accès</span></article>
+          </div>
+          <div class="as-dash-priorities">
+            <h2>Vos points de suivi</h2>
+            <article>
+              <span class="as-dash-dot" data-tone="amber"></span>
+              <div>
+                <strong>Finaliser la revue des accès</strong>
+                <p>Échéance du jeu fictif : 10 novembre 2026</p>
+              </div>
+              <span class="fs-chip" data-tone="warn">À suivre</span>
+            </article>
+            <article>
+              <span class="as-dash-dot"></span>
+              <div>
+                <strong>Préparer la revue de direction</strong>
+                <p>Rassembler les constats et les actions proposées.</p>
+              </div>
+              <span class="fs-chip">Préparation</span>
+            </article>
+          </div>
+          <p class="as-dash-note">Exemple fictif pour vérifier la continuité de la discussion pendant la navigation.</p>
+        </section>
+      </main>
+    </div>
+    <div class="rr-popup" id="search-box" role="dialog" aria-labelledby="search-title" hidden>
+      <label for="query" id="search-title">Rechercher un fournisseur</label
+      ><input id="query" type="search" placeholder="Nom du fournisseur…" /><small>Échap pour fermer</small>
+    </div>
+    <div class="rr-popup" id="filter-box" role="dialog" aria-labelledby="filter-title" hidden>
+      <header>
+        <h2 id="filter-title">Affiner le registre</h2>
+        <button type="button" class="rr-tool" data-close-popup aria-label="Fermer les filtres">×</button>
+      </header>
+      <label for="situation">Situation</label
+      ><select id="situation">
+        <option value="all">Tous les fournisseurs</option>
+        <option value="nomfa">Sans MFA confirmée</option>
+        <option value="ctl">Contrôles à faire</option>
+        <option value="cert">Certificats à traiter</option>
+        <option value="crit">Fournisseurs critiques</option></select
+      ><label for="type">Type</label
+      ><select id="type">
+        <option value="all">Tous les types</option>
+        <option value="saas">Services SaaS</option>
+        <option value="autre">Hors SaaS</option>
+      </select>
+    </div>
+    <dialog id="detail" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+    <script src="../fournisseurs-studio/donnees.js"></script>
+    <script src="../fournisseurs-studio/fournisseurs.js"></script>
+
+    <button
+      type="button"
+      id="as-launcher"
+      class="as-launcher"
+      aria-label="Ouvrir l’assistant RSSI"
+      aria-expanded="true"
+      aria-controls="as-dock"
+    >
+      <span id="as-launcher-avatar"></span
+      ><span class="as-launcher-label"><strong>Assistant RSSI</strong><small>Votre compagnon de pilotage</small></span
+      ><b id="as-launcher-count">3</b>
+    </button>
+    <aside id="as-dock" class="as-dock" aria-label="Assistant RSSI">
+      <header class="as-head">
+        <span id="as-header-avatar"></span>
+        <div class="as-identity">
+          <h2>Assistant RSSI</h2>
+          <span>Mistral <span aria-hidden="true">·</span> api.mistral.ai</span>
+        </div>
+        <div class="as-head-tools">
+          <button
+            type="button"
+            class="as-icon-button"
+            id="as-history-button"
+            aria-label="Historique des discussions"
+            title="Historique"
+          >
+            <span data-as-icon="history"></span></button
+          ><button
+            type="button"
+            class="as-icon-button"
+            id="as-new"
+            aria-label="Nouvelle discussion"
+            title="Nouvelle discussion"
+          >
+            <span data-as-icon="plus"></span></button
+          ><button
+            type="button"
+            class="as-icon-button"
+            id="as-expand"
+            aria-label="Agrandir la discussion"
+            aria-pressed="false"
+            title="Agrandir"
+          >
+            <span data-as-icon="expand"></span></button
+          ><button type="button" class="as-icon-button" id="as-close" aria-label="Réduire l’assistant" title="Réduire">
+            <span data-as-icon="close"></span>
+          </button>
+        </div>
+      </header>
+      <div class="as-context">
+        <label class="as-profile-label"
+          ><span class="as-sr">Profil de l’assistant</span
+          ><select id="as-profile">
+            <option value="mise_en_oeuvre">Mise en œuvre</option>
+            <option value="audit_interne">Audit interne</option>
+          </select></label
+        ><button
+          type="button"
+          id="as-context-button"
+          class="as-context-button"
+          aria-label="Voir le contexte de la page"
+          aria-expanded="false"
+        >
+          <span data-as-icon="layers"></span><span id="as-context-page">Fournisseurs</span
+          ><span class="as-context-chevron" data-as-icon="chevron"></span></button
+        ><button
+          type="button"
+          class="as-icon-button as-pin"
+          id="as-pin"
+          aria-label="Épingler le panneau à côté de la page"
+          aria-pressed="true"
+          title="Épingler le panneau"
+        >
+          <span data-as-icon="pin"></span>
+        </button>
+      </div>
+      <div class="as-context-details" id="as-context-details" hidden>
+        <strong>Pilotage de l’organisation</strong>
+        <p>
+          La page affichée peut être jointe à votre prochaine question. Elle ne devient pas une source consultée avant
+          la réponse de l’assistant.
+        </p>
+        <button type="button" class="as-small-button" id="as-share-page">Joindre le contexte de la page</button>
+      </div>
+      <div class="as-tabs" role="tablist" aria-label="Espace de l’assistant">
+        <button
+          type="button"
+          role="tab"
+          id="as-chat-tab"
+          aria-controls="as-chat-view"
+          aria-selected="true"
+          tabindex="0"
+        >
+          Discussion</button
+        ><button
+          type="button"
+          role="tab"
+          id="as-inbox-tab"
+          aria-controls="as-inbox-view"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          Pour vous <b id="as-inbox-count">3</b></button
+        ><span class="as-demo-label">Aperçu</span>
+      </div>
+      <div class="as-availability" id="as-availability" role="status" hidden></div>
+      <section id="as-chat-view" class="as-chat-view" role="tabpanel" aria-labelledby="as-chat-tab">
+        <div
+          class="as-thread"
+          id="as-thread"
+          role="log"
+          aria-label="Messages de la discussion"
+          aria-live="polite"
+          tabindex="0"
+        ></div>
+        <div class="as-compose">
+          <div class="as-attached" id="as-attached" hidden>
+            <span data-as-icon="layers"></span><span id="as-attached-title"></span
+            ><button type="button" id="as-remove-context" aria-label="Retirer le contexte joint">×</button>
+          </div>
+          <form id="as-compose-form">
+            <label for="as-message" class="as-sr">Votre message à l’assistant</label
+            ><textarea
+              id="as-message"
+              rows="2"
+              maxlength="4000"
+              placeholder="Posez une question sur votre SMSI…"
+            ></textarea>
+            <div class="as-compose-tools">
+              <button type="button" id="as-context-shortcut" class="as-context-shortcut">
+                <span data-as-icon="plus"></span>Contexte de la page</button
+              ><span id="as-message-count" hidden>0 / 4 000</span
+              ><button type="submit" class="as-send" id="as-send" aria-label="Envoyer le message">
+                <span data-as-icon="send"></span>
+              </button>
+            </div>
+          </form>
+          <p class="as-compose-help">Entrée pour envoyer <span>·</span> Maj + Entrée pour une nouvelle ligne</p>
+        </div>
+      </section>
+      <section id="as-inbox-view" class="as-inbox-view" role="tabpanel" aria-labelledby="as-inbox-tab" hidden>
+        <header>
+          <span class="rr-kicker">Votre suivi personnel</span>
+          <h3>Les points qui vous attendent</h3>
+          <p>Questions reçues, rappels et propositions à examiner.</p>
+        </header>
+        <div id="as-inbox-cards"></div>
+      </section>
+      <section id="as-side-view" class="as-side-view" aria-label="Détail dans l’assistant" hidden></section>
+      <footer class="as-bottom">
+        <span class="as-live-mark" aria-hidden="true"></span><span>Contexte et droits de votre profil</span
+        ><button type="button" id="as-motion" aria-label="Suspendre les animations" title="Suspendre les animations">
+          <span data-as-icon="pause"></span>
+        </button>
+      </footer>
+    </aside>
+    <div id="as-toast" class="as-toast" role="status" hidden></div>
+    <script src="donnees-assistant.js"></script>
+    <script src="assistant.js"></script>
+  </body>
+</html>

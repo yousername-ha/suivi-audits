@@ -1,0 +1,47 @@
+{
+  "dateUTC": "2026-11-11T00:33:43.040Z",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "imagesCompletesNatives": true,
+  "media": [
+    {
+      "file": "recurrences-day-light-hd.png",
+      "width": 3840,
+      "height": 3586,
+      "bytes": 1992506,
+      "sha256": "9004fcd1d5c36458d4edd0edfe06a382466dd4a69b7edddae35dfae93f68f146"
+    },
+    {
+      "file": "recurrences-week-light-hd.png",
+      "width": 3840,
+      "height": 3980,
+      "bytes": 2359144,
+      "sha256": "509ddc7d263b3bd8f7680876487fbf7b5d6036eb590c4c638dd49f50a5715bd1"
+    },
+    {
+      "file": "recurrences-month-dark-hd.png",
+      "width": 3840,
+      "height": 4246,
+      "bytes": 3139204,
+      "sha256": "271513bf43df8981fb6c9dda2b20d805ce26627aa929f3997d29bfcc9f1206b5"
+    },
+    {
+      "file": "recurrences-year-dark-hd.png",
+      "width": 3840,
+      "height": 4246,
+      "bytes": 3103682,
+      "sha256": "b4327eb40705be68818ae2549d1dae91487fc860c094c343e97e6fe06b13d306"
+    },
+    {
+      "file": "recurrences-adaptatives.mp4",
+      "bytes": 2225207,
+      "sha256": "e99c2b6825541810b06a95407dbfe06b7b1dd5770139c4c6ef6d763a0831df17",
+      "codec_name": "h264",
+      "width": 1510,
+      "height": 1080,
+      "color_range": "tv",
+      "color_space": "bt470bg",
+      "duration": 20.2
+    }
+  ]
+}

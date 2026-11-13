@@ -1,0 +1,21 @@
+{
+  "scope": "Maquette seule, aucun appel réel au modèle",
+  "movement": {
+    "zero": "0.65",
+    "middle": "1",
+    "duration": "7s"
+  },
+  "blinkDuration": "9s",
+  "filter": "none",
+  "avatarRasterImages": 0,
+  "uniqueIds": true,
+  "manualPause": "paused",
+  "reducedMotion": "none",
+  "video": {
+    "frames": 48,
+    "width": 1440,
+    "height": 900,
+    "elapsedSeconds": 8.893,
+    "capture": "Captures natives, durées réelles préservées"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "warning": {
+    "zero": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+    "middle": "oklab(0.482001 0.0587143 0.087361 / 0.09) 0px 0px 0px 3px",
+    "duration": "5.5s"
+  },
+  "scope": "Bibliothèque seule, maquette autonome",
+  "motion": {
+    "zero": "matrix(1, 0, 0, 1, 0, 0.6)",
+    "middle": "matrix(1, 0, 0, 1, 0, -0.6)",
+    "duration": "6s"
+  },
+  "hover": "matrix(1, 0, 0, 1, 0, -2)",
+  "reducedMotion": "none",
+  "menuBefore": {
+    "background": "none",
+    "color": "rgb(37, 59, 85)",
+    "width": "248px",
+    "font": "Inter, Arial, sans-serif"
+  },
+  "video": {
+    "width": 1440,
+    "height": 900,
+    "frames": 48,
+    "elapsedSeconds": 10.898,
+    "capture": "Captures natives successives, durées réelles préservées"
+  }
+}

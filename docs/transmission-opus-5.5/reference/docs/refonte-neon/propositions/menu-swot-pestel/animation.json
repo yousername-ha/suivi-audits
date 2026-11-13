@@ -1,0 +1,18 @@
+{
+  "scope": "Maquette seule",
+  "frames": {
+    "zero": "matrix(1, 0, 0, 1, 0, 0)",
+    "middle": "matrix(1, 0, 0, 1, 0, -1)",
+    "name": "mh-icon-breathe",
+    "duration": "6s"
+  },
+  "hover": "matrix(1, 0, 0, 1, 2, -1)",
+  "reducedMotion": "none",
+  "video": {
+    "width": 1440,
+    "height": 900,
+    "capture": "144 captures natives successives, dur\u00e9es r\u00e9elles pr\u00e9serv\u00e9es",
+    "elapsedSeconds": 21.128
+  },
+  "applicationModified": false
+}

@@ -1,0 +1,150 @@
+{
+  "source": "Décision menu bleu opaque et projections Dashboard approuvées",
+  "themes": ["clair", "sombre"],
+  "fond": {
+    "radial": "ellipse 115% 40% at 0% 100%, #173f45 0%, transparent 86%",
+    "linear": "163deg, #14233d 0%, #142c45 56%, #143239 100%",
+    "opacity": 1
+  },
+  "texte": {
+    "principal": "#edf4ff",
+    "secondaire": "#bdcfe0",
+    "destinations": "#c4d5e6",
+    "selection": "#ffffff"
+  },
+  "largeur_pc_px": 248,
+  "icone_famille": {
+    "width": 26,
+    "height": 26,
+    "viewBox": "0 0 32 32",
+    "strokeWidth": 1.95,
+    "raster": false
+  },
+  "palette": [
+    {
+      "entree": "Tableau de bord",
+      "id": "dashboard",
+      "couleur": "#bb96f5"
+    },
+    {
+      "entree": "Organisation",
+      "id": "organisation",
+      "couleur": "#78d69a"
+    },
+    {
+      "entree": "Pilotage",
+      "id": "pilotage",
+      "couleur": "#7aafff"
+    },
+    {
+      "entree": "Risques",
+      "id": "risques",
+      "couleur": "#f2be57"
+    },
+    {
+      "entree": "Conformité et audits",
+      "id": "conformite",
+      "couleur": "#62d4dc"
+    },
+    {
+      "entree": "Actions",
+      "id": "actions",
+      "couleur": "#f0a265"
+    },
+    {
+      "entree": "Résilience",
+      "id": "resilience",
+      "couleur": "#f37b86"
+    },
+    {
+      "entree": "Documents",
+      "id": "documents",
+      "couleur": "#d0b28b"
+    },
+    {
+      "entree": "Plateforme",
+      "id": "plateforme",
+      "couleur": "#b5c1d6"
+    },
+    {
+      "entree": "Configuration système",
+      "id": "parametres",
+      "couleur": "#b6d17d"
+    },
+    {
+      "entree": "Mon compte",
+      "id": "compte",
+      "couleur": "#cfb4f4"
+    },
+    {
+      "entree": "Guide d’utilisation",
+      "id": "aide",
+      "couleur": "#cab0d7"
+    },
+    {
+      "entree": "Écran mural",
+      "id": "mur",
+      "couleur": "#7fc5ef"
+    }
+  ],
+  "animations": [
+    {
+      "icone": "Tableau de bord",
+      "groupe": "mw-tiles",
+      "cycle": "4.8s",
+      "mouvement": "scale 1 → 1,1 → 1"
+    },
+    {
+      "icone": "Organisation",
+      "groupe": "mw-organisation",
+      "cycle": "4.6s",
+      "mouvement": "losange scale 1 → 1,15 ; origine 16/9 ; délai −1s"
+    },
+    {
+      "icone": "Pilotage",
+      "groupe": "mw-pilotage",
+      "cycle": "4.2s",
+      "mouvement": "flèche translate 0/0 → 1/−1 ; délai −0,8s"
+    },
+    {
+      "icone": "Risques",
+      "groupe": "mw-risque",
+      "cycle": "2.8s",
+      "mouvement": "triangle clignotant par opacité 1 → 0,35 → 1"
+    },
+    {
+      "icone": "Conformité",
+      "groupe": "mw-check",
+      "cycle": "4.8s",
+      "mouvement": "coche dasharray 20, offset 20 → 0 ; délai −1,6s"
+    },
+    {
+      "icone": "Actions",
+      "groupe": "mw-action",
+      "cycle": "3.4s",
+      "mouvement": "flèche translateX −1,5 → +1,5"
+    },
+    {
+      "icone": "Résilience",
+      "groupe": "mw-resilience",
+      "cycle": "10s",
+      "mouvement": "arc fléché rotation continue 360° autour 16/16"
+    },
+    {
+      "icone": "Documents",
+      "groupe": "mw-document",
+      "cycle": "5s",
+      "mouvement": "lignes translateY 0 → 1 et opacité 1 → 0,45 ; délai −2s"
+    }
+  ],
+  "administration_animee": false,
+  "pause": true,
+  "prefers_reduced_motion": true,
+  "ne_pas_porter": [
+    "fond jaune",
+    "fond transparent",
+    "iframe",
+    "tableaux statiques de destinations",
+    "MutationObserver du simulateur"
+  ]
+}

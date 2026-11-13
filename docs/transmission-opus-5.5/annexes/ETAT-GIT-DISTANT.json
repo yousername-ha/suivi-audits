@@ -1,0 +1,34 @@
+{
+  "observeLe": "2026-11-12 23:51:31 UTC",
+  "source": "Lecture seule GitHub ; ne prouve pas la version déployée",
+  "branches": [
+    {
+      "nom": "main",
+      "sha": "eb2093d2135202ba1b34408462d5c7d94db570d7"
+    },
+    {
+      "nom": "claude-suivi-smsi",
+      "sha": "b3a24227d0b955239479a252f0097f78581879a7"
+    },
+    {
+      "nom": "claude/assistant-rssi",
+      "sha": "7e9791296becde1d92b9e221203b975e26a17ce8"
+    }
+  ],
+  "pullRequests": [
+    {
+      "numero": 264,
+      "titre": "feat(api): retrait des fiches « opportunité » du serveur — lot 2 Gestion des risques (ADR 0090)",
+      "base": "claude-suivi-smsi",
+      "sha": "a478cff4edf9043c5ba52c621ce19470251ff3ce"
+    }
+  ],
+  "versionExecuteeChezDemandeur": "INCONNUE, audit obligatoire par Opus",
+  "contratsAssistantHistoriques": "460060a/575154f dans les notes de refonte ; le backend distant observé a évolué",
+  "referenceRefonteLocale": {
+    "sha": "55d43eebbc77fa2e367037b246e5396ced79abc8",
+    "disponibleSurGitHub": false,
+    "constat": "GitHub API 422 : No commit found for SHA",
+    "consequence": "Utiliser le snapshot et les médias retenus embarqués ; liens Git des médias historiques non embarqués = provenance, pas téléchargement actuellement disponible."
+  }
+}

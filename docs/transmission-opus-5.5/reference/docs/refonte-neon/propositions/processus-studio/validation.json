@@ -1,0 +1,153 @@
+{
+  "scope": "Maquette indépendante uniquement",
+  "layouts": [
+    {
+      "mode": "light",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 415,
+      "regionScroll": 1371,
+      "bottom": 714,
+      "titleFont": "16px",
+      "lanes": 3
+    },
+    {
+      "mode": "dark",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "pageHeight": 768,
+      "regionHeight": 415,
+      "regionScroll": 1371,
+      "bottom": 714,
+      "titleFont": "16px",
+      "lanes": 3
+    },
+    {
+      "mode": "light",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 415,
+      "regionScroll": 911,
+      "bottom": 714,
+      "titleFont": "16px",
+      "lanes": 3
+    },
+    {
+      "mode": "dark",
+      "width": 1366,
+      "height": 768,
+      "pageWidth": 1366,
+      "pageHeight": 768,
+      "regionHeight": 415,
+      "regionScroll": 911,
+      "bottom": 714,
+      "titleFont": "16px",
+      "lanes": 3
+    },
+    {
+      "mode": "light",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 628,
+      "regionScroll": 853,
+      "bottom": 1020,
+      "titleFont": "17px",
+      "lanes": 3
+    },
+    {
+      "mode": "dark",
+      "width": 1920,
+      "height": 1080,
+      "pageWidth": 1920,
+      "pageHeight": 1080,
+      "regionHeight": 628,
+      "regionScroll": 853,
+      "bottom": 1020,
+      "titleFont": "17px",
+      "lanes": 3
+    },
+    {
+      "mode": "light",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 987,
+      "regionScroll": 987,
+      "bottom": 1380,
+      "titleFont": "18px",
+      "lanes": 3
+    },
+    {
+      "mode": "dark",
+      "width": 2560,
+      "height": 1440,
+      "pageWidth": 2560,
+      "pageHeight": 1440,
+      "regionHeight": 987,
+      "regionScroll": 987,
+      "bottom": 1380,
+      "titleFont": "18px",
+      "lanes": 3
+    }
+  ],
+  "axe": [
+    {
+      "mode": "light",
+      "view": "cards",
+      "violations": []
+    },
+    {
+      "mode": "dark",
+      "view": "cards",
+      "violations": []
+    }
+  ],
+  "errors": [],
+  "requests": [],
+  "cases": [
+    "lecture et SWOT conservé",
+    "annulation et focus",
+    "recherche sans accents",
+    "filtres",
+    "liste et défilement local",
+    "lecture seule simulée",
+    "repli"
+  ],
+  "complements": {
+    "cases": [
+      "sous-processus et recherche sans perte de l’enfant",
+      "rattachement inaccessible distinct de zéro",
+      "édition fictive conserve les rattachements et ne persiste pas après rechargement"
+    ],
+    "axe": [
+      {
+        "theme": "dark",
+        "view": "fiche",
+        "violations": []
+      },
+      {
+        "theme": "light",
+        "view": "fiche",
+        "violations": []
+      }
+    ],
+    "errors": [],
+    "http": []
+  },
+  "export": {
+    "errors": [],
+    "externalRequests": []
+  },
+  "etat": "Maquette isolée, application inchangée à 81ea06a",
+  "imagesFournies": 0,
+  "testsApplicatifsExecutés": false,
+  "sha256Export": "d8fbe31315ec2135f2469ccbf308c239b462296210f9894cd0874bbb01ef9c5a"
+}

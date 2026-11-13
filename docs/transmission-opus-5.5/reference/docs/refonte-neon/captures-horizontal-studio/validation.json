@@ -1,0 +1,1899 @@
+{
+  "date": "2026-11-04T22:27:52.111Z",
+  "timezone": "Europe/Paris",
+  "commitApplicatif": "eed9f219c597d111475a6a00454421de49576afe",
+  "perimetre": "Application compilée et API réelle, jeu fictif, base de recette isolée ; aucun serveur du demandeur ni production.",
+  "qualite": {
+    "typecheckWeb": 0,
+    "eslintComplet": 0,
+    "prettierComplet": 0,
+    "buildWeb": 0,
+    "vitestWeb": {
+      "fichiers": 30,
+      "tests": 234,
+      "echecs": 0
+    },
+    "e2e": {
+      "reussis": 6,
+      "echecs": 0,
+      "rejeux": 0
+    }
+  },
+  "perimetres": {
+    "generated": "2026-11-04T22:27:58.554Z",
+    "base": "suivi_neon_perimetres_compacts, isolée",
+    "views": [
+      {
+        "name": "replie-light-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1188,
+            "y": 967.390625,
+            "right": 1364,
+            "bottom": 1047.390625,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 602,
+            "y": 613.890625,
+            "right": 862,
+            "bottom": 831.546875,
+            "width": 260,
+            "height": 217.65625,
+            "scroll": false,
+            "modelHeight": 218,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 316,
+            "y": 903.890625,
+            "right": 576,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 602,
+            "y": 903.890625,
+            "right": 862,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 888,
+            "y": 903.890625,
+            "right": 1148,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 274.828125,
+          "y": 582.390625,
+          "right": 1405.171875,
+          "bottom": 1142.390625,
+          "width": 1130.34375,
+          "height": 560
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-light-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1188,
+            "y": 1271.890625,
+            "right": 1364,
+            "bottom": 1351.890625,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 422,
+            "y": 606.390625,
+            "right": 1042,
+            "bottom": 1135.75,
+            "width": 620,
+            "height": 529.359375,
+            "scroll": false,
+            "modelHeight": 529,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 316,
+            "y": 1208.390625,
+            "right": 576,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 602,
+            "y": 1208.390625,
+            "right": 862,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 888,
+            "y": 1208.390625,
+            "right": 1148,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 274.828125,
+          "y": 582.390625,
+          "right": 1405.171875,
+          "bottom": 1439.390625,
+          "width": 1130.34375,
+          "height": 857
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-light-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 588.359375,
+            "y": 1577.828125,
+            "right": 764.359375,
+            "bottom": 1657.828125,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 488.359375,
+            "y": 635.828125,
+            "right": 748.359375,
+            "bottom": 852.5,
+            "width": 260,
+            "height": 216.671875,
+            "scroll": false,
+            "modelHeight": 217,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 504.359375,
+            "y": 876.828125,
+            "right": 764.359375,
+            "bottom": 1083.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 504.359375,
+            "y": 1107.828125,
+            "right": 764.359375,
+            "bottom": 1314.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 504.359375,
+            "y": 1338.828125,
+            "right": 764.359375,
+            "bottom": 1545.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 253.78125,
+          "y": 611.828125,
+          "right": 998.9375,
+          "bottom": 1681.828125,
+          "width": 745.15625,
+          "height": 1070
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-light-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 760.359375,
+            "y": 1887.828125,
+            "right": 936.359375,
+            "bottom": 1967.828125,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 316.359375,
+            "y": 635.828125,
+            "right": 936.359375,
+            "bottom": 1161.984375,
+            "width": 620,
+            "height": 526.15625,
+            "scroll": false,
+            "modelHeight": 526,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 332.359375,
+            "y": 1186.828125,
+            "right": 592.359375,
+            "bottom": 1393.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 332.359375,
+            "y": 1417.828125,
+            "right": 592.359375,
+            "bottom": 1624.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 332.359375,
+            "y": 1648.828125,
+            "right": 592.359375,
+            "bottom": 1855.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 253.78125,
+          "y": 611.828125,
+          "right": 998.9375,
+          "bottom": 1991.828125,
+          "width": 745.15625,
+          "height": 1380
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-light-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 157,
+            "y": 1686.421875,
+            "right": 333,
+            "bottom": 1766.421875,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 57,
+            "y": 745.421875,
+            "right": 317,
+            "bottom": 961.28125,
+            "width": 260,
+            "height": 215.859375,
+            "scroll": false,
+            "modelHeight": 216,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 73,
+            "y": 985.421875,
+            "right": 333,
+            "bottom": 1192.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 73,
+            "y": 1216.421875,
+            "right": 333,
+            "bottom": 1423.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 73,
+            "y": 1447.421875,
+            "right": 333,
+            "bottom": 1654.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 15,
+          "y": 721.421875,
+          "right": 375,
+          "bottom": 1790.421875,
+          "width": 360,
+          "height": 1069
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-light-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 159,
+            "y": 2206.421875,
+            "right": 335,
+            "bottom": 2286.421875,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 55,
+            "y": 745.421875,
+            "right": 335,
+            "bottom": 1481.046875,
+            "width": 280,
+            "height": 735.625,
+            "scroll": false,
+            "modelHeight": 736,
+            "modelWidth": 280,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 71,
+            "y": 1505.421875,
+            "right": 331,
+            "bottom": 1712.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 71,
+            "y": 1736.421875,
+            "right": 331,
+            "bottom": 1943.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 71,
+            "y": 1967.421875,
+            "right": 331,
+            "bottom": 2174.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 15,
+          "y": 721.421875,
+          "right": 375,
+          "bottom": 2310.421875,
+          "width": 360,
+          "height": 1589
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-dark-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1188,
+            "y": 967.390625,
+            "right": 1364,
+            "bottom": 1047.390625,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 602,
+            "y": 613.890625,
+            "right": 862,
+            "bottom": 831.546875,
+            "width": 260,
+            "height": 217.65625,
+            "scroll": false,
+            "modelHeight": 218,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 316,
+            "y": 903.890625,
+            "right": 576,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 602,
+            "y": 903.890625,
+            "right": 862,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 888,
+            "y": 903.890625,
+            "right": 1148,
+            "bottom": 1110.75,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 274.828125,
+          "y": 582.390625,
+          "right": 1405.171875,
+          "bottom": 1142.390625,
+          "width": 1130.34375,
+          "height": 560
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-dark-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1188,
+            "y": 1271.890625,
+            "right": 1364,
+            "bottom": 1351.890625,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 422,
+            "y": 606.390625,
+            "right": 1042,
+            "bottom": 1135.75,
+            "width": 620,
+            "height": 529.359375,
+            "scroll": false,
+            "modelHeight": 529,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 316,
+            "y": 1208.390625,
+            "right": 576,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 602,
+            "y": 1208.390625,
+            "right": 862,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 888,
+            "y": 1208.390625,
+            "right": 1148,
+            "bottom": 1415.25,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 274.828125,
+          "y": 582.390625,
+          "right": 1405.171875,
+          "bottom": 1439.390625,
+          "width": 1130.34375,
+          "height": 857
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-dark-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 588.359375,
+            "y": 1577.828125,
+            "right": 764.359375,
+            "bottom": 1657.828125,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 488.359375,
+            "y": 635.828125,
+            "right": 748.359375,
+            "bottom": 852.5,
+            "width": 260,
+            "height": 216.671875,
+            "scroll": false,
+            "modelHeight": 217,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 504.359375,
+            "y": 876.828125,
+            "right": 764.359375,
+            "bottom": 1083.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 504.359375,
+            "y": 1107.828125,
+            "right": 764.359375,
+            "bottom": 1314.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 504.359375,
+            "y": 1338.828125,
+            "right": 764.359375,
+            "bottom": 1545.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 253.78125,
+          "y": 611.828125,
+          "right": 998.9375,
+          "bottom": 1681.828125,
+          "width": 745.15625,
+          "height": 1070
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-dark-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 760.359375,
+            "y": 1887.828125,
+            "right": 936.359375,
+            "bottom": 1967.828125,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 316.359375,
+            "y": 635.828125,
+            "right": 936.359375,
+            "bottom": 1161.984375,
+            "width": 620,
+            "height": 526.15625,
+            "scroll": false,
+            "modelHeight": 526,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 332.359375,
+            "y": 1186.828125,
+            "right": 592.359375,
+            "bottom": 1393.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 332.359375,
+            "y": 1417.828125,
+            "right": 592.359375,
+            "bottom": 1624.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 332.359375,
+            "y": 1648.828125,
+            "right": 592.359375,
+            "bottom": 1855.6875,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 253.78125,
+          "y": 611.828125,
+          "right": 998.9375,
+          "bottom": 1991.828125,
+          "width": 745.15625,
+          "height": 1380
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-dark-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 157,
+            "y": 1686.421875,
+            "right": 333,
+            "bottom": 1766.421875,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 57,
+            "y": 745.421875,
+            "right": 317,
+            "bottom": 961.28125,
+            "width": 260,
+            "height": 215.859375,
+            "scroll": false,
+            "modelHeight": 216,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 73,
+            "y": 985.421875,
+            "right": 333,
+            "bottom": 1192.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 73,
+            "y": 1216.421875,
+            "right": 333,
+            "bottom": 1423.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 73,
+            "y": 1447.421875,
+            "right": 333,
+            "bottom": 1654.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 15,
+          "y": 721.421875,
+          "right": 375,
+          "bottom": 1790.421875,
+          "width": 360,
+          "height": 1069
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-dark-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 159,
+            "y": 2206.421875,
+            "right": 335,
+            "bottom": 2286.421875,
+            "width": 176,
+            "height": 80,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 55,
+            "y": 745.421875,
+            "right": 335,
+            "bottom": 1481.046875,
+            "width": 280,
+            "height": 735.625,
+            "scroll": false,
+            "modelHeight": 736,
+            "modelWidth": 280,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 71,
+            "y": 1505.421875,
+            "right": 331,
+            "bottom": 1712.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 71,
+            "y": 1736.421875,
+            "right": 331,
+            "bottom": 1943.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 71,
+            "y": 1967.421875,
+            "right": 331,
+            "bottom": 2174.28125,
+            "width": 260,
+            "height": 206.859375,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 15,
+          "y": 721.421875,
+          "right": 375,
+          "bottom": 2310.421875,
+          "width": 360,
+          "height": 1589
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-light-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1427.9520263671875,
+            "y": 965.9855346679688,
+            "right": 1603.9278564453125,
+            "bottom": 1045.9744873046875,
+            "width": 175.975830078125,
+            "height": 79.98895263671875,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 842.0327758789062,
+            "y": 612.5342407226562,
+            "right": 1101.9969482421875,
+            "bottom": 830.1605224609375,
+            "width": 259.96417236328125,
+            "height": 217.62628173828125,
+            "scroll": false,
+            "modelHeight": 218,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 556.0721435546875,
+            "y": 902.4942626953125,
+            "right": 816.036376953125,
+            "bottom": 1109.3251953125,
+            "width": 259.9642333984375,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 842.0327758789062,
+            "y": 902.4942626953125,
+            "right": 1101.9969482421875,
+            "bottom": 1109.3251953125,
+            "width": 259.96417236328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 1127.993408203125,
+            "y": 902.4942626953125,
+            "right": 1387.95751953125,
+            "bottom": 1109.3251953125,
+            "width": 259.964111328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 286.109375,
+          "y": 581,
+          "right": 1873.890625,
+          "bottom": 1141,
+          "width": 1587.78125,
+          "height": 560
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-light-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1427.9520263671875,
+            "y": 1270.464111328125,
+            "right": 1603.9278564453125,
+            "bottom": 1350.4530029296875,
+            "width": 175.975830078125,
+            "height": 79.9888916015625,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 662.0576171875,
+            "y": 605.0557250976562,
+            "right": 1281.97216796875,
+            "bottom": 1134.3421630859375,
+            "width": 619.91455078125,
+            "height": 529.2864379882812,
+            "scroll": false,
+            "modelHeight": 529,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 556.0721435546875,
+            "y": 1206.9727783203125,
+            "right": 816.036376953125,
+            "bottom": 1413.8037109375,
+            "width": 259.9642333984375,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 842.0327758789062,
+            "y": 1206.9727783203125,
+            "right": 1101.9969482421875,
+            "bottom": 1413.8037109375,
+            "width": 259.96417236328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 1127.993408203125,
+            "y": 1206.9727783203125,
+            "right": 1387.95751953125,
+            "bottom": 1413.8037109375,
+            "width": 259.964111328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 286.109375,
+          "y": 581,
+          "right": 1873.890625,
+          "bottom": 1438,
+          "width": 1587.78125,
+          "height": 857
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "replie-dark-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1427.9520263671875,
+            "y": 965.9855346679688,
+            "right": 1603.9278564453125,
+            "bottom": 1045.9744873046875,
+            "width": 175.975830078125,
+            "height": 79.98895263671875,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 842.0327758789062,
+            "y": 612.5342407226562,
+            "right": 1101.9969482421875,
+            "bottom": 830.1605224609375,
+            "width": 259.96417236328125,
+            "height": 217.62628173828125,
+            "scroll": false,
+            "modelHeight": 218,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 556.0721435546875,
+            "y": 902.4942626953125,
+            "right": 816.036376953125,
+            "bottom": 1109.3251953125,
+            "width": 259.9642333984375,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 842.0327758789062,
+            "y": 902.4942626953125,
+            "right": 1101.9969482421875,
+            "bottom": 1109.3251953125,
+            "width": 259.96417236328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 1127.993408203125,
+            "y": 902.4942626953125,
+            "right": 1387.95751953125,
+            "bottom": 1109.3251953125,
+            "width": 259.964111328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 286.109375,
+          "y": 581,
+          "right": 1873.890625,
+          "bottom": 1141,
+          "width": 1587.78125,
+          "height": 560
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      },
+      {
+        "name": "deplie-dark-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "nodes": [
+          {
+            "id": "Fournisseur Hébergeur fictif",
+            "x": 1427.9520263671875,
+            "y": 1270.464111328125,
+            "right": 1603.9278564453125,
+            "bottom": 1350.4530029296875,
+            "width": 175.975830078125,
+            "height": 79.9888916015625,
+            "scroll": false,
+            "modelHeight": 80,
+            "modelWidth": 176,
+            "toggleCenter": null
+          },
+          {
+            "id": "Périmètre Pilotage de l’organisation",
+            "x": 662.0576171875,
+            "y": 605.0557250976562,
+            "right": 1281.97216796875,
+            "bottom": 1134.3421630859375,
+            "width": 619.91455078125,
+            "height": 529.2864379882812,
+            "scroll": false,
+            "modelHeight": 529,
+            "modelWidth": 620,
+            "toggleCenter": 0
+          },
+          {
+            "id": "Périmètre Établissement de santé",
+            "x": 556.0721435546875,
+            "y": 1206.9727783203125,
+            "right": 816.036376953125,
+            "bottom": 1413.8037109375,
+            "width": 259.9642333984375,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Hébergement de données",
+            "x": 842.0327758789062,
+            "y": 1206.9727783203125,
+            "right": 1101.9969482421875,
+            "bottom": 1413.8037109375,
+            "width": 259.96417236328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 3.0517578125e-05
+          },
+          {
+            "id": "Périmètre Services support",
+            "x": 1127.993408203125,
+            "y": 1206.9727783203125,
+            "right": 1387.95751953125,
+            "bottom": 1413.8037109375,
+            "width": 259.964111328125,
+            "height": 206.8309326171875,
+            "scroll": false,
+            "modelHeight": 207,
+            "modelWidth": 260,
+            "toggleCenter": 0
+          }
+        ],
+        "stage": {
+          "x": 286.109375,
+          "y": 581,
+          "right": 1873.890625,
+          "bottom": 1438,
+          "width": 1587.78125,
+          "height": 857
+        },
+        "overlap": [],
+        "internal": [],
+        "center": 0,
+        "outside": 0,
+        "pageOverflow": false
+      }
+    ],
+    "analyses": [
+      {
+        "name": "replie-light-1440",
+        "violations": []
+      },
+      {
+        "name": "deplie-light-1440",
+        "violations": []
+      },
+      {
+        "name": "replie-light-390",
+        "violations": []
+      },
+      {
+        "name": "deplie-light-390",
+        "violations": []
+      },
+      {
+        "name": "replie-dark-1440",
+        "violations": []
+      },
+      {
+        "name": "deplie-dark-1440",
+        "violations": []
+      },
+      {
+        "name": "replie-dark-390",
+        "violations": []
+      },
+      {
+        "name": "deplie-dark-390",
+        "violations": []
+      }
+    ],
+    "errors": [],
+    "csp": [],
+    "writes": []
+  },
+  "objectifs": {
+    "date": "2026-11-04T22:27:52.111Z",
+    "base": "suivi_neon_perimetres_compacts, isolée",
+    "views": [
+      {
+        "name": "objectifs-light-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 273.828125,
+            "y": 426.15625,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 656.265625,
+            "y": 426.15625,
+            "width": 367.453125,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1038.71875,
+            "y": 426.15625,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          0,
+          0,
+          0
+        ],
+        "overflow": [],
+        "scheme": "light"
+      },
+      {
+        "name": "objectifs-par-objectif-light",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 273.828125,
+            "y": 426.15625,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 656.265625,
+            "y": 426.15625,
+            "width": 367.453125,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1038.71875,
+            "y": 426.15625,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [],
+        "overflow": [],
+        "scheme": "light"
+      },
+      {
+        "name": "objectifs-light-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 252.78125,
+            "y": 438.0625,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          },
+          {
+            "x": 506.59375,
+            "y": 438.0625,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          },
+          {
+            "x": 760.40625,
+            "y": 438.0625,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          null,
+          null,
+          null
+        ],
+        "overflow": [],
+        "scheme": "light"
+      },
+      {
+        "name": "objectifs-light-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 14,
+            "y": 449.390625,
+            "width": 362,
+            "height": 152.28125,
+            "scroll": false
+          },
+          {
+            "x": 14,
+            "y": 609.546875,
+            "width": 177.0625,
+            "height": 144.40625,
+            "scroll": false
+          },
+          {
+            "x": 198.9375,
+            "y": 609.546875,
+            "width": 177.0625,
+            "height": 144.40625,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          null,
+          null,
+          null
+        ],
+        "overflow": [],
+        "scheme": "light"
+      },
+      {
+        "name": "objectifs-dark-1440",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 273.828125,
+            "y": 418.25,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 656.265625,
+            "y": 418.25,
+            "width": 367.453125,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1038.71875,
+            "y": 418.25,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          0,
+          0,
+          0
+        ],
+        "overflow": [],
+        "scheme": "dark"
+      },
+      {
+        "name": "objectifs-par-objectif-dark",
+        "viewport": {
+          "width": 1440,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 273.828125,
+            "y": 418.25,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 656.265625,
+            "y": 418.25,
+            "width": 367.453125,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1038.71875,
+            "y": 418.25,
+            "width": 367.4375,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [],
+        "overflow": [],
+        "scheme": "dark"
+      },
+      {
+        "name": "objectifs-dark-1024",
+        "viewport": {
+          "width": 1024,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 252.78125,
+            "y": 430.609375,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          },
+          {
+            "x": 506.59375,
+            "y": 430.609375,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          },
+          {
+            "x": 760.40625,
+            "y": 430.609375,
+            "width": 239.53125,
+            "height": 170.3125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          null,
+          null,
+          null
+        ],
+        "overflow": [],
+        "scheme": "dark"
+      },
+      {
+        "name": "objectifs-dark-390",
+        "viewport": {
+          "width": 390,
+          "height": 1100
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 14,
+            "y": 442.609375,
+            "width": 362,
+            "height": 152.28125,
+            "scroll": false
+          },
+          {
+            "x": 14,
+            "y": 602.765625,
+            "width": 177.0625,
+            "height": 144.40625,
+            "scroll": false
+          },
+          {
+            "x": 198.9375,
+            "y": 602.765625,
+            "width": 177.0625,
+            "height": 144.40625,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          null,
+          null,
+          null
+        ],
+        "overflow": [],
+        "scheme": "dark"
+      },
+      {
+        "name": "objectifs-light-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 285.109375,
+            "y": 446.453125,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 820.03125,
+            "y": 446.453125,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1354.953125,
+            "y": 446.453125,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          0,
+          0,
+          0
+        ],
+        "overflow": [],
+        "scheme": "light"
+      },
+      {
+        "name": "objectifs-dark-hd",
+        "viewport": {
+          "width": 1920,
+          "height": 1440
+        },
+        "pageOverflow": false,
+        "internal": [],
+        "kpis": [
+          {
+            "x": 285.109375,
+            "y": 438.546875,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 820.03125,
+            "y": 438.546875,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          },
+          {
+            "x": 1354.953125,
+            "y": 438.546875,
+            "width": 519.921875,
+            "height": 184.578125,
+            "scroll": false
+          }
+        ],
+        "centers": [
+          0,
+          0,
+          0
+        ],
+        "overflow": [],
+        "scheme": "dark"
+      }
+    ],
+    "analyses": [
+      {
+        "name": "objectifs-light-1440",
+        "violations": []
+      },
+      {
+        "name": "objectifs-par-objectif-light",
+        "violations": []
+      },
+      {
+        "name": "objectifs-light-390",
+        "violations": []
+      },
+      {
+        "name": "objectifs-dark-1440",
+        "violations": []
+      },
+      {
+        "name": "objectifs-par-objectif-dark",
+        "violations": []
+      },
+      {
+        "name": "objectifs-dark-390",
+        "violations": []
+      }
+    ],
+    "errors": [],
+    "csp": [],
+    "writes": [],
+    "donneesMetierInchangees": true,
+    "defautCompact": true,
+    "autresVuesConservees": true,
+    "animationsEtPause": true
+  },
+  "lectureSeule": {
+    "lecture": true,
+    "perimetresAutorises": 1,
+    "centragePerimetreUnique": 0,
+    "grapheParDefaut": true,
+    "depliagePermis": true,
+    "commandesAdministrationAbsentes": true,
+    "fournisseursNonDemandes": true,
+    "compteursNonAutorises": null,
+    "ecritureRefusee": 403,
+    "donneesInchangees": true,
+    "objectifsLectureSeule": true,
+    "ficheIndicateurDesactivee": true,
+    "ecritureIndicateurRefusee": 403,
+    "problems": []
+  },
+  "limites": [
+    "Recette Docker Desktop Windows du demandeur non exécutée dans cet environnement.",
+    "Aucune validation automatique des références de comparaison visuelle.",
+    "Avertissements de build préexistants sur le script d’exploitation et la taille des bundles."
+  ]
+}

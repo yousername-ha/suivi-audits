@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-11",
+  "timezone": "Europe/Paris",
+  "mode": "Application compilée exécutée dans Docker",
+  "parcoursE2E": {
+    "startTime": "2026-11-11T07:51:43.458Z",
+    "duration": 139498.244,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "frontalNode": {
+    "sousCas": 4,
+    "resultat": "RÉUSSIS",
+    "couverture": [
+      "SPA, actifs, HEAD, fichiers privés",
+      "corps, CSRF, version, cookie serveur",
+      "cible API fixe",
+      "flux SSE et fermeture"
+    ]
+  },
+  "geometrie": {
+    "dispositions": 24,
+    "debordements": 0
+  },
+  "axe": {
+    "analyses": 4,
+    "violations": 0
+  },
+  "gardes": {
+    "cas": [
+      {
+        "cas": "nom-interdit",
+        "refusAvantInitialisation": true
+      },
+      {
+        "cas": "flag-absent",
+        "refusAvantInitialisation": true
+      },
+      {
+        "cas": "base-occupee",
+        "refusAvantInitialisation": true
+      }
+    ],
+    "tablesBaseProtegee": 1
+  },
+  "recreation": {
+    "session": "ok",
+    "identiteConservee": true,
+    "seriesConservees": true,
+    "sansDoublon": true,
+    "passerelleAbsente": true
+  },
+  "topologieCloud": "Conteneur applicatif Docker, base fictive nouvelle dans le PostgreSQL 18 Docker déjà présent ; réseau bridge de recette. Le Compose livré définit son propre service db.",
+  "configuration": "Aucun changement de source apps/api/src ; profils habituels authentifiés conservés.",
+  "limites": [
+    "Création simultanée des deux nouveaux conteneurs du Compose par défaut non rejouée dans le cloud limité en disque",
+    "Docker Desktop Windows reste à essayer",
+    "CI distante et suites API/E2E intégrales non relancées"
+  ],
+  "publication": "Aucun push, fusion ou déploiement.",
+  "image": {
+    "sha256": "sha256:7f828b31b9d6c987799f3537b0e6bcc0811990a092f43fef962cc72d4b9cecdc",
+    "tailleOctets": 205805497
+  },
+  "authentification": {
+    "apiDirecteAnonyme": true,
+    "accesDirectSansSession": 401,
+    "postSansCsrf": 403,
+    "fichierSessionNonServi": 403,
+    "profilNormalConnexionConservee": true
+  }
+}

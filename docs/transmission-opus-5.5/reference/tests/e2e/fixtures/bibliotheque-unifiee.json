@@ -1,0 +1,97 @@
+{
+  "catalogue": [
+    {
+      "id": "fde4c738-aeb9-4f60-896c-8a5b0b6af656",
+      "identifier": "iso-27001-2022",
+      "name": "ISO/IEC 27001:2022",
+      "version": 1,
+      "updatedAt": "2026-10-31T20:03:33.027Z",
+      "source": {
+        "url": "https://www.iso.org/fr/standard/27001",
+        "date": "",
+        "status": "unverified",
+        "license": "Norme payante protégée par le droit d’auteur : seuls les intitulés saisis dans l’outil de suivi sont repris, jamais le texte normatif.",
+        "version": "2022",
+        "document": "ISO/IEC 27001:2022 — intitulés des clauses et de l’Annexe A saisis dans l’outil de suivi",
+        "normative": false,
+        "verifiedAt": "",
+        "organisation": "ISO/IEC"
+      },
+      "requirements": 126,
+      "scopes": 1,
+      "locked": true,
+      "derivedFrom": null
+    },
+    {
+      "id": "f777ace4-f067-4371-8386-9413a46d3bb2",
+      "identifier": "hds",
+      "name": "Référentiel HDS v2",
+      "version": 1,
+      "updatedAt": "2026-10-31T20:03:33.093Z",
+      "source": {
+        "url": "https://esante.gouv.fr/services/hebergeurs-de-donnees-de-sante/les-referentiels-de-la-procedure-de-certification",
+        "date": "",
+        "status": "unverified",
+        "license": "Non renseigné dans l’outil de suivi",
+        "version": "v2",
+        "document": "Référentiel de certification des hébergeurs de données de santé (HDS) — exigences saisies dans l’outil de suivi",
+        "normative": false,
+        "verifiedAt": "",
+        "organisation": "ANS (Agence du Numérique en Santé)"
+      },
+      "requirements": 31,
+      "scopes": 1,
+      "locked": true,
+      "derivedFrom": null
+    }
+  ],
+  "couverture": {
+    "frameworks": [
+      {
+        "frameworkId": "fde4c738-aeb9-4f60-896c-8a5b0b6af656",
+        "identifier": "iso-27001-2022",
+        "name": "ISO/IEC 27001:2022",
+        "version": 1,
+        "origineId": "00000000-0000-4000-8000-000000000001",
+        "requirements": 126,
+        "covered": 0,
+        "toValidate": 0,
+        "uncovered": 126,
+        "etats": {
+          "non_implemente": 0,
+          "partiel": 30,
+          "implemente": 31,
+          "teste": 31,
+          "valide_metier": 32,
+          "non_applicable": 2,
+          "applicables": 124,
+          "aDeterminer": 0,
+          "obligatoiresNonConformes": 16
+        }
+      },
+      {
+        "frameworkId": "f777ace4-f067-4371-8386-9413a46d3bb2",
+        "identifier": "hds",
+        "name": "Référentiel HDS v2",
+        "version": 1,
+        "origineId": "00000000-0000-4000-8000-000000000001",
+        "requirements": 31,
+        "covered": 0,
+        "toValidate": 0,
+        "uncovered": 31,
+        "etats": {
+          "non_implemente": 5,
+          "partiel": 9,
+          "implemente": 0,
+          "teste": 17,
+          "valide_metier": 0,
+          "non_applicable": 0,
+          "applicables": 31,
+          "aDeterminer": 0,
+          "obligatoiresNonConformes": 0
+        }
+      }
+    ],
+    "detail": null
+  }
+}

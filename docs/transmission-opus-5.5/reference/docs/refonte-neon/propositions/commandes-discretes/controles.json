@@ -1,0 +1,111 @@
+{
+  "scope": "maquette autonome uniquement — aucun test applicatif",
+  "date": "2026-11-11",
+  "timezone": "Europe/Paris",
+  "appSourceUnchanged": "23b33b5ce4fd4cf5eeee0af97c9638b18852b61a",
+  "dispositions": [
+    {
+      "width": 320,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1920,
+      "theme": "light",
+      "horizontalOverflow": false,
+      "filterFits": true
+    },
+    {
+      "width": 1920,
+      "theme": "dark",
+      "horizontalOverflow": false,
+      "filterFits": true
+    }
+  ],
+  "axe": [
+    {
+      "name": "filtres-light",
+      "violations": []
+    },
+    {
+      "name": "actions-light",
+      "violations": []
+    },
+    {
+      "name": "actions-dark",
+      "violations": []
+    },
+    {
+      "name": "recurrences-dark",
+      "violations": []
+    },
+    {
+      "name": "mobile-filtres-light",
+      "violations": []
+    }
+  ],
+  "interactions": [
+    "Six vues en icônes ; un état actif ; synthèse uniquement à la demande.",
+    "Recherche /, résultats réels du jeu fictif, Entrée, pastille de recherche et suppression.",
+    "Filtres conservés après fermeture ; badge et pastille ; Échap et retour du focus ; remise à zéro.",
+    "Filtre Série déplacé dans le panneau, résultat filtré et pastille supprimable.",
+    "Récurrences en Timeline par défaut ; options supplémentaires et occurrences validées accessibles."
+  ],
+  "errors": [],
+  "apiRequests": 0
+}

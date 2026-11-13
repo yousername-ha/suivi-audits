@@ -1,0 +1,269 @@
+{
+  "date": "2026-11-03",
+  "fuseau": "Europe/Paris",
+  "commitApplicatif": "4a1304ba80a9bc476fb9a3d3ab504ebb33c06c67",
+  "donnees": "Jeu de démonstration fictif, API et PostgreSQL isolés",
+  "vues": 24,
+  "dimensions": [
+    {
+      "theme": "light",
+      "largeur": 1440,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 1440,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 1440,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 1024,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 1024,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 1024,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 390,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 390,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "light",
+      "largeur": 390,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1440,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1440,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1440,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1024,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1024,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 1024,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 390,
+      "ref": "ISO",
+      "lignes": 33,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 390,
+      "ref": "A",
+      "lignes": 93,
+      "ascenseurs": []
+    },
+    {
+      "theme": "dark",
+      "largeur": 390,
+      "ref": "HDS",
+      "lignes": 31,
+      "ascenseurs": []
+    }
+  ],
+  "axe": [
+    {
+      "theme": "light",
+      "largeur": 1440,
+      "vue": "registre",
+      "violations": 0
+    },
+    {
+      "theme": "light",
+      "largeur": 1440,
+      "vue": "fiche",
+      "violations": 0
+    },
+    {
+      "theme": "light",
+      "largeur": 390,
+      "vue": "registre",
+      "violations": 0
+    },
+    {
+      "theme": "light",
+      "largeur": 390,
+      "vue": "fiche",
+      "violations": 0
+    },
+    {
+      "theme": "dark",
+      "largeur": 1440,
+      "vue": "registre",
+      "violations": 0
+    },
+    {
+      "theme": "dark",
+      "largeur": 1440,
+      "vue": "fiche",
+      "violations": 0
+    },
+    {
+      "theme": "dark",
+      "largeur": 390,
+      "vue": "registre",
+      "violations": 0
+    },
+    {
+      "theme": "dark",
+      "largeur": 390,
+      "vue": "fiche",
+      "violations": 0
+    }
+  ],
+  "erreursJavaScript": 0,
+  "violationsCSP": 0,
+  "ecrituresPendantCollecte": 0,
+  "lectureSeule": {
+    "checks": [
+      "Champs de lignes désactivés",
+      "Filtres utilisables",
+      "Fiche consultable et désactivée",
+      "Écriture API refusée : 403"
+    ],
+    "problems": []
+  },
+  "captures": [
+    {
+      "fichier": "application-light-hd.png",
+      "largeur": 3840,
+      "hauteur": 2880
+    },
+    {
+      "fichier": "dda-light-integrale-hd.png",
+      "largeur": 3180,
+      "hauteur": 14332
+    },
+    {
+      "fichier": "fiche-light-hd.png",
+      "largeur": 2048,
+      "hauteur": 2182
+    },
+    {
+      "fichier": "dda-annexe-a-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "mesures-light-1440.png",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "mesures-light-390.png",
+      "largeur": 390,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "fiche-light-390.png",
+      "largeur": 390,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "application-dark-hd.png",
+      "largeur": 3840,
+      "hauteur": 2880
+    },
+    {
+      "fichier": "dda-dark-integrale-hd.png",
+      "largeur": 3180,
+      "hauteur": 14332
+    },
+    {
+      "fichier": "fiche-dark-hd.png",
+      "largeur": 2048,
+      "hauteur": 2182
+    },
+    {
+      "fichier": "dda-annexe-a-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "mesures-dark-1440.png",
+      "largeur": 1440,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "mesures-dark-390.png",
+      "largeur": 390,
+      "hauteur": 1080
+    },
+    {
+      "fichier": "fiche-dark-390.png",
+      "largeur": 390,
+      "hauteur": 1080
+    }
+  ]
+}

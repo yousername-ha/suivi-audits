@@ -1,0 +1,114 @@
+{
+  "applicationIntegree": true,
+  "codeCommit": "016d69c50c7775a62640e9e2d75d2875e9c85374",
+  "fichiers": [
+    {
+      "fichier": "animation-swot-integre.gif",
+      "octets": 3349359,
+      "sha256": "64804942da00c69a68fa81afc617cc725c065b2ad74406df7254409cc732f802"
+    },
+    {
+      "fichier": "animation-swot-integre.mp4",
+      "octets": 503400,
+      "sha256": "30120e1c0cc2ee5c962f900807776fc45d07d9963692f60eb62a3b5d42ee83df"
+    },
+    {
+      "fichier": "fiche-dark.png",
+      "octets": 197176,
+      "sha256": "e27c95305eb0c4189e02d4a66981d24df8db4e4c4f4fe237313d324483684189",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "fiche-light.png",
+      "octets": 189071,
+      "sha256": "8c2f77fe9d4e5d6e5fabbe44d2b48d0d19e5d3a603197c62a18f1af306d37f18",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "lecture-dark.png",
+      "octets": 277505,
+      "sha256": "4505ca499d231bb9a4cc544b4f88d0c8ac4197987aceade8b9c1f234daabc03e",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "lecture-light.png",
+      "octets": 268569,
+      "sha256": "700ea9c76edd36df3ae6eb6b92d6afffcf1590a54a95d55306b517cba6894844",
+      "largeur": 1440,
+      "hauteur": 1100
+    },
+    {
+      "fichier": "matrice-dark.png",
+      "octets": 294747,
+      "sha256": "a4859c64c5d076a3b3f2da5a0f612f3981ccb83f533ed77026e5e7c69aa8ae32",
+      "largeur": 1134,
+      "hauteur": 646
+    },
+    {
+      "fichier": "matrice-light.png",
+      "octets": 287646,
+      "sha256": "da44a807529dccbb7bb626d68f7655363bdc434e2ddbdb536624630f636c9090",
+      "largeur": 1134,
+      "hauteur": 646
+    },
+    {
+      "fichier": "registre-dark.png",
+      "octets": 490272,
+      "sha256": "07c4d7f90c81d9ac8da0b96dea40e5e12fe4b5078d0c46231b892e7892c658dd",
+      "largeur": 1440,
+      "hauteur": 1694
+    },
+    {
+      "fichier": "registre-light.png",
+      "octets": 506990,
+      "sha256": "a99ceccbb0979fea393d19744fae7abccd873cd5248bcb1e3d0e8fe84796867f",
+      "largeur": 1440,
+      "hauteur": 1694
+    },
+    {
+      "fichier": "swot-dark-1440.png",
+      "octets": 463682,
+      "sha256": "3e251b372586515bc8a97fc30b6e6fc5a7b3948b6b7ac5913e90b9d05839fe4d",
+      "largeur": 1440,
+      "hauteur": 1328
+    },
+    {
+      "fichier": "swot-dark-hd.png",
+      "octets": 1680475,
+      "sha256": "ab9384c95ac72ce1a0c5c99e4abf5860e4be03db912178215dce04bb7d98c500",
+      "largeur": 3840,
+      "hauteur": 2840
+    },
+    {
+      "fichier": "swot-dark-mobile.png",
+      "octets": 265452,
+      "sha256": "7b36cf287f3d17f9041c468d4f3c579bc6b9df8fbfe49eb432f4856005be3897",
+      "largeur": 390,
+      "hauteur": 1814
+    },
+    {
+      "fichier": "swot-light-1440.png",
+      "octets": 480789,
+      "sha256": "b830cedf27154931c2f240243adeaf0e9bed88b91135bb325e4b41bda92f806a",
+      "largeur": 1440,
+      "hauteur": 1328
+    },
+    {
+      "fichier": "swot-light-hd.png",
+      "octets": 1675896,
+      "sha256": "5eadb0a14fdd96c02cc4c0c9af72591968579ea1b08545f8c86559f134af990a",
+      "largeur": 3840,
+      "hauteur": 2840
+    },
+    {
+      "fichier": "swot-light-mobile.png",
+      "octets": 277325,
+      "sha256": "3bdcf26245dc661306f07f4cd74ae4a53b1e928c21ed2ba4d9ee129b0f3c97bd",
+      "largeur": 390,
+      "hauteur": 1814
+    }
+  ]
+}

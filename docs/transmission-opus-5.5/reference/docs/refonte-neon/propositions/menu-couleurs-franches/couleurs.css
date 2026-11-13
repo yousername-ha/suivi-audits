@@ -1,0 +1,59 @@
+/* Variante claire : une couleur franche par icône. Fond, gabarit et animations conservés. */
+html[data-theme='light'] [data-mh-page='dashboard'] {
+  --mc-tone: #7439b5;
+}
+html[data-theme='light'] [data-mh-family='organisation'],
+html[data-theme='light'] [data-mh-group='organisation'] {
+  --mc-tone: #287645;
+}
+html[data-theme='light'] [data-mh-family='pilotage'],
+html[data-theme='light'] [data-mh-group='pilotage'] {
+  --mc-tone: #245db5;
+}
+html[data-theme='light'] [data-mh-family='risques'],
+html[data-theme='light'] [data-mh-group='risques'] {
+  --mc-tone: #9d6b06;
+}
+html[data-theme='light'] [data-mh-family='conformite'],
+html[data-theme='light'] [data-mh-group='conformite'] {
+  --mc-tone: #087d86;
+}
+html[data-theme='light'] [data-mh-family='actions'],
+html[data-theme='light'] [data-mh-group='actions'] {
+  --mc-tone: #b65212;
+}
+html[data-theme='light'] [data-mh-family='resilience'],
+html[data-theme='light'] [data-mh-group='resilience'] {
+  --mc-tone: #b52b35;
+}
+html[data-theme='light'] [data-mh-family='documents'],
+html[data-theme='light'] [data-mh-group='documents'] {
+  --mc-tone: #79522e;
+}
+html[data-theme='light'] [data-mh-page='plateforme'] {
+  --mc-tone: #4d556c;
+}
+html[data-theme='light'] [data-mh-page='parametres'] {
+  --mc-tone: #477624;
+}
+html[data-theme='light'] [data-mh-page='compte'] {
+  --mc-tone: #5a3b84;
+}
+html[data-theme='light'] [data-mh-page='aide'] {
+  --mc-tone: #833e62;
+}
+html[data-theme='light'] [data-mh-page='mur'] {
+  --mc-tone: #316484;
+}
+html[data-theme='light'] .mh-family > .mh-icon,
+html[data-theme='light'] .mh-comptes .mh-icon {
+  stroke: var(--mc-tone);
+  stroke-width: 1.95;
+}
+html[data-theme='light'] .mh-icon .mf-fill {
+  fill: color-mix(in srgb, var(--mc-tone) 23%, transparent);
+}
+html[data-theme='light'] .mh-icon .mf-orbit {
+  stroke: color-mix(in srgb, var(--mc-tone) 50%, transparent);
+  stroke-width: 1.2;
+}

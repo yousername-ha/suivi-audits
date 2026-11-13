@@ -1,0 +1,92 @@
+/* Variante claire uniquement. La version sombre et les dimensions restent celles du menu précédent. */
+html[data-theme='light'] .mh-sidebar {
+  background:
+    radial-gradient(ellipse 115% 30% at 115% 25%, #dce9fc 0%, transparent 86%),
+    radial-gradient(ellipse 150% 30% at -35% 105%, #cce7de 0%, transparent 85%),
+    linear-gradient(153deg, #fffefa 0%, #f9fbff 59%, #f8fcfa 100%) !important;
+  border-right-color: #a7bfcb !important;
+  box-shadow:
+    inset -1px 0 #ffffff,
+    5px 0 18px -15px #22455f77 !important;
+}
+html[data-theme='light'] .mh-sidebar .brand {
+  border-bottom-color: #b8cad7;
+}
+html[data-theme='light'] .mh-sidebar .brand-mark {
+  border: 1px solid #d5c8f1;
+  box-shadow:
+    inset 0 1px #ffffff60,
+    0 4px 10px -5px #4d418e66;
+}
+html[data-theme='light'] .mh-family {
+  gap: 8px;
+  color: #243950;
+}
+html[data-theme='light'] .mh-family > .mh-icon {
+  stroke: #fff;
+  stroke-width: 1.8;
+  border-color: color-mix(in srgb, var(--mc-tone) 78%, #fff);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--mc-tone) 82%, #fff),
+    color-mix(in srgb, var(--mc-tone) 92%, #102f43)
+  );
+  box-shadow:
+    inset 0 1px #ffffff40,
+    0 3px 6px -3px color-mix(in srgb, var(--mc-tone) 45%, transparent);
+}
+html[data-theme='light'] .mh-family:hover {
+  border-color: color-mix(in srgb, var(--mc-tone) 36%, #c4d2df);
+  background: #ffffffd9;
+  box-shadow: 0 3px 8px -6px #234b6b55;
+}
+html[data-theme='light'] .mh-family[aria-current='true'] {
+  color: #183949;
+  border-color: color-mix(in srgb, var(--mc-tone) 60%, #b4c9d4);
+  border-left-color: var(--mc-tone);
+  background: linear-gradient(
+    112deg,
+    color-mix(in srgb, var(--mc-tone) 17%, #fff),
+    color-mix(in srgb, var(--mc-tone) 5%, #fff)
+  );
+  box-shadow:
+    inset 0 1px #ffffff,
+    0 5px 10px -8px color-mix(in srgb, var(--mc-tone) 45%, transparent);
+}
+html[data-theme='light'] .mh-family[aria-current='true'] > strong {
+  font-weight: 600;
+}
+html[data-theme='light'] .mh-destinations {
+  border-left-color: color-mix(in srgb, var(--mc-tone) 54%, #c1cfdc);
+}
+html[data-theme='light'] .mh-destinations .mh-destination {
+  color: #425c75;
+}
+html[data-theme='light'] .mh-destination[aria-current='page'] {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--mc-tone) 85%, #11394c);
+  background: linear-gradient(118deg, var(--mc-tone), color-mix(in srgb, var(--mc-tone) 84%, #102e43));
+  box-shadow:
+    inset 0 1px #ffffff35,
+    0 5px 10px -6px color-mix(in srgb, var(--mc-tone) 48%, transparent);
+}
+html[data-theme='light'] .mh-destination[aria-current='page']::before {
+  background: #bce7e1;
+}
+html[data-theme='light'] .mh-comptes {
+  border-top-color: #bdced8;
+}
+html[data-theme='light'] .mh-comptes .mh-destination {
+  color: #425c75;
+}
+html[data-theme='light'] .mh-comptes .mh-destination[aria-current='page'] {
+  color: #fff;
+}
+html[data-theme='light'] .mh-footer {
+  border-top-color: #b1c7d1;
+}
+html[data-theme='light'] .mh-footer button {
+  border-color: #b5c9d2;
+  background: linear-gradient(145deg, #fff, #f0f8f6);
+  box-shadow: inset 0 1px #fff;
+}

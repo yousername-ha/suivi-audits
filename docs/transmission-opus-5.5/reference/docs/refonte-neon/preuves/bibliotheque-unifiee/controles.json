@@ -1,0 +1,192 @@
+{
+  "scope": "Frontend compilé, API fictive interceptée",
+  "layouts": [
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "listWidth": 745,
+      "listScrollWidth": 745,
+      "listHeight": 369,
+      "footerBottom": 742.921875
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "listWidth": 745,
+      "listScrollWidth": 745,
+      "listHeight": 369,
+      "footerBottom": 742.921875
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "light",
+      "listWidth": 981,
+      "listScrollWidth": 981,
+      "listHeight": 319,
+      "footerBottom": 688.90625
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "theme": "dark",
+      "listWidth": 981,
+      "listScrollWidth": 981,
+      "listHeight": 319,
+      "footerBottom": 688.90625
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "listWidth": 1061,
+      "listScrollWidth": 1061,
+      "listHeight": 361,
+      "footerBottom": 734.890625
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "listWidth": 1061,
+      "listScrollWidth": 1061,
+      "listHeight": 361,
+      "footerBottom": 734.890625
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "listWidth": 1130,
+      "listScrollWidth": 1130,
+      "listHeight": 469,
+      "footerBottom": 865.171875
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "listWidth": 1130,
+      "listScrollWidth": 1130,
+      "listHeight": 469,
+      "footerBottom": 865.171875
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "light",
+      "listWidth": 1222,
+      "listScrollWidth": 1222,
+      "listHeight": 427,
+      "footerBottom": 826.90625
+    },
+    {
+      "width": 1536,
+      "height": 864,
+      "theme": "dark",
+      "listWidth": 1222,
+      "listScrollWidth": 1222,
+      "listHeight": 427,
+      "footerBottom": 826.90625
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "listWidth": 1588,
+      "listScrollWidth": 1588,
+      "listHeight": 617,
+      "footerBottom": 1033.890625
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "listWidth": 1588,
+      "listScrollWidth": 1588,
+      "listHeight": 617,
+      "footerBottom": 1033.890625
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "listWidth": 2172,
+      "listScrollWidth": 2172,
+      "listHeight": 925,
+      "footerBottom": 1383.796875
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "listWidth": 2172,
+      "listScrollWidth": 2172,
+      "listHeight": 925,
+      "footerBottom": 1383.796875
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "light",
+      "listWidth": 1588,
+      "listScrollWidth": 1588,
+      "listHeight": 357,
+      "footerBottom": 753.890625
+    },
+    {
+      "width": 1920,
+      "height": 800,
+      "theme": "dark",
+      "listWidth": 1588,
+      "listScrollWidth": 1588,
+      "listHeight": 357,
+      "footerBottom": 753.890625
+    }
+  ],
+  "menuConditionnelMesure": {
+    "avecClasseMetier": {
+      "background": "linear-gradient(165deg, rgb(48, 41, 78), rgb(37, 34, 64) 77%)",
+      "color": "rgb(209, 201, 232)",
+      "width": "240px"
+    },
+    "sansClasseMetier": {
+      "background": "none",
+      "color": "rgb(39, 48, 73)",
+      "width": "240px"
+    }
+  },
+  "errors": [],
+  "screenshot": {
+    "width": 3840,
+    "height": 2160,
+    "count": 1
+  },
+  "tests": {
+    "web": 289,
+    "ui": 246,
+    "e2eFrontendAPIInterceptee": 25,
+    "bibliothequeE2E": 8,
+    "bibliothequeAxe": 4,
+    "build": "réussi",
+    "typesWebEtE2E": "réussis",
+    "lintCible": "réussi",
+    "nonExecutes": [
+      "DB/API réelle",
+      "Docker/Windows",
+      "Mistral réel",
+      "CI distante"
+    ]
+  },
+  "sha256": {
+    "apps/web/src/pilotage/Bibliotheque.tsx": "22a25e1105c571a4465a5c652d3833c5991c3aaaeb583f502c14b38b180995bd",
+    "apps/web/src/pilotage/BibliothequeStudio.tsx": "d06ce489a89c8c0c0a8bb6ac7a775947db9113186036f84acbb11a92ba6db73d",
+    "apps/web/src/pilotage/Couverture.tsx": "e6d4f5e2aec02ccf3f35b7a41926aeeea7bc40f4dbcc5410e3d24a6558a68736",
+    "apps/web/src/navigation.ts": "5efe93c2d19f67f59ea950c3197bfaac6b81f338d3f385b7ed5a74d035424e4e",
+    "apps/web/src/pages/Pilotage.tsx": "ed7244e309c023ab2ba18fd0d1aa6833f4bd2265c42c19d228be717a56a62eda",
+    "packages/ui/src/neon-bibliotheque.css": "168ce17a5339456d6a79bb8ba11fcb8588d1fd4402affdba30aceb0257d433a4",
+    "docs/refonte-neon/preuves/bibliotheque-unifiee/bibliotheque-integree-hd.png": "0bc1a912eac30b782e6b6d5744043841ca586ae607c2baa300162fe50c34157a"
+  }
+}

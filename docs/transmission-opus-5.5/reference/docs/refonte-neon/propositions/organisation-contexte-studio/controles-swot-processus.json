@@ -1,0 +1,165 @@
+{
+  "date": "2026-11-09",
+  "timezone": "Europe/Paris",
+  "maquetteAutonome": true,
+  "applicationModifiee": false,
+  "testsApplicatifs": false,
+  "views": [
+    {
+      "name": "light-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-390",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-768",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-1024",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-1280",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-1920",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-form-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-form-390",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "light-empty-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-390",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-768",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-1024",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-1280",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-1920",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-form-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-form-390",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    },
+    {
+      "name": "dark-empty-1440",
+      "pageOverflow": false,
+      "internalScroll": [],
+      "panelOverflow": []
+    }
+  ],
+  "axe": [
+    {
+      "name": "light-main",
+      "violations": []
+    },
+    {
+      "name": "light-form",
+      "violations": []
+    },
+    {
+      "name": "dark-main",
+      "violations": []
+    },
+    {
+      "name": "dark-form",
+      "violations": []
+    }
+  ],
+  "images": [
+    "swot-processus-light-1440.png",
+    "swot-processus-light-mobile.png",
+    "fiche-swot-processus-light.png",
+    "swot-processus-sans-analyse-light.png",
+    "swot-processus-light-hd.png",
+    "swot-processus-dark-1440.png",
+    "swot-processus-dark-mobile.png",
+    "fiche-swot-processus-dark.png",
+    "swot-processus-dark-hd.png"
+  ],
+  "errors": [],
+  "external": [],
+  "writes": [],
+  "commandes": [
+    {
+      "commande": "/workspace/work/runtime/bin/node --check docs/refonte-neon/propositions/organisation-contexte-studio/prototype.js",
+      "codeRetour": 0
+    },
+    {
+      "commande": "/workspace/work/runtime/bin/node --check docs/refonte-neon/propositions/organisation-contexte-studio/donnees.js",
+      "codeRetour": 0
+    },
+    {
+      "commande": "/workspace/work/runtime/bin/node /workspace/work/organisation-contexte-studio/rendre-swot-processus.mjs",
+      "codeRetour": 0
+    }
+  ],
+  "applicationReference": "65bd22fe510ebdda872f7e73cb2974870fd1c992",
+  "environnement": "Environnement Cloud Codex ; serveur statique 127.0.0.1:8133 ; Chromium /usr/bin/chromium ; Node 26.13.0"
+}

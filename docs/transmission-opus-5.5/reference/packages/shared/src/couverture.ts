@@ -1,0 +1,200 @@
+/* Évaluation d'une exigence dans un périmètre (ADR 0041, lot H3) : cinq dimensions séparées — applicabilité, mise en
+   œuvre, test d'efficacité, validation métier — et l'état de couverture qui en découle. Fonctions pures partagées par
+   l'API (contrôle avant écriture) et l'interface. Aucun taux de conformité : l'état décrit ce qui est établi, pas ce
+   qui est certifié. */
+import { z } from 'zod';
+import type { FrameworkDefinition } from './grc.js';
+
+export const APPLICABILITES = ['a_determiner', 'applicable', 'exclue'] as const;
+export const MISES_EN_OEUVRE = ['aucune', 'partielle', 'complete'] as const;
+export const RESULTATS_TEST = ['conforme', 'non_conforme'] as const;
+export type Applicabilite = (typeof APPLICABILITES)[number];
+export type MiseEnOeuvre = (typeof MISES_EN_OEUVRE)[number];
+export type ResultatTest = (typeof RESULTATS_TEST)[number];
+
+export const LIBELLES_APPLICABILITE: Record<Applicabilite, string> = {
+  a_determiner: 'À déterminer',
+  applicable: 'Applicable',
+  exclue: 'Exclue (justifiée)',
+};
+export const LIBELLES_MISE_EN_OEUVRE: Record<MiseEnOeuvre, string> = {
+  aucune: 'Aucune',
+  partielle: 'Partielle',
+  complete: 'Complète',
+};
+export const LIBELLES_RESULTAT_TEST: Record<ResultatTest, string> = {
+  conforme: 'Conforme',
+  non_conforme: 'Non conforme',
+};
+
+/** États de couverture, du moins au plus établi. `non_applicable` est à part : hors du calcul. */
+export const ETATS_EXIGENCE = [
+  'non_implemente',
+  'partiel',
+  'implemente',
+  'teste',
+  'valide_metier',
+  'non_applicable',
+] as const;
+export type EtatExigence = (typeof ETATS_EXIGENCE)[number];
+export const LIBELLES_ETAT: Record<EtatExigence, string> = {
+  non_implemente: 'Non implémenté',
+  partiel: 'Partiellement implémenté',
+  implemente: 'Implémenté',
+  teste: 'Testé',
+  valide_metier: 'Validé métier',
+  non_applicable: 'Non applicable',
+};
+
+/** Clauses 4 à 10 de l'ISO/IEC 27001 : obligatoires, jamais excluables (seules les mesures de l'Annexe A le sont, par la
+    déclaration d'applicabilité, 6.1.3). Une copie personnalisée d'un référentiel ISO 27001 garde la règle. */
+const CLAUSES_OBLIGATOIRES = /^clause_(?:4|5|6|7|8|9|10)(?:_|$)/;
+export function exclusionInterdite(
+  def: Pick<FrameworkDefinition, 'identifier' | 'derivedFrom'>,
+  domaine: string,
+): boolean {
+  return /^iso-27001/.test(def.derivedFrom?.identifier ?? def.identifier) && CLAUSES_OBLIGATOIRES.test(domaine);
+}
+export const MESSAGE_EXCLUSION_INTERDITE =
+  'Cette exigence est obligatoire (clauses 4 à 10 de l’ISO/IEC 27001) : elle ne peut pas être exclue.';
+
+export interface EvaluationExigence {
+  version: number;
+  applicability: Applicabilite;
+  justification: string;
+  implementation: MiseEnOeuvre;
+  implementationNote: string;
+  testedAt: string | null;
+  testResult: ResultatTest | null;
+  testNote: string;
+  testRef: string;
+  validatedAt: string | null;
+  validatedBy: string | null;
+  validationNote: string;
+  reason: string;
+  createdBy: string;
+  createdAt: string;
+}
+type Dimensions = Pick<
+  EvaluationExigence,
+  'applicability' | 'justification' | 'implementation' | 'testedAt' | 'testResult' | 'validatedAt'
+>;
+
+/** État de couverture. Sans évaluation : non implémenté (l'applicabilité reste « à déterminer »). */
+export function etatExigence(e: Dimensions | null): EtatExigence {
+  if (!e) return 'non_implemente';
+  if (e.applicability === 'exclue') return 'non_applicable';
+  const complete = e.implementation === 'complete';
+  if (complete && e.testResult === 'conforme' && e.validatedAt) return 'valide_metier';
+  if (complete && e.testResult === 'conforme') return 'teste';
+  if (complete) return 'implemente';
+  return e.implementation === 'partielle' ? 'partiel' : 'non_implemente';
+}
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** Incohérences d'une évaluation (liste vide : cohérente). Mêmes règles que les contraintes de la base. */
+export function incoherencesEvaluation(
+  e: Pick<
+    EvaluationExigence,
+    'applicability' | 'justification' | 'implementation' | 'testedAt' | 'testResult' | 'validatedAt'
+  >,
+): string[] {
+  const p: string[] = [];
+  if (e.applicability === 'exclue' && !e.justification.trim()) p.push('Une exigence exclue doit être justifiée.');
+  if ((e.testedAt === null) !== (e.testResult === null))
+    p.push('Le résultat du test et sa date vont ensemble : renseignez les deux ou aucun.');
+  if (e.testResult !== null && e.applicability !== 'applicable')
+    p.push('Un test ne s’enregistre que sur une exigence applicable.');
+  if (e.testResult !== null && e.implementation === 'aucune')
+    p.push('Une exigence sans mise en œuvre ne peut pas être testée.');
+  if (e.validatedAt !== null) {
+    if (e.applicability !== 'applicable' || e.implementation !== 'complete' || e.testResult !== 'conforme')
+      p.push('La validation métier suppose une exigence applicable, complètement mise en œuvre et testée conforme.');
+  }
+  for (const d of [e.testedAt, e.validatedAt]) if (d !== null && !DATE.test(d)) p.push('Date invalide (AAAA-MM-JJ).');
+  if (e.validatedAt && e.testedAt && e.validatedAt < e.testedAt) p.push('La validation ne peut pas précéder le test.');
+  return p;
+}
+
+const texte = (n: number) => z.string().trim().max(n);
+const date = z.union([z.null(), z.string().regex(DATE, 'Date invalide (AAAA-MM-JJ).')]);
+/** Corps d'une nouvelle version d'évaluation : la version complète, pas un patch (aucune dimension n'est héritée). */
+export const EvaluationExigenceCorps = z
+  .object({
+    applicability: z.enum(APPLICABILITES),
+    justification: texte(2000).default(''),
+    implementation: z.enum(MISES_EN_OEUVRE),
+    implementationNote: texte(5000).default(''),
+    testedAt: date.default(null),
+    testResult: z.enum(RESULTATS_TEST).nullable().default(null),
+    testNote: texte(5000).default(''),
+    testRef: texte(500).default(''),
+    validatedAt: date.default(null),
+    validationNote: texte(5000).default(''),
+    reason: texte(500).min(1, 'Un motif est requis.'),
+    confirm: z.literal('EVALUER'),
+  })
+  .strict()
+  .superRefine((e, ctx) => {
+    for (const m of incoherencesEvaluation(e)) ctx.addIssue({ code: 'custom', message: m });
+  });
+export type EvaluationExigenceCorps = z.infer<typeof EvaluationExigenceCorps>;
+
+/** Évaluation vue par la couverture : une exigence obligatoire n'est jamais exclue, même si une exclusion antérieure
+    existe (elle est alors comptée comme applicable et signalée). */
+export function evaluationEffective<T extends Pick<EvaluationExigence, 'applicability'>>(
+  e: T | null,
+  interdite: boolean,
+): T | null {
+  return e && interdite && e.applicability === 'exclue' ? { ...e, applicability: 'a_determiner' } : e;
+}
+
+/** Une exigence obligatoire est « conforme » (évaluation interne, pas une attestation) quand sa mise en œuvre est complète
+    et que son test d'efficacité est conforme : états « testé » et « validé métier ». */
+export const exigenceConforme = (etat: EtatExigence): boolean => etat === 'teste' || etat === 'valide_metier';
+
+export type SyntheseEtats = Record<EtatExigence, number>;
+export interface EntreeSynthese {
+  etat: EtatExigence;
+  applicability: Applicabilite;
+  /** Exigence obligatoire : son applicabilité est acquise, elle n'est jamais « à déterminer ». */
+  obligatoire?: boolean;
+}
+/** Dénombrement par état. `applicables` exclut les exigences non applicables ; `aDeterminer` compte celles dont
+    l'applicabilité n'a pas encore été tranchée (à revoir : rien n'est établi à leur sujet) ; `obligatoiresNonConformes`
+    compte les exigences obligatoires (clauses 4 à 10) pas encore conformes. */
+export function syntheseEtats(
+  entrees: readonly (EtatExigence | EntreeSynthese)[],
+): SyntheseEtats & { applicables: number; aDeterminer: number; obligatoiresNonConformes: number } {
+  const s = Object.fromEntries(ETATS_EXIGENCE.map((k) => [k, 0])) as SyntheseEtats;
+  let aDeterminer = 0,
+    obligatoiresNonConformes = 0;
+  for (const x of entrees) {
+    const e = typeof x === 'string' ? { etat: x, applicability: 'applicable' as const } : x;
+    s[e.etat]++;
+    if (e.applicability === 'a_determiner' && !e.obligatoire) aDeterminer++;
+    if (e.obligatoire && !exigenceConforme(e.etat)) obligatoiresNonConformes++;
+  }
+  return { ...s, applicables: entrees.length - s.non_applicable, aDeterminer, obligatoiresNonConformes };
+}
+
+/** Plan d'action des écarts (ADR 0056) : actions créées en lot pour des exigences applicables non implémentées ou
+    partielles. Les identifiants viennent de l'aperçu ; le serveur recalcule l'éligibilité au moment de la création. */
+export const PlanEcartsCorps = z
+  .object({
+    frameworkId: z.uuid(),
+    requirementIds: z.array(z.string().trim().min(1).max(200)).min(1).max(200),
+    registreId: z.uuid().nullish(),
+    ownerId: z.uuid().nullish(),
+    dueAt: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide (AAAA-MM-JJ).')
+      .refine((d) => {
+        const t = new Date(d + 'T12:00:00Z');
+        return Number.isFinite(t.getTime()) && t.toISOString().slice(0, 10) === d;
+      }, 'Date inexistante.')
+      .nullish(),
+    confirm: z.literal('CREER'),
+  })
+  .strict();
+export type PlanEcartsCorps = z.infer<typeof PlanEcartsCorps>;
