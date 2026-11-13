@@ -102,9 +102,10 @@ demarrer() {
     -e 's/^RATE_LIMIT_PER_MINUTE=.*/RATE_LIMIT_PER_MINUTE=6000/' \
     .env.example >"$ENV_FICHIER"
   chmod 0600 "$ENV_FICHIER"
-  # L'exécutant d'exploitation (updater) lit lui aussi le .env du dépôt monté : celui de la pile y est monté en lecture.
-  printf 'services:\n  app:\n    env_file: !override\n      - %s\n  updater:\n    volumes:\n      - %s:%s/.env:ro\n' \
-    "$ENV_FICHIER" "$ENV_FICHIER" "$DEPOT" >"$SURCHARGE"
+  # L'exécutant d'exploitation (updater) lit lui aussi le .env du dépôt monté : celui de la pile y est monté en lecture. Il
+  # lance `docker compose` depuis le dépôt : sans nom de projet, il viserait « suivi-audits » et non la pile.
+  printf 'services:\n  app:\n    env_file: !override\n      - %s\n  updater:\n    environment:\n      COMPOSE_PROJECT_NAME: %s\n    volumes:\n      - %s:%s/.env:ro\n' \
+    "$ENV_FICHIER" "$PROJET" "$ENV_FICHIER" "$DEPOT" >"$SURCHARGE"
   if [ -n "$LOCALES" ]; then
     echo "== Images locales déjà construites (étiquette local)"
     local c
