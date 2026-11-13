@@ -19,6 +19,7 @@ import {
 import { isObject, nextLegacyId, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { surConnexion } from '../db/db.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
@@ -218,13 +219,13 @@ export class Crise {
     input: unknown,
     user: SessionUser,
     ip: string,
-  ): Promise<{ id: string; plan: string; exercice?: { ref: string; synthese: string } }> {
+  ): Promise<{ id: string; plan: string; exercice?: { ref: string; synthese: string; realise: boolean } }> {
     const b = AuteurCrise.parse(input);
     return this.r.modifier(
       user,
       ip,
       { module: 'incidents', action: 'crisis.cell-closed', reference: (x: { id: string }) => `legacy:crisis:${x.id}` },
-      async (data) => {
+      async (data, cx) => {
         const c = racine(data);
         const cell = await this.cellule(c, id, true, user);
         const fin = now();
@@ -243,11 +244,42 @@ export class Crise {
             retex: str(plan.retex) || syntheseRetex(lue, fin),
           });
         }
-        // Exercice saisi à l'écran : sa fiche est à compléter par une personne (date, résultat, retour d'expérience) ; la synthèse
-        // de la main courante est proposée, aucun résultat n'est inventé (BUG-066).
+        // Exercice saisi à l'écran : la fiche passe à « Réalisé » à la date de clôture, avec la synthèse de la main courante en
+        // observations ; le résultat (réussi, partiel, échec) reste à saisir par une personne, rien n'est inventé (BUG-066).
         if (planId.startsWith('object:')) {
           const lue = lireEtatCrise({ cells: [{ ...cell, log }] }).cells[0]!;
-          return { id, plan: '', exercice: { ref: planId, synthese: syntheseRetex(lue, fin) } };
+          const synthese = syntheseRetex(lue, fin);
+          const db = surConnexion(cx);
+          const natif = await db
+            .selectFrom('grc_objects')
+            .select(['id', 'smsi_id', 'data'])
+            .where('id', '=', planId.slice(7))
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .forUpdate()
+            .executeTakeFirst();
+          let realise = false;
+          if (natif) {
+            await this.r.g.access(natif.smsi_id, user, true, cx);
+            const fiche = isObject(natif.data as Json) ? (natif.data as JsonObject) : {};
+            await db
+              .updateTable('grc_objects')
+              .set({
+                data: JSON.stringify({
+                  ...fiche,
+                  status: 'done',
+                  performedAt: str(fiche.performedAt) || fin.slice(0, 10),
+                  observations: str(fiche.observations) || synthese,
+                }),
+                version: sql`version + 1`,
+                updated_by: user.username,
+                updated_at: new Date(),
+              })
+              .where('id', '=', natif.id)
+              .execute();
+            realise = true;
+          }
+          return { id, plan: '', exercice: { ref: planId, synthese, realise } };
         }
         return { id, plan: plan ? planId : '' };
       },

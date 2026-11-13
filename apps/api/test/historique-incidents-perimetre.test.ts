@@ -184,13 +184,21 @@ describe('exercices de continuité et cellule de crise (BUG-066)', () => {
     const synthese = (await libre.get('/api/mur/synthese')).json();
     const exo = synthese.plans.types.find((x: { type: string }) => x.type === 'exo');
     expect(exo.realises + exo.enRetard + exo.aVenir).toBeGreaterThanOrEqual(1);
-    // À la clôture, la fiche est à compléter par une personne : la synthèse est proposée, aucun résultat n'est inventé.
+    // À la clôture, l'exercice passe à « Réalisé » avec la synthèse en observations ; le résultat reste à saisir (rien d'inventé).
     const cloture = await libre.post(`/api/crise/cellules/${cellule.json().id}/cloture`, { author: 'Test' });
     expect(cloture.statusCode, cloture.body).toBeLessThan(300);
-    expect(cloture.json().exercice).toMatchObject({ ref });
+    expect(cloture.json().exercice).toMatchObject({ ref, realise: true });
     expect(cloture.json().exercice.synthese).toBeTruthy();
     const apres = (await admin.get(`/api/grc/${COMMUN}/objects/${ex.json().id}`)).json();
-    expect(apres.data.status).not.toBe('done');
+    expect(apres.data.status).toBe('done');
+    expect(apres.data.performedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(apres.data.observations).toBeTruthy();
+    expect(apres.data.result).not.toBe('success'); // le résultat n'est jamais inventé
+    expect(apres.version).toBeGreaterThan(ex.json().version);
+    // Le plan de l'outil de suivi est lui aussi « Réalisé » (compté dans « Plans du SMSI »).
+    const apresSynthese = (await libre.get('/api/mur/synthese')).json();
+    const exoApres = apresSynthese.plans.types.find((x: { type: string }) => x.type === 'exo');
+    expect(exoApres.realises).toBeGreaterThan(exo.realises);
     expect(
       (
         await libre.post('/api/crise/cellules', {

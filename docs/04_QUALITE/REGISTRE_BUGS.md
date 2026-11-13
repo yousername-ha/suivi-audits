@@ -913,12 +913,12 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Continuité, exercices ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Exercice du registre réalisé : compté ni au bandeau, ni dans « Plans du SMSI », ni dans la cellule de crise (l'API refuse tout exercice du registre, 422), ni à l'export ; seul le plan historique `PL-EXO` est lu. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Un seul registre d'exercices, repris partout. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020 et BUG-058). |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-04 ouvert » (`test.fail`) |
-| Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. Comptage dans « Plans du SMSI » ; la clôture d’une cellule propose de compléter la fiche. **Reste** : l’exercice n’est pas marqué « Réalisé » automatiquement (choix : pas de résultat inventé). |
+| Correctif | Exercices saisis à l’écran proposés et rattachables à une cellule de crise ; comptés dans « Plans du SMSI » ; à la clôture, la fiche passe à « Réalisé » (date, synthèse en observations), le résultat reste à saisir ; le plan historique est aussi « Réalisé ». |
 | Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-04` à rejouer par la recette |
 | Commit | 454addf |
 

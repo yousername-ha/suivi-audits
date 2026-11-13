@@ -117,7 +117,7 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   - **BUG-063** : la couverture d'un référentiel reprend, pour une exigence non évaluée, l'applicabilité et le niveau de la déclaration d'applicabilité portant le même
     identifiant (une évaluation enregistrée l'emporte) ; la page « Applicabilité et justifications » et la DdA écrivent déjà la même source.
   - **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
-    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture ; ils sont désormais comptés dans « Plans du SMSI » et la clôture d'une cellule propose de compléter la fiche de l'exercice (aucun résultat inventé).
+    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture ; ils sont comptés dans « Plans du SMSI », et la clôture d'une cellule marque la fiche de l'exercice « Réalisé » (date de clôture, synthèse de la main courante en observations) ; le résultat reste à saisir par une personne (rien n'est inventé). Le plan de l'outil de suivi est déjà marqué « Réalisé » à la clôture.
     _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **BUG-055, objectifs, indicateurs et processus : un seul modèle** ([ADR 0094](docs/adr/0094-objectifs-indicateurs-processus-par-perimetre.md), décision du RSSI) : le modèle de l'outil de
   suivi (mesures, calcul, liens, cartes de processus, champs ISO 9001) est disponible dans tous les périmètres ; chaque fiche porte son périmètre (`smsi`, sans migration), les liens

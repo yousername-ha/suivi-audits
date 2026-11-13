@@ -310,15 +310,21 @@ function DetailCellule({
               <ConfirmButton
                 message="Clôturer la cellule de crise ?"
                 onConfirm={async () => {
-                  const r = await agir<{ exercice?: { ref: string; synthese: string } }>('POST', `${base}/cloture`, {
-                    author: auteur,
-                  });
+                  const r = await agir<{ exercice?: { ref: string; synthese: string; realise?: boolean } }>(
+                    'POST',
+                    `${base}/cloture`,
+                    {
+                      author: auteur,
+                    },
+                  );
                   if (r?.exercice)
                     notifications.show({
                       color: 'blue',
                       autoClose: false,
-                      title: 'Complétez la fiche de l’exercice',
-                      message: `Synthèse de la main courante à reporter dans le retour d’expérience (Continuité › Exercices) : ${r.exercice.synthese}`,
+                      title: r.exercice.realise ? 'Exercice marqué « Réalisé »' : 'Complétez la fiche de l’exercice',
+                      message: r.exercice.realise
+                        ? 'La synthèse de la main courante est reportée dans les observations. Saisissez le résultat (réussi, partiel, échec) dans Continuité › Exercices.'
+                        : `Synthèse de la main courante à reporter dans le retour d’expérience (Continuité › Exercices) : ${r.exercice.synthese}`,
                     });
                 }}
               >
