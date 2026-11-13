@@ -693,6 +693,68 @@ export const JEUX: Record<string, Jeu> = {
         texte(x.notes),
       ]),
   },
+  retex: {
+    titre: () => 'RETEX des incidents',
+    colonnes: [
+      ['Incident', 16],
+      ['Intitulé', 40],
+      ['Date et heure', 18],
+      ['Type', 16],
+      ['Événement', 40],
+      ['Gravité', 12],
+      ['Acteur', 18],
+      ['Description', 60],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).retex).map((e) => [
+        texte(e.incident),
+        texte(e.intitule),
+        dateHeure(e.ts),
+        texte(e.type),
+        texte(e.titre),
+        texte(e.gravite),
+        texte(e.acteur),
+        texte(e.description),
+      ]),
+  },
+  scenariosCrise: {
+    titre: () => 'Scénarios de crise',
+    colonnes: [
+      ['Scénario', 36],
+      ['Référence', 18],
+      ['Phase', 18],
+      ['Action', 60],
+      ['Responsable', 22],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).scenarios).map((x) => [
+        texte(x.scenario),
+        texte(x.ref),
+        texte(x.phase),
+        texte(x.action),
+        texte(x.responsable),
+      ]),
+  },
+  documents: {
+    titre: () => 'Registre documentaire',
+    colonnes: [
+      ['Document', 50],
+      ['Catégorie', 20],
+      ['Classification', 16],
+      ['Version', 9],
+      ['Mis à jour le', 14],
+      ['Étiquettes', 30],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).documents).map((d) => [
+        texte(d.title),
+        texte(d.category),
+        texte(d.classification),
+        texte(d.version),
+        dFr(d.maj),
+        liste(d.tags),
+      ]),
+  },
   mainCourante: {
     titre: () => 'Mains courantes',
     colonnes: [
@@ -978,8 +1040,8 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
   {
     id: 'incs',
     titre: 'Incidents et crise',
-    description: 'Registre des incidents, contacts de crise et mains courantes.',
-    jeux: ['incidents', 'contactsCrise', 'mainCourante'],
+    description: 'Registre des incidents, RETEX, contacts, scénarios de crise et mains courantes.',
+    jeux: ['incidents', 'retex', 'contactsCrise', 'scenariosCrise', 'mainCourante'],
   },
   {
     id: 'risq',
@@ -993,7 +1055,12 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
     description: 'Plans de continuité et de reprise, exercices et revues de direction.',
     jeux: ['continuite', 'exercices', 'revues'],
   },
-  { id: 'prvx', titre: 'Preuves', description: 'Registre des preuves et rattachements.', jeux: ['preuves'] },
+  {
+    id: 'prvx',
+    titre: 'Preuves et documents',
+    description: 'Registre des preuves et rattachements, registre documentaire.',
+    jeux: ['preuves', 'documents'],
+  },
   {
     id: 'plans',
     titre: 'Plans du SMSI',

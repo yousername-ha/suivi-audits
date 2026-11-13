@@ -7,6 +7,7 @@ import type { JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI, type Grc } from '../grc/core.js';
 import { registreRisques } from '../grc/registre-risques.js';
+import { perimetreDe } from '../historique/registre.js';
 import { HttpError } from '../http/errors.js';
 
 const MAX_OBJETS = 2000;
@@ -60,6 +61,47 @@ export async function etatAvecObjetsPilotage(
   } catch (e) {
     if (!(e instanceof HttpError && e.status === 403)) throw e;
   }
+  // RETEX et scénarios de crise du périmètre demandé (un incident ou un scénario relève d'un périmètre, BUG-044) ; documents :
+  // fiches du registre documentaire visibles avec le droit de lecture du module (pas de contenu de fichier).
+  const brut = (v: unknown): JsonObject[] =>
+    (Array.isArray(v) ? v : []).filter((x): x is JsonObject => !!x && typeof x === 'object' && !Array.isArray(x));
+  const incidents = brut(etat.incidents).filter((i) => perimetreDe(i) === smsi);
+  const retex = incidents.flatMap((i) =>
+    brut(i.timeline).map((e) => ({
+      incident: texte(i.id),
+      intitule: texte(i.title),
+      ts: texte(e.ts),
+      type: texte(e.type),
+      titre: texte(e.titre),
+      gravite: texte(e.gravite),
+      acteur: texte(e.acteur),
+      description: texte(e.description),
+    })),
+  );
+  const crise = (etat.crisis && typeof etat.crisis === 'object' ? etat.crisis : {}) as JsonObject;
+  const scenarios = brut(crise.scenarios)
+    .filter((sc) => perimetreDe(sc) === smsi)
+    .flatMap((sc) => {
+      const actions = brut(sc.items);
+      return actions.length
+        ? actions.map((a) => ({
+            scenario: texte(sc.title),
+            ref: texte(sc.ref),
+            phase: texte(a.phase),
+            action: texte(a.t),
+            responsable: texte(a.owner),
+          }))
+        : [{ scenario: texte(sc.title), ref: texte(sc.ref), phase: '', action: '', responsable: '' }];
+    });
+  const documents = user.rights.can('documents', 'lire')
+    ? await g.db.k
+        .selectFrom('documents')
+        .select(['title', 'category', 'classification', 'current_version as version', 'updated_at as maj', 'tags'])
+        .where('deleted_at', 'is', null)
+        .orderBy('title')
+        .limit(MAX_OBJETS)
+        .execute()
+    : [];
   // Les entrées historiques (clés `interested`, `swots`, `roles`) appartiennent au périmètre commun.
   const historique = smsi === DEFAULT_SMSI;
   const anciennes = (k: string) => (historique && Array.isArray(etat[k]) ? (etat[k] as JsonObject[]) : []);
@@ -112,6 +154,9 @@ export async function etatAvecObjetsPilotage(
       plans: plans.map((o) => ({ name: o.name, ...o.data })),
       exercices: exercices.map((o) => ({ name: o.name, ...o.data })),
       revues: revues.map((o) => ({ name: o.name, ...o.data })),
+      retex,
+      scenarios,
+      documents: documents.map((d) => ({ ...d, maj: d.maj.toISOString().slice(0, 10) })),
     } as unknown as JsonObject,
   };
 }

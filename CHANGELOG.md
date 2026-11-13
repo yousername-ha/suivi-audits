@@ -93,8 +93,8 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
     désactive plus) ; la catégorie d'entité NIS 2 se remet à « Non renseignée » (la valeur vide est enregistrée). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Exports (campagne de recette, lot 3)** : **BUG-038** : « Contexte du SMSI » reprend les fiches saisies à l'écran (contexte, parties intéressées, SWOT, rôles) du
   périmètre demandé (`GET /api/suivi/export?perimetre=`, sélecteur « Périmètre exporté » de la page Exports) ; **BUG-046** : le type d'écart exporté est celui de
-  l'écran (« Piste de progrès » n'est plus libellé « Point sensible ») ; **BUG-058** (partiel) : nouveaux groupes « Gestion des risques » (registre, plan de
-  traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), repris par l'export complet. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+  l'écran (« Piste de progrès » n'est plus libellé « Point sensible ») ; **BUG-058** : nouveaux groupes « Gestion des risques » (registre, plan de
+  traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), repris par l'export complet ; les groupes « Incidents et crise » et « Preuves et documents » reprennent aussi le RETEX des incidents, les scénarios de crise et le registre documentaire (fiches, sans le contenu des fichiers). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Lots 4 à 6 de la campagne de recette (première partie)** :
   - **BUG-031 et BUG-042, revue de direction** : les entrées sont celles de l'ISO/IEC 27001:2022, 9.3.2 (l'ISO 9001 n'est plus suivie pour le moment, ADR 0036 amendée) ;
     chaque périmètre prépare sa propre revue, et un périmètre enfant qui hérite des référentiels du parent remonte dans la revue du parent. **BUG-070** : les incidents

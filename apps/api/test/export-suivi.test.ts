@@ -196,6 +196,38 @@ describe('GET /api/suivi/export', () => {
     ).toBe(404);
   });
 
+  it('l’export complet reprend le RETEX, les scénarios de crise et le registre documentaire (BUG-058)', async () => {
+    const inc = await a.post('/api/incidents', { title: 'Incident fictif de l’export' });
+    expect(inc.statusCode, inc.body).toBe(201);
+    const ev = await a.post(`/api/incidents/${inc.json().id}/retex`, {
+      ts: '2026-10-12T09:00',
+      type: 'Analyse',
+      titre: 'Événement RETEX fictif de l’export',
+    });
+    expect(ev.statusCode, ev.body).toBe(201);
+    const scn = await a.post('/api/crise/scenarios', {});
+    expect(scn.statusCode, scn.body).toBe(201);
+    expect(
+      (await a.patch(`/api/crise/scenarios/${scn.json().id}`, { title: 'Scénario fictif de l’export' })).statusCode,
+    ).toBe(200);
+    expect((await a.post(`/api/crise/scenarios/${scn.json().id}/actions`)).statusCode).toBe(201);
+    await t.svc.db.q(
+      "INSERT INTO documents(title, category, created_by, updated_by) VALUES ('Politique fictive de l’export', 'politique', 'test', 'test')",
+    );
+    const r = await a.get('/api/suivi/export?groupe=all&mode=std');
+    expect(r.statusCode, r.body).toBe(200);
+    const contenu = lire(r.rawPayload)
+      .filter((p) => p.nom.startsWith('xl/'))
+      .map((p) => p.texte)
+      .join('\n');
+    for (const attendu of [
+      'Événement RETEX fictif de l’export',
+      'Scénario fictif de l’export',
+      'Politique fictive de l’export',
+    ])
+      expect(contenu, attendu).toContain(attendu);
+  });
+
   it('refuse un groupe inconnu et un mode inconnu, exige session et droit d’export', async () => {
     expect((await a.get('/api/suivi/export?groupe=zz&mode=std')).statusCode).toBe(404);
     expect((await a.get('/api/suivi/export?groupe=ec&mode=csv')).statusCode).toBe(422);

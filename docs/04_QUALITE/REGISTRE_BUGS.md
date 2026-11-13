@@ -799,12 +799,12 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Exports ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Ni le registre des risques, ni le plan de traitement, ni les études EBIOS RM ne sont exportables ; l'« export complet » omet plans de continuité, exercices, RETEX, scénarios, documents, risques et revues, et ne permet pas de choisir le périmètre. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Les registres du SMSI s'exportent, pour le périmètre choisi. |
 | Cause / niveau | PISTE : exports fondés sur le registre historique (famille de BUG-038). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-05 ouvert » ; `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-16 ouvert » (`test.fail`) |
-| Correctif | **Partiel.** Nouveaux groupes d’export « Gestion des risques » (registre, plan de traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), pour le périmètre choisi ; l’export complet les reprend. **Reste** : RETEX, scénarios de crise et documents. |
+| Correctif | Nouveaux groupes d’export « Gestion des risques » (registre, plan de traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), pour le périmètre choisi ; l’export complet les reprend. Décision du RSSI : RETEX, scénarios de crise et registre documentaire (fiches, sans le contenu des fichiers) exportés aussi. |
 | Tests de la correction | `apps/api/test/export-suivi.test.ts` ; `CAMP-C2-05` à rejouer par la recette |
 | Commit | 0131729 |
 
