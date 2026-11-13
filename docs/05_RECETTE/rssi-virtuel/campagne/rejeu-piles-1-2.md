@@ -28,6 +28,7 @@ Rejeu en cours : le tableau et les sections sont complétés au fil des constats
 | C2-05 | reproduit | majeur → majeur | même famille que C1-04 et le volet export de C1-03 (les exports Excel ne lisent pas les objets du Pilotage) | oui (API) |
 | C2-06 | reproduit | majeur → majeur | extension de BUG-023 (à fusionner si la correction est commune) | oui (page et API) |
 | C2-07 | reproduit (157 options au lieu de 160) | majeur → majeur | volet « liens » : même famille que BUG-026 (mesure du traitement invisible dans la DdA) | oui (page et API) |
+| C2-08 | reproduit en partie (pile 2 seulement : aucun référentiel appliqué ; sur la pile 1, le sous-périmètre propose les mesures héritées) | majeur → mineur | aucun dans la liste ; voisin de C2-07 (deux sources de mesures selon le périmètre) | oui (API) |
 
 ## Détail par constat
 
@@ -507,7 +508,11 @@ Vu :
   « Référence saisie dans la fiche source ») ; **aucun lien vers A.8.13 ni A.8.14** (le risque saisi dans un champ est
   dérivé en lien, les mesures ne le sont pas).
 
-Différence avec la phase 1 : 157 options (et non 160) ; le reste est identique.
+Différence avec la phase 1 : 157 options (et non 160) ; le reste est identique. Second chemin (pile 1, sous-périmètre
+« Hébergement HDS » qui hérite des copies appliquées d’ISO/IEC 27001 et HDS v2) : 157 options **préfixées** de leur
+référence (« A-8.13 · 8.13 — Sauvegarde des informations », « HDS-01 · … »), sans doublon de nom, mais 31 toujours
+tronquées. Le défaut de libellé tient donc à la source historique (`legacy:items`) utilisée au périmètre commun quand les
+mesures sont proposées depuis la DdA historique.
 
 Gravité : majeur confirmé : le choix des mesures (6.1.3 b) et c)) ne peut pas se faire par référence de l’annexe A, des
 exigences homonymes sont indiscernables, et la trace traitement → mesure n’apparaît pas dans les liens.
@@ -521,3 +526,43 @@ après correction : une `option` dont le nom commence par « A.8.13 » et aucune
 `option "Sauvegarde des informations"`, 3 × « Généralités ». (API) créer un traitement fictif avec
 `"measureRefs":["legacy:items:A-8.13"]` puis `GET /api/grc/<id>/links?ref=object:<traitement>` ; attendu : un lien
 vers `legacy:items:A-8.13` ; observé : aucun.
+
+### C2-08 — Sous-périmètre : aucune mesure proposée pour un traitement (piles 2 et 1)
+
+Fait (compte `rssi`) : pile 2, `pilote.mjs ouvrir "/pilotage/traitements?perimetre=4dbcd8d1-…"` (Hébergement HDS),
+`cliquer button "Ajouter un traitement"`, script `r12-options.mjs` sur `combobox "Mesures de sécurité (mesures, DdA)"`,
+sans saisie puis en tapant « Sauv » ; même chose sous le principal ; requêtes relevées et rejouées par l’API. Second
+chemin : pile 1, même écran sous « Hébergement HDS » (`d8161580-…`), dont le parent a ISO/IEC 27001 et HDS v2
+appliqués et qui en hérite. Fenêtres refermées sans enregistrer.
+
+Vu :
+
+- Pile 2, HDS : 0 option, 0 `listbox`, avec ou sans saisie, sans message ; requête émise
+  `GET /api/grc/4dbcd8d1-…/sources?search=Sauv&cibles=object:measure,object:soa,requirement,legacy:items,legacy:soa`
+  → HTTP 200 `{"items":[],"truncated":false}`. Même requête sous le principal → `{"items":[{"ref":
+  "legacy:items:A-8.13","name":"Sauvegarde des informations","kind":"items"}]}`.
+- Pile 2 : `GET /api/grc/4dbcd8d1-…/framework-attachments` → `[]` **et** `GET /api/grc/00000000-…-0001/
+  framework-attachments` → `[]` : aucun référentiel n’est appliqué sur cette pile (la tranche 2 ne couvre pas les
+  référentiels) ; HDS a `inheritFrameworks: true` mais n’a rien à hériter. Les 157 options du principal viennent de la
+  DdA historique (`legacy:items`), réservée au périmètre commun (FCT-043 : « données historiques limitées au périmètre
+  commun »).
+- Pile 1, HDS (référentiels appliqués au parent et hérités) : 157 options, et la recherche « Sauvegarde » renvoie
+  `option "A-8.13 · 8.13 — Sauvegarde des informations"` (`GET /api/grc/d8161580-…/sources?search=Sauvegarde&…` →
+  `requirement:30b52917-…:1:A-8.13`). **Le sous-périmètre propose bien les mesures dès qu’un référentiel est appliqué.**
+
+Verdict : reproduit en partie : le défaut décrit (« aucune mesure proposée sous un sous-périmètre qui hérite ») ne se
+reproduit pas quand le parent a des référentiels appliqués ; il reste que, sans référentiel appliqué, la liste est vide
+sans explication alors que la DdA historique existe au périmètre commun.
+
+Gravité : **baissée de majeur à mineur** : le parcours prévu (appliquer ISO/IEC 27001 et HDS v2 au périmètre, ce que fait
+la tranche des référentiels) rend les mesures disponibles ; manque un message « appliquez un référentiel à ce périmètre ou
+à son parent » sur la liste vide.
+
+Doublon : aucun dans la liste ; voisin de C2-07 (deux sources de mesures, historique au principal, copies de référentiel
+ailleurs, aux libellés différents).
+
+Test déterministe (API) : sur une pile neuve, sous-périmètre fictif rattaché au principal, sans référentiel appliqué :
+`GET /api/grc/<sous-périmètre>/sources?search=Sauvegarde&cibles=object%3Ameasure%2Cobject%3Asoa%2Crequirement%2Clegacy%3Aitems%2Clegacy%3Asoa`
+→ `items: []` (observé) ; à garder vert : après application d’ISO/IEC 27001 au parent avec héritage, la même requête
+renvoie un `requirement:…:A-8.13`. La correction attendue (message ou proposition de la DdA historique) se vérifie à
+l’écran : liste vide accompagnée d’un texte explicatif.
