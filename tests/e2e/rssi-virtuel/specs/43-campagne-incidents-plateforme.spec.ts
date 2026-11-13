@@ -344,7 +344,8 @@ test('CAMP-C5-06 ouvert : un incident saisi sous un périmètre restreint n’es
       page.waitForResponse((r) => r.request().method() === 'POST' && r.url().endsWith('/api/incidents')),
       page.getByRole('button', { name: 'Nouvel incident', exact: true }).click(),
     ]);
-    id = (await okJson<{ id: string }>(cree, 'création de l’incident par l’écran')).id;
+    expect(cree.ok(), `création de l’incident par l’écran : ${cree.status()} ${await cree.text()}`).toBe(true);
+    id = ((await cree.json()) as { id: string }).id;
     await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^${id} — `) })).toBeVisible();
     const enregistre = page.waitForResponse(
       (r) => r.request().method() === 'PATCH' && r.url().endsWith(`/api/incidents/${id}`),

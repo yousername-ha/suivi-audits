@@ -578,6 +578,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Chaque fiche relève d'un périmètre ; la lecture suit l'appartenance au périmètre. |
 | Cause / niveau | PISTE : registres hors périmètre. Même famille que BUG-037 et BUG-062 ; cause commune avec BUG-051. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-06 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent ; parcours de création modifié (ADR 0091 : « Nouvel incident » crée une fiche vide). Test « CAMP-C5-06 » adapté. |
 
 ## BUG-045 — RETEX : gravité « Faible » affichée pour un incident critique sans gravité saisie (C5-11)
 
@@ -589,6 +590,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | « Non renseignée » tant qu'aucune gravité n'est saisie. |
 | Cause / niveau | PISTE : valeur par défaut dans le calcul des indicateurs du RETEX. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-11 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : RETEX dans l'onglet « Chronologie et RETEX » de la fiche de l'incident (ADR 0091) ; « Gravité maximale » = « Faible ». |
 
 ## BUG-046 — Export Excel : une piste de progrès libellée « Point sensible » (C5-15)
 
@@ -645,6 +647,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Refus sans le droit de suppression ; contenu retiré conservé au journal. |
 | Cause / niveau | PISTE : route sans contrôle du droit de suppression. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-T5-02 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : dans l'onglet « Chronologie et RETEX », le contributeur voit « Modifier » et « Retirer » sur l'événement d'un autre compte ; `DELETE /api/incidents/:id/retex/:eid` → 200. |
 
 ## BUG-051 — Un compte rattaché à un périmètre enfant voit et modifie le périmètre parent ; rattaché au parent, il ne voit pas les enfants (T1-01, T2-01, T3-01, T4-01, T5-01, T6-02)
 
@@ -668,6 +671,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Archiver (ou supprimer une fiche créée par erreur) depuis l'écran, selon les droits. |
 | Cause / niveau | PISTE : fiche générique du Pilotage sans « Archiver la fiche ». |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-03 ouvert » ; `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-03 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « opportunités » sans objet (type `opportunity` retiré, ADR 0090, lot 2 : création → 422). Toujours présent pour le contexte (SWOT…), les traitements (fiche ouverte depuis le plan d'action du risque, sans « Archiver ») et les actifs et sources de risque (fiches de l'étude EBIOS RM, `RecordEditor.tsx` sans archivage). Test « CAMP-C1-03 » réduit au cas SWOT. |
 
 ## BUG-053 — PESTEL, cartographie et processus ignorent les SWOT et enjeux saisis à l'écran (C1-05)
 
@@ -745,6 +749,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Libellés français. |
 | Cause / niveau | PISTE : extension de BUG-023. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-06 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (atelier 5 « Option : reduce », rapport « reduce » et « draft », éditeur de méthode). |
 
 ## BUG-060 — Choix des mesures d'un traitement : sans référence, avec doublons et textes tronqués (C2-07)
 
@@ -756,6 +761,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Mesures désignées par leur référence, sans doublon. |
 | Cause / niveau | PISTE : volet liens : famille de BUG-026. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-07 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : le traitement s'ajoute désormais par le Registre des risques (« Plan d’action de <risque> », « Ajouter un traitement ou une mesure ») ; option « Sauvegarde des informations » toujours sans référence. Test « CAMP-C2-07 » adapté au nouveau chemin. |
 
 ## BUG-061 — EBIOS RM : scénario opérationnel non placé dans la matrice de l'étude (C2-09)
 
@@ -767,6 +773,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Tout scénario évalué est placé dans la matrice. |
 | Cause / niveau | PISTE : à établir. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-09 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (ligne « G4 — Critique » sans scénario). |
 
 ## BUG-062 — Sélecteur « Périmètre affiché » sans effet sur la DdA, l'audit et les plans annuels (C3-01, C4-02)
 
@@ -778,6 +785,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | Chaque écran filtre sur le périmètre affiché, ou dit qu'il est commun à toute l'organisation. |
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-01 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-02 ouvert » (`test.fail`) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)
 
@@ -795,11 +803,12 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Référentiels, correspondances ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | SANS OBJET (fonction retirée par l'ADR 0089) |
 | Observé | ISO/IEC 27001 et HDS, attribués et appliqués, absents de « Référentiels et exigences » et des correspondances : aucune correspondance ISO ↔ HDS possible. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Les référentiels appliqués sont listés et correspondables. |
 | Cause / niveau | PISTE : à établir. |
-| Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-03 ouvert » (`test.fail`) |
+| Non-régression | aucun : test « CAMP-C3-03 » supprimé (page retirée) |
+| Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Fonction retirée (ADR 0089, lots 1 et 3) : `/pilotage/referentiels`, `/pilotage/correspondances` et `/pilotage/rapprochements` affichent « Rubrique introuvable » ; `GET /api/library/mappings` et `GET /api/grc/<racine>/rapprochements` → 404. Seule reste la Bibliothèque de référentiels. |
 
 ## BUG-065 — Niveau de mise en œuvre accepté sur une mesure non examinée et compté « Total » (C3-04)
 

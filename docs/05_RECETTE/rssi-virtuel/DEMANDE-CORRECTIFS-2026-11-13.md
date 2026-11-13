@@ -5,6 +5,11 @@ virtuel » (`session_01EnWdzfKyK172mDzj6dAUWv`). Constats et bilan : [rapport de
 registre : [BUG-038 à BUG-077](../../04_QUALITE/REGISTRE_BUGS.md). Cette demande complète celle du
 [12/11/2026](DEMANDE-CORRECTIFS-2026-11-12.md) (BUG-016 à BUG-037), toujours valable.
 
+> **Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091)** : BUG-064 est **sans objet** (fonction retirée) ; les volets « opportunités » de BUG-052 et
+> « applications à intégrer » de BUG-062 aussi ; BUG-060, BUG-044, BUG-045 et BUG-050 se reproduisent par les nouveaux
+> écrans ; toutes les autres fiches sont toujours présentes. Détail : [rapport, § 10](RAPPORT-CAMPAGNE-2026-11-13.md).
+> Partir de `claude-suivi-smsi` à jour : ne réimplémenter aucune fonction retirée.
+
 ## 1. Répartition des rôles (décision du RSSI, 11/11/2026)
 
 - La session de recette **teste et constate** ; elle ne modifie ni `apps/` ni `packages/`.
@@ -238,7 +243,7 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section C3-02.
 - Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-02 ouvert ».
 
-**BUG-064 — « Référentiels et exigences » ignore les référentiels attribués et appliqués** (majeur, P2 ; constats C3-03)
+~~BUG-064 — « Référentiels et exigences » ignore les référentiels attribués et appliqués~~ **SANS OBJET** (page retirée par l'ADR 0089, tri du 13/11/2026) — (majeur, P2 ; constats C3-03)
 
 - Observé : ISO/IEC 27001 et HDS, attribués et appliqués, absents de « Référentiels et exigences » et des correspondances : aucune correspondance ISO ↔ HDS possible.
 - Attendu : Les référentiels appliqués sont listés et correspondables.

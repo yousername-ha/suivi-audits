@@ -144,9 +144,7 @@ function lireClasseur(buf: Buffer): Map<string, string[][]> {
 
 /* ------------------------------------------------------------------------------- organisation et contexte (pile 1) */
 
-test('CAMP-C1-03 ouvert : une fiche du contexte créée par erreur s’archive depuis l’écran', async ({
-  browser,
-}) => {
+test('CAMP-C1-03 ouvert : une fiche du contexte créée par erreur s’archive depuis l’écran', async ({ browser }) => {
   // ISO/IEC 27001:2022, 7.5.3 (maîtrise des informations documentées, retrait des informations obsolètes). La fiche
   // générique des registres du Pilotage (SWOT, parties intéressées, rôles, contexte : constat C2-10, même cause)
   // n'offre que « Fermer » et « Enregistrer », alors que l'API archive (DELETE …/objects/:id) et que la fiche d'un
@@ -615,7 +613,9 @@ test('CAMP-C2-07 ouvert : les mesures proposées à un traitement portent leur r
   const nom = 'Campagne C2-07 risque à traiter (fictif)';
   let risque: { id: string; version: number } | undefined;
   try {
-    let methode = (await ok<{ methodId: string; version: number }[]>(await s.req.get(`${root}/methods`), 'méthodes'))[0];
+    let methode = (
+      await ok<{ methodId: string; version: number }[]>(await s.req.get(`${root}/methods`), 'méthodes')
+    )[0];
     if (!methode) {
       const definition = await ok(await s.req.get('/api/grc/methods/templates/iso27005'), 'modèle de méthode');
       const apercu = await ok(await ecrire(s, 'POST', `${root}/methods/preview`, { id: null, definition }), 'aperçu');

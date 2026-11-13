@@ -248,3 +248,23 @@ fichiers de tests ajoutés : code retour 0.
   de certificat, restauration de sauvegarde (non exécutée par prudence), clés WebAuthn (adresse IP), exports PNG, PDF et SVG
   de la cartographie, rapport imprimable.
 - Mineurs et remarques non rejoués.
+
+## 10. Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091)
+
+Le code testé par la campagne (`2e63e86`, version 6.3.0) a évolué : les ADR 0089 (Conformité), 0090 (Risques) et 0091
+(Incidents) retirent des pages et des fonctions. Le harnais complet a été repassé contre le code actuel, puis les fiches
+touchées ont été rejouées sur une pile de ce code.
+
+| Fiche | Verdict |
+| --- | --- |
+| BUG-064 | **Sans objet** : pages Référentiels et exigences, correspondances et rapprochements retirées (ADR 0089) ; test CAMP-C3-03 supprimé |
+| BUG-052 | Volet « opportunités » sans objet (type retiré, ADR 0090) ; **toujours présent** pour le contexte, les traitements, les actifs et sources ; test CAMP-C1-03 réduit au cas SWOT |
+| BUG-062 | Volet « applications à intégrer » sans objet (GAP retiré) ; **toujours présent** pour la DdA et les plans annuels |
+| BUG-060 | **Modifié, toujours présent** : traitement ajouté depuis le plan d'action du risque ; test CAMP-C2-07 adapté |
+| BUG-044 | **Toujours présent** ; nouveau parcours de création d'incident ; test CAMP-C5-06 adapté |
+| BUG-045, BUG-050 | **Modifiés, toujours présents** : RETEX dans la fiche de l'incident (ADR 0091) |
+| Toutes les autres fiches | **Toujours présentes** : leur test échoue encore sur le défaut |
+
+Harnais complet contre `967de1d`, pile vierge `https://localhost`, deux passages : **67 passed**, code retour 0 ; 55 tests
+`test.fail` (8 de la recette du 12/11, 47 ajoutés), tous en échec sur l'assertion de leur défaut, aucun en préparation ni
+par dépassement du délai. Défauts à corriger : **39** (14 bloquants, 25 majeurs) ; BUG-064 sans objet.
