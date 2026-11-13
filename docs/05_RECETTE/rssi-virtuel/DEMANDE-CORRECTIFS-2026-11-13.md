@@ -33,19 +33,27 @@ Derrière un proxy TLS, construire d'abord les images avec le secret BuildKit `b
 
 | Lot | Fiches | Motif |
 | --- | --- | --- |
-| 1. Droits | BUG-050, BUG-075, BUG-044 | Écritures ou lectures hors de ce qu'un RSSI attend du rôle ; à traiter d'abord (règle d'AGENTS.md : garde serveur, le menu ne vaut pas permission). |
+| 1. Droits | BUG-051, BUG-050, BUG-075, BUG-044 | Écritures ou lectures hors de ce qu'un RSSI attend du rôle ; à traiter d'abord (règle d'AGENTS.md : garde serveur, le menu ne vaut pas permission). |
 | 2. Données et chiffres faux | BUG-040, BUG-041, BUG-039, BUG-043, BUG-045, BUG-047, BUG-048, BUG-065 | Bloquants d'audit : DdA (6.1.3 d), acceptation du risque (6.1.3 f, 8.3), compteurs et réglages enregistrés différemment de ce qui est affiché. |
 | 3. Exports | BUG-038, BUG-046, BUG-058 | Ce qui est remis à un auditeur doit refléter les fiches saisies ; même cause que BUG-020. |
 | 4. Périmètres | BUG-062, BUG-055, BUG-068, BUG-071 | Registres sans périmètre derrière le sélecteur ; même famille que BUG-037. |
 | 5. Une seule source par objet | BUG-053, BUG-063, BUG-064, BUG-066, BUG-070, BUG-056, BUG-077 | Écrans qui lisent le registre historique alors que les formulaires écrivent les objets du Pilotage (invariant d'AGENTS.md : une seule source modifiable par objet). |
 | 6. Écrans | BUG-052, BUG-054, BUG-057, BUG-059, BUG-060, BUG-061, BUG-067, BUG-069, BUG-072, BUG-073, BUG-074, BUG-076 | Saisie perdue, page qui plante, libellés techniques, fonctions annoncées absentes. |
-| En attente d'arbitrage du RSSI | BUG-051, BUG-049, BUG-042 | **Ne pas corriger avant décision** (§ 5). |
+| En attente d'arbitrage du RSSI | BUG-049, BUG-042 | **Ne pas corriger avant décision** (§ 5). |
 
 ## 4. Fiches
 
 Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administrateur de l'installation ; contributeur, lecteur, auditeur externe et contributeur limité au sous-périmètre créés par Plateforme › Utilisateurs (comme `test7-*` de la campagne). Données fictives uniquement. « Piste » = endroit repéré par la recette, sans garantie. Les étapes de reproduction exactes (requêtes, corps, réponses) sont dans les fichiers de rejeu cités.
 
 ### 1. Droits
+
+**BUG-051 — Un compte rattaché à un périmètre enfant voit et modifie le parent ; rattaché au parent, il ne voit pas les enfants** (bloquant, P1 ; constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02)
+
+- Observé : Le périmètre racine est « Toute l'organisation » (visibilité `instance`), sans réglage ; un contributeur membre du seul périmètre enfant (« Hébergement HDS » du jeu fictif, nom d'un périmètre, pas le référentiel HDS) lit le parent et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200) ; l'appartenance ne descend pas vers les enfants.
+- Attendu : Arbitrage du RSSI du 13/11/2026 : un compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et les enfants rattachés à ce parent. Contrôle côté serveur sur toutes les routes du périmètre ; écran « Accès au périmètre » racine comprise.
+- Piste : visibilité `instance` du périmètre racine ; ADR 0039 (sans propagation) à amender par une ADR de la session de développement, numéro annoncé au RSSI.
+- Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section T1-01.
+- Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » et « CAMP-T1-02 ouvert ».
 
 **BUG-050 — Un contributeur retire des événements de la chronologie RETEX sans le droit « supprimer »** (bloquant, P1 ; constats T5-02)
 
@@ -251,7 +259,7 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 
 - Observé : Après l'archivage de l'écart FOU-01, « Créer les actions pour les écarts » d'une nouvelle évaluation répond HTTP 500 ; journal de l'API : `duplicate key value violates unique constraint "grc_objects_smsi_id_legacy_key_legacy_id_key"` (deux occurrences relevées sur la pile 2 par la session principale). Défaut trouvé pendant l'écriture de CAMP-C1-12.
 - Attendu : Un identifiant historique n'est jamais réattribué ; aucune réponse 5xx.
-- Piste : piste : `identifiantActionFournisseur` (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain numéro sans l'écart archivé. Même famille que C5-09 (référence d'incident réattribuée).
+- Piste : `identifiantActionFournisseur` (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain numéro sans l'écart archivé. Même famille que C5-09 (référence d'incident réattribuée).
 - Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section R12-01.
 - Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-R12-01 ouvert ».
 
@@ -355,14 +363,6 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 
 ### En attente d'arbitrage du RSSI
 
-**BUG-051 — Aucun compte ne peut être limité au sous-périmètre : le périmètre principal reste lisible et modifiable** (à arbitrer, P1 ; constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02)
-
-- Observé : Le périmètre commun est « Toute l'organisation » (visibilité `instance`) et aucun écran ni API ne le restreint ; un contributeur membre du seul « Hébergement HDS » lit le principal et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200).
-- Attendu : Selon l'arbitrage : un compte limité à un sous-périmètre n'écrit pas hors de celui-ci, ou la limite est écrite dans une ADR et affichée.
-- Piste : aucun document ne promet ce cloisonnement (ADR 0039 : périmètre sans propagation ; ADR 0010 : portée par module ; ADR 0043 : registre restreint aux plans, écarts et tâches).
-- Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section T1-01.
-- Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert ».
-
 **BUG-049 — Un contributeur archive un registre (plan d'actions) qu'il n'a pas créé** (bloquant, P1 ; constats T4-02)
 
 - Observé : `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage.
@@ -379,11 +379,16 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section C4-05.
 - Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-05 ouvert ».
 
-## 5. Arbitrages du RSSI à obtenir avant correction
+## 5. Arbitrages du RSSI
+
+**Rendu le 13/11/2026, BUG-051** : un compte est rattaché à un périmètre ; rattaché à un périmètre enfant, il ne voit
+que ce périmètre ; rattaché au parent, il voit le parent et les enfants rattachés à ce parent. À traiter au lot 1, avec
+une ADR qui amende l'ADR 0039 (numéro à annoncer au RSSI).
+
+À obtenir avant correction :
 
 | Fiche | Question |
 | --- | --- |
-| BUG-051 | Un compte doit-il pouvoir être limité à un sous-périmètre (séparation des activités HDS) ? Si oui : visibilité du périmètre commun réglable, écriture refusée hors des périmètres attribués. Si non : ADR qui écrit la limite, et l'écran d'accès qui la dit. |
 | BUG-049 | Le point 5 de l'ADR 0043 donne-t-il à tout contributeur le droit d'archiver un registre partagé ? Dans tous les cas, prévoir le désarchivage. |
 | BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
 | BUG-024, BUG-031 | Toujours ouverts (demande du 12/11). |

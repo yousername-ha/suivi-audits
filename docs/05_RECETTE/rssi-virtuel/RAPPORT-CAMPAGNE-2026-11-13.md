@@ -55,8 +55,8 @@ R6-03, mineurs), une en défaut sur T6-04 (téléphone). Les chiffres ci-dessus 
 | --- | --- | --- | --- | --- | --- |
 | Constats des phases 1 et 2 (avant dédoublonnage) | 6 | 47 | 80 | 27 | 160 |
 | Constats de la phase 3 (R12-01 en écrivant les tests ; R6-01 à R6-04 en retestant les cases C6-20) | 0 | 1 | 3 | 1 | 5 |
-| Après rejeu des bloquants et majeurs (constats) | 13 (+ 6 à arbitrer) | 31 | 86 | 28 | 164 |
-| **Défauts inscrits au registre (BUG-038 à BUG-077)** | **13** | **26** | — | — | **39 + 1 à arbitrer** |
+| Après rejeu des bloquants et majeurs, et arbitrage de BUG-051 (constats) | 19 | 31 | 86 | 28 | 164 |
+| **Défauts inscrits au registre (BUG-038 à BUG-077)** | **14** | **26** | — | — | **40** |
 
 - **Rejeu** (phase 3) : 53 constats bloquants ou majeurs. 50 reproduits (dont 4 en partie), 1 « outillage » (C6-20),
   **0 non reproduit** ; T5-01 et T6-02, doublons de T1-01, n'ont pas été rejoués séparément.
@@ -77,7 +77,7 @@ R6-03, mineurs), une en défaut sur T6-04 (téléphone). Les chiffres ci-dessus 
   compte calculée en UTC (le compte reste ouvert jusqu'à 00:59 le lendemain à Paris) ; vocabulaire ISO 9001 dans un SMSI
   ISO/IEC 27001.
 
-### Bloquants (13)
+### Bloquants (14)
 
 | Fiche | Défaut | Constats |
 | --- | --- | --- |
@@ -94,17 +94,13 @@ R6-03, mineurs), une en défaut sur T6-04 (téléphone). Les chiffres ci-dessus 
 | BUG-048 | Catégorie NIS 2 impossible à remettre à vide ; « enregistré » et journal inexacts | C6-05 |
 | BUG-049 | Un contributeur archive un registre qu'il n'a pas créé | T4-02 |
 | BUG-050 | Un contributeur retire des événements de la chronologie RETEX sans le droit « supprimer » | T5-02 |
+| BUG-051 | Un compte rattaché à un périmètre enfant voit et modifie le parent ; rattaché au parent, il ne voit pas les enfants | T1-01, T2-01, T3-01, T4-01, T5-01, T6-02 |
 
-### À arbitrer par le RSSI (1)
-
-| Fiche | Défaut | Constats |
-| --- | --- | --- |
-| BUG-051 | Aucun compte ne peut être limité au sous-périmètre : le périmètre principal reste lisible et modifiable | T1-01, T2-01, T3-01, T4-01, T5-01, T6-02 |
-
-Le compte contributeur membre du seul « Hébergement HDS » lit le principal et y écrit (`POST …/objects` et
-`PATCH /api/dda/A-5.1` → 200). Aucun document ne promet ce cloisonnement ni ne signale la limite (ADR 0039, 0010, 0043,
-cités dans le rejeu des piles 1-2). Majeur en l'état, **bloquant si le RSSI retient le cloisonnement** comme exigence
-(séparation des activités HDS).
+**BUG-051, arbitré par le RSSI le 13/11/2026** : un compte est rattaché à un périmètre ; rattaché à un périmètre enfant,
+il ne voit que ce périmètre ; rattaché au parent, il voit le parent et les enfants rattachés à ce parent. Aujourd'hui, le
+contributeur membre du seul périmètre enfant lit le parent et y écrit (`POST …/objects` et `PATCH /api/dda/A-5.1` → 200),
+et l'appartenance ne descend pas vers les enfants (ADR 0039). « Hébergement HDS » est le nom du périmètre enfant du jeu
+fictif, pas le référentiel HDS. La correction amende l'ADR 0039 (ADR de la session de développement).
 
 ### Majeurs (26)
 
@@ -146,7 +142,8 @@ Détail (observé, attendu, piste, test) : [registre des bugs](../../04_QUALITE/
   (`/api/grc/:smsiId/objects`).
 - **Fonctions réservées au périmètre racine** : BUG-042, 044, 055, 062 (et BUG-037) : registres sans colonne de périmètre
   derrière le sélecteur « Périmètre affiché ».
-- **Droits** : BUG-049, 050, 075 : une écriture permise au contributeur qu'un RSSI attend réservée ; BUG-051 à arbitrer.
+- **Droits** : BUG-049, 050, 075 : une écriture permise au contributeur qu'un RSSI attend réservée ; BUG-051 : cloisonnement par
+  périmètre arbitré par le RSSI.
   Ailleurs, les refus sont conformes (§ 4).
 - **Listes Mantine désélectionnables** : BUG-057, 068 (et BUG-022) : recliquer la valeur affichée la vide.
 
@@ -185,11 +182,12 @@ Constatés sans être tranchés (arbitrage du RSSI) : BUG-024, BUG-031. **Reprod
 à « 0/0 » après la création de la fiche d'audit). Extensions relevées : BUG-018 touche aussi Mon compte, Courriel et
 Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059).
 
-## 6. Arbitrages attendus du RSSI
+## 6. Arbitrages du RSSI
+
+Rendu le 13/11/2026 : BUG-051 (voir § 2, bloquants). Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-051 | Un compte doit-il pouvoir être limité à un sous-périmètre (séparation HDS) ? Sinon, écrire la limite dans une ADR et l'afficher. |
 | BUG-049 | Le point 5 de l'ADR 0043 donne-t-il à tout contributeur le droit d'archiver un registre partagé ? |
 | BUG-042 | Un sous-périmètre a-t-il sa propre revue de direction, ou ses entrées remontent-elles à celle du principal ? |
 | BUG-024, BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |

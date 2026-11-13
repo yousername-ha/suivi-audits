@@ -640,16 +640,17 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Cause / niveau | PISTE : route sans contrôle du droit de suppression. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-T5-02 ouvert » (`test.fail`) |
 
-## BUG-051 — Aucun compte ne peut être limité au sous-périmètre : le périmètre principal reste lisible et modifiable (T1-01, T2-01, T3-01, T4-01, T5-01, T6-02)
+## BUG-051 — Un compte rattaché à un périmètre enfant voit et modifie le périmètre parent ; rattaché au parent, il ne voit pas les enfants (T1-01, T2-01, T3-01, T4-01, T5-01, T6-02)
 
 | Champ | Constat |
 | --- | --- |
-| Fonction, gravité, priorité | Comptes, périmètres, droits ; À ARBITRER (MAJEURE ; BLOQUANTE si le cloisonnement est retenu) ; P1 |
+| Fonction, gravité, priorité | Comptes, périmètres, droits ; BLOQUANTE (arbitrage du RSSI du 13/11/2026) ; P1 |
 | Statut | OUVERT |
-| Observé | Le périmètre commun est « Toute l'organisation » (visibilité `instance`) et aucun écran ni API ne le restreint ; un contributeur membre du seul « Hébergement HDS » lit le principal et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
-| Attendu | Selon l'arbitrage : un compte limité à un sous-périmètre n'écrit pas hors de celui-ci, ou la limite est écrite dans une ADR et affichée. |
-| Cause / niveau | PISTE : aucun document ne promet ce cloisonnement (ADR 0039 : périmètre sans propagation ; ADR 0010 : portée par module ; ADR 0043 : registre restreint aux plans, écarts et tâches). |
-| Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » (`test.fail`) |
+| Arbitrage du RSSI (13/11/2026) | Un compte est rattaché à un périmètre. Rattaché à un périmètre enfant, il ne voit que ce périmètre. Rattaché au parent, il voit le parent et les enfants rattachés à ce parent. |
+| Observé | Le périmètre racine est créé « Toute l'organisation » (visibilité `instance`) et aucun écran ni API ne le restreint : un contributeur membre du seul périmètre enfant (« Hébergement HDS » dans le jeu fictif, nom d'un périmètre et non du référentiel HDS) lit le parent et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200). À l'inverse, l'appartenance ne descend pas : un compte du parent non membre de l'enfant reçoit 404 sur l'enfant. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md) ; [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md) (C5-06). |
+| Attendu | La règle de l'arbitrage, appliquée côté serveur à toutes les routes du périmètre (lecture et écriture) et reflétée par l'écran « Accès au périmètre » (racine comprise). |
+| Cause / niveau | PISTE : visibilité `instance` du périmètre racine sans réglage ; ADR 0039 (périmètre sans propagation des droits) à amender par une ADR de la session de développement (numéro annoncé au RSSI). Liés : BUG-044 (incidents sans périmètre), BUG-062 (sélecteur sans effet), BUG-071 (revue des accès sans périmètres). |
+| Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » (le membre de l'enfant n'écrit pas au parent) et « CAMP-T1-02 ouvert » (le membre du parent voit l'enfant) (`test.fail`) |
 
 ## BUG-052 — Fiches du Pilotage ni archivables ni supprimables à l'écran (C1-03, C2-10, C5-03)
 

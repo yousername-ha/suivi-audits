@@ -21,7 +21,7 @@ Aucune action.
 - **Campagne de recette à plusieurs agents des 12 et 13/11/2026** (sans effet sur l'application) : première exécution, sur
   six piles Docker de `lancer.sh` (PostgreSQL 18, Node 26) ; 1 712 cases de la matrice couvertes (1 005 ok, 534 en défaut,
   173 sans objet), 165 constats, bloquants et majeurs rejoués par des agents indépendants ; 40 défauts inscrits (BUG-038 à
-  BUG-077 : 13 bloquants, 26 majeurs, 1 à arbitrer) et 45 tests `test.fail` (`specs/41` à `43`). BUG-016 à BUG-037
+  BUG-077 : 14 bloquants dont BUG-051 arbitré par le RSSI le 13/11, 26 majeurs) et 46 tests `test.fail` (`specs/41` à `43`). BUG-016 à BUG-037
   reconfirmés sur la cible. Outillage corrigé : `lancer.sh` (`.env` et projet Compose de la pile pour `app` et
   `updater`, option `--images-locales`), invariant INV-08 (écarts appariés par `legacyId`). Rapport :
   `docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md` ; demande de correctifs :
