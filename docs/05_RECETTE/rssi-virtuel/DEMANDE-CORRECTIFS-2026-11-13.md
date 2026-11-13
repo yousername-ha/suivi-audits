@@ -2,7 +2,7 @@
 
 Destinataire : session de développement dédiée (Sonnet). Émetteur : session de recette « Campagne multi-agent RSSI
 virtuel » (`session_01EnWdzfKyK172mDzj6dAUWv`). Constats et bilan : [rapport de campagne](RAPPORT-CAMPAGNE-2026-11-13.md) ;
-registre : [BUG-038 à BUG-076](../../04_QUALITE/REGISTRE_BUGS.md). Cette demande complète celle du
+registre : [BUG-038 à BUG-077](../../04_QUALITE/REGISTRE_BUGS.md). Cette demande complète celle du
 [12/11/2026](DEMANDE-CORRECTIFS-2026-11-12.md) (BUG-016 à BUG-037), toujours valable.
 
 ## 1. Répartition des rôles (décision du RSSI, 11/11/2026)
@@ -37,7 +37,7 @@ Derrière un proxy TLS, construire d'abord les images avec le secret BuildKit `b
 | 2. Données et chiffres faux | BUG-040, BUG-041, BUG-039, BUG-043, BUG-045, BUG-047, BUG-048, BUG-065 | Bloquants d'audit : DdA (6.1.3 d), acceptation du risque (6.1.3 f, 8.3), compteurs et réglages enregistrés différemment de ce qui est affiché. |
 | 3. Exports | BUG-038, BUG-046, BUG-058 | Ce qui est remis à un auditeur doit refléter les fiches saisies ; même cause que BUG-020. |
 | 4. Périmètres | BUG-062, BUG-055, BUG-068, BUG-071 | Registres sans périmètre derrière le sélecteur ; même famille que BUG-037. |
-| 5. Une seule source par objet | BUG-053, BUG-063, BUG-064, BUG-066, BUG-070, BUG-056 | Écrans qui lisent le registre historique alors que les formulaires écrivent les objets du Pilotage (invariant d'AGENTS.md : une seule source modifiable par objet). |
+| 5. Une seule source par objet | BUG-053, BUG-063, BUG-064, BUG-066, BUG-070, BUG-056, BUG-077 | Écrans qui lisent le registre historique alors que les formulaires écrivent les objets du Pilotage (invariant d'AGENTS.md : une seule source modifiable par objet). |
 | 6. Écrans | BUG-052, BUG-054, BUG-057, BUG-059, BUG-060, BUG-061, BUG-067, BUG-069, BUG-072, BUG-073, BUG-074, BUG-076 | Saisie perdue, page qui plante, libellés techniques, fonctions annoncées absentes. |
 | En attente d'arbitrage du RSSI | BUG-051, BUG-049, BUG-042 | **Ne pas corriger avant décision** (§ 5). |
 
@@ -246,6 +246,14 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 - Piste : recoupe BUG-034 et BUG-035.
 - Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section C1-12.
 - Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-C1-12 ouvert ».
+
+**BUG-077 — Clausier : identifiant FOU-0n réattribué après archivage d'un écart, création en erreur 500** (majeur, P1 ; constats R12-01)
+
+- Observé : Après l'archivage de l'écart FOU-01, « Créer les actions pour les écarts » d'une nouvelle évaluation répond HTTP 500 ; journal de l'API : `duplicate key value violates unique constraint "grc_objects_smsi_id_legacy_key_legacy_id_key"` (deux occurrences relevées sur la pile 2 par la session principale). Défaut trouvé pendant l'écriture de CAMP-C1-12.
+- Attendu : Un identifiant historique n'est jamais réattribué ; aucune réponse 5xx.
+- Piste : piste : `identifiantActionFournisseur` (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain numéro sans l'écart archivé. Même famille que C5-09 (référence d'incident réattribuée).
+- Reproduire : [`campagne/rejeu-piles-1-2.md`](campagne/rejeu-piles-1-2.md), section R12-01.
+- Test de recette : `specs/41-campagne-organisation-risques.spec.ts`, « CAMP-R12-01 ouvert ».
 
 ### 6. Écrans
 

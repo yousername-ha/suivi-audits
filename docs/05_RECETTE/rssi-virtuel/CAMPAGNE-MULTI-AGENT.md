@@ -46,8 +46,12 @@ Décision du RSSI du 12/11/2026, à appliquer sans exception :
 registres. Le RSSI exige les briques de l'application (PostgreSQL 18, Node 26) : la campagne ne tourne **que** sur les
 piles Docker de `lancer.sh`. Si Docker n'est pas disponible, la session s'arrête là et le dit.
 
-**Points jamais exécutés.** `lancer.sh` (y compris `--pile`) et le workflow `rssi-virtuel.yml` n'ont jamais tourné :
-ils ont été écrits et relus sans Docker. La première étape de la campagne est donc de lancer une seule pile
+**Première exécution (12 et 13/11/2026).** `lancer.sh --pile N --garder` a tourné pour la campagne
+([rapport](RAPPORT-CAMPAGNE-2026-11-13.md)) après trois corrections du script ; derrière un proxy TLS, construire les images
+une fois avec le secret BuildKit `build_ca` puis passer `--images-locales` (en-tête du script). Le harnais complet
+(`lancer.sh` sans `--garder`) ne passe que sur la pile sans numéro (`https://localhost`) : sur une adresse IP,
+l'installation ne propose pas de clé de sécurité et `00-installation` s'arrête. Le workflow `rssi-virtuel.yml` n'a pas
+été exécuté. Historique : `lancer.sh` et ce workflow avaient été écrits et relus sans Docker. La première étape de la campagne est donc de lancer une seule pile
 (`--pile 1 --garder`), de constater qu'elle répond, puis de l'arrêter. Un défaut du script se corrige dans le script :
 c'est de l'outillage de recette, pas du code de l'application.
 

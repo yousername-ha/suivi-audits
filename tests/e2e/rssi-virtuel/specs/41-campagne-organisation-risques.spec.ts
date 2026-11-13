@@ -333,6 +333,58 @@ test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une éva
   }
 });
 
+test('CAMP-R12-01 ouvert : l’écart d’une évaluation se crée encore après l’archivage du précédent écart du clausier', async ({
+  browser,
+}) => {
+  // ISO/IEC 27001:2022, 10.2 et A.5.19 à A.5.22 ; aucune réponse 5xx. Le prochain identifiant historique FOU-0n est calculé
+  // sur les écarts restants, sans l'écart archivé qui garde le sien : la création suivante viole la clé unique
+  // `grc_objects_smsi_id_legacy_key_legacy_id_key` et répond 500 (relevé pendant l'écriture de CAMP-C1-12).
+  test.fail(true, 'CAMP-R12-01 ouvert : identifiant FOU-0n réattribué après archivage, création en erreur 500');
+  const s = await admin(browser);
+  const ecartDe = async (cle: string) => {
+    const nom = `Campagne R12-01 fournisseur ${cle} ${EXECUTION} (fictif)`;
+    const f = await ok(await ecrire(s, 'POST', '/api/suppliers', { name: nom }), `création du fournisseur ${cle}`);
+    const evaluation = await ok(
+      await ecrire(s, 'POST', '/api/evaluations-clausier', { supplier: f.id }),
+      `création de l’évaluation ${cle}`,
+    );
+    await ok(
+      await ecrire(s, 'PUT', `/api/evaluations-clausier/${evaluation.id}/points/O-1.1`, {
+        st: 'Non conforme',
+        c: 'Clause absente du contrat (fictif)',
+      }),
+      `réponse au point O-1.1 (${cle})`,
+    );
+    return ecrire(s, 'POST', `/api/evaluations-clausier/${evaluation.id}/action`);
+  };
+  const ecartCree = async (legacyId: unknown) => {
+    const ecarts = await ok(
+      await s.req.get(`/api/grc/${PERIMETRE_COMMUN}/objects?kind=nonconformity`),
+      'lecture des écarts',
+    );
+    return (ecarts.items as { id: string; version: number; legacyId: string | null }[]).find(
+      (e) => e.legacyId === legacyId,
+    );
+  };
+  let second: { id: string; version: number } | undefined;
+  try {
+    const premier = await ok(await ecartDe('A'), 'écart de la première évaluation');
+    const ecart = await ecartCree(premier.action);
+    expect(ecart, `écart ${premier.action} créé`).toBeTruthy();
+    await ok(
+      await ecrire(s, 'DELETE', `/api/grc/${PERIMETRE_COMMUN}/objects/${ecart!.id}`, undefined, ecart!.version),
+      'archivage du premier écart',
+    );
+    const r = await ecartDe('B');
+    const texte = await r.text();
+    if (r.ok()) second = await ecartCree((JSON.parse(texte) as { action?: unknown }).action);
+    expect(r.status(), `écart de la seconde évaluation : ${texte}`).toBeLessThan(400);
+  } finally {
+    await archiver(s, PERIMETRE_COMMUN, second);
+    await s.fermer();
+  }
+});
+
 /* --------------------------------------------------------------------------------------- risques et EBIOS RM (pile 2) */
 
 test('CAMP-C2-01 ouvert : re-choisir « Réduire » dans « Stratégie » enregistre « Réduire »', async ({ browser }) => {

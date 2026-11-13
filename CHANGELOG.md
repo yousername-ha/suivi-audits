@@ -18,6 +18,14 @@ Aucune action.
   code (`tests/e2e/rssi-virtuel/matrice.mjs` : 107 écrans, 1 712 cases), `lancer.sh --pile N` pour une pile vierge par
   agent, dossier de reprise `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`. Non exécuté à ce jour (Docker
   inaccessible dans la session). _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents des 12 et 13/11/2026** (sans effet sur l'application) : première exécution, sur
+  six piles Docker de `lancer.sh` (PostgreSQL 18, Node 26) ; 1 712 cases de la matrice couvertes (1 002 ok, 537 en défaut,
+  173 sans objet), 160 constats, bloquants et majeurs rejoués par des agents indépendants ; 40 défauts inscrits (BUG-038 à
+  BUG-077 : 13 bloquants, 26 majeurs, 1 à arbitrer) et 45 tests `test.fail` (`specs/41` à `43`). BUG-016 à BUG-037
+  reconfirmés sur la cible. Outillage corrigé : `lancer.sh` (`.env` et projet Compose de la pile pour `app` et
+  `updater`, option `--images-locales`), invariant INV-08 (écarts appariés par `legacyId`). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md` ; demande de correctifs :
+  `DEMANDE-CORRECTIFS-2026-11-13.md`. _(Session « Campagne multi-agent RSSI virtuel ».)_
 
 ## [6.3.0] — 2026-11-12
 

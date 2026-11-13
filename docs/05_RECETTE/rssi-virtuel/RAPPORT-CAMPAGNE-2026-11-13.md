@@ -54,7 +54,7 @@ sauvegardes chiffrées ont réussi sur la pile 6 (rejeu des piles 5-6) ; le rés
 | --- | --- | --- | --- | --- | --- |
 | Constats des phases 1 et 2 (avant dédoublonnage) | 6 | 47 | 80 | 27 | 160 |
 | Après rejeu des bloquants et majeurs (constats) | 13 (+ 6 à arbitrer) | 30 | 83 | 27 | 159 |
-| **Défauts inscrits au registre (BUG-038 à BUG-076)** | **13** | **25** | — | — | **38 + 1 à arbitrer** |
+| **Défauts inscrits au registre (BUG-038 à BUG-077)** | **13** | **26** | — | — | **39 + 1 à arbitrer** |
 
 - **Rejeu** (phase 3) : 53 constats bloquants ou majeurs. 50 reproduits (dont 4 en partie), 1 « outillage » (C6-20),
   **0 non reproduit** ; T5-01 et T6-02, doublons de T1-01, n'ont pas été rejoués séparément.
@@ -64,6 +64,8 @@ sauvegardes chiffrées ont réussi sur la pile 6 (rejeu des piles 5-6) ; le rés
   T4-01, T5-01, T6-02 → BUG-051) ; fiches non archivables (C1-03, C2-10, C5-03 → BUG-052) ; exports incomplets (C2-05,
   C5-16 → BUG-058) ; écart ignoré par la DdA (C3-06, C4-04 → BUG-041) ; sélecteur de périmètre sans effet (C3-01, C4-02 →
   BUG-062) ; resélection du périmètre (C5-17, avec le mineur T5-04 → BUG-068).
+- **Défaut nouveau trouvé en phase 3** (écriture du test CAMP-C1-12) : identifiant FOU-0n du clausier réattribué après
+  archivage, création en erreur 500 (R12-01 → BUG-077), confirmé par la session principale dans le journal de l'API.
 - **Mineurs et remarques** (110) : non rejoués (le § 5 de la campagne ne l'exige que pour les bloquants et majeurs), non
   inscrits un par un au registre ; ils restent dans les fichiers `campagne/constats-*.md`. Thèmes dominants : messages
   d'erreur qui nomment le champ par sa clé technique ou affichent la clé de permission (`Droit requis : pilotage:modifier`) ;
@@ -101,7 +103,7 @@ Le compte contributeur membre du seul « Hébergement HDS » lit le principal et
 cités dans le rejeu des piles 1-2). Majeur en l'état, **bloquant si le RSSI retient le cloisonnement** comme exigence
 (séparation des activités HDS).
 
-### Majeurs (25)
+### Majeurs (26)
 
 | Fiche | Défaut | Constats |
 | --- | --- | --- |
@@ -130,8 +132,9 @@ cités dans le rejeu des piles 1-2). Majeur en l'état, **bloquant si le RSSI re
 | BUG-074 | Au téléphone, la DdA n'affiche pas l'applicabilité ni la mise en œuvre | T3-03 |
 | BUG-075 | Un contributeur modifie les décisions d'une revue de direction validée | T4-03 |
 | BUG-076 | Le module « Incidents et PCA/PRA » n'ouvre pas les plans de continuité | T5-03 |
+| BUG-077 | Clausier : identifiant FOU-0n réattribué après archivage, création en erreur 500 | R12-01 (phase 3) |
 
-Détail (observé, attendu, piste, test) : [registre des bugs](../../04_QUALITE/REGISTRE_BUGS.md), BUG-038 à BUG-076.
+Détail (observé, attendu, piste, test) : [registre des bugs](../../04_QUALITE/REGISTRE_BUGS.md), BUG-038 à BUG-077.
 
 ### Causes communes
 
@@ -168,7 +171,7 @@ Aucun constat bloquant ou majeur n'a été écarté pour « non reproduit ».
 - **Isolement des données** entre périmètres pour les registres qui portent un périmètre (organisation, risques, écarts,
   actions, revues).
 - **Sauvegardes** (après correction de l'outillage) : exécutant disponible, sauvegardes chiffrées avec empreinte.
-- **Aucune erreur JavaScript, CSP ni HTTP 5xx** relevée ; aucune page ne défile horizontalement au téléphone.
+- **Aucune erreur JavaScript ni CSP** relevée ; une seule réponse HTTP 5xx, trouvée en phase 3 (BUG-077) ; aucune page ne défile horizontalement au téléphone.
 
 ## 5. Défauts connus (BUG-016 à BUG-037) sur les briques réelles
 
