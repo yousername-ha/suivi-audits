@@ -43,6 +43,10 @@ export interface CelluleCrise {
   deadlines: EcheanceCrise[];
 }
 export interface ContactCrise {
+  /** Rang du contact dans la liste enregistrée : les routes de modification le désignent par ce rang, la vue pouvant n'en montrer qu'une partie. */
+  rang: number;
+  /** Périmètre du contact (vide : périmètre commun). */
+  smsi: string;
   createdAt: string;
   name: string;
   org: string;
@@ -61,6 +65,8 @@ export interface ActionScenario {
 }
 export interface ScenarioCrise {
   id: string;
+  /** Périmètre du scénario (vide : périmètre commun). */
+  smsi: string;
   title: string;
   ref: string;
   desc: string;
@@ -76,22 +82,30 @@ export function lireEtatCrise(brut: unknown): EtatCrise {
   const c = objet(brut) ?? {};
   const liste = (v: unknown) => (Array.isArray(v) ? v.map(objet).filter((x): x is Obj => !!x) : []);
   return {
-    contacts: liste(c.contacts).map((x) => ({
-      createdAt: str(x.createdAt),
-      name: str(x.name),
-      org: str(x.org),
-      role: str(x.role),
-      phone: str(x.phone),
-      phone2: str(x.phone2),
-      email: str(x.email),
-      avail: str(x.avail),
-      notes: str(x.notes),
-      key: !!x.key,
-    })),
+    contacts: (Array.isArray(c.contacts) ? c.contacts : [])
+      .flatMap((brut, rang) => {
+        const x = objet(brut);
+        return x ? [{ x, rang }] : [];
+      })
+      .map(({ x, rang }) => ({
+        rang,
+        smsi: str(x.smsi),
+        createdAt: str(x.createdAt),
+        name: str(x.name),
+        org: str(x.org),
+        role: str(x.role),
+        phone: str(x.phone),
+        phone2: str(x.phone2),
+        email: str(x.email),
+        avail: str(x.avail),
+        notes: str(x.notes),
+        key: !!x.key,
+      })),
     scenarios: liste(c.scenarios)
       .filter((x) => str(x.id))
       .map((x) => ({
         id: str(x.id),
+        smsi: str(x.smsi),
         title: str(x.title),
         ref: str(x.ref),
         desc: str(x.desc),
@@ -162,6 +176,8 @@ export const CelluleOuverture = z
   })
   .partial()
   .strict();
+/** Périmètre d'un contact ou d'un scénario de crise à créer (BUG-044) ; à défaut, le périmètre commun. */
+export const PerimetreCrise = z.object({ smsi: z.string().uuid() }).partial().strict();
 export const EntreeCreation = z
   .object({ type: z.enum(TYPES_ENTREE_CRISE), author: t(200), text: t(5000).min(1) })
   .strict();

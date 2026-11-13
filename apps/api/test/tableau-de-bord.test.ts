@@ -150,3 +150,19 @@ describe('tableau de bord natif', () => {
     expect(s.risques).toBeNull();
   });
 });
+
+describe('incidents au tableau de bord (BUG-070)', () => {
+  it('le tableau de bord compte les incidents ouverts des périmètres lisibles', async () => {
+    const t2 = await createTestApp();
+    try {
+      const admin = await login(t2, await makeUser(t2, 'tdb_inc_admin', 'admin'));
+      expect((await admin.post('/api/incidents', { title: 'Incident fictif du tableau de bord' })).statusCode).toBe(
+        201,
+      );
+      const s = (await admin.get('/api/mur/synthese')).json();
+      expect(s.incidents).toEqual({ total: 1, ouverts: 1, securiteOuverts: 0 });
+    } finally {
+      await t2.close();
+    }
+  });
+});

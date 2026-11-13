@@ -438,11 +438,14 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Arbitrage du RSSI (13/11/2026) | Les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001. |
 | Attendu | Entrées 9.3.2 a) à g) de l'ISO/IEC 27001 (dont résultats de l'appréciation des risques, état du plan de traitement, retours des parties intéressées, opportunités d'amélioration continue) ; plus de numérotation ni de vocabulaire ISO 9001 (y compris les « séries proposées (ISO 9001:2015) » des tâches récurrentes, constat T4-07). |
 | Cause / niveau | Choix de l'ADR 0036 (volet qualité), à amender par la session de développement ; volet SMSI absent. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « RSSI-18 ouvert » (`test.fail`), ajouté le 13/11/2026 ; « CAMP-C4-05 ouvert » accepte la future numérotation (« 9.3.2 d 1 »). |
+| Correctif | Entrées de la revue selon l’ISO/IEC 27001:2022, 9.3.2 (a à g, d 1 à 4) ; sorties 9.3.3 ; ADR 0036 amendée. |
+| Tests de la correction | `apps/api/test/pilotage-revue.test.ts` ; `RSSI-18` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-032 — Validation de la revue refusée sans désigner « Décisions et moyens » (RSSI-20)
 
@@ -565,12 +568,15 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; BLOQUANTE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Arbitrage du RSSI (13/11/2026) | Chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent : ses entrées remontent alors dans la revue du parent. |
 | Attendu | Enfant sans héritage : revue propre, entrées 9.3.2 préparées. Enfant avec héritage : ses non-conformités et actions comptées dans les entrées du parent. |
 | Cause / niveau | PISTE : fonction réservée au périmètre racine (famille de BUG-037) ; la règle dépend de l'héritage des référentiels (`inheritFrameworks`). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, deux tests « CAMP-C4-05 ouvert » : revue propre d'un enfant sans héritage ; entrée 9.3.2 c du parent comptant l'écart d'un enfant qui hérite (`test.fail`) |
+| Correctif | Une revue par périmètre ; les enfants héritiers remontent dans la revue du parent, les autres non. |
+| Tests de la correction | `apps/api/test/pilotage-revue.test.ts` ; `CAMP-C4-05` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-043 — Compteur « Continuité » limité aux plans PCRA (C5-01)
 
@@ -591,13 +597,13 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Incidents, crise ; BLOQUANTE ; P1 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Incidents, RETEX, cellules, contacts et scénarios ne portent aucun périmètre ; le sélecteur est sans effet ; un contributeur non membre de « Hébergement HDS » reçoit 404 sur le périmètre mais lit ses incidents et cellules de crise. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Chaque fiche relève d'un périmètre ; la lecture suit l'appartenance au périmètre. |
 | Cause / niveau | PISTE : registres hors périmètre. Même famille que BUG-037 et BUG-062 ; cause commune avec BUG-051. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-06 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent ; parcours de création modifié (ADR 0091 : « Nouvel incident » crée une fiche vide). Test « CAMP-C5-06 » adapté. |
-| Correctif | Incidents (et événements RETEX) et cellules de crise portent un périmètre `smsi` (commun par défaut) ; lecture, écriture et RETEX du pilote contrôlés par l’accès au périmètre ; l’écran crée dans le périmètre affiché. **Reste** : contacts et scénarios de crise, toujours communs. |
+| Correctif | Incidents (et événements RETEX) et cellules de crise portent un périmètre `smsi` (commun par défaut) ; lecture, écriture et RETEX du pilote contrôlés par l’accès au périmètre ; l’écran crée dans le périmètre affiché. Contacts et scénarios de crise rattachés au périmètre de la même façon (rang conservé pour les contacts). |
 | Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-06` à rejouer par la recette |
 | Commit | 0131729 |
 
@@ -708,12 +714,15 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Contexte, risques, continuité ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Contexte, parties, SWOT, rôles, traitements, actifs, sources, opportunités, plans de continuité et exercices : le menu « Autres actions » ne propose ni archivage ni suppression, alors que l'API d'archivage existe. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Archiver (ou supprimer une fiche créée par erreur) depuis l'écran, selon les droits. |
 | Cause / niveau | PISTE : fiche générique du Pilotage sans « Archiver la fiche ». |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-03 ouvert » ; `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-03 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « opportunités » sans objet (type `opportunity` retiré, ADR 0090, lot 2 : création → 422). Toujours présent pour le contexte (SWOT…), les traitements (fiche ouverte depuis le plan d'action du risque, sans « Archiver ») et les actifs et sources de risque (fiches de l'étude EBIOS RM, `RecordEditor.tsx` sans archivage). Test « CAMP-C1-03 » réduit au cas SWOT. |
+| Correctif | « Archiver la fiche » dans `RecordEditor` (droit de suppression du module). |
+| Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C1-03` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-053 — PESTEL, cartographie et processus ignorent les SWOT et enjeux saisis à l'écran (C1-05)
 
@@ -731,11 +740,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Cocher, décocher, recocher un critère : « Cannot read properties of null (reading 'checked') », page inutilisable (3 fois sur 3). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Le critère se coche et se décoche sans erreur. |
 | Cause / niveau | PISTE : piste : `Fournisseurs.tsx`, l. 773 (lecture de l'événement après sa libération). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-07 ouvert » (`test.fail`) |
+| Correctif | Valeur lue avant la mise à jour d’état (case et résultat du critère). |
+| Tests de la correction | `apps/web/test/evenements-react.test.ts` (garde statique) ; `CAMP-C1-07` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-055 — Objectifs et indicateurs : deux modèles selon le périmètre ; synthèse du sous-périmètre sans objectifs (C1-10)
 
@@ -753,22 +765,28 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs, clausier ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Le bouton annonce des actions mais crée seulement l'écart FOU-01, sans responsable ni échéance, recréé à chaque évaluation ; rien dans le plan d'actions. L'écart est bien dans la DdA (l'échec d'INV-08 était un faux positif, corrigé dans `invariants.ts`). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Une action par écart, avec responsable et échéance (10.2), sans doublon. |
 | Cause / niveau | PISTE : recoupe BUG-034 et BUG-035. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-12 ouvert » (`test.fail`) |
+| Correctif | Une action par point du clausier (responsable, échéance 30 jours) ; identifiant d’évaluation déjà traitée refusé (409). |
+| Tests de la correction | `apps/api/test/historique-evals-fournisseurs.test.ts` ; `CAMP-C1-12` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-057 — « Stratégie » du traitement affichée « Réduire » mais envoyée vide ; refus en termes techniques (C2-01)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Recliquer la valeur affichée la désélectionne et envoie une stratégie vide ; refus 422 libellé `strategy`, `"reduce"`. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | La valeur affichée est celle envoyée ; message en français désignant le champ. |
 | Cause / niveau | PISTE : liste sans `allowDeselect={false}` (même mécanisme que BUG-022 et BUG-068). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-01 ouvert » (`test.fail`) |
+| Correctif | Listes sans désélection accidentelle ; messages de validation français avec libellé du champ. |
+| Tests de la correction | `apps/web/test/listes-sans-deselection.test.ts`, `apps/api/test/erreurs-validation.test.ts` ; `CAMP-C2-01` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-058 — Exports incomplets : registre des risques, traitements, EBIOS RM, « export complet » (C2-05, C5-16)
 
@@ -789,48 +807,60 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, EBIOS RM ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Légende de la carte, atelier 5, rapport et éditeur de méthode affichent des codes (`draft`, `unacceptable`, `judgement`…). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Libellés français. |
 | Cause / niveau | PISTE : extension de BUG-023. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-06 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (atelier 5 « Option : reduce », rapport « reduce » et « draft », éditeur de méthode). |
+| Correctif | Libellés français partagés (`libelles-valeurs.ts`) pour la carte, l’étude, l’appréciation et le rapport ; libellé de retrait de l’éditeur de méthode. **Reste** : valeur « Mode » de l’éditeur. |
+| Tests de la correction | `packages/shared/test/libelles-valeurs.test.ts`, `apps/web/test/rapport-comite-libelles.test.ts` ; `CAMP-C2-06` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-060 — Choix des mesures d'un traitement : sans référence, avec doublons et textes tronqués (C2-07)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | 157 options au lieu de 160, sans référence (A.8.13…), avec doublons et exigences HDS tronquées. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Mesures désignées par leur référence, sans doublon. |
 | Cause / niveau | PISTE : volet liens : famille de BUG-026. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-07 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : le traitement s'ajoute désormais par le Registre des risques (« Plan d’action de <risque> », « Ajouter un traitement ou une mesure ») ; option « Sauvegarde des informations » toujours sans référence. Test « CAMP-C2-07 » adapté au nouveau chemin. |
+| Correctif | Références des mesures dans les noms proposés, exigences dédoublonnées. **Reste** : textes HDS tronqués (non reproduits en lecture de code). |
+| Tests de la correction | `apps/api/test/sources-references.test.ts` ; `CAMP-C2-07` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-061 — EBIOS RM : scénario opérationnel non placé dans la matrice de l'étude (C2-09)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | EBIOS RM ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Le scénario G4 × V2 reste dans « Non placés ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Tout scénario évalué est placé dans la matrice. |
 | Cause / niveau | PISTE : à établir. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-09 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (ligne « G4 — Critique » sans scénario). |
+| Correctif | Rang 1 à 4 des niveaux d’échelles publiées de quatre niveaux, utilisé pour la matrice. |
+| Tests de la correction | `apps/web/test/ebios-visuel.test.ts` ; `CAMP-C2-09` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-062 — Sélecteur « Périmètre affiché » sans effet sur la DdA, l'audit et les plans annuels (C3-01, C4-02)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, audit, plans annuels ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Sous « Hébergement HDS », la DdA (clauses, annexe A, HDS), la gestion de l'audit, les applications à intégrer et les plans annuels montrent le principal ; une modification faite sous le sous-périmètre change le principal (`/api/dda` sans paramètre de périmètre). Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Chaque écran filtre sur le périmètre affiché, ou dit qu'il est commun à toute l'organisation. |
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-01 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-02 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
+| Correctif | Les rubriques communes à l’organisation (DdA, audit, plans, clausier, fournisseurs) l’indiquent sous un autre périmètre ; pas de DdA par périmètre (choix documenté, à arbitrer si le RSSI veut une DdA par périmètre). |
+| Tests de la correction | Aucun test automatisé (message d’interface) ; `CAMP-C3-01` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)
 
@@ -885,88 +915,112 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Crise, scénarios ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Responsable saisi pendant l'enregistrement du texte de l'action perdu (5 fois sur 5). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La saisie est conservée. |
 | Cause / niveau | PISTE : ligne recréée à l'enregistrement du texte (clé de ligne contenant le texte). |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-05 ouvert » (`test.fail`) |
+| Correctif | Clé de ligne des actions de scénario = indice, plus le texte. |
+| Tests de la correction | Aucun test automatisé ; `CAMP-C5-05` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-068 — Resélectionner le périmètre affiché bascule sur le périmètre racine (C5-17, T5-04)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Sélecteur de périmètre, import ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Recliquer le périmètre affiché le désélectionne et affiche la racine ; un import confirmé « dans le périmètre sélectionné » (HDS) a été enregistré à la racine. Même effet sur le niveau d'accès d'un périmètre (« Lecture et écriture » → « Lecture seule »). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Recliquer la valeur la conserve. |
 | Cause / niveau | PISTE : listes sans `allowDeselect={false}`. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-17 ouvert » (`test.fail`) |
+| Correctif | Toutes les listes de choix ont `allowDeselect={false}` ou `clearable` (garde statique). |
+| Tests de la correction | `apps/web/test/listes-sans-deselection.test.ts` ; `CAMP-C5-17` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-069 — Crise réelle : le bandeau rouge annoncé n'existe pas (C5-18)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Crise ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Cellule de crise réelle ouverte : aucun bandeau au tableau de bord ni dans le menu. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Bandeau visible tant que la cellule réelle est ouverte. |
 | Cause / niveau | PISTE : à établir. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-18 ouvert » (`test.fail`) |
+| Correctif | Composant `BandeauCrise` dans la mise en page. |
+| Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C5-18` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-070 — Les incidents ne remontent dans aucune synthèse (C5-19)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Incidents, synthèses, revue ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Tableau de bord, Synthèse, mur, rapport de pilotage et revue : aucun incident ; la diapositive « Revue des incidents » annoncée n'existe pas. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Les incidents alimentent les synthèses et l'entrée de revue correspondante. |
 | Cause / niveau | PISTE : recoupe BUG-031 pour la revue. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-19 ouvert » (`test.fail`) |
+| Correctif | Incidents repris dans la revue (d 2), le tableau de bord (`incidents`) et la synthèse du mur. **Reste** : rapport de pilotage et diapositive « Revue des incidents ». |
+| Tests de la correction | `apps/api/test/tableau-de-bord.test.ts`, `apps/api/test/pilotage-revue.test.ts` ; `CAMP-C5-19` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-071 — Revue des accès (A.5.18) sans les accès aux périmètres (C6-12)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Utilisateurs, revue des accès ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Liste, droits effectifs et export n'indiquent pas les accès aux périmètres (dont « Hébergement HDS »). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La revue des accès montre les droits par périmètre. |
 | Cause / niveau | PISTE : lié à BUG-051. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-12 ouvert » (`test.fail`) |
+| Correctif | Colonne « Accès aux périmètres » de la revue des accès (CSV et Excel). |
+| Tests de la correction | `apps/api/test/rbac.test.ts` ; `CAMP-C6-12` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-072 — Date du dernier test de restauration dans le futur acceptée : l'alerte disparaît (C6-21)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Sauvegardes ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | `PUT /api/settings/sauvegardes` accepte une date future ; l'alerte « Test de restauration à faire » disparaît. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Date future refusée avec un message. |
 | Cause / niveau | PISTE : validation absente. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-21 ouvert » (`test.fail`) |
+| Correctif | Date de dernier test de restauration refusée dans le futur (un jour de marge). |
+| Tests de la correction | `apps/api/test/settings.test.ts` ; `CAMP-C6-21` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-073 — Versions de l'état toutes vides : télécharger ou restaurer une version ne rend rien (C6-22)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Import et export, versions ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | `GET /api/admin/versions/:v` renvoie `{}` (5 octets, même empreinte pour toutes les versions) alors que l'écran propose téléchargement et restauration. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Une version contient l'état qu'elle date, ou l'écran ne propose pas de la restaurer. |
 | Cause / niveau | PISTE : piste : `LegacyStore.save()` retire les modules repris dans des tables. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-22 ouvert » (`test.fail`) |
+| Correctif | L’historique de l’état enregistre l’état complet (modules en tables compris). |
+| Tests de la correction | `apps/api/test/admin-requetes.test.ts` ; `CAMP-C6-22` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-074 — Au téléphone, la DdA n'affiche pas l'applicabilité ni la mise en œuvre (T3-03)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, affichage mobile ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | À 390 px, les listes « Applicable » et « Mise en œuvre » (52 et 42 px) ne montrent que la croix d'effacement. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Valeurs lisibles au téléphone. |
 | Cause / niveau | PISTE : largeur fixe des listes. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-T3-03 ouvert » (`test.fail`) |
+| Correctif | Largeur minimale des listes de choix des tableaux (`.champ-choix`). |
+| Tests de la correction | Aucun test automatisé ; `CAMP-T3-03` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-075 — Un contributeur modifie les décisions d'une revue de direction validée (T4-03)
 
@@ -987,20 +1041,26 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Droits, modules ; MAJEURE ; P2 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Un auditeur externe limité à ce module reçoit 403 sur les plans de continuité ; il faut lui ouvrir tout « Pilotage du SMSI ». Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Le module donne accès aux PCA/PRA qu'il annonce. |
 | Cause / niveau | PISTE : rattachement des plans de continuité au module Pilotage. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-T5-03 ouvert » (`test.fail`) |
+| Correctif | `continuity_plan` et `continuity_exercise` relèvent du module `incidents`. |
+| Tests de la correction | `apps/api/test/pilotage.test.ts` ; `CAMP-T5-03` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 
 ## BUG-077 — Clausier : identifiant FOU-0n réattribué après archivage d'un écart, création en erreur 500 (R12-01)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs, clausier ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Après l'archivage de l'écart FOU-01, « Créer les actions pour les écarts » d'une nouvelle évaluation répond HTTP 500 ; journal de l'API : `duplicate key value violates unique constraint "grc_objects_smsi_id_legacy_key_legacy_id_key"` (deux occurrences relevées sur la pile 2 par la session principale). Défaut trouvé pendant l'écriture de CAMP-C1-12. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Un identifiant historique n'est jamais réattribué ; aucune réponse 5xx. |
 | Cause / niveau | PISTE : `identifiantActionFournisseur` (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain numéro sans l'écart archivé. Même famille que C5-09 (référence d'incident réattribuée). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-R12-01 ouvert » (`test.fail`) |
+| Correctif | `identifiantsEcartsPris` : les écarts archivés comptent pour la numérotation (évaluations, incidents, exercices). |
+| Tests de la correction | `apps/api/test/historique-evals-fournisseurs.test.ts` ; `CAMP-R12-01` à rejouer par la recette |
+| Commit | COMMIT_LOT456 |
 

@@ -407,6 +407,9 @@ describe('revue des accès (ISO 27001 A.5.18)', () => {
     expect(lines[0]).toMatch(/^"Identifiant";"Nom";"E-mail";"État";"Double authentification";"Groupes";"Rôles/);
     expect(lines.some((l) => l.startsWith('"admin"') && l.includes('Administrateur'))).toBe(true);
     expect(await t.svc.db.one("SELECT 1 FROM audit_log WHERE action = 'admin.access_review_export'")).toBeTruthy();
+    // Accès aux périmètres (BUG-071) : colonne dédiée ; l'administrateur voit tous les périmètres.
+    expect(lines[0]).toMatch(/"Accès aux périmètres"$/);
+    expect(lines.find((l) => l.startsWith('"admin"'))).toMatch(/Tous les périmètres \(administrateur\)/);
   });
 
   it('export Excel (.xlsx valide : archive ZIP, feuille avec en-têtes et comptes)', async () => {

@@ -129,3 +129,36 @@ describe('cellules de crise par périmètre', () => {
     ).toBeLessThan(300);
   });
 });
+
+describe('contacts et scénarios de crise par périmètre', () => {
+  it('un contact et un scénario d’un périmètre ne sont ni lus ni modifiés hors de ce périmètre', async () => {
+    const contact = await membre.post('/api/crise/contacts', { smsi: enfant });
+    expect(contact.statusCode, contact.body).toBe(201);
+    const rang = Number(contact.json().id);
+    expect((await membre.patch(`/api/crise/contacts/${rang}`, { name: 'Contact fictif de l’enfant' })).statusCode).toBe(
+      200,
+    );
+    const scenario = await membre.post('/api/crise/scenarios', { smsi: enfant });
+    expect(scenario.statusCode, scenario.body).toBe(201);
+    const idScn = scenario.json().id as string;
+    const vue = async (a: Agent) =>
+      (await a.get('/api/crise')).json().etat as {
+        contacts: { name: string; rang: number }[];
+        scenarios: { id: string }[];
+      };
+    expect((await vue(membre)).contacts.map((c) => c.name)).toContain('Contact fictif de l’enfant');
+    expect((await vue(membre)).scenarios.map((x) => x.id)).toContain(idScn);
+    expect((await vue(parentMembre)).contacts.map((c) => c.name)).toContain('Contact fictif de l’enfant');
+    expect((await vue(autre)).contacts.map((c) => c.name)).not.toContain('Contact fictif de l’enfant');
+    expect((await vue(autre)).scenarios.map((x) => x.id)).not.toContain(idScn);
+    // Hors périmètre : 404, ni modification, ni suppression, ni action de scénario.
+    expect((await autre.patch(`/api/crise/contacts/${rang}`, { name: 'Détourné' })).statusCode).toBe(404);
+    expect((await autre.patch(`/api/crise/scenarios/${idScn}`, { title: 'Détourné' })).statusCode).toBe(404);
+    expect((await autre.post(`/api/crise/scenarios/${idScn}/actions`)).statusCode).toBe(404);
+    expect((await autre.post('/api/crise/contacts', { smsi: enfant })).statusCode).toBe(404);
+    // Le rang reste valable même quand la vue n'affiche qu'une partie des contacts.
+    const autreContact = await libre.post('/api/crise/contacts', {});
+    expect(autreContact.statusCode, autreContact.body).toBe(201);
+    expect((await vue(libre)).contacts.some((c) => c.rang === Number(autreContact.json().id))).toBe(true);
+  });
+});

@@ -75,7 +75,7 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   - **BUG-075, revue de direction validée** : elle ne se modifie plus que par un administrateur du pilotage (qui la rouvre) ; un contributeur reçoit 403.
   - **BUG-044, incidents et cellules de crise par périmètre** : un incident (et ses événements RETEX) et une cellule de crise relèvent d'un périmètre (`smsi`, périmètre commun
     pour les entrées existantes) ; le registre n'affiche et n'ouvre que les périmètres du lecteur, l'écran crée dans le périmètre affiché (`GET /api/incidents?smsi=`,
-    `GET /api/crise?smsi=`). Les contacts et les scénarios de crise restent communs : suite à traiter. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+    `GET /api/crise?smsi=`). Les contacts (désignés par leur rang, conservé même quand la vue n'en montre qu'une partie) et les scénarios de crise suivent le même périmètre (`POST /api/crise/contacts` et `/scenarios` acceptent `smsi`). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 
 - **Données et chiffres faux (campagne de recette, lot 2)** :
   - **BUG-040, applicabilité** : enregistrer la fiche d'une mesure jamais examinée ne la déclare plus « applicable » ; la fiche porte une coche « Applicabilité examinée »
@@ -95,6 +95,22 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   périmètre demandé (`GET /api/suivi/export?perimetre=`, sélecteur « Périmètre exporté » de la page Exports) ; **BUG-046** : le type d'écart exporté est celui de
   l'écran (« Piste de progrès » n'est plus libellé « Point sensible ») ; **BUG-058** (partiel) : nouveaux groupes « Gestion des risques » (registre, plan de
   traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), repris par l'export complet. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Lots 4 à 6 de la campagne de recette (première partie)** :
+  - **BUG-031 et BUG-042, revue de direction** : les entrées sont celles de l'ISO/IEC 27001:2022, 9.3.2 (l'ISO 9001 n'est plus suivie pour le moment, ADR 0036 amendée) ;
+    chaque périmètre prépare sa propre revue, et un périmètre enfant qui hérite des référentiels du parent remonte dans la revue du parent. **BUG-070** : les incidents
+    entrent dans la revue (entrée d 2), au tableau de bord et à la synthèse du mur (`incidents`).
+  - **BUG-062** : les rubriques communes à toute l'organisation (DdA, plans d'audit et annuels, clausier, fournisseurs) le disent sous un autre périmètre
+    au lieu de laisser croire que le sélecteur les filtre. **BUG-071** : la revue des accès indique les accès aux périmètres de chaque compte.
+  - **BUG-056** : « Créer les actions pour les écarts » du clausier crée une action par point (responsable : la personne qui crée ; échéance : 30 jours) au plan d'actions, et ne se
+    rejoue pas (409). **BUG-077** : un identifiant d'écart archivé n'est jamais réattribué (plus d'erreur 500).
+  - **BUG-054** : plus de plantage au troisième clic sur un critère d'évaluation fournisseur. **BUG-067** : le responsable d'une action de scénario de crise n'est plus perdu à
+    l'enregistrement du texte. **BUG-069** : bandeau rouge « Crise réelle en cours » sur toutes les pages tant qu'une cellule réelle est ouverte. **BUG-052** : « Archiver la
+    fiche » dans les fiches du Pilotage. **BUG-074** : les listes des tableaux restent lisibles au téléphone. **BUG-076** : les plans de continuité et leurs exercices relèvent
+    du module « Incidents et PCA/PRA ». **BUG-072** : une date de test de restauration dans le futur est refusée.
+  - **BUG-073** : une version de l'état contient les modules repris dans des tables (elle se télécharge et se restaure). **BUG-060** : les mesures proposées pour un traitement portent
+    leur référence (A.8.13, HDS 12…), sans doublon d'exigence. **BUG-061** : un scénario EBIOS RM dont les niveaux viennent d'échelles publiées de quatre niveaux se place dans
+    la matrice. **BUG-059** : acceptabilité, option de traitement et état de l'appréciation en français (carte, étude, rapport). **BUG-057** : messages de validation en français,
+    avec le libellé du champ. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du
   traitement, import…) gardent leur valeur ; un test interdit désormais toute liste sans `allowDeselect={false}` ou `clearable`. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 

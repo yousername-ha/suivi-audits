@@ -15,12 +15,9 @@ export class HttpError extends Error {
 }
 
 /** Libellés des champs de saisie du Pilotage, pour nommer le champ refusé plutôt que sa clé technique (BUG-057). */
-const LIBELLES_CHAMPS: Map<string, string> = new Map(
-  Object.values(PILOTAGE_FIELDS)
-    .flat()
-    .reverse()
-    .map((f) => [f.key, f.label] as const),
-);
+const LIBELLES_CHAMPS = new Map<string, string>();
+for (const f of Object.values(PILOTAGE_FIELDS).flat())
+  if (!LIBELLES_CHAMPS.has(f.key)) LIBELLES_CHAMPS.set(f.key, f.label.replace(/\s*\(.*\)\s*$/, ''));
 /** Message français d'une anomalie de validation : un message déjà rédigé (règle propre) est conservé, les messages
     génériques de la bibliothèque sont traduits sans reprendre la valeur refusée. */
 const messageZod = (i: ZodError['issues'][number]): string => {

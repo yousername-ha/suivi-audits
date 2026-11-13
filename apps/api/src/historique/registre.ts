@@ -65,6 +65,7 @@ export class RegistreHistorique {
         origin: e.origin ?? 'other',
         refs: (e.items ?? []).filter((i) => connues.has(i)).map((i) => 'legacy:items:' + i),
         dueAt: e.dueAt && validDate(e.dueAt) ? e.dueAt : '',
+        ...(e.ownerId ? { ownerId: e.ownerId } : {}),
       },
       user,
       c,
@@ -170,6 +171,8 @@ export interface NouvelEcart {
   items?: string[];
   /** Échéance AAAA-MM-JJ ; toute autre valeur est ignorée. */
   dueAt?: string;
+  /** Responsable de l'écart (compte actif autorisé dans le périmètre commun). */
+  ownerId?: string;
 }
 
 /** Entrées objet d'une clé tableau de l'état (les autres valeurs sont ignorées, jamais supprimées à la relecture). */

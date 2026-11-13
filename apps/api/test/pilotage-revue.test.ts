@@ -1,5 +1,5 @@
-/* Entrées de la revue de direction (ISO 9.3.2) : faits tirés des données, jamais interprétés ; l'adéquation des ressources
-   reste à saisir. Données fictives. */
+/* Entrées de la revue de direction (ISO/IEC 27001:2022, 9.3.2) : faits tirés des données, jamais interprétés ; une revue par
+   périmètre, les périmètres enfants héritiers remontent dans celle du parent. Données fictives. */
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ENTREES_REVUE } from '@suivi/shared';
@@ -29,10 +29,10 @@ describe('entrées de la revue de direction', () => {
     expect(r.entrees.map((e) => e.id)).toEqual(ENTREES_REVUE.map((e) => e.id));
     expect(r.precedente).toBeNull();
     expect(faitsDe(r, 'a')).toMatch(/Aucune revue de direction précédente/);
-    expect(faitsDe(r, 'c1')).toMatch(/Aucun indicateur de satisfaction/);
-    expect(faitsDe(r, 'c3')).toMatch(/Aucun processus relié/);
-    expect(r.entrees.find((e) => e.id === 'd')!.aSaisir).toBe(true);
-    expect(r.entrees.filter((e) => e.aSaisir)).toHaveLength(1);
+    expect(faitsDe(r, 'e')).toMatch(/Aucun indicateur de retour des parties intéressées/);
+    expect(faitsDe(r, 'd2')).toMatch(/Aucun incident enregistré/);
+    expect(r.entrees.map((e) => e.id)).toContain('g');
+    expect(r.entrees.filter((e) => e.aSaisir)).toHaveLength(0);
   });
   it('prépare des faits chiffrés à partir de l’état, des actions de la revue précédente et des registres', async () => {
     const action = (
@@ -98,21 +98,51 @@ describe('entrées de la revue de direction', () => {
     expect(faitsDe(r, 'a')).toMatch(
       /Revue du 15\/01\/2026 : 1 action décidée, 0 terminée\(s\), 1 ouverte\(s\) dont 1 en retard/,
     );
-    expect(faitsDe(r, 'b')).toMatch(/2 parties intéressées enregistrée\(s\), 1 non revue/);
-    expect(faitsDe(r, 'c1')).toMatch(/IND1 Satisfaction : 90 % \(cible ≥ 80 %\)/);
-    expect(faitsDe(r, 'c2')).toMatch(/1\/3 indicateur\(s\) atteint\(s\), 1 non atteint\(s\), 1 non mesuré/);
-    expect(faitsDe(r, 'c2')).toMatch(/Objectif OBJ1 Satisfaire : IND2 non atteint/);
-    expect(faitsDe(r, 'c3')).toMatch(/Processus PR1 Accueil : 1 atteint\(s\), 1 non atteint\(s\), 1 à mesurer/);
-    expect(faitsDe(r, 'c4')).toMatch(/3 constats enregistrés, 2 ouvert\(s\) dont 1 en retard/);
-    expect(faitsDe(r, 'c5')).toMatch(/1 indicateur non mesuré : IND3/);
-    expect(faitsDe(r, 'c7')).toMatch(/0 fournisseur : 0 évalué/);
-    expect(faitsDe(r, 'f')).toMatch(/1 constat de type observation/);
+    expect(faitsDe(r, 'c')).toMatch(/2 parties intéressées enregistrée\(s\), dont 1 non revue/);
+    expect(faitsDe(r, 'e')).toMatch(/IND1 Satisfaction : 90 % \(cible ≥ 80 %\)/);
+    expect(faitsDe(r, 'd4')).toMatch(/1\/3 indicateur\(s\) atteint\(s\), 1 non atteint\(s\), 1 non mesuré/);
+    expect(faitsDe(r, 'd4')).toMatch(/Objectif OBJ1 Satisfaire : IND2 non atteint/);
+    expect(faitsDe(r, 'd1')).toMatch(/2 constats ouverts dont 1 en retard/);
+    expect(faitsDe(r, 'd2')).toMatch(/1 indicateur non mesuré : IND3/);
+    expect(faitsDe(r, 'e')).toMatch(/0 fournisseur : 0 évalué/);
+    expect(faitsDe(r, 'g')).toMatch(/1 constat de type observation/);
   });
-  it('est accessible en lecture seule et reste dans le pilotage commun', async () => {
+  it('est accessible en lecture seule', async () => {
     expect((await ro.get(`${racine}/pilotage/revue/entrees`)).statusCode).toBe(200);
-    const autre = (
-      await a.post('/api/grc/smsis', { name: 'Autre périmètre', scope: 'x', timezone: 'Europe/Paris' })
-    ).json();
-    expect((await a.get(`/api/grc/${autre.id}/pilotage/revue/entrees`)).statusCode).toBe(404);
+  });
+  it('chaque périmètre a sa revue ; les enfants héritiers remontent dans celle du parent, pas les autres (BUG-042)', async () => {
+    const creer = async (name: string, extra: Record<string, unknown> = {}) =>
+      (await a.post('/api/grc/smsis', { name, scope: 'x', timezone: 'Europe/Paris', ...extra })).json().id as string;
+    const parent = await creer('Parent revue');
+    const heritier = await creer('Enfant héritier', { parentId: parent, inheritFrameworks: true });
+    const autonome = await creer('Enfant autonome', { parentId: parent });
+    const ecart = (smsi: string, name: string) =>
+      a.post(`/api/grc/${smsi}/objects`, {
+        kind: 'nonconformity',
+        name,
+        data: { classification: 'majeure', source: 'Interne', status: 'open' },
+      });
+    expect((await ecart(heritier, 'NC majeure de l’enfant héritier')).statusCode).toBe(200);
+    expect((await ecart(autonome, 'NC majeure de l’enfant autonome')).statusCode).toBe(200);
+    const lire = async (smsi: string) =>
+      (await a.get(`/api/grc/${smsi}/pilotage/revue/entrees`)).json() as Awaited<ReturnType<typeof entrees>>;
+    // L'enfant a sa propre revue préparée (plus de 404) avec sa non-conformité.
+    expect(faitsDe(await lire(heritier), 'd1')).toMatch(/1 constat ouvert, 1 majeur/);
+    // Le parent reprend l'enfant héritier, pas l'enfant autonome.
+    const dParent = faitsDe(await lire(parent), 'd1');
+    expect(dParent).toMatch(
+      /1 constat ouvert, 1 majeur\(s\) \(dont les périmètres enfants héritiers : Enfant héritier\)/,
+    );
+    expect(dParent).not.toMatch(/Enfant autonome/);
+    expect(faitsDe(await lire(autonome), 'd1')).toMatch(/1 constat ouvert, 1 majeur/);
+  });
+  it('reprend les incidents du périmètre dans la revue (BUG-070)', async () => {
+    const sous = (
+      await a.post('/api/grc/smsis', { name: 'Périmètre incidents', scope: 'x', timezone: 'Europe/Paris' })
+    ).json().id;
+    const inc = await a.post('/api/incidents', { title: 'Incident fictif de revue', smsi: sous });
+    expect(inc.statusCode, inc.body).toBe(201);
+    const r = (await a.get(`/api/grc/${sous}/pilotage/revue/entrees`)).json() as Awaited<ReturnType<typeof entrees>>;
+    expect(faitsDe(r, 'd2')).toMatch(/1 incident enregistré, 1 ouvert/);
   });
 });

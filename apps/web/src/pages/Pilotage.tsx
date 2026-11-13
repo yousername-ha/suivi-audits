@@ -1,4 +1,4 @@
-import { Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import { type BusinessPolicy, type GrcKind, type GrcObject, type PilotageRecord, type Module } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -50,6 +50,25 @@ import { Pronostic } from '../audit/Pronostic';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 
 const SOCLE = '00000000-0000-4000-8000-000000000001';
+/** Rubriques dont les données sont communes à toute l'organisation (registres historiques sans périmètre) : sous un autre
+    périmètre, la page le dit au lieu de laisser croire que le sélecteur la filtre (BUG-062). */
+const RUBRIQUES_COMMUNES = new Set([
+  'dda-iso',
+  'dda-annexe-a',
+  'dda-hds',
+  'audit-pronostic',
+  'audit-couverture',
+  'audit-deroule',
+  'audit-planning',
+  'audit-participants',
+  'plans-calendrier',
+  'plans-planning',
+  'plans-formation',
+  'plans-sensibilisation',
+  'evaluations-clausier',
+  'fournisseurs',
+  'criteres-fournisseurs',
+]);
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -276,6 +295,12 @@ export function PilotagePage() {
           />
         )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
+        {allowed && smsi && smsi !== SOCLE && RUBRIQUES_COMMUNES.has(section) && (
+          <Alert color="blue" role="note">
+            Cette rubrique est commune à toute l’organisation : elle n’est pas filtrée par le périmètre affiché, et ce
+            que vous y modifiez vaut pour tous les périmètres.
+          </Alert>
+        )}
         {allowed && smsi && policy.data && (
           <>
             {config && (
@@ -408,8 +433,8 @@ export function PilotagePage() {
             {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
             {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
             {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue smsi={smsi} />}
-            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
-            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
+            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise smsi={smsi} />}
+            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise smsi={smsi} />}
             {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents smsi={smsi} />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}

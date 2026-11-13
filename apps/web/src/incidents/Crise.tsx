@@ -44,7 +44,9 @@ interface Donnees {
   fournisseursCritiques: string[];
 }
 type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
-const useCrise = () => useModule<Donnees>('crise', '/api/crise');
+/** Données de la crise du périmètre affiché (cellules, contacts et scénarios d'un périmètre, BUG-044). */
+const useCrise = (smsi?: string) =>
+  useModule<Donnees>(`crise:${smsi ?? ''}`, smsi ? `/api/crise?smsi=${smsi}` : '/api/crise');
 
 /** Horloge d'une seconde, pour le temps écoulé et les échéances d'une cellule active. */
 function useMaintenant(actif: boolean) {
@@ -64,7 +66,7 @@ const Mode = ({ mode }: { mode: string }) => (
 export function CelluleCriseVue({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useModule<Donnees>(`crise:${smsi ?? ''}`, smsi ? `/api/crise?smsi=${smsi}` : '/api/crise'),
+    { d, agir, erreur } = useCrise(smsi),
     [sel, setSel] = useState<string | null>(null);
   const etat = d?.etat;
   const active = etat ? celluleActive(etat) : undefined;
@@ -532,10 +534,11 @@ const CHAMPS_CONTACT = [
   ['notes', 'Notes'],
 ] as const;
 
-export function ContactsCrise() {
+export function ContactsCrise({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise();
+    { d, agir, erreur } = useCrise(smsi),
+    corps = smsi ? { smsi } : {};
   return (
     <Stack>
       <ErrorAlert error={erreur} />
@@ -549,10 +552,10 @@ export function ContactsCrise() {
         </div>
         {modifiable && (
           <Group>
-            <Button variant="default" onClick={() => void agir('POST', '/api/crise/contacts/fournisseurs')}>
+            <Button variant="default" onClick={() => void agir('POST', '/api/crise/contacts/fournisseurs', corps)}>
               Ajouter les fournisseurs critiques et hébergeurs
             </Button>
-            <Button onClick={() => void agir('POST', '/api/crise/contacts')}>Ajouter un contact</Button>
+            <Button onClick={() => void agir('POST', '/api/crise/contacts', corps)}>Ajouter un contact</Button>
           </Group>
         )}
       </Group>
@@ -570,13 +573,15 @@ export function ContactsCrise() {
             </Table.Thead>
             <Table.Tbody>
               {d.etat.contacts.map((x, k) => (
-                <Table.Tr key={`${x.createdAt}-${k}`}>
+                <Table.Tr key={`${x.createdAt}-${x.rang}`}>
                   <Table.Td>
                     <Checkbox
                       aria-label={`Contact clé ${k + 1}`}
                       checked={x.key}
                       disabled={!modifiable}
-                      onChange={(e) => void agir('PATCH', `/api/crise/contacts/${k}`, { key: e.currentTarget.checked })}
+                      onChange={(e) =>
+                        void agir('PATCH', `/api/crise/contacts/${x.rang}`, { key: e.currentTarget.checked })
+                      }
                     />
                   </Table.Td>
                   {CHAMPS_CONTACT.map(([f, l]) => (
@@ -585,7 +590,7 @@ export function ContactsCrise() {
                         ariaLabel={`${l} du contact ${k + 1}`}
                         value={x[f]}
                         disabled={!modifiable}
-                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${k}`, { [f]: v })}
+                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
                       />
                     </Table.Td>
                   ))}
@@ -594,7 +599,7 @@ export function ContactsCrise() {
                       <ConfirmButton
                         message="Supprimer ce contact ?"
                         variant="subtle"
-                        onConfirm={() => agir('DELETE', `/api/crise/contacts/${k}`)}
+                        onConfirm={() => agir('DELETE', `/api/crise/contacts/${x.rang}`)}
                       >
                         Supprimer
                       </ConfirmButton>
@@ -616,10 +621,10 @@ export function ContactsCrise() {
 }
 
 /* ----------------------------------------------------------------------------------------------- scénarios */
-export function ScenariosCrise() {
+export function ScenariosCrise({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise(),
+    { d, agir, erreur } = useCrise(smsi),
     [sel, setSel] = useState<string | null>(null);
   const scenarios = d?.etat.scenarios ?? [];
   const sc: ScenarioCrise | undefined = scenarios.find((s) => s.id === sel) ?? scenarios[0];
@@ -637,7 +642,7 @@ export function ScenariosCrise() {
         {modifiable && (
           <Button
             onClick={async () => {
-              const r = await agir<{ id: string }>('POST', '/api/crise/scenarios');
+              const r = await agir<{ id: string }>('POST', '/api/crise/scenarios', smsi ? { smsi } : {});
               if (r) setSel(r.id);
             }}
           >

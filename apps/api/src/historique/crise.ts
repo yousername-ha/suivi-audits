@@ -7,6 +7,7 @@ import {
   AuteurCrise,
   CelluleOuverture,
   ChecklistBascule,
+  PerimetreCrise,
   ContactModification,
   EcheanceCreation,
   EntreeCreation,
@@ -80,12 +81,17 @@ export class Crise {
     if (smsi && !lisibles.has(smsi)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
     // Les cellules d'un périmètre illisible ne sont pas montrées (BUG-044).
     const crise = isObject(data.crisis) ? data.crisis : {};
-    const cellules = liste(crise.cells).filter(
-      (x) => isObject(x) && (smsi ? perimetreDe(x) === smsi : lisibles.has(perimetreDe(x))),
-    );
+    const visible = (x: Json) => isObject(x) && (smsi ? perimetreDe(x) === smsi : lisibles.has(perimetreDe(x)));
+    const cellules = liste(crise.cells).filter(visible);
+    // Contacts et scénarios suivent le même périmètre ; les contacts gardent leur rang d'origine (`lireEtatCrise`).
+    const contactsBruts = liste(crise.contacts);
+    const rangsVisibles = new Set(contactsBruts.flatMap((x, i) => (visible(x) ? [i] : [])));
     return {
       version,
-      etat: lireEtatCrise({ ...crise, cells: cellules }),
+      etat: (() => {
+        const e = lireEtatCrise({ ...crise, cells: cellules, scenarios: liste(crise.scenarios).filter(visible) });
+        return { ...e, contacts: e.contacts.filter((x) => rangsVisibles.has(x.rang)) };
+      })(),
       exercices: entrees(data, 'plans')
         .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
         .map((p) => ({ id: str(p.id), title: str(p.title) })),
@@ -111,6 +117,12 @@ export class Crise {
     });
   }
   /** Cellule `id`, après contrôle de l'accès (en écriture) au périmètre qui la porte (BUG-044). */
+  /** Scénario `id`, après contrôle de l'accès (en écriture) au périmètre qui le porte (BUG-044). */
+  private async scenario(c: Racine, id: string, user: SessionUser): Promise<JsonObject> {
+    const x = parId(c.scenarios, id, 'Scénario');
+    await this.r.exigerPerimetre(user, x, true, 'Scénario absent.');
+    return x;
+  }
   private async cellule(c: Racine, id: string, active: boolean, user: SessionUser): Promise<JsonObject> {
     const x = parId(c.cells, id, 'Cellule');
     await this.r.exigerPerimetre(user, x, true, 'Cellule absente.');
@@ -130,7 +142,8 @@ export class Crise {
         const mode = body.mode ?? 'Exercice';
         const smsi = body.smsi ?? DEFAULT_SMSI;
         await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
-        if (body.scenario) parId(c.scenarios, body.scenario, 'Scénario');
+        if (body.scenario)
+          await this.r.exigerPerimetre(user, parId(c.scenarios, body.scenario, 'Scénario'), false, 'Scénario absent.');
         if (body.plan && !entrees(data, 'plans').some((p) => p.id === body.plan && p.type === 'exo'))
           throw new HttpError(422, 'Exercice planifié absent.');
         const start = now();
@@ -292,16 +305,19 @@ export class Crise {
   }
 
   /* ------------------------------------------------------------------------------------------ contacts */
-  creerContact(user: SessionUser, ip: string): Promise<{ id: string }> {
+  creerContact(input: unknown, user: SessionUser, ip: string): Promise<{ id: string }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.contact-added',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
+      async (c) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         c.contacts = [
           ...c.contacts,
           {
+            smsi,
             createdAt: now(),
             name: '',
             org: '',
@@ -325,9 +341,10 @@ export class Crise {
       ip,
       'crisis.contact-updated',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
+      async (c) => {
         const x = c.contacts[k];
         if (!isObject(x)) throw new HttpError(404, 'Contact absent.');
+        await this.r.exigerPerimetre(user, x, true, 'Contact absent.');
         c.contacts = c.contacts.map((y, i) => (i === k ? { ...x, ...b } : y));
         return { id: String(k) };
       },
@@ -339,8 +356,10 @@ export class Crise {
       ip,
       'crisis.contact-removed',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
-        if (!isObject(c.contacts[k])) throw new HttpError(404, 'Contact absent.');
+      async (c) => {
+        const x = c.contacts[k];
+        if (!isObject(x)) throw new HttpError(404, 'Contact absent.');
+        await this.r.exigerPerimetre(user, x, true, 'Contact absent.');
         c.contacts = c.contacts.filter((_, i) => i !== k);
         return { id: String(k) };
       },
@@ -348,19 +367,22 @@ export class Crise {
     );
   }
   /** Ajoute comme contacts clés les fournisseurs critiques ou hébergeurs HDS du registre qui n'y figurent pas. */
-  importerFournisseurs(user: SessionUser, ip: string): Promise<{ id: string; ajoutes: number }> {
+  importerFournisseurs(input: unknown, user: SessionUser, ip: string): Promise<{ id: string; ajoutes: number }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.contacts-imported',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c, data) => {
+      async (c, data) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         let n = 0;
         for (const s of entrees(data, 'suppliers').filter((s) => s.critical === 'Oui' || s.hds === 'Oui')) {
-          if (c.contacts.some((x) => isObject(x) && x.org === s.name)) continue;
+          if (c.contacts.some((x) => isObject(x) && x.org === s.name && perimetreDe(x) === smsi)) continue;
           c.contacts = [
             ...c.contacts,
             {
+              smsi,
               createdAt: now(),
               name: '',
               org: str(s.name),
@@ -381,14 +403,17 @@ export class Crise {
   }
 
   /* ----------------------------------------------------------------------------------------- scénarios */
-  creerScenario(user: SessionUser, ip: string): Promise<{ id: string }> {
+  creerScenario(input: unknown, user: SessionUser, ip: string): Promise<{ id: string }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.scenario-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
+      async (c) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         const s: JsonObject = {
+          smsi,
           id: `SCN-${Date.now().toString(36)}`,
           createdAt: now(),
           title: 'Nouveau scénario',
@@ -408,8 +433,9 @@ export class Crise {
       ip,
       'crisis.scenario-updated',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        remplacer(c, 'scenarios', id, { ...parId(c.scenarios, id, 'Scénario'), ...b });
+      async (c) => {
+        const s = await this.scenario(c, id, user);
+        remplacer(c, 'scenarios', id, { ...s, ...b });
         return { id };
       },
     );
@@ -420,8 +446,8 @@ export class Crise {
       ip,
       'crisis.scenario-removed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        await this.scenario(c, id, user);
         remplacer(c, 'scenarios', id, null);
         return { id };
       },
@@ -434,8 +460,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         remplacer(c, 'scenarios', id, { ...s, items: [...liste(s.items), { phase: 'Gestion', t: '', owner: '' }] });
         return { id };
       },
@@ -448,8 +474,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-updated',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         const items = liste(s.items);
         if (!isObject(items[k])) throw new HttpError(404, 'Action absente.');
         remplacer(c, 'scenarios', id, {
@@ -466,8 +492,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-removed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         const items = liste(s.items);
         if (!isObject(items[k])) throw new HttpError(404, 'Action absente.');
         remplacer(c, 'scenarios', id, { ...s, items: items.filter((_, i) => i !== k) });

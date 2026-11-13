@@ -308,8 +308,9 @@ function Actions({ s }: { s: Synthese }) {
 /** Risques et continuité d'activité. */
 function Risques({ s }: { s: Synthese }) {
   const r = s.risques,
-    c = s.continuite;
-  if (!r && !c) return null;
+    c = s.continuite,
+    inc = s.incidents;
+  if (!r && !c && !inc) return null;
   return (
     <Carte titre="Risques et continuité" className="ecarts-carte">
       <div className="chiffres-grille">
@@ -323,6 +324,13 @@ function Risques({ s }: { s: Synthese }) {
         )}
         {r && <Chiffre valeur={r.revueEchue} libelle="revues échues" etat={r.revueEchue ? 'attention' : undefined} />}
         {c && <Chiffre valeur={c.plans} libelle="plans de continuité et de reprise" />}
+        {inc && (
+          <Chiffre
+            valeur={inc.ouverts}
+            libelle="incidents ouverts"
+            etat={inc.securiteOuverts ? 'attention' : undefined}
+          />
+        )}
       </div>
     </Carte>
   );
