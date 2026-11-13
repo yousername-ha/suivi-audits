@@ -445,7 +445,7 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « RSSI-18 ouvert » (`test.fail`), ajouté le 13/11/2026 ; « CAMP-C4-05 ouvert » accepte la future numérotation (« 9.3.2 d 1 »). |
 | Correctif | Entrées de la revue selon l’ISO/IEC 27001:2022, 9.3.2 (a à g, d 1 à 4) ; sorties 9.3.3 ; ADR 0036 amendée. |
 | Tests de la correction | `apps/api/test/pilotage-revue.test.ts` ; `RSSI-18` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-032 — Validation de la revue refusée sans désigner « Décisions et moyens » (RSSI-20)
 
@@ -576,7 +576,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, deux tests « CAMP-C4-05 ouvert » : revue propre d'un enfant sans héritage ; entrée 9.3.2 c du parent comptant l'écart d'un enfant qui hérite (`test.fail`) |
 | Correctif | Une revue par périmètre ; les enfants héritiers remontent dans la revue du parent, les autres non. |
 | Tests de la correction | `apps/api/test/pilotage-revue.test.ts` ; `CAMP-C4-05` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-043 — Compteur « Continuité » limité aux plans PCRA (C5-01)
 
@@ -722,7 +722,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « opportunités » sans objet (type `opportunity` retiré, ADR 0090, lot 2 : création → 422). Toujours présent pour le contexte (SWOT…), les traitements (fiche ouverte depuis le plan d'action du risque, sans « Archiver ») et les actifs et sources de risque (fiches de l'étude EBIOS RM, `RecordEditor.tsx` sans archivage). Test « CAMP-C1-03 » réduit au cas SWOT. |
 | Correctif | « Archiver la fiche » dans `RecordEditor` (droit de suppression du module). |
 | Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C1-03` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-053 — PESTEL, cartographie et processus ignorent les SWOT et enjeux saisis à l'écran (C1-05)
 
@@ -736,7 +736,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-05 ouvert » (`test.fail`) |
 | Correctif | PESTEL (menaces, opportunités et enjeux de contexte saisis à l’écran, classement par périmètre, plus de 404 hors périmètre commun), carte du contexte (enjeux et parties saisis), fiche processus (SWOT saisis rattachables par lien). |
 | Tests de la correction | `apps/api/test/pilotage-pestel.test.ts`, `apps/api/test/processus-cartes.test.ts`, `apps/api/test/carto-fiches-pilotage.test.ts` ; `CAMP-C1-05` à rejouer par la recette |
-| Commit | COMMIT_LOT5 |
+| Commit | 99c426a |
 
 ## BUG-054 — Évaluation d'un fournisseur : la page plante au troisième clic sur un critère (C1-07)
 
@@ -750,7 +750,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-07 ouvert » (`test.fail`) |
 | Correctif | Valeur lue avant la mise à jour d’état (case et résultat du critère). |
 | Tests de la correction | `apps/web/test/evenements-react.test.ts` (garde statique) ; `CAMP-C1-07` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-055 — Objectifs et indicateurs : deux modèles selon le périmètre ; synthèse du sous-périmètre sans objectifs (C1-10)
 
@@ -764,7 +764,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-10 ouvert » (`test.fail`) |
 | Correctif | Carte « Objectifs et indicateurs » dans la Synthèse de tout périmètre (fiches du périmètre). **Reste** : un seul modèle (processus, mesures, méthode d’évaluation des objectifs historiques absents des fiches du Pilotage). |
 | Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C1-10` à rejouer par la recette |
-| Commit | COMMIT_LOT5 |
+| Commit | 99c426a |
 
 ## BUG-056 — « Créer les actions pour les écarts » du clausier : aucune action, écart sans responsable ni échéance, dupliqué (C1-12)
 
@@ -778,7 +778,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C1-12 ouvert » (`test.fail`) |
 | Correctif | Une action par point du clausier (responsable, échéance 30 jours) ; identifiant d’évaluation déjà traitée refusé (409). |
 | Tests de la correction | `apps/api/test/historique-evals-fournisseurs.test.ts` ; `CAMP-C1-12` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-057 — « Stratégie » du traitement affichée « Réduire » mais envoyée vide ; refus en termes techniques (C2-01)
 
@@ -792,7 +792,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-01 ouvert » (`test.fail`) |
 | Correctif | Listes sans désélection accidentelle ; messages de validation français avec libellé du champ. |
 | Tests de la correction | `apps/web/test/listes-sans-deselection.test.ts`, `apps/api/test/erreurs-validation.test.ts` ; `CAMP-C2-01` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-058 — Exports incomplets : registre des risques, traitements, EBIOS RM, « export complet » (C2-05, C5-16)
 
@@ -821,7 +821,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (atelier 5 « Option : reduce », rapport « reduce » et « draft », éditeur de méthode). |
 | Correctif | Libellés français partagés (`libelles-valeurs.ts`) pour la carte, l’étude, l’appréciation et le rapport ; libellé de retrait de l’éditeur de méthode. **Reste** : valeur « Mode » de l’éditeur. |
 | Tests de la correction | `packages/shared/test/libelles-valeurs.test.ts`, `apps/web/test/rapport-comite-libelles.test.ts` ; `CAMP-C2-06` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-060 — Choix des mesures d'un traitement : sans référence, avec doublons et textes tronqués (C2-07)
 
@@ -836,7 +836,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : le traitement s'ajoute désormais par le Registre des risques (« Plan d’action de <risque> », « Ajouter un traitement ou une mesure ») ; option « Sauvegarde des informations » toujours sans référence. Test « CAMP-C2-07 » adapté au nouveau chemin. |
 | Correctif | Références des mesures dans les noms proposés, exigences dédoublonnées. **Reste** : textes HDS tronqués (non reproduits en lecture de code). |
 | Tests de la correction | `apps/api/test/sources-references.test.ts` ; `CAMP-C2-07` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-061 — EBIOS RM : scénario opérationnel non placé dans la matrice de l'étude (C2-09)
 
@@ -851,7 +851,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (ligne « G4 — Critique » sans scénario). |
 | Correctif | Rang 1 à 4 des niveaux d’échelles publiées de quatre niveaux, utilisé pour la matrice. |
 | Tests de la correction | `apps/web/test/ebios-visuel.test.ts` ; `CAMP-C2-09` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-062 — Sélecteur « Périmètre affiché » sans effet sur la DdA, l'audit et les plans annuels (C3-01, C4-02)
 
@@ -866,7 +866,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
 | Correctif | Les rubriques communes à l’organisation (DdA, audit, plans, clausier, fournisseurs) l’indiquent sous un autre périmètre ; pas de DdA par périmètre (choix documenté, à arbitrer si le RSSI veut une DdA par périmètre). |
 | Tests de la correction | Aucun test automatisé (message d’interface) ; `CAMP-C3-01` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-063 — Trois registres d'applicabilité qui s'ignorent (C3-02)
 
@@ -880,7 +880,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-02 ouvert » (`test.fail`) |
 | Correctif | La couverture reprend la DdA (applicabilité et niveau) pour les exigences sans évaluation enregistrée ; « Applicabilité et justifications » et DdA partagent déjà la source `dda`. |
 | Tests de la correction | `apps/api/test/couverture-dda.test.ts` ; `CAMP-C3-02` à rejouer par la recette |
-| Commit | COMMIT_LOT5 |
+| Commit | 99c426a |
 
 ## BUG-064 — « Référentiels et exigences » ignore les référentiels attribués et appliqués (C3-03)
 
@@ -920,7 +920,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-04 ouvert » (`test.fail`) |
 | Correctif | Les exercices de continuité saisis à l’écran sont proposés et rattachables à une cellule de crise. **Reste** : marquage « Réalisé » à la clôture, comptage dans « Plans du SMSI » et le bandeau. |
 | Tests de la correction | `apps/api/test/historique-incidents-perimetre.test.ts` ; `CAMP-C5-04` à rejouer par la recette |
-| Commit | COMMIT_LOT5 |
+| Commit | 99c426a |
 
 ## BUG-067 — Scénario de crise : responsable d'une action perdu sans message (C5-05)
 
@@ -934,7 +934,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-05 ouvert » (`test.fail`) |
 | Correctif | Clé de ligne des actions de scénario = indice, plus le texte. |
 | Tests de la correction | Aucun test automatisé ; `CAMP-C5-05` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-068 — Resélectionner le périmètre affiché bascule sur le périmètre racine (C5-17, T5-04)
 
@@ -948,7 +948,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-17 ouvert » (`test.fail`) |
 | Correctif | Toutes les listes de choix ont `allowDeselect={false}` ou `clearable` (garde statique). |
 | Tests de la correction | `apps/web/test/listes-sans-deselection.test.ts` ; `CAMP-C5-17` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-069 — Crise réelle : le bandeau rouge annoncé n'existe pas (C5-18)
 
@@ -962,7 +962,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-18 ouvert » (`test.fail`) |
 | Correctif | Composant `BandeauCrise` dans la mise en page. |
 | Tests de la correction | Aucun test automatisé (composant) ; `CAMP-C5-18` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-070 — Les incidents ne remontent dans aucune synthèse (C5-19)
 
@@ -976,7 +976,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-19 ouvert » (`test.fail`) |
 | Correctif | Incidents repris dans la revue (d 2), le tableau de bord (`incidents`) et la synthèse du mur. **Reste** : rapport de pilotage et diapositive « Revue des incidents ». |
 | Tests de la correction | `apps/api/test/tableau-de-bord.test.ts`, `apps/api/test/pilotage-revue.test.ts` ; `CAMP-C5-19` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-071 — Revue des accès (A.5.18) sans les accès aux périmètres (C6-12)
 
@@ -990,7 +990,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-12 ouvert » (`test.fail`) |
 | Correctif | Colonne « Accès aux périmètres » de la revue des accès (CSV et Excel). |
 | Tests de la correction | `apps/api/test/rbac.test.ts` ; `CAMP-C6-12` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-072 — Date du dernier test de restauration dans le futur acceptée : l'alerte disparaît (C6-21)
 
@@ -1004,7 +1004,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-21 ouvert » (`test.fail`) |
 | Correctif | Date de dernier test de restauration refusée dans le futur (un jour de marge). |
 | Tests de la correction | `apps/api/test/settings.test.ts` ; `CAMP-C6-21` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-073 — Versions de l'état toutes vides : télécharger ou restaurer une version ne rend rien (C6-22)
 
@@ -1018,7 +1018,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C6-22 ouvert » (`test.fail`) |
 | Correctif | L’historique de l’état enregistre l’état complet (modules en tables compris). |
 | Tests de la correction | `apps/api/test/admin-requetes.test.ts` ; `CAMP-C6-22` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-074 — Au téléphone, la DdA n'affiche pas l'applicabilité ni la mise en œuvre (T3-03)
 
@@ -1032,7 +1032,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-T3-03 ouvert » (`test.fail`) |
 | Correctif | Largeur minimale des listes de choix des tableaux (`.champ-choix`). |
 | Tests de la correction | Aucun test automatisé ; `CAMP-T3-03` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-075 — Un contributeur modifie les décisions d'une revue de direction validée (T4-03)
 
@@ -1060,7 +1060,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-T5-03 ouvert » (`test.fail`) |
 | Correctif | `continuity_plan` et `continuity_exercise` relèvent du module `incidents`. |
 | Tests de la correction | `apps/api/test/pilotage.test.ts` ; `CAMP-T5-03` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
 ## BUG-077 — Clausier : identifiant FOU-0n réattribué après archivage d'un écart, création en erreur 500 (R12-01)
 
@@ -1074,5 +1074,5 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-R12-01 ouvert » (`test.fail`) |
 | Correctif | `identifiantsEcartsPris` : les écarts archivés comptent pour la numérotation (évaluations, incidents, exercices). |
 | Tests de la correction | `apps/api/test/historique-evals-fournisseurs.test.ts` ; `CAMP-R12-01` à rejouer par la recette |
-| Commit | COMMIT_LOT456 |
+| Commit | 02aed39 |
 
