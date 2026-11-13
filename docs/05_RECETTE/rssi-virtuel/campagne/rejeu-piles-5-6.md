@@ -32,7 +32,7 @@ Les objets créés pour le rejeu portent le préfixe « rejeu ».
 | C6-05 Catégorie NIS 2 non remise à vide ; journal inexact | reproduit | majeur → **bloquant** | voisin C6-15 | oui (API `PUT`/`GET` + journal) |
 | C6-12 Revue des accès sans périmètres | reproduit | majeur → majeur | lié à T5-01 / T6-02 | oui (API `GET /api/admin/access-review`) |
 | C6-15 Valeurs numériques corrigées en silence | reproduit en partie (pas d'écart durable écran/donnée ; serveur correct) | majeur → **mineur** | famille C6-01, C5-26 | oui (page Sécurité) |
-| C6-20 Exécutant d'exploitation indisponible | **outillage** (`docker compose` de l'exécutant sans nom de projet de la pile) | majeur → sans objet | — | non (outillage à corriger d'abord) |
+| C6-20 Exécutant d'exploitation indisponible | **outillage**, confirmé après correction : exécutant disponible, deux sauvegardes chiffrées réussies et listées (section en fin de document) | majeur → sans objet (remarque sur l'emplacement affiché) | — | oui après correction (`GET /api/admin/sauvegardes`, `worker.available`) |
 | C6-21 Test de restauration daté dans le futur accepté | reproduit | majeur → majeur | famille C5-02, C5-10 | oui (API `PUT /api/settings/sauvegardes`) |
 | C6-22 Versions de l'état vides | reproduit, défaut propre (indépendant de C6-20) | majeur → majeur | — | oui (API `GET /api/admin/versions/:v`) |
 | T5-02 Contributeur retire des événements RETEX | reproduit | bloquant → bloquant | — | oui (API `DELETE …/retex/:eid`) |
@@ -40,7 +40,8 @@ Les objets créés pour le rejeu portent le préfixe « rejeu ».
 | INV-08 en ÉCHEC (pile 5) | faux positif de l'invariant (outillage) | bloquant → sans objet | BUG-019 (double identifiant) | correction dans `invariants.ts` |
 | T5-01, T6-02 | non rejoués ici (agent des piles 1 et 2) | — | — | — |
 
-Bilan : 18 reproduits, 1 reproduit en partie, 0 non reproduit, 2 outillage (C6-20, INV-08). Gravités montées : C5-01,
+Bilan : 18 reproduits, 1 reproduit en partie, 0 non reproduit, 2 outillage (C6-20, confirmé après correction de
+l'outillage ; INV-08). Gravités montées : C5-01,
 C5-06, C5-11, C5-15, C6-04, C6-05 (majeur → bloquant). Gravité baissée : C6-15 (majeur → mineur).
 
 ## Rejeu par constat
@@ -625,3 +626,49 @@ C5-06, C5-11, C5-15, C6-04, C6-05 (majeur → bloquant). Gravité baissée : C6-
 - INV-08 : apparier les écarts sur `legacyId ?? id`.
 - `pilote.mjs cliquer` ne sait pas viser un bouton homonyme dans une ligne (« Droits effectifs », « Ouvrir ») : scripts
   reliés au Chrome nécessaires.
+
+## C6-20, après correction de l'outillage (pile 6, 13/11/2026 vers 01:43 à 01:46, Europe/Paris)
+
+Contexte : la session principale a donné à l'exécutant de chaque pile le nom de projet Compose de sa pile
+(`COMPOSE_PROJECT_NAME`) et recréé les conteneurs `updater` ; la machine a ensuite redémarré, piles relancées, données
+intactes.
+
+- Fait (compte `rssi`, Chrome du pilote relancé) : `pilote ouvrir /systeme/sauvegardes` ; `pilote cliquer button
+  "Demander une sauvegarde"` → `dialog "Confirmation"` « Demander une sauvegarde complète chiffrée ? Elle sera exécutée
+  par le serveur et suivie ici. » → `pilote cliquer button "Confirmer"` (une première fois juste avant le redémarrage de la
+  machine, une seconde fois après) ; suivi par `GET /api/admin/sauvegardes` (script `r56-attendre-sauvegarde.mjs`) ;
+  liste relue à l'écran ; dossier des sauvegardes de la pile listé en lecture seule (`ls`). Rien restauré, aucune mise à
+  jour touchée.
+- Vu :
+  - `GET /api/admin/sauvegardes` → 200, `"worker":{"available":true,…,"message":"Exécutant serveur prêt ; chiffrement
+    obligatoire."}` ; écran : `region "Clé de secours des sauvegardes"` → `text: En place` (au lieu de « En attente de
+    l'exécutant »), `paragraph: "Dernier contact de l’exécutant : 13/11/2026 00:44"`, `button "Demander une sauvegarde"`
+    actif, plus d'alerte « Exécutant serveur indisponible ».
+  - après « Confirmer » : « Demande enregistrée. La sauvegarde sera exécutée sur le serveur. », ligne `row "13/11/2026 00:45
+    rssi En attente En attente du prochain passage de l’exécutant. Annuler la demande"`, puis, 8 s plus tard,
+    `"status":"reussie"`.
+  - liste `region "Demandes de sauvegarde"` : deux lignes « Réussie », par exemple `row "13/11/2026 00:45 rssi Réussie
+    suivi-audits-20261113-004533-….tar.age 360.4 Ko · 2 s · Chiffrée · SHA-256 vérifié caa117fe0f53…"` et la demande de
+    00:43 (350.4 Ko · 4 s · Chiffrée · SHA-256 vérifié). API : `report.tailleOctets` 369018 et 358778,
+    `"chiffree":true`, `"integriteVerifiee":true`, empreinte SHA-256 affichée en entier. Sur le serveur, deux fichiers
+    `.tar.age` (chiffrés par age) de ces tailles, chacun avec son `.sha256`, droits `-rw-------` root.
+  - Écart relevé : l'écran indique « Emplacement des sauvegardes sur le serveur : /srv/sauvegardes/suivi-audits » et la
+    commande manuelle `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits`, alors que les sauvegardes demandées depuis
+    l'écran sont écrites dans le dossier `sauvegardes` des données de la pile (`BACKUP_DEST` par défaut de l'exécutant).
+    Ce champ est un réglage de suivi saisi à la main ; il n'est pas relié à la destination réelle.
+- Verdict : **outillage, confirmé**. Une fois l'exécutant relié à sa pile, la sauvegarde complète chiffrée se demande
+  depuis l'écran, aboutit et apparaît dans la liste avec sa taille, son empreinte vérifiée et le chiffrement. C6-20 est
+  écarté comme défaut de l'application. Je propose une **remarque** distincte pour l'emplacement affiché, qui n'est pas
+  celui de l'exécutant (à confirmer sur une installation standard, où `BACKUP_DEST` peut être réglé dans `.env`).
+- Test déterministe : oui sur une pile corrigée : `POST` de la demande telle que l'écran l'envoie, puis interrogation de
+  `GET /api/admin/sauvegardes` jusqu'à un état final ; attendu `jobs[0].status === "reussie"`, `report.chiffree === true`,
+  `report.integriteVerifiee === true`, `report.tailleOctets > 0`.
+
+### C6-22, rejoué une fois après la correction
+
+- Fait : `pilote api GET /api/admin/versions`, puis `GET /api/admin/versions/11` (dernière version) et `GET
+  /api/incidents`.
+- Vu : 11 versions, toutes de 5 octets, une seule empreinte ; dernière `v11` « Paramètres : referentiels » ;
+  `GET /api/admin/versions/11` → 200 `{}`, alors que `GET /api/incidents` répond `"version":11` avec le contenu de l'état.
+- Verdict : **inchangé, toujours reproduit** : l'export d'une version reste `{}` avec l'exécutant en marche et après deux
+  sauvegardes réussies. Cela confirme que C6-22 est un défaut propre, indépendant de C6-20.

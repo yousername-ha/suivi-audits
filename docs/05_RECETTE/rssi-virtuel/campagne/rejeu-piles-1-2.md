@@ -29,6 +29,7 @@ Rejeu en cours : le tableau et les sections sont complétés au fil des constats
 | C2-06 | reproduit | majeur → majeur | extension de BUG-023 (à fusionner si la correction est commune) | oui (page et API) |
 | C2-07 | reproduit (157 options au lieu de 160) | majeur → majeur | volet « liens » : même famille que BUG-026 (mesure du traitement invisible dans la DdA) | oui (page et API) |
 | C2-08 | reproduit en partie (pile 2 seulement : aucun référentiel appliqué ; sur la pile 1, le sous-périmètre propose les mesures héritées) | majeur → mineur | aucun dans la liste ; voisin de C2-07 (deux sources de mesures selon le périmètre) | oui (API) |
+| C2-09 | reproduit | majeur → majeur | aucun | oui (page) |
 
 ## Détail par constat
 
@@ -566,3 +567,38 @@ Test déterministe (API) : sur une pile neuve, sous-périmètre fictif rattaché
 → `items: []` (observé) ; à garder vert : après application d’ISO/IEC 27001 au parent avec héritage, la même requête
 renvoie un `requirement:…:A-8.13`. La correction attendue (message ou proposition de la DdA historique) se vérifie à
 l’écran : liste vide accompagnée d’un texte explicatif.
+
+### C2-09 — EBIOS RM : scénario opérationnel G4 × V2 non placé dans la matrice de l’étude (pile 2)
+
+Fait (compte `rssi`, principal) : `pilote.mjs ouvrir "/pilotage/etudes?perimetre=00000000-…-0001"`, `cliquer button
+"Ouvrir l’étude"`, `cliquer tab "Suivi, matrice et cercle"` ; lecture de SO-01 et SS-01 par l’API.
+
+Vu :
+
+- `region "Scénarios opérationnels par gravité et vraisemblance"` : en-tête `row "Gravité \\ vraisemblance V1 V2 V3 V4"`,
+  lignes « G4 — Critique », « G3 — Grave », « G2 — Significative », « G1 — Mineure » **toutes vides** (la ligne G4 n’a
+  que son `rowheader`).
+- `paragraph: "Non placés dans la matrice (gravité ou vraisemblance sans rang de 1 à 4) : 1. SO-01 Hameçonnage de
+  l’administrateur de l’infogérant puis chiffrement de la baie (fictif)."`
+- Tableau de suivi : `row "1 SO-01 … « G4 — Critique » (échelle publiée) « V2 — Vraisemblable » (échelle publiée) SS-01
+  …"` ; cercle : `button "Scénario 1 : SO-01 …, gravité « G4 — Critique » (échelle publiée), vraisemblance « V2 —
+  Vraisemblable » (échelle publiée)"` avec la légende `listitem: Gravité non rangée`.
+- Données : SO-01 `"likelihood": null, "likelihoodLevel": "v2"` ; SS-01 `"gravity": null, "severityLevel": "g4"`.
+- Cause lue : `apps/web/src/grc/ebios-visuel/modele.ts`, `lignes()` : seules les valeurs numériques `gravity` et
+  `likelihood` de 1 à 4 sont placées ; le commentaire de la fonction l’assume (« une valeur de l’échelle publiée sans rang
+  numérique … ne se place pas dans la matrice 4 × 4 »), alors que les niveaux `g4` et `v2` des échelles publiées ont un
+  rang dans leur échelle.
+
+Gravité : majeur confirmé : dès que l’étude épingle les échelles publiées (chemin proposé par l’application), la matrice
+de l’atelier 4 reste vide pour tous les scénarios ; le livrable n’est obtenu qu’en renonçant aux échelles du catalogue.
+Les niveaux affichés sont justes et le scénario est signalé, d’où pas de « bloquant ».
+
+Doublon : aucun.
+
+Test déterministe (page) : étude fictive avec échelles `gravite_ebios_rm` et `vraisemblance_ebios_rm` épinglées, un
+scénario stratégique `severityLevel: "g4"` et un scénario opérationnel `likelihoodLevel: "v2"` relié (création par
+l’API `POST /api/grc/<id>/objects`, types `risk_study`, `strategic_scenario`, `operational_scenario`) ; `goto` l’étude,
+onglet « Suivi, matrice et cercle » ; attendu après correction : la ligne `row "G4 — Critique"` contient un `button`
+« Scénario 1 : … » dans la colonne V2, et aucun texte « Non placés dans la matrice » ; observé : ligne vide et
+paragraphe « Non placés … : 1. … ». Un test unitaire de `lignes()` (`modele.ts`) avec `severityLevel`/`likelihoodLevel`
+suffit aussi.
