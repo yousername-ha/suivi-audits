@@ -184,15 +184,18 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 ## 6. Arbitrages du RSSI
 
-Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver et le désarchiver ;
-BUG-042, chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent (ses
-entrées remontent alors dans la revue du parent) ; BUG-024 (recette du 12/11), la matrice est obligatoire pour apprécier
-un risque (test RSSI-09 ajouté au fichier 41) ; BUG-031 (recette du 12/11), les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001
-(test RSSI-18 ajouté au fichier 42). Restent attendus :
+Rendus le 13/11/2026 :
 
-| Sujet | Question |
+| Sujet | Décision |
 | --- | --- |
-| Rôle d'auditeur interne | Arbitrage de la recette du 12/11, toujours ouvert. |
+| BUG-051 | Un compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants (voir § 2, bloquants ; test CAMP-T1-02 ajouté). |
+| BUG-049 | Seul le gestionnaire du registre peut l'archiver et le désarchiver. |
+| BUG-042 | Chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent : ses entrées remontent alors dans la revue du parent. |
+| BUG-024 (recette du 12/11) | La matrice est obligatoire pour apprécier un risque (test RSSI-09 ajouté au fichier 41). |
+| BUG-031 (recette du 12/11) | Les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment (test RSSI-18 ajouté au fichier 42). |
+| Rôle d'auditeur interne (recette du 12/11) | Accord du RSSI : évolution inscrite au backlog (DEV-016, à cadrer). |
+
+Aucun arbitrage ne reste attendu.
 
 ## 7. Tests de non-régression
 

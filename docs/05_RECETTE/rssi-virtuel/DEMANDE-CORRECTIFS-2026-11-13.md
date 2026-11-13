@@ -394,11 +394,10 @@ le lot 2 ; test `specs/41-campagne-organisation-risques.spec.ts`, « RSSI-09 ouv
 **Rendu le 13/11/2026, BUG-031** (recette du 12/11) : les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001. À traiter avec BUG-042 (lot 4)
 et BUG-070 ; amender l'ADR 0036 ; test `specs/42-campagne-conformite-ecarts.spec.ts`, « RSSI-18 ouvert ».
 
-Restent à obtenir :
+**Rendu le 13/11/2026, rôle d'auditeur interne** (demande du 12/11) : accord du RSSI ; c'est une évolution, inscrite au
+backlog (DEV-016, à cadrer), pas un correctif de cette demande.
 
-| Fiche | Question |
-| --- | --- |
-| Rôle d'auditeur interne | Toujours ouvert (demande du 12/11). |
+Aucun arbitrage ne reste attendu.
 
 ## 6. Outillage de recette (pour information, déjà corrigé par la recette)
 

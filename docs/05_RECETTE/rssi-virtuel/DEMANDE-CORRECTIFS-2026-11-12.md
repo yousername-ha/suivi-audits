@@ -222,6 +222,7 @@ uniquement. « Piste » = endroit repéré par la recette en lisant le code, san
   **Arbitré par le RSSI le 13/11/2026 : la matrice est obligatoire pour apprécier un risque.** Test : `specs/41-campagne-organisation-risques.spec.ts`,
   « RSSI-09 ouvert ».
 - **Rôle d'auditeur interne** : aucun rôle ne permet de saisir des constats sans pouvoir modifier la DdA auditée.
+  **Accord du RSSI le 13/11/2026** : évolution inscrite au backlog (DEV-016, à cadrer).
 
 ## 4 bis. Ajout du 12/11 au soir : rattachement des processus (BUG-037, majeur, P1)
 
