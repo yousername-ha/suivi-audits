@@ -308,10 +308,6 @@ export function Creation({
     () => objs.filter((o) => o.type === 'process' || o.type === 'subprocess').map((o) => o.code ?? ''),
     [objs],
   );
-  const fournisseurs = useMemo(
-    () => [...new Set(objs.filter((o) => o.type === 'supplier').map((o) => o.name))].sort(),
-    [objs],
-  );
   if (!demande) return null;
   const item = demande.item;
   const s = (k: string) => String(f[k] ?? '');
@@ -338,8 +334,6 @@ export function Creation({
         };
       case 'supplier':
         return { type: 'supplier', name, saas: !!f.saas, hds: !!f.hds, critical: !!f.critical };
-      case 'application':
-        return { type: 'application', name, supplier: s('supplier') };
       case 'issue':
         return { type: 'issue', name, kind: s('kind') === 'int' ? 'int' : 'ext', desc: s('desc') };
       case 'site':
@@ -488,17 +482,6 @@ export function Creation({
                 onChange={(e) => set('critical', e.currentTarget.checked)}
               />
             </Group>
-          )}
-          {item.k === 'type' && item.type === 'application' && (
-            <Select
-              label="Fournisseur"
-              data={fournisseurs}
-              searchable
-              clearable
-              value={s('supplier') || null}
-              onChange={(v) => set('supplier', v ?? '')}
-              nothingFoundMessage="Aucun fournisseur"
-            />
           )}
           {item.k === 'type' && item.type === 'process' && (
             <Select

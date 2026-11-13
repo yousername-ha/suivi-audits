@@ -31,16 +31,6 @@ const ETAT: JsonObject = {
     { title: 'sans identifiant' },
   ],
   plans: [],
-  appGaps: [
-    {
-      id: 'GAP-1',
-      name: 'Application fictive',
-      lines: { 'A-1': { st: 'ok', comment: 'c' } },
-      custom: [],
-      profile: null,
-      profileAt: '',
-    },
-  ],
   // supEvals absente : la clé ne doit pas apparaître.
 };
 
@@ -66,7 +56,7 @@ describe('migration 024 et correspondance générique', () => {
       ]);
       expect(await migrerAvant043(t)).toContain('024_collections_suivi_tables.sql');
       const etat = (await t.svc.legacy.recompose())!.data;
-      for (const k of ['incidents', 'plans', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
+      for (const k of ['incidents', 'plans']) expect(etat[k], k).toEqual(ETAT[k]);
       expect('supEvals' in etat).toBe(false);
       // Ordre des entrées conservé, entrée non objet conservée à sa place.
       expect((etat.incidents as Json[])[1]).toBe('entrée atypique');
@@ -88,7 +78,7 @@ describe('migration 024 et correspondance générique', () => {
         await t.svc.db.tx((c) => ecrireCollection(c, spec, valeur as Json | undefined));
       }
       const etat = (await t.svc.legacy.recompose())!.data;
-      for (const k of ['incidents', 'plans', 'appGaps']) expect(etat[k], k).toEqual(ETAT[k]);
+      for (const k of ['incidents', 'plans']) expect(etat[k], k).toEqual(ETAT[k]);
       expect('supEvals' in etat).toBe(false);
       const spec = COLLECTIONS.find((s) => s.key === 'incidents')!;
       await t.svc.db.tx((c) => ecrireCollection(c, spec, undefined));
@@ -103,7 +93,6 @@ describe('migration 024 et correspondance générique', () => {
   const CLES = [
     'incidents',
     'plans',
-    'appGaps',
     'supEvals',
     'crisis',
     'ai',

@@ -1181,62 +1181,6 @@ export const CONTRACT_PATHS: ReadonlyArray<{ path: string; types: string }> = [
     "types": "texte"
   },
   {
-    "path": "$.appGaps",
-    "types": "liste"
-  },
-  {
-    "path": "$.appGaps[]",
-    "types": "objet"
-  },
-  {
-    "path": "$.appGaps[].id",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].createdAt",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].name",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].supplier",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].dscp",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].cloud",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].status",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].owner",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].target",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].desc",
-    "types": "texte"
-  },
-  {
-    "path": "$.appGaps[].lines",
-    "types": "objet"
-  },
-  {
-    "path": "$.appGaps[].custom",
-    "types": "liste"
-  },
-  {
     "path": "$.reviews",
     "types": "liste"
   },

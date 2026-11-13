@@ -53,13 +53,12 @@ describe('jeu de recette (RECETTE.md)', () => {
     expect(c('subprocess')).toBe(2);
     expect(c('stakeholder')).toBe(4);
     expect(c('supplier')).toBe(8);
-    expect(c('application')).toBe(2);
     expect(c('site')).toBe(1);
     expect(c('infrastructure')).toBe(1);
     expect(objs.get('sup:SUP-101')).toMatchObject({ hds: true, crit: true, std: ['ISO 27001', 'HDS'] });
     expect(objs.get('process:PRS-001.1')).toMatchObject({ type: 'subprocess', parent: 'process:PRS-001', scope: 'in' });
     expect(objs.get('process:PRP-001')!.scope).toBe('out');
-    expect(objs.get('app:APP-101')).toMatchObject({ supRef: 'sup:SUP-103', scope: 'in' });
+    expect(objs.has('app:APP-101')).toBe(false);
   });
   it('calcule les indicateurs KO et la fiche détaillée sans données brutes', () => {
     const p = objs.get('process:PRR-001')!;
@@ -74,9 +73,7 @@ describe('jeu de recette (RECETTE.md)', () => {
     const { suppliers: _s, ...sansFournisseurs } = DONNEES;
     const o = buildObjects(sansFournisseurs, { org: 'X' });
     expect([...o.values()].some((x) => x.type === 'supplier')).toBe(false);
-    expect(o.get('app:APP-101')!.supRef).toBe('');
     expect(refModule('sup:SUP-101')).toBe('fournisseurs');
-    expect(refModule('app:APP-1')).toBe('conformite');
     expect(refModule('process:P')).toBe('pilotage');
     expect(refModule('lane:pil')).toBeNull();
     expect(refModule('isms')).toBeNull();
@@ -95,7 +92,7 @@ describe('génération (CARTO-05)', () => {
     expect(l.nodes['band:ext']!.y).toBeLessThan(sc.y);
     expect(l.nodes['band:int']!.y).toBeGreaterThan(sc.y + sc.h);
     expect(l.nodes['zone:out']).toBeDefined();
-    // Fournisseurs « critiques ou HDS, et liés à une application » : les autres sont ignorés.
+    // Fournisseurs « critiques ou HDS » : les autres sont ignorés.
     expect(l.nodes['sup:SUP-106']).toBeUndefined();
     expect(l.ignored['sup:SUP-106']).toBe(1);
     expect(MapLayoutSchema.safeParse(l).success).toBe(true);

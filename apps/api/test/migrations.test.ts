@@ -193,6 +193,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
       '052_referentiels_copies_perimetre.sql',
       '053_retrait_crrc_investissements.sql',
       '054_retrait_revues_acces.sql',
+      '058_retrait_gap_applications.sql',
     ]);
     // Rôles v2 repris : admin → Administrateur, rw → Contributeur, ro → Lecteur ; colonne users.role supprimée.
     const mapped = await t.svc.db.q<{ username: string; role_id: string }>(

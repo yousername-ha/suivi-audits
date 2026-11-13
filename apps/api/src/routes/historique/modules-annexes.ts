@@ -1,15 +1,6 @@
-import {
-  ActionPlanCreation,
-  ActionPlanModification,
-  AppGapModification,
-  DecalagePlan,
-  GuideGapCreation,
-  LigneGapModification,
-  PointGapCreation,
-} from '@suivi/shared';
-import { z } from 'zod';
+import { ActionPlanCreation, ActionPlanModification, DecalagePlan } from '@suivi/shared';
 import { route } from '../../http/route.js';
-import { tags, user, idPlan, idElement } from './commun.js';
+import { tags, user, idPlan } from './commun.js';
 
 export const modulesAnnexesRoutes = [
   route({
@@ -85,91 +76,5 @@ export const modulesAnnexesRoutes = [
     access: 'pilotage:modifier' as const,
     params: idPlan,
     handler: async ({ svc, s, params, ip }) => svc.historique.plans.creerEcart(params.id, user(s), ip),
-  }),
-  route({
-    method: 'GET',
-    url: '/api/gap',
-    summary: 'Applications à intégrer au périmètre et leur analyse d’écart',
-    tags,
-    access: 'conformite:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.gap.vue(user(s)),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/gap',
-    summary: 'Ajouter une application sans questionnaire',
-    tags,
-    access: 'conformite:modifier' as const,
-    status: 201,
-    handler: async ({ svc, s, ip }) => svc.historique.gap.creer(user(s), ip),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/gap/guide',
-    summary: 'Nouveau GAP guidé : liste de contrôle pré-évaluée, plan d’action, fournisseur et usage IA facultatifs',
-    tags,
-    access: 'conformite:modifier' as const,
-    status: 201,
-    body: GuideGapCreation,
-    handler: async ({ svc, s, body, ip }) => svc.historique.gap.guider(body, user(s), ip),
-  }),
-  route({
-    method: 'PATCH',
-    url: '/api/gap/:id',
-    summary: 'Modifier une application (fournisseur, DSCP, nuage, statut, responsable, échéance, description)',
-    tags,
-    access: 'conformite:modifier' as const,
-    params: idElement,
-    body: AppGapModification,
-    handler: async ({ svc, s, params, body, ip }) => svc.historique.gap.modifier(params.id, body, user(s), ip),
-  }),
-  route({
-    method: 'DELETE',
-    url: '/api/gap/:id',
-    summary: 'Supprimer une application et son analyse d’écart',
-    tags,
-    access: 'conformite:supprimer' as const,
-    params: idElement,
-    handler: async ({ svc, s, params, ip }) => svc.historique.gap.supprimer(params.id, user(s), ip),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/gap/:id/points',
-    summary: 'Ajouter un point de contrôle à une application',
-    tags,
-    access: 'conformite:modifier' as const,
-    status: 201,
-    params: idElement,
-    body: PointGapCreation,
-    handler: async ({ svc, s, params, body, ip }) => svc.historique.gap.ajouterPoint(params.id, body, user(s), ip),
-  }),
-  route({
-    method: 'PATCH',
-    url: '/api/gap/:id/points/:point',
-    summary: 'État, constat, pilote ou échéance d’un point de contrôle',
-    tags,
-    access: 'conformite:modifier' as const,
-    params: idElement.extend({ point: z.string().trim().min(1).max(40) }),
-    body: LigneGapModification,
-    handler: async ({ svc, s, params, body, ip }) =>
-      svc.historique.gap.majPoint(params.id, params.point, body, user(s), ip),
-  }),
-  route({
-    method: 'DELETE',
-    url: '/api/gap/:id/points/:point',
-    summary: 'Retirer un point de contrôle ajouté',
-    tags,
-    access: 'conformite:supprimer' as const,
-    params: idElement.extend({ point: z.string().trim().min(1).max(40) }),
-    handler: async ({ svc, s, params, ip }) => svc.historique.gap.retirerPoint(params.id, params.point, user(s), ip),
-  }),
-  route({
-    method: 'POST',
-    url: '/api/gap/:id/points/:point/action',
-    summary: 'Créer l’action du registre des écarts d’un point partiel ou non conforme',
-    tags,
-    access: 'conformite:modifier' as const,
-    params: idElement.extend({ point: z.string().trim().min(1).max(40) }),
-    handler: async ({ svc, s, params, ip }) => svc.historique.gap.creerAction(params.id, params.point, user(s), ip),
   }),
 ];

@@ -42,7 +42,7 @@ export function defaultSize(view: MapView, o: MapObject | undefined | null): { w
 
 const listOf = (refs: Iterable<string>, objs: ReadonlyMap<string, CartoObject>) =>
   [...refs].map((r) => objs.get(r)).filter((o): o is CartoObject => !!o);
-const ASSETS = new Set(['application', 'infrastructure', 'site']);
+const ASSETS = new Set(['infrastructure', 'site']);
 
 /** Vue contexte : enjeux externes en haut, périmètre (processus, SMSI, SI) au centre, parties intéressées à gauche,
  *  fournisseurs à droite, enjeux internes en bas, puis zone hors périmètre. */

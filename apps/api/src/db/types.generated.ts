@@ -781,26 +781,6 @@ export interface StateHistory {
   import_batch_id: number | null;
 }
 
-export interface SuiviAppGaps {
-  seq: Generated<number>;
-  position: number;
-  id: string | null;
-  name: string | null;
-  supplier: string | null;
-  dscp: string | null;
-  cloud: string | null;
-  status: string | null;
-  owner: string | null;
-  target: string | null;
-  description: string | null;
-  lines: ColumnType<JsonValue | null, string | null, string | null>;
-  custom: ColumnType<JsonValue | null, string | null, string | null>;
-  plan_fd: string | null;
-  profile: ColumnType<JsonValue | null, string | null, string | null>;
-  profile_at: string | null;
-  extra: ColumnType<JsonValue, string | undefined, string>;
-}
-
 export interface SuiviClausierEvals {
   seq: Generated<number>;
   position: number;
@@ -1515,7 +1495,6 @@ export interface DB {
   sessions: Sessions;
   settings: Settings;
   state_history: StateHistory;
-  suivi_app_gaps: SuiviAppGaps;
   suivi_clausier_evals: SuiviClausierEvals;
   suivi_crise_cellules: SuiviCriseCellules;
   suivi_crise_contacts: SuiviCriseContacts;

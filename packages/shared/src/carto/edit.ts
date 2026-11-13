@@ -29,16 +29,7 @@ export const UNDO_LEVELS = 60;
 
 /** Types suivis par la synchronisation (bandeau « nouveaux objets ») et marqués « ignorés » après génération. */
 export const SYNC_TYPES: Record<MapView, readonly ObjectType[]> = {
-  context: [
-    'process',
-    'stakeholder',
-    'external_issue',
-    'internal_issue',
-    'application',
-    'infrastructure',
-    'site',
-    'supplier',
-  ],
+  context: ['process', 'stakeholder', 'external_issue', 'internal_issue', 'infrastructure', 'site', 'supplier'],
   process: ['process', 'subprocess'],
 };
 /** Types proposés par « Ajouter depuis la plateforme ». */
@@ -49,7 +40,6 @@ export const ADD_TYPES: Record<MapView, readonly ObjectType[]> = {
     'stakeholder',
     'external_issue',
     'internal_issue',
-    'application',
     'site',
     'infrastructure',
     'supplier',
@@ -78,13 +68,12 @@ export interface GenerateOptions {
   supplier?: boolean;
   external_issue?: boolean;
   internal_issue?: boolean;
-  application?: boolean;
   /** Sites et infrastructures. */
   assets?: boolean;
   /** Origine des enjeux : objectifs, SWOT. */
   iss_obj?: boolean;
   iss_swot?: boolean;
-  /** Fournisseurs : critiques, HDS ou liés à une application (crit), ou tous (all). */
+  /** Fournisseurs : critiques ou HDS (crit), ou tous (all). */
   sups?: 'crit' | 'all';
   /** Profondeur 1 à 3 (parcours depuis le SMSI et le périmètre). */
   depth?: 1 | 2 | 3;
@@ -106,7 +95,6 @@ export function defaultGenerateOptions(view: MapView, objs: ReadonlyMap<string, 
     supplier: true,
     external_issue: true,
     internal_issue: true,
-    application: true,
     assets: true,
     iss_obj: true,
     iss_swot: true,
@@ -122,26 +110,15 @@ export function selectForGeneration(ctx: CartoContext, view: MapView, fd: Genera
   const refs = new Set<string>();
   if (view === 'context') {
     const T = new Set<string>(['isms', 'scope']);
-    for (const t of [
-      'process',
-      'subprocess',
-      'stakeholder',
-      'supplier',
-      'external_issue',
-      'internal_issue',
-      'application',
-    ] as const)
+    for (const t of ['process', 'subprocess', 'stakeholder', 'supplier', 'external_issue', 'internal_issue'] as const)
       if (fd[t]) T.add(t);
     if (fd.assets) {
       T.add('site');
       T.add('infrastructure');
     }
-    const appSup = new Set(
-      all.filter((o) => o.type === 'application' && T.has('application') && o.supRef).map((o) => o.supRef!),
-    );
     const ok = (o: CartoObject) =>
       T.has(o.type) &&
-      (o.type !== 'supplier' || fd.sups === 'all' || !!o.crit || !!o.hds || appSup.has(o.ref)) &&
+      (o.type !== 'supplier' || fd.sups === 'all' || !!o.crit || !!o.hds) &&
       (!/issue/.test(o.type) ||
         (o.src ?? []).some((s) => (s.k === 'obj' && fd.iss_obj) || (s.k === 'swot' && fd.iss_swot)));
     const adj = new Map<string, string[]>();
