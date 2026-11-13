@@ -25,9 +25,9 @@ BUG-037 relevés hors Docker sont **reconfirmés sur la cible** (§ 5), à l'exc
 | 3 | Conformité, DdA, audits, preuves et contrôles | 126 | 64 | 61 | 1 |
 | 4 | Écarts, actions, plans annuels, revue de direction, registres | 60 | 23 | 33 | 4 |
 | 5 | Incidents, crise, continuité, documents, exports | 90 | 31 | 41 | 18 |
-| 6 | Installation, comptes, Plateforme, Système, paramètres | 210 | 69 | 40 | 101 |
-| 7 | Transversal : rôles, périmètres, compte restreint, téléphone | 1 070 | 753 | 285 | 32 |
-| **Total** | | **1 712** | **1 002** | **537** | **173** |
+| 6 | Installation, comptes, Plateforme, Système, paramètres | 210 | 70 | 39 | 101 |
+| 7 | Transversal : rôles, périmètres, compte restreint, téléphone | 1 070 | 755 | 283 | 32 |
+| **Total** | | **1 712** | **1 005** | **534** | **173** |
 
 Une case `defaut` renvoie au constat qui l'explique ; plusieurs cases partagent souvent le même constat (le défaut de
 cloisonnement au sous-périmètre occupe à lui seul plus de 60 cases `restreint`). Le nombre de cases en défaut ne mesure
@@ -44,16 +44,18 @@ donc pas le nombre de défauts.
 | Écran jamais vide : aucun état « vide » possible (journal d'audit, journaux techniques, détails techniques, guide) | 4 |
 | Fonction dépendant d'un service extérieur à la pile (vérification des mises à jour) ou d'un fichier absent du jeu fictif (export Tenacy) | 2 |
 
-**Cases rattachées à C6-20, écarté.** Six cases `defaut` de « Sauvegardes », « Mises à jour » et « Certificats » renvoient
-à C6-20, que le rejeu a classé « outillage » (§ 3). Après correction de `lancer.sh`, l'exécutant est disponible et deux
-sauvegardes chiffrées ont réussi sur la pile 6 (rejeu des piles 5-6) ; le résultat de ces cases est revu au § 3.
+**Cases rattachées à C6-20, écarté.** Six cases de « Sauvegardes », « Mises à jour » et « Certificats » renvoyaient à
+C6-20, que le rejeu a classé « outillage » (§ 3). Après correction de `lancer.sh`, elles ont été **retestées** sur la pile 6
+([constats du rejeu](campagne/constats-rejeu-pile-6.md)) : trois ok, deux en défaut sur des constats nouveaux (R6-01,
+R6-03, mineurs), une en défaut sur T6-04 (téléphone). Les chiffres ci-dessus en tiennent compte.
 
 ## 2. Défauts par gravité
 
 | Étape | Bloquants | Majeurs | Mineurs | Remarques | Total |
 | --- | --- | --- | --- | --- | --- |
 | Constats des phases 1 et 2 (avant dédoublonnage) | 6 | 47 | 80 | 27 | 160 |
-| Après rejeu des bloquants et majeurs (constats) | 13 (+ 6 à arbitrer) | 30 | 83 | 27 | 159 |
+| Constats de la phase 3 (R12-01 en écrivant les tests ; R6-01 à R6-04 en retestant les cases C6-20) | 0 | 1 | 3 | 1 | 5 |
+| Après rejeu des bloquants et majeurs (constats) | 13 (+ 6 à arbitrer) | 31 | 86 | 28 | 164 |
 | **Défauts inscrits au registre (BUG-038 à BUG-077)** | **13** | **26** | — | — | **39 + 1 à arbitrer** |
 
 - **Rejeu** (phase 3) : 53 constats bloquants ou majeurs. 50 reproduits (dont 4 en partie), 1 « outillage » (C6-20),
@@ -66,8 +68,9 @@ sauvegardes chiffrées ont réussi sur la pile 6 (rejeu des piles 5-6) ; le rés
   BUG-062) ; resélection du périmètre (C5-17, avec le mineur T5-04 → BUG-068).
 - **Défaut nouveau trouvé en phase 3** (écriture du test CAMP-C1-12) : identifiant FOU-0n du clausier réattribué après
   archivage, création en erreur 500 (R12-01 → BUG-077), confirmé par la session principale dans le journal de l'API.
-- **Mineurs et remarques** (110) : non rejoués (le § 5 de la campagne ne l'exige que pour les bloquants et majeurs), non
-  inscrits un par un au registre ; ils restent dans les fichiers `campagne/constats-*.md`. Thèmes dominants : messages
+- **Mineurs et remarques** (114) : non rejoués (le § 5 de la campagne ne l'exige que pour les bloquants et majeurs), non
+  inscrits un par un au registre ; ils restent dans les fichiers `campagne/constats-*.md` (dont R6-01 à R6-04 dans
+  `campagne/constats-rejeu-pile-6.md`). Thèmes dominants : messages
   d'erreur qui nomment le champ par sa clé technique ou affichent la clé de permission (`Droit requis : pilotage:modifier`) ;
   actions proposées à un rôle puis refusées par le serveur ; boutons de fermeture sans nom accessible ; doublons et dates
   incohérentes acceptés sans message ; au téléphone, colonnes d'actions coupées dans les tableaux ; date d'expiration d'un
@@ -170,7 +173,8 @@ Aucun constat bloquant ou majeur n'a été écarté pour « non reproduit ».
 - **DdA** : 93 mesures (37/8/14/34).
 - **Isolement des données** entre périmètres pour les registres qui portent un périmètre (organisation, risques, écarts,
   actions, revues).
-- **Sauvegardes** (après correction de l'outillage) : exécutant disponible, sauvegardes chiffrées avec empreinte.
+- **Sauvegardes** (après correction de l'outillage) : exécutant disponible ; cinq sauvegardes demandées à l'écran par
+  l'administrateur installé et un second administrateur, toutes réussies, chiffrées, empreinte vérifiée, tracées au journal.
 - **Aucune erreur JavaScript ni CSP** relevée ; une seule réponse HTTP 5xx, trouvée en phase 3 (BUG-077) ; aucune page ne défile horizontalement au téléphone.
 
 ## 5. Défauts connus (BUG-016 à BUG-037) sur les briques réelles
@@ -199,6 +203,7 @@ TESTS_A_COMPLETER
 - `lancer.sh` exécuté pour la première fois : trois défauts corrigés dans le script (`.env` de la pile pour `app` et
   `updater`, projet Compose de l'exécutant, option `--images-locales` pour construire derrière un proxy TLS avec le secret
   BuildKit `build_ca`). Docker crée un `.env` vide (ignoré par Git) comme point de montage ; `--arreter` le retire.
+- `lancer.sh` vérifie le port 443 avec `ss`, absent de certaines machines : le contrôle est alors muet. À durcir.
 - `pilote.mjs api` exige `NODE_EXTRA_CA_CERTS` pointant vers la racine publique de la pile (autorité locale de Caddy).
 - Limites du pilote contournées par de petits scripts Playwright hors dépôt : pas d'en-tête `If-Match`, pas de récupération
   des téléchargements, pas de choix du n-ième bouton homonyme ni des listes à choix multiples. À ajouter au pilote.
