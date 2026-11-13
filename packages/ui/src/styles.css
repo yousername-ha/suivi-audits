@@ -577,7 +577,7 @@ html[data-densite='confortable'] {
 }
 
 /* ========================================================================
-   SAUGE — surfaces calmes, hiérarchie éditoriale et navigation vert profond.
+   NEON — surfaces indigo, signature violette, rose et cyan (refonte Neon ; menu bleu nuit dans neon-menu.css).
    Couche visuelle uniquement. Aucun changement des dimensions métier du SVG.
    ======================================================================== */
 :root {
@@ -586,19 +586,19 @@ html[data-densite='confortable'] {
   --suivi-marque: 2.35rem;
   --suivi-marge-page: clamp(1rem, 2.35vw, 3rem);
   --suivi-carte-min: 21rem;
-  --suivi-nav-fond: #163e33;
-  --suivi-nav-texte: #f2f6ef;
-  --suivi-nav-secondaire: #b5cec0;
-  --suivi-nav-active: #305a49;
-  --suivi-nav-survol: #244c3e;
-  --suivi-nav-repere: #c5dbab;
-  --suivi-famille-pilotage: #c5dbab;
-  --suivi-famille-organisation: #9cc7e4;
-  --suivi-famille-risques: #f2a99b;
-  --suivi-famille-conformite: #e8d28c;
-  --suivi-famille-actions: #bcaaec;
-  --suivi-famille-resilience: #84d6c6;
-  --suivi-famille-documents: #e6b8d2;
+  --suivi-nav-fond: var(--neon-navigation);
+  --suivi-nav-texte: var(--neon-titre);
+  --suivi-nav-secondaire: var(--neon-secondaire);
+  --suivi-nav-active: var(--neon-doux);
+  --suivi-nav-survol: var(--neon-doux);
+  --suivi-nav-repere: var(--neon-accent);
+  --suivi-famille-pilotage: var(--neon-accent);
+  --suivi-famille-organisation: var(--carte-bleu-accent);
+  --suivi-famille-risques: var(--carte-orange-accent);
+  --suivi-famille-conformite: var(--carte-bleu-accent);
+  --suivi-famille-actions: var(--neon-accent);
+  --suivi-famille-resilience: var(--carte-vert-accent);
+  --suivi-famille-documents: var(--neon-accent);
   --suivi-surface-douce: var(--mantine-color-gray-0);
   --suivi-ombre: 0 2px 4px rgb(27 54 37 / 2%), 0 8px 28px rgb(27 54 37 / 3%);
   --suivi-ombre-haute: 0 18px 54px rgb(27 54 37 / 12%);
@@ -608,8 +608,8 @@ html[data-densite='confortable'] {
 }
 [data-mantine-color-scheme='dark'] {
   --suivi-surface-douce: var(--mantine-color-dark-6);
-  --suivi-nav-fond: #0c2018;
-  --suivi-nav-active: #284c3b;
+  --suivi-nav-fond: var(--neon-navigation);
+  --suivi-nav-active: var(--neon-doux);
   --suivi-ombre: 0 2px 5px rgb(0 0 0 / 9%);
   --suivi-ombre-haute: 0 18px 54px rgb(0 0 0 / 26%);
 }
@@ -1931,9 +1931,9 @@ h3,
    mode clair : navigation vert profond, couleurs métier, graphiques et cartographie restent inchangés. Le mode sombre
    garde ses variables. */
 html[data-style='clair'][data-mantine-color-scheme='light'] {
-  --suivi-fond-page: #f7f9fb;
+  --suivi-fond-page: #faf9fc;
   --suivi-trait: #dce5e9;
-  --suivi-surface-douce: #f0f4f7;
+  --suivi-surface-douce: #f5f2fa;
 }
 
 /* ---------------------------------------------------------------- Identité Référence 08 (signature, filets, repère actif)
@@ -2102,17 +2102,17 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
 .app-main:has(.tdb) {
   background-color: var(--suivi-fond-page);
   background-image:
-    radial-gradient(56rem 40rem at 4% -6%, rgb(220 236 226 / 90%), transparent 62%),
+    radial-gradient(56rem 40rem at 4% -6%, color-mix(in srgb, var(--neon-violet) 7%, transparent), transparent 62%),
     radial-gradient(48rem 38rem at 104% 2%, rgb(235 232 249 / 90%), transparent 58%),
-    radial-gradient(56rem 50rem at 58% 108%, rgb(224 240 227 / 90%), transparent 62%),
+    radial-gradient(56rem 50rem at 58% 108%, color-mix(in srgb, var(--neon-rose) 5%, transparent), transparent 62%),
     radial-gradient(39rem 32rem at 30% 55%, rgb(248 243 230 / 85%), transparent 62%),
     radial-gradient(32rem 26rem at 84% 60%, rgb(228 240 245 / 85%), transparent 60%);
 }
 [data-mantine-color-scheme='dark'] .app-main:has(.tdb) {
   background-image:
-    radial-gradient(56rem 40rem at 4% -6%, rgb(39 74 58 / 55%), transparent 62%),
+    radial-gradient(56rem 40rem at 4% -6%, color-mix(in srgb, var(--neon-violet) 8%, transparent), transparent 62%),
     radial-gradient(48rem 38rem at 104% 2%, rgb(60 52 110 / 45%), transparent 58%),
-    radial-gradient(56rem 50rem at 58% 108%, rgb(30 66 50 / 50%), transparent 62%),
+    radial-gradient(56rem 50rem at 58% 108%, color-mix(in srgb, var(--neon-bleu) 6%, transparent), transparent 62%),
     radial-gradient(32rem 26rem at 84% 60%, rgb(36 60 78 / 40%), transparent 60%);
 }
 .tdb {
@@ -2122,15 +2122,15 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   --tdb-verre-bord: rgb(255 255 255 / 50%);
   --tdb-reflet-bord: rgb(255 255 255 / 100%);
   --tdb-lumiere: rgb(255 255 255 / 95%);
-  --tdb-ombre: rgb(36 59 52);
+  --tdb-ombre: var(--suivi-encre);
   --tdb-filet: rgb(16 30 24 / 14%);
-  --tdb-rail: rgb(36 59 52 / 12%);
+  --tdb-rail: color-mix(in srgb, var(--mantine-color-text) 12%, transparent);
   --tdb-lueur: rgb(140 124 230);
 }
 [data-mantine-color-scheme='dark'] .tdb {
-  --tdb-verre-haut: rgb(48 78 63 / 62%);
-  --tdb-verre-milieu: rgb(26 47 37 / 50%);
-  --tdb-verre-bas: rgb(34 56 45 / 58%);
+  --tdb-verre-haut: var(--suivi-surface);
+  --tdb-verre-milieu: var(--suivi-surface);
+  --tdb-verre-bas: var(--neon-doux);
   --tdb-verre-bord: rgb(255 255 255 / 14%);
   --tdb-reflet-bord: rgb(255 255 255 / 45%);
   --tdb-lumiere: rgb(255 255 255 / 22%);

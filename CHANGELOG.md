@@ -15,6 +15,14 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 
 ### Modifié
 
+- **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([audit](docs/refonte-neon/AUDIT-CIBLE.md),
+  [rapport du lot](docs/refonte-neon/LOT-1-MENU-DASHBOARD.md)) : palette Neon de la charte (jetons `tokens.ts`, rayons inchangés) ;
+  menu latéral **bleu nuit opaque, identique dans les deux thèmes**, une teinte par identité d'entrée, pictogrammes animés (transform et
+  opacity seulement) avec bouton de pause et respect du mouvement réduit, nombre réel de destinations lisibles, marque en tête du menu sur
+  ordinateur. L'accueil propose une seconde présentation, la **vue analytique Neon** (onze cartes ; la carte du module CRRC retiré n'est pas
+  reprise), à côté du tableau personnalisable, qui reste la présentation par défaut. Navigation, droits, ordre personnel, alertes, disposition et
+  partage du tableau de bord inchangés. Aucun changement de serveur ni de données. _(Session « Refonte Neon suivi-audits ».)_
+
 - **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
   « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
   onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**

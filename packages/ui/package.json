@@ -17,7 +17,10 @@
       "types": "./src/tokens.ts",
       "default": "./src/tokens.ts"
     },
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./src/styles.css",
+    "./neon.css": "./src/neon.css",
+    "./neon-menu.css": "./src/neon-menu.css",
+    "./neon-analytics.css": "./src/neon-analytics.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

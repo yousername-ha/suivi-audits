@@ -1,0 +1,571 @@
+/* ========================================================================
+   MENU LATÉRAL BLEU NUIT OPAQUE (refonte Neon, retenu le 13/11/2026)
+   Une seule charte de navigation, identique en clair et en sombre et quelle que soit la rubrique : le contenu garde son
+   thème. Fond opaque (aucune transparence globale), une teinte par identité d'entrée (data-identite), jamais par
+   position. Les pictogrammes bougent à l'intérieur du dessin, uniquement par transform et opacity (aucun recalcul de mise
+   en page) ; pause (data-mouvement='pause', bouton du pied de menu ou onglet masqué) et mouvement réduit les arrêtent.
+   Couleurs : jetons MENU (tokens.ts), variables --menu-*. Chargée après styles.css, app.css et neon.css.
+   ======================================================================== */
+:root {
+  --suivi-nav-l: 15.5rem;
+  --menu-fond:
+    radial-gradient(ellipse 115% 40% at 0% 100%, var(--menu-fond-halo) 0%, transparent 86%),
+    linear-gradient(163deg, var(--menu-fond-haut) 0%, var(--menu-fond-milieu) 56%, var(--menu-fond-bas) 100%);
+  --menu-rayon: 0.6875rem 0.25rem;
+}
+
+/* Teinte par identité : famille, destination de la famille ou entrée d'administration. */
+[data-identite='dashboard'] {
+  --menu-teinte: var(--menu-teinte-dashboard);
+}
+[data-identite='organisation'] {
+  --menu-teinte: var(--menu-teinte-organisation);
+}
+[data-identite='pilotage'] {
+  --menu-teinte: var(--menu-teinte-pilotage);
+}
+[data-identite='risques'] {
+  --menu-teinte: var(--menu-teinte-risques);
+}
+[data-identite='conformite'] {
+  --menu-teinte: var(--menu-teinte-conformite);
+}
+[data-identite='actions'] {
+  --menu-teinte: var(--menu-teinte-actions);
+}
+[data-identite='resilience'],
+[data-identite='retex'] {
+  --menu-teinte: var(--menu-teinte-resilience);
+}
+[data-identite='documents'] {
+  --menu-teinte: var(--menu-teinte-documents);
+}
+[data-identite='plateforme'] {
+  --menu-teinte: var(--menu-teinte-plateforme);
+}
+[data-identite='parametres'] {
+  --menu-teinte: var(--menu-teinte-parametres);
+}
+[data-identite='compte'] {
+  --menu-teinte: var(--menu-teinte-compte);
+}
+[data-identite='aide'] {
+  --menu-teinte: var(--menu-teinte-aide);
+}
+[data-identite='mur'] {
+  --menu-teinte: var(--menu-teinte-mur);
+}
+
+/* ---------------------------------------------------------------- Surfaces : colonne, rail tablette et tiroir mobile */
+.shell-nav,
+[data-mantine-color-scheme='dark'] .shell-nav {
+  background: var(--menu-fond);
+  border-inline-end: 1px solid var(--menu-trait);
+  box-shadow:
+    inset -1px 0 color-mix(in srgb, var(--menu-selection) 3%, transparent),
+    4px 0 16px -14px color-mix(in srgb, var(--menu-fond-haut) 70%, transparent);
+}
+.nav-neon {
+  color: var(--menu-texte);
+}
+@media (min-width: 64em) {
+  /* Ordinateur : le dégradé est porté par la colonne collante, fixe pendant le défilement du contenu. */
+  .shell-nav .nav-neon {
+    background: var(--menu-fond);
+  }
+}
+.nav-tiroir.mantine-Drawer-content {
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+}
+.nav-tiroir .mantine-Drawer-header {
+  background: transparent;
+  color: var(--menu-texte);
+}
+.nav-tiroir .mantine-Drawer-close {
+  color: var(--menu-texte);
+}
+
+/* ---------------------------------------------------------------- Marque en tête du menu (ordinateur) */
+.nav-marque {
+  display: none;
+}
+@media (min-width: 64em) {
+  .nav-marque {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 0.4375rem 1.375rem;
+    margin-bottom: 1.4375rem;
+    border-bottom: 1px solid var(--menu-trait);
+    color: var(--menu-texte);
+    text-decoration: none;
+  }
+  .nav-marque .brand-mark {
+    flex: none;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.8125rem;
+  }
+  .nav-marque strong {
+    display: block;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+  .nav-marque small {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.5625rem;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--menu-secondaire);
+  }
+  .nav-marque:focus-visible {
+    outline: 2px solid var(--menu-focus);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+  /* La marque de l'en-tête est remplacée par celle du menu. */
+  .entete-marque {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- Intitulés de section */
+.nav-neon .nav-caption {
+  padding: 0 0.5rem 0.6875rem;
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--menu-secondaire);
+}
+
+/* ---------------------------------------------------------------- Entrées (familles, destinations, administration) */
+/* La pile Mantine pose son écart par variable en ligne : l'écart est porté par les marges des entrées. */
+.nav-neon .mantine-Stack-root {
+  gap: 0;
+}
+.nav-neon .mantine-NavLink-root {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  min-height: 2.4375rem;
+  margin-block: 0.1875rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--menu-rayon);
+  background: none;
+  color: var(--menu-destination);
+  box-shadow: none;
+  transition:
+    background-color var(--suivi-motion),
+    border-color var(--suivi-motion),
+    color var(--suivi-motion);
+}
+.nav-neon .mantine-NavLink-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.nav-neon .nav-famille,
+.nav-neon [data-identite='dashboard'] {
+  min-height: 2.6875rem;
+  color: var(--menu-texte);
+}
+.nav-neon .mantine-NavLink-root:hover {
+  color: var(--menu-selection);
+  background: var(--menu-survol);
+  border-color: var(--menu-survol-trait);
+}
+.nav-neon .mantine-NavLink-root:focus-visible {
+  outline: 2px solid var(--menu-focus);
+  outline-offset: 1px;
+}
+.nav-neon .mantine-NavLink-section[data-position='left'] {
+  margin-inline-end: 0.375rem;
+}
+/* Famille de la page affichée et Tableau de bord actif : surface bleu pétrole teintée, liseré gauche de la famille. */
+.nav-neon .mantine-NavLink-root[data-active]:not(.nav-destination) {
+  color: var(--menu-selection);
+  border-color: color-mix(in srgb, var(--menu-teinte) 52%, var(--menu-selection-trait));
+  border-inline-start-color: var(--menu-teinte);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--menu-teinte) 17%, var(--menu-famille-fond)),
+    var(--menu-famille-fin)
+  );
+  box-shadow: inset 0 1px color-mix(in srgb, var(--menu-selection) 5%, transparent);
+}
+.nav-neon .mantine-NavLink-root[data-active] .mantine-NavLink-label {
+  font-weight: 600;
+}
+/* Libellé de famille : alerte collée au libellé, nombre réel de destinations lisibles à droite. */
+.nav-famille__libelle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.nav-compte {
+  flex: none;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--menu-secondaire);
+  font-variant-numeric: tabular-nums;
+}
+.nav-neon .mantine-NavLink-chevron {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--menu-secondaire);
+}
+/* Destinations d'une famille dépliée : rail de la teinte de la famille, destination ouverte en relief. */
+.nav-neon .mantine-NavLink-children {
+  position: relative;
+  margin: 0.25rem 0 0.5625rem 1.125rem;
+  padding-inline-start: 0.625rem;
+  border-inline-start: 1px solid var(--menu-trait);
+}
+.nav-neon .nav-destination {
+  min-height: 2.3125rem;
+  margin-block: 0.125rem;
+  padding: 0.4375rem 0.625rem;
+}
+.nav-neon .nav-destination[data-identite] {
+  border-inline-start-color: transparent;
+}
+.nav-neon .mantine-NavLink-children:has(.nav-destination[data-identite]) {
+  border-inline-start-color: color-mix(in srgb, var(--menu-teinte, var(--menu-trait)) 40%, var(--menu-trait));
+}
+.nav-neon .nav-destination[data-active] {
+  position: relative;
+  color: var(--menu-selection);
+  border-color: color-mix(in srgb, var(--menu-teinte) 60%, var(--menu-selection-trait));
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--menu-teinte) 26%, var(--menu-destination-fond)),
+    var(--menu-destination-fin)
+  );
+  box-shadow:
+    inset 0 1px color-mix(in srgb, var(--menu-selection) 8%, transparent),
+    0 4px 9px -7px color-mix(in srgb, var(--menu-fond-haut) 55%, transparent);
+}
+.nav-neon .nav-destination[data-active]::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.5rem;
+  inset-inline-start: -1px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--menu-teinte);
+}
+
+/* ---------------------------------------------------------------- Compte et administration */
+.nav-neon .nav-administration {
+  margin-top: 1.5625rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--menu-trait);
+}
+.nav-neon .nav-administration .mantine-NavLink-root {
+  min-height: 2rem;
+  margin-block: 0.125rem;
+  padding-block: 0.3125rem;
+}
+.nav-neon .nav-administration .mantine-NavLink-label {
+  font-size: 0.75rem;
+}
+.nav-neon .nav-administration .mantine-NavLink-section[data-position='left'] {
+  margin-inline-end: 0.625rem;
+}
+
+/* ---------------------------------------------------------------- Pictogrammes : trait net, aucune plaque ni flou */
+.nav-neon .mantine-NavLink-root .nav-icone.nav-icone--neon {
+  display: inline-flex;
+  width: 1.625rem;
+  height: 1.625rem;
+  color: var(--menu-teinte, var(--menu-secondaire));
+}
+.nav-neon .mantine-NavLink-root .nav-icone.nav-icone--admin {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.nav-icone--neon svg {
+  overflow: visible;
+  stroke-width: 1.95;
+}
+.nav-icone--neon .mf-fill {
+  fill: color-mix(in srgb, currentColor 23%, transparent);
+}
+.nav-icone--neon .mf-node {
+  fill: currentColor;
+  stroke: none;
+}
+.nav-icone--neon .mf-orbit {
+  stroke: color-mix(in srgb, currentColor 50%, transparent);
+  stroke-width: 1.2;
+}
+
+/* ---------------------------------------------------------------- Pied du menu : organisation, thème, pause, version */
+.nav-neon .nav-footer {
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--menu-trait);
+}
+.nav-neon .nav-signature {
+  justify-content: center;
+  padding: 0.25rem 0.375rem 0.5rem;
+  border: 0;
+  color: var(--menu-texte);
+  text-align: center;
+}
+.nav-neon .nav-signature__mark,
+.nav-neon .nav-signature .mantine-Text-root:last-child {
+  display: none;
+}
+.nav-commandes {
+  display: flex;
+  gap: 0.375rem;
+  align-items: stretch;
+}
+.nav-commandes > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.nav-neon .nav-footer .mantine-Button-root,
+.nav-neon .nav-pause {
+  color: var(--menu-commande);
+  border: 1px solid var(--menu-commande-trait);
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, var(--menu-survol), var(--menu-famille-fond));
+  box-shadow: inset 0 1px color-mix(in srgb, var(--menu-selection) 5%, transparent);
+}
+.nav-neon .nav-footer .mantine-Button-root:hover,
+.nav-neon .nav-pause:hover {
+  color: var(--menu-selection);
+  background: var(--menu-survol);
+  border-color: var(--menu-survol-trait);
+}
+.nav-neon .nav-footer .mantine-Button-root:focus-visible,
+.nav-neon .nav-pause:focus-visible {
+  outline: 2px solid var(--menu-focus);
+  outline-offset: 1px;
+}
+.nav-pause {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  min-height: 1.875rem;
+  padding: 0;
+  cursor: pointer;
+}
+.nav-pause svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.nav-neon .app-version,
+.shell-nav .nav-neon .app-version {
+  color: var(--menu-secondaire) !important;
+}
+
+/* ---------------------------------------------------------------- Rail de la tablette : icônes seules, même charte */
+@media (min-width: 36em) and (max-width: 63.99em) {
+  .nav-neon .mantine-NavLink-root {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .nav-neon .mantine-NavLink-section[data-position='left'] {
+    margin: 0;
+  }
+  .nav-neon .nav-administration .mantine-NavLink-section[data-position='left'] {
+    margin: 0;
+  }
+  .nav-commandes {
+    flex-direction: column;
+  }
+  .nav-pause {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------- Ordinateur : colonne pleine hauteur, en-tête à droite */
+@media (min-width: 64em) {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--suivi-nav-l) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+  .shell-top {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .shell-body {
+    display: contents;
+  }
+  .shell-nav {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    padding: 0;
+  }
+  .shell-nav .shell-nav-inner {
+    position: sticky;
+    top: 0;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    padding: 1.625rem 0.8125rem 0.9375rem;
+  }
+  .shell-main {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .shell-header {
+    background: var(--suivi-fond-page);
+    border-bottom: 0;
+    box-shadow: none;
+  }
+}
+
+/* ---------------------------------------------------------------- Mouvements des formes (décoratifs)
+   Huit pictogrammes de famille ; texte, position des lignes et zones de clic fixes. Repos = dessin complet (coche
+   visible) : la pause, le mouvement réduit et l'impression retirent simplement l'animation. */
+.nav-icone--neon .mw-motion {
+  transform-box: view-box;
+  transform-origin: 16px 16px;
+}
+.nav-icone--neon .mw-organisation {
+  transform-origin: 16px 9px;
+}
+.nav-icone--neon .mw-check {
+  transform-origin: 9px 16px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nav-neon:not([data-mouvement='pause']) .mw-tiles {
+    animation: mw-tiles 4.8s ease-in-out infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-organisation {
+    animation: mw-node 4.6s ease-in-out -1s infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-pilotage {
+    animation: mw-progress 4.2s ease-in-out -0.8s infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-risque {
+    animation: mw-blink 2.8s ease-in-out infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-check {
+    animation: mw-check 4.8s ease-in-out -1.6s infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-action {
+    animation: mw-action 3.4s ease-in-out infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-resilience {
+    animation: mw-rotate 10s linear infinite;
+  }
+  .nav-neon:not([data-mouvement='pause']) .mw-document {
+    animation: mw-document 5s ease-in-out -2s infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Aucun mouvement : la commande de pause n'a pas d'objet. */
+  .nav-pause {
+    display: none;
+  }
+}
+@keyframes mw-tiles {
+  0%,
+  65%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+}
+@keyframes mw-node {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15);
+  }
+}
+@keyframes mw-progress {
+  0%,
+  70%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(1px, -1px);
+  }
+}
+@keyframes mw-blink {
+  0%,
+  65%,
+  100% {
+    opacity: 1;
+  }
+  32% {
+    opacity: 0.35;
+  }
+}
+/* Coche : le masque s'élargit de gauche à droite (équivalent du tracé progressif de la maquette, en transform). */
+@keyframes mw-check {
+  0%,
+  8%,
+  100% {
+    transform: scaleX(0);
+  }
+  35%,
+  85% {
+    transform: scaleX(1);
+  }
+}
+@keyframes mw-action {
+  0%,
+  100% {
+    transform: translateX(-1.5px);
+  }
+  50% {
+    transform: translateX(1.5px);
+  }
+}
+@keyframes mw-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes mw-document {
+  0%,
+  80%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 0.45;
+    transform: translateY(1px);
+  }
+}
+
+/* ---------------------------------------------------------------- Contrastes renforcés, couleurs forcées, impression */
+@media (prefers-contrast: more) {
+  .nav-neon .mantine-NavLink-root {
+    color: var(--menu-selection);
+  }
+}
+@media (forced-colors: active) {
+  .nav-neon .mantine-NavLink-root[data-active] {
+    border-color: Highlight;
+  }
+}
+@media print {
+  .nav-marque,
+  .nav-commandes {
+    display: none;
+  }
+}

@@ -28,8 +28,10 @@ import {
   VIOLET,
   CARTE,
   ETATS,
+  NEON,
   SCEAU,
   variablesCarte,
+  variablesMenu,
   type EtatCouleur,
 } from './tokens.ts';
 
@@ -79,6 +81,21 @@ const variablesEtats = (mode: 'clair' | 'sombre'): Record<string, string> =>
     }),
   );
 
+/** Palette sémantique Neon commune à la navigation, aux surfaces et aux dessins. */
+const variablesNeon = (mode: 'clair' | 'sombre'): Record<string, string> => ({
+  '--neon-secondaire': FONDS[mode].secondaire,
+  '--neon-rose': NEON.rose,
+  '--neon-violet': NEON.violet,
+  '--neon-bleu': NEON.bleu,
+  '--neon-cyan': NEON.cyan,
+  '--neon-orange': NEON.orange,
+  '--neon-menthe': NEON.menthe,
+  '--neon-navigation': NEON[mode].navigation,
+  '--neon-titre': NEON[mode].titre,
+  '--neon-accent': NEON[mode].accent,
+  '--neon-doux': NEON[mode].doux,
+});
+
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
   const base = defaultCssVariablesResolver(t);
@@ -91,6 +108,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-sceau-bleu': SCEAU.bleu,
       '--suivi-sceau-blanc': SCEAU.blanc,
       '--suivi-sceau-rouge': SCEAU.rouge,
+      ...variablesMenu(),
     },
     light: {
       ...base.light,
@@ -106,6 +124,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-trait': GRIS[3],
       ...variablesEtats('clair'),
       ...variablesCarte(CARTE.clair),
+      ...variablesNeon('clair'),
     },
     dark: {
       ...base.dark,
@@ -121,6 +140,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-trait': SOMBRE[5],
       ...variablesEtats('sombre'),
       ...variablesCarte(CARTE.sombre),
+      ...variablesNeon('sombre'),
     },
   };
 };
