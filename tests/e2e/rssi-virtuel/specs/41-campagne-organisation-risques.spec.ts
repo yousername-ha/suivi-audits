@@ -477,6 +477,94 @@ test('CAMP-C2-03 ouvert : un risque jamais apprécié ne peut pas être formelle
   }
 });
 
+test('RSSI-09 ouvert : un risque ne s’apprécie pas sans matrice (niveau choisi librement refusé)', async ({
+  browser,
+}) => {
+  // ISO/IEC 27001:2022, 6.1.2 b) (résultats cohérents et comparables). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-024) : la
+  // matrice est obligatoire pour apprécier un risque. Le modèle de méthode « ISO/IEC 27005 » calcule aujourd'hui par
+  // « jugement » : « Critique × Très probable » peut recevoir le niveau « Faible ». Attendu après correction : méthode sans
+  // matrice refusée (aperçu ou publication), ou niveau imposé par la matrice, jamais le niveau choisi librement.
+  test.fail(true, 'RSSI-09 ouvert : « Critique × Très probable = Faible » accepté par une méthode sans matrice');
+  const s = await admin(browser);
+  try {
+    const p = await creerPerimetre(s, `Campagne RSSI-09 risques ${EXECUTION} (fictif)`);
+    const root = `/api/grc/${p.id}`;
+    const definition = await ok<{
+      dimensions: { id: string; levels: { id: string }[] }[];
+      likelihood: { id: string }[];
+      levels: { id: string }[];
+    }>(await s.req.get('/api/grc/methods/templates/iso27005'), 'modèle de méthode');
+    // Une méthode sans matrice refusée dès l'aperçu ou la publication satisfait aussi la règle.
+    const apercu = await ecrire(s, 'POST', `${root}/methods/preview`, { id: null, definition });
+    if (!apercu.ok()) {
+      expect(apercu.status(), await apercu.text()).toBeLessThan(500);
+      return;
+    }
+    const publication = await ecrire(
+      s,
+      'POST',
+      `${root}/methods/publish`,
+      {
+        id: null,
+        definition,
+        previewId: ((await apercu.json()) as { previewId: string }).previewId,
+        reason: 'Méthode de la campagne',
+        confirm: 'PUBLIER',
+      },
+      0,
+    );
+    if (!publication.ok()) {
+      expect(publication.status(), await publication.text()).toBeLessThan(500);
+      return;
+    }
+    const { methodId } = (await publication.json()) as { methodId: string };
+    await ok(
+      await ecrire(s, 'PUT', `${root}/method`, { methodId, version: 1, confirm: 'CHOISIR' }, 1),
+      'choix de la méthode',
+    );
+    const notes = Object.fromEntries(
+      [1, 2, 3, 4, 5].map((i) => [
+        `stage_${i}`,
+        { status: 'draft', values: { [`notes_stage_${i}`]: 'Justification fictive' }, comment: '' },
+      ]),
+    );
+    const risque = await creerObjet(s, p.id, 'risk', 'Campagne RSSI-09 risque critique (fictif)', {
+      description: 'Risque fictif apprécié au plus haut',
+      code: 'CAMP-RSSI-09',
+      ownerId: null,
+      domain: '',
+      entity: '',
+      scope: '',
+      methodId,
+      methodVersion: 1,
+      strategy: 'reduce',
+      acceptanceReason: '',
+      reviewAt: null,
+      stages: notes,
+    });
+    const dernier = <T>(l: T[]): T => l[l.length - 1]!;
+    const plusBas = definition.levels[0]!.id;
+    const note = {
+      dimensions: Object.fromEntries(definition.dimensions.map((d) => [d.id, dernier(d.levels).id])),
+      likelihood: dernier(definition.likelihood).id,
+      level: plusBas,
+      inputs: {},
+    };
+    const r = await ecrire(s, 'POST', `${root}/risks/${risque.id}/preview`, {
+      ratings: { gross: note, residual: note },
+      rationale: 'Appréciation fictive de la campagne',
+      decision: 'draft',
+    });
+    const texte = await r.text();
+    if (r.ok()) {
+      const niveau = (JSON.parse(texte) as { result: { gross: { level: string } } }).result.gross.level;
+      expect(niveau, `niveau brut retenu pour gravité et vraisemblance maximales : ${texte}`).not.toBe(plusBas);
+    } else expect(r.status(), texte).toBeLessThan(500);
+  } finally {
+    await s.fermer();
+  }
+});
+
 test('CAMP-C2-05 ouvert : l’export Excel complet contient le registre des risques et le plan de traitement', async ({
   browser,
 }) => {
