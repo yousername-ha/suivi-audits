@@ -194,12 +194,12 @@ Restent attendus :
 
 ## 7. Tests de non-régression
 
-45 tests `test.fail` ajoutés au harnais, un ou plusieurs par fiche (BUG-038 à BUG-077), écrits par les agents de rejeu
+46 tests `test.fail` ajoutés au harnais, un ou plusieurs par fiche (BUG-038 à BUG-077), écrits par les agents de rejeu
 à partir de leurs recettes et nommés « CAMP-<constat> ouvert : <comportement attendu> » :
 
 | Fichier | Tests | Fiches |
 | --- | --- | --- |
-| `specs/41-campagne-organisation-risques.spec.ts` | 14 | organisation, fournisseurs, risques, EBIOS RM, cloisonnement (CAMP-T1-01), BUG-077 (CAMP-R12-01) |
+| `specs/41-campagne-organisation-risques.spec.ts` | 15 | organisation, fournisseurs, risques, EBIOS RM, cloisonnement par périmètre (CAMP-T1-01 et CAMP-T1-02, ajouté après l'arbitrage de BUG-051), BUG-077 (CAMP-R12-01) |
 | `specs/42-campagne-conformite-ecarts.spec.ts` | 13 | DdA, référentiels, écarts, plans, revue de direction, registres |
 | `specs/43-campagne-incidents-plateforme.spec.ts` | 18 | continuité, incidents, crise, exports, Plateforme, Système |
 
@@ -209,8 +209,9 @@ existe et **devient rouge le jour où il est corrigé**, ce qui oblige à retire
 aucun `test.skip`.
 
 **Exécution du harnais complet** : `sudo CI=1 tests/e2e/rssi-virtuel/lancer.sh --images-locales` sur une pile vierge
-`https://localhost`, deux passages : **65 passed**, code retour 0 (12 tests verts, dont les invariants INV-01 à INV-08 ;
-53 échecs attendus, 8 de la recette du 12/11 et 45 de la campagne). Le message d'échec de chacun des 53 a été relu dans
+`https://localhost`, trois passages : **65 passed** puis, après l'ajout de CAMP-T1-02, **66 passed**, code retour 0
+(12 tests verts, dont les invariants INV-01 à INV-08 ; 54 échecs attendus, 8 de la recette du 12/11 et 46 de la
+campagne). Le message d'échec de chacun des 54 a été relu dans
 `test-results/resultats.json` : c'est l'assertion du défaut dans tous les cas, jamais une préparation
 ([relevé](campagne/harnais-2026-11-13.md)).
 
