@@ -177,7 +177,7 @@ Aucun constat bloquant ou majeur n'a été écarté pour « non reproduit ».
 ## 5. Défauts connus (BUG-016 à BUG-037) sur les briques réelles
 
 Reconfirmés : BUG-016, 017, 018, 019, 020, 021, 022, 023, 025, 026, 027, 028, 029, 032, 033, 034, 035, 036, 037.
-Constatés sans être tranchés (arbitrage du RSSI) : BUG-024, BUG-031. **Reproduit en partie** : BUG-030 (la liste
+Constatés sans être tranchés pendant la campagne, puis arbitrés par le RSSI le 13/11/2026 : BUG-024, BUG-031. **Reproduit en partie** : BUG-030 (la liste
 « Référentiels audités » propose ISO/IEC 27001 et HDS une fois les référentiels attribués et appliqués ; le programme reste
 à « 0/0 » après la création de la fiche d'audit). Extensions relevées : BUG-018 touche aussi Mon compte, Courriel et
 Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059).
@@ -187,11 +187,12 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver et le désarchiver ;
 BUG-042, chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent (ses
 entrées remontent alors dans la revue du parent) ; BUG-024 (recette du 12/11), la matrice est obligatoire pour apprécier
-un risque (test RSSI-09 ajouté au fichier 41). Restent attendus :
+un risque (test RSSI-09 ajouté au fichier 41) ; BUG-031 (recette du 12/11), les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001
+(test RSSI-18 ajouté au fichier 42). Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
+| Rôle d'auditeur interne | Arbitrage de la recette du 12/11, toujours ouvert. |
 
 ## 7. Tests de non-régression
 

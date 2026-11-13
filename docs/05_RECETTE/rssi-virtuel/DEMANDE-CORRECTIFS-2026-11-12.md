@@ -48,7 +48,7 @@ Conséquences pour le développement :
 | 4. Libellés | BUG-029, BUG-018 | Interface en français |
 | 5. Indicateurs et actions | BUG-028, BUG-034, BUG-035 | Chiffres et saisies ambigus |
 | 6. Revue de direction | BUG-032 | Message de validation |
-| En attente d'arbitrage du RSSI | BUG-031 (BUG-024 arbitré le 13/11/2026 : matrice obligatoire, à corriger) | **Ne pas corriger avant décision** (voir § 5) |
+| Arbitrés par le RSSI le 13/11/2026 | BUG-031 (entrées 9.3.2 de l'ISO/IEC 27001, plus d'ISO 9001), BUG-024 (matrice obligatoire) | À corriger (voir § 5) |
 
 ## 4. Fiches
 
@@ -216,6 +216,7 @@ uniquement. « Piste » = endroit repéré par la recette en lisant le code, san
 - **BUG-031** : la revue de direction prépare les entrées de l'ISO 9001 (choix de l'ADR 0036). Question posée au RSSI :
   ajouter celles de l'ISO/IEC 27001:2022, 9.3.2 (dont les résultats de l'appréciation des risques, l'état du plan de
   traitement et les incidents de sécurité) quand le périmètre porte ce référentiel ?
+  **Arbitré par le RSSI le 13/11/2026 : les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001.** Test : `specs/42-campagne-conformite-ecarts.spec.ts`, « RSSI-18 ouvert ».
 - **BUG-024** : le modèle de méthode « ISO/IEC 27005 » laisse déclarer « Grave × Probable = Faible, acceptable » sans
   alerte. Question : alerte, matrice par défaut, ou jugement libre assumé ?
   **Arbitré par le RSSI le 13/11/2026 : la matrice est obligatoire pour apprécier un risque.** Test : `specs/41-campagne-organisation-risques.spec.ts`,

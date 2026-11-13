@@ -430,14 +430,16 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Cause / niveau | PROBABLE : liste alimentée par les référentiels publiés (aucun sur installation neuve) ; compteurs lus ailleurs que dans les fiches d'audit. |
 | Non-régression | à écrire |
 
-## BUG-031 — Revue de direction : entrées de l'ISO 9001 seulement, pas celles de l'ISO/IEC 27001 9.3.2 (à arbitrer, ADR 0036) (RSSI-18)
+## BUG-031 — Revue de direction : entrées de l'ISO 9001 seulement, pas celles de l'ISO/IEC 27001 9.3.2 (arbitré le 13/11/2026, ADR 0036) (RSSI-18)
 
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; MAJEURE ; P1 |
 | Statut | OUVERT |
-| Cause / niveau | Choix de l'ADR 0036 (volet qualité) ; volet SMSI absent. |
-| Non-régression | à écrire après arbitrage |
+| Arbitrage du RSSI (13/11/2026) | Les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001. |
+| Attendu | Entrées 9.3.2 a) à g) de l'ISO/IEC 27001 (dont résultats de l'appréciation des risques, état du plan de traitement, retours des parties intéressées, opportunités d'amélioration continue) ; plus de numérotation ni de vocabulaire ISO 9001 (y compris les « séries proposées (ISO 9001:2015) » des tâches récurrentes, constat T4-07). |
+| Cause / niveau | Choix de l'ADR 0036 (volet qualité), à amender par la session de développement ; volet SMSI absent. |
+| Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « RSSI-18 ouvert » (`test.fail`), ajouté le 13/11/2026 ; « CAMP-C4-05 ouvert » accepte la future numérotation (« 9.3.2 d 1 »). |
 
 ## BUG-032 — Validation de la revue refusée sans désigner « Décisions et moyens » (RSSI-20)
 
