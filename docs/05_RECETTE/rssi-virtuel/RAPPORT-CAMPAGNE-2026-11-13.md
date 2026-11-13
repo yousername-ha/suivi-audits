@@ -209,7 +209,8 @@ existe et **devient rouge le jour où il est corrigé**, ce qui oblige à retire
 aucun `test.skip`.
 
 **Exécution du harnais complet** : `sudo CI=1 tests/e2e/rssi-virtuel/lancer.sh --images-locales` sur une pile vierge
-`https://localhost`, trois passages : **65 passed** puis, après l'ajout de CAMP-T1-02, **66 passed**, code retour 0
+`https://localhost`, quatre passages : **65 passed** puis, après l'ajout de CAMP-T1-02 et l'alignement de CAMP-C4-05
+sur les arbitrages, **66 passed**, code retour 0
 (12 tests verts, dont les invariants INV-01 à INV-08 ; 54 échecs attendus, 8 de la recette du 12/11 et 46 de la
 campagne). Le message d'échec de chacun des 54 a été relu dans
 `test-results/resultats.json` : c'est l'assertion du défaut dans tous les cas, jamais une préparation
