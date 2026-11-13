@@ -184,13 +184,12 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 ## 6. Arbitrages du RSSI
 
-Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver ;
+Rendus le 13/11/2026 : BUG-051 (voir § 2, bloquants) ; BUG-049, seul le gestionnaire du registre peut l'archiver et le désarchiver ;
 BUG-042, chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent (ses
 entrées remontent alors dans la revue du parent). Restent attendus :
 
 | Sujet | Question |
 | --- | --- |
-| BUG-049 (suite) | Le désarchivage d'un registre est-il prévu, et réservé à qui ? |
 | BUG-024, BUG-031, rôle d'auditeur interne | Arbitrages de la recette du 12/11, toujours ouverts. |
 
 ## 7. Tests de non-régression

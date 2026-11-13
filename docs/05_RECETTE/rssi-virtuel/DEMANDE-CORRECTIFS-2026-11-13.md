@@ -57,7 +57,7 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 **BUG-049 — Un contributeur archive un registre (plan d'actions) qu'il n'a pas créé** (bloquant, P1 ; constats T4-02)
 
 - Observé : `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage.
-- Attendu : Arbitrage du RSSI du 13/11/2026 : seul le gestionnaire du registre peut l'archiver. Désarchivage à prévoir (proposition de la recette, non arbitrée).
+- Attendu : Arbitrage du RSSI du 13/11/2026 : seul le gestionnaire du registre peut l'archiver, et le désarchiver (commande de désarchivage à créer).
 - Piste : le code lit le point 5 de l'ADR 0043 comme un droit d'archivage pour tout contributeur ; lecture écartée par le RSSI le 13/11/2026.
 - Reproduire : [`campagne/rejeu-piles-3-4.md`](campagne/rejeu-piles-3-4.md), section T4-02.
 - Test de recette : `specs/42-campagne-conformite-ecarts.spec.ts`, « CAMP-T4-02 ouvert ».
@@ -382,8 +382,8 @@ Périmètre commun : `00000000-0000-4000-8000-000000000001`. Comptes : administr
 que ce périmètre ; rattaché au parent, il voit le parent et les enfants rattachés à ce parent. À traiter au lot 1, avec
 une ADR qui amende l'ADR 0039 (numéro à annoncer au RSSI).
 
-**Rendu le 13/11/2026, BUG-049** : seul le gestionnaire du registre peut l'archiver. À traiter au lot 1. Le désarchivage
-n'a pas été arbitré (proposition de la recette).
+**Rendu le 13/11/2026, BUG-049** : seul le gestionnaire du registre peut l'archiver ; le désarchivage est prévu, réservé
+lui aussi au gestionnaire (commande à créer). À traiter au lot 1.
 
 **Rendu le 13/11/2026, BUG-042** : chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des
 référentiels du parent ; ses entrées remontent alors dans la revue du parent. À traiter au lot 4.
@@ -392,7 +392,6 @@ Restent à obtenir :
 
 | Fiche | Question |
 | --- | --- |
-| BUG-049 (suite) | Le désarchivage d'un registre est-il prévu, et réservé à qui ? |
 | BUG-024, BUG-031 | Toujours ouverts (demande du 12/11). |
 
 ## 6. Outillage de recette (pour information, déjà corrigé par la recette)
