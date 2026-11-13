@@ -36,7 +36,13 @@ export function ListeDefilante({
         reserve += (parseFloat(style.paddingBottom) || 0) + (parseFloat(style.borderBottomWidth) || 0);
         courant = parent;
       }
-      const hauteur = Math.max(160, Math.floor(window.innerHeight - element.getBoundingClientRect().top - reserve));
+      // Liste haute dans la page : elle occupe l'espace restant du premier écran (référence). Liste placée sous d'autres
+      // blocs (adaptation à la version actuelle) : elle prend la hauteur de l'écran sous l'en-tête collant, une fois
+      // atteinte par le défilement, au lieu d'être réduite au minimum.
+      const haut = element.getBoundingClientRect().top + window.scrollY;
+      const entete = document.querySelector('.shell-header')?.getBoundingClientRect().height ?? 0;
+      const depart = haut <= window.innerHeight / 2 ? haut : entete + 16;
+      const hauteur = Math.max(240, Math.floor(window.innerHeight - depart - reserve));
       element.style.setProperty('--liste-fiches-hauteur', `${hauteur}px`);
     };
     mesurer();

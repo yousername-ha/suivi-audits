@@ -15,6 +15,15 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 
 ### Modifié
 
+- **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0092](docs/adr/0092-refonte-neon-charte-menu-et-accueil.md),
+  [rapport du lot](docs/refonte-neon/LOT-2-FENETRES-LIGNES.md)) : habillage commun des fenêtres et panneaux (cadre à angles coupés,
+  formulaires harmonisés) à **hauteur naturelle** : une fiche longue fait défiler le voile extérieur, sans ascenseur dans la fiche ; les
+  fenêtres RETEX, plein écran et le menu mobile gardent leur présentation. La **ligne entière d'une fiche** s'ouvre au clic, à Entrée ou à
+  Espace, avec la même ouverture et les mêmes droits que la commande existante (boutons « Ouvrir » conservés) ; les commandes de la ligne
+  et la sélection de texte gardent leur action, et le focus revient à la ligne à la fermeture. Les longues listes de fiches défilent dans
+  leur zone, en-têtes visibles. La liste « Ajouter depuis la plateforme » de la cartographie n'a plus de second ascenseur. Aucun
+  changement de droits, de données ni d'API. _(Session « Refonte Neon suivi-audits ».)_
+
 - **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([ADR 0092](docs/adr/0092-refonte-neon-charte-menu-et-accueil.md),
   [audit](docs/refonte-neon/AUDIT-CIBLE.md), [rapport du lot](docs/refonte-neon/LOT-1-MENU-DASHBOARD.md)) : palette Neon de la charte (jetons
   `tokens.ts`, rayons inchangés) ; menu latéral **bleu nuit opaque, identique dans les deux thèmes**, une teinte par identité d'entrée,

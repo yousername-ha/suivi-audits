@@ -110,7 +110,8 @@ Conformité dépliée sur la Bibliothèque. Elles sont transmises dans la conver
    qu'avec un droit de lecture métier (`canReadBusiness`, comme le tableau existant) et leurs données restent filtrées par le
    serveur selon les droits de la personne. **Écart signalé, non traité** : le rôle prédéfini Contributeur lit tous les modules
    métier (`packages/shared/src/permissions.ts`) et voit donc le tableau de bord ; limiter un contributeur à ce qui lui est
-   attribué (lui ou son groupe) change le modèle de droits, hors refonte graphique, à décider séparément.
+   attribué (lui ou son groupe) change le modèle de droits, hors refonte graphique : **traité dans une autre session**
+   (réponse du RSSI du 13/11/2026).
 2. **Captures de référence Playwright** : régénération dans le conteneur officiel (CI), puis relecture image par image par le
    RSSI avant tout commit.
 3. **ADR 0092** réservée et rédigée.
@@ -127,4 +128,4 @@ Conformité dépliée sur la Bibliothèque. Elles sont transmises dans la conver
 - Le test de rendu des pictogrammes est placé dans `apps/web/test` : `packages/ui` n'a pas les types de `react-dom` et aucune
   dépendance n'est ajoutée.
 
-Prochaine action : validation des captures par le RSSI, puis lot 2 (fenêtres et lignes ouvrables) sur les choix déjà validés.
+Captures du lot 1 **validées par le RSSI le 13/11/2026** ; suite : [lot 2](LOT-2-FENETRES-LIGNES.md).

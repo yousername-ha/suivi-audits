@@ -12,6 +12,18 @@
   outline-offset: -2px;
   background-color: color-mix(in srgb, var(--neon-accent) 10%, var(--suivi-surface));
 }
+/* La première colonne collante des tableaux garde un fond opaque : elle suit le survol, le focus et la ligne choisie
+   sans laisser voir les cellules qui défilent dessous. */
+.data-table tbody tr[data-fiche-ouvrable]:hover > td:first-child {
+  background: color-mix(in srgb, var(--neon-accent) 7%, var(--suivi-surface));
+}
+.data-table tbody tr[data-fiche-ouvrable]:focus-visible > td:first-child {
+  background: color-mix(in srgb, var(--neon-accent) 10%, var(--suivi-surface));
+}
+.data-table tbody tr.ligne-choisie > td:first-child {
+  background:
+    linear-gradient(var(--mantine-primary-color-light), var(--mantine-primary-color-light)), var(--suivi-surface);
+}
 
 [data-liste-fiches]:has([data-fiche-ouvrable]) {
   max-block-size: var(--liste-fiches-hauteur, 60dvh);

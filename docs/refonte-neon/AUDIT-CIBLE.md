@@ -51,8 +51,8 @@ Aucun travail en cours d'une autre session n'a été touché : la branche de tra
 | Lot | Contenu                                                                                     | Statut     |
 | --- | ------------------------------------------------------------------------------------------- | ---------- |
 | 0   | Audit, matrice                                                                              | fait       |
-| 1   | Jetons Neon, menu bleu nuit opaque animé, Dashboard analytique                              | ce lot     |
-| 2   | Fenêtres (lecture distincte, voile extérieur), lignes ouvrables, `focus-fiche`              | à venir    |
+| 1   | Jetons Neon, menu bleu nuit opaque animé, Dashboard analytique                              | validé     |
+| 2   | Fenêtres (Biseau, voile extérieur), lignes ouvrables, `focus-fiche`                         | fait       |
 | 3   | Contexte, Périmètres compacts, Objectifs compacts                                           | à venir    |
 | 4   | Bibliothèque (présentation), DDA en lignes                                                  | à venir    |
 | 5   | SWOT, PESTEL, Parties intéressées, Processus, Fournisseurs                                  | à venir    |
