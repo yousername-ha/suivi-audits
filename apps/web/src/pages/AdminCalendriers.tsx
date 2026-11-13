@@ -31,6 +31,7 @@ import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 const CLE = ['calendriers-plateforme'];
 const dateFr = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' });
@@ -109,7 +110,7 @@ export function CalendriersPanel() {
             </Table.Thead>
             <Table.Tbody>
               {(q.data ?? []).map((c) => (
-                <Table.Tr key={c.id}>
+                <Table.Tr key={c.id} {...ficheCliquable(() => setHistorique(c), `Afficher ${c.name}`)}>
                   <Table.Td>
                     <b>{c.name}</b>
                     <Text size="xs" c="dimmed">

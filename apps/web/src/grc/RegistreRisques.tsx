@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { PlanTraitementRisque } from './PlanTraitementRisque';
 
@@ -155,7 +156,7 @@ export function RegistreRisques({
             </Table.Thead>
             <Table.Tbody>
               {q.data.items.map((r) => (
-                <Table.Tr key={r.id}>
+                <Table.Tr key={r.id} {...ficheCliquable(() => void objet(r.id).then(onOpen), `Afficher ${r.name}`)}>
                   <Table.Td>
                     {r.code ? `${r.code} · ` : ''}
                     {r.name}

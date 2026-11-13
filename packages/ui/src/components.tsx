@@ -2,6 +2,7 @@
    confirmation, message d'erreur. Tous les écrans les utilisent. */
 import { Alert, Badge, Button, Card, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import { useState, type ReactNode } from 'react';
+import { ListeDefilante } from './liste-defilante';
 
 /** Page : pleine largeur (par défaut) ou largeur de formulaire. */
 export function Page({ children, variant = 'pleine' }: { children: ReactNode; variant?: 'pleine' | 'formulaire' }) {
@@ -37,9 +38,9 @@ export function PageHeader({
 export function DataTable({ children, label }: { children: ReactNode; label?: string }) {
   return (
     <Card className="data-table" p={0}>
-      <div className="table-wrap" role="region" aria-label={label} tabIndex={label ? 0 : undefined}>
+      <ListeDefilante className="table-wrap" label={label}>
         {children}
-      </div>
+      </ListeDefilante>
     </Card>
   );
 }

@@ -20,7 +20,9 @@
     "./styles.css": "./src/styles.css",
     "./neon.css": "./src/neon.css",
     "./neon-menu.css": "./src/neon-menu.css",
-    "./neon-analytics.css": "./src/neon-analytics.css"
+    "./neon-analytics.css": "./src/neon-analytics.css",
+    "./neon-fenetres.css": "./src/neon-fenetres.css",
+    "./lignes-fiches.css": "./src/lignes-fiches.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

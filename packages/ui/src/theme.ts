@@ -13,6 +13,7 @@ import {
   Table,
   type CSSVariablesResolver,
 } from '@mantine/core';
+import { rendreFocusFiche } from './focus-fiche';
 import {
   BRAND,
   ENCRE,
@@ -50,8 +51,19 @@ export const theme = createTheme({
   breakpoints: POINTS_DE_RUPTURE,
   components: {
     // Le verrouillage du défilement (react-remove-scroll) injecte une balise <style> : interdit par la CSP stricte.
-    Modal: Modal.extend({ defaultProps: { lockScroll: false, radius: 'lg' } }),
-    Drawer: Drawer.extend({ defaultProps: { lockScroll: false } }),
+    /* Retour du focus à la ligne ou au bouton qui a ouvert la fiche (lignes ouvrables, refonte Neon lot 2). Le nom
+       accessible par défaut du bouton de fermeture de la référence n'est pas repris : des tests existants cherchent un
+       bouton « Fermer » par nom partiel dans les fenêtres. */
+    Modal: Modal.extend({
+      defaultProps: {
+        lockScroll: false,
+        radius: 'lg',
+        onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
+      },
+    }),
+    Drawer: Drawer.extend({
+      defaultProps: { lockScroll: false, onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche) },
+    }),
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
     Button: Button.extend({ defaultProps: { radius: 'md' } }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),

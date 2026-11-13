@@ -32,6 +32,7 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
@@ -147,7 +148,7 @@ export function RegistreIncidents() {
             {liste.map((i) => {
               const retex = etatRetexIncident(i);
               return (
-                <Table.Tr key={i.id}>
+                <Table.Tr key={i.id} {...ficheCliquable(() => ouvrir(i.id), `Afficher l’incident ${i.id}`)}>
                   <Table.Td>
                     <Anchor component="button" type="button" fw={600} onClick={() => ouvrir(i.id)}>
                       {i.id}
