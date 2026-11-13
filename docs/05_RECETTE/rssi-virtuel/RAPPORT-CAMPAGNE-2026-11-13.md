@@ -196,7 +196,34 @@ Sécurité ; BUG-023 s'étend à la carte, à l'atelier 5 et au rapport (BUG-059
 
 ## 7. Tests de non-régression
 
-TESTS_A_COMPLETER
+45 tests `test.fail` ajoutés au harnais, un ou plusieurs par fiche (BUG-038 à BUG-077), écrits par les agents de rejeu
+à partir de leurs recettes et nommés « CAMP-<constat> ouvert : <comportement attendu> » :
+
+| Fichier | Tests | Fiches |
+| --- | --- | --- |
+| `specs/41-campagne-organisation-risques.spec.ts` | 14 | organisation, fournisseurs, risques, EBIOS RM, cloisonnement (CAMP-T1-01), BUG-077 (CAMP-R12-01) |
+| `specs/42-campagne-conformite-ecarts.spec.ts` | 13 | DdA, référentiels, écarts, plans, revue de direction, registres |
+| `specs/43-campagne-incidents-plateforme.spec.ts` | 18 | continuité, incidents, crise, exports, Plateforme, Système |
+
+Chaque fichier ne dépend que de l'installation : il crée ses données fictives, ses périmètres et ses comptes, et archive ce
+qui gênerait les invariants. Chaque test décrit le comportement attendu après correction ; il échoue tant que le défaut
+existe et **devient rouge le jour où il est corrigé**, ce qui oblige à retirer le marqueur. Aucune assertion affaiblie,
+aucun `test.skip`.
+
+**Exécution du harnais complet** : `sudo CI=1 tests/e2e/rssi-virtuel/lancer.sh --images-locales` sur une pile vierge
+`https://localhost`, deux passages : **65 passed**, code retour 0 (12 tests verts, dont les invariants INV-01 à INV-08 ;
+53 échecs attendus, 8 de la recette du 12/11 et 45 de la campagne). Le message d'échec de chacun des 53 a été relu dans
+`test-results/resultats.json` : c'est l'assertion du défaut dans tous les cas, jamais une préparation
+([relevé](campagne/harnais-2026-11-13.md)).
+
+Un premier passage sur une pile numérotée (`--pile 7`, `https://127.0.0.17`) n'est **pas valable** : sur une adresse IP,
+l'installation ne propose pas de clé de sécurité, `00-installation` s'arrête et les tests suivants échouent faute de
+compte ; les `test.fail` y « passent » pour une mauvaise raison. Le harnais complet ne se lance donc que sans `--pile`.
+
+Non exécutés : `pnpm --filter @suivi/api test` (dont `references-organisation.test.ts`, qui exige la base PostgreSQL de
+test, absente de la session ; une recherche des motifs interdits sur les fichiers ajoutés ne trouve rien), le workflow
+GitHub `rssi-virtuel.yml`. Exécutés : `pnpm run typecheck` (tests de bout en bout), `prettier --check` et `eslint` sur les
+fichiers de tests ajoutés : code retour 0.
 
 ## 8. Outillage de recette
 
