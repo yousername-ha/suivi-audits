@@ -126,9 +126,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     id: 'retex-incidents',
     title: 'RETEX d’un incident et chronologie',
     permission: 'incidents:modifier',
-    link: '/pilotage/incidents-retex',
+    link: '/pilotage/incidents-registre',
     steps: [
-      'Ouvrez Résilience, Incidents et crise, RETEX et chronologie (ou le bouton « RETEX et chronologie » de la fiche d’un incident), puis « Ouvrir un RETEX ». Vous en devenez le pilote.',
+      'Ouvrez Résilience, Incidents et crise, Registre des incidents, puis la fiche de l’incident et son onglet « Chronologie et RETEX », et « Ouvrir un RETEX ». Vous en devenez le pilote.',
       'Remplissez-le seul, ou invitez des comptes existants d’autres pôles avec une consigne et une échéance. Chaque personne invitée reçoit une notification « Contribution à un RETEX » (dans l’application, et par courriel selon ses réglages) ; relancez celles qui n’ont pas terminé.',
       'Saisissez les événements (date et heure, type d’étape, intitulé, acteur, gravité ressentie) : la chronologie se trie toute seule. Récupérez aussi les éléments datés de la fiche de l’incident et de la main courante d’une cellule de crise ; un élément déjà importé n’est pas proposé deux fois.',
       'Dans « À valider », acceptez chaque proposition, corrigez-la puis acceptez-la, marquez-la comme déjà connue ou rejetez-la avec un motif. Rien n’entre dans la chronologie sans votre décision.',
