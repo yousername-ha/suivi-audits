@@ -161,6 +161,10 @@ describe('incidents au tableau de bord (BUG-070)', () => {
       );
       const s = (await admin.get('/api/mur/synthese')).json();
       expect(s.incidents).toEqual({ total: 1, ouverts: 1, securiteOuverts: 0 });
+      // Rapport de pilotage : section « incidents » du périmètre (BUG-070).
+      const rapport = (await admin.get(`/api/grc/${DEFAULT_SMSI}/report`)).json();
+      expect(rapport.sections.incidents).toHaveLength(1);
+      expect(rapport.sections.incidents[0].title).toBe('Incident fictif du tableau de bord');
     } finally {
       await t2.close();
     }

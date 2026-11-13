@@ -1,4 +1,16 @@
-import { Accordion, Button, Checkbox, Group, NumberInput, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import {
+  Accordion,
+  Button,
+  Checkbox,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from '@mantine/core';
+import { libelleModeCalcul } from '@suivi/shared';
 import { useState } from 'react';
 const labels: Record<string, string> = {
   motive: 'Motivation',
@@ -201,6 +213,17 @@ export function ConfigurationEditor({
       </Accordion>
     );
   const label = labels[path.split('.').at(-1) ?? ''] ?? path;
+  // Mode de calcul d'une méthode : libellé français plutôt que le code (`judgement`, `matrix`, BUG-059).
+  if (typeof value === 'string' && path.endsWith('calculation.kind'))
+    return (
+      <Select
+        label={label}
+        allowDeselect={false}
+        data={['matrix', 'lookup', 'judgement'].map((k) => ({ value: k, label: libelleModeCalcul(k) }))}
+        value={value}
+        onChange={(v) => onChange(v ?? value)}
+      />
+    );
   if (typeof value === 'boolean')
     return <Checkbox label={label} checked={value} onChange={(e) => onChange(e.currentTarget.checked)} />;
   if (typeof value === 'number')

@@ -86,8 +86,8 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
           <Text size="sm" c="dimmed">
             Incidents, événements et demandes. Ouvrez la fiche d’un incident pour le qualifier (qualification guidée),
             suivre ses obligations et conduire son retour d’expérience (chronologie et RETEX). La priorité suit la
-            matrice ITIL impact × urgence. Les chiffres alimentent la diapositive « Revue des incidents » du COPIL
-            sécurité.
+            matrice ITIL impact × urgence. Les chiffres alimentent la revue de direction (entrée d 2), le tableau de
+            bord et le rapport de pilotage du périmètre.
           </Text>
         </div>
         {modifiable && (

@@ -120,6 +120,8 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
     (outil historique au périmètre commun, fiches du Pilotage ailleurs) subsistent. **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
     cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture et ne sont pas encore comptés dans « Plans du SMSI ».
     _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Compléments (BUG-070, BUG-059)** : le rapport de pilotage contient une section « Incidents » du périmètre ; le mode de calcul d'une méthode s'affiche en français dans l'éditeur ;
+  la phrase annonçant une diapositive « Revue des incidents » inexistante est remplacée. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du
   traitement, import…) gardent leur valeur ; un test interdit désormais toute liste sans `allowDeselect={false}` ou `clearable`. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 

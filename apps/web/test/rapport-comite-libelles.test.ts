@@ -34,4 +34,24 @@ describe('rapport de pilotage et audit', () => {
     for (const code of ['conditional', 'unacceptable', '>reduce<', '>draft<', '+00:00'])
       expect(html).not.toContain(code);
   });
+  it('reprend les incidents du périmètre (BUG-070)', () => {
+    const html = committeeReport({
+      smsi: { name: 'Périmètre fictif', scope: 'S' },
+      policy: { version: 1 },
+      sections: {
+        incidents: [
+          {
+            id: 'INC-2026-001',
+            title: 'Coupure fictive',
+            kind: 'Incident',
+            status: 'Nouveau',
+            detectedAt: '2026-11-12T08:45',
+          },
+        ],
+      },
+    });
+    expect(html).toContain('Incidents');
+    expect(html).toContain('Coupure fictive');
+    expect(html).toContain('12/11/2026 08:45');
+  });
 });

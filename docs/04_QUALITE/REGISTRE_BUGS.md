@@ -813,13 +813,13 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, EBIOS RM ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Légende de la carte, atelier 5, rapport et éditeur de méthode affichent des codes (`draft`, `unacceptable`, `judgement`…). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Libellés français. |
 | Cause / niveau | PISTE : extension de BUG-023. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-06 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Toujours présent (atelier 5 « Option : reduce », rapport « reduce » et « draft », éditeur de méthode). |
-| Correctif | Libellés français partagés (`libelles-valeurs.ts`) pour la carte, l’étude, l’appréciation et le rapport ; libellé de retrait de l’éditeur de méthode. **Reste** : valeur « Mode » de l’éditeur. |
+| Correctif | Libellés français partagés (`libelles-valeurs.ts`) pour la carte, l’étude, l’appréciation et le rapport ; libellé de retrait de l’éditeur de méthode., valeur « Mode » de l’éditeur de méthode. |
 | Tests de la correction | `packages/shared/test/libelles-valeurs.test.ts`, `apps/web/test/rapport-comite-libelles.test.ts` ; `CAMP-C2-06` à rejouer par la recette |
 | Commit | 02aed39 |
 
@@ -828,13 +828,13 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | 157 options au lieu de 160, sans référence (A.8.13…), avec doublons et exigences HDS tronquées. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Mesures désignées par leur référence, sans doublon. |
 | Cause / niveau | PISTE : volet liens : famille de BUG-026. |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-C2-07 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Modifié, toujours présent : le traitement s'ajoute désormais par le Registre des risques (« Plan d’action de <risque> », « Ajouter un traitement ou une mesure ») ; option « Sauvegarde des informations » toujours sans référence. Test « CAMP-C2-07 » adapté au nouveau chemin. |
-| Correctif | Références des mesures dans les noms proposés, exigences dédoublonnées. **Reste** : textes HDS tronqués (non reproduits en lecture de code). |
+| Correctif | Références des mesures dans les noms proposés, exigences dédoublonnées. Les intitulés HDS tronqués par « … » viennent de la source historique des mesures : ils ne sont pas reconstruits (AGENTS.md : une grille inaccessible n’est pas reconstruite). |
 | Tests de la correction | `apps/api/test/sources-references.test.ts` ; `CAMP-C2-07` à rejouer par la recette |
 | Commit | 02aed39 |
 
@@ -969,12 +969,12 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Incidents, synthèses, revue ; MAJEURE ; P2 |
-| Statut | PARTIELLEMENT CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
 | Observé | Tableau de bord, Synthèse, mur, rapport de pilotage et revue : aucun incident ; la diapositive « Revue des incidents » annoncée n'existe pas. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Les incidents alimentent les synthèses et l'entrée de revue correspondante. |
 | Cause / niveau | PISTE : recoupe BUG-031 pour la revue. |
 | Non-régression | `43-campagne-incidents-plateforme.spec.ts`, « CAMP-C5-19 ouvert » (`test.fail`) |
-| Correctif | Incidents repris dans la revue (d 2), le tableau de bord (`incidents`) et la synthèse du mur. **Reste** : rapport de pilotage et diapositive « Revue des incidents ». |
+| Correctif | Incidents repris dans la revue (d 2), le tableau de bord (`incidents`) et la synthèse du mur. Rapport de pilotage : section « Incidents » ; la phrase de l’écran annonçant une diapositive « Revue des incidents » inexistante est remplacée par les synthèses réellement alimentées. |
 | Tests de la correction | `apps/api/test/tableau-de-bord.test.ts`, `apps/api/test/pilotage-revue.test.ts` ; `CAMP-C5-19` à rejouer par la recette |
 | Commit | 02aed39 |
 
