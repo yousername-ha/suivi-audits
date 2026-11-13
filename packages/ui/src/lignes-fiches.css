@@ -1,4 +1,4 @@
-/* Refonte Neon, lot 2 (ADR 0092) : même interaction pour les fiches de tous les menus (ligne entière ouvrable au clic,
+/* Refonte Neon, lot 2 (ADR 0093) : même interaction pour les fiches de tous les menus (ligne entière ouvrable au clic,
    Entrée ou Espace), sans modifier la géométrie des listes. Une liste qui contient des lignes ouvrables défile dans sa
    propre zone, en-têtes visibles ; la pagination reste sous la liste. */
 [data-fiche-ouvrable] {

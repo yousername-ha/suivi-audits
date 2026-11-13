@@ -1,7 +1,8 @@
-# ADR 0092 — Refonte Neon : charte, menu bleu nuit opaque et vue analytique de l'accueil
+# ADR 0093 — Refonte Neon : charte, menu bleu nuit opaque et vue analytique de l'accueil
 
-- Statut : acceptée pour les lots 1 et 2 (décisions du RSSI du 13/11/2026 ; numéro réservé et validé par le RSSI). Complétée
-  à chaque lot de la refonte.
+- Statut : acceptée pour les lots 1 et 2 (décisions du RSSI du 13/11/2026). Complétée à chaque lot de la refonte.
+- Numéro : 0092 retenu par le RSSI le 13/11/2026, devenu **0093** à l'intégration de `claude-suivi-smsi`, où l'ADR 0092 a été
+  attribuée entre-temps à la [refonte des droits](0092-refonte-des-droits-pyramide-des-perimetres.md).
 - Date : 2026-11-13
 - Rédaction : session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`)
 - Remplace, pour la direction graphique, l'[ADR 0015](0015-refonte-visuelle-sauge.md) (palette Sauge). Les autres
@@ -67,6 +68,6 @@ droits, les calculs ou les contrats existants.
 - Le changement hors interface se limite au schéma partagé des préférences (un champ facultatif) ; l'API n'est pas modifiée.
 - Le rôle prédéfini Contributeur lit tous les modules métier : il voit donc le tableau de bord. Restreindre ce que voit un
   contributeur (seulement ce qui lui est attribué) est un changement du modèle de droits, hors refonte graphique, **traité
-  dans une autre session** (réponse du RSSI du 13/11/2026).
+  dans une autre session** (réponse du RSSI du 13/11/2026) : [ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md).
 - Lots suivants : Contexte/Périmètres/Objectifs, Bibliothèque et DDA, SWOT/PESTEL/Parties/Processus/Fournisseurs, Timeline
   des actions et récurrences, habillage de l'Assistant (après fusion de son backend), harmonisation finale.

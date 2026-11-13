@@ -1,4 +1,4 @@
-/* Pictogrammes du menu bleu nuit (refonte Neon, ADR 0092) : décoratifs, une teinte par identité, masque de la coche unique
+/* Pictogrammes du menu bleu nuit (refonte Neon, ADR 0093) : décoratifs, une teinte par identité, masque de la coche unique
    par instance, aucun style en ligne (CSP). */
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

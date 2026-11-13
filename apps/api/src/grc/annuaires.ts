@@ -1,7 +1,8 @@
 /* Annuaires de responsables : personnes, groupes et fonctions (migration 031). Le serveur est seul juge : un responsable
    de type groupe ou fonction doit exister et compter au moins une personne active ; pour une personne, l'identifiant
-   historique `ownerId` reste la source des rappels. Un responsable n'est jamais une habilitation : désigner ou changer
-   un responsable n'écrit dans aucune table de rôles, de groupes ou de droits de ressource. Les rappels d'un groupe ou d'une fonction vont aux
+   historique `ownerId` reste la source des rappels. Désigner ou changer un responsable n'écrit dans aucune table de
+   rôles, de groupes ou de droits de ressource ; depuis l'ADR 0092 (lot 2), le responsable d'une action, d'une tâche
+   récurrente ou d'un registre (« Attribuer à ») en est contributeur, par un calcul fait à chaque accès. Les rappels d'un groupe ou d'une fonction vont aux
    personnes qui le composent au moment de l'envoi. Accès aux données en Kysely (ADR 0062). */
 import {
   BUSINESS_MODULES,
@@ -45,7 +46,14 @@ export class GrcAnnuaires {
       }
     }
     if (!peutDesigner) throw new HttpError(403, 'Droits insuffisants pour désigner un responsable dans ce périmètre.');
-    const utilisateurs = await this.g.owners(smsi, user);
+    // Tout compte actif est proposable : « Attribuer à » ouvre l'élément à la personne désignée (ADR 0092, lot 2).
+    const utilisateurs = await this.g.db.k
+      .selectFrom('users as u')
+      .select(['u.id', 'u.username', 'u.display_name as displayName'])
+      .where(actif)
+      .orderBy('u.username')
+      .limit(1000)
+      .execute();
     const k = this.g.db.k;
     const groupes = await k
       .selectFrom('groups as g')
@@ -70,7 +78,8 @@ export class GrcAnnuaires {
   /** Personnes actives que désigne un responsable ; erreur 422 si la cible n'existe pas ou ne compte personne. */
   async resoudre(smsi: string, ref: ResponsableRef, c: Client): Promise<string[]> {
     if (ref.type === 'utilisateur') {
-      await this.g.checkOwner(smsi, ref.id, c);
+      // Tout compte actif peut être désigné : la désignation lui ouvre l'élément (ADR 0092, lot 2).
+      await this.g.checkOwner(smsi, ref.id, c, true);
       return [ref.id];
     }
     const k = surConnexion(c);

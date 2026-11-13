@@ -107,3 +107,10 @@ configuration) est filtré **à la lecture** selon les droits de la personne : c
 ni identifié. Les décisions restent immuables ; une action issue d'une décision sur une fiche de registre restreint se
 range dans un plan d'accueil que l'auteur gère. L'import Tenacy applique le contrôle de gestion du chemin interactif. _(Session
 « Projet audit_suivi Coeur ».)_
+
+## Amendement du 13/11/2026 — « Attribuer à » vaut rôle de contributeur
+
+[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md), lot 2 : la personne désignée par le champ « Attribuer à » d'une
+action, d'une tâche récurrente ou d'un registre (en personne, par un groupe ou par une fonction) en est contributrice sans droit
+attribué ; elle crée dans un registre qui lui est attribué et gère ce qu'elle a créé. Les droits attribués de cette ADR restent
+en vigueur jusqu'au lot 3.

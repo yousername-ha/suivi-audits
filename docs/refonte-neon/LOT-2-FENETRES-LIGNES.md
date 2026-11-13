@@ -2,7 +2,7 @@
 
 13/11/2026, Europe/Paris. Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`), branche
 `claude/refonte-neon` (suite du [lot 1](LOT-1-MENU-DASHBOARD.md), validé par le RSSI le 13/11/2026). Décision :
-[ADR 0092](../adr/0092-refonte-neon-charte-menu-et-accueil.md), § « Décision (lot 2) ». Matrice :
+[ADR 0093](../adr/0093-refonte-neon-charte-menu-et-accueil.md), § « Décision (lot 2) ». Matrice :
 [lignes `socle` et `lignes`](MATRICE-COMPATIBILITE.csv).
 
 ## 1. Décisions du RSSI pour ce lot (13/11/2026)

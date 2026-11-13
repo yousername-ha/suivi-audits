@@ -1,6 +1,6 @@
 /* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
    disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
-   cours. Plus de colonnes sur les grands écrans. Refonte Neon (ADR 0092) : une seconde présentation, la vue analytique, se
+   cours. Plus de colonnes sur les grands écrans. Refonte Neon (ADR 0093) : une seconde présentation, la vue analytique, se
    choisit au-dessus du tableau ; le choix est une préférence du compte (tous les appareils), la disposition reste le défaut.
    Sans droit de lecture métier, aucune des deux présentations n'est affichée. */
 import { Button, Card, NativeSelect, SegmentedControl, Stack, Text, Title, VisuallyHidden } from '@mantine/core';

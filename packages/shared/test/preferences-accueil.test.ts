@@ -1,4 +1,4 @@
-/* Présentation de l'accueil choisie par la personne (refonte Neon, ADR 0092) : préférence facultative du compte. */
+/* Présentation de l'accueil choisie par la personne (refonte Neon, ADR 0093) : préférence facultative du compte. */
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PREFERENCES, Preferences } from '../src/affichage.js';
 

@@ -13,9 +13,14 @@ lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_hist
 valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
 « GAP — Applications » de la version précédente et relever les correspondances utiles.
 
+**Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
+**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants. De même, les
+personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
+éléments (lot 2).
+
 ### Modifié
 
-- **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0092](docs/adr/0092-refonte-neon-charte-menu-et-accueil.md),
+- **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
   [rapport du lot](docs/refonte-neon/LOT-2-FENETRES-LIGNES.md)) : habillage commun des fenêtres et panneaux (cadre à angles coupés,
   formulaires harmonisés) à **hauteur naturelle** : une fiche longue fait défiler le voile extérieur, sans ascenseur dans la fiche ; les
   fenêtres RETEX, plein écran et le menu mobile gardent leur présentation. La **ligne entière d'une fiche** s'ouvre au clic, à Entrée ou à
@@ -24,7 +29,7 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   leur zone, en-têtes visibles. La liste « Ajouter depuis la plateforme » de la cartographie n'a plus de second ascenseur. Aucun
   changement de droits, de données ni d'API. _(Session « Refonte Neon suivi-audits ».)_
 
-- **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([ADR 0092](docs/adr/0092-refonte-neon-charte-menu-et-accueil.md),
+- **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
   [audit](docs/refonte-neon/AUDIT-CIBLE.md), [rapport du lot](docs/refonte-neon/LOT-1-MENU-DASHBOARD.md)) : palette Neon de la charte (jetons
   `tokens.ts`, rayons inchangés) ; menu latéral **bleu nuit opaque, identique dans les deux thèmes**, une teinte par identité d'entrée,
   pictogrammes animés (transform et opacity seulement) avec bouton de pause et respect du mouvement réduit, nombre réel de destinations
@@ -34,6 +39,19 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   `accueil`, sans migration ni route nouvelle). Navigation, droits, ordre personnel, alertes, disposition et partage du tableau de bord
   inchangés. _(Session « Refonte Neon suivi-audits ».)_
 
+- **Droits : pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), lot 1 de la refonte des droits) : l'accès donné
+  sur un périmètre (lecture, ou lecture et écriture) vaut désormais pour **tous ses périmètres enfants**, sans désignation un par un ; il ne remonte pas vers le parent
+  et ne passe pas aux périmètres voisins. Le niveau le plus élevé de la chaîne l'emporte. L'écran **Membres** d'un périmètre liste les comptes dont l'accès vient d'un
+  parent (« accès hérité d'un périmètre parent »), sans bouton de révocation. `GET /api/grc/:smsi/members` renvoie `herite` pour chaque ligne. Les droits de module,
+  le périmètre commun, les droits par registre et l'héritage des référentiels sont inchangés.
+  _(Session « Refonte des droits d'accès ».)_
+- **Droits : le contributeur par « Attribuer à »** (ADR 0092, lot 2, côté serveur) : la personne désignée sur une action, une tâche récurrente ou un registre, en
+  personne, par son groupe ou par sa fonction, **lit l'élément et le renseigne** sans rôle global ni accès au périmètre, et ne voit rien d'autre. Un registre attribué
+  (champ ouvert à toutes les familles de registres) lui permet d'**y créer** ; elle **gère ce qu'elle a créé** et renseigne sans le modifier ce qu'un pilote a créé.
+  Retirer l'attribution retire l'accès aussitôt. Tout compte actif peut être désigné sur une action, une tâche ou un registre, et reçoit ses rappels d'échéance.
+  API : `GET /api/registres/mes-elements` (ce qui m'est attribué), `peutCreer` sur un registre ; créer, modifier et archiver une fiche demandent une session complète,
+  le service restant seul juge. L'écran du contributeur n'est pas encore livré. Aucune migration.
+  _(Session « Refonte des droits d'accès ».)_
 - **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
   « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
   onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**

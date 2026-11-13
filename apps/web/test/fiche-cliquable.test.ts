@@ -1,4 +1,4 @@
-/* Lignes ouvrables (refonte Neon, lot 2, ADR 0092) : la ligne entière ouvre la fiche au clic, à Entrée ou à Espace, sans
+/* Lignes ouvrables (refonte Neon, lot 2, ADR 0093) : la ligne entière ouvre la fiche au clic, à Entrée ou à Espace, sans
    jamais intercepter une commande imbriquée, une touche de modification ou une sélection de texte. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ficheCliquable } from '../src/fiche-cliquable';

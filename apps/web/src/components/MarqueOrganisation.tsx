@@ -1,4 +1,4 @@
-/* Marque de l'en-tête et de la tête du menu (refonte Neon, ADR 0092) : le logo de l'organisation déposé dans Plateforme >
+/* Marque de l'en-tête et de la tête du menu (refonte Neon, ADR 0093) : le logo de l'organisation déposé dans Plateforme >
    Général (route publique existante GET /api/settings/logo), sinon la pastille « S » de l'application. Décorative : le lien
    qui la contient porte le nom de l'application. Aucune donnée nouvelle, aucune route ajoutée. */
 import { useQuery } from '@tanstack/react-query';

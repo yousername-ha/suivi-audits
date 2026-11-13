@@ -2,7 +2,7 @@
 
 13/11/2026, Europe/Paris. Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`), branche
 `claude/refonte-neon` créée depuis `claude-suivi-smsi` (`967de1d`). Audit préalable : [AUDIT-CIBLE.md](AUDIT-CIBLE.md) et
-[matrice](MATRICE-COMPATIBILITE.csv). Décision : [ADR 0092](../adr/0092-refonte-neon-charte-menu-et-accueil.md). **Point d'étape
+[matrice](MATRICE-COMPATIBILITE.csv). Décision : [ADR 0093](../adr/0093-refonte-neon-charte-menu-et-accueil.md). **Point d'étape
 demandé par le RSSI : arrêt après ce lot, en attente de validation des captures avant de poursuivre.** Les réponses du RSSI
 aux questions du point d'étape sont intégrées (§ 5).
 
@@ -38,7 +38,7 @@ aux questions du point d'étape sont intégrées (§ 5).
 
 Code : `apps/web/src` (Layout, Home, Settings pour recharger le logo, composants nouveaux), `packages/ui` (jetons, thème,
 feuilles et icônes), `packages/shared/src/affichage.ts` (un champ facultatif). Documentation : `docs/refonte-neon/`,
-`docs/adr/0092-…`, index des ADR, `CHANGELOG.md`. Tests **ajoutés** (aucun test existant modifié) : `apps/web/test/`
+`docs/adr/0093-…`, index des ADR, `CHANGELOG.md`. Tests **ajoutés** (aucun test existant modifié) : `apps/web/test/`
 `neon-donnees`, `neon-graphiques-rendu`, `icones-menu` ; `packages/ui/test/neon-graphiques` ; `packages/shared/test/`
 `preferences-accueil`.
 
@@ -114,7 +114,7 @@ Conformité dépliée sur la Bibliothèque. Elles sont transmises dans la conver
    (réponse du RSSI du 13/11/2026).
 2. **Captures de référence Playwright** : régénération dans le conteneur officiel (CI), puis relecture image par image par le
    RSSI avant tout commit.
-3. **ADR 0092** réservée et rédigée.
+3. **ADR 0093** réservée et rédigée.
 4. **Marque** : le logo configuré dans Plateforme > Général prend la place de la pastille ; pastille « S » à défaut.
 5. **Entrée « Mes contributions RETEX »** : différence de teinte jugée imperceptible ; teinte Résilience conservée.
 6. **Nouveaux tests** : ajouts autorisés, sans modification des tests existants → cinq fichiers ajoutés.
