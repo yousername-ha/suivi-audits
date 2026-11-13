@@ -283,6 +283,29 @@ test('CAMP-C4-05 ouvert : un périmètre enfant sans héritage des référentiel
   }
 });
 
+test('RSSI-18 ouvert : la revue de direction prépare les entrées 9.3.2 de l’ISO/IEC 27001', async ({ browser }) => {
+  // ISO/IEC 27001:2022, 9.3.2 a) à g). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-031) : les entrées de la revue sont celles de
+  // l'ISO/IEC 27001 ; l'ISO 9001 n'est plus suivie pour le moment. Aujourd'hui les entrées suivent l'ISO 9001 : un point
+  // c) découpé en sous-entrées (« 9.3.2 c 1 » à « c 7 ») et aucun point g) (opportunités d'amélioration continue).
+  test.fail(true, 'RSSI-18 ouvert : entrées de la revue numérotées selon l’ISO 9001, sans 9.3.2 g)');
+  const { ctx, rq } = await admin(browser);
+  try {
+    const r = await rq.get(`/api/grc/${PERIMETRE_COMMUN}/pilotage/revue/entrees`);
+    expect(r.ok(), await r.text()).toBe(true);
+    const articles = ((await r.json()) as { entrees: { article: string }[] }).entrees.map((e) => e.article);
+    expect(
+      articles.filter((a) => /^9\.3\.2 c \d/.test(a)),
+      `sous-entrées ISO 9001 du point c) : ${articles.join(', ')}`,
+    ).toEqual([]);
+    expect(
+      articles.some((a) => /^9\.3\.2 g\b/.test(a)),
+      `point g) attendu : ${articles.join(', ')}`,
+    ).toBe(true);
+  } finally {
+    await ctx.close();
+  }
+});
+
 test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les écarts ouverts de ses sous-périmètres', async ({
   browser,
 }) => {
@@ -290,7 +313,10 @@ test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les é
   // périmètre enfant qui hérite des référentiels du parent n'a pas sa propre revue, ses entrées remontent dans celle du
   // parent. La seule revue préparée (racine) ne compte que les écarts de la racine : une non-conformité majeure ouverte sous le périmètre d'hébergement n'entre dans aucune revue,
   // sans que l'entrée le dise.
-  test.fail(true, 'CAMP-C4-05 ouvert : l’écart ouvert du sous-périmètre est absent de l’entrée 9.3.2 c 4 de la racine');
+  test.fail(
+    true,
+    'CAMP-C4-05 ouvert : l’écart ouvert du sous-périmètre est absent de l’entrée des non-conformités de la racine',
+  );
   const { ctx, rq, csrf } = await admin(browser);
   let ecart: string | undefined;
   let sous = '';
@@ -298,10 +324,12 @@ test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les é
     const r = await rq.get(`/api/grc/${PERIMETRE_COMMUN}/pilotage/revue/entrees`);
     expect(r.ok(), await r.text()).toBe(true);
     const c4 = ((await r.json()) as { entrees: { article: string; faits: string[] }[] }).entrees.find(
-      (e) => e.article === '9.3.2 c 4',
+      // Non-conformités et actions correctives : « 9.3.2 c 4 » aujourd'hui (numérotation ISO 9001, BUG-031), « 9.3.2 d 1 »
+      // une fois les entrées de l'ISO/IEC 27001 en place (arbitrage du RSSI du 13/11/2026).
+      (e) => /^9\.3\.2 (c 4|d 1)\b/.test(e.article),
     );
     const m = /(\d+) ouvert\(s\)/.exec((c4?.faits ?? []).join(' '));
-    expect(m, `entrée 9.3.2 c 4 lisible : ${JSON.stringify(c4)}`).not.toBeNull();
+    expect(m, `entrée des non-conformités lisible : ${JSON.stringify(c4)}`).not.toBeNull();
     return Number(m![1]);
   };
   try {
