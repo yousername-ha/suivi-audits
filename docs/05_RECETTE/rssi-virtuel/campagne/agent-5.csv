@@ -1,0 +1,91 @@
+cellule;resultat;constat;commentaire
+pilotage/continuite|principal|rssi|vide|bureau;ok;;0 fiches, message et bouton « Ajouter plan de continuité ou de reprise »
+pilotage/continuite|principal|rssi|rempli|bureau;defaut;C5-01;PRA créé, modifié (historique v1-v2), lié à A.8.13, exporté : compté 0 PCRA sur Périmètres, tableau de bord, Synthèse et mur. Voir aussi C5-03 (pas de suppression)
+pilotage/continuite|principal|rssi|erreur|bureau;defaut;C5-03;Intitulé vide ou blanc refusé (Enregistrer désactivé) mais champ non marqué obligatoire et aucune explication. Fiche créée par erreur impossible à archiver
+pilotage/continuite|sous-perimetre|rssi|vide|bureau;ok;;0 fiches sous Hébergement HDS, le PRA du périmètre racine n’y apparaît pas
+pilotage/continuite|sous-perimetre|rssi|rempli|bureau;defaut;BUG-032;PCRA HDS créé, isolé du racine, compté 1 PCRA. Validation refusée par « Complétez les informations et justificatifs avant validation. » sans désigner les 6 champs exigés (même code pilotage/service.ts)
+pilotage/continuite|sous-perimetre|rssi|erreur|bureau;ok;;Intitulé vide refusé (bouton désactivé) sous HDS, comme au racine
+pilotage/exercices|principal|rssi|vide|bureau;ok;;0 fiches et « Plan d’exercices PRA et crise » 0/0, actions de création présentes
+pilotage/exercices|principal|rssi|rempli|bureau;defaut;C5-04;Exercice réalisé le 15/10/2026 (registre) non compté : bandeau du même écran 0/0 puis 0/1, Plans du SMSI 2026 et mur ne comptent que PL-EXO-001
+pilotage/exercices|principal|rssi|erreur|bureau;defaut;C5-02;Exercice « Réussi », réalisé le 15/01/2027 (futur), état Planifié : enregistré sans alerte. Fiche de test non supprimable (C5-03)
+pilotage/exercices|sous-perimetre|rssi|vide|bureau;ok;;0 fiches sous HDS, pas de plan historique, exercices racine absents
+pilotage/exercices|sous-perimetre|rssi|rempli|bureau;defaut;C5-04;Exercice HDS créé et isolé ; non repris dans Plans du SMSI ni dans la liste « Exercice planifié lié » de la cellule de crise
+pilotage/exercices|sous-perimetre|rssi|erreur|bureau;ok;;Intitulé vide refusé (Enregistrer désactivé) sous HDS
+pilotage/incidents-registre|principal|rssi|vide|bureau;ok;;Compteurs 0, « Aucun élément. », boutons Qualifier et Saisir directement
+pilotage/incidents-registre|principal|rssi|rempli|bureau;defaut;C5-19;INC-2026-001 qualifié, P1, résolu, action créée vers le registre des écarts, exporté : absent du tableau de bord, de la Synthèse, du mur, du rapport de pilotage et de la revue (BUG-031)
+pilotage/incidents-registre|principal|rssi|erreur|bureau;defaut;C5-10;Résolu le 01/11 antérieur à la détection du 12/11, statut En cours : accepté sans message. Voir aussi C5-07 et C5-09
+pilotage/incidents-registre|sous-perimetre|rssi|vide|bureau;ok;;Avant toute saisie : compteurs 0 et « Aucun élément. » sous HDS
+pilotage/incidents-registre|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;INC-2026-002 saisi sous HDS visible sous le racine, INC-2026-001 saisi au racine visible sous HDS : aucun rattachement au périmètre
+pilotage/incidents-registre|sous-perimetre|rssi|erreur|bureau;defaut;C5-07;« Saisir directement » crée INC-2026-002 « (sans titre) » sans aucune saisie
+pilotage/incidents-qualifier|principal|rssi|vide|bureau;ok;;Questionnaire de 6 questions, 0/6 renseignées, résultat provisoire affiché
+pilotage/incidents-qualifier|principal|rssi|rempli|bureau;defaut;C5-08;Qualification Incident de sécurité correcte avec rappels A.5.26-5.28, HDS et NIS 2, mais données de santé = oui avec DCP = je ne sais pas : aucun rappel RGPD
+pilotage/incidents-qualifier|principal|rssi|erreur|bureau;defaut;C5-07;« Créer la fiche » avec intitulé vide et 0/6 réponses crée INC-2026-001 « (sans titre) » qualifié Événement
+pilotage/incidents-qualifier|sous-perimetre|rssi|vide|bureau;ok;;Même questionnaire vierge sous HDS
+pilotage/incidents-qualifier|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;Demande INC-2026-003 qualifiée sous HDS : créée sans périmètre, visible partout
+pilotage/incidents-qualifier|sous-perimetre|rssi|erreur|bureau;defaut;C5-07;Même absence de contrôle (création possible sans intitulé ni réponse) quel que soit le périmètre
+pilotage/incidents-retex|principal|rssi|vide|bureau;ok;;Compteurs 0 et « Aucun RETEX. Ouvrez-en un depuis un incident du registre. »
+pilotage/incidents-retex|principal|rssi|rempli|bureau;defaut;C5-11;Chronologie (fiche, main courante, saisie), durées justes (25 min, 5 h 45), cause reprise dans la fiche ; gravité par défaut « Faible (reportée) » pour un incident P1
+pilotage/incidents-retex|principal|rssi|erreur|bureau;defaut;C5-10;Événement daté du 13/11 02:00 (futur) accepté sans alerte ; intitulé vide refusé (bouton désactivé)
+pilotage/incidents-retex|sous-perimetre|rssi|vide|bureau;ok;;Compteurs 0 sous HDS avant saisie
+pilotage/incidents-retex|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;RETEX de INC-2026-001 (racine) visible sous HDS. Collecte HDS : invitation, contribution, acceptation, clôture conformes. Voir C5-12
+pilotage/incidents-retex|sous-perimetre|rssi|erreur|bureau;defaut;C5-12;« Je remplis seul » ouvre une « Collecte ouverte » comptée dans les collectes
+pilotage/crise-cellule|principal|rssi|vide|bureau;ok;;Formulaire d’ouverture (Exercice par défaut), aucune cellule
+pilotage/crise-cellule|principal|rssi|rempli|bureau;defaut;C5-18;Cellule d’exercice avec scénario, main courante, échéance CNIL 72 h, check-list, clôture validant PL-EXO-001 : conforme. Crise réelle : aucun bandeau sur le tableau de bord ni le menu
+pilotage/crise-cellule|principal|rssi|erreur|bureau;ok;;Échéance -5 h refusée « heures : Trop petit : nombre doit être >=1 » (champ désigné, formulation technique). Cellule sans intitulé ouverte sous « Exercice de crise » par défaut
+pilotage/crise-cellule|sous-perimetre|rssi|vide|bureau;defaut;C5-06;Sous HDS l’historique des cellules du racine s’affiche : aucun état vide propre au périmètre
+pilotage/crise-cellule|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;Crise réelle ouverte sous HDS : cellule commune, visible sous le racine
+pilotage/crise-cellule|sous-perimetre|rssi|erreur|bureau;ok;;Même contrôle des heures d’échéance (registre commun)
+pilotage/crise-contacts|principal|rssi|vide|bureau;ok;;« Aucun contact. », boutons d’ajout
+pilotage/crise-contacts|principal|rssi|rempli|bureau;defaut;C5-06;Contacts saisis sous HDS visibles au racine ; exportés (feuille Contacts de crise) ; repris dans la cellule
+pilotage/crise-contacts|principal|rssi|erreur|bureau;defaut;C5-22;Courriel « pas-un-courriel » accepté sans message
+pilotage/crise-contacts|sous-perimetre|rssi|vide|bureau;ok;;« Aucun contact. » sous HDS avant saisie
+pilotage/crise-contacts|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;Contact créé sous HDS, modifié, contact clé, supprimé après confirmation : registre commun à tous les périmètres
+pilotage/crise-contacts|sous-perimetre|rssi|erreur|bureau;defaut;C5-22;« Ajouter les fournisseurs critiques et hébergeurs » sans aucun retour quand il n’y a pas de fournisseur
+pilotage/crise-scenarios|principal|rssi|vide|bureau;ok;;« Aucun scénario pour le moment : ajoutez-en un. »
+pilotage/crise-scenarios|principal|rssi|rempli|bureau;defaut;C5-05;Scénario de 6 actions : responsable saisi perdu sans message en cliquant « Ajouter une action » (2 essais sur 4)
+pilotage/crise-scenarios|principal|rssi|erreur|bureau;defaut;C5-23;Intitulé vidé accepté : « (sans titre) » ; suppression avec confirmation conforme
+pilotage/crise-scenarios|sous-perimetre|rssi|vide|bureau;defaut;C5-06;Sous HDS le scénario du racine s’affiche : aucun état vide propre au périmètre
+pilotage/crise-scenarios|sous-perimetre|rssi|rempli|bureau;defaut;C5-06;Scénarios communs à tous les périmètres malgré le sélecteur
+pilotage/crise-scenarios|sous-perimetre|rssi|erreur|bureau;defaut;C5-23;Même absence de contrôle de l’intitulé (registre commun)
+pilotage/imports|principal|rssi|vide|bureau;defaut;C5-20;« Référentiel à exporter » vide alors que clauses ISO 27001, annexe A et HDS sont suivies (157 mesures)
+pilotage/imports|principal|rssi|rempli|bureau;ok;;Simulation puis confirmation d’un référentiel fictif, export JSON et Excel, rapport de pilotage HTML et JSON sans erreur. Contenu du rapport : voir C5-19
+pilotage/imports|principal|rssi|erreur|bureau;defaut;C5-20;JSON tronqué : « Erreur Unexpected end of JSON input » (anglais) ; contenu invalide : message technique
+pilotage/imports|sous-perimetre|rssi|vide|bureau;ok;;Écran vierge sous HDS, liste des référentiels vide
+pilotage/imports|sous-perimetre|rssi|rempli|bureau;defaut;C5-17;Import confirmé « dans le périmètre sélectionné » (HDS) enregistré dans le périmètre racine après resélection du périmètre affiché
+pilotage/imports|sous-perimetre|rssi|erreur|bureau;defaut;C5-20;Même message technique sous HDS (« definition : Entrée invalide : objet attendu, indéfini reçu »)
+route/mur|principal|rssi|vide|bureau;defaut;C5-24;Installation vierge : « Prochain audit — 2027 — Surveillance 2 » sans cycle configuré ; autres tuiles à 0 correctes
+route/mur|principal|rssi|rempli|bureau;defaut;C5-19;Écart issu d’incident compté (Piste de progrès), mais aucun incident ni crise affichés ; exercices et PCRA faussés (C5-01, C5-04)
+route/mur|principal|rssi|erreur|bureau;ok;;Vues proposées : Synthèse, Écarts ouverts, Échéances, Plan d’audit ; aucune erreur JS ni HTTP
+route/mur|sous-perimetre|rssi|vide|bureau;sans-objet;;Le mur n’a pas de sélecteur de périmètre : il affiche l’instance entière (vérifié)
+route/mur|sous-perimetre|rssi|rempli|bureau;sans-objet;;Idem : vue d’instance, sans périmètre
+route/mur|sous-perimetre|rssi|erreur|bureau;sans-objet;;Idem : vue d’instance, sans périmètre
+route/mur/activer|principal|rssi|vide|bureau;ok;;Sans code : « Lien d’activation incomplet » en français
+route/mur/activer|principal|rssi|rempli|bureau;ok;;Écran « Salle de supervision (fictive) » créé puis activé sur la pile, état Actif, journal wall.activated
+route/mur/activer|principal|rssi|erreur|bureau;ok;;Code invalide : « Code d’activation invalide, expiré ou déjà utilisé. » (401), journal wall.activation_failed
+route/mur/activer|sous-perimetre|rssi|vide|bureau;sans-objet;;Activation d’un écran mural indépendante du périmètre
+route/mur/activer|sous-perimetre|rssi|rempli|bureau;sans-objet;;Activation d’un écran mural indépendante du périmètre
+route/mur/activer|sous-perimetre|rssi|erreur|bureau;sans-objet;;Activation d’un écran mural indépendante du périmètre
+route/documents|principal|rssi|vide|bureau;ok;;« Aucun document. », bouton de dépôt, onglet Liens vide
+route/documents|principal|rssi|rempli|bureau;defaut;C5-14;3 documents déposés, renommés, rattachés à A.5.1, A.5.24-26, A.8.13 ; lien réseau ajouté ; texte de recherche « INC » enregistré comme rattachement
+route/documents|principal|rssi|erreur|bureau;ok;;Fichier vide, .html et .exe refusés avec message français ; adresse javascript: refusée
+route/documents|sous-perimetre|rssi|vide|bureau;sans-objet;;Documents et liens sans sélecteur de périmètre : bibliothèque commune de l’instance
+route/documents|sous-perimetre|rssi|rempli|bureau;sans-objet;;Bibliothèque commune de l’instance, pas de périmètre à choisir
+route/documents|sous-perimetre|rssi|erreur|bureau;sans-objet;;Bibliothèque commune de l’instance, pas de périmètre à choisir
+route/documents/:id|principal|rssi|vide|bureau;ok;;Fiche d’un document en v1 : empreinte SHA-256, versions, actions
+route/documents/:id|principal|rssi|rempli|bureau;defaut;C5-13;v2 déposée avec historique, corbeille puis suppression définitive tracées ; aucun incident ni cellule proposé en rattachement
+route/documents/:id|principal|rssi|erreur|bureau;ok;;Document à la corbeille : Restaurer et Supprimer définitivement avec confirmation ; dépôt invalide refusé
+route/documents/:id|sous-perimetre|rssi|vide|bureau;sans-objet;;Fiche de document indépendante du périmètre
+route/documents/:id|sous-perimetre|rssi|rempli|bureau;sans-objet;;Fiche de document indépendante du périmètre
+route/documents/:id|sous-perimetre|rssi|erreur|bureau;sans-objet;;Fiche de document indépendante du périmètre
+route/exports|principal|rssi|vide|bureau;ok;;11 rubriques Excel classique et pro listées, téléchargement sans erreur
+route/exports|principal|rssi|rempli|bureau;defaut;C5-15;Incidents et crise, Plans, export complet relus : type « PP » libellé « Point sensible » ; export complet incomplet (C5-16)
+route/exports|principal|rssi|erreur|bureau;defaut;C5-16;Feuille « Périmètre du SMSI » vide malgré deux périmètres décrits ; horodatages bruts UTC dans « Mains courantes »
+route/exports|sous-perimetre|rssi|vide|bureau;sans-objet;;Aucun choix de périmètre sur l’écran : exports d’instance (signalé dans C5-16)
+route/exports|sous-perimetre|rssi|rempli|bureau;sans-objet;;Aucun choix de périmètre sur l’écran : exports d’instance (signalé dans C5-16)
+route/exports|sous-perimetre|rssi|erreur|bureau;sans-objet;;Aucun choix de périmètre sur l’écran : exports d’instance (signalé dans C5-16)
+route/retex/:incident?|principal|rssi|vide|bureau;ok;;« Aucune demande de contribution pour le moment. »
+route/retex/:incident?|principal|rssi|rempli|bureau;defaut;C5-25;Compte pilote.infra invité : élément proposé, contribution terminée, accepté par le pilote ; échéance à 8 jours affichée « J-9 »
+route/retex/:incident?|principal|rssi|erreur|bureau;ok;;RETEX non invité : « RETEX introuvable. » et retour à mes demandes
+route/retex/:incident?|sous-perimetre|rssi|vide|bureau;sans-objet;;Espace contributeur sans périmètre : demandes nominatives
+route/retex/:incident?|sous-perimetre|rssi|rempli|bureau;sans-objet;;Espace contributeur sans périmètre : demandes nominatives
+route/retex/:incident?|sous-perimetre|rssi|erreur|bureau;sans-objet;;Espace contributeur sans périmètre : demandes nominatives

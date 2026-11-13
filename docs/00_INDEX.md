@@ -97,7 +97,7 @@ Source de référence des chiffres/IDs/états :
 - [Rapport recette](05_RECETTE/RAPPORT_RECETTE.md)
 - [Couverture fonctionnelle](05_RECETTE/COUVERTURE_FONCTIONNELLE.md)
 - [Pv recette](05_RECETTE/PV_RECETTE.md)
-- [RSSI virtuel : agent exploratoire et harnais de non-régression](05_RECETTE/RSSI_VIRTUEL.md) ([rapport du 11/11/2026](05_RECETTE/rssi-virtuel/RAPPORT-2026-11-11.md))
+- [RSSI virtuel : agent exploratoire et harnais de non-régression](05_RECETTE/RSSI_VIRTUEL.md) (rapports du [11/11/2026](05_RECETTE/rssi-virtuel/RAPPORT-2026-11-11.md) et du [12/11/2026](05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md) ; [demande de correctifs au développement](05_RECETTE/rssi-virtuel/DEMANDE-CORRECTIFS-2026-11-12.md) ; [dossier graphique](05_RECETTE/rssi-virtuel/DOSSIER-GRAPHIQUE-2026-11-12.md) ; [campagne à plusieurs agents](05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md) et [matrice de couverture](05_RECETTE/rssi-virtuel/MATRICE-COUVERTURE.md) ; [rapport de la campagne des 12 et 13/11/2026](05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md), [demande de correctifs](05_RECETTE/rssi-virtuel/DEMANDE-CORRECTIFS-2026-11-13.md) et [résultats par agent](05_RECETTE/rssi-virtuel/campagne/README.md))
 - [Recette manuelle des clés de sécurité FIDO2](05_RECETTE/CHECKLIST-FIDO2.md) ([ADR 0079](adr/0079-authentification-fido2-webauthn.md), non exécutée)
 
 ## 06_GUIDES
