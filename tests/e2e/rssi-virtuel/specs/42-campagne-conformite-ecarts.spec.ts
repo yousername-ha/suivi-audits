@@ -12,7 +12,7 @@ const SOUS_PERIMETRE = 'Campagne hébergement HDS (fictif)';
 const ISO = 'iso-27001-2022';
 
 type Ligne = { app: string; level: string; just: string };
-type PageDda = { dda: Record<string, Ligne>; ecarts: { id: string; items: string[] }[] };
+type PageDda = { mesures: { id: string }[]; dda: Record<string, Ligne>; ecarts: { id: string; items: string[] }[] };
 
 async function admin(browser: Browser) {
   const { state, csrf } = await sessionAdmin(browser);
@@ -31,7 +31,12 @@ async function lireDda(rq: APIRequestContext): Promise<PageDda> {
 }
 /** Mesure de l'annexe A encore non examinée : condition de départ des tests qui l'écrivent puis la remettent à vide. */
 async function exigerNonExaminee(rq: APIRequestContext, mesure: string) {
-  const l = (await lireDda(rq)).dda[mesure];
+  const page = await lireDda(rq);
+  expect(
+    page.mesures.map((m) => m.id),
+    `${mesure} est une mesure de l’annexe A`,
+  ).toContain(mesure);
+  const l = page.dda[mesure];
   expect(`${l?.app ?? ''}|${l?.level ?? ''}|${l?.just ?? ''}`, `${mesure} doit être non examinée au départ`).toBe('||');
 }
 async function ecrireDda(rq: APIRequestContext, csrf: string, mesure: string, ligne: Partial<Ligne>) {
@@ -303,16 +308,16 @@ test('CAMP-C3-04 ouvert : un niveau de mise en œuvre est refusé tant que l’a
 }) => {
   // ISO/IEC 27001:2022, 6.1.3 d) ; AGENTS.md (aucun taux inventé). Choisir « Total » dans « Niveau » d'une mesure non
   // examinée est enregistré : la mesure sort des « Non renseignées », entre dans le filtre « Total » et fait monter le taux.
-  test.fail(true, 'CAMP-C3-04 ouvert : PATCH /api/dda/A-6.9 {"level":"Total"} accepté sans applicabilité');
+  test.fail(true, 'CAMP-C3-04 ouvert : PATCH /api/dda/A-5.37 {"level":"Total"} accepté sans applicabilité');
   const { ctx, rq, csrf } = await admin(browser);
   try {
-    await exigerNonExaminee(rq, 'A-6.9');
-    const r = await ecrireDda(rq, csrf, 'A-6.9', { level: 'Total' });
+    await exigerNonExaminee(rq, 'A-5.37');
+    const r = await ecrireDda(rq, csrf, 'A-5.37', { level: 'Total' });
     const corps = await r.text();
     const ignore = r.ok() && (JSON.parse(corps) as { dda: Ligne }).dda.level === '';
     expect(r.status() === 422 || ignore, `réponse ${r.status()} : ${corps}`).toBe(true);
   } finally {
-    await remettreAVide(rq, 'A-6.9');
+    await remettreAVide(rq, 'A-5.37');
     await ctx.close();
   }
 });
