@@ -68,6 +68,41 @@ describe('évaluations fournisseurs par le clausier', () => {
   });
 });
 
+describe('libellés des types d’écarts exportés (BUG-046)', () => {
+  const etat: JsonObject = {
+    findings: [
+      {
+        id: 'E-1',
+        source: 'AFNOR',
+        year: 2026,
+        type: 'NC maj',
+        status: 'Ouvert',
+        tasks: [{ t: 'Action A', done: true }],
+      },
+      { id: 'E-2', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', tasks: [{ t: 'Action B' }] },
+      { id: 'E-3', source: 'Interne', year: 2026, type: 'PS', status: 'Ouvert', tasks: [{ t: 'Action C' }] },
+      { id: 'E-4', source: 'Interne', year: 2026, type: 'PP', status: 'Ouvert', tasks: [{ t: 'Action D' }] },
+      { id: 'E-5', source: 'Interne', year: 2026, type: 'Remarque', status: 'Ouvert', tasks: [] },
+    ],
+  };
+  it('le registre et le plan d’actions reprennent le libellé de la classification saisie', () => {
+    const registre = JEUX.ecarts!.lignes(ctx(etat));
+    expect(registre.map((l) => l[3])).toEqual([
+      'NC majeure',
+      'NC mineure',
+      'Point sensible',
+      'Piste de progrès',
+      'Remarque',
+    ]);
+    expect(JEUX.actions!.lignes(ctx(etat)).map((l) => l[1])).toEqual([
+      'NC majeure',
+      'NC mineure',
+      'Point sensible',
+      'Piste de progrès',
+    ]);
+  });
+});
+
 describe('groupes', () => {
   it('exposent les nouvelles feuilles', () => {
     expect(GROUPES.find((g) => g.id === 'apps')).toBeUndefined();

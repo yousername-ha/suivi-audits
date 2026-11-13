@@ -179,6 +179,7 @@ function Rattachements({
             {modifiable && (
               <Group align="flex-end">
                 <Select
+                  allowDeselect={false}
                   aria-label={`Rattacher : ${LIBELLES_RATTACHEMENT[nature]}`}
                   placeholder={proposes.length ? 'Rattacher…' : 'Rien d’autre à rattacher'}
                   searchable

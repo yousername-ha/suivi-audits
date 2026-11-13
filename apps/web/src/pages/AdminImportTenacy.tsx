@@ -122,6 +122,7 @@ export function ImportTenacyPanel() {
       <Card withBorder>
         <Stack>
           <Select
+            allowDeselect={false}
             label="Périmètre de destination"
             data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
             value={perimetre}

@@ -43,6 +43,7 @@ export function Registry({
       {!fixedKind && (
         <Group>
           <Select
+            allowDeselect={false}
             label="Type de fiche"
             value={kind}
             onChange={(v) => v && setKind(v as GrcKind)}

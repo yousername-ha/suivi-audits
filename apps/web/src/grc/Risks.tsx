@@ -31,6 +31,7 @@ function Rating({
         <Text fw={600}>{title}</Text>
         {method.dimensions.map((d) => (
           <Select
+            allowDeselect={false}
             key={d.id}
             label={d.label}
             value={value.dimensions[d.id] ?? null}
@@ -39,6 +40,7 @@ function Rating({
           />
         ))}
         <Select
+          allowDeselect={false}
           label="Vraisemblance"
           value={value.likelihood}
           data={method.likelihood.map((l) => ({ value: l.id, label: l.label }))}
@@ -46,6 +48,7 @@ function Rating({
         />
         {method.calculation.kind === 'judgement' && (
           <Select
+            allowDeselect={false}
             label="Niveau de risque — jugement documenté"
             value={value.level}
             data={method.levels.map((l) => ({ value: l.id, label: l.label }))}
@@ -59,6 +62,7 @@ function Rating({
               const f = method.fields.find((f) => f.id === k);
               return (
                 <Select
+                  allowDeselect={false}
                   key={k}
                   label={f?.label ?? k}
                   value={value.inputs[k] ?? null}
@@ -186,6 +190,7 @@ export function RiskEvaluation({ smsi, risk, onClose }: { smsi: string; risk: Gr
               }}
             />
             <Select
+              allowDeselect={false}
               label="Décision"
               value={decision}
               onChange={(v) => {

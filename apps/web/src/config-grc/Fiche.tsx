@@ -447,6 +447,7 @@ function Deriver({ item, opened, onClose }: { item: ElementDetail; opened: boole
         />
         {portee === 'smsi' && (
           <Select
+            allowDeselect={false}
             label="Périmètre"
             data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
             value={smsi}

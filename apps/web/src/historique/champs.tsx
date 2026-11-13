@@ -113,15 +113,18 @@ export function ChampChoix({
 }
 
 /** Lecture et écriture d'un module repris : requête de la vue, appel d'écriture qui rafraîchit la vue. */
+/** `cle` peut porter un complément après « : » (le périmètre affiché, par exemple) : les requêtes du même module se
+    renouvellent ensemble, quel que soit le complément. */
 export function useModule<T>(cle: string, url: string) {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: [cle], queryFn: () => get<T>(url) });
+  const racine = cle.split(':')[0]!;
+  const q = useQuery({ queryKey: cle.split(':'), queryFn: () => get<T>(url) });
   const [erreur, setErreur] = useState<unknown>(null);
   const agir = async <R,>(methode: string, chemin: string, corps?: unknown): Promise<R | undefined> => {
     try {
       setErreur(null);
       const r = await api<R>(methode, chemin, corps === undefined ? {} : { body: corps });
-      await qc.invalidateQueries({ queryKey: [cle] });
+      await qc.invalidateQueries({ queryKey: [racine] });
       await qc.invalidateQueries({ queryKey: ['synthese'] });
       return r;
     } catch (e) {

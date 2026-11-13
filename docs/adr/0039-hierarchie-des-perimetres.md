@@ -1,6 +1,6 @@
 # ADR 0039 — Hiérarchie des périmètres et héritage explicite des référentiels
 
-**Statut** : proposée le 18/10/2026 (lot H1). Prolonge les [ADR 0030](0030-perimetre-agnostique-qualite-fournisseurs.md) (périmètres de
+**Statut** : proposée le 18/10/2026 (lot H1) ; point 4 (droits et membres) amendé le 13/11/2026 par l'[ADR 0092](0092-acces-aux-perimetres-hierarchiques.md). Prolonge les [ADR 0030](0030-perimetre-agnostique-qualite-fournisseurs.md) (périmètres de
 management) et [0031](0031-bibliotheque-de-referentiels.md) (bibliothèque de référentiels).
 
 ## Contexte

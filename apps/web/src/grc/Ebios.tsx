@@ -315,6 +315,7 @@ export function EtudesEbios({
             <Text size="sm">La bibliothèque est vide : ajoutez-y une source depuis la liste des études.</Text>
           )}
           <Select
+            allowDeselect={false}
             label="Source de risque"
             searchable
             data={(bibliotheque.data?.items ?? []).map((x) => ({

@@ -81,7 +81,15 @@ export class DeclarationApplicabilite {
         const courante = isObject(dda[id])
           ? (dda[id] as JsonObject)
           : { app: '', just: '', risk: '', level: '', actions: '', docs: '', comment: '' };
-        dda[id] = { ...courante, ...champs };
+        const suivante = { ...courante, ...champs };
+        // Le niveau de mise en œuvre d'une mesure suppose son applicabilité décidée (6.1.3 d, BUG-065) ; les clauses ISO,
+        // obligatoires, n'ont pas d'applicabilité.
+        if (item.ref !== 'ISO' && champs.level && !['oui', 'non'].includes(String(suivante.app ?? '')))
+          throw new HttpError(
+            422,
+            'Décidez d’abord l’applicabilité de la mesure (Oui ou Non) avant d’en renseigner le niveau de mise en œuvre.',
+          );
+        dda[id] = suivante;
         data.dda = dda;
         return { id, dda: lireDda(dda[id]) };
       },

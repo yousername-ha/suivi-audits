@@ -172,6 +172,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
     <Stack>
       <Group>
         <Select
+          allowDeselect={false}
           label="Base d’appréciation"
           value={basis}
           onChange={(v) => setBasis(v === 'gross' ? 'gross' : 'residual')}
@@ -224,6 +225,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           onChange={(e) => setCompareAt(e.currentTarget.value)}
         />
         <Select
+          allowDeselect={false}
           label="Regroupement"
           value={grouping}
           onChange={(v) => setGrouping(v ?? 'method')}
@@ -239,6 +241,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           ]}
         />
         <Select
+          allowDeselect={false}
           label="Représentation"
           value={mode}
           onChange={(v) => setMode(v ?? 'graph')}

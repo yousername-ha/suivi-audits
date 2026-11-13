@@ -415,7 +415,9 @@ export class Retex {
       ip,
       { module: 'incidents', action, reference: () => `legacy:incidents:${id}` },
       async (data, c) => {
-        const { importes, ...suivant } = await f(trouver(data, id), c);
+        const brut = trouver(data, id);
+        await this.r.exigerPerimetre(user, brut, true, 'Incident absent.');
+        const { importes, ...suivant } = await f(brut, c);
         remplacerEntree(data, 'incidents', id, suivant);
         return { ...lireIncident(suivant)!, ...(typeof importes === 'number' ? { importes } : {}) };
       },

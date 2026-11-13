@@ -147,6 +147,8 @@ export class PilotageLegacy {
     }
     if (key === 'dda') {
       data.applicable = raw.app !== 'non';
+      // Une mesure jamais examinée (app vide) reste « non examinée » (6.1.3 d, BUG-040) : seule une décision écrite compte.
+      data.examinee = raw.app === 'oui' || raw.app === 'non';
       data.implemented = raw.level === 'Total';
       data.description = String(raw.comment ?? '');
     }
@@ -224,9 +226,24 @@ export class PilotageLegacy {
       const { title: ignored, ref: ignoredRef, ...entree } = raw;
       void ignored;
       void ignoredRef;
-      const next: JsonObject = { ...entree, app: data.applicable === false ? 'non' : 'oui' };
+      // L'applicabilité n'est écrite que si elle est décidée : coche « examinée » ou refus explicite. Enregistrer la fiche
+      // d'une mesure jamais examinée, sans rien décider, ne la déclare pas « applicable » (BUG-040).
+      const app =
+        data.applicable === false
+          ? 'non'
+          : data.examinee === true
+            ? 'oui'
+            : data.examinee === false
+              ? ''
+              : String(entree.app ?? '');
+      const next: JsonObject = { ...entree, app };
       for (const [field, source] of Object.entries(def.fields))
         if (typeof data[field] === 'string') next[source] = data[field] as string;
+      if (raw.ref !== 'ISO' && next.level && next.level !== raw.level && !['oui', 'non'].includes(app))
+        throw new HttpError(
+          422,
+          'Décidez d’abord l’applicabilité de la mesure (Oui ou Non) avant d’en renseigner le niveau de mise en œuvre.',
+        );
       if (data.implemented === true && !next.level) next.level = 'Total';
       return next;
     }

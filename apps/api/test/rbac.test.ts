@@ -101,6 +101,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'PUT /api/registres/:id/ordre',
     'GET /api/grc/perimetres/synthese',
     'POST /api/registres/:id/archivage',
+    'POST /api/registres/:id/desarchivage',
     'GET /api/registres/:id/elements',
     'GET /api/registres/elements',
     // Annuaire des responsables : désigner exige modifier sur un module métier ou un rôle de registre du périmètre (403

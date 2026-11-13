@@ -46,11 +46,15 @@ const ONGLETS: Onglet[] = ['fiche', 'qualification', 'retex'];
 const dateFr = (t: string) => (t ? `${t.slice(0, 10).split('-').reverse().join('/')} ${t.slice(11, 16)}` : '');
 const Qualification = ({ k }: { k: string }) => <StatusChip etat={ETAT_QUALIFICATION[k] ?? 'neutre'}>{k}</StatusChip>;
 
-export function RegistreIncidents() {
+/** `smsi` : périmètre affiché ; le registre n'en montre que les incidents et y crée les nouveaux (BUG-044). */
+export function RegistreIncidents({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
     [params, setParams] = useSearchParams(),
-    { d, agir, erreur } = useModule<Donnees>('incidents', '/api/incidents'),
+    { d, agir, erreur } = useModule<Donnees>(
+      `incidents:${smsi ?? ''}`,
+      smsi ? `/api/incidents?smsi=${smsi}` : '/api/incidents',
+    ),
     [filtre, setFiltre] = useState<FiltreIncidents>('open'),
     [filtreRetex, setFiltreRetex] = useState<'tous' | CleEtatRetex>('tous');
   const ouverte = d?.incidents.find((i) => i.id === params.get('incident')) ?? null;
@@ -89,7 +93,7 @@ export function RegistreIncidents() {
         {modifiable && (
           <Button
             onClick={async () => {
-              const i = await agir<Incident>('POST', '/api/incidents', {});
+              const i = await agir<Incident>('POST', '/api/incidents', smsi ? { smsi } : {});
               if (i) ouvrir(i.id);
             }}
           >

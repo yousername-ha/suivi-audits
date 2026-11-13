@@ -206,6 +206,7 @@ export function RecordEditor({
               )}
               {['control', 'evidence', 'measure'].includes(kind) && (
                 <Select
+                  allowDeselect={false}
                   label={
                     kind === 'control'
                       ? 'Type de contrôle'
@@ -226,6 +227,7 @@ export function RecordEditor({
               )}
               {kind === 'control' && (
                 <Select
+                  allowDeselect={false}
                   label="Fréquence"
                   data={policy.catalogues.frequencies.map((f) => ({ value: f.id, label: f.label }))}
                   value={String(data.frequency ?? '')}

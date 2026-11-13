@@ -1031,7 +1031,7 @@ function SuiteEvaluation({
             required
           />
           <NumberInput label="Tous les" min={1} max={365} value={interval} onChange={setIntervalle} required />
-          <Select label="Unité" data={UNITES} value={unit} onChange={setUnit} required />
+          <Select allowDeselect={false} label="Unité" data={UNITES} value={unit} onChange={setUnit} required />
         </Group>
       ) : (
         <TextInput

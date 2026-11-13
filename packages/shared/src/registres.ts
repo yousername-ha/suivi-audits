@@ -174,6 +174,8 @@ export interface RegistreDto {
   peut: Record<Besoin, boolean>;
   /** Peut attribuer ou retirer des droits et changer « restreint » : rôle de gestionnaire attribué ou droit d'administrer le module. */
   peutAttribuer: boolean;
+  /** Peut archiver et désarchiver le registre : administrateur ou rôle de gestionnaire attribué sur le registre. */
+  peutArchiver: boolean;
   elements: number;
 }
 

@@ -74,6 +74,47 @@ describe('déclaration d’applicabilité historique dans le Pilotage', () => {
     ).toBe(412);
   });
 
+  it('enregistrer la fiche d’une mesure jamais examinée ne la déclare pas applicable (BUG-040)', async () => {
+    const fiche = (await a.get(base + '/A-5.4')).json();
+    expect(fiche.data.examinee).toBe(false);
+    const enregistrer = (data: Record<string, unknown>) =>
+      a.put(
+        base + '/A-5.4',
+        { name: fiche.name, sourceSha: fiche.data.sourceSha, data },
+        { 'if-match': `"${fiche.version}"` },
+      );
+    const r = await enregistrer(clean(fiche.data));
+    expect(r.statusCode, r.body).toBe(200);
+    const dda = (await t.svc.legacy.recompose())!.data.dda as Record<string, Record<string, unknown>> | undefined;
+    expect(dda?.['A-5.4']?.app ?? '').toBe('');
+    // Le niveau n'est pas non plus accepté sans décision d'applicabilité (BUG-065).
+    const sansDecision = await a.put(
+      base + '/A-5.4',
+      {
+        name: fiche.name,
+        sourceSha: (await a.get(base + '/A-5.4')).json().data.sourceSha,
+        data: { ...clean(fiche.data), level: 'Total' },
+      },
+      { 'if-match': `"${(await a.get(base + '/A-5.4')).json().version}"` },
+    );
+    expect(sansDecision.statusCode, sansDecision.body).toBe(422);
+    // Décider : cocher « Applicabilité examinée » (applicable) écrit « oui ».
+    const frais = (await a.get(base + '/A-5.4')).json();
+    const decide = await a.put(
+      base + '/A-5.4',
+      {
+        name: frais.name,
+        sourceSha: frais.data.sourceSha,
+        data: { ...clean(frais.data), examinee: true, applicable: true },
+      },
+      { 'if-match': `"${frais.version}"` },
+    );
+    expect(decide.statusCode, decide.body).toBe(200);
+    expect(((await t.svc.legacy.recompose())!.data.dda as Record<string, Record<string, unknown>>)['A-5.4']!.app).toBe(
+      'oui',
+    );
+  });
+
   it('lecture seule pour un lecteur ; écriture refusée', async () => {
     const fiche = (await ro.get(base + '/A-5.2')).json();
     expect(fiche.kind).toBe('soa');

@@ -473,6 +473,34 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     expect(improve.json().generatedRefs[0]).toMatch(/^object:/);
     expect((await reader.get(base + '/pilotage/export?kind=continuity_plan')).statusCode).toBe(403);
   });
+  it('revue de direction validée : un contributeur ne la modifie pas, un administrateur la rouvre (BUG-075)', async () => {
+    const r = (
+      await a.post(base + '/objects', {
+        kind: 'management_review',
+        name: 'Revue fictive à valider',
+        data: { heldAt: '2026-10-10', inputs: 'Entrées examinées', decisions: 'Décision fictive' },
+      })
+    ).json();
+    expect((await decide('object:' + r.id, 'approval', 'accepted', r.version)).statusCode).toBe(200);
+    const validee = (await a.get(base + '/objects/' + r.id)).json();
+    expect(validee.data.status).toBe('validated');
+    const corps = (decisions: string, status: string) => ({
+      kind: validee.kind,
+      name: validee.name,
+      data: { ...validee.data, status, decisions },
+    });
+    const entete = { 'if-match': `"${validee.version}"` };
+    const refus = await writer.put(base + '/objects/' + r.id, corps('Décision remplacée', 'draft'), entete);
+    expect(refus.statusCode, refus.body).toBe(403);
+    expect(
+      (await writer.put(base + '/objects/' + r.id, corps('Décision remplacée', 'validated'), entete)).statusCode,
+    ).toBe(403);
+    const intacte = (await a.get(base + '/objects/' + r.id)).json();
+    expect(intacte.data).toMatchObject({ status: 'validated', decisions: 'Décision fictive' });
+    const rouverte = await a.put(base + '/objects/' + r.id, corps('Décision rouverte', 'draft'), entete);
+    expect(rouverte.statusCode, rouverte.body).toBe(200);
+    expect(rouverte.json().data).toMatchObject({ status: 'draft', decisions: 'Décision rouverte' });
+  });
   it('refuse de falsifier une réalisation ou une validation par une édition générique', async () => {
     for (const [kind, data] of [
       ['control', { result: 'pass', performedAt: '2026-10-10' }],

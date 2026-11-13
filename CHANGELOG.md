@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
+**Aucune action sur le serveur.** **Migration automatique `060` (fonctions SQL de lecture, non destructive) : un compte rattaché à un périmètre ne voit plus que ce périmètre et ses descendants (ADR 0092) ; vérifier les rattachements des comptes avant la mise à jour.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
 applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
 les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
 lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
@@ -62,6 +62,41 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
   infrastructures de la cartographie sont inchangés. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Corrigé
+
+- **Droits (campagne de recette du 12 et 13/11/2026, lot 1)** :
+  - **BUG-051, accès aux périmètres hiérarchiques** ([ADR 0092](docs/adr/0092-acces-aux-perimetres-hierarchiques.md), qui amende l'ADR 0039) : un compte rattaché à un périmètre
+    enfant ne voit que ce périmètre (et ses descendants), plus le parent ni la racine ; rattaché au parent, il voit le parent et ses enfants, avec le droit d'écriture de son
+    rattachement. Un compte sans aucun rattachement garde le périmètre commun. Règle unique en base (migration `060`, fonctions de lecture seules), reprise par les
+    périmètres listés, les responsables proposables et les notifications d'échéance. **Un compte rattaché à un enfant perd l'accès au périmètre commun** : le rattacher aussi
+    au parent pour le lui rendre.
+  - **BUG-049, archivage des registres** : seul le gestionnaire du registre (ou un administrateur) l'archive, et le désarchive par la nouvelle commande
+    `POST /api/registres/:id/desarchivage` (bouton « Désarchiver le registre » sur la fiche). Un contributeur reçoit 403, un compte sans accès 404.
+  - **BUG-050, chronologie RETEX** : retirer un événement exige le droit de suppression des incidents ; l'événement retiré est conservé au journal d'audit.
+  - **BUG-075, revue de direction validée** : elle ne se modifie plus que par un administrateur du pilotage (qui la rouvre) ; un contributeur reçoit 403.
+  - **BUG-044, incidents et cellules de crise par périmètre** : un incident (et ses événements RETEX) et une cellule de crise relèvent d'un périmètre (`smsi`, périmètre commun
+    pour les entrées existantes) ; le registre n'affiche et n'ouvre que les périmètres du lecteur, l'écran crée dans le périmètre affiché (`GET /api/incidents?smsi=`,
+    `GET /api/crise?smsi=`). Les contacts et les scénarios de crise restent communs : suite à traiter. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+
+- **Données et chiffres faux (campagne de recette, lot 2)** :
+  - **BUG-040, applicabilité** : enregistrer la fiche d'une mesure jamais examinée ne la déclare plus « applicable » ; la fiche porte une coche « Applicabilité examinée »
+    (l'applicabilité n'est écrite que si elle est décidée) ; **BUG-065** : un niveau de mise en œuvre est refusé (422) tant que l'applicabilité n'est pas décidée
+    (clauses ISO exceptées), à la DdA comme dans la fiche.
+  - **BUG-041, écart et DdA** : un écart rattaché à l'exigence d'un référentiel appliqué (`requirement:…`) est repris par la DdA, comme un rattachement historique
+    (mesure en écart, indicateur « Total avec écart ouvert »).
+  - **BUG-039, acceptation d'un risque** : refusée (422) tant que le risque n'a pas de niveau apprécié ; **BUG-024** (arbitrage du RSSI du 13/11/2026) : la matrice est
+    obligatoire pour apprécier un risque : tous les modèles de méthode en fournissent une, une méthode sans matrice est refusée à l'aperçu, à la publication et au
+    choix, et un nouveau risque ne se rattache pas à une telle méthode. Les versions déjà publiées restent lisibles.
+  - **BUG-043, compteur « Continuité »** : tous les plans (PCA, PRA, PCRA, plans d'activité) sont comptés au tableau de bord, sur les cartes des périmètres et au mur
+    (le champ `continuite.pcra` de l'API devient `continuite.plans`).
+  - **BUG-045, RETEX** : la gravité maximale reste « Non renseignée » tant qu'aucune gravité n'est saisie sur la chronologie.
+  - **BUG-047 et BUG-048, réglages des référentiels** : le référentiel complémentaire actif est désigné par son identifiant (la liste l'affiche, l'enregistrer ne le
+    désactive plus) ; la catégorie d'entité NIS 2 se remet à « Non renseignée » (la valeur vide est enregistrée). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Exports (campagne de recette, lot 3)** : **BUG-038** : « Contexte du SMSI » reprend les fiches saisies à l'écran (contexte, parties intéressées, SWOT, rôles) du
+  périmètre demandé (`GET /api/suivi/export?perimetre=`, sélecteur « Périmètre exporté » de la page Exports) ; **BUG-046** : le type d'écart exporté est celui de
+  l'écran (« Piste de progrès » n'est plus libellé « Point sensible ») ; **BUG-058** (partiel) : nouveaux groupes « Gestion des risques » (registre, plan de
+  traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), repris par l'export complet. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du
+  traitement, import…) gardent leur valeur ; un test interdit désormais toute liste sans `allowDeselect={false}` ou `clearable`. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 
 - **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
   PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que

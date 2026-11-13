@@ -136,6 +136,15 @@ export const registresRoutes = [
   }),
   route({
     ...base,
+    method: 'POST',
+    url: '/api/registres/:id/desarchivage',
+    summary: 'Désarchiver un registre (gestionnaire du registre)',
+    params: registre,
+    handler: async ({ svc, s, params, ip, req }) =>
+      svc.grc.registres.desarchive(params.id, requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
     method: 'GET',
     url: '/api/registres/:id/elements',
     summary: 'Éléments d’un registre (périmètres hérités du registre)',

@@ -155,6 +155,7 @@ export const CelluleOuverture = z
     title: t(300),
     scenario: t(100),
     plan: t(100),
+    smsi: z.string().uuid(),
   })
   .partial()
   .strict();

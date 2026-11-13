@@ -128,7 +128,13 @@ export function Tasks({
   return (
     <Stack>
       <Group>
-        <Select label="Vue synchronisée" data={views} value={view} onChange={(v) => v && setView(v as typeof view)} />
+        <Select
+          allowDeselect={false}
+          label="Vue synchronisée"
+          data={views}
+          value={view}
+          onChange={(v) => v && setView(v as typeof view)}
+        />
         <TextInput
           label="Mois"
           type="month"

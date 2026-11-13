@@ -844,6 +844,7 @@ function ModalDoublon({
           contributeur voit qu’il était déjà connu.
         </Text>
         <Select
+          allowDeselect={false}
           label="Événement correspondant"
           required
           searchable
@@ -1007,6 +1008,7 @@ function Recuperation({ i, agir }: { i: Incident; agir: Agir }) {
         aide="Entrées horodatées d’une cellule de crise, réelle ou d’exercice. Un élément déjà importé n’est pas proposé deux fois."
       >
         <Select
+          allowDeselect={false}
           label="Cellule de crise"
           placeholder={crise.data?.etat.cells.length ? 'Choisir une cellule' : 'Aucune cellule de crise'}
           comboboxProps={SANS_PORTAIL}

@@ -111,6 +111,9 @@ export interface PointChronologie extends EvenementRetex {
   niveau: number;
   /** Gravité reportée (non saisie sur cet événement). */
   niveauReporte: boolean;
+  /** Vrai si le niveau vient d'une gravité réellement saisie (sur cet événement ou un précédent) : la valeur par défaut
+      de la courbe n'est pas une gravité (BUG-045, aucun chiffre inventé). */
+  niveauConnu: boolean;
   /** Minutes écoulées depuis l'événement précédent (null pour le premier). */
   depuisPrecedent: number | null;
   /** Minutes écoulées depuis le premier événement. */
@@ -122,16 +125,19 @@ export function chronologieRetex(evenements: readonly EvenementRetex[]): PointCh
   const tries = lireEvenementsRetex(evenements);
   const debut = tries[0] ? minutesRetex(tries[0].ts) : 0;
   let precedent = 1;
+  let connu = false;
   return tries.map((e, rang) => {
     const saisi = (GRAVITES_RETEX as readonly string[]).indexOf(e.gravite);
     const niveau = saisi >= 0 ? saisi : precedent;
     precedent = niveau;
+    if (saisi >= 0) connu = true;
     const t = minutesRetex(e.ts);
     return {
       ...e,
       rang,
       niveau,
       niveauReporte: saisi < 0,
+      niveauConnu: connu,
       depuisPrecedent: rang ? t - minutesRetex(tries[rang - 1]!.ts) : null,
       depuisDebut: t - debut,
     };
@@ -146,7 +152,7 @@ export interface IndicateursRetex {
   avantConfinement: number | null;
   /** De la première détection (ou du premier événement) au premier rétablissement. */
   avantRetablissement: number | null;
-  /** Gravité maximale saisie ou reportée (vide sans événement). */
+  /** Gravité maximale saisie ou reportée (vide sans événement ou tant qu'aucune gravité n'est saisie). */
   graviteMax: string;
 }
 export function indicateursRetex(evenements: readonly EvenementRetex[]): IndicateursRetex {
@@ -163,7 +169,9 @@ export function indicateursRetex(evenements: readonly EvenementRetex[]): Indicat
     dureeTotale: p.length > 1 ? p[p.length - 1]!.depuisDebut : null,
     avantConfinement: delai('Confinement'),
     avantRetablissement: delai('Rétablissement'),
-    graviteMax: GRAVITES_RETEX[Math.max(...p.map((e) => e.niveau))]!,
+    graviteMax: p.some((e) => e.niveauConnu)
+      ? GRAVITES_RETEX[Math.max(...p.filter((e) => e.niveauConnu).map((e) => e.niveau))]!
+      : '',
   };
 }
 

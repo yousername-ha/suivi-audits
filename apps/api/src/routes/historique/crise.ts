@@ -8,6 +8,7 @@ import {
   CelluleOuverture,
   AuteurCrise,
 } from '@suivi/shared';
+import { z } from 'zod';
 import { route } from '../../http/route.js';
 import { tags, user, idElement, idIndice, indiceSeul } from './commun.js';
 
@@ -18,7 +19,8 @@ export const criseRoutes = [
     summary: 'Cellules de crise, contacts et scénarios',
     tags,
     access: 'incidents:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.crise.vue(user(s)),
+    query: z.object({ smsi: z.string().uuid().optional() }).strict(),
+    handler: async ({ svc, s, query }) => svc.historique.crise.vue(user(s), query.smsi),
   }),
   route({
     method: 'POST',

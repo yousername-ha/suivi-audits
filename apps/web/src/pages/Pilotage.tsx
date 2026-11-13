@@ -267,6 +267,7 @@ export function PilotagePage() {
         <ErrorAlert error={scopes.error ?? policy.error} />
         {(scopes.data?.length ?? 0) > 1 && (
           <Select
+            allowDeselect={false}
             label="Périmètre affiché"
             description="Les accès existants sont conservés."
             data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
@@ -406,10 +407,10 @@ export function PilotagePage() {
             {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
             {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
             {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
-            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue />}
+            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue smsi={smsi} />}
             {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
             {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
-            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
+            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents smsi={smsi} />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
@@ -585,6 +586,7 @@ function ControlSchedule({ smsi, object, onClose }: { smsi: string; object: GrcO
           onChange={(e) => setStart(e.currentTarget.value)}
         />
         <Select
+          allowDeselect={false}
           label="Unité de récurrence"
           data={[
             { value: 'day', label: 'Jour' },

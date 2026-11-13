@@ -61,10 +61,10 @@ const Mode = ({ mode }: { mode: string }) => (
 );
 
 /* ------------------------------------------------------------------------------------------------- cellules */
-export function CelluleCriseVue() {
+export function CelluleCriseVue({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise(),
+    { d, agir, erreur } = useModule<Donnees>(`crise:${smsi ?? ''}`, smsi ? `/api/crise?smsi=${smsi}` : '/api/crise'),
     [sel, setSel] = useState<string | null>(null);
   const etat = d?.etat;
   const active = etat ? celluleActive(etat) : undefined;
@@ -78,6 +78,7 @@ export function CelluleCriseVue() {
           agir={agir}
           modifiable={modifiable}
           avertir={!!active}
+          smsi={smsi}
           onOuverte={setSel}
           onSelect={setSel}
         />
@@ -101,6 +102,7 @@ function OuvertureCellule({
   agir,
   modifiable,
   avertir,
+  smsi,
   onOuverte,
   onSelect,
 }: {
@@ -108,6 +110,7 @@ function OuvertureCellule({
   agir: Agir;
   modifiable: boolean;
   avertir: boolean;
+  smsi?: string;
   onOuverte: (id: string) => void;
   onSelect: (id: string) => void;
 }) {
@@ -121,6 +124,7 @@ function OuvertureCellule({
       title: titre,
       scenario: scenario ?? '',
       plan: plan ?? '',
+      ...(smsi ? { smsi } : {}),
     });
     if (r) onOuverte(r.id);
   };

@@ -1,6 +1,7 @@
 /* Constats de l'état du suivi : projection en lecture seule des écarts natifs du périmètre commun (plus de stockage
    historique). Le module Audit, le tableau de bord et les exports lisent cette projection. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ecartNatifVersFinding } from '../src/historique/ecarts-natifs.js';
 import { createTestApp, ecartCommun, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 const COMMUN = '00000000-0000-4000-8000-000000000001';
@@ -89,5 +90,23 @@ describe('écarts natifs vus comme constats', () => {
     etat.findings = [{ id: 'X-1', text: 'Imposé', status: 'Ouvert', items: [] }];
     await seedState(t, etat);
     expect(await findings()).toEqual(avant);
+  });
+});
+
+describe('rattachement d’un écart à une mesure (BUG-041)', () => {
+  const ligne = (refs: string[]) => ({
+    id: '11111111-1111-4111-8111-111111111111',
+    legacy_id: 'FOU-01',
+    name: 'Écart fictif',
+    data: { refs, status: 'open' },
+    created_at: new Date('2026-11-13T10:00:00Z'),
+  });
+  const FW = '22222222-2222-4222-8222-222222222222';
+  it('reprend la mesure d’une exigence du référentiel appliqué, comme celle d’une référence historique, sans doublon', () => {
+    expect(ecartNatifVersFinding(ligne([`requirement:${FW}:3:A-5.24`]))).toMatchObject({ items: ['A-5.24'] });
+    expect(
+      ecartNatifVersFinding(ligne(['legacy:items:A-5.24', `requirement:${FW}:3:A-5.24`, `requirement:${FW}:3:A-8.13`])),
+    ).toMatchObject({ items: ['A-5.24', 'A-8.13'] });
+    expect(ecartNatifVersFinding(ligne([`object:${FW}`]))).toMatchObject({ items: [] });
   });
 });

@@ -399,6 +399,7 @@ export function Creation({
           )}
           {item.k === 'type' && item.type === 'subprocess' && (
             <Select
+              allowDeselect={false}
               label="Processus parent"
               required
               searchable

@@ -73,6 +73,7 @@ export function DeplacerElement({ smsi, object, onDone }: { smsi: string; object
       </Text>
       <ErrorAlert error={erreur} />
       <Select
+        allowDeselect={false}
         label="Registre cible"
         searchable
         data={options}

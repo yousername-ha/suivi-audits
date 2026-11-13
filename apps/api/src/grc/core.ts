@@ -43,7 +43,7 @@ import type { BusinessPolicies } from '../business-policy.js';
 import type { Modules } from '../modules.js';
 import { HttpError } from '../http/errors.js';
 import { loadGrants } from '../rights.js';
-import { validDate } from '@suivi/shared';
+import { REFUS_SANS_MATRICE, methodeSansMatrice, validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcCopiesReferentiels } from './copies-referentiels.js';
@@ -291,39 +291,22 @@ export class Grc {
     if (!user.rights.can(module, action)) throw new HttpError(403, 'Droit requis : ' + module + ':' + action);
   }
   async access(id: string, user: SessionUser, write = false, c?: Client): Promise<GrcSmsi> {
+    // Accès au périmètre (ADR 0092, qui amende l'ADR 0039) : un compte rattaché à un périmètre l'ouvre avec ses
+    // descendants, pas son parent ; un compte sans rattachement ouvre les périmètres « instance ». Calcul en base.
     let q = (c ? surConnexion(c) : this.db.k)
       .selectFrom('grc_smsis as s')
       .select((eb) => [
         ...COLONNES_SMSI,
-        eb
-          .exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id),
-          )
-          .as('member'),
-        eb
-          .exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id)
-              .where('m.can_write', '=', true),
-          )
-          .as('canWrite'),
+        sql<boolean>`grc_smsi_ouvert(${user.id}::uuid, ${eb.ref('s.id')})`.as('ouvert'),
+        sql<boolean>`grc_smsi_ecrivable(${user.id}::uuid, ${eb.ref('s.id')})`.as('ecrivable'),
       ])
       .where('s.id', '=', id);
     // Dans une transaction, le périmètre est verrouillé en partage jusqu'à sa fin.
     if (c) q = q.forShare('s');
     const r = await q.executeTakeFirst();
     const admin = await this.isAdmin(user, c);
-    if (!r || (r.visibility === 'restricted' && !r.member && !admin))
-      throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
-    if (write && r.visibility === 'restricted' && !r.canWrite && !admin)
-      throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
+    if (!r || (!r.ouvert && !admin)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
+    if (write && !r.ecrivable && !admin) throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {
       id: r.id,
       name: r.name,
@@ -357,17 +340,7 @@ export class Grc {
       .selectFrom('grc_smsis as s')
       .select(COLONNES_SMSI)
       .where((eb) =>
-        eb.or([
-          eb('s.visibility', '=', 'instance'),
-          sql<boolean>`${admin}`,
-          eb.exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id),
-          ),
-        ]),
+        eb.or([sql<boolean>`${admin}`, sql<boolean>`grc_smsi_ouvert(${user.id}::uuid, ${eb.ref('s.id')})`]),
       )
       .orderBy(sql`s.visibility = 'instance'`, 'desc')
       .orderBy('s.name')
@@ -683,7 +656,8 @@ export class Grc {
   }
   async selectMethod(smsi: string, id: string, version: number, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
-    await this.risks.method(smsi, id, version, user);
+    if (methodeSansMatrice((await this.risks.method(smsi, id, version, user)).definition))
+      throw new HttpError(422, REFUS_SANS_MATRICE);
     return this.db.tx(async (c) => {
       await this.verrouillerPerimetre(c, smsi);
       const current = await this.access(smsi, user, true, c);
@@ -836,18 +810,7 @@ export class Grc {
       .selectFrom('users as u')
       .select(['u.id', 'u.username', 'u.display_name as displayName'])
       .where(actif)
-      .where((eb) =>
-        eb.or([
-          sql<boolean>`${s.visibility === 'instance'}`,
-          eb.exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .where('m.smsi_id', '=', smsi)
-              .whereRef('m.user_id', '=', 'u.id'),
-          ),
-        ]),
-      )
+      .where(sql<boolean>`grc_smsi_ouvert(u.id, ${s.id}::uuid)`)
       .orderBy('u.username')
       .limit(1000)
       .execute();
@@ -868,18 +831,7 @@ export class Grc {
         .select('u.id')
         .where('u.id', '=', owner)
         .where(actif)
-        .where((eb) =>
-          eb.or([
-            eb('s.visibility', '=', 'instance'),
-            eb.exists(
-              eb
-                .selectFrom('grc_members as m')
-                .select('m.user_id')
-                .whereRef('m.smsi_id', '=', 's.id')
-                .whereRef('m.user_id', '=', 'u.id'),
-            ),
-          ]),
-        )
+        .where(sql<boolean>`grc_smsi_ouvert(u.id, s.id)`)
         .executeTakeFirst())
     )
       throw new HttpError(422, 'Le responsable doit être un compte actif autorisé dans ce SMSI.');
@@ -950,6 +902,12 @@ export class Grc {
       await this.checkOwner(smsi, d.ownerId, c);
       await this.checkTypedRefs(smsi, kind, d, user, c);
       const method = await this.risks.method(smsi, d.methodId, d.methodVersion, user, c);
+      // Pas de nouvelle appréciation sans matrice (BUG-024) ; un risque déjà apprécié avec sa méthode reste modifiable.
+      if (
+        methodeSansMatrice(method.definition) &&
+        (!previous || (previous.data as { methodId?: string }).methodId !== d.methodId)
+      )
+        throw new HttpError(422, REFUS_SANS_MATRICE);
       this.risks.validateStages(method.definition, d.stages);
       if (d.reviewAt && !validDate(d.reviewAt)) throw new HttpError(422, 'Date de réévaluation invalide.');
       for (const [key, stage] of Object.entries(d.stages)) {
@@ -996,6 +954,17 @@ export class Grc {
           delete data.performedAt;
         }
       }
+      // Revue de direction validée (9.3.3, BUG-075) : la décision de la direction ne se défait que par la réouverture,
+      // réservée à qui administre le pilotage (la validation elle-même passe par la commande de validation).
+      if (
+        kind === 'management_review' &&
+        previous?.data.status === 'validated' &&
+        !user.rights.can('pilotage', 'administrer')
+      )
+        throw new HttpError(
+          403,
+          'Cette revue de direction est validée : seul un administrateur du pilotage peut la rouvrir pour la modifier.',
+        );
       if (
         (kind === 'evidence' && ['validated', 'rejected'].includes(String(data.status))) ||
         (kind === 'nonconformity' && (data.status === 'closed' || data.effectiveness !== 'pending')) ||
