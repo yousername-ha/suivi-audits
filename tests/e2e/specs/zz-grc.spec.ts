@@ -84,7 +84,7 @@ test('Pilotage : objet relié, indicateurs et rapport comité utilisables', asyn
     const assets = await (await page.request.get(prefix + '/objects?kind=support_asset')).json();
     expect(assets.items[0].data.refs).toEqual(['object:' + process.id]);
     await page.goto('/pilotage/synthese');
-    await expect(page.getByText('Référentiels activés et correspondances revues', { exact: true })).toBeVisible();
+    await expect(page.getByText('Référentiels activés', { exact: true })).toBeVisible();
     await page.goto('/pilotage/imports');
     const promise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Rapport de pilotage / audit', exact: true }).click();

@@ -510,11 +510,7 @@ export class GrcTasks {
       if (
         r.smsiId &&
         r.objectId &&
-        (await this.g.visible(
-          user,
-          r.smsiId,
-          r.kind === 'risk_review' ? 'pilotage' : r.kind === 'rapprochement' ? 'conformite' : 'ecarts',
-        ))
+        (await this.g.visible(user, r.smsiId, r.kind === 'risk_review' ? 'pilotage' : 'ecarts'))
       )
         visible.push(r);
     return visible;

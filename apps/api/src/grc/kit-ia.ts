@@ -1,24 +1,13 @@
-/* Kit d'intégration IA (ADR 0055) : aperçu puis import des contrôles IA internes dans la bibliothèque de référentiels,
-   correspondances proposées vers l'ISO/IEC 27001 et l'HDS (jamais validées automatiquement), et annexes de veille.
-   L'import est idempotent : le même kit, octet pour octet, n'écrit rien de plus. Aucun texte normatif n'est repris. */
+/* Kit d'intégration IA (ADR 0055) : aperçu puis import des contrôles IA internes dans la bibliothèque de référentiels et
+   des annexes de veille. Les correspondances vers l'ISO/IEC 27001 et l'HDS que le kit pouvait porter ne sont plus
+   importées (ADR 0089, lot 3). L'import est idempotent : le même kit, octet pour octet, n'écrit rien de plus. Aucun texte
+   normatif n'est repris. */
 import { createHash } from 'node:crypto';
-import {
-  KIT_IA_IDENTIFIANT,
-  MAX_CORRESPONDANCES_RESOLUES,
-  KitIaBundle,
-  indexHds,
-  indexIso,
-  jetonsHds,
-  jetonsIso,
-  kitVersReferentiel,
-} from '@suivi/shared';
+import { KIT_IA_IDENTIFIANT, KitIaBundle, kitVersReferentiel } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
-const URL_ISO = 'https://www.iso.org/fr/standard/27001';
-const URL_HDS =
-  'https://esante.gouv.fr/services/hebergeurs-de-donnees-de-sante/les-referentiels-de-la-procedure-de-certification';
 /** Forme canonique : clés triées à tous les niveaux (jsonb réordonne les clés, la comparaison ne doit pas en dépendre). */
 const canon = (v: unknown): unknown =>
   Array.isArray(v)
@@ -35,89 +24,8 @@ const empreinte = (v: unknown) =>
     .update(JSON.stringify(canon(v)))
     .digest('hex');
 
-interface Correspondance {
-  controle: string;
-  cible: { frameworkId: string; version: number; requirementId: string };
-  indication: string;
-  typeReference: 'ISO27001' | 'HDS_V2_0';
-  explication: string;
-}
-interface NonResolue {
-  controle: string;
-  type: string;
-  indication: string;
-  raison: string;
-}
-
 export class GrcKitIa {
   constructor(private readonly g: Grc) {}
-
-  /** Référentiel de la bibliothèque dont l'identifiant commence par le préfixe donné (version courante). */
-  private async cible(prefixe: string, user: SessionUser) {
-    // Identifiant exact ou suivi d'un tiret ; une copie de l'organisation ne passe qu'après la version source.
-    const candidats = (await this.g.library.list(user)).filter(
-      (x) => x.identifier === prefixe || x.identifier.startsWith(prefixe + '-'),
-    );
-    const f = candidats.find((x) => x.locked) ?? candidats[0];
-    if (!f) return null;
-    const v = await this.g.library.version(f.id, f.version, user);
-    const exigences = v.definition.requirements;
-    return { frameworkId: f.id, version: f.version, indexIso: indexIso(exigences), indexHds: indexHds(exigences) };
-  }
-
-  private async resoudre(b: KitIaBundle, user: SessionUser) {
-    const iso = await this.cible('iso-27001', user);
-    const hds = await this.cible('hds', user);
-    const resolues: Correspondance[] = [];
-    const nonResolues: NonResolue[] = [];
-    let themes = 0;
-    const vus = new Set<string>();
-    for (const m of b.correspondances) {
-      if (m.target_reference_type === 'ISO42001_THEME') {
-        themes++;
-        continue;
-      }
-      const cible = m.target_reference_type === 'ISO27001' ? iso : hds;
-      const nom = m.target_reference_type === 'ISO27001' ? 'ISO/IEC 27001' : 'HDS';
-      const base = { controle: m.internal_control_id, type: m.target_reference_type, indication: m.reference_hint_raw };
-      if (!cible) {
-        nonResolues.push({ ...base, raison: `Référentiel ${nom} absent de la bibliothèque.` });
-        continue;
-      }
-      const ids =
-        m.target_reference_type === 'ISO27001'
-          ? (() => {
-              const j = jetonsIso(m.reference_hint_raw);
-              return [
-                ...j.annexe.flatMap((t) => cible.indexIso.annexe.get(t) ?? []),
-                ...j.clause.flatMap((t) => cible.indexIso.clause.get(t) ?? []),
-              ];
-            })()
-          : jetonsHds(m.reference_hint_raw).flatMap((t) => cible.indexHds.get(t) ?? []);
-      if (!ids.length) {
-        nonResolues.push({ ...base, raison: 'Aucune exigence reconnue pour cette indication.' });
-        continue;
-      }
-      for (const id of new Set(ids)) {
-        if (vus.size >= MAX_CORRESPONDANCES_RESOLUES)
-          throw new HttpError(
-            422,
-            `Trop de correspondances rattachables (plus de ${MAX_CORRESPONDANCES_RESOLUES}) : resserrez les indications du kit.`,
-          );
-        const cle = `${m.internal_control_id}>${cible.frameworkId}:${id}`;
-        if (vus.has(cle)) continue;
-        vus.add(cle);
-        resolues.push({
-          controle: m.internal_control_id,
-          cible: { frameworkId: cible.frameworkId, version: cible.version, requirementId: id },
-          indication: m.reference_hint_raw,
-          typeReference: m.target_reference_type,
-          explication: m.explanation ?? '',
-        });
-      }
-    }
-    return { resolues, nonResolues, themes };
-  }
 
   private analyser(input: unknown) {
     // Le caractère nul passe la validation du schéma mais PostgreSQL le refuse dans un jsonb : refus net, avant toute écriture.
@@ -149,42 +57,16 @@ export class GrcKitIa {
     const derniere = existant ? (await this.g.library.version(existant.id, existant.version, user)).definition : null;
     const identique = !!derniere && empreinte(derniere) === empreinte(definition);
     const sha = empreinte(b);
-    const dejaTrace = !!(await this.g.db.k
+    // Déjà importé : même kit, octet pour octet (trace immuable existante).
+    const dejaImporte = !!(await this.g.db.k
       .selectFrom('lib_kit_ia')
       .select('id')
       .where('sha256', '=', sha)
       .executeTakeFirst());
-    const { resolues, nonResolues, themes } = await this.resoudre(b, user);
-    // Version du référentiel IA que l'import écrirait : la courante si le contenu est identique, la suivante sinon.
-    const versionSource = identique ? existant!.version : (existant?.version ?? 0) + 1;
-    const existantes = existant
-      ? await this.g.db.k
-          .selectFrom('lib_mappings')
-          .select([
-            'source_requirement_id as s',
-            'source_version as sv',
-            'target_framework_id as tf',
-            'target_version as tv',
-            'target_requirement_id as tr',
-          ])
-          .where('source_framework_id', '=', existant.id)
-          .where('status', '<>', 'withdrawn')
-          .execute()
-      : [];
-    const dejaPresentes = new Set(existantes.map((m) => `${m.s}@${m.sv}>${m.tf}@${m.tv}:${m.tr}`));
-    const nouvelles = resolues.filter(
-      (m) =>
-        !dejaPresentes.has(
-          `${m.controle}@${versionSource}>${m.cible.frameworkId}@${m.cible.version}:${m.cible.requirementId}`,
-        ),
-    ).length;
-    // Déjà importé : même contenu et rien de nouveau à rattacher (un référentiel cible importé depuis permet de compléter).
-    const dejaImporte = dejaTrace && nouvelles === 0;
     const parDomaine = new Map<string, number>();
     for (const c of b.controls) parDomaine.set(c.domain, (parDomaine.get(c.domain) ?? 0) + 1);
     const avertissements = [
       'Contrôles internes proposés par l’organisation : ils ne reproduisent aucun texte normatif et ne valent pas conformité.',
-      'Toutes les correspondances sont importées « proposées » : aucune n’est validée sans décision humaine.',
       ...(b.deltas.length
         ? [
             `${b.deltas.length} delta(s) HDS 2.1 préparatoires : lisibles en veille, jamais importés comme exigences en vigueur.`,
@@ -192,11 +74,6 @@ export class GrcKitIa {
         : []),
       ...(b.sources.length || b.deltas.length
         ? ['Sources et statuts juridiques du kit : à revérifier (aucune date de vérification n’est enregistrée).']
-        : []),
-      ...(!resolues.length && b.correspondances.length
-        ? [
-            'Aucune correspondance n’a pu être rattachée : importez d’abord l’ISO/IEC 27001 et l’HDS dans la bibliothèque.',
-          ]
         : []),
     ];
     const apercu = {
@@ -217,15 +94,6 @@ export class GrcKitIa {
         previewId: p.previewId,
         warning: p.warning,
       },
-      correspondances: {
-        total: b.correspondances.length,
-        resolues: resolues.length,
-        dejaPresentes: resolues.length - nouvelles,
-        nouvelles,
-        themesIso42001: themes,
-        nonResolues: nonResolues.slice(0, 200),
-        nonResoluesTotal: nonResolues.length,
-      },
       annexes: {
         actions: b.actions.length,
         scenarios: b.scenarios.length,
@@ -236,15 +104,14 @@ export class GrcKitIa {
       },
       avertissements,
     };
-    return { b, apercu, resolues };
+    return { b, apercu };
   }
 
   async importer(input: unknown, previewId: string, reason: string, user: SessionUser, ip: string) {
-    const { b, apercu, resolues } = await this.calculer(input, user);
+    const { b, apercu } = await this.calculer(input, user);
     if (apercu.referentiel.previewId !== previewId)
       throw new HttpError(422, 'Relancez l’aperçu : le contenu a changé.');
-    if (apercu.dejaImporte)
-      return { statut: 'deja_importe' as const, controles: apercu.controles, mappings: 0, ignorees: 0 };
+    if (apercu.dejaImporte) return { statut: 'deja_importe' as const, controles: apercu.controles };
     const definition = kitVersReferentiel(b);
     const existant = (await this.g.library.list(user)).find((f) => f.identifier === KIT_IA_IDENTIFIANT) ?? null;
     let frameworkId: string;
@@ -265,33 +132,6 @@ export class GrcKitIa {
       );
       frameworkId = pub.id;
       version = pub.version;
-    }
-    let crees = 0;
-    let ignorees = 0;
-    for (const m of resolues) {
-      try {
-        await this.g.libraryMappings.create(
-          {
-            source: { frameworkId, version, requirementId: m.controle },
-            target: m.cible,
-            type: 'related',
-            justification:
-              `Indication thématique du kit IA : « ${m.indication} ». ${m.explication || 'Sans équivalence normative ni automatisation de conformité.'}`.slice(
-                0,
-                5000,
-              ),
-            coverage: 0,
-            origin: 'ai',
-            sourceUrl: m.typeReference === 'ISO27001' ? URL_ISO : URL_HDS,
-          },
-          user,
-          ip,
-        );
-        crees++;
-      } catch (e) {
-        if (e instanceof HttpError && e.status === 409) ignorees++;
-        else throw e;
-      }
     }
     await this.g.db.tx(async (c, k) => {
       await k
@@ -319,15 +159,13 @@ export class GrcKitIa {
         ip,
         'library.ia_kit.imported',
         frameworkId,
-        { version, controles: b.controls.length, mappings: crees, ignorees, sha256: apercu.sha256 },
+        { version, controles: b.controls.length, sha256: apercu.sha256 },
         c,
       );
     }, user.username);
     return {
       statut: 'importe' as const,
       controles: b.controls.length,
-      mappings: crees,
-      ignorees,
       frameworkId,
       version,
     };

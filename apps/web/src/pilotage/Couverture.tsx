@@ -31,20 +31,19 @@ import { PlanEcarts } from './PlanEcarts';
 
 export interface CouvertureReferentiel {
   frameworkId: string;
-  /** Identifiant du référentiel de la bibliothèque dont la copie est appliquée (clé de rapprochement avec la carte). */
+  /** Identifiant du référentiel de la bibliothèque dont la copie est appliquée (clé de lien avec la carte). */
   identifier: string;
   name: string;
   version: number;
   requirements: number;
   covered: number;
-  toValidate: number;
   uncovered: number;
   etats: SyntheseEtats & { applicables: number; aDeterminer: number; obligatoiresNonConformes: number };
 }
 interface Detail {
   id: string;
   title: string;
-  status: 'covered' | 'to_validate' | 'uncovered';
+  status: 'covered' | 'uncovered';
   measures: { ref: string; name: string }[];
   evaluation: (EvaluationExigence & { frameworkVersion: number }) | null;
   etat: EtatExigence;
@@ -64,7 +63,6 @@ const COULEUR_ETAT: Record<EtatExigence, Etat> = {
 };
 const ETATS_LIEN: Record<Detail['status'], string> = {
   covered: 'Mesure reliée',
-  to_validate: 'Aucune mesure reliée',
   uncovered: 'Aucune mesure reliée',
 };
 
@@ -326,7 +324,7 @@ export function EtatsCouverture({ f }: { f: CouvertureReferentiel }) {
       </Group>
       <Group gap="xs">
         <StatusChip etat="succes">{f.covered} avec mesure reliée</StatusChip>
-        <StatusChip etat="neutre">{f.uncovered + f.toValidate} sans mesure reliée</StatusChip>
+        <StatusChip etat="neutre">{f.uncovered} sans mesure reliée</StatusChip>
       </Group>
       {f.etats.obligatoiresNonConformes > 0 && (
         <Alert color="red" role="alert">

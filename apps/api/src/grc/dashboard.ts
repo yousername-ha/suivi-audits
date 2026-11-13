@@ -30,7 +30,7 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
   if (policy.dashboard.cards.includes('frameworks') && user.rights.can('conformite', 'lire'))
     sections.frameworks = (
       await g.db.q(
-        `WITH publications AS(SELECT DISTINCT ON(framework_id) framework_id,version,definition FROM grc_framework_versions WHERE smsi_id=$1 ORDER BY framework_id,version DESC) SELECT o.id,o.name,p.version,jsonb_array_length(p.definition->'requirements') requirements,(SELECT count(DISTINCT m.data->'target'->>'requirementId')::int FROM grc_objects m WHERE m.smsi_id=$1 AND m.kind='mapping' AND NOT m.archived AND m.data->>'status'='validated' AND m.data->'target'->>'frameworkId'=o.id::text AND (m.data->'target'->>'version')::int=p.version AND m.data->>'type'<>'none') AS mapped FROM grc_objects o JOIN publications p ON p.framework_id=o.id WHERE o.smsi_id=$1 AND NOT o.archived AND o.data->>'enabled'='true' ORDER BY o.name`,
+        `WITH publications AS(SELECT DISTINCT ON(framework_id) framework_id,version,definition FROM grc_framework_versions WHERE smsi_id=$1 ORDER BY framework_id,version DESC) SELECT o.id,o.name,p.version,jsonb_array_length(p.definition->'requirements') requirements FROM grc_objects o JOIN publications p ON p.framework_id=o.id WHERE o.smsi_id=$1 AND NOT o.archived AND o.data->>'enabled'='true' ORDER BY o.name`,
         [smsi],
       )
     ).rows;

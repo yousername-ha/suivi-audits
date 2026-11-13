@@ -123,7 +123,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
   const couvertureDe = (id: string) => {
     let v = memo.get(id);
     if (!v) {
-      v = g.rapprochements.coverage(id, user).then(
+      v = g.couverture.coverage(id, user).then(
         (r) =>
           r.frameworks.map((f) => ({
             referentielId: f.frameworkId,

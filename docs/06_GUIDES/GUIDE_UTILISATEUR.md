@@ -459,9 +459,9 @@ Restriction : Recette du serveur utilisateur non reçue.
 Fonctions liées : voir la [matrice](../02_FONCTIONNALITES/MATRICE_TRACABILITE.md)
 et le cas TEST-019.
 
-## FCT-020 — Référentiels, exigences et correspondances
+## FCT-020 — Référentiels, exigences et couverture
 
-Objectif : Publications, activation, mappings révisables, simulations/imports ; sources normatives sous licence non redistribuées.
+Objectif : Publications, activation, simulations/imports ; sources normatives sous licence non redistribuées. Les correspondances entre référentiels sont retirées (ADR 0089, lot 3).
 
 État : **VALIDÉ AUTOMATIQUEMENT**, uniquement dans ce périmètre.
 Accès : **/pilotage/bibliotheque** (les pages « Référentiels et exigences » et « Correspondances » sont retirées, ADR 0089).

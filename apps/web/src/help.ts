@@ -21,7 +21,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Reliez les fiches à des actifs, exigences, preuves versionnées, audits, contrôles et objectifs existants. Une mesure de traitement génère une action sans recalculer le risque résiduel.',
       'Les actions se synchronisent en liste, Kanban, calendrier, planning et tableau de bord. Les récurrences produisent des occurrences uniques ; les réalisations historiques restent dans leur source.',
       'La cartographie se met à jour depuis le registre. Les couleurs et niveaux appartiennent à chaque méthode ; les versions incompatibles ne produisent pas de comparaison numérique.',
-      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Les propositions de correspondance requièrent une revue humaine. Consultez vos rappels (Pilotage > Mes rappels) et exportez les rapports pour le comité de pilotage.',
+      'Importez les gabarits JSON ou Excel avec simulation et confirmation. Consultez vos rappels (Pilotage > Mes rappels) et exportez les rapports pour le comité de pilotage.',
     ],
   },
   {

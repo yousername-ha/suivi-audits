@@ -128,7 +128,7 @@ describe('notifications métier', () => {
       const g = await lecteur.get('/api/account/notifications');
       expect(g.statusCode).toBe(200);
       expect(g.json().portee.kind).toBe('utilisateur');
-      expect(g.json().reglages).toHaveLength(8);
+      expect(g.json().reglages).toHaveLength(6);
       const r = await lecteur.put(
         '/api/account/notifications',
         { changements: [{ type: 'task_due', canal: 'application', valeur: false }] },
@@ -168,7 +168,7 @@ describe('notifications métier', () => {
     });
     it('concurrence : If-Match obligatoire, version périmée refusée avec l’état courant', async () => {
       const g = await admin.get(URL_REGLAGES('role', 'lecteur'));
-      const corps = { changements: [{ type: 'rapprochement', canal: 'application', valeur: false }] };
+      const corps = { changements: [{ type: 'risk_review', canal: 'application', valeur: false }] };
       expect((await admin.put(URL_REGLAGES('role', 'lecteur'), corps)).statusCode).toBe(428);
       const v = g.json().version as number;
       const r1 = await admin.put(URL_REGLAGES('role', 'lecteur'), corps, { 'if-match': String(v) });
@@ -176,7 +176,7 @@ describe('notifications métier', () => {
       expect(r1.json().version).toBe(v + 1);
       const perime = await admin.put(
         URL_REGLAGES('role', 'lecteur'),
-        { changements: [{ type: 'rapprochement', canal: 'application', valeur: null }] },
+        { changements: [{ type: 'risk_review', canal: 'application', valeur: null }] },
         { 'if-match': String(v) },
       );
       expect(perime.statusCode).toBe(412);
@@ -187,7 +187,7 @@ describe('notifications métier', () => {
         (
           await admin.put(
             URL_REGLAGES('role', 'lecteur'),
-            { changements: [{ type: 'rapprochement', canal: 'application', valeur: null }] },
+            { changements: [{ type: 'risk_review', canal: 'application', valeur: null }] },
             { 'if-match': String(v + 1) },
           )
         ).statusCode,
@@ -377,22 +377,20 @@ describe('notifications métier', () => {
     });
     it('un groupe qui désactive explicitement l’application est suivi, sauf si un autre groupe ou rôle l’active', async () => {
       expect(
-        (await regler('groupe', groupe, [{ type: 'rapprochement', canal: 'application', valeur: false }])).statusCode,
+        (await regler('groupe', groupe, [{ type: 'risk_review', canal: 'application', valeur: false }])).statusCode,
       ).toBe(200);
       const b = (await admin.get(URL_REGLAGES('utilisateur', ids.B!))).json();
       expect(
-        b.effectifs.find(
-          (e: { type: string; canal: string }) => e.type === 'rapprochement' && e.canal === 'application',
-        ),
+        b.effectifs.find((e: { type: string; canal: string }) => e.type === 'risk_review' && e.canal === 'application'),
       ).toMatchObject({ actif: false, origine: 'groupe' });
       expect(
-        (await regler('role', 'contributeur', [{ type: 'rapprochement', canal: 'application', valeur: true }]))
+        (await regler('role', 'contributeur', [{ type: 'risk_review', canal: 'application', valeur: true }]))
           .statusCode,
       ).toBe(200);
       const b2 = (await admin.get(URL_REGLAGES('utilisateur', ids.B!))).json();
       expect(
         b2.effectifs.find(
-          (e: { type: string; canal: string }) => e.type === 'rapprochement' && e.canal === 'application',
+          (e: { type: string; canal: string }) => e.type === 'risk_review' && e.canal === 'application',
         ),
       ).toMatchObject({ actif: true, origine: 'role' });
     });

@@ -489,7 +489,7 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
                 <ConfirmButton
                   size="xs"
                   color="blue"
-                  message={`Appliquer « ${r.name} » à ce périmètre ? La copie devient un référentiel suivi en conformité (couverture, évaluations, rapprochements) ; elle reste modifiable.`}
+                  message={`Appliquer « ${r.name} » à ce périmètre ? La copie devient un référentiel suivi en conformité (couverture, évaluations) ; elle reste modifiable.`}
                   onConfirm={() => statut(r.frameworkId, 'applique')}
                 >
                   Appliquer

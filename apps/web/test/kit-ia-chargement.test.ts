@@ -23,14 +23,23 @@ describe('chargement du kit IA', () => {
       f('v.json', { version: 'fictif-1' }),
     ]);
     expect(r.problemes).toEqual([]);
-    expect(Object.keys(r.kit).sort()).toEqual(['controls', 'correspondances', 'version']);
-    expect(r.trouvees.map((t) => t.rubrique)).toEqual(['controls', 'correspondances']);
+    // Le fichier de correspondances d'un ancien kit est reconnu mais ignoré (ADR 0089, lot 3).
+    expect(Object.keys(r.kit).sort()).toEqual(['controls', 'version']);
+    expect(r.trouvees.map((t) => t.rubrique)).toEqual(['controls']);
+    expect(r.ignorees).toEqual(['b.json']);
   });
 
   it('accepte le kit complet en un seul fichier', () => {
     const r = assembler([f('kit.json', { version: '2', controls: [controle], sources: [] })]);
     expect(r.problemes).toEqual([]);
     expect(r.kit.version).toBe('2');
+    // Une rubrique « correspondances » du kit complet est ignorée, non transmise au serveur.
+    const ancien = assembler([
+      f('kit.json', { controls: [controle], correspondances: [{ internal_control_id: 'IA-001' }] }),
+    ]);
+    expect(ancien.problemes).toEqual([]);
+    expect(ancien.kit).not.toHaveProperty('correspondances');
+    expect(ancien.ignorees).toHaveLength(1);
   });
 
   it('signale les fichiers invalides, les rubriques répétées et l’absence de contrôles', () => {

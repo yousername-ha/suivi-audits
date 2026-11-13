@@ -335,22 +335,6 @@ export interface GrcOccurrences {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
-export interface GrcRapprochements {
-  id: Generated<string>;
-  smsi_id: string;
-  measure_ref: string;
-  source_ref: string;
-  target_ref: string;
-  mapping_id: string;
-  mapping_type: string;
-  coverage: number;
-  status: "pending" | "confirmed" | "rejected" | "withdrawn";
-  decided_by: string | null;
-  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
-  decision_note: Generated<string>;
-  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
-}
-
 export interface GrcRequirementAssessments {
   id: Generated<string>;
   smsi_id: string;
@@ -522,40 +506,6 @@ export interface LibKitIa {
   reason: string;
   imported_by: string;
   imported_at: ColumnType<Date, Date | string | undefined, Date | string>;
-}
-
-export interface LibMappingHistory {
-  id: Generated<string>;
-  mapping_id: string;
-  version: number;
-  snapshot: ColumnType<JsonValue, string, string>;
-  reason: string;
-  created_by: string;
-  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
-}
-
-export interface LibMappings {
-  id: Generated<string>;
-  source_framework_id: string;
-  source_version: number;
-  source_requirement_id: string;
-  target_framework_id: string;
-  target_version: number;
-  target_requirement_id: string;
-  type: "identical" | "equivalent" | "partial" | "complementary" | "related" | "none";
-  justification: string;
-  coverage: number;
-  origin: "human" | "ai";
-  status: "proposed" | "validated" | "withdrawn";
-  source_url: string;
-  review_note: Generated<string>;
-  version: Generated<number>;
-  created_by: string;
-  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
-  updated_by: string;
-  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
-  validated_by: string | null;
-  validated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface Links {
@@ -1460,7 +1410,6 @@ export interface DB {
   grc_object_versions: GrcObjectVersions;
   grc_objects: GrcObjects;
   grc_occurrences: GrcOccurrences;
-  grc_rapprochements: GrcRapprochements;
   grc_requirement_assessments: GrcRequirementAssessments;
   grc_risk_evaluations: GrcRiskEvaluations;
   grc_scope_frameworks: GrcScopeFrameworks;
@@ -1474,8 +1423,6 @@ export interface DB {
   lib_framework_versions: LibFrameworkVersions;
   lib_frameworks: LibFrameworks;
   lib_kit_ia: LibKitIa;
-  lib_mapping_history: LibMappingHistory;
-  lib_mappings: LibMappings;
   links: Links;
   map_versions: MapVersions;
   maps: Maps;

@@ -38,8 +38,7 @@ export function committeeReport(input: unknown) {
       assessment.rationale,
     ];
   });
-  const frameworks = list(sections.frameworks),
-    mappings = list(sections.mappings);
+  const frameworks = list(sections.frameworks);
   const taskSummary = record(record(sections.tasks).summary);
   return `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Comité de pilotage — ${escape(scope.name)}</title><body><main>
     <h1>Rapport de pilotage et audit</h1><h2>${escape(scope.name)}</h2><p>Périmètre : ${escape(scope.scope)}</p><p>Généré le ${escape(report.generatedAt)} par ${escape(report.generatedBy)}. Politique métier : version ${escape(record(report.policy).version)}.</p>
@@ -62,12 +61,6 @@ export function committeeReport(input: unknown) {
               f.version,
               record(f.data).enabled ? 'Activé' : 'Désactivé',
             ]),
-          )}<h2>Correspondances validées</h2>${table(
-            ['Nom', 'Relation', 'Couverture justifiée (%)', 'Justification', 'Validation par', 'Date'],
-            mappings.map((m) => {
-              const d = record(m.data);
-              return [m.name, d.type, d.coverage, d.justification, d.validatedBy, d.validatedAt];
-            }),
           )}`
         : ''
     }

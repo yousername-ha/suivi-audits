@@ -660,7 +660,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
     <Stack>
       <ErrorAlert error={error ?? q.error} />
       {q.data
-        ?.filter((n) => n.smsiId === smsi && n.kind !== 'rapprochement')
+        ?.filter((n) => n.smsiId === smsi)
         .map((n) => (
           <Card key={n.id} withBorder>
             <Text fw={600}>{n.title}</Text>
