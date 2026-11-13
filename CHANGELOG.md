@@ -66,7 +66,7 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 - **Droits (campagne de recette du 12 et 13/11/2026, lot 1)** :
   - **BUG-051, accès aux périmètres hiérarchiques** ([ADR 0092](docs/adr/0092-acces-aux-perimetres-hierarchiques.md), qui amende l'ADR 0039) : un compte rattaché à un périmètre
     enfant ne voit que ce périmètre (et ses descendants), plus le parent ni la racine ; rattaché au parent, il voit le parent et ses enfants, avec le droit d'écriture de son
-    rattachement. Un compte sans aucun rattachement garde le périmètre commun. Règle unique en base (migration `060`, fonctions de lecture seules), reprise par les
+    rattachement. Un compte sans aucun rattachement ne voit aucun périmètre (la migration `060` rattache au périmètre commun les comptes existants qui n'ont aucun rattachement) ; un compte créé ensuite doit être rattaché. Règle unique en base (migration `060`, fonctions de lecture seules), reprise par les
     périmètres listés, les responsables proposables et les notifications d'échéance. **Un compte rattaché à un enfant perd l'accès au périmètre commun** : le rattacher aussi
     au parent pour le lui rendre.
   - **BUG-049, archivage des registres** : seul le gestionnaire du registre (ou un administrateur) l'archive, et le désarchive par la nouvelle commande

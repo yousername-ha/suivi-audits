@@ -26,10 +26,10 @@ beforeAll(async () => {
     })
   ).json().id;
   const comptes = {
-    membre: await makeUser(t, 'ip_membre', 'rw'),
-    autre: await makeUser(t, 'ip_autre', 'rw'),
+    membre: await makeUser(t, 'ip_membre', 'rw', { rattache: false }),
+    autre: await makeUser(t, 'ip_autre', 'rw', { rattache: false }),
     libre: await makeUser(t, 'ip_libre', 'rw'),
-    parent: await makeUser(t, 'ip_parent', 'rw'),
+    parent: await makeUser(t, 'ip_parent', 'rw', { rattache: false }),
   };
   expect((await admin.put(`/api/grc/${enfant}/members`, { userId: comptes.membre.id, write: true })).statusCode).toBe(
     204,

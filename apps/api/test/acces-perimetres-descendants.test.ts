@@ -6,7 +6,7 @@ import { createTestApp, login, makeUser, type Agent, type TestApp } from './help
 
 const RACINE = '00000000-0000-4000-8000-000000000001';
 let t: TestApp, admin: Agent, parent: string, enfant: string, petitEnfant: string, frere: string;
-let seulEnfant: Agent, duParent: Agent, enLecture: Agent, libre: Agent;
+let seulEnfant: Agent, duParent: Agent, enLecture: Agent, libre: Agent, nu: Agent;
 
 async function creer(nom: string, parentId: string | null) {
   const r = await admin.post('/api/grc/smsis', {
@@ -29,10 +29,11 @@ beforeAll(async () => {
   petitEnfant = await creer('Petit-enfant fictif', enfant);
   frere = await creer('Frère fictif', parent);
   const comptes = {
-    enfant: await makeUser(t, 'p51_enfant', 'rw'),
-    parent: await makeUser(t, 'p51_parent', 'rw'),
-    lecture: await makeUser(t, 'p51_lecture', 'rw'),
+    enfant: await makeUser(t, 'p51_enfant', 'rw', { rattache: false }),
+    parent: await makeUser(t, 'p51_parent', 'rw', { rattache: false }),
+    lecture: await makeUser(t, 'p51_lecture', 'rw', { rattache: false }),
     libre: await makeUser(t, 'p51_libre', 'rw'),
+    nu: await makeUser(t, 'p51_nu', 'rw', { rattache: false }),
   };
   for (const [u, smsi, write] of [
     [comptes.enfant, enfant, true],
@@ -46,6 +47,7 @@ beforeAll(async () => {
   duParent = await login(t, comptes.parent);
   enLecture = await login(t, comptes.lecture);
   libre = await login(t, comptes.libre);
+  nu = await login(t, comptes.nu);
 });
 afterAll(() => t.close());
 
@@ -79,7 +81,11 @@ describe('compte rattaché au périmètre parent', () => {
 });
 
 describe('compte sans rattachement et administrateur', () => {
-  it('le compte libre garde la racine ouverte à toute l’organisation, pas les périmètres restreints', async () => {
+  it('un compte sans aucun rattachement ne voit aucun périmètre', async () => {
+    expect((await nu.get('/api/grc/smsis')).json()).toEqual([]);
+    expect((await nu.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(404);
+  });
+  it('le compte rattaché à la racine y reste, sans voir les périmètres restreints', async () => {
     expect((await libre.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(200);
     expect((await libre.get(`/api/grc/${enfant}/objects?kind=stakeholder`)).statusCode).toBe(404);
   });

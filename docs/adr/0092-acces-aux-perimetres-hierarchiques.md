@@ -17,9 +17,10 @@ ses enfants : l'appartenance ne se propageait pas.
    descendants) ; rattaché au parent, il voit le parent et les enfants qui lui sont rattachés.
 2. **Droit d'écriture** : celui du rattachement qui ouvre le périmètre (écriture sur le parent = écriture sur les descendants ; lecture
    seule sur le parent = lecture seule sur les descendants). Un rattachement direct à l'enfant peut accorder plus que le parent.
-3. **Un compte sans aucun rattachement** garde l'accès aux périmètres de visibilité `instance` (le périmètre commun « Toute
-   l'organisation »), comme avant : les installations dont les comptes ne sont rattachés à rien sont inchangées. Dès qu'un compte
-   reçoit un rattachement, il perd cet accès par défaut aux périmètres `instance` qu'il n'a pas reçus par rattachement.
+3. **Un compte sans aucun rattachement ne voit aucun périmètre** (précision du RSSI, 13/11/2026). La visibilité `instance` du périmètre
+   commun n'ouvre plus rien d'elle-même. Pour que la mise à jour ne retire l'accès à personne, la migration `060` rattache au périmètre
+   commun, en écriture, chaque compte existant qui n'a aucun rattachement (ce que lui donnait `instance` ; ses rôles continuent de
+   borner ses droits). Un compte créé ensuite doit être rattaché explicitement (écran « Accès au périmètre »).
 4. **Administrateurs inchangés** : ils ouvrent tous les périmètres (isAdmin).
 5. **Une seule source de la règle** : trois fonctions SQL (migration `060`) — `grc_smsi_ouvert(compte, périmètre)`,
    `grc_smsi_ecrivable(compte, périmètre)` et `grc_smsi_ascendance(périmètre)` — utilisées par `Grc.access`, `Grc.listSmsis`, les
@@ -31,7 +32,7 @@ ses enfants : l'appartenance ne se propageait pas.
 ## Conséquences
 
 - Le compte rattaché à un enfant n'a plus accès au périmètre commun : les fiches communes (processus, registres historiques) lui sont
-  fermées. Pour lui donner accès aux deux, le rattacher aussi au parent (ou à la racine). L'écran « Accès au périmètre » indique les
+  fermées. Pour lui donner accès aux deux, le rattacher aussi au parent (ou à la racine). Un compte neuf, non rattaché, ne voit rien. L'écran « Accès au périmètre » indique les
   membres directs ; l'héritage descendant n'y apparaît pas comme une ligne.
 - Retour arrière : les trois fonctions sont supprimables sans toucher aux données ; une version antérieure ignore la propagation.
 - Tests : `apps/api/test/acces-perimetres-descendants.test.ts` ; harnais du RSSI virtuel, `CAMP-T1-01` et `CAMP-T1-02`.

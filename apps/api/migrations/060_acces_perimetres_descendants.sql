@@ -1,5 +1,7 @@
 -- ADR 0092 (amende l'ADR 0039) : un compte rattaché à un périmètre voit ce périmètre et ses descendants, rien d'autre.
--- Un compte sans aucun rattachement garde l'accès aux périmètres ouverts à toute l'organisation (visibilité « instance »).
+-- Un compte sans aucun rattachement ne voit aucun périmètre (décision du RSSI du 13/11/2026). Pour que la mise à jour ne
+-- retire l'accès à personne, chaque compte existant sans rattachement est rattaché au périmètre commun, en écriture (ce
+-- que lui donnait la visibilité « instance » ; ses rôles continuent de borner ses droits).
 -- Fonctions pures de lecture : aucune donnée n'est modifiée ; une version antérieure ignore ces fonctions.
 
 CREATE OR REPLACE FUNCTION grc_smsi_ascendance(s uuid) RETURNS TABLE(id uuid)
@@ -31,18 +33,20 @@ LANGUAGE sql STABLE AS $$
 $$;
 
 -- Le compte peut-il ouvrir le périmètre (hors administrateur) ? Rattaché : ce périmètre et ses descendants.
--- Sans aucun rattachement : les périmètres de visibilité « instance ».
 CREATE OR REPLACE FUNCTION grc_smsi_ouvert(u uuid, s uuid) RETURNS boolean
 LANGUAGE sql STABLE AS $$
   SELECT grc_est_admin(u) OR grc_smsi_rattache(u, s, false)
-    OR (EXISTS (SELECT 1 FROM grc_smsis g WHERE g.id = s AND g.visibility = 'instance')
-        AND NOT EXISTS (SELECT 1 FROM grc_members m WHERE m.user_id = u))
 $$;
 
 -- Le compte peut-il écrire dans le périmètre (hors administrateur) ?
 CREATE OR REPLACE FUNCTION grc_smsi_ecrivable(u uuid, s uuid) RETURNS boolean
 LANGUAGE sql STABLE AS $$
   SELECT grc_est_admin(u) OR grc_smsi_rattache(u, s, true)
-    OR (EXISTS (SELECT 1 FROM grc_smsis g WHERE g.id = s AND g.visibility = 'instance')
-        AND NOT EXISTS (SELECT 1 FROM grc_members m WHERE m.user_id = u))
 $$;
+
+INSERT INTO grc_members (smsi_id, user_id, can_write)
+SELECT '00000000-0000-4000-8000-000000000001', u.id, true
+FROM users u
+WHERE EXISTS (SELECT 1 FROM grc_smsis WHERE id = '00000000-0000-4000-8000-000000000001')
+  AND NOT EXISTS (SELECT 1 FROM grc_members m WHERE m.user_id = u.id)
+ON CONFLICT DO NOTHING;

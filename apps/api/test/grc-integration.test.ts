@@ -297,10 +297,11 @@ it('compare à une date antérieure, pagine l’historique des appréciations et
   const d = methodTemplate('custom'),
     m = await publish(d);
   const r = (await a.post(root() + '/objects', { ...risk(m.methodId), name: 'Risque comparé' })).json();
+  // Le niveau est imposé par la matrice (BUG-024) : « low » et « high » se choisissent par gravité et vraisemblance.
   const rating = (level: string) => ({
-    dimensions: { severity: 'impact_2' },
-    likelihood: 'likelihood_2',
-    level,
+    dimensions: { severity: level === 'low' ? 'impact_1' : 'impact_4' },
+    likelihood: level === 'low' ? 'likelihood_1' : 'likelihood_4',
+    level: null,
     inputs: {},
   });
   const evaluer = async (level: string, version: number, requestId = crypto.randomUUID()) => {
