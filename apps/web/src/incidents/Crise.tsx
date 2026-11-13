@@ -695,7 +695,7 @@ export function ScenariosCrise() {
                 </Table.Thead>
                 <Table.Tbody>
                   {sc.items.map((x, k) => (
-                    <Table.Tr key={`${k}-${x.t}`}>
+                    <Table.Tr key={k}>
                       <Table.Td>
                         <ChampChoix
                           ariaLabel={`Phase de l’action ${k + 1}`}

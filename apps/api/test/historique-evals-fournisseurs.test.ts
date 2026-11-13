@@ -1,5 +1,6 @@
 /* Reprise des évaluations de sécurité des fournisseurs par le clausier (clé `supEvals`) : écritures natives sous verrou,
    points applicables selon les chapitres cochés, note indicative, action des écarts avec le droit des écarts. */
+import { identifiantActionFournisseur } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
@@ -92,6 +93,19 @@ describe('évaluations par le clausier', () => {
     const points = f.desc.split('\n').filter((l: string) => l.startsWith('- Clausier O-'));
     expect(points).toHaveLength(2);
     expect((await writer.post('/api/evaluations-clausier/EVAL-ancienne/action')).statusCode).toBe(409);
+  });
+  it('un identifiant d’écart archivé n’est jamais réattribué (BUG-077)', async () => {
+    const natif = await t.svc.db.one<{ id: string; version: number }>(
+      "SELECT id, version FROM grc_objects WHERE legacy_key='findings' AND legacy_id='FOU-01'",
+    );
+    const archive = await admin.del(`/api/grc/00000000-0000-4000-8000-000000000001/objects/${natif!.id}`, {
+      'if-match': `"${natif!.version}"`,
+    });
+    expect(archive.statusCode, archive.body).toBeLessThan(300);
+    expect((await etat()).findings).toEqual([]);
+    const pris = await t.svc.db.tx((c) => t.svc.historique.registre.identifiantsEcartsPris(c, []), 'test');
+    expect(pris).toContain('FOU-01');
+    expect(identifiantActionFournisseur(pris)).toBe('FOU-02');
   });
   it('conserve les champs inconnus et supprime une évaluation', async () => {
     expect(

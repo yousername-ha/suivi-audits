@@ -101,6 +101,7 @@ export function ChampChoix({
     <Select
       label={label}
       aria-label={ariaLabel}
+      className="champ-choix"
       disabled={disabled}
       allowDeselect={!!effacable}
       clearable={!!effacable}
@@ -112,8 +113,7 @@ export function ChampChoix({
   );
 }
 
-/** Lecture et écriture d'un module repris : requête de la vue, appel d'écriture qui rafraîchit la vue. */
-/** `cle` peut porter un complément après « : » (le périmètre affiché, par exemple) : les requêtes du même module se
+/** Lecture et écriture d'un module repris : requête de la vue, appel d'écriture qui rafraîchit la vue. `cle` peut porter un complément après « : » (le périmètre affiché, par exemple) : les requêtes du même module se
     renouvellent ensemble, quel que soit le complément. */
 export function useModule<T>(cle: string, url: string) {
   const qc = useQueryClient();

@@ -50,6 +50,27 @@ describe('référentiels (BUG-047, BUG-048)', () => {
   });
 });
 
+describe('sauvegardes (BUG-072)', () => {
+  it('refuse une date de test de restauration dans le futur, accepte aujourd’hui et le passé', async () => {
+    const s = await section(A, 'sauvegardes');
+    const futur = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+    const refus = await A.put(
+      '/api/settings/sauvegardes',
+      { ...s.values, dernierTestRestauration: futur },
+      { 'if-match': s.etag },
+    );
+    expect(refus.statusCode, refus.body).toBe(422);
+    expect(refus.body).toMatch(/futur/);
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const ok = await A.put(
+      '/api/settings/sauvegardes',
+      { ...s.values, dernierTestRestauration: aujourdhui },
+      { 'if-match': s.etag },
+    );
+    expect(ok.statusCode, ok.body).toBe(200);
+  });
+});
+
 describe('paramètres', () => {
   it('dix sections, valeurs par défaut issues de la configuration', async () => {
     const r = await A.get('/api/settings');

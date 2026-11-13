@@ -1,3 +1,10 @@
+import { libelleAcceptabilite, libelleEtatAppreciation, libelleOptionTraitement } from '@suivi/shared';
+
+/** Horodatage ISO affiché « jj/mm/aaaa hh:mm » (sans fuseau ni fraction de seconde). */
+const horodatageFr = (v: unknown) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(v ?? ''));
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : String(v ?? '');
+};
 const escape = (value: unknown) =>
   String(value ?? '').replace(
     /[&<>"']/g,
@@ -28,13 +35,13 @@ export function committeeReport(input: unknown) {
       data.methodVersion,
       gross.label,
       residual.label,
-      residual.acceptability,
-      data.strategy,
+      libelleAcceptabilite(residual.acceptability),
+      libelleOptionTraitement(data.strategy),
       data.reviewAt,
       assessment.revision,
-      assessment.decision,
+      libelleEtatAppreciation(assessment.decision),
       assessment.created_by,
-      assessment.created_at,
+      horodatageFr(assessment.created_at),
       assessment.rationale,
     ];
   });

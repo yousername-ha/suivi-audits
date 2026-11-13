@@ -767,14 +767,16 @@ function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onD
               label={k.label}
               description={k.description || undefined}
               checked={!!c}
-              onChange={(e) =>
+              onChange={(e) => {
+                // La valeur est lue avant la mise à jour d'état : l'événement n'est plus valable ensuite (BUG-054).
+                const coche = e.currentTarget.checked;
                 setChoix((v) => {
                   const next = { ...v };
-                  if (e.currentTarget.checked) next[k.id] = { meets: 'nonevalue', result: '' };
+                  if (coche) next[k.id] = { meets: 'nonevalue', result: '' };
                   else delete next[k.id];
                   return next;
-                })
-              }
+                });
+              }}
             />
             {c && (
               <Group grow align="flex-start">
@@ -788,7 +790,10 @@ function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onD
                 <TextInput
                   label={`Résultat pour « ${k.label} »`}
                   value={c.result}
-                  onChange={(e) => setChoix((x) => ({ ...x, [k.id]: { ...c, result: e.currentTarget.value } }))}
+                  onChange={(e) => {
+                    const valeur = e.currentTarget.value;
+                    setChoix((x) => ({ ...x, [k.id]: { ...c, result: valeur } }));
+                  }}
                 />
               </Group>
             )}

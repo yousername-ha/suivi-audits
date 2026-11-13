@@ -50,4 +50,25 @@ describe('administration : requêtes', () => {
     const etat = await t.svc.db.one<{ data: { fournisseurs: unknown[] } }>('SELECT data FROM app_state WHERE id=1');
     expect(etat!.data.fournisseurs).toEqual([{ id: 'f1' }]);
   });
+
+  it('une version contient aussi les modules repris dans des tables, et les restaure (BUG-073)', async () => {
+    await seedState(t, {
+      incidents: [{ id: 'INC-2026-777', title: 'Incident fictif de la version', status: 'Nouveau' }],
+    });
+    await seedState(t, {
+      incidents: [
+        { id: 'INC-2026-777', title: 'Incident fictif de la version', status: 'Nouveau' },
+        { id: 'INC-2026-778', title: 'Second incident fictif', status: 'Nouveau' },
+      ],
+    });
+    const versions = (await a.get('/api/admin/versions')).json() as { version: number }[];
+    const precedente = versions[1]!;
+    const telecharge = await a.get(`/api/admin/versions/${precedente.version}`);
+    expect(telecharge.statusCode).toBe(200);
+    expect(telecharge.body.length).toBeGreaterThan(5);
+    expect((JSON.parse(telecharge.body).incidents as { id: string }[]).map((x) => x.id)).toEqual(['INC-2026-777']);
+    expect((await a.post(`/api/admin/versions/${precedente.version}/restore`)).statusCode).toBe(200);
+    const apres = ((await t.svc.legacy.recompose())!.data.incidents as { id: string }[]).map((x) => x.id);
+    expect(apres).toEqual(['INC-2026-777']);
+  });
 });

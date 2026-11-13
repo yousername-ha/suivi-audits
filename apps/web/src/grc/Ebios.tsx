@@ -6,6 +6,7 @@ import {
   ECHELLE_GRAVITE,
   ECHELLE_VRAISEMBLANCE,
   GRC_LABELS,
+  libelleOptionTraitement,
   type GrcKind,
   type GrcObject,
   type PilotageRecord,
@@ -105,7 +106,7 @@ function resume(o: ObjetEtude, noms: Map<string, string>) {
     case 'treatment':
       return `Risques traités : ${liste(o.data.riskRefs)}`;
     case 'risk':
-      return `Option : ${String(o.data.strategy ?? '—')}`;
+      return `Option : ${libelleOptionTraitement(o.data.strategy) || '—'}`;
     default:
       return String(o.data.description ?? '') || '—';
   }

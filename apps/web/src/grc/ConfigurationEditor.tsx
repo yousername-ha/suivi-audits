@@ -158,7 +158,7 @@ export function ConfigurationEditor({
             </div>
             <Button
               variant="subtle"
-              aria-label={`Retirer ${path} ${i + 1}`}
+              aria-label={`Retirer ${(labels[last] ?? last).toLowerCase()} ${i + 1}`}
               onClick={() => onChange(value.filter((_, j) => j !== i))}
             >
               Retirer

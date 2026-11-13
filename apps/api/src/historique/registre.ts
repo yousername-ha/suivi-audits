@@ -39,6 +39,18 @@ export class RegistreHistorique {
     }
   }
 
+  /** Identifiants historiques d'écarts déjà attribués, écarts archivés compris : un identifiant n'est jamais réattribué
+      (contrainte d'unicité sur `legacy_id`, BUG-077). `visibles` : ceux de la projection `findings` de l'état. */
+  async identifiantsEcartsPris(c: Client, visibles: readonly string[] = []): Promise<string[]> {
+    const rows = await surConnexion(c)
+      .selectFrom('grc_objects')
+      .select('legacy_id')
+      .where('legacy_key', '=', 'findings')
+      .where('smsi_id', '=', DEFAULT_SMSI)
+      .execute();
+    return [...new Set([...visibles, ...rows.flatMap((r) => (r.legacy_id ? [r.legacy_id] : []))])];
+  }
+
   /** Crée un écart natif (non-conformité) dans le périmètre commun, dans la transaction en cours. Le droit des écarts est
       contrôlé par l'appelant (`droits: ['ecarts']`). */
   async creerEcart(c: Client, user: SessionUser, ip: string, e: NouvelEcart): Promise<string> {

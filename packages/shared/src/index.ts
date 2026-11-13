@@ -24,6 +24,7 @@ export * from './responsables.js';
 export * from './hierarchie-perimetres.js';
 export * from './couverture.js';
 export * from './risk-methods.js';
+export * from './libelles-valeurs.js';
 export * from './method-bindings.js';
 export * from './recurrence.js';
 export * from './periodicites.js';

@@ -1,7 +1,13 @@
 import { Alert, Button, Card, Modal, Select, Stack, Textarea, Text } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type GrcObject, type MethodRating, type RiskMethod, type RiskRatings } from '@suivi/shared';
+import {
+  libelleAcceptabilite,
+  type GrcObject,
+  type MethodRating,
+  type RiskMethod,
+  type RiskRatings,
+} from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
@@ -210,10 +216,11 @@ export function RiskEvaluation({ smsi, risk, onClose }: { smsi: string; risk: Gr
             {preview && (
               <Card withBorder>
                 <Text>
-                  Brut : {preview.result.gross.label} · {preview.result.gross.acceptability}
+                  Brut : {preview.result.gross.label} · {libelleAcceptabilite(preview.result.gross.acceptability)}
                 </Text>
                 <Text>
-                  Résiduel : {preview.result.residual.label} · {preview.result.residual.acceptability}
+                  Résiduel : {preview.result.residual.label} ·{' '}
+                  {libelleAcceptabilite(preview.result.residual.acceptability)}
                 </Text>
                 <Button onClick={() => setConfirm(true)}>Enregistrer cette décision</Button>
               </Card>

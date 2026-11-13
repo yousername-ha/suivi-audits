@@ -186,7 +186,12 @@ export class Incidents {
       async (data, c) => {
         const i = await this.trouver(data, id, user);
         if (str(i.findingId)) throw new HttpError(409, `Une action existe déjà : ${str(i.findingId)}.`);
-        const fid = identifiantActionIncident(entrees(data, 'findings').map((f) => str(f.id)));
+        const fid = identifiantActionIncident(
+          await this.r.identifiantsEcartsPris(
+            c,
+            entrees(data, 'findings').map((f) => str(f.id)),
+          ),
+        );
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
         await this.r.creerEcart(c, user, ip, {
           id: fid,

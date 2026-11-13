@@ -597,3 +597,19 @@ describe('Pilotage multi-référentiels G/H/K et début E', () => {
     expect((await a.get(`/api/grc/${scope.id}/pilotage/legacy/findings`)).statusCode).toBe(404);
   });
 });
+
+describe('plans de continuité et module « Incidents et PCA/PRA » (BUG-076)', () => {
+  it('un compte limité au module incidents lit les plans de continuité, pas le reste du pilotage', async () => {
+    const plan = await a.post(base + '/objects', {
+      kind: 'continuity_plan',
+      name: 'PRA fictif du module incidents',
+      data: { planType: 'pra' },
+    });
+    expect(plan.statusCode, plan.body).toBeLessThan(300);
+    const restreint = await login(t, await makeUser(t, 'pil_incidents_seul', 'ro', { modules: ['incidents'] }));
+    const r = await restreint.get(base + '/objects?kind=continuity_plan');
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().items.map((x: { name: string }) => x.name)).toContain('PRA fictif du module incidents');
+    expect((await restreint.get(base + '/objects?kind=control')).statusCode).toBe(403);
+  });
+});

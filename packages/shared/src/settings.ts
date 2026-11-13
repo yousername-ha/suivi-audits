@@ -92,7 +92,12 @@ export const ImportExportSettings = z.object({
 });
 export const SauvegardesSettings = z.object({
   emplacement: txt(300),
-  dernierTestRestauration: optDate,
+  // Un test de restauration ne peut pas être daté du futur : l'alerte « Test de restauration à faire » disparaîtrait (BUG-072).
+  // Un jour de marge couvre le décalage entre fuseaux.
+  dernierTestRestauration: optDate.refine(
+    (d) => d === '' || d <= new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
+    'La date du dernier test de restauration ne peut pas être dans le futur.',
+  ),
   frequenceTestMois: z.number().int().min(1).max(36),
 });
 /** Durées de conservation (décision 2 du 25/10/2026) : nombre de jours après lesquels un élément devient candidat à une purge ;

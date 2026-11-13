@@ -29,6 +29,8 @@ export interface EcheanceCrise {
 }
 export interface CelluleCrise {
   id: string;
+  /** Périmètre de la cellule (vide : périmètre commun, pour les cellules ouvertes avant que le périmètre existe). */
+  smsi: string;
   title: string;
   mode: string;
   scenario: string;
@@ -99,6 +101,7 @@ export function lireEtatCrise(brut: unknown): EtatCrise {
       .filter((x) => str(x.id))
       .map((x) => ({
         id: str(x.id),
+        smsi: str(x.smsi),
         title: str(x.title),
         mode: str(x.mode) || 'Exercice',
         scenario: str(x.scenario),

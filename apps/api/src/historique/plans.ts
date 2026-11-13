@@ -227,9 +227,12 @@ export class Plans {
         const plan = lireActionPlan(this.trouver(data, id))!;
         if (plan.type !== 'exo')
           throw new HttpError(422, 'Seul un exercice crée une action dans le registre des écarts.');
-        const ecarts = entrees(data, 'findings');
+        const pris = await this.r.identifiantsEcartsPris(
+          c,
+          entrees(data, 'findings').map((f) => str(f.id)),
+        );
         let n = 1;
-        while (ecarts.some((f) => f.id === `EXO-${String(n).padStart(2, '0')}`)) n++;
+        while (pris.includes(`EXO-${String(n).padStart(2, '0')}`)) n++;
         const ecart = `EXO-${String(n).padStart(2, '0')}`;
         const mesures = new Set(entrees(data, 'items').map((m) => str(m.id)));
         await this.r.creerEcart(c, user, ip, {

@@ -183,7 +183,12 @@ export class EvaluationsClausier {
         const ecarts = ecartsEvaluation(pointsEvaluation(CLAUSIER_2026, lue.cases), lue);
         if (!ecarts.length) throw new HttpError(409, 'Aucun écart dans cette évaluation.');
         const sp = entrees(data, 'suppliers').find((s) => s.id === lue.supplier);
-        const fid = identifiantActionFournisseur(entrees(data, 'findings').map((f) => str(f.id)));
+        const fid = identifiantActionFournisseur(
+          await this.r.identifiantsEcartsPris(
+            c,
+            entrees(data, 'findings').map((f) => str(f.id)),
+          ),
+        );
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
         await this.r.creerEcart(c, user, ip, {
           id: fid,

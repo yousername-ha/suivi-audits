@@ -39,6 +39,7 @@ import { errorMessage } from '../api';
 import { ALIAS_ADMINISTRATION, cartesVisibles } from '../administration-droits';
 import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
+import { BandeauCrise } from '../incidents/BandeauCrise';
 import { alerteDeFamille, LibelleAlerte, useAlertesMenu } from '../pilotage/alertes-menu';
 import { OngletsRubriques } from './OngletsRubriques';
 import { useTriMenu } from './tri-menu';
@@ -306,6 +307,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <aside className="shell-nav">{navigation}</aside>
         <main className="shell-main app-main">
           <ErrorAlert error={logoutError} />
+          <BandeauCrise />
           <OngletsRubriques />
           {children}
         </main>

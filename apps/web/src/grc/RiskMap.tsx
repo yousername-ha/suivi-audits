@@ -1,7 +1,7 @@
 import { Alert, Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import type { GrcObject, RiskMethod } from '@suivi/shared';
+import { libelleAcceptabilite, libelleModeCalcul, type GrcObject, type RiskMethod } from '@suivi/shared';
 import { computeScene, emptyLayout, type CartoObject, type MapLayout, type ObjectLookup } from '@suivi/shared/carto';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -93,7 +93,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
         type: 'grc',
         name: item.name,
         sub: result
-          ? `${result.label}${item.method?.display.showAcceptability ? ' · ' + result.acceptability : ''}${item.method?.display.showScores && result.score !== null ? ' · ' + result.score : ''}`
+          ? `${result.label}${item.method?.display.showAcceptability ? ' · ' + libelleAcceptabilite(result.acceptability) : ''}${item.method?.display.showScores && result.score !== null ? ' · ' + result.score : ''}`
           : 'À apprécier',
         code: String(item.data.code ?? ''),
         std: [],
@@ -291,7 +291,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
                 </svg>
                 <Text size="sm">
                   {l.label}
-                  {m.display.showAcceptability ? ' · ' + l.acceptability : ''}
+                  {m.display.showAcceptability ? ' · ' + libelleAcceptabilite(l.acceptability) : ''}
                 </Text>
               </Group>
             ))}
@@ -406,8 +406,8 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
             ) : (
               <Text>
                 Cette méthode utilise{' '}
-                {m.calculation.kind === 'judgement' ? 'un jugement qualitatif' : 'des règles spécifiques'} : aucune
-                matrice artificielle.
+                {m.calculation.kind === 'judgement' ? `un ${libelleModeCalcul('judgement')}` : 'des règles spécifiques'}{' '}
+                : aucune matrice artificielle.
               </Text>
             )}
             {m.calculation.kind !== 'matrix' &&
