@@ -13,8 +13,17 @@ lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_hist
 valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
 « GAP — Applications » de la version précédente et relever les correspondances utiles.
 
+**Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
+**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants.
+
 ### Modifié
 
+- **Droits : pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), lot 1 de la refonte des droits) : l'accès donné
+  sur un périmètre (lecture, ou lecture et écriture) vaut désormais pour **tous ses périmètres enfants**, sans désignation un par un ; il ne remonte pas vers le parent
+  et ne passe pas aux périmètres voisins. Le niveau le plus élevé de la chaîne l'emporte. L'écran **Membres** d'un périmètre liste les comptes dont l'accès vient d'un
+  parent (« accès hérité d'un périmètre parent »), sans bouton de révocation. `GET /api/grc/:smsi/members` renvoie `herite` pour chaque ligne. Les droits de module,
+  le périmètre commun, les droits par registre et l'héritage des référentiels sont inchangés.
+  _(Session « Refonte des droits d'accès ».)_
 - **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
   « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
   onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**

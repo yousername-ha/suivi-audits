@@ -11,7 +11,9 @@ export function Members({ smsi }: { smsi: string }) {
   const members = useQuery({
     queryKey: ['grc', smsi, 'members'],
     queryFn: () =>
-      get<{ userId: string; username: string; displayName: string; write: boolean }[]>(`/api/grc/${smsi}/members`),
+      get<{ userId: string; username: string; displayName: string; write: boolean; herite?: boolean }[]>(
+        `/api/grc/${smsi}/members`,
+      ),
   });
   const users = useQuery({
     queryKey: ['grc', 'accounts'],
@@ -49,23 +51,26 @@ export function Members({ smsi }: { smsi: string }) {
         Attribuer l’accès
       </Button>
       {members.data?.map((m) => (
-        <Card withBorder key={m.userId}>
+        <Card withBorder key={m.userId + (m.herite ? ':herite' : '')}>
           <Text>
             {m.displayName || m.username} · {m.write ? 'Écriture' : 'Lecture'}
+            {m.herite ? ' · accès hérité d’un périmètre parent' : ''}
           </Text>
-          <Button
-            variant="subtle"
-            onClick={async () => {
-              try {
-                await api('DELETE', `/api/grc/${smsi}/members/${m.userId}`);
-                await qc.invalidateQueries({ queryKey: ['grc', smsi] });
-              } catch (e) {
-                setError(e);
-              }
-            }}
-          >
-            Révoquer l’accès
-          </Button>
+          {m.herite ? null : (
+            <Button
+              variant="subtle"
+              onClick={async () => {
+                try {
+                  await api('DELETE', `/api/grc/${smsi}/members/${m.userId}`);
+                  await qc.invalidateQueries({ queryKey: ['grc', smsi] });
+                } catch (e) {
+                  setError(e);
+                }
+              }}
+            >
+              Révoquer l’accès
+            </Button>
+          )}
         </Card>
       ))}
     </Stack>

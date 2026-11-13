@@ -1,7 +1,9 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
-> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive). Précédente :
+> **Reprise la plus récente : [13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md)** (refonte des droits, lot 1 : pyramide des
+> périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), migration `060` additive ; lots 2 et 3 en attente des
+> réponses du RSSI). Précédente : **[11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
+> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive) ; avant elle :
 > **[10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre
 > modules, [ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md) acceptée le 11/11/2026, garde-fous d'architecture, routes
 > découpées) ; avant elle : **[06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe, lots A à D) ; avant elle : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
