@@ -8,6 +8,35 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [7.1.1] — 2026-11-14
+
+Version corrective : aucune migration, aucune nouvelle dépendance. Elle termine la **refonte graphique Neon** (lots 3 à 8,
+[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) et sert un **logo par défaut** quand l'organisation n'en a pas.
+Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+Aucune action.
+
+### Modifié
+
+- **Refonte Neon, lots 3 à 8** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) : présentations validées portées
+  sur les écrans existants, sans changement de l'API ni des données. Lecture distincte des fiches Contexte, Parties intéressées
+  et Processus ; panorama des Parties intéressées et cartes des Processus ; Périmètres en graphe compact centré ; Objectifs et
+  indicateurs en vue compacte ; DdA en synthèse et mesures en lignes ; Bibliothèque de référentiels ; Fournisseurs en registre
+  compact ; SWOT en matrice reliée aux processus ; PESTEL en constellation ; Timeline des actions avec petite fenêtre de
+  validation sur les repères et Timeline adaptative des tâches récurrentes ; avatar HD et habillage final de l'Assistant RSSI ; barre d'outils discrète des registres (loupe, raccourci « / », pastilles
+  des critères actifs supprimables).
+  Fonctions, droits, filtres et sélecteurs existants conservés ; captures de référence régénérées et relues par le RSSI.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+### Corrigé
+
+- **Logo par défaut** : sans logo de l'organisation, `GET` et `HEAD /api/settings/logo` servent la marque de
+  l'application (SVG, en-tête `X-Logo: defaut`) au lieu d'une réponse 404, que le navigateur inscrivait en erreur à chaque
+  page depuis la refonte Neon ; l'en-tête garde la pastille, sans changement visuel. Constat R7-01 du rejeu de la version
+  7.0.0. _(Session « Campagne multi-agent RSSI virtuel », à la demande du RSSI.)_
+
 ## [7.1.0] — 2026-11-14
 
 Version mineure : dix migrations SQL additives (`055` à `057`, `063` à `069`) et une nouvelle dépendance de l'API (`pdfjs-dist`, acceptée par le RSSI).

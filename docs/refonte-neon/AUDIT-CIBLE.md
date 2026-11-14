@@ -52,13 +52,13 @@ Aucun travail en cours d'une autre session n'a été touché : la branche de tra
 | --- | ------------------------------------------------------------------------------------------- | ---------- |
 | 0   | Audit, matrice                                                                              | fait       |
 | 1   | Jetons Neon, menu bleu nuit opaque animé, Dashboard analytique                              | validé     |
-| 2   | Fenêtres (Biseau, voile extérieur), lignes ouvrables, `focus-fiche`                         | fait       |
-| 3   | Contexte, Périmètres compacts, Objectifs compacts                                           | à venir    |
-| 4   | Bibliothèque (présentation), DDA en lignes                                                  | à venir    |
-| 5   | SWOT, PESTEL, Parties intéressées, Processus, Fournisseurs                                  | à venir    |
-| 6   | Timeline Studio des actions et récurrences, validation rapide des occurrences               | à venir    |
-| 7   | Habillage de l'Assistant, après fusion de `claude/assistant-rssi`                           | reporté    |
-| 8   | Grille PC complète et harmonisation finale                                                  | à venir    |
+| 2   | Fenêtres (Biseau, voile extérieur), lignes ouvrables, `focus-fiche`                         | validé     |
+| 3   | Contexte, Périmètres compacts, Objectifs compacts                                           | fait       |
+| 4   | Bibliothèque (présentation), DDA en lignes                                                  | fait       |
+| 5   | SWOT, PESTEL, Parties intéressées, Processus, Fournisseurs                                  | fait       |
+| 6   | Timeline Studio des actions et récurrences, validation rapide des occurrences               | fait       |
+| 7   | Habillage de l'Assistant, après fusion de `claude/assistant-rssi`                           | fait       |
+| 8   | Grille PC complète et harmonisation finale                                                  | fait       |
 
 Rôles et responsabilités reste hors lot (proposition non validée). Chaque lot vérifie la grille PC (1024×768 à
 2560×1440, 1920×800, zoom 150 %), les deux thèmes, la pause et la préférence de mouvement réduit.

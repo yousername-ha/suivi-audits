@@ -184,6 +184,18 @@ describe('paramètres', () => {
     expect(st.nextDate).toBe('2027-03-15');
   });
 
+  it('logo : sans logo de l’organisation, le logo par défaut est servi (jamais 404)', async () => {
+    await A.req('DELETE', '/api/settings/logo');
+    for (const method of ['GET', 'HEAD'] as const) {
+      const r = await t.app.inject({ method, url: '/api/settings/logo' });
+      expect(r.statusCode, method).toBe(200);
+      expect(r.headers['content-type']).toContain('image/svg+xml');
+      expect(r.headers['x-logo']).toBe('defaut');
+    }
+    expect((await t.app.inject({ method: 'GET', url: '/api/settings/logo' })).body).toContain('<svg');
+    expect((await section(A, 'general')).info.logo).toBe(false);
+  });
+
   it('logo : PNG ou JPEG uniquement, servi publiquement', async () => {
     const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32)]);
     expect((await A.req('PUT', '/api/settings/logo', { body: Buffer.from('<svg/>') })).statusCode).toBe(422);
@@ -191,6 +203,7 @@ describe('paramètres', () => {
     const r = await t.app.inject({ method: 'GET', url: '/api/settings/logo' });
     expect(r.statusCode).toBe(200);
     expect(r.headers['content-type']).toBe('image/png');
+    expect(r.headers['x-logo']).toBe('organisation');
     expect((await section(A, 'general')).info.logo).toBe(true);
   });
 });

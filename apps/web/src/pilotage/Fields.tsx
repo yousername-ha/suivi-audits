@@ -7,6 +7,14 @@ import { ancienChamp, BlocEchelleScenario, estScenario, useEchelleScenario } fro
 import { BlocGravite, useGravite } from '../config-grc/Gravite';
 import { BlocPertinence, ConfigurationEtude, usePertinence } from '../config-grc/Pertinence';
 import { SocleEditeur } from '../grc/SocleEditeur';
+/** Contexte (refonte Neon, lot 3) : les deux champs restent des textes libres ; seule une catégorie écrite explicitement
+    classe ses lignes dans la présentation (categories-contexte.ts). */
+const AIDE_CATEGORIES_CONTEXTE: Record<string, string> = {
+  issues:
+    'Séparez les catégories par les titres « Enjeux internes : » et « Enjeux externes : », chacun sur sa ligne. Le reste apparaît dans « À préciser ».',
+  interfaces:
+    'Séparez les catégories par les titres « Interfaces : » et « Dépendances : », chacun sur sa ligne. Le reste apparaît dans « À préciser ».',
+};
 export interface Source {
   ref: string;
   name: string;
@@ -247,7 +255,7 @@ export function Fields({
       <Textarea
         key={f.key}
         label={f.label}
-        description={f.hint}
+        description={(kind === 'context' && AIDE_CATEGORIES_CONTEXTE[f.key]) || f.hint}
         rows={3}
         value={String(value ?? '')}
         onChange={(e) => onChange(f.key, e.currentTarget.value)}

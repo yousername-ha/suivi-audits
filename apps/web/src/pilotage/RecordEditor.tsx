@@ -30,6 +30,12 @@ import { Relations } from '../grc/Relations';
 import { MigrationEtude } from '../config-grc/MigrationEtude';
 import { SelecteurResponsable, useResponsables } from '../components/selecteurs';
 import { SelecteurRegistre } from '../registres/SelecteurRegistre';
+import { ContextPresentation } from './ContextPresentation';
+import { PartiePresentation } from './PartiePresentation';
+
+/** Lecture distincte (refonte Neon, ADR 0093, décision du RSSI du 13/11/2026) : une fiche existante de ces types s'ouvre
+    d'abord en présentation ; « Modifier » ouvre le formulaire ci-dessous. Les autres types gardent leur ouverture. */
+const LECTURE_DISTINCTE: readonly GrcKind[] = ['context', 'stakeholder'];
 export function RecordEditor({
   smsi,
   kind,
@@ -56,7 +62,16 @@ export function RecordEditor({
     [registreId, setRegistreId] = useState<string | null>(null),
     [error, setError] = useState<unknown>(null),
     [saving, setSaving] = useState(false),
-    [archivage, setArchivage] = useState(false);
+    [archivage, setArchivage] = useState(false),
+    [modification, setModification] = useState(false);
+  // Chaque ouverture (ou changement de fiche) repart de la présentation : réglé pendant le rendu, sans afficher le
+  // formulaire une image. À la fermeture, la fenêtre affichée reste la même jusqu'à la fin de sa transition.
+  const ouverture = opened ? (object?.id ?? '') : null;
+  const [ouvertureVue, setOuvertureVue] = useState(ouverture);
+  if (ouverture !== ouvertureVue) {
+    setOuvertureVue(ouverture);
+    if (ouverture !== null) setModification(false);
+  }
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
     queryFn: () => get<{ items: Source[] }>(`/api/grc/${smsi}/sources?search=${encodeURIComponent(search)}`),
@@ -162,11 +177,66 @@ export function RecordEditor({
   const options = [...(sources.data?.items ?? [])];
   for (const ref of refs)
     if (!options.some((s) => s.ref === ref)) options.push({ ref, name: 'Référence déjà liée', kind: '' });
+  const archivable = !!object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer');
+  const commandeArchivage = archivable && (
+    <div>
+      {!archivage ? (
+        <Button variant="subtle" onClick={() => setArchivage(true)}>
+          Archiver la fiche
+        </Button>
+      ) : (
+        <Alert>
+          <Text>Confirmer l’archivage ? Les décisions, preuves et historiques sont conservés.</Text>
+          <Group gap="xs">
+            <Button onClick={() => void archiver()}>Confirmer l’archivage</Button>
+            <Button variant="subtle" onClick={() => setArchivage(false)}>
+              Annuler
+            </Button>
+          </Group>
+        </Alert>
+      )}
+    </div>
+  );
+  const lectureDistincte = LECTURE_DISTINCTE.includes(kind) && !!object;
+  if (lectureDistincte && object && (!modification || readonly)) {
+    const Presentation = kind === 'context' ? ContextPresentation : PartiePresentation;
+    const responsable = owners.data?.find((o) => o.id === object.data.ownerId);
+    return (
+      <Presentation
+        smsi={smsi}
+        object={object}
+        opened={opened}
+        onClose={onClose}
+        onModify={
+          readonly
+            ? undefined
+            : () => {
+                // Le formulaire repart des valeurs enregistrées : un brouillon annulé n'est pas conservé.
+                setName(object.name);
+                setData({ ...object.data });
+                setError(null);
+                setArchivage(false);
+                setModification(true);
+              }
+        }
+        ownerLabel={
+          responsable?.displayName ||
+          responsable?.username ||
+          String(object.data.ownerLabel || (object.data.ownerId ? 'Responsable non disponible' : 'Non attribué'))
+        }
+        sources={options}
+        history={history.data}
+        historyLoading={history.isPending}
+        error={error ?? sources.error ?? owners.error ?? history.error}
+        archivage={commandeArchivage}
+      />
+    );
+  }
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`${object ? 'Fiche' : 'Ajouter'} — ${GRC_LABELS[kind]}`}
+      title={`${object ? (lectureDistincte ? 'Modifier' : 'Fiche') : 'Ajouter'} — ${GRC_LABELS[kind]}`}
       size="lg"
       closeButtonProps={{ 'aria-label': 'Fermer la fiche' }}
       classNames={{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}
@@ -293,29 +363,18 @@ export function RecordEditor({
             </Stack>
           </Tabs.Panel>
         </Tabs>
-        {object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer') && (
-          <div>
-            {!archivage ? (
-              <Button variant="subtle" onClick={() => setArchivage(true)}>
-                Archiver la fiche
-              </Button>
-            ) : (
-              <Alert>
-                <Text>Confirmer l’archivage ? Les décisions, preuves et historiques sont conservés.</Text>
-                <Group gap="xs">
-                  <Button onClick={() => void archiver()}>Confirmer l’archivage</Button>
-                  <Button variant="subtle" onClick={() => setArchivage(false)}>
-                    Annuler
-                  </Button>
-                </Group>
-              </Alert>
-            )}
-          </div>
-        )}
+        {commandeArchivage}
         <Group justify="flex-end" className="fenetre-actions">
-          <Button variant="default" onClick={onClose}>
-            Fermer
-          </Button>
+          {lectureDistincte ? (
+            // Retour à la présentation enregistrée, sans conserver le brouillon.
+            <Button variant="default" onClick={() => setModification(false)}>
+              Annuler
+            </Button>
+          ) : (
+            <Button variant="default" onClick={onClose}>
+              Fermer
+            </Button>
+          )}
           {!readonly && (
             <Button loading={saving} disabled={!name.trim()} onClick={() => void save()}>
               Enregistrer
