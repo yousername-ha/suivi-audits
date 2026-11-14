@@ -19,6 +19,7 @@ import { loadGrants } from '../src/rights.js';
 import type { PoivrePrepare } from '../src/mots-de-passe.js';
 import { hotp } from '../src/security/crypto.js';
 import { createServices, type Services } from '../src/services.js';
+import type { TransportModele } from '../src/assistant/modele.js';
 import { prepareDatabase } from '../src/startup.js';
 import { APP_ROLE, APP_ROLE_PASSWORD, createDatabase, dropDatabase, PG } from './pg.js';
 
@@ -51,7 +52,7 @@ export interface TestApp {
 
 export async function createTestApp(
   env: Record<string, string> = {},
-  opts: { migrate?: boolean; dbName?: string; poivre?: string | false } = {},
+  opts: { migrate?: boolean; dbName?: string; poivre?: string | false; modele?: TransportModele } = {},
 ): Promise<TestApp> {
   const dbName = opts.dbName ?? (await createDatabase());
   const cfg = loadConfig({
@@ -68,7 +69,7 @@ export async function createTestApp(
     APP_VERSION: '3.0.0-test',
     ...env,
   });
-  const svc = createServices(cfg, createLogger(process.env.TEST_LOG_LEVEL || 'silent'));
+  const svc = createServices(cfg, createLogger(process.env.TEST_LOG_LEVEL || 'silent'), { modele: opts.modele });
   if (opts.migrate !== false) {
     await prepareDatabase(svc, { issueToken: false });
     const poivre = opts.poivre ?? POIVRE_TEST;

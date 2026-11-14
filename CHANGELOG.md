@@ -6,7 +6,108 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `057` et `063` à `069`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
+`assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
+Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
+**partent chez le fournisseur du modèle** : ouvrir le flux sortant vers son hôte et n'ouvrir à l'assistant que les périmètres dont
+le contenu peut être confié à ce fournisseur. Les rôles personnalisés ne reçoivent pas le nouveau
+droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
+### Ajouté
+
+- **Assistant RSSI : liens enregistrés** : la recherche de l'assistant trouve aussi les liens de « Documents et liens » par leur
+  titre, leur description et leur adresse, et indique où se trouve une ressource. Il n'ouvre jamais la page visée.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : lecture des PDF** : le texte des PDF déposés est lu comme celui des autres documents (500 pages au plus).
+  Les PDF numérisés, protégés par mot de passe ou illisibles sont signalés « non lus ». Nouvelle dépendance de l'API,
+  `pdfjs-dist` (Mozilla, Apache-2.0), exécutée seulement dans le processus d'extraction isolé ; choix accepté par le RSSI le 12/11/2026.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : vue d'ensemble de la gouvernance** : l'assistant lit en un appel l'état de tous les périmètres (retards,
+  risques à revoir, couverture) et les échéances d'audit. Il lit aussi, avec les droits de la personne, le plan d'audit, les
+  incidents, les évaluations des fournisseurs et les applications à intégrer. Ces rubriques d'organisation ne sont ouvertes
+  qu'à un profil qui lit tous les périmètres. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : accès par défaut et réglages** : par défaut, les deux profils lisent tous les périmètres (y compris ceux
+  créés plus tard) et tous les documents, toujours dans la limite des droits de la personne ; un profil se restreint par une
+  liste de périmètres ou un niveau de classification. Chaque option de l'écran de réglages porte une explication.
+  **Corrigé** : après « Enregistrer », l'écran réaffichait les anciennes valeurs comme des modifications en attente ; il
+  montre maintenant ce qui est enregistré, et l'erreur éventuelle s'affiche à côté du bouton.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : présence dans toute la plateforme** : un bouton flottant en bas à droite ouvre un panneau de discussion
+  commun à toutes les rubriques, avec l'historique et une boîte personnelle « Pour vous » (questions reçues, rappels,
+  propositions). La discussion et les brouillons sont conservés en changeant de page. L'entrée de menu « Assistant RSSI »
+  disparaît ; la page `/assistant` devient le suivi des rondes, des propositions et des questions, et un lien direct vers
+  une conversation l'ouvre dans le panneau. Aucun changement du service. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Chargement d'un jeu de données externe** (instance de test vide) : `sudo ./scripts/dev/charger-jeu.sh <archive.zip>` charge un
+  jeu fourni par la personne (périmètre, processus, objectifs, fournisseurs, risques, actions, écarts, documents, liens,
+  contexte de l'assistant) par l'API publique, avec des dates relatives au jour du chargement. Nouvelle commande
+  `suivi charger-jeu`. Le dépôt ne contient aucun jeu. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Recette locale en une commande** (`sudo ./scripts/dev/recette-locale.sh`, poste de test seulement) : construit la branche,
+  démarre la pile sur `https://localhost` avec le relais de l'assistant et crée le compte administrateur sans assistant
+  d'installation. Nouvelle commande `suivi recette-locale`, refusée hors de `localhost` et dès qu'un administrateur existe ;
+  elle passe par la route d'installation normale. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : constats d'audit proposés** : le profil « Audit interne » propose des constats (observation,
+  non-conformité, opportunité) ; confirmé, le constat est créé en brouillon au nom de la personne qui décide. Ce profil ne
+  propose jamais d'action corrective. Un constat qui vise un élément issu d'une proposition de l'assistant est signalé.
+  Nouvel outil de lecture de l'applicabilité HDS. Jeu d'évaluation sur organisation fictive, résultats publiés
+  ([évaluation](docs/05_RECETTE/EVALUATION_ASSISTANT.md)). _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : lecture des documents** (inactive par défaut) : un profil autorisé cherche et lit le texte des documents
+  déposés (texte brut, docx, xlsx, pptx, odt, ods, odp), jusqu'au niveau de classification réglé (« interne » par défaut). Le
+  texte est extrait par un processus séparé et sans droits, puis gardé **en clair dans la base** pour la recherche ; il est
+  effacé avec la version, et entièrement dès qu'aucun profil n'est plus autorisé. PDF, anciens formats et images ne sont pas
+  lus. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : synthèse hebdomadaire et ronde sur événement** (inactives par défaut) : un bilan de la semaine le jour
+  choisi ; une ronde ciblée quand une action vient de dépasser son échéance ou qu'un écart est créé, au plus toutes les quatre
+  heures par profil. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : propositions d'action** : quand il estime qu'une action manque, l'assistant la propose au lieu de la créer.
+  Une personne autorisée (droit `assistant:modifier`) la corrige, la confirme ou la rejette ; l'action confirmée est créée à
+  son nom, avec ses droits. Une proposition rejetée n'est pas redéposée tant que l'élément concerné n'a pas changé.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : questions et relances** : pendant une ronde, l'assistant peut poser une question au responsable d'un
+  élément. La personne répond depuis Pilotage > Rappels, sans droit particulier ; la réponse est remise à l'assistant à la ronde
+  suivante. Sans réponse après le délai réglé (3 jours par défaut), la plateforme relance une fois, puis signale la question au
+  référent. Rappels et questions vont aussi aux membres du groupe ou de la fonction responsable. Nouveau type de notification
+  « Question de l'assistant RSSI ». _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : constat par la plateforme** : sous chaque rapport de ronde, la plateforme affiche elle-même les rappels
+  réellement envoyés ou refusés, les notes et les fiches écrites. Un premier essai avec un modèle réel a montré qu'un modèle
+  peut annoncer un rappel qu'il n'a pas envoyé. L'identifiant du responsable d'un élément n'est plus transmis au modèle.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : amélioration avec l'usage** (ADR 0086, second addendum du 12/11/2026) : fiches de méthode que l'assistant
+  propose et qu'il ne suit qu'après validation par le RSSI, contexte de l'organisation relu à chaque ronde et à chaque
+  conversation, avis « utile ou pas utile » sur chaque ronde et sur chaque rappel, tableau de mesure sur six mois. Aucun
+  entraînement de modèle : ces textes sont seulement relus. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI : rondes autonomes** (ADR 0086, addendum du 12/11/2026) : l'assistant peut travailler sans être interrogé.
+  Chaque jour à l'heure réglée, ou à la demande, il relève les retards et les manques de ses périmètres, envoie un rappel au
+  responsable nommé d'un élément, tient une mémoire et rend un rapport. Il n'écrit dans aucun registre. Une ronde lit avec les
+  droits du **référent** désigné pour le profil ; son rapport lui est réservé, ainsi qu'aux administrateurs de l'assistant.
+  Réglages : pause, heure de la ronde, plafond de rappels, missions, mémoire. Nouveau type de notification « Rappel de
+  l'assistant RSSI », réglable par personne. Aucune ronde ne part tant qu'un référent n'est pas désigné et la ronde
+  quotidienne activée. Non vérifié avec un modèle réel. _(Session « Assistant RSSI intégré plateforme »
+  (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Assistant RSSI intégré, premier lot** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md), acceptée ;
+  [cadrage](docs/unification/CADRAGE-ASSISTANT-RSSI.md)) : page « Assistant RSSI » où l'on dialogue avec un profil (« Mise en
+  œuvre » ou « Audit interne »). L'assistant lit la plateforme **avec les droits de la personne**, dans les seuls périmètres ouverts
+  au profil, par sept outils de lecture (périmètres, synthèse, listes, fiche, historique, actions en retard, couverture des
+  référentiels) ; il **n'écrit rien**. Chaque réponse montre les lectures faites et les éléments lus. Droit dédié `assistant`
+  (utiliser : `lire` ; régler : `administrer`), porté par les seuls rôles Administrateur et RSSI. Réglages dans Plateforme,
+  « Assistant RSSI » : adresse HTTPS d'un service de modèle compatible OpenAI, modèle, clé scellée en écriture seule, profils et
+  périmètres, budget quotidien de jetons, test de connexion. L'API garde zéro accès sortant : un service facultatif
+  `assistant-relais`, sans base ni secret, est seul à joindre le fournisseur. Journal d'audit `assistant.*` sans contenu.
+  Limites de ce lot : pas de propositions, de rappels ni de rondes autonomes (lots A2 et A3) ; contenu des documents non lu
+  (lot A4) ; réponse affichée en une fois ; **aucun appel à un fournisseur réel n'a été essayé** ; captures de référence de
+  l'écran des rôles à régénérer (nouveau module dans la matrice). (session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`))
+
+### Modifié
+
+- **Assistant RSSI : rappels et questions dans un périmètre enfant** : l'assistant joint aussi la personne qui tient son accès d'un
+  périmètre parent (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)), comme les rappels
+  d'échéance. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 
 ## [7.0.0] — 2026-11-14
 

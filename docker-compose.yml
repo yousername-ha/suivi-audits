@@ -125,7 +125,7 @@ services:
     volumes:
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
       - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat:/etat:ro
-    networks: [backend, edge, antivirus]
+    networks: [backend, edge, antivirus, assistant]
     read_only: true
     tmpfs: ['/tmp:size=16m']
     cap_drop: [ALL]
@@ -300,6 +300,35 @@ services:
       retries: 60
       start_period: 30s
 
+  # Assistant RSSI (ADR 0086), facultatif : docker compose --profile assistant up -d, puis ASSISTANT_RELAIS_URL dans .env.
+  # « assistant-relais » est le SEUL conteneur de l'assistant à sortir : il transmet les demandes de l'API au fournisseur du
+  # modèle réglé dans l'interface (HTTPS, certificat vérifié, adresses privées refusées). Même image que l'API, autre
+  # commande : aucun accès à la base, aucun secret monté, aucun fichier, aucune capacité Linux. L'API le joint sur le réseau
+  # interne « assistant » et garde zéro accès sortant.
+  assistant-relais:
+    <<: *hardening
+    image: *api-image
+    profiles: ['assistant']
+    command: ['node', 'dist/assistant-relais.js']
+    environment:
+      PORT: '8787'
+      # Modèle hébergé sur le réseau de l'organisation (adresse privée) : à autoriser explicitement, sur le serveur.
+      ASSISTANT_RELAIS_PRIVE: ${ASSISTANT_RELAIS_PRIVE:-false}
+    networks: [assistant, assistant_sortie]
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 256m
+    pids_limit: 100
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/sante').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 networks:
   public: {}
   edge: { internal: true }
@@ -307,6 +336,10 @@ networks:
   av_update: {}
   # clamd : joint par l'API seule (CLAMAV_HOST=clamav), sans accès à la base ni à Internet.
   antivirus: { internal: true }
+  # Relais de modèle de l'assistant : joint par l'API seule (ASSISTANT_RELAIS_URL), sans accès à la base.
+  assistant: { internal: true }
+  # Sortie du relais vers le fournisseur du modèle : aucun autre service n'y est relié.
+  assistant_sortie: {}
 
 # Aucun volume nommé : voir DATA_DIR ci-dessus. Les anciens volumes (pgdata, secrets, caddy_data, caddy_config,
 # clamav_db) sont repris par scripts/migrer-donnees-vers-dossier.sh.
