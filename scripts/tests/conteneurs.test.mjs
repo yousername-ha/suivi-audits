@@ -55,5 +55,21 @@ test("l'antivirus n'est relié qu'au réseau interne dédié, durci et sans priv
   assert.match(service('freshclam'), /CLAMAV_NO_CLAMD: 'true'/);
   // La base et la sortie Internet ne rejoignent jamais le réseau de l'antivirus.
   for (const nom of ['db', 'web', 'gateway', 'updater']) assert.doesNotMatch(service(nom), /antivirus/, nom);
-  assert.match(service('app'), /networks: \[backend, edge, antivirus\]/);
+  assert.match(service('app'), /networks: \[backend, edge, antivirus, assistant\]/);
+});
+
+test("le relais de l'assistant est facultatif, seul à sortir, durci, sans base ni secret (ADR 0086)", () => {
+  assert.match(compose, /^ {2}assistant: \{ internal: true \}/m);
+  assert.match(compose, /^ {2}assistant_sortie: \{\}/m);
+  const relais = service('assistant-relais');
+  assert.match(relais, /profiles: \['assistant'\]/);
+  assert.match(relais, /networks: \[assistant, assistant_sortie\]/);
+  assert.match(relais, /read_only: true/);
+  assert.match(relais, /cap_drop: \[ALL\]/);
+  assert.match(relais, /pids_limit: \d+/);
+  assert.doesNotMatch(relais, /cap_add|volumes:|env_file|secrets|backend|edge|antivirus|DB_HOST/);
+  // L'API ne rejoint que le réseau interne du relais ; aucun autre service ne rejoint la sortie de l'assistant.
+  assert.doesNotMatch(service('app'), /assistant_sortie/);
+  for (const nom of ['db', 'web', 'gateway', 'updater', 'clamav', 'freshclam'])
+    assert.doesNotMatch(service(nom), /assistant/, nom);
 });

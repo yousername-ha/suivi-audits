@@ -1,5 +1,7 @@
 /* Fournisseurs de l'organisation (ADR 0032, lot M4) : le registre est celui de l'outil historique, l'évaluation est
-   indépendante des périmètres, le rattachement à un périmètre ne porte aucune donnée d'évaluation. */
+   indépendante des périmètres, le rattachement à un périmètre ne porte aucune donnée d'évaluation.
+   Présentation « registre compact Studio » de la refonte Neon (lot 5, ADR 0093) : FournisseursStudio. Requêtes, droits,
+   écritures, fiche, évaluation, historique, suites et rattachements restent ceux de ce fichier. */
 import {
   Alert,
   Anchor,
@@ -18,58 +20,23 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, partSaas, type EtatSuivi, type ResumeControles } from '@suivi/shared';
-import { DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, partSaas } from '@suivi/shared';
+import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
-import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
+import { FournisseursStudio, PuceFournisseur } from './FournisseursStudio';
+import {
+  filtrerFournisseurs,
+  tonChamp,
+  type CertificatFournisseur,
+  type ChampFournisseur,
+  type ControleFournisseur,
+  type Fournisseur,
+} from './fournisseurs-types';
 
-export interface EvaluationCourante {
-  id: string;
-  evaluatedAt: string;
-  evaluator: string;
-  nextReviewAt: string | null;
-  items: number;
-  meets: number;
-  notMeets: number;
-  notAssessed: number;
-}
-interface CertificatFournisseur {
-  type: string;
-  validUntil?: string;
-  received?: string;
-  scope?: string;
-  location?: string;
-}
-interface ControleFournisseur {
-  id?: string;
-  t: string;
-  ref?: string;
-  freq?: number;
-  last?: string;
-  result?: string;
-  comment?: string;
-}
-export interface Fournisseur {
-  id: string;
-  name: string;
-  saas: boolean;
-  rattachement: string;
-  contact: string;
-  notes: string;
-  sso: string;
-  mfa: string;
-  critical: string;
-  hds: string;
-  certs: CertificatFournisseur[];
-  controls: ControleFournisseur[];
-  certificateState: EtatSuivi;
-  controlSummary: ResumeControles;
-  current: EvaluationCourante | null;
-  toReview: boolean;
-  scopes: string[];
-}
+export type { EvaluationCourante, Fournisseur } from './fournisseurs-types';
+
 export interface Critere {
   id: string;
   label: string;
@@ -102,8 +69,6 @@ const REPONSE: Record<string, string> = { oui: 'Répond', non: 'Ne répond pas',
 const versOption = (m: boolean | null) => (m === true ? 'oui' : m === false ? 'non' : 'nonevalue');
 const depuisOption = (v: string | null) => (v === 'oui' ? true : v === 'non' ? false : null);
 const jour = (d: Date) => d.toISOString().slice(0, 10);
-const NIVEAU: Record<string, Etat> = { ok: 'succes', mid: 'attention', bad: 'erreur', '': 'neutre' };
-const jourFr = (d: string | null) => (d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d.split('-').reverse().join('/') : '–');
 const FILTRES = [
   { value: 'all', label: 'Tous' },
   { value: 'nomfa', label: 'Sans MFA' },
@@ -113,8 +78,12 @@ const FILTRES = [
 ];
 const OPTIONS_SSO_MFA = ['', 'Oui', 'En cours', 'Non', 'N/A'].map((v) => ({ value: v, label: v || '–' }));
 const OPTIONS_OUI_NON = ['', 'Oui', 'Non', 'N/A'].map((v) => ({ value: v, label: v || '–' }));
-const classeOuiNon = (v: string): Etat =>
-  v === 'Oui' ? 'succes' : v === 'Non' ? 'erreur' : v === 'En cours' ? 'attention' : 'neutre';
+const LIBELLE_CHAMP: Record<ChampFournisseur, string> = {
+  sso: 'SSO',
+  mfa: 'MFA',
+  critical: 'Critique',
+  hds: 'Hébergeur HDS',
+};
 
 /** Liste « Fournisseurs et applications » : colonnes et filtres de l'outil de suivi (type, SSO, MFA, criticité, hébergeur
     HDS, certificats, contrôles, prochain contrôle), plus l'évaluation propre à l'organisation. */
@@ -144,7 +113,7 @@ export function Fournisseurs() {
       setErreur(e);
     }
   };
-  const modifierChamp = async (f: Fournisseur, champ: 'sso' | 'mfa' | 'critical' | 'hds', valeur: string | null) => {
+  const modifierChamp = async (f: Fournisseur, champ: ChampFournisseur, valeur: string | null) => {
     try {
       setErreur(null);
       await api('PATCH', `/api/suppliers/${encodeURIComponent(f.id)}`, { body: { [champ]: valeur ?? '' } });
@@ -155,230 +124,50 @@ export function Fournisseurs() {
     }
   };
   const tous = liste.data ?? [];
-  const affiches = tous.filter(
-    (f) =>
-      (filtre === 'all' ||
-        (filtre === 'nomfa' && f.mfa !== 'Oui') ||
-        (filtre === 'ctl' &&
-          f.controlSummary.enRetard + f.controlSummary.aRealiser + f.controlSummary.nonConformes > 0) ||
-        (filtre === 'cert' && ['bad', 'mid'].includes(f.certificateState[1])) ||
-        (filtre === 'crit' && f.critical === 'Oui')) &&
-      (type === 'all' || (type === 'saas' ? f.saas : !f.saas)) &&
-      (!recherche.trim() || f.name.toLowerCase().includes(recherche.trim().toLowerCase())),
-  );
+  const affiches = filtrerFournisseurs(tous, filtre, type, recherche);
   const mfa = partSaas(tous, 'mfa'),
     sso = partSaas(tous, 'sso');
-  const actifs = (filtre !== 'all' ? 1 : 0) + (type !== 'all' ? 1 : 0);
-  const cellule = (f: Fournisseur, champ: 'sso' | 'mfa' | 'critical' | 'hds') =>
+  // Édition directe des sélecteurs autorisés, sans ouvrir la ligne ; lecture seule : valeur colorée.
+  const cellule = (f: Fournisseur, champ: ChampFournisseur) =>
     modifier ? (
       <Select
         size="xs"
-        className="select-compact"
-        aria-label={`${{ sso: 'SSO', mfa: 'MFA', critical: 'Critique', hds: 'Hébergeur HDS' }[champ]} de ${f.name}`}
+        className="select-compact fs-select"
+        data-tone={tonChamp(champ, f[champ])}
+        aria-label={`${LIBELLE_CHAMP[champ]} de ${f.name}`}
         allowDeselect={false}
         data={champ === 'sso' || champ === 'mfa' ? OPTIONS_SSO_MFA : OPTIONS_OUI_NON}
         value={f[champ]}
         onChange={(v) => void modifierChamp(f, champ, v)}
       />
-    ) : f[champ] ? (
-      <StatusChip etat={classeOuiNon(f[champ])}>{f[champ]}</StatusChip>
     ) : (
-      '–'
+      <PuceFournisseur ton={tonChamp(champ, f[champ])}>{f[champ] || '–'}</PuceFournisseur>
     );
   return (
-    <Stack>
-      <Alert>
-        Les fournisseurs et leurs évaluations appartiennent à l’organisation, pas à un périmètre : un fournisseur évalué
-        l’est de la même façon dans tous les périmètres où il est rattaché. Les critères sont définis par vos soins ;
-        aucune grille ni aucun seuil n’est fourni. La fiche d’un fournisseur regroupe ses informations de suivi (MFA,
-        SSO, criticité, hébergeur HDS), ses certificats et ses contrôles périodiques.
-      </Alert>
+    <Stack className="fs-host">
       <ErrorAlert error={erreur ?? liste.error} />
-      <Group gap="lg" aria-label="Indicateurs des services SaaS">
-        <div>
-          <Text fw={700} size="xl">
-            {mfa.pct} %
-          </Text>
-          <Text size="sm">
-            SaaS avec MFA ({mfa.oui}/{mfa.saas})
-          </Text>
-        </div>
-        <div>
-          <Text fw={700} size="xl">
-            {sso.pct} %
-          </Text>
-          <Text size="sm">
-            SaaS avec SSO ({sso.oui}/{sso.saas})
-          </Text>
-        </div>
-        <div>
-          <Text fw={700} size="xl">
-            {tous.filter((f) => f.mfa !== 'Oui').length}
-          </Text>
-          <Text size="sm">sans MFA confirmée</Text>
-        </div>
-      </Group>
-      <Group justify="space-between">
-        <Group>
-          <TextInput
-            aria-label="Rechercher un fournisseur"
-            placeholder="Rechercher un fournisseur"
-            value={recherche}
-            onChange={(e) => setRecherche(e.currentTarget.value)}
-          />
-          <Filtres
-            actifs={actifs}
-            onReinitialiser={() => {
-              setFiltre('all');
-              setType('all');
-            }}
-          >
-            <Select
-              label="Situation"
-              allowDeselect={false}
-              data={FILTRES}
-              value={filtre}
-              onChange={(v) => setFiltre(v ?? 'all')}
-            />
-            <Select
-              label="Type"
-              allowDeselect={false}
-              data={[
-                { value: 'all', label: 'Tous les types' },
-                { value: 'saas', label: 'Services SaaS' },
-                { value: 'autre', label: 'Hors SaaS' },
-              ]}
-              value={type}
-              onChange={(v) => setType(v ?? 'all')}
-            />
-          </Filtres>
-          <Text size="sm">
-            {liste.data
-              ? `${affiches.length} fournisseur${affiches.length > 1 ? 's' : ''}`
-              : 'Chargement des fournisseurs…'}
-          </Text>
-        </Group>
-        {modifier && <Button onClick={() => setNom('')}>Ajouter un fournisseur</Button>}
-      </Group>
-      <DataTable label="Fournisseurs et applications, défilement horizontal possible">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Fournisseur ou application</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>SSO</Table.Th>
-              <Table.Th>MFA</Table.Th>
-              <Table.Th>Critique</Table.Th>
-              <Table.Th>Hébergeur HDS</Table.Th>
-              <Table.Th>Certificats</Table.Th>
-              <Table.Th>Contrôles</Table.Th>
-              <Table.Th>Prochain</Table.Th>
-              <Table.Th>Évaluation courante</Table.Th>
-              <Table.Th>Périmètres</Table.Th>
-              <Table.Th className="col-actions">Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {affiches.map((f) => {
-              const c = f.controlSummary;
-              return (
-                <Table.Tr key={f.id}>
-                  <Table.Td>
-                    <Text fw={600}>{f.name}</Text>
-                    <Text size="xs" c="dimmed">
-                      {[f.rattachement, f.notes && f.notes.slice(0, 70) + (f.notes.length > 70 ? '…' : '')]
-                        .filter(Boolean)
-                        .join(' — ') || f.id}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>{f.saas ? 'SaaS' : ''}</Table.Td>
-                  <Table.Td>{cellule(f, 'sso')}</Table.Td>
-                  <Table.Td>{cellule(f, 'mfa')}</Table.Td>
-                  <Table.Td>{cellule(f, 'critical')}</Table.Td>
-                  <Table.Td>{cellule(f, 'hds')}</Table.Td>
-                  <Table.Td>
-                    {f.certificateState[0] ? (
-                      <StatusChip etat={NIVEAU[f.certificateState[1]] ?? 'neutre'}>{f.certificateState[0]}</StatusChip>
-                    ) : (
-                      '–'
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="2xs">
-                      {c.enRetard > 0 && <StatusChip etat="erreur">{c.enRetard} en retard</StatusChip>}
-                      {c.nonConformes > 0 && <StatusChip etat="erreur">{c.nonConformes} non conforme</StatusChip>}
-                      {c.aRealiser > 0 && <StatusChip etat="attention">{c.aRealiser} à réaliser</StatusChip>}
-                      {!c.enRetard && !c.aRealiser && !c.nonConformes && c.total > 0 && (
-                        <StatusChip etat="succes">À jour</StatusChip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{jourFr(c.prochain)}</Table.Td>
-                  <Table.Td>
-                    {f.current ? (
-                      <>
-                        <Text>
-                          Le {f.current.evaluatedAt} · {f.current.evaluator}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {f.current.meets} répond · {f.current.notMeets} ne répond pas · {f.current.notAssessed} non
-                          évalué
-                        </Text>
-                        {f.current.nextReviewAt && (
-                          <Text size="xs">
-                            Réévaluation {f.current.nextReviewAt}
-                            {f.toReview && <StatusChip etat="erreur">À réévaluer</StatusChip>}
-                          </Text>
-                        )}
-                      </>
-                    ) : (
-                      <StatusChip etat="neutre">Non évalué</StatusChip>
-                    )}
-                  </Table.Td>
-                  <Table.Td>{f.scopes.length ? `${f.scopes.length} rattaché(s)` : 'Aucun'}</Table.Td>
-                  <Table.Td className="col-actions">
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Fiche du fournisseur ${f.name}`}
-                        onClick={() => setFiche(f)}
-                      >
-                        Fiche
-                      </Button>
-                      {modifier && (
-                        <Button size="xs" aria-label={`Évaluer le fournisseur ${f.name}`} onClick={() => setEvaluer(f)}>
-                          Évaluer
-                        </Button>
-                      )}
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Historique des évaluations de ${f.name}`}
-                        onClick={() => setHistorique(f)}
-                      >
-                        Historique
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Périmètres de rattachement de ${f.name}`}
-                        onClick={() => setPerimetres(f)}
-                      >
-                        Périmètres
-                      </Button>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
-      {liste.data && !liste.data.length && <Text>Aucun fournisseur dans le registre.</Text>}
-      {liste.data && !!liste.data.length && !affiches.length && (
-        <Text>Aucun fournisseur ne correspond aux filtres.</Text>
-      )}
+      <FournisseursStudio
+        tous={tous}
+        affiches={affiches}
+        chargement={liste.isPending}
+        disponible={liste.data !== undefined}
+        modifier={modifier}
+        recherche={recherche}
+        filtre={filtre}
+        type={type}
+        situations={FILTRES}
+        mfa={mfa}
+        sso={sso}
+        onRecherche={setRecherche}
+        onFiltre={setFiltre}
+        onType={setType}
+        onCreer={() => setNom('')}
+        onFiche={setFiche}
+        onEvaluer={setEvaluer}
+        onHistorique={setHistorique}
+        onPerimetres={setPerimetres}
+        cellule={cellule}
+      />
       <Modal opened={nom !== null} onClose={() => setNom(null)} title="Ajouter un fournisseur">
         <Stack>
           <ErrorAlert error={erreur} />

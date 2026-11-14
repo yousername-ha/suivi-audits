@@ -1,6 +1,6 @@
 /* Types des tables et vues de la base, générés depuis la base migrée (ADR 0062). NE PAS MODIFIER À LA MAIN :
    pnpm --filter @suivi/api db:types ; la CI régénère ce fichier et échoue s’il diffère. */
-import type { ColumnType, Generated } from 'kysely';
+import type { ColumnType, Generated, GeneratedAlways } from 'kysely';
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -12,6 +12,165 @@ export interface AppState {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   updated_by: Generated<string>;
   import_batch_id: number | null;
+}
+
+export interface AssistantConsommation {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  jetons_entree: Generated<number>;
+  jetons_sortie: Generated<number>;
+  appels: Generated<number>;
+}
+
+export interface AssistantConversations {
+  id: Generated<string>;
+  user_id: string;
+  profil: string;
+  titre: Generated<string>;
+  etat: Generated<"pret" | "en_cours">;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantMemoire {
+  id: Generated<string>;
+  profil: string;
+  contenu: string;
+  ronde_id: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantMessages {
+  id: Generated<string>;
+  conversation_id: string;
+  role: "utilisateur" | "assistant";
+  contenu: string;
+  sources: ColumnType<JsonValue, string | undefined, string>;
+  outils: ColumnType<JsonValue, string | undefined, string>;
+  erreur: Generated<boolean>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantMethodes {
+  id: Generated<string>;
+  profil: string;
+  titre: string;
+  contenu: string;
+  etat: Generated<"proposee" | "validee" | "refusee">;
+  origine: Generated<"assistant" | "personne">;
+  ronde_id: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  decided_by: Generated<string>;
+  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface AssistantMissions {
+  id: Generated<string>;
+  profil: string;
+  consigne: string;
+  etat: Generated<"ouverte" | "close">;
+  created_by: Generated<string>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  closed_by: Generated<string>;
+  closed_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface AssistantProfils {
+  id: "mise_en_oeuvre" | "audit_interne";
+  actif: Generated<boolean>;
+  perimetres: Generated<string[]>;
+  ronde_quotidienne: Generated<boolean>;
+  referent_id: string | null;
+  documents: Generated<boolean>;
+  classification_max: Generated<"public" | "interne" | "restreint" | "confidentiel">;
+  tous_perimetres: Generated<boolean>;
+}
+
+export interface AssistantPropositions {
+  id: Generated<string>;
+  profil: string;
+  ronde_id: string | null;
+  referent_id: string | null;
+  smsi_id: string;
+  type: "action" | "constat";
+  titre: string;
+  description: Generated<string>;
+  echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  source_id: string | null;
+  source_nom: Generated<string>;
+  source_version: number | null;
+  etat: Generated<"en_attente" | "confirmee" | "rejetee">;
+  decided_by: Generated<string>;
+  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  decision_note: Generated<string>;
+  objet_cree: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  nature: Generated<"" | "observation" | "nonconformity" | "opportunity">;
+  source_issue_assistant: Generated<boolean>;
+}
+
+export interface AssistantQuestions {
+  id: Generated<string>;
+  profil: string;
+  ronde_id: string | null;
+  referent_id: string | null;
+  smsi_id: string;
+  object_id: string;
+  objet_nom: Generated<string>;
+  user_id: string;
+  notification_id: string | null;
+  texte: string;
+  etat: Generated<"ouverte" | "repondue" | "sans_reponse">;
+  reponse: Generated<string>;
+  repondue_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lue_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  relances: Generated<number>;
+  relancee_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface AssistantReglages {
+  id: number;
+  actif: Generated<boolean>;
+  adresse: Generated<string>;
+  modele: Generated<string>;
+  budget_jetons_jour: Generated<number>;
+  version: Generated<number>;
+  updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  updated_by: Generated<string>;
+  en_pause: Generated<boolean>;
+  heure_ronde: Generated<number>;
+  plafond_rappels_jour: Generated<number>;
+  contexte: Generated<string>;
+  delai_relance_jours: Generated<number>;
+  jour_synthese: Generated<number>;
+  rondes_sur_evenement: Generated<boolean>;
+}
+
+export interface AssistantRondes {
+  id: Generated<string>;
+  profil: string;
+  declencheur: "planifiee" | "manuelle" | "synthese" | "evenement";
+  etat: Generated<"en_cours" | "terminee" | "echec">;
+  referent_id: string | null;
+  referent: Generated<string>;
+  demandee_par: Generated<string>;
+  debut: ColumnType<Date, Date | string | undefined, Date | string>;
+  fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  rapport: Generated<string>;
+  erreur: Generated<string>;
+  sources: ColumnType<JsonValue, string | undefined, string>;
+  outils: ColumnType<JsonValue, string | undefined, string>;
+  rappels: Generated<number>;
+  notes: Generated<number>;
+  jetons_entree: Generated<number>;
+  jetons_sortie: Generated<number>;
+  appels: Generated<number>;
+  avis: "utile" | "inutile" | null;
+  avis_motif: Generated<string>;
+  avis_par: Generated<string>;
+  methodes: Generated<number>;
+  actions: ColumnType<JsonValue, string | undefined, string>;
+  propositions: Generated<number>;
 }
 
 export interface AuditLog {
@@ -174,6 +333,16 @@ export interface DdaPerimetres {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface DocumentTextes {
+  document_id: string;
+  version: number;
+  etat: "extrait" | "non_lu" | "echec";
+  motif: Generated<string>;
+  texte: Generated<string>;
+  recherche: GeneratedAlways<string | null>;
+  extrait_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface DocumentVersions {
   document_id: string;
   version: number;
@@ -302,6 +471,7 @@ export interface GrcNotifications {
   read_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   canal_application: Generated<boolean>;
+  avis: "utile" | "inutile" | null;
 }
 
 export interface GrcObjectVersions {
@@ -1390,6 +1560,17 @@ export interface WebauthnCredentials {
 
 export interface DB {
   app_state: AppState;
+  assistant_consommation: AssistantConsommation;
+  assistant_conversations: AssistantConversations;
+  assistant_memoire: AssistantMemoire;
+  assistant_messages: AssistantMessages;
+  assistant_methodes: AssistantMethodes;
+  assistant_missions: AssistantMissions;
+  assistant_profils: AssistantProfils;
+  assistant_propositions: AssistantPropositions;
+  assistant_questions: AssistantQuestions;
+  assistant_reglages: AssistantReglages;
+  assistant_rondes: AssistantRondes;
   audit_log: AuditLog;
   backup_jobs: BackupJobs;
   backup_policy: BackupPolicy;
@@ -1405,6 +1586,7 @@ export interface DB {
   contributions_elements: ContributionsElements;
   courriel_jobs: CourrielJobs;
   dda_perimetres: DdaPerimetres;
+  document_textes: DocumentTextes;
   document_versions: DocumentVersions;
   documents: Documents;
   droits_ressources: DroitsRessources;

@@ -3,29 +3,19 @@
    propre au périmètre, modifiable librement, « en préparation » ; l'appliquer en fait un référentiel suivi en conformité.
    Aucun texte normatif n'est fourni : l'organisation importe les exigences dont elle détient les droits. Les droits sont
    ceux de l'API. */
-import { Alert, Button, Card, Group, Modal, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import { Alert, Button, Group, Modal, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FrameworkDefinition } from '@suivi/shared';
 import { ConfirmButton, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
-import { DetailExigences, EtatsCouverture, type CouvertureReferentiel } from './Couverture';
+import { BibliothequeStudio, ExigencesEnLignes } from './BibliothequeStudio';
+import type { ReferentielBibliotheque as Referentiel } from './bibliotheque-types';
+import { DetailExigences, type CouvertureReferentiel } from './Couverture';
 import { KitIa } from './KitIa';
 
-interface Referentiel {
-  id: string;
-  identifier: string;
-  name: string;
-  version: number;
-  requirements: number;
-  scopes: number;
-  source: { status: string; organisation: string };
-  /** Toujours vrai : la bibliothèque est figée (la personnalisation se fait dans la copie d'un périmètre). */
-  locked: boolean;
-  derivedFrom: { identifier: string; name: string; version: number } | null;
-}
 interface Rattachement {
   frameworkId: string;
   identifier: string;
@@ -71,24 +61,21 @@ const EXEMPLE_FICTIF: FrameworkDefinition = {
     },
   ],
 };
-const STATUTS: Record<string, string> = {
-  official_verified: 'Source officielle vérifiée',
-  licensed_import: 'Importé sous licence',
-  organisation: 'Choix de l’organisation',
-  unverified: 'Repris de l’outil de suivi',
-};
 const versions = (n: number) =>
   Array.from({ length: n }, (_, i) => ({ value: String(n - i), label: `Version ${n - i}` }));
 
 /** Page « Bibliothèque de référentiels » (ADR 0089) : une carte par référentiel, qui réunit la bibliothèque (exigences au
-    catalogue, périmètres rattachés, import et nouvelles éditions) et la couverture dans le périmètre affiché. */
+    catalogue, périmètres rattachés, import et nouvelles éditions) et la couverture dans le périmètre affiché.
+    Présentation « Studio » de la refonte Neon (lot 4, ADR 0093) : BibliothequeStudio. Le détail exigence par exigence
+    reste affiché sous le catalogue, tel quel (évaluation, historique, plan d'action des écarts). */
 export function Bibliotheque({ smsi }: { smsi?: string }) {
   const can = useCan(),
     qc = useQueryClient(),
     modifier = can('conformite', 'modifier'),
-    [detail, setDetail] = useState<CouvertureReferentiel | null>(null),
+    [ouvert, setOuvert] = useState<{ couverture: CouvertureReferentiel; smsi: string } | null>(null),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
-    [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null);
+    [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null),
+    zoneDetail = useRef<HTMLDivElement>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
     queryFn: () => get<Referentiel[]>('/api/library/frameworks'),
@@ -106,117 +93,51 @@ export function Bibliotheque({ smsi }: { smsi?: string }) {
       ),
     enabled: !!consulte,
   });
+  // Le détail suit le périmètre où il a été ouvert : changer de périmètre ne laisse pas un ancien détail affiché.
+  const detail = ouvert && ouvert.smsi === smsi ? ouvert.couverture : null;
+  // Le détail s'ouvre sous le catalogue (défilement local) : on l'amène à l'écran.
+  useEffect(() => {
+    if (!detail) return;
+    const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    zoneDetail.current?.scrollIntoView?.({ block: 'start', behavior: reduit ? 'auto' : 'smooth' });
+  }, [detail]);
   return (
-    <Stack>
-      <Alert>
-        La bibliothèque contient les référentiels de l’organisation, importés une seule fois. Elle est figée : chaque
-        édition publiée est immuable et ne se personnalise pas. Attribuer un référentiel à un périmètre (page
-        Périmètres) en crée une copie propre à ce périmètre, que vous adaptez librement ; une fois appliquée, la copie
-        est suivie en conformité. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les
-        droits.
-      </Alert>
+    <Stack className="bb-page">
       <ErrorAlert error={liste.error ?? exigences.error ?? couverture.error} />
-      <Group justify="space-between">
-        <Text>{liste.data ? `${liste.data.length} référentiel(s) dans la bibliothèque` : 'Chargement…'}</Text>
-        {modifier && <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>}
-      </Group>
-      {modifier && <StandardsDisponibles onDone={() => qc.invalidateQueries({ queryKey: ['library'] })} />}
-      <KitIa />
-      {smsi && (
-        <Alert>
-          Couverture dans le périmètre affiché : les états ci-dessous concernent uniquement ce périmètre. Ils aident à
-          piloter ; ils ne constituent ni un taux de conformité ni une preuve de conformité.
-        </Alert>
-      )}
-      <Stack>
-        {(liste.data ?? []).map((f) => {
-          const couv = couverture.data?.frameworks.find((c) => c.identifier === f.identifier) ?? null;
-          return (
-            <Card key={f.id} withBorder aria-label={`Référentiel ${f.name}`}>
-              <Stack gap="sm">
-                <Group justify="space-between" align="flex-start">
-                  <div>
-                    <Text fw={600}>{f.name}</Text>
-                    <Group gap="xs">
-                      <Text size="xs" c="dimmed">
-                        {f.identifier} · version {f.version}
-                      </Text>
-                      <StatusChip etat="neutre">Figé</StatusChip>
-                      <Text size="xs" c="dimmed">
-                        {f.derivedFrom
-                          ? `Copie de ${f.derivedFrom.name}`
-                          : (STATUTS[f.source.status] ?? f.source.status)}
-                      </Text>
-                    </Group>
-                  </div>
-                  <Group gap="md" align="flex-start">
-                    <div>
-                      <Text fw={600}>{f.requirements}</Text>
-                      <Text size="xs" c="dimmed">
-                        exigences au catalogue
-                      </Text>
-                    </div>
-                    <div>
-                      <Text fw={600}>{f.scopes}</Text>
-                      <Text size="xs" c="dimmed">
-                        {f.scopes > 1 ? 'périmètres rattachés' : 'périmètre rattaché'}
-                      </Text>
-                    </div>
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Consulter les exigences de ${f.name}`}
-                        onClick={() => setConsulte({ cible: f, version: String(f.version) })}
-                      >
-                        Exigences
-                      </Button>
-                      {modifier && (
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          aria-label={`Importer une nouvelle édition de ${f.name}`}
-                          onClick={() => setImport({ cible: f })}
-                        >
-                          Nouvelle édition
-                        </Button>
-                      )}
-                    </Group>
-                  </Group>
-                </Group>
-                {smsi && couv && (
-                  <>
-                    <EtatsCouverture f={couv} />
-                    <Group justify="flex-end">
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Voir la couverture de ${f.name}`}
-                        onClick={() => setDetail(couv)}
-                      >
-                        Voir la couverture
-                      </Button>
-                    </Group>
-                  </>
-                )}
-                {smsi && !couv && couverture.data && (
-                  <Text size="sm" c="dimmed">
-                    Non appliqué dans ce périmètre : aucune couverture à afficher. Attribuez ce référentiel au périmètre
-                    (page Périmètres, bouton « Référentiels ») puis appliquez sa copie.
-                  </Text>
-                )}
-              </Stack>
-            </Card>
-          );
-        })}
-      </Stack>
+      <BibliothequeStudio
+        catalogue={liste.data}
+        chargement={liste.isPending}
+        smsi={smsi}
+        couverture={couverture.data?.frameworks}
+        couvertureChargement={!!smsi && couverture.isPending}
+        couvertureErreur={couverture.isError}
+        modifier={modifier}
+        onImporter={() => setImport({ cible: null })}
+        onExigences={(f) => setConsulte({ cible: f, version: String(f.version) })}
+        onEdition={(f) => setImport({ cible: f })}
+        onCouverture={(c) => {
+          if (smsi) setOuvert({ couverture: c, smsi });
+        }}
+        outils={
+          <details className="bb-import-tools" open>
+            <summary>Outils d’import et kit d’intégration IA</summary>
+            <div className="bb-outils-contenu">
+              {modifier && <StandardsDisponibles onDone={() => qc.invalidateQueries({ queryKey: ['library'] })} />}
+              <KitIa />
+            </div>
+          </details>
+        }
+      />
       {smsi && detail && (
-        <DetailExigences
-          smsi={smsi}
-          frameworkId={detail.frameworkId}
-          nom={detail.name}
-          onClose={() => setDetail(null)}
-        />
+        <div ref={zoneDetail} className="bb-detail">
+          <DetailExigences
+            key={smsi + ':' + detail.frameworkId}
+            smsi={smsi}
+            frameworkId={detail.frameworkId}
+            nom={detail.name}
+            onClose={() => setOuvert(null)}
+          />
+        </div>
       )}
       <Modal
         opened={!!consulte}
@@ -233,11 +154,7 @@ export function Bibliotheque({ smsi }: { smsi?: string }) {
               value={consulte.version}
               onChange={(v) => v && setConsulte({ ...consulte, version: v })}
             />
-            {(exigences.data?.definition.requirements ?? []).map((r) => (
-              <Text key={r.id}>
-                <b>{r.id}</b> · {r.title}
-              </Text>
-            ))}
+            {exigences.data && <ExigencesEnLignes definition={exigences.data.definition} />}
           </Stack>
         )}
       </Modal>

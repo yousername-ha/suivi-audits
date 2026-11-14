@@ -36,6 +36,8 @@ export const TABLES_SYSTEME = [
   'business_policy_versions',
   'types_processus',
   'roles',
+  'assistant_reglages',
+  'assistant_profils',
 ] as const;
 
 /** Effacé seulement par la portée « tout » : comptes, groupes, fonctions, réglages et configuration de la plateforme. */
@@ -66,6 +68,16 @@ export const TABLES_CONFIGURATION = [
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
 export const TABLES_TRAVAIL = [
   'app_state',
+  'assistant_consommation',
+  'assistant_conversations',
+  'assistant_messages',
+  'assistant_memoire',
+  'assistant_methodes',
+  'document_textes',
+  'assistant_propositions',
+  'assistant_questions',
+  'assistant_missions',
+  'assistant_rondes',
   'state_history',
   'contributions_elements',
   'dda_perimetres',

@@ -34,6 +34,7 @@ import { DataTable, StatusChip } from '@suivi/ui';
 import { api, ApiError, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { CartesPerimetres, type FournisseurRattache } from './CartesPerimetres';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { ReferentielsDuPerimetre } from './Bibliotheque';
 import { Members } from './Members';
@@ -283,7 +284,13 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
             </Table.Thead>
             <Table.Tbody>
               {lignes.map(({ item: p, profondeur }) => (
-                <Table.Tr key={p.id}>
+                <Table.Tr
+                  key={p.id}
+                  // Même ouverture et même condition que le bouton « Afficher » de la ligne (refonte Neon, lot 3).
+                  {...(p.id !== affiche
+                    ? ficheCliquable(() => onChoisir(p.id), `Afficher le périmètre ${p.name}`)
+                    : {})}
+                >
                   <Table.Td className={`hier-n${Math.min(profondeur, 8)}`}>
                     <Text fw={600}>{p.name}</Text>
                     <Text size="xs">

@@ -37,3 +37,73 @@ export function validationDe(o: GrcObject): string | null {
   const r = validation?.result;
   return r ? (RESULTATS[r.toLowerCase()] ?? r.toUpperCase()) : null;
 }
+
+/** Occurrence d'une série (seule à porter un résultat OK, KO ou NA dans la version actuelle de l'API). */
+export function estOccurrence(o: GrcObject): boolean {
+  return (
+    (typeof o.data.seriesId === 'string' && o.data.seriesId !== '') ||
+    (typeof o.data.occurrenceKey === 'string' && o.data.occurrenceKey !== '')
+  );
+}
+
+/** Fiche de la Timeline des récurrences : occurrence d'une série, ou tâche récurrente historique (source conservée). */
+export function estRecurrente(o: GrcObject): boolean {
+  return estOccurrence(o) || o.data.legacyRecurring === true;
+}
+
+/* Teintes de la refonte Neon (lot 6) : une teinte par sens, toujours doublée d'un texte (statut, résultat, retard).
+   Le retard n'est jamais une teinte : il a son propre repère (contour et mention « En retard »). */
+export type TonTache = 'amber' | 'blue' | 'teal' | 'red' | 'muted';
+
+/** Teinte d'un statut : orange pour « à faire » (premier état ouvert de la politique, ou état historique non terminé),
+    rouge pour bloqué, gris pour annulé, vert pour un état terminal, bleu pour les autres états ouverts. */
+export function tonStatut(policy: BusinessPolicy, statusId: unknown): TonTache {
+  const id = String(statusId);
+  if (id === 'blocked') return 'red';
+  if (id === 'cancelled') return 'muted';
+  const statut = policy.statuses.find((s) => s.id === id);
+  if (!statut) return id === 'done' ? 'teal' : 'amber';
+  if (statut.terminal) return 'teal';
+  return id === 'todo' || statut.id === policy.statuses[0]?.id ? 'amber' : 'blue';
+}
+
+/** Teinte d'une fiche : le résultat d'une occurrence validée prime (OK vert, KO rouge, NA gris), sinon son statut. */
+export function tonTache(o: GrcObject, policy: BusinessPolicy): TonTache {
+  const v = validationDe(o);
+  if (v) return v === 'OK' ? 'teal' : v === 'KO' ? 'red' : 'muted';
+  return tonStatut(policy, o.data.status);
+}
+
+/** Classe du repère d'une occurrence : en attente tant qu'aucun résultat n'est enregistré. */
+export function classeResultat(o: GrcObject): 'attente' | 'ok' | 'ko' | 'na' {
+  const v = validationDe(o);
+  return v === 'OK' ? 'ok' : v === 'KO' ? 'ko' : v === 'NA' ? 'na' : 'attente';
+}
+
+/** Commande d'un repère : résultat d'une occurrence, réalisation d'une tâche historique (dans sa source, par sa fiche)
+    ou suivi d'une action (commentaires et preuves ; pas de résultat OK/KO hors série dans l'API actuelle). */
+export function commandeRepere(o: GrcObject): string {
+  if (o.id.startsWith('legacy:')) return 'Réaliser la tâche historique';
+  return estOccurrence(o) ? 'Saisir le résultat' : 'Suivi de réalisation';
+}
+
+/** Ce que dit un repère de la Timeline, sans l'intitulé (porté par la ligne) : état, résultat, retard et période. */
+export function descriptionRepere(
+  o: GrcObject,
+  policy: BusinessPolicy,
+  maintenant: number,
+  date: (iso: string) => string,
+): string {
+  const v = validationDe(o);
+  const debut = typeof o.data.startAt === 'string' && o.data.startAt ? `du ${date(o.data.startAt)}` : '';
+  const echeance = typeof o.data.dueAt === 'string' && o.data.dueAt ? `échéance le ${date(o.data.dueAt)}` : '';
+  return [
+    libelleStatut(policy, o).toLowerCase(),
+    estOccurrence(o) ? (v ? `validée (${v})` : 'résultat en attente') : '',
+    enRetard(o, policy, maintenant) ? 'en retard' : '',
+    debut,
+    echeance,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
