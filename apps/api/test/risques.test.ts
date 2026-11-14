@@ -357,8 +357,28 @@ describe('risque du registre : processus ISO/IEC 27005 et acceptation formelle',
   });
 
   it('acceptation : réservée à l’administration, échéance requise, décision immuable', async () => {
-    const risk = (await a.get(root() + '/objects/' + riskId)).json();
     const accepter = { operation: 'risk_acceptance', result: 'accepted', until: '2027-06-30' };
+    // Un risque jamais apprécié ne s'accepte pas (6.1.3 f et 8.3, BUG-039).
+    const nonApprecie = (await a.get(root() + '/objects/' + riskId)).json();
+    const refus = await decider(a, 'object:' + riskId, nonApprecie.version, accepter);
+    expect(refus.statusCode, refus.body).toBe(422);
+    expect(refus.body).toMatch(/Appréciez d’abord/);
+    // Appréciation : niveaux bruts et résiduels imposés par la matrice.
+    const rating = { dimensions: { severity: 'impact_2' }, likelihood: 'likelihood_2', level: null, inputs: {} };
+    const eval_ = {
+      ratings: { gross: rating, residual: rating },
+      rationale: 'Appréciation de la recette',
+      decision: 'draft',
+    };
+    const apercu = await a.post(root() + `/risks/${riskId}/preview`, eval_);
+    expect(apercu.statusCode, apercu.body).toBe(200);
+    const apprecie = await a.post(
+      root() + `/risks/${riskId}/evaluate`,
+      { ...eval_, previewId: apercu.json().previewId, requestId: crypto.randomUUID(), confirm: 'ENREGISTRER' },
+      { 'if-match': `"${nonApprecie.version}"` },
+    );
+    expect(apprecie.statusCode, apprecie.body).toBe(200);
+    const risk = (await a.get(root() + '/objects/' + riskId)).json();
     expect((await decider(rw, 'object:' + riskId, risk.version, accepter)).statusCode).toBe(403);
     expect((await decider(a, 'object:' + riskId, risk.version, { ...accepter, until: '' })).statusCode).toBe(422);
     const ok = await decider(a, 'object:' + riskId, risk.version, accepter);

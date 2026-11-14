@@ -209,10 +209,14 @@ export async function etudeEbios(g: Grc, smsi: string, id: string, user: Session
     if (o.kind === 'feared_event' && typeof o.data.severityLevel === 'string')
       calcul.graviteCatalogue = gravites.get(o.data.severityLevel) ?? null;
     if (o.kind === 'ecosystem_party') calcul.menace = indiceMenace(o.data as Parameters<typeof indiceMenace>[0]);
-    if (o.kind === 'strategic_scenario' && typeof o.data.severityLevel === 'string')
+    if (o.kind === 'strategic_scenario' && typeof o.data.severityLevel === 'string') {
       calcul.graviteScenarioCatalogue = echelles.gravite.get(o.data.severityLevel) ?? null;
-    if (o.kind === 'operational_scenario' && typeof o.data.likelihoodLevel === 'string')
+      calcul.graviteScenarioRang = echelles.rangGravite.get(o.data.severityLevel) ?? null;
+    }
+    if (o.kind === 'operational_scenario' && typeof o.data.likelihoodLevel === 'string') {
       calcul.vraisemblanceCatalogue = echelles.vraisemblance.get(o.data.likelihoodLevel) ?? null;
+      calcul.vraisemblanceRang = echelles.rangVraisemblance.get(o.data.likelihoodLevel) ?? null;
+    }
     if (o.kind === 'strategic_scenario') {
       const refs = Array.isArray(o.data.fearedEventRefs) ? (o.data.fearedEventRefs as string[]) : [];
       calcul.graviteProposee = graviteProposee(
@@ -274,14 +278,27 @@ async function libellesEchellesScenario(g: Grc, configuration: unknown) {
   const conf = StudyConfiguration.safeParse(configuration);
   const lire = async (ref: { item: string; version: number } | null | undefined) => {
     const noms = new Map<string, string>();
-    if (!ref) return noms;
+    const rangs = new Map<string, number>();
+    if (!ref) return { noms, rangs };
     const echelle = ScaleDefinition.safeParse(await definitionCfg(g.db.k, ref));
-    if (echelle.success) for (const l of echelle.data.levels) noms.set(l.id, l.label);
-    return noms;
+    if (echelle.success) {
+      echelle.data.levels.forEach((l, i) => {
+        noms.set(l.id, l.label);
+        // Rang de 1 à 4 = position dans une échelle de quatre niveaux : seule cette échelle se place dans la matrice 4 × 4.
+        if (echelle.data.levels.length === 4) rangs.set(l.id, i + 1);
+      });
+    }
+    return { noms, rangs };
   };
+  const [vraisemblance, gravite] = [
+    await lire(conf.success ? conf.data.likelihoodScale : null),
+    await lire(conf.success ? conf.data.scenarioSeverityScale : null),
+  ];
   return {
-    vraisemblance: await lire(conf.success ? conf.data.likelihoodScale : null),
-    gravite: await lire(conf.success ? conf.data.scenarioSeverityScale : null),
+    vraisemblance: vraisemblance.noms,
+    gravite: gravite.noms,
+    rangVraisemblance: vraisemblance.rangs,
+    rangGravite: gravite.rangs,
   };
 }
 

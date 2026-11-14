@@ -36,6 +36,7 @@ export function ElementsFiltres() {
     <Stack>
       <Group align="end">
         <Select
+          allowDeselect={false}
           label="Périmètre"
           placeholder="Choisir un périmètre"
           searchable

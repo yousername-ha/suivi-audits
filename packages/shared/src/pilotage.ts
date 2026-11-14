@@ -511,6 +511,7 @@ export const PILOTAGE_FIELDS: Partial<Record<GrcKind, PilotageField[]>> = {
   ],
   soa: [
     field('applicable', 'Applicable', 'boolean'),
+    field('examinee', 'Applicabilité examinée', 'boolean'),
     field('reason', 'Justification de l’applicabilité'),
     field('level', 'Niveau de mise en œuvre', 'select', [
       { value: '', label: 'Non renseigné' },

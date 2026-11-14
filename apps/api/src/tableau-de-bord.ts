@@ -3,16 +3,24 @@
    restreints qu'elle ne peut pas lire (un écran mural n'a aucun droit par registre : seuls le périmètre commun et les
    registres non restreints sont comptés). Chaque élément n'est compté qu'une fois, même s'il apparaît dans plusieurs
    périmètres par un registre partagé. Chaque bloc exige la lecture de son module et vaut `null` sans ce droit. */
-import { PorteeLecture } from './acces/portee.js';
 import type { Rights, Synthese } from '@suivi/shared';
 import { FINDING_TYPE_LABELS } from '@suivi/shared/audit';
 import type { SessionUser } from './auth.js';
 import { DEFAULT_SMSI, type Grc } from './grc/core.js';
 import { compter } from './grc/cartes.js';
+import { PorteeLecture } from './acces/portee.js';
 
 type Natif = Pick<
   Synthese,
-  'ecarts' | 'echeances' | 'ecartsOuverts' | 'actions' | 'recurrences' | 'risques' | 'continuite' | 'pilotage'
+  | 'ecarts'
+  | 'echeances'
+  | 'ecartsOuverts'
+  | 'actions'
+  | 'recurrences'
+  | 'risques'
+  | 'continuite'
+  | 'incidents'
+  | 'pilotage'
 >;
 
 const LIBELLE_STATUT: Record<string, string> = {
@@ -55,7 +63,34 @@ async function portee(g: Grc, user: SessionUser | null) {
   return { ids: [DEFAULT_SMSI], masques: restreints.map((r) => r.id) };
 }
 
+/** Tableau de bord natif : agrégats du Pilotage, plus les incidents des périmètres que la personne peut lire (BUG-070). */
 export async function tableauDeBordNatif(
+  g: Grc,
+  rights: Rights,
+  user: SessionUser | null,
+  opts: { aujourdHui: Date; joursEcheance: number },
+): Promise<Natif> {
+  const base = await tableauDeBordNatifBase(g, rights, user, opts);
+  if (!user || !rights.can('incidents', 'lire')) return base;
+  const porteeLecture = PorteeLecture.pour(g, user);
+  if (!(await porteeLecture.peutLireModule('incidents'))) return base;
+  const lisibles = await porteeLecture.perimetresLisibles();
+  const etat = (await porteeLecture.etatHistorique()).data as Record<string, unknown>;
+  const incidents = (Array.isArray(etat.incidents) ? (etat.incidents as unknown[]) : [])
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x))
+    .filter((x) => lisibles.has(typeof x.smsi === 'string' && x.smsi ? x.smsi : DEFAULT_SMSI));
+  const ouverts = incidents.filter((x) => !['Résolu', 'Clos'].includes(String(x.status ?? 'Nouveau')));
+  return {
+    ...base,
+    incidents: {
+      total: incidents.length,
+      ouverts: ouverts.length,
+      securiteOuverts: ouverts.filter((x) => /sécurité/i.test(String(x.kind ?? ''))).length,
+    },
+  };
+}
+
+async function tableauDeBordNatifBase(
   g: Grc,
   rights: Rights,
   user: SessionUser | null,
@@ -69,6 +104,7 @@ export async function tableauDeBordNatif(
     recurrences: null,
     risques: null,
     continuite: null,
+    incidents: null,
     pilotage: null,
   };
   const ecarts = rights.can('ecarts', 'lire');
@@ -179,7 +215,7 @@ export async function tableauDeBordNatif(
     }));
   }
   if (pilotage && l) {
-    sortie.continuite = { pcra: l.pcra };
+    sortie.continuite = { plans: l.plans };
     const r = await g.db.one<{ total: number; sansDecision: number; revueEchue: number }>(
       `SELECT count(*)::int total,
               count(*) FILTER (WHERE NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int "sansDecision",

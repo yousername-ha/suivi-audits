@@ -419,6 +419,8 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '058_retrait_gap_applications.sql',
         '059_retrait_correspondances_rapprochements.sql',
         '060_acces_perimetres_pyramide.sql',
+        '061_dda_par_perimetre.sql',
+        '062_sans_rattachement_rien.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

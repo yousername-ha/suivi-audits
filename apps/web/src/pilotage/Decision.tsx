@@ -181,6 +181,7 @@ export function Decision({
           />
         )}
         <Select
+          allowDeselect={false}
           label="Résultat"
           data={values.map(([value, label]) => ({ value: value!, label: label! }))}
           value={result}

@@ -7,7 +7,9 @@ import {
   ChecklistBascule,
   CelluleOuverture,
   AuteurCrise,
+  PerimetreCrise,
 } from '@suivi/shared';
+import { z } from 'zod';
 import { route } from '../../http/route.js';
 import { tags, user, idElement, idIndice, indiceSeul } from './commun.js';
 
@@ -18,7 +20,8 @@ export const criseRoutes = [
     summary: 'Cellules de crise, contacts et scénarios',
     tags,
     access: 'incidents:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.crise.vue(user(s)),
+    query: z.object({ smsi: z.string().uuid().optional() }).strict(),
+    handler: async ({ svc, s, query }) => svc.historique.crise.vue(user(s), query.smsi),
   }),
   route({
     method: 'POST',
@@ -99,7 +102,8 @@ export const criseRoutes = [
     tags,
     access: 'incidents:modifier' as const,
     status: 201,
-    handler: async ({ svc, s, ip }) => svc.historique.crise.creerContact(user(s), ip),
+    body: PerimetreCrise.optional(),
+    handler: async ({ svc, s, body, ip }) => svc.historique.crise.creerContact(body, user(s), ip),
   }),
   route({
     method: 'POST',
@@ -107,7 +111,8 @@ export const criseRoutes = [
     summary: 'Ajouter les fournisseurs critiques et hébergeurs comme contacts',
     tags,
     access: 'incidents:modifier' as const,
-    handler: async ({ svc, s, ip }) => svc.historique.crise.importerFournisseurs(user(s), ip),
+    body: PerimetreCrise.optional(),
+    handler: async ({ svc, s, body, ip }) => svc.historique.crise.importerFournisseurs(body, user(s), ip),
   }),
   route({
     method: 'PATCH',
@@ -135,7 +140,8 @@ export const criseRoutes = [
     tags,
     access: 'incidents:modifier' as const,
     status: 201,
-    handler: async ({ svc, s, ip }) => svc.historique.crise.creerScenario(user(s), ip),
+    body: PerimetreCrise.optional(),
+    handler: async ({ svc, s, body, ip }) => svc.historique.crise.creerScenario(body, user(s), ip),
   }),
   route({
     method: 'PATCH',

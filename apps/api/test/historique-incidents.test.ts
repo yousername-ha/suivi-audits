@@ -127,10 +127,18 @@ describe('registre des incidents', () => {
     expect((await writer.patch(`${url}/EV-404`, { titre: 'x' })).statusCode).toBe(404);
     expect((await writer.patch(`${url}/EV-001`, { type: 'Inconnu' })).statusCode).toBe(422);
     expect((await reader.del(`${url}/EV-002`)).statusCode).toBe(403);
-    const d = await writer.del(`${url}/EV-002`);
+    // BUG-050 : retirer un événement exige le droit de suppression ; le contenu retiré reste au journal d'audit.
+    const refuse = await writer.del(`${url}/EV-002`);
+    expect(refuse.statusCode, refuse.body).toBe(403);
+    expect((await etat()).incidents.find((x: { id: string }) => x.id === 'INC-2026-001').timeline).toHaveLength(2);
+    const d = await admin.del(`${url}/EV-002`);
     expect(d.statusCode, d.body).toBe(200);
     expect(d.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001']);
-    expect((await writer.del(`${url}/EV-002`)).statusCode).toBe(404);
+    expect((await admin.del(`${url}/EV-002`)).statusCode).toBe(404);
+    const trace = await t.svc.db.one<{ details: { evenement?: { id: string; titre: string } } }>(
+      "SELECT details FROM audit_log WHERE action='incident.retex-deleted' ORDER BY id DESC LIMIT 1",
+    );
+    expect(trace!.details.evenement).toMatchObject({ id: 'EV-002', titre: 'Alerte fictive' });
     const c = await writer.post(url, { ts: '2026-10-12T10:00', type: 'Confinement', titre: 'Isolement fictif' });
     expect(c.json().timeline.map((e: { id: string }) => e.id)).toEqual(['EV-001', 'EV-003']);
   });

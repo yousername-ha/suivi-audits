@@ -217,8 +217,8 @@ export const auditRoutes = [
     summary: 'Déclaration d’applicabilité d’un référentiel : mesures, niveaux et écarts rattachés',
     tags,
     access: 'audit:lire' as const,
-    query: z.object({ reference: z.enum(PAGES_DDA) }),
-    handler: async ({ svc, s, query }) => svc.historique.dda.vue(query.reference, user(s)),
+    query: z.object({ reference: z.enum(PAGES_DDA), smsi: z.string().uuid().optional() }),
+    handler: async ({ svc, s, query }) => svc.historique.dda.vue(query.reference, user(s), query.smsi),
   }),
   route({
     method: 'PATCH',
@@ -227,7 +227,9 @@ export const auditRoutes = [
     tags,
     access: 'audit:modifier' as const,
     params: idElement,
+    query: z.object({ smsi: z.string().uuid().optional() }),
     body: DdaModification,
-    handler: async ({ svc, s, params, body, ip }) => svc.historique.dda.modifier(params.id, body, user(s), ip),
+    handler: async ({ svc, s, params, query, body, ip }) =>
+      svc.historique.dda.modifier(params.id, body, user(s), ip, query.smsi),
   }),
 ];

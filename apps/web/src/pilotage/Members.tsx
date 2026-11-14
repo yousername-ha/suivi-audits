@@ -23,6 +23,7 @@ export function Members({ smsi }: { smsi: string }) {
     <Stack>
       <ErrorAlert error={error ?? members.error ?? users.error} />
       <Select
+        allowDeselect={false}
         label="Compte à ajouter"
         searchable
         value={userId || null}
@@ -30,6 +31,7 @@ export function Members({ smsi }: { smsi: string }) {
         data={(users.data ?? []).map((u) => ({ value: u.id, label: u.displayName || u.username }))}
       />
       <Select
+        allowDeselect={false}
         label="Accès au périmètre"
         value={write}
         onChange={(v) => setWrite(v ?? 'read')}

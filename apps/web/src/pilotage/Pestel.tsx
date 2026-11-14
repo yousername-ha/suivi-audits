@@ -19,9 +19,7 @@ export function Pestel({ smsi }: { smsi: string }) {
   const q = useQuery({
     queryKey: ['grc', smsi, 'pestel'],
     queryFn: () => get<VuePestel>(`/api/grc/${smsi}/pilotage/pestel`),
-    enabled: smsi === SOCLE,
   });
-  if (smsi !== SOCLE) return <Text>Le PESTEL s’appuie sur le contexte du pilotage commun de l’organisation.</Text>;
   const classer = async (e: EnjeuPestel, facteur: string | null) => {
     try {
       setErreur(null);

@@ -211,6 +211,11 @@ export const RiskMethod = z
     }
   });
 export type RiskMethod = z.infer<typeof RiskMethod>;
+/** Refus d'une méthode sans matrice de calcul (BUG-024) ; `null` si elle en a une. Réservé aux méthodes à publier ou à
+    choisir : une version déjà publiée avec « jugement » reste lisible. */
+export const REFUS_SANS_MATRICE =
+  'La matrice de calcul est obligatoire pour apprécier un risque : ajoutez une matrice (impact × vraisemblance) à la méthode.';
+export const methodeSansMatrice = (m: Pick<RiskMethod, 'calculation'>): boolean => m.calculation.kind !== 'matrix';
 export const MethodRating = z
   .object({
     dimensions: z.record(GrcKey, GrcKey),
@@ -531,21 +536,20 @@ export function methodTemplate(family: RiskMethod['family']): RiskMethod {
     dimensions: [{ id: 'severity', label: 'Gravité', levels: severity }],
     likelihood,
     levels,
-    calculation:
-      family === 'ebios_rm'
-        ? {
-            kind: 'matrix',
-            dimension: 'severity',
-            cells: severity.flatMap((i, index) =>
-              likelihood.map((p, j) => ({
-                impact: i.id,
-                likelihood: p.id,
-                level: index + j >= 5 ? 'high' : index + j >= 2 ? 'medium' : 'low',
-                score: null,
-              })),
-            ),
-          }
-        : { kind: 'judgement' },
+    // La matrice de calcul est obligatoire pour apprécier un risque (arbitrage du RSSI du 13/11/2026, BUG-024) : tous les
+    // modèles en fournissent une, à adapter. « Jugement » ne subsiste que pour relire les versions déjà publiées.
+    calculation: {
+      kind: 'matrix',
+      dimension: 'severity',
+      cells: severity.flatMap((i, index) =>
+        likelihood.map((p, j) => ({
+          impact: i.id,
+          likelihood: p.id,
+          level: index + j >= 5 ? 'high' : index + j >= 2 ? 'medium' : 'low',
+          score: null,
+        })),
+      ),
+    },
     strategies: [
       { id: 'reduce', label: 'Réduire', kind: 'reduce' },
       { id: 'accept', label: 'Accepter', kind: 'accept' },

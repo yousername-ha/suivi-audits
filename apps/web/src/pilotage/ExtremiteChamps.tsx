@@ -40,6 +40,7 @@ export function ExtremiteChamps({
     <Stack gap="xs">
       <Text fw={600}>{titre}</Text>
       <Select
+        allowDeselect={false}
         label={`Référentiel (${titre.toLowerCase()})`}
         data={referentiels.map((r) => ({ value: r.id, label: r.name }))}
         value={valeur.frameworkId || null}
@@ -64,6 +65,7 @@ export function ExtremiteChamps({
         />
       )}
       <Select
+        allowDeselect={false}
         label={`Exigence (${titre.toLowerCase()})`}
         searchable
         limit={50}

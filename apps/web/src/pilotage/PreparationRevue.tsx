@@ -1,4 +1,4 @@
-/* Préparation d'une revue de direction (ISO 9001:2015, 9.3.2) : faits chiffrés tirés des données de la plateforme, repris
+/* Préparation d'une revue de direction (ISO/IEC 27001:2022, 9.3.2) : faits chiffrés tirés des données de la plateforme, repris
    dans une nouvelle fiche de revue. Rien n'est interprété : la direction apprécie, conclut et décide (9.3.3).
    Habillage : dalles en verre du tableau de bord (classe tdb : même fond de page, clair ou sombre), codes graphiques de la
    chronologie RETEX (bandeau téléscripteur, voyant, teintes retex-c-*) et boutons en capsule de verre ; les entrées sont
@@ -8,8 +8,6 @@ import { cleEntree, type EntreeRevue } from '@suivi/shared';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
-
-const SOCLE = '00000000-0000-4000-8000-000000000001';
 
 /** Trois temps de lecture, dans l'ordre de 9.3.2 (a et b, puis c, puis d à f), chacun dans une teinte de la charte. */
 const TEMPS: readonly { titre: string; resume: string; teinte: string; ids: readonly string[] }[] = [
@@ -93,10 +91,8 @@ export function PreparationRevue({
       get<{ precedente: { id: string; date: string } | null; entrees: EntreeRevue[] }>(
         `/api/grc/${smsi}/pilotage/revue/entrees`,
       ),
-    enabled: smsi === SOCLE,
     retry: false,
   });
-  if (smsi !== SOCLE) return null;
   const entrees = q.data?.entrees ?? [];
   const precedente = q.data?.precedente;
   const aApprecier = entrees.filter((e) => e.aSaisir).length;
@@ -110,7 +106,7 @@ export function PreparationRevue({
         <div className="retex-bandeau__titre">
           <span className="verre-pilule revue-bandeau__sur">
             <span className="retex-bandeau__voyant" aria-hidden="true" />
-            Revue de direction · ISO 9001:2015, 9.3.2
+            Revue de direction · ISO/IEC 27001:2022, 9.3.2
           </span>
           <h2 className="retex-bandeau__nom">Préparer la prochaine revue</h2>
           <p className="revue-bandeau__texte">

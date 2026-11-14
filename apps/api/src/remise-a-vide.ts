@@ -68,6 +68,7 @@ export const TABLES_TRAVAIL = [
   'app_state',
   'state_history',
   'contributions_elements',
+  'dda_perimetres',
   'courriel_jobs',
   'document_versions',
   'documents',

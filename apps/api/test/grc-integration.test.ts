@@ -81,7 +81,7 @@ for (const family of ['ebios_rm', 'iso27005', 'mehari', 'custom'] as const) {
     const rating = {
       dimensions: { severity: 'impact_2' },
       likelihood: 'likelihood_2',
-      level: definition.calculation.kind === 'judgement' ? 'low' : null,
+      level: null,
       inputs: {},
     };
     const body = {
@@ -102,9 +102,27 @@ for (const family of ['ebios_rm', 'iso27005', 'mehari', 'custom'] as const) {
     expect(map.json().items).toHaveLength(1);
     expect(map.json().items[0].method.family).toBe(family);
     expect(map.json().items[0].assessment.result.residual.score).toBeNull();
-    expect(map.json().items[0].assessment.result.residual.level).toBe(family === 'ebios_rm' ? 'medium' : 'low');
+    // Tous les modèles calculent par matrice (BUG-024) : le niveau est imposé par la matrice, jamais choisi librement.
+    expect(map.json().items[0].assessment.result.residual.level).toBe('medium');
   });
 }
+it('refuse une méthode sans matrice de calcul à l’aperçu et à la publication (BUG-024)', async () => {
+  const definition = { ...methodTemplate('iso27005'), calculation: { kind: 'judgement' as const } };
+  const r = await a.post(root() + '/methods/preview', { id: null, definition });
+  expect(r.statusCode, r.body).toBe(422);
+  expect(r.body).toMatch(/matrice/i);
+  const publication = await a.post(root() + '/methods/publish', {
+    id: null,
+    definition,
+    previewId: 'x',
+    reason: 'Sans matrice',
+    confirm: 'PUBLIER',
+  });
+  expect(publication.statusCode, publication.body).toBe(422);
+  // Les modèles fournis ont tous une matrice.
+  for (const family of ['ebios_rm', 'iso27005', 'mehari', 'custom'] as const)
+    expect(methodTemplate(family).calculation.kind).toBe('matrix');
+});
 it('projette les liens de formulaires EBIOS sans double saisie, avec filtres et facettes', async () => {
   const method = await publish(methodTemplate('ebios_rm'));
   const asset = await a.post(root() + '/objects', {
@@ -279,10 +297,11 @@ it('compare à une date antérieure, pagine l’historique des appréciations et
   const d = methodTemplate('custom'),
     m = await publish(d);
   const r = (await a.post(root() + '/objects', { ...risk(m.methodId), name: 'Risque comparé' })).json();
+  // Le niveau est imposé par la matrice (BUG-024) : « low » et « high » se choisissent par gravité et vraisemblance.
   const rating = (level: string) => ({
-    dimensions: { severity: 'impact_2' },
-    likelihood: 'likelihood_2',
-    level,
+    dimensions: { severity: level === 'low' ? 'impact_1' : 'impact_4' },
+    likelihood: level === 'low' ? 'likelihood_1' : 'likelihood_4',
+    level: null,
     inputs: {},
   });
   const evaluer = async (level: string, version: number, requestId = crypto.randomUUID()) => {

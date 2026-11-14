@@ -35,6 +35,9 @@ export interface PageDda {
 }
 export interface Ecart {
   id: string;
+  /** Identifiant historique (« FOU-01 », « INC-AC-01 ») : celui sous lequel la DdA expose un écart né dans le registre
+      historique. */
+  legacyId?: string | null;
   name: string;
   archived: boolean;
   data: {
@@ -178,7 +181,9 @@ export const REGLES: Record<string, { titre: string; source: string; regle: (i: 
       for (const e of ecarts.filter((x) => !x.archived)) {
         const mesures = (e.data.refs ?? []).filter((r) => r.startsWith('legacy:items:')).map((r) => r.slice(13));
         if (!mesures.length) continue;
-        const d = vusDda.get(e.id);
+        // La DdA désigne un écart né dans le registre historique par son identifiant historique, pas par l'UUID de l'objet
+        // (faux positif relevé par la campagne du 12/11/2026 sur les écarts du clausier et des incidents).
+        const d = vusDda.get(e.id) ?? (e.legacyId ? vusDda.get(e.legacyId) : undefined);
         if (!d) v.push({ regle: 'INV-08', gravite: 'bloquant', detail: `« ${e.name} » absent de la DdA` });
         else if (mesures.some((m) => !d.items.includes(m)))
           v.push({ regle: 'INV-08', gravite: 'bloquant', detail: `« ${e.name} » : mesures différentes dans la DdA` });

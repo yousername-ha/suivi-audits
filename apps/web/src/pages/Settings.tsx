@@ -907,7 +907,9 @@ function Cycle({ p }: { p: P }) {
 
 function Referentiels({ p }: { p: P }) {
   const refs = (p.info.referentiels ?? []) as { nom: string; exigences: number }[];
-  const comp = (p.info.complementaires ?? []) as { nom: string; exigences: number }[];
+  const comp = (p.info.complementaires ?? []) as { id?: string; nom: string; exigences: number }[];
+  // La valeur enregistrée est l'identifiant du référentiel ; une valeur plus ancienne peut être son nom.
+  const actif = comp.find((c) => (c.id ?? c.nom) === str(p.values.activeFw) || c.nom === str(p.values.activeFw));
   return (
     <Stack>
       <Table>
@@ -929,8 +931,8 @@ function Referentiels({ p }: { p: P }) {
       <div className="grille-formulaire__champs">
         <Select
           label="Référentiel complémentaire actif"
-          data={comp.map((c) => c.nom)}
-          value={str(p.values.activeFw) || null}
+          data={comp.map((c) => ({ value: c.id ?? c.nom, label: c.nom }))}
+          value={actif ? (actif.id ?? actif.nom) : null}
           onChange={(v) => p.set('activeFw', v ?? '')}
           disabled={p.ro}
           clearable

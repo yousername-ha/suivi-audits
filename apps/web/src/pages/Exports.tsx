@@ -1,10 +1,12 @@
 /* Exports Excel de l'outil de suivi par rubrique : Excel classique (données brutes, filtres) et Excel pro (mise en forme,
    sommaire). Les données exportées sont filtrées selon les droits de lecture de la personne. */
-import { Alert, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Alert, Button, Card, Group, Select, Stack, Text, Title } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { usePerimetres } from '../components/selecteurs';
 import { useCan } from '../session';
 
 interface Groupe {
@@ -17,6 +19,14 @@ interface Groupe {
 export function ExportsPage() {
   const can = useCan();
   const autorise = can('import_export', 'exporter');
+  const perimetres = usePerimetres(autorise);
+  const [choisi, setPerimetre] = useState<string | null>(null);
+  // Par défaut, le périmètre commun ; à défaut (compte rattaché à un autre périmètre), le premier périmètre accessible.
+  const perimetre =
+    choisi ??
+    perimetres.data?.find((p) => p.id === '00000000-0000-4000-8000-000000000001')?.id ??
+    perimetres.data?.[0]?.id ??
+    null;
   const q = useQuery({
     queryKey: ['suivi', 'export', 'groupes'],
     queryFn: () => get<Groupe[]>('/api/suivi/export/groupes'),
@@ -29,7 +39,7 @@ export function ExportsPage() {
       </Page>
     );
   const lien = (groupe: string, mode: 'std' | 'pro') => () =>
-    download(`/api/suivi/export?groupe=${groupe}&mode=${mode}`);
+    download(`/api/suivi/export?groupe=${groupe}&mode=${mode}${perimetre ? `&perimetre=${perimetre}` : ''}`);
   return (
     <Page>
       <PageHeader
@@ -37,7 +47,17 @@ export function ExportsPage() {
         description="Excel classique : données brutes, filtres activés. Excel pro : mise en forme avec sommaire et pagination."
       />
       <Stack>
-        <ErrorAlert error={q.error} />
+        <ErrorAlert error={q.error ?? perimetres.error} />
+        {(perimetres.data?.length ?? 0) > 1 && (
+          <Select
+            label="Périmètre exporté"
+            description="Fiches du Pilotage exportées : contexte, risques, continuité, revues. Par défaut, le périmètre commun."
+            data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+            value={perimetre}
+            onChange={setPerimetre}
+            allowDeselect={false}
+          />
+        )}
         {(q.data ?? []).map((g) => (
           <Card key={g.id} withBorder>
             <Group justify="space-between" align="flex-start">

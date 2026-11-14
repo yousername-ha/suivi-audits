@@ -13,6 +13,12 @@
 > (version 6.0.0 préparée, PR de sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire) et celle du
 > [27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion, conversion Kysely, tests de bout en bout instables).
 > Les sections ci-dessous sont datées.
+>
+> **Recette du 12-13/11/2026** : campagne à plusieurs agents sur les piles Docker, 1 712 cases couvertes, 40 défauts inscrits
+> (BUG-038 à BUG-077, dont BUG-064 devenu sans objet après les ADR 0089 à 0091) et 47 tests `test.fail` ; [rapport](docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md),
+> [demande de correctifs](docs/05_RECETTE/rssi-virtuel/DEMANDE-CORRECTIFS-2026-11-13.md). BUG-051 arbitré par le RSSI le 13/11
+> (cloisonnement par périmètre, visibilité du parent vers ses enfants). BUG-049 arbitré (seul le gestionnaire archive et désarchive un registre). BUG-042 arbitré (revue propre à chaque enfant, sauf héritage des référentiels). BUG-024 (matrice obligatoire) et BUG-031
+> (entrées 9.3.2 de l'ISO/IEC 27001, plus d'ISO 9001) arbitrés ; rôle d'auditeur interne accepté comme évolution (DEV-016). Prochaine action : correction par la session de développement (DEV-014).
 
 Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.
 Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.

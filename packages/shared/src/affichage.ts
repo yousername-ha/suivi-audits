@@ -185,7 +185,9 @@ export const Synthese = z.object({
   /** Risques : total, sans appréciation validée, revue échue. */
   risques: z.object({ total: z.number(), sansDecision: z.number(), revueEchue: z.number() }).nullable(),
   /** Continuité : plans de continuité et de reprise d'activité (PCRA). */
-  continuite: z.object({ pcra: z.number() }).nullable(),
+  continuite: z.object({ plans: z.number() }).nullable(),
+  /** Incidents (BUG-070) : ouverts et total des périmètres lisibles, dont incidents de sécurité ouverts. */
+  incidents: z.object({ total: z.number(), ouverts: z.number(), securiteOuverts: z.number() }).nullable(),
   /** Compteurs du Pilotage utilisés par les alertes du menu : constats ouverts, risques, actions en retard. */
   pilotage: z
     .object({
@@ -254,6 +256,7 @@ export function computeSynthese(
     plans: opts.lisible('plans')
       ? { annee: opts.aujourdHui.getFullYear(), types: plansAnnee(state, opts.aujourdHui.getFullYear(), today) }
       : null,
+    incidents: null,
     pilotage: null,
   };
 }

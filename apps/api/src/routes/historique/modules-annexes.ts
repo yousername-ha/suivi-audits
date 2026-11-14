@@ -1,4 +1,5 @@
 import { ActionPlanCreation, ActionPlanModification, DecalagePlan } from '@suivi/shared';
+import { z } from 'zod';
 import { route } from '../../http/route.js';
 import { tags, user, idPlan } from './commun.js';
 
@@ -9,7 +10,8 @@ export const modulesAnnexesRoutes = [
     summary: 'Plans du SMSI (formation, sensibilisation, audit interne, exercices) et tâches récurrentes du calendrier',
     tags,
     access: 'pilotage:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.plans.vue(user(s)),
+    query: z.object({ smsi: z.string().uuid().optional() }),
+    handler: async ({ svc, s, query }) => svc.historique.plans.vue(user(s), query.smsi),
   }),
   route({
     method: 'POST',

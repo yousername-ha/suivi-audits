@@ -19,11 +19,14 @@ import {
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
+import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
 import { CLAUSIER_2026 } from './clausier-club-rssi-sante-2026.js';
 import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
+/** Échéance par défaut des actions créées depuis une évaluation du clausier. */
+const ECHEANCE_ACTIONS_JOURS = 30;
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
 export interface ResumeEvaluation extends EvaluationClausier {
@@ -179,14 +182,26 @@ export class EvaluationsClausier {
       },
       async (data, c) => {
         const e = this.trouver(data, id);
+        // Une évaluation n'ouvre qu'une fois ses actions : pas de doublon à chaque clic (BUG-056).
+        if (str(e.findingId))
+          throw new HttpError(409, `Les actions de cette évaluation existent déjà : ${str(e.findingId)}.`);
         const lue = lireEvaluationClausier(e)!;
         const ecarts = ecartsEvaluation(pointsEvaluation(CLAUSIER_2026, lue.cases), lue);
         if (!ecarts.length) throw new HttpError(409, 'Aucun écart dans cette évaluation.');
         const sp = entrees(data, 'suppliers').find((s) => s.id === lue.supplier);
-        const fid = identifiantActionFournisseur(entrees(data, 'findings').map((f) => str(f.id)));
+        const fid = identifiantActionFournisseur(
+          await this.r.identifiantsEcartsPris(
+            c,
+            entrees(data, 'findings').map((f) => str(f.id)),
+          ),
+        );
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
+        // Responsable : la personne qui crée les actions ; échéance : 30 jours (10.2, une action sans échéance ne se suit pas).
+        const echeance = new Date(Date.now() + ECHEANCE_ACTIONS_JOURS * 86_400_000).toISOString().slice(0, 10);
         await this.r.creerEcart(c, user, ip, {
           id: fid,
+          dueAt: echeance,
+          ownerId: user.id,
           name: `Évaluation sécurité ${str(sp?.name)} : ${ecarts.length} point(s) à traiter`,
           description:
             'Obtenir les engagements du fournisseur.\n' +
@@ -194,6 +209,37 @@ export class EvaluationsClausier {
           findingType: 'opportunity',
           items: ['A-5.19', 'A-5.20', 'A-5.21', 'A-5.22'].filter((x) => connus.has(x)),
         });
+        // Une action par écart du clausier, reliée à l'écart, dans le plan d'actions du périmètre commun.
+        for (const p of ecarts) {
+          const donnees = await this.r.g.normalize(
+            DEFAULT_SMSI,
+            'action',
+            {
+              description: `Écart ${fid} : obtenir l’engagement du fournisseur sur le point ${p.id} du clausier.`,
+              status: 'todo',
+              ownerId: user.id,
+              startAt: null,
+              dueAt: `${echeance}T17:00:00.000Z`,
+              priority: 'normal',
+              category: 'action',
+              justification: '',
+              reminderDays: 7,
+              dependencies: [],
+            },
+            user,
+            c,
+          );
+          await this.r.g.insert(
+            c,
+            DEFAULT_SMSI,
+            'action',
+            `Clausier ${p.id} : ${p.titre}`.slice(0, 200),
+            donnees,
+            user,
+            ip,
+          );
+        }
+        remplacerEntree(data, 'supEvals', id, { ...e, findingId: fid });
         return { id, action: fid, taches: ecarts.length };
       },
     );

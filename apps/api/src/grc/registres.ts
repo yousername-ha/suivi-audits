@@ -430,6 +430,7 @@ export class GrcRegistres {
       gerer: await this.peut(user, reg, null, 'gerer', c),
     };
     const peutAttribuer = await this.peut(user, reg, null, 'gerer', c, MODULE, 'administrer');
+    const peutArchiver = await this.estGestionnaire(user, reg, c);
     const { elements } = await k
       .selectFrom('grc_objects')
       .select(sql<number>`count(*)::int`.as('elements'))
@@ -466,6 +467,7 @@ export class GrcRegistres {
       role: await this.roleEffectif(user, reg, null, c),
       peut,
       peutAttribuer,
+      peutArchiver,
       peutCreer: !reg.archived && (peut.gerer || (await this.designeSurRegistre(user, reg, c))),
       elements,
     };
@@ -866,16 +868,44 @@ export class GrcRegistres {
       return { apercu: false as const, impact, registre: await this.dto(user, nouveau, c) };
     }, user.username);
   }
+  /** Gestionnaire du registre : administrateur ou rôle de gestionnaire attribué sur le registre (arbitrage du RSSI du
+      13/11/2026, BUG-049). Un droit de module, même d'administration, ne suffit pas pour archiver. */
+  async estGestionnaire(user: SessionUser, reg: RegistreRow, c?: Client): Promise<boolean> {
+    if (await this.g.isAdmin(user, c)) return true;
+    return roleSuffit(await this.roleDe(user, reg.id, null, c), 'gerer');
+  }
+  private async exigerGestionnaire(user: SessionUser, reg: RegistreRow, c: Client) {
+    await this.g.modules.assert(MODULE);
+    if (await this.estGestionnaire(user, reg, c)) return;
+    if (await this.peut(user, reg, null, 'lire', c))
+      throw new HttpError(403, 'Seul le gestionnaire du registre peut l’archiver ou le désarchiver.');
+    throw new HttpError(404, 'Registre introuvable ou non accessible.');
+  }
   async archive(id: string, expected: number, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
-      await this.exiger(user, reg, null, 'gerer', c);
+      await this.exigerGestionnaire(user, reg, c);
       if (reg.parDefaut) throw new HttpError(409, 'Le registre par défaut d’un périmètre ne s’archive pas.');
+      if (reg.archived) throw new HttpError(409, 'Registre déjà archivé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
       const nouveau = await this.ecrire(k, id, user.username, { archived: true });
       // Les éléments, leurs historiques et leurs preuves sont conservés tels quels.
       await this.g.db.audit(user, ip, 'registre.archived', id, { version: nouveau.version }, c);
+      await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
+      return this.dto(user, nouveau, c);
+    }, user.username);
+  }
+  /** Désarchive un registre (BUG-049) : mêmes droits que l'archivage ; ses éléments, périmètres et droits sont intacts. */
+  async desarchive(id: string, expected: number, user: SessionUser, ip: string) {
+    return this.g.db.tx(async (c, k) => {
+      const reg = await this.brut(id, c, true);
+      if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
+      await this.exigerGestionnaire(user, reg, c);
+      if (!reg.archived) throw new HttpError(409, 'Registre non archivé.');
+      if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
+      const nouveau = await this.ecrire(k, id, user.username, { archived: false });
+      await this.g.db.audit(user, ip, 'registre.unarchived', id, { version: nouveau.version }, c);
       await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
       return this.dto(user, nouveau, c);
     }, user.username);

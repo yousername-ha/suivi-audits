@@ -6,41 +6,75 @@
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --version 6.2.1  images publiées de cette version au lieu de la construction
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --garder         pile vierge laissée démarrée pour l'agent (pas de test)
 #   sudo tests/e2e/rssi-virtuel/lancer.sh --arreter        arrête la pile gardée et efface ses données
+#   sudo tests/e2e/rssi-virtuel/lancer.sh --pile 3 --garder   pile numérotée, pour plusieurs agents en parallèle
+#   sudo tests/e2e/rssi-virtuel/lancer.sh --images-locales --pile 3 --garder   images déjà construites (étiquette local)
 #
-# La pile écoute sur https://localhost (port 443) : le script refuse de démarrer si le port est déjà pris.
+# --images-locales : derrière un proxy TLS, `compose build` ne sait pas transmettre le secret BuildKit `build_ca`. Les
+# images se construisent alors une fois avec `docker buildx build --secret id=build_ca,src=<autorité> --network host
+# -f docker/<api|web|updater>.Dockerfile -t ghcr.io/yousername-ha/suivi-audits-<api|web|updater>:local --load .`, et
+# chaque pile les réutilise sans reconstruction ni téléchargement.
+#
+# Sans --pile, la pile écoute sur https://localhost (port 443, toutes les interfaces). Avec --pile N (1 à 99), elle a
+# son propre projet Compose, son propre dossier de données et sa propre adresse de bouclage, https://127.0.0.(10+N) :
+# plusieurs piles vierges cohabitent, une par agent. Le script refuse de démarrer si l'adresse est déjà prise.
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 DEPOT=$PWD
-PROJET=suivi-rssi-virtuel
-TRAVAIL=/srv/suivi-rssi-virtuel
-DONNEES=$TRAVAIL/donnees
-ENV_FICHIER=$TRAVAIL/.env
 IMAGE_PLAYWRIGHT=mcr.microsoft.com/playwright:v1.56.1-noble
 VERSION=""
 MODE=complet
+PILE=""
+LOCALES=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VERSION="$2"; shift 2 ;;
     --garder) MODE=garder; shift ;;
     --arreter) MODE=arreter; shift ;;
-    -h | --help) sed -n '2,9p' "$0"; exit 0 ;;
+    --pile) PILE="$2"; shift 2 ;;
+    --images-locales) LOCALES=1; VERSION=local; shift ;;
+    -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
     *) echo "Option inconnue : $1" >&2; exit 2 ;;
   esac
 done
+if [ -n "$PILE" ]; then
+  case "$PILE" in '' | *[!0-9]*) echo "--pile attend un nombre de 1 à 99." >&2; exit 2 ;; esac
+  [ "$PILE" -ge 1 ] && [ "$PILE" -le 99 ] || { echo "--pile attend un nombre de 1 à 99." >&2; exit 2; }
+  SUFFIXE=-$PILE
+  ADRESSE=127.0.0.$((10 + PILE))
+  ECOUTE=$ADRESSE
+else
+  SUFFIXE=""
+  ADRESSE=localhost
+  ECOUTE=0.0.0.0
+fi
+PROJET=suivi-rssi-virtuel$SUFFIXE
+TRAVAIL=/srv/suivi-rssi-virtuel$SUFFIXE
+DONNEES=$TRAVAIL/donnees
+ENV_FICHIER=$TRAVAIL/.env
+# Les services app et updater lisent le .env du dépôt : ce fichier de surcharge leur donne celui de la pile, sans écrire
+# dans le .env du dépôt. Docker crée seulement un .env vide (ignoré par Git) comme point de montage s'il n'existe pas ;
+# --arreter le retire quand il est vide et qu'aucune autre pile ne tourne.
+SURCHARGE=$TRAVAIL/compose.rssi-virtuel.yml
+JETON=$DEPOT/tests/e2e/.jeton$SUFFIXE
+URL=https://$ADRESSE
 [ "$(id -u)" = 0 ] || { echo "À lancer avec sudo (dossier de données $TRAVAIL)." >&2; exit 1; }
 
 compose() {
   local fichiers=(-f docker-compose.yml)
   [ -z "$VERSION" ] && fichiers+=(-f docker-compose.build.yml)
+  [ -f "$SURCHARGE" ] && fichiers+=(-f "$SURCHARGE")
   docker compose -p "$PROJET" --env-file "$ENV_FICHIER" "${fichiers[@]}" "$@"
 }
 
 arreter() {
   if [ -f "$ENV_FICHIER" ]; then compose down -v --remove-orphans >/dev/null 2>&1 || true; fi
   rm -rf "$TRAVAIL"
-  rm -f "$DEPOT/tests/e2e/.jeton"
-  echo "Pile du RSSI virtuel arrêtée, données effacées."
+  rm -f "$JETON"
+  if [ -f "$DEPOT/.env" ] && [ ! -s "$DEPOT/.env" ] && ! compgen -G '/srv/suivi-rssi-virtuel*/.env' >/dev/null; then
+    rm -f "$DEPOT/.env"
+  fi
+  echo "Pile du RSSI virtuel ($PROJET) arrêtée, données effacées."
 }
 
 demarrer() {
@@ -48,8 +82,11 @@ demarrer() {
     echo "$TRAVAIL existe déjà : une pile du RSSI virtuel est peut-être gardée (--arreter pour repartir de zéro)." >&2
     exit 1
   fi
-  if ss -ltn 2>/dev/null | grep -qE '[:.]443\s'; then
-    echo "Le port 443 est déjà utilisé (autre pile ?) : l'arrêter avant de lancer le RSSI virtuel." >&2
+  # Une écoute sur toutes les interfaces (pile sans --pile, autre service) occupe aussi les adresses de bouclage.
+  local motif='[^ ]*'
+  [ -n "$PILE" ] && motif="($ADRESSE|0\.0\.0\.0|\*|\[::\])"
+  if ss -ltn 2>/dev/null | grep -qE "\s$motif:443\s"; then
+    echo "Le port 443 est déjà utilisé sur $ECOUTE (autre pile ?) : l'arrêter avant de lancer le RSSI virtuel." >&2
     exit 1
   fi
   mkdir -p "$DONNEES"
@@ -58,13 +95,25 @@ demarrer() {
   printf '{"creeLe":"%s","par":"rssi-virtuel/lancer.sh","version":"%s"}\n' "$(date -Iseconds)" "${VERSION:-local}" \
     >"$DONNEES/.suivi-audits-donnees"
   sed -e "s#^DATA_DIR=.*#DATA_DIR=$DONNEES#" \
-    -e 's/^SITE_ADDRESS=.*/SITE_ADDRESS=localhost/' \
+    -e "s/^SITE_ADDRESS=.*/SITE_ADDRESS=$ADRESSE/" \
+    -e "s/^BIND_ADDR=.*/BIND_ADDR=$ECOUTE/" \
     -e "s/^APP_VERSION=.*/APP_VERSION=${VERSION:-local}/" \
     -e 's/^ORG_NAME=.*/ORG_NAME="Groupement Santé Fictif"/' \
     -e 's/^RATE_LIMIT_PER_MINUTE=.*/RATE_LIMIT_PER_MINUTE=6000/' \
     .env.example >"$ENV_FICHIER"
   chmod 0600 "$ENV_FICHIER"
-  if [ -z "$VERSION" ]; then
+  # L'exécutant d'exploitation (updater) lit lui aussi le .env du dépôt monté : celui de la pile y est monté en lecture. Il
+  # lance `docker compose` depuis le dépôt : sans nom de projet, il viserait « suivi-audits » et non la pile.
+  printf 'services:\n  app:\n    env_file: !override\n      - %s\n  updater:\n    environment:\n      COMPOSE_PROJECT_NAME: %s\n    volumes:\n      - %s:%s/.env:ro\n' \
+    "$ENV_FICHIER" "$PROJET" "$ENV_FICHIER" "$DEPOT" >"$SURCHARGE"
+  if [ -n "$LOCALES" ]; then
+    echo "== Images locales déjà construites (étiquette local)"
+    local c
+    for c in api web updater; do
+      docker image inspect "ghcr.io/yousername-ha/suivi-audits-$c:local" >/dev/null 2>&1 ||
+        { echo "Image suivi-audits-$c:local absente : la construire d'abord (voir l'en-tête)." >&2; exit 1; }
+    done
+  elif [ -z "$VERSION" ]; then
     echo "== Construction des images de la branche ($(git rev-parse --short HEAD))"
     compose build
   else
@@ -80,19 +129,19 @@ demarrer() {
     sleep 3
   done
   [ "$st" = healthy ] || { compose logs --no-color init app | tail -60; echo "La pile ne démarre pas." >&2; exit 1; }
-  for _ in $(seq 1 30); do curl -skf https://localhost/healthz >/dev/null && break; sleep 2; done
-  curl -sk https://localhost/api/setup | grep -q '"adminExists":false' || { echo "Pile non vierge : arrêt." >&2; exit 1; }
+  for _ in $(seq 1 30); do curl -skf $URL/healthz >/dev/null && break; sleep 2; done
+  curl -sk $URL/api/setup | grep -q '"adminExists":false' || { echo "Pile non vierge : arrêt." >&2; exit 1; }
 }
 
 tester() {
   # Jeton neuf lu par le test d'installation (le conteneur Playwright n'a pas accès à Docker), jamais versionné.
-  compose exec -T app setup-token >"$DEPOT/tests/e2e/.jeton"
+  compose exec -T app setup-token >"$JETON"
   local code=0
   docker run --rm --network host --ipc=host \
     -v "$DEPOT:/work" -w /work/tests/e2e \
-    -e CI -e E2E_TOKEN_CMD="cat .jeton" -e E2E_STACK_DIR=/work/tests/e2e \
+    -e CI -e E2E_BASE_URL="$URL" -e E2E_TOKEN_CMD="cat .jeton$SUFFIXE" -e E2E_STACK_DIR=/work/tests/e2e \
     "$IMAGE_PLAYWRIGHT" npx playwright test -c rssi-virtuel/playwright.config.ts || code=$?
-  rm -f "$DEPOT/tests/e2e/.jeton"
+  rm -f "$JETON"
   chown -R "${SUDO_UID:-0}:${SUDO_GID:-0}" "$DEPOT/tests/e2e/rssi-virtuel/test-results" 2>/dev/null || true
   return $code
 }
@@ -102,9 +151,9 @@ case "$MODE" in
   garder)
     demarrer
     echo
-    echo "Pile vierge gardée : https://localhost"
+    echo "Pile vierge gardée : $URL"
     echo "Jeton d'installation pour l'agent : sudo docker compose -p $PROJET --env-file $ENV_FICHIER exec -T app setup-token"
-    echo "Pilote : E2E_BASE_URL=https://localhost E2E_TOKEN_CMD='sudo docker compose -p $PROJET --env-file $ENV_FICHIER exec -T app setup-token' \\"
+    echo "Pilote : E2E_BASE_URL=$URL PILOTE_PORT=$((9333 + ${PILE:-0})) PILOTE_DOSSIER=.pilote$SUFFIXE E2E_TOKEN_CMD='sudo docker compose -p $PROJET --env-file $ENV_FICHIER exec -T app setup-token' \\"
     echo "         node tests/e2e/rssi-virtuel/pilote.mjs demarrer"
     ;;
   complet)

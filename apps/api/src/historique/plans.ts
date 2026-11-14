@@ -18,7 +18,8 @@ import {
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
-import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
+import { DEFAULT_SMSI } from '../grc/core.js';
+import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
 /** Date du jour (AAAA-MM-JJ) en UTC, comme `suppliers.ts`. */
@@ -52,11 +53,15 @@ const codeMesure = (m: JsonObject) => {
 export class Plans {
   constructor(private readonly r: RegistreHistorique) {}
 
-  async vue(user: SessionUser): Promise<VuePlans> {
+  /** Actions des plans du périmètre affiché, ou de tous les périmètres lisibles sans `smsi` (BUG-062). */
+  async vue(user: SessionUser, smsi?: string): Promise<VuePlans> {
     const { version, data } = await this.r.lire(user, 'pilotage');
+    const lisibles = await this.r.perimetresLisibles(user);
+    if (smsi && !lisibles.has(smsi)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
     return {
       version,
       plans: entrees(data, 'plans')
+        .filter((p) => (smsi ? perimetreDe(p) === smsi : lisibles.has(perimetreDe(p))))
         .map(lireActionPlan)
         .filter((p): p is ActionPlan => !!p),
       recurrences: entrees(data, 'recurring')
@@ -79,14 +84,18 @@ export class Plans {
       user,
       ip,
       { module: 'pilotage', action: 'plan.created', reference: (p) => `legacy:plans:${p.id}` },
-      (data) => {
+      async (data) => {
+        // Une action de plan relève d'un périmètre : celui qui est affiché, sinon le périmètre commun.
+        const smsi = body.smsi ?? DEFAULT_SMSI;
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         const existants = entrees(data, 'plans');
         const id = identifiantPlan(
           body.type,
           existants.map((p) => str(p.id)),
         );
-        const { type, ...saisie } = body;
-        const neuve = { ...actionPlanVierge(type, id, new Date().toISOString()), ...saisie };
+        const { type, smsi: _smsi, ...saisie } = body;
+        void _smsi;
+        const neuve = { ...actionPlanVierge(type, id, new Date().toISOString()), ...saisie, smsi };
         data.plans = [...(Array.isArray(data.plans) ? data.plans : []), neuve];
         return neuve;
       },
@@ -100,7 +109,10 @@ export class Plans {
       user,
       ip,
       { module: 'pilotage', action: 'plan.updated', reference: (p) => `legacy:plans:${p.id}` },
-      (data) => this.remplacer(data, id, (brut) => ({ ...brut, ...body })),
+      async (data) => {
+        await this.controler(data, id, user);
+        return this.remplacer(data, id, (brut) => ({ ...brut, ...body }));
+      },
     );
   }
 
@@ -111,13 +123,15 @@ export class Plans {
       user,
       ip,
       { module: 'pilotage', action: 'plan.shifted', reference: (p) => `legacy:plans:${p.id}` },
-      (data) =>
-        this.remplacer(data, id, (brut) => {
+      async (data) => {
+        await this.controler(data, id, user);
+        return this.remplacer(data, id, (brut) => {
           const lu = lireActionPlan(brut)!;
           if (!lu.start) throw new HttpError(422, 'Cette action n’a pas de date prévue à décaler.');
           const { start, end } = decalerAction(lu, jours);
           return { ...brut, start, ...(lu.end ? { end } : {}) };
-        }),
+        });
+      },
     );
   }
 
@@ -126,8 +140,8 @@ export class Plans {
       user,
       ip,
       { droit: 'supprimer', module: 'pilotage', action: 'plan.deleted', reference: (p) => `legacy:plans:${p.id}` },
-      (data) => {
-        this.trouver(data, id);
+      async (data) => {
+        await this.controler(data, id, user);
         remplacerEntree(data, 'plans', id, null);
         return { id };
       },
@@ -145,7 +159,8 @@ export class Plans {
         action: 'plan.coverage-synced',
         reference: (x) => `legacy:plans:${x.plan.id}`,
       },
-      (data) => {
+      async (data) => {
+        await this.controler(data, id, user);
         const plan = lireActionPlan(this.trouver(data, id))!;
         if (plan.type !== 'audit') throw new HttpError(422, 'Seul un audit interne alimente la couverture du cycle.');
         if (plan.status !== 'Réalisé') throw new HttpError(409, 'Disponible quand l’audit est réalisé.');
@@ -177,7 +192,8 @@ export class Plans {
       user,
       ip,
       { module: 'pilotage', action: 'plan.indicator-pushed', reference: (x) => `legacy:plans:${x.plan.id}` },
-      (data) => {
+      async (data) => {
+        await this.controler(data, id, user);
         const brut = this.trouver(data, id);
         const plan = lireActionPlan(brut)!;
         if (plan.type !== 'sensi' || plan.status !== 'Réalisé' || !plan.indicator)
@@ -224,12 +240,16 @@ export class Plans {
         reference: (x) => `legacy:plans:${x.plan.id}`,
       },
       async (data, c) => {
+        await this.controler(data, id, user);
         const plan = lireActionPlan(this.trouver(data, id))!;
         if (plan.type !== 'exo')
           throw new HttpError(422, 'Seul un exercice crée une action dans le registre des écarts.');
-        const ecarts = entrees(data, 'findings');
+        const pris = await this.r.identifiantsEcartsPris(
+          c,
+          entrees(data, 'findings').map((f) => str(f.id)),
+        );
         let n = 1;
-        while (ecarts.some((f) => f.id === `EXO-${String(n).padStart(2, '0')}`)) n++;
+        while (pris.includes(`EXO-${String(n).padStart(2, '0')}`)) n++;
         const ecart = `EXO-${String(n).padStart(2, '0')}`;
         const mesures = new Set(entrees(data, 'items').map((m) => str(m.id)));
         await this.r.creerEcart(c, user, ip, {
@@ -249,6 +269,10 @@ export class Plans {
   }
 
   /* ------------------------------------------------------------------------------------------------ interne */
+  /** Contrôle l'accès en écriture au périmètre de l'action `id` (404 hors périmètre, BUG-062). */
+  private async controler(data: JsonObject, id: string, user: SessionUser): Promise<void> {
+    await this.r.exigerPerimetre(user, this.trouver(data, id), true, 'Action de plan absente.');
+  }
   private trouver(data: JsonObject, id: string): JsonObject {
     const trouvees = entrees(data, 'plans').filter((p) => p.id === id);
     if (trouvees.length > 1)

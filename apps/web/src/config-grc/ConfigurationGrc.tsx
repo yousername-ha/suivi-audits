@@ -381,6 +381,7 @@ function Nouveau({
         />
         {portee === 'smsi' && (
           <Select
+            allowDeselect={false}
             label="Périmètre"
             data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
             value={smsi}
@@ -390,6 +391,7 @@ function Nouveau({
         {kind === 'scale' && (
           <>
             <Select
+              allowDeselect={false}
               label="Catégorie"
               data={SCALE_CATEGORIES.map((x) => ({ value: x, label: SCALE_CATEGORY_LABELS[x] }))}
               value={categorie}
@@ -406,6 +408,7 @@ function Nouveau({
         {kind === 'matrix' && (
           <>
             <Select
+              allowDeselect={false}
               label="Catégorie"
               data={MATRIX_CATEGORIES.map((x) => ({ value: x, label: MATRIX_CATEGORY_LABELS[x] }))}
               value={categorie}
@@ -436,6 +439,7 @@ function Nouveau({
         {kind === 'taxonomy' && (
           <>
             <Select
+              allowDeselect={false}
               label="Finalité"
               data={TAXONOMY_PURPOSES.map((x) => ({ value: x, label: TAXONOMY_PURPOSE_LABELS[x] }))}
               value={categorie}

@@ -1,4 +1,4 @@
-import { Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import { type BusinessPolicy, type GrcKind, type GrcObject, type PilotageRecord, type Module } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ObjectifsPerimetre } from '../pilotage/ObjectifsPerimetre';
 import { useCan } from '../session';
 import { PILOTAGE_LABELS } from '../pilotage-navigation';
 import { Overview } from '../grc/Overview';
@@ -50,6 +51,18 @@ import { Pronostic } from '../audit/Pronostic';
 import { CartesPilotage, type SyntheseApi } from '../components/Synthese';
 
 const SOCLE = '00000000-0000-4000-8000-000000000001';
+/** Rubriques dont les données sont communes à toute l'organisation (registres historiques sans périmètre) : sous un autre
+    périmètre, la page le dit au lieu de laisser croire que le sélecteur la filtre (BUG-062). */
+const RUBRIQUES_COMMUNES = new Set([
+  'audit-pronostic',
+  'audit-couverture',
+  'audit-deroule',
+  'audit-planning',
+  'audit-participants',
+  'evaluations-clausier',
+  'fournisseurs',
+  'criteres-fournisseurs',
+]);
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -267,6 +280,7 @@ export function PilotagePage() {
         <ErrorAlert error={scopes.error ?? policy.error} />
         {(scopes.data?.length ?? 0) > 1 && (
           <Select
+            allowDeselect={false}
             label="Périmètre affiché"
             description="Les accès existants sont conservés."
             data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
@@ -275,6 +289,12 @@ export function PilotagePage() {
           />
         )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
+        {allowed && smsi && smsi !== SOCLE && RUBRIQUES_COMMUNES.has(section) && (
+          <Alert color="blue" role="note">
+            Cette rubrique est commune à toute l’organisation : elle n’est pas filtrée par le périmètre affiché, et ce
+            que vous y modifiez vaut pour tous les périmètres.
+          </Alert>
+        )}
         {allowed && smsi && policy.data && (
           <>
             {config && (
@@ -287,10 +307,9 @@ export function PilotagePage() {
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
                 {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
-                {section === 'audits' && can('pilotage', 'lire') && smsi === SOCLE && <PlansSmsi vue="audit" />}
-                {section === 'exercices' && smsi === SOCLE && <PlansSmsi vue="exo" />}
-                {(smsi !== '00000000-0000-4000-8000-000000000001' ||
-                  !['processus', 'objectifs', 'indicateurs'].includes(section)) && (
+                {section === 'audits' && can('pilotage', 'lire') && <PlansSmsi vue="audit" smsi={smsi} />}
+                {section === 'exercices' && <PlansSmsi vue="exo" smsi={smsi} />}
+                {!['processus', 'objectifs', 'indicateurs'].includes(section) && (
                   <BusinessRegistry
                     key={smsi + section}
                     smsi={smsi}
@@ -306,7 +325,7 @@ export function PilotagePage() {
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}
               </>
             )}
-            {section === 'processus-cartes' && smsi === SOCLE && <CartesProcessus smsi={smsi} />}
+            {section === 'processus-cartes' && <CartesProcessus smsi={smsi} />}
             {section === 'parcours-iso' && <ParcoursIso key={smsi} smsi={smsi} />}
             {section === 'synthese' && (
               <>
@@ -332,6 +351,7 @@ export function PilotagePage() {
                   </Stack>
                 </Card>
                 {smsi === '00000000-0000-4000-8000-000000000001' && <TableauPilotage />}
+                <ObjectifsPerimetre smsi={smsi} />
                 <Overview smsi={smsi} />
               </>
             )}
@@ -403,23 +423,25 @@ export function PilotagePage() {
               <RiskMap smsi={smsi} onOpen={open} />
             )}
             {section === 'pestel' && can('pilotage', 'lire') && <Pestel smsi={smsi} />}
-            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" />}
-            {section === 'dda-annexe-a' && can('audit', 'lire') && <DeclarationApplicabilite reference="A" />}
-            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" />}
-            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue />}
-            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise />}
-            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise />}
-            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents />}
+            {section === 'dda-iso' && can('audit', 'lire') && <DeclarationApplicabilite reference="ISO" smsi={smsi} />}
+            {section === 'dda-annexe-a' && can('audit', 'lire') && (
+              <DeclarationApplicabilite reference="A" smsi={smsi} />
+            )}
+            {section === 'dda-hds' && can('audit', 'lire') && <DeclarationApplicabilite reference="HDS" smsi={smsi} />}
+            {section === 'crise-cellule' && can('incidents', 'lire') && <CelluleCriseVue smsi={smsi} />}
+            {section === 'crise-contacts' && can('incidents', 'lire') && <ContactsCrise smsi={smsi} />}
+            {section === 'crise-scenarios' && can('incidents', 'lire') && <ScenariosCrise smsi={smsi} />}
+            {section === 'incidents-registre' && can('incidents', 'lire') && <RegistreIncidents smsi={smsi} />}
             {section === 'evaluations-clausier' && can('fournisseurs', 'lire') && <EvaluationsClausier />}
             {section === 'audit-pronostic' && can('audit', 'lire') && <Pronostic />}
             {section === 'audit-couverture' && can('audit', 'lire') && <CouvertureCycle />}
             {section === 'audit-deroule' && can('plan_audit', 'lire') && <Organisation vue="deroule" />}
             {section === 'audit-planning' && can('plan_audit', 'lire') && <Organisation vue="planning" />}
             {section === 'audit-participants' && can('plan_audit', 'lire') && <Organisation vue="participants" />}
-            {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" />}
-            {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" />}
-            {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" />}
-            {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" />}
+            {section === 'plans-calendrier' && can('pilotage', 'lire') && <PlansSmsi vue="calendrier" smsi={smsi} />}
+            {section === 'plans-planning' && can('pilotage', 'lire') && <PlansSmsi vue="planning" smsi={smsi} />}
+            {section === 'plans-formation' && can('pilotage', 'lire') && <PlansSmsi vue="formation" smsi={smsi} />}
+            {section === 'plans-sensibilisation' && can('pilotage', 'lire') && <PlansSmsi vue="sensi" smsi={smsi} />}
             {section === 'imports' && can('import_export', 'lire') && <Imports smsi={smsi} />}
             {section === 'configuration' && can('pilotage', 'lire') && (
               <>
@@ -585,6 +607,7 @@ function ControlSchedule({ smsi, object, onClose }: { smsi: string; object: GrcO
           onChange={(e) => setStart(e.currentTarget.value)}
         />
         <Select
+          allowDeselect={false}
           label="Unité de récurrence"
           data={[
             { value: 'day', label: 'Jour' },
