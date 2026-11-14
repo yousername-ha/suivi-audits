@@ -1,1 +1,670 @@
 /* Refonte Neon — Plan d'actions et tâches récurrentes : timeline Studio (lot 6), ADR 0093. Portage de la référence validée, adapté à la cible. */
+/* Teintes : un sens par teinte (orange « à faire », bleu en cours, vert terminé ou OK, rouge bloqué ou KO, gris annulé ou
+   NA), toujours doublé d'un texte. Le retard n'est pas une teinte : contour pointillé rouge et mention « En retard ».
+   Couleurs : variables Mantine d'état (contrastes vérifiés dans tokens.ts) et palette Neon. Animation : opacité et
+   transformation d'un halo seulement ; le texte ne bouge jamais ; pause, mouvement réduit, impression et couleurs
+   forcées l'arrêtent. Lignes et repères gardent les classes de la Timeline précédente (tests de bout en bout). */
+
+/* ---------- Teintes ---------- */
+:is(.taches-studio, .validation-rapide) [data-ton] {
+  --ton: var(--mantine-color-blue-filled);
+  --ton-doux: var(--mantine-color-blue-light);
+  --ton-texte: var(--mantine-color-blue-light-color);
+}
+:is(.taches-studio, .validation-rapide) [data-ton='amber'] {
+  --ton: var(--mantine-color-orange-filled);
+  --ton-doux: var(--mantine-color-orange-light);
+  --ton-texte: var(--mantine-color-orange-light-color);
+}
+:is(.taches-studio, .validation-rapide) [data-ton='teal'] {
+  --ton: var(--mantine-color-teal-filled);
+  --ton-doux: var(--mantine-color-teal-light);
+  --ton-texte: var(--mantine-color-teal-light-color);
+}
+:is(.taches-studio, .validation-rapide) [data-ton='red'] {
+  --ton: var(--mantine-color-red-filled);
+  --ton-doux: var(--mantine-color-red-light);
+  --ton-texte: var(--mantine-color-red-light-color);
+}
+:is(.taches-studio, .validation-rapide) [data-ton='muted'] {
+  --ton: var(--mantine-color-gray-6);
+  --ton-doux: var(--mantine-color-gray-light);
+  --ton-texte: var(--mantine-color-gray-light-color);
+}
+.taches-studio,
+.validation-rapide {
+  --tache-retard: var(--mantine-color-red-filled);
+  --tache-halo: var(--neon-orange);
+  --tache-trait: var(--suivi-trait);
+}
+[data-mantine-color-scheme='dark'] :is(.taches-studio, .validation-rapide) {
+  --tache-retard: var(--mantine-color-red-5);
+}
+
+/* ---------- En-tête : synthèse, vues en icônes, pause ---------- */
+.taches-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.taches-metriques {
+  flex: 1 1 36rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+}
+.taches-metrique {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'libelle valeur'
+    'note valeur';
+  align-items: center;
+  column-gap: var(--mantine-spacing-xs);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ton) 35%, var(--tache-trait));
+  border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
+  background: linear-gradient(110deg, var(--suivi-surface), color-mix(in srgb, var(--ton) 7%, var(--suivi-surface)));
+  box-shadow: var(--suivi-ombre);
+  min-width: 0;
+}
+.taches-metrique::before {
+  content: '';
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline-start: 1rem;
+  inline-size: 1.5rem;
+  block-size: 3px;
+  border-radius: 2px;
+  background: var(--ton);
+}
+.taches-metrique__libelle {
+  grid-area: libelle;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--mantine-color-text);
+  overflow-wrap: anywhere;
+}
+.taches-metrique__note {
+  grid-area: note;
+  font-size: 0.6875rem;
+  color: var(--mantine-color-dimmed);
+  overflow-wrap: anywhere;
+}
+.taches-metrique__valeur {
+  grid-area: valeur;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ton-texte);
+  font-variant-numeric: tabular-nums;
+}
+.taches-commandes {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.taches-pause {
+  block-size: auto;
+  min-block-size: 1.625rem;
+}
+.taches-pause .mantine-Button-label {
+  white-space: normal;
+  text-align: start;
+}
+.taches-vues {
+  display: inline-flex;
+  gap: 0.125rem;
+  padding: 0.1875rem;
+  border: 1px solid var(--tache-trait);
+  border-radius: 0.625rem;
+  background: var(--suivi-surface-douce);
+}
+.taches-filtres {
+  align-items: flex-end;
+  padding: 0.75rem;
+  border: 1px solid var(--tache-trait);
+  border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
+  background: var(--suivi-surface-douce);
+}
+.taches-filtres > * {
+  flex: 1 1 10.5rem;
+  min-width: 0;
+}
+
+/* ---------- Puces d'état et de résultat ---------- */
+.tache-etat,
+.tache-resultat {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.4375rem;
+  border: 1px solid color-mix(in srgb, var(--ton) 50%, transparent);
+  border-radius: 0.375rem;
+  background: var(--ton-doux);
+  color: var(--ton-texte);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  line-height: 1.55;
+  white-space: nowrap;
+  flex: none;
+}
+.tache-resultat {
+  --ton: var(--mantine-color-teal-filled);
+  --ton-doux: var(--mantine-color-teal-light);
+  --ton-texte: var(--mantine-color-teal-light-color);
+  border-style: dashed;
+}
+.tache-resultat[data-resultat='ko'] {
+  --ton: var(--mantine-color-red-filled);
+  --ton-doux: var(--mantine-color-red-light);
+  --ton-texte: var(--mantine-color-red-light-color);
+}
+.tache-resultat[data-resultat='na'] {
+  --ton: var(--mantine-color-gray-6);
+  --ton-doux: var(--mantine-color-gray-light);
+  --ton-texte: var(--mantine-color-gray-light-color);
+}
+/* Halo « à faire » : présent même à l'arrêt ; il ne pulse que si le mouvement est permis. */
+.tache-etat[data-pouls]::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--tache-halo);
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0.5rem color-mix(in srgb, var(--tache-halo) 55%, transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------- Panneau Timeline ---------- */
+.timeline-studio {
+  position: relative;
+  padding: var(--mantine-spacing-md);
+  border: 1px solid var(--tache-trait);
+  border-radius: 1.25rem 0.25rem 1.25rem 0.25rem;
+  background: linear-gradient(
+    125deg,
+    var(--suivi-surface),
+    color-mix(in srgb, var(--neon-violet) 3%, var(--suivi-surface))
+  );
+  box-shadow: var(--suivi-ombre);
+  min-width: 0;
+}
+.timeline-studio::before {
+  content: '';
+  position: absolute;
+  inset-block-start: -2px;
+  inset-inline-start: 1.5rem;
+  inline-size: 2rem;
+  block-size: 3px;
+  border-radius: 2px;
+  background: var(--neon-cyan);
+}
+.timeline-studio__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.timeline-studio__surtitre {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon-accent);
+}
+.timeline-studio__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mantine-spacing-xs);
+}
+.timeline-serie {
+  max-inline-size: 34rem;
+}
+.timeline-legende {
+  padding-block: 0.375rem;
+  border-block: 1px dashed var(--tache-trait);
+  font-size: 0.75rem;
+}
+.timeline-legende__item {
+  max-inline-size: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--mantine-color-dimmed);
+}
+.timeline-legende__carre {
+  flex: none;
+}
+.timeline-legende .grc-timeline__retard-legende {
+  color: var(--tache-retard);
+}
+.timeline-fond {
+  color: var(--mantine-color-dimmed);
+}
+.timeline-hors {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: 1px dashed var(--tache-trait);
+  border-radius: 0.625rem;
+}
+
+/* ---------- Timeline des actions (contrats de la Timeline précédente conservés) ---------- */
+.taches-studio .grc-timeline {
+  --grc-timeline-etiquettes: 19rem;
+  border-color: var(--tache-trait);
+  border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
+  background: var(--suivi-surface);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.taches-studio .grc-timeline__etiquettes {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  inline-size: var(--grc-timeline-etiquettes);
+  background: var(--suivi-surface);
+  border-inline-end-color: var(--tache-trait);
+}
+.taches-studio .grc-timeline__entete {
+  display: flex;
+  align-items: flex-end;
+  block-size: var(--grc-timeline-entete, 2.125rem);
+  padding: 0 0.625rem 0.375rem;
+  border-block-end: 1px solid var(--tache-trait);
+  color: var(--mantine-color-dimmed);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.taches-studio .grc-timeline__ligne {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.375rem;
+  block-size: var(--grc-timeline-rang, 1.875rem);
+  padding-inline: 0.625rem 0.5rem;
+  font-size: 0.8125rem;
+  box-shadow: inset 3px 0 0 var(--ton);
+}
+.taches-studio .grc-timeline__ligne:nth-child(even) {
+  background: color-mix(in srgb, var(--mantine-color-text) 2.5%, var(--suivi-surface));
+}
+.taches-studio .grc-timeline__ligne:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--neon-accent) 8%, var(--suivi-surface));
+}
+.taches-studio .grc-timeline__ligne:focus-visible {
+  outline: 2px solid var(--neon-accent);
+  outline-offset: -2px;
+}
+.grc-timeline__nom {
+  overflow: hidden;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taches-studio .grc-timeline__retard {
+  flex: none;
+  padding: 0 0.3125rem;
+  border: 1px dashed var(--tache-retard);
+  border-radius: 0.3125rem;
+  color: var(--mantine-color-red-light-color);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.taches-studio .grc-timeline__frise text {
+  fill: var(--mantine-color-dimmed);
+}
+.grc-timeline__mois-libelle {
+  font-size: 0.6875rem;
+  text-transform: capitalize;
+}
+.taches-studio .grc-timeline__mois {
+  stroke: color-mix(in srgb, var(--tache-trait) 80%, transparent);
+}
+.taches-studio .grc-timeline__aujourdhui {
+  stroke: var(--neon-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+.grc-timeline__fond-ligne {
+  fill: transparent;
+  cursor: pointer;
+}
+.grc-timeline__rangee:nth-of-type(even) > .grc-timeline__fond-ligne {
+  fill: color-mix(in srgb, var(--mantine-color-text) 2.5%, transparent);
+}
+.grc-timeline__rangee:hover > .grc-timeline__fond-ligne {
+  fill: color-mix(in srgb, var(--neon-accent) 7%, transparent);
+}
+.taches-studio .grc-timeline__guide {
+  stroke: color-mix(in srgb, var(--ton) 70%, transparent);
+  pointer-events: none;
+}
+.grc-timeline__repere {
+  cursor: pointer;
+}
+.grc-timeline__repere:focus-visible {
+  outline: none;
+}
+.grc-timeline__barre {
+  fill: var(--ton);
+  stroke: color-mix(in srgb, var(--ton) 55%, var(--mantine-color-text));
+  stroke-width: 1;
+}
+.taches-studio .grc-timeline__occurrence {
+  stroke: color-mix(in srgb, var(--mantine-color-text) 55%, transparent);
+  stroke-width: 1.25;
+}
+.grc-timeline__repere:is(:hover, :focus-visible) :is(.grc-timeline__barre, .grc-timeline__occurrence) {
+  stroke: var(--neon-accent);
+  stroke-width: 3;
+}
+/* Retard : contour pointillé autour du repère, distinct de la teinte de l'état et du résultat. */
+.grc-timeline__contour-retard {
+  fill: none;
+  stroke: var(--tache-retard);
+  stroke-width: 2;
+  stroke-dasharray: 3 2;
+  pointer-events: none;
+}
+.grc-timeline__pouls {
+  fill: none;
+  stroke: var(--tache-halo);
+  stroke-width: 4;
+  opacity: 0.45;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+/* ---------- Timeline des occurrences ---------- */
+.timeline-occurrences {
+  --occ-etiquettes: 17rem;
+  max-block-size: var(--grc-zone-hauteur);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border: 1px solid var(--tache-trait);
+  border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
+  background: var(--suivi-surface);
+}
+.timeline-occurrences__axe,
+.timeline-occurrences__rang {
+  display: grid;
+  grid-template-columns: var(--occ-etiquettes) minmax(0, 1fr);
+}
+.timeline-occurrences__axe {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: var(--suivi-surface);
+  border-block-end: 1px solid var(--tache-trait);
+}
+.timeline-occurrences__coin {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0.625rem 0.375rem;
+  border-inline-end: 1px solid var(--tache-trait);
+  color: var(--mantine-color-dimmed);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.timeline-occurrences__regle,
+.timeline-occurrences__piste {
+  min-width: 0;
+  overflow: hidden;
+}
+.timeline-occurrences__regle > svg {
+  display: block;
+}
+/* Piste : le fond suit la hauteur de la ligne (intitulé compris) ; les repères restent au-dessus. */
+.timeline-occurrences__piste {
+  position: relative;
+  cursor: pointer;
+}
+.timeline-occurrences__piste:hover {
+  background: color-mix(in srgb, var(--neon-accent) 6%, transparent);
+}
+.timeline-occurrences__fond {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  block-size: 100%;
+  pointer-events: none;
+}
+.timeline-occurrences__voie {
+  position: relative;
+  display: block;
+}
+.timeline-occurrences__rang {
+  border-block-end: 1px solid color-mix(in srgb, var(--tache-trait) 60%, transparent);
+}
+.timeline-occurrences__serie {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.0625rem;
+  min-width: 0;
+  padding: 0.25rem 0.625rem;
+  border-inline-end: 1px solid var(--tache-trait);
+  box-shadow: inset 3px 0 0 var(--ton);
+}
+.timeline-occurrences__nom {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-occurrences__rythme,
+.timeline-occurrences__compte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+}
+.timeline-occurrences__grille {
+  pointer-events: none;
+}
+.timeline-occurrences__bande {
+  fill: transparent;
+  stroke: color-mix(in srgb, var(--tache-trait) 55%, transparent);
+  stroke-width: 0.5;
+}
+.timeline-occurrences__bande--alt {
+  fill: color-mix(in srgb, var(--mantine-color-text) 3.5%, transparent);
+}
+.timeline-occurrences__graduation,
+.timeline-occurrences__date {
+  fill: var(--mantine-color-dimmed);
+  font-size: 0.6875rem;
+}
+.timeline-occurrences__date {
+  font-size: 0.625rem;
+}
+.timeline-occurrences__aujourdhui {
+  fill: var(--neon-accent);
+  font-size: 0.6875rem;
+  font-weight: 650;
+}
+.timeline-occurrences__vide {
+  padding: var(--mantine-spacing-sm);
+  color: var(--mantine-color-dimmed);
+}
+
+/* ---------- Liste compacte, Kanban, calendrier ---------- */
+.taches-liste tbody tr > td:first-child {
+  box-shadow: inset 3px 0 0 var(--ton);
+}
+.taches-liste__titre {
+  block-size: auto;
+  min-block-size: 1.5rem;
+  max-inline-size: 100%;
+  padding-inline: 0.25rem;
+  text-align: start;
+}
+.taches-liste__titre .mantine-Button-inner {
+  justify-content: flex-start;
+}
+.taches-liste__titre .mantine-Button-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tache-carte {
+  border-color: color-mix(in srgb, var(--ton) 40%, var(--tache-trait));
+  border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
+  box-shadow:
+    inset 3px 0 0 var(--ton),
+    var(--suivi-ombre);
+}
+.taches-calendrier__tache {
+  box-shadow: inset 2px 0 0 var(--ton);
+}
+
+/* ---------- Petite fenêtre de résultat ---------- */
+.validation-rapide__titre {
+  color: var(--neon-titre);
+}
+.validation-rapide__etat {
+  row-gap: 0.25rem;
+}
+
+/* ---------- Mouvement : halo « à faire », cycle de 2,2 s ---------- */
+@keyframes tache-pouls {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.07);
+  }
+}
+@keyframes tache-pouls-barre {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1, 1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02, 1.55);
+  }
+}
+@keyframes tache-pouls-carre {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.5);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .taches-studio:not([data-mouvement='pause']) .tache-etat[data-pouls]::after {
+    animation: tache-pouls 2.2s ease-in-out infinite;
+  }
+  .taches-studio:not([data-mouvement='pause']) .grc-timeline__pouls {
+    animation: tache-pouls-barre 2.2s ease-in-out infinite;
+  }
+  .taches-studio:not([data-mouvement='pause']) .grc-timeline__pouls--carre {
+    animation-name: tache-pouls-carre;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .taches-studio *,
+  .taches-studio *::before,
+  .taches-studio *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Petites largeurs ---------- */
+@media (max-width: 62em) {
+  .taches-metriques {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .timeline-studio__outils {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 48em) {
+  .timeline-occurrences {
+    --occ-etiquettes: 10rem;
+  }
+  .timeline-studio {
+    padding: var(--mantine-spacing-xs);
+  }
+}
+@media (max-width: 36em) {
+  .taches-studio .grc-timeline {
+    --grc-timeline-etiquettes: 11.5rem;
+  }
+  .grc-timeline__ligne .tache-etat__libelle {
+    display: none;
+  }
+  .taches-metrique__valeur {
+    font-size: 1.25rem;
+  }
+}
+
+/* ---------- Impression et couleurs forcées ---------- */
+@media print {
+  .tache-etat[data-pouls]::after,
+  .grc-timeline__pouls,
+  .taches-vues,
+  .taches-pause {
+    display: none;
+  }
+  .timeline-studio,
+  .taches-metrique {
+    box-shadow: none;
+  }
+  .grc-timeline,
+  .timeline-occurrences {
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+@media (forced-colors: active) {
+  .tache-etat,
+  .tache-resultat,
+  .taches-metrique,
+  .grc-timeline__retard {
+    border-color: CanvasText;
+    forced-color-adjust: auto;
+  }
+  .tache-etat[data-pouls]::after,
+  .grc-timeline__pouls {
+    display: none;
+  }
+  .grc-timeline__barre,
+  .taches-studio .grc-timeline__occurrence {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+  .grc-timeline__contour-retard {
+    stroke: Highlight;
+  }
+  .grc-timeline__repere:focus-visible :is(.grc-timeline__barre, .grc-timeline__occurrence) {
+    stroke: Highlight;
+  }
+}

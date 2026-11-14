@@ -395,7 +395,13 @@ export function PilotagePage() {
                     </>
                   )}
                 </Group>
-                <Tasks key={smsi + section} smsi={smsi} policy={policy.data.definition} onOpen={open} />
+                <Tasks
+                  key={smsi + section}
+                  smsi={smsi}
+                  policy={policy.data.definition}
+                  onOpen={open}
+                  occurrences={section === 'recurrences'}
+                />
                 {section === 'recurrences' && can('ecarts', 'modifier') && (
                   <SeriesProposees onPreparer={(name, data) => createPreset('task_series', name, data)} />
                 )}
