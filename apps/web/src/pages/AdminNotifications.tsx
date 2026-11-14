@@ -92,6 +92,7 @@ export function NotificationsPanel() {
           Réglage par groupe ou par rôle
         </Title>
         <Select
+          allowDeselect={false}
           label="Groupe ou rôle"
           description="Le rôle est le « profil » de droits d’un compte, attribué directement ou par un groupe."
           placeholder="Choisir un groupe ou un rôle"

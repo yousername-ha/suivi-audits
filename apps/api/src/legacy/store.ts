@@ -125,6 +125,8 @@ export class LegacyStore {
     expected: number | null,
     note: string,
     batchId: number | null = null,
+    /** État complet daté par la version (modules repris dans des tables compris) ; par défaut `incoming`. */
+    instantane: JsonObject = incoming,
   ): Promise<
     { conflict: true; by: string; at: Date; version: number } | { conflict: false; version: number; sha256: string }
   > {
@@ -171,7 +173,9 @@ export class LegacyStore {
       .insertInto('state_history')
       .values({
         version,
-        data,
+        // La version de l'historique date l'état complet : sans les modules repris dans des tables, elle serait vide et
+        // ne pourrait ni se télécharger ni se restaurer (BUG-073).
+        data: JSON.stringify(instantane),
         sha256: sha,
         updated_at: sql<Date>`now()`,
         updated_by: by,
@@ -218,6 +222,6 @@ export class LegacyStore {
       }
       delete stored[m.key];
     }
-    return this.save(c, stored, user, expected, note);
+    return this.save(c, stored, user, expected, note, null, incoming);
   }
 }

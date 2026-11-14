@@ -81,3 +81,51 @@ describe('PESTEL des enjeux externes', () => {
     expect((await a.get(url)).json().nonClasses.map((e: { label: string }) => e.label)).toContain('Menace cyber');
   });
 });
+
+describe('PESTEL des fiches saisies à l’écran (BUG-053)', () => {
+  it('reprend les menaces et opportunités des SWOT et les lignes des contextes, classables, dans leur périmètre', async () => {
+    const creer = async (smsi: string, kind: string, name: string, data: Record<string, unknown>) => {
+      const r = await a.post(`/api/grc/${smsi}/objects`, { kind, name, data });
+      expect(r.statusCode, r.body).toBe(200);
+    };
+    const sous = (
+      await a.post('/api/grc/smsis', { name: 'Sous-périmètre PESTEL', scope: 'x', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    await creer(DEFAULT_SMSI, 'swot', 'SWOT fictif', {
+      threats: 'Menace fictive PESTEL\nAutre menace fictive',
+      opportunities: 'Opportunité fictive PESTEL',
+      strengths: 'Force interne fictive',
+    });
+    await creer(DEFAULT_SMSI, 'context', 'Contexte fictif', {
+      issues: 'Externes : obligation réglementaire fictive\nInternes : compétence fictive',
+    });
+    await creer(sous, 'swot', 'SWOT du sous-périmètre', { threats: 'Menace du sous-périmètre fictive' });
+    const vue = (await a.get(url)).json();
+    const externes = [...vue.nonClasses, ...vue.parFacteur.flatMap((f: { enjeux: unknown[] }) => f.enjeux)] as {
+      ref: string;
+      label: string;
+    }[];
+    const libelles = externes.map((e) => e.label);
+    expect(libelles).toEqual(
+      expect.arrayContaining([
+        'Menace fictive PESTEL',
+        'Autre menace fictive',
+        'Opportunité fictive PESTEL',
+        'obligation réglementaire fictive',
+      ]),
+    );
+    expect(libelles).not.toContain('Force interne fictive');
+    expect(libelles).not.toContain('Menace du sous-périmètre fictive');
+    expect(vue.internes.map((e: { label: string }) => e.label)).toContain('compétence fictive');
+    // Classement d'une menace saisie à l'écran, conservé et propre au périmètre.
+    const menace = externes.find((e) => e.label === 'Menace fictive PESTEL')!;
+    const facteur = vue.facteurs[0].id as string;
+    const put = await a.put(url, { assignments: { [menace.ref]: facteur } });
+    expect(put.statusCode, put.body).toBe(200);
+    const apres = (await a.get(url)).json();
+    expect(apres.parFacteur[0].enjeux.map((e: { label: string }) => e.label)).toContain('Menace fictive PESTEL');
+    const enfant = (await a.get(`/api/grc/${sous}/pilotage/pestel`)).json();
+    expect(JSON.stringify(enfant)).toContain('Menace du sous-périmètre fictive');
+    expect(JSON.stringify(enfant)).not.toContain('Menace fictive PESTEL');
+  });
+});

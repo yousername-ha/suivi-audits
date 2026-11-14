@@ -4,6 +4,10 @@ import type { Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { Grc } from './core.js';
 import { DEFAULT_SMSI } from './core.js';
+import { perimetreDe } from '../historique/registre.js';
+/** Référence d'une mesure de la déclaration d'applicabilité : `A.8.13`, `HDS 12` ou le numéro de clause. */
+const codeMesureSource = (m: JsonObject): string =>
+  m.ref === 'A' ? `A.${String(m.num ?? '')}` : m.ref === 'HDS' ? `HDS ${String(m.num ?? '')}` : String(m.num ?? '');
 export async function sources(g: Grc, smsi: string, user: SessionUser, search: string, cibles?: string[]) {
   await g.access(smsi, user);
   // Champ typé (lot U3) : seuls les types d'objets et les clés historiques demandés sont proposés.
@@ -73,9 +77,16 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
       .orderBy('v.framework_id')
       .orderBy('v.version', 'desc')
       .execute()) as Publication[];
+    // Une exigence n'est proposée qu'une fois, qu'elle vienne de la publication ou de la copie du périmètre (BUG-060).
+    const vues = new Set<string>();
     for (const p of publications)
       for (const r of p.definition.requirements)
-        if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)
+        if (
+          (r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) &&
+          objects.length < 300 &&
+          !vues.has(`${p.framework_id}:${p.version}:${r.id}`) &&
+          vues.add(`${p.framework_id}:${p.version}:${r.id}`)
+        )
           objects.push({
             ref: `requirement:${p.framework_id}:${p.version}:${r.id}`,
             name: r.id + ' · ' + r.title,
@@ -89,14 +100,22 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     }));
     for (const p of attached)
       for (const r of p.definition.requirements)
-        if ((r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) && objects.length < 300)
+        if (
+          (r.title + ' ' + r.id).toLowerCase().includes(search.toLowerCase()) &&
+          objects.length < 300 &&
+          !vues.has(`${p.framework_id}:${p.version}:${r.id}`) &&
+          vues.add(`${p.framework_id}:${p.version}:${r.id}`)
+        )
           objects.push({
             ref: `requirement:${p.framework_id}:${p.version}:${r.id}`,
             name: r.id + ' · ' + r.title,
             kind: 'requirement',
           });
   }
-  if (smsi === DEFAULT_SMSI) {
+  {
+    // Mesures (liste commune, sur laquelle chaque périmètre décide dans sa DdA) ; processus, objectifs et indicateurs du périmètre
+    // (ADR 0094) ; le reste de l'état historique relève du périmètre commun.
+    const parPerimetre = ['processes', 'objectives', 'indicators'];
     const state = await g.legacy.recompose();
     const allowed: Record<string, Module> = {
       items: 'audit',
@@ -117,13 +136,22 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     };
     for (const [key, module] of Object.entries(allowed)) {
       if (!user.rights.can(module, 'lire') || (clesHistoriques && !clesHistoriques.includes(key))) continue;
+      if (smsi !== DEFAULT_SMSI && key !== 'items' && !parPerimetre.includes(key)) continue;
+      // Sous un autre périmètre que le commun, ces listes longues (mesures, fiches de l'outil de suivi) ne sont proposées que sur
+      // une recherche saisie : sans elle, elles noieraient les fiches du périmètre dans les sélecteurs (BUG-041, rejeu e2e).
+      if (smsi !== DEFAULT_SMSI && !search.trim()) continue;
       const rows =
         key === 'scope' && isObject(state?.data.scope) ? [{ ...state.data.scope, id: 'instance' }] : state?.data[key];
-      const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : []).filter(isObject);
+      const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : [])
+        .filter(isObject)
+        .filter((row) => !parPerimetre.includes(key) || perimetreDe(row) === smsi);
       for (const [index, row] of entries.entries()) {
         const id = typeof row.id === 'string' ? row.id : key === 'roles' ? '@' + index : null;
         if (!id) continue;
-        const name = String(row.title ?? row.name ?? row.text ?? row.org ?? id);
+        const titre = String(row.title ?? row.name ?? row.text ?? row.org ?? id);
+        // Une mesure se désigne par sa référence (A.8.13, HDS 12, 6.1…) avant son intitulé (BUG-060).
+        const code = key === 'items' ? codeMesureSource(row) : '';
+        const name = code && !titre.startsWith(code) ? `${code} · ${titre}` : titre;
         if (name.toLowerCase().includes(search.toLowerCase()) && objects.length < 400)
           objects.push({ ref: `legacy:${key}:${id}`, name, kind: key });
       }

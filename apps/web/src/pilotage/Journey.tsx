@@ -62,6 +62,7 @@ export function Journey({
       </Group>
       {(journeys.data?.items.length ?? 0) > 1 && (
         <Select
+          allowDeselect={false}
           label="Parcours à reprendre"
           data={journeys.data!.items.map((o) => ({ value: o.id, label: o.name }))}
           value={selected ?? null}

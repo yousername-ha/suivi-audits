@@ -118,6 +118,8 @@ export const incidentOuvert = (i: Pick<Incident, 'status'>) => !['Résolu', 'Clo
 
 export interface Incident {
   id: string;
+  /** Périmètre de l'incident (vide : périmètre commun, pour les incidents saisis avant que le périmètre existe). */
+  smsi: string;
   detectedAt: string;
   reporter: string;
   title: string;
@@ -158,6 +160,7 @@ export function lireIncident(brut: unknown): Incident | null {
     for (const [k, v] of Object.entries(o.notified as Obj)) if (v) traite[k] = str(v);
   return {
     id: str(o.id),
+    smsi: str(o.smsi),
     detectedAt: str(o.detectedAt),
     reporter: str(o.reporter),
     title: str(o.title),
@@ -229,7 +232,7 @@ const heure = z.union([
 const reponse = z.enum(['oui', 'non', 'nsp']);
 const reponses = z.object(Object.fromEntries(QUESTIONS_INCIDENT.map(([k]) => [k, reponse.optional()]))).strict();
 export const IncidentCreation = z
-  .object({ title: t(300), reporter: t(200), answers: reponses })
+  .object({ title: t(300), reporter: t(200), answers: reponses, smsi: z.string().uuid() })
   .partial()
   .strict();
 export const IncidentModification = z

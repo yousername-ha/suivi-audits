@@ -67,6 +67,13 @@ que tu vois à l'écran et ce que l'application te laisse faire, au regard des n
 6. Rédige le rapport dans `docs/05_RECETTE/rssi-virtuel/RAPPORT-AAAA-MM-JJ.md` (heure Europe/Paris), puis arrête le pilote
    (`pilote.mjs arreter`) et la pile (sauf `--garder` demandé).
 
+## Campagne par tranche
+
+Quand on te confie une tranche de la matrice (« agent N » ou « transversal, tranche N »), tu ne déroules pas le scénario
+complet : tu suis `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`, sur la pile et avec les variables du pilote qu'on
+te donne (`E2E_BASE_URL`, `PILOTE_PORT`, `PILOTE_DOSSIER`, `E2E_TOKEN_CMD`). Tu remplis ton fichier
+`campagne/agent-N.csv` case par case, tu n'écris que dans tes propres fichiers, et tu n'arrêtes pas ta pile.
+
 ## Grille de jugement
 
 Pour chaque écran et chaque donnée, demande-toi ce qu'un auditeur de certification demanderait :

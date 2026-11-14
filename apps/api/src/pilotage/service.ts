@@ -353,6 +353,19 @@ export class Pilotage {
             throw new HttpError(422, 'Indiquez l’échéance de l’acceptation, postérieure à la décision.');
           if (data.strategy !== 'accept')
             throw new HttpError(409, 'Choisissez d’abord l’option de traitement « accepter » sur la fiche du risque.');
+          // On n'accepte pas un risque dont le niveau n'a jamais été apprécié (6.1.3 f et 8.3, BUG-039).
+          const appreciation = await k
+            .selectFrom('grc_risk_evaluations')
+            .select(sql<boolean>`result->'residual'->>'label' IS NOT NULL`.as('niveau'))
+            .where('risk_id', '=', source.id)
+            .orderBy('revision', 'desc')
+            .limit(1)
+            .executeTakeFirst();
+          if (!appreciation?.niveau)
+            throw new HttpError(
+              422,
+              'Appréciez d’abord le risque (niveau brut et résiduel) : un risque sans niveau apprécié ne s’accepte pas.',
+            );
         }
         terms = input.until ? { until: input.until } : {};
       }

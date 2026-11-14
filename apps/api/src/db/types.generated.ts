@@ -325,6 +325,14 @@ export interface CourrielJobs {
   next_attempt_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface DdaPerimetres {
+  smsi_id: string;
+  mesure_id: string;
+  data: ColumnType<JsonValue, string | undefined, string>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface DocumentTextes {
   document_id: string;
   version: number;
@@ -1577,6 +1585,7 @@ export interface DB {
   cfg_versions: CfgVersions;
   contributions_elements: ContributionsElements;
   courriel_jobs: CourrielJobs;
+  dda_perimetres: DdaPerimetres;
   document_textes: DocumentTextes;
   document_versions: DocumentVersions;
   documents: Documents;

@@ -148,6 +148,7 @@ export function Imports({ smsi }: { smsi: string }) {
         </>
       )}
       <Select
+        allowDeselect={false}
         label="Référentiel à exporter"
         data={(frameworks.data?.items ?? []).map((f) => ({ value: f.id, label: f.name }))}
         value={selected}

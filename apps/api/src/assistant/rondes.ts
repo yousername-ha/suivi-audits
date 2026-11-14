@@ -507,21 +507,8 @@ export class RondesAssistant {
       .where('u.id', 'in', ids)
       .where('u.disabled', '=', false)
       .where((eb) => eb.or([eb('u.expires_at', 'is', null), eb('u.expires_at', '>', sql<Date>`now()`)]))
-      .where((eb) =>
-        eb.exists(
-          eb
-            .selectFrom('grc_smsis as s')
-            .select('s.id')
-            .where('s.id', '=', perimetre)
-            .where((e2) =>
-              e2.or([
-                e2('s.visibility', '=', 'instance'),
-                // Pyramide des périmètres (ADR 0092) : l'accès donné sur un parent vaut pour le périmètre.
-                e2(sql<boolean | null>`grc_acces_perimetre(s.id, u.id)`, 'is not', null),
-              ]),
-            ),
-        ),
-      )
+      // Même règle que les rappels d'échéance (ADR 0092 et 0095) : accès au périmètre ou à l'un de ses parents, ou administrateur.
+      .where(sql<boolean>`grc_smsi_visible(${perimetre}::uuid, u.id)`)
       .orderBy('u.id')
       .limit(10)
       .execute();

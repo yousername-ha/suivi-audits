@@ -81,6 +81,7 @@ export function Relations({ smsi, source, sourceKind }: { smsi: string; source: 
       <ErrorAlert error={error ?? options.error ?? links.error} />
       <TextInput label="Rechercher un objet lié" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
       <Select
+        allowDeselect={false}
         label="Objet ou version de preuve"
         searchable
         value={target}
@@ -93,6 +94,7 @@ export function Relations({ smsi, source, sourceKind }: { smsi: string; source: 
           }))}
       />
       <Select
+        allowDeselect={false}
         label="Type de relation"
         description="Seules les relations prévues pour ce type d’objet sont proposées ; « Lié à » convient à toute paire."
         value={relationsCible.includes(type as (typeof TYPES_RELATION)[number]) ? type : 'related_to'}

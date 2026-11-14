@@ -3,6 +3,8 @@ import {
   GRC_MODULES,
   grcReferences,
   RiskMethod,
+  REFUS_SANS_MATRICE,
+  methodeSansMatrice,
   RiskRatings,
   evaluateMethod,
   validDate,
@@ -93,6 +95,7 @@ export class GrcRisks {
     if (id && !current) throw new HttpError(404, 'Méthode introuvable.');
     const version = current?.version ?? 0;
     const { definition, refs } = await this.resolved(smsi, parsed, current);
+    if (methodeSansMatrice(definition)) throw new HttpError(422, REFUS_SANS_MATRICE);
     return { definition, version, pinned: refs, previewId: hash({ smsi, id, version, definition }) };
   }
   async publishMethod(

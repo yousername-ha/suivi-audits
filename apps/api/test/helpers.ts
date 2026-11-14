@@ -172,7 +172,14 @@ export async function makeUser(
   t: TestApp,
   username: string,
   role: string | null,
-  o: { totp?: boolean; mustChange?: boolean; modules?: string[]; expiresAt?: Date | null } = {},
+  o: {
+    totp?: boolean;
+    mustChange?: boolean;
+    modules?: string[];
+    expiresAt?: Date | null;
+    /** Rattaché au périmètre commun (par défaut) : un compte sans rattachement ne voit aucun périmètre (ADR 0092). */
+    rattache?: boolean;
+  } = {},
 ): Promise<TestUser> {
   const key = crypto.randomBytes(20);
   const id = t.svc.motsDePasse.nouvelId();
@@ -193,6 +200,11 @@ export async function makeUser(
       V2[role] ?? role,
       o.modules ?? null,
     ]);
+  if (o.rattache !== false)
+    await t.svc.db.q(
+      "INSERT INTO grc_members(smsi_id, user_id, can_write) VALUES ('00000000-0000-4000-8000-000000000001', $1, true) ON CONFLICT DO NOTHING",
+      [id],
+    );
   if (o.totp !== false) {
     await t.svc.db.q('UPDATE users SET totp_secret=$2, totp_enabled=true WHERE id=$1', [
       id,

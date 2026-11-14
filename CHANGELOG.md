@@ -6,18 +6,6 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
-applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
-les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
-lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
-valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
-« GAP — Applications » de la version précédente et relever les correspondances utiles.
-
-**Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
-**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants. De même, les
-personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
-éléments (lot 2).
-
 **Aucune action sur le serveur.** **Migrations automatiques `055` à `057` et `063` à `069`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
@@ -28,9 +16,6 @@ droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » 
 
 ### Ajouté
 
-- **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
-  les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
-  `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
 - **Assistant RSSI : liens enregistrés** : la recherche de l'assistant trouve aussi les liens de « Documents et liens » par leur
   titre, leur description et leur adresse, et indique où se trouve une ressource. Il n'ouvre jamais la page visée.
   _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
@@ -123,6 +108,56 @@ droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » 
 - **Assistant RSSI : rappels et questions dans un périmètre enfant** : l'assistant joint aussi la personne qui tient son accès d'un
   périmètre parent (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)), comme les rappels
   d'échéance. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
+## [7.0.0] — 2026-11-14
+
+Version majeure : cinq migrations SQL (`058` et `059` destructives, `060`, `061` et `062` additives), aucune nouvelle dépendance. Elle refond les
+**droits par la pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)), apporte la **refonte graphique Neon**
+(lots 1 et 2, [ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)), les **correctifs de la campagne de recette** (BUG-038 à BUG-077, ADR 0094 à 0096),
+simplifie les menus **Conformité**, **Gestion des risques** et **Résilience** (ADR 0089 à 0091, avec le retrait du GAP, des applications de la cartographie, des
+correspondances entre référentiels, des rapprochements et des fiches « opportunité ») et enrichit la **démonstration** chargée à l'installation. **Installation neuve
+recommandée** : l'application n'étant pas encore en production, aucune reprise de données n'est prévue. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Aucune action sur le serveur.** **Migrations automatiques `061` (table `dda_perimetres`) et `062` (fonction `grc_smsi_visible`, ADR 0095), non destructives : un compte sans rattachement ne voit plus aucun périmètre, et un compte rattaché à un enfant seulement ne voit plus le périmètre commun (aucune reprise de données, consigne du RSSI du 14/11/2026).** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
+applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
+les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
+lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
+valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
+« GAP — Applications » de la version précédente et relever les correspondances utiles.
+
+**Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
+**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants. De même, les
+personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
+éléments (lot 2).
+
+### Ajouté
+
+- **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
+  les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
+  `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
+
+- **Recette métier du RSSI virtuel du 12/11/2026** (sans effet sur l'application) : étapes 1 à 17 du scénario déroulées à
+  l'écran ; 18 constats (BUG-020 à BUG-036, dont deux bloquants sur les chiffres de la revue de direction), trois nouveaux
+  tests `test.fail`, pilote complété (dépôt de fichier, libellés répétés). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md`. _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents** (sans effet sur l'application) : matrice de couverture générée depuis le
+  code (`tests/e2e/rssi-virtuel/matrice.mjs` : 107 écrans, 1 712 cases), `lancer.sh --pile N` pour une pile vierge par
+  agent, dossier de reprise `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`. Non exécuté à ce jour (Docker
+  inaccessible dans la session). _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents des 12 et 13/11/2026** (sans effet sur l'application) : première exécution, sur
+  six piles Docker de `lancer.sh` (PostgreSQL 18, Node 26) ; 1 712 cases de la matrice couvertes (1 005 ok, 534 en défaut,
+  173 sans objet), 165 constats, bloquants et majeurs rejoués par des agents indépendants ; 40 défauts inscrits (BUG-038 à
+  BUG-077 : 14 bloquants dont BUG-051 arbitré par le RSSI le 13/11, 26 majeurs) et 47 tests `test.fail` (dont RSSI-09 et RSSI-18 pour BUG-024 et BUG-031, arbitrés le 13/11) ; tri sur le code
+  actuel après les ADR 0089 à 0091 : BUG-064 sans objet, 39 défauts à corriger (`specs/41` à `43`). BUG-016 à BUG-037
+  reconfirmés sur la cible. Outillage corrigé : `lancer.sh` (`.env` et projet Compose de la pile pour `app` et
+  `updater`, option `--images-locales`), invariant INV-08 (écarts appariés par `legacyId`). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md` ; demande de correctifs :
+  `DEMANDE-CORRECTIFS-2026-11-13.md`. _(Session « Campagne multi-agent RSSI virtuel ».)_
+
+### Modifié
+
 - **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
   [rapport du lot](docs/refonte-neon/LOT-2-FENETRES-LIGNES.md)) : habillage commun des fenêtres et panneaux (cadre à angles coupés,
   formulaires harmonisés) à **hauteur naturelle** : une fiche longue fait défiler le voile extérieur, sans ascenseur dans la fiche ; les
@@ -211,10 +246,83 @@ droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » 
 
 ### Corrigé
 
+- **Droits (campagne de recette du 12 et 13/11/2026, lot 1)** :
+  - **BUG-051, un périmètre n'est visible que par rattachement** ([ADR 0095](docs/adr/0095-sans-rattachement-rien-ne-est-visible.md), qui amende l'[ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), décision du RSSI du 14/11/2026) :
+    le périmètre commun suit la pyramide comme les autres. Un compte sans rattachement ne voit rien ; rattaché à un enfant, il ne voit que ce périmètre et ses descendants (le parent et le périmètre commun
+    lui répondent 404, en lecture comme en écriture) ; rattaché au parent, il voit le parent et ses enfants ; rattaché à la racine, il garde tout. Règle unique en base (`grc_smsi_visible`, migration `062`, fonction
+    de lecture seule), reprise par l'accès, la liste des périmètres, les responsables proposables et les rappels d'échéance.
+  - **BUG-041, sources sous un sous-périmètre** (rejeu de la recette du 14/11/2026) : la recherche de références propose les mesures communes et les processus, objectifs et indicateurs du périmètre.
+    _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+  - **BUG-049, archivage des registres** : seul le gestionnaire du registre (ou un administrateur) l'archive, et le désarchive par la nouvelle commande
+    `POST /api/registres/:id/desarchivage` (bouton « Désarchiver le registre » sur la fiche). Un contributeur reçoit 403, un compte sans accès 404.
+  - **BUG-050, chronologie RETEX** : retirer un événement exige le droit de suppression des incidents ; l'événement retiré est conservé au journal d'audit.
+  - **BUG-075, revue de direction validée** : elle ne se modifie plus que par un administrateur du pilotage (qui la rouvre) ; un contributeur reçoit 403.
+  - **BUG-044, incidents et cellules de crise par périmètre** : un incident (et ses événements RETEX) et une cellule de crise relèvent d'un périmètre (`smsi`, périmètre commun
+    pour les entrées existantes) ; le registre n'affiche et n'ouvre que les périmètres du lecteur, l'écran crée dans le périmètre affiché (`GET /api/incidents?smsi=`,
+    `GET /api/crise?smsi=`). Les contacts (désignés par leur rang, conservé même quand la vue n'en montre qu'une partie) et les scénarios de crise suivent le même périmètre (`POST /api/crise/contacts` et `/scenarios` acceptent `smsi`). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+
+- **Données et chiffres faux (campagne de recette, lot 2)** :
+  - **BUG-040, applicabilité** : enregistrer la fiche d'une mesure jamais examinée ne la déclare plus « applicable » ; la fiche porte une coche « Applicabilité examinée »
+    (l'applicabilité n'est écrite que si elle est décidée) ; **BUG-065** : un niveau de mise en œuvre est refusé (422) tant que l'applicabilité n'est pas décidée
+    (clauses ISO exceptées), à la DdA comme dans la fiche.
+  - **BUG-041, écart et DdA** : un écart rattaché à l'exigence d'un référentiel appliqué (`requirement:…`) est repris par la DdA, comme un rattachement historique
+    (mesure en écart, indicateur « Total avec écart ouvert »).
+  - **BUG-039, acceptation d'un risque** : refusée (422) tant que le risque n'a pas de niveau apprécié ; **BUG-024** (arbitrage du RSSI du 13/11/2026) : la matrice est
+    obligatoire pour apprécier un risque : tous les modèles de méthode en fournissent une, une méthode sans matrice est refusée à l'aperçu, à la publication et au
+    choix, et un nouveau risque ne se rattache pas à une telle méthode. Les versions déjà publiées restent lisibles.
+  - **BUG-043, compteur « Continuité »** : tous les plans (PCA, PRA, PCRA, plans d'activité) sont comptés au tableau de bord, sur les cartes des périmètres et au mur
+    (le champ `continuite.pcra` de l'API devient `continuite.plans`).
+  - **BUG-045, RETEX** : la gravité maximale reste « Non renseignée » tant qu'aucune gravité n'est saisie sur la chronologie.
+  - **BUG-047 et BUG-048, réglages des référentiels** : le référentiel complémentaire actif est désigné par son identifiant (la liste l'affiche, l'enregistrer ne le
+    désactive plus) ; la catégorie d'entité NIS 2 se remet à « Non renseignée » (la valeur vide est enregistrée). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Exports (campagne de recette, lot 3)** : **BUG-038** : « Contexte du SMSI » reprend les fiches saisies à l'écran (contexte, parties intéressées, SWOT, rôles) du
+  périmètre demandé (`GET /api/suivi/export?perimetre=`, sélecteur « Périmètre exporté » de la page Exports) ; **BUG-046** : le type d'écart exporté est celui de
+  l'écran (« Piste de progrès » n'est plus libellé « Point sensible ») ; **BUG-058** : nouveaux groupes « Gestion des risques » (registre, plan de
+  traitement, études EBIOS RM) et « Continuité et revues » (plans, exercices, revues de direction), repris par l'export complet ; les groupes « Incidents et crise » et « Preuves et documents » reprennent aussi le RETEX des incidents, les scénarios de crise et le registre documentaire (fiches, sans le contenu des fichiers). _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Lots 4 à 6 de la campagne de recette (première partie)** :
+  - **BUG-031 et BUG-042, revue de direction** : les entrées sont celles de l'ISO/IEC 27001:2022, 9.3.2 (l'ISO 9001 n'est plus suivie pour le moment, ADR 0036 amendée) ;
+    chaque périmètre prépare sa propre revue, et un périmètre enfant qui hérite des référentiels du parent remonte dans la revue du parent. **BUG-070** : les incidents
+    entrent dans la revue (entrée d 2), au tableau de bord et à la synthèse du mur (`incidents`).
+  - **BUG-062** : les rubriques communes à toute l'organisation (plans d'audit et annuels, clausier, fournisseurs) le disent sous un autre périmètre
+    au lieu de laisser croire que le sélecteur les filtre. **BUG-071** : la revue des accès indique les accès aux périmètres de chaque compte.
+  - **BUG-056** : « Créer les actions pour les écarts » du clausier crée une action par point (responsable : la personne qui crée ; échéance : 30 jours) au plan d'actions, et ne se
+    rejoue pas (409). **BUG-077** : un identifiant d'écart archivé n'est jamais réattribué (plus d'erreur 500).
+  - **BUG-054** : plus de plantage au troisième clic sur un critère d'évaluation fournisseur. **BUG-067** : le responsable d'une action de scénario de crise n'est plus perdu à
+    l'enregistrement du texte. **BUG-069** : bandeau rouge « Crise réelle en cours » sur toutes les pages tant qu'une cellule réelle est ouverte. **BUG-052** : « Archiver la
+    fiche » dans les fiches du Pilotage. **BUG-074** : les listes des tableaux restent lisibles au téléphone. **BUG-076** : les plans de continuité et leurs exercices relèvent
+    du module « Incidents et PCA/PRA ». **BUG-072** : une date de test de restauration dans le futur est refusée.
+  - **BUG-073** : une version de l'état contient les modules repris dans des tables (elle se télécharge et se restaure). **BUG-060** : les mesures proposées pour un traitement portent
+    leur référence (A.8.13, HDS 12…), sans doublon d'exigence. **BUG-061** : un scénario EBIOS RM dont les niveaux viennent d'échelles publiées de quatre niveaux se place dans
+    la matrice. **BUG-059** : acceptabilité, option de traitement et état de l'appréciation en français (carte, étude, rapport). **BUG-057** : messages de validation en français,
+    avec le libellé du champ. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Une seule source par objet (campagne de recette, lot 5)** :
+  - **BUG-053** : le PESTEL reprend les menaces et opportunités des SWOT et les enjeux des fiches de contexte saisis à l'écran, pour tout périmètre (classement par périmètre) ;
+    la carte du contexte reprend ces enjeux et les parties intéressées saisies ; un SWOT saisi à l'écran se rattache à un processus par un lien.
+  - **BUG-063** : la couverture d'un référentiel reprend, pour une exigence non évaluée, l'applicabilité et le niveau de la déclaration d'applicabilité portant le même
+    identifiant (une évaluation enregistrée l'emporte) ; la page « Applicabilité et justifications » et la DdA écrivent déjà la même source.
+  - **BUG-066** (partiel) : les exercices de continuité saisis à l'écran sont proposés à l'ouverture d'une
+    cellule de crise (`plan: object:<id>`) ; ils ne sont pas marqués « Réalisé » à la clôture ; ils sont comptés dans « Plans du SMSI », et la clôture d'une cellule marque la fiche de l'exercice « Réalisé » (date de clôture, synthèse de la main courante en observations) ; le résultat reste à saisir par une personne (rien n'est inventé). Le plan de l'outil de suivi est déjà marqué « Réalisé » à la clôture.
+    _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **BUG-055, objectifs, indicateurs et processus : un seul modèle** ([ADR 0094](docs/adr/0094-objectifs-indicateurs-processus-par-perimetre.md), décision du RSSI) : le modèle de l'outil de
+  suivi (mesures, calcul, liens, cartes de processus, champs ISO 9001) est disponible dans tous les périmètres ; chaque fiche porte son périmètre (`smsi`, sans migration), les liens
+  restent dans le périmètre, les opérations hors périmètre répondent 404. Les rubriques Processus, Objectifs, Indicateurs, Cartes de processus et Boîtes de pilotage fonctionnent sous tout
+  périmètre ; la revue de direction (d4) compte les fiches du périmètre et de ses enfants héritiers ; la Synthèse d'un périmètre affiche sa carte « Objectifs et indicateurs ». L'état du suivi, la Synthèse
+  et l'export ne servent que les fiches (processus, objectifs, indicateurs, plans, incidents) des périmètres lisibles. Les fiches natives `process`, `objective`, `indicator` ne sont plus proposées à la saisie.
+  _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **BUG-062, plans d'audit et annuels par périmètre** (décision du RSSI) : chaque action de plan (audit, exercice, formation, sensibilisation, calendrier) porte un périmètre (`smsi`, périmètre
+  commun par défaut) ; `GET /api/plans` et `POST /api/plans` acceptent `smsi`, les opérations par identifiant refusent (404) un périmètre non lisible, et la Synthèse ne compte que les
+  actions des périmètres lisibles. Les pages concernées ne sont plus signalées « communes ». Clausier et fournisseurs restent communs. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **BUG-062, déclaration d'applicabilité par périmètre** ([ADR 0096](docs/adr/0096-declaration-d-applicabilite-par-perimetre.md), décision du RSSI) : le périmètre commun garde la DdA de l'outil
+  de suivi, chaque autre périmètre a la sienne (migration `061`, table `dda_perimetres`, additive) ; une mesure sans décision y reste « non examinée ». `GET /api/dda` et
+  `PATCH /api/dda/:id` acceptent `smsi` ; la couverture d'un référentiel reprend la DdA du périmètre. Aucune reprise de la DdA du parent. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Compléments (BUG-070, BUG-059)** : le rapport de pilotage contient une section « Incidents » du périmètre ; le mode de calcul d'une méthode s'affiche en français dans l'éditeur ;
+  la phrase annonçant une diapositive « Revue des incidents » inexistante est remplacée. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+- **Listes de choix (BUG-068, BUG-057, BUG-022)** : 54 listes qui se désélectionnaient par un second clic (périmètre affiché, accès au périmètre, stratégie du
+  traitement, import…) gardent leur valeur ; un test interdit désormais toute liste sans `allowDeselect={false}` ou `clearable`. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
+
 - **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
   PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que
   PostgreSQL 17 précède le passage à 18 (ADR 0035). Aucun changement de code.
-
 
 ## [6.3.0] — 2026-11-12
 
@@ -328,7 +436,6 @@ _(Session « Projet audit_suivi Coeur ».)_
   _(Session « Projet audit_suivi Coeur ».)_
 
 ### Ajouté
-
 
 - **Rocky Linux 10 comme serveur d'installation** ([ADR 0085](docs/adr/0085-support-de-rocky-linux-10.md), acceptée) : le guide
   d'installation donne les variantes `dnf`, `firewalld` et Docker CE pour Rocky Linux 10 (SELinux reste en mode `enforcing`), les

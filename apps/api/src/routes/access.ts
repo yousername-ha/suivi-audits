@@ -192,6 +192,19 @@ async function accessReview(svc: Services) {
     .select(['id', 'username', 'display_name', 'email', 'disabled', 'expires_at', 'last_login_at', 'totp_enabled'])
     .orderBy(sql`lower(username)`)
     .execute();
+  // Accès aux périmètres (A.5.18, BUG-071) : rattachements directs ; un rattachement ouvre aussi les périmètres enfants (ADR 0092).
+  const rattachements = await svc.db.k
+    .selectFrom('grc_members as m')
+    .innerJoin('grc_smsis as s', 's.id', 'm.smsi_id')
+    .select(['m.user_id as userId', 's.name', 'm.can_write as ecriture'])
+    .orderBy('s.name')
+    .execute();
+  const parCompte = new Map<string, string[]>();
+  for (const r of rattachements)
+    parCompte.set(r.userId, [
+      ...(parCompte.get(r.userId) ?? []),
+      `${r.name} (${r.ecriture ? 'lecture et écriture' : 'lecture seule'}, avec ses périmètres enfants)`,
+    ]);
   const out: string[][] = [];
   for (const u of users) {
     const grants = await loadGrants(svc.db.pool, u.id);
@@ -214,6 +227,9 @@ async function accessReview(svc: Services) {
       [...eff.keys()].join(' '),
       u.last_login_at ? new Date(u.last_login_at).toISOString() : '',
       u.expires_at ? new Date(u.expires_at).toISOString().slice(0, 10) : '',
+      grants.some((g) => g.roleId === 'administrateur' && (g.modules == null || g.modules.includes('administration')))
+        ? 'Tous les périmètres (administrateur)'
+        : (parCompte.get(u.id) ?? ['Aucun périmètre']).join(' ; '),
     ]);
   }
   return out;
@@ -229,6 +245,7 @@ const REVIEW_HEADERS = [
   'Droits effectifs',
   'Dernière connexion',
   'Expiration',
+  'Accès aux périmètres',
 ];
 
 /* ================================================================ Routes */

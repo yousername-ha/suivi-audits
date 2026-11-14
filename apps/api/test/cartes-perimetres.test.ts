@@ -149,7 +149,7 @@ describe('cartes de périmètres', () => {
   it('compte les écarts ouverts, la continuité et laisse la couverture indisponible sans référentiel effectif', async () => {
     const a = await carte(admin, A);
     expect(a.compteurs.ecarts).toMatchObject({ ouverts: 1, enRetard: 0 });
-    expect(a.compteurs.continuite).toEqual({ pcra: 1 });
+    expect(a.compteurs.continuite).toEqual({ plans: 3 });
     expect(a.compteurs.couverture).toBeNull();
   });
 
@@ -160,7 +160,7 @@ describe('cartes de périmètres', () => {
       enRetard: 0,
       parClassification: { majeure: 0, mineure: 0, point_sensible: 0, non_classe: 0 },
     });
-    expect(b.compteurs.continuite).toEqual({ pcra: 0 });
+    expect(b.compteurs.continuite).toEqual({ plans: 0 });
     expect(b.parentId).toBe(A);
   });
 

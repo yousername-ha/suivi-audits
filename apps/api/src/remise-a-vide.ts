@@ -80,6 +80,7 @@ export const TABLES_TRAVAIL = [
   'assistant_rondes',
   'state_history',
   'contributions_elements',
+  'dda_perimetres',
   'courriel_jobs',
   'document_versions',
   'documents',

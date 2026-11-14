@@ -88,7 +88,7 @@ describe('processus en cartes', () => {
     expect(c.fournisseurs!.map((x) => x.id)).toEqual(['F1']);
   });
 
-  it('refuse sans session, hors du pilotage commun, et masque les fournisseurs sans le droit de les lire', async () => {
+  it('refuse sans session, et masque les fournisseurs sans le droit de les lire', async () => {
     const anonyme = new Agent(t);
     expect((await anonyme.get(`${racine}/pilotage/processus-cartes`)).statusCode).toBe(401);
     const ailleurs = await admin.post('/api/grc/smsis', {
@@ -96,7 +96,10 @@ describe('processus en cartes', () => {
       scope: 'x',
       timezone: 'Europe/Paris',
     });
-    expect((await admin.get(`/api/grc/${ailleurs.json().id}/pilotage/processus-cartes`)).statusCode).toBe(404);
+    // Un autre périmètre a ses propres processus (BUG-055) : aucun n'y est encore saisi.
+    const vide = await admin.get(`/api/grc/${ailleurs.json().id}/pilotage/processus-cartes`);
+    expect(vide.statusCode).toBe(200);
+    expect(vide.json().processus).toHaveLength(0);
     const r = await lire(lecteur);
     expect(r.processus).toHaveLength(3);
   });
@@ -124,5 +127,18 @@ describe('processus en cartes', () => {
     expect(depuisCartographie.statusCode, depuisCartographie.body).toBe(201);
     const carteCreee = (await lire()).processus.find((p) => p.name === 'Processus dessiné dans la cartographie');
     expect(carteCreee, 'le processus de la cartographie figure en carte').toMatchObject({ family: 'Réalisation' });
+  });
+  it('un SWOT saisi à l’écran se rattache au processus par un lien (BUG-053)', async () => {
+    const swot = await admin.post(`${racine}/objects`, { kind: 'swot', name: 'SWOT fictif saisi à l’écran', data: {} });
+    expect(swot.statusCode, swot.body).toBe(200);
+    const lien = await admin.post(`${racine}/links`, {
+      source: 'object:' + swot.json().id,
+      target: 'legacy:processes:PR1',
+      type: 'related_to',
+      note: '',
+    });
+    expect(lien.statusCode, lien.body).toBe(200);
+    const swots = carte(await lire(), 'PR1').rattaches.swots!;
+    expect(swots.map((x) => [x.name, x.via])).toContainEqual(['SWOT fictif saisi à l’écran', 'lien']);
   });
 });

@@ -161,6 +161,7 @@ export function ImportPanel() {
           </Radio.Group>
           {mode === 'replace' && (
             <Select
+              allowDeselect={false}
               label="Module à remplacer"
               data={moduleOptions}
               value={module}

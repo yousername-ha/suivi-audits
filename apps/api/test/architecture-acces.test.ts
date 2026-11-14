@@ -104,6 +104,16 @@ const LISTE_BLANCHE: Record<string, Entree> = {
     categorie: 'agregat',
     raison: 'Export du registre de pilotage : masques et état rédigé viennent de la porte (2c).',
   },
+  'historique/dda.ts': {
+    categorie: 'agregat',
+    raison:
+      'DdA d’un périmètre : écarts natifs de ce périmètre, après contrôle du droit du module audit et de l’accès au périmètre (BUG-062).',
+  },
+  'historique/crise.ts': {
+    categorie: 'agregat',
+    raison:
+      'Exercices de continuité proposés à la cellule de crise : droit du module incidents contrôlé, périmètres lisibles venant de la porte (BUG-066).',
+  },
   'tableau-de-bord.ts': {
     categorie: 'agregat',
     raison: 'Agrégats du tableau de bord : périmètres lisibles et masques viennent de la porte (2g).',

@@ -43,7 +43,7 @@ import type { BusinessPolicies } from '../business-policy.js';
 import type { Modules } from '../modules.js';
 import { HttpError } from '../http/errors.js';
 import { loadGrants } from '../rights.js';
-import { validDate } from '@suivi/shared';
+import { REFUS_SANS_MATRICE, methodeSansMatrice, validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcCopiesReferentiels } from './copies-referentiels.js';
@@ -183,6 +183,8 @@ const versionPolitique = (k: Kdb) =>
 /** Accès d'un compte à un périmètre, parents compris (pyramide, ADR 0092, migration 060) : null sans accès, false en
     lecture seule, true en écriture. `smsi` et `user` sont une référence de colonne (sql.ref) ou une valeur. */
 const accesPerimetre = (smsi: unknown, user: unknown) => sql<boolean | null>`grc_acces_perimetre(${smsi}, ${user})`;
+/** Périmètre visible du compte : accès par rattachement au périmètre ou à un ancêtre (pyramide, ADR 0092), sans exception pour le périmètre commun (ADR 0095). */
+const smsiVisible = (smsi: unknown, user: unknown) => sql<boolean>`grc_smsi_visible(${smsi}, ${user})`;
 const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 /** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
 export interface MethodBindingsResolver {
@@ -294,18 +296,25 @@ export class Grc {
     if (!user.rights.can(module, action)) throw new HttpError(403, 'Droit requis : ' + module + ':' + action);
   }
   async access(id: string, user: SessionUser, write = false, c?: Client): Promise<GrcSmsi> {
+    // Accès au périmètre (ADR 0092, qui amende l'ADR 0039) : un compte rattaché à un périmètre l'ouvre avec ses
+    // descendants, pas son parent ; un compte sans rattachement n'ouvre rien (ADR 0095). Calcul en base.
     let q = (c ? surConnexion(c) : this.db.k)
       .selectFrom('grc_smsis as s')
-      .select([...COLONNES_SMSI, accesPerimetre(sql.ref('s.id'), user.id).as('acces')])
+      .select([
+        ...COLONNES_SMSI,
+        accesPerimetre(sql.ref('s.id'), user.id).as('acces'),
+        smsiVisible(sql.ref('s.id'), user.id).as('visible'),
+      ])
       .where('s.id', '=', id);
     // Dans une transaction, le périmètre est verrouillé en partage jusqu'à sa fin.
     if (c) q = q.forShare('s');
     const r = await q.executeTakeFirst();
     const admin = await this.isAdmin(user, c);
     // Pyramide (ADR 0092) : l'accès à un périmètre vaut pour ses descendants ; null = aucun accès, true = écriture.
-    if (!r || (r.visibility === 'restricted' && r.acces === null && !admin))
-      throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
-    if (write && r.visibility === 'restricted' && r.acces !== true && !admin)
+    // Sans rattachement au périmètre ou à un ancêtre, un compte ne voit rien, pas même le périmètre commun (ADR 0095).
+    if (!r || (!r.visible && !admin)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
+    // Écriture : un accès en écriture sur le périmètre ou un ancêtre (ADR 0095).
+    if (write && r.acces !== true && !admin)
       throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {
       id: r.id,
@@ -339,13 +348,7 @@ export class Grc {
     return this.db.k
       .selectFrom('grc_smsis as s')
       .select(COLONNES_SMSI)
-      .where((eb) =>
-        eb.or([
-          eb('s.visibility', '=', 'instance'),
-          sql<boolean>`${admin}`,
-          eb(accesPerimetre(sql.ref('s.id'), user.id), 'is not', null),
-        ]),
-      )
+      .where((eb) => eb.or([sql<boolean>`${admin}`, eb(smsiVisible(sql.ref('s.id'), user.id), '=', true)]))
       .orderBy(sql`s.visibility = 'instance'`, 'desc')
       .orderBy('s.name')
       .orderBy('s.id')
@@ -698,7 +701,8 @@ export class Grc {
   }
   async selectMethod(smsi: string, id: string, version: number, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
-    await this.risks.method(smsi, id, version, user);
+    if (methodeSansMatrice((await this.risks.method(smsi, id, version, user)).definition))
+      throw new HttpError(422, REFUS_SANS_MATRICE);
     return this.db.tx(async (c) => {
       await this.verrouillerPerimetre(c, smsi);
       const current = await this.access(smsi, user, true, c);
@@ -846,17 +850,12 @@ export class Grc {
   /** Responsables proposés : comptes actifs du périmètre qui peuvent consulter le pilotage (lot U4). Un compte réduit
       à l'écran mural, aux évaluations IA ou aux documents n'est pas proposé. */
   async owners(smsi: string, user: SessionUser) {
-    const s = await this.access(smsi, user);
+    await this.access(smsi, user);
     const rows = await this.db.k
       .selectFrom('users as u')
       .select(['u.id', 'u.username', 'u.display_name as displayName'])
       .where(actif)
-      .where((eb) =>
-        eb.or([
-          sql<boolean>`${s.visibility === 'instance'}`,
-          eb(accesPerimetre(sql.val(smsi), sql.ref('u.id')), 'is not', null),
-        ]),
-      )
+      .where((eb) => eb(smsiVisible(sql.val(smsi), sql.ref('u.id')), '=', true))
       .orderBy('u.username')
       .limit(1000)
       .execute();
@@ -879,13 +878,7 @@ export class Grc {
         .select('u.id')
         .where('u.id', '=', owner)
         .where(actif)
-        .where((eb) =>
-          eb.or([
-            sql<boolean>`${ouvert}`,
-            eb('s.visibility', '=', 'instance'),
-            eb(accesPerimetre(sql.ref('s.id'), sql.ref('u.id')), 'is not', null),
-          ]),
-        )
+        .where((eb) => eb.or([sql<boolean>`${ouvert}`, eb(smsiVisible(sql.ref('s.id'), sql.ref('u.id')), '=', true)]))
         .executeTakeFirst())
     )
       throw new HttpError(
@@ -961,6 +954,12 @@ export class Grc {
       await this.checkOwner(smsi, d.ownerId, c);
       await this.checkTypedRefs(smsi, kind, d, user, c);
       const method = await this.risks.method(smsi, d.methodId, d.methodVersion, user, c);
+      // Pas de nouvelle appréciation sans matrice (BUG-024) ; un risque déjà apprécié avec sa méthode reste modifiable.
+      if (
+        methodeSansMatrice(method.definition) &&
+        (!previous || (previous.data as { methodId?: string }).methodId !== d.methodId)
+      )
+        throw new HttpError(422, REFUS_SANS_MATRICE);
       this.risks.validateStages(method.definition, d.stages);
       if (d.reviewAt && !validDate(d.reviewAt)) throw new HttpError(422, 'Date de réévaluation invalide.');
       for (const [key, stage] of Object.entries(d.stages)) {
@@ -1007,6 +1006,17 @@ export class Grc {
           delete data.performedAt;
         }
       }
+      // Revue de direction validée (9.3.3, BUG-075) : la décision de la direction ne se défait que par la réouverture,
+      // réservée à qui administre le pilotage (la validation elle-même passe par la commande de validation).
+      if (
+        kind === 'management_review' &&
+        previous?.data.status === 'validated' &&
+        !user.rights.can('pilotage', 'administrer')
+      )
+        throw new HttpError(
+          403,
+          'Cette revue de direction est validée : seul un administrateur du pilotage peut la rouvrir pour la modifier.',
+        );
       if (
         (kind === 'evidence' && ['validated', 'rejected'].includes(String(data.status))) ||
         (kind === 'nonconformity' && (data.status === 'closed' || data.effectiveness !== 'pending')) ||
@@ -1475,8 +1485,10 @@ export class Grc {
       .limit(500)
       .execute();
     const historicalParents: { source_ref: string; target_ref: string }[] = [];
-    if (smsi === DEFAULT_SMSI) {
+    {
       const state = (await this.legacy.recompose())?.data ?? {};
+      // Processus, objectifs et indicateurs portent leur périmètre (BUG-055) ; les autres listes relèvent du périmètre commun.
+      const parPerimetre = ['processes', 'objectives', 'indicators'];
       for (const key of [
         'items',
         'processes',
@@ -1487,7 +1499,14 @@ export class Grc {
         'recurring',
         'reviews',
       ]) {
-        const values = (Array.isArray(state[key]) ? state[key] : []).filter(isObject);
+        if (!parPerimetre.includes(key) && smsi !== DEFAULT_SMSI) continue;
+        const values = (Array.isArray(state[key]) ? state[key] : [])
+          .filter(isObject)
+          .filter(
+            (row) =>
+              !parPerimetre.includes(key) ||
+              (typeof row.smsi === 'string' && row.smsi ? row.smsi : DEFAULT_SMSI) === smsi,
+          );
         for (const row of values) {
           if (typeof row.id === 'string' && grcReferences(row).includes(ref) && historicalParents.length < 500)
             historicalParents.push({ source_ref: `legacy:${key}:${row.id}`, target_ref: ref });

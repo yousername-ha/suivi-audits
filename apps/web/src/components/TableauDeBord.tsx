@@ -545,7 +545,7 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
       ),
     },
     { id: 'echeances', titre: 'Prochaines échéances', largeur: 6, rendu: (l) => <Echeances s={s} largeur={l} /> },
-    (r || c) && {
+    (r || c || s.incidents) && {
       id: 'risques-continuite',
       titre: 'Risques et continuité',
       largeur: 3,
@@ -567,7 +567,14 @@ export function dallesTableauDeBord(s: Synthese): DalleTableauDeBord[] {
                 detail="revues échues"
               />
             )}
-            {c && <ChiffreCle valeur={String(c.pcra)} detail="plans de continuité et de reprise" />}
+            {c && <ChiffreCle valeur={String(c.plans)} detail="plans de continuité et de reprise" />}
+            {s.incidents && (
+              <ChiffreCle
+                valeur={String(s.incidents.ouverts)}
+                teinte={s.incidents.securiteOuverts ? 'orange' : 'vert'}
+                detail="incidents ouverts"
+              />
+            )}
           </div>
         </Dalle>
       ),

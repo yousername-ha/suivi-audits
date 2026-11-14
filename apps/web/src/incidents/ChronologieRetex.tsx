@@ -208,7 +208,11 @@ export function ChronologieRetex({
     ['Durée totale', duree(indicateurs.dureeTotale), ''],
     ['Confinement après', duree(indicateurs.avantConfinement), ''],
     ['Rétablissement après', duree(indicateurs.avantRetablissement), ''],
-    ['Gravité maximale', indicateurs.graviteMax || '–', TEINTE_GRAVITE[indicateurs.graviteMax] ?? ''],
+    [
+      'Gravité maximale',
+      indicateurs.graviteMax || (indicateurs.evenements ? 'Non renseignée' : '–'),
+      TEINTE_GRAVITE[indicateurs.graviteMax] ?? '',
+    ],
   ];
 
   return (

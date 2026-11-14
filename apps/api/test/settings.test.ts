@@ -1,6 +1,6 @@
 /* Page Paramètres : sections, versions, permissions, politique de sécurité appliquée, cycle d'audit, logo. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, PASSWORD, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, PASSWORD, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp;
 let A: Agent;
@@ -14,6 +14,62 @@ const section = async (a: Agent, s: string) => {
   const r = await a.get(`/api/settings/${s}`);
   return { ...r.json(), etag: r.headers.etag as string };
 };
+
+describe('référentiels (BUG-047, BUG-048)', () => {
+  it('le référentiel complémentaire actif est désigné par son identifiant et reste actif à l’enregistrement', async () => {
+    const etat = (await A.get('/api/suivi/etat')).json();
+    etat.frameworks = [{ id: 'recyf-2.5', name: 'ReCyF 2.5 (fictif)', requirements: [{ id: 'R1' }] }];
+    await seedState(t, etat);
+    let ref = await section(A, 'referentiels');
+    expect(ref.info.complementaires).toEqual([{ id: 'recyf-2.5', nom: 'ReCyF 2.5 (fictif)', exigences: 1 }]);
+    const r = await A.put(
+      '/api/settings/referentiels',
+      { activeFw: 'recyf-2.5', entityCategory: 'importante' },
+      { 'if-match': ref.etag },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    ref = await section(A, 'referentiels');
+    expect(ref.values).toEqual({ activeFw: 'recyf-2.5', entityCategory: 'importante' });
+    expect(((await A.get('/api/suivi/etat')).json().frameworks as unknown[]).length).toBe(1);
+  });
+  it('la catégorie d’entité se remet à « Non renseignée » et le journal reflète la valeur enregistrée', async () => {
+    let ref = await section(A, 'referentiels');
+    const r = await A.put(
+      '/api/settings/referentiels',
+      { activeFw: ref.values.activeFw, entityCategory: '' },
+      { 'if-match': ref.etag },
+    );
+    expect(r.statusCode, r.body).toBe(200);
+    ref = await section(A, 'referentiels');
+    expect(ref.values.entityCategory).toBe('');
+    expect(ref.values.activeFw).toBe('recyf-2.5');
+    const log = await t.svc.db.one<{ details: { after: { entityCategory: string } } }>(
+      "SELECT details FROM audit_log WHERE action = 'settings.update' ORDER BY id DESC LIMIT 1",
+    );
+    expect(log!.details.after.entityCategory).toBe('');
+  });
+});
+
+describe('sauvegardes (BUG-072)', () => {
+  it('refuse une date de test de restauration dans le futur, accepte aujourd’hui et le passé', async () => {
+    const s = await section(A, 'sauvegardes');
+    const futur = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+    const refus = await A.put(
+      '/api/settings/sauvegardes',
+      { ...s.values, dernierTestRestauration: futur },
+      { 'if-match': s.etag },
+    );
+    expect(refus.statusCode, refus.body).toBe(422);
+    expect(refus.body).toMatch(/futur/);
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const ok = await A.put(
+      '/api/settings/sauvegardes',
+      { ...s.values, dernierTestRestauration: aujourdhui },
+      { 'if-match': s.etag },
+    );
+    expect(ok.statusCode, ok.body).toBe(200);
+  });
+});
 
 describe('paramètres', () => {
   it('dix sections, valeurs par défaut issues de la configuration', async () => {

@@ -81,6 +81,7 @@ export function AccesSujets() {
           ]}
         />
         <Select
+          allowDeselect={false}
           label={type === 'utilisateur' ? 'Personne' : 'Groupe'}
           searchable
           placeholder="Choisir"

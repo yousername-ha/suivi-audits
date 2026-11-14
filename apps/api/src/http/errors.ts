@@ -1,6 +1,7 @@
 /* Erreurs HTTP : messages en français, jamais de détail interne côté client. */
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import type { Logger } from 'pino';
+import { PILOTAGE_FIELDS } from '@suivi/shared';
 import { ZodError } from 'zod';
 
 export class HttpError extends Error {
@@ -13,10 +14,38 @@ export class HttpError extends Error {
   }
 }
 
+/** Libellés des champs de saisie du Pilotage, pour nommer le champ refusé plutôt que sa clé technique (BUG-057). */
+const LIBELLES_CHAMPS = new Map<string, string>();
+for (const f of Object.values(PILOTAGE_FIELDS).flat())
+  if (!LIBELLES_CHAMPS.has(f.key)) LIBELLES_CHAMPS.set(f.key, f.label.replace(/\s*\(.*\)\s*$/, ''));
+/** Message français d'une anomalie de validation : un message déjà rédigé (règle propre) est conservé, les messages
+    génériques de la bibliothèque sont traduits sans reprendre la valeur refusée. */
+const messageZod = (i: ZodError['issues'][number]): string => {
+  switch (i.code) {
+    case 'invalid_value':
+      return 'valeur non autorisée, choisissez une valeur proposée';
+    case 'invalid_type':
+      return /received undefined/.test(i.message) ? 'champ obligatoire' : 'type de valeur incorrect';
+    case 'too_small':
+      return 'valeur trop courte ou trop petite';
+    case 'too_big':
+      return 'valeur trop longue ou trop grande';
+    case 'invalid_format':
+      return 'format invalide';
+    case 'unrecognized_keys':
+      return 'champ inconnu';
+    default:
+      return i.message;
+  }
+};
 const zodText = (e: ZodError) =>
   e.issues
     .slice(0, 5)
-    .map((i) => (i.path.length ? `${i.path.join('.')} : ${i.message}` : i.message))
+    .map((i) => {
+      const champ = i.path.map(String).filter((p) => !/^\d+$/.test(p));
+      const nom = champ.length ? (LIBELLES_CHAMPS.get(champ.at(-1)!) ?? champ.join('.')) : '';
+      return nom ? `${nom} : ${messageZod(i)}` : messageZod(i);
+    })
     .join(' ; ');
 
 const FASTIFY_MESSAGES: Record<string, [number, string]> = {

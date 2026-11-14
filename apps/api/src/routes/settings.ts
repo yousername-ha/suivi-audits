@@ -49,6 +49,8 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
             ]
           : [],
         complementaires: fws.map((f) => ({
+          // Le réglage `activeFw` enregistre l'identifiant du référentiel (« recyf-2.5 »), pas son nom (BUG-047).
+          id: String(f.id ?? f.name ?? ''),
           nom: String(f.name ?? f.id ?? ''),
           exigences: Array.isArray(f.requirements) ? f.requirements.length : 0,
         })),

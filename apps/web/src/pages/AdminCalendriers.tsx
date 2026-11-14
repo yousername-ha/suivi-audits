@@ -382,6 +382,7 @@ function MiseAJour({ calendrier, onFait }: { calendrier: CalendrierPlateformeDto
           <Text fw={600}>Retirer une année</Text>
           <Group align="flex-end">
             <Select
+              allowDeselect={false}
               label="Année"
               data={calendrier.years.map((y) => ({ value: String(y.year), label: `${y.year} (${y.days} jours)` }))}
               value={retrait ? String(retrait.year) : null}

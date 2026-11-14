@@ -546,6 +546,7 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
       {admin && (libres.length > 0 || standardsOfferts.length > 0) && (
         <Group align="flex-end">
           <Select
+            allowDeselect={false}
             label="Attribuer un référentiel de la bibliothèque"
             description="Crée une copie propre à ce périmètre, en préparation."
             placeholder="Choisir un référentiel"

@@ -27,6 +27,8 @@ test('DdA et évaluation par le clausier : niveaux, fiche, chapitres, points, no
       dda: {
         'A-5.1': { app: 'oui', level: 'Total', just: '', risk: '', actions: 'Action fictive', docs: '', comment: '' },
         'A-5.2': { app: 'non', level: '', just: 'Hors périmètre fictif', risk: '', actions: '', docs: '', comment: '' },
+        // Applicabilité décidée avant tout niveau (BUG-065) : A.5.19 est applicable, sans niveau encore.
+        'A-5.19': { app: 'oui', level: '', just: '', risk: '', actions: '', docs: '', comment: '' },
       },
       suppliers: [{ id: 'SUP01', name: 'Fournisseur fictif', hds: 'Non', mfa: 'Oui', sso: 'SAML' }],
       supEvals: [],

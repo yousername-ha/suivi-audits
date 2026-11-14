@@ -20,8 +20,8 @@ import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { useState } from 'react';
 import { FicheIndicateur, FicheObjectif, FicheProcessus, texte, useEcriture, type Ligne } from './FichesObjectifs';
+import { etatDePerimetre } from './perimetre-etat';
 
-const SOCLE = '00000000-0000-4000-8000-000000000001';
 const ETATS: Record<EtatIndicateur, [string, Etat]> = {
   ok: ['Atteint', 'succes'],
   ko: ['Non atteint', 'erreur'],
@@ -53,15 +53,13 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
     { ecrire, erreur } = useEcriture(smsi);
   const q = useQuery({
     queryKey: ['grc', smsi, 'legacy-objectifs'],
-    queryFn: () => get<Record<string, unknown>>('/api/suivi/etat'),
-    enabled: smsi === SOCLE,
+    queryFn: async () => etatDePerimetre(await get<Record<string, unknown>>('/api/suivi/etat'), smsi),
   });
   const boites = useQuery({
     queryKey: ['grc', smsi, 'legacy-objectifs', 'boites'],
     queryFn: () => get<Boite[]>(`/api/grc/${smsi}/pilotage/boites`),
-    enabled: smsi === SOCLE && vue === 'boites',
+    enabled: vue === 'boites',
   });
-  if (smsi !== SOCLE) return null;
   const donnees = q.data;
   const objectifs = donnees ? objectifsPilotage(donnees) : [];
   const parProcessus = donnees ? objectifsParProcessus(donnees) : null;

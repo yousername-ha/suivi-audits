@@ -162,6 +162,7 @@ export function Droits({
       {peutAttribuer ? (
         <Group align="end">
           <Select
+            allowDeselect={false}
             label="Utilisateur ou groupe"
             searchable
             placeholder="Rechercher…"

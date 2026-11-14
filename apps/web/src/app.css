@@ -4569,3 +4569,8 @@ tr[data-importe='oui'] {
 .couv-barre-gris {
   fill: var(--carte-gris-accent);
 }
+
+/* Liste de choix d'un tableau (DdA, registres) : au téléphone, la colonne ne la réduit pas à sa croix d'effacement (BUG-074). */
+.champ-choix {
+  min-width: 9em;
+}

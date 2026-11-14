@@ -101,6 +101,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'PUT /api/registres/:id/ordre',
     'GET /api/grc/perimetres/synthese',
     'POST /api/registres/:id/archivage',
+    'POST /api/registres/:id/desarchivage',
     'GET /api/registres/:id/elements',
     'GET /api/registres/elements',
     // Éléments attribués à l'utilisateur (ADR 0092, lot 2) : testé dans contributeur-attribue.test.ts.
@@ -413,6 +414,9 @@ describe('revue des accès (ISO 27001 A.5.18)', () => {
     expect(lines[0]).toMatch(/^"Identifiant";"Nom";"E-mail";"État";"Double authentification";"Groupes";"Rôles/);
     expect(lines.some((l) => l.startsWith('"admin"') && l.includes('Administrateur'))).toBe(true);
     expect(await t.svc.db.one("SELECT 1 FROM audit_log WHERE action = 'admin.access_review_export'")).toBeTruthy();
+    // Accès aux périmètres (BUG-071) : colonne dédiée ; l'administrateur voit tous les périmètres.
+    expect(lines[0]).toMatch(/"Accès aux périmètres"$/);
+    expect(lines.find((l) => l.startsWith('"admin"'))).toMatch(/Tous les périmètres \(administrateur\)/);
   });
 
   it('export Excel (.xlsx valide : archive ZIP, feuille avec en-têtes et comptes)', async () => {

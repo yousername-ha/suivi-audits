@@ -112,6 +112,21 @@ describe('synthèse (003-07)', () => {
     expect([op1.gravite, op1.vraisemblance, op1.strategique]).toEqual([4, 3, 'Rançongiciel via prestataire']);
     expect(op1.graviteTexte).toBe('G4 — Critique');
   });
+  it('place un scénario dont les niveaux viennent d’échelles publiées de quatre niveaux (BUG-061)', () => {
+    const publies = lignes([
+      o('stp', 'strategic_scenario', 'Scénario stratégique publié', { gravity: null }, { graviteScenarioRang: 4 }),
+      o(
+        'opp',
+        'operational_scenario',
+        'Scénario opérationnel publié',
+        { strategicScenarioRef: 'object:stp' },
+        { vraisemblanceRang: 2, vraisemblanceCatalogue: 'V2 — Vraisemblable' },
+      ),
+    ]);
+    const l = publies.find((x) => x.id === 'opp')!;
+    expect([l.gravite, l.vraisemblance]).toEqual([4, 2]);
+    expect(nonPlaces(publies)).toEqual([]);
+  });
   it('liste à part les scénarios sans rang et filtre sans rien déduire', () => {
     expect(nonPlaces(l).map((x) => x.id)).toEqual(['op3']);
     expect(

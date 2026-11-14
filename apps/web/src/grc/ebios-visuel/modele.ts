@@ -11,6 +11,9 @@ export interface ObjetVisuel {
     menace?: number | null;
     graviteScenarioCatalogue?: string | null;
     vraisemblanceCatalogue?: string | null;
+    /** Rang (1 à 4) d'un niveau d'une échelle publiée de quatre niveaux : il permet de placer le scénario dans la matrice. */
+    graviteScenarioRang?: number | null;
+    vraisemblanceRang?: number | null;
   };
 }
 
@@ -202,11 +205,13 @@ export function lignes(objets: readonly ObjetVisuel[]): Ligne[] {
       const sRef = ref(o.data.strategicScenarioRef) ?? '';
       const s = parRef.get(sRef);
       const g =
-        s && typeof s.data.gravity === 'number' && s.data.gravity >= 1 && s.data.gravity <= 4 ? s.data.gravity : null;
+        s && typeof s.data.gravity === 'number' && s.data.gravity >= 1 && s.data.gravity <= 4
+          ? s.data.gravity
+          : (s?.calcul.graviteScenarioRang ?? null);
       const v =
         typeof o.data.likelihood === 'number' && o.data.likelihood >= 1 && o.data.likelihood <= 4
           ? o.data.likelihood
-          : null;
+          : (o.calcul.vraisemblanceRang ?? null);
       return {
         id: o.id,
         ref: 'object:' + o.id,

@@ -121,7 +121,7 @@ const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion):
                                 : kind === 'objective'
                                   ? { target: '', dueAt: '' }
                                   : kind === 'soa'
-                                    ? { applicable: true, reason: '', implemented: false }
+                                    ? { applicable: true, examinee: false, reason: '', implemented: false }
                                     : {}),
           };
 /** Champs de la récurrence que le composant « Planning de la série » édite : l'éditeur générique ne les montre pas. */
@@ -320,6 +320,7 @@ export function ObjectEditor({
             {(kind === 'action' || kind === 'task_series') && (
               <>
                 <Select
+                  allowDeselect={false}
                   label="Catégorie d’action"
                   data={policy.catalogues.actionCategories.map((c) => ({ value: c.id, label: c.label }))}
                   value={String(data.category ?? '')}
@@ -327,6 +328,7 @@ export function ObjectEditor({
                   disabled={readonly}
                 />
                 <Select
+                  allowDeselect={false}
                   label="Priorité"
                   data={[
                     { value: 'low', label: 'Faible' },
@@ -352,6 +354,7 @@ export function ObjectEditor({
                   }}
                 />
                 <Select
+                  allowDeselect={false}
                   label="État de l’action"
                   data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
                   value={String(data.status ?? '')}
@@ -444,6 +447,7 @@ export function ObjectEditor({
             {kind === 'risk' && (
               <>
                 <Select
+                  allowDeselect={false}
                   label="Méthode publiée"
                   value={typeof data.methodId === 'string' ? data.methodId : null}
                   data={(methods.data ?? []).map((m) => ({ value: m.methodId, label: m.definition.name }))}
@@ -454,6 +458,7 @@ export function ObjectEditor({
                   disabled={readonly}
                 />
                 <Select
+                  allowDeselect={false}
                   label="Version de la méthode"
                   value={String(data.methodVersion ?? 1)}
                   data={(versions.data ?? []).map((m) => ({ value: String(m.version), label: 'Version ' + m.version }))}
@@ -473,6 +478,7 @@ export function ObjectEditor({
                   />
                 ))}
                 <Select
+                  allowDeselect={false}
                   label="Stratégie"
                   data={(method?.strategies ?? []).map((s) => ({ value: s.kind, label: s.label }))}
                   value={String(data.strategy ?? 'reduce')}
@@ -660,6 +666,7 @@ function Stages({
                 const v = current.values[f.id];
                 return f.type === 'choice' ? (
                   <Select
+                    allowDeselect={false}
                     key={f.id}
                     label={f.label}
                     required={f.required}
@@ -721,6 +728,7 @@ function Stages({
               disabled={readonly}
             />
             <Select
+              allowDeselect={false}
               label={'Validation — ' + step.label}
               value={current.status}
               data={[
