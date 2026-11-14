@@ -1,6 +1,6 @@
 /* Accès aux périmètres hiérarchiques (BUG-051, ADR 0092 qui amende l'ADR 0039) : un compte rattaché à un périmètre
    enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses descendants ; un compte sans
-   rattachement garde les périmètres ouverts à toute l'organisation. Données fictives. */
+   rattachement ne voit rien (ADR 0095). Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
 
@@ -57,13 +57,14 @@ describe('compte rattaché à un périmètre enfant', () => {
     expect((await seulEnfant.get(`/api/grc/${petitEnfant}/objects?kind=stakeholder`)).statusCode).toBe(200);
     expect((await fiche(seulEnfant, petitEnfant, 'Fiche du petit-enfant')).statusCode).toBe(200);
   });
-  it('ne voit ni le parent (racine comprise), ni un périmètre voisin', async () => {
-    for (const autre of [RACINE, parent, frere]) {
+  it('ne voit ni le parent, ni un périmètre voisin ; le périmètre commun reste ouvert (ADR 0092)', async () => {
+    expect((await seulEnfant.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(200);
+    for (const autre of [parent, frere]) {
       expect((await seulEnfant.get(`/api/grc/${autre}/objects?kind=stakeholder`)).statusCode).toBe(404);
       expect((await fiche(seulEnfant, autre, 'Fiche hors périmètre')).statusCode).toBe(404);
     }
     const liste = (await seulEnfant.get('/api/grc/smsis')).json() as { id: string }[];
-    expect(liste.map((s) => s.id).sort()).toEqual([enfant, petitEnfant].sort());
+    expect(liste.map((s) => s.id).sort()).toEqual([RACINE, enfant, petitEnfant].sort());
   });
 });
 
@@ -72,7 +73,6 @@ describe('compte rattaché au périmètre parent', () => {
     for (const smsi of [parent, enfant, petitEnfant, frere])
       expect((await duParent.get(`/api/grc/${smsi}/objects?kind=stakeholder`)).statusCode).toBe(200);
     expect((await fiche(duParent, petitEnfant, 'Fiche écrite depuis le parent')).statusCode).toBe(200);
-    expect((await duParent.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(404);
   });
   it('rattaché en lecture seule : lit les enfants, n’y écrit pas', async () => {
     expect((await enLecture.get(`/api/grc/${enfant}/objects?kind=stakeholder`)).statusCode).toBe(200);

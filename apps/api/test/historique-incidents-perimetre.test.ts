@@ -88,7 +88,8 @@ describe('incidents par périmètre', () => {
     expect(c.statusCode, c.body).toBe(201);
     idCommun = c.json().id;
     expect(c.json().smsi).toBe(COMMUN);
-    expect(((await membre.get('/api/incidents')).json().incidents as { id: string }[]).map((i) => i.id)).not.toContain(
+    // Le périmètre commun reste ouvert à tout compte rattaché quelque part (ADR 0092).
+    expect(((await membre.get('/api/incidents')).json().incidents as { id: string }[]).map((i) => i.id)).toContain(
       idCommun,
     );
   });
@@ -102,7 +103,7 @@ describe('incidents par périmètre', () => {
     expect(((await libre.get('/api/incidents')).json().incidents as { id: string }[]).map((i) => i.id)).toContain(
       'INC-2025-900',
     );
-    expect(((await membre.get('/api/incidents')).json().incidents as { id: string }[]).map((i) => i.id)).not.toContain(
+    expect(((await membre.get('/api/incidents')).json().incidents as { id: string }[]).map((i) => i.id)).toContain(
       'INC-2025-900',
     );
   });

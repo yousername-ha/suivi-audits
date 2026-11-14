@@ -1,7 +1,7 @@
 # ADR 0093 — Déclaration d'applicabilité par périmètre
 
 **Statut** : acceptée le 13/11/2026 (décision du RSSI du 13/11/2026, BUG-062 de la campagne de recette). Numéro annoncé au RSSI.
-Complète l'[ADR 0092](0092-acces-aux-perimetres-hierarchiques.md) et l'[ADR 0039](0039-hierarchie-des-perimetres.md).
+Complète l'[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md) et l'[ADR 0039](0039-hierarchie-des-perimetres.md).
 
 ## Contexte
 
