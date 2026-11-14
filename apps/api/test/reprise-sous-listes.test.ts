@@ -131,13 +131,13 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '057_assistant_apprentissage.sql',
         '058_retrait_gap_applications.sql',
         '059_retrait_correspondances_rapprochements.sql',
-        '060_assistant_rondes_actions.sql',
-        '061_assistant_questions.sql',
-        '062_assistant_propositions.sql',
-        '063_assistant_evenements.sql',
-        '064_assistant_documents.sql',
-        '065_assistant_constats.sql',
-        '066_assistant_acces_par_defaut.sql',
+        '063_assistant_rondes_actions.sql',
+        '064_assistant_questions.sql',
+        '065_assistant_propositions.sql',
+        '066_assistant_evenements.sql',
+        '067_assistant_documents.sql',
+        '068_assistant_constats.sql',
+        '069_assistant_acces_par_defaut.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();
