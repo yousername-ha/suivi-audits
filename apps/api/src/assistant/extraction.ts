@@ -70,16 +70,30 @@ function entreesZip(buf: Buffer): Map<string, () => Buffer> {
 }
 
 const ENTITES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+/** Retire les balises caractère par caractère : tout ce qui suit un « < » est écarté jusqu'au « > » suivant, y compris une
+    balise jamais refermée. Le résultat ne contient donc aucun « < » venu du fragment (un remplacement par expression
+    régulière pouvait en laisser un, par recomposition). */
+function sansBalises(xml: string): string {
+  let out = '';
+  let dans = false;
+  for (const c of xml) {
+    if (c === '<') dans = true;
+    else if (c === '>' && dans) dans = false;
+    else if (!dans) out += c;
+  }
+  return out;
+}
+
 /** Texte d'un fragment XML : fins de paragraphe en sauts de ligne, balises retirées, entités décodées. */
 function texteXml(xml: string, finsDeParagraphe: RegExp): string {
-  return xml
-    .replace(finsDeParagraphe, '\n')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&(#x[0-9a-fA-F]{1,6}|#\d{1,7}|[a-z]+);/g, (tout, e: string) => {
+  return sansBalises(xml.replace(finsDeParagraphe, '\n')).replace(
+    /&(#x[0-9a-fA-F]{1,6}|#\d{1,7}|[a-z]+);/g,
+    (tout, e: string) => {
       if (e[0] !== '#') return ENTITES[e] ?? tout;
       const code = e[1] === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
       return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : '';
-    });
+    },
+  );
 }
 
 /** Caractères de contrôle retirés (PostgreSQL refuse l'octet nul), sauf tabulation, saut de ligne et retour chariot. */
