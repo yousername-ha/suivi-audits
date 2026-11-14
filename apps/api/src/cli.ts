@@ -22,6 +22,8 @@
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
   consigner-mise-a-jour       consigne au journal d'audit le rapport de mise à jour lu sur l'entrée standard
+  charger-jeu <compte> --confirmer  instance de test vide : charge un jeu de données JSON lu sur l'entrée standard
+  recette-locale              poste de test sur localhost : crée le compte administrateur sans assistant d'installation
   poivre-restaurer            reprend le poivre des mots de passe (texte sur l'entrée standard) après perte de la clé maîtresse
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
@@ -233,6 +235,22 @@ async function main() {
       );
       break;
     }
+    case 'recette-locale': {
+      // Poste de test seulement : premier administrateur créé sans assistant, refusé hors de « localhost ».
+      const { buildApp } = await import('./app.js');
+      const { installerRecetteLocale } = await import('./recette-locale.js');
+      const app = await buildApp(svc);
+      try {
+        const c = await installerRecetteLocale(svc, app);
+        console.log(`\nCompte de recette créé.\n  Identifiant  : ${c.identifiant}\n  Mot de passe : ${c.motDePasse}\n`);
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exitCode = 1;
+      } finally {
+        await app.close();
+      }
+      break;
+    }
     case 'setup-token': {
       const recovery = arg === '--recovery';
       if (!recovery && (await svc.auth.adminExists())) {
@@ -361,6 +379,37 @@ async function main() {
       try {
         const bilan = await chargerJeuDeTest(svc, app, arg, { publicUrl: svc.cfg.publicUrl || 'https://localhost' });
         console.log(JSON.stringify(bilan, null, 2));
+      } finally {
+        await app.close();
+      }
+      break;
+    }
+    case 'charger-jeu': {
+      if (!arg || extra !== '--confirmer') {
+        console.error(
+          'Jeu de données fourni sur l’entrée standard (JSON) : à réserver à une instance de test vide.\nUsage : suivi charger-jeu <compte administrateur> --confirmer < jeu.json',
+        );
+        process.exit(2);
+      }
+      const { buildApp } = await import('./app.js');
+      const { chargerJeuExterne } = await import('./jeu-externe.js');
+      let jeu: unknown;
+      try {
+        jeu = JSON.parse(await readStdin());
+      } catch {
+        console.error('Jeu de données illisible : JSON attendu sur l’entrée standard.');
+        process.exit(1);
+      }
+      const app = await buildApp(svc);
+      await app.ready();
+      try {
+        const bilan = await chargerJeuExterne(svc, app, arg, jeu, {
+          publicUrl: svc.cfg.publicUrl || 'https://localhost',
+        });
+        console.log(JSON.stringify(bilan, null, 2));
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exitCode = 1;
       } finally {
         await app.close();
       }

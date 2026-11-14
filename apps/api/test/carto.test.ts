@@ -416,11 +416,21 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '052_referentiels_copies_perimetre.sql',
         '053_retrait_crrc_investissements.sql',
         '054_retrait_revues_acces.sql',
+        '055_assistant.sql',
+        '056_assistant_rondes.sql',
+        '057_assistant_apprentissage.sql',
         '058_retrait_gap_applications.sql',
         '059_retrait_correspondances_rapprochements.sql',
         '060_acces_perimetres_pyramide.sql',
         '061_dda_par_perimetre.sql',
         '062_sans_rattachement_rien.sql',
+        '063_assistant_rondes_actions.sql',
+        '064_assistant_questions.sql',
+        '065_assistant_propositions.sql',
+        '066_assistant_evenements.sql',
+        '067_assistant_documents.sql',
+        '068_assistant_constats.sql',
+        '069_assistant_acces_par_defaut.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

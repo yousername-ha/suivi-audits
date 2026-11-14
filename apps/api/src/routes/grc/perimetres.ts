@@ -1,6 +1,6 @@
 import { sql } from 'kysely';
 import { z } from 'zod';
-import { SmsiCreate, SmsiMember, SmsiUpdate } from '@suivi/shared';
+import { AvisRappelBody, ReponseQuestionBody, SmsiCreate, SmsiMember, SmsiUpdate } from '@suivi/shared';
 import type { Session } from '../../auth.js';
 import { cartesPerimetres } from '../../grc/cartes.js';
 import { dashboard } from '../../grc/dashboard.js';
@@ -201,5 +201,25 @@ export const perimetresRoutes = [
     summary: 'Marquer un rappel comme lu',
     params: z.object({ id: z.uuid() }),
     handler: async ({ svc, s, params }) => svc.grc.tasks.read(params.id, (s as Session).user),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/notifications/:id/reponse',
+    summary: 'Répondre à une question de l’assistant RSSI (réservé à la personne interrogée)',
+    params: z.object({ id: z.uuid() }),
+    body: ReponseQuestionBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.assistantRondes.repondreQuestion(params.id, body.texte, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'PUT',
+    url: '/api/grc/notifications/:id/avis',
+    summary: 'Dire si un rappel de l’assistant RSSI était utile (réservé à son destinataire)',
+    params: z.object({ id: z.uuid() }),
+    body: AvisRappelBody,
+    handler: async ({ svc, s, params, body }) =>
+      svc.assistantRondes.avisRappel(params.id, body.avis, (s as Session).user),
   }),
 ];

@@ -47,6 +47,7 @@ Source de référence des chiffres/IDs/états :
 - [Recette de l'intégration ASTRA (R01 à R18) et bilan par lot](unification/RECETTE-INTEGRATION-ASTRA.md)
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
 - [Cadrage du module Intégrations (GLPI, ORADAD, Silène)](unification/CADRAGE-MODULE-INTEGRATIONS.md) et [ADR 0076](adr/0076-module-integrations.md) (ADR acceptée le 29/10/2026, aucun code)
+- [Cadrage de l'assistant RSSI intégré (agent natif, modèle distant)](unification/CADRAGE-ASSISTANT-RSSI.md) et [ADR 0086](adr/0086-assistant-rssi-integre.md) (ADR acceptée le 11/11/2026)
 - [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
 ## 01_REPRISE_IA
@@ -106,6 +107,9 @@ Source de référence des chiffres/IDs/états :
 - [Guide administrateur](06_GUIDES/GUIDE_ADMINISTRATEUR.md)
 - [Guide installation](06_GUIDES/GUIDE_INSTALLATION.md)
 - [Guide depannage](06_GUIDES/GUIDE_DEPANNAGE.md)
+- [Connecter l'assistant RSSI à Mistral, pas à pas](06_GUIDES/GUIDE_ASSISTANT_MISTRAL.md) (non rejoué de bout en bout)
+- [Évaluation de l'assistant RSSI sur une organisation fictive](05_RECETTE/EVALUATION_ASSISTANT.md) (résultats mesurés du 12/11/2026)
+- [Essayer la branche de l'assistant sur un poste Windows (Docker Desktop)](06_GUIDES/GUIDE_RECETTE_DOCKER_WINDOWS.md) (non rejoué sur Windows)
 - [Faq](06_GUIDES/FAQ.md)
 
 ## 07_HISTORIQUE

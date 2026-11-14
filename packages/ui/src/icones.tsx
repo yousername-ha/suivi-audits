@@ -31,6 +31,12 @@ export const IconeDocuments = () => (
     <path d="M10 13h6M10 17h6" />
   </Icone>
 );
+export const IconeAssistant = () => (
+  <Icone>
+    <path d="M4 5h16v11H9l-5 4z" />
+    <path d="M8 9h8M8 12h5" />
+  </Icone>
+);
 export const IconeCompte = () => (
   <Icone>
     <circle cx="12" cy="8" r="4" />

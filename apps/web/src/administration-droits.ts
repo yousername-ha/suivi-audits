@@ -31,6 +31,8 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'notifications', cote: 'plateforme', peut: parametres },
   { id: 'notifications-destinataires', cote: 'plateforme', peut: administration },
   { id: 'murs', cote: 'plateforme', peut: administration },
+  // Assistant RSSI (ADR 0086) : droit dédié, indépendant de l'administration et des paramètres.
+  { id: 'assistant', cote: 'plateforme', peut: (can) => can('assistant', 'administrer') },
   { id: 'import', cote: 'plateforme', peut: (can) => can('import_export', 'lire') },
   { id: 'sauvegardes', cote: 'systeme', peut: administration },
   { id: 'mises-a-jour', cote: 'systeme', peut: administration },

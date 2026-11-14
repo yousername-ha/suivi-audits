@@ -38,6 +38,18 @@ export const NOTIFICATION_TYPES = [
     description:
       'Invitation ou relance adressée à une personne d’un autre pôle pour qu’elle ajoute ses éléments au retour d’expérience d’un incident.',
   },
+  {
+    id: 'assistant_rappel',
+    label: 'Rappel de l’assistant RSSI',
+    description:
+      'Rappel que l’assistant RSSI adresse, pendant une ronde, au responsable nommé d’un élément (action en retard, risque à revoir). Il n’est émis qu’une fois tant que l’élément n’a pas changé.',
+  },
+  {
+    id: 'assistant_question',
+    label: 'Question de l’assistant RSSI',
+    description:
+      'Question que l’assistant RSSI pose, pendant une ronde, au responsable d’un élément. La personne y répond depuis ses rappels ; sans réponse, elle est relancée une fois.',
+  },
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]['id'];
 export const NOTIFICATION_TYPE_IDS = NOTIFICATION_TYPES.map((t) => t.id) as [NotificationType, ...NotificationType[]];

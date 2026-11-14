@@ -143,6 +143,8 @@ export function loadConfig(env: Env = process.env) {
     clamav: env.CLAMAV_HOST
       ? { host: env.CLAMAV_HOST, port: int(env.CLAMAV_PORT, 3310), required: bool(env.CLAMAV_REQUIRED, true) }
       : null,
+    /** Relais de modèle de l'assistant (ADR 0086) : adresse interne du conteneur « assistant-relais » ; vide s'il n'est pas installé. */
+    assistantRelais: (env.ASSISTANT_RELAIS_URL || '').trim(),
     appName,
     /** Clés de sécurité FIDO2 / WebAuthn (ADR 0079). */
     webauthn: configWebauthn(env, publicUrl, appName),
