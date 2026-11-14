@@ -64,7 +64,8 @@ describe('installation : données de démonstration', () => {
       expect(await compter(t, 'risk_study')).toBe(1);
       expect(await compter(t, 'strategic_scenario')).toBe(4);
       expect(await compter(t, 'operational_scenario')).toBe(4);
-      expect(await compter(t, 'treatment')).toBe(5);
+      // Cinq traitements de l'étude EBIOS RM, un du registre des risques (compléments de la démonstration).
+      expect(await compter(t, 'treatment')).toBe(6);
       const fw = await t.svc.db.q<{ identifier: string }>('SELECT identifier FROM lib_frameworks ORDER BY identifier');
       expect(fw.rows.map((x) => x.identifier)).toEqual(['hds', 'iso-27001-2022']);
       expect(

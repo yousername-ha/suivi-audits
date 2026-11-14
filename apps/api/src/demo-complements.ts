@@ -23,6 +23,7 @@ export interface BilanComplements {
   audit: { jours: number; creneaux: number; personnes: number };
   clausier: { evaluations: number; points: number };
   perimetres: number;
+  fournisseursRattaches: number;
   cartes: number;
   retex: number;
   continuite: { plans: number; exercices: number };
@@ -154,19 +155,20 @@ async function audit({ appel, exiger, decaler }: Complements): Promise<BilanComp
         `Participant ${name}`,
       )
     ).id;
+  // L'organisation de départ prévoit trois jours sans date : ils sont datés (et complétés s'il en manque).
+  const vue = await exiger<{ plan: { days: { id: string }[] } | null }>(
+    await appel('GET', '/api/audit-suivi'),
+    'Lecture de l’organisation de l’audit',
+  );
+  const existants = vue.plan?.days ?? [];
   const jours: string[] = [];
-  for (const [label, d] of [
-    ['Jour 1', 45],
-    ['Jour 2', 46],
-  ] as const)
-    jours.push(
-      (
-        await exiger<{ id: string }>(
-          await appel('POST', '/api/audit-suivi/plan/jours', { label, date: decaler(d) }),
-          `Jour d’audit ${label}`,
-        )
-      ).id,
-    );
+  for (const [k, d] of [45, 46, 47].entries()) {
+    const label = `Jour ${k + 1}`;
+    const jour = existants[k]
+      ? await appel('PATCH', `/api/audit-suivi/plan/jours/${existants[k].id}`, { label, date: decaler(d) })
+      : await appel('POST', '/api/audit-suivi/plan/jours', { label, date: decaler(d) });
+    jours.push((await exiger<{ id: string }>(jour, `Jour d’audit ${label}`)).id);
+  }
   const creneaux: [number, Json][] = [
     [
       0,
@@ -238,19 +240,32 @@ async function audit({ appel, exiger, decaler }: Complements): Promise<BilanComp
     [
       1,
       {
+        type: 'audit',
+        start: '11:00',
+        end: '12:30',
+        title: 'Relations avec les fournisseurs et l’hébergeur',
+        place: 'Service des achats',
+        requirements: ['A-5.19', 'A-5.22'],
+        people: ['rssi', 'aud'],
+        proofs: [{ t: 'Évaluations des fournisseurs par le clausier', done: true }],
+      },
+    ],
+    [
+      2,
+      {
         type: 'synthese',
-        start: '14:00',
-        end: '15:00',
+        start: '09:00',
+        end: '10:00',
         title: 'Synthèse de l’auditeur',
         people: ['aud'],
       },
     ],
     [
-      1,
+      2,
       {
         type: 'cloture',
-        start: '15:00',
-        end: '15:30',
+        start: '10:00',
+        end: '10:30',
         title: 'Réunion de clôture',
         place: 'Salle de direction',
         people: ['dir', 'rssi', 'qua', 'aud'],
@@ -330,8 +345,14 @@ async function clausier({ appel, exiger, decaler }: Complements): Promise<BilanC
   return { evaluations: evaluations.length, points };
 }
 
-/** Pyramide des périmètres (ADR 0092) : deux sites fictifs rattachés au périmètre de l'organisation. */
-async function perimetres({ appel, exiger, commun }: Complements): Promise<number> {
+/** Pyramide des périmètres (ADR 0092) : deux sites fictifs rattachés au périmètre de l'organisation, et les fournisseurs
+    rattachés aux périmètres. */
+async function perimetres({
+  appel,
+  exiger,
+  commun,
+  decaler,
+}: Complements): Promise<{ sites: number; rattaches: number }> {
   const sites = [
     {
       name: 'Site fictif de consultations externes',
@@ -342,17 +363,58 @@ async function perimetres({ appel, exiger, commun }: Complements): Promise<numbe
       scope: 'Hospitalisation de soins de suite et réadaptation, rattachée à l’établissement fictif.',
     },
   ];
+  const ids: string[] = [];
   for (const s of sites)
-    await exiger(
-      await appel('POST', '/api/grc/smsis', {
-        ...s,
-        parentId: commun,
-        entityKind: 'organisation',
-        timezone: 'Europe/Paris',
-      }),
-      `Périmètre « ${s.name} »`,
+    ids.push(
+      (
+        await exiger<{ id: string }>(
+          await appel('POST', '/api/grc/smsis', {
+            ...s,
+            parentId: commun,
+            entityKind: 'organisation',
+            timezone: 'Europe/Paris',
+          }),
+          `Périmètre « ${s.name} »`,
+        )
+      ).id,
     );
-  return sites.length;
+  // Fournisseurs du périmètre : ceux de l'organisation, et le prestataire de maintenance du premier site.
+  let rattaches = 0;
+  for (const [perimetre, fournisseur] of [
+    [commun, 'SUP-001'],
+    [commun, 'SUP-002'],
+    [commun, 'SUP-003'],
+    [commun, 'SUP-005'],
+    [ids[0]!, 'SUP-003'],
+    [ids[0]!, 'SUP-004'],
+  ] as const) {
+    await exiger(
+      await appel('PUT', `/api/grc/${perimetre}/suppliers/${fournisseur}`),
+      `Rattachement de ${fournisseur}`,
+    );
+    rattaches++;
+  }
+  // Une action propre au premier site : sa carte de périmètre n'est pas vide.
+  await exiger(
+    await appel('POST', `/api/grc/${ids[0]!}/objects`, {
+      kind: 'action',
+      name: 'Sécuriser l’accès au réseau du site de consultations',
+      data: {
+        description: 'Action fictive du site.',
+        status: 'todo',
+        ownerId: null,
+        startAt: null,
+        dueAt: `${decaler(50)}T09:00:00Z`,
+        priority: 'normal',
+        category: 'action',
+        justification: '',
+        reminderDays: 7,
+        dependencies: [],
+      },
+    }),
+    'Action du site',
+  );
+  return { sites: sites.length, rattaches };
 }
 
 /** Cartographie du SMSI : les deux vues (contexte et processus) générées comme le fait l'assistant de l'écran. */
@@ -431,7 +493,11 @@ async function retex({ appel, exiger, decaler }: Complements): Promise<number> {
 }
 
 /** Continuité, contrôles, preuves, tâche récurrente et traitement d'un risque du registre (objets du pilotage commun). */
-async function pilotage(ctx: Complements): Promise<Omit<BilanComplements, 'plans' | 'audit' | 'clausier' | 'perimetres' | 'cartes' | 'retex'>> {
+async function pilotage(
+  ctx: Complements,
+): Promise<
+  Omit<BilanComplements, 'plans' | 'audit' | 'clausier' | 'perimetres' | 'fournisseursRattaches' | 'cartes' | 'retex'>
+> {
   const { appel, exiger, commun, decaler } = ctx;
   const creer = async (kind: string, name: string, data: Json) =>
     (
@@ -573,7 +639,8 @@ export async function modulesComplements(ctx: Complements): Promise<BilanComplem
     plans: plansCharges,
     audit: auditCharge,
     clausier: clausierCharge,
-    perimetres: sites,
+    perimetres: sites.sites,
+    fournisseursRattaches: sites.rattaches,
     cartes: cartesChargees,
     retex: retexCharge,
     ...objets,

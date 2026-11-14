@@ -100,9 +100,10 @@ describe('jeu de données de test', () => {
     // Compléments : les rubriques que le reste du jeu laissait vides sont alimentées, et se relisent par l'API.
     expect(bilan.complements).toEqual({
       plans: 6,
-      audit: { jours: 2, creneaux: 8, personnes: 5 },
+      audit: { jours: 3, creneaux: 9, personnes: 5 },
       clausier: { evaluations: 2, points: 26 },
       perimetres: 2,
+      fournisseursRattaches: 6,
       cartes: 2,
       retex: 6,
       continuite: { plans: 2, exercices: 1 },
@@ -120,14 +121,29 @@ describe('jeu de données de test', () => {
     });
     const audit = (await a.get('/api/audit-suivi')).json();
     expect(audit.nextDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(audit.plan.days).toHaveLength(2);
-    expect(audit.plan.slots).toHaveLength(8);
+    expect(audit.plan.days).toHaveLength(3);
+    expect(audit.plan.days.every((d: { date: string }) => d.date)).toBe(true);
+    expect(audit.plan.slots).toHaveLength(9);
     expect(audit.plan.people).toHaveLength(5);
     expect(audit.plan.slots.flatMap((s: { items: string[] }) => s.items)).toContain('A-8.5');
     const clausier = (await a.get('/api/evaluations-clausier')).json().evaluations as { supplier: string }[];
     expect(clausier.map((e) => e.supplier).sort()).toEqual(['SUP-001', 'SUP-003']);
-    const perimetres = (await a.get('/api/grc/smsis')).json() as { parentId: string | null }[];
-    expect(perimetres.filter((p) => p.parentId === DEFAULT_SMSI)).toHaveLength(2);
+    const sites = (await a.get('/api/grc/smsis')).json() as { id: string; parentId: string | null }[];
+    const enfants = sites.filter((p) => p.parentId === DEFAULT_SMSI);
+    expect(enfants).toHaveLength(2);
+    const rattaches = (await a.get(`/api/grc/${DEFAULT_SMSI}/suppliers`)).json();
+    expect(rattaches.summary.attached).toBe(4);
+    expect(rattaches.summary.evaluated).toBeGreaterThan(0);
+    let duSite = 0;
+    for (const p of enfants) duSite += (await a.get(`/api/grc/${p.id}/suppliers`)).json().summary.attached;
+    expect(duSite).toBe(2);
+    const cartesPerimetres = (await a.get('/api/grc/perimetres/synthese')).json().cartes as {
+      parentId: string | null;
+      compteurs: { actions: { ouverts: number } } | null;
+    }[];
+    expect(
+      cartesPerimetres.filter((c) => c.parentId === DEFAULT_SMSI).map((c) => c.compteurs?.actions.ouverts ?? 0),
+    ).toContain(1);
     const cartes = (await a.get('/api/carto/maps')).json() as { view: string; layout: { nodes: object } }[];
     expect(cartes.map((c) => c.view).sort()).toEqual(['context', 'process']);
     for (const c of cartes) expect(Object.keys(c.layout.nodes).length, c.view).toBeGreaterThan(5);
