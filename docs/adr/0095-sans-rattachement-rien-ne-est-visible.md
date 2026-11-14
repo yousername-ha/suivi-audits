@@ -28,9 +28,7 @@ et ses données (BUG-037, BUG-044, BUG-051 ; rejeu de la recette du 14/11/2026, 
 
 ## Conséquences
 
-- Aucune reprise de données : un compte existant non rattaché perd l'accès jusqu'à son rattachement ; les comptes rattachés à la racine gardent
-  tout. L'instance n'est pas en production.
-- **À relire avant la mise à jour d'un serveur peuplé** : un compte rattaché à un enfant seulement ne voit plus le périmètre commun. Le rattacher
-  aussi à la racine pour le lui rendre.
+- Aucune reprise de données ni code de compatibilité (consigne du RSSI du 14/11/2026) : l'application n'est pas déployée officiellement et se
+  réinstalle à neuf.
 - Le retrait de la matrice de rôles et l'auditeur externe (reste du lot 3 de l'ADR 0092) ne sont pas traités ici.
 - Retour arrière : la fonction est ignorée d'une version antérieure, qui retrouve la visibilité « instance » pour tous.
