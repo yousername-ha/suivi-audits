@@ -94,6 +94,14 @@ const LOGO_TYPES: [string, Buffer][] = [
   ['image/png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])],
   ['image/jpeg', Buffer.from([0xff, 0xd8, 0xff])],
 ];
+/** Logo par défaut, servi tant que l'organisation n'a pas déposé le sien : la marque de l'application (même dessin que
+    `apps/web/public/favicon.svg`). Évite une réponse 404, que le navigateur inscrit en erreur à chaque page (R7-01). */
+const LOGO_DEFAUT = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0D6B6B"/>' +
+    '<path d="M21.5 11.2c-.8-1.6-2.7-2.6-5.1-2.6-3 0-5.2 1.6-5.2 4 0 2.2 1.6 3.2 4.6 3.8 2.1.4 2.9.9 2.9 1.9 0 1.1-1.1 ' +
+    '1.8-2.6 1.8-1.7 0-2.9-.8-3.3-2.1l-2.6 1c.7 2.3 3 3.6 5.9 3.6 3.3 0 5.6-1.7 5.6-4.4 0-2.3-1.5-3.4-4.7-4-1.9-.4-2.8' +
+    '-.8-2.8-1.7 0-.9.9-1.5 2.2-1.5 1.3 0 2.3.6 2.7 1.6z" fill="#fff"/></svg>',
+);
 
 export const settingsRoutes = [
   route({
@@ -227,18 +235,19 @@ export const settingsRoutes = [
   route({
     method: 'GET',
     url: '/api/settings/logo',
-    summary: 'Logo de l’organisation (PNG ou JPEG), affiché aussi sur la page de connexion',
+    summary:
+      'Logo de l’organisation (PNG ou JPEG), sinon logo par défaut de l’application ; affiché aussi sur la connexion',
     tags: ['Paramètres'],
     access: 'public',
     handler: async ({ svc, reply }) => {
       const ligne = await svc.db.k.selectFrom('settings').select('value').where('key', '=', 'logo').executeTakeFirst();
-      if (!ligne) throw new HttpError(404, 'Aucun logo.');
-      const r = { value: ligne.value as { mime: string; data: string } };
+      const r = ligne ? (ligne.value as { mime: string; data: string }) : null;
       reply
-        .header('Content-Type', r.value.mime)
+        .header('Content-Type', r ? r.mime : 'image/svg+xml')
         .header('Cache-Control', 'no-cache')
-        .header('Content-Security-Policy', "default-src 'none'; sandbox");
-      return reply.send(Buffer.from(r.value.data, 'base64'));
+        .header('Content-Security-Policy', "default-src 'none'; sandbox")
+        .header('X-Logo', r ? 'organisation' : 'defaut');
+      return reply.send(r ? Buffer.from(r.data, 'base64') : LOGO_DEFAUT);
     },
   }),
   route({
