@@ -42,6 +42,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
+import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
 import { usePresence } from '../realtime';
 import { ME_KEY, useCan, useMe } from '../session';
 
@@ -775,6 +776,8 @@ function General({ p }: { p: P }) {
   const refresh = async () => {
     setStamp(Date.now());
     await qc.invalidateQueries({ queryKey: ['settings', 'general'] });
+    // Logo affiché dans l'en-tête et la tête du menu (refonte Neon) : rechargé après un dépôt ou un retrait.
+    await qc.invalidateQueries({ queryKey: CLE_LOGO_ORGANISATION });
   };
   return (
     <Stack>

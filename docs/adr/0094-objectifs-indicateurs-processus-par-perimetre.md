@@ -1,7 +1,7 @@
 # ADR 0094 — Objectifs, indicateurs et processus : un seul modèle, une fiche par périmètre
 
 **Statut** : acceptée le 13/11/2026 (décision du RSSI du 13/11/2026, BUG-055 de la campagne de recette). Numéro annoncé au RSSI.
-Complète l'[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md) et l'[ADR 0093](0093-declaration-d-applicabilite-par-perimetre.md).
+Complète l'[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md) et l'[ADR 0096](0096-declaration-d-applicabilite-par-perimetre.md).
 
 ## Contexte
 

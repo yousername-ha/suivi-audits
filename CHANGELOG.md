@@ -20,6 +20,25 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 
 ### Modifié
 
+- **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
+  [rapport du lot](docs/refonte-neon/LOT-2-FENETRES-LIGNES.md)) : habillage commun des fenêtres et panneaux (cadre à angles coupés,
+  formulaires harmonisés) à **hauteur naturelle** : une fiche longue fait défiler le voile extérieur, sans ascenseur dans la fiche ; les
+  fenêtres RETEX, plein écran et le menu mobile gardent leur présentation. La **ligne entière d'une fiche** s'ouvre au clic, à Entrée ou à
+  Espace, avec la même ouverture et les mêmes droits que la commande existante (boutons « Ouvrir » conservés) ; les commandes de la ligne
+  et la sélection de texte gardent leur action, et le focus revient à la ligne à la fermeture. Les longues listes de fiches défilent dans
+  leur zone, en-têtes visibles. La liste « Ajouter depuis la plateforme » de la cartographie n'a plus de second ascenseur. Aucun
+  changement de droits, de données ni d'API. _(Session « Refonte Neon suivi-audits ».)_
+
+- **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
+  [audit](docs/refonte-neon/AUDIT-CIBLE.md), [rapport du lot](docs/refonte-neon/LOT-1-MENU-DASHBOARD.md)) : palette Neon de la charte (jetons
+  `tokens.ts`, rayons inchangés) ; menu latéral **bleu nuit opaque, identique dans les deux thèmes**, une teinte par identité d'entrée,
+  pictogrammes animés (transform et opacity seulement) avec bouton de pause et respect du mouvement réduit, nombre réel de destinations
+  lisibles ; **logo de l'organisation** (Plateforme > Général) en tête du menu et dans l'en-tête, pastille de l'application à défaut. L'accueil
+  propose une seconde présentation, la **vue analytique Neon** (onze cartes ; la carte du module CRRC retiré n'est pas reprise), à côté du
+  tableau personnalisable, qui reste la présentation par défaut ; le choix de chacun est **enregistré dans son compte** (préférence facultative
+  `accueil`, sans migration ni route nouvelle). Navigation, droits, ordre personnel, alertes, disposition et partage du tableau de bord
+  inchangés. _(Session « Refonte Neon suivi-audits ».)_
+
 - **Droits : pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), lot 1 de la refonte des droits) : l'accès donné
   sur un périmètre (lecture, ou lecture et écriture) vaut désormais pour **tous ses périmètres enfants**, sans désignation un par un ; il ne remonte pas vers le parent
   et ne passe pas aux périmètres voisins. Le niveau le plus élevé de la chaîne l'emporte. L'écran **Membres** d'un périmètre liste les comptes dont l'accès vient d'un
@@ -147,7 +166,7 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 - **BUG-062, plans d'audit et annuels par périmètre** (décision du RSSI) : chaque action de plan (audit, exercice, formation, sensibilisation, calendrier) porte un périmètre (`smsi`, périmètre
   commun par défaut) ; `GET /api/plans` et `POST /api/plans` acceptent `smsi`, les opérations par identifiant refusent (404) un périmètre non lisible, et la Synthèse ne compte que les
   actions des périmètres lisibles. Les pages concernées ne sont plus signalées « communes ». Clausier et fournisseurs restent communs. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
-- **BUG-062, déclaration d'applicabilité par périmètre** ([ADR 0093](docs/adr/0093-declaration-d-applicabilite-par-perimetre.md), décision du RSSI) : le périmètre commun garde la DdA de l'outil
+- **BUG-062, déclaration d'applicabilité par périmètre** ([ADR 0096](docs/adr/0096-declaration-d-applicabilite-par-perimetre.md), décision du RSSI) : le périmètre commun garde la DdA de l'outil
   de suivi, chaque autre périmètre a la sienne (migration `061`, table `dda_perimetres`, additive) ; une mesure sans décision y reste « non examinée ». `GET /api/dda` et
   `PATCH /api/dda/:id` acceptent `smsi` ; la couverture d'un référentiel reprend la DdA du périmètre. Aucune reprise de la DdA du parent. _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
 - **Compléments (BUG-070, BUG-059)** : le rapport de pilotage contient une section « Incidents » du périmètre ; le mode de calcul d'une méthode s'affiche en français dans l'éditeur ;

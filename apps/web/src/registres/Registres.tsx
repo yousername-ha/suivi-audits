@@ -34,6 +34,7 @@ import {
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { libelleDesignation, SelecteurResponsableTypé, useProposables } from '../components/selecteurs';
 import { AccesSujets } from './AccesSujets';
@@ -150,7 +151,10 @@ function ListeRegistres() {
                 </Table.Thead>
                 <Table.Tbody>
                   {(liste.data?.items ?? []).map((r) => (
-                    <Table.Tr key={r.id}>
+                    <Table.Tr
+                      key={r.id}
+                      {...ficheCliquable(() => void nav(`/registres/${r.id}`), `Afficher ${r.name}`)}
+                    >
                       <Table.Td>
                         <Text component={Link} to={`/registres/${r.id}`} fw={600}>
                           {r.name}

@@ -867,7 +867,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-01 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-02 ouvert » (`test.fail`) |
 | Tri du 13/11/2026 sur le code actuel de `claude-suivi-smsi` (`967de1d`, après les ADR 0089 à 0091) | Volet « applications à intégrer » sans objet (GAP retiré, ADR 0089, lot 2 : `GET /api/gap` → 404). Toujours présent pour la DdA et les plans annuels (« CAMP-C3-01 », « CAMP-C4-02 »). |
-| Correctif | DdA par périmètre (ADR 0093, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; plans d’audit et annuels par périmètre (`smsi` sur chaque action) ; clausier et fournisseurs restent communs et l’indiquent sous un autre périmètre. |
+| Correctif | DdA par périmètre (ADR 0096, migration 061) : décisions propres à chaque périmètre hors commun, couverture alignée ; plans d’audit et annuels par périmètre (`smsi` sur chaque action) ; clausier et fournisseurs restent communs et l’indiquent sous un autre périmètre. |
 | Tests de la correction | `apps/api/test/dda-perimetres.test.ts`, `apps/api/test/couverture-dda.test.ts`, `apps/api/test/historique-incidents-perimetre.test.ts` (plans) ; `CAMP-C3-01` à rejouer par la recette |
 | Commit | 454addf |
 

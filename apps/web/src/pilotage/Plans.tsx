@@ -39,6 +39,7 @@ import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 export type VuePlans = 'calendrier' | 'planning' | TypePlan;
 interface Mesure {
@@ -388,7 +389,7 @@ function Liste({
               {liste.map((p) => {
                 const [libelle, niveau] = actionPlanEtat(p, jourJ);
                 return (
-                  <Table.Tr key={p.id}>
+                  <Table.Tr key={p.id} {...ficheCliquable(() => onOuvrir(p.id), `Afficher le plan ${p.id}`)}>
                     <Table.Td>
                       <Anchor component="button" type="button" onClick={() => onOuvrir(p.id)}>
                         {p.id}

@@ -16,6 +16,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { Chemins } from './ebios-visuel/Chemins';
 import { familleSource } from './ebios-visuel/modele';
@@ -185,7 +186,13 @@ function BibliothequeSources({
               </Table.Thead>
               <Table.Tbody>
                 {q.data.items.map((s) => (
-                  <Table.Tr key={s.id}>
+                  <Table.Tr
+                    key={s.id}
+                    {...ficheCliquable(
+                      () => void get<GrcObject>(`/api/grc/${smsi}/objects/${s.id}`).then(onOpen),
+                      `Afficher ${s.name}`,
+                    )}
+                  >
                     <Table.Td>{s.name}</Table.Td>
                     <Table.Td>{s.category || '—'}</Table.Td>
                     <Table.Td>{s.version}</Table.Td>
@@ -426,7 +433,7 @@ export function EtudesEbios({
                         </Table.Thead>
                         <Table.Tbody>
                           {a.objets.map((o) => (
-                            <Table.Tr key={o.id}>
+                            <Table.Tr key={o.id} {...ficheCliquable(() => void ouvrir(o.id), `Afficher ${o.name}`)}>
                               <Table.Td>
                                 {o.kind === 'risk_source' ? (
                                   <Group gap="xs" wrap="nowrap">

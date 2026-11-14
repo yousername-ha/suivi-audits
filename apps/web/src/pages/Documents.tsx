@@ -43,6 +43,7 @@ import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../com
 import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 import { DataTable } from '@suivi/ui';
 
 interface Ref {
@@ -379,6 +380,7 @@ function DocumentList({
             {(list.data ?? []).map((d) => (
               <Table.Tr
                 key={d.id}
+                {...ficheCliquable(() => onOpen(d.id), `Afficher ${d.title}`)}
                 aria-selected={d.id === selected}
                 className={d.id === selected ? 'ligne-choisie' : undefined}
               >

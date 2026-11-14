@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ActionDeTraitement } from '../grc/ActionDeTraitement';
 export function Registry({
   smsi,
@@ -66,7 +67,7 @@ export function Registry({
       {list.data?.pages
         .flatMap((p) => p.items)
         .map((o) => (
-          <Card withBorder key={o.id}>
+          <Card withBorder key={o.id} {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}>
             <Stack>
               <Text fw={600}>{o.name}</Text>
               <Text size="sm">

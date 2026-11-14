@@ -49,6 +49,9 @@ export const Preferences = z.object({
       mouvement: z.enum(['animees', 'automatique', 'arretees']).optional(),
     })
     .default({}),
+  /** Présentation de l'accueil choisie par la personne (refonte Neon, ADR 0093) : tableau personnalisable (défaut, absent)
+      ou vue analytique. Affichage seulement : les données restent filtrées par les droits de la personne. */
+  accueil: z.enum(['personnalisee', 'analytique']).optional(),
   /** Ordre du menu choisi par la personne (glisser-déposer ou clavier) : familles, puis destinations de chaque famille.
       Affichage seulement : l'ordre n'ouvre ni ne retire aucun accès ; un identifiant inconnu est ignoré. */
   menu: z
