@@ -8,6 +8,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [7.1.1] — 2026-11-14
+
+Version corrective : aucune migration, aucune nouvelle dépendance. Elle termine la **refonte graphique Neon** (lots 3 à 8,
+[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) et sert un **logo par défaut** quand l'organisation n'en a pas.
+Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+Aucune action.
+
 ### Modifié
 
 - **Refonte Neon, lots 3 à 8** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) : présentations validées portées
