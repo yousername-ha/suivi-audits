@@ -1,1 +1,879 @@
-/* Refonte Neon — Périmètres : graphe compact centré (lot 3), ADR 0093. Portage de la référence validée, adapté à la cible. */
+/* Refonte Neon — Périmètres : graphe compact centré (lot 3), ADR 0093. Portage de la référence validée, adapté à la cible :
+   - couleurs tirées des jetons de la charte (--neon-*, --suivi-*, --carte-*), clair et sombre, contrastes AA vérifiés ;
+   - rayons bornés à 12 px (ADR 0093), cartes Studio arrondies (pas de Biseau) ;
+   - la carte repliée garde ses commandes (pictogrammes) et la ventilation des écarts, qui sont des alertes essentielles ;
+   - animation : seul le flux des liaisons, existant (app.css), bouge ; arrêté par la pause et le mouvement réduit.
+   Chargée après app.css : les règles historiques du graphe (.graphe-*) y sont redéfinies pour la présentation compacte. */
+.perimetres-graphe-compact,
+.perimetre-detail-panneau {
+  --perim-panel: var(--suivi-surface);
+  --perim-soft: color-mix(in srgb, var(--neon-doux) 50%, var(--suivi-surface));
+  --perim-ink: var(--mantine-color-text);
+  --perim-muted: var(--mantine-color-dimmed);
+  --perim-edge: var(--suivi-trait);
+  --perim-accent: var(--neon-accent);
+  --perim-tint: var(--neon-doux);
+  --perim-wire: color-mix(in srgb, var(--neon-accent) 55%, var(--suivi-surface));
+  --perim-dots: var(--suivi-trait);
+  --perim-orange: var(--carte-orange-accent);
+  --perim-red: var(--carte-rouge-accent);
+  --perim-green: var(--carte-vert-accent);
+  --perim-shadow:
+    0 4px 7px color-mix(in srgb, var(--suivi-encre) 4%, transparent),
+    0 12px 25px -15px color-mix(in srgb, var(--neon-violet) 23%, transparent);
+}
+[data-mantine-color-scheme='dark'] :is(.perimetres-graphe-compact, .perimetre-detail-panneau) {
+  --perim-soft: var(--neon-doux);
+  --perim-tint: color-mix(in srgb, var(--neon-accent) 16%, var(--suivi-surface));
+  --perim-shadow: 0 4px 18px color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
+}
+.perimetres-graphe-compact {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+  color: var(--perim-ink);
+}
+
+/* Synthèse globale : total sans doublon (jamais la somme des cartes). */
+.perimetres-graphe-compact .graphe-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--perim-panel);
+  box-shadow: var(--perim-shadow);
+  font-size: var(--mantine-font-size-sm);
+}
+.graphe-total .perimetres-synthese-titre {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.15rem;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.perimetres-synthese-titre strong {
+  color: var(--neon-titre);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.perimetres-synthese-titre small {
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+.perimetres-graphe-compact .graphe-total > dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--mantine-spacing-md);
+  flex: 3 1 32rem;
+  margin: 0;
+}
+.perimetres-graphe-compact .graphe-total > dl > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 1px solid var(--perim-edge);
+}
+.perimetres-graphe-compact .graphe-total dt {
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-compact .graphe-total dd {
+  margin: 0;
+  font-size: 0.75rem;
+  text-align: start;
+}
+.perimetres-graphe-compact .graphe-alerte {
+  color: var(--perim-red);
+  font-weight: 500;
+}
+
+/* Panneau du graphe : barre de commandes, zone pointillée, légende et zoom. */
+.perimetres-graphe-panneau {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--perim-panel);
+  box-shadow: var(--perim-shadow);
+}
+.perimetres-graphe-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--perim-edge);
+}
+.perimetres-graphe-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.perimetres-graphe-titre strong {
+  color: var(--neon-titre);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.perimetres-graphe-titre small {
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-commandes .mantine-Button-root {
+  border-color: var(--perim-edge);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--perim-soft);
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.perimetres-graphe-commandes .mantine-Button-root:last-child {
+  background: var(--perim-tint);
+  color: var(--perim-accent);
+}
+.perimetres-graphe-zone {
+  position: relative;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  touch-action: pan-y;
+  background:
+    radial-gradient(circle, var(--perim-dots) 0.65px, transparent 0.75px) 0 0 / 17px 17px,
+    var(--perim-soft);
+}
+.perimetres-graphe-zone:focus-visible {
+  outline: 2px solid var(--perim-accent);
+  outline-offset: -3px;
+}
+.perimetres-graphe-compact .graphe-perimetres {
+  display: block;
+  max-inline-size: none;
+  overflow: visible;
+}
+.perimetres-graphe-compact .graphe-lien {
+  stroke: var(--perim-wire);
+  stroke-width: 1.5;
+}
+/* Même période de tirets que le flux historique (12), pour une boucle sans à-coup. */
+.perimetres-graphe-compact .graphe-lien--flux {
+  stroke-dasharray: 4 8;
+  animation-duration: 3s;
+}
+.perimetres-graphe-compact .graphe-fleche {
+  fill: var(--perim-wire);
+}
+.perimetres-graphe-compact .graphe-lien-fournisseur {
+  stroke: var(--perim-green);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 5;
+  opacity: 0.85;
+}
+
+/* Carte d'un périmètre : hauteur naturelle (mesurée), jamais de défilement interne ni de titre tronqué. */
+.perimetres-graphe-compact .graphe-carte.perimetre-dalle {
+  container: perimetre / inline-size;
+  display: block;
+  box-sizing: border-box;
+  block-size: auto;
+  overflow: visible;
+  padding: 12px 13px;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--perim-panel);
+  box-shadow: var(--perim-shadow);
+  color: var(--perim-ink);
+  font-family: var(--mantine-font-family);
+  letter-spacing: normal;
+}
+.perimetres-graphe-compact .graphe-carte.perimetre-dalle.graphe-carte--fournisseur {
+  border-style: dashed;
+}
+.perimetres-graphe-compact .graphe-carte.perimetre-dalle[data-actif] {
+  border-color: var(--perim-accent);
+  box-shadow:
+    inset 3px 0 var(--perim-accent),
+    var(--perim-shadow);
+}
+.perimetres-graphe-compact .perimetre-dalle[data-deplie='true'] {
+  padding: 15px 16px;
+}
+.perimetre-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: 19px;
+}
+.perimetres-graphe-compact .perimetre-sur-titre {
+  margin: 0 auto 0 0;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+  font-weight: 550;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.perimetre-entete .mantine-Badge-root {
+  height: auto;
+  padding: 2px 6px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.perimetre-entete .mantine-Badge-root[data-variant='light']:not([data-color]) {
+  background: var(--perim-tint);
+  color: var(--perim-accent);
+}
+.perimetre-principal {
+  min-width: 0;
+}
+.perimetres-graphe-compact .perimetre-titre {
+  margin: 7px 0 10px;
+  color: var(--perim-ink);
+  font-size: 0.9375rem;
+  font-weight: 630;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+.perimetre-dalle[data-deplie='true'] .perimetre-principal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  align-items: center;
+  gap: 24px;
+  margin-top: 7px;
+}
+.perimetres-graphe-compact .perimetre-dalle[data-deplie='true'] .perimetre-titre {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Résumé replié : couverture, actions et écarts, chiffre en tête et formule complète dessous. */
+.perimetre-resume {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+.perimetre-resume > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 6px 7px;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--perim-soft);
+}
+.perimetre-resume > div[data-alerte] {
+  border-bottom: 2px solid var(--perim-red);
+}
+.perimetre-resume .perimetre-resume-couverture {
+  background: var(--perim-tint);
+}
+.perimetre-resume dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 2px;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+  line-height: 1.5;
+}
+.perimetre-resume dd {
+  margin: 0;
+  min-width: 0;
+}
+.perimetre-resume .perimetre-lien,
+.perimetre-resume-valeur {
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.perimetre-resume .perimetre-lien > svg {
+  display: none;
+}
+.perimetre-resume b {
+  display: block;
+  color: var(--perim-ink);
+  font-size: 1.3125rem;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.perimetre-resume-couverture b {
+  color: var(--perim-accent);
+}
+.perimetre-resume b > small {
+  display: inline;
+  margin-left: 1px;
+  font-size: 0.6875rem;
+  letter-spacing: normal;
+}
+.perimetre-resume small {
+  display: block;
+  margin-top: 2px;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.perimetre-resume [data-indisponible] b,
+.perimetre-resume-valeur b {
+  color: var(--perim-muted);
+}
+.perimetre-resume .perimetre-lien:hover small {
+  color: var(--perim-ink);
+}
+.perimetre-point-retard {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--perim-red);
+}
+.perimetres-graphe-compact .perimetre-classes {
+  margin-top: 8px;
+}
+.perimetres-graphe-compact .perimetre-classes .mantine-Badge-root {
+  height: auto;
+  min-height: 1.125rem;
+  padding-inline: 6px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Liens des compteurs : aspect neutre, flèche permanente, survol de surface et focus visible. */
+.perimetre-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  max-width: 100%;
+  margin-left: -0.3em;
+  padding: 0.18em 0.3em;
+  border-radius: var(--mantine-radius-xs);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 450;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: background-color var(--suivi-motion);
+}
+.perimetre-lien > span {
+  min-width: 0;
+}
+.perimetre-lien > svg {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0.65;
+}
+.perimetre-lien:hover {
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+  text-decoration: none;
+}
+.perimetre-lien:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-focus);
+}
+
+/* Sous-total parent + sous-périmètres, alerte de couverture et pied de carte. */
+.perimetres-graphe-compact .graphe-ensemble {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+}
+.perimetre-sous-total {
+  padding: 7px 9px;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--perim-soft);
+  color: var(--perim-muted);
+}
+.perimetre-sous-total summary {
+  cursor: pointer;
+  color: var(--perim-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.perimetre-sous-total summary span {
+  display: block;
+  margin-top: 2px;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+  font-weight: 400;
+}
+.perimetre-sous-total .graphe-compteurs {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  font-size: 0.6875rem;
+}
+.perimetre-sous-total .graphe-compteurs dd {
+  color: var(--perim-ink);
+}
+.perimetre-vigilance {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 0;
+  color: var(--perim-orange);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+.perimetre-icone {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.perimetre-pied {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 41px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--perim-edge);
+}
+.perimetre-pied-gauche,
+.perimetre-pied-droite {
+  min-width: 0;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+}
+.perimetre-pied-droite {
+  justify-self: end;
+  text-align: end;
+}
+.perimetre-pied-droite button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: var(--mantine-radius-xs);
+  background: none;
+  color: var(--perim-accent);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+.perimetre-pied .perimetre-deplier {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--perim-tint);
+  color: var(--perim-accent);
+  cursor: pointer;
+}
+.perimetre-deplier svg {
+  width: 14px;
+  height: 14px;
+}
+.perimetre-pied .perimetre-deplier:hover {
+  border-color: var(--perim-accent);
+}
+.perimetre-pied button:focus-visible {
+  outline: 2px solid var(--perim-accent);
+  outline-offset: 3px;
+}
+.perimetre-commandes .mantine-ActionIcon-root {
+  border-color: var(--perim-edge);
+  background: var(--perim-panel);
+  color: var(--perim-muted);
+}
+.perimetre-commandes .mantine-ActionIcon-root:hover {
+  border-color: var(--perim-accent);
+  color: var(--perim-accent);
+}
+.perimetre-commandes svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.perimetres-graphe-compact .perimetre-actions {
+  margin-top: 10px;
+}
+.perimetres-graphe-compact .perimetre-actions .mantine-Button-root {
+  height: auto;
+  min-height: 1.5rem;
+  padding: 4px 8px;
+  border-color: var(--perim-edge);
+  border-radius: var(--mantine-radius-xs);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.perimetres-graphe-compact .perimetre-actions .mantine-Button-root[data-variant='default'] {
+  background: var(--perim-panel);
+  color: var(--perim-ink);
+}
+.perimetres-graphe-compact .perimetre-actions .mantine-Button-root[data-variant='light'] {
+  background: var(--perim-tint);
+  color: var(--perim-accent);
+}
+
+/* Carte dépliée en largeur : trois zones de lecture (couverture, activité et continuité, écarts et actions). */
+.perimetres-graphe-compact .perimetre-corps {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--perim-edge);
+}
+.perimetre-details-colonnes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.perimetre-detail-colonne {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--perim-edge);
+  border-radius: var(--mantine-radius-md);
+  background: var(--perim-soft);
+}
+.perimetres-graphe-compact .perimetre-detail-colonne h3 {
+  margin: 0 0 10px;
+  color: var(--perim-ink);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.perimetres-graphe-compact .perimetre-indicateurs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+  margin: 0;
+}
+.perimetres-graphe-compact .perimetre-indicateurs .perimetre-indicateur {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 0;
+}
+.perimetres-graphe-compact .perimetre-indicateurs .perimetre-indicateur + .perimetre-indicateur {
+  padding-top: 9px;
+  border-top: 1px solid var(--perim-edge);
+}
+.perimetres-graphe-compact .perimetre-indicateurs .perimetre-indicateur dt {
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-compact .perimetre-indicateurs .perimetre-indicateur dd {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  text-align: start;
+}
+.perimetres-graphe-compact .perimetre-indicateurs .perimetre-lien {
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-compact .perimetre-indicateurs .graphe-alerte .perimetre-lien {
+  color: var(--perim-red);
+}
+.perimetre-chiffre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.perimetre-chiffre b {
+  color: var(--perim-ink);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.perimetre-chiffre small {
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+}
+.perimetre-retard {
+  display: block;
+  width: 100%;
+  height: 4px;
+}
+.perimetre-retard-piste {
+  fill: color-mix(in srgb, var(--neon-violet) 25%, var(--suivi-surface));
+}
+.perimetre-retard-valeur {
+  fill: var(--perim-red);
+}
+.perimetres-graphe-compact .perimetre-indicateurs .graphe-detail .perimetre-classes {
+  justify-content: flex-start;
+  max-width: 100%;
+}
+.perimetres-graphe-compact .perimetre-detail-colonne .mantine-Badge-root {
+  height: auto;
+  min-height: 1rem;
+  padding-inline: 4px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: none;
+}
+.perimetres-graphe-compact .perimetre-couverture {
+  display: block;
+}
+.perimetres-graphe-compact .perimetre-couverture strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--perim-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.perimetres-graphe-compact .perimetre-couverture :is(p, small) {
+  display: block;
+  margin: 0.25rem 0;
+  color: var(--perim-muted);
+  font-size: 0.625rem;
+  line-height: 1.6;
+}
+.perimetres-graphe-compact .perimetre-couverture .perimetre-lien {
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-compact .perimetre-couverture .graphe-alerte {
+  color: var(--perim-red);
+}
+@container perimetre (max-width: 22.5rem) {
+  .perimetre-dalle[data-deplie='true'] .perimetre-principal {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .perimetre-details-colonnes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .perimetre-detail-couverture {
+    grid-column: 1 / -1;
+  }
+  .perimetre-detail-colonne {
+    padding: 8px;
+  }
+}
+
+/* Fournisseur extérieur : rattachement, jamais un parent. */
+.perimetres-graphe-compact .graphe-fournisseur {
+  box-sizing: border-box;
+  block-size: 100%;
+  overflow: hidden;
+  padding: 11px 12px;
+  border: 1px dashed var(--perim-green);
+  border-radius: var(--mantine-radius-md);
+  background: var(--perim-panel);
+  box-shadow: var(--perim-shadow);
+}
+.perimetres-graphe-compact .graphe-fournisseur-type {
+  color: var(--perim-green);
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.perimetres-graphe-compact .graphe-fournisseur a {
+  display: -webkit-box;
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--perim-ink);
+  font-size: 0.75rem;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.perimetres-graphe-compact .graphe-fournisseur a:hover {
+  text-decoration: underline;
+}
+
+/* Légende, zoom et aide. */
+.perimetres-graphe-legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border-top: 1px solid var(--perim-edge);
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-legende > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.perimetres-graphe-legende i {
+  width: 25px;
+  border-top: 1.5px solid var(--perim-wire);
+}
+.perimetres-graphe-legende i.exterieur {
+  border-top: 1.5px dashed var(--perim-green);
+}
+.perimetres-graphe-zoom .mantine-Button-root {
+  color: var(--perim-accent);
+  font-size: 0.6875rem;
+}
+.perimetres-graphe-aide {
+  margin: 0;
+  color: var(--perim-muted);
+  font-size: 0.6875rem;
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* Panneau Détail : couverture avec son anneau, puis tous les compteurs et leur provenance. */
+.perimetre-detail-panneau .perimetre-couverture {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+  background: var(--perim-tint);
+}
+.perimetre-detail-panneau .perimetre-couverture .neon-anneau svg {
+  width: 6rem;
+  height: 6rem;
+}
+.perimetre-detail-panneau .perimetre-couverture .neon-axe {
+  display: none;
+}
+.perimetre-detail-panneau .perimetre-couverture strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.perimetre-detail-panneau .perimetre-couverture :is(p, small) {
+  display: block;
+  margin: 0.25rem 0;
+  color: var(--perim-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.perimetre-detail-panneau .perimetre-couverture .graphe-alerte {
+  color: var(--perim-red);
+}
+.perimetre-anneau-vide {
+  display: grid;
+  place-content: center;
+  width: 5rem;
+  height: 5rem;
+  border: 0.45rem solid var(--perim-edge);
+  border-radius: 50%;
+  color: var(--perim-muted);
+  font-size: 1.4rem;
+}
+.perimetre-detail-compteurs {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  margin: 0;
+}
+.perimetre-detail-compteurs > div {
+  padding-bottom: var(--mantine-spacing-sm);
+  border-bottom: 1px solid var(--perim-edge);
+}
+.perimetre-detail-compteurs dt {
+  font-weight: 650;
+}
+.perimetre-detail-panneau .graphe-alerte {
+  color: var(--perim-red);
+}
+
+@media (max-width: 70em) {
+  .perimetres-graphe-titre small {
+    display: none;
+  }
+  .perimetres-graphe-compact .graphe-total > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36em) {
+  .perimetres-graphe-compact .graphe-total {
+    padding: 0.8rem;
+  }
+  .perimetres-graphe-compact .graphe-total > dl {
+    grid-template-columns: minmax(0, 1fr);
+    flex-basis: 100%;
+  }
+  .perimetres-graphe-barre {
+    padding: 0.7rem;
+  }
+  .perimetres-graphe-commandes {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .perimetre-lien {
+    transition: none;
+  }
+  .perimetre-detail-panneau .neon-ring-valeur {
+    animation: none;
+  }
+}
+@media print {
+  .perimetres-graphe-compact :is(.graphe-total, .perimetres-graphe-panneau, .perimetre-dalle) {
+    box-shadow: none;
+  }
+  .perimetres-graphe-zone {
+    background: none;
+  }
+  .perimetres-graphe-compact .graphe-lien--flux {
+    animation: none;
+  }
+  .perimetres-graphe-commandes,
+  .perimetres-graphe-zoom,
+  .perimetre-commandes,
+  .perimetre-deplier {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .perimetres-graphe-compact :is(.perimetre-dalle, .graphe-fournisseur, .perimetre-resume > div) {
+    border-color: CanvasText;
+  }
+  .perimetres-graphe-compact .graphe-lien,
+  .perimetres-graphe-compact .graphe-lien-fournisseur {
+    stroke: CanvasText;
+  }
+  .perimetres-graphe-compact .graphe-fleche {
+    fill: CanvasText;
+  }
+  .perimetre-point-retard {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .perimetre-retard-valeur {
+    fill: Highlight;
+  }
+}
