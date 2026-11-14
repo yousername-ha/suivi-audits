@@ -36,6 +36,7 @@ import { useFiltreUrl } from '../components/filtre-url';
 import { usePerimetres, useResponsables } from '../components/selecteurs';
 import { PartiesInteresseesStudio } from './PartiesInteresseesStudio';
 import { idObjetDeRef, lienContexte } from '../retour';
+import { SwotMatrice } from './SwotMatrice';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -320,7 +321,7 @@ export function BusinessRegistry({
       </Group>
     );
   };
-  return (
+  const registre = (
     <Stack
       className={kind === 'stakeholder' ? 'pi-registry-shell' : undefined}
       data-registre-parties={kind === 'stakeholder' ? (registreParties ? 'ouvert' : 'replie') : undefined}
@@ -627,5 +628,20 @@ export function BusinessRegistry({
         </Stack>
       </Modal>
     </Stack>
+  );
+  // SWOT : la matrice Studio (refonte Neon, lot 5) précède le registre complet, conservé tel quel et toujours affiché.
+  if (kind !== 'swot') return registre;
+  return (
+    <SwotMatrice
+      smsi={smsi}
+      objects={toutes}
+      owners={owners.data ?? []}
+      writable={writable}
+      onOpen={onOpen}
+      onCreate={() => onCreate(kind)}
+      onHistory={setHistory}
+    >
+      {registre}
+    </SwotMatrice>
   );
 }
