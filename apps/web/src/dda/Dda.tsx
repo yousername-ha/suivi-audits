@@ -143,7 +143,7 @@ export function DeclarationApplicabilite({ reference, smsi }: { reference: Refer
                     return (
                       <Table.Tr
                         key={m.id}
-                        {...ficheCliquable(() => setFiche(m.id), `Ouvrir la fiche ${codeMesure(m)}`)}
+                        {...ficheCliquable(() => setFiche(m.id), `Afficher la mesure ${codeMesure(m)}`)}
                         className="dda-row"
                         data-tone={x.app === 'non' ? 'exclue' : tonNiveau(x.level)}
                       >

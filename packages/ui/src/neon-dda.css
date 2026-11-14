@@ -547,7 +547,7 @@
 }
 .dda-table tr {
   display: grid;
-  grid-template-columns: minmax(230px, 2.4fr) 88px 113px minmax(120px, 1.5fr) minmax(120px, 1.35fr) 67px 27px;
+  grid-template-columns: minmax(230px, 2.4fr) 104px 113px minmax(120px, 1.5fr) minmax(120px, 1.35fr) 67px 27px;
   align-items: center;
   column-gap: 0.875rem;
 }
@@ -566,6 +566,9 @@
   padding-inline: 0;
   border: 0;
   background: transparent;
+}
+.dda-register .data-table :is(.mantine-Table-td, .mantine-Table-th):is(:first-child, :last-child) {
+  padding-inline: 0;
 }
 /* La première colonne ne colle plus (lignes en grille) et suit le fond de la ligne, au survol comme au focus. */
 .dda-register .data-table tbody tr.dda-row[data-fiche-ouvrable] > td:first-child,
@@ -662,7 +665,7 @@
 .dda-detail[data-empty='true'] > .dda-icon {
   display: none;
 }
-.dda-detail .mantine-Anchor-root {
+.dda-register .data-table .dda-detail .mantine-Anchor-root {
   font-size: inherit;
   color: var(--dda-accent);
 }
@@ -980,7 +983,7 @@
     padding: 1.6875rem;
   }
   .dda-table tr {
-    grid-template-columns: minmax(300px, 2.5fr) 100px 130px minmax(150px, 1.6fr) minmax(150px, 1.4fr) 75px 30px;
+    grid-template-columns: minmax(300px, 2.5fr) 112px 130px minmax(150px, 1.6fr) minmax(150px, 1.4fr) 75px 30px;
     column-gap: 1.1875rem;
   }
   .dda-table .dda-row {

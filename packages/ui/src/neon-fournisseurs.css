@@ -228,7 +228,7 @@
 }
 .fournisseurs-studio .fs-table {
   width: 100%;
-  min-width: 66rem;
+  min-width: 58rem;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0 0.5rem;
@@ -246,7 +246,7 @@
   vertical-align: middle;
 }
 .fournisseurs-studio .data-table thead th:first-child {
-  width: 27%;
+  width: 25%;
   text-align: left;
   border-left: 1px solid var(--fs-edge);
   border-radius: var(--mantine-radius-md) 0 0 0.25rem;
@@ -262,10 +262,10 @@
   width: 13%;
 }
 .fournisseurs-studio .fs-table th:nth-child(6) {
-  width: 14%;
+  width: 15%;
 }
 .fournisseurs-studio .data-table thead th:last-child {
-  width: 10%;
+  width: 11%;
   border-right: 1px solid var(--fs-edge);
   border-radius: 0 0.25rem var(--mantine-radius-md) 0;
 }
