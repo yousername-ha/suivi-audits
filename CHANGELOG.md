@@ -6,6 +6,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [7.1.0] — 2026-11-14
+
+Version mineure : dix migrations SQL additives (`055` à `057`, `063` à `069`) et une nouvelle dépendance de l'API (`pdfjs-dist`, acceptée par le RSSI).
+Elle apporte l'**Assistant RSSI intégré** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md)), **inactif** tant qu'il n'est pas activé et réglé.
+Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
 **Aucune action sur le serveur.** **Migrations automatiques `055` à `057` et `063` à `069`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
