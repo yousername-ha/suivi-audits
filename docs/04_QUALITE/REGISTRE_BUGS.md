@@ -556,7 +556,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, écarts ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (second rejeu de la PR #269 du 14/11/2026) |
 | Observé | Écart lié à « A-5.24 · 5.24 » (exigence du référentiel appliqué) : la DdA n'affiche aucun écart sur la mesure « Total » et l'indicateur « Total avec écart ouvert » reste à 0. Sous un sous-périmètre sans référentiel appliqué, aucune mesure n'est proposée pour l'écart (C4-04). Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | La DdA reprend l'écart quelle que soit la forme du rattachement ; l'incohérence « Total avec écart ouvert » est signalée. |
 | Cause / niveau | PISTE : la DdA ne lit que les rattachements `legacy:items:`. Famille de BUG-026. |
@@ -701,7 +701,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Comptes, périmètres, droits ; BLOQUANTE (arbitrage du RSSI du 13/11/2026) ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ EN PARTIE — DÉCISION DU RSSI ATTENDUE (second rejeu de la PR #269 du 14/11/2026) |
 | Arbitrage du RSSI (13/11/2026) | Un compte est rattaché à un périmètre. Rattaché à un périmètre enfant, il ne voit que ce périmètre. Rattaché au parent, il voit le parent et les enfants rattachés à ce parent. |
 | Observé | Le périmètre racine est créé « Toute l'organisation » (visibilité `instance`) et aucun écran ni API ne le restreint : un contributeur membre du seul périmètre enfant (« Hébergement HDS » dans le jeu fictif, nom d'un périmètre et non du référentiel HDS) lit le parent et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200). À l'inverse, l'appartenance ne descend pas : un contributeur membre du seul parent reçoit 404 « Périmètre introuvable ou non accessible » sur l'enfant (CAMP-T1-02, harnais du 13/11/2026). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md) ; [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md) (C5-06). |
 | Attendu | La règle de l'arbitrage, appliquée côté serveur à toutes les routes du périmètre (lecture et écriture) et reflétée par l'écran « Accès au périmètre » (racine comprise). |
@@ -710,6 +710,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Correctif | ADR 0092 (amende l’ADR 0039) : un rattachement ouvre le périmètre et ses descendants, jamais le parent ; compte sans rattachement : périmètres « instance ». Migration 060 (fonctions SQL), `Grc.access`, `listSmsis`, `owners`, `checkOwner`, notifications d’échéance. Volet ouvert au rejeu du 14/11/2026 (CAMP-T1-01 : un compte rattaché au seul enfant écrivait au périmètre commun) : l’écriture exige désormais un accès en écriture au périmètre ou à un ancêtre, y compris sur un périmètre « instance » (ADR 0095, point 5) ; à rejouer. |
 | Tests de la correction | `apps/api/test/acces-perimetres-descendants.test.ts` ; `CAMP-T1-01` et `CAMP-T1-02` à rejouer par la recette |
 | Commit | 0131729 |
+| Reste | Un compte rattaché au seul enfant lit encore le périmètre commun (403 en écriture, pas 404) : lecture ouverte à tout compte rattaché par l’ADR 0092 et l’ADR 0095. L’arbitrage du RSSI du 13/11/2026 (« rattaché à un enfant, il ne voit que ce périmètre ») demande le lot 3 de l’ADR 0092 (périmètre commun réservé à ses pilotes), à livrer par la session « Refonte des droits d’accès ». |
 
 ## BUG-052 — Fiches du Pilotage ni archivables ni supprimables à l'écran (C1-03, C2-10, C5-03)
 
