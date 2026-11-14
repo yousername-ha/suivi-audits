@@ -32,6 +32,7 @@ import { api, errorMessage } from '../api';
 import { ErrorAlert } from '../components/common';
 import { CARTES_PROCESSUS_KEY } from './CartesProcessus';
 import { optionsTypesProcessus } from './types';
+import { parentsPossibles } from './processus-presentation';
 
 const VIA: Record<'fiche' | 'objectif', string> = {
   fiche: 'Rattaché depuis la fiche d’origine : modifiez-la pour le détacher.',
@@ -206,12 +207,18 @@ export function FicheCarteProcessus({
   donnees,
   modifiable,
   onClose,
+  onCancel,
+  onSaved,
 }: {
   smsi: string;
   carte: CarteProcessus;
   donnees: ProcessusCartes;
   modifiable: boolean;
   onClose: () => void;
+  /** Lecture distincte (refonte Neon) : « Annuler » revient à la consultation enregistrée, sans le brouillon. */
+  onCancel?: () => void;
+  /** Après un enregistrement réussi et l'actualisation des données (retour à la consultation). */
+  onSaved?: () => void;
 }) {
   const actualiser = useActualiser(smsi);
   const [v, setV] = useState({
@@ -229,7 +236,8 @@ export function FicheCarteProcessus({
     v.family !== carte.family ||
     v.parent !== carte.parent ||
     v.purpose !== carte.purpose;
-  const parents = donnees.processus.filter((p) => p.id !== carte.id && p.parent !== carte.id);
+  // Un processus ne peut pas avoir pour parent l'un de ses descendants, même éloigné.
+  const parents = parentsPossibles(donnees.processus, carte.id);
   const enregistrer = async () => {
     setEnvoi(true);
     try {
@@ -237,6 +245,7 @@ export function FicheCarteProcessus({
       await api('PATCH', `/api/grc/${smsi}/pilotage/objectifs/processes/${carte.id}`, { body: v });
       notifications.show({ message: 'Processus enregistré.', color: 'green' });
       await actualiser();
+      onSaved?.();
     } catch (e) {
       setErreur(e);
     } finally {
@@ -298,6 +307,11 @@ export function FicheCarteProcessus({
         />
         {modifiable && (
           <Group justify="flex-end">
+            {onCancel && (
+              <Button variant="default" onClick={onCancel} disabled={envoi}>
+                Annuler
+              </Button>
+            )}
             <Button loading={envoi} disabled={!modifie || !v.name.trim()} onClick={() => void enregistrer()}>
               Enregistrer
             </Button>
