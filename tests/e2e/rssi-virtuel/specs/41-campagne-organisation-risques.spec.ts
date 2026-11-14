@@ -764,9 +764,14 @@ test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit
 }) => {
   // ISO/IEC 27001:2022, A.5.15, A.5.18 et A.8.3 (moindre privilège). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-051) : un
   // compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants.
-  // Aujourd'hui le périmètre commun est créé « Toute l'organisation » (`visibility: 'instance'`), sans réglage possible,
-  // et le membre du seul enfant y écrit. Constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02.
-  test.fail(true, 'CAMP-T1-01 ouvert : le membre du seul sous-périmètre crée une fiche au principal (HTTP 200)');
+  // Le périmètre commun est créé « Toute l'organisation » (`visibility: 'instance'`). Depuis la PR #269 (bdbca87, ADR 0095
+  // point 5), le membre du seul enfant n'y écrit plus, mais il le voit encore : refus 403 « en lecture seule » au lieu
+  // d'un périmètre invisible (404), comme pour tout autre périmètre parent. Constats T1-01, T2-01, T3-01, T4-01, T5-01,
+  // T6-02.
+  test.fail(
+    true,
+    'CAMP-T1-01 ouvert : le membre du seul sous-périmètre voit encore le périmètre commun (403 au lieu de 404)',
+  );
   const s = await admin(browser);
   const compte = `campagne-t1-01-${Date.now().toString(36)}`;
   try {
