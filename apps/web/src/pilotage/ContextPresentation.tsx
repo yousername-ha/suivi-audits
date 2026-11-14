@@ -10,7 +10,7 @@ import { get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
 import type { Source } from './Fields';
 import { lignesInterfaces } from './liste-interfaces';
-import { CATEGORIES_CONTEXTE, repartirContexte, type FamilleContexte } from './categories-contexte';
+import { CATEGORIES_CONTEXTE, dateConnue, repartirContexte, type FamilleContexte } from './categories-contexte';
 
 export type RevisionFiche = { version: number; reason: string; createdAt: string; createdBy: string };
 type Relation = {
@@ -295,7 +295,7 @@ export function ContextPresentation({
                 <dl className="contexte-meta">
                   <div>
                     <dt>Dernière mise à jour</dt>
-                    <dd>{fmtDate(object.updatedAt) || 'Non renseignée'}</dd>
+                    <dd>{fmtDate(dateConnue(object.updatedAt)) || 'Non renseignée'}</dd>
                   </div>
                   <div>
                     <dt>Version</dt>

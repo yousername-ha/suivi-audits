@@ -59,3 +59,11 @@ export function repartirContexte(texte: string, famille: FamilleContexte): Texte
     aPreciser: groupes.aPreciser.join('\n'),
   };
 }
+
+/** Date de mise à jour réellement connue : l'API date au 1er janvier 1970 les fiches reprises de l'ancien outil qui n'en
+    portent pas (pilotage/legacy.ts) ; la présentation les affiche alors « Non renseignée » plutôt que 01/01/1970. */
+export const dateConnue = (d: string | null | undefined): string | null => {
+  if (!d) return null;
+  const t = Date.parse(d);
+  return Number.isNaN(t) || t <= 0 ? null : d;
+};
