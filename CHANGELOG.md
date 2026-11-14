@@ -20,6 +20,13 @@ Aucune action.
   Fonctions, droits, filtres et sélecteurs existants conservés ; captures de référence régénérées et relues par le RSSI.
   _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
+### Corrigé
+
+- **Logo par défaut** : sans logo de l'organisation, `GET` et `HEAD /api/settings/logo` servent la marque de
+  l'application (SVG, en-tête `X-Logo: defaut`) au lieu d'une réponse 404, que le navigateur inscrivait en erreur à chaque
+  page depuis la refonte Neon ; l'en-tête garde la pastille, sans changement visuel. Constat R7-01 du rejeu de la version
+  7.0.0. _(Session « Campagne multi-agent RSSI virtuel », à la demande du RSSI.)_
+
 ## [7.1.0] — 2026-11-14
 
 Version mineure : dix migrations SQL additives (`055` à `057`, `063` à `069`) et une nouvelle dépendance de l'API (`pdfjs-dist`, acceptée par le RSSI).

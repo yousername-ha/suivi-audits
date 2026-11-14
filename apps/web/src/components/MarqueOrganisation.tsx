@@ -1,6 +1,7 @@
 /* Marque de l'en-tête et de la tête du menu (refonte Neon, ADR 0093) : le logo de l'organisation déposé dans Plateforme >
-   Général (route publique existante GET /api/settings/logo), sinon la pastille « S » de l'application. Décorative : le lien
-   qui la contient porte le nom de l'application. Aucune donnée nouvelle, aucune route ajoutée. */
+   Général (route publique GET /api/settings/logo), sinon la pastille « S » de l'application. Sans logo de l'organisation,
+   la route sert le logo par défaut (en-tête `X-Logo: defaut`, jamais 404) : la pastille, même dessin, est alors gardée.
+   Décorative : le lien qui la contient porte le nom de l'application. */
 import { useQuery } from '@tanstack/react-query';
 
 export const CLE_LOGO_ORGANISATION = ['logo-organisation'] as const;
@@ -10,7 +11,7 @@ const ADRESSE_LOGO = '/api/settings/logo';
 async function logoPresent(): Promise<number | null> {
   try {
     const r = await fetch(ADRESSE_LOGO, { method: 'HEAD', credentials: 'same-origin' });
-    return r.ok ? Date.now() : null;
+    return r.ok && r.headers.get('X-Logo') !== 'defaut' ? Date.now() : null;
   } catch {
     return null;
   }
