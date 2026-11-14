@@ -238,7 +238,9 @@ test('CAMP-C4-02 ouvert : une action de plan saisie sous un sous-périmètre n�
     await page.goto(`/pilotage/plans-sensibilisation?perimetre=${PERIMETRE_COMMUN}`);
     await lecture;
     await expect(page.getByRole('button', { name: 'Ajouter', exact: true })).toBeVisible();
-    await expect(page.getByRole('row', { name: new RegExp(titre.replace(/[()]/g, '\\$&')) })).toHaveCount(0);
+    await expect(page.getByRole('row', { name: new RegExp(titre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })).toHaveCount(
+      0,
+    );
   } finally {
     const plans = (await (await rq.get('/api/plans')).json()) as { plans: { id: string; title: string }[] };
     for (const p of plans.plans.filter((x) => x.title === titre)) {
