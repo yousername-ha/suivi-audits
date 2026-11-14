@@ -59,6 +59,8 @@ describe('compte rattaché à un périmètre enfant', () => {
   });
   it('ne voit ni le parent, ni un périmètre voisin ; le périmètre commun reste ouvert (ADR 0092)', async () => {
     expect((await seulEnfant.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(200);
+    // Lecture seule : sans accès en écriture au périmètre commun, un compte rattaché à l'enfant n'y écrit pas (ADR 0095).
+    expect((await fiche(seulEnfant, RACINE, 'Fiche écrite au commun')).statusCode).toBe(403);
     for (const autre of [parent, frere]) {
       expect((await seulEnfant.get(`/api/grc/${autre}/objects?kind=stakeholder`)).statusCode).toBe(404);
       expect((await fiche(seulEnfant, autre, 'Fiche hors périmètre')).statusCode).toBe(404);

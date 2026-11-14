@@ -370,7 +370,7 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Appréciation des risques, modèle ISO 27005 ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Arbitrage du RSSI (13/11/2026) | La matrice est obligatoire pour apprécier un risque. |
 | Attendu | Aucune appréciation sans matrice : méthode sans matrice refusée (aperçu ou publication), ou niveau imposé par la matrice ; le modèle « ISO/IEC 27005 » fournit une matrice. |
 | Cause / niveau | Le modèle n'a pas de matrice (`calculation.kind: 'judgement'`, `packages/shared/src/risk-methods.ts`) : niveau choisi librement. |
@@ -438,7 +438,7 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Arbitrage du RSSI (13/11/2026) | Les entrées de la revue de direction sont celles de l'ISO/IEC 27001:2022, 9.3.2 ; l'ISO 9001 n'est plus suivie pour le moment, l'application se concentre sur l'ISO/IEC 27001. |
 | Attendu | Entrées 9.3.2 a) à g) de l'ISO/IEC 27001 (dont résultats de l'appréciation des risques, état du plan de traitement, retours des parties intéressées, opportunités d'amélioration continue) ; plus de numérotation ni de vocabulaire ISO 9001 (y compris les « séries proposées (ISO 9001:2015) » des tâches récurrentes, constat T4-07). |
 | Cause / niveau | Choix de l'ADR 0036 (volet qualité), à amender par la session de développement ; volet SMSI absent. |
@@ -497,11 +497,13 @@ Détection : 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Organisation → Processus, Objectifs par processus ; MAJEURE ; P1 |
-| Statut | OUVERT |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Détection | 2026-11-12, session « Agent RSSI virtuel » (`session_01EnWdzi6XW7jw824ozEWpfF`), version 6.3.0, à la demande du RSSI |
 | Observé | Processus de la racine dans le registre historique (`suivi_processus`, aucune colonne de périmètre) ; sous un sous-périmètre, page « Processus » blanche et second registre de processus (objets du Pilotage) sans lien avec le premier. Détail : [rapport du 12/11/2026, complément](../05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md). |
 | Cause / niveau | CONFIRMÉE : `apps/web/src/pages/Pilotage.tsx` (`smsi === SOCLE`). |
 | Non-régression | `30-recette-2026-11-12.spec.ts`, « RSSI-23 ouvert » (`test.fail`). |
+| Correctif | Un seul modèle de processus, objectifs et indicateurs, rattaché à un périmètre, disponible sous tous les périmètres ([ADR 0094](../adr/0094-objectifs-indicateurs-processus-par-perimetre.md), BUG-055). |
+| Tests de la correction | `apps/api/test/pilotage-objectifs.test.ts`, `apps/api/test/processus-cartes.test.ts` ; `RSSI-23` rejoué par la recette |
 
 ## Constats de la campagne de recette à plusieurs agents du 12-13/11/2026 (BUG-038 à BUG-076)
 
@@ -512,7 +514,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Contexte, export Excel ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Feuilles « Parties intéressées », « SWOT » et « Rôles » réduites aux en-têtes alors que 2, 1 et 5 fiches existent ; feuille « Périmètre » vide (l'export lit `statement`, `sites`, `excl`, que le formulaire n'écrit pas) ; aucun périmètre choisi, le sous-périmètre n'est jamais exporté. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | L'export reprend les fiches saisies à l'écran, pour le périmètre demandé. |
 | Cause / niveau | PISTE : même famille que BUG-020 : l'export lit le registre historique au lieu des objets du Pilotage. |
@@ -526,7 +528,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Décision d'acceptation enregistrée (HTTP 200), immuable, sur un risque à l'état « Non apprécié ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Refus tant que le risque n'a pas de niveau apprécié (ISO/IEC 27001:2022 6.1.3 f et 8.3). |
 | Cause / niveau | PISTE : aucun contrôle de l'appréciation avant la décision. Voisin de BUG-024 (à arbitrer). |
@@ -540,7 +542,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, applicabilité ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Ouvrir la fiche d'une mesure jamais examinée puis « Enregistrer » écrit `app: "oui"` ; le journal attribue la décision au RSSI. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Une mesure non examinée le reste tant que l'applicabilité n'est pas choisie (6.1.3 d). |
 | Cause / niveau | PISTE : valeur par défaut du formulaire envoyée. Prolonge RSSI-13 (BUG-017). |
@@ -559,7 +561,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | La DdA reprend l'écart quelle que soit la forme du rattachement ; l'incohérence « Total avec écart ouvert » est signalée. |
 | Cause / niveau | PISTE : la DdA ne lit que les rattachements `legacy:items:`. Famille de BUG-026. |
 | Non-régression | `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C3-06 ouvert » ; `42-campagne-conformite-ecarts.spec.ts`, « CAMP-C4-04 ouvert » (`test.fail`) |
-| Correctif | La projection des écarts (`findings`) reprend la mesure d’une exigence `requirement:<référentiel>:<version>:<mesure>` comme celle d’un rattachement `legacy:items:` ; la DdA et l’indicateur « Total avec écart ouvert » suivent. **Reste** : la proposition des mesures sous un sous-périmètre sans référentiel appliqué (volet C4-04). |
+| Correctif | La projection des écarts (`findings`) reprend la mesure d’une exigence `requirement:<référentiel>:<version>:<mesure>` comme celle d’un rattachement `legacy:items:` ; la DdA et l’indicateur « Total avec écart ouvert » suivent. **Reste** : la proposition des mesures sous un sous-périmètre sans référentiel appliqué (volet C4-04). Volet ouvert au rejeu du 14/11/2026 (CAMP-C4-04) : sous un sous-périmètre, les sources proposent les mesures communes et les processus, objectifs et indicateurs du périmètre ; à rejouer. |
 | Tests de la correction | `apps/api/test/ecarts-natifs.test.ts` ; `CAMP-C3-06` à rejouer par la recette |
 | Commit | 0131729 |
 
@@ -568,7 +570,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | La revue préparée du principal annonce « 2 ouvert(s) » et omet la non-conformité majeure ouverte sous « Hébergement HDS » ; sous le sous-périmètre, aucune entrée n'est préparée. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Arbitrage du RSSI (13/11/2026) | Chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent : ses entrées remontent alors dans la revue du parent. |
 | Attendu | Enfant sans héritage : revue propre, entrées 9.3.2 préparées. Enfant avec héritage : ses non-conformités et actions comptées dans les entrées du parent. |
@@ -583,7 +585,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Continuité, synthèses ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Un PRA donne « 0 plan de continuité et de reprise » sur Périmètres, la Synthèse et le mur ; le tableau de bord affiche « 1 » pour deux plans. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Tous les plans de continuité et de reprise sont comptés. |
 | Cause / niveau | PISTE : filtre sur le type PCRA. |
@@ -597,7 +599,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Incidents, crise ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Incidents, RETEX, cellules, contacts et scénarios ne portent aucun périmètre ; le sélecteur est sans effet ; un contributeur non membre de « Hébergement HDS » reçoit 404 sur le périmètre mais lit ses incidents et cellules de crise. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Chaque fiche relève d'un périmètre ; la lecture suit l'appartenance au périmètre. |
 | Cause / niveau | PISTE : registres hors périmètre. Même famille que BUG-037 et BUG-062 ; cause commune avec BUG-051. |
@@ -612,7 +614,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | RETEX ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | « Gravité maximale : Faible » pour un incident P1 critique dont aucune gravité n'est renseignée. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | « Non renseignée » tant qu'aucune gravité n'est saisie. |
 | Cause / niveau | PISTE : valeur par défaut dans le calcul des indicateurs du RETEX. |
@@ -627,7 +629,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Écarts, export Excel ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Une piste de progrès est exportée dans la colonne de classification comme « Point sensible ». Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Le libellé exporté correspond à la classification saisie. |
 | Cause / niveau | PISTE : table de libellés de l'export (`apps/api/src/export/rubriques.ts`, l. 65, piste de la recette). |
@@ -641,7 +643,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Plateforme, Général ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Valeur `recyf-2.5` enregistrée mais liste vide à l'écran ; choisir ReCyF enregistre le nom au lieu de l'identifiant et fait passer ReCyF de « Actif » à « Conservé ». Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La liste affiche la valeur enregistrée ; l'enregistrer ne change pas l'état du référentiel. |
 | Cause / niveau | PISTE : identifiant et libellé confondus entre l'écran et l'API. |
@@ -655,7 +657,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Plateforme, Général ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Vider la catégorie affiche « enregistré » et trace un changement au journal d'audit, mais la valeur reste « Entité importante ». Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La valeur vide est enregistrée, ou refusée avec un message ; le journal reflète ce qui est enregistré. |
 | Cause / niveau | PISTE : valeur vide ignorée par la fusion des réglages. |
@@ -669,7 +671,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Registres, droits ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | `POST /api/registres/:id/archivage` par un contributeur sans rôle de gestionnaire → HTTP 200 ; le même compte reçoit 403 pour archiver une seule action ou un écart ; aucune commande de désarchivage. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Arbitrage du RSSI (13/11/2026) | Seul le gestionnaire du registre peut l'archiver. Le désarchivage est prévu, réservé lui aussi au gestionnaire. |
 | Attendu | Archivage et désarchivage par le gestionnaire du registre ; refus (403) pour tout autre compte. |
@@ -684,7 +686,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | RETEX, droits ; BLOQUANTE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | `DELETE /api/incidents/:id/retex/:eid` par un contributeur → HTTP 200, y compris pour l'événement d'un autre compte ; le journal ne garde pas le contenu retiré ; la suppression de l'incident lui est refusée (403). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Refus sans le droit de suppression ; contenu retiré conservé au journal. |
 | Cause / niveau | PISTE : route sans contrôle du droit de suppression. |
@@ -705,7 +707,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Attendu | La règle de l'arbitrage, appliquée côté serveur à toutes les routes du périmètre (lecture et écriture) et reflétée par l'écran « Accès au périmètre » (racine comprise). |
 | Cause / niveau | PISTE : visibilité `instance` du périmètre racine sans réglage ; ADR 0039 (périmètre sans propagation des droits) à amender par une ADR de la session de développement (numéro annoncé au RSSI). Liés : BUG-044 (incidents sans périmètre), BUG-062 (sélecteur sans effet), BUG-071 (revue des accès sans périmètres). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » (le membre de l'enfant n'écrit pas au parent) et « CAMP-T1-02 ouvert » (le membre du parent voit l'enfant) (`test.fail`) |
-| Correctif | ADR 0092 (amende l’ADR 0039) : un rattachement ouvre le périmètre et ses descendants, jamais le parent ; compte sans rattachement : périmètres « instance ». Migration 060 (fonctions SQL), `Grc.access`, `listSmsis`, `owners`, `checkOwner`, notifications d’échéance. |
+| Correctif | ADR 0092 (amende l’ADR 0039) : un rattachement ouvre le périmètre et ses descendants, jamais le parent ; compte sans rattachement : périmètres « instance ». Migration 060 (fonctions SQL), `Grc.access`, `listSmsis`, `owners`, `checkOwner`, notifications d’échéance. Volet ouvert au rejeu du 14/11/2026 (CAMP-T1-01 : un compte rattaché au seul enfant écrivait au périmètre commun) : l’écriture exige désormais un accès en écriture au périmètre ou à un ancêtre, y compris sur un périmètre « instance » (ADR 0095, point 5) ; à rejouer. |
 | Tests de la correction | `apps/api/test/acces-perimetres-descendants.test.ts` ; `CAMP-T1-01` et `CAMP-T1-02` à rejouer par la recette |
 | Commit | 0131729 |
 
@@ -714,7 +716,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Contexte, risques, continuité ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Contexte, parties, SWOT, rôles, traitements, actifs, sources, opportunités, plans de continuité et exercices : le menu « Autres actions » ne propose ni archivage ni suppression, alors que l'API d'archivage existe. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Archiver (ou supprimer une fiche créée par erreur) depuis l'écran, selon les droits. |
 | Cause / niveau | PISTE : fiche générique du Pilotage sans « Archiver la fiche ». |
@@ -729,7 +731,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Contexte ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | « Rattacher : SWOT » grisé ; la cartographie et la fiche processus n'affichent pas les SWOT et enjeux saisis. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Les fiches saisies alimentent le PESTEL, la cartographie et les processus. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020). |
@@ -743,7 +745,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Cocher, décocher, recocher un critère : « Cannot read properties of null (reading 'checked') », page inutilisable (3 fois sur 3). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Le critère se coche et se décoche sans erreur. |
 | Cause / niveau | PISTE : piste : `Fournisseurs.tsx`, l. 773 (lecture de l'événement après sa libération). |
@@ -757,7 +759,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Objectifs, indicateurs ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Sous le principal, objectifs et indicateurs du registre historique ; sous un sous-périmètre, objets du Pilotage ; la Synthèse du sous-périmètre n'a pas de carte « Objectifs et indicateurs ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Un seul modèle, quel que soit le périmètre. |
 | Cause / niveau | PISTE : même cause que BUG-037 (`smsi === SOCLE`). |
@@ -771,7 +773,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs, clausier ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Le bouton annonce des actions mais crée seulement l'écart FOU-01, sans responsable ni échéance, recréé à chaque évaluation ; rien dans le plan d'actions. L'écart est bien dans la DdA (l'échec d'INV-08 était un faux positif, corrigé dans `invariants.ts`). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Une action par écart, avec responsable et échéance (10.2), sans doublon. |
 | Cause / niveau | PISTE : recoupe BUG-034 et BUG-035. |
@@ -785,7 +787,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Recliquer la valeur affichée la désélectionne et envoie une stratégie vide ; refus 422 libellé `strategy`, `"reduce"`. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | La valeur affichée est celle envoyée ; message en français désignant le champ. |
 | Cause / niveau | PISTE : liste sans `allowDeselect={false}` (même mécanisme que BUG-022 et BUG-068). |
@@ -799,7 +801,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Exports ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Ni le registre des risques, ni le plan de traitement, ni les études EBIOS RM ne sont exportables ; l'« export complet » omet plans de continuité, exercices, RETEX, scénarios, documents, risques et revues, et ne permet pas de choisir le périmètre. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Les registres du SMSI s'exportent, pour le périmètre choisi. |
 | Cause / niveau | PISTE : exports fondés sur le registre historique (famille de BUG-038). |
@@ -813,7 +815,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, EBIOS RM ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Légende de la carte, atelier 5, rapport et éditeur de méthode affichent des codes (`draft`, `unacceptable`, `judgement`…). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Libellés français. |
 | Cause / niveau | PISTE : extension de BUG-023. |
@@ -828,7 +830,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Risques, traitement ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | 157 options au lieu de 160, sans référence (A.8.13…), avec doublons et exigences HDS tronquées. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Mesures désignées par leur référence, sans doublon. |
 | Cause / niveau | PISTE : volet liens : famille de BUG-026. |
@@ -843,7 +845,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | EBIOS RM ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Le scénario G4 × V2 reste dans « Non placés ». Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Tout scénario évalué est placé dans la matrice. |
 | Cause / niveau | PISTE : à établir. |
@@ -858,7 +860,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, audit, plans annuels ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Sous « Hébergement HDS », la DdA (clauses, annexe A, HDS), la gestion de l'audit, les applications à intégrer et les plans annuels montrent le principal ; une modification faite sous le sous-périmètre change le principal (`/api/dda` sans paramètre de périmètre). Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Chaque écran filtre sur le périmètre affiché, ou dit qu'il est commun à toute l'organisation. |
 | Cause / niveau | PISTE : registres historiques sans périmètre (famille de BUG-037). |
@@ -873,7 +875,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, couverture ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | DdA, « Applicabilité et justifications » et « Couverture par référentiel » se saisissent séparément ; la Couverture affiche « 92 à déterminer » malgré la DdA remplie. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Une seule source de l'applicabilité. |
 | Cause / niveau | PISTE : famille de BUG-036. |
@@ -899,7 +901,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Niveau « Total » enregistré sans applicabilité décidée ; la mesure entre dans le taux et sort des « Non renseignées ». Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Niveau refusé tant que l'applicabilité n'est pas décidée. |
 | Cause / niveau | PISTE : même cause que BUG-016 ; même indicateur que BUG-017. |
@@ -913,7 +915,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Continuité, exercices ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Exercice du registre réalisé : compté ni au bandeau, ni dans « Plans du SMSI », ni dans la cellule de crise (l'API refuse tout exercice du registre, 422), ni à l'export ; seul le plan historique `PL-EXO` est lu. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Un seul registre d'exercices, repris partout. |
 | Cause / niveau | PISTE : lecture du registre historique (famille de BUG-020 et BUG-058). |
@@ -927,7 +929,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Crise, scénarios ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Responsable saisi pendant l'enregistrement du texte de l'action perdu (5 fois sur 5). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La saisie est conservée. |
 | Cause / niveau | PISTE : ligne recréée à l'enregistrement du texte (clé de ligne contenant le texte). |
@@ -941,7 +943,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Sélecteur de périmètre, import ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Recliquer le périmètre affiché le désélectionne et affiche la racine ; un import confirmé « dans le périmètre sélectionné » (HDS) a été enregistré à la racine. Même effet sur le niveau d'accès d'un périmètre (« Lecture et écriture » → « Lecture seule »). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Recliquer la valeur la conserve. |
 | Cause / niveau | PISTE : listes sans `allowDeselect={false}`. |
@@ -955,7 +957,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Crise ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Cellule de crise réelle ouverte : aucun bandeau au tableau de bord ni dans le menu. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Bandeau visible tant que la cellule réelle est ouverte. |
 | Cause / niveau | PISTE : à établir. |
@@ -969,7 +971,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Incidents, synthèses, revue ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Tableau de bord, Synthèse, mur, rapport de pilotage et revue : aucun incident ; la diapositive « Revue des incidents » annoncée n'existe pas. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Les incidents alimentent les synthèses et l'entrée de revue correspondante. |
 | Cause / niveau | PISTE : recoupe BUG-031 pour la revue. |
@@ -983,7 +985,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Utilisateurs, revue des accès ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Liste, droits effectifs et export n'indiquent pas les accès aux périmètres (dont « Hébergement HDS »). Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | La revue des accès montre les droits par périmètre. |
 | Cause / niveau | PISTE : lié à BUG-051. |
@@ -997,7 +999,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Sauvegardes ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | `PUT /api/settings/sauvegardes` accepte une date future ; l'alerte « Test de restauration à faire » disparaît. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Date future refusée avec un message. |
 | Cause / niveau | PISTE : validation absente. |
@@ -1011,7 +1013,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Import et export, versions ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | `GET /api/admin/versions/:v` renvoie `{}` (5 octets, même empreinte pour toutes les versions) alors que l'écran propose téléchargement et restauration. Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Une version contient l'état qu'elle date, ou l'écran ne propose pas de la restaurer. |
 | Cause / niveau | PISTE : piste : `LegacyStore.save()` retire les modules repris dans des tables. |
@@ -1025,7 +1027,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | DdA, affichage mobile ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | À 390 px, les listes « Applicable » et « Mise en œuvre » (52 et 42 px) ne montrent que la croix d'effacement. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Valeurs lisibles au téléphone. |
 | Cause / niveau | PISTE : largeur fixe des listes. |
@@ -1039,7 +1041,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Revue de direction, droits ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Le contributeur, qui ne peut pas valider (403), modifie une revue validée ; elle repasse en brouillon. Rejeu : [`rejeu-piles-3-4.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-3-4.md). |
 | Attendu | Revue validée immuable, sauf réouverture par un administrateur du pilotage. |
 | Cause / niveau | PISTE : aggrave C4-06 (libellés d'état). |
@@ -1053,7 +1055,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Droits, modules ; MAJEURE ; P2 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Un auditeur externe limité à ce module reçoit 403 sur les plans de continuité ; il faut lui ouvrir tout « Pilotage du SMSI ». Rejeu : [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). |
 | Attendu | Le module donne accès aux PCA/PRA qu'il annonce. |
 | Cause / niveau | PISTE : rattachement des plans de continuité au module Pilotage. |
@@ -1067,7 +1069,7 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Fournisseurs, clausier ; MAJEURE ; P1 |
-| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE |
+| Statut | CORRIGÉ ET VÉRIFIÉ PAR LA RECETTE (rejeu de la PR #269 du 14/11/2026) |
 | Observé | Après l'archivage de l'écart FOU-01, « Créer les actions pour les écarts » d'une nouvelle évaluation répond HTTP 500 ; journal de l'API : `duplicate key value violates unique constraint "grc_objects_smsi_id_legacy_key_legacy_id_key"` (deux occurrences relevées sur la pile 2 par la session principale). Défaut trouvé pendant l'écriture de CAMP-C1-12. Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md). |
 | Attendu | Un identifiant historique n'est jamais réattribué ; aucune réponse 5xx. |
 | Cause / niveau | PISTE : `identifiantActionFournisseur` (`apps/api/src/historique/evals-fournisseurs.ts`) calcule le prochain numéro sans l'écart archivé. Même famille que C5-09 (référence d'incident réattribuée). |

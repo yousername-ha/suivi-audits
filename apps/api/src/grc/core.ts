@@ -313,7 +313,8 @@ export class Grc {
     // Pyramide (ADR 0092) : l'accès à un périmètre vaut pour ses descendants ; null = aucun accès, true = écriture.
     // Sans rattachement, un compte ne voit rien, pas même un périmètre « instance » (ADR 0095).
     if (!r || (!r.visible && !admin)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
-    if (write && r.visibility === 'restricted' && r.acces !== true && !admin)
+    // Écriture : un accès en écriture sur le périmètre ou un ancêtre ; un périmètre « instance » ne s'écrit pas sans cet accès (ADR 0095).
+    if (write && r.acces !== true && !admin)
       throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {
       id: r.id,

@@ -86,6 +86,9 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
     rattachement ne voit aucun périmètre, pas même un périmètre « instance » ; un compte rattaché garde la pyramide de l'ADR 0092 (ses périmètres, leurs descendants et les
     périmètres « instance »). Règle unique en base (`grc_smsi_visible`, migration `062`, fonction de lecture seule), reprise par l'accès, la liste des périmètres, les responsables
     proposables et les rappels d'échéance. Aucune reprise de données : un compte existant non rattaché perd l'accès jusqu'à son rattachement.
+  - **Rejeu de la recette du 14/11/2026 (PR #269)** : **BUG-051** : un périmètre « instance » ne s'écrit plus sans accès en écriture au périmètre ou à un ancêtre (un compte rattaché au seul enfant lit le périmètre commun mais n'y
+    écrit pas, 403 ; [ADR 0095](docs/adr/0095-sans-rattachement-rien-ne-est-visible.md)). **BUG-041** : sous un sous-périmètre, la recherche de références propose les mesures communes et les processus, objectifs et indicateurs du périmètre.
+    _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
   - **BUG-049, archivage des registres** : seul le gestionnaire du registre (ou un administrateur) l'archive, et le désarchive par la nouvelle commande
     `POST /api/registres/:id/desarchivage` (bouton « Désarchiver le registre » sur la fiche). Un contributeur reçoit 403, un compte sans accès 404.
   - **BUG-050, chronologie RETEX** : retirer un événement exige le droit de suppression des incidents ; l'événement retiré est conservé au journal d'audit.

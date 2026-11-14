@@ -17,6 +17,8 @@ commun) ouverts à tout compte, rattaché ou non. Un compte créé et jamais rat
    périmètre, la liste des périmètres, les responsables proposables et acceptés, et les rappels d'échéance.
 4. Les registres historiques par périmètre (incidents, RETEX, crise, plans, DdA, objectifs, indicateurs, processus) ne servent que les
    périmètres lisibles par ce calcul.
+4b. **Écriture** : un périmètre « instance » ne s'écrit pas sans accès en écriture au périmètre ou à l'un de ses ancêtres (rejeu de la PR #269,
+   CAMP-T1-01) : un compte rattaché au seul enfant lit le périmètre commun mais n'y écrit pas (403).
 
 ## Conséquences
 

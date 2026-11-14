@@ -4,6 +4,7 @@ import type { Module } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { Grc } from './core.js';
 import { DEFAULT_SMSI } from './core.js';
+import { perimetreDe } from '../historique/registre.js';
 /** Référence d'une mesure de la déclaration d'applicabilité : `A.8.13`, `HDS 12` ou le numéro de clause. */
 const codeMesureSource = (m: JsonObject): string =>
   m.ref === 'A' ? `A.${String(m.num ?? '')}` : m.ref === 'HDS' ? `HDS ${String(m.num ?? '')}` : String(m.num ?? '');
@@ -111,7 +112,10 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
             kind: 'requirement',
           });
   }
-  if (smsi === DEFAULT_SMSI) {
+  {
+    // Mesures (liste commune, sur laquelle chaque périmètre décide dans sa DdA) ; processus, objectifs et indicateurs du périmètre
+    // (ADR 0094) ; le reste de l'état historique relève du périmètre commun.
+    const parPerimetre = ['processes', 'objectives', 'indicators'];
     const state = await g.legacy.recompose();
     const allowed: Record<string, Module> = {
       items: 'audit',
@@ -132,9 +136,12 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     };
     for (const [key, module] of Object.entries(allowed)) {
       if (!user.rights.can(module, 'lire') || (clesHistoriques && !clesHistoriques.includes(key))) continue;
+      if (smsi !== DEFAULT_SMSI && key !== 'items' && !parPerimetre.includes(key)) continue;
       const rows =
         key === 'scope' && isObject(state?.data.scope) ? [{ ...state.data.scope, id: 'instance' }] : state?.data[key];
-      const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : []).filter(isObject);
+      const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : [])
+        .filter(isObject)
+        .filter((row) => !parPerimetre.includes(key) || perimetreDe(row) === smsi);
       for (const [index, row] of entries.entries()) {
         const id = typeof row.id === 'string' ? row.id : key === 'roles' ? '@' + index : null;
         if (!id) continue;
