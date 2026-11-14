@@ -39,31 +39,50 @@ export function AvatarAssistant() {
   const id = useId();
   return (
     <span className="as-avatar" aria-hidden="true">
-      <svg viewBox="0 0 64 64" fill="none">
+      <svg viewBox="0 0 96 96" fill="none" shapeRendering="geometricPrecision">
         <defs>
-          <linearGradient id={id} x1="10" y1="5" x2="55" y2="62" gradientUnits="userSpaceOnUse">
-            <stop className="as-avatar-stop-a" />
-            <stop offset=".52" className="as-avatar-stop-b" />
-            <stop offset="1" className="as-avatar-stop-c" />
+          <linearGradient id={`${id}-shell`} x1="20" y1="10" x2="75" y2="86" gradientUnits="userSpaceOnUse">
+            <stop className="an-shell-start" />
+            <stop offset=".52" className="an-shell-mid" />
+            <stop offset="1" className="an-shell-end" />
+          </linearGradient>
+          <linearGradient id={`${id}-face`} x1="31" y1="28" x2="66" y2="68" gradientUnits="userSpaceOnUse">
+            <stop className="an-face-start" />
+            <stop offset="1" className="an-face-end" />
           </linearGradient>
         </defs>
-        <circle className="as-avatar-orbit" cx="32" cy="32" r="30" />
-        <path
-          className="as-avatar-shell"
-          d="M32 6 53 15v18c0 12-10 21-21 26C21 54 11 45 11 33V15Z"
-          fill={`url(#${id})`}
-        />
-        <path className="as-avatar-highlight" d="m32 9 18 8v9c-15-2-24 3-36 9V17Z" />
-        <path
-          className="as-avatar-bubble"
-          d="M23 22h18a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H29l-8 5v-7a5 5 0 0 1-3-5v-8a5 5 0 0 1 5-5Z"
-        />
-        <g className="as-avatar-eyes">
-          <rect x="25" y="28" width="3" height="5" rx="1.5" />
-          <rect x="36" y="28" width="3" height="5" rx="1.5" />
+        <g className="an-orbit" strokeWidth="1.6">
+          <path opacity=".65" d="M12 27V16l9-8h16M59 8h16l9 8v11M84 69v11l-9 8H59M37 88H21l-9-8V69" />
+          <circle cx="48" cy="48" r="41" strokeDasharray="2 11" opacity=".45" />
         </g>
-        <path className="as-avatar-smile" d="M28 37c2 2 6 2 8 0" />
-        <circle className="as-avatar-signal" cx="52" cy="13" r="4" />
+        <path
+          d="m48 12 28 11v24c0 16-13 29-28 37C33 76 20 63 20 47V23Z"
+          fill={`url(#${id}-shell)`}
+          className="an-shell"
+          strokeWidth="2.2"
+          strokeLinejoin="round"
+        />
+        <path d="m48 17 23 9v11c-19-4-28 0-46 9V26Z" className="an-highlight" opacity=".12" />
+        <path
+          d="M35 31h26a7 7 0 0 1 7 7v14a7 7 0 0 1-7 7H45l-12 8V57a7 7 0 0 1-5-7V38a7 7 0 0 1 7-7Z"
+          fill={`url(#${id}-face)`}
+          className="an-face"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <g className="an-eyes">
+          <rect x="37" y="40" width="5" height="8" rx="2.5" />
+          <rect x="54" y="40" width="5" height="8" rx="2.5" />
+        </g>
+        <path d="M41 53c4 3 10 3 14 0" className="an-smile" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d="M48 22v3M25 45h-5M76 45h-5M48 76v-4"
+          className="an-connector"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity=".8"
+        />
+        <circle cx="78" cy="18" r="5" className="an-signal" strokeWidth="2" />
       </svg>
     </span>
   );

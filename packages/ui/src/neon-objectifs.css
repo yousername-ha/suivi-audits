@@ -1,0 +1,1196 @@
+/* Refonte Neon — Objectifs et indicateurs : vue compacte Studio (lot 3), ADR 0093. Portage de la référence validée
+   (version B : blocs réduits, fonds soutenus, titres inchangés), adapté à la cible :
+   - couleurs tirées des jetons de la charte (--neon-*, --suivi-*, --carte-*), contrastes AA vérifiés en clair et en sombre ;
+   - rayons bornés à 12 px (ADR 0093) ;
+   - animations par transform et opacity seulement (halo de « Non atteint » porté par un pseudo-élément, flèches) ; texte
+     jamais animé ; pause par le bouton du registre, arrêt par le mouvement réduit et à l'impression ;
+   - tables à hauteur naturelle (pas d'ascenseur interne), en-têtes collés sous l'en-tête de l'application. */
+.objectifs-module,
+.objectifs-fiche {
+  --objectifs-panel: var(--suivi-surface);
+  --objectifs-soft: color-mix(in srgb, var(--neon-doux) 50%, var(--suivi-surface));
+  --objectifs-row: color-mix(in srgb, var(--neon-doux) 25%, var(--suivi-surface));
+  --objectifs-texte: var(--mantine-color-text);
+  --objectifs-muted: var(--mantine-color-dimmed);
+  --objectifs-structure: var(--suivi-trait);
+  --objectifs-accent: var(--neon-accent);
+  --objectifs-tint: var(--neon-doux);
+  --objectifs-succes: var(--carte-vert-accent);
+  --objectifs-erreur: var(--carte-rouge-accent);
+  --objectifs-attention: var(--carte-orange-accent);
+  --objectifs-neutre: var(--carte-gris-accent);
+  --objectifs-piste: color-mix(in srgb, var(--mantine-color-text) 11%, transparent);
+  /* Flèches d'évolution : contraste graphique d'au moins 3:1 sur les blocs colorés comme sur les lignes. */
+  --objectifs-fleche-hausse: var(--carte-vert-accent);
+  --objectifs-fleche-baisse: var(--carte-rouge-accent);
+  /* Blocs Cible / Valeur mesurée / État : fond soutenu, contour net, texte foncé (clair). */
+  --objectifs-cible-fond: color-mix(in srgb, var(--carte-violet-accent) 24%, var(--suivi-surface));
+  --objectifs-cible-trait: color-mix(in srgb, var(--carte-violet-accent) 55%, var(--suivi-surface));
+  --objectifs-cible-texte: color-mix(in srgb, var(--carte-violet-accent) 70%, var(--suivi-encre));
+  --objectifs-vert-fond: color-mix(in srgb, var(--carte-vert-accent) 24%, var(--suivi-surface));
+  --objectifs-vert-trait: color-mix(in srgb, var(--carte-vert-accent) 55%, var(--suivi-surface));
+  --objectifs-vert-texte: color-mix(in srgb, var(--carte-vert-accent) 70%, var(--suivi-encre));
+  --objectifs-rouge-fond: color-mix(in srgb, var(--carte-rouge-accent) 24%, var(--suivi-surface));
+  --objectifs-rouge-trait: color-mix(in srgb, var(--carte-rouge-accent) 55%, var(--suivi-surface));
+  --objectifs-rouge-texte: color-mix(in srgb, var(--carte-rouge-accent) 70%, var(--suivi-encre));
+  --objectifs-orange-fond: color-mix(in srgb, var(--carte-orange-accent) 24%, var(--suivi-surface));
+  --objectifs-orange-trait: color-mix(in srgb, var(--carte-orange-accent) 55%, var(--suivi-surface));
+  --objectifs-orange-texte: color-mix(in srgb, var(--carte-orange-accent) 70%, var(--suivi-encre));
+  --objectifs-neutre-fond: color-mix(in srgb, var(--carte-gris-accent) 24%, var(--suivi-surface));
+  --objectifs-neutre-trait: color-mix(in srgb, var(--carte-gris-accent) 55%, var(--suivi-surface));
+  --objectifs-neutre-texte: color-mix(in srgb, var(--carte-gris-accent) 70%, var(--suivi-encre));
+  --objectifs-ombre:
+    0 3px 6px color-mix(in srgb, var(--suivi-encre) 5%, transparent),
+    0 13px 28px -12px color-mix(in srgb, var(--neon-violet) 20%, transparent);
+  --objectifs-reflet: color-mix(in srgb, var(--mantine-color-white) 28%, transparent);
+}
+[data-mantine-color-scheme='dark'] :is(.objectifs-module, .objectifs-fiche) {
+  --objectifs-soft: var(--neon-doux);
+  --objectifs-row: color-mix(in srgb, var(--neon-doux) 50%, var(--suivi-surface));
+  --objectifs-tint: color-mix(in srgb, var(--neon-accent) 16%, var(--suivi-surface));
+  --objectifs-fleche-hausse: color-mix(in srgb, var(--carte-vert-accent) 80%, var(--mantine-color-white));
+  --objectifs-fleche-baisse: color-mix(in srgb, var(--carte-rouge-accent) 80%, var(--mantine-color-white));
+  /* Sombre : fonds profonds tirés des traits de la charte, texte clair. */
+  --objectifs-cible-fond: color-mix(in srgb, var(--carte-violet-trait) 85%, var(--suivi-surface));
+  --objectifs-cible-trait: color-mix(in srgb, var(--carte-violet-accent) 70%, var(--suivi-surface));
+  --objectifs-cible-texte: var(--mantine-color-text);
+  --objectifs-vert-fond: color-mix(in srgb, var(--carte-vert-trait) 85%, var(--suivi-surface));
+  --objectifs-vert-trait: color-mix(in srgb, var(--carte-vert-accent) 70%, var(--suivi-surface));
+  --objectifs-vert-texte: var(--mantine-color-text);
+  --objectifs-rouge-fond: color-mix(in srgb, var(--carte-rouge-trait) 85%, var(--suivi-surface));
+  --objectifs-rouge-trait: color-mix(in srgb, var(--carte-rouge-accent) 70%, var(--suivi-surface));
+  --objectifs-rouge-texte: var(--mantine-color-text);
+  --objectifs-orange-fond: color-mix(in srgb, var(--carte-orange-trait) 85%, var(--suivi-surface));
+  --objectifs-orange-trait: color-mix(in srgb, var(--carte-orange-accent) 70%, var(--suivi-surface));
+  --objectifs-orange-texte: var(--mantine-color-text);
+  --objectifs-neutre-fond: color-mix(in srgb, var(--carte-gris-trait) 85%, var(--suivi-surface));
+  --objectifs-neutre-trait: color-mix(in srgb, var(--carte-gris-accent) 70%, var(--suivi-surface));
+  --objectifs-neutre-texte: var(--mantine-color-text);
+  --objectifs-ombre: 0 5px 24px color-mix(in srgb, var(--mantine-color-black) 30%, transparent);
+  --objectifs-reflet: color-mix(in srgb, var(--mantine-color-white) 10%, transparent);
+}
+
+/* Module : commandes, synthèse et registre. */
+.objectifs-module {
+  gap: 1.25rem;
+  min-width: 0;
+  color: var(--objectifs-texte);
+}
+.objectifs-commandes {
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+.objectifs-commandes > p {
+  max-width: 76ch;
+  color: var(--objectifs-muted);
+  font-size: 0.8125rem;
+}
+.objectifs-commandes .mantine-Button-root {
+  border-radius: var(--mantine-radius-sm);
+  font-size: 0.75rem;
+}
+.objectifs-module .mantine-Button-root[data-variant='default'] {
+  border-color: var(--objectifs-structure);
+  background: var(--objectifs-panel);
+  color: var(--objectifs-texte);
+}
+.objectifs-repere {
+  display: block;
+  margin: 0 0 0.375rem;
+  color: var(--objectifs-muted);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.objectifs-synthese {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9375rem;
+}
+.objectifs-module .objectifs-kpi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 9.5rem;
+  padding: 1.0625rem 1.1875rem 0.8125rem;
+  border: 1px solid var(--objectifs-structure);
+  border-radius: var(--mantine-radius-lg);
+  background: linear-gradient(145deg, var(--objectifs-panel), var(--objectifs-soft));
+  box-shadow: var(--objectifs-ombre);
+}
+.objectifs-kpi h3 {
+  margin: 0 0 0.625rem;
+  color: var(--objectifs-texte);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: -0.0125em;
+}
+.objectifs-kpi-texte > small {
+  color: var(--objectifs-muted);
+  font-size: 0.625rem;
+}
+.objectifs-kpi-nombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5625rem;
+  margin: 0 0 0.1875rem;
+  color: var(--objectifs-muted);
+  font-size: 0.625rem;
+}
+.objectifs-kpi-nombre strong {
+  color: var(--objectifs-succes);
+  font-size: 1.9375rem;
+  font-weight: 660;
+  line-height: 1.1;
+  letter-spacing: -0.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+.objectifs-kpi[data-etat='ko'] .objectifs-kpi-nombre strong {
+  color: var(--objectifs-erreur);
+}
+.objectifs-kpi[data-etat='na'] .objectifs-kpi-nombre strong {
+  color: var(--objectifs-attention);
+}
+.objectifs-kpi-nombre small {
+  color: var(--objectifs-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.objectifs-kpi .neon-anneau svg {
+  width: 5rem;
+  height: 5rem;
+}
+.objectifs-kpi .neon-ring-valeur {
+  stroke: var(--objectifs-succes);
+}
+.objectifs-kpi .neon-ring-piste {
+  stroke: var(--objectifs-piste);
+}
+.objectifs-kpi .neon-ring-centre {
+  fill: var(--objectifs-succes);
+  font-size: 33px;
+  font-weight: 640;
+}
+.objectifs-kpi .neon-axe {
+  display: none;
+}
+.objectifs-kpi-icone {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: 2.875rem;
+  height: 2.875rem;
+  border: 1px solid var(--objectifs-rouge-trait);
+  border-radius: var(--mantine-radius-lg);
+  background: linear-gradient(135deg, var(--objectifs-panel), var(--objectifs-rouge-fond));
+  color: var(--objectifs-rouge-texte);
+  box-shadow: inset 0 1px var(--objectifs-reflet);
+  transform: rotate(-5deg);
+}
+.objectifs-kpi-icone svg {
+  width: 1.4375rem;
+  height: 1.4375rem;
+  transform: rotate(5deg);
+}
+.objectifs-kpi[data-etat='na'] .objectifs-kpi-icone {
+  border-color: var(--objectifs-orange-trait);
+  background: linear-gradient(135deg, var(--objectifs-panel), var(--objectifs-orange-fond));
+  color: var(--objectifs-orange-texte);
+}
+.objectifs-kpi-pied {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-top: 0.1875rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--objectifs-structure);
+}
+.objectifs-kpi-pied .mantine-Progress-root {
+  width: 100%;
+  height: 0.3125rem;
+  margin: 0;
+  background: var(--objectifs-piste);
+}
+.objectifs-kpi-pied .mantine-Progress-section {
+  background: var(--objectifs-erreur);
+}
+.objectifs-registre {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--objectifs-structure);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--objectifs-panel);
+  box-shadow: var(--objectifs-ombre);
+}
+.objectifs-registre-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9375rem;
+  margin-bottom: 1.0625rem;
+}
+.objectifs-registre-entete h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+  font-weight: 620;
+  line-height: 1.5;
+  letter-spacing: -0.022em;
+}
+.objectifs-registre-entete .mantine-Button-root {
+  height: auto;
+  padding: 0.4375rem 0.5625rem;
+  font-size: 0.625rem;
+}
+.objectifs-module .objectifs-registre-entete .mantine-Button-root[data-variant='default'] {
+  background: var(--objectifs-soft);
+  color: var(--objectifs-muted);
+}
+
+/* Vues : sélecteur compact, raccourcis de filtre avec leurs compteurs, filtre complet et légende des états. */
+.objectifs-vues > .mantine-Tabs-list {
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.1875rem;
+  padding: 0.25rem;
+  border: 1px solid var(--objectifs-structure);
+  border-radius: var(--mantine-radius-md);
+  background: var(--objectifs-soft);
+}
+.objectifs-vues > .mantine-Tabs-list::before {
+  display: none;
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
+  padding: 0.5rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--objectifs-muted);
+  font-size: 0.6875rem;
+}
+.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab[data-active] {
+  border-color: var(--objectifs-structure);
+  background: var(--objectifs-panel);
+  color: var(--objectifs-accent);
+  font-weight: 600;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--neon-violet) 9%, transparent);
+}
+.objectifs-vues > .mantine-Tabs-panel {
+  padding-top: 0;
+}
+.objectifs-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  margin-top: 0.875rem;
+  padding: 0.9375rem 0 0.875rem;
+  border-top: 1px solid var(--objectifs-structure);
+}
+.objectifs-filtres-rapides {
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+.objectifs-module .objectifs-filtres-rapides .mantine-Button-root {
+  height: auto;
+  min-height: 1.6875rem;
+  padding: 0.3125rem 0.4375rem;
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-xs);
+  background: transparent;
+  color: var(--objectifs-muted);
+  font-size: 0.6875rem;
+  font-weight: 450;
+}
+.objectifs-filtres-rapides .mantine-Button-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  white-space: normal;
+}
+.objectifs-module .objectifs-filtres-rapides .mantine-Button-root[aria-pressed='true'] {
+  border-color: var(--objectifs-structure);
+  background: var(--objectifs-tint);
+  color: var(--objectifs-accent);
+}
+.objectifs-filtre-nombre {
+  min-width: 1rem;
+  padding: 0 0.1875rem;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--objectifs-soft);
+  color: var(--objectifs-texte);
+  font-size: 0.625rem;
+  font-weight: 550;
+  text-align: center;
+}
+.objectifs-point {
+  flex: none;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--objectifs-neutre);
+}
+[data-etat='ok'] .objectifs-point {
+  background: var(--objectifs-succes);
+}
+[data-etat='ko'] .objectifs-point {
+  background: var(--objectifs-erreur);
+}
+[data-etat='undef'] .objectifs-point {
+  background: var(--objectifs-attention);
+}
+.objectifs-outils-droite {
+  flex-wrap: wrap;
+}
+.objectifs-legende-etats {
+  flex-wrap: wrap;
+}
+.objectifs-explication {
+  color: var(--objectifs-muted);
+}
+
+/* Puces d'état (légende, boîtes) : mêmes teintes que les blocs. */
+.objectifs-module .mantine-Badge-root.objectifs-puce {
+  border: 1px solid var(--objectifs-neutre-trait);
+  background: var(--objectifs-neutre-fond);
+  color: var(--objectifs-neutre-texte);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 560;
+}
+.objectifs-module .mantine-Badge-root.objectifs-puce[data-etat='ok'] {
+  border-color: var(--objectifs-vert-trait);
+  background: var(--objectifs-vert-fond);
+  color: var(--objectifs-vert-texte);
+}
+.objectifs-module .mantine-Badge-root.objectifs-puce[data-etat='ko'] {
+  border-color: var(--objectifs-rouge-trait);
+  background: var(--objectifs-rouge-fond);
+  color: var(--objectifs-rouge-texte);
+}
+.objectifs-module .mantine-Badge-root.objectifs-puce[data-etat='undef'] {
+  border-color: var(--objectifs-orange-trait);
+  background: var(--objectifs-orange-fond);
+  color: var(--objectifs-orange-texte);
+}
+.objectifs-puce .objectifs-avertissement {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Objectif : titre (déclarations inchangées), responsable, échéance et anneau d'atteinte. */
+.objectifs-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.objectifs-identite {
+  min-width: 0;
+}
+.objectifs-avancement {
+  flex: none;
+}
+.objectifs-avancement .neon-anneau svg {
+  width: 4rem;
+  height: 4rem;
+}
+.objectifs-avancement .neon-ring-valeur {
+  stroke: var(--objectifs-succes);
+}
+.objectifs-avancement .neon-ring-piste {
+  stroke: var(--objectifs-piste);
+}
+.objectifs-avancement .neon-ring-centre {
+  fill: var(--objectifs-texte);
+}
+.objectifs-avancement .neon-axe {
+  fill: var(--objectifs-muted);
+}
+.objectifs-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.4375rem 0 0;
+}
+.objectifs-meta > div {
+  display: flex;
+  gap: 0.35rem;
+}
+.objectifs-meta :is(dt, dd) {
+  margin: 0;
+  color: var(--objectifs-muted);
+  font-size: 0.6875rem;
+}
+.objectifs-meta dt::after {
+  content: ' :';
+}
+.objectifs-ouvrir,
+.objectifs-module .objectifs-cellule-nom .mantine-Button-root,
+.objectifs-compact-entete .mantine-Button-root {
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--objectifs-texte);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: start;
+}
+.objectifs-ouvrir:hover,
+.objectifs-module .objectifs-cellule-nom .mantine-Button-root:hover,
+.objectifs-compact-entete .mantine-Button-root:hover {
+  background: transparent;
+  color: var(--objectifs-accent);
+}
+.objectifs-ouvrir .mantine-Button-label,
+.objectifs-module .objectifs-cellule-nom .mantine-Button-label,
+.objectifs-compact-entete .mantine-Button-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.objectifs-titre {
+  font-size: 0.875rem;
+  font-weight: 620;
+}
+.objectifs-code {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--objectifs-structure);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--objectifs-tint);
+  color: var(--objectifs-accent);
+  font-size: 0.625rem;
+  font-weight: 530;
+  line-height: 1.5;
+  letter-spacing: 0.015em;
+}
+.objectifs-cellule-nom .objectifs-code {
+  background: var(--objectifs-panel);
+  color: var(--objectifs-muted);
+}
+.objectifs-marque {
+  margin-inline-start: var(--mantine-spacing-xs);
+  text-transform: none;
+}
+.objectifs-vide {
+  color: var(--objectifs-muted);
+}
+
+/* Cartes des vues Par processus, Par objectif et Boîtes de pilotage. */
+.objectifs-module :is(.objectifs-carte, .objectifs-processus, .objectifs-boite) {
+  padding: 1rem;
+  border-color: var(--objectifs-structure);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--objectifs-row);
+  box-shadow: none;
+}
+.objectifs-carte,
+.objectifs-processus {
+  margin-top: 1rem;
+}
+.objectifs-carte .objectifs-entete {
+  margin-bottom: 0.875rem;
+}
+.objectifs-processus .objectifs-bloc {
+  padding-top: 1rem;
+  border-top: 1px solid var(--objectifs-structure);
+}
+.objectifs-famille {
+  margin-top: 0.5rem;
+  padding-inline-start: 0.625rem;
+  border-inline-start: 3px solid var(--objectifs-accent);
+  color: var(--objectifs-texte);
+}
+.objectifs-processus-nom {
+  color: var(--objectifs-texte);
+}
+.objectifs-processus-meta {
+  color: var(--objectifs-muted);
+}
+.objectifs-sans-objectif {
+  color: var(--objectifs-muted);
+}
+.objectifs-enjeux summary {
+  cursor: pointer;
+  color: var(--objectifs-accent);
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.objectifs-boite[data-etat='ko'] {
+  border-top: 3px solid var(--objectifs-erreur);
+}
+.objectifs-boite[data-etat='undef'] {
+  border-top: 3px solid var(--objectifs-attention);
+}
+.objectifs-boite[data-etat='ok'] {
+  border-top: 3px solid var(--objectifs-succes);
+}
+.objectifs-module .objectifs-boite-titre {
+  color: var(--objectifs-texte);
+  text-decoration: none;
+}
+.objectifs-module .objectifs-boite-titre:hover {
+  color: var(--objectifs-accent);
+  text-decoration: underline;
+}
+.objectifs-boite-pilote,
+.objectifs-boite-cible {
+  color: var(--objectifs-muted);
+}
+.objectifs-boite-cible {
+  font-size: 0.75rem;
+}
+.objectifs-boite .boite-indicateurs > li {
+  padding-inline-start: 0.5rem;
+  border-inline-start: 2px solid var(--objectifs-neutre-trait);
+  border-top-color: var(--objectifs-structure);
+}
+.objectifs-boite .boite-indicateurs > li[data-etat='ok'] {
+  border-inline-start-color: var(--objectifs-succes);
+}
+.objectifs-boite .boite-indicateurs > li[data-etat='ko'] {
+  border-inline-start-color: var(--objectifs-erreur);
+}
+.objectifs-boite .boite-indicateurs > li[data-etat='undef'] {
+  border-inline-start-color: var(--objectifs-attention);
+}
+.objectifs-boite-valeur {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+.objectifs-boite .boite-chiffres {
+  background: var(--objectifs-soft);
+}
+.objectifs-boite .boite-chiffres dt {
+  color: var(--objectifs-muted);
+}
+.objectifs-boite .boite-chiffres-detail {
+  color: var(--objectifs-erreur);
+}
+.objectifs-valeur {
+  font-variant-numeric: tabular-nums;
+}
+.objectifs-boite .objectifs-valeur[data-etat='ok'] {
+  color: var(--objectifs-succes);
+}
+.objectifs-boite .objectifs-valeur[data-etat='ko'] {
+  color: var(--objectifs-erreur);
+}
+.objectifs-boite .objectifs-valeur[data-etat='undef'] {
+  color: var(--objectifs-attention);
+}
+
+/* Tables des indicateurs : hauteur naturelle, colonnes nommées et centrées, ligne entière ouvrable. */
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(.data-table, .table-wrap) {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) [data-liste-fiches] {
+  max-block-size: none;
+  overflow: visible;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) [data-liste-fiches] thead {
+  inset-block-start: var(--suivi-entete-h);
+  background: var(--objectifs-panel);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(th, td) {
+  border: 0;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th {
+  padding: 0.75rem 0.5625rem;
+  border-block: 1px solid var(--objectifs-structure);
+  background: var(--objectifs-soft);
+  color: var(--objectifs-muted);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th:first-child {
+  padding-inline-start: 0.875rem;
+  border-inline-start: 1px solid var(--objectifs-structure);
+  border-start-start-radius: var(--mantine-radius-sm);
+  border-end-start-radius: var(--mantine-radius-sm);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead th:last-child {
+  border-inline-end: 1px solid var(--objectifs-structure);
+  border-start-end-radius: var(--mantine-radius-sm);
+  border-end-end-radius: var(--mantine-radius-sm);
+}
+.objectifs-colonne-donnee {
+  width: 7.25rem;
+  text-align: center;
+}
+.objectifs-table-compacte .objectifs-colonne-etat {
+  width: 9rem;
+}
+.objectifs-colonne-source {
+  width: 9.4375rem;
+}
+.objectifs-entete-colonne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 1.125rem;
+  text-align: center;
+}
+.objectifs-entete-colonne[data-type='indicateur'],
+.objectifs-entete-colonne[data-type='source'] {
+  justify-content: flex-start;
+  text-align: start;
+}
+.objectifs-entete-colonne[data-type='cible'] {
+  color: var(--objectifs-cible-texte);
+}
+.objectifs-entete-colonne svg {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody td {
+  height: 3.375rem;
+  padding: 0.625rem 0.375rem;
+  border-bottom: 1px solid var(--objectifs-structure);
+  background: var(--objectifs-row);
+  vertical-align: middle;
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr[data-fiche-ouvrable]:hover td {
+  background: color-mix(in srgb, var(--neon-accent) 7%, var(--objectifs-row));
+}
+.objectifs-module .objectifs-table-indicateurs tbody tr:first-child td,
+.objectifs-module .objectifs-table-compacte tbody .objectifs-compact-groupe + tr td {
+  border-top: 1px solid var(--objectifs-structure);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody td:first-child {
+  padding-inline-start: 0.75rem;
+  border-inline-start: 1px solid var(--objectifs-structure);
+  box-shadow: inset 2px 0 var(--objectifs-neutre-trait);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr[data-etat='ok'] td:first-child {
+  box-shadow: inset 2px 0 var(--objectifs-succes);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr[data-etat='ko'] td:first-child {
+  box-shadow: inset 2px 0 var(--objectifs-erreur);
+}
+.objectifs-module
+  :is(.objectifs-table-indicateurs, .objectifs-table-compacte)
+  tbody
+  tr[data-etat='undef']
+  td:first-child {
+  box-shadow: inset 2px 0 var(--objectifs-attention);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody td:last-child {
+  padding-inline-end: 0.75rem;
+  border-inline-end: 1px solid var(--objectifs-structure);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr:last-child td:first-child {
+  border-end-start-radius: var(--mantine-radius-md);
+}
+.objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr:last-child td:last-child {
+  border-end-end-radius: var(--mantine-radius-md);
+}
+.objectifs-module .objectifs-cellule-nom .objectifs-marque {
+  margin-top: 0.25rem;
+}
+
+/* Vue compacte : un groupe par objectif (processus, responsable, échéance, atteinte), une ligne par indicateur. */
+.objectifs-module .objectifs-table-compacte .objectifs-compact-groupe th {
+  padding: 1.125rem 0.125rem 0.6875rem;
+  background: transparent;
+  font-weight: 400;
+  text-align: start;
+}
+.objectifs-module .objectifs-table-compacte tbody tr.objectifs-compact-groupe:hover {
+  background: color-mix(in srgb, var(--neon-accent) 5%, var(--objectifs-panel));
+}
+.objectifs-compact-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.875rem;
+}
+.objectifs-module .objectifs-compact-entete .mantine-Button-root {
+  font-size: 0.875rem;
+  font-weight: 620;
+}
+.objectifs-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem 0.75rem;
+  margin-top: 0.375rem;
+  color: var(--objectifs-muted);
+  font-size: 0.6875rem;
+}
+.objectifs-compact-avancement {
+  flex: none;
+  width: 5.875rem;
+  color: var(--objectifs-muted);
+  font-size: 0.625rem;
+  text-align: end;
+}
+.objectifs-compact-avancement .mantine-Progress-root {
+  height: 0.25rem;
+  margin-bottom: 0.3125rem;
+  background: var(--objectifs-piste);
+}
+.objectifs-compact-avancement .mantine-Progress-section {
+  background: var(--objectifs-succes);
+}
+
+/* Blocs Cible / Valeur mesurée / État : même format, chiffres nets, couleurs soutenues. */
+.objectifs-donnee {
+  --objectifs-donnee-fond: var(--objectifs-neutre-fond);
+  --objectifs-donnee-bord: var(--objectifs-neutre-trait);
+  --objectifs-donnee-texte: var(--objectifs-neutre-texte);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 4rem;
+  padding: 0.375rem;
+  border: 1px solid var(--objectifs-donnee-bord);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--objectifs-donnee-fond);
+  color: var(--objectifs-donnee-texte);
+  box-shadow: inset 0 1px var(--objectifs-reflet);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.objectifs-donnee--cible {
+  --objectifs-donnee-fond: var(--objectifs-cible-fond);
+  --objectifs-donnee-bord: var(--objectifs-cible-trait);
+  --objectifs-donnee-texte: var(--objectifs-cible-texte);
+}
+.objectifs-donnee[data-etat='ok'] {
+  --objectifs-donnee-fond: var(--objectifs-vert-fond);
+  --objectifs-donnee-bord: var(--objectifs-vert-trait);
+  --objectifs-donnee-texte: var(--objectifs-vert-texte);
+}
+.objectifs-donnee[data-etat='ko'] {
+  --objectifs-donnee-fond: var(--objectifs-rouge-fond);
+  --objectifs-donnee-bord: var(--objectifs-rouge-trait);
+  --objectifs-donnee-texte: var(--objectifs-rouge-texte);
+}
+.objectifs-donnee[data-etat='undef'] {
+  --objectifs-donnee-fond: var(--objectifs-orange-fond);
+  --objectifs-donnee-bord: var(--objectifs-orange-trait);
+  --objectifs-donnee-texte: var(--objectifs-orange-texte);
+}
+.objectifs-donnee > strong,
+.objectifs-donnee .objectifs-valeur {
+  color: var(--objectifs-donnee-texte);
+  font-size: 0.875rem;
+  font-weight: 610;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.objectifs-donnee-label {
+  display: block;
+  font-size: 0.5625rem;
+  font-weight: 450;
+  line-height: 1.4;
+}
+.objectifs-mesure-chiffre,
+.objectifs-etat-libelle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+.objectifs-donnee > .objectifs-etat-libelle {
+  font-size: 0.6875rem;
+  font-weight: 560;
+}
+.objectifs-source {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  color: var(--objectifs-muted);
+  font-size: 0.625rem;
+  line-height: 1.7;
+}
+.objectifs-donnee .objectifs-source {
+  color: var(--objectifs-donnee-texte);
+  font-size: 0.5625rem;
+}
+.objectifs-donnee[data-compacte] {
+  gap: 0;
+  min-height: 2rem;
+  padding: 0.3125rem 0.375rem;
+}
+.objectifs-donnee[data-compacte] .objectifs-donnee-label {
+  display: none;
+}
+.objectifs-donnee[data-compacte] > strong,
+.objectifs-donnee[data-compacte] .objectifs-valeur {
+  font-size: 0.75rem;
+}
+.objectifs-donnee[data-compacte] > .objectifs-etat-libelle {
+  font-size: 0.625rem;
+}
+.objectifs-avertissement {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.objectifs-tendance {
+  flex: none;
+  width: 0.8125rem;
+  height: 0.8125rem;
+  color: var(--objectifs-donnee-texte, var(--objectifs-neutre));
+}
+/* Hausse verte, baisse rouge, quel que soit l'état : la flèche décrit la variation, pas l'atteinte de la cible. */
+.objectifs-tendance[data-tendance='hausse'] {
+  color: var(--objectifs-fleche-hausse);
+}
+.objectifs-tendance[data-tendance='baisse'] {
+  color: var(--objectifs-fleche-baisse);
+}
+
+/* « Non atteint » : contour rouge renforcé, halo animé (pseudo-élément, transform et opacity) et pictogramme. */
+.objectifs-donnee--etat[data-etat='ko'] {
+  border-color: var(--objectifs-erreur);
+}
+.objectifs-donnee--etat[data-etat='ko']::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--objectifs-erreur);
+  border-radius: var(--mantine-radius-sm);
+  opacity: 0.35;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .objectifs-donnee--etat[data-etat='ko']::after {
+    animation: objectifs-halo 2.8s ease-in-out infinite;
+  }
+  .objectifs-donnee--etat[data-etat='ko'] .objectifs-avertissement,
+  .objectifs-puce[data-etat='ko'] .objectifs-avertissement {
+    animation: objectifs-alerte 2.8s ease-in-out infinite;
+  }
+  .objectifs-tendance[data-tendance='hausse'] {
+    animation: objectifs-hausse 2.8s ease-in-out infinite;
+  }
+  .objectifs-tendance[data-tendance='baisse'] {
+    animation: objectifs-baisse 2.8s ease-in-out infinite;
+  }
+}
+.objectifs-module[data-animations='pause'] :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance),
+.objectifs-module[data-animations='pause'] .objectifs-donnee::after {
+  animation-play-state: paused;
+}
+@keyframes objectifs-halo {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+}
+@keyframes objectifs-alerte {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+@keyframes objectifs-hausse {
+  0%,
+  65%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(1px, -2px);
+  }
+}
+@keyframes objectifs-baisse {
+  0%,
+  65%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(1px, 2px);
+  }
+}
+.objectifs-legende {
+  margin: 1.25rem 0 0;
+  padding-top: 0.9375rem;
+  border-top: 1px solid var(--objectifs-structure);
+  color: var(--objectifs-muted);
+  font-size: 0.6875rem;
+  line-height: 1.8;
+}
+
+/* Fiches : rubriques titrées, grilles de champs, mêmes champs, valeurs et droits. */
+.mantine-Modal-content.objectifs-fiche {
+  border-color: var(--objectifs-structure);
+  background: var(--objectifs-panel);
+  color: var(--objectifs-texte);
+}
+.objectifs-fiche .objectif-champs {
+  min-width: 0;
+  margin: 0;
+  padding: 0.9375rem;
+  border: 1px solid var(--objectifs-structure);
+  border-radius: var(--mantine-radius-md);
+  background: var(--objectifs-soft);
+}
+.objectifs-fiche .objectif-champs > legend {
+  padding-inline: 0.5rem;
+  color: var(--objectifs-accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.objectifs-fiche .objectif-champs > .mantine-Stack-root {
+  gap: 1.1rem;
+}
+.objectifs-fiche .objectif-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1.1rem;
+}
+.objectifs-fiche .objectif-grille--trois {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.objectifs-fiche .objectif-grille > * {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+@media (max-width: 70em) {
+  .objectifs-module .objectifs-kpi {
+    grid-template-columns: minmax(0, 1fr) 4rem;
+    padding: 0.9375rem;
+  }
+  .objectifs-kpi .neon-anneau svg {
+    width: 4rem;
+    height: 4rem;
+  }
+  .objectifs-kpi-nombre strong {
+    font-size: 1.6875rem;
+  }
+}
+@media (max-width: 64em) {
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) :is(table, tbody) {
+    display: block;
+    width: 100%;
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) thead {
+    display: none;
+  }
+  .objectifs-module
+    :is(.objectifs-table-indicateurs, .objectifs-table-compacte)
+    tbody
+    > tr:not(.objectifs-compact-groupe) {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.22fr;
+    gap: 0.5625rem 0.375rem;
+    margin-bottom: 0.4375rem;
+    padding: 0.6875rem 0.5625rem;
+    border: 1px solid var(--objectifs-structure);
+    border-inline-start: 3px solid var(--objectifs-neutre-trait);
+    border-radius: var(--mantine-radius-sm);
+    background: var(--objectifs-row);
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody > tr[data-etat='ok'] {
+    border-inline-start-color: var(--objectifs-succes);
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody > tr[data-etat='ko'] {
+    border-inline-start-color: var(--objectifs-erreur);
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody > tr[data-etat='undef'] {
+    border-inline-start-color: var(--objectifs-attention);
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr td {
+    display: block;
+    height: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr td:first-child {
+    border: 0;
+    box-shadow: none;
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr[data-etat] td:first-child {
+    box-shadow: none;
+  }
+  .objectifs-module :is(.objectifs-table-indicateurs, .objectifs-table-compacte) tbody tr td:last-child {
+    border: 0;
+  }
+  .objectifs-module .objectifs-table-indicateurs tbody tr:first-child td,
+  .objectifs-module .objectifs-table-compacte tbody .objectifs-compact-groupe + tr td {
+    border-top: 0;
+  }
+  .objectifs-cellule-nom,
+  .objectifs-cellule-source {
+    grid-column: 1 / -1;
+  }
+  .objectifs-donnee[data-compacte] {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 0.1875rem;
+    min-height: 2.75rem;
+  }
+  .objectifs-donnee[data-compacte] .objectifs-donnee-label {
+    display: block;
+    text-align: center;
+  }
+  .objectifs-module .objectifs-table-compacte :is(.objectifs-compact-groupe, .objectifs-compact-groupe th) {
+    display: block;
+    width: 100%;
+  }
+  .objectifs-module .objectifs-table-compacte .objectifs-compact-groupe th {
+    padding: 1.0625rem 0.0625rem 0.625rem;
+  }
+  .objectifs-compact-entete {
+    align-items: flex-start;
+    gap: 0.5625rem;
+  }
+  .objectifs-compact-avancement {
+    width: 3.5rem;
+  }
+}
+@media (max-width: 48em) {
+  .objectifs-commandes > .mantine-Group-root {
+    width: 100%;
+  }
+  .objectifs-commandes > .mantine-Group-root > button {
+    flex: 1 1 auto;
+  }
+  .objectifs-synthese {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5625rem;
+  }
+  .objectifs-module .objectifs-kpi {
+    grid-template-columns: minmax(0, 1fr) 1.875rem;
+    gap: 0.3125rem;
+    min-height: 8.5rem;
+    padding: 0.8125rem 0.6875rem;
+  }
+  .objectifs-module .objectifs-kpi:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) 4.25rem;
+  }
+  .objectifs-kpi:first-child .neon-anneau svg {
+    width: 4.25rem;
+    height: 4.25rem;
+  }
+  .objectifs-kpi-icone {
+    width: 1.75rem;
+    height: 1.875rem;
+    border-radius: var(--mantine-radius-sm);
+  }
+  .objectifs-kpi-icone svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .objectifs-registre {
+    padding: 0.8125rem 0.6875rem;
+  }
+  .objectifs-registre-entete {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .objectifs-registre-entete .mantine-Button-root {
+    max-width: 7rem;
+  }
+  .objectifs-registre-entete .mantine-Button-label {
+    white-space: normal;
+  }
+  .objectifs-vues > .mantine-Tabs-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
+    padding: 0.4375rem 0.25rem;
+  }
+  .objectifs-module :is(.objectifs-carte, .objectifs-processus, .objectifs-boite) {
+    padding: 0.75rem;
+  }
+  .objectifs-fiche :is(.objectif-grille, .objectif-grille--trois) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .objectifs-fiche .objectif-champs {
+    padding: 0.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .objectifs-module :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance),
+  .objectifs-module .objectifs-donnee::after {
+    animation: none;
+    transform: none;
+  }
+}
+@media print {
+  .objectifs-module :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance),
+  .objectifs-module .objectifs-donnee::after {
+    animation: none;
+    transform: none;
+  }
+  .objectifs-module :is(.objectifs-kpi, .objectifs-registre) {
+    box-shadow: none;
+  }
+  .objectifs-registre-entete .mantine-Button-root,
+  .objectifs-filtres-rapides {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .objectifs-donnee,
+  .objectifs-module .mantine-Badge-root.objectifs-puce {
+    border-color: CanvasText;
+  }
+  .objectifs-donnee--etat[data-etat='ko'],
+  .objectifs-donnee--etat[data-etat='ko']::after {
+    border-color: Mark;
+  }
+  .objectifs-point {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}

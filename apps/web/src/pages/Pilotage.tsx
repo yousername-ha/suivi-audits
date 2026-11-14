@@ -325,7 +325,7 @@ export function PilotagePage() {
                   <PreparationRevue smsi={smsi} onCreer={(initial) => create('management_review', initial)} />
                 )}
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
-                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
+                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
                 {section === 'audits' && can('pilotage', 'lire') && <PlansSmsi vue="audit" smsi={smsi} />}
                 {section === 'exercices' && <PlansSmsi vue="exo" smsi={smsi} />}
@@ -395,7 +395,13 @@ export function PilotagePage() {
                     </>
                   )}
                 </Group>
-                <Tasks key={smsi + section} smsi={smsi} policy={policy.data.definition} onOpen={open} />
+                <Tasks
+                  key={smsi + section}
+                  smsi={smsi}
+                  policy={policy.data.definition}
+                  onOpen={open}
+                  occurrences={section === 'recurrences'}
+                />
                 {section === 'recurrences' && can('ecarts', 'modifier') && (
                   <SeriesProposees onPreparer={(name, data) => createPreset('task_series', name, data)} />
                 )}

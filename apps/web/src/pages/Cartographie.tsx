@@ -327,15 +327,23 @@ function CartographieContenu() {
     const o = lookup(r);
     return o ? o.name : layout?.nodes[r]?.label || r;
   };
+  // Taille réelle de la zone au moment du centrage : la taille mémorisée n'est mise à jour par l'observateur de
+  // redimensionnement qu'à l'image suivante ; juste après l'ouverture de la carte, elle vaut encore 800 × 500 (CARTO-06).
+  const canevas = useRef<HTMLDivElement>(null);
+  const tailleReelle = () => {
+    const r = canevas.current?.querySelector('.carte-zone')?.getBoundingClientRect();
+    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : taille.current;
+  };
   const centrer = (ref: string) => {
     const n = layout?.nodes[ref];
     if (!n) return;
     const cur = vps[view] ?? { x: 0, y: 0, k: 1 };
+    const t = tailleReelle();
     setVp(
       {
         k: cur.k,
-        x: taille.current.w / 2 - (n.x + n.w / 2) * cur.k,
-        y: taille.current.h / 2 - (n.y + n.h / 2) * cur.k,
+        x: t.w / 2 - (n.x + n.w / 2) * cur.k,
+        y: t.h / 2 - (n.y + n.h / 2) * cur.k,
       },
       true,
     );
@@ -1246,7 +1254,7 @@ function CartographieContenu() {
                 )}
               </div>
             )}
-            <div className="carte-canevas">
+            <div className="carte-canevas" ref={canevas}>
               <Canevas
                 layout={layout}
                 view={view}

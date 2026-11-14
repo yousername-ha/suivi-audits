@@ -22,7 +22,17 @@
     "./neon-menu.css": "./src/neon-menu.css",
     "./neon-analytics.css": "./src/neon-analytics.css",
     "./neon-fenetres.css": "./src/neon-fenetres.css",
-    "./lignes-fiches.css": "./src/lignes-fiches.css"
+    "./lignes-fiches.css": "./src/lignes-fiches.css",
+    "./neon-perimetres.css": "./src/neon-perimetres.css",
+    "./neon-objectifs.css": "./src/neon-objectifs.css",
+    "./neon-dda.css": "./src/neon-dda.css",
+    "./neon-bibliotheque.css": "./src/neon-bibliotheque.css",
+    "./neon-swot.css": "./src/neon-swot.css",
+    "./neon-pestel.css": "./src/neon-pestel.css",
+    "./neon-parties.css": "./src/neon-parties.css",
+    "./neon-processus.css": "./src/neon-processus.css",
+    "./neon-fournisseurs.css": "./src/neon-fournisseurs.css",
+    "./neon-taches.css": "./src/neon-taches.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

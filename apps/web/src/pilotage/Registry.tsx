@@ -1,4 +1,18 @@
-import { Badge, Box, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  Menu,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { DataTable, ListeDefilante } from '@suivi/ui';
 import {
   ECART_CLASSIFICATION_LABELS,
@@ -10,17 +24,20 @@ import {
   type PilotageRecord,
 } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { Filtres } from '../components/Filtres';
+import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 import { useFiltreUrl } from '../components/filtre-url';
-import { useResponsables } from '../components/selecteurs';
+import { usePerimetres, useResponsables } from '../components/selecteurs';
+import { PartiesInteresseesStudio } from './PartiesInteresseesStudio';
 import { idObjetDeRef, lienContexte } from '../retour';
+import { SwotMatrice } from './SwotMatrice';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -177,6 +194,68 @@ export function BusinessRegistry({
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
   const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
+  // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur le champ de recherche, pastilles des critères actifs.
+  const champRecherche = useRef<HTMLInputElement>(null);
+  useRaccourciRecherche(champRecherche);
+  const reinitialiserFiltres = () => {
+    setFEtat('all');
+    setFResp('all');
+    setFEcheance('all');
+    setFOrigine('all');
+    setFClassif('all');
+  };
+  const ECHEANCES: Record<string, string> = { retard: 'Dépassée', avenir: 'À venir', sans: 'Sans échéance' };
+  const ORIGINES: Record<string, string> = { existant: 'Existant (outil de suivi)', natif: 'Créé dans le Pilotage' };
+  const criteres: CritereActif[] = [
+    ...(fEtat !== 'all' ? [{ cle: 'etat', libelle: 'État', valeur: fEtat, retirer: () => setFEtat('all') }] : []),
+    ...(fResp !== 'all'
+      ? [{ cle: 'resp', libelle: 'Responsable', valeur: fResp, retirer: () => setFResp('all') }]
+      : []),
+    ...(fEcheance !== 'all'
+      ? [
+          {
+            cle: 'ech',
+            libelle: 'Échéance',
+            valeur: ECHEANCES[fEcheance] ?? fEcheance,
+            retirer: () => setFEcheance('all'),
+          },
+        ]
+      : []),
+    ...(fClassif !== 'all'
+      ? [
+          {
+            cle: 'classif',
+            libelle: 'Classification',
+            valeur:
+              fClassif === 'non_classe'
+                ? 'Non classé'
+                : (ECART_CLASSIFICATION_LABELS[fClassif as keyof typeof ECART_CLASSIFICATION_LABELS] ?? fClassif),
+            retirer: () => setFClassif('all'),
+          },
+        ]
+      : []),
+    ...(fOrigine !== 'all'
+      ? [
+          {
+            cle: 'orig',
+            libelle: 'Origine',
+            valeur: ORIGINES[fOrigine] ?? fOrigine,
+            retirer: () => setFOrigine('all'),
+          },
+        ]
+      : []),
+  ];
+  /* Parties intéressées (refonte Neon, lot 5) : panorama Studio par défaut ; le registre détaillé ci-dessous (filtres
+     d'URL, commandes, décisions et réalisations) s'ouvre à la demande, ou d'emblée quand une recherche ou un filtre
+     d'URL est actif. Il est replié par la feuille de styles (neon-parties.css), sans être démonté. */
+  const [registreParties, setRegistreParties] = useState(!!search || !!filtresActifs);
+  const titreRegistreParties = useRef<HTMLHeadingElement>(null);
+  const nomPerimetre = usePerimetres(kind === 'stakeholder').data?.find((p) => p.id === smsi)?.name;
+  const basculerRegistreParties = () => {
+    const ouvert = !registreParties;
+    setRegistreParties(ouvert);
+    if (ouvert) requestAnimationFrame(() => titreRegistreParties.current?.focus());
+  };
   const actions = (o: GrcObject) => {
     const editable = writable && o.data.status !== 'closed';
     const primary =
@@ -190,7 +269,7 @@ export function BusinessRegistry({
     return (
       <Group gap="xs">
         <Button variant="light" size="xs" onClick={() => onOpen(o)}>
-          Ouvrir
+          {['context', 'stakeholder'].includes(kind) ? 'Afficher' : 'Ouvrir'}
         </Button>
         {editable && primary && (
           <Button variant="default" size="xs" onClick={() => onDecision(o, primary)}>
@@ -294,21 +373,80 @@ export function BusinessRegistry({
       </Group>
     );
   };
-  return (
-    <Stack>
-      <Group justify="space-between">
-        <Group align="flex-end">
-          <TextInput label="Rechercher" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
-          <Filtres
-            actifs={filtresActifs}
-            onReinitialiser={() => {
-              setFEtat('all');
-              setFResp('all');
-              setFEcheance('all');
-              setFOrigine('all');
-              setFClassif('all');
+  const registre = (
+    <Stack
+      className={kind === 'stakeholder' ? 'pi-registry-shell' : undefined}
+      data-registre-parties={kind === 'stakeholder' ? (registreParties ? 'ouvert' : 'replie') : undefined}
+    >
+      {kind === 'stakeholder' && (
+        <div className="pi-registry-vue">
+          {!registreParties && <ErrorAlert error={native.error ?? historical.error ?? owners.error} />}
+          <PartiesInteresseesStudio
+            objects={toutes}
+            scopeName={nomPerimetre || 'Périmètre sélectionné'}
+            owner={owner}
+            writable={writable}
+            loading={native.isPending || historical.isLoading}
+            total={(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)}
+            onOpen={onOpen}
+            onCreate={() => onCreate(kind)}
+            onBrowse={basculerRegistreParties}
+            registreOuvert={registreParties}
+            pagination={
+              !registreParties && (native.hasNextPage || historical.hasNextPage) ? (
+                <Group className="pi-pagination">
+                  {native.hasNextPage && (
+                    <Button
+                      variant="light"
+                      loading={native.isFetchingNextPage}
+                      onClick={() => void native.fetchNextPage()}
+                    >
+                      Afficher les fiches suivantes
+                    </Button>
+                  )}
+                  {historical.hasNextPage && (
+                    <Button
+                      variant="light"
+                      loading={historical.isFetchingNextPage}
+                      onClick={() => void historical.fetchNextPage()}
+                    >
+                      Afficher les données existantes suivantes
+                    </Button>
+                  )}
+                </Group>
+              ) : null
+            }
+          />
+        </div>
+      )}
+      {kind === 'stakeholder' && registreParties && (
+        <Group justify="space-between" className="pi-registry-details">
+          <Title order={2} size="h4" tabIndex={-1} ref={titreRegistreParties}>
+            Registre détaillé des parties intéressées
+          </Title>
+          <Button
+            variant="default"
+            onClick={() => {
+              setRegistreParties(false);
+              requestAnimationFrame(() => document.getElementById('pi-bascule-registre')?.focus());
             }}
           >
+            Replier le registre
+          </Button>
+        </Group>
+      )}
+      <Group justify="space-between" className="barre-registre">
+        <Group align="flex-end" className="barre-registre__outils">
+          <TextInput
+            ref={champRecherche}
+            className="barre-recherche"
+            label="Rechercher"
+            leftSection={<IconeLoupe />}
+            title="Raccourci : touche /"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <Filtres actifs={filtresActifs} onReinitialiser={reinitialiserFiltres}>
             <Select
               label="État"
               allowDeselect={false}
@@ -371,6 +509,7 @@ export function BusinessRegistry({
           </Button>
         )}
       </Group>
+      <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiserFiltres} />
       <ErrorAlert error={native.error ?? historical.error} />
       <Text size="sm">
         {filtresActifs
@@ -541,5 +680,20 @@ export function BusinessRegistry({
         </Stack>
       </Modal>
     </Stack>
+  );
+  // SWOT : la matrice Studio (refonte Neon, lot 5) précède le registre complet, conservé tel quel et toujours affiché.
+  if (kind !== 'swot') return registre;
+  return (
+    <SwotMatrice
+      smsi={smsi}
+      objects={toutes}
+      owners={owners.data ?? []}
+      writable={writable}
+      onOpen={onOpen}
+      onCreate={() => onCreate(kind)}
+      onHistory={setHistory}
+    >
+      {registre}
+    </SwotMatrice>
   );
 }
