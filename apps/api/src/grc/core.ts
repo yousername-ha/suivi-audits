@@ -183,7 +183,7 @@ const versionPolitique = (k: Kdb) =>
 /** Accès d'un compte à un périmètre, parents compris (pyramide, ADR 0092, migration 060) : null sans accès, false en
     lecture seule, true en écriture. `smsi` et `user` sont une référence de colonne (sql.ref) ou une valeur. */
 const accesPerimetre = (smsi: unknown, user: unknown) => sql<boolean | null>`grc_acces_perimetre(${smsi}, ${user})`;
-/** Périmètre visible du compte : accès par rattachement (pyramide), ou périmètre « instance » pour un compte rattaché quelque part (ADR 0095). */
+/** Périmètre visible du compte : accès par rattachement au périmètre ou à un ancêtre (pyramide, ADR 0092), sans exception pour le périmètre commun (ADR 0095). */
 const smsiVisible = (smsi: unknown, user: unknown) => sql<boolean>`grc_smsi_visible(${smsi}, ${user})`;
 const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 /** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
@@ -311,9 +311,9 @@ export class Grc {
     const r = await q.executeTakeFirst();
     const admin = await this.isAdmin(user, c);
     // Pyramide (ADR 0092) : l'accès à un périmètre vaut pour ses descendants ; null = aucun accès, true = écriture.
-    // Sans rattachement, un compte ne voit rien, pas même un périmètre « instance » (ADR 0095).
+    // Sans rattachement au périmètre ou à un ancêtre, un compte ne voit rien, pas même le périmètre commun (ADR 0095).
     if (!r || (!r.visible && !admin)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
-    // Écriture : un accès en écriture sur le périmètre ou un ancêtre ; un périmètre « instance » ne s'écrit pas sans cet accès (ADR 0095).
+    // Écriture : un accès en écriture sur le périmètre ou un ancêtre (ADR 0095).
     if (write && r.acces !== true && !admin)
       throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {

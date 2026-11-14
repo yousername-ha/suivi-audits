@@ -57,16 +57,13 @@ describe('compte rattaché à un périmètre enfant', () => {
     expect((await seulEnfant.get(`/api/grc/${petitEnfant}/objects?kind=stakeholder`)).statusCode).toBe(200);
     expect((await fiche(seulEnfant, petitEnfant, 'Fiche du petit-enfant')).statusCode).toBe(200);
   });
-  it('ne voit ni le parent, ni un périmètre voisin ; le périmètre commun reste ouvert (ADR 0092)', async () => {
-    expect((await seulEnfant.get(`/api/grc/${RACINE}/objects?kind=stakeholder`)).statusCode).toBe(200);
-    // Lecture seule : sans accès en écriture au périmètre commun, un compte rattaché à l'enfant n'y écrit pas (ADR 0095).
-    expect((await fiche(seulEnfant, RACINE, 'Fiche écrite au commun')).statusCode).toBe(403);
-    for (const autre of [parent, frere]) {
+  it('ne voit ni le parent, ni un périmètre voisin, ni le périmètre commun (ADR 0095, BUG-051)', async () => {
+    for (const autre of [RACINE, parent, frere]) {
       expect((await seulEnfant.get(`/api/grc/${autre}/objects?kind=stakeholder`)).statusCode).toBe(404);
       expect((await fiche(seulEnfant, autre, 'Fiche hors périmètre')).statusCode).toBe(404);
     }
     const liste = (await seulEnfant.get('/api/grc/smsis')).json() as { id: string }[];
-    expect(liste.map((s) => s.id).sort()).toEqual([RACINE, enfant, petitEnfant].sort());
+    expect(liste.map((s) => s.id).sort()).toEqual([enfant, petitEnfant].sort());
   });
 });
 

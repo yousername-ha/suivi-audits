@@ -701,16 +701,16 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Champ | Constat |
 | --- | --- |
 | Fonction, gravité, priorité | Comptes, périmètres, droits ; BLOQUANTE (arbitrage du RSSI du 13/11/2026) ; P1 |
-| Statut | CORRIGÉ EN PARTIE — DÉCISION DU RSSI ATTENDUE (second rejeu de la PR #269 du 14/11/2026) |
+| Statut | CORRIGÉ — À VALIDER PAR LA RECETTE (règle complète du RSSI du 14/11/2026) |
 | Arbitrage du RSSI (13/11/2026) | Un compte est rattaché à un périmètre. Rattaché à un périmètre enfant, il ne voit que ce périmètre. Rattaché au parent, il voit le parent et les enfants rattachés à ce parent. |
 | Observé | Le périmètre racine est créé « Toute l'organisation » (visibilité `instance`) et aucun écran ni API ne le restreint : un contributeur membre du seul périmètre enfant (« Hébergement HDS » dans le jeu fictif, nom d'un périmètre et non du référentiel HDS) lit le parent et y écrit (`POST …/objects` → 200, `PATCH /api/dda/A-5.1` → 200). À l'inverse, l'appartenance ne descend pas : un contributeur membre du seul parent reçoit 404 « Périmètre introuvable ou non accessible » sur l'enfant (CAMP-T1-02, harnais du 13/11/2026). Rejeu : [`rejeu-piles-1-2.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-1-2.md) ; [`rejeu-piles-5-6.md`](../05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md) (C5-06). |
 | Attendu | La règle de l'arbitrage, appliquée côté serveur à toutes les routes du périmètre (lecture et écriture) et reflétée par l'écran « Accès au périmètre » (racine comprise). |
 | Cause / niveau | PISTE : visibilité `instance` du périmètre racine sans réglage ; ADR 0039 (périmètre sans propagation des droits) à amender par une ADR de la session de développement (numéro annoncé au RSSI). Liés : BUG-044 (incidents sans périmètre), BUG-062 (sélecteur sans effet), BUG-071 (revue des accès sans périmètres). |
 | Non-régression | `41-campagne-organisation-risques.spec.ts`, « CAMP-T1-01 ouvert » (le membre de l'enfant n'écrit pas au parent) et « CAMP-T1-02 ouvert » (le membre du parent voit l'enfant) (`test.fail`) |
-| Correctif | ADR 0092 (amende l’ADR 0039) : un rattachement ouvre le périmètre et ses descendants, jamais le parent ; compte sans rattachement : périmètres « instance ». Migration 060 (fonctions SQL), `Grc.access`, `listSmsis`, `owners`, `checkOwner`, notifications d’échéance. Volet ouvert au rejeu du 14/11/2026 (CAMP-T1-01 : un compte rattaché au seul enfant écrivait au périmètre commun) : l’écriture exige désormais un accès en écriture au périmètre ou à un ancêtre, y compris sur un périmètre « instance » (ADR 0095, point 5) ; à rejouer. |
+| Correctif | ADR 0092 (pyramide des périmètres, migration 060 de la session « Refonte des droits ») : un rattachement ouvre le périmètre et ses descendants, jamais le parent. ADR 0095 (migration 062, `grc_smsi_visible`) : aucune exception pour le périmètre commun ; `Grc.access`, `listSmsis`, `owners`, `checkOwner`, notifications d’échéance. |
 | Tests de la correction | `apps/api/test/acces-perimetres-descendants.test.ts` ; `CAMP-T1-01` et `CAMP-T1-02` à rejouer par la recette |
 | Commit | 0131729 |
-| Reste | Un compte rattaché au seul enfant lit encore le périmètre commun (403 en écriture, pas 404) : lecture ouverte à tout compte rattaché par l’ADR 0092 et l’ADR 0095. L’arbitrage du RSSI du 13/11/2026 (« rattaché à un enfant, il ne voit que ce périmètre ») demande le lot 3 de l’ADR 0092 (périmètre commun réservé à ses pilotes), à livrer par la session « Refonte des droits d’accès ». |
+| Correctif (14/11/2026) | Règle complète (ADR 0095) : le périmètre commun suit la pyramide ; rattaché à un enfant, un compte ne le voit plus (404 en lecture et en écriture). À rejouer : CAMP-T1-01. |
 
 ## BUG-052 — Fiches du Pilotage ni archivables ni supprimables à l'écran (C1-03, C2-10, C5-03)
 

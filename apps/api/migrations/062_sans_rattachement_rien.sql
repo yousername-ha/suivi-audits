@@ -1,10 +1,10 @@
--- ADR 0095 (amende l'ADR 0092) : un compte sans aucun rattachement ne voit aucun périmètre, pas même un périmètre
--- « instance » (décision du RSSI du 13/11/2026). Un compte rattaché quelque part voit, en plus de ses périmètres (et de
--- leurs descendants, pyramide de l'ADR 0092), les périmètres « instance ». Les administrateurs voient tout (côté serveur).
+-- ADR 0095 (amende l'ADR 0092) : un périmètre n'est visible que par un compte qui y a accès, par rattachement au périmètre
+-- ou à l'un de ses ancêtres (pyramide de l'ADR 0092). Le périmètre commun, de visibilité « instance », n'échappe plus à la
+-- règle : un compte sans rattachement ne voit rien, un compte rattaché à un enfant ne voit que ce périmètre et ses
+-- descendants, un compte rattaché à la racine garde tout (décision du RSSI du 14/11/2026). Les administrateurs voient tout
+-- (côté serveur).
 -- Fonction pure de lecture : aucune donnée n'est modifiée ; une version antérieure ignore cette fonction.
 CREATE OR REPLACE FUNCTION grc_smsi_visible(s uuid, u uuid) RETURNS boolean
 LANGUAGE sql STABLE AS $$
   SELECT grc_acces_perimetre(s, u) IS NOT NULL
-      OR (EXISTS (SELECT 1 FROM grc_smsis g WHERE g.id = s AND g.visibility = 'instance')
-          AND EXISTS (SELECT 1 FROM grc_members m WHERE m.user_id = u))
 $$;

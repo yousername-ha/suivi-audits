@@ -6,7 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Aucune action sur le serveur.** **Migrations automatiques `061` (table `dda_perimetres`) et `062` (fonction `grc_smsi_visible`, ADR 0095), non destructives : un compte sans aucun rattachement ne voit plus aucun périmètre ; vérifier les rattachements des comptes avant la mise à jour.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
+**Aucune action sur le serveur.** **Migrations automatiques `061` (table `dda_perimetres`) et `062` (fonction `grc_smsi_visible`, ADR 0095), non destructives : un compte sans rattachement ne voit plus aucun périmètre, et un compte rattaché à un enfant seulement ne voit plus le périmètre commun ; vérifier les rattachements des comptes avant la mise à jour.** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
 applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
 les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
 lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements`, ainsi que les rappels et réglages « Rapprochements à
@@ -82,12 +82,12 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 ### Corrigé
 
 - **Droits (campagne de recette du 12 et 13/11/2026, lot 1)** :
-  - **BUG-051, sans rattachement, rien n'est visible** ([ADR 0095](docs/adr/0095-sans-rattachement-rien-ne-est-visible.md), qui amende l'[ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : un compte sans aucun
-    rattachement ne voit aucun périmètre, pas même un périmètre « instance » ; un compte rattaché garde la pyramide de l'ADR 0092 (ses périmètres, leurs descendants et les
-    périmètres « instance »). Règle unique en base (`grc_smsi_visible`, migration `062`, fonction de lecture seule), reprise par l'accès, la liste des périmètres, les responsables
-    proposables et les rappels d'échéance. Aucune reprise de données : un compte existant non rattaché perd l'accès jusqu'à son rattachement.
-  - **Rejeu de la recette du 14/11/2026 (PR #269)** : **BUG-051** : un périmètre « instance » ne s'écrit plus sans accès en écriture au périmètre ou à un ancêtre (un compte rattaché au seul enfant lit le périmètre commun mais n'y
-    écrit pas, 403 ; [ADR 0095](docs/adr/0095-sans-rattachement-rien-ne-est-visible.md)). **BUG-041** : sous un sous-périmètre, la recherche de références propose les mesures communes et les processus, objectifs et indicateurs du périmètre.
+  - **BUG-051, un périmètre n'est visible que par rattachement** ([ADR 0095](docs/adr/0095-sans-rattachement-rien-ne-est-visible.md), qui amende l'[ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), décision du RSSI du 14/11/2026) :
+    le périmètre commun suit la pyramide comme les autres. Un compte sans rattachement ne voit rien ; rattaché à un enfant, il ne voit que ce périmètre et ses descendants (le parent et le périmètre commun
+    lui répondent 404, en lecture comme en écriture) ; rattaché au parent, il voit le parent et ses enfants ; rattaché à la racine, il garde tout. Règle unique en base (`grc_smsi_visible`, migration `062`, fonction
+    de lecture seule), reprise par l'accès, la liste des périmètres, les responsables proposables et les rappels d'échéance. **À relire avant la mise à jour d'un serveur peuplé** : un compte rattaché à un enfant seulement
+    ne voit plus le périmètre commun.
+  - **BUG-041, sources sous un sous-périmètre** (rejeu de la recette du 14/11/2026) : la recherche de références propose les mesures communes et les processus, objectifs et indicateurs du périmètre.
     _(Session « Correctifs de la campagne de recette (BUG-038 à BUG-077) ».)_
   - **BUG-049, archivage des registres** : seul le gestionnaire du registre (ou un administrateur) l'archive, et le désarchive par la nouvelle commande
     `POST /api/registres/:id/desarchivage` (bouton « Désarchiver le registre » sur la fiche). Un contributeur reçoit 403, un compte sans accès 404.
