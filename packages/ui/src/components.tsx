@@ -2,7 +2,7 @@
    confirmation, message d'erreur. Tous les écrans les utilisent. */
 import { Alert, Badge, Button, Card, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import { useState, type ReactNode } from 'react';
-import { ListeDefilante } from './liste-defilante';
+import { ListeDefilante } from './liste-defilante.tsx';
 
 /** Page : pleine largeur (par défaut) ou largeur de formulaire. */
 export function Page({ children, variant = 'pleine' }: { children: ReactNode; variant?: 'pleine' | 'formulaire' }) {

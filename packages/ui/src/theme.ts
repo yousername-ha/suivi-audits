@@ -13,7 +13,7 @@ import {
   Table,
   type CSSVariablesResolver,
 } from '@mantine/core';
-import { rendreFocusFiche } from './focus-fiche';
+import { rendreFocusFiche } from './focus-fiche.ts';
 import {
   BRAND,
   ENCRE,
