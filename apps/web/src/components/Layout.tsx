@@ -1,5 +1,8 @@
 /* Mise en page : barre supérieure, navigation, indicateur temps réel, préférences d'affichage.
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
+   Menu bleu nuit opaque de la refonte Neon (packages/ui/src/neon-menu.css) : même charte dans les deux thèmes, teinte par
+   identité d'entrée (data-identite), pictogrammes animés avec pause ; familles, destinations, compteurs et alertes restent
+   ceux de la navigation réelle filtrée par les droits.
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
   Anchor,
@@ -13,25 +16,12 @@ import {
   Stack,
   Text,
   Tooltip,
+  useComputedColorScheme,
   useMantineColorScheme,
   VisuallyHidden,
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
-import {
-  IconeAccueil,
-  IconeActions,
-  IconeAdministration,
-  IconeCompte,
-  IconeConformite,
-  IconeDocuments,
-  IconeMur,
-  IconeOrganisation,
-  IconeParametres,
-  IconePilotage,
-  IconeResilience,
-  IconeRisques,
-  IconeTheme,
-} from '@suivi/ui';
+import { IconeAdministration, IconeMenu, IconeTheme, type IdentiteMenu } from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -49,15 +39,18 @@ import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { MarqueOrganisation } from './MarqueOrganisation';
+import { useMouvementMenu } from './mouvement-menu';
 
-const ICONES_FAMILLE: Record<FamilleId, () => ReactNode> = {
-  pilotage: IconePilotage,
-  organisation: IconeOrganisation,
-  risques: IconeRisques,
-  conformite: IconeConformite,
-  actions: IconeActions,
-  resilience: IconeResilience,
-  documents: IconeDocuments,
+/** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
+const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
+  pilotage: 'pilotage',
+  organisation: 'organisation',
+  risques: 'risques',
+  conformite: 'conformite',
+  actions: 'actions',
+  resilience: 'resilience',
+  documents: 'documents',
 };
 const SCHEME = { auto: 'auto', clair: 'light', sombre: 'dark' } as const;
 const THEME_SUIVANT = { clair: 'sombre', sombre: 'auto', auto: 'clair' } as const;
@@ -91,20 +84,22 @@ export function Layout({ children }: { children: ReactNode }) {
   const can = useCan();
   const { save } = usePreferences();
   const theme = useAffichage();
+  const schema = useComputedColorScheme('light');
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
+  const mouvement = useMouvementMenu();
 
-  type Item = [string, string, () => ReactNode];
-  const accueil: Item[] = [['/', 'Tableau de bord', IconeAccueil]];
+  type Item = [string, string, IdentiteMenu | 'retex'];
+  const accueil: Item[] = [['/', 'Tableau de bord', 'dashboard']];
   const administration: Item[] = [];
-  if (cartesVisibles(can, 'plateforme').length > 0) administration.push(['/plateforme', 'Plateforme', IconeParametres]);
+  if (cartesVisibles(can, 'plateforme').length > 0) administration.push(['/plateforme', 'Plateforme', 'plateforme']);
   if (cartesVisibles(can, 'systeme').length > 0)
-    administration.push(['/systeme', 'Configuration système', IconeAdministration]);
+    administration.push(['/systeme', 'Configuration système', 'parametres']);
   const invitationsRetex = useInvitationsRetex();
-  const outils: Item[] = [['/account', 'Mon compte', IconeCompte]];
-  outils.push(['/aide', 'Guide d’utilisation', IconeDocuments]);
-  if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', IconeMur]);
+  const outils: Item[] = [['/account', 'Mon compte', 'compte']];
+  outils.push(['/aide', 'Guide d’utilisation', 'aide']);
+  if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', 'mur']);
   // Demandes de contribution à un RETEX : visibles pour toute personne invitée, même sans droit sur les incidents.
-  if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', IconeDocuments]);
+  if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', 'retex']);
   const active = (to: string) =>
     to === '/'
       ? loc.pathname === '/'
@@ -145,31 +140,40 @@ export function Layout({ children }: { children: ReactNode }) {
   );
 
   const navigationItems = (entries: Item[]) =>
-    entries.map(([to, label, Icon]) =>
+    entries.map(([to, label, identite]) =>
       withTip(
         label,
         <NavLink
           component={Link}
           to={to}
           label={<span className="nav-libelle">{label}</span>}
-          leftSection={<Icon />}
+          leftSection={<IconeMenu identite={identite} />}
           active={active(to)}
           onClick={close}
+          data-identite={identite}
         />,
       ),
     );
   const navigation = (
     <nav
       aria-label="Navigation principale"
-      className="shell-nav-inner"
+      className="shell-nav-inner nav-neon"
       data-tri-actif={tri.glisse || undefined}
+      data-mouvement={mouvement.arrete ? 'pause' : 'anime'}
       onClickCapture={tri.surClicCapture}
     >
+      <Link to="/" className="nav-marque" onClick={close} aria-label={`${me.appName} — accueil`}>
+        <MarqueOrganisation />
+        <span>
+          <strong>{me.appName}</strong>
+          <small>Qualité, sécurité et référentiels</small>
+        </span>
+      </Link>
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
         {navigationItems(accueil)}
         {familles.map(({ famille, destinations }) => {
-          const Icone = ICONES_FAMILLE[famille.id];
+          const identite = IDENTITE_FAMILLE[famille.id];
           const dansLaFamille = familleDeLaPage === famille.id;
           return (
             <NavLink
@@ -178,8 +182,17 @@ export function Layout({ children }: { children: ReactNode }) {
               to={destinations[0]!.to}
               className="nav-famille"
               data-famille={famille.id}
-              label={<LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />}
-              leftSection={<Icone />}
+              data-identite={identite}
+              label={
+                <span className="nav-famille__libelle">
+                  <LibelleAlerte libelle={famille.label} alerte={alerteDeFamille(alertes, destinations)} />
+                  {/* Nombre de destinations lisibles avec les droits de la personne (même source que le menu). */}
+                  <small className="nav-compte nav-annexe" aria-hidden="true">
+                    {destinations.length}
+                  </small>
+                </span>
+              }
+              leftSection={<IconeMenu identite={identite} />}
               active={dansLaFamille}
               aria-expanded={!tablette && ouvert === famille.id}
               opened={!tablette && ouvert === famille.id}
@@ -195,6 +208,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     component={Link}
                     to={d.to}
                     className="nav-destination"
+                    data-identite={identite}
                     label={<LibelleAlerte libelle={d.label} alerte={alertes[d.id]} />}
                     active={localiser(loc.pathname)?.destination.id === d.id}
                     onClick={close}
@@ -227,18 +241,36 @@ export function Layout({ children }: { children: ReactNode }) {
             <Text size="xs">Pilotage de l’organisation</Text>
           </div>
         </div>
-        {withTip(
-          `Thème : ${THEME_LIBELLE[theme]}`,
-          <Button
-            variant="subtle"
-            size="xs"
-            fullWidth
-            leftSection={<IconeTheme />}
-            onClick={() => void save({ theme: THEME_SUIVANT[theme] })}
+        <div className="nav-commandes">
+          {withTip(
+            `Thème : ${THEME_LIBELLE[theme]}`,
+            <Button
+              variant="subtle"
+              size="xs"
+              fullWidth
+              leftSection={<IconeTheme />}
+              onClick={() => void save({ theme: THEME_SUIVANT[theme] })}
+            >
+              <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
+            </Button>,
+          )}
+          <Tooltip
+            label={mouvement.pause ? 'Reprendre les animations du menu' : 'Mettre en pause les animations du menu'}
+            position="right"
           >
-            <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
-          </Button>,
-        )}
+            <button
+              type="button"
+              className="nav-pause"
+              aria-label="Animations du menu en pause"
+              aria-pressed={mouvement.pause}
+              onClick={mouvement.basculer}
+            >
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                {mouvement.pause ? <path d="M5 3.5v9l7-4.5Z" /> : <path d="M4.5 3h2.5v10H4.5ZM9 3h2.5v10H9Z" />}
+              </svg>
+            </button>
+          </Tooltip>
+        </div>
         <Text size="xs" c="dimmed" ta="center" className="app-version nav-annexe">
           Version {me.version}
         </Text>
@@ -257,11 +289,16 @@ export function Layout({ children }: { children: ReactNode }) {
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">
               <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
-              <Anchor component={Link} to="/" underline="never" c="inherit" aria-label={`${me.appName} — accueil`}>
+              <Anchor
+                component={Link}
+                to="/"
+                underline="never"
+                c="inherit"
+                className="entete-marque"
+                aria-label={`${me.appName} — accueil`}
+              >
                 <Group gap="xs" wrap="nowrap">
-                  <span className="brand-mark" aria-hidden="true">
-                    S
-                  </span>
+                  <MarqueOrganisation />
                   <div className="brand-wordmark">
                     <Text fw={700} visibleFrom="xs">
                       {me.appName}
@@ -289,6 +326,16 @@ export function Layout({ children }: { children: ReactNode }) {
                   {live.connected ? 'En direct' : 'Hors ligne'}
                 </Badge>
               </Tooltip>
+              {/* Bascule rapide clair / sombre de la refonte Neon (même préférence que le réglage du pied de menu). */}
+              <Button
+                size="xs"
+                variant="default"
+                visibleFrom="md"
+                leftSection={<IconeTheme />}
+                onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
+              >
+                {schema === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              </Button>
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>
@@ -310,7 +357,14 @@ export function Layout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-      <Drawer opened={opened} onClose={close} title="Menu" size="xs" hiddenFrom="xs">
+      <Drawer
+        opened={opened}
+        onClose={close}
+        title="Menu"
+        size="xs"
+        hiddenFrom="xs"
+        classNames={{ content: 'nav-tiroir' }}
+      >
         {navigation}
       </Drawer>
     </div>

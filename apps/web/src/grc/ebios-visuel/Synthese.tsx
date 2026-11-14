@@ -5,6 +5,7 @@ import { Button, Group, Select, Stack, Table, Text } from '@mantine/core';
 import { ECHELLE_GRAVITE, ECHELLE_VRAISEMBLANCE } from '@suivi/shared';
 import { DataTable } from '@suivi/ui';
 import { useMemo, useState } from 'react';
+import { ficheCliquable } from '../../fiche-cliquable';
 import { filtrer, lignes, nonPlaces, pointsCercle, type Filtre, type Ligne, type ObjetVisuel } from './modele';
 
 const TEINTE_GRAVITE: Record<number, string> = {
@@ -196,6 +197,7 @@ export function Synthese({
             {visibles.map((l) => (
               <Table.Tr
                 key={l.ref}
+                {...ficheCliquable(() => onOuvrir(l.id), `Afficher ${l.nom}`)}
                 data-selected={l.ref === choisi ? 'true' : undefined}
                 className={l.ref === choisi ? 'ebios-ligne--choisie' : undefined}
               >
