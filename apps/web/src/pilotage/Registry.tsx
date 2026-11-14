@@ -21,6 +21,7 @@ import { OPERATION_LABELS } from './Decision';
 import { useFiltreUrl } from '../components/filtre-url';
 import { useResponsables } from '../components/selecteurs';
 import { idObjetDeRef, lienContexte } from '../retour';
+import { SwotMatrice } from './SwotMatrice';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -294,7 +295,7 @@ export function BusinessRegistry({
       </Group>
     );
   };
-  return (
+  const registre = (
     <Stack>
       <Group justify="space-between">
         <Group align="flex-end">
@@ -541,5 +542,20 @@ export function BusinessRegistry({
         </Stack>
       </Modal>
     </Stack>
+  );
+  // SWOT : la matrice Studio (refonte Neon, lot 5) précède le registre complet, conservé tel quel et toujours affiché.
+  if (kind !== 'swot') return registre;
+  return (
+    <SwotMatrice
+      smsi={smsi}
+      objects={toutes}
+      owners={owners.data ?? []}
+      writable={writable}
+      onOpen={onOpen}
+      onCreate={() => onCreate(kind)}
+      onHistory={setHistory}
+    >
+      {registre}
+    </SwotMatrice>
   );
 }
