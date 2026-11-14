@@ -6,6 +6,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [7.0.0] — 2026-11-14
+
+Version majeure : cinq migrations SQL (`058` et `059` destructives, `060`, `061` et `062` additives), aucune nouvelle dépendance. Elle refond les
+**droits par la pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)), apporte la **refonte graphique Neon**
+(lots 1 et 2, [ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)), les **correctifs de la campagne de recette** (BUG-038 à BUG-077, ADR 0094 à 0096),
+simplifie les menus **Conformité**, **Gestion des risques** et **Résilience** (ADR 0089 à 0091, avec le retrait du GAP, des applications de la cartographie, des
+correspondances entre référentiels, des rapprochements et des fiches « opportunité ») et enrichit la **démonstration** chargée à l'installation. **Installation neuve
+recommandée** : l'application n'étant pas encore en production, aucune reprise de données n'est prévue. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
 **Aucune action sur le serveur.** **Migrations automatiques `061` (table `dda_perimetres`) et `062` (fonction `grc_smsi_visible`, ADR 0095), non destructives : un compte sans rattachement ne voit plus aucun périmètre, et un compte rattaché à un enfant seulement ne voit plus le périmètre commun (aucune reprise de données, consigne du RSSI du 14/11/2026).** **Migrations automatiques `058` et `059`, destructives.** La `058` (retrait du module « Applications à intégrer » et des
 applications de la cartographie, [ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) **supprime définitivement** la table `suivi_app_gaps` et retire
 les nœuds « application » des cartes enregistrées et de leurs versions. La `059` (retrait des correspondances entre référentiels et des rapprochements, ADR 0089,
@@ -23,6 +36,24 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 - **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
   les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
   `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
+
+- **Recette métier du RSSI virtuel du 12/11/2026** (sans effet sur l'application) : étapes 1 à 17 du scénario déroulées à
+  l'écran ; 18 constats (BUG-020 à BUG-036, dont deux bloquants sur les chiffres de la revue de direction), trois nouveaux
+  tests `test.fail`, pilote complété (dépôt de fichier, libellés répétés). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md`. _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents** (sans effet sur l'application) : matrice de couverture générée depuis le
+  code (`tests/e2e/rssi-virtuel/matrice.mjs` : 107 écrans, 1 712 cases), `lancer.sh --pile N` pour une pile vierge par
+  agent, dossier de reprise `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`. Non exécuté à ce jour (Docker
+  inaccessible dans la session). _(Session « Agent RSSI virtuel ».)_
+- **Campagne de recette à plusieurs agents des 12 et 13/11/2026** (sans effet sur l'application) : première exécution, sur
+  six piles Docker de `lancer.sh` (PostgreSQL 18, Node 26) ; 1 712 cases de la matrice couvertes (1 005 ok, 534 en défaut,
+  173 sans objet), 165 constats, bloquants et majeurs rejoués par des agents indépendants ; 40 défauts inscrits (BUG-038 à
+  BUG-077 : 14 bloquants dont BUG-051 arbitré par le RSSI le 13/11, 26 majeurs) et 47 tests `test.fail` (dont RSSI-09 et RSSI-18 pour BUG-024 et BUG-031, arbitrés le 13/11) ; tri sur le code
+  actuel après les ADR 0089 à 0091 : BUG-064 sans objet, 39 défauts à corriger (`specs/41` à `43`). BUG-016 à BUG-037
+  reconfirmés sur la cible. Outillage corrigé : `lancer.sh` (`.env` et projet Compose de la pile pour `app` et
+  `updater`, option `--images-locales`), invariant INV-08 (écarts appariés par `legacyId`). Rapport :
+  `docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md` ; demande de correctifs :
+  `DEMANDE-CORRECTIFS-2026-11-13.md`. _(Session « Campagne multi-agent RSSI virtuel ».)_
 
 ### Modifié
 
@@ -191,27 +222,6 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 - **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
   PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que
   PostgreSQL 17 précède le passage à 18 (ADR 0035). Aucun changement de code.
-
-
-### Ajouté
-
-- **Recette métier du RSSI virtuel du 12/11/2026** (sans effet sur l'application) : étapes 1 à 17 du scénario déroulées à
-  l'écran ; 18 constats (BUG-020 à BUG-036, dont deux bloquants sur les chiffres de la revue de direction), trois nouveaux
-  tests `test.fail`, pilote complété (dépôt de fichier, libellés répétés). Rapport :
-  `docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md`. _(Session « Agent RSSI virtuel ».)_
-- **Campagne de recette à plusieurs agents** (sans effet sur l'application) : matrice de couverture générée depuis le
-  code (`tests/e2e/rssi-virtuel/matrice.mjs` : 107 écrans, 1 712 cases), `lancer.sh --pile N` pour une pile vierge par
-  agent, dossier de reprise `docs/05_RECETTE/rssi-virtuel/CAMPAGNE-MULTI-AGENT.md`. Non exécuté à ce jour (Docker
-  inaccessible dans la session). _(Session « Agent RSSI virtuel ».)_
-- **Campagne de recette à plusieurs agents des 12 et 13/11/2026** (sans effet sur l'application) : première exécution, sur
-  six piles Docker de `lancer.sh` (PostgreSQL 18, Node 26) ; 1 712 cases de la matrice couvertes (1 005 ok, 534 en défaut,
-  173 sans objet), 165 constats, bloquants et majeurs rejoués par des agents indépendants ; 40 défauts inscrits (BUG-038 à
-  BUG-077 : 14 bloquants dont BUG-051 arbitré par le RSSI le 13/11, 26 majeurs) et 47 tests `test.fail` (dont RSSI-09 et RSSI-18 pour BUG-024 et BUG-031, arbitrés le 13/11) ; tri sur le code
-  actuel après les ADR 0089 à 0091 : BUG-064 sans objet, 39 défauts à corriger (`specs/41` à `43`). BUG-016 à BUG-037
-  reconfirmés sur la cible. Outillage corrigé : `lancer.sh` (`.env` et projet Compose de la pile pour `app` et
-  `updater`, option `--images-locales`), invariant INV-08 (écarts appariés par `legacyId`). Rapport :
-  `docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md` ; demande de correctifs :
-  `DEMANDE-CORRECTIFS-2026-11-13.md`. _(Session « Campagne multi-agent RSSI virtuel ».)_
 
 ## [6.3.0] — 2026-11-12
 
