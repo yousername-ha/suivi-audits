@@ -10,6 +10,11 @@ registre : [BUG-038 à BUG-077](../../04_QUALITE/REGISTRE_BUGS.md). Cette demand
 > écrans ; toutes les autres fiches sont toujours présentes. Détail : [rapport, § 10](RAPPORT-CAMPAGNE-2026-11-13.md).
 > Partir de `claude-suivi-smsi` à jour : ne réimplémenter aucune fonction retirée.
 
+> **Consigne du RSSI du 14/11/2026 : pas de reprise de données.** L'application n'est pas déployée officiellement ; elle
+> est réinstallée souvent, sans reprise des données existantes. Les correctifs ne prévoient donc ni migration de données
+> (comptes, rattachements, fiches existants), ni code de compatibilité avec d'anciennes données. Les migrations de schéma
+> restent nécessaires et suivent `AGENTS.md` (ajouter une migration, ne jamais réécrire une migration publiée).
+
 ## 1. Répartition des rôles (décision du RSSI, 11/11/2026)
 
 - La session de recette **teste et constate** ; elle ne modifie ni `apps/` ni `packages/`.

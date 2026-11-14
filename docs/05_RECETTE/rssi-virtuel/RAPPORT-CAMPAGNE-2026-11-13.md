@@ -188,7 +188,7 @@ Rendus le 13/11/2026 :
 
 | Sujet | Décision |
 | --- | --- |
-| BUG-051 | Un compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants (voir § 2, bloquants ; test CAMP-T1-02 ajouté). |
+| BUG-051 | Un compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants (voir § 2, bloquants ; test CAMP-T1-02 ajouté). Précisé le 14/11/2026 : la règle complète s'applique au périmètre commun, qui est invisible pour un compte rattaché au seul enfant (lecture comprise). |
 | BUG-049 | Seul le gestionnaire du registre peut l'archiver et le désarchiver. |
 | BUG-042 | Chaque périmètre enfant a sa propre revue de direction, sauf s'il hérite des référentiels du parent : ses entrées remontent alors dans la revue du parent. |
 | BUG-024 (recette du 12/11) | La matrice est obligatoire pour apprécier un risque (test RSSI-09 ajouté au fichier 41). |
