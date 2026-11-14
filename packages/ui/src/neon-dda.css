@@ -1,1 +1,1199 @@
-/* Refonte Neon — DDA : synthèse et mesures en lignes (lot 4), ADR 0093. Portage de la référence validée, adapté à la cible. */
+/* Refonte Neon — DDA : synthèse et mesures en lignes (lot 4), ADR 0093. Portage de la référence validée (« DdA Studio »),
+   adapté à la cible :
+   - couleurs tirées des jetons de la charte (--suivi-*, --neon-*, --mantine-*, --tdb-*), clair et sombre ; aucune
+     couleur codée en dur ;
+   - rayons bornés à 12 px (ADR 0093) ;
+   - le titre de la page, le menu latéral commun (lot 1) et l'habillage « Biseau » des fenêtres (lot 2) sont conservés :
+     les surcharges de navigation et de cadre de la référence ne sont pas reprises ;
+   - le registre garde le défilement local des listes de lignes ouvrables (lot 2, ListeDefilante).
+   Choix « Applicable » et « Mise en œuvre » : remplis, plus foncés, vert / orange / rouge selon la valeur. */
+.dda-module,
+.dda-modal {
+  --dda-surface: var(--suivi-surface);
+  --dda-panel: color-mix(in srgb, var(--neon-doux) 45%, var(--suivi-surface));
+  --dda-row: color-mix(in srgb, var(--neon-doux) 22%, var(--suivi-surface));
+  --dda-edge: color-mix(in srgb, var(--suivi-trait) 70%, var(--neon-doux));
+  --dda-text: var(--mantine-color-text);
+  --dda-muted: var(--mantine-color-dimmed);
+  --dda-secondary: var(--mantine-color-dimmed);
+  --dda-accent: var(--neon-accent);
+  --dda-doux: var(--neon-doux);
+  --dda-grid: var(--mantine-color-gray-2);
+  --dda-total: var(--tdb-vert-remplissage);
+  --dda-partiel: var(--tdb-orange-remplissage);
+  --dda-erreur: var(--tdb-rouge-remplissage);
+  --dda-danger: var(--tdb-rouge-texte);
+  --dda-icone: color-mix(in srgb, var(--neon-accent) 78%, var(--mantine-color-dimmed));
+  --dda-reflet: color-mix(in srgb, var(--mantine-color-white) 35%, transparent);
+  --dda-shadow:
+    0 3px 6px color-mix(in srgb, var(--suivi-encre) 6%, transparent),
+    0 13px 28px -12px color-mix(in srgb, var(--suivi-encre) 22%, transparent);
+  --dda-choix-bg: var(--mantine-color-gray-1);
+  --dda-choix-bord: var(--mantine-color-gray-4);
+  --dda-choix-texte: var(--mantine-color-dimmed);
+  color: var(--dda-text);
+  font-size: 0.8125rem;
+  min-width: 0;
+}
+[data-mantine-color-scheme='dark'] :is(.dda-module, .dda-modal) {
+  --dda-surface: var(--suivi-fond-page);
+  --dda-panel: var(--suivi-surface);
+  --dda-row: color-mix(in srgb, var(--suivi-surface) 55%, var(--suivi-fond-page));
+  --dda-edge: var(--suivi-trait);
+  --dda-grid: color-mix(in srgb, var(--mantine-color-dimmed) 22%, var(--suivi-surface));
+  --dda-icone: color-mix(in srgb, var(--neon-accent) 85%, var(--mantine-color-text));
+  --dda-reflet: color-mix(in srgb, var(--mantine-color-white) 8%, transparent);
+  --dda-shadow: 0 4px 20px color-mix(in srgb, var(--mantine-color-dark-9) 45%, transparent);
+  --dda-choix-bg: var(--suivi-trait);
+  --dda-choix-bord: var(--mantine-color-dark-3);
+  --dda-choix-texte: var(--mantine-color-text);
+}
+/* Fond de contenu Studio (lavande en clair, bleu nuit en sombre) ; le menu latéral commun n'est pas touché. */
+.app-main:has(.dda-module) {
+  background-color: var(--suivi-fond-page);
+  background-image: radial-gradient(
+    ellipse 54% 440px at 95% 0%,
+    color-mix(in srgb, var(--neon-violet) 9%, transparent),
+    transparent 100%
+  );
+}
+.page:has(.dda-module) > .mantine-Stack-root > .mantine-Select-root {
+  max-width: 28rem;
+}
+
+/* En-tête du module */
+.dda-heading {
+  margin: 0 0 1.55rem;
+}
+.dda-heading h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  color: var(--neon-titre);
+  margin: 0.5rem 0;
+}
+.dda-heading p {
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--dda-muted);
+  margin: 0;
+  max-width: 72ch;
+}
+.dda-eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.13em;
+  font-weight: 650;
+  text-transform: uppercase;
+  color: var(--dda-muted);
+}
+.dda-section-title {
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  font-weight: 650;
+  text-transform: uppercase;
+  color: var(--dda-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0 0 0.75rem;
+}
+.dda-section-title > span {
+  font-size: 0.5rem;
+  color: var(--dda-icone);
+}
+.dda-section-title::after {
+  content: '';
+  height: 1px;
+  background: var(--dda-edge);
+  flex: 1;
+}
+.dda-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Dalles de synthèse */
+.dda-panel {
+  position: relative;
+  min-width: 0;
+  background: linear-gradient(150deg, var(--dda-surface), var(--dda-surface) 70%, var(--dda-panel));
+  border: 1px solid var(--dda-edge);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--dda-shadow);
+}
+.dda-graphs {
+  display: grid;
+  grid-template-columns: 1.12fr 1.03fr 0.95fr 0.95fr;
+  gap: 1.0625rem;
+  margin-bottom: 1.625rem;
+}
+.dda-graph {
+  padding: 1.25rem 1.1875rem 1.0625rem;
+  min-height: 14rem;
+}
+.dda-graph-entete {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+.dda-graph h3 {
+  font-size: 0.75rem;
+  font-weight: 620;
+  line-height: 1.45;
+  color: var(--dda-text);
+  margin: 0;
+}
+.dda-caption {
+  font-size: 0.5625rem;
+  line-height: 1.5;
+  color: var(--dda-muted);
+  margin: 0.0625rem 0 0;
+}
+.dda-tuile-icone {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--mantine-radius-md);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--dda-doux) 60%, var(--dda-surface)), var(--dda-doux));
+  color: var(--dda-accent);
+  box-shadow:
+    inset 0 1px 0 var(--dda-reflet),
+    0 2px 3px color-mix(in srgb, var(--neon-violet) 6%, transparent);
+}
+.dda-tuile-icone .dda-icon {
+  width: 1.0625rem;
+  height: 1.0625rem;
+}
+.dda-tuile-icone[data-ton='vert'] {
+  color: var(--tdb-vert-texte);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--tdb-vert-doux) 55%, var(--dda-surface)),
+    var(--tdb-vert-doux)
+  );
+}
+.dda-tuile-icone[data-ton='orange'] {
+  color: var(--tdb-orange-texte);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--tdb-orange-doux) 55%, var(--dda-surface)),
+    var(--tdb-orange-doux)
+  );
+}
+.dda-donut-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+.dda-donut {
+  width: 44%;
+  max-width: 6.75rem;
+  flex: none;
+  overflow: visible;
+}
+.dda-ring-track,
+.dda-ring-part {
+  fill: none;
+  stroke-width: 16;
+}
+.dda-ring-track {
+  stroke: var(--dda-grid);
+}
+.dda-ring-part {
+  stroke: var(--dda-tone);
+}
+.dda-ring-number {
+  font-size: 34px;
+  font-weight: 670;
+  letter-spacing: -1px;
+  fill: var(--dda-text);
+}
+.dda-ring-pourcent {
+  font-size: 17px;
+}
+.dda-ring-label {
+  font-size: 10px;
+  fill: var(--dda-muted);
+}
+.dda-tone-total {
+  --dda-tone: var(--dda-total);
+}
+.dda-tone-partiel {
+  --dda-tone: var(--dda-partiel);
+}
+.dda-tone-insuffisant {
+  --dda-tone: var(--dda-erreur);
+}
+.dda-tone-inconnu {
+  --dda-tone: var(--mantine-color-gray-4);
+}
+.dda-legend {
+  display: grid;
+  gap: 0.5625rem;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  font-size: 0.5625rem;
+  color: var(--dda-muted);
+}
+.dda-legend > div,
+.dda-legend dt {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.dda-legend dd {
+  font-size: 0.625rem;
+  color: var(--dda-text);
+  font-weight: 620;
+  margin: 0 0 0 auto;
+}
+.dda-dot {
+  height: 0.3125rem;
+  width: 0.3125rem;
+  border-radius: 50%;
+  background: var(--dda-tone);
+  flex: none;
+}
+.dda-graph-pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  margin: 0.9375rem 0 0;
+  font-size: 0.5625rem;
+  line-height: 1.5;
+  color: var(--dda-muted);
+}
+.dda-graph-pied b {
+  font-weight: 500;
+  color: var(--dda-secondary);
+}
+.dda-chiffre {
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+.dda-chiffre b {
+  font-weight: 620;
+  font-size: 0.6875rem;
+  color: var(--dda-text);
+}
+.dda-bars {
+  display: grid;
+  gap: 0.6875rem;
+  padding-top: 0.25rem;
+  margin: 0;
+}
+.dda-bar {
+  display: grid;
+  grid-template-columns: 3.625rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--dda-muted);
+  font-size: 0.5625rem;
+}
+.dda-bar dd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 0;
+}
+.dda-bar svg {
+  height: 0.375rem;
+  min-width: 0;
+  width: 100%;
+  flex: 1;
+  overflow: visible;
+}
+.dda-bar strong {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--dda-text);
+  min-width: 1.3125rem;
+  text-align: right;
+}
+.dda-bar-track {
+  fill: var(--dda-grid);
+}
+.dda-gradient-start {
+  stop-color: color-mix(in srgb, var(--dda-tone) 50%, var(--mantine-color-white));
+}
+.dda-gradient-end {
+  stop-color: var(--dda-tone);
+}
+.dda-coverage {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  line-height: 1;
+  margin: 0.25rem 0 0.75rem;
+}
+.dda-coverage strong {
+  font-size: 2.4375rem;
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  color: var(--dda-text);
+}
+.dda-coverage > span {
+  font-size: 0.8125rem;
+  color: var(--dda-muted);
+}
+.dda-coverage-caption {
+  font-size: 0.625rem;
+  color: var(--dda-muted);
+  margin: 0;
+}
+.dda-coverage-rail {
+  display: block;
+  height: 0.375rem;
+  width: 100%;
+  margin-top: 1.0625rem;
+}
+.dda-exclusions {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.5625rem;
+  color: var(--dda-muted);
+}
+.dda-exclusions .dda-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--dda-icone);
+}
+.dda-exclusions b {
+  font-weight: 550;
+  color: var(--dda-secondary);
+}
+.dda-vigilance-valeur {
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+  line-height: 1;
+  margin: 0.25rem 0 0;
+}
+.dda-vigilance-valeur strong {
+  font-size: 2.4375rem;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+  color: var(--dda-danger);
+}
+.dda-vigilance-valeur span {
+  font-size: 0.625rem;
+  line-height: 1.5;
+  color: var(--dda-muted);
+  max-width: 6.5rem;
+}
+.dda-substats {
+  display: flex;
+  gap: 1.25rem;
+  margin: 1rem 0 0;
+  border-top: 1px solid var(--dda-edge);
+  padding-top: 0.75rem;
+}
+.dda-substats dt {
+  font-size: 0.5625rem;
+  line-height: 1.7;
+  color: var(--dda-muted);
+}
+.dda-substats dd {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dda-secondary);
+  display: block;
+  margin: 0.125rem 0 0;
+}
+
+/* Registre des mesures en lignes compactes */
+.dda-register {
+  padding: 1.375rem 1.375rem 1rem;
+}
+.dda-register-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.1875rem;
+}
+.dda-register-heading .dda-eyebrow {
+  font-size: 0.5rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.dda-register-heading h3 {
+  font-size: 1.3125rem;
+  letter-spacing: -0.025em;
+  font-weight: 650;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--dda-text);
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+}
+.dda-register-heading h3::before {
+  content: '';
+  width: 0.3125rem;
+  height: 1.25rem;
+  border-radius: var(--mantine-radius-xs);
+  background: linear-gradient(180deg, var(--neon-violet), var(--neon-accent));
+  flex: none;
+}
+.dda-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.625rem;
+  color: var(--dda-muted);
+  background: var(--dda-doux);
+  border: 1px solid var(--dda-edge);
+  border-radius: var(--mantine-radius-sm);
+  padding: 0.4375rem 0.6875rem;
+}
+.dda-counter .dda-icon {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  color: var(--dda-icone);
+}
+.dda-counter b {
+  font-weight: 600;
+  color: var(--dda-accent);
+}
+.dda-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+  margin-bottom: 1.0625rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--dda-edge);
+}
+.dda-filters button {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  white-space: nowrap;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  padding: 0.4375rem 0.625rem;
+  color: var(--dda-muted);
+  font: inherit;
+  font-size: 0.625rem;
+  font-weight: 450;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.dda-filters button strong {
+  font-size: 0.5625rem;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  min-width: 1.1875rem;
+  height: 1.0625rem;
+  padding: 0 0.25rem;
+  border-radius: var(--mantine-radius-xs);
+  font-weight: 550;
+  background: var(--dda-panel);
+  color: var(--dda-secondary);
+}
+.dda-filters button[aria-pressed='true'] {
+  color: var(--dda-accent);
+  background: var(--dda-doux);
+  border-color: var(--dda-edge);
+  font-weight: 550;
+}
+.dda-filters button[aria-pressed='true'] strong {
+  background: var(--dda-surface);
+  color: var(--dda-accent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--neon-violet) 8%, transparent);
+}
+.dda-filters button:hover {
+  background: var(--dda-panel);
+  color: var(--dda-accent);
+}
+:is(.dda-module, .dda-modal) button:focus-visible,
+.dda-choix input:focus-visible {
+  outline: 2px solid var(--dda-accent);
+  outline-offset: 3px;
+}
+.dda-register .data-table {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.dda-register .dda-table {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+}
+.dda-table :is(thead, tbody) {
+  display: block;
+}
+.dda-table tr {
+  display: grid;
+  grid-template-columns: minmax(230px, 2.4fr) 104px 113px minmax(120px, 1.5fr) minmax(120px, 1.35fr) 67px 27px;
+  align-items: center;
+  column-gap: 0.875rem;
+}
+.dda-register [data-liste-fiches] thead {
+  background: var(--dda-surface);
+}
+.dda-table thead tr {
+  padding: 0 0.875rem 0.75rem;
+  background: transparent;
+  border: 0;
+}
+.dda-register .dda-table :is(th, td),
+.dda-register .data-table thead th,
+.dda-register .data-table thead th:first-child {
+  min-width: 0;
+  padding-inline: 0;
+  border: 0;
+  background: transparent;
+}
+.dda-register .data-table :is(.mantine-Table-td, .mantine-Table-th):is(:first-child, :last-child) {
+  padding-inline: 0;
+}
+/* La première colonne ne colle plus (lignes en grille) et suit le fond de la ligne, au survol comme au focus. */
+.dda-register .data-table tbody tr.dda-row[data-fiche-ouvrable] > td:first-child,
+.dda-register .dda-table :is(th, td):first-child {
+  position: static;
+  z-index: auto;
+  background: transparent;
+}
+.dda-table th {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dda-muted);
+}
+.dda-table th:nth-child(2),
+.dda-table th:nth-child(3) {
+  text-align: center;
+}
+.dda-table tbody {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.125rem;
+}
+.dda-table .dda-row {
+  position: relative;
+  min-height: 4.5rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--mantine-radius-md);
+  background: var(--dda-row);
+  border: 1px solid var(--dda-edge);
+  box-shadow:
+    0 3px 5px -4px color-mix(in srgb, var(--suivi-encre) 19%, transparent),
+    0 1px 2px color-mix(in srgb, var(--suivi-encre) 5%, transparent);
+}
+.dda-table .dda-row:hover,
+.dda-table .dda-row:focus-visible {
+  background: color-mix(in srgb, var(--dda-accent) 6%, var(--dda-row));
+  border-color: color-mix(in srgb, var(--dda-accent) 35%, var(--dda-edge));
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--neon-violet) 10%, transparent);
+}
+.dda-table .dda-row:focus-visible {
+  outline: 2px solid var(--dda-accent);
+  outline-offset: 1px;
+}
+.dda-table .dda-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+}
+.dda-code {
+  font: inherit;
+  font-size: 0.625rem;
+  font-weight: 550;
+  color: var(--dda-accent);
+  white-space: nowrap;
+  display: grid;
+  place-items: center;
+  min-width: 2.625rem;
+  min-height: 1.6875rem;
+  padding: 0.125rem 0.3125rem;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--dda-doux);
+  border: 1px solid var(--dda-edge);
+  flex: none;
+  cursor: pointer;
+}
+.dda-code:hover {
+  background: color-mix(in srgb, var(--dda-accent) 14%, var(--dda-doux));
+}
+.dda-measure-title {
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-weight: 530;
+  color: var(--dda-text);
+  overflow-wrap: anywhere;
+}
+.dda-detail {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  color: var(--dda-secondary);
+  font-size: 0.625rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.dda-detail .dda-icon {
+  height: 0.75rem;
+  width: 0.75rem;
+  margin-top: 0.0625rem;
+  color: var(--dda-icone);
+}
+.dda-detail[data-empty='true'] > .dda-icon {
+  display: none;
+}
+.dda-register .data-table .dda-detail .mantine-Anchor-root {
+  font-size: inherit;
+  color: var(--dda-accent);
+}
+.dda-secondary {
+  color: var(--dda-secondary);
+  font-size: 0.625rem;
+}
+.dda-ecarts .mantine-Badge-root {
+  font-size: 0.5625rem;
+  font-weight: 550;
+  line-height: 1.5;
+  height: auto;
+  min-height: 1.25rem;
+  white-space: normal;
+}
+.dda-open {
+  display: grid;
+  place-items: center;
+  height: 1.6875rem;
+  width: 1.6875rem;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--dda-doux);
+  border: 0;
+  color: var(--dda-accent);
+  box-shadow: inset 0 1px 0 var(--dda-reflet);
+  cursor: pointer;
+}
+.dda-open .dda-icon {
+  width: 0.8125rem;
+  height: 0.8125rem;
+}
+.dda-open:hover {
+  background: color-mix(in srgb, var(--dda-accent) 15%, var(--dda-doux));
+}
+.dda-register .dda-table .dda-empty {
+  grid-column: 1 / -1;
+  padding: 1.875rem;
+  color: var(--dda-muted);
+  text-align: center;
+  background: var(--dda-panel);
+  border-radius: var(--mantine-radius-md);
+}
+.dda-cell-label {
+  display: none;
+}
+.dda-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.dda-note {
+  font-size: 0.5625rem;
+  color: var(--dda-muted);
+  line-height: 1.7;
+  margin: 1.0625rem 0.25rem 0;
+}
+
+/* Choix Applicable / Mise en œuvre : remplis et colorés, sans chevron décoratif ; clavier, nom et effacement conservés. */
+.dda-choix {
+  --input-bg: transparent;
+  --dda-choice-bg: var(--dda-choix-bg);
+  --dda-choice-edge: var(--dda-choix-bord);
+  --dda-choice-ink: var(--dda-choix-texte);
+  min-width: 0;
+}
+.dda-choix[data-tone='total'] {
+  --dda-choice-bg: color-mix(in srgb, var(--tdb-vert-remplissage) 18%, var(--tdb-vert-doux));
+  --dda-choice-edge: color-mix(in srgb, var(--tdb-vert-remplissage) 45%, var(--tdb-vert-doux));
+  --dda-choice-ink: var(--tdb-vert-texte);
+}
+.dda-choix[data-tone='partiel'] {
+  --dda-choice-bg: color-mix(in srgb, var(--tdb-orange-remplissage) 18%, var(--tdb-orange-doux));
+  --dda-choice-edge: color-mix(in srgb, var(--tdb-orange-remplissage) 45%, var(--tdb-orange-doux));
+  --dda-choice-ink: var(--tdb-orange-texte);
+}
+.dda-choix[data-tone='insuffisant'] {
+  --dda-choice-bg: color-mix(in srgb, var(--tdb-rouge-remplissage) 15%, var(--tdb-rouge-doux));
+  --dda-choice-edge: color-mix(in srgb, var(--tdb-rouge-remplissage) 45%, var(--tdb-rouge-doux));
+  --dda-choice-ink: var(--tdb-rouge-texte);
+}
+[data-mantine-color-scheme='dark'] .dda-choix[data-tone='total'] {
+  --dda-choice-bg: var(--mantine-color-green-filled);
+  --dda-choice-edge: var(--tdb-vert-texte);
+  --dda-choice-ink: var(--mantine-color-white);
+}
+[data-mantine-color-scheme='dark'] .dda-choix[data-tone='partiel'] {
+  --dda-choice-bg: var(--mantine-color-yellow-filled);
+  --dda-choice-edge: var(--tdb-orange-texte);
+  --dda-choice-ink: var(--mantine-color-white);
+}
+[data-mantine-color-scheme='dark'] .dda-choix[data-tone='insuffisant'] {
+  --dda-choice-bg: var(--mantine-color-red-filled);
+  --dda-choice-edge: var(--tdb-rouge-texte);
+  --dda-choice-ink: var(--mantine-color-white);
+}
+.dda-choix .champ-choix {
+  min-width: 0;
+}
+.dda-choix .mantine-Select-input {
+  background: var(--dda-choice-bg);
+  color: var(--dda-choice-ink);
+  border: 1px solid var(--dda-choice-edge);
+  border-radius: var(--mantine-radius-sm);
+  height: 1.875rem;
+  min-height: 1.875rem;
+  line-height: normal;
+  padding: 0.3125rem 1.125rem 0.3125rem 0.4375rem;
+  font-size: 0.6875rem;
+  font-weight: 560;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 var(--dda-reflet);
+}
+.dda-choix .mantine-Select-input::placeholder {
+  color: var(--dda-choice-ink);
+  opacity: 1;
+}
+.dda-choix .mantine-Select-input:disabled {
+  background: var(--dda-choice-bg);
+  color: var(--dda-choice-ink);
+  opacity: 1;
+  cursor: default;
+}
+.dda-choix .mantine-Select-section {
+  width: 1.0625rem;
+  color: var(--dda-choice-ink);
+}
+.dda-choix .mantine-ComboboxChevron-chevron {
+  display: none;
+}
+.dda-choix .mantine-InputClearButton-root {
+  opacity: 0;
+  background: transparent;
+  color: var(--dda-choice-ink);
+}
+.dda-choix:is(:hover, :focus-within) .mantine-InputClearButton-root,
+.dda-choix .mantine-InputClearButton-root:focus-visible {
+  opacity: 1;
+}
+
+/* Fiche d'une mesure : cadre « Biseau » commun (lot 2) et hauteur naturelle ; regroupements et relief de la référence. */
+.mantine-Modal-content.dda-modal {
+  background: var(--dda-panel);
+}
+.dda-modal .mantine-Modal-header {
+  background: linear-gradient(120deg, var(--dda-surface), var(--dda-panel));
+  border-bottom-color: var(--dda-edge);
+}
+.dda-modal .mantine-Modal-title {
+  min-width: 0;
+}
+.dda-modal-titre {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8125rem;
+}
+.dda-modal-titre > .dda-tuile-icone {
+  width: 2.5625rem;
+  height: 2.5625rem;
+  border-radius: var(--mantine-radius-lg);
+}
+.dda-modal-libelle {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Le contexte s'affiche au-dessus du titre ; le titre reste en tête du nom accessible de la fenêtre. */
+.dda-modal-libelle > small {
+  order: -1;
+  display: block;
+  color: var(--dda-muted);
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 650;
+  margin: 0 0 0.3125rem;
+}
+.dda-fiche {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+  gap: 1.375rem;
+}
+.dda-fiche-main,
+.dda-fiche-aside {
+  min-width: 0;
+}
+.dda-fiche-main > .mantine-Group-root,
+.dda-fiche-main > div:not(.dda-fiche-section) {
+  margin-bottom: 0.75rem;
+}
+.dda-fiche-section {
+  padding: 1.1875rem 1.25rem;
+  background: var(--dda-surface);
+  border: 1px solid var(--dda-edge);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: 0 3px 6px -5px color-mix(in srgb, var(--neon-violet) 14%, transparent);
+  margin-bottom: 1rem;
+}
+.dda-fiche-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 630;
+  margin: 0;
+  color: var(--neon-titre);
+  line-height: 1.5;
+}
+.dda-fiche-section > h3 {
+  margin-bottom: 1.0625rem;
+}
+.dda-fiche-section h3 .dda-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--dda-icone);
+}
+.dda-fiche .grille-formulaire {
+  display: block;
+}
+.dda-fiche .grille-formulaire__champs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.9375rem;
+}
+.dda-fiche .grille-formulaire__champs > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.dda-fiche .mantine-Input-input {
+  border-color: var(--dda-edge);
+  background: var(--dda-panel);
+}
+.dda-fiche .mantine-Input-input:disabled {
+  opacity: 1;
+  color: var(--dda-secondary);
+  background: var(--dda-panel);
+}
+.dda-fiche .dda-choix .mantine-Select-input {
+  height: 2.25rem;
+  min-height: 2.25rem;
+  font-size: 0.8125rem;
+  background: var(--dda-choice-bg);
+  color: var(--dda-choice-ink);
+  border-color: var(--dda-choice-edge);
+}
+.dda-fiche .dda-choix .mantine-Select-input:disabled {
+  opacity: 1;
+  color: var(--dda-choice-ink);
+}
+.dda-fiche-aside .dda-fiche-section {
+  background: color-mix(in srgb, var(--dda-doux) 40%, var(--dda-surface));
+  box-shadow: none;
+}
+.dda-fiche-reperes {
+  margin: 0;
+  display: grid;
+  gap: 1.125rem;
+}
+.dda-fiche-reperes dt {
+  font-size: 0.6875rem;
+  color: var(--dda-muted);
+  margin-bottom: 0.3125rem;
+}
+.dda-fiche-reperes dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--dda-text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.dda-fiche-section summary {
+  cursor: pointer;
+  font-weight: 550;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--dda-text);
+}
+.dda-fiche-section details .mantine-Textarea-root {
+  margin-top: 0.875rem;
+}
+.dda-fiche .evaluation-texte {
+  font-size: 0.75rem;
+  color: var(--dda-muted);
+}
+
+@media (min-width: 100em) {
+  .dda-heading h2 {
+    font-size: 1.75rem;
+  }
+  .dda-graphs {
+    gap: 1.375rem;
+  }
+  .dda-graph {
+    min-height: 14.1875rem;
+    padding: 1.4375rem;
+  }
+  .dda-graph h3 {
+    font-size: 0.8125rem;
+  }
+  .dda-donut-layout {
+    gap: 1.375rem;
+  }
+  .dda-donut {
+    max-width: 7.25rem;
+  }
+  .dda-legend {
+    font-size: 0.625rem;
+  }
+  .dda-register {
+    padding: 1.6875rem;
+  }
+  .dda-table tr {
+    grid-template-columns: minmax(300px, 2.5fr) 112px 130px minmax(150px, 1.6fr) minmax(150px, 1.4fr) 75px 30px;
+    column-gap: 1.1875rem;
+  }
+  .dda-table .dda-row {
+    min-height: 4.75rem;
+  }
+  .dda-table th {
+    font-size: 0.625rem;
+  }
+  .dda-choix .mantine-Select-input {
+    height: 2rem;
+    min-height: 2rem;
+  }
+}
+@media (max-width: 78em) {
+  .dda-graphs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dda-graph {
+    min-height: 13rem;
+  }
+  .dda-register {
+    padding: 1.25rem 1.0625rem;
+  }
+  .dda-register .dda-table {
+    min-width: 57.8125rem;
+  }
+}
+@media (max-width: 64em) {
+  .dda-fiche {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 43em) {
+  .dda-heading h2 {
+    font-size: 1.3125rem;
+    letter-spacing: -0.03em;
+  }
+  .dda-heading p {
+    font-size: 0.6875rem;
+  }
+  .dda-heading {
+    margin-bottom: 1.4375rem;
+  }
+  .dda-section-title {
+    margin-bottom: 0.6875rem;
+  }
+  .dda-graphs {
+    gap: 0.6875rem;
+    margin-bottom: 1.5rem;
+  }
+  .dda-graph {
+    padding: 0.9375rem 0.875rem;
+    min-height: 12.3125rem;
+  }
+  .dda-graph:first-child,
+  .dda-graph:last-child {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+  .dda-graph-entete {
+    margin-bottom: 0.875rem;
+    gap: 0.5rem;
+  }
+  .dda-graph h3 {
+    font-size: 0.6875rem;
+  }
+  .dda-tuile-icone {
+    width: 1.8125rem;
+    height: 1.8125rem;
+  }
+  .dda-tuile-icone .dda-icon {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+  .dda-donut-layout {
+    gap: 1.8125rem;
+    padding: 0 0.8125rem;
+  }
+  .dda-donut {
+    width: 40%;
+    max-width: 6.8125rem;
+  }
+  .dda-legend {
+    font-size: 0.625rem;
+    gap: 0.6875rem;
+  }
+  .dda-bar {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+  .dda-bar dd {
+    gap: 0.25rem;
+  }
+  .dda-coverage strong {
+    font-size: 2rem;
+  }
+  .dda-coverage {
+    gap: 0.3125rem;
+    margin-top: 0.5625rem;
+  }
+  .dda-coverage > span {
+    font-size: 0.625rem;
+  }
+  .dda-exclusions {
+    flex-wrap: wrap;
+  }
+  .dda-vigilance-valeur strong {
+    font-size: 1.8125rem;
+  }
+  .dda-substats {
+    gap: 2.1875rem;
+  }
+  .dda-register {
+    padding: 1.125rem 0.75rem 0.875rem;
+  }
+  .dda-register-heading h3 {
+    font-size: 1.1875rem;
+    gap: 0.5625rem;
+  }
+  .dda-counter {
+    padding: 0.375rem 0.5rem;
+    gap: 0.3125rem;
+  }
+  .dda-counter .dda-icon {
+    display: none;
+  }
+  .dda-filters {
+    gap: 0.3125rem;
+    padding-bottom: 0.875rem;
+    margin-bottom: 0.875rem;
+  }
+  .dda-filters button {
+    padding: 0.375rem 0.4375rem;
+    gap: 0.3125rem;
+  }
+  .dda-register .dda-table {
+    min-width: 0;
+  }
+  .dda-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .dda-table tbody {
+    gap: 0.5625rem;
+  }
+  .dda-table tr.dda-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.625rem 0.8125rem;
+    min-height: 0;
+    padding: 0.8125rem 0.75rem 0.875rem;
+  }
+  .dda-register .dda-table .dda-identity:first-child {
+    grid-column: 1 / -1;
+    padding-right: 2.25rem;
+    gap: 0.5625rem;
+  }
+  .dda-cell-label {
+    display: block;
+    font-size: 0.5625rem;
+    color: var(--dda-muted);
+    margin-bottom: 0.3125rem;
+  }
+  .dda-table .dda-detail,
+  .dda-table .dda-ecarts {
+    grid-column: 1 / -1;
+  }
+  .dda-table [data-empty='true'] {
+    display: none;
+  }
+  .dda-open-cell {
+    position: absolute;
+    right: 0.5625rem;
+    top: 0.875rem;
+  }
+  .dda-modal-titre {
+    gap: 0.625rem;
+  }
+  .dda-modal-titre > .dda-tuile-icone {
+    width: 2rem;
+    height: 2rem;
+  }
+  .dda-fiche-section {
+    padding: 1.0625rem 0.9375rem;
+  }
+  .dda-fiche .grille-formulaire__champs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.625rem;
+  }
+  .dda-fiche-reperes {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8125rem;
+  }
+}
+@media (forced-colors: active) {
+  .dda-panel,
+  .dda-table .dda-row,
+  .dda-choix .mantine-Select-input,
+  .dda-filters button[aria-pressed='true'] {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .app-main:has(.dda-module) {
+    background: none;
+  }
+  .dda-panel,
+  .dda-table .dda-row {
+    box-shadow: none;
+  }
+}
