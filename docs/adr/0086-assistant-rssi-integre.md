@@ -480,3 +480,20 @@ rapprochements entre référentiels ; ADR 0088 à 0091). Conséquences pour l'as
 
 Contrôles du 13/11/2026 (Node 22, PostgreSQL 16) : API 159 fichiers 1 186/1 186, partagé 602/602, interface commune 235/235,
 web 231/231. Non rejoué : jeu d'évaluation avec un modèle réel, recette navigateur, Docker.
+
+## Addendum du 14/11/2026 — réalignement sur `claude-suivi-smsi` (refonte Neon, pyramide des périmètres)
+
+- **Migrations renumérotées `063` à `069`** (auparavant `060` à `066`) : l'application a pris `060` (pyramide des périmètres,
+  [ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md)) et réserve `061` et `062`. Ces migrations de l'assistant
+  n'ont jamais été publiées ; `055` à `057` gardent leur numéro.
+- **Pyramide des périmètres** : les destinataires d'un rappel ou d'une question étaient retenus sur l'appartenance directe au
+  périmètre. Ils le sont désormais par la fonction `grc_acces_perimetre`, comme les rappels d'échéance de l'application : une
+  personne qui tient son accès d'un périmètre parent est jointe dans le périmètre enfant. Les lectures de l'assistant passaient
+  déjà par la liste des périmètres du compte et suivent sans changement.
+- **Refonte Neon** : le panneau global reste monté dans le cadre commun, hors de la zone de page ; sa feuille
+  `neon-assistant.css` reste importée par `styles.css`. Aucun changement de comportement.
+
+Contrôles du 14/11/2026 (Node 22, PostgreSQL 16) : API 161 fichiers 1 201/1 201, partagé 606/606, interface commune 284/284,
+web 246/246, ESLint, Prettier, construction web ; recette navigateur du panneau global avec un faux fournisseur de modèle
+(17 points, aucune erreur de console). Non rejoué : jeu d'évaluation avec un modèle réel, Docker, CI complète (Node 26,
+PostgreSQL 18, Playwright) ; les captures de référence restent à régénérer.

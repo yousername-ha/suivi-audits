@@ -215,6 +215,12 @@
   user-select: none;
   background: var(--carte-canevas);
 }
+/* La vue (déplacement, zoom, centrage d'une recherche) s'applique sans transition, y compris quand le système réduit les
+   animations : la règle globale de styles.css donne alors une transition de 0,01 ms à chaque propriété, et la nouvelle
+   position ne paraissait qu'à une image suivante (CARTO-06). Aucun changement visuel. */
+.carte-svg > g {
+  transition: none !important;
+}
 .carte-svg:focus-visible {
   outline: calc(2 * var(--suivi-trait-l)) solid var(--carte-bleu-accent);
   outline-offset: calc(-2 * var(--suivi-trait-l));

@@ -21,6 +21,7 @@ import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ExtremiteChamps } from './ExtremiteChamps';
 import type { Critere } from './Fournisseurs';
 
@@ -150,7 +151,10 @@ export function CriteresFournisseurs() {
           </Table.Thead>
           <Table.Tbody>
             {(liste.data ?? []).map((k) => (
-              <Table.Tr key={k.id}>
+              <Table.Tr
+                key={k.id}
+                {...(administrer && !k.archived ? ficheCliquable(() => ouvrir(k), `Afficher ${k.label}`) : {})}
+              >
                 <Table.Td>
                   <Text fw={600}>{k.label}</Text>
                   <Text size="xs" c="dimmed">

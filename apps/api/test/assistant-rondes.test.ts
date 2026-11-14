@@ -741,6 +741,60 @@ describe('assistant : questions, réponses et relances', () => {
     );
     expect(recus.rows.map((x) => x.user_id)).toEqual([responsableId]);
   });
+
+  it('rappelle dans un périmètre enfant la personne qui tient son accès du parent (pyramide, ADR 0092)', async () => {
+    const enfant = (
+      await admin.post('/api/grc/smsis', {
+        name: 'Périmètre fictif enfant',
+        scope: 'Périmètre fictif',
+        timezone: 'Europe/Paris',
+        parentId: perimetre,
+      })
+    ).json().id as string;
+    const avant = await t.svc.db.q<{ id: string; perimetres: string[] }>(
+      'SELECT id::text, perimetres::text[] FROM assistant_profils WHERE $1 = ANY(perimetres)',
+      [perimetre],
+    );
+    await t.svc.db.q('UPDATE assistant_profils SET perimetres = perimetres || $2::uuid WHERE $1 = ANY(perimetres)', [
+      perimetre,
+      enfant,
+    ]);
+    // Les messages déjà reçus ce jour par le responsable sont vieillis : le plafond quotidien n'est pas l'objet de ce test.
+    await t.svc.db.q(
+      "UPDATE grc_notifications SET created_at = created_at - interval '2 days' WHERE user_id = $1 AND kind IN ('assistant_rappel', 'assistant_question')",
+      [responsableId],
+    );
+    // Le responsable n'est désigné que sur le parent : aucune ligne de membre sur l'enfant.
+    const herite = (
+      await admin.post(
+        `/api/grc/${enfant}/objects`,
+        action('Action fictive du périmètre enfant', { dueAt: '2020-06-01T00:00:00.000Z', ownerId: responsableId }),
+      )
+    ).json().id as string;
+    let compte: Record<string, unknown> | null = null;
+    modele.script = (d, n) => {
+      if (n === 1)
+        return appel('h1', 'envoyer_rappel', {
+          perimetre: enfant,
+          id: herite,
+          message: 'Cette action fictive du périmètre enfant a dépassé son échéance.',
+        });
+      compte = dernierOutil(d);
+      return rapport();
+    };
+    await lancer();
+    expect(compte).toMatchObject({ envoye: true });
+    const recus = await t.svc.db.q<{ user_id: string }>(
+      "SELECT user_id::text FROM grc_notifications WHERE kind = 'assistant_rappel' AND object_id = $1",
+      [herite],
+    );
+    expect(recus.rows.map((x) => x.user_id)).toEqual([responsableId]);
+    for (const p of avant.rows)
+      await t.svc.db.q('UPDATE assistant_profils SET perimetres = $2::uuid[] WHERE id::text = $1', [
+        p.id,
+        p.perimetres,
+      ]);
+  });
 });
 
 describe('assistant : filet de la ronde', () => {

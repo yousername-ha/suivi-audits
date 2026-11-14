@@ -19,6 +19,7 @@ import { ErrorAlert } from '../components/common';
 import { ChampChoix, ChampTexte, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 interface Resume extends EvaluationClausier {
   score: ScoreEvaluation;
@@ -110,7 +111,7 @@ export function EvaluationsClausier() {
                 </Table.Thead>
                 <Table.Tbody>
                   {d.evaluations.map((e) => (
-                    <Table.Tr key={e.id}>
+                    <Table.Tr key={e.id} {...ficheCliquable(() => setSel(e.id), `Afficher l’évaluation ${e.id}`)}>
                       <Table.Td>
                         <Anchor component="button" type="button" fw={600} onClick={() => setSel(e.id)}>
                           {nom(e.supplier)}

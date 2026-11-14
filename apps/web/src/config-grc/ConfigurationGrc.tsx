@@ -38,6 +38,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { cleDepuis, SelecteurElement, useElements, type ElementListe, type ModeleListe } from './commun';
 import { Fiche } from './Fiche';
@@ -201,7 +202,11 @@ function Liste({
             </Table.Thead>
             <Table.Tbody>
               {q.data.map((e) => (
-                <Table.Tr key={e.id} data-selected={e.id === selection || undefined}>
+                <Table.Tr
+                  key={e.id}
+                  {...ficheCliquable(() => onOpen(e.id), `Afficher ${e.name || '(sans nom)'}`)}
+                  data-selected={e.id === selection || undefined}
+                >
                   <Table.Td>{e.name || '(sans nom)'}</Table.Td>
                   <Table.Td>
                     <code>{e.key}</code>

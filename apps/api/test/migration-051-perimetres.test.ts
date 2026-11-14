@@ -43,6 +43,7 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
         '057_assistant_apprentissage.sql',
         '058_retrait_gap_applications.sql',
         '059_retrait_correspondances_rapprochements.sql',
+        '060_acces_perimetres_pyramide.sql',
         '063_assistant_rondes_actions.sql',
         '064_assistant_questions.sql',
         '065_assistant_propositions.sql',

@@ -13,7 +13,12 @@ lot 3) **supprime définitivement** les tables `lib_mappings`, `lib_mapping_hist
 valider ». La sauvegarde de la mise à jour précède les migrations, c'est le seul retour arrière ; pour garder une trace, exporter avant la rubrique Excel
 « GAP — Applications » de la version précédente et relever les correspondances utiles.
 
-**Aucune action sur le serveur.** **Migrations automatiques `055` à `057` et `060` à `066`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
+**Migration automatique `060`, additive** (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)) : aucune donnée modifiée.
+**À relire avant la mise à jour d'un serveur déjà peuplé** : un compte désigné sur un périmètre parent reçoit l'accès, au même niveau, à tous les périmètres descendants. De même, les
+personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
+éléments (lot 2).
+
+**Aucune action sur le serveur.** **Migrations automatiques `055` à `057` et `063` à `069`** (assistant RSSI, [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) :
 additives, durée négligeable. L'assistant reste **inactif** après la mise à jour. Pour l'utiliser : démarrer le service facultatif
 `assistant-relais` (`docker compose --profile assistant up -d`), renseigner `ASSISTANT_RELAIS_URL` dans `.env`, puis le régler dans
 Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activé, la question posée et les extraits lus pour y répondre
@@ -21,63 +26,11 @@ Plateforme, « Assistant RSSI » ([guide](docs/INSTALLATION.md)). Une fois activ
 le contenu peut être confié à ce fournisseur. Les rôles personnalisés ne reçoivent pas le nouveau
 droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 
-### Modifié
-
-- **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
-  « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
-  onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**
-  (chronologie, contributeurs, file à valider, récupération d'éléments, chronologie générée, ouverture d'un RETEX). « Nouvel incident » crée une fiche vide et l'ouvre ; le
-  registre affiche l'état du RETEX de chaque incident et se filtre dessus. Les anciennes adresses sont redirigées. Seul changement d'API : `PATCH /api/incidents/:id`
-  accepte `answers` (réponses du questionnaire). Aucune migration ; la page « Mes contributions RETEX » et la cellule de crise sont inchangées.
-  _(Session « Projet audit_suivi Coeur ».)_
-
-- **Menu Conformité simplifié, lot 1 : interface** ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md)) : la destination « Référentiels et exigences » ne garde
-  que la **Bibliothèque de référentiels**, qui affiche une carte par référentiel avec la **couverture du périmètre** (barre des états, clauses
-  obligatoires, mesures reliées, « Voir la couverture » pour le détail exigence par exigence). Les pages « Référentiels et exigences », « Correspondances entre
-  exigences », « Rapprochements à valider », « Couverture par référentiel » (fusionnée), « Analyser un service », « Applications à intégrer » et « Correspondances de la
-  bibliothèque » disparaissent de l'interface, avec le bandeau et la pastille de menu des rapprochements. Aucun changement de serveur ni de données dans ce lot.
-  _(Session « Projet audit_suivi Coeur ».)_
-
-- **Menu Gestion des risques simplifié, lot 1 : interface** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : les pages
-  « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » disparaissent du menu (la configuration reste dans Paramètres →
-  Configuration GRC). Chaque risque du **Registre** a un **Plan d'action** : mesures en place, actions rattachées, génération d'une action depuis un traitement.
-  Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
-  _(Session « Projet audit_suivi Coeur ».)_
-
-- **Menu Gestion des risques simplifié, lot 2 : fiches « opportunité » retirées du serveur** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : l'API ne crée plus de fiche
-  « opportunité » ; la revue de direction et le jeu de démonstration n'en parlent plus. Les traitements et les éléments EBIOS RM sont conservés. Aucune migration : les
-  fiches déjà saisies restent inertes.
-  _(Session « Projet audit_suivi Coeur ».)_
-
-### Retiré
-
-- **Correspondances entre référentiels et rapprochements**, sur décision du RSSI du 12/11/2026
-  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 3) : services, routes `/api/library/mappings*`, `/api/grc/:smsi/rapprochements*` et
-  `/api/grc/:smsi/mappings/:id/validate`, tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements` (migration `059`), type de fiche « mapping »,
-  champ `mappings` du format d'import d'un référentiel (JSON et feuille Excel « Correspondances »), section « correspondances » du rapport de comité, colonne
-  « correspondances revues » de la synthèse, notification « Rapprochements à valider » (rappels et réglages supprimés par la migration), schémas partagés et
-  tests. Le **kit IA** importe toujours ses contrôles et ses annexes de veille, mais plus ses correspondances vers l'ISO/IEC 27001 et l'HDS (un fichier de
-  correspondances est ignoré). Sont conservés : les référentiels, les liens « met en œuvre » faits à la main d'une mesure vers une exigence et la couverture par
-  exigence de la Bibliothèque, déplacée dans son propre module ; dans sa réponse (`GET /api/grc/:smsi/couverture`), `toValidate` et l'état `to_validate`
-  disparaissent (une exigence est couverte ou non couverte). La Configuration GRC (tables de correspondance des méthodes de risque) est inchangée. Les fiches
-  « mapping » déjà importées restent inertes dans l'historique immuable. _(Session « Projet audit_suivi Coeur ».)_
-
-- **Module « Applications à intégrer » (analyse d'écart GAP) et applications de la cartographie**, sur décision du RSSI du 12/11/2026
-  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : service, routes `/api/gap*`, table `suivi_app_gaps` (migration `058`), schéma partagé,
-  rubrique d'export Excel « GAP — Applications » (groupe `apps`), démonstration, jeu de test et tests. Les **nœuds « application »** disparaissent de la
-  cartographie (type d'objet, génération, palette « Construire », fiche, légende), de même que le lien application → fournisseur ; les cartes déjà enregistrées
-  sont nettoyées par la migration. La clé `appGaps` d'un fichier de l'outil historique est écartée sans rien dire à l'import. Les fournisseurs, sites et
-  infrastructures de la cartographie sont inchangés. _(Session « Projet audit_suivi Coeur ».)_
-
-### Corrigé
-
-- **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
-  PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que
-  PostgreSQL 17 précède le passage à 18 (ADR 0035). Aucun changement de code.
-
-
 ### Ajouté
 
+- **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
+  les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
+  `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
 - **Assistant RSSI : liens enregistrés** : la recherche de l'assistant trouve aussi les liens de « Documents et liens » par leur
   titre, leur description et leur adresse, et indique où se trouve une ressource. Il n'ouvre jamais la page visée.
   _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
@@ -164,6 +117,104 @@ droit `assistant` d'office. _(Session « Assistant RSSI intégré plateforme » 
   Limites de ce lot : pas de propositions, de rappels ni de rondes autonomes (lots A2 et A3) ; contenu des documents non lu
   (lot A4) ; réponse affichée en une fois ; **aucun appel à un fournisseur réel n'a été essayé** ; captures de référence de
   l'écran des rôles à régénérer (nouveau module dans la matrice). (session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`))
+
+### Modifié
+
+- **Assistant RSSI : rappels et questions dans un périmètre enfant** : l'assistant joint aussi la personne qui tient son accès d'un
+  périmètre parent (pyramide des périmètres, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md)), comme les rappels
+  d'échéance. _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+- **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
+  [rapport du lot](docs/refonte-neon/LOT-2-FENETRES-LIGNES.md)) : habillage commun des fenêtres et panneaux (cadre à angles coupés,
+  formulaires harmonisés) à **hauteur naturelle** : une fiche longue fait défiler le voile extérieur, sans ascenseur dans la fiche ; les
+  fenêtres RETEX, plein écran et le menu mobile gardent leur présentation. La **ligne entière d'une fiche** s'ouvre au clic, à Entrée ou à
+  Espace, avec la même ouverture et les mêmes droits que la commande existante (boutons « Ouvrir » conservés) ; les commandes de la ligne
+  et la sélection de texte gardent leur action, et le focus revient à la ligne à la fermeture. Les longues listes de fiches défilent dans
+  leur zone, en-têtes visibles. La liste « Ajouter depuis la plateforme » de la cartographie n'a plus de second ascenseur. Aucun
+  changement de droits, de données ni d'API. _(Session « Refonte Neon suivi-audits ».)_
+
+- **Refonte Neon, lot 1 : menu bleu nuit et vue analytique de l'accueil** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
+  [audit](docs/refonte-neon/AUDIT-CIBLE.md), [rapport du lot](docs/refonte-neon/LOT-1-MENU-DASHBOARD.md)) : palette Neon de la charte (jetons
+  `tokens.ts`, rayons inchangés) ; menu latéral **bleu nuit opaque, identique dans les deux thèmes**, une teinte par identité d'entrée,
+  pictogrammes animés (transform et opacity seulement) avec bouton de pause et respect du mouvement réduit, nombre réel de destinations
+  lisibles ; **logo de l'organisation** (Plateforme > Général) en tête du menu et dans l'en-tête, pastille de l'application à défaut. L'accueil
+  propose une seconde présentation, la **vue analytique Neon** (onze cartes ; la carte du module CRRC retiré n'est pas reprise), à côté du
+  tableau personnalisable, qui reste la présentation par défaut ; le choix de chacun est **enregistré dans son compte** (préférence facultative
+  `accueil`, sans migration ni route nouvelle). Navigation, droits, ordre personnel, alertes, disposition et partage du tableau de bord
+  inchangés. _(Session « Refonte Neon suivi-audits ».)_
+
+- **Droits : pyramide des périmètres** ([ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), lot 1 de la refonte des droits) : l'accès donné
+  sur un périmètre (lecture, ou lecture et écriture) vaut désormais pour **tous ses périmètres enfants**, sans désignation un par un ; il ne remonte pas vers le parent
+  et ne passe pas aux périmètres voisins. Le niveau le plus élevé de la chaîne l'emporte. L'écran **Membres** d'un périmètre liste les comptes dont l'accès vient d'un
+  parent (« accès hérité d'un périmètre parent »), sans bouton de révocation. `GET /api/grc/:smsi/members` renvoie `herite` pour chaque ligne. Les droits de module,
+  le périmètre commun, les droits par registre et l'héritage des référentiels sont inchangés.
+  _(Session « Refonte des droits d'accès ».)_
+- **Droits : le contributeur par « Attribuer à »** (ADR 0092, lot 2, côté serveur) : la personne désignée sur une action, une tâche récurrente ou un registre, en
+  personne, par son groupe ou par sa fonction, **lit l'élément et le renseigne** sans rôle global ni accès au périmètre, et ne voit rien d'autre. Un registre attribué
+  (champ ouvert à toutes les familles de registres) lui permet d'**y créer** ; elle **gère ce qu'elle a créé** et renseigne sans le modifier ce qu'un pilote a créé.
+  Retirer l'attribution retire l'accès aussitôt. Tout compte actif peut être désigné sur une action, une tâche ou un registre, et reçoit ses rappels d'échéance.
+  API : `GET /api/registres/mes-elements` (ce qui m'est attribué), `peutCreer` sur un registre ; créer, modifier et archiver une fiche demandent une session complète,
+  le service restant seul juge. L'écran du contributeur n'est pas encore livré. Aucune migration.
+  _(Session « Refonte des droits d'accès ».)_
+- **Menu Résilience simplifié : RETEX et qualification dans la fiche de l'incident** ([ADR 0091](docs/adr/0091-simplification-du-menu-resilience-incidents.md)) : les pages
+  « Qualifier un signalement » et « RETEX et chronologie » disparaissent du menu. La fiche d'un incident, ouverte depuis le **Registre des incidents**, a trois
+  onglets : **Fiche**, **Qualification guidée** (les six questions, modifiables à tout moment, qualification proposée et obligations à vérifier) et **Chronologie et RETEX**
+  (chronologie, contributeurs, file à valider, récupération d'éléments, chronologie générée, ouverture d'un RETEX). « Nouvel incident » crée une fiche vide et l'ouvre ; le
+  registre affiche l'état du RETEX de chaque incident et se filtre dessus. Les anciennes adresses sont redirigées. Seul changement d'API : `PATCH /api/incidents/:id`
+  accepte `answers` (réponses du questionnaire). Aucune migration ; la page « Mes contributions RETEX » et la cellule de crise sont inchangées.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+- **Menu Conformité simplifié, lot 1 : interface** ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md)) : la destination « Référentiels et exigences » ne garde
+  que la **Bibliothèque de référentiels**, qui affiche une carte par référentiel avec la **couverture du périmètre** (barre des états, clauses
+  obligatoires, mesures reliées, « Voir la couverture » pour le détail exigence par exigence). Les pages « Référentiels et exigences », « Correspondances entre
+  exigences », « Rapprochements à valider », « Couverture par référentiel » (fusionnée), « Analyser un service », « Applications à intégrer » et « Correspondances de la
+  bibliothèque » disparaissent de l'interface, avec le bandeau et la pastille de menu des rapprochements. Aucun changement de serveur ni de données dans ce lot.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+- **Menu Gestion des risques simplifié, lot 1 : interface** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : les pages
+  « Opportunités », « Traitements », « Scénarios et actifs » et « Configuration des analyses » disparaissent du menu (la configuration reste dans Paramètres →
+  Configuration GRC). Chaque risque du **Registre** a un **Plan d'action** : mesures en place, actions rattachées, génération d'une action depuis un traitement.
+  Les trois renvois du parcours ISO vers des rubriques retirées sont corrigés. Aucun changement de serveur ni de données dans ce lot.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+- **Menu Gestion des risques simplifié, lot 2 : fiches « opportunité » retirées du serveur** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : l'API ne crée plus de fiche
+  « opportunité » ; la revue de direction et le jeu de démonstration n'en parlent plus. Les traitements et les éléments EBIOS RM sont conservés. Aucune migration : les
+  fiches déjà saisies restent inertes.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+- **Démonstration complète** : les données de démonstration (case de l'installation initiale et `suivi jeu-de-test`) alimentent aussi les rubriques jusqu'ici
+  vides : plans du SMSI (formation, sensibilisation, exercices PRA et de crise, avec leurs résultats), dates du cycle d'audit et organisation de l'audit (trois
+  jours, neuf créneaux, cinq participants), deux évaluations par le clausier, deux sites fictifs rattachés au périmètre de l'organisation (avec leurs fournisseurs
+  et une action), fournisseurs du périmètre, cartographie (vues contexte et processus), chronologie du RETEX d'un incident, plans de continuité et exercice,
+  plan de contrôle, registre des preuves, une seconde tâche récurrente et le plan d'action d'un risque du registre (traitement relié par « Traite » et son
+  action). Tout passe par l'API publique ; données entièrement fictives, dates relatives au jour du chargement. Aucune migration, aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Correspondances entre référentiels et rapprochements**, sur décision du RSSI du 12/11/2026
+  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 3) : services, routes `/api/library/mappings*`, `/api/grc/:smsi/rapprochements*` et
+  `/api/grc/:smsi/mappings/:id/validate`, tables `lib_mappings`, `lib_mapping_history` et `grc_rapprochements` (migration `059`), type de fiche « mapping »,
+  champ `mappings` du format d'import d'un référentiel (JSON et feuille Excel « Correspondances »), section « correspondances » du rapport de comité, colonne
+  « correspondances revues » de la synthèse, notification « Rapprochements à valider » (rappels et réglages supprimés par la migration), schémas partagés et
+  tests. Le **kit IA** importe toujours ses contrôles et ses annexes de veille, mais plus ses correspondances vers l'ISO/IEC 27001 et l'HDS (un fichier de
+  correspondances est ignoré). Sont conservés : les référentiels, les liens « met en œuvre » faits à la main d'une mesure vers une exigence et la couverture par
+  exigence de la Bibliothèque, déplacée dans son propre module ; dans sa réponse (`GET /api/grc/:smsi/couverture`), `toValidate` et l'état `to_validate`
+  disparaissent (une exigence est couverte ou non couverte). La Configuration GRC (tables de correspondance des méthodes de risque) est inchangée. Les fiches
+  « mapping » déjà importées restent inertes dans l'historique immuable. _(Session « Projet audit_suivi Coeur ».)_
+
+- **Module « Applications à intégrer » (analyse d'écart GAP) et applications de la cartographie**, sur décision du RSSI du 12/11/2026
+  ([ADR 0089](docs/adr/0089-simplification-du-menu-conformite.md), lot 2) : service, routes `/api/gap*`, table `suivi_app_gaps` (migration `058`), schéma partagé,
+  rubrique d'export Excel « GAP — Applications » (groupe `apps`), démonstration, jeu de test et tests. Les **nœuds « application »** disparaissent de la
+  cartographie (type d'objet, génération, palette « Construire », fiche, légende), de même que le lien application → fournisseur ; les cartes déjà enregistrées
+  sont nettoyées par la migration. La clé `appGaps` d'un fichier de l'outil historique est écartée sans rien dire à l'import. Les fournisseurs, sites et
+  infrastructures de la cartographie sont inchangés. _(Session « Projet audit_suivi Coeur ».)_
+
+### Corrigé
+
+- **Documentation alignée sur le code** : versions de la pile du DAT (Node 26, TypeScript 6.0.3, Mantine 9.7.3, React Router 8.5.0, Vite 8.3.4, Vitest 5.0.5,
+  PostgreSQL 18, etc.), « Node 26 » dans CONTRIBUTING, ARCHITECTURE, le guide d'installation et HANDOVER ; l'état du 11/10 de PROJECT_STATUS précise que
+  PostgreSQL 17 précède le passage à 18 (ADR 0035). Aucun changement de code.
+
 
 ## [6.3.0] — 2026-11-12
 

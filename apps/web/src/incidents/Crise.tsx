@@ -33,6 +33,7 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
@@ -212,7 +213,7 @@ function OuvertureCellule({
               </Table.Thead>
               <Table.Tbody>
                 {historique.map((h) => (
-                  <Table.Tr key={h.id}>
+                  <Table.Tr key={h.id} {...ficheCliquable(() => onSelect(h.id), `Afficher la cellule ${h.title}`)}>
                     <Table.Td>
                       <Anchor component="button" type="button" fw={600} onClick={() => onSelect(h.id)}>
                         {h.title}

@@ -516,13 +516,8 @@ export class RondesAssistant {
             .where((e2) =>
               e2.or([
                 e2('s.visibility', '=', 'instance'),
-                e2.exists(
-                  e2
-                    .selectFrom('grc_members as m')
-                    .select('m.user_id')
-                    .whereRef('m.smsi_id', '=', 's.id')
-                    .whereRef('m.user_id', '=', 'u.id'),
-                ),
+                // Pyramide des périmètres (ADR 0092) : l'accès donné sur un parent vaut pour le périmètre.
+                e2(sql<boolean | null>`grc_acces_perimetre(s.id, u.id)`, 'is not', null),
               ]),
             ),
         ),

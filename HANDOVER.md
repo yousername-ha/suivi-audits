@@ -1,7 +1,8 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
-> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive). Précédente :
+> **Reprise la plus récente : [13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md)** (refonte des droits, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md) : pyramide des
+> périmètres, migration `060` additive ; contributeur par « Attribuer à », côté serveur ; écran du contributeur et lot 3 à faire). Précédente : **[11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
+> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive) ; avant elle :
 > **[10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre
 > modules, [ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md) acceptée le 11/11/2026, garde-fous d'architecture, routes
 > découpées) ; avant elle : **[06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe, lots A à D) ; avant elle : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
@@ -68,6 +69,14 @@ Cahier de consignes « Unification et évolution de l’application SMSI/GRC ».
   L’ergonomie signalée par l’utilisateur reste **CORRIGÉ NON VALIDÉ** humainement.
   « Aucun bug ouvert enregistré » ne signifie pas « aucun bug possible ».
 - Résultat du test du serveur utilisateur **NON REÇU** ; aucun PV accepté.
+
+## Assistant RSSI : réalignement du 14/11/2026
+
+`claude/assistant-rssi` a repris `claude-suivi-smsi` (refonte Neon, pyramide des périmètres ADR 0092, jeu de démonstration).
+Migrations de l'assistant : `055` à `057`, puis **`063` à `069`** (l'application a `058` à `060` et réserve `061` et `062`).
+Les destinataires des rappels et des questions suivent la pyramide (`grc_acces_perimetre`). Détail et contrôles : dernier
+addendum de l'ADR 0086. Une recette locale antérieure doit être recréée. Jamais essayé sous Docker ni en CI complète ;
+captures de référence à régénérer.
 
 ## Assistant RSSI : réalignement du 13/11/2026
 

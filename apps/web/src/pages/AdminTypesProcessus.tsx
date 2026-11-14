@@ -15,6 +15,7 @@ import { api, errorMessage } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
 import { TYPES_PROCESSUS_KEY, useTypesProcessus } from '../processus/types';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 interface Formulaire {
   label: string;
@@ -99,7 +100,15 @@ export function TypesProcessusPanel() {
             </Table.Thead>
             <Table.Tbody>
               {types.map((t, i) => (
-                <Table.Tr key={t.id}>
+                <Table.Tr
+                  key={t.id}
+                  {...(administrer
+                    ? ficheCliquable(
+                        () => setEdition({ id: t.id, f: { label: t.label, description: t.description, tint: t.tint } }),
+                        `Afficher ${t.label}`,
+                      )
+                    : {})}
+                >
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       <span className="pastille-teinte" data-teinte={t.tint} aria-hidden="true" />

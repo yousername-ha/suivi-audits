@@ -64,3 +64,9 @@ ne correspondaient pas à la réalité. **Un périmètre est une organisation ou
 6. Le type ne change ni les droits, ni les compteurs, ni les objets du périmètre.
 7. Retour arrière : une version antérieure lit `organisation` mais pas `fournisseur` ; il passe par la restauration de la
    sauvegarde prise avant la mise à jour.
+
+## Amendement du 13/11/2026 — les membres descendent aux périmètres enfants
+
+Le point 4 (« droits et membres ne se propagent pas ») ne vaut plus pour les membres : l'accès donné sur un périmètre vaut pour
+ses descendants ([ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md), lot 1). Objets, preuves, évaluations et
+référentiels gardent les règles ci-dessus.

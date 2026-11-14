@@ -4,7 +4,8 @@ Les consignes communes sont dans [AGENTS.md](AGENTS.md). Les lire avant toute
 intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Commencer par la
-[reprise du 11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md), la plus récente (retrait des modules CRRC et Investissements, ADR 0084), puis celle du
+[reprise du 13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md), la plus récente (refonte des droits, pyramide des périmètres, ADR 0092), puis la
+[reprise du 11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md) (retrait des modules CRRC et Investissements, ADR 0084), puis celle du
 [10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md) (porte de lecture, ADR 0083), puis celle du
 [06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md) (correctifs d'audit, lots A à D), puis la
 [reprise du 05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md) (référentiels des périmètres en copie,
@@ -34,3 +35,11 @@ Mantine de style responsives ([ADR 0006](docs/adr/0006-front-react-mantine-csp-s
 Les décisions, règles de sécurité, permissions, tests et précautions de données
 restent celles d’AGENTS et CONTRIBUTING. Les références datées expliquent
 l’historique ; elles ne remplacent pas les consignes actuelles.
+
+## Sous-agents de ce dépôt
+
+- `codeur` (Opus) : réalise un changement bien cadré une fois les décisions du RSSI obtenues ; ne commite ni ne pousse, rejoue
+  les contrôles et rend un rapport. La session principale relit le résultat, rejoue les contrôles, commite et ouvre la PR.
+- `conseiller` (Fable, lecture seule) : à consulter seulement sur un point vraiment difficile (conception aux effets étendus, bug
+  qui résiste, migration destructive, droits). Son avis se vérifie par les tests et la CI ; il ne remplace aucune décision du RSSI.
+- `rssi-virtuel` : recette exploratoire sur une pile vierge (voir sa définition).

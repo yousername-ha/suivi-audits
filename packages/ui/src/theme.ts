@@ -13,6 +13,7 @@ import {
   Table,
   type CSSVariablesResolver,
 } from '@mantine/core';
+import { rendreFocusFiche } from './focus-fiche.ts';
 import {
   BRAND,
   ENCRE,
@@ -28,8 +29,10 @@ import {
   VIOLET,
   CARTE,
   ETATS,
+  NEON,
   SCEAU,
   variablesCarte,
+  variablesMenu,
   type EtatCouleur,
 } from './tokens.ts';
 
@@ -48,8 +51,19 @@ export const theme = createTheme({
   breakpoints: POINTS_DE_RUPTURE,
   components: {
     // Le verrouillage du défilement (react-remove-scroll) injecte une balise <style> : interdit par la CSP stricte.
-    Modal: Modal.extend({ defaultProps: { lockScroll: false, radius: 'lg' } }),
-    Drawer: Drawer.extend({ defaultProps: { lockScroll: false } }),
+    /* Retour du focus à la ligne ou au bouton qui a ouvert la fiche (lignes ouvrables, refonte Neon lot 2). Le nom
+       accessible par défaut du bouton de fermeture de la référence n'est pas repris : des tests existants cherchent un
+       bouton « Fermer » par nom partiel dans les fenêtres. */
+    Modal: Modal.extend({
+      defaultProps: {
+        lockScroll: false,
+        radius: 'lg',
+        onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
+      },
+    }),
+    Drawer: Drawer.extend({
+      defaultProps: { lockScroll: false, onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche) },
+    }),
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
     Button: Button.extend({ defaultProps: { radius: 'md' } }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),
@@ -79,6 +93,21 @@ const variablesEtats = (mode: 'clair' | 'sombre'): Record<string, string> =>
     }),
   );
 
+/** Palette sémantique Neon commune à la navigation, aux surfaces et aux dessins. */
+const variablesNeon = (mode: 'clair' | 'sombre'): Record<string, string> => ({
+  '--neon-secondaire': FONDS[mode].secondaire,
+  '--neon-rose': NEON.rose,
+  '--neon-violet': NEON.violet,
+  '--neon-bleu': NEON.bleu,
+  '--neon-cyan': NEON.cyan,
+  '--neon-orange': NEON.orange,
+  '--neon-menthe': NEON.menthe,
+  '--neon-navigation': NEON[mode].navigation,
+  '--neon-titre': NEON[mode].titre,
+  '--neon-accent': NEON[mode].accent,
+  '--neon-doux': NEON[mode].doux,
+});
+
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
   const base = defaultCssVariablesResolver(t);
@@ -91,6 +120,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-sceau-bleu': SCEAU.bleu,
       '--suivi-sceau-blanc': SCEAU.blanc,
       '--suivi-sceau-rouge': SCEAU.rouge,
+      ...variablesMenu(),
     },
     light: {
       ...base.light,
@@ -106,6 +136,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-trait': GRIS[3],
       ...variablesEtats('clair'),
       ...variablesCarte(CARTE.clair),
+      ...variablesNeon('clair'),
     },
     dark: {
       ...base.dark,
@@ -121,6 +152,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-trait': SOMBRE[5],
       ...variablesEtats('sombre'),
       ...variablesCarte(CARTE.sombre),
+      ...variablesNeon('sombre'),
     },
   };
 };

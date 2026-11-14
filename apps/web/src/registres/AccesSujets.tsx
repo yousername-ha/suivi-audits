@@ -15,11 +15,12 @@ import {
 } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { REGISTRE_LABELS, ROLE_LABELS, type AccesSujetPage, type AccesSujetRegistre } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 
 const PAGE = 25;
 const SOURCES: Record<AccesSujetRegistre['source'], string> = {
@@ -30,6 +31,7 @@ const SOURCES: Record<AccesSujetRegistre['source'], string> = {
 };
 
 export function AccesSujets() {
+  const navLigne = useNavigate();
   const [type, setType] = useState<'utilisateur' | 'groupe'>('utilisateur');
   const [sujet, setSujet] = useState<string | null>(null);
   const [q, setQ] = useState('');
@@ -122,7 +124,13 @@ export function AccesSujets() {
               </Table.Thead>
               <Table.Tbody>
                 {acces.data.items.map((a) => (
-                  <Table.Tr key={a.registre.id}>
+                  <Table.Tr
+                    key={a.registre.id}
+                    {...ficheCliquable(
+                      () => void navLigne(`/registres/${a.registre.id}`),
+                      `Afficher ${a.registre.name}`,
+                    )}
+                  >
                     <Table.Td>
                       <Link to={`/registres/${a.registre.id}`}>{a.registre.name}</Link>{' '}
                       {a.registre.restreint && <Badge size="xs">Restreint</Badge>}

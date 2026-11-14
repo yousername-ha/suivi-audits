@@ -105,7 +105,7 @@ describe('cœur du GRC', () => {
         (await admin.get(`/api/grc/${S}/members`)).json() as { userId: string; username: string; write: boolean }[]
       ).filter((m) => m.userId !== adminUser.id);
     expect(await membres()).toEqual([
-      { userId: membre.id, username: 'core_membre', displayName: expect.any(String), write: true },
+      { userId: membre.id, username: 'core_membre', displayName: expect.any(String), write: true, herite: false },
     ]);
     const session = await login(t, membre);
     expect((await admin.put(`/api/grc/${S}/members`, { userId: membre.id, write: false })).statusCode).toBe(204);

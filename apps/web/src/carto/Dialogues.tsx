@@ -1,18 +1,6 @@
 /* Boîtes de dialogue de la cartographie : assistant de génération (CARTO-05), ajout depuis la plateforme (CARTO-09),
    nouvelle relation (CARTO-07), versions (CARTO-11), conflit d'enregistrement (CARTO-07). */
-import {
-  Button,
-  Checkbox,
-  Group,
-  Modal,
-  Radio,
-  ScrollArea,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Button, Checkbox, Group, Modal, Radio, Select, Stack, Text, TextInput, Title } from '@mantine/core';
 import {
   ADD_TYPES,
   GRAPHIC_RELATION_TYPES,
@@ -213,35 +201,33 @@ export function Ajout({
               onChange={(e) => setQ(e.currentTarget.value)}
               data-autofocus
             />
-            <ScrollArea.Autosize mah="50vh" type="auto">
-              <Stack gap="xs">
-                {types
-                  .filter((t) => visibles.some((o) => o.type === t))
-                  .map((t) => (
-                    <Stack key={t} gap="2xs">
-                      <Text size="sm" fw={700}>
-                        {TYPE_LABELS[t]} ({visibles.filter((o) => o.type === t).length})
-                      </Text>
-                      {visibles
-                        .filter((o) => o.type === t)
-                        .map((o) => (
-                          <Checkbox
-                            key={o.ref}
-                            checked={choix.has(o.ref)}
-                            onChange={(e) => {
-                              const n = new Set(choix);
-                              if (e.currentTarget.checked) n.add(o.ref);
-                              else n.delete(o.ref);
-                              setChoix(n);
-                            }}
-                            label={`${o.code ? o.code + ' ' : ''}${o.name}`}
-                            description={`${o.sub ?? ''}${layout?.ignored[o.ref] ? ' — ignoré précédemment' : ''}`}
-                          />
-                        ))}
-                    </Stack>
-                  ))}
-              </Stack>
-            </ScrollArea.Autosize>
+            <Stack gap="xs">
+              {types
+                .filter((t) => visibles.some((o) => o.type === t))
+                .map((t) => (
+                  <Stack key={t} gap="2xs">
+                    <Text size="sm" fw={700}>
+                      {TYPE_LABELS[t]} ({visibles.filter((o) => o.type === t).length})
+                    </Text>
+                    {visibles
+                      .filter((o) => o.type === t)
+                      .map((o) => (
+                        <Checkbox
+                          key={o.ref}
+                          checked={choix.has(o.ref)}
+                          onChange={(e) => {
+                            const n = new Set(choix);
+                            if (e.currentTarget.checked) n.add(o.ref);
+                            else n.delete(o.ref);
+                            setChoix(n);
+                          }}
+                          label={`${o.code ? o.code + ' ' : ''}${o.name}`}
+                          description={`${o.sub ?? ''}${layout?.ignored[o.ref] ? ' — ignoré précédemment' : ''}`}
+                        />
+                      ))}
+                  </Stack>
+                ))}
+            </Stack>
             <Select
               label="Ajouter aussi"
               allowDeselect={false}

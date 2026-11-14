@@ -3,7 +3,7 @@
    plusieurs périmètres que ses éléments héritent sans les copier. Les droits fins s'attribuent à un utilisateur ou à un
    groupe sur un registre entier ou sur un élément ; ils s'ajoutent aux droits de module et à l'appartenance aux périmètres. */
 import { z } from 'zod';
-import type { GrcKind } from './grc.js';
+import type { GrcKind, GrcObject } from './grc.js';
 import { ResponsableRef } from './responsables.js';
 
 /** Familles de registre : le plan d'actions (actions autonomes), le registre d'écarts, le registre de tâches récurrentes. */
@@ -174,7 +174,17 @@ export interface RegistreDto {
   peut: Record<Besoin, boolean>;
   /** Peut attribuer ou retirer des droits et changer « restreint » : rôle de gestionnaire attribué ou droit d'administrer le module. */
   peutAttribuer: boolean;
+  /** Peut créer un élément dans le registre : qui le gère, ou la personne à qui le registre est attribué (ADR 0092). */
+  peutCreer: boolean;
   elements: number;
+}
+
+/** Élément attribué à l'utilisateur (« Attribuer à », ADR 0092) ou créé par lui dans un registre qui lui est attribué. */
+export interface ElementAttribue {
+  element: GrcObject;
+  registre: { id: string; name: string; kind: RegistreKind };
+  /** Contribuer : renseigner l'avancement ; gérer : modifier la définition (élément créé par l'utilisateur, ou droits plus larges). */
+  peut: { contribuer: boolean; gerer: boolean };
 }
 
 /** Validation d'une occurrence de tâche récurrente (migration 030) : résultat, compte rendu et référence de preuve. */

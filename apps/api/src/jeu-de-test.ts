@@ -14,6 +14,7 @@ import { sql } from 'kysely';
 import type { Services } from './services.js';
 import { couvertureEtDda, etudeEbios, rattacherStandards, type BilanNormes } from './demo-normes.js';
 import { modulesAnnexes, type BilanAnnexes } from './demo-annexes.js';
+import { modulesComplements, type BilanComplements } from './demo-complements.js';
 
 export const ORGANISATION_TEST = 'Établissement de santé fictif (démonstration)';
 type Json = Record<string, unknown>;
@@ -452,6 +453,7 @@ export interface BilanChargement {
   evaluations: number;
   normes: BilanNormes | null;
   annexes: BilanAnnexes | null;
+  complements: BilanComplements | null;
 }
 
 /** Charge le jeu de test par l'API publique, au nom d'un compte administrateur existant (session temporaire). */
@@ -527,6 +529,7 @@ export async function chargerJeuDeTest(
       evaluations: 0,
       normes: null,
       annexes: null,
+      complements: null,
     };
     const commun = '00000000-0000-4000-8000-000000000001';
     // 1) État de l'outil de suivi : refusé s'il contient déjà des données de pilotage.
@@ -836,6 +839,8 @@ export async function chargerJeuDeTest(
     };
     // 8) Modules annexes : incidents, cellule de crise.
     bilan.annexes = await modulesAnnexes({ appel, exiger });
+    // 9) Compléments : plans, organisation de l'audit, clausier, périmètres enfants, cartographie, RETEX, continuité…
+    bilan.complements = await modulesComplements({ appel, exiger, commun, decaler });
     await svc.db.audit({ username: 'jeu-de-test' } as never, '127.0.0.1', 'jeu-de-test.loaded', commun, {
       compte,
       ...bilan,
