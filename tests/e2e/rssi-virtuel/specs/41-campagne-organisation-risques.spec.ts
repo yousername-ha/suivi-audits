@@ -759,19 +759,13 @@ test('CAMP-C2-09 corrigé : un scénario G4 × V2 des échelles publiées se pla
 
 /* ------------------------------------------------------------------------------------- droits (transversal, pile 1) */
 
-test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit pas dans le périmètre principal', async ({
+test('CAMP-T1-01 corrigé : un contributeur limité au sous-périmètre n’écrit pas dans le périmètre principal', async ({
   browser,
 }) => {
-  // ISO/IEC 27001:2022, A.5.15, A.5.18 et A.8.3 (moindre privilège). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-051) : un
-  // compte rattaché à un périmètre enfant ne voit que ce périmètre ; rattaché au parent, il voit le parent et ses enfants.
-  // Le périmètre commun est créé « Toute l'organisation » (`visibility: 'instance'`). Depuis la PR #269 (bdbca87, ADR 0095
-  // point 5), le membre du seul enfant n'y écrit plus, mais il le voit encore : refus 403 « en lecture seule » au lieu
-  // d'un périmètre invisible (404), comme pour tout autre périmètre parent. Constats T1-01, T2-01, T3-01, T4-01, T5-01,
-  // T6-02.
-  test.fail(
-    true,
-    'CAMP-T1-01 ouvert : le membre du seul sous-périmètre voit encore le périmètre commun (403 au lieu de 404)',
-  );
+  // BUG-051 : corrigé par la PR #269 (commit 517f763, ADR 0095 amendée), vérifié par la recette le 14/11/2026 (test de
+  // non-régression). Arbitrage du RSSI des 13 et 14/11/2026 : un compte rattaché à un périmètre enfant ne voit que ce
+  // périmètre, périmètre commun compris (404 en lecture comme en écriture) ; rattaché au parent, il voit le parent et ses
+  // enfants. ISO/IEC 27001:2022, A.5.15, A.5.18 et A.8.3. Constats T1-01, T2-01, T3-01, T4-01, T5-01, T6-02.
   const s = await admin(browser);
   const compte = `campagne-t1-01-${Date.now().toString(36)}`;
   try {
