@@ -147,13 +147,13 @@ test.afterAll(async ({ browser }) => {
   }
 });
 
-test('CAMP-C4-04 ouvert : un écart d’un sous-périmètre peut être rattaché à une mesure de la DdA', async ({
+test('CAMP-C4-04 corrigé : un écart d’un sous-périmètre peut être rattaché à une mesure de la DdA', async ({
   browser,
 }) => {
-  // ISO/IEC 27001:2022, 9.2.2 et 10.2 (traçabilité mesure → écart). Sous un sous-périmètre qui hérite des référentiels du
-  // parent, « Rechercher une référence » de la fiche d'un écart ne propose aucune mesure tant que la DdA repose sur le
-  // socle historique (aucun référentiel de la bibliothèque appliqué) : l'écart est enregistré sans référence.
-  test.fail(true, 'CAMP-C4-04 ouvert : GET …/sources sous le sous-périmètre ne propose pas A-8.13');
+  // BUG-041 (volet C4-04) : corrigé par la PR #269 (commit bdbca87), vérifié par la recette le 14/11/2026 (test de
+  // non-régression). Constat d'origine : ISO/IEC 27001:2022, 9.2.2 et 10.2 (traçabilité mesure → écart). Sous un
+  // sous-périmètre qui hérite des référentiels du parent, « Rechercher une référence » de la fiche d'un écart ne proposait
+  // aucune mesure tant que la DdA reposait sur le socle historique : l'écart était enregistré sans référence.
   const { ctx, rq, csrf } = await admin(browser);
   try {
     const sous = await sousPerimetre(rq, csrf);
