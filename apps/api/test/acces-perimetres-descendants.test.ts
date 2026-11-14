@@ -93,3 +93,28 @@ describe('compte sans rattachement et administrateur', () => {
     expect(ids).toEqual(expect.arrayContaining([RACINE, parent, enfant, petitEnfant, frere]));
   });
 });
+
+describe('administrateur non rattaché (installation neuve)', () => {
+  it('reste proposable et acceptable comme responsable, et reçoit les rappels (rejeu de la recette du 14/11/2026)', async () => {
+    const adminSeul = await makeUser(t, 'p51_admin_seul', 'admin', { rattache: false });
+    const propositions = (await admin.get(`/api/grc/${RACINE}/owners`)).json() as { id: string }[];
+    expect(propositions.map((o) => o.id)).toContain(adminSeul.id);
+    const action = await admin.post(`/api/grc/${RACINE}/objects`, {
+      kind: 'action',
+      name: 'Action confiée à l’administrateur',
+      data: {
+        description: 'Vérification documentée',
+        status: 'todo',
+        ownerId: adminSeul.id,
+        startAt: null,
+        dueAt: '2027-01-15T09:00:00Z',
+        priority: 'normal',
+        category: 'action',
+        justification: '',
+        reminderDays: 7,
+        dependencies: [],
+      },
+    });
+    expect(action.statusCode, action.body).toBe(200);
+  });
+});
