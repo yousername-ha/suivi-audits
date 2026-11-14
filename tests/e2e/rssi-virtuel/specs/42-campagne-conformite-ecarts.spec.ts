@@ -2,7 +2,8 @@
    rejeu-piles-3-4.md) : défauts bloquants et majeurs de la conformité (DdA, couverture, référentiels), des écarts, des plans
    annuels, de la revue de direction et des droits sur les registres. Chaque test décrit le comportement attendu et porte un
    marqueur test.fail tant que le constat est ouvert : il devient rouge une fois le défaut corrigé, ce qui oblige à retirer
-   le marqueur. Le fichier ne dépend que de l'installation : il crée ses données fictives (préfixe « Campagne »), son
+   le marqueur ; un constat corrigé et vérifié par la recette garde son test, sans marqueur (« corrigé »), comme test de
+   non-régression. Le fichier ne dépend que de l'installation : il crée ses données fictives (préfixe « Campagne »), son
    sous-périmètre et son compte contributeur, et remet la DdA dans l'état trouvé. */
 import { expect, test, type APIRequestContext, type Browser, type BrowserContext } from '@playwright/test';
 import { csrfOf, preparerCompte, sessionAdmin } from '../../helpers';
@@ -97,7 +98,9 @@ async function archiverFiche(rq: APIRequestContext, smsi: string, id: string) {
   expect(d.ok(), `archivage de la fiche de test : ${await d.text()}`).toBe(true);
 }
 
-/** Compte au rôle prédéfini Contributeur, créé par l'administrateur et préparé (TOTP, mot de passe personnel) une fois. */
+/** Compte au rôle prédéfini Contributeur, créé par l'administrateur et préparé (TOTP, mot de passe personnel) une fois.
+    Il est rattaché en écriture au périmètre commun, où les tests créent registres et revues : sans aucun rattachement, un
+    compte ne voit aucun périmètre (ADR 0095) et recevrait 404 avant d'atteindre le contrôle de droit visé. */
 let contributeur: Promise<BrowserContext> | undefined;
 function compteContributeur(browser: Browser): Promise<BrowserContext> {
   contributeur ??= (async () => {
@@ -109,7 +112,12 @@ function compteContributeur(browser: Browser): Promise<BrowserContext> {
         data: { username, displayName: 'Contributeur de la campagne (fictif)', roles: [{ roleId: 'contributeur' }] },
       });
       expect(r.status(), await r.text()).toBe(201);
-      const temp = (await r.json()).temporaryPassword as string;
+      const { id, temporaryPassword: temp } = (await r.json()) as { id: string; temporaryPassword: string };
+      const m = await rq.put(`/api/grc/${PERIMETRE_COMMUN}/members`, {
+        headers: entetes(csrf),
+        data: { userId: id, write: true },
+      });
+      expect(m.ok(), `rattachement du contributeur au périmètre commun : ${await m.text()}`).toBe(true);
       const c = await browser.newContext({ ignoreHTTPSErrors: true });
       await preparerCompte(c, username, temp);
       return c;
@@ -174,30 +182,40 @@ test('CAMP-C4-04 ouvert : un écart d’un sous-périmètre peut être rattaché
   }
 });
 
-test('CAMP-C3-01 ouvert : une décision de DdA prise sous un sous-périmètre ne modifie pas la DdA de la racine', async ({
+test('CAMP-C3-01 corrigé : une décision de DdA prise sous un sous-périmètre ne modifie pas la DdA de la racine', async ({
   browser,
 }) => {
+  // BUG-062 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 d) ; HDS v2 (périmètre des activités d'hébergement). La DdA est un registre historique unique
   // de l'organisation (GET /api/dda sans périmètre) affiché derrière le sélecteur « Périmètre affiché » : une décision
   // prise sous le sous-périmètre se retrouve sous la racine. Attendu : une DdA par périmètre (héritée ou propre), ou une
   // page sans sélecteur trompeur qui dit que la DdA est commune.
-  test.fail(true, 'CAMP-C3-01 ouvert : A.6.7 « Oui » choisi sous le sous-périmètre apparaît sous la racine');
   const { ctx, rq, csrf } = await admin(browser);
   const page = await ctx.newPage();
+  let sous = '';
   try {
-    const sous = await sousPerimetre(rq, csrf);
+    sous = await sousPerimetre(rq, csrf);
     await exigerNonExaminee(rq, 'A-6.7');
     await page.goto(`/pilotage/dda-annexe-a?perimetre=${sous}`);
     await expect(page.getByRole('heading', { name: 'Annexe A (DdA)', level: 1 })).toBeVisible();
     const applicabilite = page.getByRole('combobox', { name: 'Applicabilité de A.6.7', exact: true });
+    // Depuis l'ADR 0093, l'écriture porte le périmètre en paramètre (PATCH /api/dda/A-6.7?smsi=…) : on attend le chemin.
     const enregistrement = page.waitForResponse(
-      (r) => r.url().endsWith('/api/dda/A-6.7') && r.request().method() === 'PATCH',
+      (r) => new URL(r.url()).pathname === '/api/dda/A-6.7' && r.request().method() === 'PATCH',
     );
     await applicabilite.click();
     await page.getByRole('option', { name: 'Oui', exact: true }).click();
     expect((await enregistrement).ok(), 'enregistrement sous le sous-périmètre').toBe(true);
+    // Témoin : la décision est bien enregistrée dans la DdA du sous-périmètre (ADR 0093).
+    const ddaSous = await rq.get(`/api/dda?reference=A&smsi=${sous}`);
+    expect(ddaSous.ok(), await ddaSous.text()).toBe(true);
+    expect(((await ddaSous.json()) as PageDda).dda['A-6.7']?.app, 'A.6.7 sous le sous-périmètre').toBe('oui');
 
-    const lecture = page.waitForResponse((r) => r.url().includes('/api/dda?reference=A') && r.ok());
+    const lecture = page.waitForResponse((r) => {
+      const u = new URL(r.url());
+      return u.pathname === '/api/dda' && u.searchParams.get('reference') === 'A' && r.ok();
+    });
     await page.goto(`/pilotage/dda-annexe-a?perimetre=${PERIMETRE_COMMUN}`);
     await lecture;
     const ligne = page.getByRole('combobox', { name: 'Applicabilité de A.6.7', exact: true });
@@ -210,17 +228,26 @@ test('CAMP-C3-01 ouvert : une décision de DdA prise sous un sous-périmètre ne
     ).toBe(true);
   } finally {
     await remettreAVide(rq, 'A-6.7');
+    // La décision prise sous le sous-périmètre est retirée aussi (DdA propre au périmètre, ADR 0093).
+    if (sous) {
+      const r = await rq.patch(`/api/dda/A-6.7?smsi=${sous}`, {
+        data: { app: '', level: '', just: '' },
+        headers: entetes(await csrfOf(rq)),
+      });
+      expect(r.ok(), `remise à vide de A-6.7 sous le sous-périmètre : ${await r.text()}`).toBe(true);
+    }
     await ctx.close();
   }
 });
 
-test('CAMP-C4-02 ouvert : une action de plan saisie sous un sous-périmètre n’apparaît pas dans le plan de la racine', async ({
+test('CAMP-C4-02 corrigé : une action de plan saisie sous un sous-périmètre n’apparaît pas dans le plan de la racine', async ({
   browser,
 }) => {
+  // BUG-062 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 4.3, 7.2 et 7.3 ; HDS (périmètre des activités d'hébergement). Les plans annuels (formation,
   // sensibilisation, audit interne) sont lus par GET /api/plans, sans périmètre : ce qui est saisi sous un périmètre
   // apparaît sous tous les autres.
-  test.fail(true, 'CAMP-C4-02 ouvert : action de sensibilisation du sous-périmètre listée sous la racine');
   const { ctx, rq, csrf } = await admin(browser);
   const page = await ctx.newPage();
   const titre = 'Campagne C4-02 sensibilisation saisie sous le sous-périmètre (fictif)';
@@ -233,14 +260,16 @@ test('CAMP-C4-02 ouvert : une action de plan saisie sous un sous-périmètre n�
     await fiche.getByRole('textbox', { name: 'Date prévue', exact: true }).fill('2027-03-15');
     await fiche.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(page.getByText('Modifications enregistrées.')).toBeVisible();
+    // Témoin : l'action est listée sous le sous-périmètre où elle a été saisie (sinon une liste toujours vide sous la
+    // racine ferait passer le test sans rien prouver).
+    const ligne = page.getByRole('row', { name: new RegExp(titre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) });
+    await expect(ligne).toHaveCount(1);
 
     const lecture = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/plans' && r.ok());
     await page.goto(`/pilotage/plans-sensibilisation?perimetre=${PERIMETRE_COMMUN}`);
     await lecture;
     await expect(page.getByRole('button', { name: 'Ajouter', exact: true })).toBeVisible();
-    await expect(page.getByRole('row', { name: new RegExp(titre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })).toHaveCount(
-      0,
-    );
+    await expect(ligne).toHaveCount(0);
   } finally {
     const plans = (await (await rq.get('/api/plans')).json()) as { plans: { id: string; title: string }[] };
     for (const p of plans.plans.filter((x) => x.title === titre)) {
@@ -251,14 +280,15 @@ test('CAMP-C4-02 ouvert : une action de plan saisie sous un sous-périmètre n�
   }
 });
 
-test('CAMP-C4-05 ouvert : un périmètre enfant sans héritage des référentiels a sa propre revue de direction', async ({
+test('CAMP-C4-05 corrigé : un périmètre enfant sans héritage des référentiels a sa propre revue de direction', async ({
   browser,
 }) => {
+  // BUG-042 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.3.2. Arbitrage du RSSI du 13/11/2026 (BUG-042) : chaque périmètre enfant a sa propre revue, sauf
   // s'il hérite des référentiels du parent (ses entrées remontent alors dans la revue du parent, test suivant). Sous un
   // périmètre enfant, la page « Revues de direction » n'a ni bandeau « Préparer la prochaine revue » ni entrées 9.3.2 :
   // l'API répond « Ces données appartiennent au pilotage commun. ».
-  test.fail(true, 'CAMP-C4-05 ouvert : GET …/pilotage/revue/entrees répond 404 sous un périmètre enfant');
   const { ctx, rq, csrf } = await admin(browser);
   try {
     const nom = 'Campagne C4-05 périmètre enfant sans héritage (fictif)';
@@ -285,11 +315,12 @@ test('CAMP-C4-05 ouvert : un périmètre enfant sans héritage des référentiel
   }
 });
 
-test('RSSI-18 ouvert : la revue de direction prépare les entrées 9.3.2 de l’ISO/IEC 27001', async ({ browser }) => {
+test('RSSI-18 corrigé : la revue de direction prépare les entrées 9.3.2 de l’ISO/IEC 27001', async ({ browser }) => {
+  // BUG-031 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.3.2 a) à g). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-031) : les entrées de la revue sont celles de
   // l'ISO/IEC 27001 ; l'ISO 9001 n'est plus suivie pour le moment. Aujourd'hui les entrées suivent l'ISO 9001 : un point
   // c) découpé en sous-entrées (« 9.3.2 c 1 » à « c 7 ») et aucun point g) (opportunités d'amélioration continue).
-  test.fail(true, 'RSSI-18 ouvert : entrées de la revue numérotées selon l’ISO 9001, sans 9.3.2 g)');
   const { ctx, rq } = await admin(browser);
   try {
     const r = await rq.get(`/api/grc/${PERIMETRE_COMMUN}/pilotage/revue/entrees`);
@@ -308,17 +339,15 @@ test('RSSI-18 ouvert : la revue de direction prépare les entrées 9.3.2 de l’
   }
 });
 
-test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les écarts ouverts de ses sous-périmètres', async ({
+test('CAMP-C4-05 corrigé : l’entrée 9.3.2 c) de la revue du SMSI compte les écarts ouverts de ses sous-périmètres', async ({
   browser,
 }) => {
+  // BUG-042 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.3.2 c) (non-conformités et actions correctives). Arbitrage du RSSI du 13/11/2026 (BUG-042) : un
   // périmètre enfant qui hérite des référentiels du parent n'a pas sa propre revue, ses entrées remontent dans celle du
   // parent. La seule revue préparée (racine) ne compte que les écarts de la racine : une non-conformité majeure ouverte sous le périmètre d'hébergement n'entre dans aucune revue,
   // sans que l'entrée le dise.
-  test.fail(
-    true,
-    'CAMP-C4-05 ouvert : l’écart ouvert du sous-périmètre est absent de l’entrée des non-conformités de la racine',
-  );
   const { ctx, rq, csrf } = await admin(browser);
   let ecart: string | undefined;
   let sous = '';
@@ -330,7 +359,8 @@ test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les é
       // une fois les entrées de l'ISO/IEC 27001 en place (arbitrage du RSSI du 13/11/2026).
       (e) => /^9\.3\.2 (c 4|d 1)\b/.test(e.article),
     );
-    const m = /(\d+) ouvert\(s\)/.exec((c4?.faits ?? []).join(' '));
+    // « 2 ouvert(s) » avant la correction, « 1 constat ouvert » ou « 3 constats ouverts » depuis la PR #269.
+    const m = /(\d+) (?:constats? )?ouvert(?:\(s\)|s)?\b/.exec((c4?.faits ?? []).join(' '));
     expect(m, `entrée des non-conformités lisible : ${JSON.stringify(c4)}`).not.toBeNull();
     return Number(m![1]);
   };
@@ -354,12 +384,13 @@ test('CAMP-C4-05 ouvert : l’entrée 9.3.2 c) de la revue du SMSI compte les é
   }
 });
 
-test('CAMP-C3-04 ouvert : un niveau de mise en œuvre est refusé tant que l’applicabilité n’est pas décidée', async ({
+test('CAMP-C3-04 corrigé : un niveau de mise en œuvre est refusé tant que l’applicabilité n’est pas décidée', async ({
   browser,
 }) => {
+  // BUG-065 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 d) ; AGENTS.md (aucun taux inventé). Choisir « Total » dans « Niveau » d'une mesure non
   // examinée est enregistré : la mesure sort des « Non renseignées », entre dans le filtre « Total » et fait monter le taux.
-  test.fail(true, 'CAMP-C3-04 ouvert : PATCH /api/dda/A-5.37 {"level":"Total"} accepté sans applicabilité');
   const { ctx, rq, csrf } = await admin(browser);
   try {
     await exigerNonExaminee(rq, 'A-5.37');
@@ -373,12 +404,13 @@ test('CAMP-C3-04 ouvert : un niveau de mise en œuvre est refusé tant que l’a
   }
 });
 
-test('CAMP-C3-05 ouvert : enregistrer une fiche d’applicabilité sans rien changer ne décide pas l’applicabilité', async ({
+test('CAMP-C3-05 corrigé : enregistrer une fiche d’applicabilité sans rien changer ne décide pas l’applicabilité', async ({
   browser,
 }) => {
+  // BUG-040 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 d) ; prolonge RSSI-13. La fiche « Applicabilité et justifications » d'une mesure jamais
   // examinée montre « Applicable » coché ; « Enregistrer » sans modification écrit app = « oui » dans la DdA, au nom du RSSI.
-  test.fail(true, 'CAMP-C3-05 ouvert : A-5.2 passe « oui » après un enregistrement sans modification');
   const { ctx, rq } = await admin(browser);
   const page = await ctx.newPage();
   try {
@@ -408,10 +440,11 @@ test('CAMP-C3-05 ouvert : enregistrer une fiche d’applicabilité sans rien cha
   }
 });
 
-test('CAMP-T3-03 ouvert : au téléphone, la DdA laisse lire le niveau de mise en œuvre', async ({ browser }) => {
+test('CAMP-T3-03 corrigé : au téléphone, la DdA laisse lire le niveau de mise en œuvre', async ({ browser }) => {
+  // BUG-074 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 d) (DdA lisible) ; WCAG 1.4.10 (redistribution à 320 px CSS). En 390 × 844, les listes
   // « Applicabilité » et « Niveau » de la DdA mesurent 52 et 42 px : seules la croix et le chevron sont visibles.
-  test.fail(true, 'CAMP-T3-03 ouvert : « Total » tronqué dans « Niveau de A.5.3 » à 390 px');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state, viewport: { width: 390, height: 844 } });
   const rq = ctx.request;
@@ -432,11 +465,14 @@ test('CAMP-T3-03 ouvert : au téléphone, la DdA laisse lire le niveau de mise e
   }
 });
 
-test('CAMP-C3-02 ouvert : la couverture du référentiel reprend une décision prise dans la DdA', async ({ browser }) => {
+test('CAMP-C3-02 corrigé : la couverture du référentiel reprend une décision prise dans la DdA', async ({
+  browser,
+}) => {
+  // BUG-063 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 d) ; AGENTS.md (une seule source modifiable par objet). La page DdA annonce que son niveau
   // « alimente la couverture présumée des autres référentiels », mais la couverture de la copie ISO appliquée laisse
   // « À déterminer · Non implémenté » une mesure déclarée applicable et « Total » dans la DdA : double saisie.
-  test.fail(true, 'CAMP-C3-02 ouvert : A-6.8 « Total » dans la DdA, « non_implemente » dans la couverture');
   const { ctx, rq, csrf } = await admin(browser);
   try {
     const iso = await isoAppliqueALaRacine(rq, csrf);
@@ -454,11 +490,14 @@ test('CAMP-C3-02 ouvert : la couverture du référentiel reprend une décision p
   }
 });
 
-test('CAMP-C3-06 ouvert : un écart rattaché à l’exigence du référentiel est repris par la DdA', async ({ browser }) => {
+test('CAMP-C3-06 corrigé : un écart rattaché à l’exigence du référentiel est repris par la DdA', async ({
+  browser,
+}) => {
+  // BUG-041 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 10.2 et 6.1.3 d) (état de mise en œuvre) ; traçabilité mesure → écart. La recherche de la fiche
   // d'écart propose « A-5.24 · 5.24 — … » (référence requirement:…) ; la DdA ne lit que les références historiques
   // legacy:items:… : la mesure reste sans écart et l'indicateur « « Total » avec écart ouvert » à 0.
-  test.fail(true, 'CAMP-C3-06 ouvert : écart rattaché à requirement:…:A-5.24 absent des écarts de la DdA');
   const { ctx, rq, csrf } = await admin(browser);
   let ecart: string | undefined;
   try {
@@ -494,13 +533,14 @@ test('CAMP-C3-06 ouvert : un écart rattaché à l’exigence du référentiel e
   }
 });
 
-test('CAMP-T4-02 ouvert : un contributeur ne peut pas archiver un registre dont il n’est pas gestionnaire', async ({
+test('CAMP-T4-02 corrigé : un contributeur ne peut pas archiver un registre dont il n’est pas gestionnaire', async ({
   browser,
 }) => {
+  // BUG-049 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ADR 0043, point 4 (le gestionnaire archive) ; ADR 0010 et 0068 (un Contributeur ne supprime pas) ; ISO/IEC 27001:2022
   // 7.5.3. Arbitrage du RSSI du 13/11/2026 (BUG-049) : seul le gestionnaire du registre peut l'archiver. Le même compte est refusé (403) pour archiver une seule action, mais archive le registre entier, sans retour
   // possible (aucune commande de désarchivage).
-  test.fail(true, 'CAMP-T4-02 ouvert : POST /api/registres/:id/archivage par un contributeur répond 200');
   const { ctx, rq, csrf } = await admin(browser);
   let registre: string | undefined;
   try {
@@ -533,11 +573,14 @@ test('CAMP-T4-02 ouvert : un contributeur ne peut pas archiver un registre dont 
   }
 });
 
-test('CAMP-T4-03 ouvert : un contributeur ne peut pas modifier une revue de direction validée', async ({ browser }) => {
+test('CAMP-T4-03 corrigé : un contributeur ne peut pas modifier une revue de direction validée', async ({
+  browser,
+}) => {
+  // BUG-075 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.3.3 (décisions de la direction conservées) et 7.5.3 ; ADR 0010. La validation exige
   // pilotage:administrer, mais un Contributeur rouvre la fiche validée, remplace « Décisions et moyens » et la remet en
   // brouillon : la validation de la direction est défaite par un compte qui n'a pas le droit de la donner.
-  test.fail(true, 'CAMP-T4-03 ouvert : PUT de la revue validée par un contributeur répond 200');
   const { ctx, rq, csrf } = await admin(browser);
   let revue: string | undefined;
   try {

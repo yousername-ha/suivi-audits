@@ -2,8 +2,10 @@
    continuité, documents, exports » et « installation, comptes, Plateforme, Système », rejoués sur les piles 5 et 6
    (docs/05_RECETTE/rssi-virtuel/campagne/rejeu-piles-5-6.md). Chaque test décrit le comportement attendu et porte un
    marqueur test.fail tant que le constat est ouvert : il devient rouge une fois le défaut corrigé, ce qui oblige à retirer
-   le marqueur. Le fichier crée lui-même ses données fictives (préfixe « Campagne … (fictif) »), son périmètre restreint et
-   ses deux comptes de rôle ; il archive ou supprime ce qu'il crée quand l'application le permet. */
+   le marqueur ; un constat corrigé et vérifié par la recette garde son test, sans marqueur (« corrigé »), comme test de
+   non-régression. Le fichier crée lui-même ses données fictives (préfixe « Campagne … (fictif) »), ses périmètres
+   restreints (celui de la campagne et un voisin) et ses deux comptes de rôle ; il archive ou supprime ce qu'il crée quand
+   l'application le permet. */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,6 +15,7 @@ import { preparerCompte, sessionAdmin, sessionCompte } from '../../helpers';
 import { PERIMETRE_COMMUN } from '../invariants';
 
 const PERIMETRE_CAMPAGNE = 'Campagne r56 hébergement (fictif)';
+const PERIMETRE_VOISIN = 'Campagne r56 périmètre voisin (fictif)';
 const CONTRIBUTEUR = 'camp-r56-contrib';
 const AUDITEUR = 'camp-r56-auditeur';
 
@@ -41,9 +44,9 @@ async function archiver(req: APIRequestContext, csrf: string, smsi: string, o: O
     headers: { 'X-CSRF-Token': csrf, 'If-Match': String(o.version) },
   });
 }
-async function creerIncident(req: APIRequestContext, csrf: string, title: string) {
+async function creerIncident(req: APIRequestContext, csrf: string, title: string, smsi?: string) {
   return okJson<Incident>(
-    await req.post('/api/incidents', { headers: { 'X-CSRF-Token': csrf }, data: { title } }),
+    await req.post('/api/incidents', { headers: { 'X-CSRF-Token': csrf }, data: { title, ...(smsi ? { smsi } : {}) } }),
     `création de l’incident « ${title} »`,
   );
 }
@@ -60,27 +63,52 @@ async function ecrireReglage(req: APIRequestContext, csrf: string, section: stri
 }
 
 /** Périmètre restreint créé une fois, rattaché au périmètre commun. */
-async function perimetreCampagne(req: APIRequestContext, csrf: string): Promise<string> {
+async function perimetreRestreint(req: APIRequestContext, csrf: string, name: string, scope: string): Promise<string> {
   const smsis = await okJson<{ id: string; name: string }[]>(await req.get('/api/grc/smsis'), 'liste des périmètres');
-  const existant = smsis.find((s) => s.name === PERIMETRE_CAMPAGNE);
+  const existant = smsis.find((s) => s.name === name);
   if (existant) return existant.id;
   const cree = await okJson<{ id: string }>(
     await req.post('/api/grc/smsis', {
       headers: { 'X-CSRF-Token': csrf },
-      data: {
-        name: PERIMETRE_CAMPAGNE,
-        scope: 'Hébergement de données de santé du groupement (fictif)',
-        parentId: PERIMETRE_COMMUN,
-        timezone: 'Europe/Paris',
-      },
+      data: { name, scope, parentId: PERIMETRE_COMMUN, timezone: 'Europe/Paris' },
     }),
-    'création du périmètre restreint',
+    `création du périmètre restreint « ${name} »`,
   );
   return cree.id;
 }
+const perimetreCampagne = (req: APIRequestContext, csrf: string) =>
+  perimetreRestreint(req, csrf, PERIMETRE_CAMPAGNE, 'Hébergement de données de santé du groupement (fictif)');
+/** Périmètre voisin du périmètre de campagne (même parent) : celui du contributeur. */
+const perimetreVoisin = (req: APIRequestContext, csrf: string) =>
+  perimetreRestreint(req, csrf, PERIMETRE_VOISIN, 'Activités voisines du groupement, hors hébergement (fictif)');
+
+const idCompte = async (req: APIRequestContext, username: string) =>
+  liste(
+    await okJson<{ id: string; username: string }[] | { items: { id: string; username: string }[] }>(
+      await req.get('/api/admin/users'),
+      'liste des comptes',
+    ),
+  ).find((u) => u.username === username)?.id;
+
+/** Rattachement direct d'un compte de test à un périmètre, par l'administrateur, s'il n'existe pas déjà : la désignation
+    ferme les sessions du compte, elle se fait donc avant d'ouvrir la sienne et n'est pas répétée à chaque test. */
+async function rattacher(req: APIRequestContext, csrf: string, smsi: string, username: string, write: boolean) {
+  const uid = await idCompte(req, username);
+  expect(uid, `compte ${username}`).toBeTruthy();
+  const membres = await okJson<{ userId: string; write: boolean; herite: boolean }[]>(
+    await req.get(`/api/grc/${smsi}/members`),
+    `membres du périmètre ${smsi}`,
+  );
+  if (membres.some((m) => m.userId === uid && !m.herite && m.write === write)) return;
+  const r = await req.put(`/api/grc/${smsi}/members`, {
+    headers: { 'X-CSRF-Token': csrf },
+    data: { userId: uid, write },
+  });
+  expect(r.ok(), `rattachement de ${username} au périmètre ${smsi} : ${await texteDe(r)}`).toBe(true);
+}
 
 /** Compte de rôle créé par l'administrateur puis préparé (TOTP, mot de passe personnel) ; secret gardé dans le dossier
-    temporaire des tests pour un second passage. */
+    temporaire des tests pour un second passage. `rattachements` : périmètres où le rattacher avant d'ouvrir sa session. */
 const fichierSecret = (u: string) => path.join(os.tmpdir(), `suivi-e2e-campagne-${u}.json`);
 async function compte(
   browser: Browser,
@@ -88,6 +116,7 @@ async function compte(
   csrf: string,
   username: string,
   corps: Record<string, unknown>,
+  rattachements: { smsi: string; write: boolean }[] = [],
 ) {
   if (!existsSync(fichierSecret(username))) {
     const cree = await okJson<{ temporaryPassword: string }>(
@@ -102,29 +131,39 @@ async function compte(
       await ctx.close();
     }
   }
+  for (const a of rattachements) await rattacher(req, csrf, a.smsi, username, a.write);
   const { secret } = JSON.parse(readFileSync(fichierSecret(username), 'utf8')) as { secret: string };
   return sessionCompte(browser, username, secret);
 }
-const contributeur = (browser: Browser, req: APIRequestContext, csrf: string) =>
-  compte(browser, req, csrf, CONTRIBUTEUR, {
-    displayName: 'Contributeur de campagne r56 (fictif)',
-    roles: [{ roleId: 'contributeur' }],
-  });
+/** Contributeur rattaché en écriture au seul périmètre voisin : sans aucun rattachement, un compte ne voit aucun périmètre
+    (ADR 0095) et les contrôles visés ne seraient jamais atteints ; rattaché au périmètre commun, il verrait le périmètre de
+    campagne, qui en descend (ADR 0092). */
+const contributeur = async (browser: Browser, req: APIRequestContext, csrf: string) =>
+  compte(
+    browser,
+    req,
+    csrf,
+    CONTRIBUTEUR,
+    { displayName: 'Contributeur de campagne r56 (fictif)', roles: [{ roleId: 'contributeur' }] },
+    [{ smsi: await perimetreVoisin(req, csrf), write: true }],
+  );
+/** Auditeur externe (module « Incidents et PCA/PRA » seul), rattaché en lecture seule au périmètre commun dont il lit les
+    plans (CAMP-T5-03) : sans aucun rattachement, il ne verrait aucun périmètre (ADR 0095). */
 async function auditeur(browser: Browser, req: APIRequestContext, csrf: string) {
   const expire = new Date(Date.now() + 180 * 86_400_000).toISOString().slice(0, 10);
-  return compte(browser, req, csrf, AUDITEUR, {
-    displayName: 'Auditeur externe de campagne r56 (fictif)',
-    roles: [{ roleId: 'auditeur_externe', modules: ['incidents'] }],
-    expiresAt: expire,
-  });
+  return compte(
+    browser,
+    req,
+    csrf,
+    AUDITEUR,
+    {
+      displayName: 'Auditeur externe de campagne r56 (fictif)',
+      roles: [{ roleId: 'auditeur_externe', modules: ['incidents'] }],
+      expiresAt: expire,
+    },
+    [{ smsi: PERIMETRE_COMMUN, write: false }],
+  );
 }
-const idCompte = async (req: APIRequestContext, username: string) =>
-  liste(
-    await okJson<{ id: string; username: string }[] | { items: { id: string; username: string }[] }>(
-      await req.get('/api/admin/users'),
-      'liste des comptes',
-    ),
-  ).find((u) => u.username === username)?.id;
 
 /** Lecture minimale d'un classeur .xlsx (zip, chaînes en ligne) : texte des cellules de chaque ligne de chaque feuille. */
 function lignesClasseur(buf: Buffer): string[][] {
@@ -163,12 +202,13 @@ function lignesClasseur(buf: Buffer): string[][] {
 
 /* ------------------------------------------------------------------------------------- continuité et exercices */
 
-test('CAMP-C5-01 ouvert : la carte d’un périmètre compte tous ses plans de continuité et de reprise', async ({
+test('CAMP-C5-01 corrigé : la carte d’un périmètre compte tous ses plans de continuité et de reprise', async ({
   browser,
 }) => {
+  // BUG-043 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.1 et A.5.29, A.5.30 : « plans de continuité et de reprise » doit compter PCA, PRA, PCRA et plans
   // d'activité ; le compteur ne lit que planType « pcra » (un périmètre qui n'a qu'un PRA affiche « 0 PCRA »).
-  test.fail(true, 'CAMP-C5-01 ouvert : compteur continuite.pcra à 0 pour un périmètre qui a un PRA');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   let pra: Objet | undefined;
@@ -196,12 +236,13 @@ test('CAMP-C5-01 ouvert : la carte d’un périmètre compte tous ses plans de c
   }
 });
 
-test('CAMP-C5-03 ouvert : une fiche d’exercice saisie par erreur peut être archivée depuis l’écran', async ({
+test('CAMP-C5-03 corrigé : une fiche d’exercice saisie par erreur peut être archivée depuis l’écran', async ({
   browser,
 }) => {
+  // BUG-052 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5.3 : le registre « Exercices et RETEX » (comme « Continuité et reprise ») n'offre ni dans le
   // menu de ligne ni dans la fiche de commande d'archivage, alors que l'API sait archiver (DELETE …/objects/:id).
-  test.fail(true, 'CAMP-C5-03 ouvert : menu « Autres actions » sans « Archiver la fiche »');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -212,21 +253,35 @@ test('CAMP-C5-03 ouvert : une fiche d’exercice saisie par erreur peut être ar
       plannedAt: '2027-03-10',
     });
     await page.goto(`/pilotage/exercices?perimetre=${PERIMETRE_COMMUN}`);
-    await page.getByRole('button', { name: `Autres actions pour ${nom}`, exact: true }).click();
-    await expect(page.getByRole('menuitem', { name: 'Créer une action suivie' })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /^Archiver/ })).toBeVisible({ timeout: 5000 });
+    // La PR #269 place la commande dans la fiche (« Archiver la fiche » de l'éditeur commun, comme pour CAMP-C1-03), pas
+    // dans le menu « Autres actions » de la ligne : le test ouvre la fiche, archive et vérifie l'archivage.
+    const ligne = page.getByRole('row').filter({ hasText: nom });
+    await ligne.getByRole('button', { name: 'Ouvrir', exact: true }).click();
+    const dialogue = page.getByRole('dialog', { name: 'Fiche — Exercice et retour d’expérience' });
+    await expect(dialogue.getByRole('textbox', { name: 'Intitulé' })).toHaveValue(nom);
+    await dialogue.getByRole('button', { name: 'Archiver la fiche' }).click();
+    await dialogue.getByRole('alert').getByRole('button', { name: 'Confirmer l’archivage' }).click();
+    await expect(dialogue).toBeHidden();
+    await expect(ligne).toHaveCount(0);
+    const relu = await okJson<Objet>(
+      await ctx.request.get(`/api/grc/${PERIMETRE_COMMUN}/objects/${fiche.id}`),
+      'relecture de la fiche',
+    );
+    expect(relu.archived, 'fiche archivée').toBe(true);
+    fiche = undefined;
   } finally {
     await archiver(ctx.request, csrf, PERIMETRE_COMMUN, fiche);
     await ctx.close();
   }
 });
 
-test('CAMP-C5-04 ouvert : un exercice planifié du registre peut être lié à une cellule de crise', async ({
+test('CAMP-C5-04 corrigé : un exercice planifié du registre peut être lié à une cellule de crise', async ({
   browser,
 }) => {
+  // BUG-066 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, A.5.30 et traçabilité : la cellule de crise ne propose que les exercices du registre historique
   // (« Plan d'exercices PRA et crise ») ; un exercice planifié du registre « Exercices et RETEX » n'est jamais proposé.
-  test.fail(true, 'CAMP-C5-04 ouvert : GET /api/crise, exercices sans les fiches du registre');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const nom = 'Campagne C5-04 exercice de bascule planifié (fictif)';
@@ -248,12 +303,13 @@ test('CAMP-C5-04 ouvert : un exercice planifié du registre peut être lié à u
 
 /* ------------------------------------------------------------------------------------------- incidents et crise */
 
-test('CAMP-C5-05 ouvert : le responsable d’une action de scénario saisi juste après l’action est enregistré', async ({
+test('CAMP-C5-05 corrigé : le responsable d’une action de scénario saisi juste après l’action est enregistré', async ({
   browser,
 }) => {
+  // BUG-067 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5.3 et A.5.24 : saisir l'action puis son responsable ; l'enregistrement de l'action recrée la
   // ligne (clé qui contient le texte de l'action) et la saisie du responsable disparaît sans message.
-  test.fail(true, 'CAMP-C5-05 ouvert : responsable de l’action perdu (owner vide)');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -318,23 +374,34 @@ test('CAMP-C5-05 ouvert : le responsable d’une action de scénario saisi juste
   }
 });
 
-test('CAMP-C5-06 ouvert : un incident saisi sous un périmètre restreint n’est pas lu par un compte non membre', async ({
+test('CAMP-C5-06 corrigé : un incident saisi sous un périmètre restreint n’est pas lu par un compte non membre', async ({
   browser,
 }) => {
+  // BUG-044 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 4.3 et A.5.15 ; HDS v2 (périmètre des activités d'hébergement) : les incidents, RETEX et cellules
   // n'ont pas de périmètre ; l'incident saisi avec le périmètre restreint affiché est lu par tout contributeur.
-  test.fail(true, 'CAMP-C5-06 ouvert : incident du périmètre restreint lu par un contributeur non membre');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
   const titre = 'Campagne C5-06 coupure du lien du site d’hébergement (fictif)';
+  const temoin = 'Campagne C5-06 incident du périmètre voisin (fictif)';
   let id: string | undefined;
+  let idTemoin: string | undefined;
   const smsi = await perimetreCampagne(ctx.request, csrf);
   const contrib = await contributeur(browser, ctx.request, csrf);
   const cctx = await browser.newContext({ storageState: contrib.state });
   try {
     const nonMembre = await cctx.request.get(`/api/grc/${smsi}/objects?kind=continuity_plan`);
     expect(nonMembre.status(), 'le contributeur n’est pas membre du périmètre restreint').toBe(404);
+    // Témoin : le contributeur lit bien les incidents de son propre périmètre (voisin). Sans lui, un compte qui ne lit aucun
+    // incident (compte sans rattachement, ADR 0095) ferait passer le test sans rien prouver.
+    idTemoin = (await creerIncident(ctx.request, csrf, temoin, await perimetreVoisin(ctx.request, csrf))).id;
+    const siens = await okJson<{ incidents: Incident[] }>(await cctx.request.get('/api/incidents'), 'incidents lus');
+    expect(
+      siens.incidents.map((i) => i.title),
+      'incident du périmètre du contributeur',
+    ).toContain(temoin);
 
     // Saisie par l'écran, le périmètre restreint étant affiché : « Nouvel incident » crée une fiche vide et l'ouvre en
     // page du registre (ADR 0091).
@@ -358,17 +425,19 @@ test('CAMP-C5-06 ouvert : un incident saisi sous un périmètre restreint n’es
     expect(vue.incidents.map((i) => i.title)).not.toContain(titre);
   } finally {
     await supprimerIncident(ctx.request, csrf, id);
+    await supprimerIncident(ctx.request, csrf, idTemoin);
     await cctx.close();
     await ctx.close();
   }
 });
 
-test('CAMP-C5-11 ouvert : sans gravité saisie, le RETEX d’un incident critique n’affiche pas « Faible »', async ({
+test('CAMP-C5-11 corrigé : sans gravité saisie, le RETEX d’un incident critique n’affiche pas « Faible »', async ({
   browser,
 }) => {
+  // BUG-045 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // A.5.27 ; AGENTS.md (aucun chiffre inventé) : un événement sans gravité reçoit « Faible (reportée) » et la gravité
   // maximale du RETEX vaut « Faible » pour un incident d'impact et d'urgence « Élevé » (priorité P1 Critique).
-  test.fail(true, 'CAMP-C5-11 ouvert : « Gravité maximale : Faible » sans gravité saisie');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -401,10 +470,11 @@ test('CAMP-C5-11 ouvert : sans gravité saisie, le RETEX d’un incident critiqu
   }
 });
 
-test('CAMP-C5-18 ouvert : une crise réelle ouverte est annoncée sur le tableau de bord', async ({ browser }) => {
+test('CAMP-C5-18 corrigé : une crise réelle ouverte est annoncée sur le tableau de bord', async ({ browser }) => {
+  // BUG-069 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // A.5.26, A.5.29 : l'écran annonce « bandeau rouge sur le tableau de bord et dans le menu jusqu'à la clôture » ; aucun
   // bandeau n'existe.
-  test.fail(true, 'CAMP-C5-18 ouvert : aucun bandeau de crise réelle sur le tableau de bord');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -429,10 +499,11 @@ test('CAMP-C5-18 ouvert : une crise réelle ouverte est annoncée sur le tableau
   }
 });
 
-test('CAMP-C5-19 ouvert : les incidents de sécurité remontent dans la synthèse du SMSI', async ({ browser }) => {
+test('CAMP-C5-19 corrigé : les incidents de sécurité remontent dans la synthèse du SMSI', async ({ browser }) => {
+  // BUG-070 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 9.1 et 9.3.2 ; A.5.27 : ni le tableau de bord, ni la synthèse, ni le mur, ni le rapport de pilotage
   // ne comptent les incidents ; l'écran du registre annonce pourtant une diapositive « Revue des incidents ».
-  test.fail(true, 'CAMP-C5-19 ouvert : aucune donnée d’incident dans /api/mur/synthese');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   let id: string | undefined;
@@ -453,18 +524,21 @@ test('CAMP-C5-19 ouvert : les incidents de sécurité remontent dans la synthès
   }
 });
 
-test('CAMP-T5-02 ouvert : un contributeur ne retire pas un événement de la chronologie RETEX', async ({ browser }) => {
+test('CAMP-T5-02 corrigé : un contributeur ne retire pas un événement de la chronologie RETEX', async ({ browser }) => {
+  // BUG-050 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // A.5.27, A.5.28 et 7.5.3 ; rôle Contributeur « lire et modifier » : DELETE /api/incidents/:id/retex/:eid n'exige que
   // incidents:modifier, alors que la suppression d'un incident exige incidents:supprimer ; le journal ne garde pas le
   // contenu retiré.
-  test.fail(true, 'CAMP-T5-02 ouvert : DELETE …/retex/:eid répond 200 au contributeur');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   let id: string | undefined;
   const contrib = await contributeur(browser, ctx.request, csrf);
   const cctx = await browser.newContext({ storageState: contrib.state });
   try {
-    id = (await creerIncident(ctx.request, csrf, 'Campagne T5-02 incident pour le RETEX (fictif)')).id;
+    // Incident du périmètre où le contributeur est rattaché en écriture (sans rattachement : 404 « Incident absent. »).
+    const voisin = await perimetreVoisin(ctx.request, csrf);
+    id = (await creerIncident(ctx.request, csrf, 'Campagne T5-02 incident pour le RETEX (fictif)', voisin)).id;
     const avec = await okJson<Incident>(
       await cctx.request.post(`/api/incidents/${id}/retex`, {
         headers: { 'X-CSRF-Token': contrib.csrf },
@@ -485,12 +559,15 @@ test('CAMP-T5-02 ouvert : un contributeur ne retire pas un événement de la chr
   }
 });
 
-test('CAMP-T5-03 ouvert : le module « Incidents et PCA/PRA » donne la lecture des PCA/PRA', async ({ browser }) => {
+test('CAMP-T5-03 corrigé : le module « Incidents et PCA/PRA » donne la lecture des PCA/PRA', async ({ browser }) => {
+  // BUG-076 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // A.5.15, A.5.18, A.5.29 : un auditeur externe à qui l'on ouvre le seul module « Incidents et PCA/PRA » reçoit 403
   // « pilotage:lire » sur les plans de continuité : il faut lui ouvrir tout le Pilotage du SMSI.
-  test.fail(true, 'CAMP-T5-03 ouvert : 403 pilotage:lire sur les plans de continuité');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
+  // L'auditeur est rattaché en lecture seule au périmètre commun (voir `auditeur`) : sans rattachement, il ne voit aucun
+  // périmètre (ADR 0095) et recevrait 404 avant le contrôle du module.
   const aud = await auditeur(browser, ctx.request, csrf);
   const actx = await browser.newContext({ storageState: aud.state });
   try {
@@ -505,12 +582,13 @@ test('CAMP-T5-03 ouvert : le module « Incidents et PCA/PRA » donne la lecture 
 
 /* -------------------------------------------------------------------------------------------- exports et périmètre */
 
-test('CAMP-C5-15 ouvert : l’export Excel garde la classification « Piste de progrès » de l’écart', async ({
+test('CAMP-C5-15 corrigé : l’export Excel garde la classification « Piste de progrès » de l’écart', async ({
   browser,
 }) => {
+  // BUG-046 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 10.2 et traçabilité : l'export « Écarts et actions » traduit le code PP par « Point sensible »,
   // alors que l'application (modèle, tableau de bord) l'affiche « Piste de progrès ».
-  test.fail(true, 'CAMP-C5-15 ouvert : « Point sensible » dans la feuille « Registre des écarts »');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const nom = 'Campagne C5-15 piste de progrès sur la journalisation (fictif)';
@@ -531,10 +609,11 @@ test('CAMP-C5-15 ouvert : l’export Excel garde la classification « Piste de p
   }
 });
 
-test('CAMP-C5-16 ouvert : l’export complet contient les plans de continuité', async ({ browser }) => {
+test('CAMP-C5-16 corrigé : l’export complet contient les plans de continuité', async ({ browser }) => {
+  // BUG-058 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5 ; scénario, étape 17 : « Export complet » ne lit que le registre historique ; plans de
   // continuité, exercices du registre, RETEX, scénarios, documents, risques et revues n'y figurent pas.
-  test.fail(true, 'CAMP-C5-16 ouvert : plan de continuité absent de l’export complet');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const nom = 'Campagne C5-16 PRA du site principal (fictif)';
@@ -550,10 +629,11 @@ test('CAMP-C5-16 ouvert : l’export complet contient les plans de continuité',
   }
 });
 
-test('CAMP-C5-17 ouvert : choisir de nouveau le périmètre affiché ne change pas de périmètre', async ({ browser }) => {
+test('CAMP-C5-17 corrigé : choisir de nouveau le périmètre affiché ne change pas de périmètre', async ({ browser }) => {
+  // BUG-068 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 4.3 : la liste « Périmètre affiché » désélectionne l'option déjà choisie et retombe sur le
   // périmètre racine (l'adresse garde le sous-périmètre) ; une saisie part alors dans le mauvais périmètre.
-  test.fail(true, 'CAMP-C5-17 ouvert : le périmètre racine remplace le sous-périmètre resélectionné');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -572,10 +652,13 @@ test('CAMP-C5-17 ouvert : choisir de nouveau le périmètre affiché ne change p
 
 /* ------------------------------------------------------------------------------------- Plateforme et Système */
 
-test('CAMP-C6-04 ouvert : la fenêtre Référentiels affiche le référentiel complémentaire actif', async ({ browser }) => {
+test('CAMP-C6-04 corrigé : la fenêtre Référentiels affiche le référentiel complémentaire actif', async ({
+  browser,
+}) => {
+  // BUG-047 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // Traçabilité du référentiel appliqué : `activeFw` vaut un identifiant (« recyf-2.5 ») mais la liste ne propose que des
   // noms ; elle s'affiche vide, et l'enregistrer tel quel désactive ReCyF dans le socle.
-  test.fail(true, 'CAMP-C6-04 ouvert : « Référentiel complémentaire actif » vide');
   const { state } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
@@ -596,10 +679,11 @@ test('CAMP-C6-04 ouvert : la fenêtre Référentiels affiche le référentiel co
   }
 });
 
-test('CAMP-C6-05 ouvert : la catégorie NIS 2 peut être remise à « Non renseignée »', async ({ browser }) => {
+test('CAMP-C6-05 corrigé : la catégorie NIS 2 peut être remise à « Non renseignée »', async ({ browser }) => {
+  // BUG-048 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5.3 et A.8.15 : la valeur vide est acceptée (200, « enregistré ») mais la catégorie précédente
   // revient ; le journal d'audit consigne pourtant le passage à la valeur vide.
-  test.fail(true, 'CAMP-C6-05 ouvert : entityCategory reste « importante » après enregistrement de la valeur vide');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   try {
@@ -629,12 +713,13 @@ test('CAMP-C6-05 ouvert : la catégorie NIS 2 peut être remise à « Non rensei
   }
 });
 
-test('CAMP-C6-12 ouvert : la revue des accès indique les périmètres accessibles de chaque compte', async ({
+test('CAMP-C6-12 corrigé : la revue des accès indique les périmètres accessibles de chaque compte', async ({
   browser,
 }) => {
+  // BUG-071 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, A.5.15 et A.5.18 ; HDS : l'export « Revue des accès » (CSV et Excel) n'a ni colonne ni mention
   // des périmètres lisibles ou modifiables, alors que l'accès au périmètre restreint est attribué au compte.
-  test.fail(true, 'CAMP-C6-12 ouvert : aucun périmètre dans la revue des accès');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   try {
@@ -657,10 +742,11 @@ test('CAMP-C6-12 ouvert : la revue des accès indique les périmètres accessibl
   }
 });
 
-test('CAMP-C6-21 ouvert : une date de test de restauration dans le futur est refusée', async ({ browser }) => {
+test('CAMP-C6-21 corrigé : une date de test de restauration dans le futur est refusée', async ({ browser }) => {
+  // BUG-072 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, A.8.13 ; guide d'installation, étape 11.4 : une date future est enregistrée et fait disparaître
   // l'alerte « Test de restauration à faire ».
-  test.fail(true, 'CAMP-C6-21 ouvert : date future acceptée (200), alerte levée');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const avant = await okJson<{ values: Record<string, unknown> }>(
@@ -682,10 +768,11 @@ test('CAMP-C6-21 ouvert : une date de test de restauration dans le futur est ref
   }
 });
 
-test('CAMP-C6-22 ouvert : une version de l’état contient l’état qu’elle date', async ({ browser }) => {
+test('CAMP-C6-22 corrigé : une version de l’état contient l’état qu’elle date', async ({ browser }) => {
+  // BUG-073 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5.3 ; AGENTS.md (aucune promesse que l'outil ne tient pas) : chaque version est enregistrée sans
   // les modules repris dans des tables ; « Télécharger » rend {} et « Restaurer » n'a rien à restaurer.
-  test.fail(true, 'CAMP-C6-22 ouvert : GET /api/admin/versions/:v rend {}');
   const { state, csrf } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   let id: string | undefined;
