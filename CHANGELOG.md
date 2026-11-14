@@ -8,6 +8,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Corrigé
+
+- **Logo par défaut** : sans logo de l'organisation, `GET` et `HEAD /api/settings/logo` servent la marque de
+  l'application (SVG, en-tête `X-Logo: defaut`) au lieu d'une réponse 404, que le navigateur inscrivait en erreur à chaque
+  page depuis la refonte Neon ; l'en-tête garde la pastille, sans changement visuel. Constat R7-01 du rejeu de la version
+  7.0.0. _(Session « Campagne multi-agent RSSI virtuel », à la demande du RSSI.)_
+
 ## [7.0.0] — 2026-11-14
 
 Version majeure : cinq migrations SQL (`058` et `059` destructives, `060`, `061` et `062` additives), aucune nouvelle dépendance. Elle refond les
