@@ -35,3 +35,11 @@ Mantine de style responsives ([ADR 0006](docs/adr/0006-front-react-mantine-csp-s
 Les décisions, règles de sécurité, permissions, tests et précautions de données
 restent celles d’AGENTS et CONTRIBUTING. Les références datées expliquent
 l’historique ; elles ne remplacent pas les consignes actuelles.
+
+## Sous-agents de ce dépôt
+
+- `codeur` (Opus) : réalise un changement bien cadré une fois les décisions du RSSI obtenues ; ne commite ni ne pousse, rejoue
+  les contrôles et rend un rapport. La session principale relit le résultat, rejoue les contrôles, commite et ouvre la PR.
+- `conseiller` (Fable, lecture seule) : à consulter seulement sur un point vraiment difficile (conception aux effets étendus, bug
+  qui résiste, migration destructive, droits). Son avis se vérifie par les tests et la CI ; il ne remplace aucune décision du RSSI.
+- `rssi-virtuel` : recette exploratoire sur une pile vierge (voir sa définition).

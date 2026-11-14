@@ -18,6 +18,12 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
 éléments (lot 2).
 
+### Ajouté
+
+- **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
+  les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
+  `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
@@ -76,6 +82,14 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
 - **Menu Gestion des risques simplifié, lot 2 : fiches « opportunité » retirées du serveur** ([ADR 0090](docs/adr/0090-simplification-du-menu-gestion-des-risques.md)) : l'API ne crée plus de fiche
   « opportunité » ; la revue de direction et le jeu de démonstration n'en parlent plus. Les traitements et les éléments EBIOS RM sont conservés. Aucune migration : les
   fiches déjà saisies restent inertes.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+- **Démonstration complète** : les données de démonstration (case de l'installation initiale et `suivi jeu-de-test`) alimentent aussi les rubriques jusqu'ici
+  vides : plans du SMSI (formation, sensibilisation, exercices PRA et de crise, avec leurs résultats), dates du cycle d'audit et organisation de l'audit (trois
+  jours, neuf créneaux, cinq participants), deux évaluations par le clausier, deux sites fictifs rattachés au périmètre de l'organisation (avec leurs fournisseurs
+  et une action), fournisseurs du périmètre, cartographie (vues contexte et processus), chronologie du RETEX d'un incident, plans de continuité et exercice,
+  plan de contrôle, registre des preuves, une seconde tâche récurrente et le plan d'action d'un risque du registre (traitement relié par « Traite » et son
+  action). Tout passe par l'API publique ; données entièrement fictives, dates relatives au jour du chargement. Aucune migration, aucune action sur le serveur.
   _(Session « Projet audit_suivi Coeur ».)_
 
 ### Retiré
