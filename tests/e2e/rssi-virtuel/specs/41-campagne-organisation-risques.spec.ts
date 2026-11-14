@@ -1,7 +1,8 @@
 /* Campagne de recette multi-agent du 12/11/2026, phase 3 : défauts bloquants et majeurs rejoués sur les piles 1 et 2
    (organisation, contexte, objectifs, fournisseurs ; risques et EBIOS RM), docs/05_RECETTE/rssi-virtuel/campagne/
    rejeu-piles-1-2.md. Chaque test décrit le comportement attendu et porte un marqueur test.fail tant que le constat est
-   ouvert : il devient rouge une fois le défaut corrigé, ce qui oblige à retirer le marqueur. Le fichier ne dépend que de
+   ouvert : il devient rouge une fois le défaut corrigé, ce qui oblige à retirer le marqueur ; un constat corrigé et vérifié
+   par la recette garde son test, sans marqueur (« corrigé »), comme test de non-régression. Le fichier ne dépend que de
    l'installation (00) : il crée ses propres données fictives (« Campagne <constat> … (fictif) »), ses périmètres privés et
    ses comptes, et archive ce qui pourrait gêner les invariants (90). */
 import { randomUUID } from 'node:crypto';
@@ -144,12 +145,13 @@ function lireClasseur(buf: Buffer): Map<string, string[][]> {
 
 /* ------------------------------------------------------------------------------- organisation et contexte (pile 1) */
 
-test('CAMP-C1-03 ouvert : une fiche du contexte créée par erreur s’archive depuis l’écran', async ({ browser }) => {
+test('CAMP-C1-03 corrigé : une fiche du contexte créée par erreur s’archive depuis l’écran', async ({ browser }) => {
+  // BUG-052 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 7.5.3 (maîtrise des informations documentées, retrait des informations obsolètes). La fiche
   // générique des registres du Pilotage (SWOT, parties intéressées, rôles, contexte : constat C2-10, même cause)
   // n'offre que « Fermer » et « Enregistrer », alors que l'API archive (DELETE …/objects/:id) et que la fiche d'un
   // risque porte « Archiver la fiche ». Le cas « opportunité » est retiré avec le type de fiche (ADR 0090, lot 2).
-  test.fail(true, 'CAMP-C1-03 ouvert : aucun « Archiver la fiche » dans la fiche SWOT');
   const s = await admin(browser);
   const fiches: { id: string; version: number }[] = [];
   try {
@@ -180,13 +182,14 @@ test('CAMP-C1-03 ouvert : une fiche du contexte créée par erreur s’archive d
   }
 });
 
-test('CAMP-C1-04 ouvert : l’export Excel « Contexte du SMSI » reprend les parties intéressées saisies', async ({
+test('CAMP-C1-04 corrigé : l’export Excel « Contexte du SMSI » reprend les parties intéressées saisies', async ({
   browser,
 }) => {
+  // BUG-038 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 4.2 et 7.5 : le classeur remis à un auditeur doit refléter les fiches de la rubrique. L'export
   // lit le registre historique (`interested`, `swots`, `roles`), pas les objets `stakeholder`, `swot`, `governance` :
   // feuilles réduites à leur en-tête (même famille que BUG-020).
-  test.fail(true, 'CAMP-C1-04 ouvert : feuille « Parties intéressées » réduite à son en-tête');
   const s = await admin(browser);
   try {
     const nom = 'Campagne C1-04 partie intéressée exportée (fictif)';
@@ -202,10 +205,11 @@ test('CAMP-C1-04 ouvert : l’export Excel « Contexte du SMSI » reprend les pa
   }
 });
 
-test('CAMP-C1-05 ouvert : le PESTEL reprend les menaces d’un SWOT saisi à l’écran', async ({ browser }) => {
+test('CAMP-C1-05 corrigé : le PESTEL reprend les menaces d’un SWOT saisi à l’écran', async ({ browser }) => {
+  // BUG-053 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 4.1 (enjeux externes) : le PESTEL, la carte et la fiche processus lisent les enjeux du registre
   // historique ; un SWOT ou une fiche de contexte saisis dans la rubrique n'y figurent jamais.
-  test.fail(true, 'CAMP-C1-05 ouvert : la menace du SWOT est absente du PESTEL (aucun enjeu externe)');
   const s = await admin(browser);
   try {
     const menace = 'Campagne C1-05 menace externe du SWOT (fictif)';
@@ -218,13 +222,14 @@ test('CAMP-C1-05 ouvert : le PESTEL reprend les menaces d’un SWOT saisi à l�
   }
 });
 
-test('CAMP-C1-07 ouvert : cocher, décocher et recocher un critère d’évaluation d’un fournisseur', async ({
+test('CAMP-C1-07 corrigé : cocher, décocher et recocher un critère d’évaluation d’un fournisseur', async ({
   browser,
 }) => {
+  // BUG-054 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, A.5.19 à A.5.22 ; règle « aucune erreur JavaScript ». Au troisième clic, la page tombe sur
   // « Une erreur est survenue — Cannot read properties of null (reading 'checked') » (Fournisseurs.tsx lit
   // `e.currentTarget.checked` dans la fonction passée à `setChoix`) ; l'évaluation en cours est perdue.
-  test.fail(true, 'CAMP-C1-07 ouvert : « Une erreur est survenue » au troisième clic sur la case');
   const s = await admin(browser);
   const erreurs: string[] = [];
   s.page.on('pageerror', (e) => erreurs.push(e.message));
@@ -259,34 +264,50 @@ test('CAMP-C1-07 ouvert : cocher, décocher et recocher un critère d’évaluat
   }
 });
 
-test('CAMP-C1-10 ouvert : la Synthèse d’un sous-périmètre montre ses objectifs et indicateurs', async ({ browser }) => {
+test('CAMP-C1-10 corrigé : la Synthèse d’un sous-périmètre montre ses objectifs et indicateurs', async ({
+  browser,
+}) => {
+  // BUG-055 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.2 et 9.1 : sous un sous-périmètre, objectifs et indicateurs passent par un registre générique
   // (sans processus, ressources ni méthode d'évaluation) et la Synthèse n'a aucune carte « Objectifs et indicateurs »
   // (même cause que BUG-037, `smsi === SOCLE`).
-  test.fail(true, 'CAMP-C1-10 ouvert : aucune carte « Objectifs et indicateurs » dans la Synthèse du sous-périmètre');
   const s = await admin(browser);
+  let objectif: { smsi: string; id: string } | undefined;
   try {
     const p = await creerPerimetre(s, 'Campagne C1-10 sous-périmètre (fictif)', PERIMETRE_COMMUN);
-    await creerObjet(s, p.id, 'objective', 'Campagne C1-10 objectif du sous-périmètre (fictif)', {
-      target: 'Disponibilité de 99,9 % (fictif)',
-      dueAt: '2027-06-30',
-    });
+    // Depuis l'ADR 0094 (PR #269), un seul modèle d'objectifs dans tous les périmètres, celui de l'outil de suivi : la fiche
+    // native « objective » n'est plus proposée à la saisie et n'alimente plus la Synthèse.
+    const nom = 'Campagne C1-10 objectif du sous-périmètre (fictif)';
+    const cree = await ok<{ id: string }>(
+      await ecrire(s, 'POST', `/api/grc/${p.id}/pilotage/objectifs/objectives`, { name: nom, due: '2027-06-30' }),
+      'création de l’objectif',
+    );
+    objectif = { smsi: p.id, id: cree.id };
     await s.page.goto(`/pilotage/synthese?perimetre=${p.id}`);
     await expect(s.page.getByRole('combobox', { name: 'Périmètre affiché' })).toHaveValue(p.name);
     await expect(s.page.getByRole('heading', { name: 'Synthèse', level: 1 })).toBeVisible();
     await expect(s.page.getByRole('heading', { name: 'Objectifs et indicateurs', level: 2 })).toBeVisible();
+    await expect(s.page.getByLabel('Objectifs et indicateurs du périmètre')).toContainText(nom);
   } finally {
+    if (objectif)
+      await ecrire(
+        s,
+        'DELETE',
+        `/api/grc/${objectif.smsi}/pilotage/objectifs/objectives/${objectif.id}?confirm=SUPPRIMER`,
+      );
     await s.fermer();
   }
 });
 
-test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une évaluation par le clausier crée une action', async ({
+test('CAMP-C1-12 corrigé : « Créer les actions pour les écarts » d’une évaluation par le clausier crée une action', async ({
   browser,
 }) => {
+  // BUG-056 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 10.2 et A.5.19 à A.5.22. Le bouton annonce « Action FOU-0n créée » mais crée seulement un écart
   // (nature « Opportunité d'amélioration », sans responsable ni échéance) ; le plan d'actions reste vide. L'écart, lui,
   // figure bien dans la DdA sur A.5.19 à A.5.22 (l'échec d'INV-08 relevé en phase 1 était un faux positif).
-  test.fail(true, 'CAMP-C1-12 ouvert : aucune action créée, seulement un écart sans responsable ni échéance');
   const s = await admin(browser);
   try {
     const nom = `Campagne C1-12 fournisseur ${EXECUTION} (fictif)`;
@@ -315,7 +336,14 @@ test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une éva
     );
     expect(ecart, `écart ${cree.action} créé`).toBeTruthy();
     const actions = await ok(await s.req.get(`/api/grc/${PERIMETRE_COMMUN}/objects?kind=action`), 'plan d’actions');
-    expect((actions.items as { name: string }[]).map((a) => a.name).filter((n) => n.includes(nom))).not.toEqual([]);
+    // Depuis la PR #269, une action par point du clausier, nommée d'après le point (« Clausier O-1.1 : … ») et décrite
+    // d'après l'écart (« Écart FOU-0n : … ») : elle se retrouve par l'identifiant de l'écart, pas par le nom du fournisseur.
+    const deLEcart = new RegExp(`\\b${String(cree.action)}\\b`);
+    expect(
+      (actions.items as { name: string; data: { description?: string } }[])
+        .filter((a) => deLEcart.test(`${a.name} ${a.data.description ?? ''}`))
+        .map((a) => a.name),
+    ).not.toEqual([]);
   } finally {
     // L'écart (piste de progrès, type PP) reste ouvert : INV-05 ne vise que les NC et points sensibles, INV-06 n'en fait
     // qu'un avertissement. Il n'est pas archivé : l'identifiant historique FOU-0n d'un écart archivé est réattribué à
@@ -325,13 +353,14 @@ test('CAMP-C1-12 ouvert : « Créer les actions pour les écarts » d’une éva
   }
 });
 
-test('CAMP-R12-01 ouvert : l’écart d’une évaluation se crée encore après l’archivage du précédent écart du clausier', async ({
+test('CAMP-R12-01 corrigé : l’écart d’une évaluation se crée encore après l’archivage du précédent écart du clausier', async ({
   browser,
 }) => {
+  // BUG-077 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 10.2 et A.5.19 à A.5.22 ; aucune réponse 5xx. Le prochain identifiant historique FOU-0n est calculé
   // sur les écarts restants, sans l'écart archivé qui garde le sien : la création suivante viole la clé unique
   // `grc_objects_smsi_id_legacy_key_legacy_id_key` et répond 500 (relevé pendant l'écriture de CAMP-C1-12).
-  test.fail(true, 'CAMP-R12-01 ouvert : identifiant FOU-0n réattribué après archivage, création en erreur 500');
   const s = await admin(browser);
   const ecartDe = async (cle: string) => {
     const nom = `Campagne R12-01 fournisseur ${cle} ${EXECUTION} (fictif)`;
@@ -379,11 +408,12 @@ test('CAMP-R12-01 ouvert : l’écart d’une évaluation se crée encore après
 
 /* --------------------------------------------------------------------------------------- risques et EBIOS RM (pile 2) */
 
-test('CAMP-C2-01 ouvert : re-choisir « Réduire » dans « Stratégie » enregistre « Réduire »', async ({ browser }) => {
+test('CAMP-C2-01 corrigé : re-choisir « Réduire » dans « Stratégie » enregistre « Réduire »', async ({ browser }) => {
+  // BUG-057 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 a) ; AGENTS.md (messages en français). La liste affiche « Réduire » mais, re-cliquée,
   // envoie `strategy: null` et reçoit 422 « Données invalides — strategy : Option invalide … » (même mécanisme que
   // BUG-022 pour « Méthode publiée »).
-  test.fail(true, 'CAMP-C2-01 ouvert : strategy null envoyé alors que « Réduire » est affiché');
   const s = await admin(browser);
   try {
     const p = await creerPerimetre(s, 'Campagne C2-01 risques (fictif)');
@@ -409,11 +439,12 @@ test('CAMP-C2-01 ouvert : re-choisir « Réduire » dans « Stratégie » enregi
   }
 });
 
-test('CAMP-C2-03 ouvert : un risque jamais apprécié ne peut pas être formellement accepté', async ({ browser }) => {
+test('CAMP-C2-03 corrigé : un risque jamais apprécié ne peut pas être formellement accepté', async ({ browser }) => {
+  // BUG-039 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.2 e), 6.1.3 f) et 8.3 : l'acceptation d'un risque résiduel suppose un niveau de risque
   // comparé aux critères d'acceptation. Un risque « Non apprécié » reçoit aujourd'hui une décision « acceptée »
   // (HTTP 200), immuable, sans avertissement.
-  test.fail(true, 'CAMP-C2-03 ouvert : décision d’acceptation enregistrée (200) sur un risque sans appréciation');
   const s = await admin(browser);
   try {
     const p = await creerPerimetre(s, 'Campagne C2-03 risques (fictif)');
@@ -469,14 +500,15 @@ test('CAMP-C2-03 ouvert : un risque jamais apprécié ne peut pas être formelle
   }
 });
 
-test('RSSI-09 ouvert : un risque ne s’apprécie pas sans matrice (niveau choisi librement refusé)', async ({
+test('RSSI-09 corrigé : un risque ne s’apprécie pas sans matrice (niveau choisi librement refusé)', async ({
   browser,
 }) => {
+  // BUG-024 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.2 b) (résultats cohérents et comparables). ARBITRAGE DU RSSI DU 13/11/2026 (BUG-024) : la
   // matrice est obligatoire pour apprécier un risque. Le modèle de méthode « ISO/IEC 27005 » calcule aujourd'hui par
   // « jugement » : « Critique × Très probable » peut recevoir le niveau « Faible ». Attendu après correction : méthode sans
   // matrice refusée (aperçu ou publication), ou niveau imposé par la matrice, jamais le niveau choisi librement.
-  test.fail(true, 'RSSI-09 ouvert : « Critique × Très probable = Faible » accepté par une méthode sans matrice');
   const s = await admin(browser);
   try {
     const p = await creerPerimetre(s, `Campagne RSSI-09 risques ${EXECUTION} (fictif)`);
@@ -557,13 +589,14 @@ test('RSSI-09 ouvert : un risque ne s’apprécie pas sans matrice (niveau chois
   }
 });
 
-test('CAMP-C2-05 ouvert : l’export Excel complet contient le registre des risques et le plan de traitement', async ({
+test('CAMP-C2-05 corrigé : l’export Excel complet contient le registre des risques et le plan de traitement', async ({
   browser,
 }) => {
+  // BUG-058 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.2 e), 6.1.3 e), 8.2 et 8.3 (résultats conservés en information documentée) : le classeur
   // complet compte 28 feuilles (DdA, écarts, actions, fournisseurs…), aucune de risques ni de traitements ; aucun écran
   // des risques n'exporte hors de la carte.
-  test.fail(true, 'CAMP-C2-05 ouvert : aucune feuille de risques ni de traitements dans l’export complet');
   const s = await admin(browser);
   try {
     const r = await s.req.get('/api/suivi/export?groupe=all&mode=std');
@@ -583,11 +616,12 @@ test('CAMP-C2-05 ouvert : l’export Excel complet contient le registre des risq
   }
 });
 
-test('CAMP-C2-06 ouvert : l’éditeur de méthode nomme ses boutons sans clé technique', async ({ browser }) => {
+test('CAMP-C2-06 corrigé : l’éditeur de méthode nomme ses boutons sans clé technique', async ({ browser }) => {
+  // BUG-059 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // AGENTS.md (interface en français, sans clé technique) ; ISO/IEC 27001:2022, 7.5. Boutons « Retirer
   // configuration.dimensions 1 », « Retirer configuration.levels 1 »… ; ailleurs « Modéré · conditional »,
   // « Option : reduce », « draft » (extension de BUG-023). Ce test couvre la partie qui se rejoue sans données.
-  test.fail(true, 'CAMP-C2-06 ouvert : boutons « Retirer configuration.… » dans l’éditeur de méthode');
   const s = await admin(browser);
   try {
     await s.page.goto(`/pilotage/configuration?perimetre=${PERIMETRE_COMMUN}`);
@@ -601,13 +635,14 @@ test('CAMP-C2-06 ouvert : l’éditeur de méthode nomme ses boutons sans clé t
   }
 });
 
-test('CAMP-C2-07 ouvert : les mesures proposées à un traitement portent leur référence', async ({ browser }) => {
+test('CAMP-C2-07 corrigé : les mesures proposées à un traitement portent leur référence', async ({ browser }) => {
+  // BUG-060 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.3 b) et c) (comparaison avec l'annexe A) : au périmètre commun, la liste « Mesures de
   // sécurité (mesures, DdA) » propose « Sauvegarde des informations » sans « A.8.13 », des homonymes (« Généralités »
   // trois fois) et des exigences HDS tronquées. Depuis l'ADR 0090, le traitement s'ajoute par le plan d'action d'un risque,
   // dans le Registre des risques : le test saisit un risque au périmètre commun, avec une méthode publiée de ce périmètre
   // (celle qui existe déjà, sinon le modèle ISO/IEC 27005, publié sans être choisi par défaut).
-  test.fail(true, 'CAMP-C2-07 ouvert : option « Sauvegarde des informations » sans référence');
   const s = await admin(browser);
   const root = `/api/grc/${PERIMETRE_COMMUN}`;
   const nom = 'Campagne C2-07 risque à traiter (fictif)';
@@ -672,13 +707,14 @@ test('CAMP-C2-07 ouvert : les mesures proposées à un traitement portent leur r
   }
 });
 
-test('CAMP-C2-09 ouvert : un scénario G4 × V2 des échelles publiées se place dans la matrice de l’étude', async ({
+test('CAMP-C2-09 corrigé : un scénario G4 × V2 des échelles publiées se place dans la matrice de l’étude', async ({
   browser,
 }) => {
+  // BUG-061 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, 6.1.2 d) ; EBIOS RM, atelier 4. Avec les échelles publiées épinglées (niveaux `g4`, `v2`), la
   // matrice gravité × vraisemblance reste vide et l'écran indique « Non placés dans la matrice (gravité ou
   // vraisemblance sans rang de 1 à 4) » : seules les valeurs numériques sont placées (ebios-visuel/modele.ts).
-  test.fail(true, 'CAMP-C2-09 ouvert : SO « non placé dans la matrice » malgré G4 et V2 des échelles publiées');
   const s = await admin(browser);
   try {
     const adoption = await ecrire(s, 'POST', '/api/config-grc/templates/ebios-rm-gravite-vraisemblance/adopt');
@@ -770,13 +806,14 @@ test('CAMP-T1-01 ouvert : un contributeur limité au sous-périmètre n’écrit
   }
 });
 
-test('CAMP-T1-02 ouvert : un compte rattaché à un périmètre parent voit aussi ses périmètres enfants', async ({
+test('CAMP-T1-02 corrigé : un compte rattaché à un périmètre parent voit aussi ses périmètres enfants', async ({
   browser,
 }) => {
+  // BUG-051, volet « le compte rattaché au parent voit l’enfant » : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // ISO/IEC 27001:2022, A.5.15 et A.5.18. ARBITRAGE DU RSSI DU 13/11/2026 (BUG-051) : rattaché au parent, un compte voit le
   // parent et les enfants qui lui sont rattachés. Aujourd'hui l'appartenance ne se propage pas (ADR 0039) : le membre du
   // parent reçoit 404 sur l'enfant (constaté au rejeu de C5-06 et en phase 2 pour un compte non membre).
-  test.fail(true, 'CAMP-T1-02 ouvert : le membre du seul périmètre parent reçoit 404 sur le périmètre enfant');
   const s = await admin(browser);
   const compte = `campagne-t1-02-${Date.now().toString(36)}`;
   try {

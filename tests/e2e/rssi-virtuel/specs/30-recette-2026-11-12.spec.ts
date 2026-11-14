@@ -1,6 +1,7 @@
 /* Constats de la recette métier du 12/11/2026 (docs/05_RECETTE/rssi-virtuel/RAPPORT-2026-11-12.md) qui se rejouent sans
    parcours long. Chaque test décrit le comportement attendu et porte un marqueur test.fail tant que le constat est ouvert :
-   il devient rouge une fois le défaut corrigé, ce qui oblige à retirer le marqueur. */
+   il devient rouge une fois le défaut corrigé, ce qui oblige à retirer le marqueur. Un constat corrigé et vérifié par la
+   recette garde son test, sans marqueur (« corrigé »), comme test de non-régression. */
 import { expect, test } from '@playwright/test';
 import { sessionAdmin } from '../../helpers';
 import { PERIMETRE_COMMUN } from '../invariants';
@@ -73,11 +74,14 @@ test('RSSI-15 ouvert : la fiche d’une tâche récurrente affiche des noms tech
   }
 });
 
-test('RSSI-23 ouvert : la page Processus est vide dès qu’un sous-périmètre est affiché', async ({ browser }) => {
+test('RSSI-23 corrigé : la page Processus reste utilisable quand un sous-périmètre est affiché', async ({
+  browser,
+}) => {
+  // BUG-037 : corrigé par la PR #269, vérifié par la recette le 14/11/2026 (test de non-régression). Constat
+  // d'origine :
   // Les processus de la page « Processus » vivent dans le registre historique, sans périmètre ; la page ne s'affiche que
   // pour le périmètre racine. Sous un sous-périmètre (ex. hébergement HDS), elle est blanche : ni liste, ni bouton, ni
   // message. Attendu au minimum : pouvoir créer un processus du périmètre affiché, ou lire pourquoi la page est vide.
-  test.fail(true, 'RSSI-23 ouvert : page Processus blanche sous un sous-périmètre');
   const { state } = await sessionAdmin(browser);
   const ctx = await browser.newContext({ storageState: state });
   const page = await ctx.newPage();
