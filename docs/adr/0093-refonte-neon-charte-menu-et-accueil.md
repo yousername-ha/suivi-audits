@@ -91,6 +91,11 @@ filtres et fonctions propres à la cible restent ; aucun module retiré n'est r�
 16. **Harmonisation** (lot 8) : couleurs tirées des seuls jetons (aucun hexadécimal), rayons de 12 px au plus, animations en
     `transform` et `opacity`, arrêtées par le mouvement réduit, l'impression et les couleurs forcées ; règles devenues inutiles
     retirées. « Rôles et responsabilités » n'est pas porté (proposition non validée).
+17. **Barre d'outils discrète des registres** (proposition « Vues en icônes et filtres à la demande », retenue par le RSSI le
+    14/11/2026) : loupe dans le champ de recherche, raccourci « / » qui y place le curseur, pastilles des critères actifs
+    supprimables une à une ou ensemble (« Effacer les critères »), sur les registres communs, le Plan d'actions et les Tâches
+    récurrentes. Adaptation à la cible : les champs de recherche et de filtre restent affichés avec leurs libellés (les
+    parcours existants les remplissent directement) ; aucun filtre n'est retiré ni caché.
 
 ## Conséquences
 

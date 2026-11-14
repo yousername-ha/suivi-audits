@@ -17,13 +17,14 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BusinessPolicy, GrcObject, RegistreDto, TaskData } from '@suivi/shared';
 import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
+import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
+import { libelleDesignation, SelecteurResponsable, useProposables, useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
 import { definirListeCourante } from '../registres/liste-courante';
 import { enRetard, estOccurrence, tonStatut, tonTache, validationDe } from './etat-action';
@@ -102,6 +103,11 @@ export function Tasks({
     showClosed = clos === '1',
     setShowClosed = (v: boolean) => setClos(v ? '1' : '0');
   const mouvement = useMouvementTaches();
+  // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur la recherche, pastilles des critères actifs. Les
+  // champs de filtre restent affichés (vue, mois, responsable, registre, état) : rien n'est caché derrière un bouton.
+  const champRecherche = useRef<HTMLInputElement>(null);
+  useRaccourciRecherche(champRecherche);
+  const responsables = useResponsables(smsi);
   // Petite fenêtre de résultat, ouverte depuis un repère de la Timeline ; le repère retrouve le focus à sa fermeture.
   const [resultat, setResultat] = useState<GrcObject | null>(null),
     [resultatOuvert, setResultatOuvert] = useState(false);
@@ -119,6 +125,40 @@ export function Tasks({
     queryKey: ['registres', 'filtre-taches', smsi],
     queryFn: () => get<{ items: RegistreDto[] }>('/api/registres?archives=false'),
   });
+  const responsableChoisi = (responsables.data ?? []).find((r) => r.id === owner);
+  const criteresTaches: CritereActif[] = [
+    ...(search ? [{ cle: 'tq', libelle: 'Recherche', valeur: search, retirer: () => setSearch('') }] : []),
+    ...(owner
+      ? [
+          {
+            cle: 'tresp',
+            libelle: 'Responsable',
+            valeur: responsableChoisi ? responsableChoisi.displayName || responsableChoisi.username : 'sélectionné',
+            retirer: () => setOwner(null),
+          },
+        ]
+      : []),
+    ...(registre
+      ? [
+          {
+            cle: 'treg',
+            libelle: 'Registre',
+            valeur: (registres.data?.items ?? []).find((r) => r.id === registre)?.name ?? 'sélectionné',
+            retirer: () => setRegistre(''),
+          },
+        ]
+      : []),
+    ...(status
+      ? [
+          {
+            cle: 'tetat',
+            libelle: 'État',
+            valeur: policy.statuses.find((x) => x.id === status)?.label ?? status,
+            retirer: () => setStatus(null),
+          },
+        ]
+      : []),
+  ];
   const first = new Date(month + '-01T00:00:00Z'),
     last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0, 23, 59, 59));
   const list = useQuery({
@@ -329,7 +369,15 @@ export function Tasks({
             if (/^\d{4}-\d{2}$/.test(e.currentTarget.value)) setMonth(e.currentTarget.value);
           }}
         />
-        <TextInput label="Rechercher une action" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+        <TextInput
+          ref={champRecherche}
+          className="barre-recherche"
+          label="Rechercher une action"
+          leftSection={<IconeLoupe />}
+          title="Raccourci : touche /"
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
         <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
         <Select
           label="Registre"
@@ -349,6 +397,15 @@ export function Tasks({
           data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
         />
       </Group>
+      <PastillesCriteres
+        criteres={criteresTaches}
+        onToutEffacer={() => {
+          setSearch('');
+          setOwner(null);
+          setRegistre('');
+          setStatus(null);
+        }}
+      />
       <Checkbox
         label="Afficher les actions closes"
         checked={showClosed}

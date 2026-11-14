@@ -15,7 +15,8 @@ Aucune action.
   et Processus ; panorama des Parties intéressées et cartes des Processus ; Périmètres en graphe compact centré ; Objectifs et
   indicateurs en vue compacte ; DdA en synthèse et mesures en lignes ; Bibliothèque de référentiels ; Fournisseurs en registre
   compact ; SWOT en matrice reliée aux processus ; PESTEL en constellation ; Timeline des actions avec petite fenêtre de
-  validation sur les repères et Timeline adaptative des tâches récurrentes ; avatar HD et habillage final de l'Assistant RSSI.
+  validation sur les repères et Timeline adaptative des tâches récurrentes ; avatar HD et habillage final de l'Assistant RSSI ; barre d'outils discrète des registres (loupe, raccourci « / », pastilles
+  des critères actifs supprimables).
   Fonctions, droits, filtres et sélecteurs existants conservés ; captures de référence régénérées et relues par le RSSI.
   _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 

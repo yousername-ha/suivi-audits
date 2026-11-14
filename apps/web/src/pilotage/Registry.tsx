@@ -30,6 +30,7 @@ import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { Filtres } from '../components/Filtres';
+import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 import { useFiltreUrl } from '../components/filtre-url';
@@ -193,6 +194,57 @@ export function BusinessRegistry({
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
   const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
+  // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur le champ de recherche, pastilles des critères actifs.
+  const champRecherche = useRef<HTMLInputElement>(null);
+  useRaccourciRecherche(champRecherche);
+  const reinitialiserFiltres = () => {
+    setFEtat('all');
+    setFResp('all');
+    setFEcheance('all');
+    setFOrigine('all');
+    setFClassif('all');
+  };
+  const ECHEANCES: Record<string, string> = { retard: 'Dépassée', avenir: 'À venir', sans: 'Sans échéance' };
+  const ORIGINES: Record<string, string> = { existant: 'Existant (outil de suivi)', natif: 'Créé dans le Pilotage' };
+  const criteres: CritereActif[] = [
+    ...(fEtat !== 'all' ? [{ cle: 'etat', libelle: 'État', valeur: fEtat, retirer: () => setFEtat('all') }] : []),
+    ...(fResp !== 'all'
+      ? [{ cle: 'resp', libelle: 'Responsable', valeur: fResp, retirer: () => setFResp('all') }]
+      : []),
+    ...(fEcheance !== 'all'
+      ? [
+          {
+            cle: 'ech',
+            libelle: 'Échéance',
+            valeur: ECHEANCES[fEcheance] ?? fEcheance,
+            retirer: () => setFEcheance('all'),
+          },
+        ]
+      : []),
+    ...(fClassif !== 'all'
+      ? [
+          {
+            cle: 'classif',
+            libelle: 'Classification',
+            valeur:
+              fClassif === 'non_classe'
+                ? 'Non classé'
+                : (ECART_CLASSIFICATION_LABELS[fClassif as keyof typeof ECART_CLASSIFICATION_LABELS] ?? fClassif),
+            retirer: () => setFClassif('all'),
+          },
+        ]
+      : []),
+    ...(fOrigine !== 'all'
+      ? [
+          {
+            cle: 'orig',
+            libelle: 'Origine',
+            valeur: ORIGINES[fOrigine] ?? fOrigine,
+            retirer: () => setFOrigine('all'),
+          },
+        ]
+      : []),
+  ];
   /* Parties intéressées (refonte Neon, lot 5) : panorama Studio par défaut ; le registre détaillé ci-dessous (filtres
      d'URL, commandes, décisions et réalisations) s'ouvre à la demande, ou d'emblée quand une recherche ou un filtre
      d'URL est actif. Il est replié par la feuille de styles (neon-parties.css), sans être démonté. */
@@ -383,19 +435,18 @@ export function BusinessRegistry({
           </Button>
         </Group>
       )}
-      <Group justify="space-between">
-        <Group align="flex-end">
-          <TextInput label="Rechercher" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
-          <Filtres
-            actifs={filtresActifs}
-            onReinitialiser={() => {
-              setFEtat('all');
-              setFResp('all');
-              setFEcheance('all');
-              setFOrigine('all');
-              setFClassif('all');
-            }}
-          >
+      <Group justify="space-between" className="barre-registre">
+        <Group align="flex-end" className="barre-registre__outils">
+          <TextInput
+            ref={champRecherche}
+            className="barre-recherche"
+            label="Rechercher"
+            leftSection={<IconeLoupe />}
+            title="Raccourci : touche /"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <Filtres actifs={filtresActifs} onReinitialiser={reinitialiserFiltres}>
             <Select
               label="État"
               allowDeselect={false}
@@ -458,6 +509,7 @@ export function BusinessRegistry({
           </Button>
         )}
       </Group>
+      <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiserFiltres} />
       <ErrorAlert error={native.error ?? historical.error} />
       <Text size="sm">
         {filtresActifs

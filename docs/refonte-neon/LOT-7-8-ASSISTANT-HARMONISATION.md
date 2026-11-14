@@ -29,10 +29,13 @@ chargée par `styles.css` (`@import`) ; aucun import supplémentaire.
   naturelle (lot 2) ; largeurs de 390 à 2560 px et zoom 150 % sans débordement de page.
 - **CSS mort retiré** : sections, grille teintée et sous-éléments `.carte-processus__*` de l'ancienne grille des processus
   (`apps/web/src/app.css`). La règle `.carte-processus` reste : la carte Studio garde cette classe, lue par les tests.
-- **Non repris** :
-  - barre d'outils épurée commune à tous les registres : la référence la donne comme une proposition partielle et demande de ne
-    pas l'imposer sans contrôler l'existant ; les lignes ouvrables et listes défilantes du lot 2 restent la règle commune ;
-  - « Rôles et responsabilités » (proposition non validée).
+- **Barre d'outils discrète des registres** (demande du RSSI du 14/11/2026, proposition « Vues en icônes et filtres à la
+  demande » de la référence) : `apps/web/src/components/BarreOutils.tsx` (loupe, raccourci « / », pastilles des critères
+  actifs), branchée sur le registre commun (`Registry.tsx`) et sur le Plan d'actions et les Tâches récurrentes (`Tasks.tsx`) ;
+  style dans `lignes-fiches.css`. Les parcours de bout en bout remplissent directement « Rechercher », « Vue synchronisée »,
+  « Mois », « Registre » et « Responsable » : ces champs restent donc affichés, au lieu d'être repliés dans un panneau comme
+  dans la maquette. Les icônes de vues du Plan d'actions viennent du lot 6. Test ajouté : `apps/web/test/barre-outils.test.ts`.
+- **Non repris** : « Rôles et responsabilités » (proposition non validée).
 - **Code laissé en place** : `EtatsCouverture` (`apps/web/src/pilotage/Couverture.tsx`) n'est plus utilisé par la Bibliothèque ;
   le retirer est un nettoyage séparé.
 
