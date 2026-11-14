@@ -98,12 +98,15 @@ export function ValidationOccurrence({
   object,
   acces,
   onOpenObject,
+  onEnregistre,
 }: {
   smsi: string;
   object: GrcObject;
   acces: AccesElement;
   /** Ouvre une autre fiche : sert à enchaîner sur l'occurrence suivante. */
   onOpenObject?: (o: GrcObject) => void;
+  /** Appelé après chaque enregistrement réussi (validation ou réouverture), par exemple pour rafraîchir une Timeline. */
+  onEnregistre?: () => void;
 }) {
   const qc = useQueryClient();
   const cle = ['validations', object.id];
@@ -160,6 +163,7 @@ export function ValidationOccurrence({
       setPreuve('');
       setMotif('');
       await qc.invalidateQueries({ queryKey: cle });
+      onEnregistre?.();
       notifications.show({ color: 'teal', message });
       if (enchainer && chemin === '' && onOpenObject) await suivante();
     } catch (e) {

@@ -1,31 +1,87 @@
-import { Alert, Badge, Button, Card, Checkbox, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+/* Plan d'actions et tâches récurrentes (refonte Neon, lot 6, ADR 0093) : vues synchronisées (Timeline Studio, liste
+   compacte, Kanban, calendrier, Gantt, tableau de bord) sur les mêmes données, filtres et commandes que la version
+   précédente. La vue par défaut reste celle de la politique métier du périmètre (« Vue des actions par défaut »). */
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Select,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Tooltip,
+} from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { BusinessPolicy, GrcObject, RegistreDto, TaskData } from '@suivi/shared';
+import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { libelleDesignation, SelecteurResponsable, useProposables } from '../components/selecteurs';
+import { ficheCliquable } from '../fiche-cliquable';
 import { definirListeCourante } from '../registres/liste-courante';
-import { enRetard, validationDe } from './etat-action';
+import { enRetard, estOccurrence, tonStatut, tonTache, validationDe } from './etat-action';
 import { BasculesFond, useJoursDeFond, type FamilleFond } from './jours-de-fond';
-import { Timeline } from './Timeline';
+import { useMouvementTaches } from './mouvement-taches';
+import { EtatTache, ResultatTache, type OuvrirResultat } from './TimelineCommun';
+import { TimelineStudio } from './TimelineStudio';
+import { ValidationRapide } from './ValidationRapide';
+
 const views = [
+  { value: 'timeline', label: 'Timeline' },
   { value: 'list', label: 'Liste' },
   { value: 'kanban', label: 'Kanban' },
   { value: 'calendar', label: 'Calendrier' },
-  { value: 'timeline', label: 'Timeline' },
   { value: 'gantt', label: 'Planning / Gantt' },
   { value: 'dashboard', label: 'Tableau de bord' },
-];
+] as const;
+type Vue = (typeof views)[number]['value'];
+type Page = { items: GrcObject[]; total: number; nextOffset: number | null };
+
+/** Pictogramme de chaque vue (décoratif : le nom de la vue est porté par le bouton et son info-bulle). */
+function IconeVue({ vue }: { vue: Vue }) {
+  const d: Record<Vue, string> = {
+    timeline: 'M4 4v16M7 7h7M10 12h10M7 17h6',
+    list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+    kanban: 'M4 4h4.5v16H4zM10 4h4.5v10H10zM16 4h4v13h-4z',
+    calendar: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
+    gantt: 'M4 5h7M8 10h9M13 15h7M6 20h8M11 5v5M17 10v5',
+    dashboard: 'M4 4h7v8H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 14h7v6H4z',
+  };
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d[vue]} />
+    </svg>
+  );
+}
+
 export function Tasks({
   smsi,
   policy,
   onOpen,
+  occurrences = false,
 }: {
   smsi: string;
   policy: BusinessPolicy;
   onOpen: (o: GrcObject) => void;
+  /** Page Tâches récurrentes : Timeline adaptée à la périodicité, regroupée par série. */
+  occurrences?: boolean;
 }) {
   // Filtres conservés dans l'adresse (retour depuis une fiche, lien partagé) : vue, mois, recherche, responsable, état, registre.
   const [vue, setVue] = useFiltreUrl('tvue', policy.display.defaultTaskView),
@@ -37,7 +93,7 @@ export function Tasks({
     [clos, setClos] = useFiltreUrl('tclos', policy.display.showClosed ? '1' : '0'),
     [feries, setFeries] = useFiltreUrl('tferies', '0'),
     [fermetures, setFermetures] = useFiltreUrl('tfermetures', '0');
-  const view = vue as (typeof views)[number]['value'],
+  const view: Vue = views.some((v) => v.value === vue) ? (vue as Vue) : 'list',
     setView = setVue,
     owner = responsable || null,
     setOwner = (v: string | null) => setResponsable(v ?? ''),
@@ -45,6 +101,17 @@ export function Tasks({
     setStatus = (v: string | null) => setEtat(v ?? ''),
     showClosed = clos === '1',
     setShowClosed = (v: boolean) => setClos(v ? '1' : '0');
+  const mouvement = useMouvementTaches();
+  // Petite fenêtre de résultat, ouverte depuis un repère de la Timeline ; le repère retrouve le focus à sa fermeture.
+  const [resultat, setResultat] = useState<GrcObject | null>(null),
+    [resultatOuvert, setResultatOuvert] = useState(false);
+  const ouvrirResultat: OuvrirResultat = (o, declencheur) => {
+    retenirFocusFiche(declencheur as HTMLElement);
+    // Une tâche historique se réalise dans sa source, par sa fiche (date, commentaire, justificatif).
+    if (o.id.startsWith('legacy:')) return onOpen(o);
+    setResultat(o);
+    setResultatOuvert(true);
+  };
   const fondActif = { feries: feries === '1', autres: fermetures === '1' },
     fond = useJoursDeFond(fondActif),
     basculerFond = (f: FamilleFond, actif: boolean) => (f === 'feries' ? setFeries : setFermetures)(actif ? '1' : '0');
@@ -63,12 +130,21 @@ export function Tasks({
     queryKey: ['grc', smsi, 'tasks-all', search, status, owner],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      get<{ items: GrcObject[]; total: number; nextOffset: number | null }>(
+      get<Page>(
         `/api/grc/${smsi}/tasks?${new URLSearchParams({ search, offset: String(pageParam), ...(status ? { status } : {}), ...(owner ? { ownerId: owner } : {}) })}`,
       ),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
     enabled: view === 'list' || view === 'kanban' || view === 'timeline',
   });
+  // Séries de la Timeline des récurrences (nom, rythme, échelle Auto) : même requête que le registre des séries de la page.
+  const series = useInfiniteQuery({
+    queryKey: ['grc', smsi, 'objects', 'task_series', ''],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => get<Page>(`/api/grc/${smsi}/objects?kind=task_series&search=&offset=${pageParam}`),
+    getNextPageParam: (p) => p.nextOffset ?? undefined,
+    enabled: occurrences && view === 'timeline',
+  });
+  const seriesItems = series.data?.pages.flatMap((p) => p.items) ?? [];
   const summary = useQuery({
     queryKey: ['grc', smsi, 'task-dashboard'],
     queryFn: () =>
@@ -78,6 +154,7 @@ export function Tasks({
       }>(`/api/grc/${smsi}/tasks/dashboard`),
   });
   const proposables = useProposables(smsi);
+  const ownerOf = (o: GrcObject) => libelleDesignation(o.data, proposables.data);
   const items = (
     view === 'list' || view === 'kanban' || view === 'timeline'
       ? (all.data?.pages.flatMap((p) => p.items) ?? [])
@@ -98,17 +175,73 @@ export function Tasks({
     definirListeCourante(idsAffiches ? idsAffiches.split(',') : []);
     return () => definirListeCourante([]);
   }, [idsAffiches]);
+  // Synthèse des fiches chargées et filtrées (les totaux du serveur sont dans le tableau de bord).
+  const recurrentes = items.filter(estOccurrence);
+  const metriques = occurrences
+    ? [
+        {
+          label: 'Occurrences affichées',
+          valeur: recurrentes.length,
+          note: 'Fiches chargées et filtrées',
+          ton: 'blue',
+        },
+        {
+          label: 'Résultat en attente',
+          valeur: recurrentes.filter((o) => !validationDe(o)).length,
+          note: 'Ni OK, ni KO, ni NA',
+          ton: 'amber',
+        },
+        {
+          label: 'Échéances dépassées',
+          valeur: recurrentes.filter((o) => enRetard(o, policy)).length,
+          note: 'Sans résultat enregistré',
+          ton: 'red',
+        },
+        {
+          label: 'Résultats enregistrés',
+          valeur: recurrentes.filter((o) => validationDe(o)).length,
+          note: 'OK, KO ou NA au journal',
+          ton: 'teal',
+        },
+      ]
+    : [
+        { label: 'Actions affichées', valeur: items.length, note: 'Fiches chargées et filtrées', ton: 'blue' },
+        {
+          label: 'À faire',
+          valeur: items.filter((o) => tonStatut(policy, o.data.status) === 'amber' && !validationDe(o)).length,
+          note: 'Premier état du parcours',
+          ton: 'amber',
+        },
+        {
+          label: 'Échéances dépassées',
+          valeur: items.filter((o) => enRetard(o, policy)).length,
+          note: 'Actions ouvertes',
+          ton: 'red',
+        },
+        {
+          label: 'Terminées ou validées',
+          valeur: items.filter((o) => validationDe(o) || policy.statuses.find((s) => s.id === o.data.status)?.terminal)
+            .length,
+          note: 'Parmi les fiches affichées',
+          ton: 'teal',
+        },
+      ];
   const card = (o: GrcObject) => (
-    <Card withBorder key={o.id}>
+    <Card
+      withBorder
+      key={o.id}
+      {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}
+      className="tache-carte"
+      data-ton={tonTache(o, policy)}
+    >
       <Stack gap="xs">
         <Button variant="subtle" onClick={() => onOpen(o)}>
           {o.name}
         </Button>
-        <Text size="sm">
-          {policy.statuses.find((s) => s.id === o.data.status)?.label ??
-            (o.data.status === 'done' ? 'Terminée (historique)' : 'À faire (historique)')}{' '}
-          · {String(o.data.priority)}
-        </Text>
+        <Group gap="xs">
+          <EtatTache objet={o} policy={policy} />
+          <Text size="sm">{String(o.data.priority)}</Text>
+        </Group>
         <Text size="sm">{o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleString('fr-FR') : 'Sans échéance'}</Text>
         {enRetard(o, policy) && (
           <Badge variant="light" color="red">
@@ -126,14 +259,67 @@ export function Tasks({
   );
   const days = Array.from({ length: last.getUTCDate() }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`);
   return (
-    <Stack>
-      <Group>
+    <Stack className="taches-studio" data-mouvement={mouvement.arrete ? 'pause' : 'anime'}>
+      {resultat && (
+        <ValidationRapide
+          key={resultat.id}
+          smsi={smsi}
+          object={resultat}
+          policy={policy}
+          responsable={ownerOf(resultat)}
+          opened={resultatOuvert}
+          onClose={() => setResultatOuvert(false)}
+          onOpen={onOpen}
+        />
+      )}
+      <div className="taches-entete">
+        <div
+          className="taches-metriques"
+          role="group"
+          aria-label={occurrences ? 'Synthèse des occurrences affichées' : 'Synthèse des actions affichées'}
+        >
+          {metriques.map((m) => (
+            <div className="taches-metrique" data-ton={m.ton} key={m.label}>
+              <span className="taches-metrique__libelle">{m.label}</span>
+              <span className="taches-metrique__valeur">{m.valeur}</span>
+              <span className="taches-metrique__note">{m.note}</span>
+            </div>
+          ))}
+        </div>
+        <Group gap="xs" className="taches-commandes">
+          <div className="taches-vues" role="group" aria-label="Vues des actions">
+            {views.map((v) => (
+              <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
+                <ActionIcon
+                  size="lg"
+                  variant={view === v.value ? 'filled' : 'subtle'}
+                  aria-label={v.label}
+                  aria-pressed={view === v.value}
+                  onClick={() => setView(v.value)}
+                >
+                  <IconeVue vue={v.value} />
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </div>
+          <Button
+            variant="subtle"
+            size="compact-sm"
+            className="taches-pause"
+            aria-pressed={mouvement.pause}
+            onClick={mouvement.basculer}
+          >
+            {mouvement.pause ? 'Reprendre les animations des tâches' : 'Mettre en pause les animations des tâches'}
+          </Button>
+        </Group>
+      </div>
+      <Group className="taches-filtres">
         <Select
           allowDeselect={false}
           label="Vue synchronisée"
-          data={views}
+          data={views.map((v) => ({ value: v.value, label: v.label }))}
           value={view}
-          onChange={(v) => v && setView(v as typeof view)}
+          onChange={(v) => v && setView(v)}
         />
         <TextInput
           label="Mois"
@@ -175,20 +361,21 @@ export function Tasks({
         </>
       )}
       <ErrorAlert error={list.error ?? all.error} />
+      {occurrences && view === 'timeline' && <ErrorAlert error={series.error} />}
       {(view === 'list' || view === 'kanban' || view === 'timeline') && all.hasNextPage && (
         <Button variant="light" onClick={() => void all.fetchNextPage()}>
           Charger les 50 actions suivantes
         </Button>
       )}
+      {occurrences && view === 'timeline' && series.hasNextPage && (
+        <Button variant="light" onClick={() => void series.fetchNextPage()}>
+          Charger les 50 séries suivantes
+        </Button>
+      )}
       <ErrorAlert error={summary.error} />
       {view === 'list' && (
-        <Table.ScrollContainer
-          minWidth={650}
-          scrollAreaProps={{
-            viewportProps: { tabIndex: 0, role: 'region', 'aria-label': 'Tableau, défilement horizontal possible' },
-          }}
-        >
-          <Table>
+        <DataTable label="Actions, vue compacte">
+          <Table className="taches-liste">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Action</Table.Th>
@@ -199,17 +386,28 @@ export function Tasks({
             </Table.Thead>
             <Table.Tbody>
               {items.map((o) => (
-                <Table.Tr key={o.id}>
+                <Table.Tr
+                  key={o.id}
+                  {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}
+                  data-ton={tonTache(o, policy)}
+                >
                   <Table.Td>
-                    <Button variant="subtle" onClick={() => onOpen(o)}>
+                    <Button
+                      variant="subtle"
+                      size="compact-sm"
+                      className="taches-liste__titre"
+                      onClick={() => onOpen(o)}
+                    >
                       {o.name}
                     </Button>
                   </Table.Td>
                   <Table.Td>
-                    {policy.statuses.find((s) => s.id === o.data.status)?.label ??
-                      (o.data.status === 'done' ? 'Terminée (historique)' : 'À faire (historique)')}
+                    <Group gap="xs" wrap="nowrap">
+                      <EtatTache objet={o} policy={policy} />
+                      <ResultatTache objet={o} />
+                    </Group>
                   </Table.Td>
-                  <Table.Td>{libelleDesignation(o.data, proposables.data)}</Table.Td>
+                  <Table.Td>{ownerOf(o)}</Table.Td>
                   <Table.Td>
                     {o.data.dueAt ? new Date(String(o.data.dueAt)).toLocaleDateString('fr-FR') : 'Sans échéance'}
                     {enRetard(o, policy) && (
@@ -217,17 +415,12 @@ export function Tasks({
                         ! En retard
                       </Badge>
                     )}
-                    {validationDe(o) && (
-                      <Badge ml="xs" variant="light" color="teal">
-                        Validée : {validationDe(o)}
-                      </Badge>
-                    )}
                   </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
           </Table>
-        </Table.ScrollContainer>
+        </DataTable>
       )}
       {view === 'kanban' && (
         <div className="grc-kanban" role="region" aria-label="Kanban des actions, défilement possible" tabIndex={0}>
@@ -272,7 +465,14 @@ export function Tasks({
                 {items
                   .filter((o) => String(o.data.dueAt).startsWith(d))
                   .map((o) => (
-                    <Button key={o.id} variant="subtle" size="compact-xs" onClick={() => onOpen(o)}>
+                    <Button
+                      key={o.id}
+                      variant="subtle"
+                      size="compact-xs"
+                      className="taches-calendrier__tache"
+                      data-ton={tonTache(o, policy)}
+                      onClick={() => onOpen(o)}
+                    >
                       {o.name}
                     </Button>
                   ))}
@@ -283,7 +483,18 @@ export function Tasks({
           {items.filter((o) => !o.data.dueAt).map(card)}
         </>
       )}
-      {view === 'timeline' && <Timeline items={items} policy={policy} onOpen={onOpen} fond={fond.jours} />}
+      {view === 'timeline' && (
+        <TimelineStudio
+          items={items}
+          series={seriesItems}
+          occurrences={occurrences}
+          policy={policy}
+          onOpen={onOpen}
+          onResultat={ouvrirResultat}
+          ownerOf={ownerOf}
+          fond={fond.jours}
+        />
+      )}
       {view === 'gantt' && (
         <div className="grc-planning">
           <svg
