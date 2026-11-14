@@ -107,6 +107,29 @@ test('Risques : étude EBIOS RM, atelier validé, risque issu du scénario et ac
     await d.getByRole('button', { name: 'Enregistrer la fiche' }).click();
     await expect(d).toHaveCount(0);
 
+    // Un risque jamais apprécié ne s'accepte pas (6.1.3 f et 8.3, BUG-039) : appréciation préparée par l'API, niveaux imposés
+    // par la matrice de la méthode.
+    const risque = (await (await page.request.get(root + '/objects?kind=risk')).json()).items[0];
+    const cote = { dimensions: { severity: 'impact_2' }, likelihood: 'likelihood_2', level: null, inputs: {} };
+    const appreciation = {
+      ratings: { gross: cote, residual: cote },
+      rationale: 'Appréciation de la recette',
+      decision: 'draft',
+    };
+    const apercuRisque = await appel(page, 'POST', root + '/risks/' + risque.id + '/preview', appreciation);
+    await appel(
+      page,
+      'POST',
+      root + '/risks/' + risque.id + '/evaluate',
+      {
+        ...appreciation,
+        previewId: apercuRisque.previewId,
+        requestId: crypto.randomUUID(),
+        confirm: 'ENREGISTRER',
+      },
+      risque.version,
+    );
+
     // Registre : acceptation à décider, puis décision formelle avec échéance.
     await page.goto('/pilotage/risques');
     const ligne = page.getByRole('row', { name: /Risque : Hameçonnage fictif/ });
