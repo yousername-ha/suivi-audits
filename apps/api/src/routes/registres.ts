@@ -61,6 +61,20 @@ export const registresRoutes = [
   route({
     ...base,
     method: 'GET',
+    url: '/api/registres/mes-elements',
+    summary: 'Éléments attribués à l’utilisateur (« Attribuer à ») ou placés dans un registre qui lui est attribué',
+    query: z
+      .object({
+        search: z.string().max(200).default(''),
+        offset: z.coerce.number().int().min(0).max(1000000).default(0),
+      })
+      .strict(),
+    handler: async ({ svc, s, query }) =>
+      svc.grc.registres.mesElements((s as Session).user, query.search, query.offset),
+  }),
+  route({
+    ...base,
+    method: 'GET',
     url: '/api/registres/elements',
     summary: 'Éléments des registres d’un périmètre, filtrés par registres choisis (sans doublon)',
     query: z
@@ -133,6 +147,15 @@ export const registresRoutes = [
     params: registre,
     handler: async ({ svc, s, params, ip, req }) =>
       svc.grc.registres.archive(params.id, requireIfMatch(req), (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    method: 'POST',
+    url: '/api/registres/:id/desarchivage',
+    summary: 'Désarchiver un registre (gestionnaire du registre)',
+    params: registre,
+    handler: async ({ svc, s, params, ip, req }) =>
+      svc.grc.registres.desarchive(params.id, requireIfMatch(req), (s as Session).user, ip),
   }),
   route({
     ...base,

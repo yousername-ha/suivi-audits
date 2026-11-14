@@ -40,6 +40,7 @@ import { useColonnes, type Colonne } from '../components/Colonnes';
 import { FacteursCompte } from '../components/FacteursCompte';
 import { EditeurReglages } from '../notifications/Reglages';
 import { useCan, useMe } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 import { DataTable } from '@suivi/ui';
 
 const useRoles = () => useQuery({ queryKey: ['admin', 'roles'], queryFn: () => get<RoleOut[]>('/api/admin/roles') });
@@ -137,7 +138,10 @@ export function UsersPanel() {
             {(q.data ?? []).map((u) => {
               const locked = !!(u.locked_until && new Date(u.locked_until) > new Date());
               return (
-                <Table.Tr key={u.id}>
+                <Table.Tr
+                  key={u.id}
+                  {...ficheCliquable(() => setRightsOf(u), `Afficher les droits de ${u.display_name || u.username}`)}
+                >
                   <Table.Td>
                     <Text fw={600}>{u.display_name}</Text>
                     <Text size="xs" c="dimmed">
@@ -614,7 +618,10 @@ export function GroupsPanel() {
             </Table.Thead>
             <Table.Tbody>
               {(q.data ?? []).map((g) => (
-                <Table.Tr key={g.id}>
+                <Table.Tr
+                  key={g.id}
+                  {...(admin ? ficheCliquable(() => setEdit({ group: g }), `Afficher ${g.name}`) : {})}
+                >
                   <Table.Td>
                     <Text fw={600}>{g.name}</Text>
                     {g.description && (
@@ -773,7 +780,7 @@ export function RolesPanel() {
             </Table.Thead>
             <Table.Tbody>
               {(q.data ?? []).map((r) => (
-                <Table.Tr key={r.id}>
+                <Table.Tr key={r.id} {...ficheCliquable(() => setMatrix(r), `Afficher ${r.name}`)}>
                   <Table.Td>
                     <Text fw={600}>{r.name}</Text>
                     <Text size="xs" c="dimmed">

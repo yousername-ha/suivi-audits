@@ -203,11 +203,9 @@ export class Settings {
     const before = (await this.read(s, c)).values;
     if (st.version !== expected) throw conflictError(st.version, before);
     const data: JsonObject = { ...st.data };
-    for (const k of LEGACY_SECTION_KEYS[s]) {
-      const v = after[k];
-      if (v === null || v === '') delete data[k];
-      else data[k] = v as JsonObject[string];
-    }
+    // Une valeur vide est enregistrée telle quelle : retirer la clé de l'état ne retirerait pas la ligne de la table des
+    // réglages, et l'ancienne valeur reviendrait à la lecture (BUG-048).
+    for (const k of LEGACY_SECTION_KEYS[s]) data[k] = after[k] as JsonObject[string];
     const r = await this.legacy.nativeWrite(c, data, user, st.version, `Paramètres : ${s}`);
     if (r.conflict) throw conflictError(r.version, before);
     return { before, after, version: r.version };

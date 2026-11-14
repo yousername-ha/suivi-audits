@@ -10,6 +10,13 @@ import type { ModuleMapper } from '../legacy/store.js';
 const TYPES_PAR_CLASSIFICATION: Record<string, string> = { majeure: 'NC maj', mineure: 'NC min', point_sensible: 'PS' };
 const STATUTS: Record<string, string> = { closed: 'Clos', progress: 'En cours', effectiveness: 'En cours' };
 const REF_MESURE = 'legacy:items:';
+/** Mesure visée par une référence d'écart : « legacy:items:A-5.24 » ou l'exigence du référentiel appliqué
+    « requirement:<référentiel>:<version>:A-5.24 », dont l'identifiant est celui de la mesure (BUG-041). */
+const mesureDeReference = (r: string): string | null => {
+  if (r.startsWith(REF_MESURE)) return r.slice(REF_MESURE.length);
+  const m = /^requirement:[0-9a-f-]{36}:[1-9][0-9]*:(.+)$/.exec(r);
+  return m ? m[1]! : null;
+};
 
 interface Ligne {
   id: string;
@@ -37,7 +44,7 @@ export function ecartNatifVersFinding(o: Ligne): Json {
     status: STATUTS[texte(d.status)] ?? 'Ouvert',
     text: o.name,
     desc: texte(d.description),
-    items: refs.filter((r) => r.startsWith(REF_MESURE)).map((r) => r.slice(REF_MESURE.length)),
+    items: [...new Set(refs.map(mesureDeReference).filter((m): m is string => !!m))],
     createdAt: o.created_at.toISOString(),
   };
   if (texte(d.cause)) f.cause = texte(d.cause);

@@ -1,3 +1,10 @@
+import { libelleAcceptabilite, libelleEtatAppreciation, libelleOptionTraitement } from '@suivi/shared';
+
+/** Horodatage ISO affiché « jj/mm/aaaa hh:mm » (sans fuseau ni fraction de seconde). */
+const horodatageFr = (v: unknown) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(v ?? ''));
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : String(v ?? '');
+};
 const escape = (value: unknown) =>
   String(value ?? '').replace(
     /[&<>"']/g,
@@ -28,21 +35,38 @@ export function committeeReport(input: unknown) {
       data.methodVersion,
       gross.label,
       residual.label,
-      residual.acceptability,
-      data.strategy,
+      libelleAcceptabilite(residual.acceptability),
+      libelleOptionTraitement(data.strategy),
       data.reviewAt,
       assessment.revision,
-      assessment.decision,
+      libelleEtatAppreciation(assessment.decision),
       assessment.created_by,
-      assessment.created_at,
+      horodatageFr(assessment.created_at),
       assessment.rationale,
     ];
   });
-  const frameworks = list(sections.frameworks),
-    mappings = list(sections.mappings);
+  const incidents = list(sections.incidents);
+  const frameworks = list(sections.frameworks);
   const taskSummary = record(record(sections.tasks).summary);
   return `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Comité de pilotage — ${escape(scope.name)}</title><body><main>
     <h1>Rapport de pilotage et audit</h1><h2>${escape(scope.name)}</h2><p>Périmètre : ${escape(scope.scope)}</p><p>Généré le ${escape(report.generatedAt)} par ${escape(report.generatedBy)}. Politique métier : version ${escape(record(report.policy).version)}.</p>
+    ${
+      sections.incidents
+        ? `<h2>Incidents</h2><p>${escape(incidents.length)} incident(s) dans ce périmètre, dont ${escape(incidents.filter((i) => !['Résolu', 'Clos'].includes(String(i.status))).length)} ouvert(s).</p>${table(
+            ['Référence', 'Intitulé', 'Qualification', 'Statut', 'Impact', 'Urgence', 'Détecté le', 'Résolu le'],
+            incidents.map((i) => [
+              i.id,
+              i.title,
+              i.kind,
+              i.status,
+              i.impact,
+              i.urgency,
+              horodatageFr(i.detectedAt),
+              horodatageFr(i.resolvedAt),
+            ]),
+          )}`
+        : ''
+    }
     ${sections.tasks ? `<h2>Suivi des actions</h2>${table(['Total', 'Closes', 'En retard', 'Sans responsable'], [[taskSummary.total, taskSummary.closed, taskSummary.overdue, taskSummary.unassigned]])}` : ''}
     ${
       sections.risks
@@ -62,12 +86,6 @@ export function committeeReport(input: unknown) {
               f.version,
               record(f.data).enabled ? 'Activé' : 'Désactivé',
             ]),
-          )}<h2>Correspondances validées</h2>${table(
-            ['Nom', 'Relation', 'Couverture justifiée (%)', 'Justification', 'Validation par', 'Date'],
-            mappings.map((m) => {
-              const d = record(m.data);
-              return [m.name, d.type, d.coverage, d.justification, d.validatedBy, d.validatedAt];
-            }),
           )}`
         : ''
     }

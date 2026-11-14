@@ -434,6 +434,8 @@ export class GrcTasks {
       // Notifications réellement créées à ce passage (les doublons sont ignorés) : seules elles sont diffusées (ADR 0058).
       // Ces INSERT … SELECT (jointure latérale, jsonb_array_elements, make_interval) restent en SQL paramétré : Kysely les
       // exprimerait par fragments sans gain de vérification (ADR 0062 §5).
+      // Rappels d'action : la personne désignée (« Attribuer à ») les reçoit même sans accès au périmètre, puisque la
+      // désignation lui ouvre l'élément (ADR 0092, lot 2). Le rappel de risque exige toujours l'accès au périmètre.
       const emises: NotificationEmise[] = [];
       const noter = (r: { rows: NotificationEmise[] }) => void emises.push(...r.rows);
       noter(
@@ -445,7 +447,7 @@ export class GrcTasks {
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+   ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
           [now],
         ),
       );
@@ -466,7 +468,7 @@ export class GrcTasks {
    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p.definition->'statuses') st WHERE st->>'id'=o.data->>'status' AND st->>'terminal'='true')
    AND NOT ${OCCURRENCE_VALIDEE}
    AND (o.data->>'dueAt')::timestamptz <= $1::timestamptz + make_interval(days => (o.data->>'reminderDays')::int)
-   AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+   ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
           [now],
         ),
       );
@@ -478,7 +480,7 @@ export class GrcTasks {
         FROM grc_objects o JOIN grc_smsis s ON s.id=o.smsi_id JOIN business_policy_versions p ON p.version=s.business_version JOIN users u ON u.id=(o.data->>'ownerId')::uuid
         WHERE o.kind='risk' AND NOT o.archived AND NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at>now())
         AND p.definition->'notifications'->>'enabled'='true' AND (o.data->>'reviewAt')::date <= $1::timestamptz::date + (p.definition->'notifications'->>'leadDays')::int
-        AND (s.visibility='instance' OR EXISTS(SELECT 1 FROM grc_members m WHERE m.smsi_id=s.id AND m.user_id=u.id)) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
+        AND grc_smsi_visible(s.id,u.id) ON CONFLICT DO NOTHING RETURNING id,user_id AS "userId",kind`,
             [now],
           ),
         );
@@ -510,11 +512,7 @@ export class GrcTasks {
       if (
         r.smsiId &&
         r.objectId &&
-        (await this.g.visible(
-          user,
-          r.smsiId,
-          r.kind === 'risk_review' ? 'pilotage' : r.kind === 'rapprochement' ? 'conformite' : 'ecarts',
-        ))
+        (await this.g.visible(user, r.smsiId, r.kind === 'risk_review' ? 'pilotage' : 'ecarts'))
       )
         visible.push(r);
     return visible;

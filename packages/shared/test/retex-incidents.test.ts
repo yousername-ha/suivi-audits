@@ -82,6 +82,19 @@ describe('RETEX : chronologie', () => {
       graviteMax: '',
     });
   });
+  it('ne déclare aucune gravité maximale tant qu’aucune gravité n’est saisie (BUG-045)', () => {
+    const sans = lireEvenementsRetex([
+      { id: 'EV-1', ts: '2026-10-12T08:00', type: 'Détection', titre: 'Alerte sans gravité' },
+      { id: 'EV-2', ts: '2026-10-12T09:00', type: 'Analyse', titre: 'Analyse sans gravité' },
+    ]);
+    expect(indicateursRetex(sans)).toMatchObject({ evenements: 2, graviteMax: '' });
+    // Une gravité saisie plus tard compte à partir de cet événement ; les premiers, sans gravité, ne comptent pas.
+    const avecPlusTard = lireEvenementsRetex([
+      { id: 'EV-1', ts: '2026-10-12T08:00', type: 'Détection', titre: 'A', gravite: '' },
+      { id: 'EV-2', ts: '2026-10-12T09:00', type: 'Analyse', titre: 'B', gravite: 'Faible' },
+    ]);
+    expect(indicateursRetex(avecPlusTard).graviteMax).toBe('Faible');
+  });
   it('valide la saisie et la modification d’un événement', () => {
     expect(EvenementRetexSaisie.safeParse({ ts: '2026-10-12T08:45', type: 'Détection', titre: 'A' }).success).toBe(
       true,

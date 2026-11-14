@@ -20,13 +20,13 @@ une démarche qualité. Les droits et les modules activés déterminent les rubr
 | Contexte et responsabilités | Périmètre et contexte, parties intéressées, SWOT par processus, PESTEL, rôles et responsabilités |
 | Objectifs et indicateurs | Processus, objectifs, indicateurs (états calculés, valeurs historiques) |
 | Gestion de l'audit | Carte du prochain audit, couverture du cycle, déroulé, planning, participants |
-| Conformité | Référentiels et exigences, bibliothèque, déclaration d'applicabilité (ISO 27001, Annexe A, HDS), mesures, correspondances, rapprochements, **couverture par exigence**, applications à intégrer (GAP), conformité IA |
+| Conformité | Bibliothèque de référentiels avec la **couverture par exigence** du périmètre, déclaration d'applicabilité (ISO 27001, Annexe A, HDS), mesures |
 | Fournisseurs | Fournisseurs de l'organisation et du périmètre, critères, évaluations par le clausier |
-| Risques | Registre, opportunités, études EBIOS RM, cartographie des risques, traitements, scénarios et actifs, configuration des analyses |
+| Risques | Registre des risques (avec le plan d'action de chaque risque), études EBIOS RM, cartographie des risques |
 | Écarts et actions | Amélioration continue, plan d'actions, tâches récurrentes |
 | Preuves et contrôles | Registre des preuves, plan de contrôle |
 | Plans et revues | Continuité (PCA, PRA, PCRA), exercices et RETEX, plans de formation et de sensibilisation, audits internes, **revues de direction** |
-| Incidents et crise | Registre, qualification, cellule de crise, contacts, scénarios et check-lists |
+| Incidents et crise | Registre des incidents (fiche à onglets : qualification guidée, chronologie et RETEX), cellule de crise, contacts, scénarios et check-lists |
 | Outils | Mes rappels, import et rapports ; la configuration du pilotage est une carte de la page Plateforme |
 
 À côté : tableau de bord, documents et liens (chiffrés), cartographie du SMSI, évaluations IA, **exports Excel**, écran mural,
@@ -39,7 +39,7 @@ paramètres, administration (comptes, groupes, rôles, sessions, journal, versio
 - **Revue de direction** : compte rendu Word, support PowerPoint et classeur Excel générés par le serveur.
 - Import et export JSON au format historique (schéma 15), versions de l'état et restauration (administration).
 
-Le pronostic de l'audit, les évaluations fournisseurs (clausier) et le GAP applications sont inclus. Le référentiel ReCyF n'a pas d'export dédié : la page Couverture et les référentiels natifs le remplacent.
+Le pronostic de l'audit et les évaluations fournisseurs (clausier) sont inclus. Le référentiel ReCyF n'a pas d'export dédié : la page Couverture et les référentiels natifs le remplacent.
 
 ## Droits et sécurité
 

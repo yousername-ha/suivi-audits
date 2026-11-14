@@ -32,6 +32,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { EditeurCorrespondance, EditeurCriteres, EditeurEchelle, EditeurMatrice, EditeurTaxonomie } from './editeurs';
 import { USAGE_LABELS, useElement, type Definition, type ElementDetail, type Simulation, type Usage } from './commun';
@@ -447,6 +448,7 @@ function Deriver({ item, opened, onClose }: { item: ElementDetail; opened: boole
         />
         {portee === 'smsi' && (
           <Select
+            allowDeselect={false}
             label="Périmètre"
             data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
             value={smsi}
@@ -493,7 +495,12 @@ function Versions({ item }: { item: ElementDetail }) {
           </Table.Thead>
           <Table.Tbody>
             {item.versions.map((v) => (
-              <Table.Tr key={v.version}>
+              <Table.Tr
+                key={v.version}
+                {...(item.kind === 'scale' && v.version > 1
+                  ? ficheCliquable(() => setComparaison(v.version), `Afficher la version ${v.version}`)
+                  : {})}
+              >
                 <Table.Td>{v.version}</Table.Td>
                 <Table.Td>{v.reason}</Table.Td>
                 <Table.Td>{v.createdBy}</Table.Td>

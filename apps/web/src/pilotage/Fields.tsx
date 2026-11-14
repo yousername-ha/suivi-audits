@@ -209,6 +209,7 @@ export function Fields({
     if (f.type === 'select')
       return (
         <Select
+          allowDeselect={false}
           key={f.key}
           label={f.label}
           data={f.options ?? []}

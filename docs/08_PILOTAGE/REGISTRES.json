@@ -459,7 +459,7 @@
       "id": "FCT-020",
       "name": "Référentiels, exigences et correspondances",
       "module": "conformite",
-      "historical_key": "frameworks / items / appGaps",
+      "historical_key": "frameworks / items",
       "historical_source": "ancien outil (branche archive/outil-legacy-autonome)",
       "implementation": [
         "apps/api/src/grc/frameworks.ts",

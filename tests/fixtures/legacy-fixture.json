@@ -2586,36 +2586,6 @@
    }
   ]
  },
- "appGaps": [
-  {
-   "id": "APP-001",
-   "createdAt": "2026-10-02T07:58:51.403Z",
-   "name": "[name]",
-   "supplier": "",
-   "dscp": "[dscp]",
-   "cloud": "[cloud]",
-   "status": "À étudier",
-   "owner": "",
-   "target": "",
-   "desc": "",
-   "lines": {},
-   "custom": []
-  },
-  {
-   "id": "APP-002",
-   "createdAt": "2026-10-02T09:55:17.442Z",
-   "name": "[name]",
-   "supplier": "",
-   "dscp": "[dscp]",
-   "cloud": "[cloud]",
-   "status": "À étudier",
-   "owner": "",
-   "target": "",
-   "desc": "",
-   "lines": {},
-   "custom": []
-  }
- ],
  "reviews": [
   {
    "id": "COPIL-001",

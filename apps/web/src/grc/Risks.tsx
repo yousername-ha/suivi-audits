@@ -1,7 +1,13 @@
 import { Alert, Button, Card, Modal, Select, Stack, Textarea, Text } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { type GrcObject, type MethodRating, type RiskMethod, type RiskRatings } from '@suivi/shared';
+import {
+  libelleAcceptabilite,
+  type GrcObject,
+  type MethodRating,
+  type RiskMethod,
+  type RiskRatings,
+} from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
@@ -31,6 +37,7 @@ function Rating({
         <Text fw={600}>{title}</Text>
         {method.dimensions.map((d) => (
           <Select
+            allowDeselect={false}
             key={d.id}
             label={d.label}
             value={value.dimensions[d.id] ?? null}
@@ -39,6 +46,7 @@ function Rating({
           />
         ))}
         <Select
+          allowDeselect={false}
           label="Vraisemblance"
           value={value.likelihood}
           data={method.likelihood.map((l) => ({ value: l.id, label: l.label }))}
@@ -46,6 +54,7 @@ function Rating({
         />
         {method.calculation.kind === 'judgement' && (
           <Select
+            allowDeselect={false}
             label="Niveau de risque — jugement documenté"
             value={value.level}
             data={method.levels.map((l) => ({ value: l.id, label: l.label }))}
@@ -59,6 +68,7 @@ function Rating({
               const f = method.fields.find((f) => f.id === k);
               return (
                 <Select
+                  allowDeselect={false}
                   key={k}
                   label={f?.label ?? k}
                   value={value.inputs[k] ?? null}
@@ -186,6 +196,7 @@ export function RiskEvaluation({ smsi, risk, onClose }: { smsi: string; risk: Gr
               }}
             />
             <Select
+              allowDeselect={false}
               label="Décision"
               value={decision}
               onChange={(v) => {
@@ -205,10 +216,11 @@ export function RiskEvaluation({ smsi, risk, onClose }: { smsi: string; risk: Gr
             {preview && (
               <Card withBorder>
                 <Text>
-                  Brut : {preview.result.gross.label} · {preview.result.gross.acceptability}
+                  Brut : {preview.result.gross.label} · {libelleAcceptabilite(preview.result.gross.acceptability)}
                 </Text>
                 <Text>
-                  Résiduel : {preview.result.residual.label} · {preview.result.residual.acceptability}
+                  Résiduel : {preview.result.residual.label} ·{' '}
+                  {libelleAcceptabilite(preview.result.residual.acceptability)}
                 </Text>
                 <Button onClick={() => setConfirm(true)}>Enregistrer cette décision</Button>
               </Card>

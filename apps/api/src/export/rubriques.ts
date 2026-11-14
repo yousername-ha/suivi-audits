@@ -12,11 +12,6 @@ import {
   prioriteIncident,
   recurrenceSuivante,
   valeurIndicateur,
-  lireAppGap,
-  etatPointGap,
-  pointsGap,
-  SECTIONS_GAP,
-  statsGap,
   lireEvaluationClausier,
   pointsEvaluation,
   scoreEvaluation,
@@ -28,6 +23,7 @@ import {
   LV,
   PREP_LABELS,
   analyzeAll,
+  findingTypeLabel,
   itemCode,
   type AuditState,
   type AuditRef,
@@ -61,8 +57,10 @@ const dFr = (v: unknown): string => {
 const dateHeure = (v: unknown) => texte(v).replace('T', ' ');
 const codeMesure = (m: Obj) =>
   m.ref === 'A' ? `A.${texte(m.num)}` : m.ref === 'HDS' ? `HDS ${texte(m.num)}` : texte(m.num);
+/** Libellé du type d'écart : même table que l'écran (`findingTypeLabel`), sans libellé propre à l'export (BUG-046). Les codes
+    « NC » et « OBS » restent lisibles pour les anciens enregistrements. */
 const typeEcart = (t: unknown) =>
-  ({ NC: 'Non-conformité', PP: 'Point sensible', OBS: 'Observation' })[texte(t)] ?? texte(t);
+  ({ NC: 'Non-conformité', OBS: 'Observation' })[texte(t)] ?? findingTypeLabel(texte(t));
 
 const liste = (v: unknown) => (Array.isArray(v) ? v.map(texte).filter(Boolean).join(', ') : '');
 
@@ -109,22 +107,6 @@ const lignesDda =
 
 const nomFournisseur = (etat: JsonObject, id: unknown) =>
   texte(objs(etat.suppliers).find((s) => s.id === id)?.name) || texte(id);
-
-/** Exigences exclues de la déclaration d'applicabilité (points GAP « Non applicable » par défaut). */
-const exigencesExclues = (etat: JsonObject): Set<string> => {
-  const dda = obj(etat.dda);
-  return new Set(
-    objs(etat.items)
-      .filter((i) => obj(dda[texte(i.id)]).app === 'non')
-      .map((i) => texte(i.id)),
-  );
-};
-const appsGap = (etat: JsonObject) =>
-  (Array.isArray(etat.appGaps) ? etat.appGaps : []).map(lireAppGap).filter((a): a is NonNullable<typeof a> => !!a);
-const codeExigence = (etat: JsonObject, id: string) => {
-  const m = objs(etat.items).find((x) => x.id === id);
-  return m ? codeMesure(m) : id;
-};
 
 export const JEUX: Record<string, Jeu> = {
   plan: {
@@ -433,15 +415,25 @@ export const JEUX: Record<string, Jeu> = {
     ],
     lignes: ({ etat }) => {
       const s = obj(etat.scope);
-      return [
-        ['Version', texte(s.version)],
-        ['Validé le', dFr(s.validatedOn)],
-        ['Validé par', texte(s.validatedBy)],
-        ['Énoncé', texte(s.statement)],
-        ['Sites', texte(s.sites)],
-        ['Processus inclus', liste(s.processes)],
-        ...objs(s.excl).map((x): Cellule[] => [`Exclusion : ${texte(x.t)}`, texte(x.just)]),
-      ];
+      const natifs = objs(obj(etat.natifs).contextes).flatMap((c): Cellule[][] => [
+        ['Organisation', texte(c.organisation) || texte(c.name)],
+        ['Activités, entités et services concernés', texte(c.scope)],
+        ['Interfaces et dépendances', texte(c.interfaces)],
+        ['Enjeux internes et externes', texte(c.issues)],
+        ['Exclusions et justification', texte(c.exclusions)],
+      ]);
+      const historique = Object.keys(s).length
+        ? [
+            ['Version', texte(s.version)],
+            ['Validé le', dFr(s.validatedOn)],
+            ['Validé par', texte(s.validatedBy)],
+            ['Énoncé', texte(s.statement)],
+            ['Sites', texte(s.sites)],
+            ['Processus inclus', liste(s.processes)],
+            ...objs(s.excl).map((x): Cellule[] => [`Exclusion : ${texte(x.t)}`, texte(x.just)]),
+          ]
+        : [];
+      return [...natifs, ...historique] as Cellule[][];
     },
   },
   parties: {
@@ -523,6 +515,126 @@ export const JEUX: Record<string, Jeu> = {
         texte(r.refs),
       ]),
   },
+  risques: {
+    titre: () => 'Registre des risques',
+    colonnes: [
+      ['Code', 12],
+      ['Risque', 50],
+      ['Démarche', 14],
+      ['Stratégie', 14],
+      ['Niveau brut', 16],
+      ['Niveau résiduel', 16],
+      ['Acceptation', 16],
+      ['Prochaine revue', 14],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).risques).map((r) => [
+        texte(r.code),
+        texte(r.name),
+        texte(r.demarche),
+        texte(r.strategie),
+        texte(r.brut) || 'Non apprécié',
+        texte(r.residuel) || 'Non apprécié',
+        texte(r.acceptation),
+        dFr(r.prochaineRevue),
+      ]),
+  },
+  traitements: {
+    titre: () => 'Plan de traitement des risques',
+    colonnes: [
+      ['Traitement', 44],
+      ['Stratégie', 14],
+      ['Effet attendu', 50],
+      ['Vérification', 50],
+      ['Prochaine revue', 14],
+      ['État', 14],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).traitements).map((t) => [
+        texte(t.name),
+        texte(t.strategy),
+        texte(t.expectedEffect),
+        texte(t.verification),
+        dFr(t.reviewAt),
+        texte(t.status),
+      ]),
+  },
+  etudes: {
+    titre: () => 'Études de risques (EBIOS RM)',
+    colonnes: [
+      ['Étude', 40],
+      ['Objet', 60],
+      ['Périmètre étudié', 50],
+      ['Début', 12],
+      ['Fin prévue', 12],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).etudes).map((e) => [
+        texte(e.name),
+        texte(e.objective),
+        texte(e.scope),
+        dFr(e.startAt),
+        dFr(e.endAt),
+      ]),
+  },
+  continuite: {
+    titre: () => 'Plans de continuité et de reprise',
+    colonnes: [
+      ['Plan', 40],
+      ['Type', 12],
+      ['Activités et services concernés', 50],
+      ['Stratégie', 50],
+      ['État', 14],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).plans).map((p) => [
+        texte(p.name),
+        texte(p.planType),
+        texte(p.scope),
+        texte(p.strategy),
+        texte(p.status),
+      ]),
+  },
+  exercices: {
+    titre: () => 'Exercices de continuité',
+    colonnes: [
+      ['Exercice', 40],
+      ['Prévu le', 12],
+      ['Réalisé le', 12],
+      ['Résultat', 14],
+      ['Scénario testé', 50],
+      ['Retour d’expérience', 60],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).exercices).map((x) => [
+        texte(x.name),
+        dFr(x.plannedAt),
+        dFr(x.performedAt),
+        texte(x.result),
+        texte(x.scenario),
+        texte(x.lessons),
+      ]),
+  },
+  revues: {
+    titre: () => 'Revues de direction',
+    colonnes: [
+      ['Revue', 40],
+      ['Date', 12],
+      ['État', 12],
+      ['Participants', 40],
+      ['Décisions et moyens', 70],
+      ['Suivi', 50],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).revues).map((r) => [
+        texte(r.name),
+        dFr(r.heldAt),
+        texte(r.status),
+        texte(r.participants),
+        texte(r.decisions),
+        texte(r.followup),
+      ]),
+  },
   incidents: {
     titre: () => 'Registre des incidents',
     colonnes: [
@@ -579,6 +691,68 @@ export const JEUX: Record<string, Jeu> = {
         texte(x.email),
         texte(x.avail),
         texte(x.notes),
+      ]),
+  },
+  retex: {
+    titre: () => 'RETEX des incidents',
+    colonnes: [
+      ['Incident', 16],
+      ['Intitulé', 40],
+      ['Date et heure', 18],
+      ['Type', 16],
+      ['Événement', 40],
+      ['Gravité', 12],
+      ['Acteur', 18],
+      ['Description', 60],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).retex).map((e) => [
+        texte(e.incident),
+        texte(e.intitule),
+        dateHeure(e.ts),
+        texte(e.type),
+        texte(e.titre),
+        texte(e.gravite),
+        texte(e.acteur),
+        texte(e.description),
+      ]),
+  },
+  scenariosCrise: {
+    titre: () => 'Scénarios de crise',
+    colonnes: [
+      ['Scénario', 36],
+      ['Référence', 18],
+      ['Phase', 18],
+      ['Action', 60],
+      ['Responsable', 22],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).scenarios).map((x) => [
+        texte(x.scenario),
+        texte(x.ref),
+        texte(x.phase),
+        texte(x.action),
+        texte(x.responsable),
+      ]),
+  },
+  documents: {
+    titre: () => 'Registre documentaire',
+    colonnes: [
+      ['Document', 50],
+      ['Catégorie', 20],
+      ['Classification', 16],
+      ['Version', 9],
+      ['Mis à jour le', 14],
+      ['Étiquettes', 30],
+    ],
+    lignes: ({ etat }) =>
+      objs(obj(etat.natifs).documents).map((d) => [
+        texte(d.title),
+        texte(d.category),
+        texte(d.classification),
+        texte(d.version),
+        dFr(d.maj),
+        liste(d.tags),
       ]),
   },
   mainCourante: {
@@ -787,70 +961,6 @@ export const JEUX: Record<string, Jeu> = {
         ]);
     },
   },
-  gapApps: {
-    titre: () => 'GAP — applications à intégrer',
-    colonnes: [
-      ['Application', 30],
-      ['DSCP', 10],
-      ['Nuage', 10],
-      ['Statut', 12],
-      ['Avancement', 11],
-      ['Conformes', 10],
-      ['Écarts', 8],
-      ['À évaluer', 10],
-      ['Responsable', 18],
-      ['Échéance cible', 14],
-    ],
-    lignes: ({ etat }) => {
-      const exclues = exigencesExclues(etat);
-      return appsGap(etat).map((a) => {
-        const st = statsGap(a, exclues);
-        return [
-          a.name,
-          a.dscp,
-          a.cloud,
-          a.status,
-          `${st.pct} %`,
-          st.c.Conforme,
-          st.ouverts,
-          st.c['À évaluer'],
-          a.owner,
-          dFr(a.target),
-        ];
-      });
-    },
-  },
-  gapLignes: {
-    titre: () => 'GAP — points de contrôle',
-    colonnes: [
-      ['Application', 26],
-      ['Section', 22],
-      ['Références', 20],
-      ['Point de contrôle', 60],
-      ['État', 14],
-      ['Constat', 40],
-      ['Pilote', 16],
-      ['Échéance', 12],
-    ],
-    lignes: ({ etat }) => {
-      const exclues = exigencesExclues(etat);
-      return appsGap(etat).flatMap((a) =>
-        pointsGap(a).map((l) => {
-          const v = a.lines[l.id] ?? {};
-          return [
-            a.name,
-            SECTIONS_GAP.find((x) => x[0] === l.sec)?.[1] ?? '',
-            l.refs.map((r) => codeExigence(etat, r)).join(', '),
-            l.t,
-            etatPointGap(a, l, exclues),
-            v.comment ?? '',
-            v.owner ?? '',
-            dFr(v.due),
-          ];
-        }),
-      );
-    },
-  },
   evalFournisseurs: {
     titre: () => 'Évaluations sécurité fournisseurs',
     colonnes: [
@@ -930,21 +1040,32 @@ export const GROUPES: readonly { id: string; titre: string; description: string;
   {
     id: 'incs',
     titre: 'Incidents et crise',
-    description: 'Registre des incidents, contacts de crise et mains courantes.',
-    jeux: ['incidents', 'contactsCrise', 'mainCourante'],
+    description: 'Registre des incidents, RETEX, contacts, scénarios de crise et mains courantes.',
+    jeux: ['incidents', 'retex', 'contactsCrise', 'scenariosCrise', 'mainCourante'],
   },
-  { id: 'prvx', titre: 'Preuves', description: 'Registre des preuves et rattachements.', jeux: ['preuves'] },
+  {
+    id: 'risq',
+    titre: 'Gestion des risques',
+    description: 'Registre des risques, plan de traitement et études EBIOS RM.',
+    jeux: ['risques', 'traitements', 'etudes'],
+  },
+  {
+    id: 'cont',
+    titre: 'Continuité et revues',
+    description: 'Plans de continuité et de reprise, exercices et revues de direction.',
+    jeux: ['continuite', 'exercices', 'revues'],
+  },
+  {
+    id: 'prvx',
+    titre: 'Preuves et documents',
+    description: 'Registre des preuves et rattachements, registre documentaire.',
+    jeux: ['preuves', 'documents'],
+  },
   {
     id: 'plans',
     titre: 'Plans du SMSI',
     description: 'Formation, sensibilisation, audit interne, exercices et tâches récurrentes.',
     jeux: ['plans', 'recurrentes'],
-  },
-  {
-    id: 'apps',
-    titre: 'GAP — Applications',
-    description: 'Synthèse par application et points de contrôle.',
-    jeux: ['gapApps', 'gapLignes'],
   },
 ];
 export const TOUS_LES_JEUX = GROUPES.flatMap((g) => g.jeux);

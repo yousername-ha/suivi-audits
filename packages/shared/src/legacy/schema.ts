@@ -125,7 +125,6 @@ export const LegacyStateSchema = loose({
       .optional(),
     people: z.array(idObj({ name: optStr, role: optStr })).optional(),
   }).optional(),
-  appGaps: z.array(idObj()).optional(),
   reviews: z.array(idObj()).optional(),
   branding: loose({}).optional(),
   plans: z.array(z.unknown()).optional(),

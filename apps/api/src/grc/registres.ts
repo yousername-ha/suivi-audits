@@ -2,7 +2,9 @@
    - Un registre porte un ou plusieurs périmètres ; ses éléments (actions, écarts, séries) les héritent sans copie.
    - Un droit fin (lecteur, contributeur, gestionnaire) s'attribue à un utilisateur ou à un groupe sur un registre ou sur un
      élément ; il s'ajoute aux droits de module et à l'appartenance aux périmètres, jamais à la place du contrôle serveur.
-   - Un registre restreint n'est accessible que par ses droits attribués et par les administrateurs. */
+   - Un registre restreint n'est accessible que par ses droits attribués et par les administrateurs.
+   - « Attribuer à » vaut rôle de contributeur (ADR 0092, lot 2) : la personne désignée sur un élément ou sur un registre, en
+     personne, par son groupe ou par sa fonction, le lit et le renseigne ; elle gère ce qu'elle y a créé. */
 import {
   GRC_MODULES,
   RANG_ROLE,
@@ -20,6 +22,7 @@ import {
   type AccesSujetPage,
   type ApercuDroit,
   type AccesSujetRegistre,
+  type ElementAttribue,
   type Action,
   type Besoin,
   type GrcObject,
@@ -32,7 +35,7 @@ import {
   type StatutPlanRegistre,
   OrdreBody,
 } from '@suivi/shared';
-import { sql, type ExpressionBuilder } from 'kysely';
+import { sql, type Expression, type ExpressionBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import type { DB } from '../db/types.generated.js';
@@ -86,6 +89,19 @@ export interface RegistreRow {
   responsable: ResponsableRef | null;
 }
 type TypeRessource = 'registre' | 'objet';
+/** Vrai si la référence de responsable `ref` (expression jsonb { type, id }) désigne le compte : en personne, par l'un de
+    ses groupes ou par l'une de ses fonctions non archivées. */
+const designe = (ref: Expression<unknown>, userId: string) => sql<boolean>`COALESCE((
+    (${ref}->>'type' = 'utilisateur' AND ${ref}->>'id' = ${userId})
+    OR (${ref}->>'type' = 'groupe' AND EXISTS (
+      SELECT 1 FROM user_groups ug WHERE ug.user_id = ${userId}::uuid AND ug.group_id::text = ${ref}->>'id'))
+    OR (${ref}->>'type' = 'fonction' AND EXISTS (
+      SELECT 1 FROM fonction_membres fm JOIN fonctions f ON f.id = fm.fonction_id
+       WHERE NOT f.archived AND fm.user_id = ${userId}::uuid AND fm.fonction_id::text = ${ref}->>'id'))
+  ), false)`;
+/** Élément attribué au compte : responsable typé, ou personne de l'ancien champ `ownerId`. `data` : colonne des données. */
+const elementAttribue = (data: Expression<unknown>, userId: string) =>
+  sql<boolean>`(COALESCE(${data}->>'ownerId' = ${userId}, false) OR ${designe(sql`${data}->'responsable'`, userId)})`;
 const unique = <T>(l: readonly T[]) => [...new Set(l)];
 
 export class GrcRegistres {
@@ -148,6 +164,51 @@ export class GrcRegistres {
     for (const { role } of r) if (!meilleur || RANG_ROLE[role] > RANG_ROLE[meilleur]) meilleur = role;
     return meilleur;
   }
+  /** Le registre est attribué au compte (champ « Attribuer à » du registre) : il le lit, le renseigne et y crée. */
+  async designeSurRegistre(user: SessionUser, reg: RegistreRow, c?: Client): Promise<boolean> {
+    if (!reg.responsable) return false;
+    const r = await this.k(c)
+      .selectFrom('registres as r')
+      .select(designe(sql.ref('r.responsable'), user.id).as('ok'))
+      .where('r.id', '=', reg.id)
+      .executeTakeFirst();
+    return !!r?.ok;
+  }
+  /** Rôle tenu de « Attribuer à » (ADR 0092, lot 2), sans aucune ligne de droit :
+      - contributeur du registre ou de l'élément attribué au compte (en personne, par un groupe ou par une fonction) ;
+      - gestionnaire de l'élément que le compte a créé, tant qu'il reste contributeur du registre ou de l'élément.
+      `attribue` est le rôle déjà donné par un droit attribué (un contributeur attribué gère aussi ce qu'il a créé). */
+  async roleDesigne(
+    user: SessionUser,
+    reg: RegistreRow,
+    objetId: string | null,
+    c?: Client,
+    attribue: RoleRessource | null = null,
+  ): Promise<RoleRessource | null> {
+    const surRegistre = await this.designeSurRegistre(user, reg, c);
+    if (!objetId) return surRegistre ? 'contributeur' : null;
+    const o = await this.k(c)
+      .selectFrom('grc_objects as o')
+      .select([elementAttribue(sql.ref('o.data'), user.id).as('attribue'), 'o.created_by as createur'])
+      .where('o.id', '=', objetId)
+      .where('o.registre_id', '=', reg.id)
+      .executeTakeFirst();
+    const contributeur = surRegistre || !!o?.attribue || roleSuffit(attribue, 'contribuer');
+    if (!contributeur) return null;
+    return o?.createur === user.username ? 'gestionnaire' : surRegistre || o?.attribue ? 'contributeur' : null;
+  }
+  /** Rôle effectif : le plus élevé entre le droit attribué et le rôle tenu de « Attribuer à ». */
+  async roleEffectif(
+    user: SessionUser,
+    reg: RegistreRow,
+    objetId: string | null,
+    c?: Client,
+  ): Promise<RoleRessource | null> {
+    const attribue = await this.roleDe(user, reg.id, objetId, c);
+    const tenu = await this.roleDesigne(user, reg, objetId, c, attribue);
+    if (!attribue) return tenu;
+    return tenu && RANG_ROLE[tenu] > RANG_ROLE[attribue] ? tenu : attribue;
+  }
   /** Accès par les droits de module et l'appartenance aux périmètres : lecture si un périmètre au moins est accessible,
       modification seulement si tous le sont en écriture (un registre multi-périmètre n'est pas modifiable depuis un seul). */
   private async parModule(
@@ -184,7 +245,11 @@ export class GrcRegistres {
   ): Promise<boolean> {
     await this.g.modules.assert(module);
     if (await this.g.isAdmin(user, c)) return true;
-    if (roleSuffit(await this.roleDe(user, reg.id, objetId, c), besoin)) return true;
+    const attribue = await this.roleDe(user, reg.id, objetId, c);
+    if (roleSuffit(attribue, besoin)) return true;
+    // « Attribuer à » ne donne jamais l'autorité d'attribuer des droits (action « administrer », ADR 0067).
+    if (action !== 'administrer' && roleSuffit(await this.roleDesigne(user, reg, objetId, c, attribue), besoin))
+      return true;
     return this.parModule(user, reg, besoin, module, action, c);
   }
   /** Autorité d'attribuer sur un registre qui ne repose pas sur le rôle de gestionnaire donné automatiquement à son créateur :
@@ -237,7 +302,7 @@ export class GrcRegistres {
   ) {
     if (await this.peut(user, reg, objetId, besoin, c, module, action)) return;
     if (besoin !== 'lire' && (await this.peut(user, reg, objetId, 'lire', c, module))) {
-      const role = await this.roleDe(user, reg.id, objetId, c);
+      const role = await this.roleEffectif(user, reg, objetId, c);
       throw new HttpError(
         403,
         role
@@ -270,7 +335,7 @@ export class GrcRegistres {
     };
     if (!peut.lire) throw new HttpError(404, 'Élément introuvable ou non accessible.');
     const peutAttribuer = await this.peut(user, reg, id, 'gerer', undefined, module, 'administrer');
-    return { registreId: reg.id, role: await this.roleDe(user, reg.id, id), peut, peutAttribuer };
+    return { registreId: reg.id, role: await this.roleEffectif(user, reg, id), peut, peutAttribuer };
   }
   /** Registres restreints d'un périmètre que l'utilisateur ne peut pas lire : leurs éléments sont masqués des listes. */
   async inaccessibles(user: SessionUser, smsi: string, c?: Client): Promise<string[]> {
@@ -365,6 +430,7 @@ export class GrcRegistres {
       gerer: await this.peut(user, reg, null, 'gerer', c),
     };
     const peutAttribuer = await this.peut(user, reg, null, 'gerer', c, MODULE, 'administrer');
+    const peutArchiver = await this.estGestionnaire(user, reg, c);
     const { elements } = await k
       .selectFrom('grc_objects')
       .select(sql<number>`count(*)::int`.as('elements'))
@@ -398,11 +464,52 @@ export class GrcRegistres {
       avancement,
       perimetres: visibles,
       autresPerimetres: ids.length - visibles.length,
-      role: await this.roleDe(user, reg.id, null, c),
+      role: await this.roleEffectif(user, reg, null, c),
       peut,
       peutAttribuer,
+      peutArchiver,
+      peutCreer: !reg.archived && (peut.gerer || (await this.designeSurRegistre(user, reg, c))),
       elements,
     };
+  }
+  /** « Ce que je dois alimenter » (ADR 0092, lot 2) : éléments non archivés attribués au compte (en personne, par un groupe
+      ou par une fonction) et éléments des registres qui lui sont attribués, par échéance. Chaque ligne repasse par le
+      contrôle d'accès ; un module désactivé ou un élément devenu illisible est simplement omis. */
+  async mesElements(user: SessionUser, search: string, offset: number) {
+    const rows = await this.k()
+      .selectFrom('grc_objects as o')
+      .innerJoin('registres as r', 'r.id', 'o.registre_id')
+      .select(['o.id', 'r.id as rId', 'r.name as rName', 'r.kind as rKind'])
+      .where('o.archived', '=', false)
+      .where('o.name', 'ilike', motifIlike(search))
+      .where((eb) => eb.or([elementAttribue(sql.ref('o.data'), user.id), designe(sql.ref('r.responsable'), user.id)]))
+      .orderBy(sql`o.data->>'dueAt'`, (ob) => ob.asc().nullsLast())
+      .orderBy('o.id')
+      .limit(51)
+      .offset(offset)
+      .execute();
+    const items: ElementAttribue[] = [];
+    for (const { id, rId, rName, rKind } of rows.slice(0, 50)) {
+      const ligne = await objets(this.k()).where('id', '=', id).executeTakeFirst();
+      const reg = await this.brut(rId);
+      if (!ligne || !reg) continue;
+      const element = versObjet(ligne);
+      const module = GRC_MODULES[element.kind];
+      try {
+        if (!(await this.peut(user, reg, element.id, 'lire', undefined, module))) continue;
+        items.push({
+          element,
+          registre: { id: rId, name: rName, kind: rKind as RegistreKind },
+          peut: {
+            contribuer: await this.peut(user, reg, element.id, 'contribuer', undefined, module),
+            gerer: await this.peut(user, reg, element.id, 'gerer', undefined, module),
+          },
+        });
+      } catch {
+        /* module désactivé : l'élément n'est pas proposé */
+      }
+    }
+    return { items, nextOffset: rows.length > 50 ? offset + 50 : null };
   }
   async list(user: SessionUser, filtre: { perimetre?: string; kind?: RegistreKind; archives?: boolean } = {}) {
     const rows = await this.registres()
@@ -473,7 +580,8 @@ export class GrcRegistres {
     return cree.id;
   }
 
-  /** Champs d'un plan d'actions : refusés hors de cette famille ; un responsable doit exister et compter une personne active. */
+  /** Dates et statut : réservés aux plans d'actions. Le responsable (« Attribuer à »), ouvert à toutes les familles, doit
+      exister et compter une personne active. */
   private async champsPlan(
     kind: RegistreKind,
     smsi: string,
@@ -485,11 +593,9 @@ export class GrcRegistres {
     },
     c: Client,
   ) {
-    if (kind !== 'plan_actions') {
-      if (v.dateDebut || v.dateFin || v.responsable || v.statut !== 'prevu')
-        throw new HttpError(422, 'Dates, statut et responsable ne concernent que les plans d’actions.');
-      return v;
-    }
+    if (kind !== 'plan_actions' && (v.dateDebut || v.dateFin || v.statut !== 'prevu'))
+      throw new HttpError(422, 'Dates et statut ne concernent que les plans d’actions.');
+    // Tout registre peut être attribué (ADR 0092, lot 2) : la personne, le groupe ou la fonction y contribue et y crée.
     if (v.responsable) await this.g.annuaires.resoudre(smsi, v.responsable, c);
     return v;
   }
@@ -762,16 +868,44 @@ export class GrcRegistres {
       return { apercu: false as const, impact, registre: await this.dto(user, nouveau, c) };
     }, user.username);
   }
+  /** Gestionnaire du registre : administrateur ou rôle de gestionnaire attribué sur le registre (arbitrage du RSSI du
+      13/11/2026, BUG-049). Un droit de module, même d'administration, ne suffit pas pour archiver. */
+  async estGestionnaire(user: SessionUser, reg: RegistreRow, c?: Client): Promise<boolean> {
+    if (await this.g.isAdmin(user, c)) return true;
+    return roleSuffit(await this.roleDe(user, reg.id, null, c), 'gerer');
+  }
+  private async exigerGestionnaire(user: SessionUser, reg: RegistreRow, c: Client) {
+    await this.g.modules.assert(MODULE);
+    if (await this.estGestionnaire(user, reg, c)) return;
+    if (await this.peut(user, reg, null, 'lire', c))
+      throw new HttpError(403, 'Seul le gestionnaire du registre peut l’archiver ou le désarchiver.');
+    throw new HttpError(404, 'Registre introuvable ou non accessible.');
+  }
   async archive(id: string, expected: number, user: SessionUser, ip: string) {
     return this.g.db.tx(async (c, k) => {
       const reg = await this.brut(id, c, true);
       if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
-      await this.exiger(user, reg, null, 'gerer', c);
+      await this.exigerGestionnaire(user, reg, c);
       if (reg.parDefaut) throw new HttpError(409, 'Le registre par défaut d’un périmètre ne s’archive pas.');
+      if (reg.archived) throw new HttpError(409, 'Registre déjà archivé.');
       if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
       const nouveau = await this.ecrire(k, id, user.username, { archived: true });
       // Les éléments, leurs historiques et leurs preuves sont conservés tels quels.
       await this.g.db.audit(user, ip, 'registre.archived', id, { version: nouveau.version }, c);
+      await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
+      return this.dto(user, nouveau, c);
+    }, user.username);
+  }
+  /** Désarchive un registre (BUG-049) : mêmes droits que l'archivage ; ses éléments, périmètres et droits sont intacts. */
+  async desarchive(id: string, expected: number, user: SessionUser, ip: string) {
+    return this.g.db.tx(async (c, k) => {
+      const reg = await this.brut(id, c, true);
+      if (!reg) throw new HttpError(404, 'Registre introuvable ou non accessible.');
+      await this.exigerGestionnaire(user, reg, c);
+      if (!reg.archived) throw new HttpError(409, 'Registre non archivé.');
+      if (reg.version !== expected) throw new HttpError(412, 'Le registre a changé. Rechargez avant de confirmer.');
+      const nouveau = await this.ecrire(k, id, user.username, { archived: false });
+      await this.g.db.audit(user, ip, 'registre.unarchived', id, { version: nouveau.version }, c);
       await this.g.notify(c, id, nouveau.version, nouveau.referenceId, MODULE, user.username);
       return this.dto(user, nouveau, c);
     }, user.username);

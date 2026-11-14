@@ -1,7 +1,8 @@
-/* Kit d'intégration IA (ISO/IEC 27001 et HDS) : contrôles internes de l'organisation, correspondances proposées et annexes
-   de veille. Le kit se charge depuis l'interface (aucun contenu n'est versionné dans le dépôt) ; ce module valide ses
-   fichiers, en tire un référentiel de bibliothèque et résout les indications de correspondance. Jamais de texte normatif :
-   les contrôles sont des propositions de l'organisation (ADR 0055). */
+/* Kit d'intégration IA (ISO/IEC 27001 et HDS) : contrôles internes de l'organisation et annexes de veille. Le kit se
+   charge depuis l'interface (aucun contenu n'est versionné dans le dépôt) ; ce module valide ses fichiers et en tire un
+   référentiel de bibliothèque. Les correspondances vers l'ISO/IEC 27001 et l'HDS que le kit pouvait porter ne sont plus
+   importées (ADR 0089, lot 3) : un fichier de correspondances est ignoré. Jamais de texte normatif : les contrôles sont
+   des propositions de l'organisation (ADR 0055). */
 import { z } from 'zod';
 import type { LibraryFrameworkDefinition } from './grc.js';
 import { sansSoulignesDeBord } from './texte.js';
@@ -28,15 +29,6 @@ export const KitControle = z.object({
     .optional(),
 });
 export type KitControle = z.infer<typeof KitControle>;
-
-export const KitCorrespondance = z.object({
-  internal_control_id: z.string().regex(/^IA-\d{3}$/),
-  target_reference_type: z.enum(['ISO27001', 'HDS_V2_0', 'ISO42001_THEME']),
-  reference_hint_raw: court(300),
-  explanation: facultatif(1000),
-  normative_equivalence: z.literal(false).optional(),
-});
-export type KitCorrespondance = z.infer<typeof KitCorrespondance>;
 
 export const KitAction = z.object({
   id: court(40),
@@ -97,7 +89,6 @@ export const KitIaBundle = z
   .object({
     version: z.string().trim().min(1).max(60).default('non précisée'),
     controls: z.array(KitControle).min(1).max(300),
-    correspondances: z.array(KitCorrespondance).max(3000).default([]),
     actions: z.array(KitAction).max(200).default([]),
     scenarios: z.array(KitScenario).max(200).default([]),
     deltas: z.array(KitDelta).max(100).default([]),
@@ -108,9 +99,6 @@ export const KitIaBundle = z
   .superRefine((b, c) => {
     const ids = new Set(b.controls.map((x) => x.id));
     if (ids.size !== b.controls.length) c.addIssue({ code: 'custom', message: 'Identifiants de contrôle en double.' });
-    for (const m of b.correspondances)
-      if (!ids.has(m.internal_control_id))
-        c.addIssue({ code: 'custom', message: `Correspondance vers un contrôle inconnu : ${m.internal_control_id}.` });
   });
 export type KitIaBundle = z.infer<typeof KitIaBundle>;
 
@@ -164,70 +152,4 @@ export function kitVersReferentiel(b: KitIaBundle): LibraryFrameworkDefinition {
       ...(c.source_links_raw?.iso42001_theme ? { themeIso42001: c.source_links_raw.iso42001_theme } : {}),
     })),
   };
-}
-
-/* --------------------------------------------------------------------------- résolution des indications */
-/** Plafond de jetons lus dans une indication : une indication du kit désigne quelques articles, pas une plage entière. */
-export const MAX_JETONS = 10;
-/** Plafond de correspondances rattachées par import (chacune écrit sa propre trace d'audit, immuable). */
-export const MAX_CORRESPONDANCES_RESOLUES = 2000;
-export interface ExigenceCible {
-  id: string;
-  domain: string;
-  title: string;
-}
-/** Numéros d'article d'une indication ISO : « §5.2 ; A.5.1 » → clause 5.2 et Annexe A 5.1. */
-export function jetonsIso(indication: string): { annexe: string[]; clause: string[] } {
-  const annexe = [...indication.matchAll(/\bA\.(\d{1,2}\.\d{1,2})\b/g)].map((m) => m[1]!);
-  const clause = [
-    ...indication.matchAll(/§\s*(\d{1,2}(?:\.\d{1,2}){0,2})(?:\s*[-–]\s*(\d{1,2}(?:\.\d{1,2}){0,2}))?/g),
-  ].flatMap((m) => (m[2] ? [m[1]!, m[2]] : [m[1]!]));
-  return { annexe: [...new Set(annexe)].slice(0, MAX_JETONS), clause: [...new Set(clause)].slice(0, MAX_JETONS) };
-}
-/** Numéros « EXI nn » d'une indication HDS : « EXI 02-04 si hébergeur » → 02, 03, 04. */
-export function jetonsHds(indication: string): string[] {
-  const jetons: string[] = [];
-  for (const m of indication.matchAll(/EXI\s*(\d{2})(?:\s*[-–]\s*(\d{2}))?/gi)) {
-    const a = Number(m[1]);
-    const b = m[2] ? Number(m[2]) : a;
-    for (let n = a; n <= Math.min(b, a + MAX_JETONS - 1); n++) jetons.push(String(n).padStart(2, '0'));
-  }
-  return [...new Set(jetons)].slice(0, MAX_JETONS);
-}
-const numero = (titre: string) => /^\s*(?:A[.-]\s*)?(\d{1,2}(?:\.\d{1,2}){0,2})\b/.exec(titre)?.[1] ?? null;
-/** Exigences d'un référentiel ISO de la bibliothèque correspondant à un jeton : l'Annexe A se reconnaît à son domaine,
-    les clauses aux leurs ; le numéro se lit en tête de l'intitulé (« 5.1 — … » ou « A.5.1 — … ») ou dans l'identifiant. */
-export function cibleIso(exigences: readonly ExigenceCible[], type: 'annexe' | 'clause', jeton: string): string[] {
-  return exigences
-    .filter((e) => (type === 'annexe' ? /^annexe_a/.test(e.domain) : /^clause_/.test(e.domain)))
-    .filter((e) => (numero(e.title) ?? numero(e.id)) === jeton)
-    .map((e) => e.id);
-}
-export function cibleHds(exigences: readonly ExigenceCible[], jeton: string): string[] {
-  const motif = new RegExp(`\\bEXI[\\s_-]*0*${Number(jeton)}\\b`, 'i');
-  return exigences.filter((e) => motif.test(e.title) || motif.test(e.id)).map((e) => e.id);
-}
-
-/** Index des exigences par numéro, calculé une fois par référentiel cible (la résolution ne reparcourt plus la liste). */
-export function indexIso(exigences: readonly ExigenceCible[]): {
-  annexe: Map<string, string[]>;
-  clause: Map<string, string[]>;
-} {
-  const index = { annexe: new Map<string, string[]>(), clause: new Map<string, string[]>() };
-  for (const e of exigences) {
-    const type = /^annexe_a/.test(e.domain) ? 'annexe' : /^clause_/.test(e.domain) ? 'clause' : null;
-    const n = numero(e.title) ?? numero(e.id);
-    if (type && n) index[type].set(n, [...(index[type].get(n) ?? []), e.id]);
-  }
-  return index;
-}
-export function indexHds(exigences: readonly ExigenceCible[]): Map<string, string[]> {
-  const index = new Map<string, string[]>();
-  for (const e of exigences) {
-    const trouves = new Set<string>();
-    for (const m of `${e.title} ${e.id}`.matchAll(/\bEXI[\s_-]*0*(\d{1,3})\b/gi))
-      trouves.add(String(Number(m[1])).padStart(2, '0'));
-    for (const n of trouves) index.set(n, [...(index.get(n) ?? []), e.id]);
-  }
-  return index;
 }

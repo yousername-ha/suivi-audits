@@ -25,7 +25,8 @@ export const incidentsRoutes = [
     summary: 'Registre des incidents',
     tags,
     access: 'incidents:lire' as const,
-    handler: async ({ svc, s }) => svc.historique.incidents.vue(user(s)),
+    query: z.object({ smsi: z.string().uuid().optional() }).strict(),
+    handler: async ({ svc, s, query }) => svc.historique.incidents.vue(user(s), query.smsi),
   }),
   route({
     method: 'POST',
@@ -105,7 +106,7 @@ export const incidentsRoutes = [
     url: '/api/incidents/:id/retex/:eid',
     summary: 'Retirer un événement de la chronologie du RETEX',
     tags,
-    access: 'incidents:modifier' as const,
+    access: 'incidents:supprimer' as const,
     params: idEvenement,
     handler: async ({ svc, s, params, ip }) =>
       svc.historique.incidents.supprimerEvenement(params.id, params.eid, user(s), ip),

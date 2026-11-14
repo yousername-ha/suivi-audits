@@ -18,7 +18,6 @@ export function Imports({ smsi }: { smsi: string }) {
       duplicate: boolean;
       requirements: number;
       domains: number;
-      mappings: number;
     } | null>(null),
     [error, setError] = useState<unknown>(null),
     [confirm, setConfirm] = useState(false),
@@ -43,7 +42,7 @@ export function Imports({ smsi }: { smsi: string }) {
       if (!f) throw new Error('Choisissez un référentiel.');
       const definition = f.data.definition as FrameworkDefinition;
       if (excel) saveWorkbook('referentiel.xlsx', frameworkWorkbook(definition));
-      else saveBlob('referentiel.json', JSON.stringify({ definition, mappings: [] }, null, 2));
+      else saveBlob('referentiel.json', JSON.stringify({ definition }, null, 2));
     } catch (e) {
       setError(e);
     }
@@ -57,9 +56,7 @@ export function Imports({ smsi }: { smsi: string }) {
       <Group>
         <Button
           variant="light"
-          onClick={() =>
-            saveBlob('exemple-fictif.json', JSON.stringify({ definition: exampleFramework, mappings: [] }, null, 2))
-          }
+          onClick={() => saveBlob('exemple-fictif.json', JSON.stringify({ definition: exampleFramework }, null, 2))}
         >
           Exemple fictif JSON
         </Button>
@@ -74,7 +71,7 @@ export function Imports({ smsi }: { smsi: string }) {
           onClick={() =>
             saveBlob(
               'guide-import.txt',
-              'Gabarit Excel : quatre feuilles Métadonnées (Champ/Valeur ; source en JSON), Domaines (id/label), Exigences (id/domain/title/description/applicability/measureRefs en JSON), Correspondances (source/target en JSON avec frameworkId/version/requirementId, type/justification/coverage/origin/status/sourceUrl/reviewNote). Les cibles doivent déjà être publiées dans ce périmètre ; les mappings sont toujours proposés. Conserver les noms des feuilles et colonnes. Remplacer toute formule par sa valeur. 8 Mo compressés / 20 Mo décompressés, 10 000 exigences. Indiquer la source officielle, sa version et les droits de reproduction. Les exemples PSSI sont fictifs et organisationnels. Les correspondances importées restent proposées et exigent une revue humaine. Simuler, corriger les erreurs et doublons, puis confirmer IMPORTER. Aucun texte ISO sous licence n’est livré.',
+              'Gabarit Excel : trois feuilles Métadonnées (Champ/Valeur ; source en JSON), Domaines (id/label), Exigences (id/domain/title/description/applicability/measureRefs en JSON). Conserver les noms des feuilles et colonnes. Remplacer toute formule par sa valeur. 8 Mo compressés / 20 Mo décompressés, 10 000 exigences. Indiquer la source officielle, sa version et les droits de reproduction. Les exemples PSSI sont fictifs et organisationnels. Simuler, corriger les erreurs et doublons, puis confirmer IMPORTER. Aucun texte ISO sous licence n’est livré.',
               'text/plain',
             )
           }
@@ -119,8 +116,7 @@ export function Imports({ smsi }: { smsi: string }) {
           {preview && (
             <Card withBorder>
               <Text>
-                {preview.domains} domaines · {preview.requirements} exigences · {preview.mappings} propositions de
-                correspondance
+                {preview.domains} domaines · {preview.requirements} exigences
               </Text>
               {preview.duplicate && <Alert>Identifiant de référentiel déjà présent : importation refusée.</Alert>}
               <Button disabled={!preview.canImport} onClick={() => setConfirm(true)}>
@@ -152,6 +148,7 @@ export function Imports({ smsi }: { smsi: string }) {
         </>
       )}
       <Select
+        allowDeselect={false}
         label="Référentiel à exporter"
         data={(frameworks.data?.items ?? []).map((f) => ({ value: f.id, label: f.name }))}
         value={selected}

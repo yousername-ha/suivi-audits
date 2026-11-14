@@ -215,6 +215,12 @@
   user-select: none;
   background: var(--carte-canevas);
 }
+/* La vue (déplacement, zoom, centrage d'une recherche) s'applique sans transition, y compris quand le système réduit les
+   animations : la règle globale de styles.css donne alors une transition de 0,01 ms à chaque propriété, et la nouvelle
+   position ne paraissait qu'à une image suivante (CARTO-06). Aucun changement visuel. */
+.carte-svg > g {
+  transition: none !important;
+}
 .carte-svg:focus-visible {
   outline: calc(2 * var(--suivi-trait-l)) solid var(--carte-bleu-accent);
   outline-offset: calc(-2 * var(--suivi-trait-l));
@@ -4522,4 +4528,36 @@ tr[data-importe='oui'] {
   text-transform: inherit;
   text-align: inherit;
   cursor: pointer;
+}
+
+/* Barre des états des exigences d'un référentiel (page Bibliothèque, ADR 0089) : SVG, aucune valeur de style en ligne. */
+.couv-barre {
+  display: block;
+  width: 100%;
+  height: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xs);
+  overflow: hidden;
+}
+.couv-barre-rouge {
+  fill: var(--carte-rouge-accent);
+}
+.couv-barre-orange {
+  fill: var(--carte-orange-accent);
+}
+.couv-barre-bleu {
+  fill: var(--carte-bleu-accent);
+}
+.couv-barre-teal {
+  fill: var(--carte-vert-trait);
+}
+.couv-barre-vert {
+  fill: var(--carte-vert-accent);
+}
+.couv-barre-gris {
+  fill: var(--carte-gris-accent);
+}
+
+/* Liste de choix d'un tableau (DdA, registres) : au téléphone, la colonne ne la réduit pas à sa croix d'effacement (BUG-074). */
+.champ-choix {
+  min-width: 9em;
 }

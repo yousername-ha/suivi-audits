@@ -40,7 +40,6 @@ export const LEGACY_MODULES: readonly LegacyModule[] = [
   { key: 'frameworks', label: 'Référentiels complémentaires (ReCyF)', phase: 3 },
   { key: 'activeFw', label: 'Référentiel complémentaire actif', phase: 3 },
   { key: 'entityCategory', label: "Catégorie d'entité (NIS 2)", phase: 3 },
-  { key: 'appGaps', label: 'Analyses d’écart applicatives (GAP)', phase: 3 },
   { key: 'ai', label: 'Intelligence artificielle', phase: 3 },
   { key: 'incidents', label: 'Incidents', phase: 3 },
   { key: 'crisis', label: 'Gestion de crise', phase: 3 },

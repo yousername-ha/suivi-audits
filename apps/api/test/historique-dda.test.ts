@@ -66,6 +66,15 @@ describe('déclaration d’applicabilité', () => {
       inconnu: 'garder',
     });
   });
+  it('refuse un niveau de mise en œuvre tant que l’applicabilité n’est pas décidée (BUG-065)', async () => {
+    const r = await writer.patch('/api/dda/HDS-1', { level: 'Total' });
+    expect(r.statusCode, r.body).toBe(422);
+    expect(r.json().error ?? r.body).toMatch(/applicabilité/i);
+    expect((await etat()).dda?.['HDS-1']?.level ?? '').toBe('');
+    // Décider d'abord l'applicabilité, puis renseigner le niveau.
+    expect((await writer.patch('/api/dda/HDS-1', { app: 'oui' })).statusCode).toBe(200);
+    expect((await writer.patch('/api/dda/HDS-1', { level: 'Total' })).statusCode).toBe(200);
+  });
   it('crée l’entrée d’une mesure sans déclaration avec les valeurs de l’outil historique', async () => {
     expect((await writer.patch('/api/dda/A-5.2', { app: 'non', just: 'Hors périmètre' })).statusCode).toBe(200);
     expect((await etat()).dda['A-5.2']).toEqual({

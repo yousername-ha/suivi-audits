@@ -21,3 +21,10 @@
 - Aucune migration. Les droits déjà attribués sont conservés ; rien n'est supprimé automatiquement.
 - Un contributeur de périmètre qui gérait un registre par ses droits de module ne peut plus attribuer de droits sur ce registre ; il peut toujours le gérer (renommer, ordonner, archiver selon ses droits de module).
 - Le journal `droit.accorde` permet une revue des attributions passées : celles où l'auteur et le titulaire sont la même personne méritent un examen.
+
+## Amendement du 13/11/2026
+
+[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md), lot 2 : désigner un responsable (« Attribuer à ») ouvre l'élément à la
+personne désignée, en lecture et en contribution ; qui gère l'élément peut donc le faire sans l'autorité d'attribuer du point 1.
+L'attribution de droits et le réglage « restreint » restent réservés comme ci-dessus : un rôle tenu de « Attribuer à » ou de la
+création ne les donne jamais.

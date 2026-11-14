@@ -1,3 +1,4 @@
+import { notifications } from '@mantine/notifications';
 /* Cellule de crise (reprise des pages « Cellule de crise », « Contacts » et « Scénarios » de l'outil de suivi) :
    main courante horodatée, temps écoulé et échéances, check-list du scénario, contacts de crise et scénarios.
    Données lues et écrites dans l'état historique (clé `crisis`), sous verrou. L'export Excel de la main courante et
@@ -33,6 +34,7 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
@@ -44,7 +46,9 @@ interface Donnees {
   fournisseursCritiques: string[];
 }
 type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
-const useCrise = () => useModule<Donnees>('crise', '/api/crise');
+/** Données de la crise du périmètre affiché (cellules, contacts et scénarios d'un périmètre, BUG-044). */
+const useCrise = (smsi?: string) =>
+  useModule<Donnees>(`crise:${smsi ?? ''}`, smsi ? `/api/crise?smsi=${smsi}` : '/api/crise');
 
 /** Horloge d'une seconde, pour le temps écoulé et les échéances d'une cellule active. */
 function useMaintenant(actif: boolean) {
@@ -61,10 +65,10 @@ const Mode = ({ mode }: { mode: string }) => (
 );
 
 /* ------------------------------------------------------------------------------------------------- cellules */
-export function CelluleCriseVue() {
+export function CelluleCriseVue({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise(),
+    { d, agir, erreur } = useCrise(smsi),
     [sel, setSel] = useState<string | null>(null);
   const etat = d?.etat;
   const active = etat ? celluleActive(etat) : undefined;
@@ -78,6 +82,7 @@ export function CelluleCriseVue() {
           agir={agir}
           modifiable={modifiable}
           avertir={!!active}
+          smsi={smsi}
           onOuverte={setSel}
           onSelect={setSel}
         />
@@ -101,6 +106,7 @@ function OuvertureCellule({
   agir,
   modifiable,
   avertir,
+  smsi,
   onOuverte,
   onSelect,
 }: {
@@ -108,6 +114,7 @@ function OuvertureCellule({
   agir: Agir;
   modifiable: boolean;
   avertir: boolean;
+  smsi?: string;
   onOuverte: (id: string) => void;
   onSelect: (id: string) => void;
 }) {
@@ -121,6 +128,7 @@ function OuvertureCellule({
       title: titre,
       scenario: scenario ?? '',
       plan: plan ?? '',
+      ...(smsi ? { smsi } : {}),
     });
     if (r) onOuverte(r.id);
   };
@@ -212,7 +220,7 @@ function OuvertureCellule({
               </Table.Thead>
               <Table.Tbody>
                 {historique.map((h) => (
-                  <Table.Tr key={h.id}>
+                  <Table.Tr key={h.id} {...ficheCliquable(() => onSelect(h.id), `Afficher la cellule ${h.title}`)}>
                     <Table.Td>
                       <Anchor component="button" type="button" fw={600} onClick={() => onSelect(h.id)}>
                         {h.title}
@@ -302,7 +310,24 @@ function DetailCellule({
               </ConfirmButton>
               <ConfirmButton
                 message="Clôturer la cellule de crise ?"
-                onConfirm={() => agir('POST', `${base}/cloture`, { author: auteur })}
+                onConfirm={async () => {
+                  const r = await agir<{ exercice?: { ref: string; synthese: string; realise?: boolean } }>(
+                    'POST',
+                    `${base}/cloture`,
+                    {
+                      author: auteur,
+                    },
+                  );
+                  if (r?.exercice)
+                    notifications.show({
+                      color: 'blue',
+                      autoClose: false,
+                      title: r.exercice.realise ? 'Exercice marqué « Réalisé »' : 'Complétez la fiche de l’exercice',
+                      message: r.exercice.realise
+                        ? 'La synthèse de la main courante est reportée dans les observations. Saisissez le résultat (réussi, partiel, échec) dans Continuité › Exercices.'
+                        : `Synthèse de la main courante à reporter dans le retour d’expérience (Continuité › Exercices) : ${r.exercice.synthese}`,
+                    });
+                }}
               >
                 Clôturer la cellule
               </ConfirmButton>
@@ -528,10 +553,11 @@ const CHAMPS_CONTACT = [
   ['notes', 'Notes'],
 ] as const;
 
-export function ContactsCrise() {
+export function ContactsCrise({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise();
+    { d, agir, erreur } = useCrise(smsi),
+    corps = smsi ? { smsi } : {};
   return (
     <Stack>
       <ErrorAlert error={erreur} />
@@ -545,10 +571,10 @@ export function ContactsCrise() {
         </div>
         {modifiable && (
           <Group>
-            <Button variant="default" onClick={() => void agir('POST', '/api/crise/contacts/fournisseurs')}>
+            <Button variant="default" onClick={() => void agir('POST', '/api/crise/contacts/fournisseurs', corps)}>
               Ajouter les fournisseurs critiques et hébergeurs
             </Button>
-            <Button onClick={() => void agir('POST', '/api/crise/contacts')}>Ajouter un contact</Button>
+            <Button onClick={() => void agir('POST', '/api/crise/contacts', corps)}>Ajouter un contact</Button>
           </Group>
         )}
       </Group>
@@ -566,13 +592,15 @@ export function ContactsCrise() {
             </Table.Thead>
             <Table.Tbody>
               {d.etat.contacts.map((x, k) => (
-                <Table.Tr key={`${x.createdAt}-${k}`}>
+                <Table.Tr key={`${x.createdAt}-${x.rang}`}>
                   <Table.Td>
                     <Checkbox
                       aria-label={`Contact clé ${k + 1}`}
                       checked={x.key}
                       disabled={!modifiable}
-                      onChange={(e) => void agir('PATCH', `/api/crise/contacts/${k}`, { key: e.currentTarget.checked })}
+                      onChange={(e) =>
+                        void agir('PATCH', `/api/crise/contacts/${x.rang}`, { key: e.currentTarget.checked })
+                      }
                     />
                   </Table.Td>
                   {CHAMPS_CONTACT.map(([f, l]) => (
@@ -581,7 +609,7 @@ export function ContactsCrise() {
                         ariaLabel={`${l} du contact ${k + 1}`}
                         value={x[f]}
                         disabled={!modifiable}
-                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${k}`, { [f]: v })}
+                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
                       />
                     </Table.Td>
                   ))}
@@ -590,7 +618,7 @@ export function ContactsCrise() {
                       <ConfirmButton
                         message="Supprimer ce contact ?"
                         variant="subtle"
-                        onConfirm={() => agir('DELETE', `/api/crise/contacts/${k}`)}
+                        onConfirm={() => agir('DELETE', `/api/crise/contacts/${x.rang}`)}
                       >
                         Supprimer
                       </ConfirmButton>
@@ -612,10 +640,10 @@ export function ContactsCrise() {
 }
 
 /* ----------------------------------------------------------------------------------------------- scénarios */
-export function ScenariosCrise() {
+export function ScenariosCrise({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    { d, agir, erreur } = useCrise(),
+    { d, agir, erreur } = useCrise(smsi),
     [sel, setSel] = useState<string | null>(null);
   const scenarios = d?.etat.scenarios ?? [];
   const sc: ScenarioCrise | undefined = scenarios.find((s) => s.id === sel) ?? scenarios[0];
@@ -633,7 +661,7 @@ export function ScenariosCrise() {
         {modifiable && (
           <Button
             onClick={async () => {
-              const r = await agir<{ id: string }>('POST', '/api/crise/scenarios');
+              const r = await agir<{ id: string }>('POST', '/api/crise/scenarios', smsi ? { smsi } : {});
               if (r) setSel(r.id);
             }}
           >
@@ -691,7 +719,7 @@ export function ScenariosCrise() {
                 </Table.Thead>
                 <Table.Tbody>
                   {sc.items.map((x, k) => (
-                    <Table.Tr key={`${k}-${x.t}`}>
+                    <Table.Tr key={k}>
                       <Table.Td>
                         <ChampChoix
                           ariaLabel={`Phase de l’action ${k + 1}`}

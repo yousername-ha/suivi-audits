@@ -1,7 +1,9 @@
 /* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
    disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
-   cours. Plus de colonnes sur les grands écrans. */
-import { Button, Card, NativeSelect, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
+   cours. Plus de colonnes sur les grands écrans. Refonte Neon (ADR 0093) : une seconde présentation, la vue analytique, se
+   choisit au-dessus du tableau ; le choix est une préférence du compte (tous les appareils), la disposition reste le défaut.
+   Sans droit de lecture métier, aucune des deux présentations n'est affichée. */
+import { Button, Card, NativeSelect, SegmentedControl, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
 import {
   ConfirmButton,
   ErrorAlert,
@@ -11,7 +13,7 @@ import {
   Page,
   PageHeader,
 } from '@suivi/ui';
-import type { DispositionEnregistree, DispositionsOut, TableauPartage } from '@suivi/shared';
+import type { DispositionEnregistree, DispositionsOut, Preferences, TableauPartage } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -19,10 +21,13 @@ import { cartesVisibles } from '../administration-droits';
 import { api, del, get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
 import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
+import { NeonAnalytics } from '../components/NeonAnalytics';
 import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
 import { TableauDeBordConformite } from '../components/TableauDeBord';
 import { useLive, usePresence } from '../realtime';
-import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
+import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
+
+type VueAccueil = NonNullable<Preferences['accueil']>;
 
 const RESOURCE_LABELS: [RegExp, string][] = [
   [/^documents\/.+/, 'un document'],
@@ -119,8 +124,16 @@ export function HomePage() {
   const disposition = affiche?.disposition ?? null;
   const recu = d?.partages.find((p) => p.id === affiche?.id) ?? null;
   const choix = d ? choixTableaux(d) : [];
+  // Présentation choisie par la personne (préférence du compte), sinon le tableau personnalisable.
+  const { prefs, save } = usePreferences();
+  const vue: VueAccueil = prefs.accueil ?? 'personnalisee';
+  const choisirVue = (v: VueAccueil) => {
+    if (v !== vue) void save({ accueil: v });
+  };
+  const analytique = vue === 'analytique';
 
   async function choisir(tableau: string) {
+    choisirVue('personnalisee');
     setErreurChoix(null);
     try {
       qc.setQueryData(
@@ -249,7 +262,13 @@ export function HomePage() {
             <>
               {synthese.data && d && mode === 'lecture' && peutModifier && (
                 <>
-                  <Button variant="default" onClick={() => setMode('edition')}>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      choisirVue('personnalisee');
+                      setMode('edition');
+                    }}
+                  >
                     Modifier la disposition
                   </Button>
                   {d.personnelle && (
@@ -291,7 +310,19 @@ export function HomePage() {
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
       <ErrorAlert error={erreurChoix} />
-      {synthese.data && d && mode === 'lecture' && choix.length > 1 && (
+      {synthese.data && mode === 'lecture' && (
+        <SegmentedControl
+          aria-label="Présentation du tableau de bord"
+          className="tdb-presentation"
+          value={vue}
+          onChange={(v) => choisirVue(v === 'analytique' ? 'analytique' : 'personnalisee')}
+          data={[
+            { value: 'analytique', label: 'Vue analytique Neon' },
+            { value: 'personnalisee', label: 'Tableau personnalisable' },
+          ]}
+        />
+      )}
+      {synthese.data && d && mode === 'lecture' && !analytique && choix.length > 1 && (
         <NativeSelect
           className="tdb-choix"
           label="Tableau affiché"
@@ -311,6 +342,8 @@ export function HomePage() {
             peutDefinirDefaut={can('administration', 'administrer')}
             onFin={() => setMode('lecture')}
           />
+        ) : mode === 'lecture' && analytique ? (
+          <NeonAnalytics s={synthese.data} />
         ) : (
           <TableauDeBordConformite s={synthese.data} disposition={disposition} />
         ))}

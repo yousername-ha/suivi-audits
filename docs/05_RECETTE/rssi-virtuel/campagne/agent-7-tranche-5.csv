@@ -1,0 +1,151 @@
+cellule;resultat;constat;commentaire
+pilotage/continuite|principal|administrateur|rempli|bureau;ok;;Ajouter, Ouvrir, Valider, Exporter, rapport imprimable : identique à rssi. API lecture racine 200
+pilotage/continuite|sous-perimetre|administrateur|rempli|bureau;ok;;PCA HDS seul affiché, mêmes commandes. API HDS 200 sans adhésion (administrateur)
+pilotage/continuite|principal|contributeur|rempli|bureau;ok;;Ajouter et Ouvrir, ni Valider ni Exporter. API : création 200, modification (If-Match) 200, archivage 403 pilotage:supprimer
+pilotage/continuite|sous-perimetre|contributeur|rempli|bureau;ok;;Avant adhésion : 404 « Périmètre introuvable ou non accessible ». Membre en écriture : création et modification 200, archivage 403 pilotage:supprimer
+pilotage/continuite|principal|lecteur|rempli|bureau;ok;;Ouvrir seulement, fiche aux champs désactivés, menu « Décisions et réalisations » seul. API : POST 403 pilotage:modifier, PUT 403, état inchangé
+pilotage/continuite|sous-perimetre|lecteur|rempli|bureau;ok;;Membre en lecture : POST et PUT 403 « Votre accès à ce périmètre est en lecture seule. »
+pilotage/continuite|principal|auditeur_externe|rempli|bureau;defaut;T5-03;Lecture seule conforme quand « Pilotage du SMSI » est ouvert (fiche désactivée, écritures 403). Avec le seul module « Incidents et PCA/PRA », l'écran répond « Vous ne disposez pas du droit de consulter cette rubrique » et l'API 403 pilotage:lire
+pilotage/continuite|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T5-03;Lecture seule conforme quand « Pilotage du SMSI » est ouvert (fiche désactivée, écritures 403). Avec le seul module « Incidents et PCA/PRA », l'écran répond « Vous ne disposez pas du droit de consulter cette rubrique » et l'API 403 pilotage:lire
+pilotage/continuite|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte membre du seul sous-périmètre HDS : le périmètre commun reste lisible et modifiable (POST d'un exercice dans le racine : 200) et le sélecteur propose « SMSI Groupement Santé Fictif »
+pilotage/continuite|principal|rssi|rempli|telephone;ok;;390 x 844 : cartes lisibles, aucun débordement ni défilement horizontal (racine et HDS)
+pilotage/exercices|principal|administrateur|rempli|bureau;ok;;Plan PL-EXO (Ajouter) et registre des exercices, Exporter : identique à rssi
+pilotage/exercices|sous-perimetre|administrateur|rempli|bureau;ok;;Exercice HDS seul, sans le bloc historique PL-EXO (C5-04 côté domaine)
+pilotage/exercices|principal|contributeur|rempli|bureau;ok;;Ajouter (PL-EXO et registre), pas d'export. API : exercice 200, PL-EXO créé 201, archivage 403 pilotage:supprimer
+pilotage/exercices|sous-perimetre|contributeur|rempli|bureau;ok;;Membre en écriture : exercice HDS créé 200. Le PL-EXO créé « depuis HDS » apparaît sous le racine (registre sans périmètre, C5-04/C5-06)
+pilotage/exercices|principal|lecteur|rempli|bureau;ok;;Aucun bouton Ajouter. API : POST objet 403 pilotage:modifier, POST /api/plans 403
+pilotage/exercices|sous-perimetre|lecteur|rempli|bureau;ok;;PUT de l'exercice HDS : 403 « lecture seule »
+pilotage/exercices|principal|auditeur_externe|rempli|bureau;defaut;T5-03;Lecture seule conforme quand « Pilotage du SMSI » est ouvert (fiche désactivée, écritures 403). Avec le seul module « Incidents et PCA/PRA », l'écran répond « Vous ne disposez pas du droit de consulter cette rubrique » et l'API 403 pilotage:lire
+pilotage/exercices|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T5-03;Lecture seule conforme quand « Pilotage du SMSI » est ouvert (fiche désactivée, écritures 403). Avec le seul module « Incidents et PCA/PRA », l'écran répond « Vous ne disposez pas du droit de consulter cette rubrique » et l'API 403 pilotage:lire
+pilotage/exercices|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte membre du seul sous-périmètre HDS : le périmètre commun reste lisible et modifiable (POST d'un exercice dans le racine : 200) et le sélecteur propose « SMSI Groupement Santé Fictif »
+pilotage/exercices|principal|rssi|rempli|telephone;ok;;390 x 844 : tableau PL-EXO défilant dans sa zone, cartes lisibles, pas de défilement de page
+pilotage/incidents-registre|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/incidents-registre|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-registre|principal|contributeur|rempli|bureau;ok;;Qualifier, Saisir directement, fiche modifiable, pas de Supprimer. API : création 201, PATCH 200, DELETE 403 incidents:supprimer
+pilotage/incidents-registre|sous-perimetre|contributeur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-registre|principal|lecteur|rempli|bureau;ok;;Lecture seule : aucun bouton d'écriture, fiche aux champs désactivés. API : POST/PATCH 403 incidents:modifier, DELETE 403 incidents:supprimer, état inchangé
+pilotage/incidents-registre|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-registre|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des modules ouverts : fiche désactivée, aucun bouton d'écriture. API : écritures 403 incidents:modifier/supprimer, état inchangé
+pilotage/incidents-registre|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-registre|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/incidents-registre|principal|rssi|rempli|telephone;defaut;T5-05;Filtres Ouverts/Incidents/Événements/Demandes/Tous coupés à droite (overflow hidden, 561 px pour 362) : « Demandes » et « Tous » inaccessibles au doigt
+pilotage/incidents-qualifier|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/incidents-qualifier|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-qualifier|principal|contributeur|rempli|bureau;ok;;Questionnaire et « Créer la fiche dans le registre » (création 201)
+pilotage/incidents-qualifier|sous-perimetre|contributeur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-qualifier|principal|lecteur|rempli|bureau;ok;;Questions Oui/Non/Je ne sais pas sans bouton de création. POST /api/incidents 403 incidents:modifier
+pilotage/incidents-qualifier|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-qualifier|principal|auditeur_externe|rempli|bureau;ok;;Questions sans bouton de création. POST /api/incidents 403 incidents:modifier
+pilotage/incidents-qualifier|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-qualifier|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/incidents-qualifier|principal|rssi|rempli|telephone;defaut;T5-05;Deux colonnes conservées au téléphone : bouton « Créer la fiche dans le reg… » tronqué, questions sur une demi-largeur
+pilotage/incidents-retex|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/incidents-retex|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-retex|principal|contributeur|rempli|bureau;defaut;T5-02;« Retirer » affiché sur chaque événement (9 sur INC-2026-001), DELETE …/retex/EV-001 : 200 avec le seul droit incidents:modifier (événement du compte de test)
+pilotage/incidents-retex|sous-perimetre|contributeur|rempli|bureau;defaut;T5-02;Même droit de retrait des événements (aucun filtrage par périmètre, C5-06)
+pilotage/incidents-retex|principal|lecteur|rempli|bureau;ok;;Liste et chronologies en lecture, ni Ouvrir un RETEX ni Retirer. POST …/retex 403 incidents:modifier
+pilotage/incidents-retex|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-retex|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule, aucun bouton d'écriture. POST …/retex 403
+pilotage/incidents-retex|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/incidents-retex|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/incidents-retex|principal|rssi|rempli|telephone;ok;;390 x 844 : compteurs et registre des RETEX lisibles, pas de défilement horizontal
+pilotage/crise-cellule|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/crise-cellule|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-cellule|principal|contributeur|rempli|bureau;ok;;Ouvrir la cellule et main courante. API d'ouverture et d'entrée réservées à incidents:modifier (refusées au lecteur)
+pilotage/crise-cellule|sous-perimetre|contributeur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-cellule|principal|lecteur|rempli|bureau;ok;;Historique des cellules en lecture, pas d'ouverture. POST cellule et entrée : 403 incidents:modifier
+pilotage/crise-cellule|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-cellule|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des modules ouverts : fiche désactivée, aucun bouton d'écriture. API : écritures 403 incidents:modifier/supprimer, état inchangé
+pilotage/crise-cellule|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-cellule|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/crise-cellule|principal|rssi|rempli|telephone;ok;;390 x 844 : formulaire pleine largeur, tableau des cellules défilant dans sa zone
+pilotage/crise-contacts|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/crise-contacts|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-contacts|principal|contributeur|rempli|bureau;ok;;Ajouter un contact (201), pas de Supprimer. DELETE /api/crise/contacts/:k 403 incidents:supprimer
+pilotage/crise-contacts|sous-perimetre|contributeur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-contacts|principal|lecteur|rempli|bureau;ok;;Tableau sans bouton. POST, PATCH 403 incidents:modifier, DELETE 403 incidents:supprimer
+pilotage/crise-contacts|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-contacts|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des modules ouverts : fiche désactivée, aucun bouton d'écriture. API : écritures 403 incidents:modifier/supprimer, état inchangé
+pilotage/crise-contacts|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-contacts|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/crise-contacts|principal|rssi|rempli|telephone;ok;;390 x 844 : tableau de saisie défilant dans sa zone (barre visible), champs étroits mais atteignables
+pilotage/crise-scenarios|principal|administrateur|rempli|bureau;ok;;Mêmes commandes que rssi (Ajouter, Supprimer selon l'écran) : rôle à tous les droits
+pilotage/crise-scenarios|sous-perimetre|administrateur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-scenarios|principal|contributeur|rempli|bureau;ok;;Ajouter un scénario et une action, ni Retirer ni Supprimer le scénario. DELETE scénario 403 incidents:supprimer
+pilotage/crise-scenarios|sous-perimetre|contributeur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-scenarios|principal|lecteur|rempli|bureau;ok;;Liste des scénarios sans commande. PATCH 403, DELETE action 403
+pilotage/crise-scenarios|sous-perimetre|lecteur|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-scenarios|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule des modules ouverts : fiche désactivée, aucun bouton d'écriture. API : écritures 403 incidents:modifier/supprimer, état inchangé
+pilotage/crise-scenarios|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C5-06;Mêmes incidents, cellules, contacts et scénarios que sous le périmètre racine : aucun filtrage par périmètre (C5-06 reconfirmé pour ce rôle)
+pilotage/crise-scenarios|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : voit et modifie tous les incidents, cellules, contacts et scénarios de l'instance (INC-2026-001 du racine visible), aucun rattachement au périmètre (voir aussi C5-06)
+pilotage/crise-scenarios|principal|rssi|rempli|telephone;defaut;T5-05;Éditeur sur une demi-largeur : champs d'action tronqués (« Is », « A », « Re »), description coupée
+pilotage/imports|principal|administrateur|rempli|bureau;ok;;Simulation, export JSON et Excel, rapport : identique à rssi. API report 200, import 200
+pilotage/imports|sous-perimetre|administrateur|rempli|bureau;ok;;Périmètre affiché Hébergement HDS, mêmes commandes. API report HDS 200
+pilotage/imports|principal|contributeur|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|sous-perimetre|contributeur|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|principal|lecteur|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|sous-perimetre|lecteur|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|principal|auditeur_externe|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|restreint|contributeur|rempli|bureau;defaut;T5-06;Pas de droit import_export : en-tête et sélecteur seuls, aucun message (lien absent du menu, route directe vide). API : preview 403 import_export:modifier, report 403 import_export:exporter
+pilotage/imports|principal|rssi|rempli|telephone;ok;;390 x 844 : boutons et champs pleine largeur, rien de coupé
+route/mur|principal|administrateur|rempli|bureau;ok;;Synthèse complète de l'instance. API /api/admin/murs 200
+route/mur|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Vue d'instance sans sélecteur de périmètre
+route/mur|principal|contributeur|rempli|bureau;ok;;Synthèse lisible (droits de lecture des modules métier). /api/admin/murs 403 administration:lire
+route/mur|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Vue d'instance sans sélecteur de périmètre
+route/mur|principal|lecteur|rempli|bureau;ok;;Synthèse lisible. /api/admin/murs 403, POST /api/admin/murs 403 administration:administrer
+route/mur|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Vue d'instance sans sélecteur de périmètre
+route/mur|principal|auditeur_externe|rempli|bureau;ok;;Synthèse expurgée : « Prochain audit non planifié ou non visible avec vos droits », écarts et conformité null dans /api/mur/synthese
+route/mur|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Vue d'instance sans sélecteur de périmètre
+route/mur|restreint|contributeur|rempli|bureau;defaut;T5-01;Compte limité à HDS : synthèse de toute l'organisation (écarts, conformité, plans du racine)
+route/mur|principal|rssi|rempli|telephone;ok;;390 x 844 : cartes empilées lisibles, pas de défilement horizontal (tableau de conformité réservé aux lecteurs d'écran)
+route/mur/activer|principal|administrateur|rempli|bureau;ok;;« Activation impossible » et consigne sans lien complet
+route/mur/activer|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Activation par lien, indépendante du périmètre
+route/mur/activer|principal|contributeur|rempli|bureau;ok;;Même page, aucune donnée exposée
+route/mur/activer|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Activation par lien, indépendante du périmètre
+route/mur/activer|principal|lecteur|rempli|bureau;ok;;Même page, aucune donnée exposée
+route/mur/activer|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Activation par lien, indépendante du périmètre
+route/mur/activer|principal|auditeur_externe|rempli|bureau;ok;;Même page, aucune donnée exposée
+route/mur/activer|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Activation par lien, indépendante du périmètre
+route/mur/activer|restreint|contributeur|rempli|bureau;ok;;Même page sans donnée : rien hors du sous-périmètre
+route/mur/activer|principal|rssi|rempli|telephone;ok;;390 x 844 : message centré, rien de coupé
+route/documents|principal|administrateur|rempli|bureau;ok;;Déposer, Corbeille, colonnes : identique à rssi. API 200
+route/documents|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents|principal|contributeur|rempli|bureau;ok;;Déposer des documents, pas de Corbeille. API : lien créé 201, DELETE lien 403 documents:supprimer
+route/documents|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents|principal|lecteur|rempli|bureau;ok;;Liste sans Déposer ni Corbeille. PATCH 403 documents:modifier, DELETE 403 documents:supprimer, POST lien 403
+route/documents|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents|principal|auditeur_externe|rempli|bureau;ok;;Module Documents et liens ouvert : liste et téléchargement 200, écritures 403
+route/documents|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents|restreint|contributeur|rempli|bureau;defaut;T5-01;Bibliothèque commune sans périmètre : le compte limité à HDS lit et dépose dans toute la bibliothèque
+route/documents|principal|rssi|rempli|telephone;ok;;390 x 844 : tableau lisible, rien de coupé
+route/documents/:id|principal|administrateur|rempli|bureau;ok;;Fiche lue et téléchargement 200 (API), droits complets
+route/documents/:id|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents/:id|principal|contributeur|rempli|bureau;ok;;Modifier et Déposer une nouvelle version, pas de Mettre à la corbeille (code : documents:supprimer)
+route/documents/:id|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents/:id|principal|lecteur|rempli|bureau;ok;;Fiche en lecture, téléchargement 200. PATCH (If-Match) 403 documents:modifier, DELETE 403
+route/documents/:id|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents/:id|principal|auditeur_externe|rempli|bureau;ok;;Fiche et téléchargement 200, PATCH et DELETE 403
+route/documents/:id|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Bibliothèque commune de l'instance, sans sélecteur de périmètre
+route/documents/:id|restreint|contributeur|rempli|bureau;defaut;T5-01;Fiche de la bibliothèque commune lisible et modifiable par le compte limité à HDS
+route/documents/:id|principal|rssi|rempli|telephone;defaut;T5-05;Empreinte SHA-256 non coupée : défilement horizontal dans la fiche du document
+route/exports|principal|administrateur|rempli|bureau;ok;;Onze groupes Excel classique et pro. API groupes 200, export incidents 200 (classeur)
+route/exports|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Aucun choix de périmètre sur l'écran (C5-16)
+route/exports|principal|contributeur|rempli|bureau;ok;;« Vous ne disposez pas du droit d'exporter les données. » API 403 import_export:exporter
+route/exports|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Aucun choix de périmètre sur l'écran (C5-16)
+route/exports|principal|lecteur|rempli|bureau;ok;;Même message de refus, API 403 import_export:exporter
+route/exports|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Aucun choix de périmètre sur l'écran (C5-16)
+route/exports|principal|auditeur_externe|rempli|bureau;ok;;Même message de refus, API 403 import_export:exporter (lecture seule)
+route/exports|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Aucun choix de périmètre sur l'écran (C5-16)
+route/exports|restreint|contributeur|rempli|bureau;ok;;Refus identique : rien n'est exporté
+route/exports|principal|rssi|rempli|telephone;ok;;390 x 844 : cartes d'export empilées, rien de coupé
+route/retex/:incident?|principal|administrateur|rempli|bureau;ok;;Aucune demande. RETEX non invité : 404 « RETEX introuvable. »
+route/retex/:incident?|sous-perimetre|administrateur|rempli|bureau;sans-objet;;Espace contributeur nominatif, sans périmètre
+route/retex/:incident?|principal|contributeur|rempli|bureau;ok;;Aucune demande, RETEX d'un autre : 404 identique (ADR 0080)
+route/retex/:incident?|sous-perimetre|contributeur|rempli|bureau;sans-objet;;Espace contributeur nominatif, sans périmètre
+route/retex/:incident?|principal|lecteur|rempli|bureau;ok;;Invité sur un RETEX de test : contexte minimal, propositions des autres invisibles. Non invité : « RETEX introuvable. »
+route/retex/:incident?|sous-perimetre|lecteur|rempli|bureau;sans-objet;;Espace contributeur nominatif, sans périmètre
+route/retex/:incident?|principal|auditeur_externe|rempli|bureau;defaut;T5-07;Compte auditeur externe (lecture seule) proposé parmi les candidats et invité : sa proposition est acceptée (201)
+route/retex/:incident?|sous-perimetre|auditeur_externe|rempli|bureau;sans-objet;;Espace contributeur nominatif, sans périmètre
+route/retex/:incident?|restreint|contributeur|rempli|bureau;ok;;RETEX non invité : 404, rien hors de ses invitations
+route/retex/:incident?|principal|rssi|rempli|telephone;ok;;390 x 844 : page lisible (sans titre de niveau 1, voir T5-08)

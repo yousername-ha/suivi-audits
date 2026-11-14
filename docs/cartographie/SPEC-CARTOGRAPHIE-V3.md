@@ -5,6 +5,10 @@
 > validé par le RSSI le 08/10/2026. Référence visuelle : `maquette/images/01` à `03`.
 > La maquette (`maquette/docs/`) reste la source pour l'intention fonctionnelle ; **ce document l'emporte**
 > sur elle quand ils divergent (stack, dépendances, stockage, droits).
+>
+> **Note du 12/11/2026** : les applications (nœuds `application`, références `app:<id>`, lien application → fournisseur) sont
+> retirées de la cartographie avec le module « Applications à intégrer » ([ADR 0089](../adr/0089-simplification-du-menu-conformite.md),
+> lot 2). La migration 058 les retire des cartes enregistrées ; la bêta de référence (`reference-beta-legacy/`) les connaît encore.
 
 ## 1. Objectif
 
@@ -44,8 +48,8 @@ Un renommage dans la plateforme est repris sans déplacer la boîte. Un objet su
   (ex. `fournisseurs:lire` absent) n'est **pas** envoyé au navigateur (boîte remplacée par « Objet non accessible »).
 
 ### CARTO-02 — Source des objets métier (adaptateur)
-Les modules concernés ne sont pas encore repris (processus : phase 2 ; parties intéressées, SWOT, périmètre,
-GAP : phase 3). La cartographie lit donc les objets via une interface unique, côté API :
+Les modules concernés ne sont pas encore repris (processus : phase 2 ; parties intéressées, SWOT, périmètre :
+phase 3). La cartographie lit donc les objets via une interface unique, côté API :
 
 ```ts
 interface CartoObjectSource { // apps/api/src/carto/sources/*.ts
@@ -57,7 +61,7 @@ interface CartoObjectSource { // apps/api/src/carto/sources/*.ts
 - Implémentation 1 : **état legacy recomposé** (`LegacyStore`, `app_state` + modules repris) — les mêmes règles que la bêta.
 - Quand un module est repris (mapper ADR 0007), sa source passe sur les tables, **sans changer le front ni les cartes**
   (les `objectRef` restent identiques grâce aux identifiants stables du schéma 15).
-- `objectRef` : `process:<code>`, `pi:<id>`, `sup:<id>`, `app:<id>`, `issue:<id>`, `site:<id>`, `infra:<id>`,
+- `objectRef` : `process:<code>`, `pi:<id>`, `sup:<id>`, `issue:<id>`, `site:<id>`, `infra:<id>`,
   `isms`, `scope` ; cadres propres à la carte : `lane:pil|rea|sup|oth`, `band:ext|int`, `zone:out`.
   Dans la bêta, enjeux, sites et systèmes sont repérés par un hachage du libellé : en v3, utiliser l'identifiant
   stable s'il existe (schéma 15), sinon le même hachage (fonction pure partagée, testée en parité avec la bêta).
@@ -71,13 +75,12 @@ Objets et relations repris (voir `reference-beta-legacy/CONTRAT-S-MAPS.md`) :
 | Processus / sous-processus | `processes` | famille → bande ; `parent` ou code `X.Y` → sous-processus ; nb objectifs, indicateurs, indicateurs KO |
 | Parties intéressées | `interested` | externe / interne, catégorie |
 | Enjeux | `objectives[].enjeux` (« Libellé : description ») et SWOT le plus récent par processus | forces/faiblesses = internes, opportunités/menaces = externes ; nature corrigeable (CARTO-12) |
-| Applications | `appGaps` | statut Intégrée = dans le périmètre, Écartée = hors, sinon à confirmer ; fournisseur par nom |
 | Sites, systèmes | lignes de `scope.sites`, `scope.systems` | dans le périmètre |
 | Fournisseurs | `suppliers` | critique, HDS, SaaS |
 
 Relations métier dérivées (lecture seule sur la carte) : processus et SI du périmètre → SMSI (`part_of`) ;
 parties intéressées → périmètre (`interacts_with`) ; fournisseurs → périmètre (`supports`) ;
-application → fournisseur (`depends_on`) ; enjeu → périmètre (`impacts`) ; enjeu → processus (`impacts`, secondaire) ;
+enjeu → périmètre (`impacts`) ; enjeu → processus (`impacts`, secondaire) ;
 processus → sous-processus (`contains`, non dessinée si imbriqué).
 
 ### CARTO-03 — Stockage des cartes
@@ -125,8 +128,7 @@ enregistrement, restauration, suppression, export.
 ### CARTO-05 — Génération assistée
 Assistant identique à la bêta (`reference-beta-legacy/captures/1_wizard.png`) :
 - Vue contexte : types (processus, sous-processus, parties intéressées, fournisseurs, enjeux externes / internes,
-  applications, sites et infrastructures), origine des enjeux (objectifs, SWOT), fournisseurs (critiques/HDS et liés
-  à une application, ou tous), profondeur 1 à 3 (parcours en largeur depuis SMSI et périmètre), mode
+  sites et infrastructures), origine des enjeux (objectifs, SWOT), fournisseurs (critiques ou HDS, ou tous), profondeur 1 à 3 (parcours en largeur depuis SMSI et périmètre), mode
   « Remplacer la disposition » ou « Compléter (conserver les positions) ».
 - Vue processus : processus, sous-processus, propositions de flux (chaîne de réalisation et de pilotage dans
   l'ordre des codes), liens support / pilotage vers chaque processus de réalisation.
@@ -180,8 +182,7 @@ Panneau à droite (bas d'écran sur téléphone), selon le type :
 - processus : type/famille, périmètre, responsable, référentiels, parent / sous-processus, objectifs liés,
   indicateurs avec état, SWOT (date, nombre d'éléments), relations ; liens vers les écrans du module ;
 - partie intéressée : nature, catégorie, besoins, exigences, prise en compte, revue ;
-- fournisseur : SaaS, HDS, critique, SSO, MFA, certifications, applications liées ;
-- application : statut, fournisseur (cliquable), données de santé, hébergement ;
+- fournisseur : SaaS, HDS, critique, SSO, MFA, certifications ;
 - enjeu : description, nature (modifiable), origine (objectif / SWOT), processus concernés ;
 - périmètre, SMSI, cadres, objet indisponible ; relation : type, origine, destination, nature (métier, graphique,
   proposition).

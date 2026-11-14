@@ -1,14 +1,26 @@
-/* Jetons de la charte (direction graphique Sauge) : couleurs, rayons, espacements, points de rupture.
+/* Jetons de la charte (Dark / Light Neon Analytics) : couleurs, rayons, espacements, points de rupture.
    Source unique : le thème Mantine (theme.ts), la feuille statique (styles.css) et les tests de contraste
    s'y réfèrent. Aucune couleur ni aucun espacement ne doit être codé en dur ailleurs. */
 
 /** Couleurs de marque. */
 export const BRAND = {
-  encre: '#243B34',
-  vert: '#245F4C',
-  violet: '#5A48B5',
-  fond: '#F5F6F2',
+  encre: '#273049',
+  vert: '#7930C5', // alias public historique : accent d'action, sans changement de contrat
+  violet: '#7930C5',
+  fond: '#F5F4F7',
   surface: '#FFFFFF',
+} as const;
+
+/** Signature décorative. Les couleurs de criticité et de méthode restent indépendantes. */
+export const NEON = {
+  rose: '#F653B5',
+  violet: '#A461FF',
+  bleu: '#458DFF',
+  cyan: '#28C7E8',
+  orange: '#FF985B',
+  menthe: '#39D6BD',
+  clair: { navigation: '#FFFFFF', titre: '#151D38', accent: '#7930C5', doux: '#F1ECF8' },
+  sombre: { navigation: '#0C1429', titre: '#FFFFFF', accent: '#CE97FF', doux: '#1C2946' },
 } as const;
 
 /** Matrice des risques : encre du texte sur les cases claires et fond d'une case sans niveau défini (les couleurs de niveau
@@ -21,18 +33,18 @@ export const SANTE = { ok: '#2f8f5b', ko: '#c2312a', mesure: '#d98a1d' } as cons
 
 type Tuple = readonly [string, string, string, string, string, string, string, string, string, string];
 
-/** Vert (couleur principale) : nuance 8 = vert de marque. */
+/** Accent violet principal ; nom VERT conservé pour les consommateurs historiques. */
 export const VERT: Tuple = [
-  '#edf4ef',
-  '#dceadf',
-  '#bdd6c6',
-  '#9abca8',
-  '#79a68d',
-  '#578b6e',
-  '#40775e',
-  '#306b53',
-  '#245f4c',
-  '#194b3b',
+  '#F7F0FF',
+  '#EDDEFC',
+  '#DCC0FA',
+  '#CE97FF',
+  '#BE79F1',
+  '#AE61E6',
+  '#984BD0',
+  '#8436BD',
+  '#7930C5',
+  '#61239F',
 ];
 /** Encre (textes, en-têtes) : nuance 8 = encre de marque. */
 export const ENCRE: Tuple = [
@@ -49,42 +61,42 @@ export const ENCRE: Tuple = [
 ];
 /** Violet (accent) : nuance 7 = violet de marque. */
 export const VIOLET: Tuple = [
-  '#f2f0fb',
-  '#e2def5',
-  '#c2b8ea',
-  '#a092de',
-  '#8371d4',
-  '#7060ce',
-  '#6553c9',
-  '#5a48b5',
-  '#4f3fa1',
-  '#43358b',
+  '#F7F0FF',
+  '#EDDEFC',
+  '#DCC0FA',
+  '#CE97FF',
+  '#BE79F1',
+  '#AE61E6',
+  '#984BD0',
+  '#7930C5',
+  '#6925AF',
+  '#57208F',
 ];
 /** Gris neutres, assez soutenus pour que le texte secondaire (nuance 6) reste lisible (WCAG AA). */
 export const GRIS: Tuple = [
-  '#f8f9f6',
-  '#f1f3ee',
-  '#e5e9e2',
-  '#d5dcd3',
-  '#b7c2b8',
-  '#819087',
-  '#58695f',
-  '#46584e',
-  '#35473d',
-  '#25382d',
+  '#FAF9FC',
+  '#F1EFF5',
+  '#E5E1EC',
+  '#D3CEDF',
+  '#B4ADC2',
+  '#877D96',
+  '#655D74',
+  '#51495F',
+  '#3D354F',
+  '#2A233C',
 ];
 /** Mode sombre (palette « dark » de Mantine) : fond = nuance 7, texte = nuance 0, texte secondaire = nuance 2. */
 export const SOMBRE: Tuple = [
-  '#e7eee9',
-  '#ced9d1',
-  '#acbdb1',
-  '#84998b',
-  '#50685b',
-  '#384f42',
-  '#273e32',
-  '#1a2f25',
-  '#12241c',
-  '#0d1b15',
+  '#F4F5FF',
+  '#D5DCEF',
+  '#AAB7D3',
+  '#7D8DB0',
+  '#526181',
+  '#334363',
+  '#1C2946',
+  '#18233E',
+  '#0C1328',
+  '#080E20',
 ];
 
 /** Fonds de page et de surface, par mode. */
@@ -187,8 +199,8 @@ export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTabl
       vert: '#278A58',
       orange: '#EA8A1A',
       rouge: '#D63A30',
-      violet: '#6556C2',
-      bleu: '#3A66B5',
+      violet: '#A461FF',
+      bleu: '#458DFF',
       gris: '#7A887F',
     },
     texte: {
@@ -197,7 +209,7 @@ export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTabl
       rouge: '#9E1F18',
       violet: '#4F3FA1',
       bleu: '#24478A',
-      gris: '#46584E',
+      gris: '#51495F',
     },
     doux: {
       vert: '#CBE9D6',
@@ -205,18 +217,18 @@ export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTabl
       rouge: '#F8CFCB',
       violet: '#DDD8F4',
       bleu: '#D6E0F1',
-      gris: '#E0E4DE',
+      gris: '#E5E1EC',
     },
-    contour: '#10201A',
-    surface: '#F3F6F1',
+    contour: '#273049',
+    surface: '#FFFFFF',
   },
   sombre: {
     remplissage: {
       vert: '#3FAE74',
       orange: '#E89A3C',
       rouge: '#E5645A',
-      violet: '#9A8AE8',
-      bleu: '#6F97E0',
+      violet: '#A461FF',
+      bleu: '#458DFF',
       gris: '#8E9B92',
     },
     texte: {
@@ -225,7 +237,7 @@ export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTabl
       rouge: '#FF9C93',
       violet: '#C3B8FF',
       bleu: '#A9C4F5',
-      gris: '#C3CDC6',
+      gris: '#D5DCEF',
     },
     doux: {
       vert: '#173A29',
@@ -235,8 +247,8 @@ export const TABLEAU_DE_BORD: { clair: PaletteTableauDeBord; sombre: PaletteTabl
       bleu: '#1B2E4F',
       gris: '#253247',
     },
-    contour: '#A9BDB2',
-    surface: '#22382D',
+    contour: '#AAB7D3',
+    surface: '#18233E',
   },
 };
 /** Variables CSS du tableau de bord (--tdb-*) pour un mode. */
@@ -250,7 +262,7 @@ export function variablesTableauDeBord(p: PaletteTableauDeBord): Record<string, 
   return v;
 }
 
-/** Rayons : de 6 à 12 px, conformément à la charte. */
+/** Rayons : de 6 à 12 px, conformément à la charte (inchangés par la refonte Neon : le test de contraste les borne). */
 export const RAYONS = { xs: '6px', sm: '8px', md: '10px', lg: '12px', xl: '12px' } as const;
 
 /** Espacements (rem). */
@@ -311,10 +323,91 @@ export const ETATS = {
 export type EtatCouleur = keyof typeof ETATS;
 
 /** Fonds du style global « Clair » (Paramètres > Apparence), posés par `html[data-style='clair']` en mode clair. */
-export const STYLE_CLAIR = { page: '#f7f9fb', surfaceDouce: '#f0f4f7' } as const;
+export const STYLE_CLAIR = { page: '#faf9fc', surfaceDouce: '#f5f2fa' } as const;
 
 /** Sceau décoratif de l'écran de connexion : écu tricolore assombri, posé sur le fond de la navigation vert profond. */
 export const SCEAU = { bleu: '#00005E', blanc: '#B9C4BD', rouge: '#9C0A14' } as const;
+
+/** Menu latéral bleu nuit opaque (refonte Neon, retenu le 13/11/2026) : identique dans les deux thèmes, le contenu
+    garde son propre thème. Une teinte par identité d'entrée (famille ou page), jamais par position : réordonner le menu
+    ne change pas la couleur d'une entrée. Les pictogrammes sont décoratifs, le libellé porte l'information. */
+export const IDENTITES_MENU = [
+  'dashboard',
+  'organisation',
+  'pilotage',
+  'risques',
+  'conformite',
+  'actions',
+  'resilience',
+  'documents',
+  'plateforme',
+  'parametres',
+  'compte',
+  'aide',
+  'mur',
+] as const;
+export type IdentiteMenu = (typeof IDENTITES_MENU)[number];
+export const MENU = {
+  /** Dégradé linéaire (haut → milieu → bas) et halo pétrole en bas à gauche ; aucune transparence globale. */
+  fond: { haut: '#14233D', milieu: '#142C45', bas: '#143239', halo: '#173F45' },
+  texte: '#EDF4FF',
+  secondaire: '#BDCFE0',
+  destination: '#C4D5E6',
+  selection: '#FFFFFF',
+  trait: '#42617B',
+  survol: '#213E53',
+  survolTrait: '#56758D',
+  focus: '#A9E6F2',
+  commande: '#E2EFF9',
+  commandeTrait: '#52758B',
+  /** Fonds de sélection, mêlés à la teinte de l'entrée : famille dépliée et destination ouverte. */
+  selectionTrait: '#284959',
+  familleFond: '#142B40',
+  familleFin: '#173244',
+  destinationFond: '#102B40',
+  destinationFin: '#204351',
+  teintes: {
+    dashboard: '#BB96F5',
+    organisation: '#78D69A',
+    pilotage: '#7AAFFF',
+    risques: '#F2BE57',
+    conformite: '#62D4DC',
+    actions: '#F0A265',
+    resilience: '#F37B86',
+    documents: '#D0B28B',
+    plateforme: '#B5C1D6',
+    parametres: '#B6D17D',
+    compte: '#CFB4F4',
+    aide: '#CAB0D7',
+    mur: '#7FC5EF',
+  } satisfies Record<IdentiteMenu, string>,
+} as const;
+/** Variables CSS du menu (--menu-*), communes aux deux thèmes. */
+export function variablesMenu(): Record<string, string> {
+  const v: Record<string, string> = {
+    '--menu-fond-haut': MENU.fond.haut,
+    '--menu-fond-milieu': MENU.fond.milieu,
+    '--menu-fond-bas': MENU.fond.bas,
+    '--menu-fond-halo': MENU.fond.halo,
+    '--menu-texte': MENU.texte,
+    '--menu-secondaire': MENU.secondaire,
+    '--menu-destination': MENU.destination,
+    '--menu-selection': MENU.selection,
+    '--menu-trait': MENU.trait,
+    '--menu-survol': MENU.survol,
+    '--menu-survol-trait': MENU.survolTrait,
+    '--menu-focus': MENU.focus,
+    '--menu-commande': MENU.commande,
+    '--menu-commande-trait': MENU.commandeTrait,
+    '--menu-selection-trait': MENU.selectionTrait,
+    '--menu-famille-fond': MENU.familleFond,
+    '--menu-famille-fin': MENU.familleFin,
+    '--menu-destination-fond': MENU.destinationFond,
+    '--menu-destination-fin': MENU.destinationFin,
+  };
+  for (const [id, c] of Object.entries(MENU.teintes)) v[`--menu-teinte-${id}`] = c;
+  return v;
+}
 
 /** Couleur `#rgb` ou `#rrggbb` à l'opacité `alpha` (bornée entre 0 et 1), pour un dessin sur canevas dont la teinte
     vient d'une variable de la charte. Une valeur non hexadécimale est rendue telle quelle. */
@@ -344,6 +437,37 @@ export function melange(couleur: string, alpha: number, fond: string): string {
 
 /** Couples texte / fond utilisés par l'interface, avec le seuil WCAG AA attendu (4,5 texte, 3 composants). */
 export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seuil: number }[] = [
+  // Menu bleu nuit : textes sur les deux extrémités du dégradé et sur le survol ; pictogrammes (objets graphiques, 3:1).
+  ...(
+    [
+      ['haut', MENU.fond.haut],
+      ['bas', MENU.fond.bas],
+      ['halo', MENU.fond.halo],
+      ['survol', MENU.survol],
+    ] as const
+  ).flatMap(([lieu, fond]) => [
+    { nom: `Menu : libellé de famille (${lieu})`, texte: MENU.texte, fond, seuil: 4.5 },
+    { nom: `Menu : texte secondaire (${lieu})`, texte: MENU.secondaire, fond, seuil: 4.5 },
+    { nom: `Menu : destination (${lieu})`, texte: MENU.destination, fond, seuil: 4.5 },
+  ]),
+  ...IDENTITES_MENU.flatMap((id) =>
+    (['haut', 'bas'] as const).map((lieu) => ({
+      nom: `Menu : pictogramme ${id} (${lieu})`,
+      texte: MENU.teintes[id],
+      fond: MENU.fond[lieu],
+      seuil: 3,
+    })),
+  ),
+  ...(['clair', 'sombre'] as const).flatMap((mode) => [
+    { nom: `Neon : titre navigation (${mode})`, texte: NEON[mode].titre, fond: NEON[mode].navigation, seuil: 4.5 },
+    {
+      nom: `Neon : texte secondaire navigation (${mode})`,
+      texte: FONDS[mode].secondaire,
+      fond: NEON[mode].navigation,
+      seuil: 4.5,
+    },
+    { nom: `Neon : sélection et focus (${mode})`, texte: NEON[mode].accent, fond: NEON[mode].doux, seuil: 4.5 },
+  ]),
   { nom: 'texte sur fond de page (clair)', texte: FONDS.clair.texte, fond: FONDS.clair.page, seuil: 4.5 },
   { nom: 'texte sur surface (clair)', texte: FONDS.clair.texte, fond: FONDS.clair.surface, seuil: 4.5 },
   { nom: 'texte secondaire sur surface (clair)', texte: FONDS.clair.secondaire, fond: FONDS.clair.surface, seuil: 4.5 },

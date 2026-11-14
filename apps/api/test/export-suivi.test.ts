@@ -137,6 +137,97 @@ describe('GET /api/suivi/export', () => {
     expect((partie(b, 'xl/workbook.xml').match(/_xlnm\._FilterDatabase/g) ?? []).length).toBeGreaterThan(3);
   });
 
+  it('reprend les fiches du Pilotage saisies à l’écran, pour le périmètre demandé (BUG-038, BUG-058)', async () => {
+    const COMMUN = '00000000-0000-4000-8000-000000000001';
+    const sous = (
+      await a.post('/api/grc/smsis', {
+        name: 'Sous-périmètre export',
+        scope: 'S',
+        timezone: 'Europe/Paris',
+        parentId: COMMUN,
+      })
+    ).json().id;
+    const fiche = async (smsi: string, kind: string, name: string, data: Record<string, unknown> = {}) => {
+      const r = await a.post(`/api/grc/${smsi}/objects`, { kind, name, data });
+      expect(r.statusCode, r.body).toBe(200);
+    };
+    await fiche(COMMUN, 'stakeholder', 'Partie fictive du commun', {
+      nature: 'Externe',
+      expectations: 'Disponibilité',
+    });
+    await fiche(COMMUN, 'swot', 'SWOT fictif du commun', { strengths: 'Équipe formée\nSupervision 24 h' });
+    await fiche(COMMUN, 'governance', 'Rôle fictif du commun', {
+      holder: 'Titulaire fictif',
+      responsibilities: 'Piloter',
+    });
+    await fiche(COMMUN, 'context', 'Contexte fictif', {
+      organisation: 'Organisation fictive',
+      scope: 'Activités fictives',
+    });
+    await fiche(COMMUN, 'continuity_plan', 'PRA fictif du commun', { planType: 'pra' });
+    await fiche(sous, 'stakeholder', 'Partie fictive du sous-périmètre');
+    const lignes = async (groupe: string, perimetre?: string) => {
+      const r = await a.get(`/api/suivi/export?groupe=${groupe}&mode=std${perimetre ? '&perimetre=' + perimetre : ''}`);
+      expect(r.statusCode, r.body).toBe(200);
+      return lire(r.rawPayload)
+        .filter((p) => p.nom.startsWith('xl/'))
+        .map((p) => p.texte)
+        .join('\n');
+    };
+    const commun = await lignes('ctx');
+    for (const attendu of [
+      'Partie fictive du commun',
+      'Équipe formée',
+      'Supervision 24 h',
+      'Rôle fictif du commun',
+      'Titulaire fictif',
+      'Organisation fictive',
+    ])
+      expect(commun, attendu).toContain(attendu);
+    expect(commun).not.toContain('Partie fictive du sous-périmètre');
+    const enfant = await lignes('ctx', sous);
+    expect(enfant).toContain('Partie fictive du sous-périmètre');
+    expect(enfant).not.toContain('Partie fictive du commun');
+    // L'export complet reprend aussi les plans de continuité ; un périmètre illisible est refusé.
+    expect(await lignes('all')).toContain('PRA fictif du commun');
+    expect((await ro.get(`/api/suivi/export?groupe=ctx&perimetre=${sous}`)).statusCode).toBe(403);
+    expect(
+      (await a.get('/api/suivi/export?groupe=ctx&perimetre=11111111-1111-4111-8111-111111111111')).statusCode,
+    ).toBe(404);
+  });
+
+  it('l’export complet reprend le RETEX, les scénarios de crise et le registre documentaire (BUG-058)', async () => {
+    const inc = await a.post('/api/incidents', { title: 'Incident fictif de l’export' });
+    expect(inc.statusCode, inc.body).toBe(201);
+    const ev = await a.post(`/api/incidents/${inc.json().id}/retex`, {
+      ts: '2026-10-12T09:00',
+      type: 'Analyse',
+      titre: 'Événement RETEX fictif de l’export',
+    });
+    expect(ev.statusCode, ev.body).toBe(201);
+    const scn = await a.post('/api/crise/scenarios', {});
+    expect(scn.statusCode, scn.body).toBe(201);
+    expect(
+      (await a.patch(`/api/crise/scenarios/${scn.json().id}`, { title: 'Scénario fictif de l’export' })).statusCode,
+    ).toBe(200);
+    expect((await a.post(`/api/crise/scenarios/${scn.json().id}/actions`)).statusCode).toBe(201);
+    await t.svc.db.q(
+      "INSERT INTO documents(title, category, created_by, updated_by) VALUES ('Politique fictive de l’export', 'politique', 'test', 'test')",
+    );
+    const r = await a.get('/api/suivi/export?groupe=all&mode=std');
+    expect(r.statusCode, r.body).toBe(200);
+    const contenu = lire(r.rawPayload)
+      .filter((p) => p.nom.startsWith('xl/'))
+      .map((p) => p.texte)
+      .join('\n');
+    for (const attendu of [
+      'Événement RETEX fictif de l’export',
+      'Scénario fictif de l’export',
+      'Politique fictive de l’export',
+    ])
+      expect(contenu, attendu).toContain(attendu);
+  });
+
   it('refuse un groupe inconnu et un mode inconnu, exige session et droit d’export', async () => {
     expect((await a.get('/api/suivi/export?groupe=zz&mode=std')).statusCode).toBe(404);
     expect((await a.get('/api/suivi/export?groupe=ec&mode=csv')).statusCode).toBe(422);

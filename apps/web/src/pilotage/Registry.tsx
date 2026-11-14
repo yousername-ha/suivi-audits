@@ -1,4 +1,5 @@
-import { Badge, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import { Badge, Box, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import { DataTable, ListeDefilante } from '@suivi/ui';
 import {
   ECART_CLASSIFICATION_LABELS,
   GRC_LABELS,
@@ -13,6 +14,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { Filtres } from '../components/Filtres';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
@@ -393,89 +395,87 @@ export function BusinessRegistry({
           </Text>
         </Card>
       )}
-      <Table.ScrollContainer
-        minWidth={650}
-        scrollAreaProps={{
-          viewportProps: { tabIndex: 0, role: 'region', 'aria-label': 'Tableau, défilement horizontal possible' },
-        }}
-        visibleFrom="sm"
-      >
-        <Table highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Intitulé</Table.Th>
-              <Table.Th>État</Table.Th>
-              <Table.Th>Responsable</Table.Th>
-              <Table.Th>Échéance</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {rows.map((o) => (
-              <Table.Tr key={o.id}>
-                <Table.Td>
-                  <Text fw={600}>{o.name}</Text>
-                  <Text size="xs" c="dimmed">
-                    {String(o.data.description ?? '').slice(0, 120)}
-                  </Text>
-                  {o.id.startsWith('legacy:') && (
-                    <Badge size="xs" variant="light">
-                      Existant
-                    </Badge>
-                  )}
-                  {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
-                    <Badge size="xs" variant="light" color="encre">
-                      Registre partagé avec ce périmètre
-                    </Badge>
-                  )}
-                  {kind === 'nonconformity' && <EtiquettesEcart o={o} taille="xs" />}
-                  {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
-                    <Badge size="xs" variant="light" color="encre">
-                      {(o.data.auditedFrameworks as unknown[]).length > 1 ? 'Audit combiné : ' : 'Audit : '}
-                      {(o.data.auditedFrameworks as string[]).join(' + ')}
-                    </Badge>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  {state(o)}
-                  {kind === 'control' && o.data.result !== undefined && (
-                    <Text size="sm">Dernier résultat : {stateLabel(o.data.result)}</Text>
-                  )}
-                </Table.Td>
-                <Table.Td>{owner(o)}</Table.Td>
-                <Table.Td>{date(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt)}</Table.Td>
-                <Table.Td>{actions(o)}</Table.Td>
+      <Box visibleFrom="sm">
+        <DataTable label="Fiches du registre">
+          <Table highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Intitulé</Table.Th>
+                <Table.Th>État</Table.Th>
+                <Table.Th>Responsable</Table.Th>
+                <Table.Th>Échéance</Table.Th>
+                <Table.Th>Actions</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
+            </Table.Thead>
+            <Table.Tbody>
+              {rows.map((o) => (
+                <Table.Tr key={o.id} {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}>
+                  <Table.Td>
+                    <Text fw={600}>{o.name}</Text>
+                    <Text size="xs" c="dimmed" lineClamp={1}>
+                      {String(o.data.description ?? '').slice(0, 120)}
+                    </Text>
+                    {o.id.startsWith('legacy:') && (
+                      <Badge size="xs" variant="light">
+                        Existant
+                      </Badge>
+                    )}
+                    {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                      <Badge size="xs" variant="light" color="encre">
+                        Registre partagé avec ce périmètre
+                      </Badge>
+                    )}
+                    {kind === 'nonconformity' && <EtiquettesEcart o={o} taille="xs" />}
+                    {Array.isArray(o.data.auditedFrameworks) && (o.data.auditedFrameworks as unknown[]).length > 0 && (
+                      <Badge size="xs" variant="light" color="encre">
+                        {(o.data.auditedFrameworks as unknown[]).length > 1 ? 'Audit combiné : ' : 'Audit : '}
+                        {(o.data.auditedFrameworks as string[]).join(' + ')}
+                      </Badge>
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    {state(o)}
+                    {kind === 'control' && o.data.result !== undefined && (
+                      <Text size="sm">Dernier résultat : {stateLabel(o.data.result)}</Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>{owner(o)}</Table.Td>
+                  <Table.Td>{date(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt)}</Table.Td>
+                  <Table.Td>{actions(o)}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      </Box>
       <Stack hiddenFrom="sm">
-        {rows.map((o) => (
-          <Card key={o.id} withBorder>
-            <Stack gap="xs">
-              <Text fw={600}>{o.name}</Text>
-              <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
-              {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
-              {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
-                <Badge variant="light" color="encre">
-                  Registre partagé avec ce périmètre
-                </Badge>
-              )}
-              {kind === 'nonconformity' && <EtiquettesEcart o={o} />}
-              <Text size="sm">
-                {state(o)} · {owner(o)}
-              </Text>
-              {kind === 'control' && o.data.result !== undefined && (
-                <Text size="sm">Dernier résultat : {stateLabel(o.data.result)}</Text>
-              )}
-              <Text size="sm">
-                Échéance : {date(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt)}
-              </Text>
-              {actions(o)}
-            </Stack>
-          </Card>
-        ))}
+        <ListeDefilante className="fiches-mobiles" label="Fiches du registre, vue mobile">
+          {rows.map((o) => (
+            <Card key={o.id} withBorder {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}>
+              <Stack gap="xs">
+                <Text fw={600}>{o.name}</Text>
+                <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
+                {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
+                {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
+                  <Badge variant="light" color="encre">
+                    Registre partagé avec ce périmètre
+                  </Badge>
+                )}
+                {kind === 'nonconformity' && <EtiquettesEcart o={o} />}
+                <Text size="sm">
+                  {state(o)} · {owner(o)}
+                </Text>
+                {kind === 'control' && o.data.result !== undefined && (
+                  <Text size="sm">Dernier résultat : {stateLabel(o.data.result)}</Text>
+                )}
+                <Text size="sm">
+                  Échéance : {date(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt)}
+                </Text>
+                {actions(o)}
+              </Stack>
+            </Card>
+          ))}
+        </ListeDefilante>
       </Stack>
       <Group>
         {native.hasNextPage && (

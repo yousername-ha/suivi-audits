@@ -1,8 +1,7 @@
-/* Exports Excel du pronostic de l'audit, du GAP applications et des évaluations par le clausier : contenu des lignes
+/* Exports Excel du pronostic de l'audit et des évaluations par le clausier : contenu des lignes
    calculées par les fonctions partagées. Données fictives, aucune base nécessaire. */
 import { describe, expect, it } from 'vitest';
 import { LV } from '@suivi/shared/audit';
-import { POINTS_GAP, pointsGap } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { CLAUSIER_2026 } from '../src/historique/clausier-club-rssi-sante-2026.js';
 import { GROUPES, JEUX, feuillesDuGroupe } from '../src/export/rubriques.js';
@@ -43,42 +42,6 @@ describe('pronostic de l’audit', () => {
   });
 });
 
-describe('GAP applications', () => {
-  const premier = POINTS_GAP.find((p) => !p.cond && p.refs.length)!;
-  const etat: JsonObject = {
-    items: premier.refs.map((r) => ({ id: r, ref: 'A', num: r.replace('A-', ''), title: 'x' })),
-    dda: Object.fromEntries(premier.refs.map((r) => [r, { app: 'non' }])),
-    appGaps: [
-      {
-        id: 'APP01',
-        name: 'Application fictive',
-        dscp: 'Non',
-        cloud: 'Non',
-        status: 'En cours',
-        owner: 'Responsable',
-        target: '2026-12-31',
-        lines: { [POINTS_GAP.find((p) => !p.cond && p !== premier)!.id]: { st: 'Conforme', comment: 'Constat' } },
-      },
-    ],
-  };
-  it('synthèse : avancement calculé sur les points applicables', () => {
-    const [ligne] = JEUX.gapApps!.lignes(ctx(etat));
-    const total = pointsGap({ dscp: 'Non', cloud: 'Non', custom: [] }).length;
-    expect(ligne![0]).toBe('Application fictive');
-    expect(ligne![4]).toBe(`${Math.round(100 / (total - 1))} %`);
-    expect(ligne![5]).toBe(1);
-    expect(ligne![9]).toBe('31/12/2026');
-  });
-  it('points de contrôle : une ligne par point, exigences exclues « Non applicable »', () => {
-    const lignes = JEUX.gapLignes!.lignes(ctx(etat));
-    expect(lignes).toHaveLength(pointsGap({ dscp: 'Non', cloud: 'Non', custom: [] }).length);
-    const ligne = lignes.find((l) => l[3] === premier.t)!;
-    expect(ligne[4]).toBe('Non applicable');
-    expect(ligne[2]).toContain(premier.refs[0]!.replace('A-', 'A.'));
-    expect(lignes.some((l) => l[4] === 'Conforme' && l[5] === 'Constat')).toBe(true);
-  });
-});
-
 describe('évaluations fournisseurs par le clausier', () => {
   const sans = CLAUSIER_2026.reqs.filter((r) => !r.removed && !CLAUSIER_2026.cases[r.sec]);
   const etat: JsonObject = {
@@ -105,14 +68,46 @@ describe('évaluations fournisseurs par le clausier', () => {
   });
 });
 
+describe('libellés des types d’écarts exportés (BUG-046)', () => {
+  const etat: JsonObject = {
+    findings: [
+      {
+        id: 'E-1',
+        source: 'AFNOR',
+        year: 2026,
+        type: 'NC maj',
+        status: 'Ouvert',
+        tasks: [{ t: 'Action A', done: true }],
+      },
+      { id: 'E-2', source: 'Interne', year: 2026, type: 'NC min', status: 'Ouvert', tasks: [{ t: 'Action B' }] },
+      { id: 'E-3', source: 'Interne', year: 2026, type: 'PS', status: 'Ouvert', tasks: [{ t: 'Action C' }] },
+      { id: 'E-4', source: 'Interne', year: 2026, type: 'PP', status: 'Ouvert', tasks: [{ t: 'Action D' }] },
+      { id: 'E-5', source: 'Interne', year: 2026, type: 'Remarque', status: 'Ouvert', tasks: [] },
+    ],
+  };
+  it('le registre et le plan d’actions reprennent le libellé de la classification saisie', () => {
+    const registre = JEUX.ecarts!.lignes(ctx(etat));
+    expect(registre.map((l) => l[3])).toEqual([
+      'NC majeure',
+      'NC mineure',
+      'Point sensible',
+      'Piste de progrès',
+      'Remarque',
+    ]);
+    expect(JEUX.actions!.lignes(ctx(etat)).map((l) => l[1])).toEqual([
+      'NC majeure',
+      'NC mineure',
+      'Point sensible',
+      'Piste de progrès',
+    ]);
+  });
+});
+
 describe('groupes', () => {
   it('exposent les nouvelles feuilles', () => {
-    expect(GROUPES.find((g) => g.id === 'apps')?.jeux).toEqual(['gapApps', 'gapLignes']);
+    expect(GROUPES.find((g) => g.id === 'apps')).toBeUndefined();
     expect(GROUPES.find((g) => g.id === 'audit')?.jeux[0]).toBe('pronostic');
     expect(GROUPES.find((g) => g.id === 'sup')?.jeux).toContain('evalFournisseurs');
-    expect(feuillesDuGroupe('apps', ctx({}))!.map((f) => f.titre)).toEqual([
-      'GAP — applications à intégrer',
-      'GAP — points de contrôle',
-    ]);
+    expect(feuillesDuGroupe('apps', ctx({}))).toBeNull();
   });
 });

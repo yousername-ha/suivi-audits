@@ -1,70 +1,83 @@
-/* Registre des incidents et qualification d'un signalement (reprise des pages « Incidents » de l'outil de suivi) :
-   questionnaire de qualification, obligations à vérifier, priorité ITIL impact × urgence, action du registre des écarts.
+/* Registre des incidents (reprise des pages « Incidents » de l'outil de suivi) et fiche d'un incident à onglets
+   (ADR 0091) : « Fiche », « Qualification guidée » (questionnaire oui / non / je ne sais pas, qualification proposée,
+   obligations) et « Chronologie et RETEX ». Priorité ITIL impact × urgence, action du registre des écarts.
    Données lues et écrites dans l'état historique (clé `incidents`), sous verrou. */
 import {
   Anchor,
   Button,
-  Card,
   Checkbox,
   Group,
-  Modal,
+  Select,
   SegmentedControl,
   Stack,
   Table,
+  Tabs,
   Text,
-  TextInput,
+  Title,
 } from '@mantine/core';
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import {
   CATEGORIES_INCIDENT,
   NIVEAUX_INCIDENT,
   QUALIFICATIONS_INCIDENT,
-  QUESTIONS_INCIDENT,
   STATUTS_INCIDENT,
   filtrerIncidents,
   incidentOuvert,
   obligationsIncident,
   prioriteIncident,
-  qualifierIncident,
   syntheseIncidents,
   type FiltreIncidents,
   type Incident,
-  type Reponses,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
+import type { Agir, Donnees } from './donnees';
+import { FILTRES_RETEX, etatRetexIncident, type CleEtatRetex } from './etat-retex';
+import { ETAT_QUALIFICATION } from './qualification';
+import { QualificationGuidee } from './QualificationGuidee';
+import { RetexIncident } from './Retex';
 
-interface Donnees {
-  version: number;
-  incidents: Incident[];
-  categorieEntite: string;
-  ecarts: Record<string, string>;
-}
-const ETAT_KIND: Record<string, Etat> = {
-  'Incident de sécurité': 'erreur',
-  Incident: 'attention',
-  'Événement de sécurité': 'info',
-  Événement: 'neutre',
-  Demande: 'neutre',
-};
+type Onglet = 'fiche' | 'qualification' | 'retex';
+const ONGLETS: Onglet[] = ['fiche', 'qualification', 'retex'];
 const dateFr = (t: string) => (t ? `${t.slice(0, 10).split('-').reverse().join('/')} ${t.slice(11, 16)}` : '');
-const Qualification = ({ k }: { k: string }) => <StatusChip etat={ETAT_KIND[k] ?? 'neutre'}>{k}</StatusChip>;
+const Qualification = ({ k }: { k: string }) => <StatusChip etat={ETAT_QUALIFICATION[k] ?? 'neutre'}>{k}</StatusChip>;
 
-export function RegistreIncidents() {
+/** `smsi` : périmètre affiché ; le registre n'en montre que les incidents et y crée les nouveaux (BUG-044). */
+export function RegistreIncidents({ smsi }: { smsi?: string }) {
   const can = useCan(),
     modifiable = can('incidents', 'modifier'),
-    navigate = useNavigate(),
     [params, setParams] = useSearchParams(),
-    { d, agir, erreur } = useModule<Donnees>('incidents', '/api/incidents'),
-    [filtre, setFiltre] = useState<FiltreIncidents>('open');
+    { d, agir, erreur } = useModule<Donnees>(
+      `incidents:${smsi ?? ''}`,
+      smsi ? `/api/incidents?smsi=${smsi}` : '/api/incidents',
+    ),
+    [filtre, setFiltre] = useState<FiltreIncidents>('open'),
+    [filtreRetex, setFiltreRetex] = useState<'tous' | CleEtatRetex>('tous');
   const ouverte = d?.incidents.find((i) => i.id === params.get('incident')) ?? null;
-  const ouvrir = (id: string | null) => setParams(id ? { incident: id } : {}, { replace: true });
-  const liste = d ? filtrerIncidents(d.incidents, filtre) : [];
+  const ouvrir = (id: string | null) => setParams(id ? { incident: id } : {});
+  const liste = (d ? filtrerIncidents(d.incidents, filtre) : []).filter(
+    (i) => filtreRetex === 'tous' || etatRetexIncident(i).cle === filtreRetex,
+  );
   const s = d ? syntheseIncidents(d.incidents) : null;
+  if (ouverte && d)
+    return (
+      <Stack>
+        <ErrorAlert error={erreur} />
+        <FicheIncident
+          key={ouverte.id}
+          i={ouverte}
+          d={d}
+          modifiable={modifiable}
+          agir={agir}
+          retour={() => ouvrir(null)}
+        />
+      </Stack>
+    );
   return (
     <Stack>
       <ErrorAlert error={erreur} />
@@ -72,24 +85,21 @@ export function RegistreIncidents() {
         <div>
           <Text fw={600}>Registre des incidents</Text>
           <Text size="sm" c="dimmed">
-            Incidents, événements et demandes qualifiés. La priorité suit la matrice ITIL impact × urgence. Les chiffres
-            alimentent la diapositive « Revue des incidents » du COPIL sécurité.
+            Incidents, événements et demandes. Ouvrez la fiche d’un incident pour le qualifier (qualification guidée),
+            suivre ses obligations et conduire son retour d’expérience (chronologie et RETEX). La priorité suit la
+            matrice ITIL impact × urgence. Les chiffres alimentent la revue de direction (entrée d 2), le tableau de
+            bord et le rapport de pilotage du périmètre.
           </Text>
         </div>
         {modifiable && (
-          <Group>
-            <Button variant="default" onClick={() => void navigate('/pilotage/incidents-qualifier')}>
-              Qualifier un signalement
-            </Button>
-            <Button
-              onClick={async () => {
-                const i = await agir<Incident>('POST', '/api/incidents', {});
-                if (i) ouvrir(i.id);
-              }}
-            >
-              Saisir directement
-            </Button>
-          </Group>
+          <Button
+            onClick={async () => {
+              const i = await agir<Incident>('POST', '/api/incidents', smsi ? { smsi } : {});
+              if (i) ouvrir(i.id);
+            }}
+          >
+            Nouvel incident
+          </Button>
         )}
       </Group>
       {s && (
@@ -102,19 +112,28 @@ export function RegistreIncidents() {
           ]}
         />
       )}
-      <SegmentedControl
-        aria-label="Filtre du registre"
-        value={filtre}
-        onChange={(v) => setFiltre(v as FiltreIncidents)}
-        data={[
-          { value: 'open', label: 'Ouverts' },
-          { value: 'sec', label: 'Incidents de sécurité' },
-          { value: 'Incident', label: 'Incidents' },
-          { value: 'Événement de sécurité', label: 'Événements de sécurité' },
-          { value: 'Demande', label: 'Demandes' },
-          { value: 'all', label: 'Tous' },
-        ]}
-      />
+      <Group align="flex-end" justify="space-between">
+        <SegmentedControl
+          aria-label="Filtre du registre"
+          value={filtre}
+          onChange={(v) => setFiltre(v as FiltreIncidents)}
+          data={[
+            { value: 'open', label: 'Ouverts' },
+            { value: 'sec', label: 'Incidents de sécurité' },
+            { value: 'Incident', label: 'Incidents' },
+            { value: 'Événement de sécurité', label: 'Événements de sécurité' },
+            { value: 'Demande', label: 'Demandes' },
+            { value: 'all', label: 'Tous' },
+          ]}
+        />
+        <Select
+          label="RETEX"
+          allowDeselect={false}
+          data={FILTRES_RETEX}
+          value={filtreRetex}
+          onChange={(v) => setFiltreRetex((v as 'tous' | CleEtatRetex | null) ?? 'tous')}
+        />
+      </Group>
       <DataTable label="Registre des incidents">
         <Table>
           <Table.Thead>
@@ -125,90 +144,139 @@ export function RegistreIncidents() {
               <Table.Th>Intitulé</Table.Th>
               <Table.Th>Priorité</Table.Th>
               <Table.Th>Statut</Table.Th>
+              <Table.Th>RETEX</Table.Th>
               <Table.Th>Responsable</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {liste.map((i) => (
-              <Table.Tr key={i.id}>
-                <Table.Td>
-                  <Anchor component="button" type="button" fw={600} onClick={() => ouvrir(i.id)}>
-                    {i.id}
-                  </Anchor>
-                </Table.Td>
-                <Table.Td>{dateFr(i.detectedAt)}</Table.Td>
-                <Table.Td>
-                  <Qualification k={i.kind} />
-                </Table.Td>
-                <Table.Td>
-                  {i.title || '(sans titre)'}
-                  <Text size="xs" c="dimmed">
-                    {i.cat}
-                  </Text>
-                </Table.Td>
-                <Table.Td>{prioriteIncident(i.impact, i.urgency) || '–'}</Table.Td>
-                <Table.Td>
-                  <StatusChip etat={incidentOuvert(i) ? 'attention' : 'succes'}>{i.status}</StatusChip>
-                </Table.Td>
-                <Table.Td>{i.owner || '–'}</Table.Td>
-              </Table.Tr>
-            ))}
+            {liste.map((i) => {
+              const retex = etatRetexIncident(i);
+              return (
+                <Table.Tr key={i.id} {...ficheCliquable(() => ouvrir(i.id), `Afficher l’incident ${i.id}`)}>
+                  <Table.Td>
+                    <Anchor component="button" type="button" fw={600} onClick={() => ouvrir(i.id)}>
+                      {i.id}
+                    </Anchor>
+                  </Table.Td>
+                  <Table.Td>{dateFr(i.detectedAt)}</Table.Td>
+                  <Table.Td>
+                    <Qualification k={i.kind} />
+                  </Table.Td>
+                  <Table.Td>
+                    {i.title || '(sans titre)'}
+                    <Text size="xs" c="dimmed">
+                      {i.cat}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>{prioriteIncident(i.impact, i.urgency) || '–'}</Table.Td>
+                  <Table.Td>
+                    <StatusChip etat={incidentOuvert(i) ? 'attention' : 'succes'}>{i.status}</StatusChip>
+                  </Table.Td>
+                  <Table.Td>
+                    <StatusChip etat={retex.ton}>{retex.libelle}</StatusChip>
+                    {retex.enAttente > 0 && (
+                      <Text size="xs" c="dimmed">
+                        {retex.enAttente} à valider
+                      </Text>
+                    )}
+                  </Table.Td>
+                  <Table.Td>{i.owner || '–'}</Table.Td>
+                </Table.Tr>
+              );
+            })}
             {!liste.length && (
               <Table.Tr>
-                <Table.Td colSpan={7}>Aucun élément.</Table.Td>
+                <Table.Td colSpan={8}>Aucun élément.</Table.Td>
               </Table.Tr>
             )}
           </Table.Tbody>
         </Table>
       </DataTable>
-      <Modal
-        opened={!!ouverte}
-        onClose={() => ouvrir(null)}
-        lockScroll={false}
-        size="xl"
-        title={ouverte ? ouverte.id : ''}
-      >
-        {ouverte && d && (
-          <FicheIncident
-            i={ouverte}
-            d={d}
-            modifiable={modifiable}
-            maj={(champ) => void agir('PATCH', `/api/incidents/${encodeURIComponent(ouverte.id)}`, champ)}
-            agir={agir}
-            fermer={() => ouvrir(null)}
-          />
-        )}
-      </Modal>
     </Stack>
   );
 }
 
+/* ------------------------------------------------------------------------------------------ fiche à onglets */
 function FicheIncident({
   i,
   d,
   modifiable,
-  maj,
   agir,
-  fermer,
+  retour,
 }: {
   i: Incident;
   d: Donnees;
   modifiable: boolean;
-  maj: (c: Record<string, unknown>) => void;
-  agir: <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
-  fermer: () => void;
+  agir: Agir;
+  retour: () => void;
 }) {
+  const [params, setParams] = useSearchParams();
+  const can = useCan();
+  const onglet: Onglet = ONGLETS.includes(params.get('onglet') as Onglet) ? (params.get('onglet') as Onglet) : 'fiche';
+  const allerA = (o: string | null) =>
+    setParams(o && o !== 'fiche' ? { incident: i.id, onglet: o } : { incident: i.id }, { replace: true });
+  const retex = etatRetexIncident(i);
+  return (
+    <Stack>
+      <div>
+        <Anchor component="button" type="button" size="sm" onClick={retour}>
+          ← Registre des incidents
+        </Anchor>
+      </div>
+      <Group justify="space-between" align="flex-start">
+        <div>
+          <Title order={2} size="h3">
+            {i.id} — {i.title || '(sans titre)'}
+          </Title>
+          <Group gap="xs" mt="xs">
+            <Qualification k={i.kind} />
+            <StatusChip etat={incidentOuvert(i) ? 'attention' : 'succes'}>{i.status}</StatusChip>
+            <StatusChip etat={retex.ton}>{`RETEX : ${retex.libelle.toLowerCase()}`}</StatusChip>
+            <Text size="sm" c="dimmed">
+              Créé le {dateFr(i.detectedAt)}
+            </Text>
+          </Group>
+        </div>
+        {modifiable && can('incidents', 'supprimer') && (
+          <ConfirmButton
+            message={`Supprimer ${i.id} ?`}
+            onConfirm={async () => {
+              await agir('DELETE', `/api/incidents/${encodeURIComponent(i.id)}`);
+              retour();
+            }}
+            variant="light"
+          >
+            Supprimer
+          </ConfirmButton>
+        )}
+      </Group>
+      <Tabs value={onglet} onChange={allerA} keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab value="fiche">Fiche</Tabs.Tab>
+          <Tabs.Tab value="qualification">Qualification guidée</Tabs.Tab>
+          <Tabs.Tab value="retex">Chronologie et RETEX</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="fiche" pt="md">
+          <ContenuFiche i={i} d={d} modifiable={modifiable} agir={agir} />
+        </Tabs.Panel>
+        <Tabs.Panel value="qualification" pt="md">
+          <QualificationGuidee i={i} categorieEntite={d.categorieEntite} modifiable={modifiable} agir={agir} />
+        </Tabs.Panel>
+        <Tabs.Panel value="retex" pt="md">
+          <RetexIncident incident={i} modifiable={modifiable} agir={agir} />
+        </Tabs.Panel>
+      </Tabs>
+    </Stack>
+  );
+}
+
+function ContenuFiche({ i, d, modifiable, agir }: { i: Incident; d: Donnees; modifiable: boolean; agir: Agir }) {
   const obligations = obligationsIncident(i.answers, i.kind, d.categorieEntite);
   const can = useCan();
-  const navigate = useNavigate();
+  const maj = (champ: Record<string, unknown>) =>
+    void agir('PATCH', `/api/incidents/${encodeURIComponent(i.id)}`, champ);
   return (
-    <Stack key={i.id}>
-      <Group>
-        <Qualification k={i.kind} />
-        <Text size="sm" c="dimmed">
-          Créé le {dateFr(i.detectedAt)}
-        </Text>
-      </Group>
+    <Stack>
       <ChampTexte label="Intitulé" value={i.title} disabled={!modifiable} onCommit={(v) => maj({ title: v })} />
       <div className="grille-formulaire">
         <div className="grille-formulaire__champs">
@@ -299,14 +367,6 @@ function FicheIncident({
         disabled={!modifiable}
         onCommit={(v) => maj({ retex: v })}
       />
-      <Group>
-        <Button
-          variant="light"
-          onClick={() => void navigate(`/pilotage/incidents-retex?incident=${encodeURIComponent(i.id)}`)}
-        >
-          RETEX et chronologie ({i.timeline.length} événement{i.timeline.length > 1 ? 's' : ''})
-        </Button>
-      </Group>
       {obligations.length > 0 && (
         <Stack gap="xs">
           <Text fw={600}>Obligations à vérifier</Text>
@@ -347,144 +407,6 @@ function FicheIncident({
           </div>
         )
       )}
-      {modifiable && can('incidents', 'supprimer') && (
-        <Group justify="flex-end">
-          <ConfirmButton
-            message={`Supprimer ${i.id} ?`}
-            onConfirm={async () => {
-              await agir('DELETE', `/api/incidents/${encodeURIComponent(i.id)}`);
-              fermer();
-            }}
-            variant="light"
-          >
-            Supprimer
-          </ConfirmButton>
-        </Group>
-      )}
-    </Stack>
-  );
-}
-
-/* ------------------------------------------------------------------------------------ qualifier un signalement */
-export function QualifierSignalement() {
-  const can = useCan(),
-    navigate = useNavigate(),
-    { d, agir, erreur } = useModule<Donnees>('incidents', '/api/incidents'),
-    [reponses, setReponses] = useState<Reponses>({}),
-    [titre, setTitre] = useState(''),
-    [signale, setSignale] = useState('');
-  const res = qualifierIncident(reponses);
-  const renseignees = QUESTIONS_INCIDENT.filter(([k]) => reponses[k]).length;
-  const ob = obligationsIncident(reponses, res.kind, d?.categorieEntite ?? '');
-  const repondre = (k: (typeof QUESTIONS_INCIDENT)[number][0], v: 'oui' | 'non' | 'nsp') => {
-    const suivant = { ...reponses };
-    if (suivant[k] === v) delete suivant[k];
-    else suivant[k] = v;
-    setReponses(suivant);
-  };
-  return (
-    <Stack>
-      <ErrorAlert error={erreur} />
-      <div>
-        <Text fw={600}>Qualifier un signalement</Text>
-        <Text size="sm" c="dimmed">
-          Répondez aux questions : l’outil indique s’il s’agit d’un incident de sécurité, d’un incident, d’un événement
-          ou d’une demande, puis crée la fiche dans le registre.
-        </Text>
-      </div>
-      <Group align="flex-start" grow>
-        <Stack>
-          <TextInput
-            label="Intitulé du signalement"
-            placeholder="ex. Courriel suspect reçu par la comptabilité"
-            value={titre}
-            onChange={(e) => setTitre(e.currentTarget.value)}
-          />
-          <TextInput label="Signalé par" value={signale} onChange={(e) => setSignale(e.currentTarget.value)} />
-          {QUESTIONS_INCIDENT.map(([k, q]) => (
-            <Card key={k} withBorder padding="sm">
-              <Text size="sm" id={`question-${k}`}>
-                {q}
-              </Text>
-              <div role="group" aria-labelledby={`question-${k}`}>
-                <Group gap="xs" mt="xs">
-                  {(
-                    [
-                      ['oui', 'Oui'],
-                      ['non', 'Non'],
-                      ['nsp', 'Je ne sais pas'],
-                    ] as const
-                  ).map(([v, l]) => (
-                    <Button
-                      key={v}
-                      size="compact-sm"
-                      variant={reponses[k] === v ? 'filled' : 'default'}
-                      aria-pressed={reponses[k] === v}
-                      onClick={() => repondre(k, v)}
-                    >
-                      {l}
-                    </Button>
-                  ))}
-                </Group>
-              </div>
-            </Card>
-          ))}
-          <Text size="sm" c="dimmed">
-            « Je ne sais pas » est traité comme « non » pour la qualification ; à réévaluer dès que l’information est
-            connue.
-          </Text>
-        </Stack>
-        <Stack>
-          <Text fw={600}>Résultat</Text>
-          <Card withBorder>
-            <Qualification k={res.kind} />
-            <Text size="sm" mt="xs">
-              {res.why}
-            </Text>
-          </Card>
-          <Text size="sm" c="dimmed">
-            {renseignees}/{QUESTIONS_INCIDENT.length} questions renseignées.
-          </Text>
-          {ob.length > 0 && (
-            <>
-              <Text fw={600}>À vérifier</Text>
-              <ul>
-                {ob.map(([t, detail]) => (
-                  <li key={t}>
-                    <b>{t}</b> : {detail}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {can('incidents', 'modifier') && (
-            <Group>
-              <Button
-                onClick={async () => {
-                  const i = await agir<Incident>('POST', '/api/incidents', {
-                    title: titre,
-                    reporter: signale,
-                    answers: reponses,
-                  });
-                  if (i) void navigate(`/pilotage/incidents-registre?incident=${encodeURIComponent(i.id)}`);
-                }}
-              >
-                Créer la fiche dans le registre
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => {
-                  setReponses({});
-                  setTitre('');
-                  setSignale('');
-                }}
-              >
-                Recommencer
-              </Button>
-            </Group>
-          )}
-        </Stack>
-      </Group>
     </Stack>
   );
 }

@@ -6,7 +6,6 @@ export const GRC_KINDS = [
   'framework',
   'requirement',
   'measure',
-  'mapping',
   'risk',
   'risk_source',
   'feared_event',
@@ -37,14 +36,12 @@ export const GRC_KINDS = [
   'risk_study',
   'sr_ov',
   'ecosystem_party',
-  'opportunity',
 ] as const;
 export type GrcKind = (typeof GRC_KINDS)[number];
 export const GRC_MODULES: Record<GrcKind, Module> = {
   framework: 'conformite',
   requirement: 'audit',
   measure: 'audit',
-  mapping: 'conformite',
   risk: 'pilotage',
   risk_source: 'pilotage',
   feared_event: 'pilotage',
@@ -70,18 +67,16 @@ export const GRC_MODULES: Record<GrcKind, Module> = {
   governance: 'pilotage',
   management_review: 'pilotage',
   journey: 'pilotage',
-  continuity_plan: 'pilotage',
-  continuity_exercise: 'pilotage',
+  continuity_plan: 'incidents',
+  continuity_exercise: 'incidents',
   risk_study: 'pilotage',
   sr_ov: 'pilotage',
   ecosystem_party: 'pilotage',
-  opportunity: 'pilotage',
 };
 export const GRC_LABELS: Record<GrcKind, string> = {
   framework: 'Référentiel',
   requirement: 'Exigence',
   measure: 'Mesure',
-  mapping: 'Correspondance',
   risk: 'Risque',
   risk_source: 'Source de risque',
   feared_event: 'Événement redouté',
@@ -112,7 +107,6 @@ export const GRC_LABELS: Record<GrcKind, string> = {
   risk_study: 'Étude EBIOS RM',
   sr_ov: 'Couple source de risque / objectif visé',
   ecosystem_party: 'Partie prenante de l’écosystème',
-  opportunity: 'Opportunité',
 };
 export const GrcKey = z
   .string()
@@ -320,55 +314,6 @@ export const LibraryRequirementBody = z
   .refine((b) => !!b.domain !== !!b.newDomainLabel, 'Indiquez un domaine existant ou le libellé d’un nouveau domaine.');
 export type LibraryRequirementBody = z.infer<typeof LibraryRequirementBody>;
 
-/** Correspondance organisationnelle entre deux exigences de la bibliothèque (ADR 0031) : validée une fois pour toute
-    l'organisation. La validation est une décision humaine, jamais une conséquence d'une importation ni d'une IA. */
-const ExtremiteCorrespondance = z
-  .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().min(1).max(120) })
-  .strict();
-export const LibraryMappingBody = z
-  .object({
-    source: ExtremiteCorrespondance,
-    target: ExtremiteCorrespondance,
-    type: z.enum(['identical', 'equivalent', 'partial', 'complementary', 'related', 'none']),
-    justification: z.string().trim().min(10).max(5000),
-    coverage: z.number().int().min(0).max(100),
-    origin: z.enum(['human', 'ai']),
-    sourceUrl: z.url(),
-  })
-  .strict();
-export type LibraryMappingBody = z.infer<typeof LibraryMappingBody>;
-/** Décision du pilote sur des propositions de rapprochement : confirmer crée un lien explicite, rejeter garde le motif. */
-export const RapprochementDecision = z
-  .object({
-    ids: z.array(z.uuid()).min(1).max(100),
-    decision: z.enum(['confirm', 'reject']),
-    note: z.string().trim().max(2000).default(''),
-    confirm: z.literal('DECIDER'),
-  })
-  .strict()
-  .refine((d) => d.decision === 'confirm' || d.note.length >= 5, {
-    message: 'Un rejet exige un motif d’au moins 5 caractères.',
-    path: ['note'],
-  });
-export type RapprochementDecision = z.infer<typeof RapprochementDecision>;
-export const MappingData = z
-  .object({
-    source: z
-      .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().max(120) })
-      .strict(),
-    target: z
-      .object({ frameworkId: z.uuid(), version: z.number().int().positive(), requirementId: z.string().max(120) })
-      .strict(),
-    type: z.enum(['identical', 'equivalent', 'partial', 'complementary', 'related', 'none']),
-    justification: z.string().trim().min(10).max(5000),
-    coverage: z.number().min(0).max(100),
-    origin: z.enum(['human', 'ai']),
-    status: z.enum(['proposed', 'reviewed', 'validated']),
-    sourceUrl: z.url(),
-    reviewNote: z.string().max(5000).default(''),
-  })
-  .strict();
-export type MappingData = z.infer<typeof MappingData>;
 export const Recurrence = z
   .object({
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -522,9 +467,7 @@ export const LinkBody = z
     note: z.string().max(2000),
   })
   .strict();
-export const FrameworkImport = z
-  .object({ definition: FrameworkDefinition, mappings: z.array(MappingData).max(1000).default([]) })
-  .strict();
+export const FrameworkImport = z.object({ definition: FrameworkDefinition }).strict();
 
 /** Champs de liaison typés des risques (lot U3) : leurs références sont résolues et contrôlées comme « refs ». */
 export const CHAMPS_REF_RISQUES = [

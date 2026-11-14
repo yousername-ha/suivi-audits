@@ -219,7 +219,7 @@ export function Inspecteur(p: InspecteurProps) {
       : c?.scope === 'out'
         ? ['Hors périmètre', 'gray']
         : c?.scope === 'unk'
-          ? [c.scopeLabel || 'Périmètre à confirmer', 'orange']
+          ? ['Périmètre à confirmer', 'orange']
           : null;
   const legacy = (
     <Button component="a" href="/pilotage" variant="default" size="xs">
@@ -318,20 +318,6 @@ export function Inspecteur(p: InspecteurProps) {
               ))}
             </Group>
           </Ligne>
-        )}
-        {o.type === 'application' && c && (
-          <>
-            <Ligne l="Statut">
-              <Etiquette color={d.status === 'Intégrée' ? 'green' : 'orange'}>{d.status}</Etiquette>
-            </Ligne>
-            {d.supplier && (
-              <Ligne l="Fournisseur">
-                {c.supRef ? <Lien onClick={() => p.onGoto(c.supRef!)}>{d.supplier}</Lien> : d.supplier}
-              </Ligne>
-            )}
-            <Ligne l="Données de santé">{d.healthData}</Ligne>
-            <Ligne l="Hébergement">{d.hosting}</Ligne>
-          </>
         )}
         {(o.type === 'external_issue' || o.type === 'internal_issue') && c && (
           <Ligne l="Nature">
@@ -448,17 +434,6 @@ export function Inspecteur(p: InspecteurProps) {
           <Group gap="2xs">
             {d.requirements.map((x) => (
               <Etiquette key={x}>{x}</Etiquette>
-            ))}
-          </Group>
-        </Section>
-      )}
-      {o.type === 'supplier' && !!d.apps?.length && (
-        <Section titre="Applications liées">
-          <Group gap="2xs">
-            {d.apps.map((a) => (
-              <Lien key={a.id} onClick={() => p.onGoto('app:' + a.id)}>
-                {a.name}
-              </Lien>
             ))}
           </Group>
         </Section>

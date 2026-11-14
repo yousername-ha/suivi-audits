@@ -324,28 +324,14 @@ describe('édition de la bibliothèque, correspondances et détachement', () => 
     expect(c.sourceVersion).toBe(2);
     expect(c.historique[0]!.reason).toMatch(/Reprise de l’édition 2/);
   });
-  it('les correspondances de l’organisation s’appliquent aux copies appliquées', async () => {
+  it('la couverture d’une copie appliquée suit les liens faits à la main, sans notion de proposition à valider', async () => {
     await attribuer(autre, fa, 2);
     await statut(autre, fa, 'applique');
-    await attribuer(autre, fb);
-    const m = await a.post('/api/library/mappings', {
-      source: { frameworkId: fa, version: 2, requirementId: 'A-3' },
-      target: { frameworkId: fb, version: 1, requirementId: 'B-1' },
-      type: 'equivalent',
-      justification: 'Correspondance fictive de recette, revue par le pilote',
-      coverage: 100,
-      origin: 'human',
-      sourceUrl: 'https://example.invalid/correspondance',
-    });
-    expect(m.statusCode, m.body).toBe(200);
-    const v = await a.post(
-      `/api/library/mappings/${m.json().id}/validate`,
-      { note: 'Correspondance examinée par le responsable', confirm: 'VALIDER' },
-      { 'if-match': '"1"' },
-    );
-    expect(v.statusCode, v.body).toBe(200);
     const mesure = (await a.post(`/api/grc/${autre}/objects`, { kind: 'measure', name: 'Mesure', data: {} })).json()
       .id as string;
+    const avant = await couverture(autre, fa);
+    const total = avant.frameworks[0]!.requirements;
+    expect(avant.frameworks[0]).toMatchObject({ covered: 0, uncovered: total });
     const l = await a.post(`/api/grc/${autre}/links`, {
       source: 'object:' + mesure,
       target: `requirement:${fa}:2:A-3`,
@@ -353,15 +339,15 @@ describe('édition de la bibliothèque, correspondances et détachement', () => 
       note: 'Lien de recette',
     });
     expect(l.statusCode, l.body).toBe(200);
-    const enAttente = async () =>
-      ((await a.get(`/api/grc/${autre}/rapprochements?status=pending`)).json() as unknown[]).length;
-    // B est en préparation : aucune proposition. Appliqué : une proposition.
-    expect(await enAttente()).toBe(0);
-    await statut(autre, fb, 'applique');
-    expect(await enAttente()).toBe(1);
-    // L'exigence cible retirée de la copie : la proposition est retirée.
-    await a.del(`/api/grc/${autre}/framework-copies/${fb}/requirements/B-1`, { 'if-match': '"1"' });
-    expect(await enAttente()).toBe(0);
+    const c = await couverture(autre, fa);
+    expect(c.frameworks[0]).toMatchObject({ frameworkId: fa, covered: 1, uncovered: total - 1 });
+    expect(c.frameworks[0]).not.toHaveProperty('toValidate');
+    const lignes = c.detail as unknown as { id: string; status: string; measures: { name: string }[] }[];
+    expect(lignes.find((x) => x.id === 'A-3')).toMatchObject({ status: 'covered', measures: [{ name: 'Mesure' }] });
+    expect(lignes.filter((x) => x.id !== 'A-3').every((x) => x.status === 'uncovered')).toBe(true);
+    // Plus de correspondances ni de rapprochements : les routes ont disparu.
+    expect((await a.get('/api/library/mappings')).statusCode).toBe(404);
+    expect((await a.get(`/api/grc/${autre}/rapprochements`)).statusCode).toBe(404);
   });
   it('détacher la copie du parent retire aussi les surcharges devenues sans effet chez l’enfant', async () => {
     await a.put(`/api/grc/${enfant}/framework-attachments/${fb}`, { version: 1, confirm: 'RATTACHER' });

@@ -10,7 +10,6 @@ import {
   TaskData,
   SeriesData,
   RiskData,
-  MappingData,
   PILOTAGE_SCHEMAS,
   GRC_LABELS,
   cibleAutorisee,
@@ -44,15 +43,14 @@ import type { BusinessPolicies } from '../business-policy.js';
 import type { Modules } from '../modules.js';
 import { HttpError } from '../http/errors.js';
 import { loadGrants } from '../rights.js';
-import { validDate } from '@suivi/shared';
+import { REFUS_SANS_MATRICE, methodeSansMatrice, validDate } from '@suivi/shared';
 import { GrcFrameworks } from './frameworks.js';
 import { GrcLibrary } from './library.js';
 import { GrcCopiesReferentiels } from './copies-referentiels.js';
 import { GrcKitIa } from './kit-ia.js';
-import { GrcLibraryMappings } from './library-mappings.js';
 import { GrcEvaluationsExigences } from './evaluations-exigences.js';
 import { GrcPlanEcarts } from './plan-ecarts.js';
-import { GrcRapprochements } from './rapprochements.js';
+import { GrcCouverture } from './couverture.js';
 import type { NotificationsMetier } from '../notifications-metier.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRisks } from './risks.js';
@@ -182,6 +180,11 @@ const COLONNES_SMSI = [
 const versionPolitique = (k: Kdb) =>
   k.selectFrom('business_policy_configuration').select('version').where('id', '=', 1);
 /** Compte actif : ni désactivé ni expiré (alias « u » de la table users ; fragment constant, sans valeur). */
+/** Accès d'un compte à un périmètre, parents compris (pyramide, ADR 0092, migration 060) : null sans accès, false en
+    lecture seule, true en écriture. `smsi` et `user` sont une référence de colonne (sql.ref) ou une valeur. */
+const accesPerimetre = (smsi: unknown, user: unknown) => sql<boolean | null>`grc_acces_perimetre(${smsi}, ${user})`;
+/** Périmètre visible du compte : accès par rattachement au périmètre ou à un ancêtre (pyramide, ADR 0092), sans exception pour le périmètre commun (ADR 0095). */
+const smsiVisible = (smsi: unknown, user: unknown) => sql<boolean>`grc_smsi_visible(${smsi}, ${user})`;
 const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
 /** Résolution des épinglages d'une méthode de risque sur le catalogue de configuration (ADR 0038), branchée par services.ts. */
 export interface MethodBindingsResolver {
@@ -227,9 +230,8 @@ export class Grc {
   readonly frameworks: GrcFrameworks;
   readonly library: GrcLibrary;
   readonly copies: GrcCopiesReferentiels;
-  readonly libraryMappings: GrcLibraryMappings;
   readonly kitIa: GrcKitIa;
-  readonly rapprochements: GrcRapprochements;
+  readonly couverture: GrcCouverture;
   readonly planEcarts: GrcPlanEcarts;
   readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
@@ -251,9 +253,8 @@ export class Grc {
     this.frameworks = new GrcFrameworks(this);
     this.library = new GrcLibrary(this);
     this.copies = new GrcCopiesReferentiels(this);
-    this.libraryMappings = new GrcLibraryMappings(this);
     this.kitIa = new GrcKitIa(this);
-    this.rapprochements = new GrcRapprochements(this);
+    this.couverture = new GrcCouverture(this);
     this.planEcarts = new GrcPlanEcarts(this);
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
@@ -295,38 +296,25 @@ export class Grc {
     if (!user.rights.can(module, action)) throw new HttpError(403, 'Droit requis : ' + module + ':' + action);
   }
   async access(id: string, user: SessionUser, write = false, c?: Client): Promise<GrcSmsi> {
+    // Accès au périmètre (ADR 0092, qui amende l'ADR 0039) : un compte rattaché à un périmètre l'ouvre avec ses
+    // descendants, pas son parent ; un compte sans rattachement n'ouvre rien (ADR 0095). Calcul en base.
     let q = (c ? surConnexion(c) : this.db.k)
       .selectFrom('grc_smsis as s')
-      .select((eb) => [
+      .select([
         ...COLONNES_SMSI,
-        eb
-          .exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id),
-          )
-          .as('member'),
-        eb
-          .exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id)
-              .where('m.can_write', '=', true),
-          )
-          .as('canWrite'),
+        accesPerimetre(sql.ref('s.id'), user.id).as('acces'),
+        smsiVisible(sql.ref('s.id'), user.id).as('visible'),
       ])
       .where('s.id', '=', id);
     // Dans une transaction, le périmètre est verrouillé en partage jusqu'à sa fin.
     if (c) q = q.forShare('s');
     const r = await q.executeTakeFirst();
     const admin = await this.isAdmin(user, c);
-    if (!r || (r.visibility === 'restricted' && !r.member && !admin))
-      throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
-    if (write && r.visibility === 'restricted' && !r.canWrite && !admin)
+    // Pyramide (ADR 0092) : l'accès à un périmètre vaut pour ses descendants ; null = aucun accès, true = écriture.
+    // Sans rattachement au périmètre ou à un ancêtre, un compte ne voit rien, pas même le périmètre commun (ADR 0095).
+    if (!r || (!r.visible && !admin)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
+    // Écriture : un accès en écriture sur le périmètre ou un ancêtre (ADR 0095).
+    if (write && r.acces !== true && !admin)
       throw new HttpError(403, 'Votre accès à ce périmètre est en lecture seule.');
     return {
       id: r.id,
@@ -360,19 +348,7 @@ export class Grc {
     return this.db.k
       .selectFrom('grc_smsis as s')
       .select(COLONNES_SMSI)
-      .where((eb) =>
-        eb.or([
-          eb('s.visibility', '=', 'instance'),
-          sql<boolean>`${admin}`,
-          eb.exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .whereRef('m.smsi_id', '=', 's.id')
-              .where('m.user_id', '=', user.id),
-          ),
-        ]),
-      )
+      .where((eb) => eb.or([sql<boolean>`${admin}`, eb(smsiVisible(sql.ref('s.id'), user.id), '=', true)]))
       .orderBy(sql`s.visibility = 'instance'`, 'desc')
       .orderBy('s.name')
       .orderBy('s.id')
@@ -418,7 +394,6 @@ export class Grc {
         .executeTakeFirstOrThrow();
       await k.insertInto('grc_members').values({ smsi_id: row.id, user_id: user.id, can_write: true }).execute();
       await this.db.audit(user, ip, 'grc.smsi.created', row.id, { parentId }, c);
-      if (parentId && input.inheritFrameworks) await this.rapprochements.sync(row.id, c);
       await this.notify(c, row.id, 1, row.id, 'pilotage', user.username);
       return this.access(row.id, user, true, c);
     }, user.username);
@@ -559,11 +534,6 @@ export class Grc {
       .execute();
     return rows.map((r) => r.id);
   }
-  /** Recalcule les rapprochements du périmètre et de ceux qui héritent de lui. */
-  async resynchroniser(smsi: string, c: Client) {
-    await this.rapprochements.sync(smsi, c);
-    for (const h of await this.heritiers(smsi, c)) await this.rapprochements.sync(h, c);
-  }
   /** Modifie le nom, le texte, le fuseau, la place dans l'arbre, le type et la fiche fournisseur reliée d'un périmètre
       (version attendue ; membres et rattachements de référentiels inchangés). La nature absente reste inchangée. */
   async updateSmsi(id: string, input: SmsiUpdate, expected: number, user: SessionUser, ip: string) {
@@ -629,8 +599,6 @@ export class Grc {
         },
         c,
       );
-      if (parentId !== current.parentId || inheritFrameworks !== current.inheritFrameworks)
-        await this.resynchroniser(id, c);
       await this.notify(c, id, current.version + 1, id, 'pilotage', user.username);
       return this.access(id, user, false, c);
     }, user.username);
@@ -638,13 +606,51 @@ export class Grc {
   async members(id: string, user: SessionUser) {
     await this.permission(user, 'pilotage', 'administrer');
     await this.access(id, user, true);
-    return this.db.k
+    // Membres directs, puis comptes qui tiennent leur accès d'un périmètre parent (pyramide, ADR 0092) : ces derniers ne se
+    // révoquent pas ici, et le nom du parent n'est pas donné (il peut ne pas être accessible à qui gère ce périmètre).
+    const directs = await this.db.k
       .selectFrom('grc_members as m')
       .innerJoin('users as u', 'u.id', 'm.user_id')
       .select(['m.user_id as userId', 'u.username', 'u.display_name as displayName', 'm.can_write as write'])
       .where('m.smsi_id', '=', id)
       .orderBy('u.username')
       .execute();
+    const acces = accesPerimetre(sql.val(id), sql.ref('u.id'));
+    const herites = await this.db.k
+      .selectFrom('users as u')
+      .select(['u.id as userId', 'u.username', 'u.display_name as displayName', acces.as('write')])
+      .where(actif)
+      .where(acces, 'is not', null)
+      .where((eb) =>
+        eb.or([
+          eb.not(
+            eb.exists(
+              eb
+                .selectFrom('grc_members as m')
+                .select('m.user_id')
+                .where('m.smsi_id', '=', id)
+                .whereRef('m.user_id', '=', 'u.id'),
+            ),
+          ),
+          // Membre direct en lecture, mais en écriture par un parent : le niveau hérité est affiché en plus.
+          eb.exists(
+            eb
+              .selectFrom('grc_members as m')
+              .select('m.user_id')
+              .where('m.smsi_id', '=', id)
+              .whereRef('m.user_id', '=', 'u.id')
+              .where('m.can_write', '=', false)
+              .where(acces, '=', true),
+          ),
+        ]),
+      )
+      .orderBy('u.username')
+      .limit(1000)
+      .execute();
+    return [
+      ...directs.map((m) => ({ ...m, herite: false })),
+      ...herites.map((m) => ({ ...m, write: m.write === true, herite: true })),
+    ];
   }
   async setMember(id: string, target: string, write: boolean | null, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
@@ -695,7 +701,8 @@ export class Grc {
   }
   async selectMethod(smsi: string, id: string, version: number, expected: number, user: SessionUser, ip: string) {
     await this.permission(user, 'pilotage', 'administrer');
-    await this.risks.method(smsi, id, version, user);
+    if (methodeSansMatrice((await this.risks.method(smsi, id, version, user)).definition))
+      throw new HttpError(422, REFUS_SANS_MATRICE);
     return this.db.tx(async (c) => {
       await this.verrouillerPerimetre(c, smsi);
       const current = await this.access(smsi, user, true, c);
@@ -843,23 +850,12 @@ export class Grc {
   /** Responsables proposés : comptes actifs du périmètre qui peuvent consulter le pilotage (lot U4). Un compte réduit
       à l'écran mural, aux évaluations IA ou aux documents n'est pas proposé. */
   async owners(smsi: string, user: SessionUser) {
-    const s = await this.access(smsi, user);
+    await this.access(smsi, user);
     const rows = await this.db.k
       .selectFrom('users as u')
       .select(['u.id', 'u.username', 'u.display_name as displayName'])
       .where(actif)
-      .where((eb) =>
-        eb.or([
-          sql<boolean>`${s.visibility === 'instance'}`,
-          eb.exists(
-            eb
-              .selectFrom('grc_members as m')
-              .select('m.user_id')
-              .where('m.smsi_id', '=', smsi)
-              .whereRef('m.user_id', '=', 'u.id'),
-          ),
-        ]),
-      )
+      .where((eb) => eb(smsiVisible(sql.val(smsi), sql.ref('u.id')), '=', true))
       .orderBy('u.username')
       .limit(1000)
       .execute();
@@ -870,7 +866,9 @@ export class Grc {
     }
     return out;
   }
-  async checkOwner(smsi: string, owner: unknown, c: Client) {
+  /** `ouvert` (actions et tâches récurrentes, ADR 0092 lot 2) : « Attribuer à » accepte tout compte actif, car la
+      désignation donne à la personne l'accès à l'élément ; ailleurs, le responsable doit déjà accéder au périmètre. */
+  async checkOwner(smsi: string, owner: unknown, c: Client, ouvert = false) {
     if (owner == null) return;
     if (
       typeof owner !== 'string' ||
@@ -880,21 +878,15 @@ export class Grc {
         .select('u.id')
         .where('u.id', '=', owner)
         .where(actif)
-        .where((eb) =>
-          eb.or([
-            eb('s.visibility', '=', 'instance'),
-            eb.exists(
-              eb
-                .selectFrom('grc_members as m')
-                .select('m.user_id')
-                .whereRef('m.smsi_id', '=', 's.id')
-                .whereRef('m.user_id', '=', 'u.id'),
-            ),
-          ]),
-        )
+        .where((eb) => eb.or([sql<boolean>`${ouvert}`, eb(smsiVisible(sql.ref('s.id'), sql.ref('u.id')), '=', true)]))
         .executeTakeFirst())
     )
-      throw new HttpError(422, 'Le responsable doit être un compte actif autorisé dans ce SMSI.');
+      throw new HttpError(
+        422,
+        ouvert
+          ? 'Le responsable doit être un compte actif.'
+          : 'Le responsable doit être un compte actif autorisé dans ce SMSI.',
+      );
   }
   async normalize(
     smsi: string,
@@ -926,7 +918,7 @@ export class Grc {
       if (previous && (previous.data.seriesId !== d.seriesId || previous.data.occurrenceKey !== d.occurrenceKey))
         throw new HttpError(422, 'L’origine de l’occurrence est immuable.');
       await this.annuaires.normaliser(smsi, d, c);
-      await this.checkOwner(smsi, d.ownerId, c);
+      await this.checkOwner(smsi, d.ownerId, c, true);
       if (new Set(d.dependencies).size !== d.dependencies.length) throw new HttpError(422, 'Dépendances dupliquées.');
       if (previous && d.dependencies.length) {
         // Parcours des dépendances (jsonb) depuis les dépendances déclarées : retrouver l'action elle-même = cycle.
@@ -953,7 +945,7 @@ export class Grc {
       if (!policy.catalogues.actionCategories.some((x) => x.id === d.category))
         throw new HttpError(422, 'Catégorie de récurrence inconnue.');
       await this.annuaires.normaliser(smsi, d, c);
-      await this.checkOwner(smsi, d.ownerId, c);
+      await this.checkOwner(smsi, d.ownerId, c, true);
       for (const ref of d.refs) await this.resolve(smsi, ref, user, c);
       return d;
     }
@@ -962,6 +954,12 @@ export class Grc {
       await this.checkOwner(smsi, d.ownerId, c);
       await this.checkTypedRefs(smsi, kind, d, user, c);
       const method = await this.risks.method(smsi, d.methodId, d.methodVersion, user, c);
+      // Pas de nouvelle appréciation sans matrice (BUG-024) ; un risque déjà apprécié avec sa méthode reste modifiable.
+      if (
+        methodeSansMatrice(method.definition) &&
+        (!previous || (previous.data as { methodId?: string }).methodId !== d.methodId)
+      )
+        throw new HttpError(422, REFUS_SANS_MATRICE);
       this.risks.validateStages(method.definition, d.stages);
       if (d.reviewAt && !validDate(d.reviewAt)) throw new HttpError(422, 'Date de réévaluation invalide.');
       for (const [key, stage] of Object.entries(d.stages)) {
@@ -979,13 +977,6 @@ export class Grc {
       return d;
     }
     if (kind === 'framework') throw new HttpError(409, 'Utilisez la publication versionnée du référentiel.');
-    if (kind === 'mapping') {
-      const d = MappingData.parse(data);
-      if (d.status === 'validated')
-        throw new HttpError(422, 'Validez le mapping par la commande de revue humaine dédiée.');
-      await this.frameworks.validateMapping(smsi, d, user, c);
-      return d;
-    }
     if (kind === 'requirement')
       throw new HttpError(409, 'Les exigences se publient avec leur référentiel pour conserver la version exacte.');
     if (kind in PILOTAGE_SCHEMAS) {
@@ -1015,6 +1006,17 @@ export class Grc {
           delete data.performedAt;
         }
       }
+      // Revue de direction validée (9.3.3, BUG-075) : la décision de la direction ne se défait que par la réouverture,
+      // réservée à qui administre le pilotage (la validation elle-même passe par la commande de validation).
+      if (
+        kind === 'management_review' &&
+        previous?.data.status === 'validated' &&
+        !user.rights.can('pilotage', 'administrer')
+      )
+        throw new HttpError(
+          403,
+          'Cette revue de direction est validée : seul un administrateur du pilotage peut la rouvrir pour la modifier.',
+        );
       if (
         (kind === 'evidence' && ['validated', 'rejected'].includes(String(data.status))) ||
         (kind === 'nonconformity' && (data.status === 'closed' || data.effectiveness !== 'pending')) ||
@@ -1107,8 +1109,8 @@ export class Grc {
       return o;
     }, user.username);
   }
-  /** Registre d'accueil d'une création : celui qui est choisi (gestion du registre exigée, périmètre de référence = périmètre
-      de l'URL) ou, sans choix, le registre par défaut (droit de module et accès au périmètre exigés). */
+  /** Registre d'accueil d'une création : celui qui est choisi (gestion ou attribution du registre exigée, périmètre de
+      référence = périmètre de l'URL) ou, sans choix, le registre par défaut (droit de module et accès au périmètre exigés). */
   async registreDeCreation(
     c: Client,
     smsi: string,
@@ -1127,7 +1129,11 @@ export class Grc {
     if (!reg || reg.archived) throw new HttpError(404, 'Registre introuvable, archivé ou non accessible.');
     if (reg.kind !== famille || reg.referenceId !== smsi)
       throw new HttpError(422, 'Ce registre n’accueille pas ce type d’élément pour ce périmètre.');
-    await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[kind]);
+    // Qui gère le registre y crée ; la personne à qui le registre est attribué aussi (ADR 0092, lot 2) : elle gère ensuite
+    // ce qu'elle a créé, sans pouvoir modifier ce que d'autres y ont créé.
+    if (!(await this.registres.designeSurRegistre(user, reg, c)))
+      await this.registres.exiger(user, reg, null, 'gerer', c, GRC_MODULES[kind]);
+    else await this.modules.assert(GRC_MODULES[kind]);
     return reg.id;
   }
   async insert(
@@ -1479,8 +1485,10 @@ export class Grc {
       .limit(500)
       .execute();
     const historicalParents: { source_ref: string; target_ref: string }[] = [];
-    if (smsi === DEFAULT_SMSI) {
+    {
       const state = (await this.legacy.recompose())?.data ?? {};
+      // Processus, objectifs et indicateurs portent leur périmètre (BUG-055) ; les autres listes relèvent du périmètre commun.
+      const parPerimetre = ['processes', 'objectives', 'indicators'];
       for (const key of [
         'items',
         'processes',
@@ -1491,7 +1499,14 @@ export class Grc {
         'recurring',
         'reviews',
       ]) {
-        const values = (Array.isArray(state[key]) ? state[key] : []).filter(isObject);
+        if (!parPerimetre.includes(key) && smsi !== DEFAULT_SMSI) continue;
+        const values = (Array.isArray(state[key]) ? state[key] : [])
+          .filter(isObject)
+          .filter(
+            (row) =>
+              !parPerimetre.includes(key) ||
+              (typeof row.smsi === 'string' && row.smsi ? row.smsi : DEFAULT_SMSI) === smsi,
+          );
         for (const row of values) {
           if (typeof row.id === 'string' && grcReferences(row).includes(ref) && historicalParents.length < 500)
             historicalParents.push({ source_ref: `legacy:${key}:${row.id}`, target_ref: ref });
@@ -1560,7 +1575,7 @@ export class Grc {
     await this.access(smsi, user, true);
     return this.db.tx((c) => this.linkIn(c, smsi, source, target, type, note, user, ip), user.username);
   }
-  /** Crée la relation dans la transaction de l'appelant (une décision de rapprochement la partage). */
+  /** Crée la relation dans la transaction de l'appelant. */
   async linkIn(
     c: Client,
     smsi: string,
@@ -1627,7 +1642,6 @@ export class Grc {
         c,
       );
       await this.notify(c, r.id, 1, smsi, from.module, user.username);
-      await this.rapprochements.sync(smsi, c);
       return r;
     }
   }
@@ -1648,7 +1662,6 @@ export class Grc {
       await k.deleteFrom('grc_links').where('id', '=', id).execute();
       await this.db.audit(user, ip, 'grc.link.deleted', id, { smsiId: smsi, ...row }, c);
       await this.notify(c, id, 1, smsi, source.module, user.username);
-      await this.rapprochements.sync(smsi, c);
     }, user.username);
   }
 }

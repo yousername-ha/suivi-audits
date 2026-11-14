@@ -36,7 +36,7 @@ travaillent sur le dépôt :
 3. Les PR Dependabot visent `claude-suivi-smsi` (`target-branch` de `.github/dependabot.yml`) ; une PR Dependabot
    ouverte vers `main` avant ce réglage est fermée.
 4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Aucun fichier
-   n'est tenu par une autre session depuis le 27/10/2026 (`apps/api/src/historique/gap.ts`, GAP IA, était tenu par la session
+   n'est tenu par une autre session depuis le 27/10/2026 (le service GAP, retiré le 12/11/2026 par l'ADR 0089, était tenu par la session
    Sonnet, aujourd'hui seule active).
 5. Numéros d'ADR : annoncer le numéro pris au RSSI avant de l'utiliser (0065 retenu par la session Sonnet le 27/10/2026).
 6. Dossier de reprise commun : le plus récent de `docs/01_REPRISE_IA/REPRISE-*.md`.
@@ -61,6 +61,10 @@ travaillent sur le dépôt :
 - Préserver IDs, champs extra, historique, relations et exports. L’écran `/legacy` est retiré
   (ADR 0042) ; l’import/export au format historique et les versions de l’état sont conservés.
 - Ajouter les migrations ; ne jamais réécrire une migration publiée.
+- Pas de reprise de données (consigne du RSSI du 14/11/2026) : l’application n’est pas déployée officiellement et se
+  réinstalle souvent, sans reprise des données existantes. Une évolution ne prévoit ni migration de données (comptes,
+  rattachements, fiches existants) ni code de compatibilité avec d’anciennes données ; les migrations de schéma restent
+  nécessaires et suivent la règle ci-dessus.
 - Décisions/publications immuables ; une action terminée ne recalcule pas le résiduel.
 - L’API n’obtient ni socket Docker, ni commandes shell arbitraires, ni clés
   privées de sauvegarde. Les workers restent hors API.

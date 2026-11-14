@@ -25,7 +25,7 @@ export interface Ligne {
   ecartsMajeurs: number;
   ecartsMineurs: number;
   ecartsSensibles: number;
-  pcra: number;
+  plans: number;
 }
 
 /** Fragment SQL : l'occurrence `o` a été validée (OK, KO ou NA) et ne s'est pas vue rouvrir depuis (journal immuable, migration
@@ -63,7 +63,7 @@ export async function compter(g: Grc, ids: string[], masques: string[], maintena
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='majeure')::int AS "ecartsMajeurs",
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='mineure')::int AS "ecartsMineurs",
        count(*) FILTER (WHERE ${ECART_OUVERT} AND ${CLASSIFICATION}='point_sensible')::int AS "ecartsSensibles",
-       count(*) FILTER (WHERE o.kind='continuity_plan' AND o.data->>'planType'='pcra')::int AS pcra
+       count(*) FILTER (WHERE o.kind='continuity_plan')::int AS plans
      FROM grc_objects o
      JOIN grc_smsis s ON s.id=o.smsi_id
      JOIN business_policy_versions v ON v.version=s.business_version
@@ -96,7 +96,7 @@ function versCompteurs(l: Ligne | null, ecarts: boolean, pilotage: boolean): Car
       },
     };
   }
-  if (pilotage) c.continuite = { pcra: l.pcra };
+  if (pilotage) c.continuite = { plans: l.plans };
   return c;
 }
 
@@ -123,7 +123,7 @@ export async function cartesPerimetres(g: Grc, user: SessionUser): Promise<Synth
   const couvertureDe = (id: string) => {
     let v = memo.get(id);
     if (!v) {
-      v = g.rapprochements.coverage(id, user).then(
+      v = g.couverture.coverage(id, user).then(
         (r) =>
           r.frameworks.map((f) => ({
             referentielId: f.frameworkId,

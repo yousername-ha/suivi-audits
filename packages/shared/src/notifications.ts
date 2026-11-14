@@ -33,12 +33,6 @@ export const NOTIFICATION_TYPES = [
     description: 'Rappel adressé au propriétaire d’un risque dont l’appréciation périodique est à préparer.',
   },
   {
-    id: 'rapprochement',
-    label: 'Rapprochements à valider',
-    description:
-      'Rappel adressé aux pilotes d’une mesure quand de nouveaux rapprochements entre référentiels attendent leur décision.',
-  },
-  {
     id: 'retex_contribution',
     label: 'Contribution à un RETEX',
     description:

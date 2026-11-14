@@ -40,10 +40,6 @@ export const ICONES_CARTE: Record<string, ElementIcone[]> = {
     { t: 'circle', cx: 12, cy: 12, r: 4 },
     { t: 'path', d: 'M12 12h.01' },
   ],
-  app: [
-    { t: 'rect', x: 3, y: 4, width: 18, height: 12, rx: 2 },
-    { t: 'path', d: 'M8 20h8M12 16v4' },
-  ],
   server: [
     { t: 'rect', x: 4, y: 4, width: 16, height: 7, rx: 1.5 },
     { t: 'rect', x: 4, y: 13, width: 16, height: 7, rx: 1.5 },

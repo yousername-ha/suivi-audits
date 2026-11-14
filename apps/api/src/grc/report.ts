@@ -1,7 +1,6 @@
-import { sql } from 'kysely';
 import { PorteeLecture } from '../acces/portee.js';
 import type { SessionUser } from '../auth.js';
-import type { Grc } from './core.js';
+import { DEFAULT_SMSI, type Grc } from './core.js';
 export async function report(g: Grc, smsi: string, user: SessionUser, ip: string) {
   await g.permission(user, 'import_export', 'exporter');
   const scope = await g.access(smsi, user),
@@ -32,19 +31,27 @@ export async function report(g: Grc, smsi: string, user: SessionUser, ip: string
       ).execute()
     ).map((r) => ({ ...r, data: r.data as Record<string, unknown> }));
     sections.frameworks = rows;
-    sections.mappings = await (
-      await portee.filtrerObjets(
-        g.db.k
-          .selectFrom('grc_objects')
-          .select(['id', 'name', 'data', 'version', 'updated_by as updatedBy', 'updated_at as updatedAt'])
-          .where('smsi_id', '=', smsi)
-          .where('kind', '=', 'mapping')
-          .where('archived', '=', false)
-          .where(sql<string>`data->>'status'`, '=', 'validated')
-          .orderBy('id')
-          .limit(1000),
-      )
-    ).execute();
+  }
+  // Incidents du périmètre (BUG-070) : registre filtré par la porte de lecture (module, périmètre).
+  if (
+    user.rights.can('incidents', 'lire') &&
+    user.rights.can('incidents', 'exporter') &&
+    (await portee.peutLireModule('incidents'))
+  ) {
+    const etat = (await portee.etatHistorique()).data as Record<string, unknown>;
+    const incidents = (Array.isArray(etat.incidents) ? (etat.incidents as unknown[]) : [])
+      .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x))
+      .filter((x) => (typeof x.smsi === 'string' && x.smsi ? x.smsi : DEFAULT_SMSI) === smsi);
+    sections.incidents = incidents.slice(0, 1000).map((x) => ({
+      id: x.id,
+      title: x.title,
+      kind: x.kind,
+      status: x.status,
+      impact: x.impact,
+      urgency: x.urgency,
+      detectedAt: x.detectedAt,
+      resolvedAt: x.resolvedAt,
+    }));
   }
   await g.db.audit(user, ip, 'grc.report.exported', smsi, { sections: Object.keys(sections) });
   return {
@@ -56,7 +63,6 @@ export async function report(g: Grc, smsi: string, user: SessionUser, ip: string
     sections,
     notes: [
       'Les critères, couleurs et niveaux appartiennent à chaque version méthodologique.',
-      'Les propositions de correspondance ne constituent pas des équivalences normatives validées.',
       'Les actions de traitement ne modifient pas automatiquement le risque résiduel.',
       'Les registres volumineux sont plafonnés à 1 000 lignes par section ; les totaux et indicateurs portent sur le périmètre complet.',
     ],

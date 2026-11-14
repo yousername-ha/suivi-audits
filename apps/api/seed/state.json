@@ -4251,7 +4251,6 @@
   "schema": 14,
   "crisis": { "contacts": [], "scenarios": [], "cells": [] },
   "iso27001Certified": true,
-  "appGaps": [],
   "reviews": [],
   "branding": {},
   "plans": [],

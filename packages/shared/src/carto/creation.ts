@@ -21,7 +21,6 @@ const low = (v: unknown) =>
 export const CREATABLE_TYPES = [
   'stakeholder',
   'supplier',
-  'application',
   'issue',
   'site',
   'infrastructure',
@@ -42,7 +41,6 @@ export interface CreatableDef {
 export const CREATABLE: Record<CreatableType, CreatableDef> = {
   stakeholder: { l: 'Partie intéressée', module: 'pilotage', views: ['context'], ic: 'users', tint: 'violet' },
   supplier: { l: 'Fournisseur', module: 'fournisseurs', views: ['context'], ic: 'box', tint: 'violet' },
-  application: { l: 'Application', module: 'conformite', views: ['context'], ic: 'app', tint: 'bleu' },
   issue: { l: 'Enjeu', module: 'cartographie', views: ['context'], ic: 'alert', tint: 'orange' },
   site: { l: 'Site', module: 'pilotage', views: ['context'], ic: 'pin', tint: 'bleu' },
   infrastructure: { l: 'Système d’information', module: 'pilotage', views: ['context'], ic: 'server', tint: 'bleu' },
@@ -99,7 +97,6 @@ export const CreateObjectBody = z.discriminatedUnion('type', [
     hds: z.boolean().default(false),
     critical: z.boolean().default(false),
   }),
-  z.object({ type: z.literal('application'), name: nom, supplier: vide(texte(200)) }),
   z.object({ type: z.literal('issue'), name: nom, kind: z.enum(['ext', 'int']), desc: vide(texte(500)) }),
   z.object({ type: z.literal('site'), name: nom }),
   z.object({ type: z.literal('infrastructure'), name: nom }),
@@ -127,7 +124,7 @@ export const RenameBody = z.object({ ref: z.string().max(220), name: nom });
 
 /** Objets renommables depuis la carte : identifiant stable (les enjeux, sites et systèmes sont repérés par leur
  *  libellé, les renommer changerait leur référence). */
-export const RENAMABLE_PREFIXES: ReadonlySet<string> = new Set(['process', 'pi', 'sup', 'app']);
+export const RENAMABLE_PREFIXES: ReadonlySet<string> = new Set(['process', 'pi', 'sup']);
 export const canRename = (ref: string) => RENAMABLE_PREFIXES.has(refPrefix(ref));
 
 /* ---------------------------------------------------------------- Erreurs */
@@ -239,34 +236,6 @@ export function createInLegacy(
       ];
       return { data, ref: 'sup:' + id, name };
     }
-    case 'application': {
-      const list = recs(data.appGaps);
-      let supplier = '';
-      if (body.supplier) {
-        const sp = recs(data.suppliers).find((s) => low(s.name) === low(body.supplier));
-        if (!sp) throw new CreationError(422, 'Fournisseur inconnu : choisissez-le dans la liste.');
-        supplier = String(sp.name);
-      }
-      const id = nextPadded(list, 'APP');
-      data.appGaps = [
-        ...raw(data.appGaps),
-        {
-          id,
-          createdAt: opts.now,
-          name,
-          supplier,
-          dscp: 'À qualifier',
-          cloud: 'À qualifier',
-          status: 'À étudier',
-          owner: '',
-          target: '',
-          desc: '',
-          lines: {},
-          custom: [],
-        },
-      ];
-      return { data, ref: 'app:' + id, name };
-    }
     case 'issue': {
       const ref = issueRef(name);
       if (opts.existingIssues?.has(ref)) throw new CreationError(409, 'Cet enjeu existe déjà.');
@@ -309,9 +278,9 @@ export function createInLegacy(
 }
 
 /* ---------------------------------------------------------------- Renommage (CARTO-18) */
-const LISTES: Record<string, string> = { pi: 'interested', sup: 'suppliers', app: 'appGaps', process: 'processes' };
+const LISTES: Record<string, string> = { pi: 'interested', sup: 'suppliers', process: 'processes' };
 
-/** Renomme un objet dans l'état legacy ; un fournisseur renommé reste lié à ses applications. */
+/** Renomme un objet dans l'état legacy. */
 export function renameInLegacy(state: unknown, ref: string, name: string): { data: Rec; old: string } {
   const prefix = refPrefix(ref);
   const key = LISTES[prefix];
@@ -326,7 +295,5 @@ export function renameInLegacy(state: unknown, ref: string, name: string): { dat
     throw new CreationError(409, 'Un fournisseur porte déjà ce nom.');
   const cible = list[i];
   data[key] = raw(data[key]).map((x) => (x === cible ? { ...cible, name } : x));
-  if (prefix === 'sup' && old && Array.isArray(data.appGaps))
-    data.appGaps = data.appGaps.map((a) => (isRec(a) && low(a.supplier) === low(old) ? { ...a, supplier: name } : a));
   return { data, old };
 }

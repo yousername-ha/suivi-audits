@@ -810,7 +810,7 @@ test('21. installation vide : « Construire la carte », SMSI dans le périmètr
   const page = await admin.page.context().newPage();
   bat = { ...admin, page, problems: watchPage(page) };
   await ecrireLegacy(admin, (d) => {
-    Object.assign(d, { processes: [], interested: [], suppliers: [], appGaps: [], objectives: [], swots: [] });
+    Object.assign(d, { processes: [], interested: [], suppliers: [], objectives: [], swots: [] });
     d.scope = {};
   });
   await supprimerCartes(admin);

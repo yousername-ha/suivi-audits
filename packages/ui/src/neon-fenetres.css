@@ -1,0 +1,357 @@
+/* Refonte Neon, lot 2 (ADR 0093) : habillage commun des fenêtres et panneaux, sans modification des formulaires, des
+   champs ni des droits. Repris de la référence validée (fenêtres « Biseau », hauteur naturelle, voile extérieur) et
+   adapté à la version actuelle :
+   - les fenêtres RETEX (.retex-modal) gardent leur habillage et leur défilement propres (graphe RETEX inchangé) ;
+   - le menu mobile (.nav-tiroir) garde la présentation validée au lot 1 ;
+   - la présentation du Contexte (cadre SVG, pictogrammes) relève du lot 3.
+   Les petits dialogues conservent leur largeur ; les fiches lg/xl gagnent de l'espace. */
+.mantine-Modal-root {
+  --modal-size-lg: 50rem;
+  --modal-size-xl: 64rem;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir)) {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--suivi-trait);
+  box-shadow: var(--suivi-ombre-haute);
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.mantine-Drawer-content:not(.nav-tiroir) {
+  min-height: 100dvh;
+}
+.mantine-Modal-content:not(.retex-modal) {
+  margin-block: var(--modal-inner-y-offset, var(--modal-y-offset));
+}
+.mantine-Modal-overlay,
+.mantine-Drawer-overlay {
+  background-color: color-mix(in srgb, var(--suivi-encre) 38%, transparent);
+  backdrop-filter: blur(4px);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-header, .mantine-Drawer-header) {
+  flex: none;
+  gap: 1rem;
+  min-height: 5rem;
+  margin-bottom: 0;
+  padding: 1.35rem 1.75rem;
+  border-bottom: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-title, .mantine-Drawer-title) {
+  color: var(--neon-titre);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-close, .mantine-Drawer-close) {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.75rem;
+  background: var(--suivi-surface-douce);
+  color: var(--mantine-color-dimmed);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-close, .mantine-Drawer-close):hover {
+  background: var(--neon-doux);
+  color: var(--neon-titre);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  flex: none;
+  min-height: auto;
+  padding: 1.5rem 1.75rem;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+/* Hiérarchie commune : texte neutre, libellés nets, aides plus discrètes.
+   Les couleurs d'erreur, les champs désactivés et les variantes gardent leur sémantique. */
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-InputWrapper-label {
+  margin-bottom: 0.45rem;
+  color: var(--neon-titre);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input {
+  border-color: var(--suivi-trait);
+  border-radius: 0.7rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:not([data-error]):focus-within {
+  border-color: var(--neon-accent);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  textarea.mantine-Input-input {
+  padding-block: 0.65rem;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.mantine-InputWrapper-description, .mantine-InputWrapper-error) {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Button-root {
+  border-radius: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: normal;
+}
+/* Un lien reste reconnaissable sans la couleur : contour et flèche permanents. */
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root) {
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.35rem;
+  background: var(--suivi-surface-douce);
+  color: var(--neon-titre);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root)::after {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-inline-start: 0.45em;
+  vertical-align: 0.1em;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  background: linear-gradient(135deg, transparent 42%, currentColor 42%, currentColor 58%, transparent 58%);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Anchor-root:not(.mantine-Button-root):hover {
+  background: var(--neon-doux);
+  text-decoration: none;
+}
+/* Les onglets restent identifiables par leur forme et leur état actif, même sans couleur. */
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid var(--suivi-trait);
+  border-radius: 0.75rem;
+  background: var(--suivi-surface-douce);
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Tabs-list:not([data-orientation='vertical'])::before {
+  display: none;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Tabs-tab {
+  padding: 0.7rem 0.95rem;
+  border-radius: 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Tabs-tab[data-active] {
+  background: var(--suivi-surface);
+  border-color: transparent;
+  color: var(--neon-titre);
+  box-shadow: var(--suivi-ombre);
+  font-weight: 650;
+}
+
+/* Fiches des registres : hauteur naturelle, sans défilement imbriqué dans les onglets. */
+.fenetre-fiche-corps {
+  padding-bottom: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root {
+  min-width: 0;
+}
+.fenetre-fiche-corps > .mantine-Stack-root > .mantine-Tabs-root {
+  padding: 0.2rem;
+}
+.fenetre-fiche-corps .mantine-Tabs-panel > .mantine-Stack-root {
+  gap: 1.25rem;
+}
+.fenetre-actions {
+  flex: none;
+  padding-block: 1rem;
+  border-top: 1px solid var(--suivi-trait);
+  background: var(--suivi-surface);
+}
+@media (max-width: 36em) {
+  .mantine-Modal-root {
+    --modal-x-offset: 0.5rem;
+    --modal-y-offset: 0.75rem;
+  }
+  :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+    > :is(.mantine-Modal-header, .mantine-Drawer-header) {
+    min-height: 4.25rem;
+    padding: 1rem;
+  }
+  :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+    :is(.mantine-Modal-title, .mantine-Drawer-title) {
+    font-size: 1rem;
+  }
+  :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+    > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+    padding: 1rem;
+  }
+  :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+    > :is(.mantine-Modal-body, .mantine-Drawer-body)
+    .mantine-Tabs-tab {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+  }
+  .fenetre-actions .mantine-Button-root {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mantine-Modal-overlay,
+  .mantine-Drawer-overlay {
+    backdrop-filter: none;
+  }
+}
+
+/* Biseau commun aux fenêtres et panneaux : coupe géométrique et traits violet/cyan sur le contour (validé). */
+:is(
+  .mantine-Modal-content:not(.retex-modal, [data-full-screen]),
+  .mantine-Drawer-content:not(.nav-tiroir),
+  .neon-cadre-biseau
+) {
+  --fenetre-coupe: 1.125rem;
+  position: relative;
+  isolation: isolate;
+  border-color: transparent;
+  border-radius: 0;
+  clip-path: polygon(
+    var(--fenetre-coupe) 0,
+    calc(100% - var(--fenetre-coupe)) 0,
+    100% var(--fenetre-coupe),
+    100% calc(100% - var(--fenetre-coupe)),
+    calc(100% - var(--fenetre-coupe)) 100%,
+    var(--fenetre-coupe) 100%,
+    0 calc(100% - var(--fenetre-coupe)),
+    0 var(--fenetre-coupe)
+  );
+}
+:is(
+  .mantine-Modal-content:not(.retex-modal, [data-full-screen]),
+  .mantine-Drawer-content:not(.nav-tiroir),
+  .neon-cadre-biseau
+)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  pointer-events: none;
+  background:
+    linear-gradient(
+        135deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-violet) calc(50% - 0.75px),
+        var(--neon-violet) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      top left / var(--fenetre-coupe) var(--fenetre-coupe),
+    linear-gradient(
+        45deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      top right / var(--fenetre-coupe) var(--fenetre-coupe),
+    linear-gradient(
+        135deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% - 0.75px),
+        var(--neon-cyan) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      bottom right / var(--fenetre-coupe) var(--fenetre-coupe),
+    linear-gradient(
+        45deg,
+        transparent calc(50% - 0.75px),
+        var(--neon-violet) calc(50% - 0.75px),
+        var(--neon-violet) calc(50% + 0.75px),
+        transparent calc(50% + 0.75px)
+      )
+      bottom left / var(--fenetre-coupe) var(--fenetre-coupe),
+    linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) top center / calc(100% - 2 * var(--fenetre-coupe))
+      1.5px,
+    linear-gradient(90deg, var(--neon-violet), var(--neon-cyan)) bottom center / calc(100% - 2 * var(--fenetre-coupe))
+      1.5px,
+    linear-gradient(var(--neon-violet), var(--neon-violet)) left center / 1.5px calc(100% - 2 * var(--fenetre-coupe)),
+    linear-gradient(var(--neon-cyan), var(--neon-cyan)) right center / 1.5px calc(100% - 2 * var(--fenetre-coupe));
+  background-repeat: no-repeat;
+}
+
+/* La hauteur vient du contenu : seul le voile extérieur défile pour les fiches longues, au bord de l'écran. */
+:is(.mantine-Modal-inner, .mantine-Drawer-inner):not(:has(.retex-modal, .nav-tiroir)) {
+  inset-inline-start: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--suivi-trait) transparent;
+}
+/* La marge appartient au cadre : le titre collant rejoint le bord de l'écran pendant le défilement. */
+.mantine-Modal-inner:not(:has(.retex-modal)) {
+  padding-block: 0;
+}
+/* « safe » garde les petits dialogues centrés et aligne les longs en haut sans couper leur titre. */
+.mantine-Modal-root[data-centered] .mantine-Modal-inner:not(:has(.retex-modal)) {
+  align-items: safe center;
+}
+@media (forced-colors: active) {
+  :is(
+    .mantine-Modal-content:not(.retex-modal, [data-full-screen]),
+    .mantine-Drawer-content:not(.nav-tiroir),
+    .neon-cadre-biseau
+  ) {
+    border-color: CanvasText;
+    clip-path: none;
+  }
+  :is(
+    .mantine-Modal-content:not(.retex-modal, [data-full-screen]),
+    .mantine-Drawer-content:not(.nav-tiroir),
+    .neon-cadre-biseau
+  )::before {
+    display: none;
+  }
+}

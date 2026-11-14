@@ -1,0 +1,101 @@
+cellule;resultat;constat;commentaire
+pilotage/amelioration|principal|administrateur|rempli|bureau;ok;;4 écarts, Ajouter, Vérifier l'efficacité, exports visibles , export JSON HTTP 200 , archivage d'un écart (DELETE) HTTP 200
+pilotage/amelioration|sous-perimetre|administrateur|rempli|bureau;ok;;Écart HDS visible sans appartenance (administrateur) , export HDS HTTP 200
+pilotage/amelioration|principal|contributeur|rempli|bureau;ok;;Ajouter et Vérifier l'efficacité, pas d'export , création HTTP 200 , archivage refusé HTTP 403 « Votre accès à ce registre ne permet pas cette opération » , export HTTP 403
+pilotage/amelioration|sous-perimetre|contributeur|rempli|bureau;ok;;Membre HDS en écriture : écart HDS, Ajouter un constat , pas d'export
+pilotage/amelioration|principal|lecteur|rempli|bureau;ok;;Ouvrir seulement, fiche entièrement désactivée, menu limité à « Décisions et réalisations » , POST écart HTTP 403 ecarts:modifier, PUT HTTP 403
+pilotage/amelioration|sous-perimetre|lecteur|rempli|bureau;ok;;Membre HDS en lecture : écart HDS en lecture seule , écriture HTTP 403 « lecture seule »
+pilotage/amelioration|principal|auditeur_externe|rempli|bureau;ok;;Modules ecarts+pilotage : lecture seule , POST HTTP 403 , références de mesures (module audit non ouvert) filtrées de /sources
+pilotage/amelioration|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Membre HDS en lecture : lecture seule , écritures HTTP 403
+pilotage/amelioration|restreint|contributeur|rempli|bureau;defaut;T4-01;Voit et modifie les écarts du périmètre principal : PUT de l'écart test7 du principal HTTP 200
+pilotage/amelioration|principal|rssi|rempli|telephone;ok;;390 px : pas de défilement horizontal de page (375/375), cartes et boutons entiers
+pilotage/actions|principal|administrateur|rempli|bureau;ok;;Ajouter une action / une tâche récurrente , archivage des fiches de test HTTP 200
+pilotage/actions|sous-perimetre|administrateur|rempli|bureau;ok;;Actions HDS et action du registre partagé visibles
+pilotage/actions|principal|contributeur|rempli|bureau;ok;;Ajouter une action , fiche sans « Archiver la fiche » , DELETE HTTP 403
+pilotage/actions|sous-perimetre|contributeur|rempli|bureau;ok;;Action créée à l'écran sous HDS , archivage refusé HTTP 403 , plans d'accueil HDS et registre partagé proposés
+pilotage/actions|principal|lecteur|rempli|bureau;ok;;Liste sans bouton d'ajout , POST HTTP 403
+pilotage/actions|sous-perimetre|lecteur|rempli|bureau;ok;;Liste HDS sans ajout , POST action HDS HTTP 403 « lecture seule » , contribution HTTP 403
+pilotage/actions|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule , écritures HTTP 403
+pilotage/actions|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture seule , POST, contribution, archivage HTTP 403
+pilotage/actions|restreint|contributeur|rempli|bureau;defaut;T4-01;Liste et « Ajouter une action » du périmètre principal proposés au compte limité à HDS
+pilotage/actions|principal|rssi|rempli|telephone;ok;;Pas de défilement de page , tableau dans une zone nommée « Tableau, défilement horizontal possible » (seule la colonne Action visible au départ)
+pilotage/recurrences|principal|administrateur|rempli|bureau;ok;;Séries, Préparer la série, ajout
+pilotage/recurrences|sous-perimetre|administrateur|rempli|bureau;ok;;Série trimestrielle HDS
+pilotage/recurrences|principal|contributeur|rempli|bureau;ok;;Ajout et « Préparer la série » proposés (ecarts:modifier)
+pilotage/recurrences|sous-perimetre|contributeur|rempli|bureau;ok;;Série HDS, ajout proposé
+pilotage/recurrences|principal|lecteur|rempli|bureau;ok;;Ni ajout ni « Préparer la série »
+pilotage/recurrences|sous-perimetre|lecteur|rempli|bureau;ok;;Lecture , validation d'occurrence HDS HTTP 403
+pilotage/recurrences|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule
+pilotage/recurrences|sous-perimetre|auditeur_externe|rempli|bureau;ok;;Lecture , validation d'occurrence HDS HTTP 403
+pilotage/recurrences|restreint|contributeur|rempli|bureau;defaut;T4-01;Série mensuelle du principal visible et modifiable
+pilotage/recurrences|principal|rssi|rempli|telephone;defaut;T4-05;Huit boutons « Préparer la série » tronqués (« Préparer l », « Prépar ») dans « Séries proposées »
+pilotage/plans-calendrier|principal|administrateur|rempli|bureau;ok;;Calendrier 2026, actions de plan
+pilotage/plans-calendrier|sous-perimetre|administrateur|rempli|bureau;defaut;C4-02;Sous HDS : PL-FOR-001/002 et PL-AUD-001 du principal affichés
+pilotage/plans-calendrier|principal|contributeur|rempli|bureau;ok;;Consultation , écran sans saisie
+pilotage/plans-calendrier|sous-perimetre|contributeur|rempli|bureau;defaut;C4-02;Mêmes plans que sous le principal
+pilotage/plans-calendrier|principal|lecteur|rempli|bureau;ok;;Consultation
+pilotage/plans-calendrier|sous-perimetre|lecteur|rempli|bureau;defaut;C4-02;Mêmes plans que sous le principal
+pilotage/plans-calendrier|principal|auditeur_externe|rempli|bureau;ok;;Consultation (pilotage:lire)
+pilotage/plans-calendrier|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C4-02;Mêmes plans que sous le principal
+pilotage/plans-calendrier|restreint|contributeur|rempli|bureau;defaut;T4-01;Plans du groupement lus par le compte limité à HDS (GET /api/plans HTTP 200, sans périmètre , voir aussi C4-02)
+pilotage/plans-calendrier|principal|rssi|rempli|telephone;defaut;T4-05;Pas de défilement de page , intitulés d'actions tronqués dans la grille (3 boutons), mois au-delà d'avril hors écran dans la zone défilante
+pilotage/plans-planning|principal|administrateur|rempli|bureau;ok;;Ajouter : formation, sensibilisation, audit interne, exercice , barres déplaçables
+pilotage/plans-planning|sous-perimetre|administrateur|rempli|bureau;defaut;C4-02;Plans du principal sous HDS
+pilotage/plans-planning|principal|contributeur|rempli|bureau;ok;;Ajouts et décalage au clavier proposés (pilotage:modifier)
+pilotage/plans-planning|sous-perimetre|contributeur|rempli|bureau;defaut;C4-02;Plans du principal sous HDS
+pilotage/plans-planning|principal|lecteur|rempli|bureau;ok;;Barres sans consigne de décalage, aucun ajout , décalage API HTTP 403
+pilotage/plans-planning|sous-perimetre|lecteur|rempli|bureau;defaut;C4-02;Plans du principal sous HDS
+pilotage/plans-planning|principal|auditeur_externe|rempli|bureau;ok;;Lecture , décalage HTTP 403
+pilotage/plans-planning|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C4-02;Plans du principal sous HDS
+pilotage/plans-planning|restreint|contributeur|rempli|bureau;defaut;T4-01;Ajout et décalage des plans du groupement proposés au compte limité à HDS
+pilotage/plans-planning|principal|rssi|rempli|telephone;defaut;T4-05;Diagramme SVG de 840 px dans une zone défilante sans nom ni barre visible , intitulés superposés aux colonnes de mois
+pilotage/plans-formation|principal|administrateur|rempli|bureau;ok;;Ajouter, fiche avec Supprimer , suppression de PL-FOR-003 (test) confirmée
+pilotage/plans-formation|sous-perimetre|administrateur|rempli|bureau;defaut;C4-02;PL-FOR-001/002 du principal sous HDS
+pilotage/plans-formation|principal|contributeur|rempli|bureau;ok;;Ajout PL-FOR-003 (test) , fiche sans Supprimer , DELETE /api/plans HTTP 403 pilotage:supprimer
+pilotage/plans-formation|sous-perimetre|contributeur|rempli|bureau;defaut;C4-02;Plan de formation du principal sous HDS
+pilotage/plans-formation|principal|lecteur|rempli|bureau;ok;;Pas d'Ajouter , POST/PATCH/DELETE /api/plans HTTP 403
+pilotage/plans-formation|sous-perimetre|lecteur|rempli|bureau;defaut;C4-02;Plan de formation du principal sous HDS
+pilotage/plans-formation|principal|auditeur_externe|rempli|bureau;ok;;Lecture , écritures HTTP 403
+pilotage/plans-formation|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C4-02;Plan de formation du principal sous HDS
+pilotage/plans-formation|restreint|contributeur|rempli|bureau;defaut;T4-01;Ajout au plan de formation du groupement proposé au compte limité à HDS
+pilotage/plans-formation|principal|rssi|rempli|telephone;ok;;Pas de défilement de page , tableau et onglets dans des zones défilantes avec barre visible
+pilotage/plans-sensibilisation|principal|administrateur|rempli|bureau;ok;;PL-SEN-001, Ajouter
+pilotage/plans-sensibilisation|sous-perimetre|administrateur|rempli|bureau;defaut;C4-02;Même liste sous les deux périmètres
+pilotage/plans-sensibilisation|principal|contributeur|rempli|bureau;ok;;Ajouter proposé, pas de suppression
+pilotage/plans-sensibilisation|sous-perimetre|contributeur|rempli|bureau;defaut;C4-02;Même liste sous les deux périmètres
+pilotage/plans-sensibilisation|principal|lecteur|rempli|bureau;ok;;Lecture seule
+pilotage/plans-sensibilisation|sous-perimetre|lecteur|rempli|bureau;defaut;C4-02;Même liste sous les deux périmètres
+pilotage/plans-sensibilisation|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule
+pilotage/plans-sensibilisation|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C4-02;Même liste sous les deux périmètres
+pilotage/plans-sensibilisation|restreint|contributeur|rempli|bureau;defaut;T4-01;Plan commun au groupement modifiable par le compte limité à HDS
+pilotage/plans-sensibilisation|principal|rssi|rempli|telephone;ok;;Pas de défilement de page , tableau entier dans sa zone
+pilotage/revues|principal|administrateur|rempli|bureau;ok;;Valider, Préparer, exports , revue de test validée HTTP 200 , export docx HTTP 200
+pilotage/revues|sous-perimetre|administrateur|rempli|bureau;defaut;C4-05;Valider et exports présents , aucune entrée 9.3.2 préparée sous HDS
+pilotage/revues|principal|contributeur|rempli|bureau;defaut;T4-03;Pas de Valider (validation HTTP 403 pilotage:administrer) mais modifie une revue validée, qui repasse en brouillon
+pilotage/revues|sous-perimetre|contributeur|rempli|bureau;defaut;C4-05;Ajouter proposé, pas de Valider , aucune entrée préparée sous HDS
+pilotage/revues|principal|lecteur|rempli|bureau;ok;;Ouvrir seulement , POST revue HTTP 403 , export docx HTTP 403
+pilotage/revues|sous-perimetre|lecteur|rempli|bureau;defaut;C4-05;Lecture seule , validation HTTP 403 , aucune entrée préparée sous HDS
+pilotage/revues|principal|auditeur_externe|rempli|bureau;ok;;Lecture seule , validation et export HTTP 403
+pilotage/revues|sous-perimetre|auditeur_externe|rempli|bureau;defaut;C4-05;Lecture seule , aucune entrée préparée sous HDS
+pilotage/revues|restreint|contributeur|rempli|bureau;defaut;T4-01;Revue de direction du groupement ouverte en écriture au compte limité à HDS
+pilotage/revues|principal|rssi|rempli|telephone;ok;;Pas de défilement de page , entrées 9.3.2 et fiches lisibles à 390 px
+pilotage/rappels|principal|administrateur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|sous-perimetre|administrateur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|principal|contributeur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|sous-perimetre|contributeur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|principal|lecteur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|sous-perimetre|lecteur|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|principal|auditeur_externe|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|sous-perimetre|auditeur_externe|rempli|bureau;ok;;« Aucun rappel pour le moment. » : aucune action attribuée à ce compte , aucun rappel d'un autre compte visible
+pilotage/rappels|restreint|contributeur|rempli|bureau;ok;;« Aucun rappel pour le moment. » sous les deux périmètres (rappels personnels, aucun du principal exposé)
+pilotage/rappels|principal|rssi|rempli|telephone;defaut;C4-10;Pas de défilement de page , cartes « Échéance SMSI » sans intitulé ni date (C4-10)
+route/registres/:id?|principal|administrateur|rempli|bureau;ok;;Nouveau registre, archivage, droits , registre de test créé
+route/registres/:id?|sous-perimetre|administrateur|rempli|bureau;ok;;Éléments par périmètre HDS
+route/registres/:id?|principal|contributeur|rempli|bureau;defaut;T4-02;Archive le registre « test7 plan créé par l’administrateur » sans rôle de gestionnaire (HTTP 200, registre.archived)
+route/registres/:id?|sous-perimetre|contributeur|rempli|bureau;defaut;T4-02;Archive à l'écran un registre HDS créé par l'administrateur
+route/registres/:id?|principal|lecteur|rempli|bureau;defaut;T4-04;« Nouveau registre » proposé , Créer → « Erreur Droit requis : ecarts:modifier » (HTTP 403) , onglets Périmètres/Paramètres sans commande
+route/registres/:id?|sous-perimetre|lecteur|rempli|bureau;defaut;T4-04;Éléments HDS en lecture , « Nouveau registre » proposé à tort
+route/registres/:id?|principal|auditeur_externe|rempli|bureau;defaut;T4-04;Registres en « Lecture » , « Nouveau registre » proposé , création HTTP 403
+route/registres/:id?|sous-perimetre|auditeur_externe|rempli|bureau;defaut;T4-04;6 éléments HDS en lecture , « Nouveau registre » proposé
+route/registres/:id?|restreint|contributeur|rempli|bureau;defaut;T4-01;Registres du principal listés avec « Droits du module » (écriture)
+route/registres/:id?|principal|rssi|rempli|telephone;ok;;Pas de défilement de page , tableau dans « Registres accessibles, défilement horizontal possible »

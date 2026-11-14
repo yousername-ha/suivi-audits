@@ -1,7 +1,8 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
-> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive). Précédente :
+> **Reprise la plus récente : [13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md)** (refonte des droits, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md) : pyramide des
+> périmètres, migration `060` additive ; contributeur par « Attribuer à », côté serveur ; écran du contributeur et lot 3 à faire). Précédente : **[11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
+> Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive) ; avant elle :
 > **[10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre
 > modules, [ADR 0083](docs/adr/0083-porte-de-lecture-autorisee-entre-modules.md) acceptée le 11/11/2026, garde-fous d'architecture, routes
 > découpées) ; avant elle : **[06/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-06.md)** (correctifs issus d'un audit externe, lots A à D) ; avant elle : **[05/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-05.md)** (bibliothèque figée, copie du
@@ -12,6 +13,12 @@
 > (version 6.0.0 préparée, PR de sécurité fusionnées, écran de connexion refondu par la PR #181, reste à faire) et celle du
 > [27/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion, conversion Kysely, tests de bout en bout instables).
 > Les sections ci-dessous sont datées.
+>
+> **Recette du 12-13/11/2026** : campagne à plusieurs agents sur les piles Docker, 1 712 cases couvertes, 40 défauts inscrits
+> (BUG-038 à BUG-077, dont BUG-064 devenu sans objet après les ADR 0089 à 0091) et 47 tests `test.fail` ; [rapport](docs/05_RECETTE/rssi-virtuel/RAPPORT-CAMPAGNE-2026-11-13.md),
+> [demande de correctifs](docs/05_RECETTE/rssi-virtuel/DEMANDE-CORRECTIFS-2026-11-13.md). BUG-051 arbitré par le RSSI le 13/11
+> (cloisonnement par périmètre, visibilité du parent vers ses enfants). BUG-049 arbitré (seul le gestionnaire archive et désarchive un registre). BUG-042 arbitré (revue propre à chaque enfant, sauf héritage des référentiels). BUG-024 (matrice obligatoire) et BUG-031
+> (entrées 9.3.2 de l'ISO/IEC 27001, plus d'ISO 9001) arbitrés ; rôle d'auditeur interne accepté comme évolution (DEV-016). Prochaine action : correction par la session de développement (DEV-014).
 
 Dernière mise à jour : **2026-10-11T04:04:46+02:00 (Europe/Paris)**.
 Référence applicative analysée : **`c704fa6e6d6d516db75f963db8dd5d2049ab42c8`** ; version 3.0.2.
@@ -101,7 +108,7 @@ node --test scripts/tests/publication.test.mjs
 python3 -m unittest discover -s scripts/tests -p test_updates.py
 ```
 
-Ces commandes supposent Node 24+, pnpm 10.34.6 et un clone de développement.
+Ces commandes supposent Node 26+, pnpm 10.34.6 et un clone de développement.
 L’installation de dépendances accède aux registres externes ; elle n’a pas été
 rejouée pendant l’audit, car les dépendances étaient présentes. Les tests API,
 `pnpm test` et les recettes Docker demandent une base et un environnement

@@ -3,14 +3,15 @@
    propre au périmètre, modifiable librement, « en préparation » ; l'appliquer en fait un référentiel suivi en conformité.
    Aucun texte normatif n'est fourni : l'organisation importe les exigences dont elle détient les droits. Les droits sont
    ceux de l'API. */
-import { Alert, Button, Group, Modal, Select, Stack, Table, Text, Textarea, TextInput } from '@mantine/core';
+import { Alert, Button, Card, Group, Modal, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { FrameworkDefinition } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
+import { ConfirmButton, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { DetailExigences, EtatsCouverture, type CouvertureReferentiel } from './Couverture';
 import { KitIa } from './KitIa';
 
 interface Referentiel {
@@ -79,16 +80,23 @@ const STATUTS: Record<string, string> = {
 const versions = (n: number) =>
   Array.from({ length: n }, (_, i) => ({ value: String(n - i), label: `Version ${n - i}` }));
 
-/** Page « Bibliothèque de référentiels » : liste, consultation des exigences, import et nouvelles versions. */
-export function Bibliotheque() {
+/** Page « Bibliothèque de référentiels » (ADR 0089) : une carte par référentiel, qui réunit la bibliothèque (exigences au
+    catalogue, périmètres rattachés, import et nouvelles éditions) et la couverture dans le périmètre affiché. */
+export function Bibliotheque({ smsi }: { smsi?: string }) {
   const can = useCan(),
     qc = useQueryClient(),
     modifier = can('conformite', 'modifier'),
+    [detail, setDetail] = useState<CouvertureReferentiel | null>(null),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
     [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
     queryFn: () => get<Referentiel[]>('/api/library/frameworks'),
+  });
+  const couverture = useQuery({
+    queryKey: ['grc', smsi, 'couverture', null],
+    queryFn: () => get<{ frameworks: CouvertureReferentiel[] }>(`/api/grc/${smsi}/couverture`),
+    enabled: !!smsi,
   });
   const exigences = useQuery({
     queryKey: ['library', 'frameworks', consulte?.cible.id, consulte?.version],
@@ -107,72 +115,109 @@ export function Bibliotheque() {
         est suivie en conformité. Aucun texte normatif n’est fourni : importez les exigences dont vous détenez les
         droits.
       </Alert>
-      <ErrorAlert error={liste.error ?? exigences.error} />
+      <ErrorAlert error={liste.error ?? exigences.error ?? couverture.error} />
       <Group justify="space-between">
         <Text>{liste.data ? `${liste.data.length} référentiel(s) dans la bibliothèque` : 'Chargement…'}</Text>
         {modifier && <Button onClick={() => setImport({ cible: null })}>Importer un référentiel</Button>}
       </Group>
       {modifier && <StandardsDisponibles onDone={() => qc.invalidateQueries({ queryKey: ['library'] })} />}
       <KitIa />
-      <DataTable label="Référentiels de la bibliothèque, défilement horizontal possible">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Référentiel</Table.Th>
-              <Table.Th>Version</Table.Th>
-              <Table.Th>Exigences</Table.Th>
-              <Table.Th>Copies dans les périmètres</Table.Th>
-              <Table.Th>Source</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {(liste.data ?? []).map((f) => (
-              <Table.Tr key={f.id}>
-                <Table.Td>
-                  <Text fw={600}>{f.name}</Text>
-                  <Text size="xs" c="dimmed">
-                    {f.identifier}
-                  </Text>
-                </Table.Td>
-                <Table.Td>{f.version}</Table.Td>
-                <Table.Td>{f.requirements}</Table.Td>
-                <Table.Td>{f.scopes}</Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <StatusChip etat="neutre">Figé</StatusChip>
-                    <Text size="xs" c="dimmed">
-                      {f.derivedFrom ? `Copie de ${f.derivedFrom.name}` : (STATUTS[f.source.status] ?? f.source.status)}
-                    </Text>
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Button
-                      size="xs"
-                      variant="default"
-                      aria-label={`Consulter les exigences de ${f.name}`}
-                      onClick={() => setConsulte({ cible: f, version: String(f.version) })}
-                    >
-                      Exigences
-                    </Button>
-                    {modifier && (
+      {smsi && (
+        <Alert>
+          Couverture dans le périmètre affiché : les états ci-dessous concernent uniquement ce périmètre. Ils aident à
+          piloter ; ils ne constituent ni un taux de conformité ni une preuve de conformité.
+        </Alert>
+      )}
+      <Stack>
+        {(liste.data ?? []).map((f) => {
+          const couv = couverture.data?.frameworks.find((c) => c.identifier === f.identifier) ?? null;
+          return (
+            <Card key={f.id} withBorder aria-label={`Référentiel ${f.name}`}>
+              <Stack gap="sm">
+                <Group justify="space-between" align="flex-start">
+                  <div>
+                    <Text fw={600}>{f.name}</Text>
+                    <Group gap="xs">
+                      <Text size="xs" c="dimmed">
+                        {f.identifier} · version {f.version}
+                      </Text>
+                      <StatusChip etat="neutre">Figé</StatusChip>
+                      <Text size="xs" c="dimmed">
+                        {f.derivedFrom
+                          ? `Copie de ${f.derivedFrom.name}`
+                          : (STATUTS[f.source.status] ?? f.source.status)}
+                      </Text>
+                    </Group>
+                  </div>
+                  <Group gap="md" align="flex-start">
+                    <div>
+                      <Text fw={600}>{f.requirements}</Text>
+                      <Text size="xs" c="dimmed">
+                        exigences au catalogue
+                      </Text>
+                    </div>
+                    <div>
+                      <Text fw={600}>{f.scopes}</Text>
+                      <Text size="xs" c="dimmed">
+                        {f.scopes > 1 ? 'périmètres rattachés' : 'périmètre rattaché'}
+                      </Text>
+                    </div>
+                    <Group gap="xs">
                       <Button
                         size="xs"
-                        variant="subtle"
-                        aria-label={`Importer une nouvelle édition de ${f.name}`}
-                        onClick={() => setImport({ cible: f })}
+                        variant="default"
+                        aria-label={`Consulter les exigences de ${f.name}`}
+                        onClick={() => setConsulte({ cible: f, version: String(f.version) })}
                       >
-                        Nouvelle édition
+                        Exigences
                       </Button>
-                    )}
+                      {modifier && (
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          aria-label={`Importer une nouvelle édition de ${f.name}`}
+                          onClick={() => setImport({ cible: f })}
+                        >
+                          Nouvelle édition
+                        </Button>
+                      )}
+                    </Group>
                   </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
+                </Group>
+                {smsi && couv && (
+                  <>
+                    <EtatsCouverture f={couv} />
+                    <Group justify="flex-end">
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Voir la couverture de ${f.name}`}
+                        onClick={() => setDetail(couv)}
+                      >
+                        Voir la couverture
+                      </Button>
+                    </Group>
+                  </>
+                )}
+                {smsi && !couv && couverture.data && (
+                  <Text size="sm" c="dimmed">
+                    Non appliqué dans ce périmètre : aucune couverture à afficher. Attribuez ce référentiel au périmètre
+                    (page Périmètres, bouton « Référentiels ») puis appliquez sa copie.
+                  </Text>
+                )}
+              </Stack>
+            </Card>
+          );
+        })}
+      </Stack>
+      {smsi && detail && (
+        <DetailExigences
+          smsi={smsi}
+          frameworkId={detail.frameworkId}
+          nom={detail.name}
+          onClose={() => setDetail(null)}
+        />
+      )}
       <Modal
         opened={!!consulte}
         onClose={() => setConsulte(null)}
@@ -444,7 +489,7 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
                 <ConfirmButton
                   size="xs"
                   color="blue"
-                  message={`Appliquer « ${r.name} » à ce périmètre ? La copie devient un référentiel suivi en conformité (couverture, évaluations, rapprochements) ; elle reste modifiable.`}
+                  message={`Appliquer « ${r.name} » à ce périmètre ? La copie devient un référentiel suivi en conformité (couverture, évaluations) ; elle reste modifiable.`}
                   onConfirm={() => statut(r.frameworkId, 'applique')}
                 >
                   Appliquer
@@ -501,6 +546,7 @@ export function ReferentielsDuPerimetre({ smsi }: { smsi: string }) {
       {admin && (libres.length > 0 || standardsOfferts.length > 0) && (
         <Group align="flex-end">
           <Select
+            allowDeselect={false}
             label="Attribuer un référentiel de la bibliothèque"
             description="Crée une copie propre à ce périmètre, en préparation."
             placeholder="Choisir un référentiel"

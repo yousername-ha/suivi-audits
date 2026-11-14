@@ -39,6 +39,7 @@ import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 export type VuePlans = 'calendrier' | 'planning' | TypePlan;
 interface Mesure {
@@ -78,14 +79,18 @@ const PLAN_DE: Record<string, { titre: string; description: string }> = {
   },
 };
 
-export function PlansSmsi({ vue }: { vue: VuePlans }) {
+/** `smsi` : périmètre affiché ; les plans et leurs actions relèvent d'un périmètre (BUG-062). */
+export function PlansSmsi({ vue, smsi }: { vue: VuePlans; smsi?: string }) {
   const can = useCan(),
     modifier = can('pilotage', 'modifier'),
     qc = useQueryClient(),
     [annee, setAnnee] = useState(new Date().getFullYear()),
     [fiche, setFiche] = useState<string | null>(null),
     [erreur, setErreur] = useState<unknown>(null);
-  const q = useQuery({ queryKey: ['plans'], queryFn: () => get<Donnees>('/api/plans') });
+  const q = useQuery({
+    queryKey: ['plans', smsi ?? ''],
+    queryFn: () => get<Donnees>(smsi ? `/api/plans?smsi=${smsi}` : '/api/plans'),
+  });
   const donnees = q.data;
   const rafraichir = async () => {
     await qc.invalidateQueries({ queryKey: ['plans'] });
@@ -94,7 +99,7 @@ export function PlansSmsi({ vue }: { vue: VuePlans }) {
   const ajouter = async (type: TypePlan) => {
     try {
       setErreur(null);
-      const p = await api<ActionPlan>('POST', '/api/plans', { body: { type } });
+      const p = await api<ActionPlan>('POST', '/api/plans', { body: smsi ? { type, smsi } : { type } });
       await rafraichir();
       setFiche(p.id);
     } catch (e) {
@@ -384,7 +389,7 @@ function Liste({
               {liste.map((p) => {
                 const [libelle, niveau] = actionPlanEtat(p, jourJ);
                 return (
-                  <Table.Tr key={p.id}>
+                  <Table.Tr key={p.id} {...ficheCliquable(() => onOuvrir(p.id), `Afficher le plan ${p.id}`)}>
                     <Table.Td>
                       <Anchor component="button" type="button" onClick={() => onOuvrir(p.id)}>
                         {p.id}

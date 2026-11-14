@@ -19,8 +19,9 @@ import {
 } from '@suivi/shared';
 import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
+import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
-import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
+import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
 const maintenant16 = () => new Date().toISOString().slice(0, 16);
@@ -72,9 +73,14 @@ export const ajouterIncident = (data: JsonObject, brut: JsonObject) => {
 export class Incidents {
   constructor(private readonly r: RegistreHistorique) {}
 
-  async vue(user: SessionUser): Promise<VueIncidents> {
+  /** Registre des incidents lisibles par l'utilisateur : ceux des périmètres qu'il ouvre (BUG-044) ; `smsi` restreint la
+      vue à un seul périmètre, qui doit alors être accessible. */
+  async vue(user: SessionUser, smsi?: string): Promise<VueIncidents> {
     const { version, data } = await this.r.lire(user, 'incidents');
+    const lisibles = await this.r.perimetresLisibles(user);
+    if (smsi && !lisibles.has(smsi)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
     const incidents = entrees(data, 'incidents')
+      .filter((x) => (smsi ? perimetreDe(x) === smsi : lisibles.has(perimetreDe(x))))
       .map(lireIncident)
       .filter((x): x is Incident => !!x);
     const statuts = new Map(entrees(data, 'findings').map((f) => [str(f.id), str(f.status)]));
@@ -94,9 +100,13 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.created', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
+      async (data) => {
+        // Un incident relève d'un périmètre (BUG-044) : celui qui est affiché, sinon le périmètre commun.
+        const smsi = body.smsi ?? DEFAULT_SMSI;
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         const q = body.answers ? qualifierIncident(body.answers as Reponses) : null;
         const brut = incidentBrut(data, {
+          smsi,
           title: body.title ?? '',
           reporter: body.reporter ?? '',
           ...(q ? { kind: q.kind, status: 'Qualifié', answers: body.answers as JsonObject } : {}),
@@ -113,9 +123,10 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.updated', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
-        const i = this.trouver(data, id);
-        const suivant: JsonObject = { ...i, ...body };
+      async (data) => {
+        const i = await this.trouver(data, id, user);
+        const { answers, ...champs } = body;
+        const suivant: JsonObject = { ...i, ...champs, ...(answers ? { answers: answers as JsonObject } : {}) };
         if (body.status && ['Résolu', 'Clos'].includes(body.status) && !str(suivant.resolvedAt))
           suivant.resolvedAt = maintenant16();
         remplacerEntree(data, 'incidents', id, suivant);
@@ -134,8 +145,8 @@ export class Incidents {
         action: 'incident.deleted',
         reference: (x) => `legacy:incidents:${x.id}`,
       },
-      (data) => {
-        this.trouver(data, id);
+      async (data) => {
+        await this.trouver(data, id, user);
         remplacerEntree(data, 'incidents', id, null);
         return { id };
       },
@@ -149,8 +160,8 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.obligation', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
-        const i = this.trouver(data, id);
+      async (data) => {
+        const i = await this.trouver(data, id, user);
         const notified: JsonObject = isObject(i.notified) ? { ...i.notified } : {};
         if (body.traitee) notified[String(k)] = new Date().toISOString();
         else delete notified[String(k)];
@@ -173,9 +184,14 @@ export class Incidents {
         reference: (x) => `legacy:incidents:${x.id}`,
       },
       async (data, c) => {
-        const i = this.trouver(data, id);
+        const i = await this.trouver(data, id, user);
         if (str(i.findingId)) throw new HttpError(409, `Une action existe déjà : ${str(i.findingId)}.`);
-        const fid = identifiantActionIncident(entrees(data, 'findings').map((f) => str(f.id)));
+        const fid = identifiantActionIncident(
+          await this.r.identifiantsEcartsPris(
+            c,
+            entrees(data, 'findings').map((f) => str(f.id)),
+          ),
+        );
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
         await this.r.creerEcart(c, user, ip, {
           id: fid,
@@ -199,8 +215,8 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.retex-added', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
-        const i = this.trouver(data, id);
+      async (data) => {
+        const i = await this.trouver(data, id, user);
         const liste = chronologieBrute(i);
         if (liste.length >= MAX_EVENEMENTS_RETEX)
           throw new HttpError(409, `La chronologie est limitée à ${MAX_EVENEMENTS_RETEX} événements.`);
@@ -229,8 +245,8 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.retex-updated', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
-        const i = this.trouver(data, id);
+      async (data) => {
+        const i = await this.trouver(data, id, user);
         const liste = chronologieBrute(i);
         if (liste.filter((e) => isObject(e) && e.id === eid).length !== 1)
           throw new HttpError(404, 'Événement absent de la chronologie.');
@@ -247,15 +263,24 @@ export class Incidents {
   }
 
   supprimerEvenement(id: string, eid: string, user: SessionUser, ip: string): Promise<Incident> {
+    // Le contenu retiré reste au journal d'audit (BUG-050) ; retirer un événement exige le droit de suppression.
+    let retire: JsonObject | undefined;
     return this.r.modifier(
       user,
       ip,
-      { module: 'incidents', action: 'incident.retex-deleted', reference: (x) => `legacy:incidents:${x.id}` },
-      (data) => {
-        const i = this.trouver(data, id);
+      {
+        module: 'incidents',
+        action: 'incident.retex-deleted',
+        droit: 'supprimer',
+        reference: (x) => `legacy:incidents:${x.id}`,
+        detail: () => (retire ? { evenement: retire } : undefined),
+      },
+      async (data) => {
+        const i = await this.trouver(data, id, user);
         const liste = chronologieBrute(i);
-        if (!liste.some((e) => isObject(e) && e.id === eid))
-          throw new HttpError(404, 'Événement absent de la chronologie.');
+        const present = liste.find((e): e is JsonObject => isObject(e) && e.id === eid);
+        if (!present) throw new HttpError(404, 'Événement absent de la chronologie.');
+        retire = present;
         const suivant = { ...i, timeline: liste.filter((e) => !(isObject(e) && e.id === eid)) };
         remplacerEntree(data, 'incidents', id, suivant);
         return lireIncident(suivant)!;
@@ -263,10 +288,12 @@ export class Incidents {
     );
   }
 
-  private trouver(data: JsonObject, id: string): JsonObject {
+  /** Incident `id`, après contrôle de l'accès à son périmètre (écriture pour toute modification). */
+  private async trouver(data: JsonObject, id: string, user: SessionUser, ecriture = true): Promise<JsonObject> {
     const t = entrees(data, 'incidents').filter((x) => x.id === id);
     if (t.length > 1) throw new HttpError(409, 'Identifiant historique ambigu : corrigez les doublons dans la source.');
     if (!t[0]) throw new HttpError(404, 'Incident absent.');
+    await this.r.exigerPerimetre(user, t[0], ecriture, 'Incident absent.');
     return t[0];
   }
 }

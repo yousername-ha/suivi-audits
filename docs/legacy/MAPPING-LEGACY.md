@@ -310,20 +310,6 @@ Un seul module est repris dans des tables dédiées : la **cartographie** (`maps
 | `$.plan.people[].id` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |
 | `$.plan.people[].name` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |
 | `$.plan.people[].role` | app_state.data | 1 | audit_plan_days, audit_plan_slots, audit_plan_people |  |
-| `$.appGaps` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[]` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].id` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].createdAt` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].name` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].supplier` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].dscp` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].cloud` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].status` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].owner` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].target` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].desc` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].lines` | app_state.data | 3 | app_gap_analyses |  |
-| `$.appGaps[].custom` | app_state.data | 3 | app_gap_analyses |  |
 | `$.reviews` | app_state.data | 2 | management_reviews |  |
 | `$.reviews[]` | app_state.data | 2 | management_reviews |  |
 | `$.reviews[].id` | app_state.data | 2 | management_reviews |  |

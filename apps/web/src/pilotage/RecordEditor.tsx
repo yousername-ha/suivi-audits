@@ -55,7 +55,8 @@ export function RecordEditor({
     [search, setSearch] = useState(''),
     [registreId, setRegistreId] = useState<string | null>(null),
     [error, setError] = useState<unknown>(null),
-    [saving, setSaving] = useState(false);
+    [saving, setSaving] = useState(false),
+    [archivage, setArchivage] = useState(false);
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
     queryFn: () => get<{ items: Source[] }>(`/api/grc/${smsi}/sources?search=${encodeURIComponent(search)}`),
@@ -117,8 +118,20 @@ export function RecordEditor({
       setData(d);
       setError(null);
     }
+    setArchivage(false);
   }, [opened, object, kind, policy, initial]);
   const set = (key: string, value: unknown) => setData((old) => ({ ...old, [key]: value }));
+  // Archivage d'une fiche du Pilotage depuis l'écran (BUG-052) : la fiche reste consultable, ses décisions et preuves aussi.
+  const archiver = async () => {
+    if (!object) return;
+    try {
+      await api('DELETE', `/api/grc/${smsi}/objects/${object.id}`, { ifMatch: object.version });
+      await qc.invalidateQueries({ queryKey: ['grc', smsi] });
+      onClose();
+    } catch (e) {
+      setError(e);
+    }
+  };
   const save = async () => {
     setSaving(true);
     try {
@@ -156,6 +169,7 @@ export function RecordEditor({
       title={`${object ? 'Fiche' : 'Ajouter'} — ${GRC_LABELS[kind]}`}
       size="lg"
       closeButtonProps={{ 'aria-label': 'Fermer la fiche' }}
+      classNames={{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}
     >
       <Stack>
         <ErrorAlert error={error ?? sources.error ?? owners.error} />
@@ -206,6 +220,7 @@ export function RecordEditor({
               )}
               {['control', 'evidence', 'measure'].includes(kind) && (
                 <Select
+                  allowDeselect={false}
                   label={
                     kind === 'control'
                       ? 'Type de contrôle'
@@ -226,6 +241,7 @@ export function RecordEditor({
               )}
               {kind === 'control' && (
                 <Select
+                  allowDeselect={false}
                   label="Fréquence"
                   data={policy.catalogues.frequencies.map((f) => ({ value: f.id, label: f.label }))}
                   value={String(data.frequency ?? '')}
@@ -277,7 +293,26 @@ export function RecordEditor({
             </Stack>
           </Tabs.Panel>
         </Tabs>
-        <Group justify="flex-end">
+        {object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer') && (
+          <div>
+            {!archivage ? (
+              <Button variant="subtle" onClick={() => setArchivage(true)}>
+                Archiver la fiche
+              </Button>
+            ) : (
+              <Alert>
+                <Text>Confirmer l’archivage ? Les décisions, preuves et historiques sont conservés.</Text>
+                <Group gap="xs">
+                  <Button onClick={() => void archiver()}>Confirmer l’archivage</Button>
+                  <Button variant="subtle" onClick={() => setArchivage(false)}>
+                    Annuler
+                  </Button>
+                </Group>
+              </Alert>
+            )}
+          </div>
+        )}
+        <Group justify="flex-end" className="fenetre-actions">
           <Button variant="default" onClick={onClose}>
             Fermer
           </Button>

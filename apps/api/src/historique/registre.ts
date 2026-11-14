@@ -16,8 +16,67 @@ export interface EtatHistorique {
   data: JsonObject;
 }
 
+/** Périmètre d'une entrée du registre historique (incident, cellule de crise) : celui qu'elle porte (`smsi`), sinon le
+    périmètre commun, où vivent les entrées saisies avant que le périmètre existe (BUG-044). */
+export const perimetreDe = (e: JsonObject): string => (typeof e.smsi === 'string' && e.smsi ? e.smsi : DEFAULT_SMSI);
+
+/** Processus, objectifs et indicateurs de l'outil de suivi : un seul modèle, une fiche par périmètre (BUG-055). */
+export const CLES_PILOTAGE = ['processes', 'objectives', 'indicators'] as const;
+
+/** Listes de l'état historique dont chaque entrée porte un périmètre : jamais servies hors des périmètres lisibles. */
+const CLES_PAR_PERIMETRE = [...CLES_PILOTAGE, 'plans', 'incidents'] as const;
+
+/** Copie de l'état dont les processus, objectifs et indicateurs sont limités aux périmètres donnés. */
+export function etatPilotageDe(etat: JsonObject, perimetres: Iterable<string>): JsonObject {
+  return limiterAuxPerimetres(etat, perimetres, CLES_PILOTAGE);
+}
+
+/** Copie de l'état dont les listes rattachées à un périmètre sont limitées aux périmètres lisibles (BUG-044, 055, 062). */
+export function etatLisibleDe(etat: JsonObject, perimetres: Iterable<string>): JsonObject {
+  return limiterAuxPerimetres(etat, perimetres, CLES_PAR_PERIMETRE);
+}
+
+function limiterAuxPerimetres(etat: JsonObject, perimetres: Iterable<string>, cles: readonly string[]): JsonObject {
+  const gardes = new Set(perimetres);
+  const sortie: JsonObject = { ...etat };
+  for (const cle of cles)
+    if (Array.isArray(etat[cle]))
+      sortie[cle] = (etat[cle] as unknown[]).filter(
+        (l) => !isObject(l) || gardes.has(perimetreDe(l as JsonObject)),
+      ) as never;
+  return sortie;
+}
+
 export class RegistreHistorique {
   constructor(readonly g: Grc) {}
+
+  /** Périmètres que l'utilisateur peut ouvrir : une entrée d'un autre périmètre ne lui est ni montrée ni modifiable. */
+  perimetresLisibles(user: SessionUser): Promise<ReadonlySet<string>> {
+    return PorteeLecture.pour(this.g, user).perimetresLisibles();
+  }
+
+  /** Exige l'accès au périmètre de l'entrée : 404 (jamais 403) si le périmètre est illisible, pour ne rien révéler ; 403 si
+      l'accès est en lecture seule et que `ecriture` est demandé. */
+  async exigerPerimetre(user: SessionUser, entree: JsonObject, ecriture: boolean, absent: string): Promise<void> {
+    try {
+      await this.g.access(perimetreDe(entree), user, ecriture);
+    } catch (e) {
+      if (e instanceof HttpError && e.status === 404) throw new HttpError(404, absent);
+      throw e;
+    }
+  }
+
+  /** Identifiants historiques d'écarts déjà attribués, écarts archivés compris : un identifiant n'est jamais réattribué
+      (contrainte d'unicité sur `legacy_id`, BUG-077). `visibles` : ceux de la projection `findings` de l'état. */
+  async identifiantsEcartsPris(c: Client, visibles: readonly string[] = []): Promise<string[]> {
+    const rows = await surConnexion(c)
+      .selectFrom('grc_objects')
+      .select('legacy_id')
+      .where('legacy_key', '=', 'findings')
+      .where('smsi_id', '=', DEFAULT_SMSI)
+      .execute();
+    return [...new Set([...visibles, ...rows.flatMap((r) => (r.legacy_id ? [r.legacy_id] : []))])];
+  }
 
   /** Crée un écart natif (non-conformité) dans le périmètre commun, dans la transaction en cours. Le droit des écarts est
       contrôlé par l'appelant (`droits: ['ecarts']`). */
@@ -33,6 +92,7 @@ export class RegistreHistorique {
         origin: e.origin ?? 'other',
         refs: (e.items ?? []).filter((i) => connues.has(i)).map((i) => 'legacy:items:' + i),
         dueAt: e.dueAt && validDate(e.dueAt) ? e.dueAt : '',
+        ...(e.ownerId ? { ownerId: e.ownerId } : {}),
       },
       user,
       c,
@@ -103,6 +163,8 @@ export class RegistreHistorique {
       droits?: Module[];
       /** Droit de module exigé : « supprimer » pour une suppression (ADR 0010), « modifier » sinon. */
       droit?: 'modifier' | 'supprimer';
+      /** Éléments conservés au journal en plus de la version (contenu retiré par une suppression, par exemple). */
+      detail?: () => JsonObject | undefined;
     },
     appliquer: (data: JsonObject, c: Client) => T | Promise<T>,
   ): Promise<T> {
@@ -117,7 +179,7 @@ export class RegistreHistorique {
       const r = await this.g.legacy.nativeWrite(c, data, user, etat.version);
       if (r.conflict) throw new HttpError(412, 'Les données historiques ont changé. Rechargez avant de modifier.');
       const ref = cible.reference(resultat);
-      await this.g.db.audit(user, ip, cible.action, ref, { version: r.version }, c);
+      await this.g.db.audit(user, ip, cible.action, ref, { version: r.version, ...(cible.detail?.() ?? {}) }, c);
       await this.g.notify(c, ref, r.version, DEFAULT_SMSI, cible.module, user.username);
       return resultat;
     }, user.username);
@@ -136,6 +198,8 @@ export interface NouvelEcart {
   items?: string[];
   /** Échéance AAAA-MM-JJ ; toute autre valeur est ignorée. */
   dueAt?: string;
+  /** Responsable de l'écart (compte actif autorisé dans le périmètre commun). */
+  ownerId?: string;
 }
 
 /** Entrées objet d'une clé tableau de l'état (les autres valeurs sont ignorées, jamais supprimées à la relecture). */

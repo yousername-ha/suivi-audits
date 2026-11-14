@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
 import { useCan } from '../session';
+import { ficheCliquable } from '../fiche-cliquable';
 
 const useFonctions = () =>
   useQuery({ queryKey: ['admin', 'fonctions'], queryFn: () => get<FonctionDto[]>('/api/admin/fonctions') });
@@ -46,7 +47,10 @@ export function FonctionsPanel() {
               {(q.data ?? [])
                 .filter((f) => !f.archived)
                 .map((f) => (
-                  <Table.Tr key={f.id}>
+                  <Table.Tr
+                    key={f.id}
+                    {...(admin ? ficheCliquable(() => setEdit({ fonction: f }), `Afficher ${f.name}`) : {})}
+                  >
                     <Table.Td>
                       <Text fw={600}>{f.name}</Text>
                       {f.description && (

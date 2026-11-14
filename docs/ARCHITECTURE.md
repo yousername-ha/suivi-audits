@@ -17,7 +17,7 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
    └────────────────┬─────────────────┘
                     │ réseau « edge » (interne, sans sortie Internet)
    ┌────────────────▼─────────────────┐
-   │ app — API Node 24 (uid 1000)     │  Fastify, sessions, TOTP, CSRF, rôles, audit,
+   │ app — API Node 26 (uid 1000)     │  Fastify, sessions, TOTP, CSRF, rôles, audit,
    │  · /api (REST + OpenAPI)         │  documents chiffrés (AES-256-GCM),
    │  · /api/events (SSE)             │  temps réel, import et export au format historique
    └────────────────┬─────────────────┘

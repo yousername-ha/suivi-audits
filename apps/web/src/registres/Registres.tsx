@@ -34,6 +34,7 @@ import {
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert, fmtDate } from '../components/common';
+import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { libelleDesignation, SelecteurResponsableTypé, useProposables } from '../components/selecteurs';
 import { AccesSujets } from './AccesSujets';
@@ -150,7 +151,10 @@ function ListeRegistres() {
                 </Table.Thead>
                 <Table.Tbody>
                   {(liste.data?.items ?? []).map((r) => (
-                    <Table.Tr key={r.id}>
+                    <Table.Tr
+                      key={r.id}
+                      {...ficheCliquable(() => void nav(`/registres/${r.id}`), `Afficher ${r.name}`)}
+                    >
                       <Table.Td>
                         <Text component={Link} to={`/registres/${r.id}`} fw={600}>
                           {r.name}
@@ -260,6 +264,7 @@ function NouveauRegistre({
           onChange={(e) => setDescription(e.currentTarget.value)}
         />
         <Select
+          allowDeselect={false}
           label="Périmètre de référence"
           description="Politique métier et fuseau des éléments : il ne peut plus être retiré du registre."
           required
@@ -618,6 +623,16 @@ function Parametres({ r }: { r: RegistreDto }) {
       setErreur(e);
     }
   };
+  const desarchiver = async () => {
+    setErreur(null);
+    try {
+      await api('POST', `/api/registres/${r.id}/desarchivage`, { ifMatch: r.version });
+      await qc.invalidateQueries({ queryKey: ['registres'] });
+      notifications.show({ color: 'teal', message: 'Registre désarchivé.' });
+    } catch (e) {
+      setErreur(e);
+    }
+  };
   return (
     <Stack>
       <ErrorAlert error={erreur} />
@@ -674,7 +689,16 @@ function Parametres({ r }: { r: RegistreDto }) {
         <Button loading={envoi} disabled={!name.trim() || r.archived} onClick={() => void enregistrer()}>
           Enregistrer
         </Button>
-        {!r.archived && !r.parDefaut && (
+        {r.archived && r.peutArchiver && (
+          <ConfirmButton
+            variant="default"
+            message="Désarchiver ce registre ? Il accepte de nouveau des éléments ; ses éléments, ses périmètres et ses droits n’ont pas changé."
+            onConfirm={desarchiver}
+          >
+            Désarchiver le registre
+          </ConfirmButton>
+        )}
+        {!r.archived && !r.parDefaut && r.peutArchiver && (
           <ConfirmButton
             variant="default"
             message="Archiver ce registre ? Il n’accepte plus de nouveaux éléments ; ses éléments, ses périmètres et ses droits ne sont pas touchés."

@@ -73,6 +73,9 @@ export const objetsRoutes = [
   }),
   route({
     ...base,
+    // Session complète (ADR 0092, lot 2) : la personne à qui un registre est attribué y crée, et gère ce qu'elle a créé, sans
+    // droit de module. Le service reste seul juge : registre, droits de module et périmètres (403 ou 404 sinon).
+    access: 'auth',
     method: 'POST',
     url: '/api/grc/:smsi/objects',
     summary: 'Créer une fiche liée au SMSI',
@@ -101,6 +104,9 @@ export const objetsRoutes = [
   }),
   route({
     ...base,
+    // Session complète (ADR 0092, lot 2) : la personne à qui un registre est attribué y crée, et gère ce qu'elle a créé, sans
+    // droit de module. Le service reste seul juge : registre, droits de module et périmètres (403 ou 404 sinon).
+    access: 'auth',
     method: 'PUT',
     url: '/api/grc/:smsi/objects/:id',
     summary: 'Modifier avec contrôle de concurrence',
@@ -114,6 +120,9 @@ export const objetsRoutes = [
   }),
   route({
     ...base,
+    // Session complète (ADR 0092, lot 2) : la personne à qui un registre est attribué y crée, et gère ce qu'elle a créé, sans
+    // droit de module. Le service reste seul juge : registre, droits de module et périmètres (403 ou 404 sinon).
+    access: 'auth',
     method: 'DELETE',
     url: '/api/grc/:smsi/objects/:id',
     summary: 'Archiver sans supprimer les décisions',

@@ -95,7 +95,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await capture(page, '08-fiche-fournisseur');
     await page.keyboard.press('Escape');
 
-    // Contexte : PESTEL, parties intéressées, opportunités.
+    // Contexte : PESTEL, parties intéressées.
     await page.goto('/pilotage/pestel');
     await expect(page.getByText('Le PESTEL n’est pas exigé par la norme ISO 9001:2015')).toBeVisible();
     await expect(page.getByLabel('Enjeux internes')).toBeVisible();
@@ -103,9 +103,6 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await page.goto('/pilotage/parties');
     await expect(page.getByLabel('Synthèse des parties intéressées')).toContainText('non revues depuis un an');
     await capture(page, '10-parties-interessees');
-    await page.goto('/pilotage/opportunites');
-    await expect(page.getByText('Ouverture à la téléconsultation').first()).toBeVisible();
-    await capture(page, '11-opportunites');
 
     // Séries proposées sans fréquence, revue de direction préparée, audits.
     await page.goto('/pilotage/recurrences');
@@ -127,11 +124,10 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     expect(zone.height).toBeLessThanOrEqual(cadre.height + 1);
     await capture(page, '14-carte-des-risques');
 
-    // Cartographie du SMSI : calque santé.
+    // Cartographie du SMSI : la démonstration enregistre déjà les cartes des deux vues ; calque santé.
     await page.goto('/cartographie');
     await page.getByRole('button', { name: 'Vue processus' }).click();
-    await page.getByRole('button', { name: 'Générer depuis la plateforme' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Générer', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Générer depuis la plateforme' })).toHaveCount(0);
     await expect(page.getByText('Calques', { exact: true })).toBeVisible();
     await page.getByRole('switch', { name: 'Santé des indicateurs' }).check();
     await capture(page, '15-cartographie-sante');

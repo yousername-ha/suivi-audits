@@ -177,6 +177,7 @@ export function PlanningSerie({
               </Text>
               <Group grow align="flex-start">
                 <Select
+                  allowDeselect={false}
                   label="Calendrier de la plateforme"
                   data={avecJours.map((c) => ({ value: c.id, label: c.name }))}
                   value={calId}

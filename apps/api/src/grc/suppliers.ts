@@ -21,7 +21,7 @@ import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import type { DB } from '../db/types.generated.js';
 import { HttpError } from '../http/errors.js';
 import { DEFAULT_SMSI, type Grc } from './core.js';
-import { parseRequirementRef } from './rapprochements.js';
+import { parseRequirementRef } from './couverture.js';
 
 export interface SupplierCriterion {
   id: string;

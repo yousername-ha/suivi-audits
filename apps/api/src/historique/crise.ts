@@ -7,6 +7,7 @@ import {
   AuteurCrise,
   CelluleOuverture,
   ChecklistBascule,
+  PerimetreCrise,
   ContactModification,
   EcheanceCreation,
   EntreeCreation,
@@ -16,9 +17,12 @@ import {
   type EtatCrise,
 } from '@suivi/shared';
 import { isObject, nextLegacyId, type Json, type JsonObject } from '@suivi/shared/legacy';
+import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { surConnexion } from '../db/db.js';
+import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
-import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js';
+import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
 const now = () => new Date().toISOString();
@@ -73,14 +77,41 @@ export interface VueCrise {
 export class Crise {
   constructor(private readonly r: RegistreHistorique) {}
 
-  async vue(user: SessionUser): Promise<VueCrise> {
+  async vue(user: SessionUser, smsi?: string): Promise<VueCrise> {
     const { version, data } = await this.r.lire(user, 'incidents');
+    const lisibles = await this.r.perimetresLisibles(user);
+    if (smsi && !lisibles.has(smsi)) throw new HttpError(404, 'Périmètre introuvable ou non accessible.');
+    // Les cellules d'un périmètre illisible ne sont pas montrées (BUG-044).
+    const crise = isObject(data.crisis) ? data.crisis : {};
+    const visible = (x: Json) => isObject(x) && (smsi ? perimetreDe(x) === smsi : lisibles.has(perimetreDe(x)));
+    const cellules = liste(crise.cells).filter(visible);
+    // Contacts et scénarios suivent le même périmètre ; les contacts gardent leur rang d'origine (`lireEtatCrise`).
+    const contactsBruts = liste(crise.contacts);
+    const rangsVisibles = new Set(contactsBruts.flatMap((x, i) => (visible(x) ? [i] : [])));
     return {
       version,
-      etat: lireEtatCrise(data.crisis),
-      exercices: entrees(data, 'plans')
-        .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
-        .map((p) => ({ id: str(p.id), title: str(p.title) })),
+      etat: (() => {
+        const e = lireEtatCrise({ ...crise, cells: cellules, scenarios: liste(crise.scenarios).filter(visible) });
+        return { ...e, contacts: e.contacts.filter((x) => rangsVisibles.has(x.rang)) };
+      })(),
+      // Exercices planifiés : ceux de l'outil historique et les exercices de continuité saisis à l'écran, un seul registre (BUG-066).
+      exercices: [
+        ...entrees(data, 'plans')
+          .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
+          .map((p) => ({ id: str(p.id), title: str(p.title) })),
+        ...(
+          await this.r.g.db.k
+            .selectFrom('grc_objects')
+            .select(['id', 'name'])
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .where('smsi_id', 'in', [...lisibles])
+            .where(sql<string>`COALESCE(data->>'status','planned')`, '<>', 'done')
+            .orderBy('name')
+            .limit(200)
+            .execute()
+        ).map((o) => ({ id: `object:${o.id}`, title: o.name })),
+      ],
       fournisseursCritiques: entrees(data, 'suppliers')
         .filter((s) => s.critical === 'Oui' || s.hds === 'Oui')
         .map((s) => str(s.name)),
@@ -102,8 +133,16 @@ export class Crise {
       return resultat;
     });
   }
-  private cellule(c: Racine, id: string, active = false): JsonObject {
+  /** Cellule `id`, après contrôle de l'accès (en écriture) au périmètre qui la porte (BUG-044). */
+  /** Scénario `id`, après contrôle de l'accès (en écriture) au périmètre qui le porte (BUG-044). */
+  private async scenario(c: Racine, id: string, user: SessionUser): Promise<JsonObject> {
+    const x = parId(c.scenarios, id, 'Scénario');
+    await this.r.exigerPerimetre(user, x, true, 'Scénario absent.');
+    return x;
+  }
+  private async cellule(c: Racine, id: string, active: boolean, user: SessionUser): Promise<JsonObject> {
     const x = parId(c.cells, id, 'Cellule');
+    await this.r.exigerPerimetre(user, x, true, 'Cellule absente.');
     if (active && x.status !== 'Active') throw new HttpError(409, 'La cellule est clôturée.');
     return x;
   }
@@ -116,14 +155,29 @@ export class Crise {
       ip,
       'crisis.cell-opened',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c, data) => {
+      async (c, data) => {
         const mode = body.mode ?? 'Exercice';
-        if (body.scenario) parId(c.scenarios, body.scenario, 'Scénario');
-        if (body.plan && !entrees(data, 'plans').some((p) => p.id === body.plan && p.type === 'exo'))
+        const smsi = body.smsi ?? DEFAULT_SMSI;
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
+        if (body.scenario)
+          await this.r.exigerPerimetre(user, parId(c.scenarios, body.scenario, 'Scénario'), false, 'Scénario absent.');
+        if (body.plan?.startsWith('object:')) {
+          const lisibles = [...(await this.r.perimetresLisibles(user))];
+          const natif = await this.r.g.db.k
+            .selectFrom('grc_objects')
+            .select('id')
+            .where('id', '=', body.plan.slice(7))
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .where('smsi_id', 'in', lisibles)
+            .executeTakeFirst();
+          if (!natif) throw new HttpError(422, 'Exercice planifié absent.');
+        } else if (body.plan && !entrees(data, 'plans').some((p) => p.id === body.plan && p.type === 'exo'))
           throw new HttpError(422, 'Exercice planifié absent.');
         const start = now();
         const cell: JsonObject = {
           id: `CRISE-${Date.now().toString(36)}`,
+          smsi,
           createdAt: start,
           title: body.title || (mode === 'Réel' ? 'Crise' : 'Exercice de crise'),
           mode,
@@ -151,8 +205,8 @@ export class Crise {
       ip,
       'crisis.log-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const cell = this.cellule(c, id, true);
+      async (c) => {
+        const cell = await this.cellule(c, id, true, user);
         remplacer(c, 'cells', id, { ...cell, log: [...liste(cell.log), entreeLog(b.type, b.author, b.text)] });
         return { id };
       },
@@ -160,15 +214,20 @@ export class Crise {
   }
 
   /** Clôture : un exercice planifié lié est marqué « Réalisé » avec la synthèse de la main courante. */
-  cloturer(id: string, input: unknown, user: SessionUser, ip: string): Promise<{ id: string; plan: string }> {
+  cloturer(
+    id: string,
+    input: unknown,
+    user: SessionUser,
+    ip: string,
+  ): Promise<{ id: string; plan: string; exercice?: { ref: string; synthese: string; realise: boolean } }> {
     const b = AuteurCrise.parse(input);
     return this.r.modifier(
       user,
       ip,
       { module: 'incidents', action: 'crisis.cell-closed', reference: (x: { id: string }) => `legacy:crisis:${x.id}` },
-      async (data) => {
+      async (data, cx) => {
         const c = racine(data);
-        const cell = this.cellule(c, id, true);
+        const cell = await this.cellule(c, id, true, user);
         const fin = now();
         const log = [...liste(cell.log), entreeLog('Décision', b.author ?? '', 'Clôture de la cellule.')];
         remplacer(c, 'cells', id, { ...cell, end: fin, status: 'Clôturée', log });
@@ -185,6 +244,43 @@ export class Crise {
             retex: str(plan.retex) || syntheseRetex(lue, fin),
           });
         }
+        // Exercice saisi à l'écran : la fiche passe à « Réalisé » à la date de clôture, avec la synthèse de la main courante en
+        // observations ; le résultat (réussi, partiel, échec) reste à saisir par une personne, rien n'est inventé (BUG-066).
+        if (planId.startsWith('object:')) {
+          const lue = lireEtatCrise({ cells: [{ ...cell, log }] }).cells[0]!;
+          const synthese = syntheseRetex(lue, fin);
+          const db = surConnexion(cx);
+          const natif = await db
+            .selectFrom('grc_objects')
+            .select(['id', 'smsi_id', 'data'])
+            .where('id', '=', planId.slice(7))
+            .where('kind', '=', 'continuity_exercise')
+            .where('archived', '=', false)
+            .forUpdate()
+            .executeTakeFirst();
+          let realise = false;
+          if (natif) {
+            await this.r.g.access(natif.smsi_id, user, true, cx);
+            const fiche = isObject(natif.data as Json) ? (natif.data as JsonObject) : {};
+            await db
+              .updateTable('grc_objects')
+              .set({
+                data: JSON.stringify({
+                  ...fiche,
+                  status: 'done',
+                  performedAt: str(fiche.performedAt) || fin.slice(0, 10),
+                  observations: str(fiche.observations) || synthese,
+                }),
+                version: sql`version + 1`,
+                updated_by: user.username,
+                updated_at: new Date(),
+              })
+              .where('id', '=', natif.id)
+              .execute();
+            realise = true;
+          }
+          return { id, plan: '', exercice: { ref: planId, synthese, realise } };
+        }
         return { id, plan: plan ? planId : '' };
       },
     );
@@ -198,8 +294,8 @@ export class Crise {
       ip,
       'crisis.mode-changed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const cell = this.cellule(c, id, true);
+      async (c) => {
+        const cell = await this.cellule(c, id, true, user);
         const vers = cell.mode === 'Réel' ? 'Exercice' : 'Réel';
         remplacer(c, 'cells', id, {
           ...cell,
@@ -225,8 +321,8 @@ export class Crise {
       ip,
       'crisis.deadline-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const cell = this.cellule(c, id, true);
+      async (c) => {
+        const cell = await this.cellule(c, id, true, user);
         const due = new Date(Date.parse(str(cell.start)) + b.heures * 3600e3).toISOString();
         remplacer(c, 'cells', id, { ...cell, deadlines: [...liste(cell.deadlines), { label: b.label, due }] });
         return { id };
@@ -239,8 +335,8 @@ export class Crise {
       ip,
       'crisis.deadline-removed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const cell = this.cellule(c, id, true);
+      async (c) => {
+        const cell = await this.cellule(c, id, true, user);
         const l = liste(cell.deadlines);
         if (!l[k]) throw new HttpError(404, 'Échéance absente.');
         remplacer(c, 'cells', id, { ...cell, deadlines: l.filter((_, i) => i !== k) });
@@ -258,8 +354,8 @@ export class Crise {
       ip,
       'crisis.checklist',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const cell = this.cellule(c, id, true);
+      async (c) => {
+        const cell = await this.cellule(c, id, true, user);
         const sc = c.scenarios.find((s) => isObject(s) && s.id === cell.scenario);
         const items = isObject(sc) ? liste(sc.items) : [];
         if (!items[k]) throw new HttpError(404, 'Action de la check-list absente.');
@@ -279,16 +375,19 @@ export class Crise {
   }
 
   /* ------------------------------------------------------------------------------------------ contacts */
-  creerContact(user: SessionUser, ip: string): Promise<{ id: string }> {
+  creerContact(input: unknown, user: SessionUser, ip: string): Promise<{ id: string }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.contact-added',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
+      async (c) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         c.contacts = [
           ...c.contacts,
           {
+            smsi,
             createdAt: now(),
             name: '',
             org: '',
@@ -312,9 +411,10 @@ export class Crise {
       ip,
       'crisis.contact-updated',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
+      async (c) => {
         const x = c.contacts[k];
         if (!isObject(x)) throw new HttpError(404, 'Contact absent.');
+        await this.r.exigerPerimetre(user, x, true, 'Contact absent.');
         c.contacts = c.contacts.map((y, i) => (i === k ? { ...x, ...b } : y));
         return { id: String(k) };
       },
@@ -326,8 +426,10 @@ export class Crise {
       ip,
       'crisis.contact-removed',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c) => {
-        if (!isObject(c.contacts[k])) throw new HttpError(404, 'Contact absent.');
+      async (c) => {
+        const x = c.contacts[k];
+        if (!isObject(x)) throw new HttpError(404, 'Contact absent.');
+        await this.r.exigerPerimetre(user, x, true, 'Contact absent.');
         c.contacts = c.contacts.filter((_, i) => i !== k);
         return { id: String(k) };
       },
@@ -335,19 +437,22 @@ export class Crise {
     );
   }
   /** Ajoute comme contacts clés les fournisseurs critiques ou hébergeurs HDS du registre qui n'y figurent pas. */
-  importerFournisseurs(user: SessionUser, ip: string): Promise<{ id: string; ajoutes: number }> {
+  importerFournisseurs(input: unknown, user: SessionUser, ip: string): Promise<{ id: string; ajoutes: number }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.contacts-imported',
       (x: { id: string }) => `legacy:crisis:contact:${x.id}`,
-      (c, data) => {
+      async (c, data) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         let n = 0;
         for (const s of entrees(data, 'suppliers').filter((s) => s.critical === 'Oui' || s.hds === 'Oui')) {
-          if (c.contacts.some((x) => isObject(x) && x.org === s.name)) continue;
+          if (c.contacts.some((x) => isObject(x) && x.org === s.name && perimetreDe(x) === smsi)) continue;
           c.contacts = [
             ...c.contacts,
             {
+              smsi,
               createdAt: now(),
               name: '',
               org: str(s.name),
@@ -368,14 +473,17 @@ export class Crise {
   }
 
   /* ----------------------------------------------------------------------------------------- scénarios */
-  creerScenario(user: SessionUser, ip: string): Promise<{ id: string }> {
+  creerScenario(input: unknown, user: SessionUser, ip: string): Promise<{ id: string }> {
+    const smsi = PerimetreCrise.parse(input ?? {}).smsi ?? DEFAULT_SMSI;
     return this.ecrire(
       user,
       ip,
       'crisis.scenario-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
+      async (c) => {
+        await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
         const s: JsonObject = {
+          smsi,
           id: `SCN-${Date.now().toString(36)}`,
           createdAt: now(),
           title: 'Nouveau scénario',
@@ -395,8 +503,9 @@ export class Crise {
       ip,
       'crisis.scenario-updated',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        remplacer(c, 'scenarios', id, { ...parId(c.scenarios, id, 'Scénario'), ...b });
+      async (c) => {
+        const s = await this.scenario(c, id, user);
+        remplacer(c, 'scenarios', id, { ...s, ...b });
         return { id };
       },
     );
@@ -407,8 +516,8 @@ export class Crise {
       ip,
       'crisis.scenario-removed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        await this.scenario(c, id, user);
         remplacer(c, 'scenarios', id, null);
         return { id };
       },
@@ -421,8 +530,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-added',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         remplacer(c, 'scenarios', id, { ...s, items: [...liste(s.items), { phase: 'Gestion', t: '', owner: '' }] });
         return { id };
       },
@@ -435,8 +544,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-updated',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         const items = liste(s.items);
         if (!isObject(items[k])) throw new HttpError(404, 'Action absente.');
         remplacer(c, 'scenarios', id, {
@@ -453,8 +562,8 @@ export class Crise {
       ip,
       'crisis.scenario-action-removed',
       (x: { id: string }) => `legacy:crisis:${x.id}`,
-      (c) => {
-        const s = parId(c.scenarios, id, 'Scénario');
+      async (c) => {
+        const s = await this.scenario(c, id, user);
         const items = liste(s.items);
         if (!isObject(items[k])) throw new HttpError(404, 'Action absente.');
         remplacer(c, 'scenarios', id, { ...s, items: items.filter((_, i) => i !== k) });

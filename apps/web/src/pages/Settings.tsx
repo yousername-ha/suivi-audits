@@ -42,6 +42,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
+import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
 import { usePresence } from '../realtime';
 import { ME_KEY, useCan, useMe } from '../session';
 
@@ -775,6 +776,8 @@ function General({ p }: { p: P }) {
   const refresh = async () => {
     setStamp(Date.now());
     await qc.invalidateQueries({ queryKey: ['settings', 'general'] });
+    // Logo affiché dans l'en-tête et la tête du menu (refonte Neon) : rechargé après un dépôt ou un retrait.
+    await qc.invalidateQueries({ queryKey: CLE_LOGO_ORGANISATION });
   };
   return (
     <Stack>
@@ -904,7 +907,9 @@ function Cycle({ p }: { p: P }) {
 
 function Referentiels({ p }: { p: P }) {
   const refs = (p.info.referentiels ?? []) as { nom: string; exigences: number }[];
-  const comp = (p.info.complementaires ?? []) as { nom: string; exigences: number }[];
+  const comp = (p.info.complementaires ?? []) as { id?: string; nom: string; exigences: number }[];
+  // La valeur enregistrée est l'identifiant du référentiel ; une valeur plus ancienne peut être son nom.
+  const actif = comp.find((c) => (c.id ?? c.nom) === str(p.values.activeFw) || c.nom === str(p.values.activeFw));
   return (
     <Stack>
       <Table>
@@ -926,8 +931,8 @@ function Referentiels({ p }: { p: P }) {
       <div className="grille-formulaire__champs">
         <Select
           label="Référentiel complémentaire actif"
-          data={comp.map((c) => c.nom)}
-          value={str(p.values.activeFw) || null}
+          data={comp.map((c) => ({ value: c.id ?? c.nom, label: c.nom }))}
+          value={actif ? (actif.id ?? actif.nom) : null}
           onChange={(v) => p.set('activeFw', v ?? '')}
           disabled={p.ro}
           clearable
