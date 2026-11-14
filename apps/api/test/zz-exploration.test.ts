@@ -7,7 +7,8 @@ let t: TestApp, a: Agent;
 beforeAll(async () => { t = await createTestApp(); a = await login(t, await makeUser(t, 'jdt_admin', 'admin')); });
 afterAll(() => t.close());
 it('explore', { timeout: 180_000 }, async () => {
-  await chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' });
+  const b = await chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' });
+  require('node:fs').appendFileSync('/tmp/claude-0/ex.txt', 'BILAN ' + JSON.stringify(b.complements) + '\n');
   const S = DEFAULT_SMSI;
   for (const u of ['/api/plans', '/api/audit-suivi', '/api/evaluations-clausier', '/api/grc/smsis', '/api/carto/maps', '/api/carto/objects',
     `/api/grc/${S}/objects?kind=task_series`, `/api/grc/${S}/objects?kind=action`, `/api/grc/${S}/objects?kind=control`, `/api/grc/${S}/objects?kind=evidence`,

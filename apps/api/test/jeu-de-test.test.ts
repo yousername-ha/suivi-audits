@@ -97,6 +97,58 @@ describe('jeu de données de test', () => {
     const revue = (await a.get(`/api/grc/${DEFAULT_SMSI}/pilotage/revue/entrees`)).json();
     expect(revue.precedente).toMatchObject({ id: 'R1' });
     expect(revue.entrees.find((e: { id: string }) => e.id === 'a').faits.join(' ')).toMatch(/1 action décidée/);
+    // Compléments : les rubriques que le reste du jeu laissait vides sont alimentées, et se relisent par l'API.
+    expect(bilan.complements).toEqual({
+      plans: 6,
+      audit: { jours: 2, creneaux: 8, personnes: 5 },
+      clausier: { evaluations: 2, points: 26 },
+      perimetres: 2,
+      cartes: 2,
+      retex: 6,
+      continuite: { plans: 2, exercices: 1 },
+      controles: 2,
+      preuves: 1,
+      series: 1,
+      traitements: 1,
+    });
+    const plans = (await a.get('/api/plans')).json().plans as { type: string; status: string; result: string }[];
+    expect(plans).toHaveLength(11);
+    for (const type of ['formation', 'sensi', 'audit', 'exo'])
+      expect(plans.filter((p) => p.type === type).length, type).toBeGreaterThanOrEqual(2);
+    expect(plans.find((p) => p.type === 'exo' && p.status === 'Réalisé')).toMatchObject({
+      result: 'Partiellement atteint',
+    });
+    const audit = (await a.get('/api/audit-suivi')).json();
+    expect(audit.nextDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(audit.plan.days).toHaveLength(2);
+    expect(audit.plan.slots).toHaveLength(8);
+    expect(audit.plan.people).toHaveLength(5);
+    expect(audit.plan.slots.flatMap((s: { items: string[] }) => s.items)).toContain('A-8.5');
+    const clausier = (await a.get('/api/evaluations-clausier')).json().evaluations as { supplier: string }[];
+    expect(clausier.map((e) => e.supplier).sort()).toEqual(['SUP-001', 'SUP-003']);
+    const perimetres = (await a.get('/api/grc/smsis')).json() as { parentId: string | null }[];
+    expect(perimetres.filter((p) => p.parentId === DEFAULT_SMSI)).toHaveLength(2);
+    const cartes = (await a.get('/api/carto/maps')).json() as { view: string; layout: { nodes: object } }[];
+    expect(cartes.map((c) => c.view).sort()).toEqual(['context', 'process']);
+    for (const c of cartes) expect(Object.keys(c.layout.nodes).length, c.view).toBeGreaterThan(5);
+    const indispo = (incidents.incidents as { title: string; timeline: unknown[] }[]).find((i) =>
+      /Indisponibilité du logiciel/.test(i.title),
+    )!;
+    expect(indispo.timeline).toHaveLength(6);
+    for (const [kind, n] of [
+      ['continuity_plan', 2],
+      ['continuity_exercise', 1],
+      ['control', 2],
+      ['evidence', 1],
+      ['task_series', 2],
+    ] as const)
+      expect((await a.get(`/api/grc/${DEFAULT_SMSI}/objects?kind=${kind}`)).json().total, kind).toBe(n);
+    const r03 = (await a.get(`/api/grc/${DEFAULT_SMSI}/objects?kind=risk`))
+      .json()
+      .items.find((r: { data: { code?: string } }) => r.data.code === 'R03');
+    const liensR03 = JSON.stringify((await a.get(`/api/grc/${DEFAULT_SMSI}/links?ref=object:${r03.id}`)).json());
+    expect(liensR03).toMatch(/treats/);
+    expect(liensR03).toMatch(/Sauvegarder les dossiers hors site/);
   });
   it('refuse de se charger deux fois : les données de départ restent vides sauf demande explicite', async () => {
     await expect(chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' })).rejects.toThrow(
