@@ -137,6 +137,9 @@ export async function sources(g: Grc, smsi: string, user: SessionUser, search: s
     for (const [key, module] of Object.entries(allowed)) {
       if (!user.rights.can(module, 'lire') || (clesHistoriques && !clesHistoriques.includes(key))) continue;
       if (smsi !== DEFAULT_SMSI && key !== 'items' && !parPerimetre.includes(key)) continue;
+      // Sous un autre périmètre que le commun, ces listes longues (mesures, fiches de l'outil de suivi) ne sont proposées que sur
+      // une recherche saisie : sans elle, elles noieraient les fiches du périmètre dans les sélecteurs (BUG-041, rejeu e2e).
+      if (smsi !== DEFAULT_SMSI && !search.trim()) continue;
       const rows =
         key === 'scope' && isObject(state?.data.scope) ? [{ ...state.data.scope, id: 'instance' }] : state?.data[key];
       const entries: JsonObject[] = (Array.isArray(rows) ? (rows as unknown[]) : [])

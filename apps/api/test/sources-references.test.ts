@@ -33,6 +33,9 @@ describe('références proposées', () => {
       name: 'Processus sauvegarde du sous-périmètre',
     });
     expect(p.statusCode, p.body).toBe(200);
+    // Sans recherche, aucune liste longue : les sélecteurs de fiches du périmètre ne sont pas noyés.
+    const sansRecherche = await a.get(`/api/grc/${sous}/sources`);
+    expect((sansRecherche.json().items as { ref: string }[]).filter((x) => x.ref.startsWith('legacy:'))).toEqual([]);
     const r = await a.get(`/api/grc/${sous}/sources?search=sauvegarde`);
     expect(r.statusCode, r.body).toBe(200);
     const refs = (r.json().items as { ref: string }[]).map((x) => x.ref);
