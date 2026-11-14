@@ -28,6 +28,7 @@ import { ImportPanel } from './AdminImport';
 import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
+import { ReglagesAssistantPanel } from '../assistant/ReglagesAssistant';
 import { NotificationsPanel } from './AdminNotifications';
 import { OperationsPanel } from './AdminOperations';
 import { TypesProcessusPanel } from './AdminTypesProcessus';
@@ -213,6 +214,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'ecran',
     teinte: 'bleu',
     detail: () => <MursPanel />,
+  },
+  {
+    id: 'assistant',
+    cote: 'plateforme',
+    titre: 'Assistant RSSI',
+    resume: 'Fournisseur du modèle, clé, profils et périmètres que l’assistant peut lire.',
+    icone: 'bouclier',
+    teinte: 'violet',
+    detail: (m) => <ReglagesAssistantPanel onDirty={m} />,
   },
   {
     id: 'import',

@@ -51,6 +51,11 @@ describe('cartes de l’Administration : droits', () => {
       'details',
     ]);
   });
+  it('la carte de l’assistant demande son droit dédié, que ni l’administration ni les réglages ne donnent', () => {
+    for (const peut of [avec(['administration', 'lire']), avec(['parametres', 'lire']), avec(['assistant', 'lire'])])
+      expect(cartesVisibles(peut, 'plateforme')).not.toContain('assistant');
+    expect(cartesVisibles(avec(['assistant', 'administrer']), 'plateforme')).toEqual(['assistant']);
+  });
   it('les réglages seuls ouvrent les sections de paramètres', () => {
     const peut = avec(['parametres', 'lire']);
     expect(cartesVisibles(peut, 'plateforme')).toEqual([

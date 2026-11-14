@@ -37,8 +37,12 @@ import { AdresseSiteService } from './adresse-site.js';
 import { NotificationsMetier } from './notifications-metier.js';
 import { TypesProcessus } from './types-processus.js';
 import { Webauthn } from './webauthn.js';
+import { Assistant } from './assistant/index.js';
+import { DocumentsAssistant } from './assistant/documents.js';
+import { RondesAssistant } from './assistant/rondes.js';
+import { RelaisModele, type TransportModele } from './assistant/modele.js';
 
-export function createServices(cfg: Config, log: Logger) {
+export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
   const vault = new Vault(cfg.masterKey);
   const bus = new Bus(cfg.db, log);
@@ -68,6 +72,13 @@ export function createServices(cfg: Config, log: Logger) {
   const webauthn = new Webauthn(cfg, db, vault);
   auth.exigenceCle = (u) => webauthn.exigence(u);
   webauthn.surAlerte = (e) => alertesSecurite.cleSecurite(e);
+  const modele = options.modele ?? new RelaisModele(cfg.assistantRelais);
+  const assistant = new Assistant(db, vault, grc, modele, log);
+  const assistantRondes = new RondesAssistant(db, grc, assistant, modele, log);
+  assistant.rondes = assistantRondes;
+  const assistantDocuments = new DocumentsAssistant(db, vault, cfg, assistant, log);
+  assistant.documents = assistantDocuments;
+  assistant.organisation = historique;
   return {
     cfg,
     log,
@@ -96,6 +107,12 @@ export function createServices(cfg: Config, log: Logger) {
     cleSecours: new CleSecours(db, cfg),
     adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
+    /** Assistant RSSI (ADR 0086) : le transport du modèle est remplaçable (tests sans réseau). */
+    assistant,
+    /** Rondes autonomes de l'assistant (lot A3) : lancées par le tic de l'API ou à la demande. */
+    assistantRondes,
+    /** Texte et index de recherche des documents, pour l'assistant (lot A4). */
+    assistantDocuments,
     bus,
     presence: new Presence(db, bus),
     legacy,
@@ -119,6 +136,10 @@ export function createServices(cfg: Config, log: Logger) {
       webauthnByUser: limiter(20, 15 * 60e3),
       webauthnGestionByUser: limiter(30, 15 * 60e3),
       codeRecuperationByUser: limiter(5, 15 * 60e3),
+      /* Assistant RSSI (ADR 0086) : questions et tests du modèle, par compte. */
+      assistantByUser: limiter(30, 10 * 60e3),
+      assistantTestByUser: limiter(5, 10 * 60e3),
+      assistantRondeByUser: limiter(20, 60 * 60e3),
     },
   };
 }

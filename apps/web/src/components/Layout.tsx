@@ -26,6 +26,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { errorMessage } from '../api';
+import { AssistantGlobal } from '../assistant/AssistantGlobal';
 import { ALIAS_ADMINISTRATION, cartesVisibles } from '../administration-droits';
 import { famillesVisibles, localiser, type FamilleId } from '../navigation';
 import { logout as endSession } from '../logout';
@@ -77,6 +78,7 @@ function useAffichage() {
 
 export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
+  const [assistantPinned, setAssistantPinned] = useState(false);
   const [opened, { toggle, close }] = useDisclosure();
   const loc = useLocation();
   const nav = useNavigate();
@@ -101,6 +103,7 @@ export function Layout({ children }: { children: ReactNode }) {
   if (canReadBusiness(can)) outils.push(['/mur', 'Écran mural', 'mur']);
   // Demandes de contribution à un RETEX : visibles pour toute personne invitée, même sans droit sur les incidents.
   if (invitationsRetex.data?.length) outils.push(['/retex', 'Mes contributions RETEX', 'retex']);
+  // Assistant RSSI (ADR 0086) : présence flottante (AssistantGlobal), pas une entrée du menu.
   const active = (to: string) =>
     to === '/'
       ? loc.pathname === '/'
@@ -280,7 +283,7 @@ export function Layout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="shell">
+    <div className="shell" data-assistant-pinned={assistantPinned || undefined}>
       <div className="shell-top">
         <UpdateNotice />
         <CleSecoursNotice />
@@ -359,6 +362,8 @@ export function Layout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      {/* Hors de l’Outlet : l’instance et ses brouillons survivent aux changements de rubrique. */}
+      <AssistantGlobal onPinned={setAssistantPinned} />
       <Drawer
         opened={opened}
         onClose={close}
