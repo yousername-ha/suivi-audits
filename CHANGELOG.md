@@ -18,6 +18,12 @@ valider ». La sauvegarde de la mise à jour précède les migrations, c'est le 
 personnes, groupes et fonctions déjà désignés comme responsables d'une action, d'une tâche récurrente ou d'un plan d'actions peuvent désormais lire et renseigner ces
 éléments (lot 2).
 
+### Ajouté
+
+- **Sous-agents de développement** (outillage, sans effet sur l'application) : `codeur` (Opus) réalise un changement cadré sans commiter, rejoue
+  les contrôles et rend un rapport ; `conseiller` (Fable, lecture seule) donne un avis argumenté sur un point difficile. Usage décrit dans
+  `CLAUDE.md`. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Refonte Neon, lot 2 : fenêtres « Biseau » et lignes ouvrables** ([ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md),
