@@ -78,6 +78,14 @@ personnes, groupes et fonctions déjà désignés comme responsables d'une actio
   fiches déjà saisies restent inertes.
   _(Session « Projet audit_suivi Coeur ».)_
 
+- **Démonstration complète** : les données de démonstration (case de l'installation initiale et `suivi jeu-de-test`) alimentent aussi les rubriques jusqu'ici
+  vides : plans du SMSI (formation, sensibilisation, exercices PRA et de crise, avec leurs résultats), dates du cycle d'audit et organisation de l'audit (trois
+  jours, neuf créneaux, cinq participants), deux évaluations par le clausier, deux sites fictifs rattachés au périmètre de l'organisation (avec leurs fournisseurs
+  et une action), fournisseurs du périmètre, cartographie (vues contexte et processus), chronologie du RETEX d'un incident, plans de continuité et exercice,
+  plan de contrôle, registre des preuves, une seconde tâche récurrente et le plan d'action d'un risque du registre (traitement relié par « Traite » et son
+  action). Tout passe par l'API publique ; données entièrement fictives, dates relatives au jour du chargement. Aucune migration, aucune action sur le serveur.
+  _(Session « Projet audit_suivi Coeur ».)_
+
 ### Retiré
 
 - **Correspondances entre référentiels et rapprochements**, sur décision du RSSI du 12/11/2026
