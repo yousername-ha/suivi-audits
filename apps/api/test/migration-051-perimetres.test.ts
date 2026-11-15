@@ -53,6 +53,7 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
         '067_assistant_documents.sql',
         '068_assistant_constats.sql',
         '069_assistant_acces_par_defaut.sql',
+        '070_criteres_rattaches_fournisseurs.sql',
       ]);
       const { rows: lignes } = await t.svc.db.q<{
         id: string;

@@ -1381,6 +1381,13 @@ export interface SupCriterionHistory {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface SupCriterionLinks {
+  criterion_id: string;
+  supplier_id: string;
+  attached_by: string;
+  attached_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface SupEvaluationItems {
   id: Generated<string>;
   evaluation_id: string;
@@ -1662,6 +1669,7 @@ export interface DB {
   suivi_taches_recurrentes: SuiviTachesRecurrentes;
   sup_criteria: SupCriteria;
   sup_criterion_history: SupCriterionHistory;
+  sup_criterion_links: SupCriterionLinks;
   sup_evaluation_items: SupEvaluationItems;
   sup_evaluations: SupEvaluations;
   sup_scope_links: SupScopeLinks;

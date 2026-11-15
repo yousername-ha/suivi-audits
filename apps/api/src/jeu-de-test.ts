@@ -450,6 +450,8 @@ export interface BilanChargement {
   serie: number;
   liens: number;
   criteres: number;
+  /** Couples critère ↔ fournisseur rattachés (ADR 0098). */
+  rattachementsCriteres: number;
   evaluations: number;
   normes: BilanNormes | null;
   annexes: BilanAnnexes | null;
@@ -526,6 +528,7 @@ export async function chargerJeuDeTest(
       serie: 0,
       liens: 0,
       criteres: 0,
+      rattachementsCriteres: 0,
       evaluations: 0,
       normes: null,
       annexes: null,
@@ -758,6 +761,18 @@ export async function chargerJeuDeTest(
     const c2 = await critere('Certificat valide', ['selection', 'reevaluation'], [exigence('A-5.22')]);
     const c3 = await critere('Plan de continuité documenté', ['evaluation'], [exigence('A-5.30')]);
     bilan.criteres = 3;
+    // Critères rattachés aux fournisseurs qu'ils concernent (ADR 0098) : en masse depuis un critère, puis depuis une fiche.
+    const masse = async (critereId: string, fournisseurs: string[]) =>
+      (
+        await exiger<{ attached: string[] }>(
+          await appel('POST', `/api/suppliers/criteria/${critereId}/suppliers`, { attach: fournisseurs }),
+          'Rattachement des critères',
+        )
+      ).attached.length;
+    bilan.rattachementsCriteres += await masse(c1, ['SUP-001', 'SUP-002', 'SUP-003']);
+    bilan.rattachementsCriteres += await masse(c2, ['SUP-001', 'SUP-003']);
+    await exiger(await appel('PUT', `/api/suppliers/SUP-001/criteria/${c3}`), 'Rattachement d’un critère');
+    bilan.rattachementsCriteres++;
     const evaluation = (
       items: { criterionId: string; meets: boolean | null; result?: string }[],
       suivante: string | null,

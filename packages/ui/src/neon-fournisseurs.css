@@ -547,6 +547,10 @@
     width: auto;
   }
 }
+/* Détail des critères rattachés (ADR 0098) : une ligne par critère dans l'info-bulle, rendue hors du registre. */
+.fs-tooltip-ligne {
+  display: block;
+}
 @media (forced-colors: active) {
   .fs-stat,
   .fs-workspace,
