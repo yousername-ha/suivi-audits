@@ -1531,6 +1531,24 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesProduits {
+  id: Generated<string>;
+  fournisseur_id: string | null;
+  editeur: string;
+  nom: string;
+  version_produit: Generated<string>;
+  cpe: string | null;
+  famille: "systemes" | "reseau" | "messagerie" | "applications_metier" | "postes_de_travail" | "web";
+  criticite: "faible" | "moyenne" | "elevee";
+  responsable: ColumnType<JsonValue | null, string | null, string | null>;
+  origine: Generated<"saisie" | "ekialis" | "tenable">;
+  version: Generated<number>;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface WallScreens {
   id: Generated<string>;
   name: string;
@@ -1693,6 +1711,7 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_produits: VulnerabilitesProduits;
   wall_screens: WallScreens;
   webauthn_challenges: WebauthnChallenges;
   webauthn_credentials: WebauthnCredentials;

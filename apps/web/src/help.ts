@@ -89,6 +89,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-produits',
+    title: 'Vulnérabilités : produits surveillés',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/produits',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Produits surveillés. Le registre appartient à l’organisation, pas à un périmètre : il liste les produits (éditeur, produit, version) dont la plateforme suivra les vulnérabilités publiées. La veille elle-même n’est pas encore en service.',
+      'Ajouter un produit : éditeur, nom du produit, famille et criticité sont obligatoires ; la version, l’identifiant CPE 2.3 et le responsable (personne, groupe ou fonction) sont facultatifs. Avec le droit de lire les fournisseurs, vous pouvez lier le produit à un fournisseur du registre de l’organisation.',
+      'Un produit n’est inscrit qu’une fois : même éditeur, même produit et même version, sans tenir compte des majuscules. Une fiche modifiée entre-temps par quelqu’un d’autre est refusée : rechargez la page avant d’enregistrer.',
+      'Le filtre « Famille » restreint la liste. Créer et modifier demandent le droit de modifier le module Vulnérabilités ; supprimer demande le droit de suppression. Chaque ajout, modification et suppression est inscrit au journal d’audit.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours par démarche',
     permission: 'pilotage:lire',

@@ -39,6 +39,7 @@ import { tableauDeBordRoutes } from './routes/tableau-de-bord.js';
 import { cartoRoutes } from './routes/carto.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { assistantRoutes } from './routes/assistant.js';
+import { vulnerabilitesRoutes } from './routes/vulnerabilites.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
 import { ReadyOut, VersionOut } from '@suivi/shared';
 import { MAX_SCHEMA, MIN_SCHEMA } from '@suivi/shared/legacy';
@@ -141,6 +142,7 @@ export function allRoutes(): RouteDef[] {
     ...parcoursRoutes,
     ...calendriersPlateformeRoutes,
     ...assistantRoutes,
+    ...vulnerabilitesRoutes,
     ...notificationsRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,

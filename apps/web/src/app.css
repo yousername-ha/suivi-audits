@@ -4516,3 +4516,9 @@ tr[data-importe='oui'] {
 .champ-choix {
   min-width: 9em;
 }
+
+/* Produits surveillés (module Vulnérabilités, ADR 0100) : identifiant CPE long, coupé n'importe où. */
+.produit-cpe {
+  font-family: var(--mantine-font-family-monospace);
+  overflow-wrap: anywhere;
+}

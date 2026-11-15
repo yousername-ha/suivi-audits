@@ -151,6 +151,8 @@ export const TABLES_TRAVAIL = [
   'cfg_items',
   'cfg_versions',
   'cfg_usages',
+  // Module Vulnérabilités (ADR 0100) : produits surveillés saisis par les utilisateurs.
+  'vulnerabilites_produits',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

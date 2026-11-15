@@ -6,7 +6,26 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur.** **Migration automatique `072`** (module Vulnérabilités, lot V1,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (une table `vulnerabilites_produits`, deux index, contrainte des
+modules recréée pour admettre `vulnerabilites`), durée négligeable, sans reprise de données : le registre des produits
+surveillés démarre vide. Le module est actif après la mise à jour ; il se désactive dans Administration > Modules.
+(session « Module surveillance vulnérabilités SMSI »)
+
+### Ajouté
+
+- **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  [cadrage](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Nouveau module de droits `vulnerabilites`, désactivable, rangé
+  parmi les modules métier : l'administrateur et le RSSI ont tous les droits, le contributeur lit et modifie, le lecteur lit,
+  l'auditeur externe peut recevoir la lecture. Registre des produits surveillés **au niveau de l'organisation** (sans
+  périmètre, comme les fournisseurs) : éditeur, produit, version, identifiant CPE 2.3 facultatif, famille (systèmes, réseau,
+  messagerie, applications métier, postes de travail, web), criticité (faible, moyenne, élevée), responsable facultatif
+  (personne, groupe ou fonction), fournisseur facultatif du registre de l'organisation (vérifié avec les droits de la personne),
+  origine (`saisie` seule produite à ce stade). API `/api/vulnerabilites/produits` (lister avec filtre par famille, lire,
+  créer, modifier et supprimer avec `If-Match`) ; doublon éditeur, produit et version refusé sans tenir compte de la casse ;
+  journal `vulnerabilites.produit.cree`, `.modifie`, `.supprime`. Écran Risques > Vulnérabilités > « Produits surveillés »
+  (liste, filtre par famille, ajout, modification, suppression), visible avec la lecture du module. Ni veille, ni connecteur,
+  ni faille à ce stade (lots V2 et suivants). (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

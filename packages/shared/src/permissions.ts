@@ -12,6 +12,7 @@ export const BUSINESS_MODULES = [
   'conformite',
   'incidents',
   'cartographie',
+  'vulnerabilites',
 ] as const;
 export const MODULES = [
   ...BUSINESS_MODULES,
@@ -34,6 +35,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   conformite: 'Conformité (ReCyF)',
   incidents: 'Incidents et PCA/PRA',
   cartographie: 'Cartographie du SMSI',
+  vulnerabilites: 'Vulnérabilités',
   documents: 'Documents et liens',
   import_export: 'Import et export',
   administration: 'Administration (comptes, groupes, rôles, sessions, journal)',

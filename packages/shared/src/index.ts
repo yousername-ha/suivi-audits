@@ -58,3 +58,4 @@ export * from './notifications.js';
 export * from './texte.js';
 export * from './assistant.js';
 export * from './flux-externes.js';
+export * from './vulnerabilites.js';

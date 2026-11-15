@@ -38,6 +38,7 @@ const PilotagePage = lazy(() => import('./pages/Pilotage').then((m) => ({ defaul
 import { HomePage } from './pages/Home';
 import { ExportsPage } from './pages/Exports';
 import { RegistresPage } from './registres/Registres';
+import { ProduitsSurveillesPage } from './vulnerabilites/ProduitsSurveilles';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
 import { LoginPage } from './pages/Login';
@@ -120,6 +121,8 @@ const router = createBrowserRouter([
       { path: '/grc', element: <Navigate to="/pilotage" replace /> },
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
+      { path: '/vulnerabilites', element: <Navigate to="/vulnerabilites/produits" replace /> },
+      { path: '/vulnerabilites/produits', element: <ProduitsSurveillesPage /> },
       { path: '/aide', element: <HelpPage /> },
       { path: '/assistant/:id?', element: <AssistantPage /> },
       { path: '/retex/:incident?', element: <MesContributionsRetexPage /> },

@@ -94,7 +94,7 @@ additive éventuelle, les droits serveur, les tests et la documentation. Une PR 
 
 ## 5. Ce qu'il faut du RSSI
 
-- **V0** : la validation de l'ADR 0100 et la réponse à ses douze points ouverts.
+- **V0** : la validation de l'ADR 0100 et la réponse à ses treize points ouverts.
 - **V5** : Tenable Security Center est en version **6.9** (indiqué le 15/11/2026) ; un compte **en lecture seule** et ses clés d'API,
   saisies dans l'interface et jamais communiquées à une session ; une instance de recette
   joignable par l'exécutant, ou des **exemples de réponses anonymisés** (aucun nom de machine ni adresse réels : le dépôt est

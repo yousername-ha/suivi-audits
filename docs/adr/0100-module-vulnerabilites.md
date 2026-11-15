@@ -241,3 +241,5 @@
 10. Durée de vie des repères : renouvelés à chaque échange avec le modèle (proposé), ou stables d'un échange à l'autre ?
 11. Zero-day : toute faille dont l'exploitation est avérée (proposé), ou seulement celles sans correctif publié ?
 12. Fenêtre d'alerte critique : au niveau 4 seulement (proposé), ou dès le niveau 3 (exploitée, produit à confirmer) ?
+13. Droits par défaut : comme les autres modules métier (retenu au lot V1 : le contributeur lit et modifie, le lecteur lit), ou
+    réservés à l'administrateur et au RSSI comme l'assistant ? À trancher avant l'arrivée des failles et des machines.

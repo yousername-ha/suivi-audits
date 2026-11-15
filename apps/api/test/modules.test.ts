@@ -40,7 +40,7 @@ describe('B1 configuration des modules', () => {
   it('tous actifs par défaut, registre accessible aux sessions complètes', async () => {
     const state = (await a.get('/api/modules')).json();
     expect(state.disabled).toEqual([]);
-    expect(state.registry).toHaveLength(14);
+    expect(state.registry).toHaveLength(15);
     expect(state.registry.filter((m: { protected: boolean }) => m.protected)).toHaveLength(2);
     const r = await login(t, reader);
     expect((await r.get('/api/modules')).statusCode).toBe(200);

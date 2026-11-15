@@ -42,6 +42,7 @@ import { DocumentsAssistant } from './assistant/documents.js';
 import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
+import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
@@ -92,6 +93,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
+    /** Module Vulnérabilités (ADR 0100) : registre des produits surveillés (lot V1). */
+    vulnerabilites: { produits: new ProduitsSurveilles(db, grc) },
     modules,
     flux,
     updates: new Updates(cfg, db, settings, alertes, flux),
