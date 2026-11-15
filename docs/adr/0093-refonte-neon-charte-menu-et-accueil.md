@@ -5,6 +5,9 @@
 - Numéro : 0092 retenu par le RSSI le 13/11/2026, devenu **0093** à l'intégration de `claude-suivi-smsi`, où l'ADR 0092 a été
   attribuée entre-temps à la [refonte des droits](0092-refonte-des-droits-pyramide-des-perimetres.md).
 - Date : 2026-11-13
+- **Modifiée par** l'[ADR 0099](0099-animations-en-continu-sans-bouton-de-pause.md) (15/11/2026) : les boutons de pause des
+  animations (menu, points 2 et 15, et écrans des lots 3 à 8) sont retirés ; les animations tournent en continu, arrêtées par
+  le mouvement réduit, l'onglet masqué et l'impression.
 - Rédaction : session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`)
 - Remplace, pour la direction graphique, l'[ADR 0015](0015-refonte-visuelle-sauge.md) (palette Sauge). Les autres
   principes de l'ADR 0015 restent : Inter locale, styles partagés dans `packages/ui`, rayons de 6 à 12 px, mouvement réduit.

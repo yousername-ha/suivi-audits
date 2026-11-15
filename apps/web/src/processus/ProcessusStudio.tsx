@@ -68,9 +68,8 @@ export function ProcessusStudio({
   const [vue, setVue] = useState<'cartes' | 'liste'>('cartes');
   const [filtres, setFiltres] = useState<FiltresProcessus>(FILTRES_VIDES);
   const [deplies, setDeplies] = useState<Record<string, boolean>>({});
-  const [pause, setPause] = useState(false),
-    reduit = useReducedMotion();
-  const anime = !pause && !reduit;
+  // Animations en continu (ADR 0099) : seule la préférence système de mouvement réduit les arrête.
+  const anime = !useReducedMotion();
   const indisponibles = NATURES_RATTACHEMENT.filter((n) => donnees.candidats[n] === null);
   const visibles = filtrerProcessus(donnees.processus, donnees.types, filtres, indisponibles);
   const groupes = regrouperProcessus(visibles, donnees.types);
@@ -298,22 +297,6 @@ export function ProcessusStudio({
                 </div>
               </Popover.Dropdown>
             </Popover>
-            <button
-              type="button"
-              className="pr-tool"
-              disabled={!!reduit}
-              aria-label={anime ? 'Mettre les animations en pause' : 'Reprendre les animations'}
-              title={
-                reduit
-                  ? 'Mouvement réduit activé sur cet appareil'
-                  : anime
-                    ? 'Mettre les animations en pause'
-                    : 'Reprendre les animations'
-              }
-              onClick={() => setPause((v) => !v)}
-            >
-              <Icone name={anime ? 'pause' : 'play'} />
-            </button>
             {modifiable && (
               <Button
                 onClick={(e) => {

@@ -21,6 +21,16 @@ de données. _(Session « Projet audit_suivi Coeur ».)_
   (« 3/5 critères remplis · 1 non »), détail au survol. « Évaluer » coche d'office les critères rattachés. Un critère retiré
   reste rattaché mais n'est plus proposé. Jeu de démonstration complété. _(Session « Projet audit_suivi Coeur ».)_
 
+### Modifié
+
+- **Animations en continu, sans bouton de pause** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md),
+  décision du RSSI du 15/11/2026) : les boutons de pause et de reprise des animations sont retirés du menu latéral, du Plan
+  d'actions et des tâches récurrentes, des chemins EBIOS RM, du panneau de l'assistant, de Processus, des Parties intéressées,
+  du PESTEL, du SWOT, des Objectifs et indicateurs et du graphe des Périmètres, avec les préférences de pause gardées dans le
+  navigateur (menu, tâches). Les animations, décoratives, tournent en continu ; la préférence système « réduire les
+  animations », l'onglet masqué, l'impression et le réglage « Animées / Automatiques / Arrêtées » du parcours ISO et des
+  chemins EBIOS les arrêtent toujours. Aucune migration, aucune API. _(Session « Projet audit_suivi Coeur ».)_
+
 ## [7.1.1] — 2026-11-14
 
 Version corrective : aucune migration, aucune nouvelle dépendance. Elle termine la **refonte graphique Neon** (lots 3 à 8,

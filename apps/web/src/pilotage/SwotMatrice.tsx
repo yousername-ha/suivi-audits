@@ -80,8 +80,6 @@ const ICONES: Record<string, ReactNode> = {
       <path d="M12 9v5m0 3h.01" />
     </>
   ),
-  pause: <path d="M8 5v14M16 5v14" />,
-  play: <path d="m8 4 12 8-12 8Z" />,
   expand: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5" />,
   edit: <path d="m15 4 5 5-11 11-6 1 1-6Zm-1 1 5 5" />,
   link: <path d="m10 13 4-4m-6 7-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m0 12a4 4 0 0 0 6 0l5-5a4 4 0 0 0-6-6l-1 1" />,
@@ -157,10 +155,10 @@ export function SwotMatrice({
   const [params, setParams] = useSearchParams();
   const commun = smsi === SOCLE;
   const [lecture, setLecture] = useState<QuadrantSwot | null>(null),
-    [resume, setResume] = useState(false),
-    [pause, setPause] = useState(false);
+    [resume, setResume] = useState(false);
+  // Animations en continu (ADR 0099) : seule la préférence système de mouvement réduit les arrête.
   const reduit = useReducedMotion();
-  const anime = !reduit && !pause;
+  const anime = !reduit;
   const origineLecture = useRef<HTMLButtonElement | null>(null);
   const registre = useRef<HTMLElement>(null);
   const titreRegistre = useId();
@@ -407,17 +405,6 @@ export function SwotMatrice({
                     </div>
                   </div>
                   <div className="swot-matrix-actions">
-                    {!reduit && (
-                      <button
-                        type="button"
-                        className="swot-button swot-motion-control"
-                        aria-pressed={pause}
-                        onClick={() => setPause((v) => !v)}
-                      >
-                        <Icone nom={pause ? 'play' : 'pause'} />
-                        {pause ? 'Reprendre les animations' : 'Pause animations'}
-                      </button>
-                    )}
                     <button
                       type="button"
                       className="swot-button"

@@ -5,8 +5,8 @@
      deux thèmes ; teintes des six facteurs usuels, les autres facteurs reprennent une teinte par rang ;
    - dimensions en rem, rayons bornés à 12 px, aucun texte sous 0,6875 rem ; au-delà de six facteurs, avec un libellé
      long ou sur une largeur de téléphone, la constellation devient une grille dans la même charte ;
-   - mouvements par transform et opacity seulement, jamais sur un texte ; arrêtés par la pause, la préférence de mouvement
-     réduit et l'impression ; contours système en couleurs forcées. */
+   - mouvements par transform et opacity seulement, jamais sur un texte ; en continu, sans bouton de pause (ADR 0099), arrêtés
+     par la préférence de mouvement réduit et l'impression ; contours système en couleurs forcées. */
 .pestel-studio {
   --pestel-ink: var(--mantine-color-text);
   --pestel-muted: var(--mantine-color-dimmed);
@@ -236,10 +236,6 @@
   margin-top: 0.3125rem;
   font-size: 1.125rem;
   font-weight: 650;
-}
-.pestel-stage-heading .pestel-button {
-  border-color: color-mix(in srgb, var(--pestel-blue) 55%, var(--pestel-edge));
-  color: var(--pestel-blue);
 }
 .pestel-explorer {
   display: grid;
@@ -1275,7 +1271,6 @@
     animation: none;
   }
   .pestel-toolbar,
-  .pestel-stage-heading .pestel-button,
   .pestel-factor-empty .pestel-button,
   .pestel-registry > footer .pestel-button {
     display: none;

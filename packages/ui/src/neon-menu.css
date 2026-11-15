@@ -3,7 +3,8 @@
    Une seule charte de navigation, identique en clair et en sombre et quelle que soit la rubrique : le contenu garde son
    thème. Fond opaque (aucune transparence globale), une teinte par identité d'entrée (data-identite), jamais par
    position. Les pictogrammes bougent à l'intérieur du dessin, uniquement par transform et opacity (aucun recalcul de mise
-   en page) ; pause (data-mouvement='pause', bouton du pied de menu ou onglet masqué) et mouvement réduit les arrêtent.
+   en page), en continu, sans bouton de pause (ADR 0099) ; onglet masqué (data-mouvement='pause'), mouvement réduit et
+   impression les arrêtent.
    Couleurs : jetons MENU (tokens.ts), variables --menu-*. Chargée après styles.css, app.css et neon.css.
    ======================================================================== */
 :root {
@@ -336,7 +337,7 @@
   stroke-width: 1.2;
 }
 
-/* ---------------------------------------------------------------- Pied du menu : organisation, thème, pause, version */
+/* ---------------------------------------------------------------- Pied du menu : organisation, thème, version */
 .nav-neon .nav-footer {
   padding-top: 0.875rem;
   border-top: 1px solid var(--menu-trait);
@@ -361,37 +362,21 @@
   flex: 1;
   min-width: 0;
 }
-.nav-neon .nav-footer .mantine-Button-root,
-.nav-neon .nav-pause {
+.nav-neon .nav-footer .mantine-Button-root {
   color: var(--menu-commande);
   border: 1px solid var(--menu-commande-trait);
   border-radius: 0.5rem;
   background: linear-gradient(145deg, var(--menu-survol), var(--menu-famille-fond));
   box-shadow: inset 0 1px color-mix(in srgb, var(--menu-selection) 5%, transparent);
 }
-.nav-neon .nav-footer .mantine-Button-root:hover,
-.nav-neon .nav-pause:hover {
+.nav-neon .nav-footer .mantine-Button-root:hover {
   color: var(--menu-selection);
   background: var(--menu-survol);
   border-color: var(--menu-survol-trait);
 }
-.nav-neon .nav-footer .mantine-Button-root:focus-visible,
-.nav-neon .nav-pause:focus-visible {
+.nav-neon .nav-footer .mantine-Button-root:focus-visible {
   outline: 2px solid var(--menu-focus);
   outline-offset: 1px;
-}
-.nav-pause {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 2.25rem;
-  min-height: 1.875rem;
-  padding: 0;
-  cursor: pointer;
-}
-.nav-pause svg {
-  width: 0.875rem;
-  height: 0.875rem;
 }
 .nav-neon .app-version,
 .shell-nav .nav-neon .app-version {
@@ -412,9 +397,6 @@
   }
   .nav-commandes {
     flex-direction: column;
-  }
-  .nav-pause {
-    width: 100%;
   }
 }
 
@@ -458,7 +440,7 @@
 
 /* ---------------------------------------------------------------- Mouvements des formes (décoratifs)
    Huit pictogrammes de famille ; texte, position des lignes et zones de clic fixes. Repos = dessin complet (coche
-   visible) : la pause, le mouvement réduit et l'impression retirent simplement l'animation. */
+   visible) : l'onglet masqué, le mouvement réduit et l'impression retirent simplement l'animation. */
 .nav-icone--neon .mw-motion {
   transform-box: view-box;
   transform-origin: 16px 16px;
@@ -493,12 +475,6 @@
   }
   .nav-neon:not([data-mouvement='pause']) .mw-document {
     animation: mw-document 5s ease-in-out -2s infinite;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  /* Aucun mouvement : la commande de pause n'a pas d'objet. */
-  .nav-pause {
-    display: none;
   }
 }
 @keyframes mw-tiles {

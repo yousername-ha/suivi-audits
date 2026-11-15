@@ -2,8 +2,8 @@
 /* Teintes : un sens par teinte (orange « à faire », bleu en cours, vert terminé ou OK, rouge bloqué ou KO, gris annulé ou
    NA), toujours doublé d'un texte. Le retard n'est pas une teinte : contour pointillé rouge et mention « En retard ».
    Couleurs : variables Mantine d'état (contrastes vérifiés dans tokens.ts) et palette Neon. Animation : opacité et
-   transformation d'un halo seulement ; le texte ne bouge jamais ; pause, mouvement réduit, impression et couleurs
-   forcées l'arrêtent. Lignes et repères gardent les classes de la Timeline précédente (tests de bout en bout). */
+   transformation d'un halo seulement ; le texte ne bouge jamais ; en continu, sans bouton de pause (ADR 0099) ;
+   onglet masqué, mouvement réduit, impression et couleurs forcées l'arrêtent. Lignes et repères gardent les classes de la Timeline précédente (tests de bout en bout). */
 
 /* ---------- Teintes ---------- */
 :is(.taches-studio, .validation-rapide) [data-ton] {
@@ -41,7 +41,7 @@
   --tache-retard: var(--mantine-color-red-5);
 }
 
-/* ---------- En-tête : synthèse, vues en icônes, pause ---------- */
+/* ---------- En-tête : synthèse, vues en icônes ---------- */
 .taches-entete {
   display: flex;
   flex-wrap: wrap;
@@ -106,14 +106,6 @@
 .taches-commandes {
   flex: 0 1 auto;
   min-width: 0;
-}
-.taches-pause {
-  block-size: auto;
-  min-block-size: 1.625rem;
-}
-.taches-pause .mantine-Button-label {
-  white-space: normal;
-  text-align: start;
 }
 .taches-vues {
   display: inline-flex;
@@ -630,8 +622,7 @@
 @media print {
   .tache-etat[data-pouls]::after,
   .grc-timeline__pouls,
-  .taches-vues,
-  .taches-pause {
+  .taches-vues {
     display: none;
   }
   .timeline-studio,
