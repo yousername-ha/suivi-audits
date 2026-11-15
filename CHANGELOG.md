@@ -56,7 +56,9 @@ _(Session « Projet audit_suivi Coeur ».)_
   système > Flux vers l'extérieur, au changement et toutes les 30 minutes. L'assistant ne joint son relais que lorsque son
   flux est ouvert et appliqué, et le dit sinon. Profils, services et modules viennent de listes fermées dont un test
   d'architecture vérifie la concordance avec le registre. Guides mis à jour (installation, assistant Mistral, recette
-  Windows) : plus de `docker compose --profile … up -d`. _(Session « Projet audit_suivi Coeur ».)_
+  Windows) : plus de `docker compose --profile … up -d`. Docker Hub (image ClamAV, téléchargée à la première activation)
+  figure parmi les destinations de l'antivirus dans la fenêtre de validation et les flux à autoriser sur le pare-feu.
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »

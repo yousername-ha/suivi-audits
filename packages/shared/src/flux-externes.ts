@@ -140,6 +140,11 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
         hote: 'Miroirs des signatures ClamAV (database.clamav.net)',
         ports: 'TCP 443 (HTTPS)',
       },
+      {
+        sens: 'sortant',
+        hote: 'Docker Hub (registry-1.docker.io), téléchargement de l’image ClamAV à la première activation',
+        ports: 'TCP 443 (HTTPS)',
+      },
     ],
     porteur: {
       type: 'conteneur',
@@ -152,7 +157,10 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       'Des demandes de téléchargement des signatures (adresse IP du serveur, version de ClamAV) ; aucun fichier déposé ne sort.',
     reglage: { libelle: 'Configuration système > Sécurité', lien: '/systeme/securite' },
     activation: { par: 'flux', geste: 'Bouton « Activer l’analyse antivirus »' },
-    pareFeu: ['Sortie TCP 443 du serveur vers les miroirs ClamAV.'],
+    pareFeu: [
+      'Sortie TCP 443 du serveur vers les miroirs ClamAV.',
+      'Sortie TCP 443 du serveur vers Docker Hub (registry-1.docker.io, auth.docker.io, production.cloudflare.docker.com), pour l’image ClamAV.',
+    ],
     siFerme:
       'Les fichiers déposés ne sont pas analysés : ils sont acceptés et marqués « non analysé », comme sans antivirus.',
   },
