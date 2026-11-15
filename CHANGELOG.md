@@ -6,7 +6,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur.** **Migration automatique `070`** (critères rattachés aux fournisseurs,
+[ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : additive (une table, un index), durée négligeable, sans reprise
+de données. _(Session « Projet audit_suivi Coeur ».)_
+
+### Ajouté
+
+- **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
+  critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
+  fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »
+  sur la liste filtrée) et enregistre en une seule opération ; la fiche d'un fournisseur permet aussi de rattacher ou détacher
+  un critère (droit `fournisseurs:administrer`, journal `supplier.criterion.attached` / `detached`). La fiche montre chaque
+  critère rattaché avec sa dernière réponse (Oui, Non ou Non évalué) et sa date ; la ligne du registre en donne le résumé
+  (« 3/5 critères remplis · 1 non »), détail au survol. « Évaluer » coche d'office les critères rattachés. Un critère retiré
+  reste rattaché mais n'est plus proposé. Jeu de démonstration complété. _(Session « Projet audit_suivi Coeur ».)_
 
 ## [7.1.1] — 2026-11-14
 

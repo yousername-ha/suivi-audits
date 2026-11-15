@@ -30,6 +30,7 @@ describe('jeu de données de test', () => {
       ecarts: 6,
       serie: 1,
       criteres: 3,
+      rattachementsCriteres: 6,
       evaluations: 2,
     });
     expect(bilan.liens).toBeGreaterThanOrEqual(6);
@@ -86,6 +87,23 @@ describe('jeu de données de test', () => {
     expect(fournisseurs).toHaveLength(5);
     expect(fournisseurs.filter((f) => f.current)).toHaveLength(2);
     expect(fournisseurs.find((f) => f.id === 'SUP-003')!.toReview).toBe(true);
+    // Critères rattachés (ADR 0098) : dernière réponse de chacun, « non évalué » pour un critère jamais évalué.
+    const reponses = (id: string) =>
+      (
+        fournisseurs.find((f) => f.id === id) as unknown as {
+          criteria: { label: string; answer: { meets: boolean | null } | null }[];
+        }
+      ).criteria.map((k) => [k.label, k.answer ? k.answer.meets : 'jamais']);
+    expect(reponses('SUP-001')).toEqual([
+      ['Authentification multifacteur', true],
+      ['Certificat valide', true],
+      ['Plan de continuité documenté', null],
+    ]);
+    expect(reponses('SUP-002')).toEqual([['Authentification multifacteur', 'jamais']]);
+    expect(reponses('SUP-003')).toEqual([
+      ['Authentification multifacteur', false],
+      ['Certificat valide', false],
+    ]);
     const boites = (await a.get(`/api/grc/${DEFAULT_SMSI}/pilotage/boites`)).json() as {
       ref: string;
       actionsOuvertes: number;

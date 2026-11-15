@@ -9,7 +9,9 @@ import { Filtres } from '../components/Filtres';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   attentionFournisseur,
+  detailCritere,
   jourFr,
+  resumeCriteresLigne,
   tonCertificats,
   type ChampFournisseur,
   type Fournisseur,
@@ -95,6 +97,30 @@ function Evaluation({ f }: { f: Fournisseur }) {
       {e.nextReviewAt && <small className="fs-context">Réévaluation {jourFr(e.nextReviewAt)}</small>}
       {f.toReview && <PuceFournisseur ton="bad">À réévaluer</PuceFournisseur>}
     </>
+  );
+}
+
+/** Critères rattachés (ADR 0098) : résumé compact sur la ligne, détail de chaque critère au survol ; la fiche du fournisseur,
+    ouverte d'un clic sur la ligne, en donne le détail complet (aussi au clavier). */
+function CriteresLigne({ f }: { f: Fournisseur }) {
+  const r = resumeCriteresLigne(f.criteria);
+  if (!f.criteria.length) return <small>{r.texte}</small>;
+  return (
+    <Tooltip
+      label={f.criteria.map((k) => (
+        <span key={k.id} className="fs-tooltip-ligne">
+          {detailCritere(k)}
+        </span>
+      ))}
+      multiline
+      w="var(--suivi-champ-m)"
+      withArrow
+      openDelay={300}
+    >
+      <span className="fs-chip" data-tone={r.ton}>
+        {r.texte}
+      </span>
+    </Tooltip>
   );
 }
 
@@ -345,7 +371,7 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
                   Contrôles <span className="fs-th-sub">Prochain</span>
                 </Table.Th>
                 <Table.Th scope="col">
-                  Évaluation courante <span className="fs-th-sub">Périmètres</span>
+                  Évaluation courante <span className="fs-th-sub">Critères rattachés · Périmètres</span>
                 </Table.Th>
                 <Table.Th scope="col" className="col-actions">
                   <span className="fs-visually-hidden">Actions</span>
@@ -420,6 +446,7 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
                   <Table.Td>
                     <div className="fs-cell">
                       <Evaluation f={f} />
+                      <CriteresLigne f={f} />
                       <small>{f.scopes.length ? `${f.scopes.length} rattaché(s)` : 'Aucun périmètre'}</small>
                     </div>
                   </Table.Td>

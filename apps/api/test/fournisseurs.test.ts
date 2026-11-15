@@ -2,7 +2,7 @@
    (aucun fourni), évaluations immuables indépendantes des périmètres, rattachement à plusieurs périmètres. Données fictives. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FrameworkDefinition } from '@suivi/shared';
-import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
+import { Agent, createTestApp, login, makeUser, type TestApp, type TestUser } from './helpers.js';
 
 let t: TestApp,
   a: Agent,
@@ -480,5 +480,176 @@ describe('critères et évaluations : détails (équivalence de la conversion Ky
       i2 = hist2.findIndex((x) => x.id === e2.id);
     expect(i2).toBeLessThan(i1);
     expect(hist2.every((x, i) => i === 0 || hist2[i - 1]!.evaluatedAt >= x.evaluatedAt)).toBe(true);
+  });
+});
+
+describe('critères rattachés aux fournisseurs (ADR 0098)', () => {
+  let k1: { id: string; version: number }, k2: { id: string; version: number };
+  let s1: string, s2: string, s3: string, s4: string;
+  type Ligne = {
+    id: string;
+    criteria: {
+      id: string;
+      label: string;
+      archived: boolean;
+      answer: { meets: boolean | null; evaluatedAt: string; evaluationId: string } | null;
+    }[];
+  };
+  const ligne = async (id: string, agent = reader) =>
+    ((await agent.get('/api/suppliers')).json() as Ligne[]).find((f) => f.id === id)!;
+  const masse = (critere: string, body: unknown, agent = a) =>
+    agent.post(`/api/suppliers/criteria/${critere}/suppliers`, body);
+  const rattaches = async (critere: string) =>
+    (
+      await t.svc.db.q<{ supplier_id: string }>(
+        'SELECT supplier_id FROM sup_criterion_links WHERE criterion_id=$1 ORDER BY supplier_id',
+        [critere],
+      )
+    ).rows.map((r) => r.supplier_id);
+  beforeAll(async () => {
+    k1 = (await a.post('/api/suppliers/criteria', critBody('Clauses de confidentialité signées'))).json();
+    k2 = (await a.post('/api/suppliers/criteria', critBody('Notification des incidents sous 24 h'))).json();
+    const ajout = async (name: string) => (await a.post('/api/suppliers', { name })).json().id as string;
+    s1 = await ajout('Fournisseur rattaché un');
+    s2 = await ajout('Fournisseur rattaché deux');
+    s3 = await ajout('Fournisseur rattaché trois');
+    s4 = await ajout('Fournisseur rattaché quatre');
+  });
+
+  it('réserve le rattachement au droit d’administration et le refuse sans session', async () => {
+    for (const agent of [reader, contributor]) {
+      expect((await masse(k1.id, { attach: [s1] }, agent)).statusCode).toBe(403);
+      expect((await agent.put(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
+      expect((await agent.del(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
+    }
+    expect((await masse(k1.id, { attach: [s1] }, new Agent(t))).statusCode).toBe(401);
+    expect(await rattaches(k1.id)).toEqual([]);
+  });
+
+  it('rattache plusieurs fournisseurs en une opération, journalisée, et ignore ce qui est déjà fait', async () => {
+    const r = await masse(k1.id, { attach: [s1, s2, s3] });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toEqual({ criterionId: k1.id, attached: [s1, s2, s3], detached: [], suppliers: [s1, s2, s3] });
+    const ev = await t.svc.db.one<{ username: string; details: { suppliers: string[] } }>(
+      "SELECT username, details FROM audit_log WHERE action='supplier.criterion.attached' AND target=$1",
+      [k1.id],
+    );
+    expect(ev).toMatchObject({ username: 'sup_admin' });
+    expect(ev!.details.suppliers.sort()).toEqual([s1, s2, s3].sort());
+    // Écart lu par l'écran : s1 déjà rattaché (ignoré), s2 détaché, s4 jamais rattaché (ignoré).
+    const m = await masse(k1.id, { attach: [s1], detach: [s2, s4] });
+    expect(m.statusCode, m.body).toBe(200);
+    expect(m.json()).toMatchObject({ attached: [], detached: [s2], suppliers: [s1, s3] });
+    expect(
+      (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='supplier.criterion.attached' AND target=$1", [k1.id]))
+        .rowCount,
+    ).toBe(1);
+    expect(
+      (await t.svc.db.one<{ details: { suppliers: string[] } }>(
+        "SELECT details FROM audit_log WHERE action='supplier.criterion.detached' AND target=$1",
+        [k1.id],
+      ))!.details.suppliers,
+    ).toEqual([s2]);
+  });
+
+  it('refuse une opération incohérente et l’annule en entier si un fournisseur est absent', async () => {
+    expect((await masse(k1.id, {})).statusCode).toBe(422);
+    expect((await masse(k1.id, { attach: [s4], detach: [s4] })).statusCode).toBe(422);
+    expect((await masse(k1.id, { attach: [s4, s4] })).statusCode).toBe(422);
+    expect((await masse(crypto.randomUUID(), { attach: [s4] })).statusCode).toBe(404);
+    const r = await masse(k1.id, { attach: [s4, 'SUP-404'] });
+    expect(r.statusCode).toBe(404);
+    expect(r.body).toContain('SUP-404');
+    expect(await rattaches(k1.id)).toEqual([s1, s3]);
+  });
+
+  it('rattache et détache depuis la fiche, un seul rattachement par couple', async () => {
+    const p = await a.put(`/api/suppliers/${s1}/criteria/${k2.id}`);
+    expect(p.statusCode, p.body).toBe(200);
+    expect(
+      p
+        .json()
+        .criteria.map((x: { id: string }) => x.id)
+        .sort(),
+    ).toEqual([k1.id, k2.id].sort());
+    expect((await a.put(`/api/suppliers/${s1}/criteria/${k2.id}`)).statusCode).toBe(409);
+    expect((await a.put(`/api/suppliers/SUP-404/criteria/${k2.id}`)).statusCode).toBe(404);
+    expect((await a.put(`/api/suppliers/${s1}/criteria/${crypto.randomUUID()}`)).statusCode).toBe(404);
+    expect((await a.put(`/api/suppliers/${s1}/criteria/pas-un-uuid`)).statusCode).toBe(422);
+    await expect(
+      t.svc.db.q('INSERT INTO sup_criterion_links (criterion_id, supplier_id, attached_by) VALUES ($1,$2,$3)', [
+        k2.id,
+        s1,
+        'sup_admin',
+      ]),
+    ).rejects.toThrow();
+    expect((await a.put(`/api/suppliers/${s2}/criteria/${k2.id}`)).statusCode).toBe(200);
+    expect((await a.del(`/api/suppliers/${s2}/criteria/${k2.id}`)).statusCode).toBe(204);
+    expect((await a.del(`/api/suppliers/${s2}/criteria/${k2.id}`)).statusCode).toBe(404);
+    expect(await rattaches(k2.id)).toEqual([s1]);
+  });
+
+  it('montre chaque critère rattaché avec la dernière réponse donnée, ou non évalué', async () => {
+    const avant = await ligne(s1);
+    expect(avant.criteria.map((x) => x.id).sort()).toEqual([k1.id, k2.id].sort());
+    expect(avant.criteria.every((x) => x.answer === null && !x.archived)).toBe(true);
+    const evaluer = async (items: { criterionId: string; meets: boolean | null }[], evaluatedAt: string) => {
+      const r = await contributor.post(`/api/suppliers/${s1}/evaluations`, evalBody(items, { evaluatedAt }));
+      expect(r.statusCode, r.body).toBe(200);
+      return r.json().id as string;
+    };
+    const e1 = await evaluer(
+      [
+        { criterionId: k1.id, meets: true },
+        { criterionId: k2.id, meets: false },
+      ],
+      '2026-10-01',
+    );
+    // Une évaluation plus récente qui ne porte pas k1 ne l'efface pas ; elle donne la réponse de k2.
+    const e2 = await evaluer([{ criterionId: k2.id, meets: null }], '2026-10-05');
+    // Une évaluation enregistrée après mais datée plus tôt ne remplace pas la plus récente.
+    await evaluer([{ criterionId: k1.id, meets: false }], '2026-09-01');
+    const l = await ligne(s1);
+    const de = (id: string) => l.criteria.find((x) => x.id === id)!;
+    expect(de(k1.id).answer).toEqual({ meets: true, evaluatedAt: '2026-10-01', evaluationId: e1 });
+    expect(de(k2.id).answer).toEqual({ meets: null, evaluatedAt: '2026-10-05', evaluationId: e2 });
+    expect(de(k1.id).label).toBe('Clauses de confidentialité signées');
+    expect(l.criteria.map((x) => x.label.toLowerCase())).toEqual(l.criteria.map((x) => x.label.toLowerCase()).sort());
+    // s3 : rattaché, jamais évalué ; s4 : aucun critère.
+    expect((await ligne(s3)).criteria).toEqual([
+      { id: k1.id, label: 'Clauses de confidentialité signées', archived: false, answer: null },
+    ]);
+    expect((await ligne(s4)).criteria).toEqual([]);
+    // Même lecture dans un périmètre où le fournisseur est rattaché.
+    expect((await contributor.put(`/api/grc/${scopeA}/suppliers/${s1}`)).statusCode).toBe(200);
+    const perimetre = (await reader.get(`/api/grc/${scopeA}/suppliers`)).json().suppliers as Ligne[];
+    expect(perimetre.find((f) => f.id === s1)!.criteria).toEqual(l.criteria);
+  });
+
+  it('garde rattaché un critère retiré, sans le rattacher à de nouveaux fournisseurs', async () => {
+    const arch = await a.post(
+      `/api/suppliers/criteria/${k1.id}/archive`,
+      { reason: 'Critère remplacé', confirm: 'RETIRER' },
+      { 'if-match': `"${k1.version}"` },
+    );
+    expect(arch.statusCode, arch.body).toBe(200);
+    expect((await ligne(s1)).criteria.find((x) => x.id === k1.id)).toMatchObject({
+      archived: true,
+      answer: { meets: true, evaluatedAt: '2026-10-01' },
+    });
+    expect((await masse(k1.id, { attach: [s4] })).statusCode).toBe(409);
+    expect((await a.put(`/api/suppliers/${s4}/criteria/${k1.id}`)).statusCode).toBe(409);
+    expect(await rattaches(k1.id)).toEqual([s1, s3]);
+    // On peut encore l'en détacher ; les évaluations passées restent intactes.
+    const d = await masse(k1.id, { detach: [s3] });
+    expect(d.statusCode, d.body).toBe(200);
+    expect(d.json().suppliers).toEqual([s1]);
+    expect((await a.del(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(204);
+    expect((await ligne(s1)).criteria.map((x) => x.id)).toEqual([k2.id]);
+    const hist = (await reader.get(`/api/suppliers/${s1}/evaluations`)).json() as {
+      items: { criterionId: string }[];
+    }[];
+    expect(hist).toHaveLength(3);
+    expect(hist.flatMap((e) => e.items.map((i) => i.criterionId))).toContain(k1.id);
   });
 });

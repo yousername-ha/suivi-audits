@@ -134,3 +134,56 @@ export const SupplierFollowUpBody = z
       });
   });
 export type SupplierFollowUpBody = z.infer<typeof SupplierFollowUpBody>;
+
+/** Identifiant d'un fournisseur du registre historique (le même que celui des évaluations). */
+const ID_FOURNISSEUR = z.string().trim().min(1).max(200);
+/** Rattachement en masse depuis un critère (ADR 0098) : fournisseurs à rattacher et à détacher, en une seule opération.
+    Le client envoie l'écart avec ce qu'il a lu ; un rattachement déjà présent ou un détachement déjà fait est ignoré,
+    ce qui évite d'écraser le travail d'une autre personne. */
+export const SupplierCriterionLinksBody = z
+  .object({
+    attach: z
+      .array(ID_FOURNISSEUR)
+      .max(2000)
+      .refine((v) => new Set(v).size === v.length, 'Fournisseur en double.')
+      .default([]),
+    detach: z
+      .array(ID_FOURNISSEUR)
+      .max(2000)
+      .refine((v) => new Set(v).size === v.length, 'Fournisseur en double.')
+      .default([]),
+  })
+  .strict()
+  .superRefine((v, c) => {
+    if (!v.attach.length && !v.detach.length)
+      c.addIssue({ code: 'custom', message: 'Aucune modification.', path: ['attach'] });
+    const retires = new Set(v.detach);
+    if (v.attach.some((id) => retires.has(id)))
+      c.addIssue({
+        code: 'custom',
+        message: 'Un fournisseur ne peut être rattaché et détaché à la fois.',
+        path: ['detach'],
+      });
+  });
+export type SupplierCriterionLinksBody = z.infer<typeof SupplierCriterionLinksBody>;
+
+/** Réponse retenue pour un critère rattaché : celle de la plus récente évaluation du fournisseur qui l'a porté (oui, non,
+    non évalué) ; `null` si le critère n'a jamais été évalué pour ce fournisseur. */
+export interface ReponseCritereRattache {
+  meets: boolean | null;
+  evaluatedAt: string;
+  evaluationId: string;
+}
+export interface CritereRattache {
+  id: string;
+  label: string;
+  archived: boolean;
+  answer: ReponseCritereRattache | null;
+}
+/** Décompte des critères rattachés : remplis (oui), non remplis (non), non évalués (jamais évalués ou « non évalué »).
+    Ce n'est ni une note ni un seuil. */
+export function resumeCriteresRattaches(criteres: readonly Pick<CritereRattache, 'answer'>[]) {
+  const remplis = criteres.filter((k) => k.answer?.meets === true).length,
+    non = criteres.filter((k) => k.answer?.meets === false).length;
+  return { total: criteres.length, remplis, non, nonEvalues: criteres.length - remplis - non };
+}

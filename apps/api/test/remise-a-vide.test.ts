@@ -159,6 +159,7 @@ describe('remise à vide : effacement', () => {
       'grc_object_versions',
       'grc_method_versions',
       'sup_evaluations',
+      'sup_criterion_links',
       'documents',
       'links',
     ])

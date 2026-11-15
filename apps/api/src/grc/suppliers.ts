@@ -5,11 +5,13 @@
 import {
   SupplierBody,
   SupplierCriterionBody,
+  SupplierCriterionLinksBody,
   SupplierEvaluationBody,
   SupplierFollowUpBody,
   SupplierUpdateBody,
   etatCertificats,
   resumeControles,
+  type CritereRattache,
   type EtatSuivi,
   type FrameworkDefinition,
   type ResumeControles,
@@ -65,6 +67,8 @@ export interface SupplierRow {
   current: EvaluationSummary | null;
   toReview: boolean;
   scopes: string[];
+  /** Critères rattachés au fournisseur (ADR 0098), retirés compris, avec la dernière réponse donnée pour chacun. */
+  criteria: CritereRattache[];
 }
 /** Colonnes d'un critère ; la date de mise à jour est rendue en ISO, comme sa sérialisation JSON d'origine. */
 const criteres = (k: Kdb) =>
@@ -152,7 +156,54 @@ export class GrcSuppliers {
       .execute();
     return rows.map(resume);
   }
-  private row(s: JsonObject & { id: string }, current: EvaluationSummary | null, scopes: string[], day: string) {
+  /** Critères rattachés à chaque fournisseur (ADR 0098), avec la réponse de la plus récente évaluation du fournisseur qui
+      a porté ce critère ; aucune réponse si le critère n'a jamais été évalué pour lui. Ordre : libellé. */
+  private async attachedCriteria(k: Kdb = this.g.db.k, supplierId?: string) {
+    let q = k
+      .selectFrom('sup_criterion_links as l')
+      .innerJoin('sup_criteria as c', 'c.id', 'l.criterion_id')
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('sup_evaluation_items as i')
+            .innerJoin('sup_evaluations as e', 'e.id', 'i.evaluation_id')
+            .select(['i.meets', sql<string>`e.evaluated_at::text`.as('evaluatedAt'), 'e.id as evaluationId'])
+            .whereRef('i.criterion_id', '=', 'l.criterion_id')
+            .whereRef('e.supplier_id', '=', 'l.supplier_id')
+            .orderBy('e.evaluated_at', 'desc')
+            .orderBy('e.created_at', 'desc')
+            .limit(1)
+            .as('r'),
+        (join) => join.onTrue(),
+      )
+      .select(['l.supplier_id', 'c.id', 'c.label', 'c.archived', 'r.meets', 'r.evaluatedAt', 'r.evaluationId']);
+    if (supplierId) q = q.where('l.supplier_id', '=', supplierId);
+    const rows = await q
+      .orderBy(sql`lower(c.label)`)
+      .orderBy('c.id')
+      .execute();
+    const out = new Map<string, CritereRattache[]>();
+    for (const r of rows) {
+      const list = out.get(r.supplier_id) ?? [];
+      list.push({
+        id: r.id,
+        label: r.label,
+        archived: r.archived,
+        answer: r.evaluationId
+          ? { meets: r.meets ?? null, evaluatedAt: r.evaluatedAt!, evaluationId: r.evaluationId }
+          : null,
+      });
+      out.set(r.supplier_id, list);
+    }
+    return out;
+  }
+  private row(
+    s: JsonObject & { id: string },
+    current: EvaluationSummary | null,
+    scopes: string[],
+    day: string,
+    criteria: CritereRattache[] = [],
+  ) {
     return {
       id: s.id,
       name: str(s.name),
@@ -171,6 +222,7 @@ export class GrcSuppliers {
       current,
       toReview: !!current?.nextReviewAt && current.nextReviewAt < day,
       scopes,
+      criteria,
     } satisfies SupplierRow;
   }
 
@@ -189,6 +241,7 @@ export class GrcSuppliers {
       } catch {
         // périmètre non accessible : le rattachement n'est pas affiché
       }
+    const criteria = await this.attachedCriteria();
     const day = today('UTC');
     return suppliers
       .map((s) =>
@@ -197,6 +250,7 @@ export class GrcSuppliers {
           current.get(s.id) ?? null,
           links.filter((l) => l.supplier_id === s.id && visible.has(l.smsi_id)).map((l) => l.smsi_id),
           day,
+          criteria.get(s.id) ?? [],
         ),
       )
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
@@ -404,6 +458,92 @@ export class GrcSuppliers {
       await this.history(k, crit, 'Critère retiré : ' + reason, user);
       await this.g.db.audit(user, ip, 'supplier.criterion.archived', id, { version: crit.version }, c);
       return crit;
+    }, user.username);
+  }
+
+  /* ------------------------------------------------------------------ Critères rattachés aux fournisseurs (ADR 0098) */
+  /** Rattache et détache en une seule transaction des fournisseurs à un critère. Un rattachement déjà présent ou un
+      détachement déjà fait est ignoré ; un critère retiré ne reçoit plus de fournisseur, mais on peut l'en détacher.
+      Journal : un événement par sens, avec la liste des fournisseurs concernés. */
+  async linkCriterion(criterionId: string, input: unknown, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'fournisseurs', 'administrer');
+    const body = SupplierCriterionLinksBody.parse(input);
+    return this.g.db.tx(async (c, k) => {
+      const crit = await this.criterion(criterionId, k, true);
+      if (body.attach.length) {
+        if (crit.archived) throw new HttpError(409, 'Un critère retiré ne se rattache plus à un fournisseur.');
+        const known = new Set((await this.registry(c)).suppliers.map((s) => s.id));
+        const absent = body.attach.find((id) => !known.has(id));
+        if (absent) throw new HttpError(404, `Fournisseur absent du registre : ${absent}`);
+      }
+      const attached = body.attach.length
+        ? (
+            await k
+              .insertInto('sup_criterion_links')
+              .values(body.attach.map((id) => ({ criterion_id: crit.id, supplier_id: id, attached_by: user.username })))
+              .onConflict((oc) => oc.doNothing())
+              .returning('supplier_id')
+              .execute()
+          ).map((r) => r.supplier_id)
+        : [];
+      const detached = body.detach.length
+        ? (
+            await k
+              .deleteFrom('sup_criterion_links')
+              .where('criterion_id', '=', crit.id)
+              .where('supplier_id', 'in', body.detach)
+              .returning('supplier_id')
+              .execute()
+          ).map((r) => r.supplier_id)
+        : [];
+      if (attached.length)
+        await this.g.db.audit(user, ip, 'supplier.criterion.attached', crit.id, { suppliers: attached }, c);
+      if (detached.length)
+        await this.g.db.audit(user, ip, 'supplier.criterion.detached', crit.id, { suppliers: detached }, c);
+      const suppliers = (
+        await k
+          .selectFrom('sup_criterion_links')
+          .select('supplier_id')
+          .where('criterion_id', '=', crit.id)
+          .orderBy('supplier_id')
+          .execute()
+      ).map((r) => r.supplier_id);
+      return { criterionId: crit.id, attached, detached, suppliers };
+    }, user.username);
+  }
+  /** Rattache un critère depuis la fiche d'un fournisseur (même droit que la définition des critères). */
+  async attachCriterion(supplierId: string, criterionId: string, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'fournisseurs', 'administrer');
+    return this.g.db.tx(async (c, k) => {
+      const crit = await this.criterion(criterionId, k, true);
+      await this.supplier(supplierId, c);
+      if (crit.archived) throw new HttpError(409, 'Un critère retiré ne se rattache plus à un fournisseur.');
+      const r = await k
+        .insertInto('sup_criterion_links')
+        .values({ criterion_id: crit.id, supplier_id: supplierId, attached_by: user.username })
+        .onConflict((oc) => oc.doNothing())
+        .executeTakeFirst();
+      if (!Number(r.numInsertedOrUpdatedRows ?? 0n))
+        throw new HttpError(409, 'Critère déjà rattaché à ce fournisseur.');
+      await this.g.db.audit(user, ip, 'supplier.criterion.attached', crit.id, { suppliers: [supplierId] }, c);
+      return {
+        criterionId: crit.id,
+        supplierId,
+        criteria: (await this.attachedCriteria(k, supplierId)).get(supplierId) ?? [],
+      };
+    }, user.username);
+  }
+  /** Détache un critère d'un fournisseur ; ses évaluations passées ne sont pas touchées. */
+  async detachCriterion(supplierId: string, criterionId: string, user: SessionUser, ip: string) {
+    await this.g.permission(user, 'fournisseurs', 'administrer');
+    await this.g.db.tx(async (c, k) => {
+      const r = await k
+        .deleteFrom('sup_criterion_links')
+        .where('criterion_id', '=', criterionId)
+        .where('supplier_id', '=', supplierId)
+        .executeTakeFirst();
+      if (!Number(r.numDeletedRows)) throw new HttpError(404, 'Rattachement introuvable.');
+      await this.g.db.audit(user, ip, 'supplier.criterion.detached', criterionId, { suppliers: [supplierId] }, c);
     }, user.username);
   }
 
@@ -632,10 +772,11 @@ export class GrcSuppliers {
     );
     const { suppliers } = await this.registry();
     const current = new Map((await this.current()).map((e) => [e.supplierId, e]));
+    const criteria = await this.attachedCriteria();
     const day = today(scope.timezone);
     const rows = suppliers
       .filter((s) => links.has(s.id))
-      .map((s) => this.row(s, current.get(s.id) ?? null, [smsi], day))
+      .map((s) => this.row(s, current.get(s.id) ?? null, [smsi], day, criteria.get(s.id) ?? []))
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     return {
       suppliers: rows,

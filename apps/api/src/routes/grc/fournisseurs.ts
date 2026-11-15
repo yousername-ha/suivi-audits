@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   SupplierBody,
   SupplierCriterionBody,
+  SupplierCriterionLinksBody,
   SupplierEvaluationBody,
   SupplierFollowUpBody,
   SupplierUpdateBody,
@@ -78,6 +79,37 @@ export const fournisseursRoutes = [
     body: z.object({ reason: z.string().trim().min(5).max(2000), confirm: z.literal('RETIRER') }).strict(),
     handler: async ({ svc, s, params, body, req, ip }) =>
       svc.grc.suppliers.archiveCriterion(params.id, requireIfMatch(req), body.reason, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'POST',
+    url: '/api/suppliers/criteria/:id/suppliers',
+    summary: 'Rattacher et détacher des fournisseurs à un critère, en une seule opération (ADR 0098)',
+    params: criterionParam,
+    body: SupplierCriterionLinksBody,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.grc.suppliers.linkCriterion(params.id, body, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'PUT',
+    url: '/api/suppliers/:id/criteria/:criterionId',
+    summary: 'Rattacher un critère d’évaluation au fournisseur (ADR 0098)',
+    params: supplierParam.extend({ criterionId: z.uuid() }),
+    handler: async ({ svc, s, params, ip }) =>
+      svc.grc.suppliers.attachCriterion(params.id, params.criterionId, (s as Session).user, ip),
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:administrer' as const,
+    method: 'DELETE',
+    url: '/api/suppliers/:id/criteria/:criterionId',
+    summary: 'Détacher un critère du fournisseur (ses évaluations sont conservées)',
+    params: supplierParam.extend({ criterionId: z.uuid() }),
+    handler: async ({ svc, s, params, ip }) =>
+      svc.grc.suppliers.detachCriterion(params.id, params.criterionId, (s as Session).user, ip),
   }),
   route({
     ...base,

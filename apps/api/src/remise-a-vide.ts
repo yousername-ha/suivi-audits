@@ -141,6 +141,7 @@ export const TABLES_TRAVAIL = [
   'suivi_taches_recurrentes',
   'sup_criteria',
   'sup_criterion_history',
+  'sup_criterion_links',
   'sup_evaluation_items',
   'sup_evaluations',
   'sup_scope_links',

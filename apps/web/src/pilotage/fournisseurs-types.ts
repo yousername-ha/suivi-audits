@@ -1,7 +1,9 @@
 /* Fournisseurs de l'organisation (refonte Neon, lot 5, ADR 0093) : types de présentation existants de `GET /api/suppliers`,
    extraits de Fournisseurs.tsx sans changer leur contrat, et fonctions pures du registre compact (teintes, filtres,
    repères d'attention). Aucune requête ni aucun composant React ici. */
-import type { EtatSuivi, ResumeControles } from '@suivi/shared';
+import { resumeCriteresRattaches, type CritereRattache, type EtatSuivi, type ResumeControles } from '@suivi/shared';
+
+export type { CritereRattache } from '@suivi/shared';
 
 export interface EvaluationCourante {
   id: string;
@@ -47,6 +49,8 @@ export interface Fournisseur {
   current: EvaluationCourante | null;
   toReview: boolean;
   scopes: string[];
+  /** Critères rattachés (ADR 0098), retirés compris, avec la dernière réponse donnée pour chacun. */
+  criteria: CritereRattache[];
 }
 
 export type ChampFournisseur = 'sso' | 'mfa' | 'critical' | 'hds';
@@ -106,4 +110,42 @@ export function filtrerFournisseurs<
       (type === 'all' || (type === 'saas' ? f.saas : !f.saas)) &&
       (!q || sansAccents(f.name).includes(q)),
   );
+}
+
+/** Dernière réponse d'un critère rattaché : « Oui », « Non » ou « Non évalué » (jamais évalué, ou évalué sans réponse). */
+export function libelleReponse(k: Pick<CritereRattache, 'answer'>) {
+  return k.answer?.meets === true ? 'Oui' : k.answer?.meets === false ? 'Non' : 'Non évalué';
+}
+export function tonReponse(k: Pick<CritereRattache, 'answer'>): TonFournisseur {
+  return k.answer?.meets === true ? 'good' : k.answer?.meets === false ? 'bad' : 'neutral';
+}
+/** Résumé compact des critères rattachés d'une ligne, par exemple « 3/5 critères remplis · 1 non · 1 non évalué » ;
+    teinte : rouge si un critère n'est pas rempli, vert si tous le sont, neutre sinon. Aucune note, aucun seuil. */
+export function resumeCriteresLigne(criteres: readonly Pick<CritereRattache, 'answer'>[]): {
+  texte: string;
+  ton: TonFournisseur;
+} {
+  const r = resumeCriteresRattaches(criteres);
+  if (!r.total) return { texte: 'Aucun critère rattaché', ton: 'neutral' };
+  const parties = [`${r.remplis}/${r.total} critère${r.total > 1 ? 's' : ''} rempli${r.total > 1 ? 's' : ''}`];
+  if (r.non) parties.push(`${r.non} non`);
+  if (r.nonEvalues) parties.push(`${r.nonEvalues} non évalué${r.nonEvalues > 1 ? 's' : ''}`);
+  return { texte: parties.join(' · '), ton: r.non ? 'bad' : r.remplis === r.total ? 'good' : 'neutral' };
+}
+/** Une ligne de détail par critère rattaché : libellé, réponse et date (JJ/MM/AAAA). */
+export function detailCritere(k: CritereRattache) {
+  return `${k.label}${k.archived ? ' (retiré)' : ''} : ${libelleReponse(k)}${k.answer ? ` le ${jourFr(k.answer.evaluatedAt)}` : ''}`;
+}
+
+/** Recherche par nom, sans accents ni majuscules. */
+export function filtrerParNom<T extends Pick<Fournisseur, 'name'>>(liste: readonly T[], recherche: string): T[] {
+  const q = sansAccents(recherche.trim());
+  return q ? liste.filter((f) => sansAccents(f.name).includes(q)) : [...liste];
+}
+/** Écart entre les fournisseurs lus et ceux cochés : à rattacher, à détacher (ordre stable). */
+export function ecartRattachements(initial: ReadonlySet<string>, coches: ReadonlySet<string>) {
+  return {
+    attach: [...coches].filter((id) => !initial.has(id)).sort(),
+    detach: [...initial].filter((id) => !coches.has(id)).sort(),
+  };
 }
