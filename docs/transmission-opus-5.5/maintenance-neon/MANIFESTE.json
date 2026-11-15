@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-15",
+  "scope": "Complément documentaire Maintenance Neon, aucun code applicatif intégré",
+  "sourceMaquette": "89b5ac5d414c1b8f0187b77f645aca980ea5a495",
+  "basePublication": "fb1ca1448479c370bd3fcb112b824e9471ee5b61",
+  "fichiers": [
+    {
+      "path": "00-LIRE-EN-PREMIER.md",
+      "octets": 4538,
+      "sha256": "f75294f75973e27f69b92cba89d2f9567d6b67b31ee3d07a75617f0a048e8730"
+    },
+    {
+      "path": "01-PROMPT-POUR-IA.md",
+      "octets": 4640,
+      "sha256": "7067be42ee4a5f1e4d42440dcfef369d2c4ce228e191326a78cbb117984630b5"
+    },
+    {
+      "path": "02-EXIGENCES-FINALES.md",
+      "octets": 15242,
+      "sha256": "73b8c2ccf0448c6834ea2e34ddc71aafa7d63380ab518a6f722c6fb0c8f84b24"
+    },
+    {
+      "path": "03-AUDIT-EXISTANT.md",
+      "octets": 18304,
+      "sha256": "de55d07719f7f44e9fb75821a420a438b8433636de9d8bb2650f0a33251d85ed"
+    },
+    {
+      "path": "04-PORTAGE-UI-ET-ANIMATIONS.md",
+      "octets": 10337,
+      "sha256": "9d7610ab5ea2c5382ed195967c082567096f2fef113119e07677101f6916df1a"
+    },
+    {
+      "path": "05-JOURNAL-COMPLET-ET-SECRETS.md",
+      "octets": 28848,
+      "sha256": "b1fe33aa69c51e35388cc81fbf35f76a31b546d486e3cc17d62aa2291089e3c4"
+    },
+    {
+      "path": "06-PLAN-ET-RECETTE.md",
+      "octets": 7676,
+      "sha256": "9d73c1e66a4a9c7ea7c6db40def9575ac27b17997926004e75292a8773227b06"
+    },
+    {
+      "path": "07-PREUVES-ET-PROVENANCE.md",
+      "octets": 6222,
+      "sha256": "17bc82abf15785679f7831fb5c962fa0081feb86fd4a8cbc8a01955b287d3c5b"
+    },
+    {
+      "path": "08-ATLAS-VISUEL.html",
+      "octets": 4677,
+      "sha256": "9f8ddbf535dd8a4c5baf371be0b8aad9afd901aaa87e9a6a489f28f06fe0b2c2"
+    },
+    {
+      "path": "annexes/CONTROLES-NAVIGATEUR.json",
+      "octets": 6443,
+      "sha256": "0df430559571a445a746bba23ecd3de53d51235168da4eb6ab604f3fde691abe"
+    },
+    {
+      "path": "annexes/MATRICE-COMPATIBILITE.csv",
+      "octets": 883,
+      "sha256": "22daeb9c299e7d0dd0569d525e16405346774635c64a557cfe4aff131dbb8d8b"
+    },
+    {
+      "path": "annexes/PROVENANCE-MAQUETTE-ET-VISUELS.json",
+      "octets": 10169,
+      "sha256": "da2bf97010bc1a0cbd00f04fc9af6fc7dd46a82b75830fc617855c4d4a1914f5"
+    },
+    {
+      "path": "annexes/SNAPSHOTS-GITHUB.json",
+      "octets": 10725,
+      "sha256": "fc0833215b2f995b9f893bd6cdfcb27b4a05f9d830fcd91433423977d82a9f80"
+    },
+    {
+      "path": "annexes/SOURCES-GITHUB-AUDITEES.json",
+      "octets": 6680,
+      "sha256": "782a2463c546b0ef84be0899a9d868929d1c6d9a42df610cb3b870b4451cd116"
+    },
+    {
+      "path": "annexes/VISUELS.json",
+      "octets": 1777,
+      "sha256": "76f304894c2ce923f1da70c97a02e28119eefc9a46e77277b63e8a52d9a84fa4"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/src/journal-technique.ts",
+      "octets": 5202,
+      "sha256": "db6b3d245ec6d48c81f7d1429b5813ff66deb718e132efea7e77126912c2606e"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/src/log.ts",
+      "octets": 4012,
+      "sha256": "d929ad6be6a9f342f0048584e6a660df398fc86efa1ce1ac63d30013bc3dff9f"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/src/routes/admin.ts",
+      "octets": 21431,
+      "sha256": "edc47668b94f3fc97d0a08dad96aae4d432e0166f7b2892e6bf218a828ddf81a"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/src/routes/updates.ts",
+      "octets": 4058,
+      "sha256": "30610435ca15a1fc0a754fbfb287934253a6f78d6684576ab0f9d58292a0f5c5"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/src/updates.ts",
+      "octets": 12748,
+      "sha256": "0a9b675b80dc9dd9ab2e014dbcfe0f084d4e1d59773f3827df19bf01669ce1e0"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/test/journaux-techniques.test.ts",
+      "octets": 7251,
+      "sha256": "bced41f3be3be1d4b2b81f16cc4c84166e29cede8e7cca420c753e50a5ae4d94"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/test/update-scripts.test.ts",
+      "octets": 461,
+      "sha256": "e695336096cae37730f2658ed23852b88682f074ad1150162feeca8effc3a97a"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/api/test/updates.test.ts",
+      "octets": 18410,
+      "sha256": "05b7c8c1f39a86ba8f15ede58eb3ebaf6cfd3e616ce690a0ed16c27dd12b187b"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/apps/web/src/components/Updates.tsx",
+      "octets": 13091,
+      "sha256": "83ffb48e16f8b78bccce038601c18d0c46ba157f8649424a81e7179b9da8c74f"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/Caddyfile.gateway",
+      "octets": 3670,
+      "sha256": "c26b69b235ece9ffb24057c6f0b77ddbe1a843d662a221c91de9af173c38bb07"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/maintenance/client.js",
+      "octets": 3243,
+      "sha256": "278bc37b2797c1bd3c2a7602541445187d830aa6e08e79ed995e68464b53ec18"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/maintenance/index.html",
+      "octets": 2131,
+      "sha256": "b89f410549dca631a194e8b0926089898c07e5ba62388cdd0bf709035a29c41b"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/maintenance/maintenance.css",
+      "octets": 2236,
+      "sha256": "2d5c3425e2dd0a3f14c1af15a6a72c81cac44c44a8df424d3d31bb0c2e00d7d4"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/maintenance/maintenance.js",
+      "octets": 6261,
+      "sha256": "38ef43ee4dbc3c77a4865d5160ecc5794b88cbf749e8d91c2918a9ab082bb7ec"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/maintenance/notice.css",
+      "octets": 454,
+      "sha256": "78e5947414dd80c7c3ca014d6a9ac64c4d7944b52b40d68cd290b684005e656c"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker/web.Dockerfile",
+      "octets": 4143,
+      "sha256": "6fe7cf5cc082b5c055342d597896fb8b3da1daa853b403f8f1910514a7f46437"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/docker-compose.yml",
+      "octets": 14543,
+      "sha256": "52346c05376d5b317f527972f4d5653c5c362c3658187744d00b04cdc8fa660a"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/packages/shared/src/updates.ts",
+      "octets": 7257,
+      "sha256": "ead41395a492c42fb1d18c9a83fd39806f14f0acb4734ac498f649f65ce2a686"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/scripts/mettre-a-jour.sh",
+      "octets": 26710,
+      "sha256": "b0791bcfd8c76aec8725f5930796d1d65bb208b16be07424904d095210a97cbb"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/scripts/tests/test_updates.py",
+      "octets": 22584,
+      "sha256": "aba1e7e467dd99b0a176c6bfb64bcbd17a5bcfd448d45b5cd051e1e15ebd0315"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/scripts/update-worker.py",
+      "octets": 34144,
+      "sha256": "49280eb27511edfab5bfe14b166188d43d3124116f948838f421449d8c934ec5"
+    },
+    {
+      "path": "annexes/existant-2026-11-15/tests/e2e/specs/zy-updates.spec.ts",
+      "octets": 18184,
+      "sha256": "34d91ff1158fa6a19098601594d6c5b88619866925909b598416d5218c4b6ebe"
+    },
+    {
+      "path": "maquette/README.md",
+      "octets": 2011,
+      "sha256": "13716da3cee53c5959f97ee6209f7678ff3c1141fd3662f192a5fe764fa2e4da"
+    },
+    {
+      "path": "maquette/assets/LICENSE-Inter.txt",
+      "octets": 4477,
+      "sha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345"
+    },
+    {
+      "path": "maquette/assets/inter.woff2",
+      "octets": 48256,
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+    },
+    {
+      "path": "maquette/direct.css",
+      "octets": 2709,
+      "sha256": "6c4a02db850e1935e20984127e3aea33c4a7648f2f836f6bbd3b3034a9890a63"
+    },
+    {
+      "path": "maquette/direct.js",
+      "octets": 844,
+      "sha256": "545f01e9861a0c5ae065a3cf368d16e70e975d934a3d92be536c749e2928005e"
+    },
+    {
+      "path": "maquette/effects.css",
+      "octets": 5392,
+      "sha256": "6e8555719bca5285bc2d4be78c14cb9f7e0012b227c61d4a0af934ef3e7782af"
+    },
+    {
+      "path": "maquette/erreurs.css",
+      "octets": 470,
+      "sha256": "001704535e7b7b37cf7ac2b34677c79b52efdd44a6f0c26300f9fb2a1cc282aa"
+    },
+    {
+      "path": "maquette/erreurs.js",
+      "octets": 1104,
+      "sha256": "36532063522336098c413f3b99d08e38140b10535174a0e51bed42f2697ce296"
+    },
+    {
+      "path": "maquette/index.html",
+      "octets": 43544,
+      "sha256": "998b02c30784f9989bf1b885f34a4e553f8faaf4937baa70ad4901c314f0b70c"
+    },
+    {
+      "path": "maquette/journal.css",
+      "octets": 5195,
+      "sha256": "62e691e59d5b01782c72551fd4c30cd9ee3637724b211465eba7c0dea9d0848d"
+    },
+    {
+      "path": "maquette/phases.css",
+      "octets": 8983,
+      "sha256": "8d79845b9fdc6416c16cb420c54fc546e95f88412898b033073d642352bfab8e"
+    },
+    {
+      "path": "maquette/studio.css",
+      "octets": 27285,
+      "sha256": "d826a07c0f978aeb4624c987ae95b454b25d0f6428842ecfb2022d0a5153613c"
+    },
+    {
+      "path": "maquette/studio.js",
+      "octets": 10391,
+      "sha256": "6a4ff79bb57bc79793b5684c06e6fc47af3fd05c421df22431dab80041fd80ba"
+    },
+    {
+      "path": "maquette/technique.css",
+      "octets": 1094,
+      "sha256": "2b8af4c3eface0537c1a237474514b683b2d1fbdea00d8b5c321a9765f554a8e"
+    },
+    {
+      "path": "maquette/technique.js",
+      "octets": 3079,
+      "sha256": "dc4a3b6f5ba9aadf8b15236d78b8df81ba8b617a75f5d1582eb0ec762f616d95"
+    },
+    {
+      "path": "maquette/violet.css",
+      "octets": 2618,
+      "sha256": "016b0b2b4a87cc16e5af5e81860478dcaa0c1f5d7e91dd2850b44563a9a8abd5"
+    },
+    {
+      "path": "outils/verifier_dossier.py",
+      "octets": 3924,
+      "sha256": "3f85f1263b87523b4923d1322282880d29e1c4f79ff7b4946ac1af5b4c58dbd6"
+    },
+    {
+      "path": "visuels/01-installation-ensemble.jpg",
+      "octets": 179682,
+      "sha256": "e60fa467e5fdd85236115758fced712a593ffcc8dd2f74ca68ec374de50e940d"
+    },
+    {
+      "path": "visuels/02-noyau-violet-detail.jpg",
+      "octets": 77917,
+      "sha256": "b78be0c9db33a6a6235304ce8e5c87afe417595d9df8d76bcc0cfcb3e4103d94"
+    },
+    {
+      "path": "visuels/03-erreurs-ensemble.jpg",
+      "octets": 175259,
+      "sha256": "68cd13406afc025a6cb22ec4b093bf524748ae7e16d13f098883a593a5ed1008"
+    },
+    {
+      "path": "visuels/04-erreur-journal-detail.jpg",
+      "octets": 32529,
+      "sha256": "d6af17321a57945f6a88f9b8f967822d0aff8753bb6d4dde7eb6837136d8b208"
+    },
+    {
+      "path": "visuels/05-journal-technique-detail.jpg",
+      "octets": 27113,
+      "sha256": "871cfce318cc9e2c0d7681b1a6778593781be23f125ca441b5858f0fa93b92ad"
+    },
+    {
+      "path": "visuels/06-animations-par-etape-4k.png",
+      "octets": 1291579,
+      "sha256": "4ed0ccd979ecc7d02679d2621d117b2c0c4eb096b38e8324104a048a9e55d162"
+    }
+  ],
+  "visuels": [
+    {
+      "fichier": "visuels/01-installation-ensemble.jpg",
+      "titre": "Installation — composition et accent violet léger",
+      "legende": "Full HD, capture originale. Même composition que la dernière référence ; les erreurs rouges sont ajoutées dans la vue Échec.",
+      "dimensions": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "fichier": "visuels/02-noyau-violet-detail.jpg",
+      "titre": "Noyau et cubes — détail",
+      "legende": "Détail original à densité 2. SVG vectoriels disponibles dans la maquette.",
+      "dimensions": [
+        720,
+        770
+      ]
+    },
+    {
+      "fichier": "visuels/03-erreurs-ensemble.jpg",
+      "titre": "Échec — dernière référence cumulée",
+      "legende": "Full HD original : bleu/cyan, violet léger, journal technique direct et erreurs rouges. Proposition à valider.",
+      "dimensions": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "fichier": "visuels/04-erreur-journal-detail.jpg",
+      "titre": "Erreur technique — détail",
+      "legende": "Message et horaire rouges dans le même flux ; aucun panneau de journal supplémentaire.",
+      "dimensions": [
+        784,
+        560
+      ]
+    },
+    {
+      "fichier": "visuels/05-journal-technique-detail.jpg",
+      "titre": "Écriture technique et fondu spatial",
+      "legende": "Référence antérieure à la touche violet et au rouge ; précise uniquement la typographie et la disposition du journal.",
+      "dimensions": [
+        784,
+        560
+      ]
+    },
+    {
+      "fichier": "visuels/06-animations-par-etape-4k.png",
+      "titre": "Six animations logiques — planche 4K",
+      "legende": "Étude antérieure au journal final et au violet. Référence des mouvements par phase uniquement, pas de la composition finale du journal.",
+      "dimensions": [
+        3840,
+        2160
+      ]
+    }
+  ],
+  "exclusions": [
+    "MANIFESTE.json (ne se hache pas lui-même)"
+  ]
+}

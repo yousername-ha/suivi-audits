@@ -1,0 +1,200 @@
+[
+  {
+    "path": "apps/api/src/journal-technique.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/src/journal-technique.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "1189c404f684e3aa055ab05d3ed99655a5c1d4fb",
+    "sha256": "db6b3d245ec6d48c81f7d1429b5813ff66deb718e132efea7e77126912c2606e",
+    "octets": 5202,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/src/journal-technique.ts"
+  },
+  {
+    "path": "apps/api/src/log.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/src/log.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "be1e2460762d7c353fafeecbcbcfb29f25d91ebe",
+    "sha256": "d929ad6be6a9f342f0048584e6a660df398fc86efa1ce1ac63d30013bc3dff9f",
+    "octets": 4012,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/src/log.ts"
+  },
+  {
+    "path": "apps/api/src/routes/admin.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/src/routes/admin.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "c441fa98912881d2477f567ee12bed3e45126808",
+    "sha256": "edc47668b94f3fc97d0a08dad96aae4d432e0166f7b2892e6bf218a828ddf81a",
+    "octets": 21431,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/src/routes/admin.ts"
+  },
+  {
+    "path": "apps/api/src/routes/updates.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/src/routes/updates.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "cc983b4a8b8e9e324b37a21d292b03db9ad7ec35",
+    "sha256": "30610435ca15a1fc0a754fbfb287934253a6f78d6684576ab0f9d58292a0f5c5",
+    "octets": 4058,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/src/routes/updates.ts"
+  },
+  {
+    "path": "apps/api/src/updates.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/src/updates.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "6e05225684103d1b52eb4ba659fb44c43afd82d2",
+    "sha256": "0a9b675b80dc9dd9ab2e014dbcfe0f084d4e1d59773f3827df19bf01669ce1e0",
+    "octets": 12748,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/src/updates.ts"
+  },
+  {
+    "path": "apps/api/test/journaux-techniques.test.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/test/journaux-techniques.test.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "850a76dfdfb56966c217bf9906f34139ab706531",
+    "sha256": "bced41f3be3be1d4b2b81f16cc4c84166e29cede8e7cca420c753e50a5ae4d94",
+    "octets": 7251,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/test/journaux-techniques.test.ts"
+  },
+  {
+    "path": "apps/api/test/update-scripts.test.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/test/update-scripts.test.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "3d64e1a064f3fb59c27a286786fdcd1ee15e6dac",
+    "sha256": "e695336096cae37730f2658ed23852b88682f074ad1150162feeca8effc3a97a",
+    "octets": 461,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/test/update-scripts.test.ts"
+  },
+  {
+    "path": "apps/api/test/updates.test.ts",
+    "destination": "annexes/existant-2026-11-15/apps/api/test/updates.test.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "4b951529e32231126812e3c4a13d7c3c89802a37",
+    "sha256": "05b7c8c1f39a86ba8f15ede58eb3ebaf6cfd3e616ce690a0ed16c27dd12b187b",
+    "octets": 18410,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/api/test/updates.test.ts"
+  },
+  {
+    "path": "apps/web/src/components/Updates.tsx",
+    "destination": "annexes/existant-2026-11-15/apps/web/src/components/Updates.tsx",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "65ae47a80b9cb5b23f62deeae8fd28711e57c5ff",
+    "sha256": "83ffb48e16f8b78bccce038601c18d0c46ba157f8649424a81e7179b9da8c74f",
+    "octets": 13091,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/apps/web/src/components/Updates.tsx"
+  },
+  {
+    "path": "docker/Caddyfile.gateway",
+    "destination": "annexes/existant-2026-11-15/docker/Caddyfile.gateway",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "ae05358d9d4ecc0c52055c1dcc120d8148dd178f",
+    "sha256": "c26b69b235ece9ffb24057c6f0b77ddbe1a843d662a221c91de9af173c38bb07",
+    "octets": 3670,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/Caddyfile.gateway"
+  },
+  {
+    "path": "docker/maintenance/client.js",
+    "destination": "annexes/existant-2026-11-15/docker/maintenance/client.js",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "cd814a55c0b6f133ad5f2255a8134dfb2ca9f9e4",
+    "sha256": "278bc37b2797c1bd3c2a7602541445187d830aa6e08e79ed995e68464b53ec18",
+    "octets": 3243,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/maintenance/client.js"
+  },
+  {
+    "path": "docker/maintenance/index.html",
+    "destination": "annexes/existant-2026-11-15/docker/maintenance/index.html",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "4238c02ed2731bd3b0c02439f65b6f553bba95ec",
+    "sha256": "b89f410549dca631a194e8b0926089898c07e5ba62388cdd0bf709035a29c41b",
+    "octets": 2131,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/maintenance/index.html"
+  },
+  {
+    "path": "docker/maintenance/maintenance.css",
+    "destination": "annexes/existant-2026-11-15/docker/maintenance/maintenance.css",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "260380f6789369aa4fb38e3ecfd1f67915ac45fc",
+    "sha256": "2d5c3425e2dd0a3f14c1af15a6a72c81cac44c44a8df424d3d31bb0c2e00d7d4",
+    "octets": 2236,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/maintenance/maintenance.css"
+  },
+  {
+    "path": "docker/maintenance/maintenance.js",
+    "destination": "annexes/existant-2026-11-15/docker/maintenance/maintenance.js",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "8f6df515bb820f8a48c76359fcb63cdaa898b4cf",
+    "sha256": "38ef43ee4dbc3c77a4865d5160ecc5794b88cbf749e8d91c2918a9ab082bb7ec",
+    "octets": 6261,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/maintenance/maintenance.js"
+  },
+  {
+    "path": "docker/maintenance/notice.css",
+    "destination": "annexes/existant-2026-11-15/docker/maintenance/notice.css",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "52910a3e0c00e29ca9e890b416b412ae59b16ec3",
+    "sha256": "78e5947414dd80c7c3ca014d6a9ac64c4d7944b52b40d68cd290b684005e656c",
+    "octets": 454,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/maintenance/notice.css"
+  },
+  {
+    "path": "docker/web.Dockerfile",
+    "destination": "annexes/existant-2026-11-15/docker/web.Dockerfile",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "e91ca0361f65b1b25719ea6062c1ef4deecd4664",
+    "sha256": "6fe7cf5cc082b5c055342d597896fb8b3da1daa853b403f8f1910514a7f46437",
+    "octets": 4143,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker/web.Dockerfile"
+  },
+  {
+    "path": "docker-compose.yml",
+    "destination": "annexes/existant-2026-11-15/docker-compose.yml",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "34549c8e64a6ddd6c026054d04962d0b63b05407",
+    "sha256": "52346c05376d5b317f527972f4d5653c5c362c3658187744d00b04cdc8fa660a",
+    "octets": 14543,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/docker-compose.yml"
+  },
+  {
+    "path": "packages/shared/src/updates.ts",
+    "destination": "annexes/existant-2026-11-15/packages/shared/src/updates.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "a06834ec968ed3f0a2342112f28eaa0eb6647763",
+    "sha256": "ead41395a492c42fb1d18c9a83fd39806f14f0acb4734ac498f649f65ce2a686",
+    "octets": 7257,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/packages/shared/src/updates.ts"
+  },
+  {
+    "path": "scripts/mettre-a-jour.sh",
+    "destination": "annexes/existant-2026-11-15/scripts/mettre-a-jour.sh",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "108be9be1895509b4601be0c3cc4d4a88fbd570c",
+    "sha256": "b0791bcfd8c76aec8725f5930796d1d65bb208b16be07424904d095210a97cbb",
+    "octets": 26710,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/scripts/mettre-a-jour.sh"
+  },
+  {
+    "path": "scripts/tests/test_updates.py",
+    "destination": "annexes/existant-2026-11-15/scripts/tests/test_updates.py",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "2b61cb07b89be59fd246af827a9bfb8315de2656",
+    "sha256": "aba1e7e467dd99b0a176c6bfb64bcbd17a5bcfd448d45b5cd051e1e15ebd0315",
+    "octets": 22584,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/scripts/tests/test_updates.py"
+  },
+  {
+    "path": "scripts/update-worker.py",
+    "destination": "annexes/existant-2026-11-15/scripts/update-worker.py",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "00f189163b51d9ee7ee26073ad0a0efe038310a2",
+    "sha256": "49280eb27511edfab5bfe14b166188d43d3124116f948838f421449d8c934ec5",
+    "octets": 34144,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/scripts/update-worker.py"
+  },
+  {
+    "path": "tests/e2e/specs/zy-updates.spec.ts",
+    "destination": "annexes/existant-2026-11-15/tests/e2e/specs/zy-updates.spec.ts",
+    "commit": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "blobGit": "0340d389a5747d2b083aa7d04bdec40e2b56d944",
+    "sha256": "34d91ff1158fa6a19098601594d6c5b88619866925909b598416d5218c4b6ebe",
+    "octets": 18184,
+    "url": "https://github.com/yousername-ha/suivi-audits/blob/28d48cacc3995200359fd4854286584a89d8b34f/tests/e2e/specs/zy-updates.spec.ts"
+  }
+]

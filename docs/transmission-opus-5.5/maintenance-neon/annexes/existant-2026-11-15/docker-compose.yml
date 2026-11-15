@@ -1,0 +1,345 @@
+# Suivi des audits SMSI ISO 27001 / HDS — déploiement de production.
+#   gateway (HTTPS + maintenance) -> web (interface interne) -> app (API Node.js) -> db (PostgreSQL 18)
+# Images versionnées publiées sur GHCR : mise à jour = changer APP_VERSION dans .env, puis
+#   docker compose pull && docker compose up -d
+# Réseaux : seul « gateway » est exposé ; « app » et « db » n'ont aucun accès sortant.
+# Données (EXPL-01) : toutes dans le dossier du serveur DATA_DIR (montages bind), aucune dans les conteneurs ni dans
+# des volumes Docker. Supprimer les conteneurs, les images ou lancer « docker compose down -v » ne les touche pas.
+#   DATA_DIR/postgres18  base PostgreSQL 18 (postgres18/18/docker). L'ancien dossier postgres (PostgreSQL 17) n'est plus utilisé : il
+#                      est conservé intact après la migration jusqu'à scripts/nettoyer-ancienne-base-postgresql.sh · secrets  secrets générés · caddy/data, caddy/config  certificats · clamav  signatures
+#   DATA_DIR/etat      rapports des scripts du serveur (mises à jour, sauvegardes, version disponible)
+
+name: suivi-audits
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt: ['no-new-privileges:true']
+  logging:
+    driver: json-file
+    options: { max-size: '20m', max-file: '5' }
+
+x-data-dir: &data-dir ${DATA_DIR:-/srv/suivi-audits/donnees}
+
+x-api-image: &api-image ${API_IMAGE:-ghcr.io/yousername-ha/suivi-audits-api:${APP_VERSION:?Renseigner APP_VERSION dans .env}}
+
+services:
+  # À chaque démarrage : contrôle et prépare DATA_DIR (dossiers, propriétaires, droits), génère les secrets
+  # manquants, puis s'arrête. Refuse de démarrer sur un DATA_DIR non préparé ou mal placé.
+  init:
+    image: *api-image
+    user: '0:0'
+    command: ['node', 'dist/init-secrets.js']
+    environment:
+      DONNEES: /donnees
+      DATA_DIR_HOTE: *data-dir
+      PROJET: /projet
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}:/donnees
+      # Dossier de l'application, en lecture seule : vérifie que DATA_DIR n'y est pas.
+      - .:/projet:ro
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+
+  db:
+    <<: *hardening
+    image: postgres:18-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+    depends_on:
+      init: { condition: service_completed_successfully }
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_superuser_password
+      POSTGRES_INITDB_ARGS: '--auth-host=scram-sha-256 --auth-local=peer --data-checksums'
+    command:
+      - postgres
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+      - -c
+      - log_line_prefix=%m [%p] %q%u@%d %h
+      - -c
+      - max_connections=50
+    volumes:
+      # PostgreSQL 18 : l'image range la base dans /var/lib/postgresql/18/docker (donc postgres18/18/docker sur le serveur) et
+      # refuse un dossier contenant déjà une base d'une version plus ancienne : d'où un dossier à part de l'ancien « postgres ».
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres18:/var/lib/postgresql
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks: [backend]
+    read_only: true
+    tmpfs:
+      - /var/run/postgresql:mode=3777,size=8m
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    shm_size: 128m
+    mem_limit: 1g
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d suivi -h 127.0.0.1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Migration PostgreSQL 17 -> 18 (ADR 0035) : conteneur éphémère lancé par scripts/lib-commun.sh (migrer_postgresql), jamais
+  # au démarrage normal. Moteur 17 sur l'ancien dossier de données, sans réseau ; exporte la base vers etat/migration-postgresql.
+  db-pg17:
+    profiles: ['migration-postgresql']
+    image: postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
+    user: '70:70'
+    entrypoint: ['sh', '/migration/exporter-pg17.sh']
+    network_mode: none
+    restart: 'no'
+    security_opt: ['no-new-privileges:true']
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/postgres:/var/lib/postgresql/data
+      - ./docker/migration-postgresql:/migration:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat/migration-postgresql:/export
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    shm_size: 128m
+    mem_limit: 1g
+
+  app:
+    <<: *hardening
+    image: *api-image
+    depends_on:
+      db: { condition: service_healthy }
+    env_file: .env
+    environment:
+      DB_HOST: db
+      SECRETS_DIR: /run/secrets
+      # Un seul relais de confiance devant l'API : web (gateway remplace l'en-tête du navigateur avant lui).
+      TRUST_PROXY: '1'
+      PUBLIC_URL: https://${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
+      ETAT_DIR: /etat
+      DATA_DIR_HOTE: *data-dir
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets:/run/secrets:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat:/etat:ro
+    networks: [backend, edge, antivirus, assistant]
+    read_only: true
+    tmpfs: ['/tmp:size=16m']
+    cap_drop: [ALL]
+    mem_limit: 768m
+    pids_limit: 200
+    healthcheck:
+      # Prête = base joignable ET migrations appliquées (appel local, réservé au conteneur) ; Node de l'image, rien à ajouter.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/api/health/ready').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  web:
+    <<: *hardening
+    image: ${WEB_IMAGE:-ghcr.io/yousername-ha/suivi-audits-web:${APP_VERSION:?Renseigner APP_VERSION dans .env}}
+    depends_on:
+      app: { condition: service_healthy }
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Renseigner SITE_ADDRESS dans .env}
+      CADDY_TLS: ${CADDY_TLS:-internal}
+      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-1}
+      TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
+      WEB_INTERNAL: '1'
+    volumes:
+      - ./certs:/certs:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets/tls-web:/certs-web:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/data:/data
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/config:/config
+    networks: [public, edge]
+    read_only: true
+    tmpfs: ['/tmp:size=16m']
+    cap_drop: [ALL]
+    mem_limit: 256m
+    healthcheck:
+      # Le frontal sert l'interface compilée : indépendant de l'état de l'API.
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/']
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
+
+  # Frontal stable : son image est indépendante des versions applicatives pendant une mise à jour web.
+  gateway:
+    <<: *hardening
+    image: ghcr.io/yousername-ha/suivi-audits-web:${GATEWAY_VERSION:-${APP_VERSION}}
+    depends_on:
+      init: { condition: service_completed_successfully }
+      # Une ancienne installation libère d'abord les ports de web avant de lancer le nouveau frontal.
+      web: { condition: service_healthy }
+    command: ['/usr/local/bin/demarrer-gateway']
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      # Noms et adresses IPv4 du serveur, servis avec le certificat interne en plus du nom du site (installer.sh, ADR 0077).
+      SITE_ADDRESS_EXTRA: ${SITE_ADDRESS_EXTRA:-}
+      CADDY_TLS: ${CADDY_TLS:-internal}
+      TLS_WEB_MANAGEMENT: ${TLS_WEB_MANAGEMENT:-1}
+      TLS_TERMINATION: ${TLS_TERMINATION:-caddy}
+    ports:
+      - '${BIND_ADDR:-0.0.0.0}:${HTTPS_PORT:-443}:8443'
+      - '${BIND_ADDR:-0.0.0.0}:${HTTP_PORT:-80}:8080'
+    volumes:
+      - ./certs:/certs:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/secrets/tls-web:/certs-web:ro
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/data:/data
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/caddy/config:/config
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/etat/updates:/updates:ro
+    networks: [public, edge]
+    read_only: true
+    tmpfs: ['/tmp:size=16m']
+    cap_drop: [ALL]
+    mem_limit: 256m
+    healthcheck:
+      # Le port HTTP répond (redirection vers HTTPS) tant que Caddy tourne, y compris pendant une maintenance.
+      test:
+        - CMD-SHELL
+        - "printf 'GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' | nc -w 2 127.0.0.1 8080 | grep -q '^HTTP/'"
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
+
+  # Composant de confiance privilégié, sans port ni API HTTP ; l'API applicative ne reçoit jamais Docker.
+  updater:
+    <<: *hardening
+    image: ${UPDATER_IMAGE:-ghcr.io/yousername-ha/suivi-audits-updater:${APP_VERSION}}
+    depends_on:
+      app: { condition: service_healthy }
+    environment:
+      REPO: ${PWD}
+      PWD: ${PWD}
+      DATA_DIR: ${DATA_DIR:-/srv/suivi-audits/donnees}
+    working_dir: ${PWD}
+    volumes:
+      - .:${PWD}
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}:${DATA_DIR:-/srv/suivi-audits/donnees}
+      # Sauvegardes intégrées ; les chemins explicites de l'exploitant restent prioritaires.
+      - ${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}:${BACKUP_DEST:-${DATA_DIR:-/srv/suivi-audits/donnees}/sauvegardes}
+      # Chiffrement age des sauvegardes (ADR 0071, ADR 0077) : clé du serveur et clé publique de secours dans
+      # DATA_DIR/cles-sauvegarde (monté ci-dessus) ; l'exécutant crée la première et recopie la seconde depuis l'application.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Aucun identifiant par défaut (ADR 0061) : le dépôt public est lu en HTTPS, les images publiques sans connexion.
+      # Dépôt ou registre privé : UPDATER_SSH_DIR=/root/.ssh et/ou UPDATER_DOCKER_CONFIG=/root/.docker dans .env.
+      - ${UPDATER_SSH_DIR:-${DATA_DIR:-/srv/suivi-audits/donnees}/updater-sans-identifiants}:/root/.ssh:ro
+      - ${UPDATER_DOCKER_CONFIG:-${DATA_DIR:-/srv/suivi-audits/donnees}/updater-sans-identifiants}:/root/.docker:ro
+    networks: [public]
+    read_only: true
+    tmpfs: ['/tmp:size=256m', '/root:size=32m']
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE]
+    mem_limit: 512m
+    pids_limit: 128
+    stop_grace_period: 30s
+
+  # Antivirus facultatif : docker compose --profile antivirus up -d  (et CLAMAV_HOST=clamav dans .env)
+  # Deux services : « clamav » (clamd seul) n'est relié qu'au réseau interne « antivirus », partagé avec l'API, sans accès à
+  # la base ni à Internet ; « freshclam » (mise à jour des signatures) sort vers Internet mais n'est relié à aucun autre service.
+  # Les deux s'exécutent sans privilège (utilisateur clamav, uid 100), système de fichiers en lecture seule.
+  clamav:
+    <<: *hardening
+    image: clamav/clamav:1.5@sha256:bda39705e291105049c3936e2803ac90b955172af8030f94f05dce1252df6c6d
+    profiles: ['antivirus']
+    user: '100:101'
+    entrypoint: ['/init-unprivileged']
+    environment:
+      CLAMAV_NO_FRESHCLAMD: 'true'
+      CLAMAV_NO_MILTERD: 'true'
+    networks: [antivirus]
+    depends_on:
+      init: { condition: service_completed_successfully }
+      freshclam: { condition: service_healthy }
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/clamav:/var/lib/clamav:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,uid=100,gid=101
+      - /var/log/clamav:size=16m,uid=100,gid=101
+    cap_drop: [ALL]
+    mem_limit: 3g
+    pids_limit: 200
+
+  freshclam:
+    <<: *hardening
+    image: clamav/clamav:1.5@sha256:bda39705e291105049c3936e2803ac90b955172af8030f94f05dce1252df6c6d
+    profiles: ['antivirus']
+    user: '100:101'
+    entrypoint: ['/init-unprivileged']
+    environment:
+      CLAMAV_NO_CLAMD: 'true'
+      CLAMAV_NO_MILTERD: 'true'
+    networks: [av_update]
+    depends_on:
+      init: { condition: service_completed_successfully }
+    volumes:
+      - ${DATA_DIR:-/srv/suivi-audits/donnees}/clamav:/var/lib/clamav
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,uid=100,gid=101
+      - /var/log/clamav:size=16m,uid=100,gid=101
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 50
+    healthcheck:
+      # Prêt quand les signatures initiales sont téléchargées : clamd ne démarre pas sans elles.
+      test: ['CMD-SHELL', 'test -f /var/lib/clamav/main.cvd -o -f /var/lib/clamav/main.cld']
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  # Assistant RSSI (ADR 0086), facultatif : docker compose --profile assistant up -d, puis ASSISTANT_RELAIS_URL dans .env.
+  # « assistant-relais » est le SEUL conteneur de l'assistant à sortir : il transmet les demandes de l'API au fournisseur du
+  # modèle réglé dans l'interface (HTTPS, certificat vérifié, adresses privées refusées). Même image que l'API, autre
+  # commande : aucun accès à la base, aucun secret monté, aucun fichier, aucune capacité Linux. L'API le joint sur le réseau
+  # interne « assistant » et garde zéro accès sortant.
+  assistant-relais:
+    <<: *hardening
+    image: *api-image
+    profiles: ['assistant']
+    command: ['node', 'dist/assistant-relais.js']
+    environment:
+      PORT: '8787'
+      # Modèle hébergé sur le réseau de l'organisation (adresse privée) : à autoriser explicitement, sur le serveur.
+      ASSISTANT_RELAIS_PRIVE: ${ASSISTANT_RELAIS_PRIVE:-false}
+    networks: [assistant, assistant_sortie]
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 256m
+    pids_limit: 100
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/sante').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  public: {}
+  edge: { internal: true }
+  backend: { internal: true }
+  av_update: {}
+  # clamd : joint par l'API seule (CLAMAV_HOST=clamav), sans accès à la base ni à Internet.
+  antivirus: { internal: true }
+  # Relais de modèle de l'assistant : joint par l'API seule (ASSISTANT_RELAIS_URL), sans accès à la base.
+  assistant: { internal: true }
+  # Sortie du relais vers le fournisseur du modèle : aucun autre service n'y est relié.
+  assistant_sortie: {}
+
+# Aucun volume nommé : voir DATA_DIR ci-dessus. Les anciens volumes (pgdata, secrets, caddy_data, caddy_config,
+# clamav_db) sont repris par scripts/migrer-donnees-vers-dossier.sh.

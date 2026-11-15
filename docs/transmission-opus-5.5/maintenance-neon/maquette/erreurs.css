@@ -1,0 +1,15 @@
+/* La sévérité appartient à la ligne, pas à toutes les lignes de la phase. */
+.event-line.log-error .event-label,
+.event-line.log-error.latest .event-label {
+  color: #ff4c43;
+}
+.event-line.log-error time {
+  color: rgb(255 76 67 / 75%);
+}
+[data-theme="light"] .event-line.log-error .event-label,
+[data-theme="light"] .event-line.log-error.latest .event-label {
+  color: #c52b23;
+}
+[data-theme="light"] .event-line.log-error time {
+  color: rgb(197 43 35 / 75%);
+}

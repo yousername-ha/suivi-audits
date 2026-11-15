@@ -1,0 +1,13 @@
+id;zone;chemin_a_verifier;etat_dans_cible_a_remplir;preuve_commit_lignes;action;validation_et_tests
+M01;Ecran autonome;docker/maintenance/index.html;A_AUDITER;;;
+M02;Styles et tokens;docker/maintenance/maintenance.css;A_AUDITER;;;
+M03;Polling et gardes;docker/maintenance/maintenance.js;A_AUDITER;;;
+M04;Bandeau et redirection;docker/maintenance/client.js;A_AUDITER;;;
+M05;Gateway et CSP;docker/Caddyfile.gateway;A_AUDITER;;;
+M06;Collecte du worker;scripts/update-worker.py;A_AUDITER;;;
+M07;Sorties installateur;scripts/mettre-a-jour.sh;A_AUDITER;;;
+M08;Statut et schemas;packages/shared/src/updates.ts;A_AUDITER;;;
+M09;Routes et droits;apps/api/src/routes/updates.ts;A_AUDITER;;;
+M10;Journal API distinct;apps/api/src/log.ts;A_AUDITER;;;
+M11;Transport prive autonome;A_DEFINIR_APRES_AUDIT;A_AUDITER;;;
+M12;Tests existants et nouveaux;tests/e2e/specs/zy-updates.spec.ts;A_AUDITER;;;

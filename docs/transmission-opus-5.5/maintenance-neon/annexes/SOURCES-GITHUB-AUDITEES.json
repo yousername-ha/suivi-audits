@@ -1,0 +1,226 @@
+[
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "docker/maintenance/index.html",
+    "blob": "4238c02ed2731bd3b0c02439f65b6f553bba95ec",
+    "octets": 2131
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "docker/maintenance/maintenance.css",
+    "blob": "260380f6789369aa4fb38e3ecfd1f67915ac45fc",
+    "octets": 2236
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "docker/maintenance/maintenance.js",
+    "blob": "8f6df515bb820f8a48c76359fcb63cdaa898b4cf",
+    "octets": 6261
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "docker/maintenance/client.js",
+    "blob": "cd814a55c0b6f133ad5f2255a8134dfb2ca9f9e4",
+    "octets": 3243
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "docker/Caddyfile.gateway",
+    "blob": "ae05358d9d4ecc0c52055c1dcc120d8148dd178f",
+    "octets": 3670
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "scripts/update-worker.py",
+    "blob": "00f189163b51d9ee7ee26073ad0a0efe038310a2",
+    "octets": 34144
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "scripts/mettre-a-jour.sh",
+    "blob": "108be9be1895509b4601be0c3cc4d4a88fbd570c",
+    "octets": 26710
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/api/src/updates.ts",
+    "blob": "6e05225684103d1b52eb4ba659fb44c43afd82d2",
+    "octets": 12748
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/api/src/routes/updates.ts",
+    "blob": "cc983b4a8b8e9e324b37a21d292b03db9ad7ec35",
+    "octets": 4058
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "packages/shared/src/updates.ts",
+    "blob": "a06834ec968ed3f0a2342112f28eaa0eb6647763",
+    "octets": 7257
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/api/src/log.ts",
+    "blob": "be1e2460762d7c353fafeecbcbcfb29f25d91ebe",
+    "octets": 4012
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/web/src/components/Updates.tsx",
+    "blob": "65ae47a80b9cb5b23f62deeae8fd28711e57c5ff",
+    "octets": 13091
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "tests/e2e/specs/zy-updates.spec.ts",
+    "blob": "0340d389a5747d2b083aa7d04bdec40e2b56d944",
+    "octets": 18184
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/api/test/updates.test.ts",
+    "blob": "4b951529e32231126812e3c4a13d7c3c89802a37",
+    "octets": 18410
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "scripts/tests/test_updates.py",
+    "blob": "2b61cb07b89be59fd246af827a9bfb8315de2656",
+    "octets": 22584
+  },
+  {
+    "branche": "neon",
+    "ref": "28d48cacc3995200359fd4854286584a89d8b34f",
+    "path": "apps/api/test/update-scripts.test.ts",
+    "blob": "3d64e1a064f3fb59c27a286786fdcd1ee15e6dac",
+    "octets": 461
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "docker/maintenance/index.html",
+    "blob": "4238c02ed2731bd3b0c02439f65b6f553bba95ec",
+    "octets": 2131
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "docker/maintenance/maintenance.css",
+    "blob": "260380f6789369aa4fb38e3ecfd1f67915ac45fc",
+    "octets": 2236
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "docker/maintenance/maintenance.js",
+    "blob": "8f6df515bb820f8a48c76359fcb63cdaa898b4cf",
+    "octets": 6261
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "docker/maintenance/client.js",
+    "blob": "cd814a55c0b6f133ad5f2255a8134dfb2ca9f9e4",
+    "octets": 3243
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "docker/Caddyfile.gateway",
+    "blob": "ae05358d9d4ecc0c52055c1dcc120d8148dd178f",
+    "octets": 3670
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "scripts/update-worker.py",
+    "blob": "00f189163b51d9ee7ee26073ad0a0efe038310a2",
+    "octets": 34144
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "scripts/mettre-a-jour.sh",
+    "blob": "108be9be1895509b4601be0c3cc4d4a88fbd570c",
+    "octets": 26710
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/api/src/updates.ts",
+    "blob": "6e05225684103d1b52eb4ba659fb44c43afd82d2",
+    "octets": 12748
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/api/src/routes/updates.ts",
+    "blob": "cc983b4a8b8e9e324b37a21d292b03db9ad7ec35",
+    "octets": 4058
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "packages/shared/src/updates.ts",
+    "blob": "a06834ec968ed3f0a2342112f28eaa0eb6647763",
+    "octets": 7257
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/api/src/log.ts",
+    "blob": "be1e2460762d7c353fafeecbcbcfb29f25d91ebe",
+    "octets": 4012
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/web/src/components/Updates.tsx",
+    "blob": "65ae47a80b9cb5b23f62deeae8fd28711e57c5ff",
+    "octets": 13091
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "tests/e2e/specs/zy-updates.spec.ts",
+    "blob": "0340d389a5747d2b083aa7d04bdec40e2b56d944",
+    "octets": 18184
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/api/test/updates.test.ts",
+    "blob": "4b951529e32231126812e3c4a13d7c3c89802a37",
+    "octets": 18410
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "scripts/tests/test_updates.py",
+    "blob": "2b61cb07b89be59fd246af827a9bfb8315de2656",
+    "octets": 22584
+  },
+  {
+    "branche": "travail",
+    "ref": "8ff37b62fa5645368158d7c3b3c37ef40a177d65",
+    "path": "apps/api/test/update-scripts.test.ts",
+    "blob": "3d64e1a064f3fb59c27a286786fdcd1ee15e6dac",
+    "octets": 461
+  }
+]

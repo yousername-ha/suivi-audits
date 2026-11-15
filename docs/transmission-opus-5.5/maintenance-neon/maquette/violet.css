@@ -1,0 +1,119 @@
+/* Accent violet limité à l’identité graphique ; cyan et couleurs d’état conservés. */
+:root {
+  --accent-violet: #ad96f3;
+}
+.ring-outer > path {
+  stroke: #b9a3ff;
+  filter: drop-shadow(0 0 4px #a48aeb65);
+}
+.ring-inner > circle:last-child {
+  stroke: #9380cf;
+  opacity: 0.55;
+}
+.energy-orbit > ellipse:last-of-type {
+  stroke: #a28bdc;
+  opacity: 0.6;
+}
+.cube-right {
+  fill: #5b579b;
+}
+.operation-shell {
+  border-top-color: color-mix(in srgb, #a28be5, var(--line) 72%);
+  border-bottom-color: color-mix(in srgb, #a28be5, var(--line) 84%);
+}
+.operation-shell:before {
+  width: 145px;
+  background: linear-gradient(90deg, transparent, #ac91ee8c, transparent);
+  box-shadow: 0 0 12px #9c7fe51a;
+}
+.operation-shell:after {
+  width: 150px;
+  background: linear-gradient(90deg, transparent, #ac91ee8c, transparent);
+}
+.current-operation {
+  border-right-color: #9c83df85;
+}
+.current-operation:after {
+  background: linear-gradient(transparent, #b29be9aa, transparent);
+}
+.step-chip {
+  color: #bba8f4;
+}
+.journey li.current .step-icon {
+  border-color: #a997e0;
+  color: #c1b1f1;
+  background: #8f77cc12;
+}
+.journey li.current .step-number {
+  color: #bba8f4;
+}
+h1 span {
+  background-image: linear-gradient(
+    95deg,
+    #86edf0 0%,
+    #86baff 73%,
+    #b3a1ee 100%
+  );
+}
+.ambient:after {
+  content: "";
+  position: absolute;
+  right: -100px;
+  top: 90px;
+  width: 800px;
+  height: 560px;
+  background: radial-gradient(ellipse, #8d70c90d, transparent 70%);
+  pointer-events: none;
+}
+/* Les teintes d’alerte et de restauration portent le sens de l’état. */
+[data-art="alert"] .ring-outer > path,
+[data-art="rollback"] .ring-outer > path,
+[data-art="restored"] .ring-outer > path,
+[data-art="complete"] .ring-outer > path {
+  stroke: var(--cyan);
+  filter: none;
+}
+[data-theme="light"] .ring-outer > path {
+  stroke: #7e65ba;
+  filter: none;
+}
+[data-theme="light"] .cube-right {
+  fill: #9288c4;
+}
+[data-theme="light"] .step-chip,
+[data-theme="light"] .journey li.current .step-number {
+  color: #7356ac;
+}
+[data-theme="light"] .journey li.current .step-icon {
+  color: #7356ac;
+  border-color: #a293c8;
+  background: #8f77cc0c;
+}
+[data-theme="light"] h1 span {
+  background-image: linear-gradient(
+    95deg,
+    #087e8d 0%,
+    #4569bb 75%,
+    #7c62ac 100%
+  );
+}
+:is(
+    [data-art="alert"],
+    [data-art="rollback"],
+    [data-art="restored"],
+    [data-art="complete"]
+  )
+  .ring-outer
+  > path {
+  stroke: var(--cyan);
+  filter: none;
+}
+:is(
+    [data-art="alert"],
+    [data-art="rollback"],
+    [data-art="restored"],
+    [data-art="complete"]
+  )
+  .step-chip {
+  color: var(--cyan-ink);
+}

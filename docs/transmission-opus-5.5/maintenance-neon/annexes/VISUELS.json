@@ -1,0 +1,56 @@
+[
+  {
+    "fichier": "visuels/01-installation-ensemble.jpg",
+    "titre": "Installation — composition et accent violet léger",
+    "legende": "Full HD, capture originale. Même composition que la dernière référence ; les erreurs rouges sont ajoutées dans la vue Échec.",
+    "dimensions": [
+      1920,
+      1080
+    ]
+  },
+  {
+    "fichier": "visuels/02-noyau-violet-detail.jpg",
+    "titre": "Noyau et cubes — détail",
+    "legende": "Détail original à densité 2. SVG vectoriels disponibles dans la maquette.",
+    "dimensions": [
+      720,
+      770
+    ]
+  },
+  {
+    "fichier": "visuels/03-erreurs-ensemble.jpg",
+    "titre": "Échec — dernière référence cumulée",
+    "legende": "Full HD original : bleu/cyan, violet léger, journal technique direct et erreurs rouges. Proposition à valider.",
+    "dimensions": [
+      1920,
+      1080
+    ]
+  },
+  {
+    "fichier": "visuels/04-erreur-journal-detail.jpg",
+    "titre": "Erreur technique — détail",
+    "legende": "Message et horaire rouges dans le même flux ; aucun panneau de journal supplémentaire.",
+    "dimensions": [
+      784,
+      560
+    ]
+  },
+  {
+    "fichier": "visuels/05-journal-technique-detail.jpg",
+    "titre": "Écriture technique et fondu spatial",
+    "legende": "Référence antérieure à la touche violet et au rouge ; précise uniquement la typographie et la disposition du journal.",
+    "dimensions": [
+      784,
+      560
+    ]
+  },
+  {
+    "fichier": "visuels/06-animations-par-etape-4k.png",
+    "titre": "Six animations logiques — planche 4K",
+    "legende": "Étude antérieure au journal final et au violet. Référence des mouvements par phase uniquement, pas de la composition finale du journal.",
+    "dimensions": [
+      3840,
+      2160
+    ]
+  }
+]

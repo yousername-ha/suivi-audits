@@ -15,6 +15,25 @@ configuration Docker ou authentification de la branche de base n’est remplacé
   puis ouvrir ce fichier localement avec ses sous-dossiers ; GitHub affiche le code HTML.
 - [Intégrité et provenance](docs/transmission-opus-5.5/MANIFESTE.json).
 
+## Complément du 15 novembre 2026 — maintenance / mise à jour Neon
+
+Le dossier de maintenance est maintenant regroupé avec le reste de la refonte :
+
+- [Commencer le lot Maintenance](docs/transmission-opus-5.5/maintenance-neon/00-LIRE-EN-PREMIER.md).
+- [Prompt prêt à donner à l’IA sur GitHub](docs/transmission-opus-5.5/maintenance-neon/01-PROMPT-POUR-IA.md).
+- [Atlas et six images originales](docs/transmission-opus-5.5/maintenance-neon/08-ATLAS-VISUEL.html).
+- [Audit du code actif et travaux restants](docs/transmission-opus-5.5/maintenance-neon/03-AUDIT-EXISTANT.md).
+- [Résumé IA et vérifications](docs/transmission-opus-5.5/maintenance-neon/07-PREUVES-ET-PROVENANCE.md).
+
+L’audit du 15/11 constate `claude/refonte-neon@28d48ca` comme branche d’implémentation active.
+Les dernières captures de maintenance restent proposées : ce complément n’intègre pas l’écran,
+ne remplace pas le client réel et ne fournit pas encore le flux privé de logs. L’IA doit vérifier
+l’existant et les validations les plus récentes avant portage. Ne pas fusionner cette branche
+documentaire ancienne dans sa branche de code ; lire ou importer seulement les références utiles.
+
+Le dossier général ci-dessous et son manifeste restent intacts. Le complément possède son propre
+manifeste et vérificateur. Session : Codex (01a193c1-316c-7677-831f-2f31592aa052).
+
 ## Priorité à la version actuelle
 
 Branche de base : `claude-suivi-smsi`, commit

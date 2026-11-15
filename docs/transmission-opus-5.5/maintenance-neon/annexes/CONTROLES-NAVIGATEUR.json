@@ -1,0 +1,271 @@
+{
+  "type": "Conditionnement documentaire et maquette isolée, pas recette applicative",
+  "date": "2026-11-15",
+  "scenarios": [
+    {
+      "scene": "waiting",
+      "art": "waiting",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 0
+    },
+    {
+      "scene": "preparing",
+      "art": "download",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 4
+    },
+    {
+      "scene": "backup",
+      "art": "backup",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 3
+    },
+    {
+      "scene": "installing",
+      "art": "building",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 8
+    },
+    {
+      "scene": "verifying",
+      "art": "verifying",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 10
+    },
+    {
+      "scene": "success",
+      "art": "complete",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 11
+    },
+    {
+      "scene": "rollback",
+      "art": "rollback",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 11
+    },
+    {
+      "scene": "rolled_back",
+      "art": "restored",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 10
+    },
+    {
+      "scene": "failed",
+      "art": "alert",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [
+        "rgb(255, 76, 67)"
+      ],
+      "lines": 7
+    },
+    {
+      "scene": "intervention",
+      "art": "alert",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [
+        "rgb(255, 76, 67)"
+      ],
+      "lines": 10
+    },
+    {
+      "scene": "connection",
+      "art": "building",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 8
+    },
+    {
+      "scene": "delay",
+      "art": "building",
+      "journalBorder": "0px",
+      "journalBackground": "rgba(0, 0, 0, 0)",
+      "journalHeader": "none",
+      "errorColors": [],
+      "lines": 8
+    }
+  ],
+  "atlasTailles": [
+    {
+      "width": 1280,
+      "horizontalOverflow": false,
+      "images": [
+        {
+          "src": "visuels/01-installation-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/02-noyau-violet-detail.jpg",
+          "width": 720,
+          "height": 770
+        },
+        {
+          "src": "visuels/03-erreurs-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/04-erreur-journal-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/05-journal-technique-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/06-animations-par-etape-4k.png",
+          "width": 3840,
+          "height": 2160
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "horizontalOverflow": false,
+      "images": [
+        {
+          "src": "visuels/01-installation-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/02-noyau-violet-detail.jpg",
+          "width": 720,
+          "height": 770
+        },
+        {
+          "src": "visuels/03-erreurs-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/04-erreur-journal-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/05-journal-technique-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/06-animations-par-etape-4k.png",
+          "width": 3840,
+          "height": 2160
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "horizontalOverflow": false,
+      "images": [
+        {
+          "src": "visuels/01-installation-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/02-noyau-violet-detail.jpg",
+          "width": 720,
+          "height": 770
+        },
+        {
+          "src": "visuels/03-erreurs-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/04-erreur-journal-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/05-journal-technique-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/06-animations-par-etape-4k.png",
+          "width": 3840,
+          "height": 2160
+        }
+      ]
+    },
+    {
+      "width": 2560,
+      "horizontalOverflow": false,
+      "images": [
+        {
+          "src": "visuels/01-installation-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/02-noyau-violet-detail.jpg",
+          "width": 720,
+          "height": 770
+        },
+        {
+          "src": "visuels/03-erreurs-ensemble.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "src": "visuels/04-erreur-journal-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/05-journal-technique-detail.jpg",
+          "width": 784,
+          "height": 560
+        },
+        {
+          "src": "visuels/06-animations-par-etape-4k.png",
+          "width": 3840,
+          "height": 2160
+        }
+      ]
+    }
+  ],
+  "pause": "OK",
+  "reducedMotionAnimationsActives": 0,
+  "couleurErreurClair": "rgb(197, 43, 35)",
+  "requeteExterne": [],
+  "erreursNavigateur": [],
+  "videoProduite": false,
+  "testsApplicationBuildDockerDB": false
+}

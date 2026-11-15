@@ -1,0 +1,50 @@
+/* Extrait console simulé pour validation graphique, pas un flux serveur. */
+.event-line,
+.event-line:last-child {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  flex-basis: 36px;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+}
+.event-label,
+.event-line.latest .event-label {
+  font-family:
+    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  color: rgb(255 255 255 / 78%);
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+.event-line time {
+  font-family:
+    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+}
+.events-list.flow-rise {
+  animation-name: technique-rise;
+}
+@keyframes technique-rise {
+  from {
+    transform: translateY(36px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (max-width: 1200px) {
+  .event-label,
+  .event-line.latest .event-label {
+    font-size: 10px;
+    letter-spacing: -0.35px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .events-list {
+    animation: none;
+  }
+}

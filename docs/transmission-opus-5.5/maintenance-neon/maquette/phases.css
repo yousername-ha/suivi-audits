@@ -1,0 +1,505 @@
+/* Illustrations de phase : aucune mesure d'avancement ni action système. */
+.stage-art {
+  display: none;
+  color: var(--cyan);
+  stroke: currentColor;
+}
+[data-art="waiting"] .stage-waiting,
+[data-art="download"] .stage-download,
+[data-art="backup"] .stage-backup,
+[data-art="building"] .stage-building,
+[data-art="verifying"] .stage-verifying,
+[data-art="complete"] .stage-complete,
+[data-art="rollback"] .stage-rollback,
+[data-art="restored"] .stage-restored,
+[data-art="alert"] .stage-alert {
+  display: inline;
+}
+.art-label {
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  letter-spacing: 1.1px;
+  fill: var(--muted);
+  stroke: none;
+}
+.stage-rollback .art-label,
+.stage-restored .art-label {
+  font-size: 9px;
+  letter-spacing: 0.8px;
+}
+.stage-stroke {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wait-halo {
+  stroke-width: 2;
+  fill: var(--panel);
+}
+.wait-link {
+  stroke-width: 2;
+  stroke-dasharray: 4 8;
+  animation: wait-signal 2s linear infinite;
+}
+.cloud-shell {
+  stroke-width: 2;
+  fill: var(--active);
+}
+.download-arrow {
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: download-tug 2s ease-in-out infinite;
+}
+.download-particles {
+  stroke-width: 2;
+  stroke-dasharray: 3 15;
+  opacity: 0.6;
+  animation: download-stream 1.8s linear infinite;
+}
+.transfer-shell {
+  stroke-width: 1.8;
+  fill: var(--panel);
+}
+.transfer-band {
+  stroke: none;
+  fill: var(--cyan);
+  animation: transfer-pass 2.6s ease-in-out infinite;
+}
+.transfer-marks {
+  stroke: var(--cyan);
+  stroke-width: 1;
+  opacity: 0.2;
+}
+.document-shell {
+  stroke-width: 1.8;
+  fill: var(--active);
+}
+.backup-route {
+  stroke-width: 1.8;
+  stroke-dasharray: 4 6;
+  opacity: 0.6;
+  animation: wait-signal 4s linear infinite;
+}
+.backup-bit {
+  fill: var(--active);
+  stroke-width: 1.8;
+  animation: backup-copy 4s ease-in-out infinite;
+  opacity: 0;
+}
+.backup-bit.bit-1 {
+  animation-delay: -1.3s;
+}
+.backup-bit.bit-2 {
+  animation-delay: -2.6s;
+}
+.vault-body {
+  fill: var(--active);
+  stroke-width: 2;
+}
+.vault-door {
+  fill: var(--panel);
+  stroke-width: 1.8;
+}
+.vault-wheel {
+  stroke-width: 1.8;
+  transform-origin: 274px 260px;
+  animation: vault-dial 10s linear infinite;
+}
+.vault-hinge {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.assembly-base {
+  fill: var(--active);
+  stroke: var(--line);
+  stroke-width: 1.4;
+}
+.assembly-grid {
+  stroke: var(--cyan);
+  stroke-width: 1;
+  opacity: 0.18;
+}
+.voxel,
+.restore-cube {
+  stroke: var(--cyan);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+.cube-top {
+  fill: #5ebfdf;
+}
+.cube-left {
+  fill: #21516d;
+}
+.cube-right {
+  fill: #307d9b;
+}
+.voxel {
+  animation: voxel-install 6s cubic-bezier(0.2, 0.65, 0.3, 1) infinite;
+  animation-fill-mode: backwards;
+}
+.voxel-1 {
+  animation-delay: 0.32s;
+}
+.voxel-2 {
+  animation-delay: 0.64s;
+}
+.voxel-3 {
+  animation-delay: 1s;
+}
+.voxel-4 {
+  animation-delay: 1.32s;
+}
+.voxel-5 {
+  animation-delay: 1.64s;
+}
+.assembly-lock {
+  stroke-width: 2;
+  animation: assembly-lock 7.64s ease-in-out infinite;
+}
+.verify-panel {
+  fill: var(--active);
+  stroke-width: 2;
+}
+.verify-lines {
+  stroke: var(--muted);
+  stroke-width: 2;
+  opacity: 0.5;
+}
+.verify-separators {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.verify-tick {
+  stroke: var(--green);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: verify-tick 4s ease-in-out infinite;
+}
+.tick-1 {
+  animation-delay: 0.75s;
+}
+.tick-2 {
+  animation-delay: 1.5s;
+}
+.verification-scan {
+  animation: verification-scan 4s ease-in-out infinite;
+}
+.verification-scan rect {
+  fill: var(--cyan);
+  stroke: none;
+  opacity: 0.14;
+}
+.verification-scan path {
+  stroke: var(--cyan);
+  stroke-width: 2;
+}
+.verification-lens {
+  fill: var(--panel);
+  stroke-width: 2.5;
+}
+.lens-glint {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.portal-frame {
+  fill: var(--active);
+  stroke-width: 2;
+}
+.portal-glow {
+  stroke: none;
+  fill: var(--active);
+}
+.portal-door {
+  fill: var(--panel);
+  stroke: var(--cyan);
+  stroke-width: 1;
+  animation: portal-open 1.5s ease-out both;
+}
+.complete-check {
+  stroke: var(--green);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 110;
+  stroke-dashoffset: 0;
+  animation: complete-check 1.3s ease-out both;
+}
+.portal-return {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.previous-version {
+  fill: var(--active);
+  stroke-width: 2;
+}
+.previous-lines {
+  stroke-width: 2;
+  opacity: 0.65;
+}
+.restore-route {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 8 5;
+  animation: wait-signal 3s linear infinite reverse;
+}
+.restore-cube {
+  animation: restore-cube 4s ease-in-out infinite;
+}
+.restore-cube-1 {
+  animation-delay: -0.9s;
+}
+.restore-cube-2 {
+  animation-delay: -1.8s;
+}
+.alert-triangle {
+  fill: var(--active);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.alert-mark {
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+[data-art="complete"] .ring-outer,
+[data-art="complete"] .ring-inner,
+[data-art="restored"] .ring-outer,
+[data-art="restored"] .ring-inner,
+[data-art="alert"] .ring-outer,
+[data-art="alert"] .ring-inner {
+  animation: none;
+}
+[data-scene="connection"] .stage-art * {
+  animation-play-state: paused !important;
+}
+[data-theme="light"] .cube-top {
+  fill: #7fc6dd;
+}
+[data-theme="light"] .cube-left {
+  fill: #b3dae5;
+}
+[data-theme="light"] .cube-right {
+  fill: #58a3bd;
+}
+@keyframes wait-signal {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+@keyframes download-tug {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(7px);
+  }
+}
+@keyframes download-stream {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+@keyframes transfer-pass {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(250px);
+  }
+}
+@keyframes backup-copy {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(142px, 124px) scale(0.55);
+    opacity: 0;
+  }
+}
+@keyframes vault-dial {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes voxel-install {
+  0% {
+    opacity: 0;
+    transform: translateY(-75px);
+  }
+  9% {
+    opacity: 1;
+  }
+  22%,
+  78% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+@keyframes assembly-lock {
+  0%,
+  25%,
+  100% {
+    opacity: 0.2;
+  }
+  60%,
+  80% {
+    opacity: 1;
+  }
+}
+@keyframes verification-scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  70% {
+    transform: translateY(106px);
+  }
+}
+@keyframes verify-tick {
+  0%,
+  18% {
+    opacity: 0.15;
+  }
+  35%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.15;
+  }
+}
+@keyframes portal-open {
+  0%,
+  20% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(125px);
+  }
+}
+@keyframes complete-check {
+  0%,
+  20% {
+    stroke-dashoffset: 110;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes restore-cube {
+  0%,
+  15% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: translate(-92px, 12px) scale(0.45);
+  }
+}
+[data-focus="true"] body {
+  min-height: 100vh;
+  overflow: hidden;
+}
+[data-focus="true"] .ambient,
+[data-focus="true"] .page-header,
+[data-focus="true"] .intro,
+[data-focus="true"] .shell-top,
+[data-focus="true"] .details-column,
+[data-focus="true"] .journey-heading,
+[data-focus="true"] .journey,
+[data-focus="true"] .shell-footer,
+[data-focus="true"] .page-bottom,
+[data-focus="true"] .preview-controls,
+[data-focus="true"] .notice,
+[data-focus="true"] .return-link {
+  display: none !important;
+}
+[data-focus="true"] main {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+[data-focus="true"] .operation-shell {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+[data-focus="true"] .operation-shell:before,
+[data-focus="true"] .operation-shell:after {
+  display: none;
+}
+[data-focus="true"] .operation-body {
+  display: block;
+  padding: 0;
+}
+[data-focus="true"] .reactor-column {
+  padding: 0;
+  min-height: 100vh;
+  align-content: center;
+}
+[data-focus="true"] .reactor {
+  width: min(100%, 300px);
+}
+[data-focus="true"] .reactor-caption {
+  font-size: 11px;
+  margin-top: 18px;
+}
+[data-focus="true"] .phase-index {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-art * {
+    animation: none !important;
+  }
+  .transfer-band {
+    transform: translateX(105px);
+  }
+  .backup-bit,
+  .verification-scan {
+    display: none;
+  }
+  .verify-tick {
+    opacity: 1;
+  }
+  .portal-door {
+    transform: translateX(125px);
+  }
+  .complete-check {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+[data-focus="true"] .reactor-caption {
+  display: none;
+}
+
+[data-art="complete"] .operation-wave,
+[data-art="restored"] .operation-wave,
+[data-art="alert"] .operation-wave {
+  display: none;
+}
