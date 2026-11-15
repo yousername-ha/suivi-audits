@@ -9,7 +9,7 @@ import type { ConversationAssistantDetailDto, EtatAssistantDto, ReglagesAssistan
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
 import { OUTILS, serialiser } from '../src/assistant/outils.js';
 import { HttpError } from '../src/http/errors.js';
-import { type Agent, createTestApp, login, makeUser, ouvrirFlux, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, ouvrirFlux, appliquerFlux, type TestApp } from './helpers.js';
 
 const CLE = 'cle-fictive-de-test-0123456789';
 const ADRESSE = 'https://modele.example.invalid/v1';
@@ -104,6 +104,8 @@ beforeAll(async () => {
   t = await createTestApp({}, { modele });
   // Flux de l'assistant ouvert par l'administrateur (ADR 0097) : fermé, l'assistant ne joint pas le modèle.
   await ouvrirFlux(t, 'assistant');
+  // Rapport de l'exécutant : relais démarré (ADR 0097, lot 2).
+  await appliquerFlux(t, 'assistant');
   // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
   await t.svc.db.q(
     "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
@@ -296,6 +298,42 @@ describe('assistant : droit dédié et réglages', () => {
     expect((await regler(admin, { actif: true })).statusCode).toBe(409);
     expect((await regler(admin, { actif: true, fluxConfirme: true })).statusCode).toBe(200);
     expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+  });
+
+  it('flux ouvert mais pas encore appliqué par l’exécutant, ou en erreur (ADR 0097, lot 2) : le relais n’est pas joint', async () => {
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+    modele.demandes = [];
+    modele.script = () => ({ role: 'assistant', content: 'prêt' });
+    const id = await ouvrir(admin);
+    // Essai du modèle par le service (la route limite le nombre d'essais par personne).
+    const essayer = () => t.svc.assistant.tester({ username: 'as_admin' }, '127.0.0.1');
+    try {
+      // Rapport de l'exécutant : conteneur du relais pas encore démarré (fermé), puis en erreur.
+      for (const [rapport, attendu] of [
+        [{ etat: 'ferme' }, 'l’applique à son prochain passage'],
+        [{ etat: 'erreur', erreur: 'Démarrage du conteneur « assistant-relais » en échec.' }, 'n’a pas pu l’appliquer'],
+      ] as const) {
+        await t.svc.flux.appliquer({ assistant: rapport });
+        const test = await essayer();
+        expect(test.ok).toBe(false);
+        expect(test.detail).toContain(attendu);
+        expect(test.detail).not.toContain('fermé');
+        // L'erreur détaillée reste dans Administration (droit administration:lire) : elle n'est pas recopiée ici.
+        expect(test.detail).not.toContain('assistant-relais');
+        const etat = (await admin.get(`${base}/etat`)).json() as EtatAssistantDto;
+        expect(etat.pret).toBe(false);
+        expect(etat.motif).toContain(attendu);
+        const r = await admin.post(`${base}/conversations/${id}/messages`, { texte: 'Où en sont les actions ?' });
+        expect(r.statusCode).toBe(409);
+        expect(r.json().error).toContain(attendu);
+      }
+      expect(modele.demandes).toHaveLength(0);
+    } finally {
+      // L'exécutant rapporte le relais démarré : l'assistant répond de nouveau, sans redémarrer l'API.
+      await appliquerFlux(t, 'assistant');
+    }
+    expect(await essayer()).toEqual({ ok: true, detail: 'Le modèle a répondu.' });
+    expect(modele.demandes).toHaveLength(1);
   });
 });
 

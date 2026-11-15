@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { EtatAssistantDto, ReglagesAssistantDto } from '@suivi/shared';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
-import { type Agent, createTestApp, login, makeUser, ouvrirFlux, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, ouvrirFlux, appliquerFlux, type TestApp } from './helpers.js';
 
 class FauxModele implements TransportModele {
   script: (d: DemandeModele, n: number) => MessageModele = () => ({ role: 'assistant', content: 'Réponse fictive.' });
@@ -49,6 +49,8 @@ beforeAll(async () => {
   t = await createTestApp({}, { modele });
   // Flux de l'assistant ouvert par l'administrateur (ADR 0097) : fermé, l'assistant ne joint pas le modèle.
   await ouvrirFlux(t, 'assistant');
+  // Rapport de l'exécutant : relais démarré (ADR 0097, lot 2).
+  await appliquerFlux(t, 'assistant');
   admin = await login(t, await makeUser(t, 'def_admin', 'admin'));
   await t.svc.db.q(
     "INSERT INTO roles(id, name, permissions) VALUES ('r_assistant', 'Utilisateur de l’assistant', $1)",

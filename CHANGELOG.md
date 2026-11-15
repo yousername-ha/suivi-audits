@@ -16,8 +16,14 @@ fermés**, y compris sur un serveur où l'assistant, l'antivirus, le courriel, l
 l'interface fonctionnaient : un administrateur réactive les modules qui servent, depuis leur page (assistant, envoi des
 courriels, mode ACME, analyse antivirus dans Sécurité, mises à jour depuis l'interface) ; la validation explicite qui s'affiche
 alors rouvre le flux et s'inscrit au journal d'audit. Les lignes `ASSISTANT_RELAIS_URL` et `CLAMAV_HOST` de `.env` deviennent
-inutiles (valeurs par défaut identiques) ; les profils Compose `assistant` et `antivirus` se démarrent encore à la main jusqu'au
-lot 2. _(Session « Projet audit_suivi Coeur ».)_
+inutiles (valeurs par défaut identiques). _(Session « Projet audit_suivi Coeur ».)_
+
+**Plus aucune commande pour l'assistant et l'antivirus** (ADR 0097, lot 2) : l'exécutant d'exploitation démarre et arrête
+lui-même les profils Compose `assistant` et `antivirus` selon leur flux. Un relais ou un antivirus démarré à la main avec
+`--profile` est **arrêté et retiré** au premier passage tant que son module n'a pas été réactivé dans l'application ; le
+contrôle automatique des versions toutes les six heures cesse tant que le flux « Mises à jour » est fermé, et une passerelle
+en ACME revient à l'autorité interne si le flux ACME est fermé. Réactiver les modules qui servent juste après la mise à jour.
+_(Session « Projet audit_suivi Coeur ».)_
 
 ### Ajouté
 
@@ -38,6 +44,21 @@ lot 2. _(Session « Projet audit_suivi Coeur ».)_
   redémarrer l'API. Commandes de l'exécutant `suivi flux-souhaites` et `suivi flux-appliques` (rapport validé strictement), qui
   serviront au lot 2. Test d'architecture : un service du compose qui sort ou publie un port sans être inscrit au registre fait
   échouer la CI. _(Session « Projet audit_suivi Coeur ».)_
+- **Flux vers l'extérieur pilotés par les modules, lot 2 : l'exécutant applique l'état**
+  ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). À chaque passage, l'exécutant d'exploitation lit l'état
+  voulu et l'applique, sans commande à taper ni SSH : activer l'assistant ou l'analyse antivirus démarre leurs conteneurs
+  (`assistant-relais` ; `freshclam` puis `clamav` une fois les signatures téléchargées), les désactiver les arrête et les
+  retire ; flux fermé, ni courriel réclamé, ni contrôle automatique des versions, ni `git fetch`, téléchargement d'image ou
+  vérification Sigstore, ni demande ACME appliquée, et une passerelle restée en ACME revient d'elle-même à l'autorité
+  interne (un certificat fourni n'est jamais touché). État voulu illisible (application arrêtée ou en redémarrage) :
+  l'exécutant n'émet rien lui-même et laisse les conteneurs dans leur état, sans les arrêter sur une indisponibilité
+  passagère. L'état réellement appliqué (ouvert, fermé ou erreur courte, sans sortie de commande) remonte dans Configuration
+  système > Flux vers l'extérieur, au changement et toutes les 30 minutes. L'assistant ne joint son relais que lorsque son
+  flux est ouvert et appliqué, et le dit sinon. Profils, services et modules viennent de listes fermées dont un test
+  d'architecture vérifie la concordance avec le registre. Guides mis à jour (installation, assistant Mistral, recette
+  Windows) : plus de `docker compose --profile … up -d`. Docker Hub (image ClamAV, téléchargée à la première activation)
+  figure parmi les destinations de l'antivirus dans la fenêtre de validation et les flux à autoriser sur le pare-feu.
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »

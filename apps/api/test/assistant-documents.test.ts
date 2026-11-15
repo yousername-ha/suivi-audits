@@ -7,7 +7,7 @@ import type { ReglagesAssistantDto } from '@suivi/shared';
 import { extraireTexte } from '../src/assistant/extraction.js';
 import { extrairePdf } from '../src/assistant/extraction-pdf.js';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
-import { type Agent, createTestApp, login, makeUser, ouvrirFlux, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, ouvrirFlux, appliquerFlux, type TestApp } from './helpers.js';
 
 /** Archive ZIP minimale (une entrée compressée par nom), pour fabriquer de faux documents bureautiques. */
 function zip(entrees: Record<string, string>, o: { tailleDeclaree?: number; drapeaux?: number } = {}): Buffer {
@@ -237,6 +237,8 @@ beforeAll(async () => {
   t = await createTestApp({}, { modele });
   // Flux de l'assistant ouvert par l'administrateur (ADR 0097) : fermé, l'assistant ne joint pas le modèle.
   await ouvrirFlux(t, 'assistant');
+  // Rapport de l'exécutant : relais démarré (ADR 0097, lot 2).
+  await appliquerFlux(t, 'assistant');
   // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
   await t.svc.db.q(
     "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
