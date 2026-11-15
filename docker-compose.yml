@@ -244,7 +244,7 @@ services:
     pids_limit: 128
     stop_grace_period: 30s
 
-  # Antivirus facultatif : docker compose --profile antivirus up -d  (et CLAMAV_HOST=clamav dans .env)
+  # Antivirus facultatif : docker compose --profile antivirus up -d, puis analyse activée dans l'interface (ouvre son flux, ADR 0097).
   # Deux services : « clamav » (clamd seul) n'est relié qu'au réseau interne « antivirus », partagé avec l'API, sans accès à
   # la base ni à Internet ; « freshclam » (mise à jour des signatures) sort vers Internet mais n'est relié à aucun autre service.
   # Les deux s'exécutent sans privilège (utilisateur clamav, uid 100), système de fichiers en lecture seule.
@@ -300,7 +300,8 @@ services:
       retries: 60
       start_period: 30s
 
-  # Assistant RSSI (ADR 0086), facultatif : docker compose --profile assistant up -d, puis ASSISTANT_RELAIS_URL dans .env.
+  # Assistant RSSI (ADR 0086), facultatif : docker compose --profile assistant up -d, puis assistant activé dans l'interface
+  # (ouvre son flux, ADR 0097) ; l'API connaît l'adresse du relais sans réglage.
   # « assistant-relais » est le SEUL conteneur de l'assistant à sortir : il transmet les demandes de l'API au fournisseur du
   # modèle réglé dans l'interface (HTTPS, certificat vérifié, adresses privées refusées). Même image que l'API, autre
   # commande : aucun accès à la base, aucun secret monté, aucun fichier, aucune capacité Linux. L'API le joint sur le réseau
@@ -334,9 +335,9 @@ networks:
   edge: { internal: true }
   backend: { internal: true }
   av_update: {}
-  # clamd : joint par l'API seule (CLAMAV_HOST=clamav), sans accès à la base ni à Internet.
+  # clamd : joint par l'API seule (hôte « clamav »), sans accès à la base ni à Internet.
   antivirus: { internal: true }
-  # Relais de modèle de l'assistant : joint par l'API seule (ASSISTANT_RELAIS_URL), sans accès à la base.
+  # Relais de modèle de l'assistant : joint par l'API seule (http://assistant-relais:8787), sans accès à la base.
   assistant: { internal: true }
   # Sortie du relais vers le fournisseur du modèle : aucun autre service n'y est relié.
   assistant_sortie: {}

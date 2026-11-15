@@ -13,6 +13,7 @@ import {
   PASSWORD,
   type TestApp,
   type TestUser,
+  ouvrirFlux,
 } from './helpers.js';
 
 const SAISI = 'Vq7!mZ3#kP9$wX2@nR5%tL8&yB4*cD6^hF1(';
@@ -129,6 +130,8 @@ describe('poivre en service et changement', () => {
   let courant = SAISI;
   beforeAll(async () => {
     t = await createTestApp({}, { poivre: SAISI });
+    // Flux « courriel » ouvert (ADR 0097) : l'envoi s'active ici sans repasser par la validation.
+    await ouvrirFlux(t, 'courriel');
     admin = await makeUser(t, 'rssi', 'admin');
     autres = [await makeUser(t, 'alice', 'rw'), await makeUser(t, 'bob', 'ro', { totp: false })];
     agent = await login(t, admin);
@@ -352,6 +355,8 @@ describe('liaison de l’empreinte au compte et fuites', () => {
   let t: TestApp, a: TestUser, b: TestUser, agent: Agent;
   beforeAll(async () => {
     t = await createTestApp({}, { poivre: SAISI });
+    // Flux « courriel » ouvert (ADR 0097) : l'envoi s'active ici sans repasser par la validation.
+    await ouvrirFlux(t, 'courriel');
     a = await makeUser(t, 'alice', 'rw');
     b = await makeUser(t, 'bob', 'rw');
     agent = await login(t, await makeUser(t, 'rssi', 'admin'));

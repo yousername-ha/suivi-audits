@@ -483,6 +483,7 @@ export const adminRoutes = [
         (r) => r.name,
       );
       const c = svc.cfg;
+      const antivirus = await svc.flux.antivirus(c.clamav);
       return {
         app: c.version,
         node: process.version,
@@ -495,11 +496,11 @@ export const adminRoutes = [
         counts,
         migrations,
         keyId: svc.vault.keyId,
-        clamav: c.clamav
-          ? `${c.clamav.host}:${c.clamav.port}${c.clamav.required ? ' (obligatoire)' : ''}`
-          : 'désactivé',
-        /** Version annoncée par le démon ; nulle s'il est désactivé ou injoignable. */
-        clamavVersion: await clamavVersion(c),
+        clamav: antivirus
+          ? `${antivirus.host}:${antivirus.port}${antivirus.required ? ' (obligatoire)' : ''}`
+          : 'désactivé (flux « antivirus » fermé)',
+        /** Version annoncée par le démon ; nulle s'il n'est pas en service ou est injoignable. */
+        clamavVersion: await clamavVersion(antivirus),
         repartition: {
           totalOctets,
           piecesOctets,

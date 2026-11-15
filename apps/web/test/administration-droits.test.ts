@@ -43,6 +43,7 @@ describe('cartes de l’Administration : droits', () => {
     expect(cartesVisibles(peut, 'systeme')).toEqual([
       'sauvegardes',
       'mises-a-jour',
+      'flux-externes',
       'certificats',
       'sessions',
       'journal',

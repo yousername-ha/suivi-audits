@@ -104,9 +104,12 @@ export interface OptionsAnalyse {
   surEchec?: () => void;
 }
 
-/** Analyse ClamAV (protocole clamd INSTREAM). Renvoie 'sain' | 'non_analysé' ; lève FileRejected si infecté ou si l'analyse est obligatoire et impossible. */
-export function scanFile(cfg: Config, buf: Buffer, o: OptionsAnalyse = {}): Promise<'sain' | 'non_analysé'> {
-  const av = cfg.clamav;
+/** Démon ClamAV en service : celui de la configuration quand le flux « antivirus » est ouvert (ADR 0097), sinon null. */
+export type Antivirus = Config['clamav'] | null;
+
+/** Analyse ClamAV (protocole clamd INSTREAM). Renvoie 'sain' | 'non_analysé' ; lève FileRejected si infecté ou si l'analyse est obligatoire et impossible.
+    Sans antivirus en service (flux fermé), le fichier est accepté « non analysé », comme avant toute installation de ClamAV. */
+export function scanFile(av: Antivirus, buf: Buffer, o: OptionsAnalyse = {}): Promise<'sain' | 'non_analysé'> {
   if (!av) return Promise.resolve('non_analysé');
   return new Promise((resolve, reject) => {
     const s = net.connect(av.port, av.host);
@@ -154,10 +157,9 @@ export function scanFile(cfg: Config, buf: Buffer, o: OptionsAnalyse = {}): Prom
   });
 }
 
-/** Version annoncée par le démon ClamAV (commande clamd VERSION). Nul quand l'antivirus est désactivé ou injoignable :
-    l'écran dit alors « Non disponible » au lieu d'inventer une valeur. */
-export function clamavVersion(cfg: Config, delaiMs = 3000): Promise<string | null> {
-  const av = cfg.clamav;
+/** Version annoncée par le démon ClamAV (commande clamd VERSION). Nul quand l'antivirus n'est pas en service ou est
+    injoignable : l'écran dit alors « Non disponible » au lieu d'inventer une valeur. */
+export function clamavVersion(av: Antivirus, delaiMs = 3000): Promise<string | null> {
   if (!av) return Promise.resolve(null);
   return new Promise((resolve) => {
     const s = net.connect(av.port, av.host);

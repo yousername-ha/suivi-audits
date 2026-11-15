@@ -11,7 +11,7 @@ import type {
 } from '@suivi/shared';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
 import { HttpError } from '../src/http/errors.js';
-import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, ouvrirFlux, type TestApp } from './helpers.js';
 
 class FauxModele implements TransportModele {
   demandes: DemandeModele[] = [];
@@ -104,6 +104,8 @@ const rappelsDe = async (userId: string) =>
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Flux de l'assistant ouvert par l'administrateur (ADR 0097) : fermé, l'assistant ne joint pas le modèle.
+  await ouvrirFlux(t, 'assistant');
   // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
   await t.svc.db.q(
     "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",

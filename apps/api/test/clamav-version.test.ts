@@ -8,8 +8,9 @@ const serveurs: net.Server[] = [];
 afterEach(() => {
   for (const s of serveurs.splice(0)) s.close();
 });
+/** Démon antivirus de la configuration (en service : flux « antivirus » ouvert, ADR 0097). */
 const config = (env: Record<string, string>) =>
-  loadConfig({ DB_HOST: 'x', DB_PASSWORD: 'x', DOC_MASTER_KEY: Buffer.alloc(32, 1).toString('base64'), ...env });
+  loadConfig({ DB_HOST: 'x', DB_PASSWORD: 'x', DOC_MASTER_KEY: Buffer.alloc(32, 1).toString('base64'), ...env }).clamav;
 const demon = (reponse: string | null) =>
   new Promise<number>((resolve) => {
     const s = net.createServer((c) => {
@@ -30,8 +31,8 @@ describe('version de ClamAV', () => {
       'ClamAV 1.4.2/27800/Tue Oct 27 08:00:00 2026',
     );
   });
-  it('renvoie null sans antivirus configuré', async () => {
-    expect(await clamavVersion(config({}))).toBeNull();
+  it('renvoie null sans antivirus en service (flux fermé)', async () => {
+    expect(await clamavVersion(null)).toBeNull();
   });
   it('renvoie null si le démon est injoignable ou muet', async () => {
     const mort = await demon('x');

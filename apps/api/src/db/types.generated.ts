@@ -392,6 +392,16 @@ export interface DroitsRessources {
   granted_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface FluxExternes {
+  module: string;
+  ouvert: Generated<boolean>;
+  decide_par: string | null;
+  decide_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  applique: "ouvert" | "ferme" | "erreur" | null;
+  applique_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+}
+
 export interface FonctionMembres {
   fonction_id: string;
   user_id: string;
@@ -1597,6 +1607,7 @@ export interface DB {
   document_versions: DocumentVersions;
   documents: Documents;
   droits_ressources: DroitsRessources;
+  flux_externes: FluxExternes;
   fonction_membres: FonctionMembres;
   fonctions: Fonctions;
   grc_framework_copy_versions: GrcFrameworkCopyVersions;

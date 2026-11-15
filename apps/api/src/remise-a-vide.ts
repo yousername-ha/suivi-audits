@@ -38,6 +38,9 @@ export const TABLES_SYSTEME = [
   'roles',
   'assistant_reglages',
   'assistant_profils',
+  // Flux vers l'extérieur (ADR 0097) : décision de l'administrateur, comme les réglages de l'assistant ; une remise à vide
+  // ne rouvre ni ne ferme aucun flux.
+  'flux_externes',
 ] as const;
 
 /** Effacé seulement par la portée « tout » : comptes, groupes, fonctions, réglages et configuration de la plateforme. */

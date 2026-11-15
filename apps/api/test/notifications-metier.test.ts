@@ -2,7 +2,7 @@
    (le réglage personnel l'emporte), canal courriel déposé dans la file de l'exécutant seulement si le courriel est configuré,
    idempotence, droits, concurrence et journal sans adresse. Données fictives : adresses en « .test ». */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, type TestApp, ouvrirFlux } from './helpers.js';
 
 const URL_REGLAGES = (kind: string, id: string) => `/api/admin/notifications/reglages/${kind}/${id}`;
 const bientot = () => new Date(Date.now() + 2 * 86_400_000).toISOString();
@@ -72,6 +72,8 @@ describe('notifications métier', () => {
 
   beforeAll(async () => {
     t = await createTestApp();
+    // Flux « courriel » ouvert par l'administrateur (ADR 0097) : fermé, rien n'est remis à l'exécutant.
+    await ouvrirFlux(t, 'courriel');
     admin = await login(t, await makeUser(t, 'notif_admin', 'admin'));
     lecteur = await login(t, await makeUser(t, 'notif_lecteur', 'ro'));
     for (const n of ['A', 'B', 'C', 'D']) {

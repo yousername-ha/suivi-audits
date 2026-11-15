@@ -71,7 +71,8 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
       return { prochainTest: next.toISOString().slice(0, 10), enRetard: next < new Date() };
     }
     case 'courriel':
-      return { motDePasseDefini: await svc.courriel.motDePasseDefini() };
+      // Flux « courriel » (ADR 0097) : tant qu'il est fermé, rien ne part, et la page le dit.
+      return { motDePasseDefini: await svc.courriel.motDePasseDefini(), fluxOuvert: await svc.flux.ouvert('courriel') };
     case 'securite':
       return { mfaObligatoire: true };
     default:
@@ -215,10 +216,26 @@ export const settingsRoutes = [
       if (params.section === 'import_export') await svc.modules.assert('import_export');
       for (const p of writePermissions(params.section)) svc.auth.requirePermission(sess, p);
       const expected = requireIfMatch(req);
-      const r = await svc.db.tx(
-        (c) => svc.settings.write(c, params.section, body, expected, sess.user),
-        sess.user.username,
-      );
+      // Courriel (ADR 0097, précision du RSSI du 15/11/2026) : activer l'envoi ouvre le flux « courriel » dans la même
+      // transaction, après validation explicite (fluxConfirme) par un administrateur ; le désactiver le referme.
+      const { fluxConfirme, ...valeurs } = body;
+      const saisie = params.section === 'courriel' ? valeurs : body;
+      const r = await svc.db.tx(async (c, k) => {
+        const ecrit = await svc.settings.write(c, params.section, saisie, expected, sess.user);
+        if (params.section === 'courriel') {
+          if (ecrit.after.actif === true)
+            await svc.flux.activer(c, k, 'courriel', {
+              confirme: fluxConfirme === true,
+              administrateur: sess.user.rights.can('administration', 'administrer'),
+              actor: sess.user,
+              ip,
+              origine: 'settings.courriel',
+            });
+          else if (ecrit.before.actif === true)
+            await svc.flux.desactiver(c, k, 'courriel', sess.user, ip, 'settings.courriel');
+        }
+        return ecrit;
+      }, sess.user.username);
       await svc.settings.load();
       await svc.db.audit(sess.user, ip, 'settings.update', params.section, {
         before: r.before,

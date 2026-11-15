@@ -30,6 +30,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { api, errorMessage, get, post, saveBlob } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets } from '../components/common';
+import { FluxFermeAlerte } from '../components/FluxExternes';
+import { useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
 
 const KEY = ['admin', 'exploitation'];
@@ -109,6 +111,7 @@ export function OperationsPanel() {
   const [apercu, setApercu] = useState<ApercuCertificat | null>(null);
   const [acmeEmail, setAcmeEmail] = useState('');
   const [acmeServeur, setAcmeServeur] = useState('');
+  const flux = useValidationFlux();
   const controler = async () => {
     if (!certificate) return;
     setError(null);
@@ -185,6 +188,8 @@ export function OperationsPanel() {
     q.data?.jobs.some((j) => ['en_attente', 'en_cours', 'intervention'].includes(j.status)) ||
     backups.data?.jobs.some((j) => ['en_attente', 'en_cours'].includes(j.status));
   const disabled = pending || !q.data?.available || !!active;
+  // Flux « acme » fermé (ADR 0097) : aucune demande de certificat public ; inconnu (champ absent), rien n'est bloqué ici.
+  const acmeFerme = q.data?.fluxAcmeOuvert === false;
   const archives = host?.archives.filter((a) => a.name.toLowerCase().includes(filter.toLowerCase())) ?? [];
   const archive = host?.archives.find((a) => a.id === selected);
   const verified = (id: string, sha: string) =>
@@ -484,6 +489,7 @@ export function OperationsPanel() {
                   Réglage ACME en vigueur : {host.acme.email} · {host.acme.directory}
                 </Text>
               )}
+              {acmeFerme && <FluxFermeAlerte module="acme" />}
               <TextInput
                 label="Adresse de courriel de contact ACME"
                 type="email"
@@ -499,20 +505,43 @@ export function OperationsPanel() {
                 onChange={(e) => setAcmeServeur(e.currentTarget.value)}
               />
               <Group>
-                <ConfirmButton
-                  disabled={disabled || !acmeEmail.trim()}
-                  message="Passer en ACME ? Le serveur contactera le serveur ACME, le frontal sera redémarré et contrôlé. La configuration précédente est rétablie en cas d’échec."
-                  onConfirm={() =>
-                    void request({
-                      kind: 'tls_acme',
-                      email: acmeEmail.trim(),
-                      directory: acmeServeur.trim() || ACME_PAR_DEFAUT,
-                      confirmation: 'APPLIQUER',
-                    })
-                  }
-                >
-                  Obtenir un certificat ACME
-                </ConfirmButton>
+                {acmeFerme ? (
+                  // Flux fermé (ADR 0097, précision du RSSI du 15/11/2026) : choisir ACME ouvre le flux, après validation
+                  // explicite ; la demande et l'ouverture partent en une seule opération.
+                  <Button
+                    disabled={disabled || !acmeEmail.trim()}
+                    onClick={() =>
+                      void flux.valider('acme').then(async (ok) => {
+                        if (ok)
+                          await request({
+                            kind: 'tls_acme',
+                            email: acmeEmail.trim(),
+                            directory: acmeServeur.trim() || ACME_PAR_DEFAUT,
+                            confirmation: 'APPLIQUER',
+                            fluxConfirme: true,
+                          });
+                      })
+                    }
+                  >
+                    Obtenir un certificat ACME
+                  </Button>
+                ) : (
+                  <ConfirmButton
+                    disabled={disabled || !acmeEmail.trim()}
+                    message="Passer en ACME ? Le serveur contactera le serveur ACME, le frontal sera redémarré et contrôlé. La configuration précédente est rétablie en cas d’échec."
+                    onConfirm={() =>
+                      void request({
+                        kind: 'tls_acme',
+                        email: acmeEmail.trim(),
+                        directory: acmeServeur.trim() || ACME_PAR_DEFAUT,
+                        confirmation: 'APPLIQUER',
+                      })
+                    }
+                  >
+                    Obtenir un certificat ACME
+                  </ConfirmButton>
+                )}
+                {flux.fenetre}
               </Group>
               <Title order={3} size="h5">
                 Certificat fourni
