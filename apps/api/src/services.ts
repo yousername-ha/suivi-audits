@@ -41,9 +41,12 @@ import { Assistant } from './assistant/index.js';
 import { DocumentsAssistant } from './assistant/documents.js';
 import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
+import { FluxExternes } from './flux-externes.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
+  /** Flux vers l'extérieur (ADR 0097) : état voulu et appliqué, relu en base à chaque usage. */
+  const flux = new FluxExternes(db);
   const vault = new Vault(cfg.masterKey);
   const bus = new Bus(cfg.db, log);
   const legacy = new LegacyStore(cfg, db);
@@ -57,7 +60,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   legacy.registerBatch(reglagesMapper(CLES_REGLAGES));
   const settings = new Settings(cfg, db, legacy);
   const businessPolicies = new BusinessPolicies(db);
-  const modules = new Modules(cfg.db, db);
+  const modules = new Modules(cfg.db, db, flux);
   const grc = new Grc(db, legacy, businessPolicies, modules);
   const configGrc = new ConfigGrc(db, grc);
   grc.methodBindings = configGrc;
@@ -73,10 +76,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   auth.exigenceCle = (u) => webauthn.exigence(u);
   webauthn.surAlerte = (e) => alertesSecurite.cleSecurite(e);
   const modele = options.modele ?? new RelaisModele(cfg.assistantRelais);
-  const assistant = new Assistant(db, vault, grc, modele, log);
+  const assistant = new Assistant(db, vault, grc, modele, log, flux);
   const assistantRondes = new RondesAssistant(db, grc, assistant, modele, log);
   assistant.rondes = assistantRondes;
-  const assistantDocuments = new DocumentsAssistant(db, vault, cfg, assistant, log);
+  const assistantDocuments = new DocumentsAssistant(db, vault, assistant, log, flux);
   assistant.documents = assistantDocuments;
   assistant.organisation = historique;
   return {
@@ -90,16 +93,17 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     configGrc,
     historique,
     modules,
-    updates: new Updates(cfg, db, settings, alertes),
+    flux,
+    updates: new Updates(cfg, db, settings, alertes, flux),
     remiseAVide: new RemiseAVide(db),
     backups: new Backups(cfg, db, alertes),
-    operations: new Operations(cfg, db, vault, alertes),
+    operations: new Operations(cfg, db, vault, alertes, flux),
     walls: new Walls(cfg, db),
     journalTechnique: new JournalTechnique(db, log),
     typesProcessus: new TypesProcessus(db),
     calendriers: new CalendriersPlateforme(db),
     conservation: new Conservation(db),
-    courriel: new Courriel(db, vault),
+    courriel: new Courriel(db, vault, flux),
     notificationsMetier,
     auth,
     motsDePasse,

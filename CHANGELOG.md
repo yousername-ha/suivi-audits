@@ -10,8 +10,55 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : additive (une table, un index), durée négligeable, sans reprise
 de données. _(Session « Projet audit_suivi Coeur ».)_
 
+**Migration automatique `071`** (flux vers l'extérieur, [ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), lot 1) :
+additive (une table), durée négligeable, sans reprise de données. **Après la mise à jour, tous les flux vers l'extérieur sont
+fermés**, y compris sur un serveur où l'assistant, l'antivirus, le courriel, le certificat ACME ou les mises à jour depuis
+l'interface fonctionnaient : un administrateur réactive les modules qui servent, depuis leur page (assistant, envoi des
+courriels, mode ACME, analyse antivirus dans Sécurité, mises à jour depuis l'interface) ; la validation explicite qui s'affiche
+alors rouvre le flux et s'inscrit au journal d'audit. Les lignes `ASSISTANT_RELAIS_URL` et `CLAMAV_HOST` de `.env` deviennent
+inutiles (valeurs par défaut identiques). _(Session « Projet audit_suivi Coeur ».)_
+
+**Plus aucune commande pour l'assistant et l'antivirus** (ADR 0097, lot 2) : l'exécutant d'exploitation démarre et arrête
+lui-même les profils Compose `assistant` et `antivirus` selon leur flux. Un relais ou un antivirus démarré à la main avec
+`--profile` est **arrêté et retiré** au premier passage tant que son module n'a pas été réactivé dans l'application ; le
+contrôle automatique des versions toutes les six heures cesse tant que le flux « Mises à jour » est fermé, et une passerelle
+en ACME revient à l'autorité interne si le flux ACME est fermé. Réactiver les modules qui servent juste après la mise à jour.
+_(Session « Projet audit_suivi Coeur ».)_
+
 ### Ajouté
 
+- **Flux vers l'extérieur pilotés par les modules, lot 1** ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)) :
+  registre partagé des modules qui sortent du serveur ou exposent un port (assistant RSSI, courriel, certificat public ACME,
+  antivirus, mises à jour), avec destinations, ports, porteur, données qui sortent et flux à autoriser sur le pare-feu. **Tout est
+  fermé par défaut.** Activer un module ouvre son flux, sans étape séparée (précision du RSSI du 15/11/2026) : l'interrupteur de
+  l'assistant, l'envoi des courriels, le choix du mode ACME, la nouvelle « analyse antivirus » (Configuration système >
+  Sécurité) et les mises à jour depuis l'interface affichent une fois une fenêtre qui détaille destinations, ports et données
+  qui sortent, avec une case de validation obligatoire ; l'activation et l'ouverture partent en une seule opération, réservée à
+  `administration:administrer` (journal `flux.externe.ouvert` / `flux.externe.ferme`, avec les destinations et l'origine du
+  geste). Désactiver le module referme le flux, y compris en désactivant le module « assistant » dans Administration >
+  Modules ; le réactiver ne rouvre rien (il faut repasser par l'interrupteur et la validation). Nouvelle carte Configuration système > « Flux vers l'extérieur », en résumé :
+  état voulu, état appliqué, erreur, date, flux à autoriser sur le pare-feu, bouton Fermer. Tant qu'un flux est
+  fermé, l'API ne fait rien sortir : l'assistant ne joint pas le relais (message qui renvoie au geste d'activation), l'antivirus n'est pas
+  appelé (dépôt accepté « non analysé »), aucun courriel n'est remis à l'exécutant, vérification et installation des mises à
+  jour sont refusées, une demande de certificat ACME aussi ; chaque page le dit. L'état est relu à chaque usage, sans
+  redémarrer l'API. Commandes de l'exécutant `suivi flux-souhaites` et `suivi flux-appliques` (rapport validé strictement), qui
+  serviront au lot 2. Test d'architecture : un service du compose qui sort ou publie un port sans être inscrit au registre fait
+  échouer la CI. _(Session « Projet audit_suivi Coeur ».)_
+- **Flux vers l'extérieur pilotés par les modules, lot 2 : l'exécutant applique l'état**
+  ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). À chaque passage, l'exécutant d'exploitation lit l'état
+  voulu et l'applique, sans commande à taper ni SSH : activer l'assistant ou l'analyse antivirus démarre leurs conteneurs
+  (`assistant-relais` ; `freshclam` puis `clamav` une fois les signatures téléchargées), les désactiver les arrête et les
+  retire ; flux fermé, ni courriel réclamé, ni contrôle automatique des versions, ni `git fetch`, téléchargement d'image ou
+  vérification Sigstore, ni demande ACME appliquée, et une passerelle restée en ACME revient d'elle-même à l'autorité
+  interne (un certificat fourni n'est jamais touché). État voulu illisible (application arrêtée ou en redémarrage) :
+  l'exécutant n'émet rien lui-même et laisse les conteneurs dans leur état, sans les arrêter sur une indisponibilité
+  passagère. L'état réellement appliqué (ouvert, fermé ou erreur courte, sans sortie de commande) remonte dans Configuration
+  système > Flux vers l'extérieur, au changement et toutes les 30 minutes. L'assistant ne joint son relais que lorsque son
+  flux est ouvert et appliqué, et le dit sinon. Profils, services et modules viennent de listes fermées dont un test
+  d'architecture vérifie la concordance avec le registre. Guides mis à jour (installation, assistant Mistral, recette
+  Windows) : plus de `docker compose --profile … up -d`. Docker Hub (image ClamAV, téléchargée à la première activation)
+  figure parmi les destinations de l'antivirus dans la fenêtre de validation et les flux à autoriser sur le pare-feu.
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »
@@ -23,16 +70,24 @@ de données. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
 
+- **Animations en continu, sans bouton de pause** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md),
+  décision du RSSI du 15/11/2026) : les boutons de pause et de reprise des animations sont retirés du menu latéral, du Plan
+  d'actions et des tâches récurrentes, des chemins EBIOS RM, du panneau de l'assistant, de Processus, des Parties intéressées,
+  du PESTEL, du SWOT, des Objectifs et indicateurs et du graphe des Périmètres, avec les préférences de pause gardées dans le
+  navigateur (menu, tâches). Les animations, décoratives, tournent en continu ; la préférence système « réduire les
+  animations », l'onglet masqué, l'impression et le réglage « Animées / Automatiques / Arrêtées » du parcours ISO et des
+  chemins EBIOS les arrêtent toujours. Aucune migration, aucune API. _(Session « Projet audit_suivi Coeur ».)_
 - **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
   page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
   thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
   sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
   remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
-  (décisions du RSSI) ; le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés
-  (bon job, santé `ok`, adresse de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la
-  version cible et l'avis de lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas raccordé
-  (second lot) : sa zone l'indique, sans ligne simulée. La page étant servie par le frontal, elle suit l'image
-  `GATEWAY_VERSION`. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+  (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
+  le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
+  de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
+  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas raccordé (second lot) : sa zone
+  l'indique, sans ligne simulée. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
+  « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 ## [7.1.1] — 2026-11-14
 

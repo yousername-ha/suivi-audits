@@ -9,6 +9,7 @@ import { createLogger } from '../src/log.js';
 import {
   effectivePermissions,
   finPoivre,
+  type FluxModule,
   formaterPoivreGenere,
   genererPoivre,
   Rights,
@@ -93,6 +94,18 @@ export async function createTestApp(
       await dropDatabase(dbName);
     },
   };
+}
+
+/** Ouvre des flux vers l'extérieur (ADR 0097), comme l'administrateur après confirmation : par défaut tout est fermé, et les
+    tests d'un module qui sort (assistant, antivirus, courriel…) partent d'un flux ouvert. */
+export async function ouvrirFlux(t: TestApp, ...modules: FluxModule[]) {
+  for (const m of modules) await t.svc.flux.changer(m, true, { username: 'test' }, '127.0.0.1');
+}
+
+/** Simule le rapport de l'exécutant d'exploitation (`suivi flux-appliques`) : flux appliqués ouverts (conteneur de sortie
+    démarré). L'assistant n'utilise son relais que si son flux est ouvert ET appliqué (ADR 0097, lot 2). */
+export async function appliquerFlux(t: TestApp, ...modules: FluxModule[]) {
+  await t.svc.flux.appliquer(Object.fromEntries(modules.map((m) => [m, { etat: 'ouvert' as const }])));
 }
 
 /** Client HTTP de test : conserve les cookies, envoie l'origine et le jeton CSRF comme un navigateur. */

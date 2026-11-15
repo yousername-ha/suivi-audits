@@ -55,6 +55,78 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
 - La reprise des réglages d'un serveur existant : l'application n'est pas encore en production (consigne du 14/11/2026, pas de
   reprise de données) ; un serveur déjà installé retrouve ses flux fermés et l'administrateur les rouvre depuis la page.
 
+## Précision du RSSI (15/11/2026) : l'activation du module ouvre son flux, sans étape séparée
+
+- Le geste d'activation du module, là où il se fait déjà, affiche une fois la fenêtre de validation (destinations, ports,
+  données qui sortent, case de validation obligatoire). La validation enregistre l'activation **et** ouvre le flux en une seule
+  opération ; désactiver le module referme le flux. Les deux sont inscrits au journal.
+- Gestes retenus : assistant, l'interrupteur « Activer l'assistant » de sa page de réglage (Plateforme > Assistant RSSI) ;
+  courriel, « Activer l'envoi de courriels » de sa page ; certificat ACME, le choix du mode ACME (« Obtenir un certificat
+  ACME »), et le retour à l'autorité interne ou à un certificat fourni le referme ; antivirus, « Activer l'analyse antivirus »
+  (geste créé dans Configuration système > Sécurité) ; mises à jour, « Activer les mises à jour depuis l'interface » dans la
+  page Mises à jour.
+- Côté serveur, voie retenue : les routes d'activation existantes portent la validation (`fluxConfirme: true`) et ouvrent le
+  flux dans **leur** transaction (`PUT /api/assistant/reglages`, `PUT /api/settings/courriel`, demande `tls_acme`) ; sans
+  validation, 409 (`flux_validation`) ; sans le droit `administration:administrer`, 403 (`flux_droit`), même si la personne a
+  le droit du module (droit non élargi). Pour l'antivirus et les mises à jour, qui n'ont pas d'autre état, l'activation est la
+  décision de flux elle-même, par la route commune `PUT /api/admin/flux-externes/:module`. Cette route n'ouvre pas le flux
+  d'un module activé par son propre geste (409 `flux_par_module`) ; elle ferme toujours.
+- La page Administration « Flux vers l'extérieur » devient un **résumé** : état voulu et appliqué, erreur, flux à autoriser sur
+  le pare-feu, lien vers la page du module et bouton Fermer. On n'y ouvre rien.
+- La fenêtre de validation est un composant réutilisable (`apps/web/src/components/ValidationFlux.tsx` : fenêtre, contenu seul
+  et `useValidationFlux`), que l'assistant d'installation (lot 3) reprendra pour « Activer / Plus tard ».
+
+## Mise en œuvre
+
+- **Lot 1 — registre, état, gestes d'activation et résumé : livré** (session « Projet audit_suivi Coeur »). Registre partagé
+  `packages/shared/src/flux-externes.ts` (cinq modules, destinations, ports, porteur, données qui sortent, pare-feu, geste
+  d'activation) ; migration `071` additive (`flux_externes` : état voulu, décidé par / le, état appliqué, date, erreur courte),
+  sans reprise : tout est fermé, y compris sur un serveur déjà installé ; table de configuration conservée par la remise à
+  vide. Lecture `GET /api/admin/flux-externes` (`administration:lire`) ; ouverture par les gestes d'activation ci-dessus ;
+  journal `flux.externe.ouvert` / `flux.externe.ferme` avec les destinations et l'origine du geste. CLI de l'exécutant :
+  `suivi flux-souhaites` et `suivi flux-appliques` (entrée validée strictement, journal `flux.externe.applique` au
+  changement). Blocages côté API, état relu à chaque usage : assistant (relais `http://assistant-relais:8787` par défaut, sans
+  `.env`), antivirus (hôte `clamav` par défaut ; fermé, dépôt accepté « non analysé »), courriel (rien n'est remis à
+  l'exécutant, test refusé), mises à jour (vérification et installation refusées, demande en file close), ACME (demande en
+  attente annulée à la fermeture). Test d'architecture `apps/api/test/architecture-flux.test.ts`.
+  Demande du RSSI après revue (15/11/2026) : désactiver un module dans Administration > Modules (ADR 0019) referme aussi son
+  flux, dans la même transaction (journal `flux.externe.ferme`, origine `modules.update`) ; la réactivation du module ne rouvre
+  rien, il faut repasser par son geste d'activation et la validation. Généralisé par le champ `moduleActivation` du registre
+  (aujourd'hui l'assistant seul : les autres modules du registre ne sont pas des modules de l'ADR 0019).
+- **Lot 2 — exécutant : livré** (session « Projet audit_suivi Coeur »). À chaque passage (environ 15 s), l'exécutant lit
+  `suivi flux-souhaites` et l'applique, sans commande à taper ni SSH :
+  - conteneurs dédiés (`scripts/update-worker.py`) : flux ouvert, `docker compose --profile <profil> up -d --no-deps <service>`,
+    services dans l'ordre et sans bloquer la boucle (`clamav` n'est lancé qu'une fois `freshclam` sain) ; fermé,
+    `docker compose --profile <profil> rm --stop --force <services>` (arrêtés et retirés, ils ne redémarrent pas avec Docker).
+    Un `up -d` est renouvelé au démarrage de l'exécutant et toutes les heures, pour reprendre une nouvelle image après une mise
+    à jour ou un réglage changé. Après une erreur de démarrage, nouvel essai dix minutes plus tard ;
+  - mises à jour : flux fermé, ni contrôle automatique toutes les six heures, ni vérification ou installation demandée (la
+    demande est close en échec, avec un message explicite), ni `git fetch`, `docker pull`, `docker manifest` ou `cosign` ; l'état est relu au moment de
+    vérifier et d'installer ;
+  - courriel (`scripts/exploitation-worker.py`) : flux fermé, aucune demande n'est réclamée (`mail-claim`), en plus du blocage
+    côté API. Aucune autre sortie de cet exécutant (l'observation du certificat vise le frontal du site) ;
+  - ACME : l'exécutant relit le flux juste avant d'appliquer une demande `tls_acme` (fermé : échec avant application, rien ne
+    part) ; fermé alors que la passerelle est en ACME (mode `acme`, ou mode `env` avec `CADDY_TLS` réglé sur un courriel), il
+    la ramène à l'autorité interne par le chemin d'une demande `tls_internal` (marqueur `interne`, validation, recréation,
+    contrôle du certificat servi), sous le verrou des sauvegardes. Un certificat fourni (mode `web`) et le réglage ACME ne sont
+    jamais touchés. Configuration refusée : marqueur antérieur rétabli, erreur rapportée, nouvel essai dix minutes plus tard ;
+    `TLS_WEB_MANAGEMENT=0` : rien n'est modifié, erreur rapportée.
+  Règle d'un état voulu illisible (application arrêtée ou en redémarrage, réponse inattendue) : l'exécutant n'émet rien
+  lui-même (ni courriel, ni vérification ou téléchargement de version, ni demande ACME) et laisse les conteneurs de sortie dans
+  l'état où il les a mis, sans rien rapporter ; une indisponibilité passagère n'arrête donc pas l'assistant ni l'antivirus et
+  n'ouvre jamais rien. Rapport `suivi flux-appliques` (assistant, antivirus et mises à jour par `update-worker.py` ; courriel
+  et ACME par `exploitation-worker.py`) au changement et au plus tard toutes les 30 minutes, erreur courte en phrase fixe
+  (≤ 300 caractères, jamais de sortie de commande). Arguments fermés : profils, services et modules viennent de constantes des
+  deux scripts ; un nom reçu de l'application et inconnu est ignoré ; le test d'architecture vérifie leur concordance avec le
+  registre et l'ordre de démarrage (`depends_on`). Côté API, l'assistant ne joint son relais que si son flux est ouvert **et**
+  appliqué ouvert (sinon un message dit que l'exécutant l'applique, ou qu'il a échoué). L'antivirus suit l'état voulu seul :
+  la connexion de l'API à `clamav` est interne, et `CLAMAV_REQUIRED` refuse déjà un dépôt tant que le démon ne répond pas ;
+  exiger l'état appliqué y ferait accepter des fichiers « non analysés » pendant le démarrage. Le périmètre de confiance de
+  l'exécutant ne change pas (il avait déjà le socket Docker). Tests : `scripts/tests/test_flux_executant.py`,
+  `scripts/tests/test_exploitation.py`, `apps/api/test/assistant.test.ts`, `apps/api/test/architecture-flux.test.ts`.
+- Lot 3 — questions de l'assistant d'installation (étape 8), avec le composant de validation du lot 1 : à faire.
+- Lot 4 — documentation : à faire.
+
 ## Conséquences
 
 - Plus aucune commande à taper pour l'assistant, l'antivirus, le courriel, le certificat public ou les mises à jour.

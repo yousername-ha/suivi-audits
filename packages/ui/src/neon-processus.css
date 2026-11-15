@@ -4,8 +4,8 @@
      prises dans la palette de la carte (--carte-<teinte>-accent / -doux), donc lisibles en clair comme en sombre ;
    - la carte garde la classe historique « carte-processus » (sélecteurs existants) : ses anciennes règles d'app.css sont
      neutralisées ici ;
-   - animations limitées à transform et opacity (orbite décorative, survol des cartes), arrêtées en mouvement réduit, en
-     pause et à l'impression. La cartographie SMSI n'est pas concernée. */
+   - animations limitées à transform et opacity (orbite décorative, survol des cartes), arrêtées en mouvement réduit et à
+     l'impression, sans bouton de pause (ADR 0099). La cartographie SMSI n'est pas concernée. */
 .processus-studio {
   --compact-ink: var(--mantine-color-text);
   --compact-muted: var(--mantine-color-dimmed);
@@ -214,10 +214,6 @@
     background: var(--compact-active);
     color: var(--compact-accent);
     box-shadow: inset 0 -2px var(--compact-accent);
-  }
-  .pr-tool:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
   .pr-tool > b {
     position: absolute;

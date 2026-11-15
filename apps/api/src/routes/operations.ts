@@ -15,7 +15,7 @@ export const operationRoutes = [
     tags: ['Administration'],
     access: 'administration:lire',
     response: ExploitationOut,
-    handler: async ({ svc }) => svc.operations.list(),
+    handler: async ({ svc }) => ({ ...(await svc.operations.list()), fluxAcmeOuvert: await svc.flux.ouvert('acme') }),
   }),
   route({
     method: 'PUT',

@@ -51,6 +51,9 @@ class Updates(unittest.TestCase):
         with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
             self.w = m.Worker()
         self.id = str(uuid.uuid4())
+        # Flux « mises-a-jour » ouvert par l'administrateur (ADR 0097) ; les tests du flux fermé le referment.
+        self.ouverts = {'mises-a-jour'}
+        self.w.flux_ouvert = lambda module: module in self.ouverts
 
     def test_publication_stable_uniquement(self):
         self.assertEqual(m.release({'tag_name':'v3.1.0','draft':False,'prerelease':False})[0], '3.1.0')

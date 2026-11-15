@@ -9,6 +9,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Actor, Db, Kdb } from './db/db.js';
 import { DEMANDEUR_ALERTE } from './alertes-exploitation.js';
+import type { FluxExternes } from './flux-externes.js';
 import { HttpError } from './http/errors.js';
 import { adresseUtilisable, EXPIRATION_NOTIFICATION_JOURS } from './notifications-metier.js';
 import type { Vault } from './security/crypto.js';
@@ -69,6 +70,7 @@ export class Courriel {
   constructor(
     private readonly db: Db,
     private readonly vault: Vault,
+    private readonly flux: FluxExternes,
   ) {}
 
   async motDePasseDefini(): Promise<boolean> {
@@ -118,6 +120,8 @@ export class Courriel {
       throw new HttpError(409, 'Renseignez l’hôte, l’adresse d’expédition et le contact technique, puis enregistrez.');
     if (c.utilisateur && !(await this.motDePasseDefini()))
       throw new HttpError(409, 'Un compte est configuré mais aucun mot de passe n’est enregistré.');
+    // Flux fermé (ADR 0097) : rien ne partirait, la demande est refusée plutôt que laissée en file.
+    await this.flux.exiger('courriel');
     if (!(await this.executantDisponible()))
       throw new HttpError(
         503,
@@ -181,6 +185,9 @@ export class Courriel {
       ce qu'il faut pour l'envoyer, mot de passe compris. Une demande de notification dont le destinataire est devenu
       inutilisable (désactivé, expiré, sans adresse) est close sans envoi et la suivante est réclamée. */
   async reclamer(c: SettingsValues['courriel']): Promise<Record<string, unknown> | null> {
+    // Flux fermé (ADR 0097) : rien n'est remis à l'exécutant. Le ménage de la file continue ; les notifications restent en
+    // file et expirent selon la règle habituelle, un message de test encore en attente est clos sans envoi.
+    const ouvert = await this.flux.ouvert('courriel');
     for (let essai = 0; essai < 50; essai++) {
       const r = await this.db.tx(async (_cl, k) => {
         await verrouFile(k);
@@ -222,6 +229,19 @@ export class Courriel {
           .where('status', '=', 'en_attente')
           .where('created_at', '<', sql<Date>`now() - (${EXPIRATION_NOTIFICATION_JOURS}::int * interval '1 day')`)
           .execute();
+        if (!ouvert) {
+          await k
+            .updateTable('courriel_jobs')
+            .set({
+              status: 'echec',
+              finished_at: sql<Date>`now()`,
+              result: sansEnvoi('Flux « Courriel » fermé : le message de test n’a pas été envoyé.'),
+            })
+            .where('kind', '=', 'test')
+            .where('status', '=', 'en_attente')
+            .execute();
+          return undefined;
+        }
         const reclamee = await k
           .updateTable('courriel_jobs')
           .set((eb) => ({ status: 'en_cours', started_at: sql<Date>`now()`, attempts: eb('attempts', '+', 1) }))

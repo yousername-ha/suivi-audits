@@ -704,21 +704,6 @@
   background: var(--as-accent);
   border-radius: 50%;
 }
-.as-bottom button {
-  margin-left: auto;
-  display: grid;
-  place-items: center;
-  width: 23px;
-  height: 23px;
-  border: 0;
-  background: none;
-  color: var(--as-muted);
-  padding: 4px;
-}
-.as-bottom .as-icon {
-  width: 13px;
-  height: 13px;
-}
 .as-launcher {
   position: fixed;
   right: 28px;

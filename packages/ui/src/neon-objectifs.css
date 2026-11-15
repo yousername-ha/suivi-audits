@@ -3,7 +3,8 @@
    - couleurs tirées des jetons de la charte (--neon-*, --suivi-*, --carte-*), contrastes AA vérifiés en clair et en sombre ;
    - rayons bornés à 12 px (ADR 0093) ;
    - animations par transform et opacity seulement (halo de « Non atteint » porté par un pseudo-élément, flèches) ; texte
-     jamais animé ; pause par le bouton du registre, arrêt par le mouvement réduit et à l'impression ;
+     jamais animé ; animations en continu, sans bouton de pause (ADR 0099), arrêtées par le mouvement réduit et à
+     l'impression ;
    - tables à hauteur naturelle (pas d'ascenseur interne), en-têtes collés sous l'en-tête de l'application. */
 .objectifs-module,
 .objectifs-fiche {
@@ -240,15 +241,6 @@
   font-weight: 620;
   line-height: 1.5;
   letter-spacing: -0.022em;
-}
-.objectifs-registre-entete .mantine-Button-root {
-  height: auto;
-  padding: 0.4375rem 0.5625rem;
-  font-size: 0.625rem;
-}
-.objectifs-module .objectifs-registre-entete .mantine-Button-root[data-variant='default'] {
-  background: var(--objectifs-soft);
-  color: var(--objectifs-muted);
 }
 
 /* Vues : sélecteur compact, raccourcis de filtre avec leurs compteurs, filtre complet et légende des états. */
@@ -907,10 +899,6 @@
     animation: objectifs-baisse 2.8s ease-in-out infinite;
   }
 }
-.objectifs-module[data-animations='pause'] :is(.objectifs-donnee, .objectifs-avertissement, .objectifs-tendance),
-.objectifs-module[data-animations='pause'] .objectifs-donnee::after {
-  animation-play-state: paused;
-}
 @keyframes objectifs-halo {
   0%,
   100% {
@@ -1135,12 +1123,6 @@
     align-items: flex-start;
     gap: 0.5rem;
   }
-  .objectifs-registre-entete .mantine-Button-root {
-    max-width: 7rem;
-  }
-  .objectifs-registre-entete .mantine-Button-label {
-    white-space: normal;
-  }
   .objectifs-vues > .mantine-Tabs-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1175,7 +1157,6 @@
   .objectifs-module :is(.objectifs-kpi, .objectifs-registre) {
     box-shadow: none;
   }
-  .objectifs-registre-entete .mantine-Button-root,
   .objectifs-filtres-rapides {
     display: none;
   }

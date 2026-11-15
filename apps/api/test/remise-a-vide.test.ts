@@ -190,6 +190,8 @@ describe('remise à vide : effacement', () => {
       "INSERT INTO roles(id, name, system) VALUES ('perso_raz','Rôle perso', false) ON CONFLICT DO NOTHING",
     );
     await t.svc.db.q("INSERT INTO groups(name) VALUES ('Groupe raz') ON CONFLICT DO NOTHING");
+    // Flux vers l'extérieur (ADR 0097) : décision de l'administrateur, ni rouverte ni refermée par la remise à vide.
+    await t.svc.flux.changer('assistant', true, { id: admin.id, username: admin.username }, '127.0.0.1');
     const rolesSysteme = Number(
       (await t.svc.db.one<{ n: string }>('SELECT count(*)::text n FROM roles WHERE system'))!.n,
     );
@@ -211,6 +213,8 @@ describe('remise à vide : effacement', () => {
     );
     expect(await t.svc.auth.setupPending()).toBe(true);
     expect(await t.svc.remiseAVide.autorisee()).toBe(false);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+    expect(await t.svc.flux.ouvert('courriel')).toBe(false);
     expect(
       (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='remise_a_vide.executee' AND target='tout'")).rowCount,
     ).toBe(1);

@@ -9,7 +9,7 @@ import type { ConversationAssistantDetailDto, EtatAssistantDto, ReglagesAssistan
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
 import { OUTILS, serialiser } from '../src/assistant/outils.js';
 import { HttpError } from '../src/http/errors.js';
-import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
+import { type Agent, createTestApp, login, makeUser, ouvrirFlux, appliquerFlux, type TestApp } from './helpers.js';
 
 const CLE = 'cle-fictive-de-test-0123456789';
 const ADRESSE = 'https://modele.example.invalid/v1';
@@ -70,6 +70,7 @@ const regler = async (
   change: Partial<Pick<ReglagesAssistantDto, 'actif' | 'adresse' | 'modele' | 'budgetJetonsJour'>> & {
     profils?: { id: string; actif: boolean; perimetres: string[] }[];
     version?: number;
+    fluxConfirme?: true;
   },
 ) => {
   const cur = await reglages();
@@ -101,6 +102,10 @@ const ouvrir = async (a: Agent, profil = 'mise_en_oeuvre') => {
 beforeAll(async () => {
   modele = new FauxModele();
   t = await createTestApp({}, { modele });
+  // Flux de l'assistant ouvert par l'administrateur (ADR 0097) : fermé, l'assistant ne joint pas le modèle.
+  await ouvrirFlux(t, 'assistant');
+  // Rapport de l'exécutant : relais démarré (ADR 0097, lot 2).
+  await appliquerFlux(t, 'assistant');
   // Ces tests partent d'un assistant restreint (avant la migration 064, c'était l'état par défaut).
   await t.svc.db.q(
     "UPDATE assistant_profils SET actif = false, tous_perimetres = false, documents = false, classification_max = 'interne'",
@@ -237,6 +242,98 @@ describe('assistant : droit dédié et réglages', () => {
     expect((await admin.post(`${base}/reglages/test`)).json().detail).toContain('relais');
     expect((await admin.get(`${base}/etat`)).json().pret).toBe(false);
     modele.disponible = true;
+  });
+
+  it('flux « assistant » fermé (ADR 0097) : aucun appel au modèle, message qui renvoie au geste d’activation, relu sans redémarrage', async () => {
+    expect(
+      (await admin.put('/api/admin/flux-externes/assistant', { ouvert: false, confirmation: true })).statusCode,
+    ).toBe(200);
+    modele.demandes = [];
+    modele.script = () => ({ role: 'assistant', content: 'prêt' });
+    const test = (await admin.post(`${base}/reglages/test`)).json();
+    expect(test.ok).toBe(false);
+    expect(test.detail).toContain('activant le module');
+    expect(test.detail).toContain('Plateforme > Assistant RSSI');
+    expect(test.detail).not.toContain('pas installé');
+    const etat = (await admin.get(`${base}/etat`)).json() as EtatAssistantDto;
+    expect(etat.pret).toBe(false);
+    expect(etat.motif).toContain('fermé');
+    expect((await reglages()).fluxOuvert).toBe(false);
+    const id = await ouvrir(admin);
+    const r = await admin.post(`${base}/conversations/${id}/messages`, { texte: 'Où en sont les actions ?' });
+    expect(r.statusCode).toBe(409);
+    expect(r.json().error).toContain('fermé');
+    expect(modele.demandes).toHaveLength(0);
+    // Pas d'étape séparée : la route commune n'ouvre pas le flux de l'assistant.
+    expect(
+      (await admin.put('/api/admin/flux-externes/assistant', { ouvert: true, confirmation: true })).json().reason,
+    ).toBe('flux_par_module');
+    // Rouvert par le geste d'activation (précision du RSSI du 15/11/2026) : validation explicite et droit
+    // d'administration exigés, puis activation et ouverture en une seule opération, sans redémarrer l'API.
+    const sansValidation = await regler(admin, {});
+    expect(sansValidation.statusCode).toBe(409);
+    expect(sansValidation.json()).toMatchObject({ reason: 'flux_validation', module: 'assistant' });
+    await t.svc.db.q(
+      "INSERT INTO roles(id, name, permissions) VALUES ('r_assistant_reglage', 'Réglage de l’assistant', $1)",
+      [['assistant:lire', 'assistant:administrer']],
+    );
+    const reglage = await login(t, await makeUser(t, 'as_reglage', 'r_assistant_reglage'));
+    const sansDroit = await regler(reglage, { fluxConfirme: true });
+    expect(sansDroit.statusCode).toBe(403);
+    expect(sansDroit.json()).toMatchObject({ reason: 'flux_droit', module: 'assistant' });
+    expect(await t.svc.flux.ouvert('assistant')).toBe(false);
+    const valide = await regler(admin, { fluxConfirme: true });
+    expect(valide.statusCode, valide.body).toBe(200);
+    expect(valide.json().fluxOuvert).toBe(true);
+    const journal = await t.svc.db.q<{ details: { origine: string } }>(
+      "SELECT details FROM audit_log WHERE action = 'flux.externe.ouvert' AND target = 'assistant' ORDER BY id DESC LIMIT 1",
+    );
+    expect(journal.rows[0]!.details.origine).toBe('assistant.reglages');
+    expect((await admin.post(`${base}/reglages/test`)).json()).toEqual({ ok: true, detail: 'Le modèle a répondu.' });
+    // Flux ouvert : les réglages se modifient sans nouvelle validation.
+    expect((await regler(admin, {})).statusCode).toBe(200);
+    // Désactiver l'assistant referme son flux ; le réactiver redemande la validation.
+    expect((await regler(admin, { actif: false })).statusCode).toBe(200);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(false);
+    expect((await regler(admin, { actif: true })).statusCode).toBe(409);
+    expect((await regler(admin, { actif: true, fluxConfirme: true })).statusCode).toBe(200);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+  });
+
+  it('flux ouvert mais pas encore appliqué par l’exécutant, ou en erreur (ADR 0097, lot 2) : le relais n’est pas joint', async () => {
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+    modele.demandes = [];
+    modele.script = () => ({ role: 'assistant', content: 'prêt' });
+    const id = await ouvrir(admin);
+    // Essai du modèle par le service (la route limite le nombre d'essais par personne).
+    const essayer = () => t.svc.assistant.tester({ username: 'as_admin' }, '127.0.0.1');
+    try {
+      // Rapport de l'exécutant : conteneur du relais pas encore démarré (fermé), puis en erreur.
+      for (const [rapport, attendu] of [
+        [{ etat: 'ferme' }, 'l’applique à son prochain passage'],
+        [{ etat: 'erreur', erreur: 'Démarrage du conteneur « assistant-relais » en échec.' }, 'n’a pas pu l’appliquer'],
+      ] as const) {
+        await t.svc.flux.appliquer({ assistant: rapport });
+        const test = await essayer();
+        expect(test.ok).toBe(false);
+        expect(test.detail).toContain(attendu);
+        expect(test.detail).not.toContain('fermé');
+        // L'erreur détaillée reste dans Administration (droit administration:lire) : elle n'est pas recopiée ici.
+        expect(test.detail).not.toContain('assistant-relais');
+        const etat = (await admin.get(`${base}/etat`)).json() as EtatAssistantDto;
+        expect(etat.pret).toBe(false);
+        expect(etat.motif).toContain(attendu);
+        const r = await admin.post(`${base}/conversations/${id}/messages`, { texte: 'Où en sont les actions ?' });
+        expect(r.statusCode).toBe(409);
+        expect(r.json().error).toContain(attendu);
+      }
+      expect(modele.demandes).toHaveLength(0);
+    } finally {
+      // L'exécutant rapporte le relais démarré : l'assistant répond de nouveau, sans redémarrer l'API.
+      await appliquerFlux(t, 'assistant');
+    }
+    expect(await essayer()).toEqual({ ok: true, detail: 'Le modèle a répondu.' });
+    expect(modele.demandes).toHaveLength(1);
   });
 });
 
@@ -392,7 +489,9 @@ describe('assistant : conversations et outils de lecture', () => {
     expect((await admin.post(`${base}/conversations/${id}/messages`, { texte: 'Bonjour' })).statusCode).toBe(429);
     expect((await regler(admin, { budgetJetonsJour: 500_000, actif: false })).statusCode).toBe(200);
     expect((await admin.post(`${base}/conversations/${id}/messages`, { texte: 'Bonjour' })).statusCode).toBe(409);
-    expect((await regler(admin, { actif: true })).statusCode).toBe(200);
+    // Désactivé, son flux est refermé (ADR 0097) : le réactiver le rouvre, après validation.
+    expect(await t.svc.flux.ouvert('assistant')).toBe(false);
+    expect((await regler(admin, { actif: true, fluxConfirme: true })).statusCode).toBe(200);
 
     const intent = { changes: [{ id: 'assistant', enabled: false }], cascade: false };
     const apercu = await admin.post('/api/admin/modules/preview', intent);

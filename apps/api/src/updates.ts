@@ -20,6 +20,7 @@ import type { Config } from './config.js';
 import { sql } from 'kysely';
 import type { AlertesExploitation } from './alertes-exploitation.js';
 import type { Client, Db } from './db/db.js';
+import type { FluxExternes } from './flux-externes.js';
 import { HttpError } from './http/errors.js';
 import { exploitationOccupee } from './operations.js';
 import { loadGrants } from './rights.js';
@@ -32,6 +33,7 @@ export class Updates {
     private readonly db: Db,
     private readonly settings: Settings,
     private readonly alertes: AlertesExploitation,
+    private readonly flux: FluxExternes,
   ) {}
   /** Fenêtre de maintenance lue en base (et non dans le cache) : la CLI de l'exécutant n'a pas de cache chargé. */
   async fenetre(c?: Client): Promise<FenetreMaintenance> {
@@ -106,6 +108,8 @@ export class Updates {
           throw new HttpError(409, 'Cet identifiant désigne une autre demande.');
         return { id: previous.id, status: previous.status as string };
       }
+      // Flux fermé (ADR 0097) : ni vérification ni installation, rien ne part vers GitHub ou le registre d'images.
+      await this.flux.exiger('mises-a-jour', k);
       const state = this.state();
       if (!state.ready) throw new HttpError(503, 'Le service de mise à jour est indisponible.');
       if (state.maintenance || state.status === 'intervention')
@@ -164,6 +168,26 @@ export class Updates {
         .forUpdate()
         .executeTakeFirst();
       if (!job) return null;
+      // Flux fermé depuis la demande (ADR 0097) : rien n'est remis à l'exécutant ; les demandes en file sont closes et
+      // tracées, pour qu'aucune ne parte d'elle-même à la réouverture.
+      if (!(await this.flux.ouvert('mises-a-jour', k))) {
+        const closes = await k
+          .updateTable('update_jobs')
+          .set({ status: 'failed', finished_at: sql<Date>`now()` })
+          .where('status', '=', 'queued')
+          .returning(['id', 'kind', 'target'])
+          .execute();
+        for (const j of closes)
+          await this.db.audit(
+            { username: 'exploitation serveur' },
+            null,
+            'update.neutralized',
+            j.id,
+            { reason: 'flux_ferme', kind: j.kind, target: j.target },
+            c,
+          );
+        return null;
+      }
       const u = job.user_id
         ? await k
             .selectFrom('users')

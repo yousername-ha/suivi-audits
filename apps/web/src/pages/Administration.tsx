@@ -20,6 +20,8 @@ import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { CleSecoursPanel } from '../components/CleSecours';
+import { FluxExternesPanel } from '../components/FluxExternes';
+import { AntivirusPanel } from '../components/Antivirus';
 import { AdresseSitePanel } from '../components/AdresseSite';
 import { CalendriersPanel } from './AdminCalendriers';
 import { FonctionsPanel } from './AdminFonctions';
@@ -56,6 +58,7 @@ type Icone =
   | 'journal'
   | 'logs'
   | 'modules'
+  | 'reseau'
   | 'terminal';
 
 interface Carte {
@@ -279,6 +282,16 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     ),
   },
   {
+    id: 'flux-externes',
+    cote: 'systeme',
+    titre: 'Flux vers l’extérieur',
+    resume:
+      'Résumé de ce qui sort du serveur (assistant, courriel, certificat public, antivirus, mises à jour) : fermé par défaut, ouvert en activant le module.',
+    icone: 'reseau',
+    teinte: 'orange',
+    detail: () => <FluxExternesPanel />,
+  },
+  {
     id: 'certificats',
     cote: 'systeme',
     titre: 'Certificats et opérations',
@@ -296,7 +309,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'securite',
     cote: 'systeme',
     titre: 'Sécurité',
-    resume: 'Mots de passe, durée des sessions et double authentification.',
+    resume: 'Mots de passe, durée des sessions, double authentification et analyse antivirus des fichiers déposés.',
     icone: 'bouclier',
     teinte: 'vert',
     detail: (m, can) => (
@@ -304,6 +317,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         <SectionLoader section="securite" onDirty={m} />
         {can('administration', 'administrer') && <PoivrePanel />}
         {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
+        {can('administration', 'lire') && <AntivirusPanel />}
       </Stack>
     ),
   },
@@ -401,6 +415,7 @@ const TRACES: Record<Icone, ReactNode> = {
   journal: <path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" />,
   modules: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
   logs: <path d="M4 6h16M4 12h10M4 18h14M19 12h0" />,
+  reseau: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />,
   terminal: <path d="M3 5h18v14H3zM7 10l3 2-3 2M12 15h5" />,
 };
 

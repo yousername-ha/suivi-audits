@@ -2,13 +2,15 @@
    abandonnée close avant une nouvelle, dernière demande, demande inconnue. Données fictives, aucun envoi réel. */
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, type TestApp } from './helpers.js';
+import { createTestApp, type TestApp, ouvrirFlux } from './helpers.js';
 
 let t: TestApp;
 const acteur = { username: 'mailq_admin' };
 
 beforeAll(async () => {
   t = await createTestApp();
+  // Flux « courriel » ouvert par l'administrateur (ADR 0097) : fermé, rien n'est remis à l'exécutant.
+  await ouvrirFlux(t, 'courriel');
 });
 afterAll(() => t.close());
 

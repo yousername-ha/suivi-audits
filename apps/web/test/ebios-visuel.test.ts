@@ -160,6 +160,15 @@ describe('rendu', () => {
     expect(svgs(html)).not.toBe('');
     expect(svgs(html)).not.toContain('style=');
   });
+  it('flux en continu : réglage « Animations » gardé, aucun bouton de pause (ADR 0099)', () => {
+    const html = rendu(
+      createElement(Chemins, { objets: jeu, choisi: 'object:st1', onChoisir() {}, onOuvrir() {}, onVoirSynthese() {} }),
+    );
+    expect(html).toContain('data-anime="oui"');
+    expect(html).toContain('Animations');
+    expect(html).toContain('Voir tous les chemins');
+    expect(html).not.toMatch(/Mettre en pause|Reprendre le mouvement/);
+  });
   it('sans sélection : aucun flux ni contour épais', () => {
     const html = rendu(
       createElement(Chemins, { objets: jeu, choisi: null, onChoisir() {}, onOuvrir() {}, onVoirSynthese() {} }),

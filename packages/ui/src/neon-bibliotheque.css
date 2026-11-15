@@ -5,7 +5,8 @@
    - le détail exigence par exigence reste affiché sous le catalogue (pas de fenêtre), comme dans la cible ;
    - le catalogue défile dans sa zone (ListeDefilante, lot 2) ;
    - couleurs tirées des jetons de la charte (--carte-*, --suivi-*, --mantine-*), clair et sombre ; rayons bornés à 12 px ;
-   - mouvements par transform et opacity seulement, arrêtés par la pause du menu, le mouvement réduit et l'impression. */
+   - mouvements par transform et opacity seulement, en continu (ADR 0099), arrêtés quand l'onglet est masqué (état du menu),
+     par le mouvement réduit et à l'impression. */
 .bb-module,
 .bb-exigences,
 .bb-detail {
@@ -683,7 +684,7 @@
   font-size: 0.8125rem;
 }
 
-/* Mouvements discrets : seulement sans préférence de mouvement réduit et hors pause du menu. */
+/* Mouvements discrets : seulement sans préférence de mouvement réduit et onglet visible (data-mouvement du menu). */
 @media (prefers-reduced-motion: no-preference) {
   .bb-record {
     transition: transform 240ms ease;

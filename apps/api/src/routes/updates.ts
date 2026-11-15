@@ -14,7 +14,8 @@ export const updateRoutes = [
     tags: ['Système'],
     access: 'auth',
     response: UpdateState,
-    handler: async ({ svc }) => svc.updates.state(),
+    // État du flux ajouté par l'API (ADR 0097) : la page des mises à jour dit pourquoi rien n'est vérifié ni installé.
+    handler: async ({ svc }) => ({ ...svc.updates.state(), fluxOuvert: await svc.flux.ouvert('mises-a-jour') }),
   }),
   route({
     method: 'POST',
@@ -39,7 +40,8 @@ export const updateRoutes = [
       await svc.updates.assertAdmin(user);
       if (!svc.limits.updateMfaByUser(user.id))
         throw new HttpError(429, 'Trop de codes refusés. Réessayez dans quinze minutes.');
-      // Le créneau est contrôlé avant le code : un refus horaire ne consomme pas le code saisi.
+      // Le flux et le créneau sont contrôlés avant le code : un refus de principe ne consomme pas le code saisi.
+      await svc.flux.exiger('mises-a-jour');
       await svc.updates.assertWindow();
       if (!(await svc.auth.checkTotp(user.id, body.code))) {
         await svc.db.audit(user, ip, 'update.install.mfa_failed', '', { target: body.version });

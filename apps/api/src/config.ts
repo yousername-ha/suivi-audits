@@ -140,11 +140,16 @@ export function loadConfig(env: Env = process.env) {
     maxUploadMb: int(env.MAX_UPLOAD_MB, 50),
     maxImportMb: int(env.MAX_IMPORT_MB, 50),
     stateHistoryKeep: int(env.STATE_HISTORY_KEEP, 1000),
-    clamav: env.CLAMAV_HOST
-      ? { host: env.CLAMAV_HOST, port: int(env.CLAMAV_PORT, 3310), required: bool(env.CLAMAV_REQUIRED, true) }
-      : null,
-    /** Relais de modèle de l'assistant (ADR 0086) : adresse interne du conteneur « assistant-relais » ; vide s'il n'est pas installé. */
-    assistantRelais: (env.ASSISTANT_RELAIS_URL || '').trim(),
+    /** Démon ClamAV (conteneur « clamav » par défaut). Il n'est utilisé que si l'administrateur a ouvert le flux
+        « antivirus » (ADR 0097) ; « required » : refuser un dépôt quand le démon, en service, ne répond pas. */
+    clamav: {
+      host: (env.CLAMAV_HOST || '').trim() || 'clamav',
+      port: int(env.CLAMAV_PORT, 3310),
+      required: bool(env.CLAMAV_REQUIRED, true),
+    },
+    /** Relais de modèle de l'assistant (ADR 0086) : conteneur « assistant-relais » par défaut, joint seulement si
+        l'administrateur a ouvert le flux « assistant » (ADR 0097). ASSISTANT_RELAIS_URL ne sert qu'à le remplacer. */
+    assistantRelais: (env.ASSISTANT_RELAIS_URL || '').trim() || 'http://assistant-relais:8787',
     appName,
     /** Clés de sécurité FIDO2 / WebAuthn (ADR 0079). */
     webauthn: configWebauthn(env, publicUrl, appName),

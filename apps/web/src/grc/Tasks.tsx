@@ -26,10 +26,10 @@ import { ErrorAlert } from '../components/common';
 import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
 import { libelleDesignation, SelecteurResponsable, useProposables, useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
+import { useOngletVisible } from '../parcours-iso/mouvement';
 import { definirListeCourante } from '../registres/liste-courante';
 import { enRetard, estOccurrence, tonStatut, tonTache, validationDe } from './etat-action';
 import { BasculesFond, useJoursDeFond, type FamilleFond } from './jours-de-fond';
-import { useMouvementTaches } from './mouvement-taches';
 import { EtatTache, ResultatTache, type OuvrirResultat } from './TimelineCommun';
 import { TimelineStudio } from './TimelineStudio';
 import { ValidationRapide } from './ValidationRapide';
@@ -102,7 +102,9 @@ export function Tasks({
     setStatus = (v: string | null) => setEtat(v ?? ''),
     showClosed = clos === '1',
     setShowClosed = (v: boolean) => setClos(v ? '1' : '0');
-  const mouvement = useMouvementTaches();
+  // Animation des tâches « à faire » en continu, sans bouton de pause (ADR 0099) : arrêtée quand l'onglet est masqué ; le
+  // mouvement réduit du système, l'impression et les couleurs forcées l'arrêtent par neon-taches.css.
+  const ongletVisible = useOngletVisible();
   // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur la recherche, pastilles des critères actifs. Les
   // champs de filtre restent affichés (vue, mois, responsable, registre, état) : rien n'est caché derrière un bouton.
   const champRecherche = useRef<HTMLInputElement>(null);
@@ -299,7 +301,7 @@ export function Tasks({
   );
   const days = Array.from({ length: last.getUTCDate() }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`);
   return (
-    <Stack className="taches-studio" data-mouvement={mouvement.arrete ? 'pause' : 'anime'}>
+    <Stack className="taches-studio" data-mouvement={ongletVisible ? 'anime' : 'pause'}>
       {resultat && (
         <ValidationRapide
           key={resultat.id}
@@ -342,15 +344,6 @@ export function Tasks({
               </Tooltip>
             ))}
           </div>
-          <Button
-            variant="subtle"
-            size="compact-sm"
-            className="taches-pause"
-            aria-pressed={mouvement.pause}
-            onClick={mouvement.basculer}
-          >
-            {mouvement.pause ? 'Reprendre les animations des tâches' : 'Mettre en pause les animations des tâches'}
-          </Button>
         </Group>
       </div>
       <Group className="taches-filtres">
