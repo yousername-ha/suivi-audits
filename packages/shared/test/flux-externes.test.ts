@@ -49,11 +49,9 @@ describe('registre des flux vers l’extérieur', () => {
     expect(fluxExterne('acme').destinations.find((d) => d.sens === 'entrant')!.ports).toContain('80 et 443');
     for (const m of FLUX_MODULES.filter((x) => x !== 'acme')) expect(sensDuFlux(fluxExterne(m))).toEqual(['sortant']);
     expect(fluxExterne('assistant').destinations[0]!.ports).toContain('443');
-    expect(
-      fluxExterne('mises-a-jour')
-        .destinations.map((d) => d.hote)
-        .join(' '),
-    ).toMatch(/github\.com.*ghcr\.io/);
+    expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
+      expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),
+    );
   });
 });
 

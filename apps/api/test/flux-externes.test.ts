@@ -115,7 +115,11 @@ describe('flux vers l’extérieur : décision et journal', () => {
     expect(j[0]!.username).toBe('flux_admin');
     expect(j[0]!.details).toMatchObject({ module: 'antivirus', origine: 'flux', sens: ['sortant'] });
     const destinations = j[0]!.details.destinations as { sens: string; hote: string; ports: string }[];
-    expect(destinations.some((d) => /database\.clamav\.net/.test(d.hote) && d.ports.includes('443'))).toBe(true);
+    expect(
+      destinations.some(
+        (d) => d.hote === 'Miroirs des signatures ClamAV (database.clamav.net)' && d.ports === 'TCP 443 (HTTPS)',
+      ),
+    ).toBe(true);
     // Idempotence : même état demandé, aucune nouvelle entrée ni nouvelle date.
     const encore = await admin.put(`${url}/antivirus`, { ouvert: true, confirmation: true });
     expect(encore.statusCode).toBe(200);
