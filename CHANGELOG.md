@@ -12,7 +12,7 @@ Aucune action.
 
 Version mineure, numérotée par le RSSI. Elle ferme par défaut les **flux vers l'extérieur** et les fait ouvrir par l'activation du
 module, après validation explicite, sans commande sur le serveur ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md),
-lots 1 à 3), rattache les **critères d'évaluation aux fournisseurs** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md))
+lots 1 à 3), rattache les **critères d'évaluation aux fournisseurs** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)),
 retire les boutons de pause des **animations** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md))
 et habille la **page de mise à jour** aux couleurs Neon.
 Migrations additives `070` et `071`. **Action après la mise à jour : réactiver les modules qui servent** (voir ci-dessous).
