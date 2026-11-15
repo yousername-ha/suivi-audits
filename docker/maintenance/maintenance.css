@@ -2,7 +2,7 @@
 /* Page de mise à jour : refonte Neon, lot 1 « Maintenance Neon » (proposition validée par le RSSI le 15/11/2026).
    Page autonome servie par le frontal pendant l'arrêt de l'application, sous la CSP de /update/ : aucun style en ligne.
    Couches de la maquette consolidées dans l'ordre studio → effets → phases → journal (disposition seule) → direct →
-   technique → violet → erreurs ; l'habillage encadré du journal (cadre, titre, compteur, séparateurs) est écarté.
+   technique → violet → erreurs ; le journal lui-même n'est pas affiché (option C), seule sa zone reste.
    Couleurs dérivées du thème servi (/update/theme.css), longueurs en jetons du thème ou en unités relatives.
    Thème sombre seul et animations continues, sans bouton (décisions du RSSI du 15/11/2026). Animations limitées à
    transform et opacity, supprimées par le mouvement réduit ; aucune ne mesure ni ne fait avancer l'opération. */
@@ -56,10 +56,6 @@
   --m-red: var(--mantine-color-red-4);
   --m-cube: var(--mantine-color-cyan-3);
   --m-cube-violet: var(--mantine-color-violet-5);
-  /* Console : blanc légèrement transparent ; erreurs en rouge, propres à la ligne. */
-  --m-console: color-mix(in srgb, var(--mantine-color-white) 78%, transparent);
-  --m-console-heure: color-mix(in srgb, var(--mantine-color-white) 55%, transparent);
-  --m-console-erreur: var(--mantine-color-red-6);
   --m-ombre: color-mix(in srgb, var(--suivi-fond-page) 70%, var(--mantine-color-dark-9));
   --m-fx-ligne: var(--mantine-color-cyan-5);
   --m-fx-paquet: var(--mantine-color-cyan-2);
@@ -1206,8 +1202,8 @@ h1 {
   color: var(--m-cyan);
 }
 
-/* Journal technique (direct + technique + erreurs) : texte libre dans la dalle, sans cadre ni titre. Les lignes
-   arrivent en bas et s'effacent vers le haut ; la sévérité réelle d'une ligne seule la colore en rouge. */
+/* Zone du journal technique : le journal n'est pas affiché sur cette page (option C retenue par le RSSI le 15/11/2026) ;
+   la zone l'indique en texte libre dans la dalle, sans cadre ni titre, et aucune ligne n'est simulée. */
 .journal {
   align-self: center;
   min-inline-size: 0;
@@ -1217,47 +1213,6 @@ h1 {
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-}
-.journal-fenetre:has(.journal-ligne) {
-  block-size: calc(var(--mantine-spacing-2xl) * 4.6);
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    color-mix(in srgb, black 7%, transparent) 12%,
-    color-mix(in srgb, black 33%, transparent) 33%,
-    color-mix(in srgb, black 73%, transparent) 62%,
-    black 88%
-  );
-}
-.journal-lignes {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.journal-ligne {
-  display: grid;
-  grid-template-columns: 8ch minmax(0, 1fr);
-  align-items: baseline;
-  gap: var(--mantine-spacing-sm);
-  min-block-size: calc(var(--mantine-spacing-2xl) * 0.75);
-  color: var(--m-console);
-  font-family: var(--mantine-font-family-monospace);
-  font-size: var(--mantine-font-size-xs);
-  white-space: pre-wrap;
-}
-.journal-ligne time {
-  color: var(--m-console-heure);
-  font-size: calc(var(--mantine-font-size-xs) * 0.85);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.05em;
-}
-.journal-ligne.journal-erreur {
-  color: var(--m-console-erreur);
-}
-.journal-ligne.journal-erreur time {
-  color: color-mix(in srgb, var(--m-console-erreur) 75%, transparent);
 }
 .journal-vide {
   color: var(--m-muted);

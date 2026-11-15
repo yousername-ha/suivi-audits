@@ -3,7 +3,7 @@
 15/11/2026. Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`), branche `claude/refonte-neon`, partie de
 `claude-suivi-smsi` (`8ff37b6`). Dossier source : `docs/transmission-opus-5.5/maintenance-neon` (branche
 `codex/transmission-neon-opus-5-5`). Décision du RSSI du 15/11/2026, après revue des captures de la maquette isolée :
-« Validé, intégrer l'habillage ». Le journal technique complet (lot 2) n'est pas autorisé à ce stade.
+« Validé, intégrer l'habillage ». Le journal technique complet (lot 2) n'est pas réalisé : option C retenue (décision 6).
 
 ## Décisions du RSSI (15/11/2026)
 
@@ -21,6 +21,12 @@ Prises après présentation des captures d'intégration, avant et après :
 5. **Libellés** rédigés pendant le portage (titres d'étape, étiquettes d'état, rappel du retour, pied de page) : validés, à
    condition de ne pas joindre deux phrases par un point-virgule. Les trois phrases concernées de la page (attente de prise en
    charge, avis de lenteur, pied de page) sont coupées en deux phrases ; les tests ne lisent que « Demande enregistrée. ».
+6. **Journal technique : option C** de `05-JOURNAL-COMPLET-ET-SECRETS.md`. Le journal n'est pas affiché sur la page : sa
+   zone indique « Journal technique indisponible pendant cette opération. », sans ligne simulée. Le diagnostic reste dans le
+   reçu (Administration, Mises à jour) et dans les journaux privés du serveur (`DATA_DIR/reprise-updates`). Aucun transport
+   privé, aucune nouvelle route, aucun nouveau service. Le code prévu pour afficher des lignes (liste, styles, jetons de
+   console) est retiré, sans changement d'affichage. Les options A (service séparé en lecture seule, recommandée) et B
+   (lecture par le frontal) restent décrites dans le dossier si le besoin revient.
 
 ## Fichiers et contrats modifiés
 
@@ -52,10 +58,10 @@ frise horodatée, durée écoulée puis totale, reçu à la fin. La page ne simu
 
 | Fichier           | Avant (gzip)     | Après (gzip)      |
 | ----------------- | ---------------- | ----------------- |
-| `index.html`      | 2,1 Ko (1,0 Ko)  | 33,3 Ko (6,6 Ko)  |
-| `maintenance.css` | 2,2 Ko (0,9 Ko)  | 47,5 Ko (9,8 Ko)  |
+| `index.html`      | 2,1 Ko (1,0 Ko)  | 33,3 Ko (6,5 Ko)  |
+| `maintenance.css` | 2,2 Ko (0,9 Ko)  | 46,1 Ko (9,5 Ko)  |
 | `maintenance.js`  | 6,3 Ko (2,4 Ko)  | 11,1 Ko (3,8 Ko)  |
-| Total             | 10,6 Ko (4,3 Ko) | 92,0 Ko (20,2 Ko) |
+| Total             | 10,6 Ko (4,3 Ko) | 90,5 Ko (19,9 Ko) |
 
 Aucune image ni police ajoutée (polices et thème déjà servis sous `/update/`). Le paquet de l'application n'est pas concerné.
 
@@ -78,8 +84,7 @@ poste les retire toutes ; l'impression donne un rendu statique ; un suivi interr
 
 ## Limites
 
-- Journal technique non raccordé (lot 2) : la zone affiche « Journal technique indisponible pendant cette opération. », sans
-  ligne simulée. Le lot n'est donc pas terminé au sens du dossier.
+- Journal technique non affiché (décision 6) : le dossier le demandait pour le résultat final ; écart assumé par le RSSI.
 - Pause des animations absente (décision 4) : écart au dossier et au critère WCAG 2.2.2.
 - La page est servie par le frontal : elle n'apparaît en production qu'avec une image `GATEWAY_VERSION` qui la contient.
 
@@ -91,6 +96,5 @@ versionnées : aucune capture de référence n'est ajoutée ni remplacée.
 
 ## État d'intégration et prochaine action
 
-PR vers `claude-suivi-smsi` ; pas de fusion sans accord du RSSI. Prochaines actions : CI verte sur la version finale, accord du
-RSSI pour la fusion, puis lot 2 (journal complet : collecte, expurgation des secrets côté serveur, transport privé
-pendant l'arrêt de l'API) selon l'option A, B ou C de `05-JOURNAL-COMPLET-ET-SECRETS.md`, à choisir par le RSSI.
+PR vers `claude-suivi-smsi` ; pas de fusion sans accord du RSSI. Prochaines actions : CI verte sur la version finale, puis
+accord du RSSI pour la fusion. La refonte de la maintenance est alors terminée (lot 2 non réalisé, décision 6).

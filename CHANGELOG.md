@@ -85,8 +85,9 @@ _(Session « Projet audit_suivi Coeur ».)_
   (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
   le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
   de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
-  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas raccordé (second lot) : sa zone
-  l'indique, sans ligne simulée. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
+  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas affiché sur la page (option C
+  retenue par le RSSI) : sa zone l'indique, sans ligne simulée ; le diagnostic reste dans le reçu et les journaux du
+  serveur. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
   « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 ## [7.1.1] — 2026-11-14
