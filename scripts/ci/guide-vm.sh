@@ -43,7 +43,11 @@ cleanup() {
     [ ! -f qemu.pid ] || kill "$(cat qemu.pid)" 2> /dev/null || true
     [ ! -f seed.pid ] || kill "$(cat seed.pid)" 2> /dev/null || true
   fi
-  if [ "$code" != 0 ] && [ -f serial.log ]; then echo "::group::Console série de la machine virtuelle (fin)"; tail -n 80 serial.log; echo "::endgroup::"; fi
+  if [ "$code" != 0 ] && [ -f serial.log ]; then
+    echo "::group::Console série de la machine virtuelle (fin)"; tail -n 80 serial.log; echo "::endgroup::"
+    # Erreurs du noyau de la VM (fichier local du runner : lisible même si la VM ne répond plus).
+    grep -nE 'BUG:|Oops|RIP:|blocked for more' serial.log | head -n 20 | sed 's/^/::warning::Noyau de la VM : /' || true
+  fi
   exit "$code"
 }
 trap cleanup EXIT
@@ -111,7 +115,10 @@ echo "::group::Mise à jour du système ($SYSTEME) puis redémarrage"
 if [ "$SYSTEME" = rocky10 ]; then
   "${SSH[@]}" 'sudo dnf upgrade -y --refresh > /dev/null'
 else
-  "${SSH[@]}" 'sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq full-upgrade > /dev/null'
+  # Noyau de l'image conservé : le noyau Debian 6.1.0-55 (6.1.192-1, 14/11/2026) plante dans ext4
+  # (ext4_mb_load_buddy_gfp, NULL pointer dereference) pendant la construction des images et fige le disque de la VM.
+  # Retirer ce blocage dès qu'un noyau corrigé est publié. Rocky Linux n'est pas concerné.
+  "${SSH[@]}" 'sudo apt-mark hold linux-image-cloud-amd64 > /dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq full-upgrade > /dev/null'
 fi
 "${SSH[@]}" 'sudo systemctl reboot' || true
 sleep 20
@@ -141,7 +148,8 @@ diagnostic_vm() {
   echo "::endgroup::"
 }
 echo "::group::Rejeu du guide sur $SYSTEME"
-"${SSH[@]}" "$ENV_VM; bash ~/guide.sh" || { echo "::endgroup::"; diagnostic_vm; arret "Le rejeu du guide a échoué sur $SYSTEME."; }
+# Délai côté runner : un blocage de la VM échoue avec son diagnostic bien avant le délai du job (80 minutes).
+timeout 40m "${SSH[@]}" "$ENV_VM; bash ~/guide.sh" || { echo "::endgroup::"; diagnostic_vm; arret "Le rejeu du guide a échoué sur $SYSTEME."; }
 echo "::endgroup::"
 echo "::group::Lot A — pilotage réel, restauration et retours arrière, TLS"
 "${SSH[@]}" "$ENV_VM; cd /opt/suivi-audits && NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node \$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs lot-a https://localhost" || { echo "::endgroup::"; diagnostic_vm; arret "Le lot A a échoué sur $SYSTEME."; }
