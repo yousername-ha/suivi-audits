@@ -18,8 +18,9 @@ Prises après présentation des captures d'intégration, avant et après :
    de plus de cinq secondes. Seule la préférence « réduire les animations » du poste les arrête. Une variante sans bouton, avec
    arrêt automatique après cinq secondes, a été proposée et écartée.
 
-Reste à présenter : les libellés de présentation rédigés pendant le portage (titres d'étape, étiquettes d'état, rappel du
-retour, pied de page).
+5. **Libellés** rédigés pendant le portage (titres d'étape, étiquettes d'état, rappel du retour, pied de page) : validés, à
+   condition de ne pas joindre deux phrases par un point-virgule. Les trois phrases concernées de la page (attente de prise en
+   charge, avis de lenteur, pied de page) sont coupées en deux phrases ; les tests ne lisent que « Demande enregistrée. ».
 
 ## Fichiers et contrats modifiés
 
@@ -90,6 +91,6 @@ versionnées : aucune capture de référence n'est ajoutée ni remplacée.
 
 ## État d'intégration et prochaine action
 
-PR vers `claude-suivi-smsi` ; pas de fusion sans accord du RSSI. Prochaines actions : présentation des libellés au RSSI, CI verte
-sur la version sombre sans bouton, puis lot 2 (journal complet : collecte, expurgation des secrets côté serveur, transport privé
+PR vers `claude-suivi-smsi` ; pas de fusion sans accord du RSSI. Prochaines actions : CI verte sur la version finale, accord du
+RSSI pour la fusion, puis lot 2 (journal complet : collecte, expurgation des secrets côté serveur, transport privé
 pendant l'arrêt de l'API) selon l'option A, B ou C de `05-JOURNAL-COMPLET-ET-SECRETS.md`, à choisir par le RSSI.

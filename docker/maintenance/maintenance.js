@@ -157,7 +157,7 @@
       ecrire(
         'message',
         waiting
-          ? 'Demande enregistrée. Le service de mise à jour prépare l’installation ; cette page se met à jour toute seule.'
+          ? 'Demande enregistrée. Le service de mise à jour prépare l’installation. Cette page se met à jour toute seule.'
           : state.message || 'Nous préparons le retour de votre espace de travail.',
       );
       // Lenteur : mesurée sur l'opération publiée, pas sur une opération précédente pendant l'attente de prise en charge.
