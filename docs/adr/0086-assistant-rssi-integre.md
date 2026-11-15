@@ -3,6 +3,8 @@
 - Statut : **acceptée** par le RSSI le 11/11/2026, dans la session (numéro 0086 annoncé et confirmé ; libre sur toutes les
   branches du dépôt à cette date).
 - Date : 2026-11-11
+- **Complétée par** l'[ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md) (15/11/2026) : le relais est démarré et arrêté par la
+  plateforme quand l'administrateur active ou désactive l'assistant, sans commande sur le serveur.
 - Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`)
 - Contexte : le RSSI demande, le 11/11/2026, un **assistant RSSI intégré à la plateforme**, qui surveille, analyse et
   questionne pour maintenir la certification ISO/IEC 27001 et HDS, en tenant deux rôles : aide à la mise en œuvre (« lead

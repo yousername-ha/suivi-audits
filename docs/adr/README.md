@@ -101,3 +101,4 @@ Une ADR courte par décision structurante : contexte, décision, conséquences. 
 | [0094](0094-objectifs-indicateurs-processus-par-perimetre.md) | Objectifs, indicateurs et processus : un seul modèle (celui de l'outil de suivi), une fiche par périmètre | Acceptée |
 | [0095](0095-sans-rattachement-rien-ne-est-visible.md) | Sans rattachement, un compte ne voit aucun périmètre, pas même un périmètre « instance » (amende l'ADR 0092) | Acceptée |
 | [0096](0096-declaration-d-applicabilite-par-perimetre.md) | Déclaration d'applicabilité par périmètre : la DdA historique au périmètre commun, une table par périmètre ailleurs, sans héritage | Acceptée |
+| [0097](0097-flux-sortants-pilotes-par-les-modules.md) | Flux vers l'extérieur pilotés par les modules : fermés par défaut, ouverts par l'activation d'un module validée par l'administrateur, appliqués par l'exécutant d'exploitation sans commande sur le serveur ; questions dès l'installation (complète 0086) | Acceptée |
