@@ -183,6 +183,13 @@
     `packages/ui` et l'interface native, sous la CSP stricte (ADR 0006). Maquettes de référence, données fictives :
     [maquettes-vulnerabilites](../unification/maquettes-vulnerabilites/).
 
+21. **Fenêtre d'alerte critique** (demande du RSSI du 15/11/2026). Quand une faille atteint le plus haut niveau (exploitée et
+    détectée), une **grande fenêtre rouge** s'affiche par-dessus l'écran, pour les personnes qui ont le droit de lire le
+    module et la faille : produit, identifiant, nombre de machines, sources de l'exploitation, heure. Elle reste affichée
+    tant que la personne ne l'a pas **prise en compte** ; la prise en compte est tracée dans le journal d'audit. Une seule
+    fenêtre par faille et par personne tant que la faille ne change pas. Elle s'ajoute à la notification du point 11 et ne
+    dépend pas de l'assistant. Les animations s'arrêtent avec le réglage « mouvement réduit » du système (ADR 0099).
+
 ## Conséquences
 
 - La plateforme gagne trois flux réseau de plus, tous fermés par défaut et portés par l'exécutant. La surface de l'API ne

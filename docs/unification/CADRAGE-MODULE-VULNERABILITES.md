@@ -72,6 +72,7 @@ Elles ne montrent ni le menu latéral de l'application, ni le thème clair, ni l
 | Vue par machine | [04-machines](maquettes-vulnerabilites/04-machines.png), [grand écran](maquettes-vulnerabilites/04b-machines-grand-ecran.png) | Machines en icônes rangées par ligne (front, back, bases, sans rôle), frontières visibles entre les lignes, rang, failles par gravité, lecture de l’assistant ; mode réduit (les plus prioritaires) et mode grand écran (tout le parc) |
 | Vue par périmètre | [05-perimetre](maquettes-vulnerabilites/05-perimetre.png) | Front, back applicatif et bases, reliés par ligne |
 | Produits surveillés | [06-produits](maquettes-vulnerabilites/06-produits.png) | Registre, origine, propositions venues d'Ekialis |
+| Alerte critique | [07-alerte-critique](maquettes-vulnerabilites/07-alerte-critique.png) | Grande fenêtre rouge affichée quand une faille est exploitée et détectée, à prendre en compte |
 
 ## 4. Lots proposés (sans calendrier ; estimations non établies)
 
