@@ -1,4 +1,4 @@
-# Exemples de réponses de Tenable Security Center pour les tests du connecteur (ADR 0100, lot V5).
+﻿# Exemples de réponses de Tenable Security Center pour les tests du connecteur (ADR 0100, lot V5).
 # Windows PowerShell 5.1 ou PowerShell 7, sans droits d'administrateur. Lecture seule : rien n'est modifié dans Tenable.
 # Les réponses sont anonymisées avant d'être écrites dans le dossier « exemples-tenable » du dossier courant.
 # À RELIRE avant tout envoi : le dépôt est public. Ne jamais transmettre les clés d'API.
