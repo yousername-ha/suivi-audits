@@ -17,7 +17,7 @@ async function main() {
     {
       port: cfg.port,
       mfaRequired: cfg.mfaRequired,
-      clamav: !!cfg.clamav,
+      antivirus: `${cfg.clamav.host}:${cfg.clamav.port}, selon le flux « antivirus »`,
       keyId: svc.vault.keyId,
       version: cfg.version,
     },

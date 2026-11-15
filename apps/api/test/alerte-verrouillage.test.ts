@@ -3,7 +3,17 @@
    contact technique et aux administrateurs actifs, non désactivable par les réglages personnels, avec plafond horaire. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
-import { Agent, createTestApp, login, makeUser, nextCode, PASSWORD, type TestApp, type TestUser } from './helpers.js';
+import {
+  Agent,
+  createTestApp,
+  login,
+  makeUser,
+  nextCode,
+  PASSWORD,
+  type TestApp,
+  type TestUser,
+  ouvrirFlux,
+} from './helpers.js';
 
 const CONTACT = 'securite-technique@exemple.test';
 const MESSAGE = 'Identifiant ou mot de passe incorrect, ou compte temporairement verrouillé après plusieurs échecs.';
@@ -19,8 +29,10 @@ const regler = async (v: Record<string, unknown>) => {
   );
   expect(r.statusCode, r.body).toBe(200);
 };
+// Réactiver l'envoi rouvre le flux « courriel » (ADR 0097) : l'administrateur joint la validation explicite.
 const configurer = (v: Record<string, unknown> = {}) =>
   regler({
+    fluxConfirme: true,
     actif: true,
     hote: 'smtp.exemple.test',
     expediteur: 'suivi@exemple.test',
@@ -64,6 +76,8 @@ const verrouillerParMotDePasse = async (u: TestUser) => {
 
 beforeAll(async () => {
   t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' });
+  // Flux « courriel » ouvert (ADR 0097) : l'envoi s'active ici sans repasser par la validation.
+  await ouvrirFlux(t, 'courriel');
   admin = await login(t, await makeUser(t, 'verrou-admin-session', 'admin'));
 });
 afterAll(() => t.close());

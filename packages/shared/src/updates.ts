@@ -47,6 +47,8 @@ export const UpdateState = z.object({
   finishedAt: z.string().datetime().nullable().default(null),
   /** Ajouté par l'API (jamais écrit par l'exécutant) : créneau d'installation et son état à l'instant de la lecture. */
   fenetre: z.object({ active: z.boolean(), ouverte: z.boolean(), libelle: z.string().max(200) }).optional(),
+  /** Ajouté par l'API : flux « mises-a-jour » ouvert par l'administrateur (ADR 0097). Absent : inconnu. */
+  fluxOuvert: z.boolean().optional(),
 });
 export type UpdateState = z.infer<typeof UpdateState>;
 export type UpdateRequest = z.infer<typeof UpdateRequest>;

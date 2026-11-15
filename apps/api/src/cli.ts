@@ -18,6 +18,8 @@
      site-adresse               adresse du site demandée dans l'application
      backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+     flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
+     flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
@@ -28,7 +30,7 @@
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
-import { formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
+import { FluxAppliques, formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
@@ -58,6 +60,8 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   site-adresse               adresse du site demandée
   backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+  flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
+  flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
@@ -169,6 +173,30 @@ async function main() {
         JSON.parse(await readStdin()),
         (await svc.settings.read('courriel')).values as SettingsValues['courriel'],
       );
+      break;
+    }
+    case 'flux-souhaites': {
+      // Flux vers l'extérieur (ADR 0097) : l'exécutant ouvre ceux-ci et ferme tous les autres modules du registre.
+      console.log(JSON.stringify(await svc.flux.souhaites()));
+      break;
+    }
+    case 'flux-appliques': {
+      // Rapport de l'exécutant, validé strictement : module inconnu, champ inattendu ou erreur mal formée refusés.
+      let brut: unknown;
+      try {
+        brut = JSON.parse(await readStdin());
+      } catch {
+        console.error('Rapport illisible : JSON attendu sur l’entrée standard.');
+        process.exit(2);
+      }
+      const p = FluxAppliques.safeParse(brut);
+      if (!p.success) {
+        console.error(
+          `Rapport refusé : ${p.error.issues.map((i) => `${i.path.join('.') || '(racine)'} ${i.message}`).join(' ; ')}`,
+        );
+        process.exit(2);
+      }
+      console.log(JSON.stringify({ modules: await svc.flux.appliquer(p.data) }));
       break;
     }
     case 'ops-policy': {

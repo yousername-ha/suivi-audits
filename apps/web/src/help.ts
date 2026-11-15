@@ -243,6 +243,19 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'flux-externes',
+    title: 'Flux vers l’extérieur',
+    permission: 'administration:lire',
+    link: '/systeme/flux-externes',
+    steps: [
+      'Par défaut, aucun flux ne sort du serveur. Un flux s’ouvre en activant son module, sans étape séparée : interrupteur « Activer l’assistant » (Plateforme > Assistant RSSI), « Activer l’envoi de courriels » (Configuration système > Courriel), « Obtenir un certificat ACME » (Certificats et opérations), « Activer l’analyse antivirus » (Sécurité), « Activer les mises à jour depuis l’interface » (Mises à jour et versions).',
+      'Tant que le flux est fermé, ce geste affiche une fois une fenêtre qui détaille les destinations, les ports et les données qui sortent : cochez la case de validation, puis Confirmer. L’activation et l’ouverture partent en une seule opération, réservée à un administrateur, et sont inscrites au journal d’audit avec les destinations. Désactiver le module referme son flux.',
+      'Tant qu’un flux est fermé, le module ne fait rien sortir : l’assistant ne répond pas, aucun courriel ne part, aucune demande ACME ni mise à jour n’est possible, et les fichiers déposés sont acceptés « non analysés ».',
+      'La carte Configuration système > Flux vers l’extérieur est un résumé : sens, destinations, état voulu, état appliqué par l’exécutant d’exploitation, dernière erreur et date de la décision. On y ferme un flux ; on ne l’y ouvre pas.',
+      'La plateforme ouvre ou ferme ses propres flux. Le pare-feu du serveur et du réseau reste du ressort de l’équipe infrastructure : le résumé indique, pour chaque flux ouvert, ce qu’il faut faire autoriser.',
+    ],
+  },
+  {
     id: 'systeme',
     title: 'Sauvegardes, restauration et exploitation',
     permission: 'administration:lire',

@@ -24,8 +24,8 @@ avec le rôle Administrateur ou RSSI, et un moyen de paiement pour Mistral.
 |---|---|---|
 | 1 | Sur papier | Décider ce que l'assistant a le droit de lire |
 | 2 | Site de Mistral | Créer un compte, activer la facturation, créer une clé |
-| 3 | Serveur | Démarrer le relais et le déclarer |
-| 4 | Plateforme | Régler le modèle, la clé, un profil et un périmètre |
+| 3 | Serveur | Démarrer le relais |
+| 4 | Plateforme | Activer l'assistant (ce qui ouvre son flux, après validation), régler le modèle, la clé, un profil et un périmètre |
 | 5 | Plateforme | Tester, puis poser une première question |
 | 6 | Plateforme | Facultatif : activer les rondes autonomes |
 
@@ -69,28 +69,19 @@ Ne collez jamais la clé dans un courriel, un ticket ou une conversation.
 ## Étape 3 — Démarrer le relais sur le serveur
 
 L'application n'a aucun accès à Internet. Un petit service, le **relais**, est le seul à sortir, vers Mistral uniquement.
+Par défaut, ce flux est **fermé** ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md)) : il s'ouvre quand un
+administrateur active l'assistant, à l'étape 4. Aucune ligne n'est à ajouter dans `.env` : l'application connaît l'adresse du
+relais.
 
-1. Connectez-vous au serveur et placez-vous dans le dossier de l'application :
+1. Démarrez le relais sur le serveur. Le démarrage automatique par l'exécutant d'exploitation arrive avec le lot 2 de
+   l'ADR 0097 ; d'ici là, connectez-vous au serveur et lancez, dans le dossier de l'application :
 
    ```text
    cd /opt/suivi-audits
-   ```
-
-2. Ouvrez le fichier `.env` (par exemple avec `sudo nano .env`) et ajoutez cette ligne, sans `#` devant :
-
-   ```text
-   ASSISTANT_RELAIS_URL=http://assistant-relais:8787
-   ```
-
-   Enregistrez et fermez (`Ctrl+O`, `Entrée`, `Ctrl+X` dans nano).
-
-3. Démarrez le relais et recréez l'application pour qu'elle le connaisse :
-
-   ```text
    sudo docker compose --profile assistant up -d
    ```
 
-4. Vérifiez qu'il tourne :
+2. Vérifiez qu'il tourne :
 
    ```text
    sudo docker compose --profile assistant ps assistant-relais
@@ -98,16 +89,16 @@ L'application n'a aucun accès à Internet. Un petit service, le **relais**, est
 
    **Résultat attendu** : une ligne `assistant-relais` avec l'état `running` puis `healthy`.
 
-5. Pare-feu : le serveur doit pouvoir joindre `api.mistral.ai` sur le port TCP 443. Si votre pare-feu filtre les sorties,
-   ajoutez cette règle. Aucun port n'est à ouvrir en entrée.
+3. Pare-feu : le serveur doit pouvoir joindre `api.mistral.ai` sur le port TCP 443. Si votre pare-feu filtre les sorties,
+   ajoutez cette règle (la carte « Flux vers l'extérieur » de Configuration système la rappelle). Aucun port n'est à ouvrir en entrée.
 
 > Par la suite, gardez `--profile assistant` dans vos commandes `docker compose up`, sinon le relais n'est pas redémarré.
 
 ## Étape 4 — Régler l'assistant dans la plateforme
 
-1. Connectez-vous à la plateforme avec un compte Administrateur ou RSSI.
+1. Connectez-vous à la plateforme avec un compte Administrateur (seul un administrateur peut valider l'ouverture du flux).
 2. Dans le menu, ouvrez **Plateforme**, puis la carte **Assistant RSSI**.
-3. Si un bandeau rouge « Relais de modèle absent » apparaît, revenez à l'étape 3.
+3. Un bandeau « Flux « Assistant RSSI » fermé » est normal tant que l'assistant n'est pas activé : il disparaît au point 6.
 4. Dans **Modèle**, renseignez :
 
    | Champ | Valeur |
@@ -120,7 +111,10 @@ L'application n'a aucun accès à Internet. Un petit service, le **relais**, est
 5. Dans **Profils et périmètres**, rien n'est obligatoire : les deux profils sont cochés et lisent tout par défaut. Pour
    restreindre un profil, décochez « lit tous les périmètres » et choisissez les périmètres, ou baissez la classification
    des documents. Chaque option porte son explication à l'écran.
-6. Cliquez sur **Enregistrer les réglages**. Le texte à côté du bouton doit dire « Tous les réglages ci-dessus sont
+6. Cliquez sur **Enregistrer les réglages**. La première fois, comme « Activer l'assistant » est coché, une fenêtre
+   « Activer « Assistant RSSI » : ouvrir son flux » indique la destination (le fournisseur du modèle, TCP 443) et ce qui sort
+   du serveur : cochez la case de validation, puis **Confirmer**. L'activation et l'ouverture du flux sont enregistrées
+   ensemble et inscrites au journal d'audit. Le texte à côté du bouton doit dire « Tous les réglages ci-dessus sont
    enregistrés ». Une erreur s'affiche juste au-dessus du bouton.
 7. Dans **Clé du modèle**, collez la clé de l'étape 2 puis cliquez sur **Enregistrer la clé**. La puce passe à « Clé
    enregistrée ». La clé n'est plus jamais affichée : c'est normal.
@@ -180,8 +174,8 @@ consommation du jour les premières fois.
 
 | Message affiché | Cause probable | Que faire |
 |---|---|---|
-| Le relais de modèle n'est pas installé sur le serveur | `ASSISTANT_RELAIS_URL` absent de `.env`, ou `app` non recréée | Refaire l'étape 3, points 2 et 3 |
-| Le relais de modèle ne répond pas | Le service `assistant-relais` est arrêté | `sudo docker compose --profile assistant up -d`, puis l'étape 3, point 4 |
+| Le flux « Assistant RSSI » vers l'extérieur est fermé | Assistant pas encore activé par un administrateur, ou flux refermé | Refaire l'étape 4, points 4 à 6, avec un compte Administrateur |
+| Le relais de modèle ne répond pas | Le service `assistant-relais` est arrêté | `sudo docker compose --profile assistant up -d`, puis l'étape 3, point 2 |
 | Le fournisseur du modèle est injoignable depuis le relais | Pare-feu ou résolution de noms | Autoriser la sortie vers `api.mistral.ai`, TCP 443 |
 | Le fournisseur du modèle refuse la clé enregistrée | Clé mal copiée, expirée, ou facturation non activée | Vérifier la facturation chez Mistral, recréer une clé, la réenregistrer |
 | Le fournisseur du modèle ne connaît pas cette adresse ou ce modèle | Faute dans l'adresse ou le nom du modèle | Reprendre les valeurs du tableau de l'étape 4 |

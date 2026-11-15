@@ -43,7 +43,19 @@ flowchart LR
 - `clamav` : facultatif, profil antivirus.
 
 API et base appartiennent à des réseaux internes ; les flux externes de mise
-à jour viennent du worker. Il n’existe pas de bus distribué ou Redis ajouté.
+à jour viennent du worker.
+
+Flux vers l'extérieur ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md), lot 1 livré) : un registre partagé
+(`packages/shared/src/flux-externes.ts`) décrit chaque module qui sort ou expose un port (assistant par `assistant-relais`,
+courriel et mises à jour par `updater`, ACME par `gateway`, signatures antivirus par `freshclam`). Tout est fermé par défaut ;
+activer un module ouvre son flux, dans la même transaction que l'activation, après validation explicite par un
+administrateur (`fluxConfirme`) ; le désactiver le referme (table `flux_externes`, migration `071`, journal
+`flux.externe.ouvert` / `flux.externe.ferme` avec l'origine du geste). La carte « Flux vers l'extérieur » n'est qu'un résumé, où
+l'on ferme un flux. L'API relit l'état à chaque usage et refuse de faire sortir un module fermé ;
+l'exécutant lit l'état voulu (`suivi flux-souhaites`) et rapporte l'état appliqué (`suivi flux-appliques`). Le démarrage et
+l'arrêt des profils Compose par l'exécutant relèvent du lot 2. Un test d'architecture (`apps/api/test/architecture-flux.test.ts`)
+refuse tout service du compose qui sort ou publie un port sans être porté par le registre ou justifié dans le cœur de
+plateforme (`gateway`, `web`, `updater`). Il n’existe pas de bus distribué ou Redis ajouté.
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 

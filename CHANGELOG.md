@@ -10,8 +10,33 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : additive (une table, un index), durée négligeable, sans reprise
 de données. _(Session « Projet audit_suivi Coeur ».)_
 
+**Migration automatique `071`** (flux vers l'extérieur, [ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), lot 1) :
+additive (une table), durée négligeable, sans reprise de données. **Après la mise à jour, tous les flux vers l'extérieur sont
+fermés**, y compris sur un serveur où l'assistant, l'antivirus, le courriel, le certificat ACME ou les mises à jour depuis
+l'interface fonctionnaient : un administrateur réactive les modules qui servent, depuis leur page (assistant, envoi des
+courriels, mode ACME, analyse antivirus dans Sécurité, mises à jour depuis l'interface) ; la validation explicite qui s'affiche
+alors rouvre le flux et s'inscrit au journal d'audit. Les lignes `ASSISTANT_RELAIS_URL` et `CLAMAV_HOST` de `.env` deviennent
+inutiles (valeurs par défaut identiques) ; les profils Compose `assistant` et `antivirus` se démarrent encore à la main jusqu'au
+lot 2. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Ajouté
 
+- **Flux vers l'extérieur pilotés par les modules, lot 1** ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)) :
+  registre partagé des modules qui sortent du serveur ou exposent un port (assistant RSSI, courriel, certificat public ACME,
+  antivirus, mises à jour), avec destinations, ports, porteur, données qui sortent et flux à autoriser sur le pare-feu. **Tout est
+  fermé par défaut.** Activer un module ouvre son flux, sans étape séparée (précision du RSSI du 15/11/2026) : l'interrupteur de
+  l'assistant, l'envoi des courriels, le choix du mode ACME, la nouvelle « analyse antivirus » (Configuration système >
+  Sécurité) et les mises à jour depuis l'interface affichent une fois une fenêtre qui détaille destinations, ports et données
+  qui sortent, avec une case de validation obligatoire ; l'activation et l'ouverture partent en une seule opération, réservée à
+  `administration:administrer` (journal `flux.externe.ouvert` / `flux.externe.ferme`, avec les destinations et l'origine du
+  geste). Désactiver le module referme le flux. Nouvelle carte Configuration système > « Flux vers l'extérieur », en résumé :
+  état voulu, état appliqué, erreur, date, flux à autoriser sur le pare-feu, bouton Fermer. Tant qu'un flux est
+  fermé, l'API ne fait rien sortir : l'assistant ne joint pas le relais (message qui renvoie au geste d'activation), l'antivirus n'est pas
+  appelé (dépôt accepté « non analysé »), aucun courriel n'est remis à l'exécutant, vérification et installation des mises à
+  jour sont refusées, une demande de certificat ACME aussi ; chaque page le dit. L'état est relu à chaque usage, sans
+  redémarrer l'API. Commandes de l'exécutant `suivi flux-souhaites` et `suivi flux-appliques` (rapport validé strictement), qui
+  serviront au lot 2. Test d'architecture : un service du compose qui sort ou publie un port sans être inscrit au registre fait
+  échouer la CI. _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »

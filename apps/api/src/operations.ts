@@ -7,6 +7,7 @@ import { z } from 'zod';
 import type { Config } from './config.js';
 import { sql, type Selectable } from 'kysely';
 import type { AlertesExploitation } from './alertes-exploitation.js';
+import type { FluxExternes } from './flux-externes.js';
 import type { Actor, Client, Db, Kdb } from './db/db.js';
 import type { OperationJobs } from './db/types.generated.js';
 import { HttpError } from './http/errors.js';
@@ -100,6 +101,7 @@ export class Operations {
     private readonly db: Db,
     private readonly vault: Vault,
     private readonly alertes: AlertesExploitation,
+    private readonly flux: FluxExternes,
   ) {}
   // Verrou consultatif transactionnel partagé avec les sauvegardes : appel SQL direct (ADR 0062 §5).
   private lock(c: Client) {
@@ -170,6 +172,19 @@ export class Operations {
           throw new HttpError(409, 'Identifiant de requête déjà utilisé.');
         return old;
       }
+      // Certificat public (ADR 0097, précision du RSSI du 15/11/2026) : choisir le mode ACME ouvre le flux « acme » dans
+      // la même transaction, après validation explicite (route réservée à administration:administrer, ou hôte) ; choisir
+      // l'autorité interne ou un certificat fourni le referme.
+      if (p.kind === 'tls_acme')
+        await this.flux.activer(c, k, 'acme', {
+          confirme: p.fluxConfirme,
+          administrateur: true,
+          actor,
+          ip: ip ?? '',
+          origine: 'operation.tls_acme',
+        });
+      if (p.kind === 'tls_internal' || p.kind === 'tls_install')
+        await this.flux.desactiver(c, k, 'acme', actor, ip ?? '', `operation.${p.kind}`);
       if (!fresh(h)) throw new HttpError(503, 'Exécutant d’exploitation indisponible.');
       if (
         h!.jobs.some((j) => ['en_cours', 'intervention'].includes(j.status)) ||
@@ -374,6 +389,32 @@ export class Operations {
         }))
         .where('status', '=', 'en_cours')
         .execute();
+      // Flux « acme » fermé depuis la demande (ADR 0097) : la demande ACME est annulée, jamais remise à l'exécutant.
+      if (!(await this.flux.ouvert('acme', k))) {
+        const annulees = await k
+          .updateTable('operation_jobs')
+          .set((eb) => ({
+            status: 'annulee',
+            finished_at: sql<Date>`now()`,
+            version: eb('version', '+', 1),
+            secret: null,
+            payload: '{}',
+            message: 'Flux « Certificat public ACME » fermé : demande annulée sans exécution.',
+          }))
+          .where('status', '=', 'en_attente')
+          .where('kind', '=', 'tls_acme')
+          .returning('id')
+          .execute();
+        for (const a of annulees)
+          await this.db.audit(
+            { username: 'exécutant exploitation' },
+            null,
+            'operation.cancel',
+            a.id,
+            { reason: 'flux_ferme' },
+            c,
+          );
+      }
       // La plus ancienne demande en attente, prise sous le verrou consultatif : une seule à la fois.
       const prise = await k
         .updateTable('operation_jobs')
