@@ -34,7 +34,7 @@
 | V12 | Rôles et périmètres | Le RSSI indique les serveurs **front, back applicatif et base de données**. Par périmètre, une vue montre les machines **ensemble**, ou le front relié au back, séparés |
 | V13 | Machines | Elles sont **récupérées d'Ekialis et de Tenable** et rangées dans la plateforme. Remplace la proposition initiale (détail laissé dans Tenable) |
 | V14 | Assistant et machines | L'assistant **classe les machines par criticité**. Il **n'envoie ni nom, ni adresse IP, ni rôle** au modèle : c'est **la plateforme, en local**, qui replace le résultat sur les machines au retour du modèle |
-| V15 | Correctif indiqué par Tenable | L'accès « solutions » de Tenable est retenu **bien qu'annoncé expérimental** |
+| V15 | Accès expérimentaux de Tenable | L'accès « solutions » (correctifs) et l'**inventaire des machines** de Tenable sont retenus **bien qu'expérimentaux** |
 | V16 | Marques | Un **avertissement** sur la machine qui porte une faille zero-day ; une **icône propre** aux failles exploitables |
 | V17 | Alerte critique | Une **grande fenêtre rouge** quand une faille critique de type zero-day touche le parc |
 

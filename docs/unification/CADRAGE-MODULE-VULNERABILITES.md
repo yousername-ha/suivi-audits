@@ -128,6 +128,17 @@ Pour produire des exemples de réponses anonymisés depuis un poste Windows sans
 [`scripts/dev/exemples-tenable.ps1`](../../scripts/dev/exemples-tenable.ps1) (lecture seule, **non essayé** : aucun PowerShell
 ni aucune instance dans la session).
 
+**Inventaire des machines, lui aussi expérimental** (indication du RSSI du 15/11/2026, d'après sa console). La documentation
+publique ne marque « expérimental » que l'accès aux correctifs ; elle ne le dit pas de `/hosts`. Le connecteur traite donc les
+deux comme susceptibles de changer :
+
+- la liste des machines touchées vient d'abord de `POST /analysis` (outils `sumip` et `vulndetails`, qui rendent adresse et
+  nom), accès stable et documenté ;
+- `GET /hosts` complète l'inventaire (système, dates, étiquettes, criticité de l'actif) quand il répond ; s'il échoue ou
+  change, la synchronisation des failles continue et l'écran le signale ;
+- le détail de criticité d'une machine porte un champ `internetExposure` : il pourrait aider à repérer les machines de
+  première ligne. À confirmer sur l'instance ; le rôle reste décidé par une personne.
+
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
 des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes
 et les temps de réponse.
