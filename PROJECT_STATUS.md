@@ -1,5 +1,9 @@
 # État synthétique du projet
 
+> **15/11/2026** : versions 7.0.0 à 7.1.1 publiées ; sur `claude-suivi-smsi`, flux vers l'extérieur fermés par défaut et ouverts
+> par l'activation du module (ADR 0097, lots 1 à 3, migration `071`), critères fournisseurs (ADR 0098, migration `070`), animations en
+> continu (ADR 0099). Détail et suite : [reprise du 15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md). Le tableau ci-dessous est daté.
+
 ## État au 20/10/2026
 
 | Sujet | État réel |
