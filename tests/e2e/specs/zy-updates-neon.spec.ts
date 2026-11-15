@@ -1,7 +1,7 @@
 /* Page de mise à jour, habillage Neon (lot 1 « Maintenance Neon ») : ce que l'habillage ajoute au suivi existant, servi par
-   le frontal réel et sa CSP. Les animations n'utilisent que transform et opacity ; la pause les fige sans arrêter le suivi ;
-   le mouvement réduit donne un rendu statique avec les mêmes informations ; l'illustration ne montre jamais une réussite que
-   le service n'a pas publiée. Le suivi lui-même (bon job, santé, retour) est vérifié par zy-updates.spec.ts. Données fictives. */
+   le frontal réel et sa CSP. Thème sombre seul et animations continues, sans bouton (décisions du RSSI du 15/11/2026) ;
+   les animations n'utilisent que transform et opacity ; le mouvement réduit donne un rendu statique avec les mêmes
+   informations ; l'illustration ne montre jamais une réussite que le service n'a pas publiée. Le suivi lui-même (bon job, santé, retour) est vérifié par zy-updates.spec.ts. Données fictives. */
 import { expect, test, type Browser } from '@playwright/test';
 import { watchPage } from '../helpers';
 
@@ -36,7 +36,10 @@ async function ouvrir(browser: Browser, etat: Record<string, unknown>, reducedMo
     ignoreHTTPSErrors: true,
     viewport: { width: 1440, height: 900 },
     reducedMotion,
+    // Poste et application en clair : la page reste sombre.
+    colorScheme: 'light',
   });
+  await ctx.addInitScript(() => localStorage.setItem('mantine-color-scheme-value', 'light'));
   const page = await ctx.newPage();
   const problems = watchPage(page);
   const suivi = { etat };
@@ -46,12 +49,13 @@ async function ouvrir(browser: Browser, etat: Record<string, unknown>, reducedMo
 }
 const animationsActives = () => document.getAnimations().filter((a) => a.playState === 'running').length;
 
-test('maintenance Neon : animations en transform et opacity seulement, figées par la pause sans arrêter le suivi', async ({
+test('maintenance Neon : thème sombre seul, animations continues en transform et opacity, sans bouton, suivi actif', async ({
   browser,
 }) => {
   const { ctx, page, problems, suivi } = await ouvrir(browser, enCours(), 'no-preference');
   try {
     await expect(page.locator('html')).toHaveAttribute('data-art', 'building');
+    await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', 'dark');
     await expect(page.locator('li.current')).toHaveText(/^Installation/);
     const proprietes = await page.evaluate(() => {
       const vues = new Set<string>();
@@ -65,13 +69,8 @@ test('maintenance Neon : animations en transform et opacity seulement, figées p
     expect(proprietes.length).toBeGreaterThan(0);
     expect(proprietes.filter((p) => !/:(transform|opacity)$/.test(p))).toEqual([]);
     expect(await page.evaluate(animationsActives)).toBeGreaterThan(0);
-    const pause = page.getByRole('button', { name: 'Mettre les animations en pause' });
-    await expect(pause).toHaveAttribute('aria-pressed', 'false');
-    await pause.focus();
-    await page.keyboard.press('Enter');
-    await expect(pause).toHaveAttribute('aria-pressed', 'true');
-    await expect.poll(() => page.evaluate(animationsActives)).toBe(0);
-    // Pendant la pause, le suivi continue : l'état publié suivant est reçu et affiché.
+    await expect(page.getByRole('button')).toHaveCount(0);
+    // Le suivi continue : l'état publié suivant est reçu et affiché, les animations tournent toujours.
     suivi.etat = enCours({
       phase: 'verifying',
       message: 'Vérification du service et de vos données.',
@@ -80,9 +79,7 @@ test('maintenance Neon : animations en transform et opacity seulement, figées p
     await expect(page.getByRole('status')).toHaveText('Vérification du service et de vos données.');
     await expect(page.locator('html')).toHaveAttribute('data-art', 'verifying');
     await expect(page.locator('li.current')).toHaveText(/^Vérification/);
-    expect(await page.evaluate(animationsActives)).toBe(0);
-    await page.keyboard.press(' ');
-    await expect(pause).toHaveAttribute('aria-pressed', 'false');
+    expect(await page.evaluate(animationsActives)).toBeGreaterThan(0);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();
@@ -98,7 +95,6 @@ test('maintenance Neon : mouvement réduit, rendu statique avec les mêmes infor
     await expect(page.locator('li.current')).toHaveText(/^Installation/);
     await expect(page.locator('#elapsed')).toContainText(/Durée écoulée : 1 min \d{2} s/);
     expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
-    await expect(page.locator('#pause')).toBeHidden();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

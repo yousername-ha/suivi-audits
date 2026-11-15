@@ -4,8 +4,8 @@
    Couches de la maquette consolidées dans l'ordre studio → effets → phases → journal (disposition seule) → direct →
    technique → violet → erreurs ; l'habillage encadré du journal (cadre, titre, compteur, séparateurs) est écarté.
    Couleurs dérivées du thème servi (/update/theme.css), longueurs en jetons du thème ou en unités relatives.
-   Animations limitées à transform et opacity : la pause les fige, le mouvement réduit les supprime. Aucune ne mesure
-   ni ne fait avancer l'opération. */
+   Thème sombre seul et animations continues, sans bouton (décisions du RSSI du 15/11/2026). Animations limitées à
+   transform et opacity, supprimées par le mouvement réduit ; aucune ne mesure ni ne fait avancer l'opération. */
 
 @font-face {
   font-family: Inter;
@@ -30,7 +30,7 @@
 
 /* ------------------------------------------------------------------------------------------------ Jetons locaux */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   /* Traits et gabarits, dérivés des espacements et rayons du thème. */
   --m-trait: calc(var(--mantine-spacing-2xs) / 4);
   --m-trait-2: calc(var(--mantine-spacing-2xs) / 2);
@@ -42,41 +42,13 @@
   --m-biseau: calc(var(--mantine-radius-lg) * 1.8) var(--mantine-radius-xs);
   --m-grille: calc(var(--mantine-spacing-2xl) * 1.5);
 
-  /* Thème clair : la maquette ne livrait que le sombre ; contrastes du texte utile au niveau AA. */
+  /* Thème sombre seul (la page ne suit pas le thème de l'application). */
   --m-bg: var(--suivi-fond-page);
-  --m-panel: var(--suivi-surface);
+  --m-panel: color-mix(in srgb, var(--suivi-surface) 60%, var(--suivi-fond-page));
   --m-ink: var(--mantine-color-text);
   --m-muted: var(--neon-secondaire);
-  --m-faint: var(--neon-secondaire);
-  --m-line: var(--suivi-trait);
-  --m-cyan: var(--mantine-color-cyan-9);
-  --m-violet: var(--mantine-color-violet-7);
-  --m-green: color-mix(in srgb, var(--mantine-color-teal-9) 80%, var(--mantine-color-black));
-  --m-amber: color-mix(in srgb, var(--mantine-color-orange-9) 70%, var(--mantine-color-black));
-  --m-red: var(--mantine-color-red-9);
-  --m-cube: var(--mantine-color-cyan-6);
-  --m-cube-violet: var(--mantine-color-violet-4);
-  --m-console: color-mix(in srgb, var(--mantine-color-text) 88%, transparent);
-  --m-console-heure: var(--neon-secondaire);
-  --m-console-erreur: var(--mantine-color-red-9);
-  --m-ombre: color-mix(in srgb, var(--suivi-encre) 9%, transparent);
-  --m-fx-ligne: var(--mantine-color-cyan-8);
-  --m-fx-paquet: var(--mantine-color-cyan-8);
-  --m-fx-point: var(--mantine-color-cyan-8);
-  --m-fx-grille: color-mix(in srgb, var(--mantine-color-cyan-9) 40%, var(--suivi-trait));
-  --m-fx-doux: var(--mantine-color-cyan-7);
-  --m-fx-force: 0.7;
-
-  /* Couleur d'état : cyan pendant le travail, rouge en échec, ambre en restauration, vert en réussite. */
-  --m-accent: var(--m-cyan);
-  --m-active: color-mix(in srgb, var(--m-accent) 9%, var(--m-panel));
-  --m-wash: color-mix(in srgb, var(--m-accent) 7%, transparent);
-  --m-orbit: color-mix(in srgb, var(--m-accent) 45%, var(--m-line));
-}
-:root[data-mantine-color-scheme='dark'] {
-  color-scheme: dark;
-  --m-panel: color-mix(in srgb, var(--suivi-surface) 60%, var(--suivi-fond-page));
   --m-faint: color-mix(in srgb, var(--neon-secondaire) 78%, var(--suivi-fond-page));
+  --m-line: var(--suivi-trait);
   --m-cyan: var(--mantine-color-cyan-3);
   --m-violet: var(--mantine-color-violet-3);
   --m-green: var(--mantine-color-teal-3);
@@ -95,6 +67,12 @@
   --m-fx-grille: color-mix(in srgb, var(--mantine-color-cyan-7) 45%, var(--suivi-trait));
   --m-fx-doux: var(--mantine-color-cyan-6);
   --m-fx-force: 1;
+
+  /* Couleur d'état : cyan pendant le travail, rouge en échec, ambre en restauration, vert en réussite. */
+  --m-accent: var(--m-cyan);
+  --m-active: color-mix(in srgb, var(--m-accent) 9%, var(--m-panel));
+  --m-wash: color-mix(in srgb, var(--m-accent) 7%, transparent);
+  --m-orbit: color-mix(in srgb, var(--m-accent) 45%, var(--m-line));
 }
 :root[data-art='alert'] {
   --m-accent: var(--m-red);
@@ -470,31 +448,6 @@ main {
   block-size: 0.45em;
   background: var(--m-cyan);
 }
-.icon-button {
-  display: grid;
-  flex: none;
-  place-items: center;
-  inline-size: calc(var(--mantine-spacing-xl) * 1.2);
-  block-size: calc(var(--mantine-spacing-xl) * 1.2);
-  padding: 0;
-  border: var(--m-trait) solid var(--m-line);
-  border-radius: var(--mantine-radius-md);
-  background: var(--m-panel);
-  color: var(--m-ink);
-  font: inherit;
-  cursor: pointer;
-}
-.icon-button:hover {
-  border-color: var(--m-cyan);
-}
-.icon-button .icone {
-  inline-size: 1.2em;
-  block-size: 1.2em;
-}
-#pause[aria-pressed='true'] .icone-pause,
-#pause:not([aria-pressed='true']) .icone-lecture {
-  display: none;
-}
 
 /* ------------------------------------------------------------------------------------------------ Titre */
 /* Hauteur disponible au-delà du contenu : la dalle est centrée verticalement sous l'en-tête. */
@@ -754,7 +707,7 @@ h1 {
   stroke: var(--m-accent);
   stroke-width: 2;
 }
-:root[data-mantine-color-scheme='dark'] .ring-outer {
+.ring-outer {
   filter: drop-shadow(0 0 0.3em color-mix(in srgb, var(--m-accent) 27%, transparent));
 }
 
@@ -1768,12 +1721,6 @@ h1 {
   }
 }
 
-/* Pause : les effets sont figés, le suivi continue (les états et messages restent actualisés). */
-[data-paused='true'] *,
-[data-paused='true'] *::before,
-[data-paused='true'] *::after {
-  animation-play-state: paused !important;
-}
 /* Mouvement réduit : rendu statique immédiat, mêmes informations. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1786,8 +1733,7 @@ h1 {
   .fx-node-pulse,
   .fx-scan,
   .backup-bit,
-  .verification-scan,
-  #pause {
+  .verification-scan {
     display: none;
   }
   .transfer-band {
@@ -1972,8 +1918,7 @@ h1 {
   }
 }
 @media print {
-  .ambient,
-  #pause {
+  .ambient {
     display: none;
   }
 }

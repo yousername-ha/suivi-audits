@@ -2,18 +2,8 @@
    de présentation découlent de l'état publié ; ils ne font jamais avancer d'étape et ne simulent ni pourcentage, ni débit,
    ni durée, ni ligne de journal. */
 (() => {
+  // Thème sombre seul, fixé dans la page (décision du RSSI du 15/11/2026).
   const root = document.documentElement;
-  let preference = 'auto';
-  try {
-    preference = localStorage.getItem('mantine-color-scheme-value') || 'auto';
-  } catch {
-    /* La maintenance fonctionne aussi sans stockage navigateur. */
-  }
-  root.dataset.mantineColorScheme =
-    preference === 'dark' ||
-    ((!preference || preference === 'auto') && matchMedia('(prefers-color-scheme: dark)').matches)
-      ? 'dark'
-      : 'light';
   const get = (id) => document.getElementById(id);
   // N'écrire que ce qui change : la zone annoncée (#message) n'est pas relue à chaque relevé.
   const ecrire = (id, texte) => {
@@ -53,13 +43,6 @@
       'neutral'
     );
   };
-  // Pause : fige les effets visuels seulement ; le suivi et l'affichage des états continuent.
-  const pause = get('pause');
-  pause.addEventListener('click', () => {
-    const figee = root.dataset.paused !== 'true';
-    root.dataset.paused = String(figee);
-    pause.setAttribute('aria-pressed', String(figee));
-  });
   const next = new URLSearchParams(location.search).get('next');
   let destination = '/';
   if (next && next.startsWith('/')) {

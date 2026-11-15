@@ -24,10 +24,11 @@ de données. _(Session « Projet audit_suivi Coeur ».)_
 ### Modifié
 
 - **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
-  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) dans
-  les thèmes clair et sombre, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée
-  (préparation, sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; un bouton fige
-  les animations sans arrêter le suivi et le mouvement réduit donne un rendu statique. Suivi et gardes de retour inchangés
+  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
+  thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
+  sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
+  remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
+  (décisions du RSSI) ; le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés
   (bon job, santé `ok`, adresse de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la
   version cible et l'avis de lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas raccordé
   (second lot) : sa zone l'indique, sans ligne simulée. La page étant servie par le frontal, elle suit l'image
