@@ -217,3 +217,52 @@ describe('flux vers l’extérieur : protocole de l’exécutant (CLI)', () => {
     expect(await etats()).toEqual(avant);
   }, 120_000);
 });
+
+describe('flux vers l’extérieur : désactivation par l’activation des modules (ADR 0019)', () => {
+  const appliquer = async (changes: { id: string; enabled: boolean }[], previewId?: string) => {
+    const intent = { changes, cascade: false };
+    const apercu = await admin.post('/api/admin/modules/preview', intent);
+    expect(apercu.statusCode, apercu.body).toBe(200);
+    return admin.put(
+      '/api/admin/modules',
+      { intent, previewId: previewId ?? apercu.json().previewId, confirm: 'VALIDER' },
+      { 'if-match': `"${apercu.json().version}"` },
+    );
+  };
+  const fermetures = async () =>
+    (
+      await t.svc.db.q<{ details: { origine: string } }>(
+        "SELECT details FROM audit_log WHERE action = 'flux.externe.ferme' AND target = 'assistant' ORDER BY id",
+      )
+    ).rows.map((r) => r.details.origine);
+
+  it('désactiver le module « assistant » referme son flux dans la même opération ; le réactiver ne rouvre rien', async () => {
+    await t.svc.flux.changer('assistant', true, { username: 'flux_admin' }, '127.0.0.1', 'assistant.reglages');
+    await t.svc.flux.changer('antivirus', true, { username: 'flux_admin' }, '127.0.0.1');
+    const avant = await fermetures();
+    // Échec de l'application (prévisualisation qui ne correspond pas) : rien n'est fermé.
+    expect((await appliquer([{ id: 'assistant', enabled: false }], 'f'.repeat(64))).statusCode).toBe(409);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+    // Un autre module désactivé ne touche pas au flux de l'assistant.
+    expect((await appliquer([{ id: 'incidents', enabled: false }])).statusCode).toBe(200);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(true);
+    const r = await appliquer([{ id: 'assistant', enabled: false }]);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(false);
+    expect(await fermetures()).toEqual([...avant, 'modules.update']);
+    expect((await etat('assistant')).decidePar).toBe('flux_admin');
+    // Les flux sans module d'activation (antivirus) ne sont pas concernés.
+    expect(await t.svc.flux.ouvert('antivirus')).toBe(true);
+    // Réactivation : le flux reste fermé, il faut repasser par l'interrupteur et la validation.
+    expect(
+      (
+        await appliquer([
+          { id: 'assistant', enabled: true },
+          { id: 'incidents', enabled: true },
+        ])
+      ).statusCode,
+    ).toBe(200);
+    expect(await t.svc.flux.ouvert('assistant')).toBe(false);
+    expect(await fermetures()).toEqual([...avant, 'modules.update']);
+  });
+});

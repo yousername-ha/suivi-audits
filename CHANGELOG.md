@@ -29,7 +29,8 @@ lot 2. _(Session « Projet audit_suivi Coeur ».)_
   Sécurité) et les mises à jour depuis l'interface affichent une fois une fenêtre qui détaille destinations, ports et données
   qui sortent, avec une case de validation obligatoire ; l'activation et l'ouverture partent en une seule opération, réservée à
   `administration:administrer` (journal `flux.externe.ouvert` / `flux.externe.ferme`, avec les destinations et l'origine du
-  geste). Désactiver le module referme le flux. Nouvelle carte Configuration système > « Flux vers l'extérieur », en résumé :
+  geste). Désactiver le module referme le flux, y compris en désactivant le module « assistant » dans Administration >
+  Modules ; le réactiver ne rouvre rien (il faut repasser par l'interrupteur et la validation). Nouvelle carte Configuration système > « Flux vers l'extérieur », en résumé :
   état voulu, état appliqué, erreur, date, flux à autoriser sur le pare-feu, bouton Fermer. Tant qu'un flux est
   fermé, l'API ne fait rien sortir : l'assistant ne joint pas le relais (message qui renvoie au geste d'activation), l'antivirus n'est pas
   appelé (dépôt accepté « non analysé »), aucun courriel n'est remis à l'exécutant, vérification et installation des mises à

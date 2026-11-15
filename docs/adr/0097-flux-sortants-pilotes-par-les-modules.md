@@ -89,6 +89,10 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
   `.env`), antivirus (hôte `clamav` par défaut ; fermé, dépôt accepté « non analysé »), courriel (rien n'est remis à
   l'exécutant, test refusé), mises à jour (vérification et installation refusées, demande en file close), ACME (demande en
   attente annulée à la fermeture). Test d'architecture `apps/api/test/architecture-flux.test.ts`.
+  Demande du RSSI après revue (15/11/2026) : désactiver un module dans Administration > Modules (ADR 0019) referme aussi son
+  flux, dans la même transaction (journal `flux.externe.ferme`, origine `modules.update`) ; la réactivation du module ne rouvre
+  rien, il faut repasser par son geste d'activation et la validation. Généralisé par le champ `moduleActivation` du registre
+  (aujourd'hui l'assistant seul : les autres modules du registre ne sont pas des modules de l'ADR 0019).
 - Lot 2 — exécutant (profils Compose `assistant` et `antivirus`, silence du courriel, des mises à jour et de l'ACME quand le
   flux est fermé, rapport par `flux-appliques`) : à faire.
 - Lot 3 — questions de l'assistant d'installation (étape 8), avec le composant de validation du lot 1 : à faire.

@@ -63,6 +63,10 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
       'mises-a-jour',
     ]);
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
+    // Activation globale (ADR 0019) : seul l'assistant est un module dont la désactivation referme le flux.
+    expect(FLUX_EXTERNES.filter((f) => f.moduleActivation).map((f) => [f.id, f.moduleActivation])).toEqual([
+      ['assistant', 'assistant'],
+    ]);
   });
   it('la validation jointe à l’activation est un « vrai » explicite', () => {
     expect(FluxConfirme.safeParse(true).success).toBe(true);

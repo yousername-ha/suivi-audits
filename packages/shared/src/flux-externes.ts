@@ -4,6 +4,7 @@
    l'applique et rapporte l'état appliqué. Un test d'architecture vérifie que tout service du compose qui sort ou publie un
    port est porté par un module de ce registre ou figure dans la courte liste du cœur de plateforme. */
 import { z } from 'zod';
+import type { Module } from './permissions.js';
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
 export const FLUX_MODULES = ['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour'] as const;
@@ -47,6 +48,9 @@ export interface FluxExterneDefinition {
       dans la même opération ; « flux » : le module n'a pas d'autre état, son activation est la décision de flux elle-même
       (analyse antivirus, mises à jour depuis l'interface). Dans les deux cas, la fermeture est toujours possible. */
   activation: { par: 'module' | 'flux'; geste: string };
+  /** Module de l'activation globale (ADR 0019) dont la désactivation, dans Administration > Modules, referme aussi ce flux
+      dans la même transaction. Sa réactivation ne rouvre rien : il faut repasser par le geste et la validation. */
+  moduleActivation?: Module;
   /** Flux à autoriser sur le pare-feu de l'hôte et du réseau (ADR 0097, point 6 : ce n'est pas la plateforme qui le fait). */
   pareFeu: readonly string[];
   /** Ce qui se passe tant que le flux est fermé. */
@@ -71,6 +75,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       'La question posée, les extraits que l’assistant a lus pour y répondre (intitulés d’écarts, descriptions de risques, noms d’éléments, extraits de documents) et la clé du fournisseur.',
     reglage: { libelle: 'Plateforme > Assistant RSSI', lien: '/plateforme/assistant' },
     activation: { par: 'module', geste: 'Interrupteur « Activer l’assistant », puis Enregistrer' },
+    moduleActivation: 'assistant',
     pareFeu: ['Sortie TCP 443 du serveur vers l’adresse du fournisseur du modèle.'],
     siFerme: 'L’assistant ne répond pas et ses rondes ne partent pas ; ses réglages sont conservés.',
   },

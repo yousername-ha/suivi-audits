@@ -60,7 +60,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   legacy.registerBatch(reglagesMapper(CLES_REGLAGES));
   const settings = new Settings(cfg, db, legacy);
   const businessPolicies = new BusinessPolicies(db);
-  const modules = new Modules(cfg.db, db);
+  const modules = new Modules(cfg.db, db, flux);
   const grc = new Grc(db, legacy, businessPolicies, modules);
   const configGrc = new ConfigGrc(db, grc);
   grc.methodBindings = configGrc;
