@@ -48,6 +48,10 @@
   - CERT Santé : flux RSS `cyberveille.esante.gouv.fr/alertes-et-vulnerabilites/rss.xml` (titre « produit - identifiant CVE »).
 - **Hébergement** : le RSSI indique que la plateforme est hébergée en interne. L'ADR 0086 décrivait un VPS ; ce point ne
   change rien à l'assistant, dont le modèle reste distant.
+- **Tenable Security Center 6.9** (version indiquée par le RSSI) : la documentation publique donne l'authentification par clés
+  d'API (`x-apikey`), l'API de session étant dépréciée en 6.9 ; les failles par `POST /analysis` avec des vues agrégées et
+  le détail par machine ; les machines par `GET /hosts` ; le correctif par `/solutions`, annoncé expérimental. Relevé complet
+  au [cadrage, §5 bis](../unification/CADRAGE-MODULE-VULNERABILITES.md).
 - **Non vérifié** : l'API de Tenable Security Center telle que l'instance du RSSI l'expose (la documentation publique décrit
   une interrogation `POST /rest/analysis` de type `vuln` ; l'authentification par clé d'API et les vues agrégées restent à lire
   sur l'instance) ; **l'existence, le contenu et les conditions d'une API Ekialis** (rien trouvé sur le site public) ; les

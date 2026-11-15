@@ -95,7 +95,8 @@ additive éventuelle, les droits serveur, les tests et la documentation. Une PR 
 ## 5. Ce qu'il faut du RSSI
 
 - **V0** : la validation de l'ADR 0100 et la réponse à ses dix points ouverts.
-- **V5** : la version de Tenable Security Center ; un compte **en lecture seule** et sa clé d'API ; une instance de recette
+- **V5** : Tenable Security Center est en version **6.9** (indiqué le 15/11/2026) ; un compte **en lecture seule** et ses clés d'API,
+  saisies dans l'interface et jamais communiquées à une session ; une instance de recette
   joignable par l'exécutant, ou des **exemples de réponses anonymisés** (aucun nom de machine ni adresse réels : le dépôt est
   public) ; les filtres voulus (gravité minimale, dépôts ou groupes de machines).
 - **V7** : la documentation de l'API d'Ekialis, un compte en lecture seule, et les champs à reprendre (éditeur, application,
@@ -103,6 +104,29 @@ additive éventuelle, les droits serveur, les tests et la documentation. Une PR 
 - **V4 et V6** : les seuils de départ, les destinataires de l'alerte, et les produits à surveiller en premier.
 - **Avant la mise en service** : la lecture des conditions d'usage de chaque source (NVD et CISA publient pour un usage
   public ; CERT-FR, CERT Santé et EPSS restent à lire).
+
+## 5 bis. Tenable Security Center 6.9 : ce que dit la documentation publique
+
+Version indiquée par le RSSI le 15/11/2026 : **6.9**. Lu le même jour dans la documentation publique de l'API
+(`docs.tenable.com/security-center/api`), **sans essai sur une instance**.
+
+| Sujet | Ce que la documentation indique | Conséquence pour le connecteur |
+| --- | --- | --- |
+| Authentification | Clés d'API dans l'en-tête `x-apikey: accesskey=…; secretkey=…;`. L'API « Token » (ouverture de session) est **dépréciée en 6.9** | Clés d'API seulement : deux secrets scellés, aucune session à ouvrir ni à fermer |
+| Failles | `POST /analysis`, type `vuln`, source `cumulative`, pagination par `startOffset` et `endOffset` ; la réponse porte `totalRecords`, `returnedRecords` et `results` | La lecture se fait par `POST` : liste fermée de points d'accès de lecture (ADR 0100, point 6) |
+| Vues agrégées | Outils `sumid` (par contrôle), `sumcve`, `sumip`, `sumseverity` ; détail par `vulndetails`, `listvuln`, `vulnipdetail`, `cveipdetail` | Agrégats par faille d'un côté, machines touchées de l'autre, sans rapatrier tout le détail |
+| Filtres | `severity`, `exploitAvailable`, `cveID`, `vprScore`, `epssScore`, `cvssV3Vector`, `firstSeen`, `lastSeen`, `repository`, `pluginID` | Filtrage fait par Tenable : gravité minimale, dépôts, date de dernière détection |
+| Champs d'un résultat | `pluginID`, `severity`, `vprScore`, `epssScore`, `ip`, `uuid`, `dnsName`, `name` | Nom et adresse de la machine disponibles ; score EPSS aussi fourni par Tenable |
+| Machines | `GET /hosts` : `uuid`, `name`, `ipAddress`, `os`, `firstSeen`, `lastSeen`, `netBios`, criticité de l'actif (`acr`) ; `GET /hosts/{uuid}` ajoute `tags` | Inventaire des machines ; les étiquettes de Tenable peuvent porter le rôle, à confirmer |
+| Correctif | `POST /solutions` et `POST /solutions/{pluginID}`, annoncés **expérimentaux** | Recommandation « Tenable » possible, mais l'accès peut changer d'une version à l'autre |
+
+Points d'accès retenus pour la liste fermée, tous en lecture : `POST /analysis`, `POST /solutions`, `POST /solutions/{pluginID}`,
+`GET /hosts`, `GET /hosts/{uuid}`, `GET /system`. Tout autre appel est refusé par le socle, en particulier
+`PATCH /hosts/{uuid}/acr`, qui écrit.
+
+**Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
+des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes
+et les temps de réponse.
 
 ## 6. Ce que ce cadrage n'établit pas
 
