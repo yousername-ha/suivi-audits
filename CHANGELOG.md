@@ -6,31 +6,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action obligatoire. La nouvelle page de mise à jour s'affiche une fois le frontal mis à jour par la procédure
-serveur (`GATEWAY_VERSION`, fenêtre d'entretien distincte). D'ici là, le frontal continue de servir l'ancienne page.
-_(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
-
-### Modifié
-
-- **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
-  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
-  thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
-  sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
-  remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
-  (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
-  le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
-  de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
-  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas affiché sur la page (option C
-  retenue par le RSSI) : sa zone l'indique, sans ligne simulée ; le diagnostic reste dans le reçu et les journaux du
-  serveur. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
-  « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+Aucune action.
 
 ## [7.2.0] — 2026-11-15
 
 Version mineure, numérotée par le RSSI. Elle ferme par défaut les **flux vers l'extérieur** et les fait ouvrir par l'activation du
 module, après validation explicite, sans commande sur le serveur ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md),
 lots 1 à 3), rattache les **critères d'évaluation aux fournisseurs** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md))
-et retire les boutons de pause des **animations** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)).
+retire les boutons de pause des **animations** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md))
+et habille la **page de mise à jour** aux couleurs Neon.
 Migrations additives `070` et `071`. **Action après la mise à jour : réactiver les modules qui servent** (voir ci-dessous).
 Section rédigée par la session « Projet audit_suivi Coeur ».
 
@@ -54,6 +38,10 @@ lui-même les profils Compose `assistant` et `antivirus` selon leur flux. Un rel
 contrôle automatique des versions toutes les six heures cesse tant que le flux « Mises à jour » est fermé, et une passerelle
 en ACME revient à l'autorité interne si le flux ACME est fermé. Réactiver les modules qui servent juste après la mise à jour.
 _(Session « Projet audit_suivi Coeur ».)_
+
+**Page de mise à jour (habillage Neon)** : aucune action obligatoire. La nouvelle page de mise à jour s'affiche une fois le
+frontal mis à jour par la procédure serveur (`GATEWAY_VERSION`, fenêtre d'entretien distincte). D'ici là, le frontal continue de servir l'ancienne page.
+_(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 ### Ajouté
 
@@ -114,6 +102,19 @@ _(Session « Projet audit_suivi Coeur ».)_
   reste rattaché mais n'est plus proposé. Jeu de démonstration complété. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Modifié
+
+- **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
+  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
+  thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
+  sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
+  remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
+  (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
+  le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
+  de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
+  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas affiché sur la page (option C
+  retenue par le RSSI) : sa zone l'indique, sans ligne simulée ; le diagnostic reste dans le reçu et les journaux du
+  serveur. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
+  « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Animations en continu, sans bouton de pause** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md),
   décision du RSSI du 15/11/2026) : les boutons de pause et de reprise des animations sont retirés du menu latéral, du Plan
