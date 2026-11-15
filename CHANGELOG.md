@@ -6,6 +6,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action.
+
+## [7.2.0] — 2026-11-15
+
+Version mineure, numérotée par le RSSI. Elle ferme par défaut les **flux vers l'extérieur** et les fait ouvrir par l'activation du
+module, après validation explicite, sans commande sur le serveur ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md),
+lots 1 à 3), rattache les **critères d'évaluation aux fournisseurs** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md))
+et retire les boutons de pause des **animations** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)).
+Migrations additives `070` et `071`. **Action après la mise à jour : réactiver les modules qui servent** (voir ci-dessous).
+Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
 **Aucune action sur le serveur.** **Migration automatique `070`** (critères rattachés aux fournisseurs,
 [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : additive (une table, un index), durée négligeable, sans reprise
 de données. _(Session « Projet audit_suivi Coeur ».)_
