@@ -69,7 +69,7 @@ Elles ne montrent ni le menu latéral de l'application, ni le thème clair, ni l
 | Vue d'ensemble | [01-vue](maquettes-vulnerabilites/01-vue.png) | Niveau d'alerte, radar, cible prioritaire, journal de veille, cibles par priorité, état des sources |
 | Fiche d'une faille | [02-fiche](maquettes-vulnerabilites/02-fiche.png) | Position sur le radar, faits, vecteur d'attaque en clair et schéma, recommandations des sources, proposition de l'assistant, parcours |
 | Recherche, vue par faille | [03-failles](maquettes-vulnerabilites/03-failles.png) | Recherche, faille dépliée sur ses machines regroupées par rôle |
-| Vue par machine | [04-machines](maquettes-vulnerabilites/04-machines.png) | Rang, rôle modifiable, failles par gravité, lecture de l'assistant |
+| Vue par machine | [04-machines](maquettes-vulnerabilites/04-machines.png) | Machines en icônes rangées par ligne (front, back, bases, sans rôle), rang, failles par gravité, lecture de l’assistant |
 | Vue par périmètre | [05-perimetre](maquettes-vulnerabilites/05-perimetre.png) | Front, back applicatif et bases, reliés par ligne |
 | Produits surveillés | [06-produits](maquettes-vulnerabilites/06-produits.png) | Registre, origine, propositions venues d'Ekialis |
 
