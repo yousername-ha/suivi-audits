@@ -21,7 +21,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { StatusChip } from '@suivi/ui';
+import { FormSection, StatusChip } from '@suivi/ui';
 import {
   CONTEXTE_ASSISTANT_MAX,
   FOURNISSEUR_PERSONNALISE,
@@ -205,33 +205,11 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   const niveaux = new Set(saisie.profils.map((p) => p.classificationMax));
   const niveauCommun = niveaux.size === 1 ? saisie.profils[0]!.classificationMax : null;
   const aEnregistrer = modifie || cle.length >= 8;
-  const barre = (
-    <Stack gap="xs">
-      {/* L'erreur s'affiche à côté du bouton, et non en haut d'une longue page. */}
-      <ErrorAlert error={erreur} />
-      <Group>
-        <Button onClick={() => void enregistrer()} loading={envoi} disabled={!aEnregistrer}>
-          Enregistrer
-        </Button>
-        <Text size="sm" role="status">
-          {aEnregistrer
-            ? 'Modifications non enregistrées : elles ne prennent effet qu’après « Enregistrer ».'
-            : 'Tous les réglages sont enregistrés.'}
-        </Text>
-      </Group>
-    </Stack>
-  );
+  const erreurTexte = erreur ? errorMessage(erreur) : null;
   const choixReferents = (referents.data ?? []).map((r) => ({ value: r.id, label: r.nom }));
 
   return (
     <Stack>
-      <Alert color="orange" title="Ce qui quitte le serveur">
-        Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus
-        (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit que ce que ses profils ouvrent, et
-        jamais plus que la personne qui l’interroge. Par défaut, un profil lit tous les périmètres et tous les documents
-        : restreignez-le dans les réglages avancés si une partie ne doit pas être confiée à ce fournisseur.
-        {fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}
-      </Alert>
       {!d.relaisDeclare && (
         <Alert color="red" title="Relais de modèle absent">
           Le relais de modèle n’est pas installé sur le serveur : l’assistant ne peut pas répondre. Voir le guide
@@ -239,101 +217,100 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
         </Alert>
       )}
 
-      <Card withBorder>
-        <Stack>
-          <Group justify="space-between">
-            <Title order={3} size="h5">
-              Activation
-            </Title>
-            <StatusChip etat={d.cleDefinie ? 'succes' : 'attention'}>
-              {d.cleDefinie ? 'Clé enregistrée' : 'Aucune clé'}
-            </StatusChip>
-          </Group>
-          <Switch
-            label="Activer l’assistant RSSI"
-            description="Coché : le bouton de l’assistant apparaît en bas à droite pour les personnes autorisées. Décoché : plus aucun appel au modèle, les réglages sont conservés."
-            checked={saisie.actif}
-            onChange={(e) => changer({ actif: e.currentTarget.checked })}
-          />
+      <FormSection
+        title="Assistant RSSI"
+        description={`Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit jamais plus que la personne qui l’interroge. Par défaut, il lit tous les périmètres et tous les documents : restreignez-le dans les réglages avancés si une partie ne doit pas être confiée à ce fournisseur.${fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}`}
+        dirty={aEnregistrer}
+        saving={envoi}
+        onSave={enregistrer}
+        error={erreurTexte}
+      >
+        <Switch
+          label="Activer l’assistant RSSI"
+          description="Coché : le bouton de l’assistant apparaît en bas à droite pour les personnes autorisées. Décoché : plus aucun appel au modèle, les réglages sont conservés."
+          checked={saisie.actif}
+          onChange={(e) => changer({ actif: e.currentTarget.checked })}
+        />
+        <Select
+          label="Fournisseur du modèle"
+          description="L’adresse et les modèles des trois fournisseurs sont préenregistrés. « Personnalisé » : tout autre service compatible, à régler vous-même."
+          placeholder="Choisissez un fournisseur"
+          data={[
+            ...FOURNISSEURS_ASSISTANT.map((f) => ({ value: f.id, label: f.libelle })),
+            { value: FOURNISSEUR_PERSONNALISE, label: 'Personnalisé' },
+          ]}
+          value={choixFournisseur}
+          onChange={choisirFournisseur}
+          allowDeselect={false}
+          comboboxProps={{ withinPortal: true }}
+        />
+        {connu && (
           <Select
-            label="Fournisseur du modèle"
-            description="L’adresse et les modèles des trois fournisseurs sont préenregistrés. « Personnalisé » : tout autre service compatible, à régler vous-même."
-            placeholder="Choisissez un fournisseur"
-            data={[
-              ...FOURNISSEURS_ASSISTANT.map((f) => ({ value: f.id, label: f.libelle })),
-              { value: FOURNISSEUR_PERSONNALISE, label: 'Personnalisé' },
-            ]}
-            value={choixFournisseur}
-            onChange={choisirFournisseur}
+            label="Modèle"
+            description={`Adresse préenregistrée : ${connu.adresse}. Pour un autre modèle de ce fournisseur, choisissez « Personnalisé ».`}
+            data={modeles}
+            value={saisie.modele}
+            onChange={(v) => changer({ modele: v ?? connu.modeles[0] })}
             allowDeselect={false}
             comboboxProps={{ withinPortal: true }}
           />
-          {connu && (
-            <Select
-              label="Modèle"
-              description={`Adresse préenregistrée : ${connu.adresse}. Pour un autre modèle de ce fournisseur, choisissez « Personnalisé ».`}
-              data={modeles}
+        )}
+        {choixFournisseur === FOURNISSEUR_PERSONNALISE && (
+          <>
+            <TextInput
+              label="Adresse du service de modèle"
+              description="Adresse HTTPS d’une API « chat completions » compatible OpenAI, par exemple https://modele.exemple.fr/v1"
+              value={saisie.adresse}
+              onChange={(e) => changer({ adresse: e.currentTarget.value })}
+            />
+            <TextInput
+              label="Nom du modèle"
+              description="Tel que le service le nomme. Le modèle doit gérer l’appel d’outils."
               value={saisie.modele}
-              onChange={(v) => changer({ modele: v ?? connu.modeles[0] })}
-              allowDeselect={false}
-              comboboxProps={{ withinPortal: true }}
+              onChange={(e) => changer({ modele: e.currentTarget.value })}
             />
-          )}
-          {choixFournisseur === FOURNISSEUR_PERSONNALISE && (
-            <>
-              <TextInput
-                label="Adresse du service de modèle"
-                description="Adresse HTTPS d’une API « chat completions » compatible OpenAI, par exemple https://modele.exemple.fr/v1"
-                value={saisie.adresse}
-                onChange={(e) => changer({ adresse: e.currentTarget.value })}
-              />
-              <TextInput
-                label="Nom du modèle"
-                description="Tel que le service le nomme. Le modèle doit gérer l’appel d’outils."
-                value={saisie.modele}
-                onChange={(e) => changer({ modele: e.currentTarget.value })}
-              />
-            </>
-          )}
-          {choixFournisseur && (
-            <PasswordInput
-              label={d.cleDefinie ? 'Remplacer la clé d’API' : 'Clé d’API du fournisseur'}
-              description="Scellée sur le serveur : jamais réaffichée ni écrite dans un journal. Laissez vide pour garder la clé enregistrée."
-              value={cle}
-              onChange={(e) => setCle(e.currentTarget.value)}
-              autoComplete="off"
-            />
-          )}
-          {choixFournisseur && (
-            <Select
-              label="Niveau d’habilitation de l’assistant"
-              description="Classification la plus élevée que l’assistant peut lire dans les documents. « Confidentiel » : tous les documents. Un niveau plus bas : les documents classés au-dessus ne sont ni trouvés ni lus."
-              placeholder="Différent selon le profil (voir les réglages avancés)"
-              data={NIVEAUX}
-              value={niveauCommun}
-              onChange={(v) => {
-                if (v)
-                  changer({
-                    profils: saisie.profils.map((p) => ({ ...p, classificationMax: v as typeof p.classificationMax })),
-                  });
-              }}
-              allowDeselect={false}
-              comboboxProps={{ withinPortal: true }}
-            />
-          )}
-          {barre}
-          <Group>
-            <Button variant="default" onClick={() => void tester()} loading={envoi} disabled={aEnregistrer}>
-              Tester le modèle
-            </Button>
-            {test && <StatusChip etat={test.ok ? 'succes' : 'erreur'}>{test.detail}</StatusChip>}
-          </Group>
-          <Text size="xs" c="dimmed">
-            Le test est un appel réel et minimal au modèle, avec les réglages enregistrés. Aucune donnée de la
-            plateforme n’est envoyée.{d.updatedBy ? ` Dernière modification par ${d.updatedBy}.` : ''}
-          </Text>
-        </Stack>
-      </Card>
+          </>
+        )}
+        {choixFournisseur && (
+          <PasswordInput
+            label={d.cleDefinie ? 'Remplacer la clé d’API' : 'Clé d’API du fournisseur'}
+            description="Scellée sur le serveur : jamais réaffichée ni écrite dans un journal. Laissez vide pour garder la clé enregistrée."
+            value={cle}
+            onChange={(e) => setCle(e.currentTarget.value)}
+            autoComplete="off"
+          />
+        )}
+        {choixFournisseur && (
+          <Select
+            label="Niveau d’habilitation de l’assistant"
+            description="Classification la plus élevée que l’assistant peut lire dans les documents. « Confidentiel » : tous les documents. Un niveau plus bas : les documents classés au-dessus ne sont ni trouvés ni lus."
+            placeholder="Différent selon le profil (voir les réglages avancés)"
+            data={NIVEAUX}
+            value={niveauCommun}
+            onChange={(v) => {
+              if (v)
+                changer({
+                  profils: saisie.profils.map((p) => ({ ...p, classificationMax: v as typeof p.classificationMax })),
+                });
+            }}
+            allowDeselect={false}
+            comboboxProps={{ withinPortal: true }}
+          />
+        )}
+        <Group>
+          <Button variant="default" onClick={() => void tester()} loading={envoi} disabled={aEnregistrer}>
+            Tester le modèle
+          </Button>
+          {test && <StatusChip etat={test.ok ? 'succes' : 'erreur'}>{test.detail}</StatusChip>}
+          <StatusChip etat={d.cleDefinie ? 'succes' : 'neutre'}>
+            {d.cleDefinie ? 'Clé enregistrée' : 'Aucune clé enregistrée'}
+          </StatusChip>
+        </Group>
+        <Text size="xs" c="dimmed">
+          Le test est un appel réel et minimal au modèle, avec les réglages enregistrés. Aucune donnée de la plateforme
+          n’est envoyée.{d.updatedBy ? ` Dernière modification par ${d.updatedBy}.` : ''}
+        </Text>
+      </FormSection>
 
       <Accordion variant="contained">
         <Accordion.Item value="avances">
@@ -531,7 +508,11 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
                 </Stack>
               </Card>
 
-              <Card withBorder>{barre}</Card>
+              <Group justify="flex-end">
+                <Button onClick={() => void enregistrer()} loading={envoi} disabled={!aEnregistrer}>
+                  Enregistrer
+                </Button>
+              </Group>
               {d.cleDefinie && (
                 <Card withBorder>
                   <Group>
