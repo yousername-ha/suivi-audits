@@ -461,9 +461,20 @@ sudo ./installer.sh
 2. Scannez le QR code affiché à l'écran.
 3. Saisissez le code à 6 chiffres affiché par le téléphone : il est validé automatiquement (sinon, cliquez sur **Valider**).
 
-**Résultat attendu** : la page d'accueil s'affiche avec « Bonjour Responsable SSI ». **L'installation est terminée.** La page `/setup` est désormais désactivée : elle renvoie vers la connexion.
+**Résultat attendu** : l'application peut proposer d'ajouter une clé de sécurité (facultatif, **Plus tard** pour passer), puis affiche la page « Flux vers l'extérieur » (étape 8.6). La page `/setup` est désormais désactivée : elle renvoie vers la connexion.
 
 <!-- ci: exec: NODE_EXTRA_CA_CERTS=/opt/suivi-audits/racine-suivi-audits.crt node "$GITHUB_WORKSPACE/scripts/ci/guide-api.mjs" administrateur https://<nom_dns> -->
+
+**8.6 Flux vers l'extérieur** ([ADR 0097](adr/0097-flux-sortants-pilotes-par-les-modules.md)), dernière étape, facultative. Par défaut, **aucun flux ne sort du serveur**. Pour chaque module qui communique avec l'extérieur, choisissez **Activer** ou **Plus tard** ; **Passer l'étape : tout plus tard** les laisse tous fermés. Tout se change ensuite depuis la page de chaque module, et le résumé est dans Administration, Configuration système, Flux vers l'extérieur.
+- **Activer** affiche les destinations, les ports et les données qui sortent ; cochez la case de validation (sans elle, **Terminer** reste grisé). La décision est inscrite au journal d'audit et l'exécutant d'exploitation l'applique en moins d'une minute.
+- **Antivirus** et **Mises à jour de la plateforme** s'ouvrent directement.
+- **Assistant RSSI** : indiquez aussi l'adresse du service de modèle (par exemple `https://api.mistral.ai/v1`) et le nom du modèle. La clé du fournisseur et les profils se règlent ensuite dans Plateforme, Assistant RSSI : tant qu'aucune clé n'est enregistrée, rien ne sort.
+- **Courriel** et **Certificat public ACME** ont besoin de leurs réglages (serveur SMTP ; nom public et ports 80 et 443 joignables depuis Internet) : ils s'activent depuis leur page (étapes 11.8 et 11.7), dont le lien est donné à la fin de l'étape ; la même validation y est demandée.
+- Pour chaque flux ouvert, faites autoriser par l'équipe infrastructure le flux indiqué (pare-feu de l'hôte et du réseau, tableau de l'étape 0).
+
+Cette étape n'est proposée qu'une fois, au compte créé par l'installation : terminée ou passée, elle ne revient pas.
+
+**Résultat attendu** : la page d'accueil s'affiche avec « Bonjour Responsable SSI ». **L'installation est terminée.**
 
 > ⚠️ Le compte administrateur est le seul à pouvoir créer des comptes. Créez **un second administrateur** (étape 9) pour ne jamais dépendre d'un seul téléphone.
 

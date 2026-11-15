@@ -73,7 +73,9 @@ L'application n'a aucun accès à Internet. Un petit service, le **relais** (`as
 Mistral uniquement. Par défaut, ce flux est **fermé** ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md)) :
 il s'ouvre quand un administrateur active l'assistant, à l'étape 4. **Rien n'est à faire sur le serveur** : à la validation,
 l'exécutant d'exploitation du serveur démarre le relais à son passage suivant (en général moins d'une minute), et l'arrête
-quand l'assistant est désactivé. Aucune ligne n'est à ajouter dans `.env` : l'application connaît l'adresse du relais.
+quand l'assistant est désactivé. Aucune ligne n'est à ajouter dans `.env` : l'application connaît l'adresse du relais. Si
+l'assistant a été activé à la dernière étape de l'installation (« Flux vers l'extérieur », avec l'adresse et le modèle), le flux
+est déjà ouvert : à l'étape 4, il reste à enregistrer la clé et à vérifier les profils.
 
 1. Pare-feu : le serveur doit pouvoir joindre `api.mistral.ai` sur le port TCP 443. Si votre pare-feu filtre les sorties,
    demandez cette règle à l'équipe réseau (la carte « Flux vers l'extérieur » de Configuration système la rappelle). Aucun

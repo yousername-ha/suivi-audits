@@ -10,7 +10,7 @@ est exploratoire : l'agent le vérifie à la main, puis propose le test qui manq
 
 | Étape | Ce que fait le RSSI | Critères d'acceptation (extraits) | Harnais |
 | --- | --- | --- | --- |
-| 0. Installer | Poivre et clé de secours au coffre, jeton, compte administrateur, TOTP, clé de sécurité « Plus tard » | Chaque secret exige la recopie de sa fin ; `/setup` fermé ensuite ; aucune erreur JS/CSP ; libellés en français | `00-installation` |
+| 0. Installer | Poivre et clé de secours au coffre, jeton, compte administrateur, TOTP, clé de sécurité « Plus tard », flux vers l'extérieur laissés fermés (« Passer l'étape : tout plus tard ») | Chaque secret exige la recopie de sa fin ; `/setup` fermé ensuite ; aucune erreur JS/CSP ; libellés en français | `00-installation` |
 | 1. Définir le cadre (4.1 à 4.4) | Nom de l'organisation, périmètre du SMSI et périmètre HDS (sous-périmètre), enjeux internes et externes, parties intéressées | Le périmètre HDS hérite des référentiels du SMSI ou s'en écarte explicitement ; le contexte est rattaché au bon périmètre | à écrire |
 | 2. Engager la direction (5.1 à 5.3) | Politique de sécurité (document), rôles : RSSI, DPO, pilote de processus, auditeur interne, direction (comptes du jeu fictif) | Chaque compte n'obtient que les droits de son rôle ; l'auditeur interne ne modifie pas ce qu'il audite ; le journal d'audit trace les attributions | à écrire |
 | 3. Mobiliser les moyens (7.1 à 7.5) | Déposer les documents (politique, PSSI, procédure de gestion des incidents), versions, liens vers les mesures | Version, auteur, date et document chiffré ; une nouvelle version garde l'historique ; un document est rattachable à une mesure de la DdA | à écrire |

@@ -6,6 +6,36 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+Aucune action obligatoire. La nouvelle page de mise à jour s'affiche une fois le frontal mis à jour par la procédure
+serveur (`GATEWAY_VERSION`, fenêtre d'entretien distincte). D'ici là, le frontal continue de servir l'ancienne page.
+_(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+### Modifié
+
+- **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
+  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
+  thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
+  sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
+  remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
+  (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
+  le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
+  de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
+  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas affiché sur la page (option C
+  retenue par le RSSI) : sa zone l'indique, sans ligne simulée ; le diagnostic reste dans le reçu et les journaux du
+  serveur. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
+  « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+## [7.2.0] — 2026-11-15
+
+Version mineure, numérotée par le RSSI. Elle ferme par défaut les **flux vers l'extérieur** et les fait ouvrir par l'activation du
+module, après validation explicite, sans commande sur le serveur ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md),
+lots 1 à 3), rattache les **critères d'évaluation aux fournisseurs** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md))
+et retire les boutons de pause des **animations** ([ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)).
+Migrations additives `070` et `071`. **Action après la mise à jour : réactiver les modules qui servent** (voir ci-dessous).
+Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
 **Aucune action sur le serveur.** **Migration automatique `070`** (critères rattachés aux fournisseurs,
 [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : additive (une table, un index), durée négligeable, sans reprise
 de données. _(Session « Projet audit_suivi Coeur ».)_
@@ -59,6 +89,21 @@ _(Session « Projet audit_suivi Coeur ».)_
   Windows) : plus de `docker compose --profile … up -d`. Docker Hub (image ClamAV, téléchargée à la première activation)
   figure parmi les destinations de l'antivirus dans la fenêtre de validation et les flux à autoriser sur le pare-feu.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Flux vers l'extérieur pilotés par les modules, lot 3 : questions dès l'installation**
+  ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), point 5). Dernière étape de l'assistant d'installation,
+  « Flux vers l'extérieur » : à la première connexion complète du compte administrateur créé par l'installation (double
+  authentification activée, droit `administration:administrer`), chaque module du registre propose « Activer » ou « Plus
+  tard », et « Passer l'étape : tout plus tard » les laisse tous fermés. « Activer » affiche la même validation que les gestes
+  du lot 1 (destinations, ports, données qui sortent, case obligatoire) et passe par les mêmes routes, droit et journal :
+  l'antivirus et les mises à jour s'ouvrent par la route commune ; l'assistant par ses réglages, avec l'adresse du service de
+  modèle et le nom du modèle (sa clé et ses profils se règlent ensuite dans sa page : sans clé, rien ne sort) ; le courriel et
+  le certificat ACME, qui n'ont de sens qu'avec leurs réglages (serveur SMTP ; nom public et ports joignables), renvoient à
+  leur page, où leur geste demande la validation. « Plus tard » ne fait aucun appel. L'étape n'est proposée qu'une fois, au
+  seul compte créé par l'installation (pas à un administrateur de secours) : la demande est mémorisée à la création du compte,
+  comme les données de démonstration, et consommée quand l'étape est terminée ou passée (journal
+  `setup.flux_questions_vues`, avec les flux ouverts et fermés). Deux routes : `GET /api/installation/flux-externes` et
+  `POST /api/installation/flux-externes/vues` (`administration:administrer`), qui n'ouvrent aucun flux. Sans migration.
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »
@@ -77,18 +122,6 @@ _(Session « Projet audit_suivi Coeur ».)_
   navigateur (menu, tâches). Les animations, décoratives, tournent en continu ; la préférence système « réduire les
   animations », l'onglet masqué, l'impression et le réglage « Animées / Automatiques / Arrêtées » du parcours ISO et des
   chemins EBIOS les arrêtent toujours. Aucune migration, aucune API. _(Session « Projet audit_suivi Coeur ».)_
-- **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
-  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) en
-  thème sombre seul, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée (préparation,
-  sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; une illustration d'alerte
-  remplace l'indicateur en échec ou en intervention. Les animations tournent en continu, sans bouton de pause ni de thème
-  (décisions du RSSI, comme dans l'application : [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md)) ;
-  le mouvement réduit du poste donne un rendu statique. Suivi et gardes de retour inchangés (bon job, santé `ok`, adresse
-  de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la version cible et l'avis de
-  lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas affiché sur la page (option C
-  retenue par le RSSI) : sa zone l'indique, sans ligne simulée ; le diagnostic reste dans le reçu et les journaux du
-  serveur. La page étant servie par le frontal, elle suit l'image `GATEWAY_VERSION`. _(Session
-  « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 ## [7.1.1] — 2026-11-14
 
