@@ -21,6 +21,18 @@ de données. _(Session « Projet audit_suivi Coeur ».)_
   (« 3/5 critères remplis · 1 non »), détail au survol. « Évaluer » coche d'office les critères rattachés. Un critère retiré
   reste rattaché mais n'est plus proposé. Jeu de démonstration complété. _(Session « Projet audit_suivi Coeur ».)_
 
+### Modifié
+
+- **Page de mise à jour : habillage Neon** (lot 1 « Maintenance Neon », proposition validée par le RSSI le 15/11/2026) : la
+  page autonome `/update/` reprend la composition validée (grande dalle, noyau vectoriel, décor réseau, frise des étapes) dans
+  les thèmes clair et sombre, avec les couleurs du thème. L'illustration centrale suit l'étape réellement publiée
+  (préparation, sauvegarde, installation, vérification, retour arrière, résultat) sans mesurer l'avancement ; un bouton fige
+  les animations sans arrêter le suivi et le mouvement réduit donne un rendu statique. Suivi et gardes de retour inchangés
+  (bon job, santé `ok`, adresse de retour validée, aucun retour en intervention) ; pendant l'attente de prise en charge, la
+  version cible et l'avis de lenteur de l'opération précédente ne sont plus affichés. Le journal technique n'est pas raccordé
+  (second lot) : sa zone l'indique, sans ligne simulée. La page étant servie par le frontal, elle suit l'image
+  `GATEWAY_VERSION`. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 ## [7.1.1] — 2026-11-14
 
 Version corrective : aucune migration, aucune nouvelle dépendance. Elle termine la **refonte graphique Neon** (lots 3 à 8,
