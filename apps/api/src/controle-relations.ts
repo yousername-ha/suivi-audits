@@ -150,6 +150,11 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
     if (!fournisseurs.has(l.supplier_id))
       risques.anomalie(`rattachement au périmètre ${l.smsi_id} : fournisseur absent du registre ${l.supplier_id}`);
   }
+  for (const l of await k.selectFrom('sup_criterion_links').select(['criterion_id', 'supplier_id']).execute()) {
+    risques.verifie();
+    if (!fournisseurs.has(l.supplier_id))
+      risques.anomalie(`critère ${l.criterion_id} rattaché à un fournisseur absent du registre ${l.supplier_id}`);
+  }
   for (const e of await k.selectFrom('sup_evaluations').select(['id', 'supplier_id']).execute()) {
     risques.verifie();
     // Une évaluation survit au retrait d'un fournisseur (son nom est figé) : signalé, pas bloquant.

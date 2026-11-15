@@ -2,7 +2,7 @@
    périmètre au centre) et liste compacte du registre déjà chargé par BusinessRegistry. Aucune requête ni écriture métier
    supplémentaire : les filtres, la recherche et les compteurs portent sur les fiches chargées, la pagination existante
    reste visible. Les liaisons et les deux points lumineux sont décoratifs (transform et opacity seulement) ; ils
-   s'arrêtent en pause, onglet masqué ou mouvement réduit. */
+   tournent en continu, sans bouton de pause (ADR 0099), et s'arrêtent onglet masqué ou en mouvement réduit. */
 import { Button, Popover, Select, TextInput } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import type { GrcObject } from '@suivi/shared';
@@ -64,8 +64,6 @@ const ICONES: Record<string, ReactNode> = {
     </>
   ),
   filter: <path d="M4 6h16M7 12h10M10 18h4" />,
-  pause: <path d="M8 4v16M16 4v16" />,
-  play: <path d="m7 4 14 8-14 8z" />,
   calendar: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2" />
@@ -392,10 +390,9 @@ export function PartiesInteresseesStudio({
     [addressed, setAddressed] = useState('all'),
     [review, setReview] = useState('all'),
     [category, setCategory] = useState('all'),
-    [responsable, setResponsable] = useState('all'),
-    [paused, setPaused] = useState(false);
-  const reduced = useReducedMotion(),
-    moving = !reduced && !paused;
+    [responsable, setResponsable] = useState('all');
+  // Animations en continu (ADR 0099) : seule la préférence système de mouvement réduit les arrête.
+  const moving = !useReducedMotion();
   const active = [nature, addressed, review, category, responsable].filter((v) => v !== 'all').length + Number(!!query);
   const items = objects.filter(
     (o) =>
@@ -540,22 +537,6 @@ export function PartiesInteresseesStudio({
                 </div>
               </Popover.Dropdown>
             </Popover>
-            <button
-              type="button"
-              className="pi-tool"
-              disabled={!!reduced}
-              aria-label={moving ? 'Mettre les animations en pause' : 'Reprendre les animations'}
-              title={
-                reduced
-                  ? 'Mouvement réduit activé sur cet appareil'
-                  : moving
-                    ? 'Mettre les animations en pause'
-                    : 'Reprendre les animations'
-              }
-              onClick={() => setPaused((v) => !v)}
-            >
-              <IconePartie name={moving ? 'pause' : 'play'} />
-            </button>
             <button
               type="button"
               id="pi-bascule-registre"

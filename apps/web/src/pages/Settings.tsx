@@ -42,6 +42,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
+import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
+import { useValidationFlux } from '../components/ValidationFlux';
 import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
 import { usePresence } from '../realtime';
 import { ME_KEY, useCan, useMe } from '../session';
@@ -154,16 +156,27 @@ function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d:
   useEffect(() => onDirty(dirty), [dirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
   const set = (k: string, v: unknown) => setValues((x) => ({ ...x, [k]: v }));
+  const flux = useValidationFlux();
+  // Envoi déjà actif mais flux fermé (serveur mis à jour, flux refermé) : « Enregistrer » reste possible pour l'ouvrir.
+  const fluxAOuvrir = data.section === 'courriel' && values.actif === true && data.info?.fluxOuvert === false;
 
   const save = async () => {
+    // Courriel (ADR 0097, précision du RSSI du 15/11/2026) : activer l'envoi ouvre le flux, après validation explicite,
+    // dans la même opération que l'enregistrement.
+    let body = values;
+    if (data.section === 'courriel' && values.actif === true && data.info?.fluxOuvert === false) {
+      if (!(await flux.valider('courriel'))) return;
+      body = { ...values, fluxConfirme: true };
+    }
     setSaving(true);
     setError(null);
     try {
       const out = await api<SettingsSectionOut>('PUT', `/api/settings/${data.section}`, {
-        body: values,
+        body,
         ifMatch: data.version,
       });
       qc.setQueryData(['settings', data.section], out);
+      if (data.section === 'courriel') await qc.invalidateQueries({ queryKey: CLE_FLUX_EXTERNES });
       if (['general', 'apparence', 'securite'].includes(data.section)) await qc.invalidateQueries({ queryKey: ME_KEY });
       notifications.show({ color: 'teal', message: `${SETTINGS_LABELS[data.section]} : enregistré.` });
     } catch (e) {
@@ -182,7 +195,7 @@ function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d:
     <FormSection
       title={SETTINGS_LABELS[data.section]}
       description={DESCRIPTIONS[data.section]}
-      dirty={dirty}
+      dirty={dirty || fluxAOuvrir}
       saving={saving}
       canSave={data.canWrite}
       readOnlyReason="Consultation seule : vos droits ne permettent pas de modifier cette section."
@@ -191,6 +204,7 @@ function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d:
       error={error}
     >
       {SECTIONS[data.section](props)}
+      {flux.fenetre}
     </FormSection>
   );
 }
@@ -280,6 +294,7 @@ function CourrielForm({ p }: { p: P }) {
         Le serveur d’application n’a pas d’accès à Internet : c’est l’exécutant d’exploitation du serveur (le même que
         pour les sauvegardes) qui se connecte au serveur SMTP. Tout se règle ici, sans fichier à modifier.
       </Alert>
+      {p.info.fluxOuvert === false && <FluxFermeAlerte module="courriel" />}
       {!(
         p.values.actif === true &&
         str(p.values.hote) &&

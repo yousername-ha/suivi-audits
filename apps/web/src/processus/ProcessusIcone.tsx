@@ -25,8 +25,6 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   filter: <path d="M4 6h16M7 12h10M10 18h4" />,
-  pause: <path d="M8 4v16M16 4v16" />,
-  play: <path d="m7 4 14 8-14 8z" />,
   user: (
     <>
       <circle cx="12" cy="7" r="4" />

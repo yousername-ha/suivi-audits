@@ -57,3 +57,4 @@ export * from './calendriers-plateforme.js';
 export * from './notifications.js';
 export * from './texte.js';
 export * from './assistant.js';
+export * from './flux-externes.js';

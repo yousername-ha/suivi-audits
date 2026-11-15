@@ -117,6 +117,8 @@ call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-U
 csrf=call('GET','/api/auth/me')['csrf']
 call('POST','/api/auth/mfa',{'code':next_code()})
 csrf=call('GET','/api/auth/me')['csrf']
+# Flux « mises-a-jour » fermé par défaut (ADR 0097) : l'administrateur l'ouvre, comme depuis la carte « Flux vers l'extérieur ».
+assert call('PUT','/api/admin/flux-externes/mises-a-jour',{'ouvert':True,'confirmation':True})['ouvert'] is True
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
 def donnees_snapshot():
     return json.loads(compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT jsonb_build_object('business',(SELECT jsonb_agg(to_jsonb(b) ORDER BY version) FROM business_policy_versions b),'smsis',(SELECT jsonb_agg(to_jsonb(s) ORDER BY id) FROM grc_smsis s),'objects',(SELECT jsonb_agg(to_jsonb(o) ORDER BY id) FROM grc_objects o),'methods',(SELECT jsonb_agg(to_jsonb(m) ORDER BY id) FROM grc_method_versions m),'evaluations',(SELECT jsonb_agg(to_jsonb(e) ORDER BY id) FROM grc_risk_evaluations e),'links',(SELECT jsonb_agg(to_jsonb(l) ORDER BY id) FROM grc_links l),'objectVersions',(SELECT jsonb_agg(to_jsonb(v) ORDER BY id) FROM grc_object_versions v))::text",cwd=repo))
@@ -200,6 +202,8 @@ try:
     csrf=call('GET','/api/auth/me')['csrf']
     call('POST','/api/auth/mfa',{'code':next_code()})
     csrf=call('GET','/api/auth/me')['csrf']
+    # La sauvegarde restaurée date d'après l'ouverture du flux : il reste ouvert (demande idempotente).
+    assert call('PUT','/api/admin/flux-externes/mises-a-jour',{'ouvert':True,'confirmation':True})['ouvert'] is True
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     worker=Fixture();worker.reconcile();worker.check();worker.publish(ready=True,status='idle',maintenance=False)
     requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR','code':next_code()})

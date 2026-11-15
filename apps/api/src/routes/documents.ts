@@ -150,8 +150,8 @@ async function receiveFile(ctx: Ctx<Buffer, unknown, unknown>) {
   }
   let scan;
   try {
-    scan = await scanFile(svc.cfg, buf, {
-      surEchec: () => void svc.alertesSecurite.antivirus(svc.cfg.clamav?.required ?? true),
+    scan = await scanFile(await svc.flux.antivirus(svc.cfg.clamav), buf, {
+      surEchec: () => void svc.alertesSecurite.antivirus(svc.cfg.clamav.required),
     });
   } catch (e) {
     await svc.db.audit(

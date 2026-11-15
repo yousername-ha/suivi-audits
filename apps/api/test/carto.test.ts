@@ -431,6 +431,8 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '067_assistant_documents.sql',
         '068_assistant_constats.sql',
         '069_assistant_acces_par_defaut.sql',
+        '070_criteres_rattaches_fournisseurs.sql',
+        '071_flux_externes.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

@@ -492,15 +492,30 @@ test('Pilotage : fournisseur évalué une fois, rattaché à deux périmètres a
     await expect(dialog).toHaveCount(0);
     const ligne = page.getByRole('row').filter({ hasText: fournisseur });
     await expect(ligne).toContainText('Non évalué');
+    await expect(ligne).toContainText('Aucun critère rattaché');
 
-    // 2. Une évaluation, indépendante des périmètres.
+    // 1 bis. Le critère concerne ce fournisseur : sélection en masse depuis la page des critères (ADR 0098).
+    await page.goto('/pilotage/criteres-fournisseurs');
+    await page.getByRole('button', { name: `Fournisseurs concernés par le critère ${critere}`, exact: true }).click();
+    await dialog.getByLabel('Rechercher un fournisseur').fill(fournisseur);
+    await dialog.getByRole('checkbox', { name: 'Tout sélectionner (1 affiché)', exact: true }).check();
+    await expect(dialog.getByRole('checkbox', { name: fournisseur, exact: true })).toBeChecked();
+    await expect(dialog.getByRole('status')).toContainText('1 à rattacher · 0 à détacher');
+    await dialog.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole('row').filter({ hasText: critere })).toContainText('1 fournisseur');
+    await page.goto('/pilotage/fournisseurs');
+    await expect(ligne).toContainText('0/1 critère rempli · 1 non évalué');
+
+    // 2. Une évaluation, indépendante des périmètres : le critère rattaché est proposé d'office.
     await page.getByRole('button', { name: `Évaluer le fournisseur ${fournisseur}`, exact: true }).click();
-    await dialog.getByRole('checkbox', { name: new RegExp(critere) }).check();
+    await expect(dialog.getByRole('checkbox', { name: new RegExp(critere) })).toBeChecked();
     await choose(page, `Répond au critère « ${critere} » ?`, 'Répond');
     await dialog.getByLabel(`Résultat pour « ${critere} »`).fill('Contrat examiné');
     await dialog.getByRole('button', { name: 'Enregistrer l’évaluation', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect(ligne).toContainText('1 répond');
+    await expect(ligne).toContainText('1/1 critère rempli');
 
     // 3. Rattachement à deux périmètres, sans copie de l'évaluation.
     await page.getByRole('button', { name: `Périmètres de rattachement de ${fournisseur}`, exact: true }).click();

@@ -56,8 +56,6 @@ const ICONES: Record<string, ReactNode> = {
       <path d="M12 9v5m0 3h.01" />
     </>
   ),
-  pause: <path d="M8 5v14M16 5v14" />,
-  play: <path d="m8 4 12 8-12 8Z" />,
   list: <path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1" />,
   arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
   info: (
@@ -172,10 +170,10 @@ export function PestelStudio({
   const [params, setParams] = useSearchParams();
   const [registre, setRegistre] = useState(false),
     [recherche, setRecherche] = useState(''),
-    [statut, setStatut] = useState(''),
-    [pause, setPause] = useState(false);
+    [statut, setStatut] = useState('');
+  // Animations en continu (ADR 0099) : seule la préférence système de mouvement réduit les arrête.
   const reduit = useReducedMotion();
-  const anime = !reduit && !pause;
+  const anime = !reduit;
   const id = useId();
   const ids = {
     scene: `${id}-scene`,
@@ -286,17 +284,6 @@ export function PestelStudio({
             <span className="pestel-eyebrow">Lecture de l’environnement</span>
             <h2 id={ids.scene}>{titrePerspectives(groupes.length)}</h2>
           </div>
-          {!reduit && (
-            <button
-              type="button"
-              className="pestel-button pestel-small"
-              aria-pressed={pause}
-              onClick={() => setPause((v) => !v)}
-            >
-              <Icone nom={pause ? 'play' : 'pause'} />
-              {pause ? 'Reprendre les animations' : 'Pause animations'}
-            </button>
-          )}
         </header>
         <div className="pestel-explorer">
           <div className="pestel-graph-panel">

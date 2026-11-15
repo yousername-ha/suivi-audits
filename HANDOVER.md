@@ -1,6 +1,10 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md)** (refonte des droits, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md) : pyramide des
+> **Reprise la plus récente : [15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md)** (flux vers l'extérieur fermés par défaut et
+> ouverts par l'activation du module, [ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), lots 1 à 3, migration `071` ;
+> critères fournisseurs, [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md), migration `070` ; animations en continu,
+> [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md) ; versions 7.0.0 à 7.1.1 publiées). Précédente :
+> **[13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md)** (refonte des droits, [ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md) : pyramide des
 > périmètres, migration `060` additive ; contributeur par « Attribuer à », côté serveur ; écran du contributeur et lot 3 à faire). Précédente : **[11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md)** (retrait définitif des modules CRRC et
 > Investissements, [ADR 0084](docs/adr/0084-retrait-des-modules-crrc-et-investissements.md), migration `053` destructive) ; avant elle :
 > **[10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md)** (porte de lecture autorisée entre

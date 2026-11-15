@@ -1,5 +1,6 @@
 /* Étape 0 du scénario du RSSI virtuel : installation d'une pile vierge par le RSSI (poivre et clé de secours au coffre,
-   jeton, compte administrateur, nom de l'organisation, TOTP). La session ouverte est partagée par les fichiers suivants. */
+   jeton, compte administrateur, nom de l'organisation, TOTP, flux vers l'extérieur laissés fermés). La session ouverte est
+   partagée par les fichiers suivants. */
 import { expect, test } from '@playwright/test';
 import { enregistrerSessionAdmin, markTotpUsed, PASSWORD, saveAdmin, setupToken, totp, watchPage } from '../../helpers';
 import donnees from '../donnees';
@@ -51,6 +52,9 @@ test('le RSSI installe l’application sur une pile vierge', async ({ browser })
   markTotpUsed(secret);
   await expect(page.getByRole('heading', { name: 'Ajouter une clé de sécurité (facultatif)' })).toBeVisible();
   await page.getByRole('button', { name: 'Plus tard' }).click();
+  // Dernière étape (ADR 0097, lot 3) : le RSSI laisse tous les flux vers l'extérieur fermés à l'installation.
+  await expect(page.getByRole('heading', { name: 'Flux vers l’extérieur', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Passer l’étape : tout plus tard' }).click();
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
   await expect(page.getByText(`Tableau de bord — ${donnees.organisation.nom}`)).toBeVisible();
   saveAdmin('rssi', secret, poivre);

@@ -1,7 +1,7 @@
 /* Le mot de passe SMTP scellé ne vaut que pour le relais saisi : changer l'hôte, le port, le mode de sécurité, le compte
    ou l'autorité de certification le supprime (il doit être ressaisi) ; les autres réglages le conservent. Fictif. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp, ouvrirFlux } from './helpers.js';
 
 let t: TestApp, admin: Agent;
 const SECRET = 'Secret-SMTP-fictif-42';
@@ -21,6 +21,8 @@ const poser = async () =>
 
 beforeAll(async () => {
   t = await createTestApp();
+  // Flux « courriel » ouvert (ADR 0097) : l'envoi s'active ici sans repasser par la validation.
+  await ouvrirFlux(t, 'courriel');
   admin = await login(t, await makeUser(t, 'cs_admin', 'admin'));
   await regler({ hote: 'smtp.exemple.test', port: 587, securite: 'starttls', utilisateur: 'compte', actif: true });
 });

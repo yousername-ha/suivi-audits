@@ -29,41 +29,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
+import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
+import { useValidationFlux } from '../components/ValidationFlux';
 import { ASSISTANT_GLOBAL } from './cles';
+import { corpsReglages, saisieDe, type Saisie } from './reglages-corps';
 import { MemoireAssistant, MesuresAssistant, MethodesAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
 const CLE_REGLAGES = ['assistant', 'reglages'];
 
-type Saisie = Pick<
-  ReglagesAssistantDto,
-  | 'actif'
-  | 'adresse'
-  | 'modele'
-  | 'budgetJetonsJour'
-  | 'enPause'
-  | 'heureRonde'
-  | 'plafondRappelsJour'
-  | 'delaiRelanceJours'
-  | 'jourSynthese'
-  | 'rondesSurEvenement'
-  | 'contexte'
-  | 'profils'
->;
-const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
-  actif: d.actif,
-  adresse: d.adresse,
-  modele: d.modele,
-  budgetJetonsJour: d.budgetJetonsJour,
-  enPause: d.enPause,
-  heureRonde: d.heureRonde,
-  plafondRappelsJour: d.plafondRappelsJour,
-  delaiRelanceJours: d.delaiRelanceJours,
-  jourSynthese: d.jourSynthese,
-  rondesSurEvenement: d.rondesSurEvenement,
-  contexte: d.contexte,
-  profils: d.profils,
-});
 const hote = (adresse: string) => {
   try {
     return new URL(adresse).host;
@@ -88,6 +62,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   const [erreur, setErreur] = useState<unknown>(null);
   const [envoi, setEnvoi] = useState(false);
   const [test, setTest] = useState<TestModeleDto | null>(null);
+  const flux = useValidationFlux();
 
   useEffect(() => {
     if (q.data && !saisie) setSaisie(saisieDe(q.data));
@@ -122,38 +97,20 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
     }
   };
   // Le formulaire reprend la réponse du serveur : il affiche exactement ce qui est enregistré, et redevient « à jour ».
-  const enregistrer = () =>
-    agir(async () => {
+  const enregistrer = async () => {
+    // Activer l'assistant ouvre son flux (ADR 0097, précision du RSSI du 15/11/2026) : validation explicite une fois, puis
+    // activation et ouverture en une seule opération.
+    const valide = saisie.actif && !d.fluxOuvert ? await flux.valider('assistant') : null;
+    if (valide === false) return;
+    await agir(async () => {
       const enregistre = await api<ReglagesAssistantDto>('PUT', '/api/assistant/reglages', {
-        body: {
-          ...saisie,
-          profils: saisie.profils.map(
-            ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }) => ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }),
-          ),
-          version: d.version,
-        },
+        body: corpsReglages(saisie, d.version, !!valide),
       });
       qc.setQueryData(CLE_REGLAGES, enregistre);
       setSaisie(saisieDe(enregistre));
+      await qc.invalidateQueries({ queryKey: CLE_FLUX_EXTERNES });
     }, 'Réglages de l’assistant enregistrés.');
+  };
   const tester = async () => {
     setEnvoi(true);
     try {
@@ -171,6 +128,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
 
   return (
     <Stack>
+      {flux.fenetre}
       <Alert color="orange" title="Ce qui quitte le serveur">
         Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus
         (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit que ce que les profils ci-dessous
@@ -178,11 +136,15 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
         les documents : restreignez-le si une partie ne doit pas être confiée à ce fournisseur.
         {fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}
       </Alert>
-      {!d.relaisDeclare && (
-        <Alert color="red" title="Relais de modèle absent">
-          Le relais de modèle n’est pas installé sur le serveur : l’assistant ne peut pas répondre. Voir le guide
-          d’installation, « Assistant RSSI ».
-        </Alert>
+      {!d.fluxOuvert ? (
+        <FluxFermeAlerte module="assistant" />
+      ) : (
+        !d.relaisDeclare && (
+          <Alert color="red" title="Relais de modèle absent">
+            Aucune adresse de relais de modèle n’est connue du serveur : l’assistant ne peut pas répondre. Voir le guide
+            d’installation, « Assistant RSSI ».
+          </Alert>
+        )
       )}
 
       <Card withBorder>
@@ -396,7 +358,11 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
           {/* L'erreur s'affiche ici, à côté du bouton, et non en haut d'une longue page. */}
           <ErrorAlert error={erreur} />
           <Group>
-            <Button onClick={() => void enregistrer()} loading={envoi} disabled={!modifie}>
+            <Button
+              onClick={() => void enregistrer()}
+              loading={envoi}
+              disabled={!modifie && !(saisie.actif && !d.fluxOuvert)}
+            >
               Enregistrer les réglages
             </Button>
             <Text size="sm" role="status">

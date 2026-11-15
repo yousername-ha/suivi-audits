@@ -5,8 +5,8 @@
    - couleurs tirées des jetons de la charte (--carte-*, --neon-*, --suivi-*, --mantine-*), lisibles dans les deux thèmes ;
    - dimensions en rem (taille d'affichage du compte), rayons bornés à 12 px, aucun texte sous 0,6875 rem ;
    - cercle placé par la grille au croisement réel des panneaux (sans calcul de position), liaisons dessinées en CSS ;
-   - mouvements par transform et opacity seulement, jamais sur un texte ; arrêtés par la pause, la préférence de mouvement
-     réduit et l'impression ; contours système en couleurs forcées ;
+   - mouvements par transform et opacity seulement, jamais sur un texte ; en continu, sans bouton de pause (ADR 0099), arrêtés
+     par la préférence de mouvement réduit et l'impression ; contours système en couleurs forcées ;
    - disposition selon la largeur réellement disponible (requêtes de conteneur), menu latéral ouvert ou replié. */
 .swot-studio {
   --swot-ink: var(--mantine-color-text);
@@ -304,10 +304,6 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
-.swot-motion-control {
-  background: var(--swot-soft);
-  color: var(--swot-muted);
-}
 
 /* ---------------------------------------------------------------- Plan : axes, quadrants, liaisons et cercle
    Grille : axe des lignes | panneaux gauches | écart (croisement) | panneaux droits ; rangées : axe des colonnes,
@@ -513,7 +509,7 @@
   stroke-width: 1.7;
   animation: var(--swot-icone-anim, swot-icon-float) var(--swot-icone-duree, 3.8s) ease-in-out infinite;
 }
-/* Mouvement propre à chaque catégorie, par variable : la pause et le mouvement réduit l'arrêtent sans exception. */
+/* Mouvement propre à chaque catégorie, par variable : le mouvement réduit l'arrête sans exception. */
 .swot-sector[data-key='W'],
 .swot-focus-body[data-focus='W'] {
   --swot-icone-anim: swot-icon-tilt;

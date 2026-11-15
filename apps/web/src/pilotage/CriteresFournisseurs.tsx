@@ -4,6 +4,7 @@ import {
   Alert,
   Badge,
   Button,
+  Checkbox,
   Group,
   Modal,
   MultiSelect,
@@ -23,7 +24,8 @@ import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { ficheCliquable } from '../fiche-cliquable';
 import { ExtremiteChamps } from './ExtremiteChamps';
-import type { Critere } from './Fournisseurs';
+import type { Critere, Fournisseur } from './Fournisseurs';
+import { ecartRattachements, filtrerParNom } from './fournisseurs-types';
 
 interface Referentiel {
   id: string;
@@ -48,11 +50,16 @@ export function CriteresFournisseurs() {
     [formulaire, setFormulaire] = useState<Formulaire | null>(null),
     [exigence, setExigence] = useState(VIDE_EXIGENCE),
     [retrait, setRetrait] = useState<{ critere: Critere; motif: string } | null>(null),
+    [concernes, setConcernes] = useState<Critere | null>(null),
     [erreur, setErreur] = useState<unknown>(null);
   const liste = useQuery({
     queryKey: ['suppliers', 'criteria', archives],
     queryFn: () => get<Critere[]>(`/api/suppliers/criteria?archived=${archives}`),
   });
+  // Rattachements (ADR 0098) : lus sur le registre des fournisseurs, qui porte les critères de chacun.
+  const fournisseurs = useQuery({ queryKey: ['suppliers'], queryFn: () => get<Fournisseur[]>('/api/suppliers') });
+  const nombreConcernes = (id: string) =>
+    (fournisseurs.data ?? []).filter((f) => f.criteria.some((k) => k.id === id)).length;
   const referentiels = useQuery({
     queryKey: ['library', 'frameworks'],
     queryFn: () => get<Referentiel[]>('/api/library/frameworks'),
@@ -146,6 +153,7 @@ export function CriteresFournisseurs() {
               <Table.Th>Critère</Table.Th>
               <Table.Th>Usages</Table.Th>
               <Table.Th>Exigences visées</Table.Th>
+              <Table.Th>Fournisseurs concernés</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -184,8 +192,24 @@ export function CriteresFournisseurs() {
                   )}
                 </Table.Td>
                 <Table.Td>
+                  {fournisseurs.data
+                    ? `${nombreConcernes(k.id)} fournisseur${nombreConcernes(k.id) > 1 ? 's' : ''}`
+                    : '—'}
+                </Table.Td>
+                <Table.Td>
                   {administrer && !k.archived && (
                     <Group gap="xs">
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Fournisseurs concernés par le critère ${k.label}`}
+                        onClick={() => {
+                          setErreur(null);
+                          setConcernes(k);
+                        }}
+                      >
+                        Fournisseurs concernés
+                      </Button>
                       <Button
                         size="xs"
                         variant="default"
@@ -295,6 +319,25 @@ export function CriteresFournisseurs() {
           </Stack>
         )}
       </Modal>
+      <Modal
+        opened={!!concernes}
+        onClose={() => setConcernes(null)}
+        size="lg"
+        title={concernes ? `Fournisseurs concernés par « ${concernes.label} »` : ''}
+      >
+        {concernes && (
+          <Stack>
+            <ErrorAlert error={fournisseurs.error} />
+            {fournisseurs.data && (
+              <FournisseursConcernes
+                critere={concernes}
+                fournisseurs={fournisseurs.data}
+                onDone={() => setConcernes(null)}
+              />
+            )}
+          </Stack>
+        )}
+      </Modal>
       <Modal opened={!!retrait} onClose={() => setRetrait(null)} title="Retirer le critère">
         {retrait && (
           <Stack>
@@ -320,6 +363,116 @@ export function CriteresFournisseurs() {
           </Stack>
         )}
       </Modal>
+    </Stack>
+  );
+}
+
+/** Sélection en masse des fournisseurs concernés par un critère (ADR 0098) : recherche, « tout sélectionner » sur la liste
+    filtrée, puis un seul enregistrement. Seul l'écart avec l'état lu est envoyé (rattacher, détacher). */
+function FournisseursConcernes({
+  critere,
+  fournisseurs,
+  onDone,
+}: {
+  critere: Critere;
+  fournisseurs: Fournisseur[];
+  onDone: () => void;
+}) {
+  const qc = useQueryClient(),
+    [initial] = useState(
+      () => new Set(fournisseurs.filter((f) => f.criteria.some((k) => k.id === critere.id)).map((f) => f.id)),
+    ),
+    [coches, setCoches] = useState(() => new Set(initial)),
+    [recherche, setRecherche] = useState(''),
+    [envoi, setEnvoi] = useState(false),
+    [erreur, setErreur] = useState<unknown>(null);
+  const affiches = filtrerParNom(fournisseurs, recherche);
+  const tousCoches = affiches.length > 0 && affiches.every((f) => coches.has(f.id)),
+    certains = affiches.some((f) => coches.has(f.id));
+  const ecart = ecartRattachements(initial, coches);
+  const basculer = (ids: string[], coche: boolean) =>
+    setCoches((v) => {
+      const next = new Set(v);
+      for (const id of ids) {
+        if (coche) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  const enregistrer = async () => {
+    setEnvoi(true);
+    try {
+      setErreur(null);
+      await api('POST', `/api/suppliers/criteria/${critere.id}/suppliers`, { body: ecart });
+      await qc.invalidateQueries({ queryKey: ['suppliers'] });
+      onDone();
+    } catch (e) {
+      setErreur(e);
+    } finally {
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Stack>
+      <Text size="sm">
+        Cochez les fournisseurs que ce critère concerne : il leur sera proposé d’office dans « Évaluer », et leur fiche
+        comme leur ligne du registre montreront la dernière réponse donnée.
+      </Text>
+      <ErrorAlert error={erreur} />
+      <TextInput
+        label="Rechercher un fournisseur"
+        placeholder="Nom du fournisseur…"
+        value={recherche}
+        onChange={(e) => setRecherche(e.currentTarget.value)}
+      />
+      {!fournisseurs.length ? (
+        <Text>Aucun fournisseur dans le registre.</Text>
+      ) : (
+        <>
+          <Checkbox
+            label={
+              recherche.trim()
+                ? `Tout sélectionner (${affiches.length} affiché${affiches.length > 1 ? 's' : ''})`
+                : 'Tout sélectionner'
+            }
+            checked={tousCoches}
+            indeterminate={!tousCoches && certains}
+            disabled={!affiches.length}
+            onChange={(e) =>
+              basculer(
+                affiches.map((f) => f.id),
+                e.currentTarget.checked,
+              )
+            }
+          />
+          <Stack gap="xs" role="group" aria-label="Fournisseurs">
+            {affiches.map((f) => (
+              <Checkbox
+                key={f.id}
+                label={f.name}
+                description={f.id}
+                checked={coches.has(f.id)}
+                onChange={(e) => basculer([f.id], e.currentTarget.checked)}
+              />
+            ))}
+          </Stack>
+          {!affiches.length && <Text size="sm">Aucun fournisseur ne correspond à la recherche.</Text>}
+        </>
+      )}
+      <Text size="sm" role="status">
+        {coches.size} fournisseur{coches.size > 1 ? 's' : ''} concerné{coches.size > 1 ? 's' : ''}
+        {ecart.attach.length || ecart.detach.length
+          ? ` · ${ecart.attach.length} à rattacher · ${ecart.detach.length} à détacher`
+          : ' · aucune modification'}
+      </Text>
+      <Group justify="flex-end">
+        <Button variant="default" onClick={onDone}>
+          Annuler
+        </Button>
+        <Button loading={envoi} disabled={!ecart.attach.length && !ecart.detach.length} onClick={enregistrer}>
+          Enregistrer
+        </Button>
+      </Group>
     </Stack>
   );
 }

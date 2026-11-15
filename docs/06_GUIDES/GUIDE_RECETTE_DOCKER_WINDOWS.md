@@ -19,8 +19,9 @@ wsl -d Ubuntu -- bash -lc "cd ~/suivi-audits && sudo ./scripts/dev/recette-local
 
 La seconde commande prend 10 à 20 minutes, puis affiche l'**identifiant** et le **mot de passe** du compte administrateur.
 Ouvrir `https://localhost`, accepter l'avertissement de certificat, se connecter. Il n'y a ni assistant d'installation, ni
-jeton, ni double authentification. Le relais de l'assistant est déjà démarré : il reste à saisir la clé du modèle dans
-Plateforme > Assistant RSSI ([guide Mistral](GUIDE_ASSISTANT_MISTRAL.md), étape 4).
+jeton, ni double authentification. Il reste à activer l'assistant et à saisir la clé du modèle dans Plateforme > Assistant
+RSSI ([guide Mistral](GUIDE_ASSISTANT_MISTRAL.md), étape 4) : la validation ouvre son flux, et l'exécutant d'exploitation
+démarre alors le relais (en général en moins d'une minute).
 
 Reprendre une version plus récente de la branche :
 
@@ -37,5 +38,5 @@ wsl -d Ubuntu -- bash -lc "cd ~/suivi-audits && sudo docker compose exec app sui
 Tout arrêter et tout effacer (efface **toutes** les données de la recette) :
 
 ```text
-wsl -d Ubuntu -- bash -lc "cd ~/suivi-audits && sudo docker compose --profile assistant down && sudo rm -rf /srv/suivi-audits/donnees && rm .env"
+wsl -d Ubuntu -- bash -lc "cd ~/suivi-audits && sudo docker compose --profile assistant --profile antivirus down && sudo rm -rf /srv/suivi-audits/donnees && rm .env"
 ```

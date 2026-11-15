@@ -46,7 +46,13 @@ export const assistantRoutes = [
     tags,
     access: 'assistant:administrer',
     body: ReglagesAssistantBody,
-    handler: async ({ svc, s, body, ip }) => svc.assistant.modifierReglages(body, (s as Session).user, ip),
+    handler: async ({ svc, s, body, ip }) =>
+      svc.assistant.modifierReglages(
+        body,
+        (s as Session).user,
+        ip,
+        (s as Session).user.rights.can('administration', 'administrer'),
+      ),
   }),
   route({
     method: 'PUT',

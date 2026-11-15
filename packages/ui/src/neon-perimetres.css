@@ -2,7 +2,8 @@
    - couleurs tirées des jetons de la charte (--neon-*, --suivi-*, --carte-*), clair et sombre, contrastes AA vérifiés ;
    - rayons bornés à 12 px (ADR 0093), cartes Studio arrondies (pas de Biseau) ;
    - la carte repliée garde ses commandes (pictogrammes) et la ventilation des écarts, qui sont des alertes essentielles ;
-   - animation : seul le flux des liaisons, existant (app.css), bouge ; arrêté par la pause et le mouvement réduit.
+   - animation : seul le flux des liaisons, existant (app.css), bouge, en continu (ADR 0099) ; arrêté par le mouvement
+     réduit et à l'impression.
    Chargée après app.css : les règles historiques du graphe (.graphe-*) y sont redéfinies pour la présentation compacte. */
 .perimetres-graphe-compact,
 .perimetre-detail-panneau {

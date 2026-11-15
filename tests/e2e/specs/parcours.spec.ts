@@ -120,6 +120,34 @@ test('installation : jeton, création de l’administrateur, activation de la do
   // Clé de sécurité proposée dès l'installation (ADR 0079), facultative : le TOTP reste le facteur obligatoire.
   await expect(page.getByRole('heading', { name: 'Ajouter une clé de sécurité (facultatif)' })).toBeVisible();
   await page.getByRole('button', { name: 'Plus tard' }).click();
+  // Dernière étape (ADR 0097, lot 3) : flux vers l'extérieur, « Activer » ou « Plus tard » pour chaque module. Activer sans
+  // cocher la case de validation n'autorise pas à terminer ; l'étape se passe d'un coup et n'ouvre alors aucun flux.
+  await expect(page).toHaveURL(/\/installation\/flux-externes/);
+  await expect(page.getByRole('heading', { name: 'Flux vers l’extérieur', level: 1 })).toBeVisible();
+  const antivirus = page.getByRole('region', { name: 'Antivirus (mise à jour des signatures)' });
+  for (const nom of [
+    'Assistant RSSI',
+    'Courriel (SMTP/SMTPS)',
+    'Certificat public ACME',
+    'Antivirus (mise à jour des signatures)',
+    'Mises à jour de la plateforme',
+  ])
+    await expect(page.getByRole('region', { name: nom }).getByRole('button', { name: 'Plus tard' })).toBeVisible();
+  await antivirus.getByRole('button', { name: 'Activer' }).click();
+  await expect(
+    antivirus.getByLabel(
+      'J’ai pris connaissance des destinations, des ports et des données qui sortent, et j’autorise ce flux.',
+    ),
+  ).not.toBeChecked();
+  await expect(page.getByRole('button', { name: 'Terminer', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Passer l’étape : tout plus tard' }).click();
+  await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
+  const flux = (await (await page.request.get('/api/admin/flux-externes')).json()) as {
+    modules: { module: string; ouvert: boolean }[];
+  };
+  expect(flux.modules.filter((m) => m.ouvert)).toEqual([]);
+  // L'étape n'est plus reposée : son adresse renvoie à l'accueil.
+  await page.goto('/installation/flux-externes');
   await expect(page.getByRole('heading', { name: /^Bonjour Responsable SSI/ })).toBeVisible();
   saveAdmin(ADMIN, adminSecret, poivre);
   // La session ouverte par l'installation est complète : les fichiers suivants la partagent (sessionAdmin) au lieu de se

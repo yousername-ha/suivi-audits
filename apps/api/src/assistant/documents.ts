@@ -13,8 +13,8 @@ import { fileURLToPath } from 'node:url';
 import { sql } from 'kysely';
 import type { Logger } from 'pino';
 import type { SessionUser } from '../auth.js';
-import type { Config } from '../config.js';
 import type { Db } from '../db/db.js';
+import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 import { extraireTexte, type Extraction } from './extraction.js';
@@ -91,9 +91,9 @@ export class DocumentsAssistant {
   constructor(
     private readonly db: Db,
     private readonly vault: Vault,
-    private readonly cfg: Config,
     private readonly assistant: Assistant,
     private readonly log: Logger,
+    private readonly flux: FluxExternes,
   ) {}
 
   /** Un profil actif au moins est autorisé à lire les documents, et l'assistant est activé. */
@@ -137,11 +137,13 @@ export class DocumentsAssistant {
       .orderBy('d.updated_at')
       .limit(max)
       .execute();
+    // Antivirus en service (flux ouvert, ADR 0097) : relu à chaque passage, sans redémarrer l'API.
+    const antivirus = attente.length > 0 && (await this.flux.ouvert('antivirus'));
     for (const v of attente) {
       let r: Extraction;
       if (Number(v.size) > TAILLE_MAX) r = { etat: 'non_lu', motif: 'Document trop volumineux pour être lu.' };
-      // Après le contrôle antivirus (ADR 0086, point 12) : quand un antivirus est installé, seul un fichier sain est lu.
-      else if (this.cfg.clamav && v.scan_status !== 'sain')
+      // Après le contrôle antivirus (ADR 0086, point 12) : quand l'antivirus est en service, seul un fichier sain est lu.
+      else if (antivirus && v.scan_status !== 'sain')
         r = { etat: 'non_lu', motif: 'Document non analysé par l’antivirus : il n’est pas lu.' };
       else
         try {

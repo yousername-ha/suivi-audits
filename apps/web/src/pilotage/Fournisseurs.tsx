@@ -28,14 +28,17 @@ import { useCan } from '../session';
 import { FournisseursStudio, PuceFournisseur } from './FournisseursStudio';
 import {
   filtrerFournisseurs,
+  jourFr,
+  libelleReponse,
   tonChamp,
+  tonReponse,
   type CertificatFournisseur,
   type ChampFournisseur,
   type ControleFournisseur,
   type Fournisseur,
 } from './fournisseurs-types';
 
-export type { EvaluationCourante, Fournisseur } from './fournisseurs-types';
+export type { CritereRattache, EvaluationCourante, Fournisseur } from './fournisseurs-types';
 
 export interface Critere {
   id: string;
@@ -338,6 +341,7 @@ function FicheFournisseur({
           mesure de réduction du risque.
         </Alert>
       )}
+      <CriteresDuFournisseur fournisseur={fournisseur} />
       <Text fw={600}>Certificats</Text>
       {!certs.length && (
         <Text size="sm">
@@ -479,19 +483,129 @@ function FicheFournisseur({
   );
 }
 
+/** Critères rattachés au fournisseur (ADR 0098), avec la dernière réponse donnée et sa date. Rattacher ou détacher
+    s'enregistre aussitôt (même droit que la définition des critères) ; un critère retiré reste affiché, il n'est plus proposé. */
+function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
+  const can = useCan(),
+    qc = useQueryClient(),
+    modifier = can('fournisseurs', 'modifier'),
+    [choisi, setChoisi] = useState<string | null>(null),
+    [erreur, setErreur] = useState<unknown>(null);
+  // La fiche reçoit une ligne figée : la liste du registre donne l'état à jour après un rattachement.
+  const liste = useQuery({ queryKey: ['suppliers'], queryFn: () => get<Fournisseur[]>('/api/suppliers') });
+  const criteres = useQuery({
+    queryKey: ['suppliers', 'criteria'],
+    queryFn: () => get<Critere[]>('/api/suppliers/criteria'),
+    enabled: modifier,
+  });
+  const rattaches = liste.data?.find((f) => f.id === fournisseur.id)?.criteria ?? fournisseur.criteria;
+  const proposes = (criteres.data ?? []).filter((k) => !rattaches.some((r) => r.id === k.id));
+  const changer = async (critereId: string, rattacher: boolean) => {
+    try {
+      setErreur(null);
+      await api(
+        rattacher ? 'PUT' : 'DELETE',
+        `/api/suppliers/${encodeURIComponent(fournisseur.id)}/criteria/${encodeURIComponent(critereId)}`,
+      );
+      await qc.invalidateQueries({ queryKey: ['suppliers'] });
+      setChoisi(null);
+    } catch (e) {
+      setErreur(e);
+    }
+  };
+  return (
+    <Stack gap="xs">
+      <Text fw={600}>Critères d’évaluation rattachés</Text>
+      <ErrorAlert error={erreur ?? liste.error} />
+      {!rattaches.length ? (
+        <Text size="sm">
+          Aucun critère rattaché. Les critères rattachés sont proposés d’office dans « Évaluer » et suivis ici.
+        </Text>
+      ) : (
+        <DataTable label={`Critères rattachés à ${fournisseur.name}`}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Critère</Table.Th>
+                <Table.Th>Dernière réponse</Table.Th>
+                <Table.Th>Date</Table.Th>
+                {modifier && <Table.Th>Actions</Table.Th>}
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {rattaches.map((k) => (
+                <Table.Tr key={k.id}>
+                  <Table.Td>
+                    {k.label} {k.archived && <StatusChip etat="neutre">Retiré</StatusChip>}
+                  </Table.Td>
+                  <Table.Td>
+                    <PuceFournisseur ton={tonReponse(k)}>{libelleReponse(k)}</PuceFournisseur>
+                  </Table.Td>
+                  <Table.Td>{k.answer ? jourFr(k.answer.evaluatedAt) : '–'}</Table.Td>
+                  {modifier && (
+                    <Table.Td>
+                      <Button
+                        size="xs"
+                        variant="default"
+                        aria-label={`Détacher le critère ${k.label}`}
+                        onClick={() => changer(k.id, false)}
+                      >
+                        Détacher
+                      </Button>
+                    </Table.Td>
+                  )}
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      )}
+      {modifier && proposes.length > 0 && (
+        <Group align="flex-end">
+          <Select
+            label="Rattacher un critère"
+            placeholder="Choisir un critère"
+            data={proposes.map((k) => ({ value: k.id, label: k.label }))}
+            value={choisi}
+            onChange={setChoisi}
+            allowDeselect={false}
+            searchable
+          />
+          <Button variant="default" disabled={!choisi} onClick={() => choisi && changer(choisi, true)}>
+            Rattacher
+          </Button>
+        </Group>
+      )}
+    </Stack>
+  );
+}
+
 function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onDone: () => void }) {
   const can = useCan(),
     qc = useQueryClient(),
     [date, setDate] = useState(jour(new Date())),
     [prochaine, setProchaine] = useState(''),
     [conclusion, setConclusion] = useState(''),
-    [choix, setChoix] = useState<Record<string, { meets: string; result: string }>>({}),
+    // Les critères rattachés au fournisseur (ADR 0098) sont proposés d'office ; un critère retiré ne l'est plus.
+    [choix, setChoix] = useState<Record<string, { meets: string; result: string }>>(() =>
+      Object.fromEntries(
+        fournisseur.criteria.filter((k) => !k.archived).map((k) => [k.id, { meets: 'nonevalue', result: '' }]),
+      ),
+    ),
     [erreur, setErreur] = useState<unknown>(null);
   const criteres = useQuery({
     queryKey: ['suppliers', 'criteria'],
     queryFn: () => get<Critere[]>('/api/suppliers/criteria'),
   });
-  const retenus = Object.keys(choix);
+  const rattaches = new Set(fournisseur.criteria.map((k) => k.id));
+  const actifs = criteres.data ?? [];
+  // Seuls les critères actifs s'enregistrent : un critère retiré entre-temps n'est plus envoyé.
+  const retenus = Object.keys(choix).filter((id) => actifs.some((k) => k.id === id));
+  const groupes = [
+    { titre: 'Critères rattachés à ce fournisseur', liste: actifs.filter((k) => rattaches.has(k.id)) },
+    { titre: 'Autres critères', liste: actifs.filter((k) => !rattaches.has(k.id)) },
+  ].filter((g) => g.liste.length);
+  const avecRattaches = actifs.some((k) => rattaches.has(k.id));
   const enregistrer = async () => {
     try {
       setErreur(null);
@@ -548,47 +662,52 @@ function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onD
           onChange={(e) => setProchaine(e.currentTarget.value)}
         />
       </Group>
-      {(criteres.data ?? []).map((k) => {
-        const c = choix[k.id];
-        return (
-          <Stack key={k.id} gap="xs">
-            <Checkbox
-              label={k.label}
-              description={k.description || undefined}
-              checked={!!c}
-              onChange={(e) => {
-                // La valeur est lue avant la mise à jour d'état : l'événement n'est plus valable ensuite (BUG-054).
-                const coche = e.currentTarget.checked;
-                setChoix((v) => {
-                  const next = { ...v };
-                  if (coche) next[k.id] = { meets: 'nonevalue', result: '' };
-                  else delete next[k.id];
-                  return next;
-                });
-              }}
-            />
-            {c && (
-              <Group grow align="flex-start">
-                <Select
-                  label={`Répond au critère « ${k.label} » ?`}
-                  allowDeselect={false}
-                  data={Object.entries(REPONSE).map(([value, label]) => ({ value, label }))}
-                  value={c.meets}
-                  onChange={(v) => setChoix((x) => ({ ...x, [k.id]: { ...c, meets: v ?? 'nonevalue' } }))}
-                />
-                <TextInput
-                  label={`Résultat pour « ${k.label} »`}
-                  value={c.result}
+      {groupes.map((g) => (
+        <Stack key={g.titre} gap="xs">
+          {avecRattaches && <Text fw={600}>{g.titre}</Text>}
+          {g.liste.map((k) => {
+            const c = choix[k.id];
+            return (
+              <Stack key={k.id} gap="xs">
+                <Checkbox
+                  label={k.label}
+                  description={k.description || undefined}
+                  checked={!!c}
                   onChange={(e) => {
-                    const valeur = e.currentTarget.value;
-                    setChoix((x) => ({ ...x, [k.id]: { ...c, result: valeur } }));
+                    // La valeur est lue avant la mise à jour d'état : l'événement n'est plus valable ensuite (BUG-054).
+                    const coche = e.currentTarget.checked;
+                    setChoix((v) => {
+                      const next = { ...v };
+                      if (coche) next[k.id] = { meets: 'nonevalue', result: '' };
+                      else delete next[k.id];
+                      return next;
+                    });
                   }}
                 />
-              </Group>
-            )}
-          </Stack>
-        );
-      })}
+                {c && (
+                  <Group grow align="flex-start">
+                    <Select
+                      label={`Répond au critère « ${k.label} » ?`}
+                      allowDeselect={false}
+                      data={Object.entries(REPONSE).map(([value, label]) => ({ value, label }))}
+                      value={c.meets}
+                      onChange={(v) => setChoix((x) => ({ ...x, [k.id]: { ...c, meets: v ?? 'nonevalue' } }))}
+                    />
+                    <TextInput
+                      label={`Résultat pour « ${k.label} »`}
+                      value={c.result}
+                      onChange={(e) => {
+                        const valeur = e.currentTarget.value;
+                        setChoix((x) => ({ ...x, [k.id]: { ...c, result: valeur } }));
+                      }}
+                    />
+                  </Group>
+                )}
+              </Stack>
+            );
+          })}
+        </Stack>
+      ))}
       <Textarea label="Conclusion" value={conclusion} onChange={(e) => setConclusion(e.currentTarget.value)} />
       <Group justify="flex-end">
         <Button variant="default" onClick={onDone}>

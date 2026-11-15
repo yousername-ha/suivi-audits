@@ -3,13 +3,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
 import { ALERTES_PAR_HEURE } from '../src/alertes-securite.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp, ouvrirFlux } from './helpers.js';
 
 const CONTACT = 'plafond@exemple.test';
 let t: TestApp;
 
 beforeAll(async () => {
   t = await createTestApp({ PUBLIC_URL: 'https://suivi.test' });
+  // Flux « courriel » ouvert (ADR 0097) : l'envoi s'active ici sans repasser par la validation.
+  await ouvrirFlux(t, 'courriel');
   const admin: Agent = await login(t, await makeUser(t, 'plafond-admin', 'admin'));
   const g = await admin.get('/api/settings/courriel');
   const r = await admin.put(

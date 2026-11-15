@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import tls from 'node:tls';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp, ouvrirFlux } from './helpers.js';
 
 let t: TestApp, admin: Agent, lecteur: Agent, dir: string, cert: Buffer, key: Buffer;
 const MOT_DE_PASSE = 'Secret-SMTP-à-ne-jamais-voir-42';
@@ -167,6 +168,8 @@ beforeAll(async () => {
   cert = readFileSync(path.join(dir, 'c.pem'));
   key = readFileSync(path.join(dir, 'k.pem'));
   t = await createTestApp();
+  // Flux « courriel » ouvert par l'administrateur (ADR 0097) : fermé, rien n'est remis à l'exécutant.
+  await ouvrirFlux(t, 'courriel');
   admin = await login(t, await makeUser(t, 'mail_admin', 'admin'));
   lecteur = await login(t, await makeUser(t, 'mail_ro', 'ro'));
 });
@@ -280,6 +283,81 @@ describe('configuration et file de demandes', () => {
     await t.svc.courriel.reclamer((await t.svc.settings.read('courriel')).values as never);
     await expect(t.svc.courriel.terminer(d.id, { ok: true, steps: [], error: null, password: 'x' })).rejects.toThrow();
     await t.svc.courriel.terminer(d.id, { ok: true, steps: [], error: null });
+  });
+
+  it('flux « courriel » fermé (ADR 0097) : test refusé avant l’exécutant, rien n’est remis, la page le dit, relu sans redémarrage', async () => {
+    await t.svc.backups.heartbeat(true);
+    const valeurs = async () => (await t.svc.settings.read('courriel')).values as never;
+    // Une notification en file et un test en attente, demandés flux ouvert.
+    await t.svc.db.q('DELETE FROM courriel_jobs');
+    await t.svc.db.q(
+      "INSERT INTO courriel_jobs(id, kind, requested_by, to_address, subject, body) VALUES (gen_random_uuid(), 'notification', $1, 'technique@exemple.test', 'Objet', 'Corps')",
+      [DEMANDEUR_ALERTE],
+    );
+    const enAttente = (await admin.post('/api/settings/courriel/test')).json();
+    expect(enAttente.status).toBe('en_attente');
+    t.svc.limits.courrielTest.reset();
+    await t.svc.flux.changer('courriel', false, { username: 'test' }, '127.0.0.1');
+    expect((await admin.get('/api/settings/courriel')).json().info.fluxOuvert).toBe(false);
+    expect(await t.svc.courriel.reclamer(await valeurs())).toBeNull();
+    // Le test en attente est clos sans envoi ; la notification reste en file.
+    const test = (await admin.get(`/api/settings/courriel/test/${enAttente.id}`)).json();
+    expect(test).toMatchObject({ status: 'echec' });
+    expect(test.error).toContain('fermé');
+    const file = await t.svc.db.q<{ status: string }>("SELECT status FROM courriel_jobs WHERE kind = 'notification'");
+    expect(file.rows.map((r) => r.status)).toEqual(['en_attente']);
+    // Une nouvelle demande de test est refusée, même sans exécutant disponible : le flux est contrôlé d'abord.
+    await t.svc.db.q('DELETE FROM backup_worker');
+    const refus = await admin.post('/api/settings/courriel/test');
+    expect(refus.statusCode).toBe(409);
+    expect(refus.json()).toMatchObject({ reason: 'flux_ferme', module: 'courriel' });
+    expect(refus.json().error).toContain('activant le module');
+    // Rouvert : la notification est de nouveau remise à l'exécutant.
+    await ouvrirFlux(t, 'courriel');
+    expect((await admin.get('/api/settings/courriel')).json().info.fluxOuvert).toBe(true);
+    expect(await t.svc.courriel.reclamer(await valeurs())).toMatchObject({ kind: 'notification', subject: 'Objet' });
+    await t.svc.db.q('DELETE FROM courriel_jobs');
+  });
+
+  it('activer l’envoi ouvre le flux en une seule opération, après validation par un administrateur ; le désactiver le referme', async () => {
+    const enregistrer = async (a: Agent, v: Record<string, unknown>) => {
+      const g = await admin.get('/api/settings/courriel');
+      return a.put('/api/settings/courriel', { ...g.json().values, ...v }, { 'if-match': g.headers.etag as string });
+    };
+    await t.svc.flux.changer('courriel', false, { username: 'test' }, '127.0.0.1');
+    // Envoi actif, flux fermé : enregistrer exige la validation ; rien n'est écrit sans elle.
+    const sans = await enregistrer(admin, { actif: true, contactTechnique: 'autre@exemple.test' });
+    expect(sans.statusCode).toBe(409);
+    expect(sans.json()).toMatchObject({ reason: 'flux_validation', module: 'courriel' });
+    expect((await admin.get('/api/settings/courriel')).json().values.contactTechnique).toBe('technique@exemple.test');
+    // Le droit de paramétrage seul ne suffit pas : l'ouverture d'un flux est une décision d'administrateur.
+    await t.svc.db.q(
+      "INSERT INTO roles(id, name, permissions) VALUES ('r_parametres', 'Paramétrage', $1) ON CONFLICT DO NOTHING",
+      [['parametres:lire', 'parametres:modifier', 'parametres:administrer']],
+    );
+    const parametrage = await login(t, await makeUser(t, 'mail_parametres', 'r_parametres'));
+    const sansDroit = await enregistrer(parametrage, { actif: true, fluxConfirme: true });
+    expect(sansDroit.statusCode).toBe(403);
+    expect(sansDroit.json().reason).toBe('flux_droit');
+    expect(await t.svc.flux.ouvert('courriel')).toBe(false);
+    const ok = await enregistrer(admin, { actif: true, fluxConfirme: true });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().info.fluxOuvert).toBe(true);
+    expect(ok.json().values).not.toHaveProperty('fluxConfirme');
+    const journal = await t.svc.db.q<{ details: { origine: string } }>(
+      "SELECT details FROM audit_log WHERE action = 'flux.externe.ouvert' AND target = 'courriel' ORDER BY id DESC LIMIT 1",
+    );
+    expect(journal.rows[0]!.details.origine).toBe('settings.courriel');
+    // Flux ouvert : les autres réglages s'enregistrent sans nouvelle validation.
+    expect((await enregistrer(parametrage, { port: 465 })).statusCode).toBe(200);
+    // Désactiver l'envoi referme le flux.
+    expect((await enregistrer(admin, { actif: false })).statusCode).toBe(200);
+    expect(await t.svc.flux.ouvert('courriel')).toBe(false);
+    expect(
+      (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action = 'flux.externe.ferme' AND target = 'courriel'"))
+        .rowCount,
+    ).toBeGreaterThan(0);
+    expect((await enregistrer(admin, { actif: true, fluxConfirme: true })).statusCode).toBe(200);
   });
 
   it('limite les essais de test pour qu’un compte ne serve pas de relais', async () => {
