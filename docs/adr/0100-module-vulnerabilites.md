@@ -156,7 +156,10 @@
 
 16. **Rang d'une machine, calculé par la plateforme.** Ordre : faille dont l'exploitation est avérée, puis rôle (front avant
     back avant base de données), puis nombre de failles critiques. Le rang affiche les faits qui le fondent. Le rôle entre
-    dans ce calcul local et ne sort pas du serveur (V14).
+    dans ce calcul local et ne sort pas du serveur (V14). La vue par machine montre des icônes de machines rangées par ligne,
+    avec une **frontière visible** entre le front et le back, puis entre le back et les bases ; ces frontières séparent les
+    rôles indiqués et ne prouvent pas un cloisonnement du réseau. Deux modes : **réduit**, qui ne garde que les machines les
+    plus prioritaires de chaque ligne, et **grand écran**, qui montre tout le parc.
 
 17. **Vue par périmètre** (V12). Pour un périmètre, deux présentations : **globale**, toutes les machines ensemble ; **par
     ligne**, le front en première ligne, relié au back applicatif, lui-même relié aux bases de données. Les liens sont
