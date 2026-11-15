@@ -1,7 +1,8 @@
 # ADR 0100 — Module Vulnérabilités : veille sur listes fiables, lecture de Tenable Security Center et d'Ekialis, priorité calculée par la plateforme, alerte par l'assistant
 
-- Statut : **proposée**, à valider par le RSSI. Numéro 0100 annoncé au RSSI et retenu par lui le 15/11/2026 (libre sur toutes les
-  branches du dépôt à cette date). Aucun code, aucune migration.
+- Statut : **acceptée** par le RSSI le 15/11/2026, dans la session (« t'as mon accord »). Numéro 0100 annoncé au RSSI et retenu
+  par lui le même jour (libre sur toutes les branches du dépôt à cette date). Les lots démarrent ; les points ouverts gardent
+  leur réponse proposée tant que le RSSI n'en décide pas autrement (lecture de la session, à confirmer par lui).
 - Date : 2026-11-15
 - Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`)
 - Contexte : le RSSI demande, le 15/11/2026, un **module de surveillance des vulnérabilités** : suivre les failles publiées à
@@ -33,6 +34,9 @@
 | V12 | Rôles et périmètres | Le RSSI indique les serveurs **front, back applicatif et base de données**. Par périmètre, une vue montre les machines **ensemble**, ou le front relié au back, séparés |
 | V13 | Machines | Elles sont **récupérées d'Ekialis et de Tenable** et rangées dans la plateforme. Remplace la proposition initiale (détail laissé dans Tenable) |
 | V14 | Assistant et machines | L'assistant **classe les machines par criticité**. Il **n'envoie ni nom, ni adresse IP, ni rôle** au modèle : c'est **la plateforme, en local**, qui replace le résultat sur les machines au retour du modèle |
+| V15 | Correctif indiqué par Tenable | L'accès « solutions » de Tenable est retenu **bien qu'annoncé expérimental** |
+| V16 | Marques | Un **avertissement** sur la machine qui porte une faille zero-day ; une **icône propre** aux failles exploitables |
+| V17 | Alerte critique | Une **grande fenêtre rouge** quand une faille critique de type zero-day touche le parc |
 
 ## Faits relevés le 15/11/2026
 
@@ -59,7 +63,7 @@
   Tenable ; ce qu'Ekialis sait des machines, de leur rôle et de leur périmètre ; la consigne détaillée du CERT-FR, absente du
   flux RSS (seul un résumé y figure).
 
-## Décision proposée
+## Décision
 
 1. **Nouveau module `vulnerabilites`**, ajouté à `MODULES`, désactivable (ADR 0019), avec des dépendances facultatives vers
    `fournisseurs`, `ecarts` et `assistant`. Actions :
@@ -183,7 +187,9 @@
     de la plateforme : chaque valeur a son libellé et son icône, un schéma va de l'attaquant à la cible puis à l'effet, et
     une phrase en clair est composée à partir des mêmes valeurs. Le modèle n'intervient pas. Sans vecteur publié, la fiche
     l'indique. Les **recommandations** sont celles des sources, bornées et présentées par source : action exigée et
-    échéance du catalogue KEV, correctif indiqué par Tenable, renvoi vers l'avis du CERT-FR ou du CERT Santé. La
+    échéance du catalogue KEV, correctif indiqué par Tenable, renvoi vers l'avis du CERT-FR ou du CERT Santé. L'accès de Tenable aux
+    correctifs est annoncé expérimental par l'éditeur ; il est retenu (V15) : s'il échoue ou change, la fiche affiche les
+    autres recommandations et signale que celle de Tenable est indisponible, sans bloquer la synchronisation. La
     proposition d'action de l'assistant reste affichée à part.
 
 20. **Charte** (V8). Les écrans reprennent le langage visuel de la page de mise à jour (`docker/maintenance`), porté dans

@@ -1,8 +1,8 @@
 # Cadrage — module Vulnérabilités (veille, Tenable Security Center, Ekialis, assistant RSSI)
 
 **Statut** : cadrage du 15/11/2026, à la demande du RSSI, avec ses décisions V1 à V7 de
-l'[ADR 0100](../adr/0100-module-vulnerabilites.md) (proposée, à valider), complétées le même jour par V8 à V14 (écrans, machines,
-rôles, assistant). Aucun code, aucune migration. Rédigé par la session
+l'[ADR 0100](../adr/0100-module-vulnerabilites.md) (acceptée le 15/11/2026), complétées le même jour par V8 à V14 (écrans, machines,
+rôles, assistant). Les lots démarrent par V1. Rédigé par la session
 « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`).
 
 ## 1. Besoin
@@ -123,6 +123,10 @@ Version indiquée par le RSSI le 15/11/2026 : **6.9**. Lu le même jour dans la 
 Points d'accès retenus pour la liste fermée, tous en lecture : `POST /analysis`, `POST /solutions`, `POST /solutions/{pluginID}`,
 `GET /hosts`, `GET /hosts/{uuid}`, `GET /system`. Tout autre appel est refusé par le socle, en particulier
 `PATCH /hosts/{uuid}/acr`, qui écrit.
+
+Pour produire des exemples de réponses anonymisés depuis un poste Windows sans droits d'administrateur :
+[`scripts/dev/exemples-tenable.ps1`](../../scripts/dev/exemples-tenable.ps1) (lecture seule, **non essayé** : aucun PowerShell
+ni aucune instance dans la session).
 
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
 des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes
