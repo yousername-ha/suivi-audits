@@ -488,7 +488,7 @@ function FicheFournisseur({
 function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
   const can = useCan(),
     qc = useQueryClient(),
-    administrer = can('fournisseurs', 'administrer'),
+    modifier = can('fournisseurs', 'modifier'),
     [choisi, setChoisi] = useState<string | null>(null),
     [erreur, setErreur] = useState<unknown>(null);
   // La fiche reçoit une ligne figée : la liste du registre donne l'état à jour après un rattachement.
@@ -496,7 +496,7 @@ function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
   const criteres = useQuery({
     queryKey: ['suppliers', 'criteria'],
     queryFn: () => get<Critere[]>('/api/suppliers/criteria'),
-    enabled: administrer,
+    enabled: modifier,
   });
   const rattaches = liste.data?.find((f) => f.id === fournisseur.id)?.criteria ?? fournisseur.criteria;
   const proposes = (criteres.data ?? []).filter((k) => !rattaches.some((r) => r.id === k.id));
@@ -529,7 +529,7 @@ function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
                 <Table.Th>Critère</Table.Th>
                 <Table.Th>Dernière réponse</Table.Th>
                 <Table.Th>Date</Table.Th>
-                {administrer && <Table.Th>Actions</Table.Th>}
+                {modifier && <Table.Th>Actions</Table.Th>}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -542,7 +542,7 @@ function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
                     <PuceFournisseur ton={tonReponse(k)}>{libelleReponse(k)}</PuceFournisseur>
                   </Table.Td>
                   <Table.Td>{k.answer ? jourFr(k.answer.evaluatedAt) : '–'}</Table.Td>
-                  {administrer && (
+                  {modifier && (
                     <Table.Td>
                       <Button
                         size="xs"
@@ -560,7 +560,7 @@ function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
           </Table>
         </DataTable>
       )}
-      {administrer && proposes.length > 0 && (
+      {modifier && proposes.length > 0 && (
         <Group align="flex-end">
           <Select
             label="Rattacher un critère"

@@ -511,9 +511,9 @@ export class GrcSuppliers {
       return { criterionId: crit.id, attached, detached, suppliers };
     }, user.username);
   }
-  /** Rattache un critère depuis la fiche d'un fournisseur (même droit que la définition des critères). */
+  /** Rattache un critère depuis la fiche d'un fournisseur (droit de modification, comme l'évaluation ; décision du RSSI, ADR 0098). */
   async attachCriterion(supplierId: string, criterionId: string, user: SessionUser, ip: string) {
-    await this.g.permission(user, 'fournisseurs', 'administrer');
+    await this.g.permission(user, 'fournisseurs', 'modifier');
     return this.g.db.tx(async (c, k) => {
       const crit = await this.criterion(criterionId, k, true);
       await this.supplier(supplierId, c);
@@ -535,7 +535,7 @@ export class GrcSuppliers {
   }
   /** Détache un critère d'un fournisseur ; ses évaluations passées ne sont pas touchées. */
   async detachCriterion(supplierId: string, criterionId: string, user: SessionUser, ip: string) {
-    await this.g.permission(user, 'fournisseurs', 'administrer');
+    await this.g.permission(user, 'fournisseurs', 'modifier');
     await this.g.db.tx(async (c, k) => {
       const r = await k
         .deleteFrom('sup_criterion_links')

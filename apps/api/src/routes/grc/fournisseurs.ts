@@ -93,7 +93,7 @@ export const fournisseursRoutes = [
   }),
   route({
     ...base,
-    access: 'fournisseurs:administrer' as const,
+    access: 'fournisseurs:modifier' as const,
     method: 'PUT',
     url: '/api/suppliers/:id/criteria/:criterionId',
     summary: 'Rattacher un critère d’évaluation au fournisseur (ADR 0098)',
@@ -103,7 +103,7 @@ export const fournisseursRoutes = [
   }),
   route({
     ...base,
-    access: 'fournisseurs:administrer' as const,
+    access: 'fournisseurs:modifier' as const,
     method: 'DELETE',
     url: '/api/suppliers/:id/criteria/:criterionId',
     summary: 'Détacher un critère du fournisseur (ses évaluations sont conservées)',

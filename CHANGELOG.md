@@ -16,7 +16,7 @@ de données. _(Session « Projet audit_suivi Coeur ».)_
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »
   sur la liste filtrée) et enregistre en une seule opération ; la fiche d'un fournisseur permet aussi de rattacher ou détacher
-  un critère (droit `fournisseurs:administrer`, journal `supplier.criterion.attached` / `detached`). La fiche montre chaque
+  un critère (droit `fournisseurs:modifier` depuis la fiche, `fournisseurs:administrer` pour la sélection en masse, journal `supplier.criterion.attached` / `detached`). La fiche montre chaque
   critère rattaché avec sa dernière réponse (Oui, Non ou Non évalué) et sa date ; la ligne du registre en donne le résumé
   (« 3/5 critères remplis · 1 non »), détail au survol. « Évaluer » coche d'office les critères rattachés. Un critère retiré
   reste rattaché mais n'est plus proposé. Jeu de démonstration complété. _(Session « Projet audit_suivi Coeur ».)_

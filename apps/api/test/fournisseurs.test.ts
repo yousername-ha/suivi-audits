@@ -516,13 +516,14 @@ describe('critères rattachés aux fournisseurs (ADR 0098)', () => {
     s4 = await ajout('Fournisseur rattaché quatre');
   });
 
-  it('réserve le rattachement au droit d’administration et le refuse sans session', async () => {
+  it('réserve la sélection en masse à l’administration, ouvre la fiche à la modification, refuse sans session', async () => {
     for (const agent of [reader, contributor]) {
       expect((await masse(k1.id, { attach: [s1] }, agent)).statusCode).toBe(403);
-      expect((await agent.put(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
-      expect((await agent.del(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
     }
+    expect((await reader.put(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
+    expect((await reader.del(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(403);
     expect((await masse(k1.id, { attach: [s1] }, new Agent(t))).statusCode).toBe(401);
+    expect((await new Agent(t).put(`/api/suppliers/${s1}/criteria/${k1.id}`)).statusCode).toBe(401);
     expect(await rattaches(k1.id)).toEqual([]);
   });
 
@@ -651,5 +652,13 @@ describe('critères rattachés aux fournisseurs (ADR 0098)', () => {
     }[];
     expect(hist).toHaveLength(3);
     expect(hist.flatMap((e) => e.items.map((i) => i.criterionId))).toContain(k1.id);
+  });
+
+  it('ouvre le rattachement depuis la fiche au droit de modification (décision du RSSI)', async () => {
+    const k = (await a.post('/api/suppliers/criteria', critBody('Critère rattaché par un contributeur'))).json();
+    expect((await contributor.put(`/api/suppliers/${s1}/criteria/${k.id}`)).statusCode).toBe(200);
+    expect(await rattaches(k.id)).toEqual([s1]);
+    expect((await contributor.del(`/api/suppliers/${s1}/criteria/${k.id}`)).statusCode).toBe(204);
+    expect(await rattaches(k.id)).toEqual([]);
   });
 });

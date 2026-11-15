@@ -40,8 +40,9 @@ concernent quel fournisseur, ni où en est chacun d'eux.
    avec le détail au survol. Ce n'est ni une note ni un seuil.
 6. **« Évaluer »** coche d'office les critères rattachés (non retirés), regroupés en tête ; les autres critères actifs restent
    disponibles. L'évaluation reste immuable et inchangée côté serveur.
-7. **Droits.** Lecture : `fournisseurs:lire`. Rattacher et détacher (en masse comme depuis la fiche) : `fournisseurs:administrer`,
-   le droit de définition des critères.
+7. **Droits** (décision du RSSI). Lecture : `fournisseurs:lire`. Rattacher et détacher depuis la fiche du fournisseur :
+   `fournisseurs:modifier`, le droit qui permet déjà d'évaluer. Sélection en masse depuis le registre des critères :
+   `fournisseurs:administrer`, le droit de définition des critères.
 
 ## Ce qui n'est pas fait dans cette ADR
 
