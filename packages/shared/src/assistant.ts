@@ -32,6 +32,39 @@ export const AdresseModele = z
     }
   }, 'Adresse HTTPS attendue, sans identifiants ni paramètres (exemple : https://api.mistral.ai/v1).');
 
+/** Fournisseurs de modèle préenregistrés de l'écran de réglages. Chacun expose une API « chat completions » compatible
+    OpenAI ; l'adresse et les modèles proposés viennent de la documentation publique du fournisseur (relevé du 15/11/2026).
+    Seul Mistral a été essayé avec l'assistant. Tout autre service se règle par « Personnalisé ». */
+export const FOURNISSEURS_ASSISTANT = [
+  {
+    id: 'mistral',
+    libelle: 'Mistral AI',
+    adresse: 'https://api.mistral.ai/v1',
+    modeles: ['mistral-small-latest', 'mistral-medium-latest', 'mistral-large-latest'],
+  },
+  {
+    id: 'openai',
+    libelle: 'OpenAI',
+    adresse: 'https://api.openai.com/v1',
+    modeles: ['gpt-6-luna', 'gpt-6-astra'],
+  },
+  {
+    id: 'anthropic',
+    libelle: 'Anthropic (Claude)',
+    adresse: 'https://api.anthropic.com/v1',
+    modeles: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
+  },
+] as const;
+export type FournisseurAssistant = (typeof FOURNISSEURS_ASSISTANT)[number];
+export const FOURNISSEUR_PERSONNALISE = 'personnalise';
+
+const sansBarreFinale = (adresse: string) => adresse.trim().replace(/\/+$/, '');
+/** Fournisseur préenregistré dont l'adresse est celle-ci, à une barre finale près ; null pour toute autre adresse. */
+export function fournisseurDeAdresse(adresse: string): FournisseurAssistant | null {
+  const a = sansBarreFinale(adresse);
+  return FOURNISSEURS_ASSISTANT.find((f) => f.adresse === a) ?? null;
+}
+
 export const ReglagesAssistantBody = z
   .object({
     actif: z.boolean(),

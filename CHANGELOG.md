@@ -8,6 +8,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Modifié
+
+- **Assistant RSSI : activation simplifiée** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) : l'écran de réglages tient en quatre gestes (activer, choisir le
+  fournisseur, saisir la clé, choisir le niveau d'habilitation) et un seul bouton « Enregistrer », qui scelle aussi la clé. Trois
+  fournisseurs sont préenregistrés (Mistral AI, OpenAI, Anthropic) avec leur adresse et leurs modèles ; « Personnalisé » garde la
+  saisie libre d'une API compatible. Le niveau d'habilitation s'applique aux deux profils. Budget, profils, périmètres, rondes
+  et autonomie gardent leurs valeurs par défaut sous « Réglages avancés ». L'appel est adapté aux écarts connus d'OpenAI et
+  d'Anthropic (température, plafond de sortie) ; **seul Mistral a été essayé avec un modèle réel**.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
 ## [7.1.1] — 2026-11-14
 
 Version corrective : aucune migration, aucune nouvelle dépendance. Elle termine la **refonte graphique Neon** (lots 3 à 8,

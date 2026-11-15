@@ -77,6 +77,31 @@ function messageFournisseur(statut: number): string {
   return `Le fournisseur du modèle a refusé la demande (code ${statut}).`;
 }
 
+/** Écarts connus au format « chat completions » classique, par hôte du fournisseur (documentation publique, relevé du
+    15/11/2026). Tout autre hôte reçoit la demande telle quelle.
+    - OpenAI : ses modèles actuels raisonnent ; l'appel d'outils n'y est accepté qu'avec `reasoning_effort: "none"`, le
+      plafond de sortie s'appelle `max_completion_tokens` et la température n'est pas réglable.
+    - Anthropic : ses modèles actuels refusent une température inférieure à 1 et réfléchissent d'office ; ce travail compte
+      dans le plafond de sortie, relevé pour ne pas tronquer la réponse. */
+const PLANCHER_SORTIE_ANTHROPIC = 4096;
+export function adapterDemande(adresse: string, demande: DemandeModele): Record<string, unknown> {
+  let hote = '';
+  try {
+    hote = new URL(adresse).hostname;
+  } catch {
+    /* adresse illisible : demande inchangée, le relais la refusera */
+  }
+  if (hote === 'api.openai.com') {
+    const { temperature: _t, max_tokens, ...reste } = demande;
+    return { ...reste, ...(max_tokens ? { max_completion_tokens: max_tokens } : {}), reasoning_effort: 'none' };
+  }
+  if (hote === 'api.anthropic.com') {
+    const { temperature: _t, max_tokens, ...reste } = demande;
+    return { ...reste, ...(max_tokens ? { max_tokens: Math.max(max_tokens, PLANCHER_SORTIE_ANTHROPIC) } : {}) };
+  }
+  return { ...demande };
+}
+
 export class RelaisModele implements TransportModele {
   constructor(
     private readonly url: string,
@@ -94,7 +119,7 @@ export class RelaisModele implements TransportModele {
       r = await fetch(this.url.replace(/\/+$/, '') + '/v1/completer', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ adresse, cle, corps: demande }),
+        body: JSON.stringify({ adresse, cle, corps: adapterDemande(adresse, demande) }),
         signal: AbortSignal.timeout(this.delaiMs),
       });
     } catch {

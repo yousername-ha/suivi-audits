@@ -499,3 +499,26 @@ Contrôles du 14/11/2026 (Node 22, PostgreSQL 16) : API 169 fichiers 1 251/1 251
 web 251/251, ESLint, Prettier, construction web ; recette navigateur du panneau global avec un faux fournisseur de modèle
 (17 points, aucune erreur de console). Non rejoué : jeu d'évaluation avec un modèle réel, Docker, CI complète (Node 26,
 PostgreSQL 18, Playwright) ; les captures de référence restent à régénérer.
+
+## Addendum du 15/11/2026 — activation simplifiée, fournisseurs préenregistrés
+
+Demande du RSSI : activer l'assistant sans réfléchir aux paramètres. Décisions du RSSI (15/11/2026) : Mistral AI, OpenAI et
+Anthropic préenregistrés, plus « Personnalisé » ; les autres réglages repliés sous « Réglages avancés » ; un seul niveau
+d'habilitation pour les deux profils.
+
+- **Aucun changement de schéma ni de route.** Le fournisseur n'est pas enregistré : l'écran le reconnaît à l'adresse du
+  service (`FOURNISSEURS_ASSISTANT`, paquet partagé). Le niveau d'habilitation écrit la classification maximale des deux
+  profils ; un réglage distinct par profil reste possible dans les réglages avancés.
+- **Un seul bouton** : « Enregistrer » scelle la clé saisie, puis enregistre les réglages. La clé reste en écriture seule.
+- **Écarts au format « chat completions »**, traités dans l'API d'après l'hôte exact du fournisseur (`adapterDemande`) :
+  OpenAI n'accepte l'appel d'outils qu'avec `reasoning_effort: "none"`, nomme le plafond de sortie
+  `max_completion_tokens` et ne règle pas la température ; Anthropic refuse une température inférieure à 1 et compte sa
+  réflexion dans le plafond de sortie, relevé à 4 096. Tout autre hôte reçoit la demande inchangée. La couche de
+  compatibilité d'Anthropic est présentée par son éditeur comme un moyen d'essai, pas comme une solution de production.
+- **Confidentialité** : choisir un fournisseur, c'est lui confier la question posée et les extraits lus. L'écran continue
+  de nommer le fournisseur réglé ; l'API garde zéro accès sortant, seul le relais sort.
+
+Contrôles du 15/11/2026 (Node 22, PostgreSQL 16) : voir le message de commit. Recette navigateur de l'écran avec un faux
+fournisseur (14 points). **Non vérifié : OpenAI et Anthropic avec un modèle réel** (aucune clé d'essai) ; les noms de
+modèles préenregistrés viennent des documentations publiques relevées le 15/11/2026 et vieilliront.
+
