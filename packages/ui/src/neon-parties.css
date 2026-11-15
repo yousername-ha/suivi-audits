@@ -120,10 +120,6 @@
   color: var(--pi-cyan);
   box-shadow: inset 0 -2px var(--pi-cyan);
 }
-.parties-studio .pi-tool:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
 .parties-studio .pi-view-label {
   font-size: 0.875rem;
   color: var(--pi-muted);

@@ -5,6 +5,7 @@
    une par la commande centrée en bas, positions et liaisons recalculées sur les dimensions réelles des cartes, ensemble
    centré. Repliée, une carte garde ses commandes et ses alertes essentielles ; le détail complet reste à un clic. */
 import { ActionIcon, Anchor, Badge, Button, Drawer, Group, Loader, Stack, Text } from '@mantine/core';
+import { useReducedMotion } from '@mantine/hooks';
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { NeonAnneau } from '@suivi/ui';
@@ -537,9 +538,9 @@ export function CartesPerimetres({
   const [largeurZone, setLargeurZone] = useState(0);
   const [zoom, setZoom] = useState<number | null>(null);
   const [decalage, setDecalage] = useState({ x: 0, y: 0 });
-  const [arret, setArret] = useState(
-    () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
-  );
+  // Flux des liaisons en continu, sans bouton de pause (ADR 0099) : seul le mouvement réduit du système l'arrête, lu dès le
+  // premier rendu.
+  const arret = useReducedMotion(false, { getInitialValueInEffect: false });
   const zone = useRef<HTMLDivElement>(null);
   const glissement = useRef<{ x: number; y: number; origine: { x: number; y: number } } | null>(null);
   const noeuds = useRef(new Map<string, HTMLDivElement>());
@@ -713,9 +714,6 @@ export function CartesPerimetres({
               </small>
             </div>
             <Group gap="2xs" className="perimetres-graphe-commandes">
-              <Button size="compact-xs" variant="default" aria-pressed={arret} onClick={() => setArret((a) => !a)}>
-                {arret ? 'Reprendre le flux' : 'Mettre le flux en pause'}
-              </Button>
               <Button
                 size="compact-xs"
                 variant="default"

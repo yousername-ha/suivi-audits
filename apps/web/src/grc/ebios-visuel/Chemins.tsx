@@ -1,7 +1,8 @@
 /* Chemins stratégiques (003-08 et 003-10) : source → parties prenantes → événements redoutés, tracés d'après les liens
    enregistrés dans l'étude. Un chemin se choisit dans la liste (clavier compris) ; seul le chemin choisi a un contour
-   épais et un flux animé, les autres restent visibles. Les animations sont décoratives : pause, réglage « Animées /
-   Automatiques / Arrêtées » (comme dans le parcours guidé) et respect du mouvement réduit du système. */
+   épais et un flux animé, les autres restent visibles. Les animations sont décoratives et continues, sans bouton de
+   pause (ADR 0099) : réglage « Animées / Automatiques / Arrêtées » (comme dans le parcours guidé), respect du mouvement
+   réduit du système et arrêt quand l'onglet est masqué. */
 import { Alert, Button, Group, Select, Stack, Text } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import { useMemo, useState } from 'react';
@@ -38,11 +39,10 @@ export function Chemins({
   const modele = useMemo(() => construireChemins(objets), [objets]);
   const { positions, largeur, hauteur } = useMemo(() => disposer(modele.etapes), [modele.etapes]);
   const [mouvement, setMouvement] = useState<Mouvement>('automatique');
-  const [pause, setPause] = useState(false);
   const reduit = useReducedMotion();
   const visible = useOngletVisible();
   const actuel = modele.chemins.find((c) => c.ref === choisi) ?? null;
-  const anime = !!actuel && !pause && visible && (mouvement === 'animees' || (mouvement === 'automatique' && !reduit));
+  const anime = !!actuel && visible && (mouvement === 'animees' || (mouvement === 'automatique' && !reduit));
   const dessines = modele.chemins.filter((c) => !c.manques.length);
   const aretes = [...modele.aretes].sort(
     (a, b) => Number(!!actuel && a.chemins.includes(actuel.ref)) - Number(!!actuel && b.chemins.includes(actuel.ref)),
@@ -73,9 +73,6 @@ export function Chemins({
           value={mouvement}
           onChange={(v) => v && setMouvement(v as Mouvement)}
         />
-        <Button variant="default" onClick={() => setPause((p) => !p)} disabled={!actuel} aria-pressed={pause}>
-          {pause ? 'Reprendre le mouvement' : 'Mettre en pause'}
-        </Button>
         <Button variant="subtle" onClick={() => onChoisir(null)} disabled={!actuel}>
           Voir tous les chemins
         </Button>
