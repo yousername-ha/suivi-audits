@@ -48,6 +48,7 @@ Source de référence des chiffres/IDs/états :
 - [Cadrage du module Qualité ISO 9001](unification/CADRAGE-MODULE-QUALITE-9001.md) (réflexion, aucun code)
 - [Cadrage du module Intégrations (GLPI, ORADAD, Silène)](unification/CADRAGE-MODULE-INTEGRATIONS.md) et [ADR 0076](adr/0076-module-integrations.md) (ADR acceptée le 29/10/2026, aucun code)
 - [Cadrage de l'assistant RSSI intégré (agent natif, modèle distant)](unification/CADRAGE-ASSISTANT-RSSI.md) et [ADR 0086](adr/0086-assistant-rssi-integre.md) (ADR acceptée le 11/11/2026)
+- [Cadrage du module Vulnérabilités (veille, Tenable Security Center, Ekialis)](unification/CADRAGE-MODULE-VULNERABILITES.md) et [ADR 0100](adr/0100-module-vulnerabilites.md) (ADR proposée le 15/11/2026, aucun code)
 - [Refonte GRC : configuration transversale et multiméthode](archive/refonte-grc/README.md) ([ADR 0038](adr/0038-socle-de-configuration-grc-transversal.md))
 
 ## 01_REPRISE_IA
