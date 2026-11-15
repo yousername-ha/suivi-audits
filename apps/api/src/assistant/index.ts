@@ -21,7 +21,7 @@ import type { Kdb } from '../db/db.js';
 import type { Logger } from 'pino';
 import type { SessionUser } from '../auth.js';
 import type { Actor, Db } from '../db/db.js';
-import { messageFluxFerme, type FluxExternes } from '../flux-externes.js';
+import type { FluxExternes } from '../flux-externes.js';
 import type { Grc } from '../grc/core.js';
 import type { Historique } from '../historique/index.js';
 import { HttpError } from '../http/errors.js';
@@ -264,11 +264,13 @@ export class Assistant {
     const { r } = await this.lire();
     const cle = await this.lireCle();
     let resultat: TestModeleDto;
+    let fluxEmpeche: string | null;
     if (!r.adresse || !r.modele)
       resultat = { ok: false, detail: 'Renseignez l’adresse et le modèle, puis enregistrez.' };
     else if (!cle) resultat = { ok: false, detail: 'Aucune clé n’est enregistrée.' };
-    // Flux fermé (ADR 0097) : rien ne part vers le fournisseur, même pour un essai.
-    else if (!(await this.flux.ouvert('assistant'))) resultat = { ok: false, detail: messageFluxFerme('assistant') };
+    // Flux fermé (ADR 0097) : rien ne part vers le fournisseur, même pour un essai ; ouvert, le relais n'est joint qu'une
+    // fois son conteneur démarré par l'exécutant (état appliqué « ouvert »).
+    else if ((fluxEmpeche = await this.flux.empechement('assistant'))) resultat = { ok: false, detail: fluxEmpeche };
     else if (!this.transport.declare())
       resultat = { ok: false, detail: 'Le relais de modèle n’est pas installé sur le serveur.' };
     else
@@ -306,7 +308,8 @@ export class Assistant {
     if (!r.actif) return 'L’assistant n’est pas activé.';
     if (!r.adresse || !r.modele) return 'Le modèle de l’assistant n’est pas réglé.';
     if (!(await this.cleDefinie())) return 'Aucune clé de modèle n’est enregistrée.';
-    if (!(await this.flux.ouvert('assistant'))) return messageFluxFerme('assistant');
+    const flux = await this.flux.empechement('assistant');
+    if (flux) return flux;
     if (!this.transport.declare()) return 'Le relais de modèle n’est pas installé sur le serveur.';
     return null;
   }

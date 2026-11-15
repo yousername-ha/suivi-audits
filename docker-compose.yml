@@ -212,7 +212,9 @@ services:
       retries: 4
       start_period: 20s
 
-  # Composant de confiance privilégié, sans port ni API HTTP ; l'API applicative ne reçoit jamais Docker.
+  # Composant de confiance privilégié, sans port ni API HTTP ; l'API applicative ne reçoit jamais Docker. Il applique aussi les
+  # flux vers l'extérieur décidés dans l'interface (ADR 0097) : démarrage et arrêt des profils « assistant » et « antivirus »,
+  # silence du courriel, des mises à jour et de l'ACME quand leur flux est fermé.
   updater:
     <<: *hardening
     image: ${UPDATER_IMAGE:-ghcr.io/yousername-ha/suivi-audits-updater:${APP_VERSION}}
@@ -244,7 +246,8 @@ services:
     pids_limit: 128
     stop_grace_period: 30s
 
-  # Antivirus facultatif : docker compose --profile antivirus up -d, puis analyse activée dans l'interface (ouvre son flux, ADR 0097).
+  # Antivirus facultatif : « Activer l'analyse antivirus » dans l'interface ouvre son flux (ADR 0097) ; l'exécutant d'exploitation
+  # (updater) démarre alors ce profil, et l'arrête et le retire quand le flux se ferme. Aucune commande à taper.
   # Deux services : « clamav » (clamd seul) n'est relié qu'au réseau interne « antivirus », partagé avec l'API, sans accès à
   # la base ni à Internet ; « freshclam » (mise à jour des signatures) sort vers Internet mais n'est relié à aucun autre service.
   # Les deux s'exécutent sans privilège (utilisateur clamav, uid 100), système de fichiers en lecture seule.
@@ -300,8 +303,9 @@ services:
       retries: 60
       start_period: 30s
 
-  # Assistant RSSI (ADR 0086), facultatif : docker compose --profile assistant up -d, puis assistant activé dans l'interface
-  # (ouvre son flux, ADR 0097) ; l'API connaît l'adresse du relais sans réglage.
+  # Assistant RSSI (ADR 0086), facultatif : l'activer dans l'interface ouvre son flux (ADR 0097) ; l'exécutant d'exploitation
+  # (updater) démarre alors ce profil, et l'arrête et le retire à la fermeture. L'API connaît l'adresse du relais sans réglage
+  # et ne le joint qu'une fois son démarrage rapporté par l'exécutant.
   # « assistant-relais » est le SEUL conteneur de l'assistant à sortir : il transmet les demandes de l'API au fournisseur du
   # modèle réglé dans l'interface (HTTPS, certificat vérifié, adresses privées refusées). Même image que l'API, autre
   # commande : aucun accès à la base, aucun secret monté, aucun fichier, aucune capacité Linux. L'API le joint sur le réseau

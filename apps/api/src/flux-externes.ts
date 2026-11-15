@@ -7,6 +7,7 @@ import {
   fluxExterne,
   sensDuFlux,
   type FluxAppliques,
+  type FluxEtatApplique,
   type FluxExterneEtat,
   type FluxModule,
   type FluxSouhaites,
@@ -21,6 +22,14 @@ import { HttpError } from './http/errors.js';
 export const messageFluxFerme = (m: FluxModule) => {
   const f = fluxExterne(m);
   return `Le flux « ${f.libelle} » vers l’extérieur est fermé : il s’ouvre en activant le module (${f.reglage.libelle} : ${f.activation.geste}), après validation par un administrateur.`;
+};
+
+/** Flux voulu ouvert, mais pas encore appliqué par l'exécutant (conteneur de sortie en cours de démarrage) ou en erreur. */
+export const messageFluxNonApplique = (m: FluxModule, applique: FluxEtatApplique | null) => {
+  const f = fluxExterne(m);
+  return applique === 'erreur'
+    ? `Le flux « ${f.libelle} » est ouvert, mais l’exécutant d’exploitation du serveur n’a pas pu l’appliquer : l’erreur est indiquée dans Administration, Configuration système, Flux vers l’extérieur.`
+    : `Le flux « ${f.libelle} » est ouvert ; l’exécutant d’exploitation du serveur l’applique à son prochain passage (en général moins d’une minute, davantage au premier démarrage).`;
 };
 
 interface Ligne {
@@ -50,6 +59,21 @@ export class FluxExternes {
   async ouvert(m: FluxModule, k: Kdb = this.db.k): Promise<boolean> {
     const l = await k.selectFrom('flux_externes').select('ouvert').where('module', '=', m).executeTakeFirst();
     return l?.ouvert === true;
+  }
+
+  /** État voulu et appliqué d'un module, relu en base. */
+  async lire(m: FluxModule, k: Kdb = this.db.k): Promise<FluxExterneEtat> {
+    const l = await k.selectFrom('flux_externes').selectAll().where('module', '=', m).executeTakeFirst();
+    return versEtat(m, l as Ligne | undefined);
+  }
+
+  /** Pourquoi un module à conteneur de sortie ne peut pas encore servir : flux fermé, ou ouvert mais pas encore appliqué
+      (ou en erreur) par l'exécutant ; null s'il est ouvert ET appliqué ouvert (lot 2 de l'ADR 0097). */
+  async empechement(m: FluxModule): Promise<string | null> {
+    const e = await this.lire(m);
+    if (!e.ouvert) return messageFluxFerme(m);
+    if (e.applique !== 'ouvert') return messageFluxNonApplique(m, e.applique);
+    return null;
   }
 
   /** Démon antivirus à utiliser : celui de la configuration si le flux « antivirus » est ouvert, sinon aucun. */

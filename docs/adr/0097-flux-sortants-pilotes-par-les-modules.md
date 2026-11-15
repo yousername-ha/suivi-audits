@@ -93,8 +93,37 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
   flux, dans la même transaction (journal `flux.externe.ferme`, origine `modules.update`) ; la réactivation du module ne rouvre
   rien, il faut repasser par son geste d'activation et la validation. Généralisé par le champ `moduleActivation` du registre
   (aujourd'hui l'assistant seul : les autres modules du registre ne sont pas des modules de l'ADR 0019).
-- Lot 2 — exécutant (profils Compose `assistant` et `antivirus`, silence du courriel, des mises à jour et de l'ACME quand le
-  flux est fermé, rapport par `flux-appliques`) : à faire.
+- **Lot 2 — exécutant : livré** (session « Projet audit_suivi Coeur »). À chaque passage (environ 15 s), l'exécutant lit
+  `suivi flux-souhaites` et l'applique, sans commande à taper ni SSH :
+  - conteneurs dédiés (`scripts/update-worker.py`) : flux ouvert, `docker compose --profile <profil> up -d --no-deps <service>`,
+    services dans l'ordre et sans bloquer la boucle (`clamav` n'est lancé qu'une fois `freshclam` sain) ; fermé,
+    `docker compose --profile <profil> rm --stop --force <services>` (arrêtés et retirés, ils ne redémarrent pas avec Docker).
+    Un `up -d` est renouvelé au démarrage de l'exécutant et toutes les heures, pour reprendre une nouvelle image après une mise
+    à jour ou un réglage changé. Après une erreur de démarrage, nouvel essai dix minutes plus tard ;
+  - mises à jour : flux fermé, ni contrôle automatique toutes les six heures, ni vérification ou installation demandée (la
+    demande est close en échec, avec un message explicite), ni `git fetch`, `docker pull`, `docker manifest` ou `cosign` ; l'état est relu au moment de
+    vérifier et d'installer ;
+  - courriel (`scripts/exploitation-worker.py`) : flux fermé, aucune demande n'est réclamée (`mail-claim`), en plus du blocage
+    côté API. Aucune autre sortie de cet exécutant (l'observation du certificat vise le frontal du site) ;
+  - ACME : l'exécutant relit le flux juste avant d'appliquer une demande `tls_acme` (fermé : échec avant application, rien ne
+    part) ; fermé alors que la passerelle est en ACME (mode `acme`, ou mode `env` avec `CADDY_TLS` réglé sur un courriel), il
+    la ramène à l'autorité interne par le chemin d'une demande `tls_internal` (marqueur `interne`, validation, recréation,
+    contrôle du certificat servi), sous le verrou des sauvegardes. Un certificat fourni (mode `web`) et le réglage ACME ne sont
+    jamais touchés. Configuration refusée : marqueur antérieur rétabli, erreur rapportée, nouvel essai dix minutes plus tard ;
+    `TLS_WEB_MANAGEMENT=0` : rien n'est modifié, erreur rapportée.
+  Règle d'un état voulu illisible (application arrêtée ou en redémarrage, réponse inattendue) : l'exécutant n'émet rien
+  lui-même (ni courriel, ni vérification ou téléchargement de version, ni demande ACME) et laisse les conteneurs de sortie dans
+  l'état où il les a mis, sans rien rapporter ; une indisponibilité passagère n'arrête donc pas l'assistant ni l'antivirus et
+  n'ouvre jamais rien. Rapport `suivi flux-appliques` (assistant, antivirus et mises à jour par `update-worker.py` ; courriel
+  et ACME par `exploitation-worker.py`) au changement et au plus tard toutes les 30 minutes, erreur courte en phrase fixe
+  (≤ 300 caractères, jamais de sortie de commande). Arguments fermés : profils, services et modules viennent de constantes des
+  deux scripts ; un nom reçu de l'application et inconnu est ignoré ; le test d'architecture vérifie leur concordance avec le
+  registre et l'ordre de démarrage (`depends_on`). Côté API, l'assistant ne joint son relais que si son flux est ouvert **et**
+  appliqué ouvert (sinon un message dit que l'exécutant l'applique, ou qu'il a échoué). L'antivirus suit l'état voulu seul :
+  la connexion de l'API à `clamav` est interne, et `CLAMAV_REQUIRED` refuse déjà un dépôt tant que le démon ne répond pas ;
+  exiger l'état appliqué y ferait accepter des fichiers « non analysés » pendant le démarrage. Le périmètre de confiance de
+  l'exécutant ne change pas (il avait déjà le socket Docker). Tests : `scripts/tests/test_flux_executant.py`,
+  `scripts/tests/test_exploitation.py`, `apps/api/test/assistant.test.ts`, `apps/api/test/architecture-flux.test.ts`.
 - Lot 3 — questions de l'assistant d'installation (étape 8), avec le composant de validation du lot 1 : à faire.
 - Lot 4 — documentation : à faire.
 

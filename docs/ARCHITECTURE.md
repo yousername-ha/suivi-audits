@@ -35,8 +35,8 @@ Ce document décrit l'architecture cible et l'état livré en **phase 0** (fonda
 | `db` | `postgres:18-alpine` | Base unique. Aucun port publié. |
 | `app` | `ghcr.io/yousername-ha/suivi-audits-api` | API, commandes d'exploitation (`setup-token`, `suivi`). Désactive aussi les comptes arrivés à expiration. |
 | `web` | `ghcr.io/yousername-ha/suivi-audits-web` | Caddy : TLS, en-têtes de sécurité, interface compilée, reverse proxy vers `app`. Seul service exposé. |
-| `clamav` | `clamav/clamav` (épinglée par empreinte) | Facultatif (`--profile antivirus`) : clamd seul, sur le réseau interne `antivirus` partagé avec `app`, sans privilège. Utilisé par l'API seulement si l'analyse est activée, ce qui ouvre son flux ([ADR 0097](adr/0097-flux-sortants-pilotes-par-les-modules.md)). |
-| `freshclam` | `clamav/clamav` (épinglée par empreinte) | Facultatif (`--profile antivirus`) : mise à jour des signatures, seul service antivirus avec accès sortant, aucun lien avec les autres services. |
+| `clamav` | `clamav/clamav` (épinglée par empreinte) | Facultatif (profil `antivirus`, démarré et arrêté par l'exécutant d'exploitation selon le flux « antivirus ») : clamd seul, sur le réseau interne `antivirus` partagé avec `app`, sans privilège. Utilisé par l'API seulement si l'analyse est activée, ce qui ouvre son flux ([ADR 0097](adr/0097-flux-sortants-pilotes-par-les-modules.md)). |
+| `freshclam` | `clamav/clamav` (épinglée par empreinte) | Facultatif (profil `antivirus`, démarré par l'exécutant avant `clamav`) : mise à jour des signatures, seul service antivirus avec accès sortant, aucun lien avec les autres services. |
 
 Données : toutes dans le dossier du serveur `DATA_DIR` (montages bind, aucun volume nommé, [ADR 0014](adr/0014-donnees-sur-le-serveur-et-mises-a-jour.md)) : `postgres/` (base), `secrets/` (mots de passe de la base, clé maître des documents), `caddy/` (certificats, autorité interne), `clamav/`, `etat/` (rapports des scripts du serveur, lus par l'application). Mises à jour : `scripts/mettre-a-jour.sh` (sauvegarde, signature des images, santé, retour arrière automatique).
 

@@ -8,7 +8,7 @@
    Base : le PostgreSQL de test (variables TEST_PG_*). Aucune donnée réelle : tout est créé ici. */
 import type { DemandeModele, ReponseModele, TransportModele } from '../../src/assistant/modele.js';
 import { lireReponse } from '../../src/assistant/modele.js';
-import { createTestApp, login, makeUser, ouvrirFlux } from '../helpers.js';
+import { createTestApp, login, makeUser, ouvrirFlux, appliquerFlux } from '../helpers.js';
 
 const ADRESSE = (process.env.ASSISTANT_EVAL_ADRESSE || 'https://api.mistral.ai/v1').replace(/\/+$/, '');
 const CLE = process.env.ASSISTANT_EVAL_CLE || '';
@@ -62,6 +62,8 @@ const action = (name: string, dueAt: string | null, ownerId: string | null, desc
 async function passe(): Promise<{ controles: Controle[]; jetons: number }> {
   const t = await createTestApp({}, { modele: new Direct() });
   await ouvrirFlux(t, 'assistant');
+  // Rapport de l'exécutant : relais démarré (ADR 0097, lot 2).
+  await appliquerFlux(t, 'assistant');
   try {
     t.svc.limits.assistantRondeByUser = Object.assign(() => true, { reset() {} });
     const rssi = await makeUser(t, 'eval_rssi', 'admin');

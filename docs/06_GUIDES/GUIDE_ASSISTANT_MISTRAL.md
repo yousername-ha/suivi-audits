@@ -15,8 +15,9 @@ Mistral ni réglé l'assistant.
 >   documentation, relue le 11/11/2026 ; ses écrans peuvent avoir changé.
 > - Une fois l'assistant activé, **vos questions et les extraits qu'il lit partent chez Mistral**. Lisez l'étape 1.
 
-Temps à prévoir : environ 30 minutes. Il vous faut : un accès au serveur en ligne de commande, un compte de la plateforme
-avec le rôle Administrateur ou RSSI, et un moyen de paiement pour Mistral.
+Temps à prévoir : environ 30 minutes. Il vous faut : un compte de la plateforme avec le rôle Administrateur (seul un
+administrateur valide l'ouverture du flux), et un moyen de paiement pour Mistral. Aucune commande n'est à taper sur le
+serveur : le relais y démarre seul ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md), lot 2).
 
 ## Vue d'ensemble
 
@@ -24,7 +25,7 @@ avec le rôle Administrateur ou RSSI, et un moyen de paiement pour Mistral.
 |---|---|---|
 | 1 | Sur papier | Décider ce que l'assistant a le droit de lire |
 | 2 | Site de Mistral | Créer un compte, activer la facturation, créer une clé |
-| 3 | Serveur | Démarrer le relais |
+| 3 | Équipe réseau | Autoriser la sortie vers Mistral (le relais démarre seul) |
 | 4 | Plateforme | Activer l'assistant (ce qui ouvre son flux, après validation), régler le modèle, la clé, un profil et un périmètre |
 | 5 | Plateforme | Tester, puis poser une première question |
 | 6 | Plateforme | Facultatif : activer les rondes autonomes |
@@ -66,33 +67,20 @@ Avant d'aller plus loin :
 
 Ne collez jamais la clé dans un courriel, un ticket ou une conversation.
 
-## Étape 3 — Démarrer le relais sur le serveur
+## Étape 3 — Le relais et le pare-feu
 
-L'application n'a aucun accès à Internet. Un petit service, le **relais**, est le seul à sortir, vers Mistral uniquement.
-Par défaut, ce flux est **fermé** ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md)) : il s'ouvre quand un
-administrateur active l'assistant, à l'étape 4. Aucune ligne n'est à ajouter dans `.env` : l'application connaît l'adresse du
-relais.
+L'application n'a aucun accès à Internet. Un petit service, le **relais** (`assistant-relais`), est le seul à sortir, vers
+Mistral uniquement. Par défaut, ce flux est **fermé** ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md)) :
+il s'ouvre quand un administrateur active l'assistant, à l'étape 4. **Rien n'est à faire sur le serveur** : à la validation,
+l'exécutant d'exploitation du serveur démarre le relais à son passage suivant (en général moins d'une minute), et l'arrête
+quand l'assistant est désactivé. Aucune ligne n'est à ajouter dans `.env` : l'application connaît l'adresse du relais.
 
-1. Démarrez le relais sur le serveur. Le démarrage automatique par l'exécutant d'exploitation arrive avec le lot 2 de
-   l'ADR 0097 ; d'ici là, connectez-vous au serveur et lancez, dans le dossier de l'application :
-
-   ```text
-   cd /opt/suivi-audits
-   sudo docker compose --profile assistant up -d
-   ```
-
-2. Vérifiez qu'il tourne :
-
-   ```text
-   sudo docker compose --profile assistant ps assistant-relais
-   ```
-
-   **Résultat attendu** : une ligne `assistant-relais` avec l'état `running` puis `healthy`.
-
-3. Pare-feu : le serveur doit pouvoir joindre `api.mistral.ai` sur le port TCP 443. Si votre pare-feu filtre les sorties,
-   ajoutez cette règle (la carte « Flux vers l'extérieur » de Configuration système la rappelle). Aucun port n'est à ouvrir en entrée.
-
-> Par la suite, gardez `--profile assistant` dans vos commandes `docker compose up`, sinon le relais n'est pas redémarré.
+1. Pare-feu : le serveur doit pouvoir joindre `api.mistral.ai` sur le port TCP 443. Si votre pare-feu filtre les sorties,
+   demandez cette règle à l'équipe réseau (la carte « Flux vers l'extérieur » de Configuration système la rappelle). Aucun
+   port n'est à ouvrir en entrée.
+2. Après l'étape 4, vous pourrez vérifier que le relais tourne : dans **Configuration système > Flux vers l'extérieur**, la
+   ligne « Assistant RSSI » doit afficher **Ouvert** dans les colonnes « Voulu » et « Appliqué ». « Ouverture en attente »
+   pendant une minute est normal ; une **Erreur** est expliquée dans la colonne voisine.
 
 ## Étape 4 — Régler l'assistant dans la plateforme
 
@@ -175,7 +163,9 @@ consommation du jour les premières fois.
 | Message affiché | Cause probable | Que faire |
 |---|---|---|
 | Le flux « Assistant RSSI » vers l'extérieur est fermé | Assistant pas encore activé par un administrateur, ou flux refermé | Refaire l'étape 4, points 4 à 6, avec un compte Administrateur |
-| Le relais de modèle ne répond pas | Le service `assistant-relais` est arrêté | `sudo docker compose --profile assistant up -d`, puis l'étape 3, point 2 |
+| Le flux « Assistant RSSI » est ouvert ; l'exécutant d'exploitation du serveur l'applique… | Relais en cours de démarrage | Attendre une minute, puis réessayer |
+| Le flux « Assistant RSSI » est ouvert, mais l'exécutant… n'a pas pu l'appliquer | Le relais n'a pas démarré | Lire l'erreur dans Configuration système > Flux vers l'extérieur ; transmettre à l'exploitant du serveur |
+| Le relais de modèle ne répond pas | Relais arrêté ou redémarré depuis le dernier passage de l'exécutant | Attendre une minute ; sinon, voir l'étape 3, point 2 |
 | Le fournisseur du modèle est injoignable depuis le relais | Pare-feu ou résolution de noms | Autoriser la sortie vers `api.mistral.ai`, TCP 443 |
 | Le fournisseur du modèle refuse la clé enregistrée | Clé mal copiée, expirée, ou facturation non activée | Vérifier la facturation chez Mistral, recréer une clé, la réenregistrer |
 | Le fournisseur du modèle ne connaît pas cette adresse ou ce modèle | Faute dans l'adresse ou le nom du modèle | Reprendre les valeurs du tableau de l'étape 4 |
@@ -198,7 +188,8 @@ jetons consommés, sans le contenu.
 
 - **Couper tout de suite** : décochez « Activer l'assistant » et enregistrez. Plus rien ne part.
 - **Retirer la clé** : bouton « Retirer la clé » dans la carte. Supprimez-la aussi dans la console de Mistral.
-- **Arrêter le relais** : `sudo docker compose --profile assistant stop assistant-relais`.
+- **Arrêter le relais** : décocher « Activer l'assistant » suffit : l'exécutant d'exploitation arrête et retire le relais à
+  son passage suivant, et ne le redémarre pas.
 - **Si la clé a pu fuiter** : supprimez-la d'abord chez Mistral, puis créez-en une nouvelle.
 
 ## Bonnes pratiques
@@ -223,8 +214,10 @@ cd /opt/suivi-audits
 sudo git fetch origin claude/assistant-rssi
 sudo git checkout claude/assistant-rssi
 sudo docker compose -f docker-compose.yml -f docker-compose.build.yml build
-sudo docker compose --profile assistant up -d
+sudo docker compose up -d
 ```
+
+Le relais n'est pas démarré par cette commande : l'exécutant d'exploitation le démarre quand l'assistant est activé (étape 4).
 
 Cette suite de commandes n'a pas été exécutée pendant le développement : faites une sauvegarde avant, et relevez le
 premier message d'erreur si elle échoue.

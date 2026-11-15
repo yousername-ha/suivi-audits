@@ -4,7 +4,7 @@
    entrée justifiée. Ajouter un service sortant sans l'inscrire fait échouer ce test ; une entrée devenue inutile aussi. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { FLUX_EXTERNES } from '@suivi/shared';
+import { FLUX_EXTERNES, FLUX_MODULES } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { REPO } from './helpers.js';
 
@@ -91,6 +91,12 @@ const nonInscrits = (texte: string) => servicesExposes(texte).filter((s) => !por
 
 describe('architecture : flux vers l’extérieur', () => {
   const compose = readFileSync(path.join(REPO, 'docker-compose.yml'), 'utf8');
+  // Bloc d'un service : de « ␠␠nom: » au service suivant (même indentation) ou à la clé de premier niveau suivante.
+  const blocService = (nom: string) => {
+    const reste = compose.slice(compose.indexOf(`\n  ${nom}:\n`) + 1);
+    const fin = reste.slice(1).search(/\n {2}[a-z][^\n]*:\n|\n\S/);
+    return fin === -1 ? reste : reste.slice(0, fin + 1);
+  };
 
   it('tout service exposé est porté par un module du registre ou justifié dans le cœur de plateforme', () => {
     expect(nonInscrits(compose)).toEqual([]);
@@ -111,14 +117,38 @@ describe('architecture : flux vers l’extérieur', () => {
   });
 
   it('les conteneurs de sortie démarrent par le profil Compose de leur module', () => {
-    // Bloc d'un service : de « ␠␠nom: » au service suivant (même indentation) ou à la clé de premier niveau suivante.
-    const bloc = (nom: string) => {
-      const reste = compose.slice(compose.indexOf(`\n  ${nom}:\n`) + 1);
-      const fin = reste.slice(1).search(/\n {2}[a-z][^\n]*:\n|\n\S/);
-      return fin === -1 ? reste : reste.slice(0, fin + 1);
-    };
     for (const f of FLUX_EXTERNES.filter((x) => x.porteur.type === 'conteneur'))
-      for (const s of f.porteur.services) expect(bloc(s), s).toContain(`profiles: ['${f.porteur.profil}']`);
+      for (const s of f.porteur.services) expect(blocService(s), s).toContain(`profiles: ['${f.porteur.profil}']`);
+  });
+
+  it('les listes fermées des exécutants concordent avec le registre (modules, profils et services des conteneurs)', () => {
+    // Les exécutants Python ne lisent pas le registre TypeScript : leurs constantes sont recopiées, et ce test garantit
+    // qu'elles restent identiques (ADR 0097, lot 2). Aucun nom reçu de l'application n'y est ajouté à l'exécution.
+    const lire = (f: string) => readFileSync(path.join(REPO, f), 'utf8');
+    for (const f of ['scripts/update-worker.py', 'scripts/exploitation-worker.py']) {
+      const modules = /^FLUX_MODULES = \(([^)]*)\)$/m.exec(lire(f));
+      expect(modules, f).not.toBeNull();
+      expect(
+        [...modules![1]!.matchAll(/"([^"]+)"/g)].map((x) => x[1]),
+        f,
+      ).toEqual([...FLUX_MODULES]);
+    }
+    const ligne = /^FLUX_CONTENEURS = (\{.*\})$/m.exec(lire('scripts/update-worker.py'));
+    expect(ligne).not.toBeNull();
+    const conteneurs = JSON.parse(ligne![1]!) as Record<string, { profil: string; services: string[] }>;
+    const attendus = FLUX_EXTERNES.filter((f) => f.porteur.type === 'conteneur');
+    expect(Object.keys(conteneurs).sort()).toEqual(attendus.map((f) => f.id).sort());
+    for (const f of attendus) {
+      expect(conteneurs[f.id]!.profil, f.id).toBe(f.porteur.profil);
+      expect([...conteneurs[f.id]!.services].sort(), f.id).toEqual([...f.porteur.services].sort());
+    }
+    // Ordre de démarrage de l'exécutant : un service ne dépend jamais (depends_on) d'un service lancé après lui.
+    for (const { services } of Object.values(conteneurs))
+      services.forEach((s, i) => {
+        for (const apres of services.slice(i + 1))
+          expect(blocService(s), `${s} dépend de ${apres}`).not.toMatch(new RegExp(`\\n {6}${apres}: \\{`));
+      });
+    expect(blocService('clamav')).toMatch(/\n {6}freshclam: \{ condition: service_healthy \}/);
   });
 
   it('ajouter un service sortant sans l’inscrire au registre fait échouer le contrôle', () => {
