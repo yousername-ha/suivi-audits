@@ -163,7 +163,10 @@
     dans ce calcul local et ne sort pas du serveur (V14). La vue par machine montre des icônes de machines rangées par ligne,
     avec une **frontière visible** entre le front et le back, puis entre le back et les bases ; ces frontières séparent les
     rôles indiqués et ne prouvent pas un cloisonnement du réseau. Deux modes : **réduit**, qui ne garde que les machines les
-    plus prioritaires de chaque ligne, et **grand écran**, qui montre tout le parc.
+    plus prioritaires de chaque ligne, et **grand écran**, qui montre tout le parc. Deux marques s'affichent sur une machine et sur une faille : un **avertissement** pour une
+    faille **zero-day** (exploitation en cours) et une **icône d'éclair** pour une faille **exploitable** (un code
+    d'exploitation existe, d'après le champ `exploitAvailable` de Tenable, sans exploitation observée). La définition exacte
+    du zero-day reste à arrêter (point ouvert).
 
 17. **Vue par périmètre** (V12). Pour un périmètre, deux présentations : **globale**, toutes les machines ensemble ; **par
     ligne**, le front en première ligne, relié au back applicatif, lui-même relié aux bases de données. Les liens sont
@@ -230,3 +233,5 @@
 8. Adresses IP : affichées dans les vues, ou seulement rangées ?
 9. Nom du périmètre d'une machine : transmis au modèle avec son repère, ou gardé en local comme le rôle (proposé) ?
 10. Durée de vie des repères : renouvelés à chaque échange avec le modèle (proposé), ou stables d'un échange à l'autre ?
+11. Zero-day : toute faille dont l'exploitation est avérée (proposé), ou seulement celles sans correctif publié ?
+12. Fenêtre d'alerte critique : au niveau 4 seulement (proposé), ou dès le niveau 3 (exploitée, produit à confirmer) ?
