@@ -59,6 +59,21 @@ _(Session « Projet audit_suivi Coeur ».)_
   Windows) : plus de `docker compose --profile … up -d`. Docker Hub (image ClamAV, téléchargée à la première activation)
   figure parmi les destinations de l'antivirus dans la fenêtre de validation et les flux à autoriser sur le pare-feu.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Flux vers l'extérieur pilotés par les modules, lot 3 : questions dès l'installation**
+  ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), point 5). Dernière étape de l'assistant d'installation,
+  « Flux vers l'extérieur » : à la première connexion complète du compte administrateur créé par l'installation (double
+  authentification activée, droit `administration:administrer`), chaque module du registre propose « Activer » ou « Plus
+  tard », et « Passer l'étape : tout plus tard » les laisse tous fermés. « Activer » affiche la même validation que les gestes
+  du lot 1 (destinations, ports, données qui sortent, case obligatoire) et passe par les mêmes routes, droit et journal :
+  l'antivirus et les mises à jour s'ouvrent par la route commune ; l'assistant par ses réglages, avec l'adresse du service de
+  modèle et le nom du modèle (sa clé et ses profils se règlent ensuite dans sa page : sans clé, rien ne sort) ; le courriel et
+  le certificat ACME, qui n'ont de sens qu'avec leurs réglages (serveur SMTP ; nom public et ports joignables), renvoient à
+  leur page, où leur geste demande la validation. « Plus tard » ne fait aucun appel. L'étape n'est proposée qu'une fois, au
+  seul compte créé par l'installation (pas à un administrateur de secours) : la demande est mémorisée à la création du compte,
+  comme les données de démonstration, et consommée quand l'étape est terminée ou passée (journal
+  `setup.flux_questions_vues`, avec les flux ouverts et fermés). Deux routes : `GET /api/installation/flux-externes` et
+  `POST /api/installation/flux-externes/vues` (`administration:administrer`), qui n'ouvrent aucun flux. Sans migration.
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Fournisseurs : critères rattachés** ([ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md)) : le registre des
   critères reste commun, et chaque fournisseur reçoit les critères qui le concernent. Dans « Critères d'évaluation des
   fournisseurs », « Fournisseurs concernés » coche ou décoche plusieurs fournisseurs à la fois (recherche, « Tout sélectionner »

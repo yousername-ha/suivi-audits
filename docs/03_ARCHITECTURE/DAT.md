@@ -45,7 +45,7 @@ flowchart LR
 API et base appartiennent à des réseaux internes ; les flux externes de mise
 à jour viennent du worker.
 
-Flux vers l'extérieur ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md), lots 1 et 2 livrés) : un registre partagé
+Flux vers l'extérieur ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md), lots 1 à 3 livrés) : un registre partagé
 (`packages/shared/src/flux-externes.ts`) décrit chaque module qui sort ou expose un port (assistant par `assistant-relais`,
 courriel et mises à jour par `updater`, ACME par `gateway`, signatures antivirus par `freshclam`). Tout est fermé par défaut ;
 activer un module ouvre son flux, dans la même transaction que l'activation, après validation explicite par un
@@ -62,7 +62,10 @@ le test d'architecture. État voulu illisible : rien n'est émis par l'exécutan
 état, rien n'est rapporté. L'assistant ne joint son relais que si le flux est ouvert **et** appliqué ouvert ; l'antivirus suit
 l'état voulu seul (connexion interne à `clamav`, et `CLAMAV_REQUIRED` refuse un dépôt tant que le démon ne répond pas). Un test d'architecture (`apps/api/test/architecture-flux.test.ts`)
 refuse tout service du compose qui sort ou publie un port sans être porté par le registre ou justifié dans le cœur de
-plateforme (`gateway`, `web`, `updater`). Il n’existe pas de bus distribué ou Redis ajouté.
+plateforme (`gateway`, `web`, `updater`). Lot 3 : la dernière étape de l'installation, à la première connexion complète du
+compte créé (demande mémorisée dans `settings`, `flux_questions_en_attente`, comme la démonstration), pose « Activer » ou
+« Plus tard » pour chaque module et ouvre par les mêmes gestes (route commune, réglages de l'assistant) ; courriel et ACME
+renvoient à leur page. Il n’existe pas de bus distribué ou Redis ajouté.
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 

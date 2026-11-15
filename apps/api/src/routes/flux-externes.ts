@@ -2,11 +2,20 @@
    confirmation explicite obligatoire. Précision du RSSI du 15/11/2026 : activer le module ouvre son flux. L'ouverture par
    cette route n'est donc admise que pour un module dont l'activation est le flux lui-même (antivirus, mises à jour) ; les
    autres s'ouvrent par leur propre geste d'activation (même transaction). La fermeture est toujours admise. Aucune
-   exécution : l'exécutant d'exploitation applique l'état voulu. */
-import { FLUX_MODULES, FluxChangement, FluxExterneEtat, FluxExternesOut, fluxExterne } from '@suivi/shared';
+   exécution : l'exécutant d'exploitation applique l'état voulu. Questions de l'assistant d'installation (lot 3) : savoir si
+   l'étape reste à proposer, puis la clore ; ces deux routes n'ouvrent aucun flux. */
+import {
+  FLUX_MODULES,
+  FluxChangement,
+  FluxExterneEtat,
+  FluxExternesOut,
+  QuestionsFluxOut,
+  fluxExterne,
+} from '@suivi/shared';
 import { z } from 'zod';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
+import { questionsFluxAProposer, questionsFluxVues } from '../installation-flux.js';
 
 const ModuleParams = z.object({ module: z.string().max(60) }).strict();
 
@@ -41,6 +50,30 @@ export const fluxExternesRoutes = [
           { reason: 'flux_par_module', module: m },
         );
       return svc.flux.changer(m, body.ouvert, s!.user, ip);
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/installation/flux-externes',
+    summary:
+      'Assistant d’installation : l’étape « Flux vers l’extérieur » reste-t-elle à proposer au compte créé par l’installation ?',
+    tags: ['Installation'],
+    access: 'administration:administrer',
+    response: QuestionsFluxOut,
+    handler: async ({ svc, s }) => ({ aProposer: await questionsFluxAProposer(svc, s!.user.id) }),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/installation/flux-externes/vues',
+    summary:
+      'Assistant d’installation : étape « Flux vers l’extérieur » terminée ou passée (n’ouvre aucun flux ; journal d’audit)',
+    tags: ['Installation'],
+    access: 'administration:administrer',
+    body: z.object({}).strict(),
+    response: QuestionsFluxOut,
+    handler: async ({ svc, s, ip }) => {
+      await questionsFluxVues(svc, { id: s!.user.id, username: s!.user.username }, ip);
+      return { aProposer: false };
     },
   }),
 ];

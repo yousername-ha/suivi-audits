@@ -32,40 +32,12 @@ import { ConfirmButton, ErrorAlert } from '../components/common';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { ASSISTANT_GLOBAL } from './cles';
+import { corpsReglages, saisieDe, type Saisie } from './reglages-corps';
 import { MemoireAssistant, MesuresAssistant, MethodesAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
 const CLE_REGLAGES = ['assistant', 'reglages'];
 
-type Saisie = Pick<
-  ReglagesAssistantDto,
-  | 'actif'
-  | 'adresse'
-  | 'modele'
-  | 'budgetJetonsJour'
-  | 'enPause'
-  | 'heureRonde'
-  | 'plafondRappelsJour'
-  | 'delaiRelanceJours'
-  | 'jourSynthese'
-  | 'rondesSurEvenement'
-  | 'contexte'
-  | 'profils'
->;
-const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
-  actif: d.actif,
-  adresse: d.adresse,
-  modele: d.modele,
-  budgetJetonsJour: d.budgetJetonsJour,
-  enPause: d.enPause,
-  heureRonde: d.heureRonde,
-  plafondRappelsJour: d.plafondRappelsJour,
-  delaiRelanceJours: d.delaiRelanceJours,
-  jourSynthese: d.jourSynthese,
-  rondesSurEvenement: d.rondesSurEvenement,
-  contexte: d.contexte,
-  profils: d.profils,
-});
 const hote = (adresse: string) => {
   try {
     return new URL(adresse).host;
@@ -132,32 +104,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
     if (valide === false) return;
     await agir(async () => {
       const enregistre = await api<ReglagesAssistantDto>('PUT', '/api/assistant/reglages', {
-        body: {
-          ...saisie,
-          ...(valide ? { fluxConfirme: true } : {}),
-          profils: saisie.profils.map(
-            ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }) => ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }),
-          ),
-          version: d.version,
-        },
+        body: corpsReglages(saisie, d.version, !!valide),
       });
       qc.setQueryData(CLE_REGLAGES, enregistre);
       setSaisie(saisieDe(enregistre));
