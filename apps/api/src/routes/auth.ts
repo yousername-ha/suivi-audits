@@ -17,6 +17,7 @@ import {
   type MeOut as MeOutT,
 } from '@suivi/shared';
 import { chargerDemoDemandee, demanderDemo } from '../demo-installation.js';
+import { proposerQuestionsFlux } from '../installation-flux.js';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { accessStage, type Session } from '../auth.js';
@@ -252,6 +253,9 @@ export const authRoutes = [
             .returning('id')
             .executeTakeFirstOrThrow();
           await kdb.insertInto('user_roles').values({ user_id: u.id, role_id: 'administrateur' }).execute();
+          // Questions « Flux vers l'extérieur » (ADR 0097, lot 3) : proposées à ce compte à sa première session complète. Pas
+          // pour un administrateur de secours, créé sur une installation déjà en service.
+          if (k.reason !== 'recovery') await proposerQuestionsFlux(kdb, { id: u.id, username: body.username });
           const org = body.orgName?.trim();
           if (org) {
             const cur = await svc.settings.read('general', c);

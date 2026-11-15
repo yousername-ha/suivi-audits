@@ -124,7 +124,32 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
   exiger l'état appliqué y ferait accepter des fichiers « non analysés » pendant le démarrage. Le périmètre de confiance de
   l'exécutant ne change pas (il avait déjà le socket Docker). Tests : `scripts/tests/test_flux_executant.py`,
   `scripts/tests/test_exploitation.py`, `apps/api/test/assistant.test.ts`, `apps/api/test/architecture-flux.test.ts`.
-- Lot 3 — questions de l'assistant d'installation (étape 8), avec le composant de validation du lot 1 : à faire.
+- **Lot 3 — questions de l'assistant d'installation (étape 8) : livré** (session « Projet audit_suivi Coeur »). Endroit retenu :
+  la **première connexion complète** du compte administrateur créé par l'installation (après l'enrôlement du second facteur,
+  et de la clé de sécurité facultative), pas la page `/setup` : avant, la personne n'a pas de session complète, donc ni le droit
+  `administration:administrer` ni le journal nominatif des gestes du lot 1. La page de connexion renvoie alors vers
+  `/installation/flux-externes` (page de l'application), puis vers la page demandée. Mécanisme le plus proche, sans migration :
+  celui des données de démonstration. La demande est mémorisée dans `settings` (`flux_questions_en_attente`, compte créé) par
+  la transaction qui consomme le jeton, sauf pour un administrateur de secours (jeton `recovery`) ; elle n'est proposée qu'à
+  ce compte, et consommée quand il termine ou passe l'étape (`POST /api/installation/flux-externes/vues`, journal
+  `setup.flux_questions_vues` avec les flux ouverts et fermés) ; `GET /api/installation/flux-externes` dit si elle reste à
+  proposer. Ces deux routes (`administration:administrer`) n'ouvrent rien. Pour chaque module : « Activer » ou « Plus tard » ;
+  « Passer l'étape : tout plus tard » laisse tout fermé. « Plus tard » ne fait aucun appel. « Activer » affiche
+  `DetailValidationFlux` (case obligatoire) et passe par le geste du lot 1 :
+  - antivirus et mises à jour : route commune `PUT /api/admin/flux-externes/:module` (`confirmation: true`) ;
+  - assistant : `PUT /api/assistant/reglages` (`actif: true`, `fluxConfirme: true`, autres réglages inchangés), avec l'adresse
+    du service de modèle et le nom du modèle, que le schéma exige pour activer. La clé et les profils se règlent ensuite dans
+    sa page, indiquée à la fin de l'étape. État obtenu : assistant actif, flux ouvert, relais démarré, aucune clé ; rien ne sort
+    (l'assistant répond « Aucune clé de modèle n'est enregistrée »), état déjà atteignable depuis la page de l'assistant. Sans
+    `assistant:administrer` (ou module désactivé), l'assistant renvoie à sa page ;
+  - courriel et certificat ACME : **pas d'ouverture depuis l'étape**. Le courriel n'a de sens qu'avec son serveur SMTP (hôte,
+    port, chiffrement, compte, mot de passe scellé, expéditeur, message de test) ; ACME exige un nom public, les ports 80 et
+    443 joignables depuis Internet et l'exécutant prêt, souvent pas encore le cas à l'installation (site ouvert par son
+    adresse IP). « Activer » montre destinations et données, puis renvoie à leur page, dont le geste affiche la validation
+    (une seule fois) ; d'ici là, le flux reste fermé.
+  Aucun chemin n'ouvre un flux sans la validation explicite. L'exécutant applique au passage suivant (lot 2, inchangé).
+  Tests : `apps/web/test/installation-flux.test.ts`, `apps/api/test/installation-flux.test.ts`, parcours d'installation e2e
+  (`parcours.spec.ts`, `rssi-virtuel/specs/00-installation.spec.ts`).
 - Lot 4 — documentation : à faire.
 
 ## Conséquences

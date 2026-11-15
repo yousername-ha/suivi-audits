@@ -261,3 +261,10 @@ export const FluxAppliques = z
   )
   .strict();
 export type FluxAppliques = z.infer<typeof FluxAppliques>;
+
+/* ------------------------------------------------------------------ Questions de l'installation (lot 3) */
+/** Étape « Flux vers l'extérieur » de l'assistant d'installation (ADR 0097, point 5) : proposée une seule fois, à la première
+    connexion complète du compte administrateur créé par l'installation, jusqu'à ce qu'il la termine ou la passe. Elle
+    n'ouvre rien elle-même : chaque ouverture passe par le geste d'activation du module et sa validation explicite. */
+export const QuestionsFluxOut = z.object({ aProposer: z.boolean() });
+export type QuestionsFluxOut = z.infer<typeof QuestionsFluxOut>;
