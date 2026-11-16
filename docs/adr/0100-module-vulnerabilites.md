@@ -40,6 +40,7 @@
 | V18 | Systèmes qui ne sont plus maintenus | Les constats de Tenable **sans CVE** (système ou logiciel obsolète) entrent dans le module et comptent dans le rang de la machine (16/11/2026) |
 | V19 | Textes de Tenable | Affichés **en anglais, tels quels** : pas de traduction par le modèle (16/11/2026) |
 | V20 | Produit déclaré non détecté | Quand un produit surveillé (par exemple GLPI) n'est pas détecté automatiquement, le RSSI **relie lui-même le produit aux machines** qui le portent (16/11/2026) |
+| V21 | Version du produit déclaré | Un produit se déclare **avec sa version** (par exemple GLPI 10.1.2) ; c'est elle qui sert au rapprochement avec les failles publiées (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -127,6 +128,13 @@
    Un produit surveillé peut être **relié à la main à une ou plusieurs machines** (V20). Une faille publiée pour ce produit
    est alors rattachée à ces machines avec la mention « déclaré », distincte de « détecté par Tenable » : elle compte pour la
    machine, sans prétendre à une détection.
+
+   **Rapprochement par version (V21).** La version d'un produit surveillé est obligatoire. Une faille publiée est rattachée
+   d'office au produit quand la source donne une **plage de versions touchées** et que la version déclarée s'y trouve ; elle
+   est écartée quand la version déclarée est hors de la plage. Quand la source ne donne aucune plage (avis sans version,
+   CVE sans configuration publiée) ou que les versions ne se comparent pas sûrement, le rattachement est **proposé** et une
+   personne le confirme ou le rejette. La version déclarée se tient à jour à la main, ou par Ekialis s'il la fournit : une
+   version périmée fausse le résultat, et l'écran affiche la date de dernière mise à jour de la fiche.
 
 9. **Priorité calculée par la plateforme, pas par le modèle.** Des règles déterministes classent chaque faille suivie selon
    quatre faits : exploitation avérée (présence au catalogue KEV, alerte du CERT-FR ou du CERT Santé), présence dans
