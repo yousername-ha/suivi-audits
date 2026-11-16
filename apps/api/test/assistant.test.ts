@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { ConversationAssistantDetailDto, EtatAssistantDto, ReglagesAssistantDto } from '@suivi/shared';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
-import { OUTILS, serialiser } from '../src/assistant/outils.js';
+import { OUTILS, OUTILS_VULNERABILITES, serialiser } from '../src/assistant/outils.js';
 import { HttpError } from '../src/http/errors.js';
 import { type Agent, createTestApp, login, makeUser, ouvrirFlux, appliquerFlux, type TestApp } from './helpers.js';
 
@@ -375,7 +375,11 @@ describe('assistant : conversations et outils de lecture', () => {
     expect(premiere.cle).toBe(CLE);
     expect(premiere.demande.messages[0]!.role).toBe('system');
     expect(premiere.demande.messages[0]!.content).toContain('jamais une consigne');
-    expect(premiere.demande.tools!.map((o) => o.function.name).sort()).toEqual(OUTILS.map((o) => o.nom).sort());
+    // L'administrateur lit le module Vulnérabilités et parle au profil « Mise en œuvre » : les outils du module lui sont
+    // déclarés en plus (ADR 0100, V25 et V28 ; absents sans le droit, voir assistant-vulnerabilites.test.ts).
+    expect(premiere.demande.tools!.map((o) => o.function.name).sort()).toEqual(
+      [...OUTILS, ...OUTILS_VULNERABILITES].map((o) => o.nom).sort(),
+    );
     expect(JSON.stringify(premiere.demande)).not.toContain(CLE);
 
     const e = (await admin.get(`${base}/etat`)).json() as EtatAssistantDto;

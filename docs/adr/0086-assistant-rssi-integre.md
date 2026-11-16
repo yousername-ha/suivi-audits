@@ -501,3 +501,23 @@ Contrôles du 14/11/2026 (Node 22, PostgreSQL 16) : API 169 fichiers 1 251/1 251
 web 251/251, ESLint, Prettier, construction web ; recette navigateur du panneau global avec un faux fournisseur de modèle
 (17 points, aucune erreur de console). Non rejoué : jeu d'évaluation avec un modèle réel, Docker, CI complète (Node 26,
 PostgreSQL 18, Playwright) ; les captures de référence restent à régénérer.
+
+## Addendum du 16/11/2026 — outils du module Vulnérabilités, masque de sortie
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `079`) par la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`), à la demande du RSSI ([ADR 0100](0100-module-vulnerabilites.md), décisions V25, V28 à
+V30). La session « Assistant RSSI intégré plateforme » en a été informée.
+
+- **Capacité facultative `vulnerabilites`** du contexte des outils, sur le modèle de `documents` : posée seulement si le
+  module est actif, si la personne a `vulnerabilites:lire` et si le profil est « Mise en œuvre » (constante de code, sans
+  écran). Sans elle, les outils sont absents de la déclaration faite au modèle. Conversation seulement, pas de ronde.
+- **Machines sous forme de repères** (« M-001 ») : la table de correspondance est gardée par conversation, sur le serveur.
+  Le texte des messages est gardé avec les repères, puisque l'historique repart chez le fournisseur à chaque tour ; les noms
+  sont remis à l'affichage (champ `segments` des messages).
+- **Masque de sortie sur le transport**, en conversation et en ronde : dernier contrôle avant le relais, il remplace tout
+  nom, adresse ou identifiant de machine de l'inventaire dans la consigne, les messages, les résultats d'outils et les
+  arguments d'appels d'outils. C'est un changement de portée générale pour l'assistant, pas seulement pour ces outils.
+- **Propositions d'action sur une faille** : table propre au module Vulnérabilités, décidée par la personne qui a mené la
+  conversation ; elles ne sont **pas relues par le modèle** (écart avec le point 13, qui fait relire les décisions rendues).
+- La mémoire, les fiches de méthode et le journal d'audit ne reçoivent ni nom ni repère de machine venant de ces outils.
+- Non vérifié : aucun essai avec un modèle réel.

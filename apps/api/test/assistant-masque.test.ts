@@ -36,6 +36,14 @@ describe('masque des machines', () => {
     expect(await masquer('https://srv-masque-01.autre.invalid/chemin')).toBe('https://M-001/chemin');
   });
 
+  it('nom de machine avec un tiret bas (nom Windows) : reconnu en entier, avec ou sans domaine devant', async () => {
+    const masquer = creerMasque([m('a', 'SRV_MASQUE_01', '192.0.2.211')], attribuer);
+    expect(await masquer('Redémarrer srv_masque_01, puis EXEMPLE\\SRV_MASQUE_01.')).toBe(
+      'Redémarrer M-001, puis EXEMPLE\\M-001.',
+    );
+    expect(await masquer('Le mot masque seul reste.')).toBe('Le mot masque seul reste.');
+  });
+
   it('machine non lisible, libellé partagé par deux machines : « [machine] », sans repère', async () => {
     const vus: string[] = [];
     const masquer = creerMasque(parc, async (ids) => {

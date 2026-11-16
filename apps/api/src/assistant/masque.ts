@@ -24,8 +24,10 @@ export interface MachineAMasquer {
 export const MACHINE_MASQUEE = '[machine]';
 /** Premier libellé d'un nom retenu comme désignation de la machine à partir de cette longueur (évite « db », « ad »…). */
 const LIBELLE_MIN = 3;
-/** Jeton candidat : lettres, chiffres, points, tirets et deux-points, commençant et finissant par une lettre ou un chiffre. */
-const JETON = /[A-Za-z0-9](?:[A-Za-z0-9.:-]*[A-Za-z0-9])?/g;
+/** Jeton candidat : lettres, chiffres, points, tirets, tirets bas et deux-points, commençant et finissant par une lettre
+    ou un chiffre. Le tiret bas est admis parce qu'un nom de machine Windows (NetBIOS) peut en porter : sans lui, un tel nom
+    serait découpé et ne serait pas reconnu. */
+const JETON = /[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?/g;
 
 export type Masquer = (texte: string) => Promise<string>;
 

@@ -308,6 +308,25 @@
   - annuler une confirmation alors que la règle d'office tranche désormais donne « rattaché d'office » ;
   - à valeur égale entre sources, l'ordre d'affichage est NVD, Tenable, CERT Santé, FIRST.
   Non vérifié : conditions d'usage du site du CERT Santé pour la lecture de ses pages, toute collecte réelle.
+- **Lot « Assistant », évaluer une CVE** (16/11/2026) : migration `079`. Outils `evaluer_cve`, `machines_prioritaires`,
+  `failles_prioritaires` et `proposer_action_vulnerabilite`, offerts **en conversation seulement** (pas en ronde autonome),
+  au profil « Mise en œuvre », à une personne qui a `vulnerabilites:lire`. À confirmer par le RSSI :
+  - les machines ne sont remises au modèle que sous forme de **repères stables par conversation** (point ouvert 10 tranché :
+    stables) ; ni rôle ni nom de périmètre ne sont transmis (point ouvert 9) ;
+  - le texte est gardé avec les repères ; les noms sont remis à l'affichage, pour la personne qui regarde et selon ses
+    droits ; un repère inconnu est affiché « non reconnu » (et non écarté, écart avec le point 11) ;
+  - **masque de sortie** : avant tout envoi au fournisseur du modèle, en conversation comme en ronde, tout nom de machine
+    de l'inventaire, toute adresse et tout identifiant de Tenable est remplacé par le repère de la machine, ou par
+    « [machine] ». Il couvre ce que la personne tape, les actions qui nomment des machines depuis V30, les documents et le
+    contexte de l'organisation. Limites : un nom de machine qui est aussi un mot courant est masqué partout ; un nom absent
+    de l'inventaire n'est pas reconnu ;
+  - une proposition d'action de l'assistant est gardée avec ses repères ; à la confirmation, sur le serveur, les noms sont
+    remis et l'action est créée sous l'identité de la personne (V29), sans retour vers le modèle ; seule la personne qui a
+    mené la conversation décide ;
+  - **contenu d'une action (V30)** : les noms des machines et des applications touchées sont ajoutés par le serveur à la
+    description (20 machines au plus, puis « et N autres ») ; aucune adresse ; une machine sans nom est comptée « sans nom » ;
+    le journal d'audit reste sans nom de machine.
+  Non vérifié : aucun modèle réel n'a répondu (faux transport) ; la qualité des réponses n'est pas mesurée.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
