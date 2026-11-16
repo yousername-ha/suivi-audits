@@ -32,7 +32,9 @@ travaillent sur le dépôt :
    fusionne `claude-suivi-smsi` avant tout travail.
 2. Toute PR vise `claude-suivi-smsi`, en fusion classique (merge commit), après les 7 contrôles verts. Rien ne vise
    `main` directement : `main` n'évolue que par la PR `claude-suivi-smsi` → `main`, fusionnée par le RSSI ou sur son
-   accord explicite. Aucune étiquette `v*` sans le RSSI.
+   accord explicite. Aucune étiquette `v*` sans le RSSI : un agent ne pose une étiquette que par le workflow
+   `poser-etiquette.yml`, sur demande explicite du RSSI et après CI verte de `main`, et l'approbation reste au RSSI
+   ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) ; jamais de déplacement ni de suppression.
 3. Les PR Dependabot visent `claude-suivi-smsi` (`target-branch` de `.github/dependabot.yml`) ; une PR Dependabot
    ouverte vers `main` avant ce réglage est fermée.
 4. Avant de toucher `apps/api/src` ou un fichier tenu par une autre session, prévenir celle-ci par le RSSI. Aucun fichier
