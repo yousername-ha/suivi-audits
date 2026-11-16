@@ -63,10 +63,15 @@ Deux contraintes de l'ADR 0063 encadrent la solution :
 - Vérifier que les règles d'étiquettes `v*` admettent l'identité de ce jeton (rôle administrateur, ou la GitHub App en
   contournement si une App est retenue).
 
+## Mise en œuvre
+
+- `.github/workflows/poser-etiquette.yml` : job `verifier` (lecture seule, `scripts/ci/verifier-etiquette.mjs`) puis job
+  `etiqueter` (environnement `etiquette-version`, secret `ETIQUETTE_VERSION_JETON`, étiquette annotée sur le commit vérifié).
+- `scripts/tests/etiquette.test.mjs` (lancé par la CI) ; AGENTS.md (règle des étiquettes) et CONTRIBUTING.md (publication).
+- Tant que l'environnement et le secret ne sont pas créés, le second job échoue proprement (« Secret … absent ») sans rien poser.
+
 ## Ce qui n'est pas fait dans cette ADR
 
-- Le workflow lui-même, son test (script de vérification du premier job) et la mise à jour d'AGENTS.md et de CONTRIBUTING.md :
-  livrés dans une PR suivante, après relecture de cette ADR.
 - Aucune étiquette de développement (`development`) : ce workflow ne publie que le canal `stable` depuis `main`.
 
 ## Conséquences

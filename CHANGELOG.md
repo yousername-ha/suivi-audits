@@ -8,6 +8,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Ajouté
+
+- **Étiquette de version par un workflow approuvé** ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) :
+  `poser-etiquette.yml`, lancé à la main (ou par l'agent par l'API) avec la version, vérifie avant toute approbation le
+  manifeste de publication, la section du CHANGELOG, la CI et CodeQL du commit exact de `main` et l'absence de l'étiquette ;
+  il attend ensuite l'approbation du RSSI (environnement `etiquette-version`) et pousse l'étiquette avec un jeton dédié, ce
+  qui déclenche la publication habituelle. Réglages GitHub à faire une fois par le RSSI (environnement, jeton). _(Session
+  « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Ergonomie sur grand écran : en-tête compact et boîte d'outils commune** (demande du RSSI pour la 7.3.0, modèle validé le

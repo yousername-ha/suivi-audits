@@ -66,6 +66,7 @@ jobs:
       - name: Contrats de publication et compatibilité de détection des mises à jour
         run: |
           node --test scripts/tests/publication.test.mjs
+          node --test scripts/tests/etiquette.test.mjs
           node --test scripts/tests/epinglage.test.mjs
           node --test scripts/tests/conteneurs.test.mjs
           node --test scripts/tests/rapport-e2e.test.mjs
