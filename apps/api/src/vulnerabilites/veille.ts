@@ -43,6 +43,7 @@ import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { VulnerabilitesVeilleCollectes } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
+import type { Mandataire } from '../mandataire.js';
 
 type LigneCollecte = Selectable<VulnerabilitesVeilleCollectes>;
 
@@ -90,6 +91,8 @@ export class VeilleVulnerabilites {
   constructor(
     private readonly db: Db,
     private readonly flux: FluxExternes,
+    /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : la veille est le seul flux qui l'emprunte. */
+    private readonly mandataire: Mandataire,
   ) {}
 
   /* ---------------------------------------------------------------- Lecture (vulnerabilites:lire) */
@@ -114,6 +117,7 @@ export class VeilleVulnerabilites {
     return {
       flux: { ouvert: flux.ouvert, applique: flux.applique },
       executant: { disponible: await this.executantDisponible() },
+      mandataire: { actif: await this.mandataire.actif() },
       sources: SOURCES_VEILLE_DEFINITIONS.map((d) => {
         const l = lignes.get(d.id);
         const reussite = l?.derniere_reussite ?? null;
@@ -389,19 +393,24 @@ export class VeilleVulnerabilites {
   /* ---------------------------------------------------------------- CLI de l'exécutant */
   /** `suivi veille-claim` : réclame la collecte en file la plus ancienne et rend ses paramètres (fenêtre NVD, failles à
       noter par EPSS, avis du CERT-FR déjà lus). Module désactivé ou flux fermé : rien n'est remis, les collectes en file
-      sont closes sans appel. */
+      sont closes sans appel. Mandataire de l'établissement actif (ADR 0101) : ses paramètres, mot de passe compris, sont
+      joints à la demande remise à l'exécutant (jamais au journal) ; réglage illisible : rien n'est remis, la collecte en
+      file est close, plutôt que de sortir en direct. */
   async reclamer(moduleActif: boolean): Promise<Record<string, unknown> | null> {
     const ouvert = moduleActif && (await this.flux.ouvert(FLUX));
+    const mandataire = ouvert ? await this.mandataire.pourExecutant() : null;
     return this.db.tx(async (c, k) => {
       await verrouFile(k);
       await this.menage(k, c);
-      if (!ouvert) {
+      if (!ouvert || mandataire === 'illisible') {
         const closes = await k
           .updateTable('vulnerabilites_veille_collectes')
           .set({
             etat: 'echec',
             termine_le: sql<Date>`now()`,
-            erreur: 'Flux fermé ou module désactivé : la collecte n’a pas été transmise.',
+            erreur: !ouvert
+              ? 'Flux fermé ou module désactivé : la collecte n’a pas été transmise.'
+              : 'Réglage du mandataire sortant illisible : la collecte n’a pas été transmise (Configuration système, Mandataire sortant).',
           })
           .where('etat', '=', 'en_file')
           .returning(['id', 'source'])
@@ -495,7 +504,7 @@ export class VeilleVulnerabilites {
         { source: r.source, ...(fenetre ? { depuis: parametres.depuis, jusqua: parametres.jusqua } : {}) },
         c,
       );
-      return { id: r.id, source: r.source, parametres };
+      return { id: r.id, source: r.source, parametres, ...(mandataire ? { mandataire } : {}) };
     });
   }
 

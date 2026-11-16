@@ -6,6 +6,7 @@ import { Alert, Anchor, Badge, Button, Card, Group, List, Modal, Stack, Table, T
 import {
   FLUX_EXTERNES,
   fluxExterne,
+  passeParMandataire,
   type FluxExterneDefinition,
   type FluxExterneEtat,
   type FluxExternesOut,
@@ -26,6 +27,7 @@ import {
 import { useCan } from '../session';
 import { ErrorAlert, fmtDate } from './common';
 import { Destinations } from './ValidationFlux';
+import { LIEN_MANDATAIRE } from '../mandataire';
 
 const COULEURS: Record<Ton, string> = { vert: 'green', gris: 'gray', rouge: 'red', orange: 'orange' };
 export const CLE_FLUX_EXTERNES = ['admin', 'flux-externes'] as const;
@@ -107,7 +109,8 @@ export function FluxExternesPanel() {
   });
   const [fermeture, setFermeture] = useState<FluxExterneDefinition | null>(null);
   const etats = new Map<FluxModule, FluxExterneEtat>((q.data?.modules ?? []).map((e) => [e.module, e]));
-  const pareFeu = pareFeuAOuvrir(FLUX_EXTERNES, q.data?.modules ?? []);
+  const mandataire = q.data?.mandataire.actif === true;
+  const pareFeu = pareFeuAOuvrir(FLUX_EXTERNES, q.data?.modules ?? [], mandataire);
   return (
     <Card withBorder>
       <Stack>
@@ -121,6 +124,14 @@ export function FluxExternesPanel() {
           journal d’audit. L’exécutant d’exploitation applique la décision et rapporte l’état appliqué.
         </Text>
         <ErrorAlert error={q.error} />
+        {mandataire && (
+          <Alert color="blue" title="Mandataire sortant de l’établissement actif">
+            La veille des vulnérabilités passe par le mandataire réglé ; les autres flux sortent comme indiqué.{' '}
+            <Anchor component={Link} to={LIEN_MANDATAIRE}>
+              Réglage du mandataire
+            </Anchor>
+          </Alert>
+        )}
         <div className="table-wrap" role="region" aria-label="Flux vers l’extérieur" tabIndex={0}>
           <Table striped>
             <Table.Thead>
@@ -149,6 +160,11 @@ export function FluxExternesPanel() {
                     <Table.Td>{libelleSens(f)}</Table.Td>
                     <Table.Td>
                       <Destinations f={f} />
+                      {passeParMandataire(f.id, mandataire) && (
+                        <Text size="xs" c="dimmed">
+                          Par le mandataire réglé
+                        </Text>
+                      )}
                     </Table.Td>
                     <Table.Td>
                       {e && (

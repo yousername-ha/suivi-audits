@@ -16,6 +16,7 @@ import { adresseSiteRoutes } from './routes/adresse-site.js';
 import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { fluxExternesRoutes } from './routes/flux-externes.js';
+import { mandataireRoutes } from './routes/mandataire.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
 import { webauthnRoutes } from './routes/webauthn.js';
@@ -124,6 +125,7 @@ export function allRoutes(): RouteDef[] {
     ...operationRoutes,
     ...updateRoutes,
     ...fluxExternesRoutes,
+    ...mandataireRoutes,
     ...remiseAVideRoutes,
     ...poivreRoutes,
     ...cleSecoursRoutes,

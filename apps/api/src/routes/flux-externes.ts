@@ -27,7 +27,10 @@ export const fluxExternesRoutes = [
     tags: ['Administration'],
     access: 'administration:lire',
     response: FluxExternesOut,
-    handler: async ({ svc }) => ({ modules: await svc.flux.etat() }),
+    handler: async ({ svc }) => ({
+      modules: await svc.flux.etat(),
+      mandataire: { actif: await svc.mandataire.actif() },
+    }),
   }),
   route({
     method: 'PUT',

@@ -50,6 +50,7 @@ export function EtapeFluxExterieur({
   erreur,
   onTerminer,
   onPasser,
+  mandataire = false,
 }: {
   ouvert: (m: FluxModule) => boolean;
   mode: (m: FluxModule) => ModeInstallation;
@@ -59,6 +60,8 @@ export function EtapeFluxExterieur({
   erreur: unknown;
   onTerminer: () => void;
   onPasser: () => void;
+  /** Mandataire sortant de l'établissement actif (ADR 0101) : la validation d'un flux qui l'utilise le dit. */
+  mandataire?: boolean;
 }) {
   const choisir = (m: FluxModule, c: ChoixFlux) =>
     onSaisie({ ...saisie, choix: { ...saisie.choix, [m]: c }, valides: { ...saisie.valides, [m]: false } });
@@ -155,6 +158,7 @@ export function EtapeFluxExterieur({
                         module={f.id}
                         valide={saisie.valides[f.id] === true}
                         onValide={(v) => onSaisie({ ...saisie, valides: { ...saisie.valides, [f.id]: v } })}
+                        mandataire={mandataire}
                       />
                     </Stack>
                   )}
@@ -286,6 +290,7 @@ export function QuestionsFluxPage() {
     const pareFeu = pareFeuAOuvrir(
       FLUX_EXTERNES,
       ouverts.map((module) => ({ module, ouvert: true })),
+      etats.data.mandataire.actif,
     );
     return (
       <Stack className="page">
@@ -353,6 +358,7 @@ export function QuestionsFluxPage() {
         erreur={erreur}
         onTerminer={() => void terminer()}
         onPasser={() => void passer()}
+        mandataire={etats.data.mandataire.actif}
       />
     </Stack>
   );

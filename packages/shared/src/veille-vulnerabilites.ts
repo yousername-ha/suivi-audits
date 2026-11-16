@@ -297,6 +297,8 @@ export interface EtatSourceVeilleDto {
 export interface EtatVeilleDto {
   flux: { ouvert: boolean; applique: FluxEtatApplique | null };
   executant: { disponible: boolean };
+  /** Mandataire sortant de l'établissement actif (ADR 0101) : les demandes passent par lui ; ni adresse ni compte ici. */
+  mandataire: { actif: boolean };
   sources: EtatSourceVeilleDto[];
 }
 

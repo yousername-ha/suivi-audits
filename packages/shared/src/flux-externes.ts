@@ -288,7 +288,11 @@ export const FluxExterneEtat = z.object({
 });
 export type FluxExterneEtat = z.infer<typeof FluxExterneEtat>;
 
-export const FluxExternesOut = z.object({ modules: z.array(FluxExterneEtat) });
+export const FluxExternesOut = z.object({
+  modules: z.array(FluxExterneEtat),
+  /** Mandataire sortant de l'établissement (ADR 0101) : seulement s'il est actif ; ni adresse ni compte. */
+  mandataire: z.object({ actif: z.boolean() }),
+});
 export type FluxExternesOut = z.infer<typeof FluxExternesOut>;
 
 /** Ouvrir ou fermer un module par la route commune : la confirmation explicite est obligatoire dans les deux sens.

@@ -5,7 +5,7 @@ Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.p
 `python -I`, avec un environnement minimal et un délai borné, jamais par l'API (qui reste sans accès réseau sortant).
 Bibliothèque standard seule.
 
-Entrée : un objet JSON sur l'entrée standard {source, parametres}. Sortie : un objet JSON {ok, elements, bilan, erreur} sur
+Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?}. Sortie : un objet JSON {ok, elements, bilan, erreur} sur
 la sortie standard ; les éléments sont normalisés en champs structurés et bornés, l'erreur tient sur une ligne et ne
 reprend jamais un contenu de réponse.
 
@@ -13,6 +13,11 @@ Règles :
 - liste fermée des hôtes et des chemins, écrite ici (SOURCES), recopiée de packages/shared/src/veille-vulnerabilites.ts et
   comparée par apps/api/test/veille-architecture.test.ts ; aucune adresse n'est reçue de l'application ;
 - GET seulement, HTTPS, certificat toujours vérifié (magasin du système), TLS 1.2 au minimum ;
+- mandataire sortant de l'établissement (ADR 0101, lot P1), seulement s'il est reçu : tunnel CONNECT vers l'hôte de la liste
+  fermée à travers le mandataire, puis TLS jusqu'à la source, certificat et nom toujours vérifiés ; l'identifiant et le mot
+  de passe ne vont qu'au mandataire (en-tête Proxy-Authorization de la demande CONNECT, authentification simple seulement :
+  ni NTLM ni Kerberos), jamais à la source ; l'autorité de l'établissement, si elle est fournie, est ajoutée au magasin du
+  système pour ces connexions (mandataire qui inspecte le trafic). Aucune option pour ne pas vérifier ;
 - aucune redirection suivie (http.client ne les suit pas ; un code 3xx est une erreur) ;
 - réponse bornée en taille, nombre d'éléments borné ; NVD est lu par fenêtre de dates de modification, EPSS seulement pour
   des failles déjà publiées par les sources (liste reçue de l'application), jamais par produit ;
@@ -20,10 +25,12 @@ Règles :
   libre débarrassé de tout balisage et des caractères de contrôle, borné ; adresse gardée seulement en https sur l'hôte de
   la source ; RSS refusé s'il déclare un type de document ou une entité, profondeur et nombre d'éléments bornés.
 """
+import base64
 import datetime as dt
 from email.utils import parsedate_to_datetime
 import html
 import http.client
+import ipaddress
 import json
 import re
 import socket
@@ -53,6 +60,12 @@ INSTANT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$")
 GRAVITES = ("NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL")
 
 ENTREE_MAX = 256 * 1024
+# Mandataire : champs reçus, réponse à la demande de tunnel bornée.
+MANDATAIRE_CHAMPS = ("hote", "port", "identifiant", "motDePasse", "autorite")
+TUNNEL_REPONSE_MAX = 16 * 1024
+NOM_HOTE = re.compile(r"^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$")
+CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
+SEULE_BASIC = "Seule l'authentification simple (Basic) est prise en charge ; NTLM et Kerberos ne le sont pas."
 ELEMENTS_MAX = BORNES["lot"] * BORNES["lots"]
 REPONSE_MAX = {"cisa-kev": 16 * 1024 * 1024, "nvd": 32 * 1024 * 1024, "epss": 1024 * 1024, "cert-fr": 2 * 1024 * 1024, "cert-sante": 2 * 1024 * 1024}
 ERREUR_MAX = 300
@@ -159,6 +172,126 @@ def contexte():
     return ctx
 
 
+def lire_mandataire(m):
+    """Paramètres du mandataire reçus sur l'entrée standard : None s'il n'y en a pas, sinon forme stricte (hôte nom ou adresse
+    IP, port, identifiant sans deux-points, mot de passe, autorité PEM facultative). Le contenu n'est jamais repris dans une
+    erreur."""
+    if m is None:
+        return None
+    illisible = Refus("Paramètres du mandataire illisibles : rien n'a été lu.")
+    if not isinstance(m, dict) or set(m) != set(MANDATAIRE_CHAMPS):
+        raise illisible
+    hote, port, identifiant, mot_de_passe, autorite = (m[k] for k in MANDATAIRE_CHAMPS)
+    if not all(isinstance(x, str) for x in (hote, identifiant, mot_de_passe, autorite)):
+        raise illisible
+    if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+        raise illisible
+    try:
+        ipaddress.ip_address(hote)
+    except ValueError:
+        if re.fullmatch(r"[0-9.]+", hote) or not NOM_HOTE.fullmatch(hote):
+            raise illisible from None
+    if (len(identifiant) > 255 or ":" in identifiant or CONTROLE.search(identifiant) or len(mot_de_passe) > 500
+            or CONTROLE.search(mot_de_passe) or len(autorite) > 20000
+            or (autorite.strip() and "-----BEGIN CERTIFICATE-----" not in autorite)):
+        raise illisible
+    return {"hote": hote, "port": port, "identifiant": identifiant, "motDePasse": mot_de_passe, "autorite": autorite.strip()}
+
+
+def nom_mandataire(m):
+    return ("[%s]:%d" if ":" in m["hote"] else "%s:%d") % (m["hote"], m["port"])
+
+
+def lire_reponse_tunnel(sock):
+    """Ligne d'état et en-têtes de la réponse du mandataire à CONNECT, lus octet par octet jusqu'à la ligne vide : rien de
+    la suite (le chiffré de la source) n'est consommé. Renvoie (code, schémas d'authentification proposés)."""
+    brut = b""
+    while not brut.endswith(b"\r\n\r\n"):
+        octet = sock.recv(1)
+        if not octet:
+            raise Refus("Le mandataire a fermé la connexion pendant la demande de tunnel.")
+        brut += octet
+        if len(brut) > TUNNEL_REPONSE_MAX:
+            raise Refus("Réponse du mandataire à la demande de tunnel illisible (trop longue).")
+    lignes = brut.decode("latin-1").split("\r\n")
+    m = re.fullmatch(r"HTTP/1\.[01] (\d{3})(?: .*)?", lignes[0])
+    if not m:
+        raise Refus("Réponse du mandataire à la demande de tunnel illisible.")
+    schemas = []
+    for ligne in lignes[1:]:
+        nom, _, valeur = ligne.partition(":")
+        if nom.strip().lower() == "proxy-authenticate":
+            schema = valeur.strip().split(" ", 1)[0]
+            if re.fullmatch(r"[A-Za-z0-9-]{1,20}", schema) and schema not in schemas and len(schemas) < 4:
+                schemas.append(schema)
+    return int(m.group(1)), schemas
+
+
+def ouvrir_tunnel(m, hote, port, delai):
+    """Tunnel CONNECT vers hote:port à travers le mandataire ; l'authentification simple n'est envoyée qu'au mandataire.
+    Renvoie la connexion ouverte, prête pour TLS vers la source. Chaque échec est expliqué sur une ligne, sans secret."""
+    try:
+        sock = socket.create_connection((m["hote"], m["port"]), timeout=delai)
+    except socket.gaierror:
+        raise Refus("Mandataire injoignable : nom %s introuvable depuis le serveur (DNS)." % m["hote"]) from None
+    except ConnectionRefusedError:
+        raise Refus("Mandataire injoignable : connexion refusée sur %s (le mandataire n'écoute pas, ou un pare-feu la refuse)." % nom_mandataire(m)) from None
+    except (TimeoutError, socket.timeout):
+        raise Refus("Mandataire injoignable : délai dépassé vers %s (pare-feu ou mandataire indisponible)." % nom_mandataire(m)) from None
+    except OSError as e:
+        raise Refus("Mandataire injoignable : %s (%s)." % (nom_mandataire(m), e.strerror or type(e).__name__)) from None
+    try:
+        cible = ("[%s]:%d" if ":" in hote else "%s:%d") % (hote, port)
+        lignes = ["CONNECT %s HTTP/1.1" % cible, "Host: %s" % cible, "User-Agent: suivi-audits-veille"]
+        if m["identifiant"]:
+            jeton = base64.b64encode(("%s:%s" % (m["identifiant"], m["motDePasse"])).encode("utf-8")).decode("ascii")
+            lignes.append("Proxy-Authorization: Basic " + jeton)
+        sock.sendall(("\r\n".join(lignes) + "\r\n\r\n").encode("ascii"))
+        code, schemas = lire_reponse_tunnel(sock)
+    except Refus:
+        sock.close()
+        raise
+    except (TimeoutError, socket.timeout):
+        sock.close()
+        raise Refus("Le mandataire ne répond pas à la demande de tunnel (délai dépassé).") from None
+    except OSError as e:
+        sock.close()
+        raise Refus("Connexion au mandataire interrompue pendant la demande de tunnel (%s)." % (e.strerror or type(e).__name__)) from None
+    if 200 <= code < 300:
+        return sock
+    sock.close()
+    if code == 407:
+        if not m["identifiant"]:
+            raise Refus("Le mandataire exige une authentification (code 407) : renseignez l'identifiant et le mot de passe. " + SEULE_BASIC)
+        if schemas and not any(x.lower() == "basic" for x in schemas):
+            raise Refus("Authentification refusée par le mandataire (code 407) : il demande %s. %s" % (", ".join(schemas), SEULE_BASIC))
+        raise Refus("Authentification refusée par le mandataire (code 407) : vérifiez l'identifiant et le mot de passe. " + SEULE_BASIC)
+    raise Refus("Tunnel refusé par le mandataire vers %s (code %d) : la destination n'est peut-être pas autorisée par le mandataire." % (hote, code))
+
+
+class ConnexionMandataire(http.client.HTTPSConnection):
+    """Connexion HTTPS à la source à travers un tunnel ouvert sur le mandataire : TLS de bout en bout, certificat et nom de
+    la source vérifiés par le même contexte qu'en accès direct."""
+
+    def __init__(self, hote, port, contexte_tls, mandataire):
+        super().__init__(hote, port, timeout=DELAI_REQUETE, context=contexte_tls)
+        self.contexte_tls = contexte_tls
+        self.mandataire = mandataire
+
+    def connect(self):
+        brut = ouvrir_tunnel(self.mandataire, self.host, self.port, self.timeout)
+        try:
+            self.sock = self.contexte_tls.wrap_socket(brut, server_hostname=self.host)
+        except ssl.SSLCertVerificationError as e:
+            brut.close()
+            raise Refus("Certificat de la source refusé à travers le mandataire (%s). Si le mandataire inspecte le trafic "
+                        "chiffré, fournissez l'autorité de certification de l'établissement dans son réglage."
+                        % (e.verify_message or "vérification impossible")) from None
+        except BaseException:
+            brut.close()
+            raise
+
+
 def chemin_admis(source, chemin):
     for motif in SOURCES.get(source, {}).get("chemins", ()):
         if "{reference}" in motif:
@@ -193,10 +326,17 @@ def explication(erreur):
 class Client:
     """Client HTTPS d'une source, limité à son hôte et à ses chemins. GET seulement ; aucune redirection suivie."""
 
-    def __init__(self, source, debut=None):
+    def __init__(self, source, debut=None, mandataire=None):
         self.source = source
         self.hote, self.port = destination(source)
         self.contexte = contexte()
+        self.mandataire = mandataire
+        if mandataire and mandataire["autorite"]:
+            # Autorité de l'établissement ajoutée au magasin du système, pour les seules connexions par le mandataire.
+            try:
+                self.contexte.load_verify_locations(cadata=mandataire["autorite"])
+            except (ssl.SSLError, ValueError):
+                raise Refus("Autorité de certification de l'établissement illisible : rien n'a été lu.") from None
         self.debut = time.monotonic() if debut is None else debut
 
     def lire(self, chemin, requete=""):
@@ -207,7 +347,10 @@ class Client:
         if time.monotonic() - self.debut > DUREE_MAX:
             raise Refus("Durée maximale de la collecte atteinte : collecte interrompue.")
         maximum = REPONSE_MAX[self.source]
-        connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=DELAI_REQUETE, context=self.contexte)
+        if self.mandataire:
+            connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire)
+        else:
+            connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=DELAI_REQUETE, context=self.contexte)
         try:
             connexion.request("GET", chemin + ("?" + requete if requete else ""), headers={
                 "Accept": "application/json, application/rss+xml, application/xml;q=0.9",
@@ -536,8 +679,9 @@ def executer(p):
             raise Refus("Source inconnue : rien n'a été lu.")
         if not isinstance(parametres, dict):
             raise Refus("Demande illisible.")
+        mandataire = lire_mandataire(p.get("mandataire"))
         bilan = Bilan()
-        elements = COLLECTES[source](Client(source), parametres, bilan)
+        elements = COLLECTES[source](Client(source, mandataire=mandataire), parametres, bilan)
         if len(elements) > ELEMENTS_MAX:
             elements, bilan.tronque = elements[:ELEMENTS_MAX], True
         return {"ok": True, "elements": elements, "erreur": None,

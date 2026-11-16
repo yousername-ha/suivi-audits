@@ -108,6 +108,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     steps: [
       'Ouvrez Risques > Vulnérabilités > Veille. La plateforme lit cinq sources publiques, en liste fermée : le catalogue des failles exploitées de la CISA (KEV), la base NVD du NIST, les scores EPSS du FIRST, les alertes et avis du CERT-FR et ceux du CERT Santé. Aucune autre source ne peut être ajoutée.',
       'Activer la veille : un administrateur clique « Activer la veille » ; une fenêtre détaille les destinations (TCP 443 vers les cinq hôtes) et ce qui sort (l’adresse IP du serveur et des demandes de lecture, aucune donnée de la plateforme), à valider. Désactiver le module Vulnérabilités referme ce flux.',
+      'Si le mandataire sortant de l’établissement est réglé et actif (Configuration système > Mandataire sortant), les demandes passent par lui, dans un tunnel chiffré jusqu’à chaque source ; les destinations sont inchangées et l’écran le dit. Le pare-feu doit alors autoriser la sortie du serveur vers le mandataire, sur le port réglé.',
       'Chaque source est lue au plus une fois par jour par l’exécutant d’exploitation du serveur, jamais par l’application elle-même. NVD est lu par fenêtre de dates, EPSS seulement pour des failles déjà publiées par les sources : rien ne révèle les produits de l’organisation. Une collecte manquée (serveur arrêté) n’est pas rejouée ; elle reprend le lendemain.',
       'Le tableau des sources donne la dernière collecte réussie et l’erreur éventuelle ; une source sans collecte réussie depuis 36 heures est signalée en retard. Avec le droit d’administrer le module, « Collecter maintenant » relance la lecture (quatre demandes par heure au plus, une source demandée il y a moins de quinze minutes n’est pas redemandée).',
       'La recherche porte sur l’identifiant CVE, l’éditeur, le produit, et le titre des avis. Les textes des sources sont repris tels quels (en anglais pour la CISA et NVD) et affichés comme texte simple : ce sont des données, pas des consignes. Le lien d’un avis s’ouvre dans un nouvel onglet, sans transmettre l’adresse de la plateforme.',
@@ -306,6 +307,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Dès l’installation, la dernière étape de l’assistant d’installation (à la première connexion du compte administrateur créé, une fois sa double authentification activée) pose la même question pour chaque module : « Activer » ou « Plus tard ». Activer affiche la même validation, avec sa case obligatoire ; Plus tard laisse le flux fermé, et « Passer l’étape : tout plus tard » les laisse tous fermés. L’antivirus et les mises à jour s’y ouvrent directement ; l’assistant aussi, avec l’adresse du service de modèle et le nom du modèle (sa clé se règle ensuite dans sa page) ; le courriel et le certificat ACME, qui ont besoin de leurs réglages, s’activent depuis leur page, dont le lien est donné à la fin de l’étape. L’étape n’est proposée qu’une fois.',
       'La carte Configuration système > Flux vers l’extérieur est un résumé : sens, destinations, état voulu, état appliqué par l’exécutant d’exploitation, dernière erreur et date de la décision. On y ferme un flux ; on ne l’y ouvre pas.',
       'La plateforme ouvre ou ferme ses propres flux. Le pare-feu du serveur et du réseau reste du ressort de l’équipe infrastructure : le résumé indique, pour chaque flux ouvert, ce qu’il faut faire autoriser.',
+    ],
+  },
+  {
+    id: 'mandataire-sortant',
+    title: 'Mandataire sortant de l’établissement',
+    permission: 'administration:administrer',
+    link: '/systeme/mandataire',
+    steps: [
+      'Si le serveur ne sort vers Internet que par le mandataire (proxy) de l’établissement, ouvrez Configuration système > Mandataire sortant. Inactif par défaut : les flux sortent directement.',
+      'Adresse sous la forme http://hôte:port : nom ou adresse IP (IPv6 entre crochets, adresses privées admises), port obligatoire, sans identifiant, chemin ni paramètre. Identifiant facultatif ; authentification simple seulement (identifiant et mot de passe) : NTLM et Kerberos ne sont pas pris en charge.',
+      'Le mot de passe s’enregistre à part : scellé sur le serveur, jamais affiché ni relu, seulement « défini » ou « non défini ». Il n’est envoyé qu’au mandataire, jamais aux destinations. Changer l’adresse ou l’identifiant efface le mot de passe : il faut le ressaisir. Chaque changement est inscrit au journal d’audit, sans secret.',
+      'Le chiffrement reste vérifié de bout en bout : un tunnel est ouvert à travers le mandataire, puis le certificat de chaque destination est vérifié. Si le mandataire inspecte le trafic chiffré, il présente son propre certificat et lit ce qui passe : collez alors l’autorité de certification de l’établissement (PEM), obtenue d’une source sûre. Elle est ajoutée aux autorités reconnues pour les seuls flux qui passent par le mandataire.',
+      'Flux concernés : la veille des vulnérabilités utilise le mandataire ; Tenable Security Center (interne) et le courriel (SMTP) restent en accès direct, par construction ; l’assistant, les mises à jour, l’antivirus et le certificat ACME ne passent pas encore par le mandataire. Le démon Docker de l’hôte (téléchargement des images) se règle hors de la plateforme (guide d’installation).',
+      'Pare-feu : pour un flux qui passe par le mandataire, autorisez la sortie du serveur vers le mandataire, sur le port réglé, au lieu de la sortie vers les destinations.',
     ],
   },
   {

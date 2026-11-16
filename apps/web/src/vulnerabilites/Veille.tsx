@@ -9,6 +9,7 @@ import { Alert, Anchor, Badge, Button, Group, Pagination, Stack, Table, Text, Te
 import { notifications } from '@mantine/notifications';
 import {
   fluxExterne,
+  PRECISION_MANDATAIRE,
   type AvisVeilleDto,
   type EtatSourceVeilleDto,
   type EtatVeilleDto,
@@ -136,6 +137,12 @@ export function ActivationVeille({
       )}
       <Text size="sm">Destinations, toutes en lecture :</Text>
       <Destinations f={f} />
+      {etat.mandataire.actif && (
+        <Text size="sm">
+          <strong>Par le mandataire de l’établissement :</strong> {PRECISION_MANDATAIRE} Pare-feu : sortie du serveur
+          vers le mandataire, sur le port réglé (Configuration système, Mandataire sortant).
+        </Text>
+      )}
       <Text size="sm">
         <strong>Ce qui sort du serveur :</strong> {f.donnees}
       </Text>
@@ -454,7 +461,7 @@ export function VeillePage() {
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
   const basculer = async (ouvert: boolean) => {
-    if (ouvert && !(await flux.valider(FLUX))) return;
+    if (ouvert && !(await flux.valider(FLUX, undefined, etat.data?.mandataire.actif))) return;
     setEnvoi(true);
     setErreur(null);
     try {

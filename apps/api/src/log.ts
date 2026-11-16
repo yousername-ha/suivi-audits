@@ -31,6 +31,16 @@ export const REDACT = [
   '*.sessionToken',
   '*.secrets',
   'req.headers["x-apikey"]',
+  // Mandataire sortant de l'établissement (ADR 0101) : mot de passe (champ de l'API et paramètre remis à l'exécutant) et
+  // en-tête d'authentification auprès d'un mandataire.
+  'motDePasse',
+  '*.motDePasse',
+  'mandataire.motDePasse',
+  '*.mandataire.motDePasse',
+  'req.headers["proxy-authorization"]',
+  '*.headers["proxy-authorization"]',
+  '*["Proxy-Authorization"]',
+  '*["proxy-authorization"]',
 ];
 
 /** Niveaux de la journalisation technique, du plus détaillé au plus sobre. Les erreurs (error, fatal) sont toujours collectées. */

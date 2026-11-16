@@ -43,6 +43,13 @@ rendre à d'autres personnes, créer un rôle personnalisé (Administration > R�
 d'un connecteur Tenable peut désormais porter un port (`https://serveur:port`) ; s'il change, faire évoluer la règle de pare-feu
 de sortie ([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
 
+**Mandataire sortant de l'établissement** ([ADR 0101](docs/adr/0101-mandataire-sortant.md), lot P1) : **aucune migration**
+(réglage rangé dans la table `settings` existante), inactif par défaut : sans réglage, rien ne change. Si le serveur ne sort
+vers Internet que par le mandataire de l'établissement, le régler dans Configuration système > Mandataire sortant ; la veille
+des vulnérabilités passe alors par lui, et l'équipe infrastructure autorise la sortie du serveur vers le mandataire, sur le
+port réglé, au lieu de la sortie TCP 443 vers les cinq sources ([guide d'installation, étape 11.12](docs/INSTALLATION.md)).
+(session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -138,6 +145,30 @@ de sortie ([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session
   par le RSSI) : `vulnerabilites` sort des modules métier ; administrateur et RSSI seulement, un rôle personnalisé peut
   l'accorder ; il n'ouvre ni l'accueil, ni les écrans muraux, ni les routes communes « métier ». (session « Module surveillance
   vulnérabilités SMSI »)
+- **Mandataire sortant (proxy) de l'établissement, lot P1 : réglage et veille des vulnérabilités**
+  ([ADR 0101](docs/adr/0101-mandataire-sortant.md), décisions M1 à M4). Réglage unique de la configuration système, réservé à
+  `administration:administrer`, inactif par défaut : adresse `http://hôte:port` (nom ou adresse IP, IPv6 entre crochets,
+  adresses privées admises, port obligatoire de 1 à 65535 ; identifiant dans l'adresse, chemin, paramètre, fragment et
+  `https://` refusés), identifiant facultatif, mot de passe facultatif, autorité de certification de l'établissement facultative
+  (PEM). Schéma partagé (`packages/shared/src/mandataire.ts`). API `/api/admin/mandataire` (lecture, enregistrement avec
+  `If-Match`) et `/api/admin/mandataire/mot-de-passe` (définir, retirer). Rangé dans la table `settings` (`systeme:mandataire`) ;
+  **mot de passe en écriture seule**, scellé par le coffre (`secret:mandataire`), jamais renvoyé ni journalisé, seulement
+  « défini » ou « non défini » ; **changer l'adresse ou l'identifiant l'efface** (`systeme.mandataire.mot_de_passe_efface`).
+  Journal `systeme.mandataire.*` sans secret ni certificat entier ; `motDePasse` et `Proxy-Authorization` masqués dans les
+  journaux techniques. Les paramètres ne sont remis à l'exécutant qu'avec la réclamation d'une collecte de la veille, et
+  seulement si le mandataire est actif (réglage illisible : collecte close, jamais faite en direct) ; l'exécutant les passe au
+  script par l'entrée standard seule. `scripts/veille-vulnerabilites.py` ouvre alors un **tunnel `CONNECT`** vers l'hôte de la
+  liste fermée, envoie `Proxy-Authorization: Basic` **au mandataire seulement**, puis négocie TLS jusqu'à la source, certificat
+  et nom toujours vérifiés ; l'autorité fournie est ajoutée au magasin du système pour ces seules connexions (mandataire qui
+  inspecte le trafic). Erreurs expliquées sur une ligne : mandataire injoignable, tunnel refusé, authentification refusée
+  (407, authentification simple seulement : ni NTLM ni Kerberos), certificat refusé (avec l'indication de fournir l'autorité).
+  Sans mandataire, comportement inchangé ; liste fermée, GET seul, aucune redirection et bornes inchangés. **Le connecteur
+  interne (Tenable) n'emprunte jamais le mandataire**, par construction : aucun paramètre ne lui est remis, son script n'en lit
+  aucun. Mandataire actif : la validation du flux de la veille, l'écran « Veille » et le résumé des flux disent que les demandes
+  passent par le mandataire (destinations inchangées) et le pare-feu à autoriser devient la sortie vers le mandataire, sur le
+  port réglé. Carte Configuration système > « Mandataire sortant » : flux qui l'utilisent (veille), en accès direct par
+  construction (Tenable, courriel), pas encore pris en charge (assistant, mises à jour, antivirus, ACME) ; avertissement sur
+  l'inspection du trafic ; article d'aide. (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

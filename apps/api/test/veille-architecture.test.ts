@@ -83,12 +83,14 @@ describe('architecture : veille des vulnérabilités', () => {
   });
 
   it('le script n’utilise que la bibliothèque standard, ne lit qu’en GET et ne suit aucune redirection', () => {
-    const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
+    const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z0-9_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
     expect([...new Set(imports)].sort()).toEqual([
+      'base64',
       'datetime',
       'email',
       'html',
       'http',
+      'ipaddress',
       'json',
       're',
       'socket',
@@ -100,5 +102,22 @@ describe('architecture : veille des vulnérabilités', () => {
     ]);
     expect(SCRIPT).not.toMatch(/urllib|HTTPRedirectHandler|subprocess|os\.environ|getenv/);
     expect([...SCRIPT.matchAll(/\.request\("([A-Z]+)"/g)].map((m) => m[1])).toEqual(['GET']);
+  });
+
+  it('mandataire de l’établissement (ADR 0101) : tunnel CONNECT seulement, aucune option qui coupe la vérification', () => {
+    // CONNECT n'est écrit qu'une fois, dans la demande au mandataire ; l'authentification simple aussi.
+    expect(SCRIPT.match(/"CONNECT /g)).toHaveLength(1);
+    expect(SCRIPT.match(/Proxy-Authorization: Basic/g)).toHaveLength(1);
+    expect(SCRIPT).not.toMatch(/CERT_NONE|check_hostname = False|_create_unverified_context|set_tunnel/);
+    expect(constante(SCRIPT, 'MANDATAIRE_CHAMPS')).toEqual(constante(EXECUTANT, 'MANDATAIRE_CHAMPS'));
+  });
+
+  it('le connecteur interne n’emprunte jamais le mandataire : ni lecture dans son script, ni transmission par l’exécutant', () => {
+    const INTEGRATION = lire('scripts/integration-http.py');
+    expect(INTEGRATION).not.toMatch(/mandataire|proxy|set_tunnel|"CONNECT/i);
+    // L'exécution d'un connecteur reçoit une demande composée champ par champ, sans paramètre de mandataire.
+    const corps = /def integration\(self, voulus\):([\s\S]*?)\n {4}def /.exec(EXECUTANT)![1]!;
+    expect(corps).toContain('json.dumps({"type": type_, "operation": operation, "configuration"');
+    expect(corps).not.toMatch(/mandataire/i);
   });
 });

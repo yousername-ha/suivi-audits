@@ -64,6 +64,23 @@
      réglé par la plateforme.
 8. **Aucune dépendance nouvelle.**
 
+## Avancement
+
+- **Lot P1** (16/11/2026) : réglage « Mandataire sortant » de la configuration système et passage de la veille des
+  vulnérabilités par le mandataire. Précisions de réalisation, à confirmer par le RSSI :
+  - le réglage est rangé avec les réglages système, sans migration ; il se lit et s'écrit avec `administration:administrer`,
+    les autres écrans ne sachant que s'il est actif ;
+  - le mot de passe est effacé quand l'adresse **ou l'identifiant** change, comme pour le courriel ;
+  - l'adresse exige un port explicite ; `https://` est refusé (point ouvert 4) ;
+  - un réglage enregistré illisible fait échouer la collecte : elle n'est jamais faite en accès direct à la place ;
+  - le nom de la destination est résolu par le mandataire ; le serveur ne résout que le nom du mandataire ;
+  - l'autorité de l'établissement ne sert qu'aux connexions qui passent par le mandataire ;
+  - un refus d'authentification (code 407) nomme le type demandé par le mandataire et rappelle que seule l'authentification
+    simple est prise en charge.
+  Non vérifié : le fonctionnement face au mandataire réel de l'établissement (tests sur un faux mandataire local).
+- **Lots P2 et P3** (assistant, mises à jour, antivirus, ACME) : non réalisés ; l'écran du réglage les dit « pas encore pris
+  en charge ».
+
 ## Conséquences
 
 - La plateforme devient installable derrière le mandataire d'un établissement, flux par flux.

@@ -72,9 +72,10 @@ const faille = (f: Partial<FailleVeilleDto> = {}): FailleVeilleDto => ({
   },
   ...f,
 });
-const etat = (ouvert: boolean, disponible = true): EtatVeilleDto => ({
+const etat = (ouvert: boolean, disponible = true, mandataire = false): EtatVeilleDto => ({
   flux: { ouvert, applique: ouvert ? 'ouvert' : null },
   executant: { disponible },
+  mandataire: { actif: mandataire },
   sources: [source()],
 });
 
@@ -245,5 +246,22 @@ describe('rendu', () => {
     );
     expect(ouvert).toContain('Désactiver la veille');
     expect(ouvert).toContain('Exécutant d’exploitation non vu');
+    expect(ouvert).not.toContain('Par le mandataire');
+  });
+  it('mandataire de l’établissement actif : l’écran dit que les demandes passent par lui, destinations inchangées', () => {
+    const html = rendu(
+      createElement(ActivationVeille, {
+        etat: etat(true, true, true),
+        peutActiver: true,
+        envoi: false,
+        onActiver: () => {},
+        onDesactiver: () => {},
+      }),
+    );
+    expect(html).toContain('Par le mandataire de l’établissement');
+    expect(html).toContain('la destination finale est inchangée');
+    expect(html).toContain('sortie du serveur vers le mandataire, sur le port réglé');
+    expect(html).toContain('www.cisa.gov');
+    expect(html).toContain('cyberveille.esante.gouv.fr');
   });
 });

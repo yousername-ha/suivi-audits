@@ -47,6 +47,7 @@ import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { Integrations } from './integrations/index.js';
+import { Mandataire } from './mandataire.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
@@ -91,6 +92,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const integrations = new Integrations(db, vault, flux);
   const tenable = new SynchronisationTenable(db, flux, integrations);
   integrations.enLots.synchroniser = tenable;
+  /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. */
+  const mandataire = new Mandataire(db, vault);
   return {
     cfg,
     log,
@@ -105,12 +108,13 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {
       produits: new ProduitsSurveilles(db, grc),
-      veille: new VeilleVulnerabilites(db, flux),
+      veille: new VeilleVulnerabilites(db, flux, mandataire),
       tenable,
       failles: new FaillesDetectees(db, grc),
     },
     modules,
     flux,
+    mandataire,
     updates: new Updates(cfg, db, settings, alertes, flux),
     remiseAVide: new RemiseAVide(db),
     backups: new Backups(cfg, db, alertes),

@@ -1,12 +1,18 @@
 """Script isolé de la veille des vulnérabilités (scripts/veille-vulnerabilites.py, ADR 0100 points 3 à 5, lots V2 et V3)
 contre un faux service HTTPS local : liste fermée des hôtes et des chemins, GET seulement, aucune redirection suivie,
 certificat toujours vérifié, réponse bornée, JSON mal formé refusé, RSS piégé (déclaration de type, entités, balisage et
-script dans un titre, texte démesuré, identifiant mal formé) refusé ou nettoyé. Jeux d'essai : petits extraits au format
+script dans un titre, texte démesuré, identifiant mal formé) refusé ou nettoyé. Mandataire sortant de l'établissement (ADR
+0101, lot P1) contre un faux mandataire local (tunnel CONNECT) : passage par le tunnel, authentification simple exigée puis
+acceptée, refus 407 expliqué, en-tête d'authentification absent de la requête reçue par la source, autorité « de
+l'établissement » acceptée seulement si elle est fournie, nom vérifié, tunnel refusé, mandataire injoignable. Jeux d'essai : petits extraits au format
 réel des sources (données publiques, scripts/tests/fixtures/veille) ou fictifs ; aucune source réelle n'est jointe."""
+import base64
 import http.server
 import importlib.util
 import json
 from pathlib import Path
+import socket
+import socketserver
 import ssl
 import subprocess
 import sys
@@ -47,12 +53,14 @@ class Faux(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.0"
     reponses = {}
     recues = []
+    entetes = []
 
     def log_message(self, *args):
         pass
 
     def traiter(self):
         Faux.recues.append((self.command, self.path))
+        Faux.entetes.append({k.lower(): val for k, val in self.headers.items()})
         chemin = self.path.split("?", 1)[0]
         code, corps, en_tetes = Faux.reponses.get(self.path) or Faux.reponses.get(chemin) or (404, b"", ())
         self.send_response(code)
@@ -367,6 +375,269 @@ class Veille(unittest.TestCase):
         self.echec(self.collecter("cert-fr", {"connus": ["../etc"]}), "avis connus illisible")
 
 
+def autorite_et_feuille(dossier):
+    """Autorité fictive « de l'établissement » et certificat de « localhost » signé par elle (extensions d'une vraie chaîne,
+    pour la vérification stricte de Python)."""
+    def openssl(*args):
+        subprocess.run(["openssl", *args], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    openssl("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(dossier / "ca.key"), "-out", str(dossier / "ca.crt"),
+            "-days", "2", "-subj", "/CN=Autorite fictive de l'etablissement",
+            "-addext", "basicConstraints=critical,CA:TRUE", "-addext", "keyUsage=critical,keyCertSign,cRLSign")
+    (dossier / "ext.cnf").write_text("basicConstraints=CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\n"
+                                     "extendedKeyUsage=serverAuth\nsubjectAltName=DNS:localhost\n"
+                                     "subjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid\n")
+    openssl("req", "-newkey", "rsa:2048", "-nodes", "-keyout", str(dossier / "feuille.key"), "-out", str(dossier / "feuille.csr"),
+            "-subj", "/CN=localhost")
+    openssl("x509", "-req", "-in", str(dossier / "feuille.csr"), "-CA", str(dossier / "ca.crt"), "-CAkey", str(dossier / "ca.key"),
+            "-CAcreateserial", "-out", str(dossier / "feuille.crt"), "-days", "2", "-extfile", str(dossier / "ext.cnf"))
+    return (dossier / "ca.crt").read_text(), str(dossier / "feuille.crt"), str(dossier / "feuille.key")
+
+
+class FauxMandataire(socketserver.ThreadingTCPServer):
+    """Faux mandataire HTTP : n'accepte que CONNECT, exige au besoin l'authentification simple (identifiant et mot de passe
+    réglés par le test), puis relaie les octets dans les deux sens. Chaque demande reçue est gardée (lignes d'en-tête)."""
+
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def __init__(self):
+        super().__init__(("127.0.0.1", 0), TraitementMandataire)
+        self.demandes = []
+        self.attendu = None
+        self.schemas = ("Basic realm=\"fictif\"",)
+        self.forcee = None
+
+
+class TraitementMandataire(socketserver.BaseRequestHandler):
+    def handle(self):
+        srv, client = self.server, self.request
+        brut = b""
+        while b"\r\n\r\n" not in brut:
+            d = client.recv(4096)
+            if not d:
+                return
+            brut += d
+        tete, _, reste = brut.partition(b"\r\n\r\n")
+        lignes = tete.decode("latin-1").split("\r\n")
+        entetes = {k.strip().lower(): val.strip() for k, _, val in (x.partition(":") for x in lignes[1:])}
+        srv.demandes.append({"ligne": lignes[0], "entetes": entetes})
+        methode, cible, _ = lignes[0].split(" ", 2)
+        if srv.forcee:
+            client.sendall(("HTTP/1.1 %s\r\nContent-Length: 0\r\n\r\n" % srv.forcee).encode())
+            return
+        if methode != "CONNECT":
+            client.sendall(b"HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n")
+            return
+        if srv.attendu is not None:
+            jeton = "Basic " + base64.b64encode(("%s:%s" % srv.attendu).encode("utf-8")).decode("ascii")
+            if entetes.get("proxy-authorization") != jeton:
+                demande = "".join("Proxy-Authenticate: %s\r\n" % x for x in srv.schemas)
+                client.sendall(("HTTP/1.1 407 Proxy Authentication Required\r\n%sContent-Length: 0\r\n\r\n" % demande).encode())
+                return
+        hote, port = cible.rsplit(":", 1)
+        try:
+            dest = socket.create_connection(("127.0.0.1" if hote == "localhost" else hote.strip("[]"), int(port)), timeout=10)
+        except OSError:
+            client.sendall(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+            return
+        client.sendall(b"HTTP/1.1 200 Connection established\r\n\r\n")
+        if reste:
+            dest.sendall(reste)
+
+        def copier(de, vers):
+            try:
+                while True:
+                    d = de.recv(65536)
+                    if not d:
+                        break
+                    vers.sendall(d)
+            except OSError:
+                pass
+            finally:
+                try:
+                    vers.shutdown(socket.SHUT_WR)
+                except OSError:
+                    pass
+        t = threading.Thread(target=copier, args=(dest, client), daemon=True)
+        t.start()
+        copier(client, dest)
+        t.join(10)
+        dest.close()
+
+
+class Mandataire(unittest.TestCase):
+    """Collecte par le mandataire de l'établissement : la source est un faux service HTTPS dont le certificat est signé par
+    une autorité fictive « de l'établissement », inconnue du magasin du système. Le contexte n'est pas remplacé ici : seule
+    l'autorité fournie dans les paramètres du mandataire la fait reconnaître."""
+
+    IDENTIFIANT = "compte-veille"
+    MOT_DE_PASSE = "Mdp-fictif:42-é"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.dossier = tempfile.TemporaryDirectory()
+        cls.autorite, feuille, cle = autorite_et_feuille(Path(cls.dossier.name))
+        cls.autre_autorite = Path(certificat(Path(cls.dossier.name), "autre")).read_text()
+        cls.serveur = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Faux)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(feuille, cle)
+        cls.serveur.socket = ctx.wrap_socket(cls.serveur.socket, server_side=True)
+        cls.port = cls.serveur.server_address[1]
+        threading.Thread(target=cls.serveur.serve_forever, daemon=True).start()
+        cls.mandataire = FauxMandataire()
+        threading.Thread(target=cls.mandataire.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        for srv in (cls.serveur, cls.mandataire):
+            srv.shutdown()
+            srv.server_close()
+        cls.dossier.cleanup()
+
+    def setUp(self):
+        Faux.reponses, Faux.recues, Faux.entetes = {}, [], []
+        self.mandataire.demandes, self.mandataire.attendu, self.mandataire.forcee = [], None, None
+        self.mandataire.schemas = ("Basic realm=\"fictif\"",)
+        p = patch.object(v, "destination", lambda source: ("localhost", self.port))
+        p.start()
+        self.addCleanup(p.stop)
+        Faux.reponses[v.SOURCES["cisa-kev"]["chemins"][0]] = (200, jeu("cisa-kev.json"), ())
+
+    def parametres(self, **extra):
+        m = {"hote": "127.0.0.1", "port": self.mandataire.server_address[1], "identifiant": "", "motDePasse": "",
+             "autorite": self.autorite}
+        m.update(extra)
+        return m
+
+    def collecter(self, mandataire):
+        return v.executer({"source": "cisa-kev", "parametres": {}, "mandataire": mandataire})
+
+    def echec(self, sortie, *attendus):
+        self.assertFalse(sortie["ok"], sortie)
+        self.assertEqual((sortie["elements"], sortie["bilan"]), ([], None))
+        for attendu in attendus:
+            self.assertIn(attendu, sortie["erreur"])
+        self.assertNotIn("\n", sortie["erreur"])
+        self.assertLessEqual(len(sortie["erreur"]), v.ERREUR_MAX)
+        self.assertNotIn(self.MOT_DE_PASSE, json.dumps(sortie))
+
+    def test_collect_goes_through_the_tunnel_with_basic_auth_sent_to_the_proxy_only(self):
+        self.mandataire.attendu = (self.IDENTIFIANT, self.MOT_DE_PASSE)
+        sortie = self.collecter(self.parametres(identifiant=self.IDENTIFIANT, motDePasse=self.MOT_DE_PASSE))
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertEqual(sortie["bilan"]["elements"], 2)
+        # Une seule demande au mandataire : CONNECT vers l'hôte de la liste fermée (remplacé par le faux service), avec
+        # l'authentification simple.
+        self.assertEqual(len(self.mandataire.demandes), 1)
+        d = self.mandataire.demandes[0]
+        self.assertEqual(d["ligne"], "CONNECT localhost:%d HTTP/1.1" % self.port)
+        jeton = base64.b64encode(("%s:%s" % (self.IDENTIFIANT, self.MOT_DE_PASSE)).encode("utf-8")).decode("ascii")
+        self.assertEqual(d["entetes"]["proxy-authorization"], "Basic " + jeton)
+        # La source ne reçoit qu'un GET sur le chemin de la liste fermée, sans l'en-tête d'authentification du mandataire.
+        self.assertEqual(Faux.recues, [("GET", v.SOURCES["cisa-kev"]["chemins"][0])])
+        self.assertEqual(len(Faux.entetes), 1)
+        self.assertNotIn("proxy-authorization", Faux.entetes[0])
+        self.assertNotIn(jeton, json.dumps(Faux.entetes))
+        self.assertNotIn(self.MOT_DE_PASSE, json.dumps(sortie))
+
+    def test_proxy_without_authentication_is_supported(self):
+        sortie = self.collecter(self.parametres())
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertNotIn("proxy-authorization", self.mandataire.demandes[0]["entetes"])
+
+    def test_authentication_required_or_refused_is_explained_with_the_basic_only_limit(self):
+        self.mandataire.attendu = (self.IDENTIFIANT, self.MOT_DE_PASSE)
+        self.echec(self.collecter(self.parametres()), "exige une authentification (code 407)", "identifiant et le mot de passe",
+                   "NTLM et Kerberos ne le sont pas")
+        self.echec(self.collecter(self.parametres(identifiant=self.IDENTIFIANT, motDePasse="mauvais")),
+                   "Authentification refusée par le mandataire (code 407)", "vérifiez l'identifiant",
+                   "Seule l'authentification simple (Basic)")
+        self.mandataire.schemas = ("NTLM", "Negotiate")
+        self.echec(self.collecter(self.parametres(identifiant=self.IDENTIFIANT, motDePasse=self.MOT_DE_PASSE + "x")),
+                   "code 407", "il demande NTLM, Negotiate", "NTLM et Kerberos ne le sont pas")
+        self.assertEqual(Faux.recues, [])
+
+    def test_establishment_authority_is_needed_and_added_to_the_system_store(self):
+        # Sans l'autorité de l'établissement (magasin du système seul) ou avec une autre autorité : certificat refusé, et le
+        # message dit quoi fournir.
+        for autorite in ("", self.autre_autorite):
+            with self.subTest(autorite=bool(autorite)):
+                self.echec(self.collecter(self.parametres(autorite=autorite)), "Certificat de la source refusé à travers le mandataire",
+                           "autorité de certification de l'établissement")
+        self.assertEqual(Faux.recues, [])
+        # Avec elle : acceptée, et la vérification du nom reste faite.
+        self.assertTrue(self.collecter(self.parametres())["ok"])
+        with patch.object(v, "destination", lambda source: ("127.0.0.1", self.port)):
+            self.echec(self.collecter(self.parametres()), "Certificat de la source refusé")
+        # Autorité illisible : rien n'est lu.
+        self.mandataire.demandes = []
+        self.echec(self.collecter(self.parametres(autorite="-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----")),
+                   "Autorité de certification de l'établissement illisible")
+        self.assertEqual(self.mandataire.demandes, [])
+
+    def test_refused_tunnel_and_unreachable_proxy_are_explained(self):
+        self.mandataire.forcee = "403 Forbidden"
+        self.echec(self.collecter(self.parametres()), "Tunnel refusé par le mandataire vers localhost (code 403)")
+        libre = socket.socket()
+        libre.bind(("127.0.0.1", 0))
+        port_ferme = libre.getsockname()[1]
+        libre.close()
+        self.echec(self.collecter(self.parametres(port=port_ferme)), "Mandataire injoignable", "connexion refusée",
+                   "127.0.0.1:%d" % port_ferme)
+        self.echec(self.collecter(self.parametres(hote="mandataire.invalid")), "Mandataire injoignable", "mandataire.invalid")
+        self.assertEqual(Faux.recues, [])
+
+    def test_closed_list_get_only_and_no_redirect_still_apply_through_the_proxy(self):
+        Faux.reponses[v.SOURCES["cisa-kev"]["chemins"][0]] = (301, b"", (("Location", "https://ailleurs.exemple.test/"),))
+        self.echec(self.collecter(self.parametres()), "Redirection refusée (code 301)")
+        self.assertEqual(Faux.recues, [("GET", v.SOURCES["cisa-kev"]["chemins"][0])])
+        self.assertEqual(len(self.mandataire.demandes), 1)
+        self.assertTrue(self.mandataire.demandes[0]["ligne"].startswith("CONNECT localhost:"))
+
+    def test_malformed_proxy_parameters_read_nothing(self):
+        for m in ({"hote": "127.0.0.1"}, self.parametres(port=0), self.parametres(port="3128"), self.parametres(port=True),
+                  self.parametres(hote="mandataire interne"), self.parametres(hote="999.1.1.1"),
+                  self.parametres(identifiant="a:b"), self.parametres(identifiant="a\r\nX-Injecte: 1"),
+                  self.parametres(motDePasse="x\r\ny"), self.parametres(autorite="pas un certificat"),
+                  {**self.parametres(), "extra": 1}, "http://127.0.0.1:3128"):
+            with self.subTest(m=str(m)[:60]):
+                self.echec(self.collecter(m), "Paramètres du mandataire illisibles")
+        self.assertEqual(self.mandataire.demandes, [])
+        self.assertEqual(Faux.recues, [])
+        # Adresse IPv6 admise (forme) : le mandataire n'écoute pas là, l'échec est celui de la connexion.
+        self.assertIn("Mandataire injoignable", self.collecter(self.parametres(hote="::1", port=9))["erreur"])
+
+    def test_without_proxy_the_source_is_joined_directly(self):
+        """Non-régression : sans paramètres de mandataire, le mandataire n'est pas contacté (connexion directe)."""
+        vrai = v.contexte
+
+        def contexte():
+            c = vrai()
+            c.load_verify_locations(cadata=self.autorite)
+            return c
+        with patch.object(v, "contexte", contexte):
+            sortie = v.executer({"source": "cisa-kev", "parametres": {}})
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertEqual(self.mandataire.demandes, [])
+        self.assertEqual(Faux.recues, [("GET", v.SOURCES["cisa-kev"]["chemins"][0])])
+
+    def test_runs_isolated_with_proxy_parameters_on_stdin_only(self):
+        self.mandataire.attendu = (self.IDENTIFIANT, self.MOT_DE_PASSE)
+        # Le script lancé seul joint l'hôte réel de la liste fermée : on vérifie ici seulement que les paramètres du mandataire
+        # sont lus sur l'entrée standard et que la demande part vers lui (le faux mandataire refuse ce tunnel).
+        self.mandataire.forcee = "403 Forbidden"
+        entree = json.dumps({"source": "cisa-kev", "parametres": {},
+                             "mandataire": self.parametres(identifiant=self.IDENTIFIANT, motDePasse=self.MOT_DE_PASSE)})
+        fait = subprocess.run([sys.executable, "-I", str(SCRIPT)], input=entree, capture_output=True, text=True, timeout=60,
+                              env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}, cwd="/")
+        self.assertEqual(fait.returncode, 0, fait.stderr)
+        sortie = json.loads(fait.stdout)
+        self.assertFalse(sortie["ok"])
+        self.assertIn("Tunnel refusé par le mandataire vers www.cisa.gov (code 403)", sortie["erreur"])
+        self.assertEqual(self.mandataire.demandes[0]["ligne"], "CONNECT www.cisa.gov:443 HTTP/1.1")
+        self.assertNotIn(self.MOT_DE_PASSE, fait.stdout + fait.stderr)
+
+
 class Texte(unittest.TestCase):
     def test_external_text_becomes_plain_bounded_single_line_text(self):
         self.assertEqual(v.texte("<p>Un <b>avis</b></p>\n<p>fictif</p>", 100), "Un avis fictif")
@@ -403,6 +674,12 @@ class Isolement(unittest.TestCase):
         # GET seulement : aucune autre méthode n'est écrite dans le script.
         texte = SCRIPT.read_text(encoding="utf8")
         self.assertEqual(set(__import__("re").findall(r'request\("([A-Z]+)"', texte)), {"GET"})
+        # CONNECT n'est écrit qu'une fois, dans la demande de tunnel au mandataire ; l'en-tête d'authentification du
+        # mandataire aussi, et jamais dans les en-têtes de la requête à la source. Aucune option qui coupe la vérification.
+        self.assertEqual(texte.count('"CONNECT '), 1)
+        self.assertEqual(texte.count('"Proxy-Authorization: Basic "'), 1)
+        for interdit in ("CERT_NONE", "check_hostname = False", "_create_unverified_context", "set_tunnel"):
+            self.assertNotIn(interdit, texte)
 
 
 if __name__ == "__main__":
