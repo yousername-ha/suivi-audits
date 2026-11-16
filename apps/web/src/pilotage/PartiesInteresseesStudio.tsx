@@ -2,11 +2,14 @@
    périmètre au centre) et liste compacte du registre déjà chargé par BusinessRegistry. Aucune requête ni écriture métier
    supplémentaire : les filtres, la recherche et les compteurs portent sur les fiches chargées, la pagination existante
    reste visible. Les liaisons et les deux points lumineux sont décoratifs (transform et opacity seulement) ; ils
-   tournent en continu, sans bouton de pause (ADR 0099), et s'arrêtent onglet masqué ou en mouvement réduit. */
-import { Button, Popover, Select, TextInput } from '@mantine/core';
+   tournent en continu, sans bouton de pause (ADR 0099), et s'arrêtent onglet masqué ou en mouvement réduit.
+   Boîte d'outils commune (7.3.0) : vues, recherche, filtres avancés et bascule du registre détaillé ; l'ajout au bout
+   de la ligne. Les en-têtes de la liste compacte restent décoratifs (aria-hidden), sans filtre de colonne. */
+import { ActionIcon, Button, Select } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import type { GrcObject } from '@suivi/shared';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
 import { liaisonsParties, parcoursParties, cheminPartie, type CartePartie, type RoutePartie } from './parties-liaisons';
 
@@ -357,6 +360,24 @@ function Panorama({
 
 const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('fr');
 
+const OPTIONS_NATURE = [
+  { value: 'all', label: 'Toutes' },
+  ...['Interne', 'Externe', 'À préciser'].map((v) => ({ value: v, label: v })),
+];
+const OPTIONS_EXIGENCES = [
+  { value: 'all', label: 'Toutes' },
+  { value: 'Oui', label: 'Traitées' },
+  { value: 'Partiel', label: 'Partiellement' },
+  { value: 'Non', label: 'Non traitées' },
+  { value: 'unknown', label: 'Non renseigné' },
+];
+const OPTIONS_REVUE = [
+  { value: 'all', label: 'Toutes' },
+  { value: 'check', label: 'À vérifier (date absente ou > 365 jours)' },
+  { value: 'missing', label: 'Non renseignée' },
+  { value: 'recent', label: 'Depuis moins de 365 jours' },
+];
+
 /** Présentation du registre déjà chargé : aucune requête ou écriture métier supplémentaire. */
 export function PartiesInteresseesStudio({
   objects,
@@ -407,24 +428,72 @@ export function PartiesInteresseesStudio({
       (review === 'all' ||
         (review === 'check' ? revuePartie(o) : review === 'missing' ? !o.data.reviewedAt : !revuePartie(o))),
   );
-  const reset = () => {
-    setQuery('');
+  // Filtres avancés : tous les critères sauf la recherche, qui reste dans son champ.
+  const avances = [nature, addressed, review, category, responsable].filter((v) => v !== 'all').length;
+  const reinitialiserFiltres = () => {
     setNature('all');
     setAddressed('all');
     setReview('all');
     setCategory('all');
     setResponsable('all');
   };
+  const reset = () => {
+    setQuery('');
+    reinitialiserFiltres();
+  };
   const select = (
     label: string,
     value: string,
     onChange: (v: string) => void,
     data: { value: string; label: string }[],
-  ) => <Select label={label} value={value} onChange={(v) => onChange(v ?? 'all')} allowDeselect={false} data={data} />;
+  ) => (
+    <Select
+      label={label}
+      value={value}
+      onChange={(v) => onChange(v ?? 'all')}
+      allowDeselect={false}
+      data={data}
+      comboboxProps={{ withinPortal: false }}
+    />
+  );
   const choices = (values: string[]) => [
     { value: 'all', label: 'Tous' },
     ...[...new Set(values.filter(Boolean))].sort().map((v) => ({ value: v, label: v })),
   ];
+  const libelleDe = (options: { value: string; label: string }[], v: string) =>
+    options.find((o) => o.value === v)?.label ?? v;
+  const criteres = (
+    [
+      [!!query, { cle: 'piq', libelle: 'Recherche', valeur: query, retirer: () => setQuery('') }],
+      [
+        nature !== 'all',
+        { cle: 'pinat', libelle: 'Nature', valeur: libelleDe(OPTIONS_NATURE, nature), retirer: () => setNature('all') },
+      ],
+      [
+        addressed !== 'all',
+        {
+          cle: 'piexi',
+          libelle: 'Exigences traitées',
+          valeur: libelleDe(OPTIONS_EXIGENCES, addressed),
+          retirer: () => setAddressed('all'),
+        },
+      ],
+      [
+        review !== 'all',
+        {
+          cle: 'pirev',
+          libelle: 'Dernière revue',
+          valeur: libelleDe(OPTIONS_REVUE, review),
+          retirer: () => setReview('all'),
+        },
+      ],
+      [category !== 'all', { cle: 'picat', libelle: 'Catégorie', valeur: category, retirer: () => setCategory('all') }],
+      [
+        responsable !== 'all',
+        { cle: 'piresp', libelle: 'Responsable', valeur: responsable, retirer: () => setResponsable('all') },
+      ],
+    ] as [boolean, CritereActif][]
+  ).flatMap(([actif, c]) => (actif ? [c] : []));
   return (
     <section
       className="parties-studio"
@@ -449,120 +518,58 @@ export function PartiesInteresseesStudio({
             {objects.filter((o) => revuePartie(o)).length} revues à vérifier
           </span>
         </div>
-        {writable && (
-          <Button onClick={onCreate}>
-            <span aria-hidden="true">+&nbsp;</span>Ajouter une partie intéressée
-          </Button>
-        )}
       </header>
       <div className="pi-surface">
-        <div className="pi-toolbar">
-          <div className="pi-views" role="group" aria-label="Vue des parties intéressées">
-            {(['panorama', 'list'] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                className="pi-tool"
-                aria-label={v === 'panorama' ? 'Vue panorama' : 'Vue liste compacte'}
-                title={v === 'panorama' ? 'Panorama' : 'Liste compacte'}
-                aria-pressed={mode === v}
-                onClick={() => setMode(v)}
-              >
-                <IconePartie name={v === 'panorama' ? 'network' : 'list'} />
-              </button>
-            ))}
-          </div>
-          <span className="pi-view-label">{mode === 'panorama' ? 'Panorama' : 'Liste compacte'}</span>
-          <div className="pi-toolbar-end">
-            <Popover position="bottom-end" withArrow trapFocus returnFocus>
-              <Popover.Target>
-                <button type="button" className="pi-tool" aria-label="Rechercher une partie" title="Rechercher">
-                  <IconePartie name="search" />
-                </button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <TextInput
-                  label="Rechercher une partie"
-                  placeholder="Nom, besoin, responsable…"
-                  value={query}
-                  onChange={(e) => setQuery(e.currentTarget.value)}
-                />
-              </Popover.Dropdown>
-            </Popover>
-            <Popover position="bottom-end" trapFocus returnFocus>
-              <Popover.Target>
-                <button
-                  type="button"
-                  className="pi-tool"
-                  aria-label={`Filtres${active ? `, ${active} actif${active > 1 ? 's' : ''}` : ''}`}
-                  title="Filtres"
-                >
-                  <IconePartie name="filter" />
-                  {!!active && (
-                    <span className="pi-filter-count" aria-hidden="true">
-                      {active}
-                    </span>
-                  )}
-                </button>
-              </Popover.Target>
-              <Popover.Dropdown className="pi-filter-panel">
-                <div className="pi-filters">
-                  {select('Nature', nature, setNature, [
-                    { value: 'all', label: 'Toutes' },
-                    ...['Interne', 'Externe', 'À préciser'].map((v) => ({ value: v, label: v })),
-                  ])}
-                  {select('Exigences traitées', addressed, setAddressed, [
-                    { value: 'all', label: 'Toutes' },
-                    { value: 'Oui', label: 'Traitées' },
-                    { value: 'Partiel', label: 'Partiellement' },
-                    { value: 'Non', label: 'Non traitées' },
-                    { value: 'unknown', label: 'Non renseigné' },
-                  ])}
-                  {select('Dernière revue', review, setReview, [
-                    { value: 'all', label: 'Toutes' },
-                    { value: 'check', label: 'À vérifier (date absente ou > 365 jours)' },
-                    { value: 'missing', label: 'Non renseignée' },
-                    { value: 'recent', label: 'Depuis moins de 365 jours' },
-                  ])}
-                  {select(
-                    'Catégorie',
-                    category,
-                    setCategory,
-                    choices(objects.map((o) => textePartie(o.data.category))),
-                  )}
-                  {select('Responsable', responsable, setResponsable, choices(objects.map(owner)))}
-                  <Button variant="subtle" onClick={reset}>
-                    Réinitialiser les filtres
-                  </Button>
-                </div>
-              </Popover.Dropdown>
-            </Popover>
-            <button
-              type="button"
-              id="pi-bascule-registre"
-              className="pi-tool"
-              aria-label={registreOuvert ? 'Replier le registre détaillé' : 'Ouvrir le registre détaillé'}
-              aria-expanded={registreOuvert}
-              title="Registre détaillé et historique des décisions"
-              onClick={onBrowse}
-            >
-              <IconePartie name="more" />
-            </button>
-          </div>
-        </div>
-        {!!active && (
-          <div className="pi-active-filters">
-            <span>
-              {items.length} résultat{items.length > 1 ? 's' : ''} · {active} critère{active > 1 ? 's' : ''}
-            </span>
-            {query && <span>Recherche : {query}</span>}
-            {nature !== 'all' && <span>{nature}</span>}
-            {addressed !== 'all' && <span>Traitement : {addressed === 'unknown' ? 'Non renseigné' : addressed}</span>}
-            <button type="button" onClick={reset}>
-              Tout effacer <span aria-hidden="true">×</span>
-            </button>
-          </div>
-        )}
+        {/* Boîte d'outils commune (7.3.0) : vues, recherche, bascule du registre détaillé et filtres avancés ; ajout
+            au bout de la ligne. */}
+        <BoiteOutils
+          label="Outils des parties intéressées"
+          vues={[
+            { value: 'panorama', label: 'Vue panorama', icone: <IconePartie name="network" /> },
+            { value: 'list', label: 'Vue liste compacte', icone: <IconePartie name="list" /> },
+          ]}
+          vue={mode}
+          onVue={(v) => setMode(v === 'list' ? 'list' : 'panorama')}
+          recherche={{
+            label: 'Rechercher une partie',
+            value: query,
+            onChange: setQuery,
+            placeholder: 'Nom, besoin, responsable…',
+          }}
+          filtres={{
+            actifs: avances,
+            onReinitialiser: reinitialiserFiltres,
+            contenu: (
+              <>
+                {select('Nature', nature, setNature, OPTIONS_NATURE)}
+                {select('Exigences traitées', addressed, setAddressed, OPTIONS_EXIGENCES)}
+                {select('Dernière revue', review, setReview, OPTIONS_REVUE)}
+                {select('Catégorie', category, setCategory, choices(objects.map((o) => textePartie(o.data.category))))}
+                {select('Responsable', responsable, setResponsable, choices(objects.map(owner)))}
+              </>
+            ),
+          }}
+          ajout={
+            writable && (
+              <Button onClick={onCreate}>
+                <span aria-hidden="true">+&nbsp;</span>Ajouter une partie intéressée
+              </Button>
+            )
+          }
+        >
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            id="pi-bascule-registre"
+            aria-label={registreOuvert ? 'Replier le registre détaillé' : 'Ouvrir le registre détaillé'}
+            aria-expanded={registreOuvert}
+            title="Registre détaillé et historique des décisions"
+            onClick={onBrowse}
+          >
+            <IconePartie name="more" />
+          </ActionIcon>
+        </BoiteOutils>
+        <PastillesCriteres criteres={criteres} onToutEffacer={reset} />
         <div className="pi-content" tabIndex={0} role="region" aria-label="Acteurs affichés" aria-busy={loading}>
           {loading && <p role="status">Chargement des parties intéressées…</p>}
           {!items.length && !loading ? (

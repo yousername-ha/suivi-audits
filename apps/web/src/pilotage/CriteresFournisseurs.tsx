@@ -20,6 +20,7 @@ import { useState } from 'react';
 import { USAGES_CRITERE, USAGES_CRITERE_LIBELLES } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { ficheCliquable } from '../fiche-cliquable';
@@ -138,14 +139,23 @@ export function CriteresFournisseurs() {
         version du critère tels qu’ils étaient.
       </Alert>
       <ErrorAlert error={erreur ?? liste.error} />
-      <Group justify="space-between">
-        <Switch
-          label="Afficher les critères retirés"
-          checked={archives}
-          onChange={(e) => setArchives(e.currentTarget.checked)}
-        />
-        {administrer && <Button onClick={() => ouvrir(null)}>Définir un critère</Button>}
-      </Group>
+      {/* Boîte d'outils commune (7.3.0) : l'affichage des critères retirés va dans les filtres avancés ; la définition
+          d'un critère au bout de la ligne. */}
+      <BoiteOutils
+        label="Outils des critères"
+        filtres={{
+          actifs: archives ? 1 : 0,
+          onReinitialiser: () => setArchives(false),
+          contenu: (
+            <Switch
+              label="Afficher les critères retirés"
+              checked={archives}
+              onChange={(e) => setArchives(e.currentTarget.checked)}
+            />
+          ),
+        }}
+        ajout={administrer && <Button onClick={() => ouvrir(null)}>Définir un critère</Button>}
+      />
       <DataTable label="Critères d’évaluation des fournisseurs, défilement horizontal possible">
         <Table>
           <Table.Thead>

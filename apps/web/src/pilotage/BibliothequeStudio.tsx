@@ -2,11 +2,14 @@
    ADR 0089) : une dalle par référentiel, identité et catalogue à gauche, couverture du périmètre affiché à droite.
    Présentation seule des contrats existants : catalogue `GET /api/library/frameworks`, résumé `GET /api/grc/:smsi/couverture`.
    Chargement, erreur et absence de rattachement ne deviennent jamais des zéros. Les couleurs sont portées par des classes
-   (neon-bibliotheque.css), jamais par un style en ligne (CSP stricte). */
+   (neon-bibliotheque.css), jamais par un style en ligne (CSP stricte). La recherche est tenue par la page
+   (Bibliotheque.tsx), qui fournit la boîte d'outils commune (7.3.0) dans `barre` : le studio reste sans composant Mantine
+   en tête de catalogue. */
 import { Table } from '@mantine/core';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ETATS_EXIGENCE, LIBELLES_ETAT, type FrameworkDefinition } from '@suivi/shared';
 import { DataTable, ListeDefilante } from '@suivi/ui';
+import { PastillesCriteres } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   filtrerReferentiels,
@@ -121,6 +124,11 @@ export interface BibliothequeStudioProps {
   onEdition: (f: Referentiel) => void;
   onCouverture: (c: CouvertureReferentiel) => void;
   outils: ReactNode;
+  /** Recherche par nom ou identifiant, tenue par la page. */
+  recherche?: string;
+  onRecherche?: (valeur: string) => void;
+  /** Boîte d'outils du catalogue (recherche), placée en tête du catalogue. */
+  barre?: ReactNode;
 }
 
 export function BibliothequeStudio({
@@ -136,18 +144,10 @@ export function BibliothequeStudio({
   onEdition,
   onCouverture,
   outils,
+  recherche = '',
+  onRecherche,
+  barre,
 }: BibliothequeStudioProps) {
-  const [recherche, setRecherche] = useState(''),
-    [ouverte, setOuverte] = useState(false);
-  const champ = useRef<HTMLInputElement>(null),
-    loupe = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (ouverte) champ.current?.focus();
-  }, [ouverte]);
-  const fermer = () => {
-    setOuverte(false);
-    loupe.current?.focus();
-  };
   const affiches = filtrerReferentiels(catalogue ?? [], recherche);
   return (
     <div className="bb-module">
@@ -170,45 +170,13 @@ export function BibliothequeStudio({
         )}
       </div>
       <section className="bb-workspace" aria-label="Catalogue et couverture des référentiels">
-        <header className="bb-toolbar">
+        <header className="bb-catalogue-entete">
           <div className="bb-catalogue-title">
             <Icone nom="library" />
             <h2>Catalogue de l’organisation</h2>
             <span>{catalogue ? `${catalogue.length} référentiel(s) dans la bibliothèque` : 'Chargement…'}</span>
           </div>
-          <div className="bb-tools">
-            {ouverte && (
-              <div className="bb-search">
-                <label className="bb-sr" htmlFor="bibliotheque-recherche">
-                  Rechercher un référentiel
-                </label>
-                <input
-                  ref={champ}
-                  id="bibliotheque-recherche"
-                  type="search"
-                  value={recherche}
-                  placeholder="Nom ou identifiant…"
-                  onChange={(e) => setRecherche(e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
-                      fermer();
-                    }
-                  }}
-                />
-              </div>
-            )}
-            <button
-              type="button"
-              ref={loupe}
-              className="bb-icon-button"
-              aria-label="Rechercher un référentiel"
-              aria-expanded={ouverte}
-              onClick={() => (ouverte ? fermer() : setOuverte(true))}
-            >
-              <Icone nom="search" />
-            </button>
-          </div>
+          {barre}
         </header>
         {smsi && (
           <div className="bb-scope">
@@ -222,19 +190,12 @@ export function BibliothequeStudio({
             </p>
           </div>
         )}
-        {recherche.trim() && (
-          <div className="bb-criteria">
-            <span>Recherche : {recherche.trim()}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setRecherche('');
-                setOuverte(false);
-                loupe.current?.focus();
-              }}
-            >
-              Effacer la recherche
-            </button>
+        {onRecherche && !!recherche.trim() && (
+          <div className="bb-pastilles">
+            <PastillesCriteres
+              criteres={[{ cle: 'bq', libelle: 'Recherche', valeur: recherche.trim(), retirer: () => onRecherche('') }]}
+              onToutEffacer={() => onRecherche('')}
+            />
           </div>
         )}
         <ListeDefilante className="bb-scroll" label="Référentiels et états de couverture">

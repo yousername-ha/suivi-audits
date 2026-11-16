@@ -129,6 +129,19 @@
   padding: 0.9375rem 1.3125rem;
   border-bottom: 1px solid var(--bb-edge);
 }
+/* En-tête du catalogue (7.3.0) : titre à gauche, boîte d'outils commune à droite, sans bande ; pastilles des critères
+   actifs dessous. */
+.bb-catalogue-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+}
+.bb-pastilles {
+  padding: 0 var(--mantine-spacing-lg) var(--mantine-spacing-xs);
+}
 .bb-catalogue-title {
   display: flex;
   align-items: center;
