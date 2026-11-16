@@ -281,9 +281,18 @@ export function PilotagePage() {
     <Page>
       <PageHeader
         title={PILOTAGE_LABELS[section] ?? 'Pilotage'}
-        description={
-          config?.description ??
-          'Qualité, sécurité et référentiels : pilotez vos travaux à partir des données existantes.'
+        description={config?.description}
+        actions={
+          (scopes.data?.length ?? 0) > 1 && (
+            <Select
+              className="selecteur-perimetre"
+              allowDeselect={false}
+              label="Périmètre affiché"
+              data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
+              value={smsi ?? null}
+              onChange={chooseScope}
+            />
+          )
         }
       />
       <Stack>
@@ -298,16 +307,6 @@ export function PilotagePage() {
           </Anchor>
         )}
         <ErrorAlert error={scopes.error ?? policy.error} />
-        {(scopes.data?.length ?? 0) > 1 && (
-          <Select
-            allowDeselect={false}
-            label="Périmètre affiché"
-            description="Les accès existants sont conservés."
-            data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
-            value={smsi ?? null}
-            onChange={chooseScope}
-          />
-        )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
         {allowed && smsi && smsi !== SOCLE && RUBRIQUES_COMMUNES.has(section) && (
           <Alert color="blue" role="note">

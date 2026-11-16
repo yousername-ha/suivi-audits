@@ -826,6 +826,47 @@ h3,
   margin-top: 0.6rem;
   line-height: 1.6;
 }
+/* En-tête compact (7.3.0, maquette) : titre réduit et outils (périmètre affiché, actions) sur la même ligne, pour que
+   les données arrivent dans le premier tiers de l'écran. Les explications longues sont repliées (« À propos »). */
+.page-header h1 {
+  font-size: calc(var(--mantine-h1-font-size) * 0.66);
+  line-height: 1.25;
+}
+.page-header__titre .lecture {
+  margin-top: var(--mantine-spacing-2xs);
+  line-height: 1.45;
+}
+.selecteur-perimetre {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.selecteur-perimetre .mantine-InputWrapper-label {
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.selecteur-perimetre .mantine-Input-wrapper {
+  inline-size: calc(var(--mantine-spacing-xl) * 9);
+}
+.a-propos {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+.a-propos > summary {
+  inline-size: fit-content;
+  color: var(--mantine-color-anchor);
+  cursor: pointer;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+}
+.a-propos__texte {
+  max-inline-size: var(--suivi-largeur-lecture);
+  margin-top: var(--mantine-spacing-xs);
+  line-height: 1.55;
+}
 .page-eyebrow {
   color: var(--mantine-color-dimmed);
   font-size: 0.65rem;

@@ -4,7 +4,7 @@
    Les couleurs sont portées par des classes (neon-fournisseurs.css), jamais par un style en ligne (CSP stricte). */
 import { ActionIcon, Button, Select, Table, TextInput, Tooltip } from '@mantine/core';
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { DataTable, retenirFocusFiche } from '@suivi/ui';
+import { APropos, DataTable, retenirFocusFiche } from '@suivi/ui';
 import { Filtres } from '../components/Filtres';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
@@ -237,12 +237,12 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
   ] as const;
   return (
     <section className="fournisseurs-studio" aria-label="Registre des fournisseurs">
-      <p className="fs-intro">
+      <APropos>
         Les fournisseurs et leurs évaluations appartiennent à l’organisation, pas à un périmètre : un fournisseur évalué
         l’est de la même façon dans tous les périmètres où il est rattaché. Les critères sont définis par vos soins ;
         aucune grille ni aucun seuil n’est fourni. La fiche d’un fournisseur regroupe ses informations de suivi (MFA,
         SSO, criticité, hébergeur HDS), ses certificats et ses contrôles périodiques.
-      </p>
+      </APropos>
       <div className="fs-summary" role="group" aria-label="Indicateurs des services SaaS">
         {indicateurs.map((s) => (
           <div className="fs-stat" data-tone={s.ton} key={s.libelle}>

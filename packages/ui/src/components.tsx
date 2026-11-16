@@ -34,6 +34,16 @@ export function PageHeader({
   );
 }
 
+/** Explication d'une page, repliée par défaut pour laisser les données en haut de l'écran (en-tête compact, 7.3.0). */
+export function APropos({ children }: { children: ReactNode }) {
+  return (
+    <details className="a-propos">
+      <summary>À propos de cette page</summary>
+      <div className="a-propos__texte">{children}</div>
+    </details>
+  );
+}
+
 /** Tableau dans une carte, défilant horizontalement si nécessaire. */
 export function DataTable({ children, label }: { children: ReactNode; label?: string }) {
   return (
