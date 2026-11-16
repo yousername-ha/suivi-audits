@@ -22,13 +22,15 @@ function Remplacer([string]$Valeur, [string]$Prefixe) {
 }
 $Noms = 'dnsName', 'netbiosName', 'netBios', 'netBiosWorkgroup', 'hostName', 'hostname', 'fqdn', 'names'
 $Identifiants = 'uuid', 'tenableUUID', 'hostUUID', 'hostUniqueness', 'macAddress', 'macs'
-$Retires = 'pluginText', 'pluginOutput', 'tags', 'segments'
+$Retires = 'pluginText', 'pluginOutput', 'tags', 'segments', 'activationCode', 'fcsuite', 'agGridLicense', 'uuidsha256', 'vulnUUID',
+  'licenseExpiration', 'licensedIPs', 'activeIPs', 'wasFQDNCount', 'timezones', 'scLogs', 'reportTypes', 'banner', 'headerText'
 
 function Nettoyer($Objet, [bool]$NomEstMachine) {
   if ($null -eq $Objet) { return }
   if ($Objet -is [System.Array]) { foreach ($Element in $Objet) { Nettoyer $Element $NomEstMachine }; return }
   if ($Objet -isnot [System.Management.Automation.PSCustomObject]) { return }
   foreach ($P in @($Objet.PSObject.Properties)) {
+    # Champs retirés quel que soit leur type : textes détaillés, licence et code d'activation, listes sans intérêt.
     if ($Retires -contains $P.Name) { $P.Value = '(retiré)'; continue }
     if ($P.Value -is [string]) {
       if ($Noms -contains $P.Name) { $P.Value = Remplacer $P.Value 'MACHINE' }
@@ -46,8 +48,8 @@ function Lire([string]$Fichier, [string]$Methode, [string]$Chemin, [string]$Corp
     else { $Reponse = Invoke-RestMethod -Uri ($Base + $Chemin) -Method $Methode -Headers $Entetes }
     Nettoyer $Reponse $NomEstMachine
     $Texte = $Reponse | ConvertTo-Json -Depth 30
-    # Adresses IPv4 restantes, où qu'elles soient : plage réservée à la documentation.
-    $Texte = [regex]::Replace($Texte, '\b(?:\d{1,3}\.){3}\d{1,3}\b', { param($m) '192.0.2.' + ((([Math]::Abs($m.Value.GetHashCode())) % 250) + 1) })
+    # Adresses IPv4 restantes : plage réservée à la documentation. Un numéro de version (noyau…) n'est pas touché.
+    $Texte = [regex]::Replace($Texte, '(?<![\w.\-])(?:\d{1,3}\.){3}\d{1,3}(?![\w.\-])', { param($m) '192.0.2.' + ((([Math]::Abs($m.Value.GetHashCode())) % 250) + 1) })
     $Texte = $Texte.Replace(([uri]$Base).Host, 'tenable.exemple.local')
     $Texte | Out-File -FilePath (Join-Path $Dossier $Fichier) -Encoding utf8
     Write-Host "OK      $Fichier"

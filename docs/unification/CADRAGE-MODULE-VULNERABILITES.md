@@ -94,7 +94,7 @@ additive éventuelle, les droits serveur, les tests et la documentation. Une PR 
 
 ## 5. Ce qu'il faut du RSSI
 
-- **V0** : la validation de l'ADR 0100 et la réponse à ses treize points ouverts.
+- **V0** : la validation de l'ADR 0100 et la réponse à ses quinze points ouverts.
 - **V5** : Tenable Security Center est en version **6.9** (indiqué le 15/11/2026) ; un compte **en lecture seule** et ses clés d'API,
   saisies dans l'interface et jamais communiquées à une session ; une instance de recette
   joignable par l'exécutant, ou des **exemples de réponses anonymisés** (aucun nom de machine ni adresse réels : le dépôt est
@@ -154,6 +154,28 @@ la session.
   nombre (`cveTotal`). Le lien avec une faille passe par le numéro de contrôle, lu dans les vues des failles ;
 - le texte du correctif (`solution`) est **en anglais** ;
 - `vprScore`, `epssScore` et `cpe` peuvent être vides.
+
+**Forme des réponses lues le 16/11/2026** (exemples anonymisés fournis par le RSSI, instance en version 6.9.1 ; ni les
+fichiers ni leurs chiffres ne sont dans le dépôt) :
+
+| Lecture | Ce qui revient | Conséquence |
+| --- | --- | --- |
+| Failles agrégées (`sumid`) | Un résultat par **contrôle de Tenable** : `pluginID`, `name`, `severity`, `total`, `hostTotal`, `vprScore`, `vprContext`, `epssScore`, `family` | L'unité de Tenable est le contrôle, pas la CVE. Aucune liste de CVE dans cette vue |
+| Failles par machine (`vulndetails`) | Un résultat par contrôle **et** par machine : `pluginID`, `pluginName`, `cve` (liste séparée par des virgules, parfois plus de deux cents), `exploitAvailable`, `exploitEase`, `cvssV3Vector`, `cvssV3BaseScore`, `solution`, `synopsis`, `vulnPubDate`, `patchPubDate`, `seolDate`, `firstSeen`, `lastSeen`, `hasBeenMitigated`, `acceptRisk`, `recastRisk`, `ip`, `dnsName`, `netbiosName`, `operatingSystem`, `hostUUID`, `acrScore`, `keyDrivers`, `repository` | Cette seule vue donne la faille, ses CVE, le vecteur d'attaque, l'existence d'un exploit, le correctif et la machine |
+| Machines (`GET /hosts`) | Une liste directe : `id`, `uuid`, `tenableUUID`, `name`, `os`, `firstSeen`, `lastSeen`, `ipAddress` | Inventaire minimal ; les étiquettes demandent la lecture par machine |
+| Système (`GET /system`) | Version, jeu de contrôles, mais aussi **licence et code d'activation** | Le connecteur ne garde que la version ; le reste n'est ni rangé ni journalisé |
+
+Points à retenir pour le connecteur :
+
+- **un contrôle porte plusieurs CVE** et une CVE peut relever de plusieurs contrôles : la plateforme range le constat de Tenable
+  (contrôle, machine) et le relie aux CVE suivies par la veille ; un constat est « exploité » si l'une de ses CVE l'est ;
+- **certains constats n'ont aucune CVE** (système ou serveur web qui n'est plus maintenu) : ils sont suivis quand même (V18) ;
+- `exploitAvailable` vaut « Yes » ou « No » : c'est la source de la marque « exploitable » ;
+- `keyDrivers` porte une clé « internet exposure » (valeur lue : « internal ») : indice pour repérer la première ligne ;
+- les dates sont des secondes depuis 1970, en texte ; `seolDate` vaut « -1 » quand elle ne s'applique pas ;
+- `epssScore` est rendu **en pourcentage** par Tenable (valeurs lues entre 0 et 100), alors que la source EPSS publie entre 0 et 1 ;
+- le correctif figure déjà dans `solution` de chaque constat : la vue `sumremediation` ne sert qu'au regroupement par correctif ;
+- `vprScore`, `epssScore` et `cve` peuvent être vides.
 
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
 des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes

@@ -37,6 +37,8 @@
 | V15 | Accès expérimentaux de Tenable | L'accès « solutions » (correctifs) et l'**inventaire des machines** de Tenable sont retenus **bien qu'expérimentaux**. Essai du 16/11/2026 : « solutions » est refusé au compte de consultation ; les correctifs sont lus par l'analyse, accès stable, sans élargir le rôle du compte |
 | V16 | Marques | Un **avertissement** sur la machine qui porte une faille zero-day ; une **icône propre** aux failles exploitables |
 | V17 | Alerte critique | Une **grande fenêtre rouge** quand une faille critique de type zero-day touche le parc |
+| V18 | Systèmes qui ne sont plus maintenus | Les constats de Tenable **sans CVE** (système ou logiciel obsolète) entrent dans le module et comptent dans le rang de la machine (16/11/2026) |
+| V19 | Textes de Tenable | Affichés **en anglais, tels quels** : pas de traduction par le modèle (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -243,3 +245,6 @@
 12. Fenêtre d'alerte critique : au niveau 4 seulement (proposé), ou dès le niveau 3 (exploitée, produit à confirmer) ?
 13. Droits par défaut : comme les autres modules métier (retenu au lot V1 : le contributeur lit et modifie, le lecteur lit), ou
     réservés à l'administrateur et au RSSI comme l'assistant ? À trancher avant l'arrivée des failles et des machines.
+14. Unité affichée : Tenable raisonne par contrôle (un correctif, plusieurs CVE), la veille par CVE. Les listes et le radar
+    montrent-ils les contrôles de Tenable regroupés (proposé), ou chaque CVE ?
+15. Radar : le parc compte plusieurs milliers de constats ; le radar montre-t-il les plus prioritaires seulement (proposé) ?
