@@ -59,6 +59,7 @@ describe('migration 051 : périmètres organisation ou fournisseur', () => {
         '073_integrations.sql',
         '074_vulnerabilites_veille.sql',
         '075_vulnerabilites_tenable.sql',
+        '076_vulnerabilites_rapprochement.sql',
       ]);
       const { rows: lignes } = await t.svc.db.q<{
         id: string;

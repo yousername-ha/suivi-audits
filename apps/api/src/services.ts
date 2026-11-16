@@ -46,6 +46,8 @@ import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
+import { Rapprochements } from './vulnerabilites/rapprochements.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -94,6 +96,11 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   integrations.enLots.synchroniser = tenable;
   /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. */
   const mandataire = new Mandataire(db, vault);
+  /* Vulnérabilités, lot V4a : seuils de priorité, rapprochements recalculés après chaque collecte NVD réussie. */
+  const reglagePriorite = new ReglagePrioriteVulnerabilites(db);
+  const rapprochements = new Rapprochements(db, reglagePriorite);
+  const veille = new VeilleVulnerabilites(db, flux, mandataire);
+  veille.apresNvd = () => rapprochements.recalculerTout();
   return {
     cfg,
     log,
@@ -107,10 +114,12 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {
-      produits: new ProduitsSurveilles(db, grc),
-      veille: new VeilleVulnerabilites(db, flux, mandataire),
+      produits: new ProduitsSurveilles(db, grc, rapprochements),
+      veille,
       tenable,
-      failles: new FaillesDetectees(db, grc),
+      failles: new FaillesDetectees(db, grc, reglagePriorite),
+      rapprochements,
+      priorite: reglagePriorite,
     },
     modules,
     flux,

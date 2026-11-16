@@ -18,6 +18,7 @@ import {
   ElementEpss,
   ElementKev,
   ElementNvd,
+  VERSION_CPE,
   LotVeille,
   RapportCollecte,
   RechercheAvis,
@@ -49,6 +50,20 @@ const nvd = {
   cvss40: null,
   editeurs: ['editeur_fictif'],
   produits: ['produit_fictif'],
+  produitsTouches: [
+    {
+      partie: 'a',
+      editeur: 'editeur_fictif',
+      produit: 'produit_fictif',
+      version: null,
+      debutInclus: '1.0',
+      debutExclus: null,
+      finInclus: null,
+      finExclus: '1.4.2',
+      vulnerable: true,
+    },
+  ],
+  produitsTronques: false,
 };
 const certfr = {
   identifiant: 'CERTFR-2026-AVI-1500',
@@ -173,6 +188,27 @@ describe('éléments rapportés par l’exécutant', () => {
     expect(ElementNvd.safeParse({ ...nvd, produits: ['<x>'] }).success).toBe(false);
     expect(ElementNvd.safeParse({ ...nvd, cvss31: { ...nvd.cvss31, score: 11 } }).success).toBe(false);
     expect(ElementNvd.safeParse({ ...nvd, cvss31: { ...nvd.cvss31, gravite: 'SEVERE' } }).success).toBe(false);
+  });
+  it('produits touchés (lot V4a) : forme stricte, bornes cohérentes, nombre borné, drapeau de troncature exigé', () => {
+    const t = nvd.produitsTouches[0]!;
+    const avec = (x: Record<string, unknown>) => ElementNvd.safeParse({ ...nvd, produitsTouches: [{ ...t, ...x }] });
+    expect(avec({ version: '2.0', debutInclus: null, finExclus: null }).success).toBe(true);
+    expect(avec({ vulnerable: false }).success).toBe(true);
+    expect(avec({ partie: 'x' }).success).toBe(false);
+    expect(avec({ debutExclus: '1.0' }).success).toBe(false);
+    expect(avec({ finInclus: '1.4' }).success).toBe(false);
+    expect(avec({ finExclus: '1 .4' }).success).toBe(false);
+    expect(avec({ finExclus: '<script>' }).success).toBe(false);
+    expect(avec({ finExclus: '1'.repeat(61) }).success).toBe(false);
+    expect(avec({ editeur: '*'.repeat(101) }).success).toBe(false);
+    expect(avec({ cpe: 'x' }).success).toBe(false);
+    expect(
+      ElementNvd.safeParse({ ...nvd, produitsTouches: Array(VEILLE_BORNES.produitsTouches + 1).fill(t) }).success,
+    ).toBe(false);
+    const { produitsTronques: _, ...sansDrapeau } = nvd;
+    expect(ElementNvd.safeParse(sansDrapeau).success).toBe(false);
+    expect(VERSION_CPE.test('10.1.2')).toBe(true);
+    expect(VERSION_CPE.test('2024-05-01_rc1')).toBe(true);
   });
   it('EPSS publie une probabilité entre 0 et 1 : un pourcentage est refusé', () => {
     expect(ElementEpss.safeParse({ cve: 'CVE-2026-0002', score: 50.8, centile: 0.4, date: '2026-11-15' }).success).toBe(

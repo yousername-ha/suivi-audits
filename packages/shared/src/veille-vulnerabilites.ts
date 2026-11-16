@@ -101,6 +101,10 @@ export const CVSS31_VECTEUR = /^CVSS:3\.1(?:\/[A-Z]{1,3}:[A-Z]{1,2}){8,20}$/;
 export const CVSS40_VECTEUR = /^CVSS:4\.0(?:\/[A-Za-z]{1,3}:[A-Za-z]{1,10}){11,40}$/;
 /** Nom d'éditeur ou de produit tiré d'un CPE 2.3 (échappements retirés) : caractères imprimables, sans balise. */
 export const NOM_CPE = /^[\x21-\x3b\x3d\x3f-\x7e]{1,100}$/;
+/** Version ou borne de version tirée d'une configuration NVD (composante « version » d'un CPE, `versionStartIncluding`…) :
+    mêmes caractères qu'un nom de CPE, plus courte. Gardée telle quelle ; la comparaison sûre est faite par la plateforme
+    (rapprochement-vulnerabilites.ts), qui rend « incertain » pour toute forme qu'elle ne sait pas comparer. */
+export const VERSION_CPE = /^[\x21-\x3b\x3d\x3f-\x7e]{1,60}$/;
 
 /** Bornes de taille, reprises par la migration 074 et par le script de l'exécutant. */
 export const VEILLE_BORNES = {
@@ -112,6 +116,9 @@ export const VEILLE_BORNES = {
   editeur: 200,
   produit: 200,
   nomsCpe: 20,
+  /** Produits touchés gardés par CVE (configurations NVD) : les vulnérables d'abord. Au-delà, la CVE est marquée
+      « produits tronqués » et aucun rapprochement n'est écarté sur ses données (lot V4a). */
+  produitsTouches: 20,
   cvesParAvis: 200,
   /** Éléments par lot rapporté par l'exécutant, et lots par collecte. */
   lot: 500,
@@ -156,6 +163,32 @@ const Cvss = (vecteur: RegExp) =>
     })
     .strict();
 
+/** Partie d'un CPE 2.3 : application, système d'exploitation, matériel. */
+export const PARTIES_CPE = ['a', 'o', 'h'] as const;
+export type PartieCpe = (typeof PARTIES_CPE)[number];
+const versionCpe = z.string().regex(VERSION_CPE).nullable();
+
+/** Produit touché par une CVE, tiré du champ `configurations` de NVD (lot V4a) : éditeur et produit du CPE, version exacte
+    si le CPE en porte une (sinon null : « * » ou « - »), bornes de la plage et drapeau « vulnérable » (false : condition
+    de plateforme, jamais rapprochée). Une borne illisible fait retirer version et bornes : la plage devient absente et
+    le rapprochement reste à décider par une personne, jamais écarté à tort. */
+export const ProduitTouche = z
+  .object({
+    partie: z.enum(PARTIES_CPE),
+    editeur: z.string().regex(NOM_CPE),
+    produit: z.string().regex(NOM_CPE),
+    version: versionCpe,
+    debutInclus: versionCpe,
+    debutExclus: versionCpe,
+    finInclus: versionCpe,
+    finExclus: versionCpe,
+    vulnerable: z.boolean(),
+  })
+  .strict()
+  .refine((p) => p.debutInclus === null || p.debutExclus === null, { message: 'Deux bornes de début.' })
+  .refine((p) => p.finInclus === null || p.finExclus === null, { message: 'Deux bornes de fin.' });
+export type ProduitTouche = z.infer<typeof ProduitTouche>;
+
 export const ElementNvd = z
   .object({
     cve,
@@ -168,6 +201,10 @@ export const ElementNvd = z
     /** Éditeurs et produits des CPE vulnérables, sans doublon, bornés. */
     editeurs: z.array(z.string().regex(NOM_CPE)).max(VEILLE_BORNES.nomsCpe),
     produits: z.array(z.string().regex(NOM_CPE)).max(VEILLE_BORNES.nomsCpe),
+    /** Produits touchés avec leur plage de versions (lot V4a), bornés ; `produitsTronques` : un produit vulnérable n'a pas
+        pu être gardé. */
+    produitsTouches: z.array(ProduitTouche).max(VEILLE_BORNES.produitsTouches),
+    produitsTronques: z.boolean(),
   })
   .strict();
 export type ElementNvd = z.infer<typeof ElementNvd>;

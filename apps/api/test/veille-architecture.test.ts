@@ -16,6 +16,7 @@ import {
   SOURCES_VEILLE,
   SOURCES_VEILLE_DEFINITIONS,
   VEILLE_BORNES,
+  VERSION_CPE,
 } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { REPO } from './helpers.js';
@@ -71,6 +72,7 @@ describe('architecture : veille des vulnérabilités', () => {
       ['CVSS31_VECTEUR', CVSS31_VECTEUR],
       ['CVSS40_VECTEUR', CVSS40_VECTEUR],
       ['NOM_CPE', NOM_CPE],
+      ['VERSION_CPE', VERSION_CPE],
     ] as const)
       expect(motif(SCRIPT, nom), nom).toBe(re.source);
   });

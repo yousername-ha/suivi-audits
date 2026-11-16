@@ -36,6 +36,8 @@ const nvd = (cve: string, extra: Record<string, unknown> = {}) => ({
   cvss40: null,
   editeurs: ['editeur_cpe_fictif'],
   produits: ['produit_cpe_fictif'],
+  produitsTouches: [],
+  produitsTronques: false,
   ...extra,
 });
 const avisCertFr = (identifiant: string, extra: Record<string, unknown> = {}) => ({
@@ -421,7 +423,7 @@ describe('collecte par la CLI de l’exécutant', () => {
     await ouvrir();
     // Produit surveillé : jamais dans la demande (le parc n'est pas lu).
     await t.svc.db.q(
-      "INSERT INTO vulnerabilites_produits (editeur, nom, famille, criticite, cpe, created_by, updated_by) VALUES ('Éditeur fictif', 'Produit fictif', 'web', 'faible', 'cpe:2.3:a:editeur:produit:1.0:*:*:*:*:*:*:*', 't', 't')",
+      "INSERT INTO vulnerabilites_produits (editeur, nom, version_produit, famille, criticite, cpe, created_by, updated_by) VALUES ('Éditeur fictif', 'Produit fictif', '1.0', 'web', 'faible', 'cpe:2.3:a:editeur:produit:1.0:*:*:*:*:*:*:*', 't', 't')",
     );
     await collecte('nvd', [nvd('CVE-2026-0010')]);
     await collecte('cert-fr', [avisCertFr('CERTFR-2026-AVI-0001', { cves: ['CVE-2026-0011'] })]);

@@ -44,7 +44,7 @@ import xml.etree.ElementTree as ET
 # test d'architecture la lit telle quelle.
 SOURCES = {"cisa-kev": {"hote": "www.cisa.gov", "chemins": ["/sites/default/files/feeds/known_exploited_vulnerabilities.json"]}, "nvd": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cves/2.0"]}, "epss": {"hote": "api.first.org", "chemins": ["/data/v1/epss"]}, "cert-fr": {"hote": "cert.cyber.gouv.fr", "chemins": ["/alerte/feed/", "/avis/feed/", "/alerte/{reference}/json/", "/avis/{reference}/json/"]}, "cert-sante": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/alertes-et-vulnerabilites/rss.xml"]}}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
-BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "cvesParAvis": 200, "lot": 500, "lots": 40, "epss": 2000}
+BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "lot": 500, "lots": 40, "epss": 2000}
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
 CERTFR_ID = re.compile(r"^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$")
 CERTSANTE_ID = re.compile(r"^[1-9]\d{0,9}$")
@@ -52,6 +52,7 @@ ADRESSE_CERTSANTE = re.compile(r"^https:\/\/cyberveille\.esante\.gouv\.fr\/alert
 CVSS31_VECTEUR = re.compile(r"^CVSS:3\.1(?:\/[A-Z]{1,3}:[A-Z]{1,2}){8,20}$")
 CVSS40_VECTEUR = re.compile(r"^CVSS:4\.0(?:\/[A-Za-z]{1,3}:[A-Za-z]{1,10}){11,40}$")
 NOM_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,100}$")
+VERSION_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,60}$")
 CVE_DANS_TEXTE = re.compile(r"\bCVE-[12]\d{3}-\d{4,9}\b")
 REFERENCE_CERTFR = re.compile(r"/(?:alerte|avis)/(CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4})/")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -504,6 +505,60 @@ def noms_cpe(configurations):
     return editeurs, produits
 
 
+BORNES_PLAGE = (("versionStartIncluding", "debutInclus"), ("versionStartExcluding", "debutExclus"),
+                ("versionEndIncluding", "finInclus"), ("versionEndExcluding", "finExclus"))
+SANS_VERSION = ("*", "-", "")
+
+
+def produit_touche(m):
+    """Un produit touché tiré d'une entrée « cpeMatch » (lot V4a) : partie, éditeur et produit du CPE, version exacte s'il en
+    porte une, bornes de la plage, drapeau « vulnérable ». None si le CPE est illisible. Une version ou une borne de forme
+    inattendue, ou une mise à jour précisée (« update » du CPE), fait retirer version et bornes : la plage devient absente
+    et le rapprochement reste à décider par une personne, jamais écarté à tort."""
+    if not (isinstance(m, dict) and isinstance(m.get("criteria"), str) and isinstance(m.get("vulnerable"), bool)):
+        return None
+    p = composantes_cpe(m["criteria"])
+    if len(p) < 7 or p[0] != "cpe" or p[1] != "2.3" or p[2] not in ("a", "o", "h"):
+        return None
+    if p[3] in SANS_VERSION or p[4] in SANS_VERSION or not NOM_CPE.fullmatch(p[3]) or not NOM_CPE.fullmatch(p[4]):
+        return None
+    e = {"partie": p[2], "editeur": p[3], "produit": p[4], "version": None, "debutInclus": None, "debutExclus": None,
+         "finInclus": None, "finExclus": None, "vulnerable": m["vulnerable"]}
+    lisible = p[6] in SANS_VERSION
+    if p[5] not in SANS_VERSION:
+        lisible = lisible and bool(VERSION_CPE.fullmatch(p[5]))
+        e["version"] = p[5]
+    for cle, champ in BORNES_PLAGE:
+        borne = m.get(cle)
+        if borne is None:
+            continue
+        lisible = lisible and isinstance(borne, str) and bool(VERSION_CPE.fullmatch(borne))
+        e[champ] = borne
+    if (e["debutInclus"] is not None and e["debutExclus"] is not None) or (e["finInclus"] is not None and e["finExclus"] is not None):
+        lisible = False
+    if not lisible:
+        for champ in ("version", "debutInclus", "debutExclus", "finInclus", "finExclus"):
+            e[champ] = None
+    return e
+
+
+def produits_touches(configurations):
+    """Produits touchés d'une CVE, sans doublon : les vulnérables d'abord, puis les conditions de plateforme, bornés.
+    Renvoie (liste, tronque) ; `tronque` : un produit vulnérable n'a pas pu être gardé."""
+    vulnerables, autres = [], []
+    for conf in configurations if isinstance(configurations, list) else ():
+        for noeud in (conf.get("nodes") if isinstance(conf, dict) else None) or ():
+            for m in (noeud.get("cpeMatch") if isinstance(noeud, dict) else None) or ():
+                e = produit_touche(m)
+                if e is None:
+                    continue
+                liste = vulnerables if e["vulnerable"] else autres
+                if e not in liste:
+                    liste.append(e)
+    garde = (vulnerables + autres)[: BORNES["produitsTouches"]]
+    return garde, len(vulnerables) > BORNES["produitsTouches"]
+
+
 def faille_nvd(v):
     c = v.get("cve") if isinstance(v, dict) else None
     if not isinstance(c, dict) or not isinstance(c.get("id"), str) or not CVE_ID.fullmatch(c["id"]):
@@ -514,6 +569,7 @@ def faille_nvd(v):
     descriptions = c.get("descriptions") if isinstance(c.get("descriptions"), list) else []
     anglais = next((d.get("value") for d in descriptions if isinstance(d, dict) and d.get("lang") == "en"), "")
     editeurs, produits = noms_cpe(c.get("configurations"))
+    touches, tronques = produits_touches(c.get("configurations"))
     metriques = c.get("metrics")
     return {
         "cve": c["id"],
@@ -524,6 +580,8 @@ def faille_nvd(v):
         "cvss40": cvss(metriques, "cvssMetricV40", "4.0", CVSS40_VECTEUR),
         "editeurs": editeurs,
         "produits": produits,
+        "produitsTouches": touches,
+        "produitsTronques": tronques,
     }
 
 

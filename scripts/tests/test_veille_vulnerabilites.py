@@ -160,10 +160,59 @@ class Veille(unittest.TestCase):
         self.assertEqual(e["cvss31"]["vecteur"], "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H")
         self.assertTrue(e["cvss40"]["vecteur"].startswith("CVSS:4.0/"))
         self.assertEqual((e["editeurs"], e["produits"]), (["dlib"], ["dlib"]))
+        # Produits touchés avec leur plage (lot V4a), tirés du seul champ « configurations » (jamais de « affected »).
+        self.assertEqual(e["produitsTouches"], [{"partie": "a", "editeur": "dlib", "produit": "dlib", "version": None,
+                                                 "debutInclus": None, "debutExclus": None, "finInclus": None,
+                                                 "finExclus": "19.24.7", "vulnerable": True}])
+        self.assertFalse(e["produitsTronques"])
         self.assertTrue(e["publieLe"].endswith("Z"))
         for p in (p for _, p in Faux.recues):
             self.assertNotIn("keyword", p)
             self.assertNotIn("cpeName", p)
+
+    def test_nvd_affected_products_keep_ranges_exact_versions_and_the_vulnerable_flag(self):
+        cpe = lambda produit, version="*", update="*": "cpe:2.3:a:editeur_fictif:%s:%s:%s:*:*:*:*:*:*" % (produit, version, update)
+        configurations = [{"nodes": [{"operator": "AND", "cpeMatch": [
+            {"vulnerable": True, "criteria": cpe("gestionnaire_fictif"), "versionStartIncluding": "10.0", "versionEndExcluding": "10.1.5"},
+            {"vulnerable": True, "criteria": cpe("gestionnaire_fictif", "9.4.2")},
+            {"vulnerable": True, "criteria": cpe("gestionnaire_fictif", "9.4.2")},
+            {"vulnerable": False, "criteria": "cpe:2.3:o:systeme_fictif:noyau_fictif:-:*:*:*:*:*:*:*"},
+            # Mise à jour précisée, borne illisible, bornes contradictoires : plage retirée (jamais écartée à tort).
+            {"vulnerable": True, "criteria": cpe("agent_fictif", "2.0", "beta1")},
+            {"vulnerable": True, "criteria": cpe("autre_fictif"), "versionEndExcluding": "<b>1</b>"},
+            {"vulnerable": True, "criteria": cpe("borne_fictive"), "versionEndIncluding": 3},
+            # CPE illisibles ou sans éditeur : écartés.
+            {"vulnerable": True, "criteria": "cpe:2.3:x:editeur_fictif:produit:*:*:*:*:*:*:*:*"},
+            {"vulnerable": True, "criteria": "cpe:2.3:a:*:produit:*:*:*:*:*:*:*:*"},
+            {"vulnerable": True, "criteria": "cpe:/a:editeur:produit"},
+            {"criteria": cpe("sans_drapeau")},
+        ]}]}]
+        touches, tronques = v.produits_touches(configurations)
+        self.assertFalse(tronques)
+        self.assertEqual([(t["produit"], t["vulnerable"]) for t in touches], [
+            ("gestionnaire_fictif", True), ("gestionnaire_fictif", True), ("agent_fictif", True), ("autre_fictif", True),
+            ("borne_fictive", True), ("noyau_fictif", False)])
+        self.assertEqual((touches[0]["debutInclus"], touches[0]["finExclus"], touches[0]["version"]), ("10.0", "10.1.5", None))
+        self.assertEqual(touches[1]["version"], "9.4.2")
+        for t in touches[2:5]:
+            self.assertEqual([t[k] for k in ("version", "debutInclus", "debutExclus", "finInclus", "finExclus")], [None] * 5)
+        self.assertEqual((touches[5]["partie"], touches[5]["version"]), ("o", None))
+
+    def test_nvd_affected_products_are_bounded_vulnerable_first_and_truncation_is_flagged(self):
+        borne = v.BORNES["produitsTouches"]
+        plateformes = [{"vulnerable": False, "criteria": "cpe:2.3:o:systeme_fictif:noyau_%d:*:*:*:*:*:*:*:*" % i} for i in range(5)]
+        vulnerables = [{"vulnerable": True, "criteria": "cpe:2.3:a:editeur_fictif:produit_fictif:1.%d:*:*:*:*:*:*:*" % i}
+                       for i in range(borne - 2)]
+        touches, tronques = v.produits_touches([{"nodes": [{"cpeMatch": plateformes + vulnerables}]}])
+        self.assertEqual(len(touches), borne)
+        self.assertFalse(tronques)
+        self.assertTrue(all(t["vulnerable"] for t in touches[: borne - 2]))
+        touches, tronques = v.produits_touches([{"nodes": [{"cpeMatch": vulnerables * 1 + [
+            {"vulnerable": True, "criteria": "cpe:2.3:a:editeur_fictif:produit_fictif:2.%d:*:*:*:*:*:*:*" % i} for i in range(3)]}]}])
+        self.assertEqual(len(touches), borne)
+        self.assertTrue(tronques)
+        self.assertEqual(v.produits_touches(None), ([], False))
+        self.assertEqual(v.produits_touches([{"nodes": "x"}, "y"]), ([], False))
 
     def test_nvd_window_is_checked_and_a_truncated_collect_is_reported(self):
         for parametres in ({"depuis": "2026-01-01T00:00:00.000Z", "jusqua": "2026-11-14T00:00:00.000Z"},

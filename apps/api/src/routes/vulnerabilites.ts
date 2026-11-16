@@ -4,11 +4,19 @@
    lit avec `lire` ; « Collecter maintenant » demande `administrer`. Son flux s'ouvre par la route commune des flux
    (« Activer la veille », administrateur, validation explicite). Failles et machines : lecture à travers les droits du
    périmètre de chaque machine (service FaillesDetectees) ; rôle et périmètre avec `modifier` et l'écriture sur le
-   périmètre ; « Synchroniser maintenant » relève du module Intégrations (routes/integrations.ts). */
+   périmètre ; « Synchroniser maintenant » relève du module Intégrations (routes/integrations.ts).
+   Lot V4a : fiche d'un produit (rapprochements, machines reliées lisibles), produit relié à une machine (`modifier`,
+   If-Match sur la fiche du produit, machine lue par son périmètre), décision sur une proposition (`modifier`, If-Match sur
+   le rapprochement), suggestions d'identifiant CPE (`modifier`, données de la veille seulement), failles déclarées (`lire`),
+   seuils de priorité (lecture `lire`, écriture `administrer` avec If-Match). */
 import {
   AffectationMachine,
   AffectationMachines,
+  DecisionRapprochement,
   DemandeCollecte,
+  RechercheDeclarees,
+  ReglagePriorite,
+  SuggestionsCpeQuery,
   type ProduitSurveilleDto,
   RechercheAvis,
   RechercheFailles,
@@ -26,6 +34,8 @@ import { route } from '../http/route.js';
 
 const tags = ['Vulnérabilités'];
 const id = z.object({ id: z.uuid() });
+const lienMachine = z.object({ id: z.uuid(), machineId: z.uuid() });
+const CorpsLien = z.object({ machineId: z.uuid() }).strict();
 
 export const vulnerabilitesRoutes = [
   route({
@@ -237,5 +247,135 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:modifier',
     body: AffectationMachines,
     handler: async ({ svc, s, body, ip }) => svc.vulnerabilites.failles.affecterEnMasse(body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/produits/:id/fiche',
+    summary:
+      'Fiche d’un produit surveillé : identité CPE, machines reliées lisibles, rapprochements avec la veille (sauf retirés) et leur priorité',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const f = await svc.vulnerabilites.produits.fiche((s as Session).user, params.id);
+      setEtag(reply, f.produit.version);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/produits/:id/machines',
+    summary:
+      'Relier le produit à une machine lisible (If-Match : version du produit) ; une machine non lisible répond comme inconnue',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsLien,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.relier(
+        params.id,
+        body.machineId,
+        true,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/produits/:id/machines/:machineId',
+    summary: 'Délier le produit d’une machine lisible (If-Match : version du produit)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: lienMachine,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.relier(
+        params.id,
+        params.machineId,
+        false,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id/produits',
+    summary: 'Produits surveillés reliés à une machine lisible',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.produits.deMachine((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/identites-cpe',
+    summary:
+      'Couples éditeur et produit déjà connus de la veille qui ressemblent au nom saisi (aucun appel réseau), pour l’identifiant CPE d’un produit',
+    tags,
+    access: 'vulnerabilites:modifier',
+    query: SuggestionsCpeQuery,
+    handler: async ({ svc, query }) => svc.vulnerabilites.rapprochements.suggestions(query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/rapprochements/:id/decision',
+    summary: 'Confirmer ou rejeter un rapprochement proposé, avec une note (If-Match : version du rapprochement)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: DecisionRapprochement,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.rapprochements.decider(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/declarees',
+    summary:
+      'Failles déclarées : CVE rattachées à un produit relié à des machines lisibles, hors machines où Tenable les détecte ; priorité calculée',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheDeclarees,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.declarees((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/priorite/reglage',
+    summary: 'Seuils de la grille de priorité (ETag : version du réglage)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, reply }) => {
+      const r = await svc.vulnerabilites.priorite.lire();
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/priorite/reglage',
+    summary: 'Régler les seuils de la grille de priorité (If-Match : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ReglagePriorite,
+    handler: async ({ svc, s, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
   }),
 ];

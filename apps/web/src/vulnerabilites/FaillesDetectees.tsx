@@ -3,7 +3,9 @@
    (gravité, exploitée, exploitable, non maintenu), fiche d'un constat (CVE, vecteur CVSS tel quel, correctif en anglais tel
    quel, machines par rôle). Écran sobre avec les composants de la charte (packages/ui), sous la CSP stricte (ADR 0006) ;
    le style du poste de commandement viendra au lot V8. Seules les machines que la personne peut lire (périmètre) sont
-   comptées et montrées : le serveur en est seul juge. Aucun calcul de priorité ni de rang dans ce lot. */
+   comptées et montrées : le serveur en est seul juge. Lot V4a : colonne et filtre de priorité (niveau calculé par la
+   plateforme et faits qui le fondent), failles « déclarées » (CVE rattachées à un produit surveillé relié à des machines),
+   distinctes des failles détectées par Tenable. */
 import {
   Alert,
   Anchor,
@@ -24,11 +26,16 @@ import {
   type ConstatDto,
   type ConstatResumeDto,
   type EtatSynchronisationDto,
+  type FailleDeclareeDto,
   GRAVITES_TENABLE,
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
+  NIVEAUX_PRIORITE,
+  type NiveauPriorite,
   type PageFailles,
   type PageMachines,
+  type Priorite,
+  STATUT_RAPPROCHEMENT_LIBELLES,
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -39,6 +46,8 @@ import { fmtDate } from '../components/common';
 import { resumeExecution } from '../integrations/integrations';
 import { useCan } from '../session';
 import {
+  ETAT_PRIORITE,
+  faitsPriorite,
   FILTRES_CONSTATS_VIDES,
   FILTRES_MACHINES_VIDES,
   type FiltresConstats,
@@ -51,12 +60,25 @@ import {
   marquesConstat,
   resumeCves,
   urlConstats,
+  urlDeclarees,
   urlMachines,
 } from './failles';
 import { nombrePages } from './veille';
 import { MachinesTable } from './Machines';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
+
+/** Priorité calculée par la plateforme et faits qui la fondent (sans état). */
+export function PrioriteFaits({ p }: { p: Priorite }) {
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_PRIORITE[p.niveau]}>{p.niveau}</StatusChip>
+      <Text size="xs" c="dimmed">
+        {faitsPriorite(p).join(' · ')}
+      </Text>
+    </Stack>
+  );
+}
 
 /** Liste des constats (sans état) : rendu testable hors navigateur. */
 export function ConstatsTable({
@@ -71,6 +93,7 @@ export function ConstatsTable({
       <Table>
         <Table.Thead>
           <Table.Tr>
+            <Table.Th>Priorité</Table.Th>
             <Table.Th>Contrôle de Tenable</Table.Th>
             <Table.Th>Gravité</Table.Th>
             <Table.Th>CVE</Table.Th>
@@ -81,6 +104,9 @@ export function ConstatsTable({
         <Table.Tbody>
           {constats.map((c) => (
             <Table.Tr key={c.id}>
+              <Table.Td>
+                <PrioriteFaits p={c.priorite} />
+              </Table.Td>
               <Table.Td>
                 <Anchor
                   component="button"
@@ -96,6 +122,7 @@ export function ConstatsTable({
                   {c.famille ? ` · ${c.famille}` : ''}
                 </Text>
                 <Group gap="2xs">
+                  <StatusChip etat="info">Détecté par Tenable</StatusChip>
                   {marquesConstat(c).map((m) => (
                     <StatusChip key={m.libelle} etat={m.etat}>
                       {m.libelle}
@@ -129,9 +156,77 @@ export function ConstatsTable({
           ))}
           {constats.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={5}>
+              <Table.Td colSpan={6}>
                 <Text size="sm" c="dimmed">
                   Aucune faille détectée ne correspond, parmi les machines que vous pouvez lire.
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
+      </Table>
+    </DataTable>
+  );
+}
+
+/** Failles déclarées (sans état) : CVE rattachées à un produit surveillé relié à des machines, mention « déclaré ». */
+export function DeclareesTable({ failles }: { failles: FailleDeclareeDto[] }) {
+  return (
+    <DataTable label="Failles déclarées">
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Priorité</Table.Th>
+            <Table.Th>CVE</Table.Th>
+            <Table.Th>Produit surveillé</Table.Th>
+            <Table.Th>Gravité (NVD)</Table.Th>
+            <Table.Th>Machines</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {failles.map((f) => (
+            <Table.Tr key={f.rapprochementId}>
+              <Table.Td>
+                <PrioriteFaits p={f.priorite} />
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm" className="veille-code">
+                  {f.cve}
+                </Text>
+                <Group gap="2xs">
+                  <StatusChip etat="attention">Déclaré</StatusChip>
+                  {f.kev && <StatusChip etat="erreur">Exploitée (KEV)</StatusChip>}
+                  {f.alerteCertFr && <StatusChip etat="erreur">Alerte CERT-FR</StatusChip>}
+                </Group>
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm">
+                  {f.produit.nom} {f.produit.versionProduit}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {f.produit.editeur} · {STATUT_RAPPROCHEMENT_LIBELLES[f.statut]}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                {f.gravite ? (
+                  <StatusChip etat={GRAVITE_TENABLE_ETAT[f.gravite]}>{libelleGravite(f.gravite)}</StatusChip>
+                ) : (
+                  'Non publiée'
+                )}
+                {f.cvssScore !== null && (
+                  <Text size="xs" c="dimmed">
+                    CVSS : {f.cvssScore.toLocaleString('fr-FR')}
+                  </Text>
+                )}
+              </Table.Td>
+              <Table.Td>{f.machines}</Table.Td>
+            </Table.Tr>
+          ))}
+          {failles.length === 0 && (
+            <Table.Tr>
+              <Table.Td colSpan={5}>
+                <Text size="sm" c="dimmed">
+                  Aucune faille déclarée ne correspond : reliez un produit surveillé à ses machines depuis sa fiche.
                 </Text>
               </Table.Td>
             </Table.Tr>
@@ -147,6 +242,12 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
   const lien = lienVoirAussi(c);
   return (
     <Stack>
+      <Stack gap="2xs">
+        <Title order={3} size="h6">
+          Priorité calculée par la plateforme
+        </Title>
+        <PrioriteFaits p={c.priorite} />
+      </Stack>
       <Group gap="xs">
         <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
         {marquesConstat(c).map((m) => (
@@ -307,6 +408,7 @@ export function FaillesDetecteesPage() {
   const [filtres, setFiltres] = useState<FiltresConstats>(FILTRES_CONSTATS_VIDES);
   const [page, setPage] = useState(1);
   const [pageMachines, setPageMachines] = useState(1);
+  const [pageDeclarees, setPageDeclarees] = useState(1);
   const [ouvert, setOuvert] = useState<string | null>(null);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
@@ -317,6 +419,11 @@ export function FaillesDetecteesPage() {
   const constats = useQuery({
     queryKey: [...CLE, 'constats', filtres, page],
     queryFn: () => get<PageFailles<ConstatResumeDto>>(urlConstats(filtres, page)),
+    enabled: lire && vue === 'failles',
+  });
+  const declarees = useQuery({
+    queryKey: [...CLE, 'declarees', filtres.q, filtres.priorite, pageDeclarees],
+    queryFn: () => get<PageFailles<FailleDeclareeDto>>(urlDeclarees(filtres, pageDeclarees)),
     enabled: lire && vue === 'failles',
   });
   const machines = useQuery({
@@ -333,6 +440,7 @@ export function FaillesDetecteesPage() {
     setFiltres({ ...filtres, ...f });
     setPage(1);
     setPageMachines(1);
+    setPageDeclarees(1);
   };
   const chercher = (e: FormEvent) => {
     e.preventDefault();
@@ -351,7 +459,7 @@ export function FaillesDetecteesPage() {
     <Page>
       <PageHeader
         title="Failles détectées"
-        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine). Un constat par contrôle de Tenable ; « exploitée » : une de ses CVE figure au catalogue KEV de la veille ; « non maintenu » : constat sans CVE. Textes de Tenable en anglais, tels quels."
+        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitée » : une de ses CVE figure au catalogue KEV de la veille ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Textes de Tenable en anglais, tels quels."
         actions={
           <Button component={Link} to="/vulnerabilites/machines" variant="default">
             Machines
@@ -389,6 +497,15 @@ export function FaillesDetecteesPage() {
         </form>
         {vue === 'failles' && (
           <Group align="flex-end">
+            <Select
+              label="Priorité"
+              placeholder="Toutes"
+              clearable
+              value={filtres.priorite || null}
+              onChange={(v) => changer({ priorite: (v ?? '') as NiveauPriorite | '' })}
+              data={NIVEAUX_PRIORITE.map((p) => ({ value: p, label: p }))}
+              comboboxProps={{ withinPortal: false }}
+            />
             <Select
               label="Gravité"
               placeholder="Toutes"
@@ -432,6 +549,28 @@ export function FaillesDetecteesPage() {
               />
             )}
           </Group>
+        )}
+        {vue === 'failles' && (
+          <Stack gap="xs">
+            <Title order={2} size="h4">
+              Failles déclarées (produits surveillés reliés aux machines)
+            </Title>
+            <Text size="sm" c="dimmed">
+              Une CVE rattachée à un produit surveillé (d’office ou confirmée) apparaît sur chaque machine reliée au
+              produit avec la mention « déclaré », sans prétendre à une détection. Si Tenable la détecte aussi sur une
+              machine, elle n’y est comptée qu’une fois, comme détectée.
+            </Text>
+            <ErrorAlert error={declarees.error} />
+            {declarees.data && <DeclareesTable failles={declarees.data.elements} />}
+            {declarees.data && nombrePages(declarees.data.total, declarees.data.parPage) > 1 && (
+              <Pagination
+                total={nombrePages(declarees.data.total, declarees.data.parPage)}
+                value={pageDeclarees}
+                onChange={setPageDeclarees}
+                aria-label="Pages des failles déclarées"
+              />
+            )}
+          </Stack>
         )}
       </Stack>
       <Modal

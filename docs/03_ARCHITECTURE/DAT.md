@@ -97,6 +97,15 @@ fermée des cinq hôtes et de leurs chemins comparée au registre partagé par `
 et éléments bornés, RSS sans déclaration de type ni entité) et rapporte des champs structurés par lots de 500 au plus
 (`suivi veille-lot`, validés par zod), puis le bilan (`suivi veille-finish`). Failles et avis sont rangés sans doublon dans
 `vulnerabilites_veille_cve` et `vulnerabilites_veille_avis` ; ce sont des données publiques, effacées par la remise à vide.
+Depuis le lot V4a (migration `076`), chaque faille NVD porte ses produits touchés, tirés du seul champ `configurations` (CPE,
+version exacte, bornes, drapeau « vulnérable », vingt au plus), rangés dans `vulnerabilites_veille_cve_produits` avec leurs
+noms normalisés. Après chaque collecte NVD réussie (hors de la transaction de clôture) et dans la transaction de chaque création
+ou modification d'un produit surveillé, `apps/api/src/vulnerabilites/rapprochements.ts` recalcule, produit par produit et sous
+le verrou de sa fiche, les `vulnerabilites_rapprochements` (rattachée d'office, écartée, proposée, confirmée, rejetée, retirée)
+par les fonctions pures du paquet partagé (`rapprochement-vulnerabilites.ts` : comparaison de versions sûre, classement,
+transitions). Un produit surveillé se relie à la main aux machines (`vulnerabilites_produits_machines`). Priorité P1 à P4 et rang
+des machines sont calculés à la lecture par `priorite-vulnerabilites.ts` (fonctions pures, seuil EPSS rangé dans `settings`,
+clé `vulnerabilites:priorite`) sur les seules machines lisibles ; rien n'en sort du serveur.
 
 Mandataire sortant de l'établissement ([ADR 0101](../adr/0101-mandataire-sortant.md), lot P1) : réglage système unique
 (`administration:administrer`, `If-Match`), rangé sans migration dans `settings` (`systeme:mandataire` : actif, adresse

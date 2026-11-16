@@ -22,6 +22,7 @@ import {
   marquesConstat,
   resumeCves,
   urlConstats,
+  urlDeclarees,
   urlMachines,
 } from '../src/vulnerabilites/failles';
 
@@ -45,6 +46,14 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   cves: ['CVE-2026-90005', 'CVE-2026-90004'],
   machines: 3,
   derniereDetection: '2026-11-16T06:04:48.000Z',
+  alerteCertFr: false,
+  priorite: {
+    niveau: 'P1',
+    faits: [
+      { fait: 'exploitation', sources: ['kev'] },
+      { fait: 'presence', presence: 'detectee' },
+    ],
+  },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -99,7 +108,26 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   derniere: null,
   source: 'tenable',
   integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
-  compteurs: { critique: 2, elevee: 1, moyenne: 0, faible: 0, exploites: 1, exploitables: 2 },
+  compteurs: {
+    critique: 2,
+    elevee: 1,
+    moyenne: 0,
+    faible: 0,
+    exploites: 1,
+    exploitables: 2,
+    declarees: 1,
+    exploitationAveree: 1,
+  },
+  rang: {
+    position: 2,
+    total: 5,
+    faits: [
+      { fait: 'exploitation', nombre: 1 },
+      { fait: 'role', role: null },
+      { fait: 'critiques', nombre: 2 },
+      { fait: 'elevees', nombre: 1 },
+    ],
+  },
   version: 4,
   ...m,
 });
@@ -114,8 +142,10 @@ describe('menu et aide', () => {
       'vulnerabilites-veille',
       'vulnerabilites-failles',
       'vulnerabilites-machines',
+      'vulnerabilites-priorite',
     ]);
     expect(localiser('/vulnerabilites/failles')?.rubrique.id).toBe('vulnerabilites-failles');
+    expect(localiser('/vulnerabilites/priorite')?.rubrique.id).toBe('vulnerabilites-priorite');
     expect(localiser('/vulnerabilites/machines')?.rubrique.id).toBe('vulnerabilites-machines');
     // Un droit métier seul n'ouvre pas le module (droits par défaut resserrés, lot V5).
     expect(
@@ -143,9 +173,16 @@ describe('adresses et libellés', () => {
   it('constats : recherche et filtres ; machines : nom, rôle, périmètre', () => {
     expect(urlConstats(FILTRES_CONSTATS_VIDES)).toBe('/api/vulnerabilites/constats');
     expect(
-      urlConstats({ q: ' CVE-2026 ', gravite: 'critique', exploite: true, exploitable: true, nonMaintenu: true }, 2),
+      urlConstats(
+        { q: ' CVE-2026 ', gravite: 'critique', exploite: true, exploitable: true, nonMaintenu: true, priorite: 'P2' },
+        2,
+      ),
     ).toBe(
-      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&page=2',
+      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&priorite=P2&page=2',
+    );
+    expect(urlDeclarees(FILTRES_CONSTATS_VIDES)).toBe('/api/vulnerabilites/declarees');
+    expect(urlDeclarees({ q: ' glpi ', priorite: 'P1' }, 2)).toBe(
+      '/api/vulnerabilites/declarees?q=glpi&priorite=P1&page=2',
     );
     expect(urlMachines(FILTRES_MACHINES_VIDES)).toBe('/api/vulnerabilites/machines');
     expect(urlMachines({ q: 'srv', role: 'aucun', perimetre: 'aucun' }, 3)).toBe(
@@ -196,6 +233,10 @@ describe('rendu', () => {
     );
     expect(html).toContain('Exploitée (KEV)');
     expect(html).toContain('CVE-2026-90005, CVE-2026-90004 et 5 autres');
+    // Lot V4a : priorité calculée, ses faits en clair, mention « détecté par Tenable ».
+    expect(html).toContain('>P1<');
+    expect(html).toContain('Exploitation avérée (catalogue KEV) · Détectée par Tenable');
+    expect(html).toContain('Détecté par Tenable');
     expect(html).toContain('&lt;img src=x');
     expect(html).not.toContain('<img');
     expect(rendu(createElement(ConstatsTable, { constats: [], onOuvrir: rien }))).toContain('Aucune faille détectée');
@@ -225,6 +266,10 @@ describe('rendu', () => {
   it('machines : compteurs par gravité, rôle manquant signalé, cases à cocher seulement pour l’affectation', () => {
     const html = rendu(createElement(MachinesTable, { machines: [machine()] }));
     expect(html).toContain('2 · 1 · 0 · 0');
+    // Lot V4a : rang et faits, exploitées, exploitables et déclarées.
+    expect(html).toContain('2 / 5');
+    expect(html).toContain('1 faille à l’exploitation avérée · Rôle non renseigné · 2 critiques · 1 élevée');
+    expect(html).toContain('1 · 2 · 1');
     expect(html).toContain('Rôle non renseigné');
     expect(html).not.toContain('type="checkbox"');
     const choix = rendu(

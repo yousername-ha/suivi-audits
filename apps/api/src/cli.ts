@@ -603,8 +603,9 @@ async function main() {
   await svc.db.end();
 }
 
-/** Lot de la veille : 500 éléments d'au plus quelques kilooctets chacun. */
-const VEILLE_ENTREE_MAX = 4 * 1024 * 1024;
+/** Lot de la veille : 500 éléments d'au plus quelques kilooctets chacun ; une faille NVD porte depuis le lot V4a jusqu'à
+    vingt produits touchés avec leur plage de versions (au pire une douzaine de kilooctets). */
+const VEILLE_ENTREE_MAX = 16 * 1024 * 1024;
 /** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
 const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
 

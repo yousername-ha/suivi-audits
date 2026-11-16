@@ -26,6 +26,7 @@ import {
   type FailleVeilleDto,
   type GraviteCvss,
   LotVeille,
+  normaliserNom,
   type PageVeille,
   RapportCollecte,
   type RechercheAvis,
@@ -88,6 +89,9 @@ const nombre = (v: string | null) => (v === null ? null : Number(v));
 const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 export class VeilleVulnerabilites {
+  /** Lot V4a : recalcul des rapprochements après une collecte NVD réussie (branché par services.ts). */
+  apresNvd: (() => Promise<unknown>) | null = null;
+
   constructor(
     private readonly db: Db,
     private readonly flux: FluxExternes,
@@ -614,6 +618,10 @@ export class VeilleVulnerabilites {
       return fin;
     });
     if (!r) throw new HttpError(409, 'Collecte absente ou déjà terminée.');
+    // Rapprochement par version (lot V4a) : recalculé après chaque collecte NVD réussie, hors de la transaction de clôture
+    // (la collecte reste close et reçue même si le recalcul échoue ; il est refait à la collecte ou à la modification
+    // suivante).
+    if (r.source === 'nvd' && r.etat === 'recu' && this.apresNvd) await this.apresNvd();
     return versCollecte(r);
   }
 
@@ -697,6 +705,7 @@ export class VeilleVulnerabilites {
           cvss40_gravite: e.cvss40?.gravite ?? null,
           editeurs: e.editeurs,
           produits: e.produits,
+          produits_tronques: e.produitsTronques,
           nvd_le: sql<Date>`now()`,
         })),
       )
@@ -713,11 +722,43 @@ export class VeilleVulnerabilites {
           cvss40_gravite: eb.ref('excluded.cvss40_gravite'),
           editeurs: eb.ref('excluded.editeurs'),
           produits: eb.ref('excluded.produits'),
+          produits_tronques: eb.ref('excluded.produits_tronques'),
           nvd_le: sql<Date>`now()`,
           maj_le: sql<Date>`now()`,
         })),
       )
       .execute();
+    // Produits touchés (lot V4a) : remplacés en bloc pour chaque CVE du lot, dans l'ordre rapporté par le script.
+    await k
+      .deleteFrom('vulnerabilites_veille_cve_produits')
+      .where(
+        'cve',
+        'in',
+        el.map((e) => e.cve),
+      )
+      .execute();
+    const touches = el.flatMap((e) =>
+      e.produitsTouches.map((p, rang) => ({
+        cve: e.cve,
+        rang,
+        partie: p.partie,
+        editeur: p.editeur,
+        produit: p.produit,
+        editeur_norm: normaliserNom(p.editeur),
+        produit_norm: normaliserNom(p.produit),
+        version: p.version,
+        debut_inclus: p.debutInclus,
+        debut_exclus: p.debutExclus,
+        fin_inclus: p.finInclus,
+        fin_exclus: p.finExclus,
+        vulnerable: p.vulnerable,
+      })),
+    );
+    for (let i = 0; i < touches.length; i += 2000)
+      await k
+        .insertInto('vulnerabilites_veille_cve_produits')
+        .values(touches.slice(i, i + 2000))
+        .execute();
   }
 
   /** EPSS ne note que des failles déjà connues : un score pour une faille inconnue de la veille est ignoré. */

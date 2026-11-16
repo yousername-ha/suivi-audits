@@ -173,6 +173,11 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_constats',
   'vulnerabilites_constat_cves',
   'vulnerabilites_detections',
+  // Rapprochement par version (ADR 0100, lot V4a) : produits touchés tirés de NVD (recalculables), liens produit-machine et
+  // rapprochements décidés par les utilisateurs, effacés avec les produits, les machines et la veille.
+  'vulnerabilites_veille_cve_produits',
+  'vulnerabilites_produits_machines',
+  'vulnerabilites_rapprochements',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

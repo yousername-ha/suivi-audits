@@ -68,12 +68,16 @@ describe('migration 072 sur base vierge', () => {
       t.svc.db.q("UPDATE module_activation SET disabled = ARRAY['vulnerabilites_inconnu'] WHERE id = 1"),
     ).rejects.toThrow();
     // Contraintes de la table : famille, criticité et origine en liste fermée ; doublon à la casse près.
-    const ins = (famille: string, criticite: string, origine = 'saisie', nom = 'Produit SQL') =>
+    // Version obligatoire depuis la migration 076 (lot V4a, V21).
+    const ins = (famille: string, criticite: string, origine = 'saisie', nom = 'Produit SQL', version = '1.0') =>
       t.svc.db.q(
-        `INSERT INTO vulnerabilites_produits (editeur, nom, famille, criticite, origine, created_by, updated_by)
-         VALUES ('Éditeur SQL', $1, $2, $3, $4, 'test', 'test')`,
-        [nom, famille, criticite, origine],
+        `INSERT INTO vulnerabilites_produits (editeur, nom, version_produit, famille, criticite, origine, created_by, updated_by)
+         VALUES ('Éditeur SQL', $1, $5, $2, $3, $4, 'test', 'test')`,
+        [nom, famille, criticite, origine, version],
       );
+    await expect(ins('web', 'faible', 'saisie', 'Produit SQL', '  ')).rejects.toThrow(
+      /vulnerabilites_produits_version_obligatoire/,
+    );
     await expect(ins('autre', 'faible')).rejects.toThrow();
     await expect(ins('web', 'critique')).rejects.toThrow();
     await expect(ins('web', 'faible', 'manuel')).rejects.toThrow();

@@ -253,6 +253,22 @@
   - port de Tenable réglable (443 par défaut).
   Non vérifié sur l'instance : la correspondance entre les machines de l'analyse et celles de l'inventaire (`uuid` ou
   `tenableUUID`), la pagination de l'inventaire, toute synchronisation réelle.
+- **Lot V4a, rapprochement, priorité et rang** (16/11/2026) : migration `076`. Version d'un produit obligatoire ; la veille
+  NVD garde les plages de versions touchées ; rapprochement d'office, écarté ou proposé ; produit relié à la main à ses
+  machines avec la mention « déclaré » ; priorité P1 à P4 et rang des machines, avec leurs faits. À confirmer par le RSSI :
+  - le rattachement d'office exige que le produit porte son identifiant normalisé (CPE), que l'écran propose parmi ceux
+    connus de la veille ; sans lui, le rapprochement se fait par nom et reste à décider ;
+  - une plage à une seule borne compte comme une plage ; une version non numérique, un produit touché sans plage ou une
+    liste de produits tronquée (20 par CVE) donnent une proposition, jamais un écart ;
+  - **une CVE rattachée à un produit compte comme présente même si aucune machine n'est reliée au produit** : elle peut
+    donc être en P1 ;
+  - l'exploitation avérée vient du catalogue KEV ou d'une alerte du CERT-FR ; **les alertes du CERT Santé ne comptent pas**,
+    contrairement au point 9 ;
+  - seul le seuil EPSS se règle (0,5 par défaut) ; les gravités de la grille sont fixes ;
+  - une décision (confirmation, rejet) ne peut pas être annulée ; un rejet est reproposé si le produit ou les plages
+    publiées changent ;
+  - une faille exploitée que NVD n'a pas republiée dans la fenêtre de collecte n'est pas rapprochée d'un produit déclaré.
+  Non réalisé : états de suivi d'une faille, lien avec une action, proposition « corrigée ».
 
 ## Conséquences
 

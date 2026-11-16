@@ -32,6 +32,7 @@ const produit = (p: Partial<ProduitSurveilleDto> = {}): ProduitSurveilleDto => (
   responsable: null,
   responsableLibelle: null,
   origine: 'saisie',
+  suivi: { rattachees: 0, aDecider: 0 },
   version: 1,
   createdBy: 'test',
   createdAt: '2026-11-15T10:00:00.000Z',
@@ -56,7 +57,15 @@ describe('menu', () => {
 
 describe('formulaire', () => {
   it('signale les champs obligatoires manquants', () => {
-    expect(champsManquants(formulaireDepuis(null))).toEqual(['éditeur', 'nom du produit', 'famille', 'criticité']);
+    expect(champsManquants(formulaireDepuis(null))).toEqual([
+      'éditeur',
+      'nom du produit',
+      'version',
+      'famille',
+      'criticité',
+    ]);
+    // Version obligatoire (lot V4a, V21) : des espaces ne suffisent pas.
+    expect(champsManquants({ ...formulaireDepuis(produit()), versionProduit: '  ' })).toEqual(['version']);
     expect(champsManquants(formulaireDepuis(produit()))).toEqual([]);
   });
 

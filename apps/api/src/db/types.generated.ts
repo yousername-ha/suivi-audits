@@ -1644,6 +1644,32 @@ export interface VulnerabilitesProduits {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesProduitsMachines {
+  produit_id: string;
+  machine_id: string;
+  relie_par: string;
+  relie_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesRapprochements {
+  id: Generated<string>;
+  produit_id: string;
+  cve: string;
+  statut: "rattachee" | "ecartee" | "proposee" | "confirmee" | "rejetee" | "retiree";
+  motif: string | null;
+  version_dans_plage: string | null;
+  par_identifiant: boolean;
+  empreinte_produit: string;
+  empreinte_cve: string;
+  version_decidee: string | null;
+  decide_par: string | null;
+  decide_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  note: Generated<string>;
+  version: Generated<number>;
+  calcule_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesSynchronisations {
   execution_id: string;
   integration_id: string;
@@ -1727,6 +1753,23 @@ export interface VulnerabilitesVeilleCve {
   avis_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  produits_tronques: Generated<boolean>;
+}
+
+export interface VulnerabilitesVeilleCveProduits {
+  cve: string;
+  rang: number;
+  partie: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  editeur_norm: string;
+  produit_norm: string;
+  version: string | null;
+  debut_inclus: string | null;
+  debut_exclus: string | null;
+  fin_inclus: string | null;
+  fin_exclus: string | null;
+  vulnerable: boolean;
 }
 
 export interface VulnerabilitesVeilleSources {
@@ -1907,11 +1950,14 @@ export interface DB {
   vulnerabilites_detections: VulnerabilitesDetections;
   vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;
+  vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;
+  vulnerabilites_rapprochements: VulnerabilitesRapprochements;
   vulnerabilites_synchronisations: VulnerabilitesSynchronisations;
   vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;
   vulnerabilites_veille_collectes: VulnerabilitesVeilleCollectes;
   vulnerabilites_veille_cve: VulnerabilitesVeilleCve;
+  vulnerabilites_veille_cve_produits: VulnerabilitesVeilleCveProduits;
   vulnerabilites_veille_sources: VulnerabilitesVeilleSources;
   wall_screens: WallScreens;
   webauthn_challenges: WebauthnChallenges;

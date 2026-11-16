@@ -50,6 +50,16 @@ des vulnérabilités passe alors par lui, et l'équipe infrastructure autorise l
 port réglé, au lieu de la sortie TCP 443 vers les cinq sources ([guide d'installation, étape 11.12](docs/INSTALLATION.md)).
 (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `076`** (module Vulnérabilités, rapprochement par version, lot V4a de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (une contrainte `NOT VALID` de version obligatoire sur
+`vulnerabilites_produits`, une colonne `produits_tronques` sur `vulnerabilites_veille_cve`, tables
+`vulnerabilites_veille_cve_produits`, `vulnerabilites_produits_machines` et `vulnerabilites_rapprochements`, cinq index), durée
+négligeable, sans reprise de données. Rien à faire sur le serveur. **La version d'un produit surveillé devient obligatoire** :
+une fiche enregistrée sans version reste lisible, mais sa prochaine modification demande la version. Les produits touchés et
+leurs plages de versions ne sont rangés qu'à partir des collectes NVD suivant la mise à jour (fenêtre de sept jours au plus) :
+les CVE plus anciennes ne sont pas rapprochées tant que NVD ne les republie pas. Le seuil EPSS de la grille de priorité vaut
+50 % par défaut (Risques > Vulnérabilités > Seuils de priorité). (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -169,6 +179,36 @@ port réglé, au lieu de la sortie TCP 443 vers les cinq sources ([guide d'insta
   port réglé. Carte Configuration système > « Mandataire sortant » : flux qui l'utilisent (veille), en accès direct par
   construction (Tenable, courriel), pas encore pris en charge (assistant, mises à jour, antivirus, ACME) ; avertissement sur
   l'inspection du trafic ; article d'aide. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4a : rapprochement par version, produits reliés aux machines, priorité et rang**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 8, 9 et 16, décisions V20 et V21). **Version obligatoire**
+  d'un produit surveillé (schéma partagé, API, écran ; contrainte de base `NOT VALID`). **Veille NVD étendue** : le script garde,
+  par CVE, les produits touchés tirés du seul champ `configurations` (partie, éditeur et produit du CPE, version exacte, bornes
+  `versionStart…`/`versionEnd…`, drapeau « vulnérable »), vingt au plus, les vulnérables d'abord, avec un drapeau
+  « produits tronqués » ; une borne illisible ou une mise à jour précisée retire la plage (jamais d'exclusion à tort) ; lot de
+  l'exécutant porté à 16 Mo. **Comparaison de versions sûre** (`packages/shared`) : segments numériques séparés par des points,
+  préfixe « v » toléré ; toute autre forme rend « incertain ». **Rapprochement** recalculé après chaque collecte NVD réussie et
+  à chaque création ou modification d'un produit, déterministe : par identifiant CPE (éditeur et produit exacts), **rattachée
+  d'office** si la version déclarée est dans une plage publiée, **écartée** si elle est hors de toutes ; **proposée** sinon (nom
+  seulement, aucune plage publiée, version non comparable, liste des produits touchés incomplète), avec la position de la
+  version. Décision « confirmer » ou « rejeter » avec note (`vulnerabilites:modifier`, `If-Match`) ; un rejet n'est pas reproposé
+  tant que ni le produit ni les données de la CVE n'ont changé ; une confirmation tient jusqu'au changement de version.
+  **Suggestions d'identifiant CPE** tirées des couples éditeur et produit déjà rangés par la veille (aucun appel réseau).
+  **Produit relié à la main aux machines** (V20) : `vulnerabilites:modifier` et machine lisible par son périmètre (une machine
+  non lisible répond comme inconnue), `If-Match` sur la fiche du produit, depuis la fiche du produit ou de la machine ; une CVE
+  rattachée apparaît sur chaque machine reliée avec la mention **« déclaré »**, compte dans ses compteurs et son rang, et n'est
+  comptée qu'une fois, comme détectée, si Tenable la détecte aussi. **Priorité P1 à P4** calculée par une fonction pure
+  (exploitation avérée par le catalogue KEV ou une alerte du CERT-FR, présence détectée, déclarée ou à confirmer, gravité, score
+  EPSS, exploit disponible), avec les faits qui la fondent, appliquée aux constats de Tenable et aux failles déclarées ; seuil
+  EPSS réglable (`vulnerabilites:administrer`, `If-Match`, réglage `vulnerabilites:priorite` de la table `settings`).
+  **Rang d'une machine** (exploitation avérée, puis rôle, puis critiques, puis élevées) calculé sur les seules machines lisibles,
+  avec ses faits ; liste des machines rangée par défaut de la plus critique à la moins critique. API `/produits/:id/fiche`,
+  `/produits/:id/machines`, `/machines/:id/produits`, `/identites-cpe`, `/rapprochements/:id/decision`, `/declarees`,
+  `/priorite/reglage` ; filtre `priorite` sur `/constats`. Journal `vulnerabilites.rapprochement.recalcule`, `.confirme`,
+  `.rejete`, `vulnerabilites.produit.machine_reliee`, `.machine_deliee`, `vulnerabilites.priorite.reglage_modifie`, sans nom ni
+  adresse de machine. Écrans : fiche du produit (machines reliées, CVE rattachées, écartées, propositions à décider), colonne et
+  filtre de priorité et failles déclarées dans « Failles détectées », rang et fiche de machine dans « Machines », écran « Seuils
+  de priorité ». Rien ne part vers l'assistant, aucune notification, aucun export. (session « Module surveillance
+  vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

@@ -2,8 +2,16 @@
    comme les fournisseurs (ADR 0032). Les droits de module sont contrôlés par route() ; ce service est seul juge du reste :
    doublon (même éditeur, produit et version, à la casse près), version attendue (If-Match), fournisseur lié lisible par la
    personne à travers la porte de lecture (ADR 0083), responsable existant et actif. Chaque écriture est journalisée
-   (`vulnerabilites.produit.*`) sans secret. Accès aux données en Kysely (ADR 0062). */
+   (`vulnerabilites.produit.*`) sans secret. Accès aux données en Kysely (ADR 0062).
+   Lot V4a : version obligatoire (V21) ; rapprochements recalculés dans la transaction de chaque création ou modification ;
+   fiche du produit (machines reliées lisibles, rapprochements) ; produit relié à la main aux machines (V20), avec
+   `vulnerabilites:modifier` et la lecture de la machine par son périmètre (une machine non lisible répond comme une machine
+   inconnue), If-Match sur la fiche du produit, journal sans nom ni adresse de machine. */
 import {
+  type FicheProduitDto,
+  identiteCpe,
+  type MachineRelieeDto,
+  type ProduitRelieDto,
   type FamilleProduit,
   type ProduitSurveilleBody,
   type ProduitSurveilleDto,
@@ -20,8 +28,12 @@ import type { VulnerabilitesProduits } from '../db/types.generated.js';
 import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
+import type { Rapprochements } from './rapprochements.js';
+import { lisible } from './sql.js';
 
-type Ligne = Selectable<VulnerabilitesProduits>;
+type Ligne = Selectable<VulnerabilitesProduits> & { rattachees: number; a_decider: number };
+const MACHINE_INTROUVABLE = 'Machine introuvable ou non accessible.';
+const VERSION_OBLIGATOIRE = 'Version obligatoire : c’est elle qui sert au rapprochement avec les failles publiées.';
 
 const DOUBLON =
   'Ce produit est déjà surveillé : même éditeur, même produit et même version (sans tenir compte de la casse).';
@@ -45,6 +57,7 @@ const versDto = (r: Ligne, libelles: Map<string, string>): ProduitSurveilleDto =
     responsable,
     responsableLibelle: responsable ? (libelles.get(`${responsable.type}:${responsable.id}`) ?? null) : null,
     origine: r.origine,
+    suivi: { rattachees: r.rattachees, aDecider: r.a_decider },
     version: r.version,
     createdBy: r.created_by,
     createdAt: r.created_at.toISOString(),
@@ -70,15 +83,24 @@ const doublonEnBase = (e: unknown): never => {
   throw e;
 };
 
+/** Compteurs de suivi d'un produit (lot V4a) : CVE rattachées et propositions à décider. */
+const compteursSuivi = [
+  sql<number>`(SELECT count(*)::int FROM vulnerabilites_rapprochements r
+    WHERE r.produit_id = vulnerabilites_produits.id AND r.statut IN ('rattachee', 'confirmee'))`.as('rattachees'),
+  sql<number>`(SELECT count(*)::int FROM vulnerabilites_rapprochements r
+    WHERE r.produit_id = vulnerabilites_produits.id AND r.statut = 'proposee')`.as('a_decider'),
+];
+
 export class ProduitsSurveilles {
   constructor(
     private readonly db: Db,
     private readonly grc: Grc,
+    private readonly rapprochements: Rapprochements,
   ) {}
 
   /** Registre, éventuellement filtré par famille ; ordre : éditeur, produit, version. */
   async lister(famille?: FamilleProduit): Promise<ProduitSurveilleDto[]> {
-    let q = this.db.k.selectFrom('vulnerabilites_produits').selectAll();
+    let q = this.db.k.selectFrom('vulnerabilites_produits').selectAll().select(compteursSuivi);
     if (famille) q = q.where('famille', '=', famille);
     const lignes = await q
       .orderBy(sql`lower(editeur)`)
@@ -91,7 +113,7 @@ export class ProduitsSurveilles {
   }
 
   async lire(id: string, k: Kdb = this.db.k, verrou = false): Promise<ProduitSurveilleDto> {
-    let q = k.selectFrom('vulnerabilites_produits').selectAll().where('id', '=', id);
+    let q = k.selectFrom('vulnerabilites_produits').selectAll().select(compteursSuivi).where('id', '=', id);
     if (verrou) q = q.forUpdate();
     const r = await q.executeTakeFirst();
     if (!r) throw new HttpError(404, 'Produit surveillé introuvable.');
@@ -129,9 +151,16 @@ export class ProduitsSurveilles {
           })
           .returning('id')
           .executeTakeFirstOrThrow();
-        const cree = await this.lire(id, k);
-        await this.db.audit(user, ip, 'vulnerabilites.produit.cree', id, { ...resume(cree), origine: cree.origine }, c);
-        return cree;
+        await this.db.audit(
+          user,
+          ip,
+          'vulnerabilites.produit.cree',
+          id,
+          { ...resume(await this.lire(id, k)), origine: 'saisie' },
+          c,
+        );
+        await this.rapprochements.recalculerProduit(k, c, id);
+        return this.lire(id, k);
       }, user.username)
       .catch(doublonEnBase);
   }
@@ -148,6 +177,8 @@ export class ProduitsSurveilles {
         const avant = await this.lire(id, k, true);
         if (avant.version !== attendue) throw conflict({ ...avant });
         const apres = { ...resume(avant), ...patch };
+        // Fiche enregistrée sans version avant le lot V4a : la modification doit la renseigner (V21).
+        if (!apres.versionProduit.trim()) throw new HttpError(422, VERSION_OBLIGATOIRE);
         // Un lien inchangé reste valable même pour qui ne lit pas les fournisseurs ; un nouveau lien est contrôlé.
         if (patch.fournisseurId !== undefined && patch.fournisseurId !== avant.fournisseurId)
           await this.verifierFournisseur(patch.fournisseurId, user);
@@ -190,7 +221,8 @@ export class ProduitsSurveilles {
           { champs, avant: resume(avant), apres: resume(modifie), version: modifie.version },
           c,
         );
-        return modifie;
+        await this.rapprochements.recalculerProduit(k, c, id);
+        return this.lire(id, k);
       }, user.username)
       .catch(doublonEnBase);
   }
@@ -209,6 +241,119 @@ export class ProduitsSurveilles {
         c,
       );
     }, user.username);
+  }
+
+  /* ---------------------------------------------------------------- Fiche et machines reliées (lot V4a) */
+  /** Fiche : identité CPE lue, machines reliées que la personne peut lire, rapprochements. */
+  async fiche(user: SessionUser, id: string): Promise<FicheProduitDto> {
+    const produit = await this.lire(id);
+    const { rows: machines } = await sql<{
+      id: string;
+      nom: string | null;
+      adresse: string | null;
+      role: MachineRelieeDto['role'];
+      perimetre_nom: string | null;
+      relie_le: Date;
+    }>`SELECT m.id, m.nom, m.adresse, m.role, s.name AS perimetre_nom, pm.relie_le
+       FROM vulnerabilites_produits_machines pm
+       JOIN vulnerabilites_machines m ON m.id = pm.machine_id
+       LEFT JOIN grc_smsis s ON s.id = m.perimetre_id
+       WHERE pm.produit_id = ${id}::uuid AND ${lisible(user)}
+       ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id`.execute(this.db.k);
+    return {
+      produit,
+      identite: identiteCpe(produit.cpe),
+      machines: machines.map((m) => ({
+        id: m.id,
+        nom: m.nom,
+        adresse: m.adresse,
+        role: m.role,
+        perimetreNom: m.perimetre_nom,
+        relieLe: m.relie_le.toISOString(),
+      })),
+      ...(await this.rapprochements.duProduit(id)),
+    };
+  }
+
+  /** Relie (ou délie) le produit à une machine lisible par la personne (If-Match : version de la fiche du produit, qui
+      augmente). Une machine non lisible répond comme une machine inconnue. */
+  async relier(
+    id: string,
+    machineId: string,
+    relie: boolean,
+    attendue: number,
+    user: SessionUser,
+    ip: string,
+  ): Promise<ProduitSurveilleDto> {
+    return this.db.tx(async (c, k) => {
+      const avant = await this.lire(id, k, true);
+      if (avant.version !== attendue) throw conflict({ ...avant });
+      const { rows } = await sql<{ id: string }>`SELECT m.id FROM vulnerabilites_machines m
+        WHERE m.id = ${machineId}::uuid AND ${lisible(user)}`.execute(k);
+      if (!rows[0]) throw new HttpError(404, MACHINE_INTROUVABLE);
+      if (relie) {
+        const r = await k
+          .insertInto('vulnerabilites_produits_machines')
+          .values({ produit_id: id, machine_id: machineId, relie_par: user.username })
+          .onConflict((oc) => oc.doNothing())
+          .executeTakeFirst();
+        if (!Number(r.numInsertedOrUpdatedRows)) throw new HttpError(409, 'Cette machine est déjà reliée au produit.');
+      } else {
+        const r = await k
+          .deleteFrom('vulnerabilites_produits_machines')
+          .where('produit_id', '=', id)
+          .where('machine_id', '=', machineId)
+          .executeTakeFirst();
+        if (!Number(r.numDeletedRows)) throw new HttpError(404, 'Cette machine n’est pas reliée au produit.');
+      }
+      const { version } = await k
+        .updateTable('vulnerabilites_produits')
+        .set((eb) => ({ version: eb('version', '+', 1), updated_by: user.username, updated_at: sql<Date>`now()` }))
+        .where('id', '=', id)
+        .returning('version')
+        .executeTakeFirstOrThrow();
+      await this.db.audit(
+        user,
+        ip,
+        relie ? 'vulnerabilites.produit.machine_reliee' : 'vulnerabilites.produit.machine_deliee',
+        id,
+        { machine: machineId, version },
+        c,
+      );
+      return this.lire(id, k);
+    }, user.username);
+  }
+
+  /** Produits reliés à une machine lisible (fiche de la machine). */
+  async deMachine(user: SessionUser, machineId: string): Promise<ProduitRelieDto[]> {
+    const { rows: m } = await sql<{ id: string }>`SELECT m.id FROM vulnerabilites_machines m
+      WHERE m.id = ${machineId}::uuid AND ${lisible(user)}`.execute(this.db.k);
+    if (!m[0]) throw new HttpError(404, MACHINE_INTROUVABLE);
+    const lignes = await this.db.k
+      .selectFrom('vulnerabilites_produits_machines as pm')
+      .innerJoin('vulnerabilites_produits as p', 'p.id', 'pm.produit_id')
+      .select([
+        'p.id',
+        'p.editeur',
+        'p.nom',
+        'p.version_produit',
+        'p.version',
+        sql<number>`(SELECT count(*)::int FROM vulnerabilites_rapprochements r
+          WHERE r.produit_id = p.id AND r.statut IN ('rattachee', 'confirmee'))`.as('rattachees'),
+      ])
+      .where('pm.machine_id', '=', machineId)
+      .orderBy(sql`lower(p.editeur)`)
+      .orderBy(sql`lower(p.nom)`)
+      .orderBy('p.id')
+      .execute();
+    return lignes.map((l) => ({
+      id: l.id,
+      editeur: l.editeur,
+      nom: l.nom,
+      versionProduit: l.version_produit,
+      version: l.version,
+      cvesRattachees: l.rattachees,
+    }));
   }
 
   /** Le fournisseur lié doit figurer au registre de l'organisation, lu avec les droits de la personne (porte de lecture,

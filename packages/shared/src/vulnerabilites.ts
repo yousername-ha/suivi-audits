@@ -1,5 +1,6 @@
 /* Module Vulnérabilités (ADR 0100), lot V1 : registre des produits surveillés, tenu au niveau de l'organisation comme les
-   fournisseurs (ADR 0032), sans périmètre. La veille, les connecteurs et les failles viendront dans les lots suivants. */
+   fournisseurs (ADR 0032), sans périmètre. Lot V4a : la version est obligatoire (V21), c'est elle qui sert au rapprochement
+   avec les CVE de la veille ; seuls l'éditeur et le produit de l'identifiant CPE servent à ce rapprochement. */
 import { z } from 'zod';
 import { ResponsableRef } from './responsables.js';
 
@@ -52,7 +53,9 @@ const champsProduit = {
   fournisseurId: z.string().trim().min(1).max(200).nullable(),
   editeur: texte(200).min(1, 'Éditeur obligatoire.').refine(sansControle, 'Caractère de contrôle refusé.'),
   nom: texte(200).min(1, 'Nom du produit obligatoire.').refine(sansControle, 'Caractère de contrôle refusé.'),
-  versionProduit: texte(100).refine(sansControle, 'Caractère de contrôle refusé.'),
+  /** Version déclarée, obligatoire (V21) : celle qui sert au rapprochement. */
+  versionProduit: texte(100).min(1, 'Version obligatoire.').refine(sansControle, 'Caractère de contrôle refusé.'),
+  /** Identifiant CPE 2.3 facultatif : son éditeur et son produit fondent le rapprochement exact ; sa version n'est pas lue. */
   cpe: z.string().trim().max(500).regex(CPE_23, 'Identifiant CPE 2.3 attendu (cpe:2.3:…).').nullable(),
   famille: z.enum(FAMILLES_PRODUIT),
   criticite: z.enum(CRITICITES_PRODUIT),
@@ -64,7 +67,6 @@ export const ProduitSurveilleBody = z
   .object({
     ...champsProduit,
     fournisseurId: champsProduit.fournisseurId.default(null),
-    versionProduit: champsProduit.versionProduit.default(''),
     cpe: champsProduit.cpe.default(null),
     responsable: champsProduit.responsable.default(null),
   })
@@ -92,6 +94,8 @@ export interface ProduitSurveilleDto {
   /** Libellé du responsable (personne, groupe ou fonction) ; null si aucun, ou si la cible a disparu. */
   responsableLibelle: string | null;
   origine: OrigineProduit;
+  /** Lot V4a : CVE rattachées (d'office ou confirmées) et propositions à décider. */
+  suivi: { rattachees: number; aDecider: number };
   version: number;
   createdBy: string;
   createdAt: string;

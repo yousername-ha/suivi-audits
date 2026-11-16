@@ -5,6 +5,7 @@
    refuser tout le lot. Forme des réponses relevée sur une instance 6.9.1 (cadrage, §5 bis) ; aucun autre champ n'est
    supposé. Les textes de Tenable sont gardés en anglais, tels quels (V19), nettoyés et bornés comme un texte externe. */
 import { z } from 'zod';
+import type { Priorite, RangMachineDto } from './priorite-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Gravités */
@@ -34,6 +35,11 @@ export const FiltreGravites = z
   .max(GRAVITES_TENABLE.length)
   .refine((g) => new Set(g).size === g.length, 'Gravité en double.')
   .transform((g) => GRAVITES_TENABLE.filter((x) => g.includes(x)));
+
+/** Niveaux de priorité calculés par la plateforme (ADR 0100, point 9 ; calcul dans priorite-vulnerabilites.ts). */
+export const NIVEAUX_PRIORITE = ['P1', 'P2', 'P3', 'P4'] as const;
+export const NiveauPriorite = z.enum(NIVEAUX_PRIORITE);
+export type NiveauPriorite = z.infer<typeof NiveauPriorite>;
 
 /* ------------------------------------------------------------------ Bornes */
 /** Bornes reprises par la migration 075, par le script de l'exécutant (BORNES_SYNCHRO) et par l'exécutant lui-même ; un
@@ -246,9 +252,17 @@ const page = z.coerce.number().int().min(1).max(1000).default(1);
 const oui = z.enum(['oui']).optional();
 
 /** Constats : recherche par identifiant CVE, numéro ou nom du contrôle ; filtres par gravité, exploité (catalogue KEV),
-    exploitable (code d'exploitation connu de Tenable), non maintenu (constat sans CVE). */
+    exploitable (code d'exploitation connu de Tenable), non maintenu (constat sans CVE), priorité calculée (lot V4a). */
 export const RechercheConstats = z
-  .object({ q: recherche, gravite: GraviteTenable.optional(), exploite: oui, exploitable: oui, nonMaintenu: oui, page })
+  .object({
+    q: recherche,
+    gravite: GraviteTenable.optional(),
+    exploite: oui,
+    exploitable: oui,
+    nonMaintenu: oui,
+    priorite: NiveauPriorite.optional(),
+    page,
+  })
   .strict();
 export type RechercheConstats = z.infer<typeof RechercheConstats>;
 
@@ -291,6 +305,10 @@ export interface ConstatResumeDto {
   /** Machines où le constat est présent, parmi celles que la personne peut lire. */
   machines: number;
   derniereDetection: string | null;
+  /** Une CVE du constat est citée par une alerte du CERT-FR rangée par la veille (lot V4a). */
+  alerteCertFr: boolean;
+  /** Priorité calculée par la plateforme et faits qui la fondent (lot V4a). */
+  priorite: Priorite;
 }
 
 export interface MachineDetectionDto {
@@ -332,6 +350,11 @@ export interface CompteursMachine {
   faible: number;
   exploites: number;
   exploitables: number;
+  /** Failles déclarées (CVE rattachées à un produit relié à la machine), comptées une fois et seulement si Tenable ne les
+      détecte pas sur cette machine ; déjà incluses dans les compteurs par gravité (lot V4a). */
+  declarees: number;
+  /** Failles présentes, détectées ou déclarées, dont l'exploitation est avérée (catalogue KEV ou alerte du CERT-FR). */
+  exploitationAveree: number;
 }
 
 export interface MachineDto {
@@ -350,6 +373,8 @@ export interface MachineDto {
   integration: { id: string; nom: string };
   /** Constats présents sur la machine, par gravité, puis exploités et exploitables. */
   compteurs: CompteursMachine;
+  /** Rang parmi les machines que la personne peut lire, et faits qui le fondent (lot V4a). */
+  rang: RangMachineDto;
   version: number;
 }
 

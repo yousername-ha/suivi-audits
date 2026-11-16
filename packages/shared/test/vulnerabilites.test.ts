@@ -16,7 +16,13 @@ import {
   ProduitsSurveillesQuery,
 } from '../src/index.js';
 
-const base = { editeur: 'Éditeur fictif', nom: 'Produit fictif', famille: 'web', criticite: 'moyenne' };
+const base = {
+  editeur: 'Éditeur fictif',
+  nom: 'Produit fictif',
+  versionProduit: '8.3',
+  famille: 'web',
+  criticite: 'moyenne',
+};
 
 describe('module Vulnérabilités', () => {
   it('est un module désactivable, libellé « Vulnérabilités », avec ses dépendances facultatives', () => {
@@ -55,7 +61,6 @@ describe('module Vulnérabilités', () => {
     expect(p).toEqual({
       ...base,
       fournisseurId: null,
-      versionProduit: '',
       cpe: null,
       responsable: null,
     });
@@ -72,6 +77,16 @@ describe('module Vulnérabilités', () => {
     expect(ProduitSurveilleBody.safeParse({ ...base, nom: 'Produit\u0007fictif' }).success).toBe(false);
     expect(ProduitSurveilleBody.safeParse({ ...base, editeur: 'x'.repeat(201) }).success).toBe(false);
     expect(ProduitSurveilleBody.safeParse({ ...base, versionProduit: '1'.repeat(101) }).success).toBe(false);
+  });
+
+  it('version obligatoire (V21) : absente, vide ou faite d’espaces, refusée à la création comme à la modification', () => {
+    const { versionProduit: _, ...sansVersion } = base;
+    expect(ProduitSurveilleBody.safeParse(sansVersion).success).toBe(false);
+    expect(ProduitSurveilleBody.safeParse({ ...base, versionProduit: '' }).success).toBe(false);
+    expect(ProduitSurveilleBody.safeParse({ ...base, versionProduit: '   ' }).success).toBe(false);
+    expect(ProduitSurveilleBody.parse({ ...base, versionProduit: ' 10.1.2 ' }).versionProduit).toBe('10.1.2');
+    expect(ProduitSurveillePatch.safeParse({ versionProduit: '' }).success).toBe(false);
+    expect(ProduitSurveillePatch.safeParse({ versionProduit: '10.1.3' }).success).toBe(true);
   });
 
   it('responsable : personne, groupe ou fonction désignés par identifiant', () => {

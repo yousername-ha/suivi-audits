@@ -521,7 +521,17 @@ describe('lecture : constats, EPSS, KEV, non maintenu, recherche', () => {
     ]);
     expect(fiche.parRole.aucun.map((m: { nom: string }) => m.nom)).toEqual([nomMachine(1), nomMachine(2)]);
     const m = (await admin.get(`${V}/machines?q=srv-exemple-01`)).json().elements[0];
-    expect(m.compteurs).toEqual({ critique: 1, elevee: 0, moyenne: 0, faible: 0, exploites: 1, exploitables: 1 });
+    // Lot V4a : failles déclarées (aucune ici) et exploitation avérée (le constat cite une CVE du catalogue KEV).
+    expect(m.compteurs).toEqual({
+      critique: 1,
+      elevee: 0,
+      moyenne: 0,
+      faible: 0,
+      exploites: 1,
+      exploitables: 1,
+      declarees: 0,
+      exploitationAveree: 1,
+    });
   });
 });
 

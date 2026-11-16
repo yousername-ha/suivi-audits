@@ -1,12 +1,18 @@
 /* Failles détectées par Tenable et machines (ADR 0100, lot V5) : présentation sans état ni appel réseau (testée à part). Le
    serveur reste seul juge des droits (module, périmètre de chaque machine) ; les textes de Tenable s'affichent tels quels,
-   en anglais (V19), comme texte simple. Un lien « voir aussi » n'est rendu que s'il a la forme contrôlée (https). */
+   en anglais (V19), comme texte simple. Un lien « voir aussi » n'est rendu que s'il a la forme contrôlée (https).
+   Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. */
 import {
   type ConstatDto,
   type ConstatResumeDto,
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
+  libelleFaitPriorite,
+  libelleFaitRang,
   type MachineDto,
+  type NiveauPriorite,
+  type Priorite,
+  type RangMachineDto,
   ROLE_MACHINE_LIBELLES,
   type RoleMachine,
   VOIR_AUSSI,
@@ -19,6 +25,7 @@ export interface FiltresConstats {
   exploite: boolean;
   exploitable: boolean;
   nonMaintenu: boolean;
+  priorite: NiveauPriorite | '';
 }
 export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   q: '',
@@ -26,6 +33,7 @@ export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   exploite: false,
   exploitable: false,
   nonMaintenu: false,
+  priorite: '',
 };
 
 /** Adresse de la liste des constats (recherche, filtres, page), lue par le serveur. */
@@ -36,10 +44,33 @@ export function urlConstats(f: FiltresConstats, page = 1): string {
   if (f.exploite) p.set('exploite', 'oui');
   if (f.exploitable) p.set('exploitable', 'oui');
   if (f.nonMaintenu) p.set('nonMaintenu', 'oui');
+  if (f.priorite) p.set('priorite', f.priorite);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/constats${s ? `?${s}` : ''}`;
 }
+
+/** Adresse des failles déclarées (CVE rattachées à un produit relié à des machines) : recherche, priorité, page. */
+export function urlDeclarees(f: Pick<FiltresConstats, 'q' | 'priorite'>, page = 1): string {
+  const p = new URLSearchParams();
+  if (f.q.trim()) p.set('q', f.q.trim());
+  if (f.priorite) p.set('priorite', f.priorite);
+  if (page > 1) p.set('page', String(page));
+  const s = p.toString();
+  return `/api/vulnerabilites/declarees${s ? `?${s}` : ''}`;
+}
+
+/** Sens de la puce de priorité (couleurs de la charte). */
+export const ETAT_PRIORITE: Record<NiveauPriorite, Etat> = {
+  P1: 'erreur',
+  P2: 'attention',
+  P3: 'info',
+  P4: 'neutre',
+};
+/** Faits qui fondent une priorité, en clair. */
+export const faitsPriorite = (p: Priorite) => p.faits.map(libelleFaitPriorite);
+/** Faits qui fondent le rang d'une machine, en clair. */
+export const faitsDuRang = (r: RangMachineDto) => r.faits.map(libelleFaitRang);
 
 export interface FiltresMachines {
   q: string;

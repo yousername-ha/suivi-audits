@@ -89,6 +89,7 @@ describe('menu', () => {
       ['vulnerabilites-veille', '/vulnerabilites/veille'],
       ['vulnerabilites-failles', '/vulnerabilites/failles'],
       ['vulnerabilites-machines', '/vulnerabilites/machines'],
+      ['vulnerabilites-priorite', '/vulnerabilites/priorite'],
     ]);
     expect(localiser('/vulnerabilites/veille')?.destination.id).toBe('vulnerabilites');
     expect(

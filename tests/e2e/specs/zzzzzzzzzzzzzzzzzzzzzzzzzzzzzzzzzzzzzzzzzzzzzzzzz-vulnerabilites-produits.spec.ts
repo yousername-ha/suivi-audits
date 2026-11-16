@@ -1,6 +1,6 @@
 /* Module Vulnérabilités (ADR 0100, lot V1) : écran « Produits surveillés » de bout en bout, sans capture de référence
-   (aucune n'est approuvée sans relecture) : ajout, filtre par famille, modification, suppression, accessibilité, CSP.
-   Données fictives. */
+   (aucune n'est approuvée sans relecture) : ajout (version obligatoire depuis le lot V4a), fiche du produit, filtre par
+   famille, modification, suppression, accessibilité, CSP. Données fictives. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -30,15 +30,27 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     const ajout = page.getByRole('dialog', { name: 'Ajouter un produit surveillé' });
     await ajout.getByLabel('Éditeur', { exact: true }).fill('Éditeur fictif de recette');
     await ajout.getByLabel('Nom du produit', { exact: true }).fill(nom);
-    await ajout.getByLabel('Version', { exact: true }).fill('1.0');
+    // Version obligatoire (lot V4a) : sans elle, l'ajout est refusé à l'écran.
     await choisir('Famille', 'Web', ajout);
     await choisir('Criticité', 'Élevée', ajout);
+    await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await expect(ajout.getByRole('alert')).toContainText('version');
+    await ajout.getByLabel('Version', { exact: true }).fill('1.0');
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout).toBeHidden();
     const ligne = page.getByRole('row', { name: new RegExp(nom) });
     await expect(ligne).toContainText('Élevée');
     await expect(ligne).toContainText('Saisie');
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+
+    // Fiche du produit (lot V4a) : aucune faille rapprochée ni machine reliée sur la pile de test.
+    await ligne.getByRole('button', { name: nom, exact: true }).click();
+    const fiche = page.getByRole('dialog', { name: `${nom} 1.0` });
+    await expect(fiche.getByText('Aucune faille de la veille ne correspond')).toBeVisible();
+    await expect(fiche.getByText('Aucune machine reliée que vous puissiez lire.')).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(fiche).toBeHidden();
 
     // Filtre par famille, appliqué par le serveur.
     await choisir('Famille', 'Réseau');
