@@ -46,6 +46,8 @@
 | V24 | Décision de rapprochement | Une confirmation ou un rejet **peut être annulé** (16/11/2026) |
 | V25 | Assistant et CVE | Quand le RSSI donne une CVE à l'assistant, celui-ci dit **si l'organisation est touchée, quoi faire, quels actifs traiter d'abord**, et propose un **plan d'action** ; à voir avec la session « Assistant RSSI intégré plateforme » (16/11/2026) |
 | V26 | Plusieurs sources | **« Ou » logique entre les sources** : la surveillance est multi-source, et **la source en avance prime** (première à publier une CVE, première à signaler une exploitation). Aucune source n'est attendue pour agir (16/11/2026) |
+| V27 | Valeurs différentes selon les sources | La **plus sévère** sert à la priorité ; chaque valeur est gardée avec sa source (16/11/2026) |
+| V28 | Branchement de l'assistant | Réalisé par la session du module Vulnérabilités, la session « Assistant RSSI intégré plateforme » en étant informée (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -280,12 +282,20 @@
   dans le rapprochement avec les produits déclarés, par le nom, comme proposition à décider ; l'exploitation est avérée dès
   qu'une source le dit (catalogue KEV, alerte du CERT-FR, mention du CERT Santé). Quand deux sources donnent une valeur
   différente pour un même fait (score de gravité), chacune est gardée avec sa source et la **plus sévère** sert à la
-  priorité (lecture de la session, à confirmer par le RSSI).
+  priorité (V27).
 - **À réaliser après les décisions V23 et V24** : la fiche de chaque publication du CERT Santé porte des mentions
   structurées, relevées le 16/11/2026 sur une alerte (« La faille est activement exploitée : Oui / Non », « Un correctif
   existe », « Une mesure de contournement existe », rubrique « Preuve de concept »). Le flux RSS ne les porte pas : la veille
   devra lire la page de chaque publication nouvelle, sur le même hôte, et n'en retenir que ces mentions. Un simple mot-clé ne
   convient pas : le mot « exploitée » figure dans toutes les fiches (« La vulnérabilité exploitée est du type… »).
+- **Assistant (V25, V28), à réaliser** : outils de lecture offerts seulement à une personne qui a `vulnerabilites:lire`
+  (capacité facultative du contexte, comme pour les documents) ; service de lecture fourni par le module, appelé avec les
+  droits de la personne ou du référent ; machines remises au modèle sous forme de repères. **Le texte est gardé avec les
+  repères** : l'historique d'une conversation repart chez le fournisseur à chaque tour, les noms ne sont donc remis qu'à
+  l'affichage, par une table de correspondance qui vit aussi longtemps que la conversation ; ni la mémoire ni les fiches de
+  méthode ne gardent de repère ou de nom. Réglages retenus à défaut de décision contraire du RSSI : outils ouverts au
+  profil « Mise en œuvre » seulement ; une action proposée à partir d'un plan **ne nomme aucune machine** et renvoie à la
+  faille, la liste des machines se lisant dans le module.
 
 ## Conséquences
 
