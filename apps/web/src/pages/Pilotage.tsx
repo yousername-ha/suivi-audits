@@ -384,17 +384,17 @@ export function PilotagePage() {
             )}
             {['actions', 'recurrences'].includes(section) && can('ecarts', 'lire') && (
               <>
-                <Group>
-                  {can('ecarts', 'modifier') && (
-                    <>
-                      <Button onClick={() => create('action')}>Ajouter une action</Button>
-                      <Button variant="light" onClick={() => create('task_series')}>
-                        Ajouter une tâche récurrente
-                      </Button>
-                    </>
-                  )}
-                </Group>
                 <Tasks
+                  outils={
+                    can('ecarts', 'modifier') && (
+                      <>
+                        <Button onClick={() => create('action')}>Ajouter une action</Button>
+                        <Button variant="light" onClick={() => create('task_series')}>
+                          Ajouter une tâche récurrente
+                        </Button>
+                      </>
+                    )
+                  }
                   key={smsi + section}
                   smsi={smsi}
                   policy={policy.data.definition}

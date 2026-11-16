@@ -32,7 +32,8 @@
     "./neon-parties.css": "./src/neon-parties.css",
     "./neon-processus.css": "./src/neon-processus.css",
     "./neon-fournisseurs.css": "./src/neon-fournisseurs.css",
-    "./neon-taches.css": "./src/neon-taches.css"
+    "./neon-taches.css": "./src/neon-taches.css",
+    "./neon-ergonomie.css": "./src/neon-ergonomie.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

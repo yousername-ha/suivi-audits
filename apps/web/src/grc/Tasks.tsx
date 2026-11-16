@@ -17,7 +17,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BusinessPolicy, GrcObject, RegistreDto, TaskData } from '@suivi/shared';
 import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
@@ -77,10 +77,13 @@ export function Tasks({
   policy,
   onOpen,
   occurrences = false,
+  outils,
 }: {
   smsi: string;
   policy: BusinessPolicy;
   onOpen: (o: GrcObject) => void;
+  /** Commandes d'ajout placées au bout de la barre d'outils commune (en-tête compact, 7.3.0). */
+  outils?: ReactNode;
   /** Page Tâches récurrentes : Timeline adaptée à la périodicité, regroupée par série. */
   occurrences?: boolean;
 }) {
@@ -328,25 +331,23 @@ export function Tasks({
             </div>
           ))}
         </div>
-        <Group gap="xs" className="taches-commandes">
-          <div className="taches-vues" role="group" aria-label="Vues des actions">
-            {views.map((v) => (
-              <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
-                <ActionIcon
-                  size="lg"
-                  variant={view === v.value ? 'filled' : 'subtle'}
-                  aria-label={v.label}
-                  aria-pressed={view === v.value}
-                  onClick={() => setView(v.value)}
-                >
-                  <IconeVue vue={v.value} />
-                </ActionIcon>
-              </Tooltip>
-            ))}
-          </div>
-        </Group>
       </div>
       <Group className="taches-filtres">
+        <div className="taches-vues" role="group" aria-label="Vues des actions">
+          {views.map((v) => (
+            <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
+              <ActionIcon
+                size="lg"
+                variant={view === v.value ? 'filled' : 'subtle'}
+                aria-label={v.label}
+                aria-pressed={view === v.value}
+                onClick={() => setView(v.value)}
+              >
+                <IconeVue vue={v.value} />
+              </ActionIcon>
+            </Tooltip>
+          ))}
+        </div>
         <Select
           allowDeselect={false}
           label="Vue synchronisée"
@@ -389,6 +390,7 @@ export function Tasks({
           onChange={setStatus}
           data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
         />
+        {outils && <div className="barre-outils__ajout">{outils}</div>}
       </Group>
       <PastillesCriteres
         criteres={criteresTaches}

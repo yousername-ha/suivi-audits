@@ -1,0 +1,169 @@
+/* ========================================================================
+   ERGONOMIE SUR GRAND ÉCRAN (version 7.3.0, maquette présentée au RSSI le 16/11/2026)
+   En-tête de page compact, contenu remonté sous la barre du haut, barre d'outils commune aux registres en bleu nuit,
+   aux couleurs du menu (jetons --menu-*). Chargée en dernier : elle s'applique sur les feuilles des modules.
+   ======================================================================== */
+
+/* Contenu remonté : la marge haute de la zone principale passe à un espacement moyen. */
+.shell-main {
+  padding-top: var(--mantine-spacing-md);
+}
+
+/* En-tête compact : titre réduit, périmètre affiché et actions sur la même ligne ; explications repliées. */
+.app-main .page-header h1 {
+  font-size: calc(var(--mantine-h1-font-size) * 0.66);
+  line-height: 1.25;
+}
+.page-header__titre .lecture {
+  margin-top: var(--mantine-spacing-2xs);
+  line-height: 1.45;
+}
+.selecteur-perimetre {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.selecteur-perimetre .mantine-InputWrapper-label {
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.selecteur-perimetre .mantine-Input-wrapper {
+  inline-size: calc(var(--mantine-spacing-xl) * 9);
+}
+.a-propos {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+.a-propos > summary {
+  inline-size: fit-content;
+  color: var(--mantine-color-anchor);
+  cursor: pointer;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+}
+.a-propos__texte {
+  max-inline-size: var(--suivi-largeur-lecture);
+  margin-top: var(--mantine-spacing-xs);
+  line-height: 1.55;
+}
+
+/* Barre d'outils commune (vues, recherche, filtres, ajout) : bleu nuit du menu, dans les deux thèmes, même ordre partout. */
+.app-main :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres) {
+  align-items: center;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border: 1px solid var(--menu-trait);
+  border-radius: var(--menu-rayon);
+  background: var(--menu-fond);
+  box-shadow: none;
+  color: var(--menu-texte);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(h2, h3, h4, strong, b, span, p, div, label) {
+  color: inherit;
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-InputWrapper-label, .mantine-InputWrapper-description, small, .fs-note, .pr-view-label, .pi-view-label) {
+  color: var(--menu-secondaire);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  .mantine-Input-input {
+  border-color: var(--menu-commande-trait);
+  background: var(--menu-famille-fond);
+  color: var(--menu-texte);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  .mantine-Input-input::placeholder {
+  color: var(--menu-secondaire);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-Input-section, .barre-loupe) {
+  color: var(--menu-secondaire);
+}
+/* Boutons secondaires et icônes : contour clair sur le bleu nuit. */
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-ActionIcon-root, .mantine-Button-root[data-variant], .fs-tool, .pr-tool, .pi-tool, .bb-toolbar button) {
+  --button-bg: transparent;
+  --ai-bg: transparent;
+  border-color: var(--menu-commande-trait);
+  background: transparent;
+  color: var(--menu-commande);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-ActionIcon-root, .mantine-Button-root, button):hover {
+  background: var(--menu-survol);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is([aria-pressed='true'], [data-active='true'], [aria-selected='true']) {
+  border-color: var(--menu-teinte-pilotage);
+  background: var(--menu-destination-fond);
+  color: var(--menu-selection);
+}
+/* Action principale (ajouter, créer) : bleu du menu, texte bleu nuit. */
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter) {
+  --button-bg: var(--menu-teinte-pilotage);
+  --button-hover: var(--menu-focus);
+  --button-color: var(--menu-fond-haut);
+  border: 0;
+  background: var(--menu-teinte-pilotage);
+  color: var(--menu-fond-haut);
+}
+.app-main
+  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter):hover {
+  background: var(--menu-focus);
+}
+/* Groupes de vues (icônes) : même cadre sombre que les champs. */
+.app-main :is(.fs-views, .pr-views, .pi-views, .taches-vues) {
+  border-color: var(--menu-commande-trait);
+  background: var(--menu-famille-fond);
+  box-shadow: none;
+}
+/* Recherche du registre commun : libellé lu par les lecteurs d'écran, masqué à l'œil (la loupe suffit). */
+.app-main .barre-registre .barre-recherche .mantine-InputWrapper-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Plan d'actions et tâches récurrentes : vues et ajouts sur la première ligne, filtres en dessous. */
+.app-main .taches-filtres {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.app-main .taches-filtres > .taches-vues {
+  grid-row: 1;
+  grid-column: 1 / 4;
+  justify-self: start;
+}
+.app-main .taches-filtres > .barre-outils__ajout {
+  display: flex;
+  grid-row: 1;
+  grid-column: 4 / 7;
+  justify-self: end;
+  gap: var(--mantine-spacing-xs);
+}
+.app-main .taches-filtres .mantine-InputWrapper-description {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
