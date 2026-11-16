@@ -15,7 +15,10 @@
    - Planification : une synchronisation par jour (Europe/Paris) et par instance active et complète ; le créneau est consommé
      avant l'inscription (aucun rejeu après une panne). Rien si le flux « tenable » est fermé ; le tic vérifie les modules.
    Journal `vulnerabilites.synchronisation.*` : identifiants internes et nombres seulement, jamais un nom ni une adresse de
-   machine. Accès aux données en Kysely (ADR 0062). */
+   machine. Accès aux données en Kysely (ADR 0062).
+   Lot V4b : à la fin d'une synchronisation reçue, le suivi des failles retire les propositions « corrigée » des constats
+   de nouveau présents et remet « à traiter » ceux qui étaient corrigés ; après une synchronisation complète seulement, il
+   propose « corrigé selon Tenable, à confirmer » pour les constats qui ne sont plus présents nulle part (suivi.ts). */
 import {
   BilanSynchronisation,
   cleMachine,
@@ -47,6 +50,9 @@ function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
 }
 
 export class SynchronisationTenable implements OperationEnLots {
+  /** Suivi des failles (lot V4b) : propositions « corrigée », retraits et réapparitions, dans la transaction de la fin. */
+  apresSynchronisation?: (k: Kdb, c: Client, integrationId: string, complete: boolean) => Promise<void>;
+
   constructor(
     private readonly db: Db,
     private readonly flux: FluxExternes,
@@ -147,6 +153,7 @@ export class SynchronisationTenable implements OperationEnLots {
         }))
         .where('integration_id', '=', s.integration_id)
         .execute();
+      await this.apresSynchronisation?.(k, c, s.integration_id, complete);
     }
     await this.db.audit(
       EXECUTANT,

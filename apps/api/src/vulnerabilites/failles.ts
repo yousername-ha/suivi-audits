@@ -15,6 +15,10 @@
    partagé avec le seuil réglé ; rang de chaque machine parmi celles que la personne peut lire, compteurs complétés des
    failles déclarées (comptées une fois, et pas si Tenable les détecte sur la machine). Listes calculées en mémoire puis
    filtrées et paginées : l'ordre et la priorité sont ceux de la fonction partagée, sans copie en SQL.
+   Lot V4b : état de suivi de chaque faille (suivi.ts) et filtre d'état ; par défaut, les failles encore à traiter. Un constat
+   qui n'est plus présent nulle part reste lisible par les machines où il a été vu en dernier (proposition « corrigée »,
+   état décidé). Les failles corrigées, au risque accepté ou non concernées sortent des compteurs et du rang des machines ;
+   la priorité reste calculée sur les faits.
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
   AffectationMachine,
@@ -22,6 +26,7 @@ import {
   calculerPriorite,
   type CompteursMachine,
   type FailleDeclareeDto,
+  type FicheDeclareeDto,
   faitsRang,
   graviteDepuisNvd,
   type RechercheDeclarees,
@@ -41,6 +46,7 @@ import {
   type RechercheConstats,
   type RechercheMachines,
   type RoleMachine,
+  type StatutRapprochement,
 } from '@suivi/shared';
 import { sql, type RawBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
@@ -50,6 +56,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { alerteCertFr, detecteeSurMachine, lisible, present, scoreNvd } from './sql.js';
+import { close, colonnesSuivi, filtreSuivi, type LigneSuivi, versSuiviResume } from './suivi.js';
 
 const INTROUVABLE = 'Machine introuvable ou non accessible.';
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
@@ -69,7 +76,7 @@ const epssVeille = sql<string | null>`(SELECT max(v.epss_score) FROM vulnerabili
   JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE cc.constat_id = c.id)`;
 const ORDRE_GRAVITE = (g: GraviteTenable | null) => (g ? GRAVITES_TENABLE.indexOf(g) : GRAVITES_TENABLE.length);
 
-interface LigneConstat {
+interface LigneConstat extends LigneSuivi {
   id: string;
   plugin_id: number;
   nom: string;
@@ -95,6 +102,7 @@ interface LigneConstat {
   cves: string[];
   machines: number;
   derniere: Date | null;
+  present: boolean;
   alerte_certfr: boolean;
   epss_veille: string | null;
 }
@@ -123,8 +131,9 @@ interface LigneMachine {
   exploitees_avere: number;
 }
 
-/** Priorité d'un constat présent sur une machine lisible : présence « détectée ». EPSS : le plus haut entre Tenable et la
-    veille. Un constat sans CVE (non maintenu) n'a ni exploitation ni EPSS de la veille : il est classé sur sa gravité. */
+/** Priorité d'un constat présent sur une machine lisible : présence « détectée » (« absente » s'il n'est plus rapporté).
+    EPSS : le plus haut entre Tenable et la veille. Un constat sans CVE (non maintenu) n'a ni exploitation ni EPSS de la
+    veille : il est classé sur sa gravité. L'état de suivi n'entre pas dans la priorité. */
 const prioriteConstat = (l: LigneConstat, reglage: ReglagePriorite) => {
   const scores = [nombre(l.epss_score), nombre(l.epss_veille)].filter((x): x is number => x !== null);
   const exploitation: SourceExploitation[] = [
@@ -134,7 +143,7 @@ const prioriteConstat = (l: LigneConstat, reglage: ReglagePriorite) => {
   return calculerPriorite(
     {
       exploitation,
-      presence: 'detectee',
+      presence: l.present ? 'detectee' : 'absente',
       gravite: l.gravite,
       epss: scores.length ? Math.max(...scores) : null,
       exploitDisponible: l.exploitable,
@@ -160,8 +169,10 @@ const versResume = (l: LigneConstat, reglage: ReglagePriorite): ConstatResumeDto
   cves: l.cves,
   machines: l.machines,
   derniereDetection: iso(l.derniere),
+  present: l.present,
   alerteCertFr: l.alerte_certfr,
   priorite: prioriteConstat(l, reglage),
+  suivi: versSuiviResume(l),
 });
 
 /** Faille déclarée sur une machine : CVE rattachée à un produit relié, non détectée par Tenable sur cette machine. */
@@ -216,23 +227,35 @@ export class FaillesDetectees {
   ) {}
 
   /* ---------------------------------------------------------------- Constats */
-  /** Requête des constats présents sur au moins une machine lisible, avec leurs compteurs limités à ces machines. */
-  private requeteConstats(user: SessionUser, conditions: RawBuilder<boolean>[]) {
+  /** Requête des constats lisibles, avec leurs compteurs limités aux machines lisibles touchées : celles où le constat est
+      présent ; s'il ne l'est plus nulle part (lot V4b), celles où il a été vu en dernier. Sans aucune machine lisible
+      touchée, le constat n'est ni listé ni ouvert. */
+  private requeteConstats(user: SessionUser, conditions: RawBuilder<boolean>[], constatId?: string) {
     const ou = conditions.length ? sql.join(conditions, sql` AND `) : sql`true`;
+    const un = constatId ? sql`d.constat_id = ${constatId}::uuid` : sql`true`;
     return sql`
-      WITH par_constat AS (
-        SELECT d.constat_id, count(DISTINCT d.machine_id)::int AS machines, max(d.derniere_detection) AS derniere
+      WITH x AS (
+        SELECT d.constat_id, d.machine_id, d.derniere_detection, ${present} AS present, ${lisible(user)} AS lisible
         FROM vulnerabilites_detections d
         JOIN vulnerabilites_machines m ON m.id = d.machine_id
         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-        WHERE ${present} AND ${lisible(user)}
-        GROUP BY d.constat_id)
-      SELECT c.*, p.machines, p.derniere, ${exploite} AS exploite, ${sansCve} AS non_maintenu,
+        WHERE ${un}),
+      pc AS (SELECT constat_id, bool_or(present) AS present FROM x GROUP BY constat_id),
+      par_constat AS (
+        SELECT x.constat_id, pc.present, count(DISTINCT x.machine_id) FILTER (WHERE x.lisible)::int AS machines,
+               max(x.derniere_detection) FILTER (WHERE x.lisible) AS derniere
+        FROM x JOIN pc ON pc.constat_id = x.constat_id
+        WHERE x.present OR NOT pc.present
+        GROUP BY x.constat_id, pc.present
+        HAVING bool_or(x.lisible))
+      SELECT c.*, p.machines, p.derniere, p.present, ${exploite} AS exploite, ${sansCve} AS non_maintenu,
         ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
         (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
         ARRAY(SELECT cc.cve FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id ORDER BY cc.cve DESC LIMIT 5)
-          AS cves
+          AS cves,
+        ${colonnesSuivi}
       FROM vulnerabilites_constats c JOIN par_constat p ON p.constat_id = c.id
+      LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
       WHERE ${ou}`;
   }
 
@@ -242,6 +265,7 @@ export class FaillesDetectees {
     if (q.exploite) conditions.push(exploite);
     if (q.exploitable) conditions.push(sql<boolean>`c.exploitable`);
     if (q.nonMaintenu) conditions.push(sansCve);
+    conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
     if (texte) {
       const motif = litteral(texte);
@@ -279,11 +303,11 @@ export class FaillesDetectees {
     };
   }
 
-  /** Fiche d'un constat : ses CVE (avec leur présence au catalogue KEV) et les machines lisibles où il est présent, par rôle.
-      Un constat sans machine lisible répond comme un constat inconnu. */
+  /** Fiche d'un constat : ses CVE (avec leur présence au catalogue KEV) et les machines lisibles où il est présent (à
+      défaut, où il a été vu en dernier), par rôle. Un constat sans machine lisible répond comme un constat inconnu. */
   async constat(user: SessionUser, id: string): Promise<ConstatDto> {
     const { rows } = await sql<LigneConstat & { integration_nom: string }>`
-      SELECT x.*, i.nom AS integration_nom FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`])}) x
+      SELECT x.*, i.nom AS integration_nom FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x
       JOIN integrations i ON i.id = x.integration_id`.execute(this.db.k);
     const l = rows[0];
     if (!l) throw new HttpError(404, 'Faille introuvable ou non accessible.');
@@ -315,7 +339,7 @@ export class FaillesDetectees {
       JOIN vulnerabilites_machines m ON m.id = d.machine_id
       LEFT JOIN grc_smsis s ON s.id = m.perimetre_id
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-      WHERE d.constat_id = ${id}::uuid AND ${present} AND ${lisible(user)}
+      WHERE d.constat_id = ${id}::uuid AND (${present} OR NOT ${l.present}::boolean) AND ${lisible(user)}
       ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id, d.port, d.protocole`.execute(this.db.k);
     const parRole: ConstatDto['parRole'] = { front: [], back: [], bdd: [], aucun: [] };
     for (const d of detections)
@@ -352,7 +376,8 @@ export class FaillesDetectees {
 
   /* ---------------------------------------------------------------- Machines */
   /** Toutes les machines lisibles, avec leurs compteurs (constats présents, puis failles déclarées non détectées), rangées
-      de la plus critique à la moins critique (rangerMachines du paquet partagé). */
+      de la plus critique à la moins critique (rangerMachines du paquet partagé). Une faille corrigée, au risque accepté ou
+      non concernée ne compte pas (lot V4b). */
   private async machinesRangees(user: SessionUser): Promise<MachineDto[]> {
     const { rows } = await sql<LigneMachine>`
       SELECT m.id, m.nom, m.adresse, m.systeme, m.role, m.perimetre_id, s.name AS perimetre_nom, m.exposition, m.acr,
@@ -373,7 +398,7 @@ export class FaillesDetectees {
                count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
                count(DISTINCT c.id) FILTER (WHERE ${exploite} OR ${alerteConstat})::int AS exploitees_avere
         FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
-        WHERE d.machine_id = m.id AND ${present}) k ON true
+        WHERE d.machine_id = m.id AND ${present} AND NOT ${close('constat')}) k ON true
       WHERE ${lisible(user)}`.execute(this.db.k);
     const { rows: declarees } = await sql<DeclareeMachine>`
       SELECT DISTINCT m.id AS machine_id, r.cve, v.cvss31_gravite, v.cvss40_gravite,
@@ -383,7 +408,7 @@ export class FaillesDetectees {
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
       JOIN vulnerabilites_rapprochements r ON r.produit_id = pm.produit_id AND r.statut IN ('rattachee', 'confirmee')
       JOIN vulnerabilites_veille_cve v ON v.cve = r.cve
-      WHERE ${lisible(user)} AND NOT ${detecteeSurMachine}`.execute(this.db.k);
+      WHERE ${lisible(user)} AND NOT ${detecteeSurMachine} AND NOT ${close('declaree')}`.execute(this.db.k);
     const parMachine = new Map<string, DeclareeMachine[]>();
     for (const x of declarees) parMachine.set(x.machine_id, [...(parMachine.get(x.machine_id) ?? []), x]);
     const machines = rows.map((l) => versMachine(l, parMachine.get(l.id) ?? []));
@@ -431,10 +456,89 @@ export class FaillesDetectees {
   }
 
   /* ---------------------------------------------------------------- Failles déclarées (V20, lot V4a) */
+  /** Lignes des failles déclarées : une par produit et par CVE, sur les machines lisibles reliées au produit où Tenable ne
+      détecte pas la CVE, avec sa priorité et son suivi (lot V4b). `toutes` : garder une ligne même si Tenable détecte la CVE
+      sur toutes ces machines (fiche). */
+  private async lignesDeclarees(
+    user: SessionUser,
+    conditions: RawBuilder<boolean>[],
+    toutes = false,
+  ): Promise<FailleDeclareeDto[]> {
+    const et = conditions.length ? sql`AND ${sql.join(conditions, sql` AND `)}` : sql``;
+    const { rows } = await sql<
+      LigneSuivi & {
+        id: string;
+        cve: string;
+        statut: StatutRapprochement;
+        produit_id: string;
+        editeur: string;
+        nom: string;
+        version_produit: string;
+        cvss31_gravite: string | null;
+        cvss40_gravite: string | null;
+        score: string | null;
+        epss_score: string | null;
+        kev: boolean;
+        alerte: boolean;
+        machines: number;
+      }
+    >`
+      SELECT r.id, r.cve, r.statut, p.id AS produit_id, p.editeur, p.nom, p.version_produit, v.cvss31_gravite,
+             v.cvss40_gravite, ${scoreNvd} AS score, v.epss_score, v.kev_ajout IS NOT NULL AS kev,
+             ${alerteCertFr('v.cve')} AS alerte,
+             count(DISTINCT m.id) FILTER (WHERE NOT ${detecteeSurMachine})::int AS machines,
+             ${colonnesSuivi}
+      FROM vulnerabilites_rapprochements r
+      JOIN vulnerabilites_produits p ON p.id = r.produit_id
+      JOIN vulnerabilites_veille_cve v ON v.cve = r.cve
+      JOIN vulnerabilites_produits_machines pm ON pm.produit_id = p.id
+      JOIN vulnerabilites_machines m ON m.id = pm.machine_id
+      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+      LEFT JOIN vulnerabilites_suivis s ON s.rapprochement_id = r.id
+      WHERE ${lisible(user)} ${et}
+      GROUP BY r.id, p.id, v.cve, s.id
+      HAVING ${toutes}::boolean OR count(DISTINCT m.id) FILTER (WHERE NOT ${detecteeSurMachine}) > 0`.execute(
+      this.db.k,
+    );
+    const reglage = await this.reglage.valeurs();
+    return rows.map((l): FailleDeclareeDto => {
+      const gravite = graviteDepuisNvd(l.cvss31_gravite, l.cvss40_gravite);
+      const epss = nombre(l.epss_score);
+      const rattachee = l.statut === 'rattachee' || l.statut === 'confirmee';
+      return {
+        rapprochementId: l.id,
+        cve: l.cve,
+        statut: l.statut,
+        produit: { id: l.produit_id, editeur: l.editeur, nom: l.nom, versionProduit: l.version_produit },
+        gravite,
+        cvssScore: nombre(l.score),
+        epss,
+        kev: l.kev,
+        alerteCertFr: l.alerte,
+        machines: l.machines,
+        present: rattachee,
+        priorite: calculerPriorite(
+          {
+            exploitation: [...(l.kev ? ['kev' as const] : []), ...(l.alerte ? ['cert-fr' as const] : [])],
+            presence: rattachee ? 'declaree' : l.statut === 'proposee' ? 'a_confirmer' : 'absente',
+            gravite,
+            epss,
+            exploitDisponible: false,
+          },
+          reglage,
+        ),
+        suivi: versSuiviResume(l),
+      };
+    });
+  }
+
   /** CVE rattachées (d'office ou confirmées) à un produit relié à des machines lisibles, sur les machines où Tenable ne les
-      détecte pas ; une par produit et par CVE, avec sa priorité (présence « déclarée »). */
+      détecte pas ; une par produit et par CVE, avec sa priorité (présence « déclarée »). Filtre de suivi (lot V4b) : une CVE
+      qui n'est plus rattachée reste listée si elle a un suivi (proposition « corrigée », état décidé). */
   async declarees(user: SessionUser, q: RechercheDeclarees): Promise<PageFailles<FailleDeclareeDto>> {
-    const conditions: RawBuilder<boolean>[] = [];
+    const conditions: RawBuilder<boolean>[] = [
+      filtreSuivi(q.etat, sql<boolean>`r.statut IN ('rattachee', 'confirmee')`),
+    ];
     const texte = q.q?.trim();
     if (texte) {
       const motif = litteral(texte);
@@ -444,62 +548,7 @@ export class FaillesDetectees {
           : sql<boolean>`(p.nom ILIKE ${`%${motif}%`} OR p.editeur ILIKE ${`%${motif}%`})`,
       );
     }
-    const et = conditions.length ? sql`AND ${sql.join(conditions, sql` AND `)}` : sql``;
-    const { rows } = await sql<{
-      id: string;
-      cve: string;
-      statut: 'rattachee' | 'confirmee';
-      produit_id: string;
-      editeur: string;
-      nom: string;
-      version_produit: string;
-      cvss31_gravite: string | null;
-      cvss40_gravite: string | null;
-      score: string | null;
-      epss_score: string | null;
-      kev: boolean;
-      alerte: boolean;
-      machines: number;
-    }>`
-      SELECT r.id, r.cve, r.statut, p.id AS produit_id, p.editeur, p.nom, p.version_produit, v.cvss31_gravite,
-             v.cvss40_gravite, ${scoreNvd} AS score, v.epss_score, v.kev_ajout IS NOT NULL AS kev,
-             ${alerteCertFr('v.cve')} AS alerte, count(DISTINCT m.id)::int AS machines
-      FROM vulnerabilites_rapprochements r
-      JOIN vulnerabilites_produits p ON p.id = r.produit_id
-      JOIN vulnerabilites_veille_cve v ON v.cve = r.cve
-      JOIN vulnerabilites_produits_machines pm ON pm.produit_id = p.id
-      JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-      WHERE r.statut IN ('rattachee', 'confirmee') AND ${lisible(user)} AND NOT ${detecteeSurMachine} ${et}
-      GROUP BY r.id, p.id, v.cve`.execute(this.db.k);
-    const reglage = await this.reglage.valeurs();
-    const tous = rows
-      .map((l): FailleDeclareeDto => {
-        const gravite = graviteDepuisNvd(l.cvss31_gravite, l.cvss40_gravite);
-        const epss = nombre(l.epss_score);
-        return {
-          rapprochementId: l.id,
-          cve: l.cve,
-          statut: l.statut,
-          produit: { id: l.produit_id, editeur: l.editeur, nom: l.nom, versionProduit: l.version_produit },
-          gravite,
-          cvssScore: nombre(l.score),
-          epss,
-          kev: l.kev,
-          alerteCertFr: l.alerte,
-          machines: l.machines,
-          priorite: calculerPriorite(
-            {
-              exploitation: [...(l.kev ? ['kev' as const] : []), ...(l.alerte ? ['cert-fr' as const] : [])],
-              presence: 'declaree',
-              gravite,
-              epss,
-              exploitDisponible: false,
-            },
-            reglage,
-          ),
-        };
-      })
+    const tous = (await this.lignesDeclarees(user, conditions))
       .filter((x) => !q.priorite || x.priorite.niveau === q.priorite)
       .sort(
         (a, b) =>
@@ -514,6 +563,53 @@ export class FaillesDetectees {
       page: q.page,
       parPage: FAILLES_PAR_PAGE,
       elements: tous.slice(debut, debut + FAILLES_PAR_PAGE),
+    };
+  }
+
+  /** Fiche d'une faille déclarée (lot V4b) : description de NVD, action exigée du catalogue KEV, machines lisibles reliées
+      au produit (avec « détectée par Tenable »). Lisible si au moins une machine reliée l'est, et si la CVE est rattachée ou
+      a un suivi ; sinon, comme une faille inconnue. */
+  async declaree(user: SessionUser, id: string): Promise<FicheDeclareeDto> {
+    const [f] = await this.lignesDeclarees(
+      user,
+      [sql<boolean>`r.id = ${id}::uuid`, sql<boolean>`(r.statut IN ('rattachee', 'confirmee') OR s.id IS NOT NULL)`],
+      true,
+    );
+    if (!f) throw new HttpError(404, 'Faille introuvable ou non accessible.');
+    const v = await this.db.k
+      .selectFrom('vulnerabilites_veille_cve')
+      .select(['description', 'kev_action', sql<string | null>`kev_echeance::text`.as('kev_echeance')])
+      .where('cve', '=', f.cve)
+      .executeTakeFirstOrThrow();
+    const { rows } = await sql<{
+      id: string;
+      nom: string | null;
+      adresse: string | null;
+      role: RoleMachine | null;
+      perimetre_nom: string | null;
+      detectee: boolean;
+    }>`
+      SELECT m.id, m.nom, m.adresse, m.role, sm.name AS perimetre_nom, ${detecteeSurMachine} AS detectee
+      FROM vulnerabilites_rapprochements r
+      JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
+      JOIN vulnerabilites_machines m ON m.id = pm.machine_id
+      LEFT JOIN grc_smsis sm ON sm.id = m.perimetre_id
+      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+      WHERE r.id = ${id}::uuid AND ${lisible(user)}
+      ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id`.execute(this.db.k);
+    return {
+      ...f,
+      description: v.description,
+      kevAction: v.kev_action,
+      kevEcheance: v.kev_echeance,
+      machinesReliees: rows.map((m) => ({
+        id: m.id,
+        nom: m.nom,
+        adresse: m.adresse,
+        role: m.role,
+        perimetreNom: m.perimetre_nom,
+        detectee: m.detectee,
+      })),
     };
   }
 

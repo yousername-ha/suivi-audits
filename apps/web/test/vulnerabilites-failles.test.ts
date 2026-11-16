@@ -46,6 +46,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   cves: ['CVE-2026-90005', 'CVE-2026-90004'],
   machines: 3,
   derniereDetection: '2026-11-16T06:04:48.000Z',
+  present: true,
   alerteCertFr: false,
   priorite: {
     niveau: 'P1',
@@ -54,6 +55,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
       { fait: 'presence', presence: 'detectee' },
     ],
   },
+  suivi: { etat: 'nouvelle', proposition: 'aucune', revueLe: null, revueDepassee: false, nombreActions: 0, version: 0 },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -174,11 +176,25 @@ describe('adresses et libellés', () => {
     expect(urlConstats(FILTRES_CONSTATS_VIDES)).toBe('/api/vulnerabilites/constats');
     expect(
       urlConstats(
-        { q: ' CVE-2026 ', gravite: 'critique', exploite: true, exploitable: true, nonMaintenu: true, priorite: 'P2' },
+        {
+          q: ' CVE-2026 ',
+          gravite: 'critique',
+          exploite: true,
+          exploitable: true,
+          nonMaintenu: true,
+          priorite: 'P2',
+          etat: '',
+        },
         2,
       ),
     ).toBe(
       '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&priorite=P2&page=2',
+    );
+    expect(urlConstats({ ...FILTRES_CONSTATS_VIDES, etat: 'a_clore' })).toBe(
+      '/api/vulnerabilites/constats?etat=a_clore',
+    );
+    expect(urlDeclarees({ q: '', priorite: '', etat: 'risque_accepte' })).toBe(
+      '/api/vulnerabilites/declarees?etat=risque_accepte',
     );
     expect(urlDeclarees(FILTRES_CONSTATS_VIDES)).toBe('/api/vulnerabilites/declarees');
     expect(urlDeclarees({ q: ' glpi ', priorite: 'P1' }, 2)).toBe(

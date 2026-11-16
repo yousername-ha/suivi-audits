@@ -117,6 +117,7 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         '074_vulnerabilites_veille.sql',
         '075_vulnerabilites_tenable.sql',
         '076_vulnerabilites_rapprochement.sql',
+        '077_vulnerabilites_suivi.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

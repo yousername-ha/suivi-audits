@@ -8,11 +8,20 @@
    Lot V4a : fiche d'un produit (rapprochements, machines reliées lisibles), produit relié à une machine (`modifier`,
    If-Match sur la fiche du produit, machine lue par son périmètre), décision sur une proposition (`modifier`, If-Match sur
    le rapprochement), suggestions d'identifiant CPE (`modifier`, données de la veille seulement), failles déclarées (`lire`),
-   seuils de priorité (lecture `lire`, écriture `administrer` avec If-Match). */
+   seuils de priorité (lecture `lire`, écriture `administrer` avec If-Match).
+   Lot V4b : fiche d'une faille déclarée (`lire`) ; suivi d'un constat ou d'une faille déclarée (lecture `lire` ; état,
+   refus de la proposition « corrigée », création, lien et retrait d'une action avec `modifier` et If-Match sur la version du
+   suivi). Le service exige en plus de lire toutes les machines touchées ; créer une action exige le droit du module des
+   actions et l'écriture sur le périmètre choisi (service du registre). */
 import {
   AffectationMachine,
   AffectationMachines,
+  ChangementEtatSuivi,
+  CreationActionSuivi,
   DecisionRapprochement,
+  LienActionSuivi,
+  NatureSuivi,
+  RefusPropositionSuivi,
   DemandeCollecte,
   RechercheDeclarees,
   ReglagePriorite,
@@ -36,6 +45,8 @@ const tags = ['Vulnérabilités'];
 const id = z.object({ id: z.uuid() });
 const lienMachine = z.object({ id: z.uuid(), machineId: z.uuid() });
 const CorpsLien = z.object({ machineId: z.uuid() }).strict();
+const suivi = z.object({ nature: NatureSuivi, id: z.uuid() });
+const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uuid() });
 
 export const vulnerabilitesRoutes = [
   route({
@@ -352,6 +363,138 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     query: RechercheDeclarees,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.declarees((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/declarees/:id',
+    summary:
+      'Fiche d’une faille déclarée (rapprochement) : description de NVD, action exigée du catalogue KEV, machines lisibles reliées au produit, priorité et suivi',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.declaree((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/suivis/:nature/:id',
+    summary:
+      'Suivi d’un constat ou d’une faille déclarée : état, proposition « corrigée », historique, actions liées (détail des seules actions lisibles) ; ETag : version du suivi',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: suivi,
+    handler: async ({ svc, s, params, reply }) => {
+      const r = await svc.vulnerabilites.suivi.lire((s as Session).user, params.nature, params.id);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/etat',
+    summary:
+      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: ChangementEtatSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.changerEtat(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/refus',
+    summary: 'Refuser la proposition « corrigée » avec une note ; l’état ne change pas (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: RefusPropositionSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.refuserProposition(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/actions',
+    summary:
+      'Créer une action du registre existant liée à la faille, sous l’identité et avec les droits de la personne (droit du module des actions, écriture sur le périmètre) ; If-Match : version du suivi',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: CreationActionSuivi,
+    status: 201,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.creerAction(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/liens',
+    summary: 'Relier une action existante que la personne peut lire (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: LienActionSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.relierAction(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/suivis/:nature/:id/liens/:actionId',
+    summary:
+      'Délier une action que la personne peut lire ; l’état de la faille ne change pas (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: lienAction,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.delierAction(
+        params.nature,
+        params.id,
+        params.actionId,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
   }),
   route({
     method: 'GET',

@@ -178,6 +178,12 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_veille_cve_produits',
   'vulnerabilites_produits_machines',
   'vulnerabilites_rapprochements',
+  // Suivi des failles (ADR 0100, lot V4b) : états décidés par les utilisateurs, historique immuable de ces décisions et liens
+  // vers les actions du registre ; ils portent sur les constats, les rapprochements et les actions, tous effacés avec le
+  // travail. L'historique, en ajout seul, n'est effacé que par ce chemin (déclencheurs suspendus le temps de la transaction).
+  'vulnerabilites_suivis',
+  'vulnerabilites_suivi_historique',
+  'vulnerabilites_suivi_actions',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

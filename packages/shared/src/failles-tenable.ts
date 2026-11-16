@@ -6,6 +6,7 @@
    supposé. Les textes de Tenable sont gardés en anglais, tels quels (V19), nettoyés et bornés comme un texte externe. */
 import { z } from 'zod';
 import type { Priorite, RangMachineDto } from './priorite-vulnerabilites.js';
+import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Gravités */
@@ -252,7 +253,8 @@ const page = z.coerce.number().int().min(1).max(1000).default(1);
 const oui = z.enum(['oui']).optional();
 
 /** Constats : recherche par identifiant CVE, numéro ou nom du contrôle ; filtres par gravité, exploité (catalogue KEV),
-    exploitable (code d'exploitation connu de Tenable), non maintenu (constat sans CVE), priorité calculée (lot V4a). */
+    exploitable (code d'exploitation connu de Tenable), non maintenu (constat sans CVE), priorité calculée (lot V4a), suivi
+    (lot V4b : absent, les failles encore à traiter ; un état ; `a_clore` ; `tous`). */
 export const RechercheConstats = z
   .object({
     q: recherche,
@@ -261,6 +263,7 @@ export const RechercheConstats = z
     exploitable: oui,
     nonMaintenu: oui,
     priorite: NiveauPriorite.optional(),
+    etat: FiltreSuivi.optional(),
     page,
   })
   .strict();
@@ -302,9 +305,14 @@ export interface ConstatResumeDto {
   /** Nombre de CVE du constat, et les premières (cinq au plus). */
   nombreCves: number;
   cves: string[];
-  /** Machines où le constat est présent, parmi celles que la personne peut lire. */
+  /** Machines où le constat est présent, parmi celles que la personne peut lire ; pour un constat qui n'est plus rapporté,
+      celles où il a été vu en dernier (lot V4b). */
   machines: number;
   derniereDetection: string | null;
+  /** Le constat est rapporté par la dernière synchronisation complète (ou plus récente) sur au moins une machine. */
+  present: boolean;
+  /** État de suivi décidé par une personne, proposition « corrigée » et actions liées (lot V4b). */
+  suivi: SuiviResumeDto;
   /** Une CVE du constat est citée par une alerte du CERT-FR rangée par la veille (lot V4a). */
   alerteCertFr: boolean;
   /** Priorité calculée par la plateforme et faits qui la fondent (lot V4a). */

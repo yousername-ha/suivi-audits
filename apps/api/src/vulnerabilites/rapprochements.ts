@@ -8,7 +8,8 @@
    - Décision d'une personne sur une proposition (`vulnerabilites:modifier`, If-Match) : confirmer ou rejeter, avec une note.
    - Suggestions d'identifiant : couples éditeur et produit déjà rangés par la veille qui ressemblent au nom saisi (lecture
      de la base seulement, aucun appel réseau).
-   Journal `vulnerabilites.rapprochement.*` : identifiants internes, CVE et nombres ; aucun nom ni adresse de machine. */
+   Journal `vulnerabilites.rapprochement.*` : identifiants internes, CVE et nombres ; aucun nom ni adresse de machine.
+   Lot V4b : un rapprochement qui cesse d'être rattaché (ou le redevient) est signalé au suivi des failles déclarées. */
 import { createHash } from 'node:crypto';
 import {
   calculerPriorite,
@@ -73,7 +74,18 @@ const presenceDe = (s: StatutRapprochement): Presence =>
 /** Ordre d'affichage : à décider, puis rattachées, confirmées, écartées, rejetées. */
 const ORDRE_FICHE: StatutRapprochement[] = ['proposee', 'rattachee', 'confirmee', 'ecartee', 'rejetee'];
 
+const RATTACHEE = (s: StatutRapprochement) => s === 'rattachee' || s === 'confirmee';
+
 export class Rapprochements {
+  /** Suivi des failles déclarées (lot V4b) : une CVE qui n'est plus rattachée est proposée « corrigée » ; de nouveau
+      rattachée, la proposition est retirée ou la faille corrigée réapparaît. Dans la transaction du recalcul. */
+  apresBascules?: (
+    k: Kdb,
+    c: Client,
+    produitId: string,
+    bascules: { id: string; rattachee: boolean }[],
+  ) => Promise<void>;
+
   constructor(
     private readonly db: Db,
     private readonly reglage: ReglagePrioriteVulnerabilites,
@@ -139,6 +151,7 @@ export class Rapprochements {
     const bilan: Partial<Record<StatutRapprochement, number>> = {};
     let changements = 0;
     const nouveaux: Record<string, unknown>[] = [];
+    const bascules: { id: string; rattachee: boolean }[] = [];
     for (const cve of [...new Set([...candidats.keys(), ...existants.keys()])].sort()) {
       const plages = candidats.get(cve);
       const courant = existants.get(cve);
@@ -196,6 +209,8 @@ export class Rapprochements {
           .set((eb) => ({ ...valeurs, version: eb('version', '+', 1), calcule_le: sql<Date>`now()` }))
           .where('id', '=', courant.id)
           .execute();
+        if (RATTACHEE(courant.statut) !== RATTACHEE(t.statut))
+          bascules.push({ id: courant.id, rattachee: RATTACHEE(t.statut) });
       }
       changements++;
       bilan[t.statut] = (bilan[t.statut] ?? 0) + 1;
@@ -205,6 +220,7 @@ export class Rapprochements {
         .insertInto('vulnerabilites_rapprochements')
         .values(nouveaux.slice(i, i + 1000) as never)
         .execute();
+    if (bascules.length) await this.apresBascules?.(k, c, p.id, bascules);
     if (changements)
       await this.db.audit(
         AUTOMATE,

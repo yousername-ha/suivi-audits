@@ -1,10 +1,12 @@
 /* Failles détectées par Tenable et machines (ADR 0100, lot V5) : présentation sans état ni appel réseau (testée à part). Le
    serveur reste seul juge des droits (module, périmètre de chaque machine) ; les textes de Tenable s'affichent tels quels,
    en anglais (V19), comme texte simple. Un lien « voir aussi » n'est rendu que s'il a la forme contrôlée (https).
-   Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. */
+   Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. Lot V4b : filtre
+   de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). */
 import {
   type ConstatDto,
   type ConstatResumeDto,
+  type FiltreSuivi,
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
   libelleFaitPriorite,
@@ -26,6 +28,8 @@ export interface FiltresConstats {
   exploitable: boolean;
   nonMaintenu: boolean;
   priorite: NiveauPriorite | '';
+  /** Suivi (lot V4b) : vide, les failles encore à traiter. */
+  etat: FiltreSuivi | '';
 }
 export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   q: '',
@@ -34,6 +38,7 @@ export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   exploitable: false,
   nonMaintenu: false,
   priorite: '',
+  etat: '',
 };
 
 /** Adresse de la liste des constats (recherche, filtres, page), lue par le serveur. */
@@ -45,16 +50,21 @@ export function urlConstats(f: FiltresConstats, page = 1): string {
   if (f.exploitable) p.set('exploitable', 'oui');
   if (f.nonMaintenu) p.set('nonMaintenu', 'oui');
   if (f.priorite) p.set('priorite', f.priorite);
+  if (f.etat) p.set('etat', f.etat);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/constats${s ? `?${s}` : ''}`;
 }
 
-/** Adresse des failles déclarées (CVE rattachées à un produit relié à des machines) : recherche, priorité, page. */
-export function urlDeclarees(f: Pick<FiltresConstats, 'q' | 'priorite'>, page = 1): string {
+/** Adresse des failles déclarées (CVE rattachées à un produit relié à des machines) : recherche, priorité, suivi, page. */
+export function urlDeclarees(
+  f: Pick<FiltresConstats, 'q' | 'priorite'> & { etat?: FiltreSuivi | '' },
+  page = 1,
+): string {
   const p = new URLSearchParams();
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.priorite) p.set('priorite', f.priorite);
+  if (f.etat) p.set('etat', f.etat);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/declarees${s ? `?${s}` : ''}`;

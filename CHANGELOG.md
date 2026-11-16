@@ -60,6 +60,15 @@ leurs plages de versions ne sont rangés qu'à partir des collectes NVD suivant 
 les CVE plus anciennes ne sont pas rapprochées tant que NVD ne les republie pas. Le seuil EPSS de la grille de priorité vaut
 50 % par défaut (Risques > Vulnérabilités > Seuils de priorité). (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `077`** (module Vulnérabilités, suivi d'une faille, lot V4b de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_suivis`,
+`vulnerabilites_suivi_historique`, en ajout seul et protégée par déclencheurs, et `vulnerabilites_suivi_actions`, quatre index),
+durée négligeable, sans reprise de données. Rien à faire sur le serveur. Toutes les failles existantes sont « nouvelles ».
+**Les listes de « Failles détectées » ne montrent plus par défaut que les failles encore à traiter** (nouvelles, à traiter, en
+cours) : le filtre « Suivi » montre les autres états et les failles « à clore ». À la première synchronisation complète de
+Tenable qui suit la mise à jour, les constats qui ne sont plus présents nulle part, y compris ceux disparus avant elle, sont
+proposés « corrigés selon Tenable, à confirmer ». (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -209,6 +218,33 @@ les CVE plus anciennes ne sont pas rapprochées tant que NVD ne les republie pas
   filtre de priorité et failles déclarées dans « Failles détectées », rang et fiche de machine dans « Machines », écran « Seuils
   de priorité ». Rien ne part vers l'assistant, aucune notification, aucun export. (session « Module surveillance
   vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4b : suivi d'une faille, lien avec une action, proposition « corrigée »**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), point 10). **États de suivi** d'un constat de Tenable et d'une faille
+  déclarée : nouvelle (état initial), à traiter, en cours, corrigée, risque accepté, non concernée. Changement d'état par une
+  personne (`vulnerabilites:modifier`, `If-Match` sur la version du suivi) qui **lit toutes les machines touchées** par la faille
+  (sinon refus explicite : la décision vaut pour toute l'organisation) ; **note obligatoire** pour « risque accepté » et « non
+  concernée », **date de revue** facultative d'un risque accepté (jamais passée). **Historique** de chaque changement (ancien et
+  nouvel état, auteur, date, note), en ajout seul, protégé par déclencheurs comme les autres décisions immuables, écrit dans la
+  même transaction que l'état courant. **Lien avec une action du registre existant** : « Créer une action » ouvre un formulaire
+  prérempli (nom du contrôle, ou CVE et produit ; correctif de Tenable ou action exigée du catalogue KEV en anglais, tels quels ;
+  aucun nom de machine), la personne choisit un périmètre où elle écrit ; l'action est créée par le service du registre, **sous
+  son identité et avec ses droits** (droit de modifier les actions, module actif, écriture sur le périmètre ; sinon rien n'est
+  créé), avec la justification « Créée depuis le module Vulnérabilités (…) », sans nom ni adresse de machine. « Relier une
+  action » existante que la personne peut lire, « Délier » ; plusieurs actions possibles ; la fiche n'affiche l'état que des
+  actions lisibles. Créer ou relier une action fait passer une faille « nouvelle » à « à traiter » ; **la clôture d'une action
+  ne change jamais l'état de la faille**. **Proposition « corrigée »** : après une synchronisation **complète** seulement, un
+  constat qui n'est plus présent sur aucune machine est marqué « corrigé selon Tenable, à confirmer » (filtre « À clore ») ;
+  une faille déclarée qui n'est plus rattachée (version du produit changée) aussi. Une personne confirme (« corrigée ») ou
+  refuse avec une note (l'état reste). Une faille corrigée qui réapparaît repasse « à traiter », avec une entrée « réapparue »
+  du système ; rien n'est jamais passé à « corrigée » sans une personne. **Listes** : colonne et filtre « Suivi » dans « Failles
+  détectées » et dans les failles déclarées (par défaut les failles encore à traiter ; un état ; « à clore » ; « tous ») ; une
+  date de revue dépassée est signalée sans changement d'état ; les failles corrigées, au risque accepté ou non concernées sortent
+  des compteurs et du rang des machines, leur priorité reste calculée sur les faits. Fiche d'une faille déclarée (description
+  de NVD, action exigée du catalogue KEV, machines reliées lisibles). API `/declarees/:id`, `/suivis/:nature/:id`,
+  `…/etat`, `…/refus`, `…/actions`, `…/liens`, `…/liens/:actionId` ; filtre `etat` sur `/constats` et `/declarees`. Journal
+  `vulnerabilites.suivi.etat_modifie`, `.proposition_refusee`, `.action_creee`, `.action_reliee`, `.action_deliee`,
+  `.synchronisation`, `.rapprochement` : identifiants et états, sans note, sans nom ni adresse de machine. Rien ne part vers
+  l'assistant, aucune notification, aucun export. (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

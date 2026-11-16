@@ -106,6 +106,15 @@ par les fonctions pures du paquet partagé (`rapprochement-vulnerabilites.ts` : 
 transitions). Un produit surveillé se relie à la main aux machines (`vulnerabilites_produits_machines`). Priorité P1 à P4 et rang
 des machines sont calculés à la lecture par `priorite-vulnerabilites.ts` (fonctions pures, seuil EPSS rangé dans `settings`,
 clé `vulnerabilites:priorite`) sur les seules machines lisibles ; rien n'en sort du serveur.
+Depuis le lot V4b (migration `077`), `apps/api/src/vulnerabilites/suivi.ts` tient l'état de suivi d'un constat ou d'une
+faille déclarée (`vulnerabilites_suivis`, ligne créée à la première décision), son historique en ajout seul
+(`vulnerabilites_suivi_historique`, déclencheurs d'immuabilité, sans clé étrangère : il survit à l'objet) et ses liens vers les
+actions du registre (`vulnerabilites_suivi_actions`, clé étrangère vers `grc_objects`). Une action est créée dans la transaction
+du lien par les méthodes du registre (`registreDeCreation`, `normalize`, `insert` de `grc/core.ts`), avec la session et les droits
+de la personne. La fin d'une synchronisation de Tenable (`tenable.ts`, même transaction) et le recalcul des rapprochements
+(`rapprochements.ts`, même transaction) préviennent le suivi, qui propose « corrigée » (après une synchronisation complète
+seulement), retire la proposition ou remet « à traiter » une faille corrigée qui réapparaît ; il ne passe jamais rien à
+« corrigée ».
 
 Mandataire sortant de l'établissement ([ADR 0101](../adr/0101-mandataire-sortant.md), lot P1) : réglage système unique
 (`administration:administrer`, `If-Match`), rangé sans migration dans `settings` (`systeme:mandataire` : actif, adresse

@@ -236,12 +236,21 @@ describe('failles déclarées, priorité, machines', () => {
     kev: true,
     alerteCertFr: false,
     machines: 2,
+    present: true,
     priorite: {
       niveau: 'P1',
       faits: [
         { fait: 'exploitation', sources: ['kev'] },
         { fait: 'presence', presence: 'declaree' },
       ],
+    },
+    suivi: {
+      etat: 'a_traiter',
+      proposition: 'aucune',
+      revueLe: null,
+      revueDepassee: false,
+      nombreActions: 1,
+      version: 2,
     },
   };
   it('liste des failles déclarées : mention « déclaré », produit et version, priorité et faits', () => {

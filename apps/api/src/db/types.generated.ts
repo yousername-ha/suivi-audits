@@ -1670,6 +1670,42 @@ export interface VulnerabilitesRapprochements {
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesSuiviActions {
+  suivi_id: string;
+  action_id: string;
+  cree_ici: boolean;
+  relie_par: string;
+  relie_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSuiviHistorique {
+  id: Generated<string>;
+  nature: "constat" | "declaree";
+  objet_id: string;
+  evenement: "changement" | "action" | "proposition" | "refus" | "retrait_proposition" | "reapparition";
+  etat_avant: string | null;
+  etat_apres: "nouvelle" | "a_traiter" | "en_cours" | "corrigee" | "risque_accepte" | "non_concernee";
+  note: Generated<string>;
+  revue_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  auteur: string;
+  auteur_id: string | null;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSuivis {
+  id: Generated<string>;
+  nature: "constat" | "declaree";
+  constat_id: string | null;
+  rapprochement_id: string | null;
+  etat: Generated<"nouvelle" | "a_traiter" | "en_cours" | "corrigee" | "risque_accepte" | "non_concernee">;
+  proposition: Generated<"aucune" | "a_confirmer" | "refusee">;
+  absente: Generated<boolean>;
+  revue_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  version: Generated<number>;
+  maj_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  maj_par: string | null;
+}
+
 export interface VulnerabilitesSynchronisations {
   execution_id: string;
   integration_id: string;
@@ -1952,6 +1988,9 @@ export interface DB {
   vulnerabilites_produits: VulnerabilitesProduits;
   vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;
   vulnerabilites_rapprochements: VulnerabilitesRapprochements;
+  vulnerabilites_suivi_actions: VulnerabilitesSuiviActions;
+  vulnerabilites_suivi_historique: VulnerabilitesSuiviHistorique;
+  vulnerabilites_suivis: VulnerabilitesSuivis;
   vulnerabilites_synchronisations: VulnerabilitesSynchronisations;
   vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;

@@ -65,3 +65,4 @@ export * from './failles-tenable.js';
 export * from './mandataire.js';
 export * from './rapprochement-vulnerabilites.js';
 export * from './priorite-vulnerabilites.js';
+export * from './suivi-vulnerabilites.js';

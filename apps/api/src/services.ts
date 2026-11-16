@@ -48,6 +48,7 @@ import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
+import { SuiviFailles } from './vulnerabilites/suivi.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -101,6 +102,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const rapprochements = new Rapprochements(db, reglagePriorite);
   const veille = new VeilleVulnerabilites(db, flux, mandataire);
   veille.apresNvd = () => rapprochements.recalculerTout();
+  /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
+  const suivi = new SuiviFailles(db, grc);
+  tenable.apresSynchronisation = (k, c, id, complete) => suivi.apresSynchronisation(k, c, id, complete);
+  rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   return {
     cfg,
     log,
@@ -120,6 +125,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       failles: new FaillesDetectees(db, grc, reglagePriorite),
       rapprochements,
       priorite: reglagePriorite,
+      suivi,
     },
     modules,
     flux,

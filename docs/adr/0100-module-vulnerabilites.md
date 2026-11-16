@@ -276,6 +276,20 @@
     publiées changent ;
   - une faille exploitée que NVD n'a pas republiée dans la fenêtre de collecte n'est pas rapprochée d'un produit déclaré.
   Non réalisé : états de suivi d'une faille, lien avec une action, proposition « corrigée ».
+- **Lot V4b, suivi d'une faille** (16/11/2026) : migration `077`. États de suivi historisés (historique en ajout seul),
+  lien avec les actions du registre existant (création sous l'identité de la personne, ou action existante reliée),
+  proposition « corrigée » après une synchronisation complète. À confirmer par le RSSI :
+  - pour **décider** (état, action, refus), il faut lire **toutes** les machines touchées ; pour lire, une seule suffit ;
+  - la clôture d'une action ne change jamais l'état de la faille ; créer ou relier une action fait passer « nouvelle » à
+    « à traiter » ;
+  - la proposition « corrigée » vise aussi les failles en « risque accepté » et « non concernée » ; refusée, elle n'est
+    refaite que si la faille a été de nouveau rapportée entre-temps ;
+  - une faille marquée « corrigée » par une personne alors que Tenable la voit encore reste corrigée et est signalée ; elle
+    ne repasse « à traiter » que si elle avait été vue absente puis revient ;
+  - un constat qui n'est plus rapporté a une présence « absente » : sa priorité baisse ;
+  - la note d'une décision est gardée dans l'historique, pas dans le journal d'audit ;
+  - une action créée depuis le module ne nomme aucune machine.
+  Non réalisé : notification, lien de la fiche vers l'action dans Pilotage.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre

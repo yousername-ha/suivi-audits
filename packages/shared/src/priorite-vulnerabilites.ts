@@ -9,6 +9,8 @@ import {
   ROLE_MACHINE_LIBELLES,
   type RoleMachine,
 } from './failles-tenable.js';
+import type { StatutRapprochement } from './rapprochement-vulnerabilites.js';
+import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Réglage (vulnerabilites:administrer) */
 /** Seuil du score EPSS (probabilité entre 0 et 1) à partir duquel une faille présente passe en P2. Seul seuil réglable de la
@@ -207,11 +209,13 @@ export interface RangMachineDto {
 
 /* ------------------------------------------------------------------ Failles déclarées (V20) */
 /** Failles déclarées : CVE rattachées (d'office ou confirmées) à un produit relié à des machines lisibles, hors machines où
-    Tenable détecte déjà la CVE. Recherche par identifiant CVE, éditeur ou nom du produit ; filtre par priorité. */
+    Tenable détecte déjà la CVE. Recherche par identifiant CVE, éditeur ou nom du produit ; filtre par priorité ; filtre de
+    suivi (lot V4b). Une CVE qui n'est plus rattachée reste listée si elle a un suivi (proposition « corrigée », état). */
 export const RechercheDeclarees = z
   .object({
     q: z.string().trim().max(100).optional(),
     priorite: NiveauPriorite.optional(),
+    etat: FiltreSuivi.optional(),
     page: z.coerce.number().int().min(1).max(1000).default(1),
   })
   .strict();
@@ -220,7 +224,8 @@ export type RechercheDeclarees = z.infer<typeof RechercheDeclarees>;
 export interface FailleDeclareeDto {
   rapprochementId: string;
   cve: string;
-  statut: 'rattachee' | 'confirmee';
+  /** Rattachée ou confirmée ; un autre statut quand le rapprochement n'est plus rattaché (lot V4b, proposition « corrigée »). */
+  statut: StatutRapprochement;
   produit: { id: string; editeur: string; nom: string; versionProduit: string };
   gravite: GraviteTenable | null;
   cvssScore: number | null;
@@ -229,5 +234,27 @@ export interface FailleDeclareeDto {
   alerteCertFr: boolean;
   /** Machines lisibles reliées au produit où Tenable ne détecte pas cette CVE. */
   machines: number;
+  /** Le rapprochement est rattaché (d'office ou confirmé) : la faille vise toujours la version déclarée (lot V4b). */
+  present: boolean;
   priorite: Priorite;
+  suivi: SuiviResumeDto;
+}
+
+/** Machine lisible reliée au produit d'une faille déclarée ; `detectee` : Tenable y détecte aussi la CVE. */
+export interface MachineDeclareeDto {
+  id: string;
+  nom: string | null;
+  adresse: string | null;
+  role: RoleMachine | null;
+  perimetreNom: string | null;
+  detectee: boolean;
+}
+
+/** Fiche d'une faille déclarée (lot V4b) : description de NVD et action exigée du catalogue KEV (en anglais, telles quelles),
+    machines lisibles reliées au produit. */
+export interface FicheDeclareeDto extends FailleDeclareeDto {
+  description: string | null;
+  kevAction: string | null;
+  kevEcheance: string | null;
+  machinesReliees: MachineDeclareeDto[];
 }
