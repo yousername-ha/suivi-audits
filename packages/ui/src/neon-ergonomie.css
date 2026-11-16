@@ -168,7 +168,10 @@
 /* Action principale : bleu du menu, texte bleu nuit ; ajout secondaire : contour. */
 .app-main
   :is(.barre-outils__ajout, .fs-toolbar-end, .pr-toolbar-end, .barre-registre)
-  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter) {
+  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter):not(
+    :disabled,
+    [data-disabled]
+  ) {
   --button-bg: var(--menu-teinte-pilotage);
   --button-hover: var(--menu-focus);
   --button-color: var(--menu-fond-haut);
@@ -274,5 +277,19 @@
 @media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
   .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
     animation: none;
+  }
+}
+
+/* Téléphone : la boîte d'outils ne dépasse jamais la largeur de l'écran ; le champ de recherche se rétrécit. */
+@media (max-width: 36em) {
+  .app-main .barre-boite {
+    max-inline-size: 100%;
+  }
+  .app-main .barre-boite__recherche {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+  .app-main .barre-boite__recherche .mantine-Input-input {
+    inline-size: 100%;
   }
 }

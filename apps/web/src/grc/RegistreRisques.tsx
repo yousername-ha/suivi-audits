@@ -1,11 +1,14 @@
 /* Registre des risques (lot U3, ADR 0027) : niveaux brut et résiduel de la dernière appréciation, option de
-   traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. */
-import { Button, Group, Select, Table, Text, TextInput } from '@mantine/core';
+   traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. Boîte d'outils
+   commune (7.3.0) : recherche et filtres avancés ; Démarche, Étude, Option et Acceptation se filtrent aussi sur le titre
+   de leur colonne ; l'ajout d'un risque se place au bout de la ligne. */
+import { Button, Checkbox, Group, Select, Table, Text } from '@mantine/core';
 import { ETATS_ACCEPTATION, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
 import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { get } from '../api';
+import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
@@ -60,6 +63,7 @@ export function RegistreRisques({
   onAcceptation,
   onRelation,
   onAjouterTraitement,
+  ajout,
 }: {
   smsi: string;
   onOpen: (o: GrcObject) => void;
@@ -68,6 +72,8 @@ export function RegistreRisques({
   onRelation: (ref: string) => void;
   /** Ouvre la création d'un traitement déjà rattaché au risque. */
   onAjouterTraitement: (risqueId: string) => void;
+  /** Commande d'ajout placée au bout de la boîte d'outils (« Ajouter un risque »). */
+  ajout?: ReactNode;
 }) {
   const can = useCan();
   const [demarche, setDemarche] = useState<string | null>(null),
@@ -96,45 +102,124 @@ export function RegistreRisques({
   });
   const nomEtude = new Map((etudes.data?.items ?? []).map((e) => ['object:' + e.id, e.name] as const));
   const objet = (id: string) => get<GrcObject>(`/api/grc/${smsi}/objects/${id}`);
+  // Valeurs des filtres : les mêmes pour le panneau des filtres avancés et pour les titres de colonnes.
+  const optionsDemarche = Object.entries(DEMARCHES).map(([value, label]) => ({ value, label })),
+    optionsEtude = (etudes.data?.items ?? []).map((e) => ({ value: e.id, label: e.name })),
+    optionsOption = Object.entries(OPTIONS).map(([value, label]) => ({ value, label })),
+    optionsAcceptation = Object.entries(ETATS_ACCEPTATION).map(([value, label]) => ({ value, label }));
+  const libelleDe = (options: { value: string; label: string }[], v: string) =>
+    options.find((o) => o.value === v)?.label ?? 'sélectionnée';
+  const reinitialiser = () => {
+    setDemarche(null);
+    setEtude(null);
+    setStrategie(null);
+    setAcceptation(null);
+    setRetard(false);
+    setEcart(false);
+  };
+  const criteres: CritereActif[] = [
+    ...(recherche ? [{ cle: 'q', libelle: 'Recherche', valeur: recherche, retirer: () => setRecherche('') }] : []),
+    ...(demarche
+      ? [
+          {
+            cle: 'demarche',
+            libelle: 'Démarche',
+            valeur: libelleDe(optionsDemarche, demarche),
+            retirer: () => setDemarche(null),
+          },
+        ]
+      : []),
+    ...(etude
+      ? [{ cle: 'etude', libelle: 'Étude', valeur: libelleDe(optionsEtude, etude), retirer: () => setEtude(null) }]
+      : []),
+    ...(strategie
+      ? [
+          {
+            cle: 'option',
+            libelle: 'Option de traitement',
+            valeur: libelleDe(optionsOption, strategie),
+            retirer: () => setStrategie(null),
+          },
+        ]
+      : []),
+    ...(acceptation
+      ? [
+          {
+            cle: 'acceptation',
+            libelle: 'Acceptation',
+            valeur: libelleDe(optionsAcceptation, acceptation),
+            retirer: () => setAcceptation(null),
+          },
+        ]
+      : []),
+    ...(retard ? [{ cle: 'retard', libelle: 'Revue dépassée', valeur: 'oui', retirer: () => setRetard(false) }] : []),
+    ...(ecart
+      ? [{ cle: 'ecart', libelle: 'Écart avec la matrice', valeur: 'oui', retirer: () => setEcart(false) }]
+      : []),
+  ];
   return (
     <>
-      <Group align="end">
-        <TextInput label="Rechercher" value={recherche} onChange={(e) => setRecherche(e.currentTarget.value)} />
-        <Select
-          label="Démarche"
-          clearable
-          data={Object.entries(DEMARCHES).map(([value, label]) => ({ value, label }))}
-          value={demarche}
-          onChange={setDemarche}
-        />
-        <Select
-          label="Étude"
-          clearable
-          data={(etudes.data?.items ?? []).map((e) => ({ value: e.id, label: e.name }))}
-          value={etude}
-          onChange={setEtude}
-        />
-        <Select
-          label="Option de traitement"
-          clearable
-          data={Object.entries(OPTIONS).map(([value, label]) => ({ value, label }))}
-          value={strategie}
-          onChange={setStrategie}
-        />
-        <Select
-          label="Acceptation"
-          clearable
-          data={Object.entries(ETATS_ACCEPTATION).map(([value, label]) => ({ value, label }))}
-          value={acceptation}
-          onChange={setAcceptation}
-        />
-        <Button variant={retard ? 'filled' : 'default'} onClick={() => setRetard((x) => !x)}>
-          Revue dépassée
-        </Button>
-        <Button variant={ecart ? 'filled' : 'default'} aria-pressed={ecart} onClick={() => setEcart((x) => !x)}>
-          Écart avec la matrice
-        </Button>
-      </Group>
+      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés ; Démarche, Étude, Option et
+          Acceptation se filtrent aussi sur le titre de leur colonne (le panneau les garde : le tableau disparaît quand
+          aucun risque ne correspond, et ses colonnes secondaires se masquent sur petit écran). */}
+      <BoiteOutils
+        label="Outils du registre des risques"
+        recherche={{ label: 'Rechercher', value: recherche, onChange: setRecherche }}
+        filtres={{
+          actifs: [demarche, etude, strategie, acceptation, retard ? '1' : '', ecart ? '1' : ''].filter(Boolean).length,
+          onReinitialiser: reinitialiser,
+          contenu: (
+            <>
+              <Select
+                label="Démarche"
+                clearable
+                data={optionsDemarche}
+                value={demarche}
+                onChange={setDemarche}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Étude"
+                clearable
+                data={optionsEtude}
+                value={etude}
+                onChange={setEtude}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Option de traitement"
+                clearable
+                data={optionsOption}
+                value={strategie}
+                onChange={setStrategie}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Acceptation"
+                clearable
+                data={optionsAcceptation}
+                value={acceptation}
+                onChange={setAcceptation}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Checkbox label="Revue dépassée" checked={retard} onChange={(e) => setRetard(e.currentTarget.checked)} />
+              <Checkbox
+                label="Écart avec la matrice"
+                checked={ecart}
+                onChange={(e) => setEcart(e.currentTarget.checked)}
+              />
+            </>
+          ),
+        }}
+        ajout={ajout}
+      />
+      <PastillesCriteres
+        criteres={criteres}
+        onToutEffacer={() => {
+          setRecherche('');
+          reinitialiser();
+        }}
+      />
       <ErrorAlert error={q.error} />
       {q.data?.tronque && <Text size="sm">Seuls les 500 premiers risques sont affichés : précisez les filtres.</Text>}
       {q.data && !q.data.items.length && <Text>Aucun risque ne correspond.</Text>}
@@ -144,12 +229,30 @@ export function RegistreRisques({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Risque</Table.Th>
-                <Table.Th className="col-p2">Démarche</Table.Th>
-                <Table.Th className="col-p3">Étude</Table.Th>
+                <Table.Th className="col-p2">
+                  <FiltreColonne
+                    libelle="Démarche"
+                    valeur={demarche}
+                    options={optionsDemarche}
+                    onChange={setDemarche}
+                  />
+                </Table.Th>
+                <Table.Th className="col-p3">
+                  <FiltreColonne libelle="Étude" valeur={etude} options={optionsEtude} onChange={setEtude} />
+                </Table.Th>
                 <Table.Th>Brut</Table.Th>
                 <Table.Th>Résiduel</Table.Th>
-                <Table.Th className="col-p2">Option</Table.Th>
-                <Table.Th>Acceptation</Table.Th>
+                <Table.Th className="col-p2">
+                  <FiltreColonne libelle="Option" valeur={strategie} options={optionsOption} onChange={setStrategie} />
+                </Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="Acceptation"
+                    valeur={acceptation}
+                    options={optionsAcceptation}
+                    onChange={setAcceptation}
+                  />
+                </Table.Th>
                 <Table.Th className="col-p3">Prochaine revue</Table.Th>
                 <Table.Th>Actions</Table.Th>
               </Table.Tr>

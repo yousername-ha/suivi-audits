@@ -418,12 +418,14 @@ export function PilotagePage() {
             {section === 'risques' && can('pilotage', 'lire') && (
               <>
                 <Group>
-                  {can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>}
                   <Anchor component={Link} to="/pilotage/configuration">
                     Choisir ou adapter la méthode d’appréciation
                   </Anchor>
                 </Group>
                 <RegistreRisques
+                  ajout={
+                    can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>
+                  }
                   key={smsi}
                   smsi={smsi}
                   onOpen={open}

@@ -39,6 +39,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
+import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
@@ -68,6 +69,14 @@ function useEtiquettes(portee: 'documents' | 'liens' | 'tous') {
   });
 }
 const optionsEtiquettes = (t?: TagCount[]) => (t ?? []).map((e) => ({ value: e.tag, label: `${e.tag} (${e.count})` }));
+/** Pastilles des étiquettes filtrées : une par étiquette, retirable seule. */
+const criteresEtiquettes = (tags: string[], setTags: (t: string[]) => void): CritereActif[] =>
+  tags.map((t) => ({
+    cle: 'etiquette:' + t,
+    libelle: 'Étiquette',
+    valeur: t,
+    retirer: () => setTags(tags.filter((x) => x !== t)),
+  }));
 
 /** Saisie d'étiquettes : une étiquette qui ne diffère d'une étiquette existante que par la casse est refusée
  *  (« rgpd » si « RGPD » existe) ; un doublon dans la même liste est ignoré. */
@@ -290,60 +299,91 @@ function DocumentList({
     }
   };
 
+  const reinitialiser = () => {
+    setCategory(null);
+    setTags([]);
+    setTrash('0');
+  };
+  const criteres: CritereActif[] = [
+    ...(q ? [{ cle: 'q', libelle: 'Recherche', valeur: q, retirer: () => setQ('') }] : []),
+    ...(category
+      ? [{ cle: 'categorie', libelle: 'Catégorie', valeur: category, retirer: () => setCategory(null) }]
+      : []),
+    ...criteresEtiquettes(tags, setTags),
+    ...(trash === '1'
+      ? [{ cle: 'corbeille', libelle: 'Afficher', valeur: 'Corbeille', retirer: () => setTrash('0') }]
+      : []),
+  ];
+
   return (
     <Stack>
-      <Group align="flex-end" wrap="wrap">
-        <TextInput
-          label="Rechercher"
-          placeholder="Titre, fichier, rattachement…"
-          value={q}
-          onChange={(e) => setQ(e.currentTarget.value)}
-          className="champ-m"
-        />
-        <Select
-          label="Catégorie"
-          data={cats.data ?? []}
-          value={category}
-          onChange={setCategory}
-          clearable
-          className="champ-s"
-        />
-        <div className="filtre-etiquettes">
-          <MultiSelect
-            label="Étiquettes"
-            description="Toutes les étiquettes choisies"
-            placeholder={tags.length ? undefined : 'Toutes'}
-            data={optionsEtiquettes(etiquettes.data)}
-            value={tags}
-            onChange={setTags}
-            searchable
-            clearable
-            nothingFoundMessage="Aucune étiquette"
-            className="champ-m"
-          />
-        </div>
-        {canDelete && (
-          <SegmentedControl
-            value={trash}
-            onChange={setTrash}
-            data={[
-              { value: '0', label: 'Documents' },
-              { value: '1', label: 'Corbeille' },
-            ]}
-            aria-label="Afficher"
-          />
-        )}
-        {canWrite && trash === '0' && (
-          <FileButton onChange={(f) => f.length && void upload(f)} multiple>
-            {(props) => (
-              <Button {...props} loading={uploading}>
-                Déposer des documents
-              </Button>
+      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés. La catégorie (dont le titre de
+          colonne porte déjà le tri), les étiquettes (choix multiple) et la corbeille passent dans les filtres avancés ;
+          le choix des colonnes et le dépôt se placent au bout de la ligne. */}
+      <BoiteOutils
+        label="Outils des documents"
+        recherche={{ label: 'Rechercher', placeholder: 'Titre, fichier, rattachement…', value: q, onChange: setQ }}
+        filtres={{
+          actifs: [category, tags.length ? '1' : '', trash === '1' ? '1' : ''].filter(Boolean).length,
+          onReinitialiser: reinitialiser,
+          contenu: (
+            <>
+              <Select
+                label="Catégorie"
+                data={cats.data ?? []}
+                value={category}
+                onChange={setCategory}
+                clearable
+                comboboxProps={{ withinPortal: false }}
+              />
+              <MultiSelect
+                label="Étiquettes"
+                description="Toutes les étiquettes choisies"
+                placeholder={tags.length ? undefined : 'Toutes'}
+                data={optionsEtiquettes(etiquettes.data)}
+                value={tags}
+                onChange={setTags}
+                searchable
+                clearable
+                nothingFoundMessage="Aucune étiquette"
+                comboboxProps={{ withinPortal: false }}
+              />
+              {canDelete && (
+                <SegmentedControl
+                  value={trash}
+                  onChange={setTrash}
+                  data={[
+                    { value: '0', label: 'Documents' },
+                    { value: '1', label: 'Corbeille' },
+                  ]}
+                  aria-label="Afficher"
+                />
+              )}
+            </>
+          ),
+        }}
+        ajout={
+          <Group gap="xs">
+            {selecteur}
+            {canWrite && trash === '0' && (
+              <FileButton onChange={(f) => f.length && void upload(f)} multiple>
+                {(props) => (
+                  <Button {...props} loading={uploading}>
+                    Déposer des documents
+                  </Button>
+                )}
+              </FileButton>
             )}
-          </FileButton>
-        )}
-        <div className="pousse-droite">{selecteur}</div>
-      </Group>
+          </Group>
+        }
+      />
+      <PastillesCriteres
+        criteres={criteres}
+        onToutEffacer={() => {
+          setQ('');
+          reinitialiser();
+        }}
+      />
       <ErrorAlert error={list.error} />
       <DataTable label="Documents">
         <Table highlightOnHover>
@@ -825,34 +865,55 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
 
   return (
     <Stack>
-      <Group align="flex-end">
-        <TextInput label="Rechercher" value={q} onChange={(e) => setQ(e.currentTarget.value)} className="champ-m" />
-        <MultiSelect
-          label="Étiquettes"
-          description="Toutes les étiquettes choisies"
-          placeholder={tags.length ? undefined : 'Toutes'}
-          data={optionsEtiquettes(etiquettes.data)}
-          value={tags}
-          onChange={setTags}
-          searchable
-          clearable
-          nothingFoundMessage="Aucune étiquette"
-          className="champ-m"
-        />
-        <Select
-          label="Trier par"
-          data={[
-            { value: 'modifie', label: 'Dernière modification' },
-            { value: 'titre', label: 'Titre' },
-            { value: 'categorie', label: 'Catégorie' },
-          ]}
-          value={tri}
-          onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
-          allowDeselect={false}
-          className="champ-s"
-        />
-        {canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
-      </Group>
+      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés (étiquettes, tri), libellés inchangés ; la liste des
+          liens n'a pas de titres de colonnes. L'ajout d'un lien se place au bout de la ligne. */}
+      <BoiteOutils
+        label="Outils des liens"
+        recherche={{ label: 'Rechercher', value: q, onChange: setQ }}
+        filtres={{
+          actifs: tags.length ? 1 : 0,
+          onReinitialiser: () => setTags([]),
+          contenu: (
+            <>
+              <MultiSelect
+                label="Étiquettes"
+                description="Toutes les étiquettes choisies"
+                placeholder={tags.length ? undefined : 'Toutes'}
+                data={optionsEtiquettes(etiquettes.data)}
+                value={tags}
+                onChange={setTags}
+                searchable
+                clearable
+                nothingFoundMessage="Aucune étiquette"
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Trier par"
+                data={[
+                  { value: 'modifie', label: 'Dernière modification' },
+                  { value: 'titre', label: 'Titre' },
+                  { value: 'categorie', label: 'Catégorie' },
+                ]}
+                value={tri}
+                onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
+                allowDeselect={false}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </>
+          ),
+        }}
+        ajout={canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
+      />
+      <PastillesCriteres
+        criteres={[
+          ...(q ? [{ cle: 'q', libelle: 'Recherche', valeur: q, retirer: () => setQ('') }] : []),
+          ...criteresEtiquettes(tags, setTags),
+        ]}
+        onToutEffacer={() => {
+          setQ('');
+          setTags([]);
+        }}
+      />
       <ErrorAlert error={list.error} />
       <Card withBorder p={0}>
         <div className="table-wrap" role="region" aria-label="Liens du document" tabIndex={0}>

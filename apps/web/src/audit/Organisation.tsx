@@ -31,6 +31,7 @@ import {
 } from '@suivi/shared/audit';
 import { ConfirmButton, DataTable } from '@suivi/ui';
 import { Table } from '@mantine/core';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { heureFr, jourFr, minutes, useActionAudit, useAudit, type DonneesAudit } from './commun';
@@ -76,6 +77,22 @@ export function Organisation({ vue }: { vue: VueOrganisation }) {
     }
   };
   const ouvert = plan.slots.find((s) => s.id === creneau) ?? null;
+  const ajouts = modifiable ? (
+    vue === 'participants' ? (
+      <Button variant="default" onClick={() => void lancer('POST', '/plan/personnes', {})}>
+        Ajouter une personne
+      </Button>
+    ) : (
+      <>
+        <Button variant="default" onClick={() => void lancer('POST', '/plan/jours', {})}>
+          Ajouter un jour
+        </Button>
+        <Button onClick={() => void ajouterCreneau()} disabled={!plan.days.length}>
+          Ajouter un créneau
+        </Button>
+      </>
+    )
+  ) : null;
   return (
     <Stack>
       <ErrorAlert error={erreur} />
@@ -118,23 +135,20 @@ export function Organisation({ vue }: { vue: VueOrganisation }) {
               : 'Toutes les mesures du référentiel sont placées.'}
           </Alert>
         ))}
-      {modifiable && (
-        <Group justify="flex-end">
-          {vue === 'participants' ? (
-            <Button variant="default" onClick={() => void lancer('POST', '/plan/personnes', {})}>
-              Ajouter une personne
-            </Button>
-          ) : (
-            <>
-              <Button variant="default" onClick={() => void lancer('POST', '/plan/jours', {})}>
-                Ajouter un jour
-              </Button>
-              <Button onClick={() => void ajouterCreneau()} disabled={!plan.days.length}>
-                Ajouter un créneau
-              </Button>
-            </>
-          )}
-        </Group>
+      {/* Boîte d'outils commune (7.3.0) : le déroulé a sa recherche de créneaux (libellé inchangé) ; les ajouts se placent
+          au bout de la ligne, sur les trois vues. */}
+      {vue === 'deroule' ? (
+        <BoiteOutils
+          label="Outils du déroulé"
+          recherche={{ label: 'Rechercher un créneau', value: recherche, onChange: setRecherche }}
+          ajout={ajouts}
+        />
+      ) : (
+        ajouts && (
+          <Group justify="flex-end" className="barre-outils__ajout">
+            {ajouts}
+          </Group>
+        )
       )}
       {vue === 'deroule' && (
         <Deroule
@@ -143,7 +157,6 @@ export function Organisation({ vue }: { vue: VueOrganisation }) {
           analyses={analyses}
           modifiable={modifiable}
           recherche={recherche}
-          onRecherche={setRecherche}
           onOuvrir={setCreneau}
           onAjouter={ajouterCreneau}
           lancer={lancer}
@@ -188,7 +201,6 @@ function Deroule({
   analyses,
   modifiable,
   recherche,
-  onRecherche,
   onOuvrir,
   onAjouter,
   lancer,
@@ -197,8 +209,8 @@ function Deroule({
   plan: AuditPlan;
   analyses: Record<string, Analysis>;
   modifiable: boolean;
+  /** Terme saisi dans la boîte d'outils de l'organisation (« Rechercher un créneau »). */
   recherche: string;
-  onRecherche: (v: string) => void;
   onOuvrir: (id: string) => void;
   onAjouter: (day?: string) => Promise<void>;
   lancer: Lancer;
@@ -227,7 +239,6 @@ function Deroule({
   if (!plan.days.length) return <Text size="sm">Aucun jour d’audit : ajoutez un jour pour commencer.</Text>;
   return (
     <Stack>
-      <TextInput label="Rechercher un créneau" value={recherche} onChange={(e) => onRecherche(e.currentTarget.value)} />
       {plan.days.map((j) => {
         const creneaux = duJour(plan, j.id).filter(correspond);
         if (terme && !creneaux.length) return null;
