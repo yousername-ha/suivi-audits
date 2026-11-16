@@ -4,7 +4,7 @@
    entrée justifiée. Ajouter un service sortant sans l'inscrire fait échouer ce test ; une entrée devenue inutile aussi. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { FLUX_EXTERNES, FLUX_MODULES } from '@suivi/shared';
+import { FLUX_EXTERNES, FLUX_MODULES, FLUX_REPRISE_EXECUTANT, FLUX_REPRISE_MOTIFS } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { REPO } from './helpers.js';
 
@@ -149,6 +149,29 @@ describe('architecture : flux vers l’extérieur', () => {
           expect(blocService(s), `${s} dépend de ${apres}`).not.toMatch(new RegExp(`\\n {6}${apres}: \\{`));
       });
     expect(blocService('clamav')).toMatch(/\n {6}freshclam: \{ condition: service_healthy \}/);
+  });
+
+  it('les motifs de reprise des exécutants concordent avec le registre et couvrent chacun des modules qu’ils constatent', () => {
+    // Précision du RSSI du 16/11/2026 : chaque exécutant déclare les modules qu'il porte et qui sont en service ; à eux deux,
+    // ils couvrent exactement FLUX_REPRISE_EXECUTANT, avec les codes de FLUX_REPRISE_MOTIFS (le courriel est constaté par l'API).
+    const lire = (f: string) => readFileSync(path.join(REPO, f), 'utf8');
+    const declares: Record<string, string[]> = {};
+    for (const f of ['scripts/update-worker.py', 'scripts/exploitation-worker.py']) {
+      const ligne = /^FLUX_REPRISE_MOTIFS = (\{.*\})$/m.exec(lire(f));
+      expect(ligne, f).not.toBeNull();
+      for (const [m, motifs] of Object.entries(JSON.parse(ligne![1]!) as Record<string, string[]>)) {
+        expect(declares[m], `${m} déclaré par deux exécutants`).toBeUndefined();
+        declares[m] = motifs;
+      }
+    }
+    expect(Object.keys(declares).sort()).toEqual([...FLUX_REPRISE_EXECUTANT].sort());
+    for (const m of FLUX_REPRISE_EXECUTANT)
+      expect([...declares[m]!].sort(), m).toEqual(Object.keys(FLUX_REPRISE_MOTIFS[m]).sort());
+    // Les réglages de .env lus pour la reprise sont ceux que nomment les motifs « env-renseigne ».
+    const env = /^FLUX_REPRISE_ENV = (\{.*\})$/m.exec(lire('scripts/update-worker.py'));
+    expect(env).not.toBeNull();
+    for (const [m, variable] of Object.entries(JSON.parse(env![1]!) as Record<string, string>))
+      expect(FLUX_REPRISE_MOTIFS[m as 'assistant' | 'antivirus']['env-renseigne'], m).toContain(variable);
   });
 
   it('ajouter un service sortant sans l’inscrire au registre fait échouer le contrôle', () => {

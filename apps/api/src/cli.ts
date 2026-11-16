@@ -20,6 +20,7 @@
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
+     flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
      ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
@@ -30,7 +31,7 @@
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
-import { FluxAppliques, formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
+import { FluxAppliques, FluxReprise, formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
@@ -62,6 +63,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
+  flux-reprise                modules en service jamais décidés enregistrés ouverts (JSON sur l'entrée standard), puis flux voulus ouverts
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
   ops-request | ops-certificate  JSON privé sur entrée standard
   ops-schedule <UUID>         demande planifiée (verrou hôte)
@@ -197,6 +199,28 @@ async function main() {
         process.exit(2);
       }
       console.log(JSON.stringify({ modules: await svc.flux.appliquer(p.data) }));
+      break;
+    }
+    case 'flux-reprise': {
+      // Reprise de l'existant (précision du RSSI du 16/11/2026) : l'exécutant déclare les modules réellement en service sur
+      // le serveur, avec le motif constaté, AVANT toute fermeture. Un module jamais décidé est enregistré ouvert ; un module
+      // déjà décidé n'est jamais touché. Entrée validée strictement ; la sortie est celle de « flux-souhaites ».
+      let brut: unknown;
+      try {
+        brut = JSON.parse(await readStdin());
+      } catch {
+        console.error('Reprise illisible : JSON attendu sur l’entrée standard.');
+        process.exit(2);
+      }
+      const p = FluxReprise.safeParse(brut);
+      if (!p.success) {
+        console.error(
+          `Reprise refusée : ${p.error.issues.map((i) => `${i.path.join('.') || '(racine)'} ${i.message}`).join(' ; ')}`,
+        );
+        process.exit(2);
+      }
+      await svc.flux.reprendre(p.data.enService, 'executant');
+      console.log(JSON.stringify(await svc.flux.souhaites()));
       break;
     }
     case 'ops-policy': {

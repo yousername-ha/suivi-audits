@@ -24,6 +24,9 @@ export async function prepareDatabase(svc: Services, opts: { issueToken?: boolea
   await svc.grc.initialize();
   await seedState(svc);
   await svc.settings.load();
+  // Reprise de l'existant (précision du RSSI du 16/11/2026) : un envoi de courriels déjà actif, jamais décidé côté flux, garde
+  // son flux ouvert après une mise à jour ; une décision enregistrée n'est jamais touchée.
+  await svc.flux.reprendreCourriel(svc.settings.get('courriel'));
   await svc.webauthn.charger();
   if (!svc.cfg.webauthn.disponible)
     svc.log.warn(
