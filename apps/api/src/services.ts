@@ -49,6 +49,7 @@ import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
 import { SuiviFailles } from './vulnerabilites/suivi.js';
+import { AssistantVulnerabilites } from './vulnerabilites/assistant.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -106,6 +107,11 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const suivi = new SuiviFailles(db, grc);
   tenable.apresSynchronisation = (k, c, id, complete) => suivi.apresSynchronisation(k, c, id, complete);
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
+  const failles = new FaillesDetectees(db, grc, reglagePriorite);
+  /* V30 : les machines nommées dans une action suivent le rang des machines. */
+  suivi.rangs = (user) => failles.machinesRangees(user);
+  /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie. */
+  assistant.vulnerabilites = new AssistantVulnerabilites(db, failles, suivi, reglagePriorite);
   return {
     cfg,
     log,
@@ -122,7 +128,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       produits: new ProduitsSurveilles(db, grc, rapprochements),
       veille,
       tenable,
-      failles: new FaillesDetectees(db, grc, reglagePriorite),
+      failles,
       rapprochements,
       priorite: reglagePriorite,
       suivi,

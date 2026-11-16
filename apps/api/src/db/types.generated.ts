@@ -1559,6 +1559,31 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesAssistantPropositions {
+  id: Generated<string>;
+  conversation_id: string;
+  nature: "constat" | "declaree";
+  constat_id: string | null;
+  rapprochement_id: string | null;
+  titre: string;
+  description: Generated<string>;
+  echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  reperes: Generated<number[]>;
+  etat: Generated<"en_attente" | "confirmee" | "rejetee" | "retiree">;
+  decided_by: Generated<string>;
+  decided_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  decision_note: Generated<string>;
+  action_id: string | null;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAssistantReperes {
+  conversation_id: string;
+  numero: number;
+  machine_id: string | null;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesConstatCves {
   constat_id: string;
   cve: string;
@@ -1996,6 +2021,8 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_assistant_propositions: VulnerabilitesAssistantPropositions;
+  vulnerabilites_assistant_reperes: VulnerabilitesAssistantReperes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;
   vulnerabilites_constats: VulnerabilitesConstats;
   vulnerabilites_detections: VulnerabilitesDetections;

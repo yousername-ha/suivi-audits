@@ -184,6 +184,10 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_suivis',
   'vulnerabilites_suivi_historique',
   'vulnerabilites_suivi_actions',
+  // Assistant et vulnérabilités (ADR 0100, V14 et V29) : repères des machines et propositions d'action, rattachés aux
+  // conversations de l'assistant (travail des utilisateurs, effacées par les deux portées) et effacés avec elles.
+  'vulnerabilites_assistant_reperes',
+  'vulnerabilites_assistant_propositions',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

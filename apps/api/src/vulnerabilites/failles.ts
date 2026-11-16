@@ -419,8 +419,9 @@ export class FaillesDetectees {
   /* ---------------------------------------------------------------- Machines */
   /** Toutes les machines lisibles, avec leurs compteurs (constats présents, puis failles déclarées non détectées), rangées
       de la plus critique à la moins critique (rangerMachines du paquet partagé). Une faille corrigée, au risque accepté ou
-      non concernée ne compte pas (lot V4b). */
-  private async machinesRangees(user: SessionUser): Promise<MachineDto[]> {
+      non concernée ne compte pas (lot V4b). Public : le suivi (V30) et l'assistant (repères) rangent les machines par ce
+      même rang. */
+  async machinesRangees(user: SessionUser): Promise<MachineDto[]> {
     const { rows } = await sql<LigneMachine>`
       SELECT m.id, m.nom, m.adresse, m.systeme, m.role, m.perimetre_id, s.name AS perimetre_nom, m.exposition, m.acr,
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,

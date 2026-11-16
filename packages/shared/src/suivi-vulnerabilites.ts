@@ -191,6 +191,9 @@ export interface SuiviDto extends SuiviResumeDto {
   motifRefus: string | null;
   /** Préremplissage du formulaire « Créer une action ». */
   preremplissage: { titre: string; description: string };
+  /** Actifs touchés (V30) : bloc ajouté par le serveur à la description de toute action créée depuis la faille (noms des
+      machines que la personne peut lire, applications touchées). Vide si rien n'est connu. */
+  actifsAction: string;
 }
 
 /* ------------------------------------------------------------------ Action préremplie */
@@ -207,7 +210,8 @@ export type SourceAction =
     };
 
 /** Intitulé et description proposés : nom du contrôle, ou CVE et produit ; correctif de la source en anglais, tel quel.
-    Aucun nom ni adresse de machine. */
+    Aucun nom ni adresse de machine ici : les machines et applications touchées sont ajoutées par le serveur à la création
+    (V30, `actifsAction`). */
 export function preremplirAction(s: SourceAction): { titre: string; description: string } {
   if (s.nature === 'constat')
     return {

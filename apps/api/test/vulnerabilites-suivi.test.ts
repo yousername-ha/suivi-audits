@@ -1,8 +1,9 @@
 /* Module Vulnérabilités (ADR 0100, point 10 ; lot V4b) : suivi d'une faille. Migration 077 sur base vierge ; historique en
    ajout seul ; états, transitions et notes obligatoires, If-Match ; droits (sans le droit, constat touchant une machine non
    lisible, périmètre de l'action non inscriptible, module des actions désactivé, sans droit du module des actions) ;
-   création d'une action du registre sous l'identité de la personne, mention de l'origine, aucun nom ni adresse de machine
-   dans l'action ni au journal ; relier et délier une action ; passage « nouvelle » -> « à traiter » ; la clôture d'une
+   création d'une action du registre sous l'identité de la personne, mention de l'origine ; l'action nomme les machines et
+   l'application touchées (V30, décision du RSSI du 16/11/2026 qui remplace le choix initial du lot : action sans nom de
+   machine), jamais une adresse ; aucun nom ni adresse de machine au journal ; relier et délier une action ; passage « nouvelle » -> « à traiter » ; la clôture d'une
    action ne change pas l'état ; proposition « corrigée » après une synchronisation complète seulement, confirmation, refus,
    réapparition ; faille déclarée qui n'est plus rattachée ; exclusion des compteurs et du rang ; date de revue dépassée.
    Données entièrement fictives : noms en .invalid, adresses de 192.0.2.0/24, CVE et contrôles fictifs ; aucun service
@@ -146,6 +147,7 @@ type Suivi = {
     { lisible: true; id: string; statut: string; statutLibelle: string; terminee: boolean } | { lisible: false }
   )[];
   preremplissage: { titre: string; description: string };
+  actifsAction: string;
 };
 const suivi = async (a: Agent, nature: string, id: string): Promise<Suivi> => {
   const r = await a.get(`${V}/suivis/${nature}/${id}`);
@@ -357,7 +359,7 @@ describe('droits', () => {
 });
 
 describe('actions du registre', () => {
-  it('création sous l’identité de la personne, mention de l’origine, sans nom de machine ; nouvelle -> à traiter', async () => {
+  it('création sous l’identité de la personne, mention de l’origine, machines et application nommées (V30) ; nouvelle -> à traiter', async () => {
     const id = await constatId('950003');
     const s0 = await suivi(editeurA, 'constat', id);
     expect(s0.etat).toBe('nouvelle');
@@ -398,7 +400,20 @@ describe('actions du registre', () => {
     );
     expect(a.data.status).toBe('todo');
     expect(a.data.dueAt).toBe('2099-03-31T12:00:00.000Z');
-    sansMachine(JSON.stringify(a));
+    // V30 (remplace l'assertion du lot V4b « aucun nom de machine dans l'action ») : la description nomme la machine touchée
+    // (950003 n'est que sur la machine 3) et l'application (nom du contrôle, faute de produit surveillé), après le texte de la
+    // personne ; jamais d'adresse.
+    expect(a.data.description).toBe(
+      `${s0.preremplissage.description}\n\nActifs touchés (selon vos droits de lecture) :\n` +
+        `Machine touchée : ${nomMachine(3)}.\nApplication touchée : Exemple Linux : contrôle fictif 950003.`,
+    );
+    expect(s0.actifsAction).toBe(
+      `Actifs touchés (selon vos droits de lecture) :\nMachine touchée : ${nomMachine(3)}.\n` +
+        'Application touchée : Exemple Linux : contrôle fictif 950003.',
+    );
+    for (const k of [1, 2, 3]) expect(JSON.stringify(a)).not.toContain(adresse(k));
+    expect(JSON.stringify(a)).not.toContain(nomMachine(1));
+    expect(JSON.stringify(a)).not.toContain(nomMachine(2));
     // Journal du registre et du module : sous l'identité de la personne, sans nom ni adresse de machine.
     const g = (await audits('grc.object.created')).filter((x) => x.target === a.id);
     expect(g).toHaveLength(1);
@@ -723,7 +738,7 @@ describe('faille déclarée', () => {
     const s0 = await suivi(editeurA, 'declaree', rid);
     expect(s0.preremplissage.titre).toBe('Corriger CVE-2026-95101 : Éditeur suivi Produit suivi 1.5');
     sansMachine(JSON.stringify(s0.preremplissage));
-    // Action créée depuis la faille déclarée : mention de la CVE, pas de machine.
+    // Action créée depuis la faille déclarée : mention de la CVE ; machine reliée et produit avec sa version nommés (V30).
     const a = await editeurA.post(`${V}/suivis/declaree/${rid}/actions`, actionCorps(perimA), ifMatch(0));
     expect(a.statusCode, a.body).toBe(201);
     expect(a.json().etat).toBe('a_traiter');
@@ -733,6 +748,11 @@ describe('faille déclarée', () => {
       [rid],
     ))!;
     expect(action.data.justification).toBe('Créée depuis le module Vulnérabilités (faille déclarée CVE-2026-95101).');
+    expect(action.data.description).toBe(
+      `Description fictive.\n\nActifs touchés (selon vos droits de lecture) :\nMachine touchée : ${nomMachine(3)}.\n` +
+        'Application touchée : Éditeur suivi Produit suivi 1.5.',
+    );
+    expect(JSON.stringify(action)).not.toContain(adresse(3));
     // Version du produit changée, hors plage : le rapprochement est écarté, la faille proposée « corrigée ».
     const ver = (await admin.get(`${V}/produits/${p.json().id}`)).json().version as number;
     const maj = await admin.patch(`${V}/produits/${p.json().id}`, { versionProduit: '2.1' }, ifMatch(ver));

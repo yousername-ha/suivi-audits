@@ -127,6 +127,20 @@ rapprochée par le nom du produit cité (proposition « avis_seulement ») ; la 
 des rapprochements. Une confirmation ou un rejet s'annule (`POST …/rapprochements/:id/annulation`, `If-Match`) : décision
 effacée, rapprochement recalculé, annulation gardée sur la ligne et au journal ; le suivi est prévenu comme pour tout
 changement de rattachement (une confirmation aussi).
+Depuis la migration `079` (décisions V14, V25, V28, V29 et V30), l'assistant lit le module par un service du module
+(`apps/api/src/vulnerabilites/assistant.ts`), appelé avec la session de la personne, jamais par les tables en direct ; ses outils
+(`evaluer_cve`, `machines_prioritaires`, `failles_prioritaires`, `proposer_action_vulnerabilite`) ne sont déclarés au modèle
+qu'en conversation, pour le profil « Mise en œuvre », module actif et droit `vulnerabilites:lire`. Chaque machine y est un
+repère de la conversation (`vulnerabilites_assistant_reperes`, clé étrangère en cascade vers `assistant_conversations`, machine
+à `SET NULL` pour qu'un numéro ne soit jamais réattribué) ; la table de correspondance ne sort pas du serveur. Le transport du
+modèle est enveloppé par un masque (`apps/api/src/assistant/masque.ts`, en conversation et en ronde) qui relit toute la demande
+avant le relais et remplace tout nom, premier libellé, adresse ou identifiant de Tenable de l'inventaire par le repère ou par
+« [machine] » : c'est le dernier point de contrôle avant la sortie. Le texte du modèle est rangé avec ses repères
+(`assistant_messages`, `vulnerabilites_assistant_propositions`) ; la route d'une conversation et celle des propositions les
+remplacent à la lecture, selon les droits de la personne. À la confirmation d'une proposition, la création de l'action et la
+mise à jour de la proposition se font dans une seule transaction (`SuiviFailles.creerActionProposee`), repères remplacés par les
+noms sur le serveur. Toute action créée depuis une faille porte dans sa description les actifs touchés (V30), calculés à la
+création avec les droits de la personne et le rang des machines.
 
 Mandataire sortant de l'établissement ([ADR 0101](../adr/0101-mandataire-sortant.md), lot P1) : réglage système unique
 (`administration:administrer`, `If-Match`), rangé sans migration dans `settings` (`systeme:mandataire` : actif, adresse

@@ -9,7 +9,11 @@
      présent, à défaut celles où il a été vu en dernier ; faille déclarée : machines reliées au produit). Sinon, refus.
    - Actions du registre existant : création par le service du registre (registreDeCreation, normalize, insert), SOUS
      L'IDENTITÉ ET AVEC LES DROITS de la personne (droit du module des actions, écriture sur le périmètre choisi), dans la
-     transaction du lien ; justification portant la mention de l'origine, sans nom ni adresse de machine. Relier une action
+     transaction du lien ; justification portant la mention de l'origine. La description porte en plus les actifs touchés
+     (V30, remplace le choix initial du lot) : noms des machines que la personne peut lire, rangées par rang (20 au plus,
+     puis « et N autres » avec le renvoi à la faille ; jamais d'adresse), et applications touchées (produit surveillé avec
+     sa version, sinon nom du contrôle). Une action proposée par l'assistant puis confirmée passe par la même création
+     (creerActionProposee), dans la transaction de la décision. Relier une action
      existante que la personne peut lire ; délier. Créer ou relier fait passer une faille « nouvelle » à « à traiter » ; la
      clôture d'une action ne change jamais l'état de la faille.
    - Proposition « corrigée » : la plateforme ne fait que proposer. Après une synchronisation complète, un constat qui n'est
@@ -17,9 +21,14 @@
      personne confirme (état « corrigée ») ou refuse avec une note. Une faille « corrigée » qui réapparaît repasse « à
      traiter », avec une entrée « réapparue » dont l'auteur est le système.
    Journal `vulnerabilites.suivi.*` : identifiants internes et états seulement ; ni nom ni adresse de machine, ni la note
-   (texte libre, gardé à l'historique). */
+   (texte libre, gardé à l'historique), ni la description de l'action. */
 import {
+  type ActifsTouches,
+  ACTIFS_MACHINES_MAX,
   type ActionLieeDto,
+  blocActifsTouches,
+  descriptionAvecActifs,
+  type MachineDto,
   ChangementEtatSuivi,
   CreationActionSuivi,
   type EntreeHistoriqueSuiviDto,
@@ -126,6 +135,10 @@ interface LigneEtat {
 const colonne = (nature: NatureSuivi) => (nature === 'constat' ? 'constat_id' : 'rapprochement_id');
 
 export class SuiviFailles {
+  /** Machines lisibles rangées par rang (FaillesDetectees.machinesRangees), branché par les services : ordre des machines
+      nommées dans une action (V30). Absent, l'ordre est celui des noms. */
+  rangs?: (user: SessionUser) => Promise<MachineDto[]>;
+
   constructor(
     private readonly db: Db,
     private readonly g: Grc,
@@ -202,6 +215,75 @@ export class SuiviFailles {
     const o = await this.objet(k, user, nature, id);
     if (!o?.visible) throw new HttpError(404, INTROUVABLE);
     return o;
+  }
+
+  /** L'objet existe et la personne le lit (au moins une machine touchée lisible). */
+  async estLisible(user: SessionUser, nature: NatureSuivi, id: string): Promise<boolean> {
+    return !!(await this.objet(this.db.k, user, nature, id))?.visible;
+  }
+
+  /** Actifs touchés par la faille (V30), dans la limite de ce que la personne peut lire : machines touchées (constat :
+      où il est présent, à défaut où il a été vu en dernier ; faille déclarée : machines reliées au produit), rangées par
+      rang ; applications touchées : produit surveillé avec sa version (faille déclarée, ou produits rattachés aux CVE du
+      constat), sinon nom du contrôle. */
+  async actifs(k: Kdb, user: SessionUser, nature: NatureSuivi, id: string): Promise<ActifsTouches> {
+    const { rows: machines } =
+      nature === 'constat'
+        ? await sql<{ id: string; nom: string | null }>`
+            WITH x AS (
+              SELECT DISTINCT d.machine_id, m.nom, ${present} AS present, ${lisible(user)} AS lisible
+              FROM vulnerabilites_detections d
+              JOIN vulnerabilites_machines m ON m.id = d.machine_id
+              LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+              WHERE d.constat_id = ${id}::uuid)
+            SELECT DISTINCT x.machine_id AS id, x.nom FROM x
+            WHERE x.lisible AND (x.present OR NOT EXISTS (SELECT 1 FROM x y WHERE y.present))`.execute(k)
+        : await sql<{ id: string; nom: string | null }>`
+            SELECT DISTINCT m.id, m.nom FROM vulnerabilites_rapprochements r
+            JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
+            JOIN vulnerabilites_machines m ON m.id = pm.machine_id
+            WHERE r.id = ${id}::uuid AND ${lisible(user)}`.execute(k);
+    const rang = new Map(((await this.rangs?.(user)) ?? []).map((m) => [m.id, m.rang.position]));
+    const ordonnees = [...machines].sort(
+      (a, b) =>
+        (rang.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rang.get(b.id) ?? Number.MAX_SAFE_INTEGER) ||
+        (a.nom ?? '').localeCompare(b.nom ?? '') ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
+    const nommees = ordonnees.filter((m) => m.nom).map((m) => m.nom!);
+    let applications: string[];
+    let renvoi: string;
+    if (nature === 'constat') {
+      const c = await k
+        .selectFrom('vulnerabilites_constats')
+        .select(['plugin_id', 'nom'])
+        .where('id', '=', id)
+        .executeTakeFirstOrThrow();
+      const { rows } = await sql<{ produit: string }>`
+        SELECT DISTINCT p.editeur || ' ' || p.nom || CASE WHEN p.version_produit <> '' THEN ' ' || p.version_produit ELSE '' END
+          AS produit
+        FROM vulnerabilites_constat_cves cc
+        JOIN vulnerabilites_rapprochements r ON r.cve = cc.cve AND r.statut IN ('rattachee', 'confirmee')
+        JOIN vulnerabilites_produits p ON p.id = r.produit_id
+        WHERE cc.constat_id = ${id}::uuid ORDER BY 1`.execute(k);
+      applications = rows.length ? rows.map((r) => r.produit) : [c.nom];
+      renvoi = `contrôle n° ${c.plugin_id} de Tenable Security Center`;
+    } else {
+      const { rows } = await sql<{ cve: string; produit: string }>`
+        SELECT r.cve, p.editeur || ' ' || p.nom || CASE WHEN p.version_produit <> '' THEN ' ' || p.version_produit ELSE '' END
+          AS produit
+        FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
+        WHERE r.id = ${id}::uuid`.execute(k);
+      applications = rows.map((r) => r.produit);
+      renvoi = rows[0]?.cve ?? '';
+    }
+    return {
+      machines: nommees.slice(0, ACTIFS_MACHINES_MAX),
+      autres: Math.max(0, nommees.length - ACTIFS_MACHINES_MAX),
+      sansNom: ordonnees.length - nommees.length,
+      applications,
+      renvoi,
+    };
   }
 
   /** Objet sur lequel la personne peut décider : lisible, et toutes ses machines touchées lisibles. */
@@ -323,6 +405,7 @@ export class SuiviFailles {
           ? null
           : MACHINES_NON_LISIBLES,
       preremplissage: preremplirAction(o.source),
+      actifsAction: blocActifsTouches(await this.actifs(k, user, nature, id)),
     };
   }
 
@@ -477,55 +560,98 @@ export class SuiviFailles {
   ): Promise<SuiviDto> {
     const b = CreationActionSuivi.parse(corps);
     await this.db.tx(async (c, k) => {
-      const o = await this.decidable(k, user, nature, id);
-      const s = await this.verrouiller(k, nature, id);
-      if (s.version !== attendue) throw conflict({ version: s.version, updated_by: s.maj_par ?? '' });
-      // Service du registre, comme une création depuis l'écran des actions (createObject, sans registre choisi) : droit du
-      // module des actions (module actif) et écriture sur le périmètre, sinon rien n'est créé.
-      await this.g.registreDeCreation(c, b.perimetreId, 'action', registreKindOf('action'), null, user);
-      const politique = (await this.g.politiqueDe(b.perimetreId, c)).definition;
-      const statut = politique.statuses.find((x) => !x.terminal)?.id;
-      const categorie = politique.catalogues.actionCategories[0]?.id;
-      if (!statut || !categorie)
-        throw new HttpError(422, 'La politique du périmètre ne permet pas de créer une action.');
-      const data = await this.g.normalize(
-        b.perimetreId,
-        'action',
-        {
-          description: b.description,
-          status: statut,
-          ownerId: null,
-          startAt: null,
-          dueAt: b.echeance ? `${b.echeance}T12:00:00.000Z` : null,
-          priority: 'normal',
-          category: categorie,
-          justification: mentionOrigineAction(
-            o.source.nature === 'constat'
-              ? { nature: 'constat', plugin: o.source.plugin }
-              : { nature: 'declaree', cve: o.source.cve },
-          ),
-          reminderDays: 7,
-          dependencies: [],
-        },
-        user,
-        c,
-      );
-      const a = await this.g.insert(c, b.perimetreId, 'action', b.titre, data, user, ip);
-      await k
-        .insertInto('vulnerabilites_suivi_actions')
-        .values({ suivi_id: s.id, action_id: a.id, cree_ici: true, relie_par: user.username })
-        .execute();
-      const apres = await this.apresLien(k, nature, id, s, user);
-      await this.db.audit(
-        user,
-        ip,
-        'vulnerabilites.suivi.action_creee',
-        s.id,
-        { nature, objet: id, action: a.id, perimetre: b.perimetreId, avant: s.etat, apres },
-        c,
-      );
+      await this.creer(c, k, nature, id, b, attendue, user, ip, null);
     }, user.username);
     return this.lire(user, nature, id);
+  }
+
+  /** Action proposée par l'assistant puis confirmée par la personne (ADR 0100, V29) : même création que depuis la fiche,
+      dans la transaction de la décision, sans If-Match (la personne décide de la proposition, pas d'une version du suivi).
+      Rend l'identifiant de l'action créée. */
+  async creerActionProposee(
+    c: Client,
+    k: Kdb,
+    nature: NatureSuivi,
+    id: string,
+    b: CreationActionSuivi,
+    user: SessionUser,
+    ip: string,
+    proposition: string,
+  ): Promise<string> {
+    return this.creer(c, k, nature, id, CreationActionSuivi.parse(b), null, user, ip, proposition);
+  }
+
+  private async creer(
+    c: Client,
+    k: Kdb,
+    nature: NatureSuivi,
+    id: string,
+    b: CreationActionSuivi,
+    attendue: number | null,
+    user: SessionUser,
+    ip: string,
+    proposition: string | null,
+  ): Promise<string> {
+    const o = await this.decidable(k, user, nature, id);
+    const s = await this.verrouiller(k, nature, id);
+    if (attendue !== null && s.version !== attendue)
+      throw conflict({ version: s.version, updated_by: s.maj_par ?? '' });
+    // Service du registre, comme une création depuis l'écran des actions (createObject, sans registre choisi) : droit du
+    // module des actions (module actif) et écriture sur le périmètre, sinon rien n'est créé.
+    await this.g.registreDeCreation(c, b.perimetreId, 'action', registreKindOf('action'), null, user);
+    const politique = (await this.g.politiqueDe(b.perimetreId, c)).definition;
+    const statut = politique.statuses.find((x) => !x.terminal)?.id;
+    const categorie = politique.catalogues.actionCategories[0]?.id;
+    if (!statut || !categorie) throw new HttpError(422, 'La politique du périmètre ne permet pas de créer une action.');
+    const mention = mentionOrigineAction(
+      o.source.nature === 'constat'
+        ? { nature: 'constat', plugin: o.source.plugin }
+        : { nature: 'declaree', cve: o.source.cve },
+    );
+    const data = await this.g.normalize(
+      b.perimetreId,
+      'action',
+      {
+        // V30 : machines et applications touchées, dans la limite de ce que la personne peut lire.
+        description: descriptionAvecActifs(b.description, blocActifsTouches(await this.actifs(k, user, nature, id))),
+        status: statut,
+        ownerId: null,
+        startAt: null,
+        dueAt: b.echeance ? `${b.echeance}T12:00:00.000Z` : null,
+        priority: 'normal',
+        category: categorie,
+        justification: proposition
+          ? `${mention} Proposée par l’assistant RSSI, confirmée par ${user.displayName || user.username}.`
+          : mention,
+        reminderDays: 7,
+        dependencies: [],
+      },
+      user,
+      c,
+    );
+    const a = await this.g.insert(c, b.perimetreId, 'action', b.titre, data, user, ip);
+    await k
+      .insertInto('vulnerabilites_suivi_actions')
+      .values({ suivi_id: s.id, action_id: a.id, cree_ici: true, relie_par: user.username })
+      .execute();
+    const apres = await this.apresLien(k, nature, id, s, user);
+    await this.db.audit(
+      user,
+      ip,
+      'vulnerabilites.suivi.action_creee',
+      s.id,
+      {
+        nature,
+        objet: id,
+        action: a.id,
+        perimetre: b.perimetreId,
+        avant: s.etat,
+        apres,
+        ...(proposition ? { origine: 'assistant', proposition } : {}),
+      },
+      c,
+    );
+    return a.id;
   }
 
   /** Relie une action existante du registre, que la personne peut lire. */

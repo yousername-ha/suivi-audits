@@ -80,6 +80,16 @@ lui comme les autres. Les mentions du CERT Santé ne sont connues qu'à partir d
 de certaines failles peut monter : l'exploitation avérée vaut désormais aussi par la fiche du CERT Santé, et la gravité retenue
 est la plus sévère des sources. (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `079`** (assistant RSSI et module Vulnérabilités, décisions V14, V25, V28, V29 et V30 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_assistant_reperes` et
+`vulnerabilites_assistant_propositions`, deux index ; aucune table existante modifiée), durée négligeable, sans reprise de
+données. Rien à faire sur le serveur. **Les actions créées depuis une faille nomment désormais les machines touchées** que la
+personne peut lire (20 au plus) et les applications touchées (V30) : les personnes qui lisent les actions du périmètre choisi
+liront ces noms. **Masque des machines** : dès que l'inventaire du module contient des machines, tout nom, adresse ou
+identifiant de machine part chez le fournisseur du modèle sous la forme d'un repère ou de « [machine] », y compris dans les
+documents, les actions et le contexte de l'organisation relus par l'assistant, en conversation comme en ronde. (session
+« Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -284,6 +294,52 @@ est la plus sévère des sources. (session « Module surveillance vulnérabilit�
   `vulnerabilites.rapprochement.annule` (décision annulée et son auteur, statut obtenu, note). Écrans : « Ce que disent les
   sources » dans les fiches, marques dans les listes, bouton « Annuler la décision », mentions du CERT Santé telles quelles et
   état des fiches dans « Veille ». (session « Module surveillance vulnérabilités SMSI »)
+- **Assistant RSSI branché sur le module Vulnérabilités : évaluer une CVE, actifs à traiter d'abord, plan d'action, avec
+  repères anonymes ; contenu des actions (V30)** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), décisions V5, V14, V25,
+  V28, V29 et V30 ; [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)). **Service de lecture du module pour l'assistant**
+  (`apps/api/src/vulnerabilites/assistant.ts`), appelé avec les droits de la personne, résultats bornés et déjà anonymisés.
+  **Quatre outils**, offerts **en conversation seulement** (pas en ronde autonome dans ce lot), au profil « Mise en œuvre »
+  seulement (constante de code), quand le module est actif et que la personne a `vulnerabilites:lire` ; sinon ils sont absents
+  de la déclaration faite au modèle : `evaluer_cve` (identifiant contrôlé ; connue ou non de la veille ; faits par source avec
+  leurs dates : publication, exploitation avérée, exploitable, gravités, scores CVSS et EPSS, valeurs retenues ; avis et alertes
+  qui la citent, titre borné ; action exigée du catalogue KEV, mentions « correctif » et « contournement » du CERT Santé ;
+  présence : constats de Tenable lisibles qui la portent avec numéro et nom du contrôle, correctif publié par Tenable, nombre de
+  machines et repères des machines lisibles, produits surveillés rattachés, à décider ou écartés avec éditeur, produit, version
+  et motif ; priorité calculée et ses faits ; état de suivi et nombre d'actions liées ; une CVE inconnue de la veille et absente
+  de Tenable rend « inconnue de la plateforme »), `machines_prioritaires` (30 au plus, pour toute la portée lisible, une CVE ou
+  un constat : repère, rang, faits du rang **sans le rôle**, compteurs par gravité, exploitées, exploitables, déclarées),
+  `failles_prioritaires` (25 au plus, par priorité : faits, nombre de machines, état de suivi) et
+  `proposer_action_vulnerabilite`. **Consigne** : réponse en quatre parties courtes (« Sommes-nous touchés », « Quoi faire »,
+  « Actifs à traiter d'abord », « Plan d'action proposé »), en texte simple, sans rien calculer ni inventer, repères recopiés
+  tels quels, aucun accès au web. **Repères** : chaque machine est remise au modèle sous la forme `M-001`, `M-002`…, attribuée
+  par la plateforme pour la conversation, stable d'un tour à l'autre, jamais réattribuée, seulement à une machine que la
+  personne lit (une machine non lisible n'a pas de repère et ne compte pas) ; la table de correspondance reste sur le serveur et
+  disparaît avec la conversation. **Le texte du modèle est gardé avec ses repères** (l'historique repart chez le fournisseur à
+  chaque tour) ; la route d'une conversation les remplace par les noms **à la lecture**, pour la personne qui regarde et selon
+  ses droits ; un repère inconnu (inventé) n'est jamais remplacé et s'affiche « repère non reconnu ». **Masque de sortie** :
+  avant chaque envoi au modèle, toute la demande (consigne, questions, réponses précédentes, résultats et arguments d'outils) est
+  relue ; un nom complet ou un premier libellé de nom de machine, une adresse ou un identifiant de Tenable y devient le repère
+  de la machine (machine lisible, en conversation) ou « [machine] ». **Propositions d'action** : l'assistant dépose une
+  proposition sur une faille (constat ou faille déclarée), avec les repères des machines concernées, tous connus de la
+  conversation (sinon refus) ; rien n'est écrit dans un registre ; 10 par conversation, 5 en attente par conversation, 30 en
+  attente par personne ; une nouvelle proposition sur la même faille remplace celle en attente ; un rejet n'est pas redéposé
+  à l'identique. Décision par la personne de la conversation (`assistant:modifier`, plus `vulnerabilites:modifier`, la lecture
+  de toutes les machines touchées par la faille, le droit de modifier les actions et l'écriture sur le périmètre choisi) : elle
+  choisit le périmètre, corrige au besoin l'intitulé, la description et l'échéance, puis confirme ou rejette. **À la
+  confirmation, sur le serveur, les repères sont remplacés par les noms** (V29 ; jamais l'adresse), l'action est créée par le
+  service du registre sous l'identité de la personne et liée à la faille (suivi du lot V4b) ; rien ne repart vers le modèle.
+  **Contenu d'une action (V30)**, depuis la fiche d'une faille comme depuis une proposition : la description porte, après le
+  texte de la personne, les **actifs touchés** : noms des machines touchées que la personne peut lire, rangées par rang (les 20
+  premières, puis « et N autres » avec le renvoi à la faille ; une machine sans nom est comptée), et applications touchées
+  (produit surveillé avec sa version, sinon nom du contrôle) ; le formulaire « Créer une action » montre ce bloc. Remplace le
+  choix du lot V4b (action sans nom de machine). API `GET /api/assistant/vulnerabilites/propositions`,
+  `POST /api/assistant/vulnerabilites/propositions/:id/decision` ; champ `actifsAction` du suivi, `segments` des messages.
+  Journal `assistant.vulnerabilites.proposition_deposee`, `.proposition_decidee`, origine « assistant » dans
+  `vulnerabilites.suivi.action_creee` ; outils et nombres dans `assistant.message` ; jamais un nom, une adresse ni un repère.
+  Écrans : machines soulignées en pointillés avec leur repère en info-bulle dans le panneau de l'assistant, propositions dans
+  « Pour vous » avec leur décision, bloc des actifs touchés dans le formulaire de la fiche ; aide « Vulnérabilités : demander à
+  l'assistant RSSI ». Non vérifié : aucun modèle réel (faux transport seulement). (session « Module surveillance
+  vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

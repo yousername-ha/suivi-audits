@@ -403,6 +403,16 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
             value={creation.description}
             onChange={(e) => setCreation({ ...creation, description: e.currentTarget.value })}
           />
+          {s.actifsAction && (
+            <Textarea
+              label="Actifs touchés, ajoutés à la description"
+              description="La plateforme ajoute à l’action les machines touchées que vous pouvez lire (20 au plus, par rang) et les applications touchées, sans adresse."
+              autosize
+              minRows={2}
+              readOnly
+              value={s.actifsAction}
+            />
+          )}
           <TextInput
             type="date"
             label="Échéance (facultative)"
