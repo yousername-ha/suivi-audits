@@ -203,23 +203,23 @@
   font-weight: 500;
 }
 
-/* Champ de recherche de la boîte d'outils (demandes du RSSI du 16/11/2026) : contour parcouru d'un dégradé violet,
-   rose et bleu qui tourne, intérieur en fondu violet transparent de gauche à droite. Seule la rotation (transform) est
-   animée, en continu (ADR 0099) ; arrêtée par le mouvement réduit, l'impression, les couleurs forcées et l'onglet
-   masqué. */
+/* Champ de recherche de la boîte d'outils (demandes du RSSI du 16/11/2026) : une lueur violette, comme une comète,
+   fait le tour du rectangle ; le contour reste fin et discret ; intérieur en fondu violet transparent de gauche à
+   droite. Seule la rotation (transform) est animée, en continu (ADR 0099) ; arrêtée par le mouvement réduit,
+   l'impression, les couleurs forcées et l'onglet masqué. */
 .app-main .barre-boite__recherche {
   position: relative;
   isolation: isolate;
 }
-/* Contour : anneau d'un pixel et demi, parcouru par le dégradé tournant. */
+/* Couloir de la lueur : quelques pixels autour du champ, découpés au rectangle arrondi. */
 .app-main .barre-boite__recherche .mantine-Input-wrapper {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: 1.5px;
-  border-radius: var(--mantine-radius-md);
-  background: color-mix(in srgb, var(--mantine-color-violet-3) 30%, transparent);
+  padding: 3px;
+  border-radius: calc(var(--mantine-radius-md) + 3px);
 }
+/* Lueur : un seul éclat violet à tête claire, avec sa traîne, adouci par un flou fixe ; seule la rotation est animée. */
 .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
   position: absolute;
   z-index: -1;
@@ -229,21 +229,21 @@
   aspect-ratio: 1;
   background: conic-gradient(
     from 0deg,
-    var(--mantine-color-violet-4),
-    var(--mantine-color-pink-3),
-    var(--mantine-color-indigo-3),
-    var(--mantine-color-cyan-3),
-    var(--mantine-color-violet-4)
+    transparent 0turn 0.74turn,
+    color-mix(in srgb, var(--mantine-color-violet-5) 30%, transparent) 0.84turn,
+    var(--mantine-color-violet-4) 0.93turn,
+    var(--mantine-color-violet-1) 0.97turn,
+    transparent 0.995turn
   );
   content: '';
-  opacity: 0.85;
+  filter: blur(3px);
   transform: translate(-50%, -50%) rotate(0turn);
-  animation: barre-lueur 6s linear infinite;
+  animation: barre-lueur 4.5s linear infinite;
 }
 /* Intérieur : fondu violet transparent de gauche à droite, sans violet sur la droite ; le bleu nuit de la boîte reste
    visible au travers. */
 .app-main .barre-boite__recherche .mantine-Input-input {
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--mantine-color-violet-3) 38%, transparent);
   background:
     linear-gradient(
       90deg,
