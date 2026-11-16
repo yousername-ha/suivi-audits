@@ -41,6 +41,10 @@
 | V19 | Textes de Tenable | Affichés **en anglais, tels quels** : pas de traduction par le modèle (16/11/2026) |
 | V20 | Produit déclaré non détecté | Quand un produit surveillé (par exemple GLPI) n'est pas détecté automatiquement, le RSSI **relie lui-même le produit aux machines** qui le portent (16/11/2026) |
 | V21 | Version du produit déclaré | Un produit se déclare **avec sa version** (par exemple GLPI 10.1.2) ; c'est elle qui sert au rapprochement avec les failles publiées (16/11/2026) |
+| V22 | Produit déclaré sans machine reliée | Une faille rattachée à un produit déclaré **compte comme présente**, même sans machine reliée (16/11/2026) |
+| V23 | CERT Santé et exploitation | Une publication du CERT Santé compte comme exploitation **quand elle l'écrit** : faille exploitée, ou exploitable (16/11/2026) |
+| V24 | Décision de rapprochement | Une confirmation ou un rejet **peut être annulé** (16/11/2026) |
+| V25 | Assistant et CVE | Quand le RSSI donne une CVE à l'assistant, celui-ci dit **si l'organisation est touchée, quoi faire, quels actifs traiter d'abord**, et propose un **plan d'action** ; à voir avec la session « Assistant RSSI intégré plateforme » (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -269,6 +273,11 @@
     publiées changent ;
   - une faille exploitée que NVD n'a pas republiée dans la fenêtre de collecte n'est pas rapprochée d'un produit déclaré.
   Non réalisé : états de suivi d'une faille, lien avec une action, proposition « corrigée ».
+- **À réaliser après les décisions V23 et V24** : la fiche de chaque publication du CERT Santé porte des mentions
+  structurées, relevées le 16/11/2026 sur une alerte (« La faille est activement exploitée : Oui / Non », « Un correctif
+  existe », « Une mesure de contournement existe », rubrique « Preuve de concept »). Le flux RSS ne les porte pas : la veille
+  devra lire la page de chaque publication nouvelle, sur le même hôte, et n'en retenir que ces mentions. Un simple mot-clé ne
+  convient pas : le mot « exploitée » figure dans toutes les fiches (« La vulnérabilité exploitée est du type… »).
 
 ## Conséquences
 
