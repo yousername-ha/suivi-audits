@@ -259,12 +259,8 @@ function CartographieContenu() {
   }, [layout, objs, view, inaccessible]);
 
   const vp = vps[view];
-  // Vue ajustée automatiquement à l'ouverture : tant que personne ne l'a déplacée ni zoomée, elle suit la taille de la
-  // zone, connue seulement après la mise en page (CARTO-06, CARTO-07).
-  const ajusteeAuto = useRef(false);
   const setVp = useCallback(
     (v: Viewport, persist?: boolean) => {
-      ajusteeAuto.current = false;
       setVps((x) => ({ ...x, [view]: v }));
       if (persist) {
         if (vpTimer.current) clearTimeout(vpTimer.current);
@@ -292,9 +288,7 @@ function CartographieContenu() {
   useEffect(() => {
     if (!scene || vp || !scene.nodes.length) return;
     const t = mesure();
-    if (!t) return;
-    setVp(fitViewport(scene, t.w, t.h));
-    ajusteeAuto.current = true;
+    if (t) setVp(fitViewport(scene, t.w, t.h));
   }, [scene, vp, setVp, mesure]);
 
   usePresence(`cartographie/${view}`, editMode ? 'edit' : 'view');
@@ -1283,12 +1277,9 @@ function CartographieContenu() {
                 vp={vp ?? { x: 0, y: 0, k: 1 }}
                 setVp={setVp}
                 onSize={(wd, h) => {
-                  const change = taille.current.w !== wd || taille.current.h !== h;
                   taille.current = { w: wd, h };
-                  if (scene && scene.nodes.length && (!vp || (ajusteeAuto.current && change))) {
-                    setVps((x) => ({ ...x, [view]: fitViewport(scene, wd, h) }));
-                    ajusteeAuto.current = true;
-                  }
+                  // Ajustement initial que l'effet n'a pas pu faire, la zone n'étant pas encore mise en page.
+                  if (!vp && scene && scene.nodes.length) setVp(fitViewport(scene, wd, h));
                 }}
                 onLive={(l) => majTravail((cur) => ({ ...cur, layout: l }))}
                 onCommit={(before) =>
