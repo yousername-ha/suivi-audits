@@ -2,8 +2,19 @@
    demande » de la référence, retenue par le RSSI le 14/11/2026). Les champs de recherche et de filtre existants restent
    en place, avec leurs libellés : la barre ajoute une loupe dans le champ de recherche, le raccourci « / » qui y place le
    curseur, et les pastilles des critères actifs, supprimables une à une ou ensemble. Aucun filtre réel n'est retiré. */
-import { ActionIcon, Badge, Button, Group, Menu, Popover, Stack, UnstyledButton } from '@mantine/core';
-import { useEffect, type ReactNode, type RefObject } from 'react';
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Group,
+  Menu,
+  Popover,
+  Stack,
+  TextInput,
+  Tooltip,
+  UnstyledButton,
+} from '@mantine/core';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
 export function IconeLoupe() {
@@ -192,5 +203,84 @@ export function FiltreColonne({
         ))}
       </Menu.Dropdown>
     </Menu>
+  );
+}
+
+export interface VueBoite {
+  value: string;
+  label: string;
+  icone: ReactNode;
+}
+
+/** Boîte d'outils commune aux registres (version 7.3.0, modèle validé par le RSSI le 16/11/2026) : petite boîte bleu
+    nuit avec les vues, la recherche (raccourci « / ») et l'entonnoir des filtres avancés ; l'ajout se place au bout de
+    la ligne. Les autres filtres se posent sur le titre des colonnes (FiltreColonne). */
+export function BoiteOutils({
+  label,
+  vues,
+  vue,
+  onVue,
+  recherche,
+  filtres,
+  ajout,
+  children,
+}: {
+  /** Nom de la barre d'outils, lu par les lecteurs d'écran. */
+  label: string;
+  vues?: readonly VueBoite[];
+  vue?: string;
+  onVue?: (v: string) => void;
+  recherche?: { label: string; value: string; onChange: (v: string) => void; placeholder?: string };
+  filtres?: { actifs: number; onReinitialiser: () => void; contenu: ReactNode };
+  ajout?: ReactNode;
+  /** Outils supplémentaires, placés dans la boîte avant l'entonnoir. */
+  children?: ReactNode;
+}) {
+  const champ = useRef<HTMLInputElement>(null);
+  useRaccourciRecherche(champ);
+  return (
+    <div className="barre-boite-ligne">
+      <div className="barre-boite" role="toolbar" aria-label={label}>
+        {vues && vues.length > 0 && (
+          <>
+            <div className="barre-boite__vues" role="group" aria-label="Vues">
+              {vues.map((v) => (
+                <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
+                  <ActionIcon
+                    size="lg"
+                    variant={vue === v.value ? 'filled' : 'subtle'}
+                    aria-label={v.label}
+                    aria-pressed={vue === v.value}
+                    onClick={() => onVue?.(v.value)}
+                  >
+                    {v.icone}
+                  </ActionIcon>
+                </Tooltip>
+              ))}
+            </div>
+            {(recherche || filtres || children) && <span className="barre-boite__sep" aria-hidden="true" />}
+          </>
+        )}
+        {recherche && (
+          <TextInput
+            ref={champ}
+            className="barre-recherche barre-boite__recherche"
+            aria-label={recherche.label}
+            placeholder={recherche.placeholder ?? 'Rechercher…'}
+            leftSection={<IconeLoupe />}
+            title="Raccourci : touche /"
+            value={recherche.value}
+            onChange={(e) => recherche.onChange(e.currentTarget.value)}
+          />
+        )}
+        {children}
+        {filtres && (
+          <FiltresAvances actifs={filtres.actifs} onReinitialiser={filtres.onReinitialiser}>
+            {filtres.contenu}
+          </FiltresAvances>
+        )}
+      </div>
+      {ajout && <div className="barre-outils__ajout">{ajout}</div>}
+    </div>
   );
 }

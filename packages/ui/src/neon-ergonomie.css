@@ -70,7 +70,7 @@
   background: var(--menu-fond);
   color: var(--menu-texte);
 }
-.app-main .barre-boite .taches-vues {
+.app-main .barre-boite__vues {
   display: inline-flex;
   gap: var(--mantine-spacing-2xs);
   padding: 0;
