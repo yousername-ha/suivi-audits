@@ -8,7 +8,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
-<<<<<<< HEAD
+### Ajouté
+
+- **Étiquette de version par un workflow approuvé** ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) :
+  `poser-etiquette.yml`, lancé à la main (ou par l'agent par l'API) avec la version, vérifie avant toute approbation le
+  manifeste de publication, la section du CHANGELOG, la CI et CodeQL du commit exact de `main` et l'absence de l'étiquette ;
+  il attend ensuite l'approbation du RSSI (environnement `etiquette-version`) et pousse l'étiquette avec un jeton dédié, ce
+  qui déclenche la publication habituelle. Réglages GitHub à faire une fois par le RSSI (environnement, jeton). _(Session
+  « Projet audit_suivi Coeur ».)_
+
 ### Modifié
 
 - **Assistant RSSI : activation simplifiée** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) : l'écran de réglages tient en quatre gestes (activer, choisir le
@@ -18,16 +26,6 @@ Aucune action.
   et autonomie gardent leurs valeurs par défaut sous « Réglages avancés ». La validation de l'ouverture du flux (ADR 0097) est conservée à la première activation. L'appel est adapté aux écarts connus d'OpenAI et
   d'Anthropic (température, plafond de sortie) ; **seul Mistral a été essayé avec un modèle réel**.
   _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
-=======
-### Ajouté
-
-- **Étiquette de version par un workflow approuvé** ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) :
-  `poser-etiquette.yml`, lancé à la main (ou par l'agent par l'API) avec la version, vérifie avant toute approbation le
-  manifeste de publication, la section du CHANGELOG, la CI et CodeQL du commit exact de `main` et l'absence de l'étiquette ;
-  il attend ensuite l'approbation du RSSI (environnement `etiquette-version`) et pousse l'étiquette avec un jeton dédié, ce
-  qui déclenche la publication habituelle. Réglages GitHub à faire une fois par le RSSI (environnement, jeton). _(Session
-  « Projet audit_suivi Coeur ».)_
->>>>>>> origin/claude-suivi-smsi
 
 ## [7.2.1] — 2026-11-16
 
