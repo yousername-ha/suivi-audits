@@ -34,7 +34,7 @@
 | V12 | Rôles et périmètres | Le RSSI indique les serveurs **front, back applicatif et base de données**. Par périmètre, une vue montre les machines **ensemble**, ou le front relié au back, séparés |
 | V13 | Machines | Elles sont **récupérées d'Ekialis et de Tenable** et rangées dans la plateforme. Remplace la proposition initiale (détail laissé dans Tenable) |
 | V14 | Assistant et machines | L'assistant **classe les machines par criticité**. Il **n'envoie ni nom, ni adresse IP, ni rôle** au modèle : c'est **la plateforme, en local**, qui replace le résultat sur les machines au retour du modèle |
-| V15 | Accès expérimentaux de Tenable | L'accès « solutions » (correctifs) et l'**inventaire des machines** de Tenable sont retenus **bien qu'expérimentaux** |
+| V15 | Accès expérimentaux de Tenable | L'accès « solutions » (correctifs) et l'**inventaire des machines** de Tenable sont retenus **bien qu'expérimentaux**. Essai du 16/11/2026 : « solutions » est refusé au compte de consultation ; les correctifs sont lus par l'analyse, accès stable, sans élargir le rôle du compte |
 | V16 | Marques | Un **avertissement** sur la machine qui porte une faille zero-day ; une **icône propre** aux failles exploitables |
 | V17 | Alerte critique | Une **grande fenêtre rouge** quand une faille critique de type zero-day touche le parc |
 
@@ -187,10 +187,10 @@
     de la plateforme : chaque valeur a son libellé et son icône, un schéma va de l'attaquant à la cible puis à l'effet, et
     une phrase en clair est composée à partir des mêmes valeurs. Le modèle n'intervient pas. Sans vecteur publié, la fiche
     l'indique. Les **recommandations** sont celles des sources, bornées et présentées par source : action exigée et
-    échéance du catalogue KEV, correctif indiqué par Tenable, renvoi vers l'avis du CERT-FR ou du CERT Santé. L'accès de Tenable aux
-    correctifs est annoncé expérimental par l'éditeur ; il est retenu (V15) : s'il échoue ou change, la fiche affiche les
-    autres recommandations et signale que celle de Tenable est indisponible, sans bloquer la synchronisation. La
-    proposition d'action de l'assistant reste affichée à part.
+    échéance du catalogue KEV, correctif indiqué par Tenable, renvoi vers l'avis du CERT-FR ou du CERT Santé. Le correctif de Tenable est lu par la vue des correctifs de
+    l'analyse (`sumremediation`), accès stable, qui a répondu le 16/11/2026 avec un compte de rôle Auditor ; l'accès
+    expérimental `/solutions`, refusé à ce rôle, n'est pas utilisé. Si la lecture échoue, la fiche affiche les autres
+    recommandations et signale que celle de Tenable est indisponible, sans bloquer la synchronisation.
 
 20. **Charte** (V8). Les écrans reprennent le langage visuel de la page de mise à jour (`docker/maintenance`), porté dans
     `packages/ui` et l'interface native, sous la CSP stricte (ADR 0006). Maquettes de référence, données fictives :

@@ -64,9 +64,11 @@ Lire '1-systeme.json' 'GET' '/rest/system' '' $false
 Lire '2-failles-agregees.json' 'POST' '/rest/analysis' (Requete 'sumid' '3,4') $false
 Lire '3-failles-par-machine.json' 'POST' '/rest/analysis' (Requete 'vulndetails' '4') $false
 Lire '4-machines.json' 'GET' '/rest/hosts?limit=5' '' $true
-Lire '5-correctifs.json' 'POST' '/rest/solutions' (Requete 'sumid' '3,4') $false
+# Correctifs : vue « sumremediation » de l'analyse. L'accès /rest/solutions est refusé (403) au rôle Auditor.
+Lire '5-correctifs.json' 'POST' '/rest/analysis' (Requete 'sumremediation' '3,4') $false
 
 $Secret = $null
 Write-Host ''
 Write-Host "Fichiers écrits dans : $Dossier"
 Write-Host 'Relisez-les avant de les transmettre : aucun nom de machine, de domaine, de personne ni adresse réelle ne doit rester.'
+Read-Host 'Appuyez sur Entrée pour fermer' | Out-Null

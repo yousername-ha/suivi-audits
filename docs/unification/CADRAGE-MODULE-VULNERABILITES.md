@@ -118,11 +118,11 @@ Version indiquée par le RSSI le 15/11/2026 : **6.9**. Lu le même jour dans la 
 | Filtres | `severity`, `exploitAvailable`, `cveID`, `vprScore`, `epssScore`, `cvssV3Vector`, `firstSeen`, `lastSeen`, `repository`, `pluginID` | Filtrage fait par Tenable : gravité minimale, dépôts, date de dernière détection |
 | Champs d'un résultat | `pluginID`, `severity`, `vprScore`, `epssScore`, `ip`, `uuid`, `dnsName`, `name` | Nom et adresse de la machine disponibles ; score EPSS aussi fourni par Tenable |
 | Machines | `GET /hosts` : `uuid`, `name`, `ipAddress`, `os`, `firstSeen`, `lastSeen`, `netBios`, criticité de l'actif (`acr`) ; `GET /hosts/{uuid}` ajoute `tags` | Inventaire des machines ; les étiquettes de Tenable peuvent porter le rôle, à confirmer |
-| Correctif | `POST /solutions` et `POST /solutions/{pluginID}`, annoncés **expérimentaux** | Recommandation « Tenable » possible, mais l'accès peut changer d'une version à l'autre |
+| Correctif | Vue `sumremediation` de `POST /analysis` (accès stable). L'accès `/solutions`, annoncé **expérimental**, existe aussi | Recommandation « Tenable » par la vue de l'analyse ; `/solutions` n'est pas utilisé (refusé au rôle Auditor, voir l'essai ci-dessous) |
 
-Points d'accès retenus pour la liste fermée, tous en lecture : `POST /analysis`, `POST /solutions`, `POST /solutions/{pluginID}`,
-`GET /hosts`, `GET /hosts/{uuid}`, `GET /system`. Tout autre appel est refusé par le socle, en particulier
-`PATCH /hosts/{uuid}/acr`, qui écrit.
+Points d'accès retenus pour la liste fermée, tous en lecture : `POST /analysis`, `GET /hosts`, `GET /hosts/{uuid}`, `GET /system`.
+Tout autre appel est refusé par le socle, en particulier `PATCH /hosts/{uuid}/acr`, qui écrit, et `/solutions`, qui n'est pas
+nécessaire.
 
 Pour produire des exemples de réponses anonymisés depuis un poste Windows sans droits d'administrateur :
 [`scripts/dev/exemples-tenable.ps1`](../../scripts/dev/exemples-tenable.ps1) (lecture seule, **non essayé** : aucun PowerShell
@@ -141,8 +141,9 @@ deux comme susceptibles de changer :
 
 **Premier essai sur l'instance du RSSI (16/11/2026)**, avec le script d'exemples et un compte de rôle « Auditor » (groupe
 « Full Access », sans gestion des utilisateurs ni des objets) : les lectures du système, des failles agrégées, des failles par
-machine et des machines ont répondu, avec le préfixe `/rest` ; la lecture des correctifs par `/solutions` a échoué, cause non
-établie (forme de la requête envoyée par le script, ou droit du rôle). Les réponses elles-mêmes n'ont pas encore été lues par
+machine et des machines ont répondu, avec le préfixe `/rest` ; la lecture des correctifs par `/solutions` a été **refusée (403)** à ce rôle ; la même information demandée par la vue
+`sumremediation` de `POST /analysis` a **répondu** avec ce compte. Le connecteur lit donc les correctifs par l'analyse, sans
+élargir le rôle du compte. Les réponses elles-mêmes n'ont pas encore été lues par
 la session.
 
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
