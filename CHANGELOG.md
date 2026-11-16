@@ -12,6 +12,14 @@ modules recréée pour admettre `vulnerabilites`), durée négligeable, sans rep
 surveillés démarre vide. Le module est actif après la mise à jour ; il se désactive dans Administration > Modules.
 (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `073`** (module Intégrations, socle des connecteurs réseau,
+[ADR 0076](docs/adr/0076-module-integrations.md)) : additive (tables `integrations` et `integration_executions`, trois index,
+contrainte des modules recréée pour admettre `integrations`), durée négligeable, sans reprise de données : aucun connecteur
+n'est configuré. Le flux « Tenable Security Center » est **fermé** ; il ne s'ouvre qu'à l'activation d'un connecteur, après
+validation explicite par un administrateur. Rien à faire sur le serveur tant qu'aucun connecteur n'est activé ; ensuite, faire
+autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'adresse de Tenable Security Center
+([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -26,6 +34,25 @@ surveillés démarre vide. Le module est actif après la mise à jour ; il se d�
   journal `vulnerabilites.produit.cree`, `.modifie`, `.supprime`. Écran Risques > Vulnérabilités > « Produits surveillés »
   (liste, filtre par famille, ajout, modification, suppression), visible avec la lecture du module. Ni veille, ni connecteur,
   ni faille à ce stade (lots V2 et suivants). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Intégrations », socle des connecteurs réseau et connecteur Tenable Security Center (test de connexion)**
+  ([ADR 0076](docs/adr/0076-module-integrations.md), sous-ensemble des lots I1 et I4 ;
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 4 et 6). Nouveau module de droits `integrations`, non métier comme
+  l'import et l'export, désactivable : `lire` (connecteurs, exécutions), `modifier` (lancer), `administrer` (créer, configurer,
+  secrets) ; l'administrateur et le RSSI les reçoivent, les autres rôles prédéfinis non. Catalogue en code
+  (`packages/shared/src/integrations.ts`) : par type, portée (`organisation` ou `smsi`), schéma de configuration, champs secrets,
+  flux et **liste fermée des points d'accès de lecture**. Un seul type livré, `tenable` (portée organisation) : adresse
+  `https://serveur` (port 443, adresses privées admises ; `http`, identifiants, chemins, paramètres et fragments refusés),
+  autorité de certification interne facultative, délai ; clés d'accès et secrète. Secrets **en écriture seule**, scellés par le
+  coffre (`secret:integration:<id>`), jamais renvoyés ni journalisés, supprimés si l'adresse ou l'autorité change ; noms masqués
+  dans les journaux techniques. Activer un connecteur ouvre le flux « Tenable Security Center » (registre de l'ADR 0097) avec la
+  validation explicite d'un administrateur ; désactiver le dernier connecteur du type, ou le module, le referme. **« Tester la
+  connexion »** : l'API met la demande en file ; l'exécutant d'exploitation la réclame (`suivi integrations-claim`) et lance
+  `scripts/integration-http.py` (bibliothèque standard, `python -I`, compte sans privilège, entrée standard seule, HTTPS avec
+  certificat toujours vérifié et TLS 1.2 au minimum, aucune redirection suivie, réponse bornée), qui appelle `GET /rest/system`
+  et ne rend **que la version** (`suivi integrations-finish`). Flux fermé ou module désactivé : rien n'est réclamé. Rubrique
+  Pilotage > « Intégrations » : tuiles avec pictogramme neutre, configuration, secrets « défini / non défini », validation du
+  flux, test, dernières exécutions, message si l'exécutant n'est pas vu. Journal `integration.*` sans secret. Ni lecture des
+  failles ou des machines, ni planification, ni autre connecteur à ce stade. (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

@@ -4522,3 +4522,22 @@ tr[data-importe='oui'] {
   font-family: var(--mantine-font-family-monospace);
   overflow-wrap: anywhere;
 }
+
+/* Intégrations (ADR 0076) : tuiles des connecteurs, pictogramme neutre agrandi (aucun logo de marque). */
+.integrations-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.integration-tuile {
+  min-width: 0;
+}
+.integration-picto {
+  display: inline-flex;
+  flex: none;
+  color: var(--mantine-primary-color-filled);
+}
+.integration-picto .nav-icone {
+  width: 2.25em;
+  height: 2.25em;
+}

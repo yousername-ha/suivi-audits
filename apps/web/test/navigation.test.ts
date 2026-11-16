@@ -36,6 +36,7 @@ const INVENTAIRE = [
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
+  'pilotage|integrations|integrations|/integrations|integrations|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
@@ -147,7 +148,14 @@ describe('navigation', () => {
     expect(rappels?.rubriques.map((r) => [r.id, r.to, r.module, r.action])).toEqual([
       ['rappels', '/pilotage/rappels', 'pilotage', 'lire'],
     ]);
-    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues', 'rappels']);
+    expect(pilotage?.destinations.map((d) => d.id)).toEqual([
+      'synthese',
+      'parcours',
+      'objectifs',
+      'revues',
+      'rappels',
+      'integrations',
+    ]);
     expect(rubriques.some((r) => r.id === 'configuration' || r.to === '/pilotage/configuration')).toBe(false);
     expect(localiser('/pilotage/rappels')).toMatchObject({
       famille: { id: 'pilotage' },

@@ -101,6 +101,19 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'integrations',
+    title: 'Intégrations : connecteurs vers des outils externes',
+    permission: 'integrations:lire',
+    link: '/integrations',
+    steps: [
+      'Ouvrez Pilotage > Intégrations. Chaque connecteur lit un outil de l’organisation, en lecture seule. Le serveur d’application n’a pas d’accès réseau : c’est l’exécutant d’exploitation du serveur qui interroge l’outil, par un script isolé. Si l’exécutant n’est pas vu, la page le dit et aucun appel n’est possible.',
+      'Ajouter une instance (droit d’administrer les intégrations) : choisissez un type dans le catalogue, puis indiquez l’adresse https://serveur (port 443, sans chemin), l’autorité de certification interne si besoin et le délai. Le certificat est toujours vérifié et aucune redirection n’est suivie.',
+      'Secrets : saisissez les clés d’API ; elles sont scellées, jamais réaffichées ni journalisées, et seule la mention « défini » ou « non défini » apparaît. Changer l’adresse ou l’autorité de certification les supprime : il faut les ressaisir.',
+      'Activer un connecteur ouvre le flux vers l’outil : une fenêtre détaille la destination, le port et ce qui sort, et un administrateur la valide (case à cocher). Désactiver le dernier connecteur d’un type, ou désactiver le module Intégrations, referme le flux.',
+      '« Tester la connexion » (droit de modifier les intégrations) : la demande part en file, l’exécutant la traite en général en moins d’une minute ; pour Tenable Security Center, seule la version du service est rapportée. Le bouton « Exécutions » montre les vingt dernières, avec leur résultat ou leur erreur. Chaque geste est inscrit au journal d’audit, sans secret.',
+    ],
+  },
+  {
     id: 'parcours-pilotage',
     title: 'Parcours par démarche',
     permission: 'pilotage:lire',

@@ -96,6 +96,8 @@ export const FAMILLES: Famille[] = [
       dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
       dest('revues', 'Revues de direction', [p('revues')]),
       dest('rappels', 'Mes rappels', [p('rappels')]),
+      // Module Intégrations (ADR 0076, point 12) : connecteurs vers des outils externes, rubrique du Pilotage.
+      dest('integrations', 'Intégrations', [page('integrations', 'Intégrations', '/integrations', 'integrations')]),
     ],
   },
   {

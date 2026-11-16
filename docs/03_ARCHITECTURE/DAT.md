@@ -66,6 +66,18 @@ plateforme (`gateway`, `web`, `updater`). Lot 3 : la dernière étape de l'insta
 compte créé (demande mémorisée dans `settings`, `flux_questions_en_attente`, comme la démonstration), pose « Activer » ou
 « Plus tard » pour chaque module et ouvre par les mêmes gestes (route commune, réglages de l'assistant) ; courriel et ACME
 renvoient à leur page. Il n’existe pas de bus distribué ou Redis ajouté.
+
+Connecteurs du module Intégrations ([ADR 0076](../adr/0076-module-integrations.md), socle partiel) : catalogue des types en
+code (`packages/shared/src/integrations.ts` : portée, schéma de configuration, champs secrets, flux, liste fermée des points
+d'accès de lecture), instances et file des exécutions en base (`integrations`, `integration_executions`, migration `073`),
+secrets scellés par le coffre dans `settings` (`secret:integration:<id>`, AAD `integration:<id>:<champ>`), jamais relus par
+l'interface. L'API n'a toujours aucun accès sortant : elle inscrit l'exécution ; `exploitation-worker.py` la réclame
+(`suivi integrations-claim`, secrets compris) seulement si le flux du type est ouvert, lance `scripts/integration-http.py`
+(`python -I`, uid 65534, environnement minimal, entrée standard seule, bibliothèque standard, HTTPS vérifié en TLS 1.2 au
+minimum, aucune redirection, réponse bornée, liste fermée recopiée et comparée au catalogue par
+`apps/api/test/integrations-architecture.test.ts`) et rapporte un résultat normalisé (`suivi integrations-finish`). Premier
+type : Tenable Security Center (flux `tenable`, porté par `updater`), opération « Tester la connexion » qui ne rend que la
+version.
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 

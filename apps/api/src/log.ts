@@ -2,7 +2,7 @@
    Les secrets (cookies, jetons, mots de passe) sont masqués. */
 import { pino, type Logger } from 'pino';
 
-const REDACT = [
+export const REDACT = [
   'req.headers.cookie',
   'req.headers.authorization',
   'req.headers["x-csrf-token"]',
@@ -17,6 +17,20 @@ const REDACT = [
   '*.secret',
   '*.poivre',
   '*.ancienPoivre',
+  // Secrets des connecteurs du module Intégrations (ADR 0076, point 10) : clés d'API de Tenable Security Center, et noms
+  // prévus par l'ADR pour les connecteurs à venir.
+  'accessKey',
+  'secretKey',
+  'secrets',
+  '*.accessKey',
+  '*.secretKey',
+  '*.appToken',
+  '*.userToken',
+  '*.clientSecret',
+  '*.accessToken',
+  '*.sessionToken',
+  '*.secrets',
+  'req.headers["x-apikey"]',
 ];
 
 /** Niveaux de la journalisation technique, du plus détaillé au plus sobre. Les erreurs (error, fatal) sont toujours collectées. */

@@ -66,6 +66,10 @@ export const TABLES_CONFIGURATION = [
   'calendriers_plateforme',
   'calendriers_plateforme_journal',
   'calendriers_plateforme_jours',
+  // Module Intégrations (ADR 0076) : connecteurs configurés par l'administrateur (leurs secrets sont dans settings) et
+  // journal de leurs exécutions.
+  'integrations',
+  'integration_executions',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */

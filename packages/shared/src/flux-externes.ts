@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { Module } from './permissions.js';
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
-export const FLUX_MODULES = ['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour'] as const;
+export const FLUX_MODULES = ['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour', 'tenable'] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
 
@@ -190,6 +190,33 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       'Sortie TCP 443 du serveur vers tuf-repo-cdn.sigstore.dev et rekor.sigstore.dev.',
     ],
     siFerme: 'Aucune vérification ni installation de version : la version installée reste en place.',
+  },
+  {
+    // Connecteur Tenable Security Center du module Intégrations (ADR 0076, point 5 ; ADR 0100, points 4 et 6). Le flux ne
+    // quitte pas le réseau interne en général ; il est déclaré quand même, puisqu'il quitte le serveur.
+    id: 'tenable',
+    libelle: 'Tenable Security Center',
+    role: 'Lire Tenable Security Center, en lecture seule, pour le module Intégrations : tester la connexion, puis lire les failles et les machines (lot suivant).',
+    destinations: [
+      {
+        sens: 'sortant',
+        hote: 'Adresse réglée de Tenable Security Center (réseau interne en général)',
+        ports: 'TCP 443 (HTTPS)',
+      },
+    ],
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service ; failles et machines au lot suivant). Aucune donnée de la plateforme n’est envoyée.',
+    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
+    moduleActivation: 'integrations',
+    pareFeu: ['Sortie TCP 443 du serveur vers l’adresse de Tenable Security Center.'],
+    siFerme:
+      'Aucune requête ne part vers Tenable Security Center : une demande en file est close sans appel ; la configuration et les clés sont conservées.',
   },
 ];
 

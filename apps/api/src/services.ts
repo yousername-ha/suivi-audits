@@ -43,6 +43,7 @@ import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
+import { Integrations } from './integrations/index.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
@@ -107,6 +108,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     calendriers: new CalendriersPlateforme(db),
     conservation: new Conservation(db),
     courriel: new Courriel(db, vault, flux),
+    /** Module Intégrations (ADR 0076) : connecteurs, secrets scellés, file des exécutions traitée par l'exécutant. */
+    integrations: new Integrations(db, vault, flux),
     notificationsMetier,
     auth,
     motsDePasse,
@@ -126,6 +129,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     limits: {
       global: limiter(cfg.rateLimitPerMinute, 60e3),
       courrielTest: limiter(5, 10 * 60e3),
+      integrationTest: limiter(10, 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),

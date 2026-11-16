@@ -22,6 +22,7 @@ export const MODULES = [
   'parametres',
   'tableau_de_bord',
   'assistant',
+  'integrations',
 ] as const;
 export type Module = (typeof MODULES)[number];
 export type BusinessModule = (typeof BUSINESS_MODULES)[number];
@@ -42,6 +43,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   parametres: 'Paramètres',
   tableau_de_bord: 'Tableau de bord de l’accueil (disposition et partage)',
   assistant: 'Assistant RSSI (dialogue, réglages)',
+  integrations: 'Intégrations (connecteurs vers des outils externes)',
 };
 
 export const ACTIONS = ['lire', 'modifier', 'supprimer', 'exporter', 'administrer'] as const;

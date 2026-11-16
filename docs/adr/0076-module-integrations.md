@@ -193,3 +193,22 @@ Il modifie la décision R11 (« une instance de connecteur par SMSI ») et le po
 - **Ordre de réalisation** : le socle (module, instances, secrets, file d'exécution, appels par l'exécutant) est réalisé avant
   les lots ORADAD et Silène, pour le connecteur Tenable. Les autres parties du lot I1 (extraction du moteur d'écarts de
   Tenacy, logos) restent à faire.
+
+## Addendum du 16/11/2026 — socle réalisé pour le connecteur Tenable Security Center
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `073`), sous-ensemble des lots I1 et I4 :
+
+- **Livré** : module `integrations` et ses droits, catalogue en code, instances de connecteur, secrets scellés en écriture
+  seule, file des exécutions, commandes `integrations-claim` et `integrations-finish`, script isolé de l'exécutant
+  (`scripts/integration-http.py`), rubrique « Intégrations ». Un seul type : `tenable`, une seule opération : « Tester la
+  connexion », qui ne rapporte que la version de l'outil.
+- **Flux** : le connecteur a son flux au registre de l'[ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md)
+  (`tenable`), fermé par défaut, ouvert par l'activation d'une instance avec validation explicite, refermé quand la dernière
+  instance active du type est désactivée ou quand le module est désactivé.
+- **Choix de réalisation, à confirmer par le RSSI** : adresse en `https` sur le **port 443 seulement** (pour que le trafic
+  corresponde au flux déclaré) ; changer l'adresse ou l'autorité de certification efface les clés enregistrées, comme pour le
+  mot de passe du courriel ; droits par défaut d'un module non métier (administrateur et RSSI ; un rôle personnalisé pour
+  toute autre personne).
+- **Non réalisé** : extraction du moteur d'écarts de Tenacy, ORADAD, Silène, GLPI, propositions de fournisseurs, liaisons
+  d'indicateurs, logos, planification.
+- **Non vérifié** : aucun appel vers un vrai Tenable (tests sur un faux service HTTPS local), Docker, Playwright, Node 26.

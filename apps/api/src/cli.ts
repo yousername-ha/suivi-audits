@@ -18,6 +18,7 @@
      site-adresse               adresse du site demandée dans l'application
      backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+     integrations-claim | integrations-finish <id>  connecteurs : réclame une exécution, rapporte son résultat (JSON sur l'entrée standard)
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
@@ -30,7 +31,7 @@
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
-import { FluxAppliques, formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
+import { FluxAppliques, formaterPoivreGenere, RapportExecution, type SettingsValues } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
@@ -60,6 +61,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   site-adresse               adresse du site demandée
   backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+  integrations-claim | integrations-finish <id>  connecteurs : réclame une exécution, rapporte son résultat (JSON sur l'entrée standard)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   ops-policy | ops-sync [date] | ops-claim  protocole hôte (jamais HTTP)
@@ -173,6 +175,30 @@ async function main() {
         JSON.parse(await readStdin()),
         (await svc.settings.read('courriel')).values as SettingsValues['courriel'],
       );
+      break;
+    }
+    case 'integrations-claim': {
+      // Connecteurs du module Intégrations (ADR 0076) : module désactivé ou flux du type fermé, rien n'est remis.
+      const actif = !(await svc.modules.state(true)).disabled.includes('integrations');
+      const job = await svc.integrations.reclamer(actif);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'integrations-finish': {
+      // Rapport de l'exécutant, validé strictement : champ inattendu, erreur sur plusieurs lignes ou résultat absent refusés.
+      let brut: unknown;
+      try {
+        brut = JSON.parse(await readStdin());
+      } catch {
+        console.error('Rapport illisible : JSON attendu sur l’entrée standard.');
+        process.exit(2);
+      }
+      const p = RapportExecution.safeParse(brut);
+      if (!z.uuid().safeParse(arg).success || !p.success) {
+        console.error('Rapport refusé : identifiant ou contenu invalide.');
+        process.exit(2);
+      }
+      await svc.integrations.terminer(arg!, p.data);
       break;
     }
     case 'flux-souhaites': {

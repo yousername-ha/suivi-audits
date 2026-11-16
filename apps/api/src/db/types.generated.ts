@@ -645,6 +645,34 @@ export interface ImportBatches {
   version: Generated<number>;
 }
 
+export interface IntegrationExecutions {
+  id: Generated<string>;
+  integration_id: string;
+  operation: string;
+  origine: Generated<"manuel" | "planifie">;
+  etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
+  demande_par: string;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  resultat: ColumnType<JsonValue | null, string | null, string | null>;
+  erreur: string | null;
+}
+
+export interface Integrations {
+  id: Generated<string>;
+  type: string;
+  nom: string;
+  smsi_id: string | null;
+  configuration: ColumnType<JsonValue, string | undefined, string>;
+  actif: Generated<boolean>;
+  version: Generated<number>;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface JournalTechniqueConfig {
   id: number;
   niveau: Generated<"info" | "warn">;
@@ -1645,6 +1673,8 @@ export interface DB {
   group_roles: GroupRoles;
   groups: Groups;
   import_batches: ImportBatches;
+  integration_executions: IntegrationExecutions;
+  integrations: Integrations;
   journal_technique_config: JournalTechniqueConfig;
   lib_framework_promotions: LibFrameworkPromotions;
   lib_framework_versions: LibFrameworkVersions;

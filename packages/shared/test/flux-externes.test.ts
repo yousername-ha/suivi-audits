@@ -14,8 +14,8 @@ import {
 } from '../src/index.js';
 
 describe('registre des flux vers l’extérieur', () => {
-  it('décrit les cinq modules de l’ADR, dans l’ordre des identifiants stables', () => {
-    expect(FLUX_MODULES).toEqual(['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour']);
+  it('décrit les cinq modules de l’ADR, puis le connecteur Tenable, dans l’ordre des identifiants stables', () => {
+    expect(FLUX_MODULES).toEqual(['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour', 'tenable']);
     expect(FLUX_EXTERNES.map((f) => f.id)).toEqual([...FLUX_MODULES]);
   });
   it('chaque module a destinations, ports, porteur, données, réglage et pare-feu', () => {
@@ -30,7 +30,8 @@ describe('registre des flux vers l’extérieur', () => {
       expect(f.porteur.services.length, f.id).toBeGreaterThan(0);
       if (f.porteur.type === 'conteneur') expect(f.porteur.profil, f.id).toBeTruthy();
       expect(f.donnees, f.id).not.toBe('');
-      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme|plateforme)\//);
+      // Page de réglage : Configuration système, Plateforme, ou rubrique Intégrations pour les connecteurs (ADR 0076).
+      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme\/|plateforme\/|integrations$)/);
       expect(f.pareFeu.length, f.id).toBeGreaterThan(0);
       expect(f.siFerme, f.id).not.toBe('');
     }
@@ -43,12 +44,22 @@ describe('registre des flux vers l’extérieur', () => {
     expect(fluxExterne('courriel').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
     expect(fluxExterne('mises-a-jour').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
     expect(fluxExterne('acme').porteur).toMatchObject({ type: 'passerelle', services: ['gateway'] });
+    expect(fluxExterne('tenable').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
   });
   it('le certificat ACME sort vers l’autorité et reçoit sur 80 et 443 ; les autres modules ne font que sortir', () => {
     expect(sensDuFlux(fluxExterne('acme'))).toEqual(['sortant', 'entrant']);
     expect(fluxExterne('acme').destinations.find((d) => d.sens === 'entrant')!.ports).toContain('80 et 443');
     for (const m of FLUX_MODULES.filter((x) => x !== 'acme')) expect(sensDuFlux(fluxExterne(m))).toEqual(['sortant']);
     expect(fluxExterne('assistant').destinations[0]!.ports).toContain('443');
+    // Tenable Security Center : adresse réglée, TCP 443 ; ce qui sort : les clés d'API et des requêtes de lecture.
+    expect(fluxExterne('tenable').destinations).toEqual([
+      expect.objectContaining({
+        sens: 'sortant',
+        ports: 'TCP 443 (HTTPS)',
+        hote: expect.stringMatching(/Adresse réglée/),
+      }),
+    ]);
+    expect(fluxExterne('tenable').donnees).toMatch(/clés d’API.*requêtes de lecture/);
     expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
       expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),
     );
@@ -63,10 +74,13 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
       'mises-a-jour',
     ]);
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
-    // Activation globale (ADR 0019) : seul l'assistant est un module dont la désactivation referme le flux.
+    // Activation globale (ADR 0019) : l'assistant et le module Intégrations (connecteur Tenable) sont des modules dont la
+    // désactivation referme le flux.
     expect(FLUX_EXTERNES.filter((f) => f.moduleActivation).map((f) => [f.id, f.moduleActivation])).toEqual([
       ['assistant', 'assistant'],
+      ['tenable', 'integrations'],
     ]);
+    expect(fluxExterne('tenable').activation.par).toBe('module');
   });
   it('la validation jointe à l’activation est un « vrai » explicite', () => {
     expect(FluxConfirme.safeParse(true).success).toBe(true);

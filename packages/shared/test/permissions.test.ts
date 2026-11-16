@@ -13,14 +13,14 @@ import {
 import { LEGACY_MODULES } from '../src/legacy/index.js';
 
 describe('modèle de droits', () => {
-  it('permissions = modules × actions (15 × 5)', () => {
-    expect(ALL_PERMISSIONS).toHaveLength(75);
-    expect(new Set(ALL_PERMISSIONS).size).toBe(75);
+  it('permissions = modules × actions (16 × 5)', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(80);
+    expect(new Set(ALL_PERMISSIONS).size).toBe(80);
   });
 
   it('rôles prédéfinis conformes à la spécification', () => {
     const p = (r: keyof typeof SYSTEM_ROLE_DEFS) => new Set(SYSTEM_ROLE_DEFS[r].permissions);
-    expect(p('administrateur').size).toBe(75);
+    expect(p('administrateur').size).toBe(80);
     expect([...p('rssi')].some((x) => x.startsWith('administration:'))).toBe(false);
     expect(p('rssi').has('parametres:administrer')).toBe(true);
     expect(p('contributeur').has('ecarts:modifier')).toBe(true);
@@ -46,6 +46,11 @@ describe('modèle de droits', () => {
     ]);
     for (const r of ['lecteur', 'auditeur_externe'] as const)
       expect([...p(r)].filter((x) => x.startsWith('vulnerabilites:'))).toEqual(['vulnerabilites:lire']);
+    // Intégrations (ADR 0076) : module non métier, comme l'import et l'export ; RSSI et administrateur seuls par défaut.
+    for (const r of ['administrateur', 'rssi'] as const)
+      for (const a of ['lire', 'modifier', 'administrer'] as const) expect(p(r).has(`integrations:${a}`)).toBe(true);
+    for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
+      expect([...p(r)].some((x) => x.startsWith('integrations:'))).toBe(false);
     // Lecteur : lecture seule, plus l'export des cartes (CARTO-01).
     expect([...p('lecteur')].every((x) => x.endsWith(':lire') || x === 'cartographie:exporter')).toBe(true);
     expect(p('lecteur').has('cartographie:modifier')).toBe(false);

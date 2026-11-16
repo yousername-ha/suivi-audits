@@ -205,6 +205,13 @@
     fenêtre par faille et par personne tant que la faille ne change pas. Elle s'ajoute à la notification du point 11 et ne
     dépend pas de l'assistant. Les animations s'arrêtent avec le réglage « mouvement réduit » du système (ADR 0099).
 
+## Avancement
+
+- **Lot V1** (15/11/2026) : module `vulnerabilites`, migration `072`, registre des produits surveillés.
+- **Socle des connecteurs** (16/11/2026) : module `integrations`, migration `073`, connecteur Tenable Security Center limité
+  au test de connexion, flux `tenable` ; voir l'addendum de l'[ADR 0076](0076-module-integrations.md). Les points d'accès
+  portent le préfixe `/rest`, observé sur l'instance du RSSI.
+
 ## Conséquences
 
 - La plateforme gagne trois flux réseau de plus, tous fermés par défaut et portés par l'exécutant. La surface de l'API ne
