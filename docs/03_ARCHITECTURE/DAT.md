@@ -76,8 +76,17 @@ l'interface. L'API n'a toujours aucun accès sortant : elle inscrit l'exécution
 (`python -I`, uid 65534, environnement minimal, entrée standard seule, bibliothèque standard, HTTPS vérifié en TLS 1.2 au
 minimum, aucune redirection, réponse bornée, liste fermée recopiée et comparée au catalogue par
 `apps/api/test/integrations-architecture.test.ts`) et rapporte un résultat normalisé (`suivi integrations-finish`). Premier
-type : Tenable Security Center (flux `tenable`, porté par `updater`), opération « Tester la connexion » qui ne rend que la
-version.
+type : Tenable Security Center (flux `tenable`, porté par `updater`, port réglé dans l'adresse, 443 par défaut), opérations
+« Tester la connexion », qui ne rend que la version, et « Synchroniser » ([ADR 0100](../adr/0100-module-vulnerabilites.md),
+lot V5) : le tic de l'API en inscrit une par jour et par instance active (créneau consommé avant l'inscription, dans
+`vulnerabilites_tenable_etat`, migration `075`) ; le script lit `POST /rest/analysis` (`vulndetails`, paginé, borné en pages,
+détections et durée) puis `GET /rest/hosts` (inventaire expérimental, échec toléré), ne garde que des champs listés et
+l'exécutant les rapporte par lots de 500 (`suivi integrations-lot`, validés par zod) avant la fin. Machines, constats, CVE et
+détections sont rangés sans doublon ; une détection garde le numéro de la dernière synchronisation qui l'a vue et n'est plus
+« présente » qu'après une synchronisation **complète** plus récente qui ne l'a pas vue (rien n'est supprimé ; une
+synchronisation interrompue ou incomplète ne fait rien disparaître). Lecture par l'interface à travers le périmètre de chaque
+machine (`grc_smsi_visible`, pyramide des ADR 0092 et 0095) ; une machine sans périmètre n'est lisible qu'avec
+`vulnerabilites:administrer`. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant

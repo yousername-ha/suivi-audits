@@ -2,15 +2,19 @@
    déclare sa portée (organisation ou SMSI), son schéma de configuration non secrète, les noms de ses champs secrets, le
    flux vers l'extérieur qu'il emprunte (ADR 0097) et la liste fermée des points d'accès de lecture qu'il peut appeler.
    L'API n'appelle jamais ces points d'accès : l'exécutant d'exploitation le fait, dans un script isolé
-   (scripts/integration-http.py) dont la liste recopiée est comparée à celle-ci par un test. Ce lot ne livre qu'un type,
-   « tenable » (Tenable Security Center, ADR 0100, point 6), et une seule opération, « Tester la connexion ». */
+   (scripts/integration-http.py) dont la liste recopiée est comparée à celle-ci par un test. Un seul type, « tenable »
+   (Tenable Security Center, ADR 0100, point 6), et deux opérations : « Tester la connexion » et « Synchroniser » (failles et
+   machines, lot V5, rapportées par lots bornés au module Vulnérabilités). */
 import { z } from 'zod';
+import { FiltreGravites, GRAVITES_PAR_DEFAUT, BilanSynchronisation } from './failles-tenable.js';
 import type { FluxModule } from './flux-externes.js';
+import type { Module } from './permissions.js';
 
 /* ------------------------------------------------------------------ Champs communs */
 /** Adresse d'un service interne : HTTPS seulement, sans identifiants, sans chemin, sans paramètres ni fragment. Les
-    adresses privées sont admises (outil interne). Port : 443 seulement, celui que déclare le flux (TCP 443). La valeur
-    rangée est l'origine normalisée (`https://hote`). */
+    adresses privées sont admises (outil interne). Port : 443 par défaut, ou un port explicite de 1 à 65535
+    (`https://serveur:PORT`, décision du RSSI du 16/11/2026) ; le flux déclaré suit le port réglé. La valeur rangée est
+    l'origine normalisée (`https://hote` ou `https://hote:port`). */
 export const ADRESSE_MAX = 253 + 'https://'.length;
 const hoteValide =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$|^\[[0-9a-f:.]+\]$/;
@@ -23,6 +27,11 @@ export function erreurAdresse(brute: string): string | null {
   // eslint-disable-next-line no-control-regex
   if (/[\s\u0000-\u001f\u007f\\]/.test(v)) return 'Adresse invalide : espace ou caractère de contrôle.';
   if (!/^https:\/\//i.test(v)) return 'Seule une adresse https:// est admise.';
+  // Port explicite (décision du RSSI du 16/11/2026) : un nombre de 1 à 65535 ; contrôlé avant l'analyse de l'adresse pour
+  // un message clair. Une adresse avec identifiant, chemin, paramètre ou fragment est refusée plus loin.
+  const port = /^https:\/\/(?:\[[^\]]*\]|[^/:@?#]*):([^/?#@]*)\/?$/i.exec(v)?.[1];
+  if (port !== undefined && (!/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535))
+    return 'Port invalide : un nombre de 1 à 65535 (443 par défaut).';
   let u: URL;
   try {
     u = new URL(v);
@@ -36,12 +45,11 @@ export function erreurAdresse(brute: string): string | null {
   if (u.hash || v.includes('#')) return 'Pas de fragment dans l’adresse.';
   if (u.pathname !== '/' || /^https:\/\/[^/]+\/./i.test(v))
     return 'Indiquez l’adresse du serveur seule, sans chemin (https://serveur).';
-  if (u.port && u.port !== '443') return 'Port 443 seulement (flux déclaré : TCP 443).';
   if (!hoteValide.test(u.hostname)) return 'Nom d’hôte invalide.';
   return null;
 }
 
-/** Adresse normalisée : `https://hote` (minuscules, sans barre finale ni port 443 explicite). */
+/** Adresse normalisée : `https://hote` ou `https://hote:port` (minuscules, sans barre finale ni port 443 explicite). */
 export const AdresseHttps = z
   .string()
   .max(ADRESSE_MAX + 10)
@@ -50,6 +58,16 @@ export const AdresseHttps = z
     if (e) ctx.addIssue({ code: 'custom', message: e });
   })
   .transform((v) => `https://${new URL(v.trim()).host}`);
+
+/** Port TCP d'une adresse normalisée (443 sans port explicite) : celui du flux à ouvrir. */
+export function portAdresse(adresse: string): number {
+  try {
+    const u = new URL(adresse);
+    return u.protocol === 'https:' && u.port ? Number(u.port) : 443;
+  } catch {
+    return 443;
+  }
+}
 
 /** Autorité de certification interne facultative, collée en PEM comme pour le courriel ; vide : magasin du système. */
 export const AutoriteCertificationPem = z
@@ -70,6 +88,8 @@ export const ConfigurationTenable = z
     adresse: AdresseHttps,
     autoriteCertification: AutoriteCertificationPem.default(''),
     delaiSecondes: DelaiSecondes.default(30),
+    /** Gravités lues par « Synchroniser » (filtre de l'analyse) : par défaut critiques et élevées. */
+    gravites: FiltreGravites.default([...GRAVITES_PAR_DEFAUT]),
   })
   .strict();
 export type ConfigurationTenable = z.infer<typeof ConfigurationTenable>;
@@ -88,16 +108,25 @@ export type IntegrationType = z.infer<typeof IntegrationType>;
 export const PORTEES_INTEGRATION = ['organisation', 'smsi'] as const;
 export type PorteeIntegration = (typeof PORTEES_INTEGRATION)[number];
 
-/** Opérations d'un type. Ce lot n'en livre qu'une : « tester » (lecture de la version du service). */
-export const OPERATIONS_INTEGRATION = ['tester'] as const;
+/** Opérations d'un type : « tester » (lecture de la version du service) et « synchroniser » (lecture des failles et des
+    machines, rapportée par lots). */
+export const OPERATIONS_INTEGRATION = ['tester', 'synchroniser'] as const;
 export const OperationIntegration = z.enum(OPERATIONS_INTEGRATION);
 export type OperationIntegration = z.infer<typeof OperationIntegration>;
-export const OPERATION_LIBELLES: Record<OperationIntegration, string> = { tester: 'Tester la connexion' };
+export const OPERATION_LIBELLES: Record<OperationIntegration, string> = {
+  tester: 'Tester la connexion',
+  synchroniser: 'Synchroniser',
+};
+/** Opérations rapportées par lots (`suivi integrations-lot`) avant leur fin, et module qui doit être actif pour qu'elles
+    soient inscrites ou réclamées (ce module range les données reçues). */
+export const OPERATIONS_EN_LOTS: Partial<Record<OperationIntegration, Module>> = { synchroniser: 'vulnerabilites' };
 
-/** Point d'accès de lecture : méthode et chemin exact, ou motif strict dont `{uuid}` désigne un identifiant UUID. */
+/** Point d'accès de lecture : méthode et chemin exact, ou motif strict dont `{uuid}` désigne un identifiant UUID.
+    `parametres` : noms des paramètres de requête admis (valeurs entières seulement) ; absent, aucun. */
 export interface PointAcces {
   methode: 'GET' | 'POST';
   chemin: string;
+  parametres?: readonly string[];
 }
 
 export interface SecretIntegration {
@@ -129,7 +158,7 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     id: 'tenable',
     libelle: 'Tenable Security Center',
     description:
-      'Lecture seule de Tenable Security Center par clés d’API. Ce lot teste la connexion (version du service) ; la lecture des failles et des machines viendra ensuite.',
+      'Lecture seule de Tenable Security Center par clés d’API : test de connexion (version du service) et synchronisation quotidienne des failles détectées et des machines, rangées dans le module Vulnérabilités.',
     portee: 'organisation',
     configuration: ConfigurationTenable as unknown as z.ZodType<Record<string, unknown>, unknown>,
     secrets: [
@@ -149,11 +178,12 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     flux: 'tenable',
     pointsAcces: [
       { methode: 'POST', chemin: '/rest/analysis' },
-      { methode: 'GET', chemin: '/rest/hosts' },
+      // Inventaire des machines, accès annoncé expérimental : paginé par `limit` (lu sur l'instance) et `offset`.
+      { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
     ],
-    operations: ['tester'],
+    operations: ['tester', 'synchroniser'],
   },
 ];
 
@@ -199,7 +229,7 @@ export const catalogueIntegrations = (): TypeIntegrationDto[] =>
     portee: t.portee,
     secrets: t.secrets.map((s) => ({ id: s.id, libelle: s.libelle, aide: s.aide })),
     flux: t.flux,
-    pointsAcces: t.pointsAcces.map((p) => ({ ...p })),
+    pointsAcces: t.pointsAcces.map((p) => ({ ...p, ...(p.parametres ? { parametres: [...p.parametres] } : {}) })),
     operations: [...t.operations],
   }));
 
@@ -271,7 +301,8 @@ export interface ExecutionIntegrationDto {
   demandeLe: string;
   debuteLe: string | null;
   termineLe: string | null;
-  /** Résultat borné de l'opération (tester : `{ version }`) ; null tant qu'il n'est pas reçu. */
+  /** Résultat borné de l'opération (tester : `{ version }` ; synchroniser : son bilan chiffré) ; null tant qu'il n'est pas
+      reçu. */
   resultat: Record<string, unknown> | null;
   erreur: string | null;
 }
@@ -311,7 +342,7 @@ export const ErreurExecution = z
 
 /** Résultat admis par opération : borné et typé ; tout champ inattendu est refusé. */
 export const RESULTATS_OPERATION: Record<IntegrationType, Record<OperationIntegration, z.ZodType>> = {
-  tenable: { tester: ResultatTestTenable },
+  tenable: { tester: ResultatTestTenable, synchroniser: BilanSynchronisation },
 };
 
 /** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */

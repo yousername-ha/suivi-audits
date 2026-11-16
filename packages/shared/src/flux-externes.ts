@@ -205,12 +205,12 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     // quitte pas le réseau interne en général ; il est déclaré quand même, puisqu'il quitte le serveur.
     id: 'tenable',
     libelle: 'Tenable Security Center',
-    role: 'Lire Tenable Security Center, en lecture seule, pour le module Intégrations : tester la connexion, puis lire les failles et les machines (lot suivant).',
+    role: 'Lire Tenable Security Center, en lecture seule, pour le module Intégrations : tester la connexion, lire les failles et les machines pour le module Vulnérabilités.',
     destinations: [
       {
         sens: 'sortant',
         hote: 'Adresse réglée de Tenable Security Center (réseau interne en général)',
-        ports: 'TCP 443 (HTTPS)',
+        ports: 'TCP du port réglé (443 par défaut, HTTPS)',
       },
     ],
     porteur: {
@@ -219,11 +219,11 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
     },
     donnees:
-      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service ; failles et machines au lot suivant). Aucune donnée de la plateforme n’est envoyée.',
+      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines). Aucune donnée de la plateforme n’est envoyée.',
     reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
     moduleActivation: 'integrations',
-    pareFeu: ['Sortie TCP 443 du serveur vers l’adresse de Tenable Security Center.'],
+    pareFeu: ['Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).'],
     siFerme:
       'Aucune requête ne part vers Tenable Security Center : une demande en file est close sans appel ; la configuration et les clés sont conservées.',
   },

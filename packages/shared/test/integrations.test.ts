@@ -11,7 +11,9 @@ import {
   IntegrationCreation,
   IntegrationModification,
   IntegrationSecrets,
+  OPERATIONS_EN_LOTS,
   pointAccesAdmis,
+  portAdresse,
   RapportExecution,
   RESULTATS_OPERATION,
   SECRETS_INTEGRATION,
@@ -29,7 +31,8 @@ describe('catalogue des connecteurs', () => {
     expect(t.portee).toBe('organisation');
     expect(t.flux).toBe('tenable');
     expect(t.secrets.map((s) => s.id)).toEqual(['accessKey', 'secretKey']);
-    expect(t.operations).toEqual(['tester']);
+    expect(t.operations).toEqual(['tester', 'synchroniser']);
+    expect(OPERATIONS_EN_LOTS).toEqual({ synchroniser: 'vulnerabilites' });
     expect(SECRETS_INTEGRATION).toEqual(['accessKey', 'secretKey']);
     // Chaque type emprunte un flux du registre (ADR 0097), refermé par la désactivation du module Intégrations.
     for (const x of TYPES_INTEGRATION) {
@@ -46,7 +49,7 @@ describe('catalogue des connecteurs', () => {
   it('liste fermée des points d’accès : lecture seule, motif strict', () => {
     expect(typeIntegration('tenable').pointsAcces).toEqual([
       { methode: 'POST', chemin: '/rest/analysis' },
-      { methode: 'GET', chemin: '/rest/hosts' },
+      { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
     ]);
@@ -74,15 +77,26 @@ describe('adresse et configuration de Tenable Security Center', () => {
       ['  https://Tenable.Exemple.Test/ ', 'https://tenable.exemple.test'],
       ['https://10.20.30.40', 'https://10.20.30.40'],
       ['https://tenable.exemple.test:443', 'https://tenable.exemple.test'],
+      // Port réglable (décision du RSSI du 16/11/2026) : gardé quand il n'est pas 443.
+      ['https://Tenable.Exemple.Test:8443/', 'https://tenable.exemple.test:8443'],
+      ['https://10.20.30.40:1', 'https://10.20.30.40:1'],
+      ['https://tenable.exemple.test:65535', 'https://tenable.exemple.test:65535'],
     ])
       expect(configurationValide('tenable', { adresse: saisie })).toEqual({
         adresse: rangee,
         autoriteCertification: '',
         delaiSecondes: 30,
+        gravites: ['critique', 'elevee'],
       });
   });
 
-  it('refuse http, les identifiants, les chemins, les paramètres, les fragments et un autre port', () => {
+  it('port du flux : celui de l’adresse réglée, 443 sans port explicite', () => {
+    expect(portAdresse('https://tenable.exemple.test')).toBe(443);
+    expect(portAdresse('https://tenable.exemple.test:8443')).toBe(8443);
+    expect(portAdresse('pas une adresse')).toBe(443);
+  });
+
+  it('refuse http, les identifiants, les chemins, les paramètres, les fragments et un port hors bornes ou non numérique', () => {
     for (const [adresse, motif] of [
       ['http://tenable.exemple.test', /https:\/\//],
       ['https://compte:secret@tenable.exemple.test', /identifiant/],
@@ -90,7 +104,12 @@ describe('adresse et configuration de Tenable Security Center', () => {
       ['https://tenable.exemple.test/rest', /chemin/],
       ['https://tenable.exemple.test?a=1', /paramètre/],
       ['https://tenable.exemple.test#x', /fragment/],
-      ['https://tenable.exemple.test:8443', /443/],
+      ['https://tenable.exemple.test:0', /Port invalide/],
+      ['https://tenable.exemple.test:65536', /Port invalide/],
+      ['https://tenable.exemple.test:99999', /Port invalide/],
+      ['https://tenable.exemple.test:abc', /Port invalide/],
+      ['https://tenable.exemple.test:', /Port invalide/],
+      ['https://tenable.exemple.test:8443/rest', /chemin/],
       ['https://tenable exemple.test', /espace/],
       ['', /obligatoire/],
     ] as const)
@@ -112,8 +131,22 @@ describe('adresse et configuration de Tenable Security Center', () => {
       { delaiSecondes: 4 },
       { delaiSecondes: 61 },
       { accessKey: 'a1b2c3d4e5f60718293a4b5c6d7e8f90' },
+      { gravites: [] },
+      { gravites: ['info'] },
+      { gravites: ['critique', 'critique'] },
     ])
       expect(() => configurationValide('tenable', { adresse: 'https://tenable.exemple.test', ...extra })).toThrow();
+  });
+
+  it('filtre de gravité de « Synchroniser » : critiques et élevées par défaut, rangé de la plus grave à la moins grave', () => {
+    expect(configurationValide('tenable', { adresse: 'https://tenable.exemple.test' }).gravites).toEqual([
+      'critique',
+      'elevee',
+    ]);
+    expect(
+      configurationValide('tenable', { adresse: 'https://tenable.exemple.test', gravites: ['faible', 'critique'] })
+        .gravites,
+    ).toEqual(['critique', 'faible']);
   });
 });
 

@@ -31,6 +31,18 @@ l'équipe infrastructure la sortie TCP 443 du serveur vers `www.cisa.gov`, `serv
 d'usage des cinq sources n'ont pas été lues à ce jour : à lire avant la mise en service. (session « Module surveillance
 vulnérabilités SMSI »)
 
+**Migration automatique `075`** (module Vulnérabilités, failles et machines de Tenable Security Center, lot V5 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_machines`, `vulnerabilites_constats`,
+`vulnerabilites_constat_cves`, `vulnerabilites_detections`, `vulnerabilites_tenable_etat` et
+`vulnerabilites_synchronisations`, quatre index ; aucune table existante modifiée), durée négligeable, sans reprise de données :
+l'inventaire démarre vide et se remplit à la première synchronisation. Rien à faire sur le serveur : la synchronisation
+quotidienne est inscrite par l'application et passe par l'exécutant d'exploitation et le flux « Tenable Security Center » déjà
+déclarés. **Droits par défaut modifiés** : le module Vulnérabilités n'est plus un module métier ; ses droits ne vont plus
+d'office qu'à l'administrateur et au RSSI (le contributeur, le lecteur et l'auditeur externe prédéfinis les perdent). Pour les
+rendre à d'autres personnes, créer un rôle personnalisé (Administration > Rôles) qui les accorde. **Port de Tenable** : l'adresse
+d'un connecteur Tenable peut désormais porter un port (`https://serveur:port`) ; s'il change, faire évoluer la règle de pare-feu
+de sortie ([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -92,6 +104,40 @@ vulnérabilités SMSI »)
   exploitées récentes (action exigée, échéance), alertes et avis récents, recherche ; textes des sources tels quels, en texte
   simple ; lien d'avis dans un nouvel onglet sans référent. Ni rapprochement avec les produits surveillés, ni priorité, ni
   alerte à ce stade (lots V4 et suivants). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V5 : failles et machines de Tenable Security Center**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 6, 14 et 15, décisions V13, V15, V18 et V19 ;
+  [cadrage, §5 bis](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Opération **« Synchroniser »** du connecteur Tenable :
+  une par jour et par instance active (tic de l'API, créneau consommé avant l'inscription, rien si le module Intégrations, le
+  module Vulnérabilités ou le flux est fermé), plus « Synchroniser maintenant » (`integrations:modifier`, six demandes par heure,
+  pas deux fois en quinze minutes). Le script isolé lit `POST /rest/analysis` (vue `vulndetails`, source cumulative, filtre de
+  gravité réglé sur l'instance, critiques et élevées par défaut) par pages de 200, borné à 100 pages, 20 000 détections et huit
+  minutes, puis l'**inventaire** `GET /rest/hosts` (paramètres `limit` et `offset` seulement ; accès annoncé expérimental : son
+  échec n'empêche pas la synchronisation des failles et s'affiche). Seuls des champs listés sortent du script, jamais
+  `pluginText` ; score EPSS de Tenable (pourcentage) ramené entre 0 et 1 ; textes nettoyés et bornés, lien « voir aussi » en
+  https seulement. L'exécutant rapporte par lots de 500 (`suivi integrations-lot`, 200 lots au plus), validés un à un par zod.
+  Migration `075` : machines (identifiant dans Tenable ou couple adresse et nom, rôle front, back ou base de données, périmètre
+  facultatif, indice d'exposition, criticité de l'actif), constats par contrôle (gravité, CVSS v3, VPR, EPSS, exploit, dates,
+  fin de support, correctif), CVE, détections (port, protocole, atténuée, risque accepté ou requalifié). Rien n'est supprimé :
+  une détection qui n'est plus vue n'est plus comptée qu'après une synchronisation complète ; une synchronisation interrompue,
+  incomplète ou au bilan incohérent ne fait rien disparaître. Constat sans CVE signalé « non maintenu » (V18) ; « exploitée »
+  par jointure avec le catalogue KEV de la veille, « exploitable » d'après Tenable ; aucun calcul de priorité. **Lecture par
+  périmètre** : une machine se lit à travers les droits de son périmètre (pyramide des ADR 0092 et 0095), sans périmètre avec
+  `vulnerabilites:administrer` seulement ; un constat ne compte que les machines lisibles et n'apparaît pas sans elles. Rôle et
+  périmètre : une machine (`If-Match`) ou en masse (200 au plus, version de chaque machine, tout ou rien), avec
+  `vulnerabilites:modifier`, l'écriture sur le périmètre actuel et visé ; retirer le périmètre demande
+  `vulnerabilites:administrer`. API `/api/vulnerabilites/constats`, `/constats/:id`, `/machines`, `/machines/:id`,
+  `/machines/affectation`, `/perimetres`, `/synchronisation` ; `/api/integrations/instances/:id/synchroniser`. Journal
+  `vulnerabilites.synchronisation.terminee`, `vulnerabilites.machine.modifiee`, `vulnerabilites.machines.affectees` : identifiants
+  et nombres seulement, jamais un nom ni une adresse de machine. Écrans Risques > Vulnérabilités > « Failles détectées » (par
+  faille ou par machine, recherche par CVE, numéro ou nom du contrôle, filtres, fiche avec CVE, vecteur CVSS et correctif en
+  anglais tels quels, machines par rôle) et « Machines » (recherche, filtres par rôle et périmètre, constats par gravité,
+  bandeau des machines sans rôle, affectation en masse) ; tuile Tenable : gravités, « Synchroniser maintenant », dernier
+  résultat. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export). **Port de Tenable réglable**
+  (décision du RSSI du 16/11/2026) : adresse `https://serveur:port` admise (1 à 65535, 443 par défaut), le flux et sa
+  validation suivent le port réglé, le changer efface les clés. **Droits par défaut resserrés** (réglage prudent, à confirmer
+  par le RSSI) : `vulnerabilites` sort des modules métier ; administrateur et RSSI seulement, un rôle personnalisé peut
+  l'accorder ; il n'ouvre ni l'accueil, ni les écrans muraux, ni les routes communes « métier ». (session « Module surveillance
+  vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

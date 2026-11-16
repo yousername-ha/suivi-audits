@@ -3,7 +3,12 @@
 import {
   ETAT_EXECUTION_LIBELLES,
   erreurAdresse,
+  GRAVITES_PAR_DEFAUT,
+  GRAVITES_TENABLE,
+  GRAVITE_TENABLE_LIBELLES,
+  type GraviteTenable,
   OPERATION_LIBELLES,
+  portAdresse,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
   type IntegrationDto,
@@ -47,11 +52,33 @@ export const libelleOperation = (o: ExecutionIntegrationDto['operation']) => OPE
 export const executionEnCours = (e: Pick<ExecutionIntegrationDto, 'etat'> | null | undefined) =>
   e?.etat === 'en_file' || e?.etat === 'en_cours';
 
-/** Résultat lisible d'une exécution terminée : version rendue par « Tester la connexion », ou l'erreur courte. */
+const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
+
+/** Bilan lisible d'une synchronisation (nombres seulement) : constats, machines, détections, borne atteinte, inventaire. */
+export function resumeSynchronisation(r: Record<string, unknown>): string {
+  const n = (k: string) => (typeof r[k] === 'number' ? (r[k] as number) : 0);
+  const inventaire = r.inventaire as { ok?: boolean; erreur?: string | null } | undefined;
+  return [
+    `Synchronisation reçue : ${pluriel(n('constats'), 'faille', 'failles')} sur ${pluriel(n('machines'), 'machine', 'machines')} (${pluriel(n('detections'), 'détection', 'détections')}).`,
+    r.tronque === true
+      ? 'Incomplète : une borne a été atteinte (pages, détections ou durée) ; aucune faille n’est marquée disparue.'
+      : '',
+    inventaire?.ok === false
+      ? `Inventaire des machines (expérimental) indisponible : ${inventaire.erreur ?? 'sans détail'}`
+      : `Inventaire : ${pluriel(n('hotes'), 'machine lue', 'machines lues')}.`,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+/** Résultat lisible d'une exécution terminée : version rendue par « Tester la connexion », bilan d'une synchronisation, ou
+    l'erreur courte. */
 export function resumeExecution(e: Pick<ExecutionIntegrationDto, 'etat' | 'resultat' | 'erreur'>): string {
   if (e.etat === 'recu') {
     const v = e.resultat?.version;
-    return typeof v === 'string' ? `Connexion établie : version ${v}.` : 'Résultat reçu.';
+    if (typeof v === 'string') return `Connexion établie : version ${v}.`;
+    if (e.resultat && typeof e.resultat.constats === 'number') return resumeSynchronisation(e.resultat);
+    return 'Résultat reçu.';
   }
   if (e.etat === 'en_file') return 'En attente de l’exécutant d’exploitation (en général moins d’une minute).';
   if (e.etat === 'en_cours') return 'Appel en cours…';
@@ -76,7 +103,21 @@ export interface FormulaireConfiguration {
   adresse: string;
   autoriteCertification: string;
   delaiSecondes: number;
+  /** Gravités lues par « Synchroniser » (critiques et élevées par défaut). */
+  gravites: GraviteTenable[];
 }
+
+export const OPTIONS_GRAVITES = GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }));
+const gravitesDe = (v: unknown): GraviteTenable[] =>
+  Array.isArray(v) ? GRAVITES_TENABLE.filter((g) => v.includes(g)) : [...GRAVITES_PAR_DEFAUT];
+export const libelleGravites = (v: unknown) =>
+  gravitesDe(v)
+    .map((g) => GRAVITE_TENABLE_LIBELLES[g])
+    .join(', ');
+
+/** Port effectivement réglé d'une instance, pour la validation du flux (443 sans port explicite). */
+export const precisionPort = (i: Pick<IntegrationDto, 'nom' | 'configuration'>) =>
+  `Port réglé pour « ${i.nom} » : TCP ${portAdresse(typeof i.configuration.adresse === 'string' ? i.configuration.adresse : '')}.`;
 
 export function formulaireDepuis(i: IntegrationDto | null, t: TypeIntegrationDto): FormulaireConfiguration {
   const c = i?.configuration ?? {};
@@ -85,6 +126,7 @@ export function formulaireDepuis(i: IntegrationDto | null, t: TypeIntegrationDto
     adresse: typeof c.adresse === 'string' ? c.adresse : '',
     autoriteCertification: typeof c.autoriteCertification === 'string' ? c.autoriteCertification : '',
     delaiSecondes: typeof c.delaiSecondes === 'number' ? c.delaiSecondes : 30,
+    gravites: gravitesDe(c.gravites),
   };
 }
 
@@ -94,6 +136,7 @@ export function erreursFormulaire(f: FormulaireConfiguration): string[] {
   if (!f.nom.trim()) r.push('Nom obligatoire.');
   const a = erreurAdresse(f.adresse);
   if (a) r.push(a);
+  if (!f.gravites.length) r.push('Choisissez au moins une gravité à synchroniser.');
   return r;
 }
 
@@ -101,6 +144,7 @@ export const configurationDepuis = (f: FormulaireConfiguration) => ({
   adresse: f.adresse.trim(),
   autoriteCertification: f.autoriteCertification,
   delaiSecondes: f.delaiSecondes,
+  gravites: GRAVITES_TENABLE.filter((g) => f.gravites.includes(g)),
 });
 
 export const corpsCreation = (t: TypeIntegrationDto, f: FormulaireConfiguration) => ({
@@ -118,13 +162,15 @@ export function corpsModification(i: IntegrationDto, f: FormulaireConfiguration)
   if (
     c.adresse.replace(/\/$/, '').toLowerCase() !== avant.adresse ||
     c.autoriteCertification !== avant.autoriteCertification ||
-    c.delaiSecondes !== avant.delaiSecondes
+    c.delaiSecondes !== avant.delaiSecondes ||
+    c.gravites.join() !== avant.gravites.join()
   )
     out.configuration = c;
   return out;
 }
 
-/** Changer l'adresse ou l'autorité de certification supprime les clés enregistrées (règle du serveur, annoncée ici). */
+/** Changer l'adresse (port compris) ou l'autorité de certification supprime les clés enregistrées (règle du serveur,
+    annoncée ici). */
 export function destinationChangee(i: IntegrationDto, f: FormulaireConfiguration): boolean {
   const avant = formulaireDepuis(i, { libelle: i.nom } as TypeIntegrationDto);
   return (

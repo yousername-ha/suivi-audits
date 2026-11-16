@@ -1,12 +1,15 @@
 /* Module Intégrations (ADR 0076), socle des connecteurs réseau : rubrique « Intégrations ». Une tuile par type de connecteur
    (catalogue) et par instance, avec un pictogramme neutre de packages/ui (aucun logo de marque dans ce lot). Configuration,
    secrets en écriture seule (« défini » / « non défini »), activation qui ouvre le flux du type après validation explicite
-   (ADR 0097), « Tester la connexion », dernières exécutions, message clair si l'exécutant n'est pas vu. CSP stricte
-   (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage seulement. */
+   (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
+   le filtre de gravité de l'instance et le dernier résultat, dernières exécutions, message clair si l'exécutant n'est pas
+   vu. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
+   seulement. */
 import {
   Alert,
   Badge,
   Button,
+  Checkbox,
   Group,
   Modal,
   NumberInput,
@@ -48,9 +51,12 @@ import {
   fluxOuvertPour,
   formulaireDepuis,
   libelleEtatExecution,
+  libelleGravites,
   libelleOperation,
   libelleSecret,
   messageExecutant,
+  OPTIONS_GRAVITES,
+  precisionPort,
   resumeExecution,
   type FormulaireConfiguration,
 } from './integrations';
@@ -111,6 +117,7 @@ export function TuileInstance({
   onConfigurer,
   onActiver,
   onTester,
+  onSynchroniser,
   onExecutions,
 }: {
   i: IntegrationDto;
@@ -122,8 +129,11 @@ export function TuileInstance({
   onConfigurer: () => void;
   onActiver: (actif: boolean) => void;
   onTester: () => void;
+  onSynchroniser?: () => void;
   onExecutions: () => void;
 }) {
+  const synchronisable = !!t?.operations.includes('synchroniser');
+  const pret = i.actif && fluxOuvert && Object.values(i.secrets).every(Boolean);
   const e = ETAT_TUILE[etatTuile(i, fluxOuvert)];
   const derniere = i.derniereExecution;
   const adresse = typeof i.configuration.adresse === 'string' ? i.configuration.adresse : '';
@@ -150,6 +160,11 @@ export function TuileInstance({
             </Badge>
           ))}
         </Group>
+        {synchronisable && (
+          <Text size="xs" c="dimmed">
+            Synchronisation quotidienne des failles : {libelleGravites(i.configuration.gravites)}.
+          </Text>
+        )}
         {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
         <Text size="sm" c={derniere ? undefined : 'dimmed'} role="status">
           {derniere ? (
@@ -181,13 +196,13 @@ export function TuileInstance({
             </Button>
           )}
           {peutLancer && (
-            <Button
-              size="compact-sm"
-              loading={enCours}
-              disabled={!i.actif || !fluxOuvert || !Object.values(i.secrets).every(Boolean)}
-              onClick={onTester}
-            >
+            <Button size="compact-sm" variant="default" loading={enCours} disabled={!pret} onClick={onTester}>
               Tester la connexion
+            </Button>
+          )}
+          {peutLancer && synchronisable && onSynchroniser && (
+            <Button size="compact-sm" loading={enCours} disabled={!pret} onClick={onSynchroniser}>
+              Synchroniser maintenant
             </Button>
           )}
         </Group>
@@ -285,8 +300,9 @@ export function IntegrationsPage() {
     agir(i.id, async () => {
       const t = types.get(i.type);
       const ouvert = fluxOuvertPour(etat.data, i.type);
-      // Activer ouvre le flux du type, après validation explicite (une fois, tant qu'il est fermé).
-      if (actif && !ouvert && t && !(await flux.valider(t.flux))) return;
+      // Activer ouvre le flux du type, après validation explicite (une fois, tant qu'il est fermé) ; le port réglé de
+      // l'instance est rappelé.
+      if (actif && !ouvert && t && !(await flux.valider(t.flux, precisionPort(i)))) return;
       await api('PUT', `/api/integrations/instances/${i.id}/activation`, {
         body: actif && !ouvert ? { actif, fluxConfirme: true } : { actif },
         ifMatch: i.version,
@@ -298,6 +314,11 @@ export function IntegrationsPage() {
     agir(i.id, async () => {
       await api('POST', `/api/integrations/instances/${i.id}/tester`);
       notifications.show({ color: 'teal', message: 'Test demandé à l’exécutant d’exploitation.' });
+    });
+  const synchroniser = (i: IntegrationDto) =>
+    agir(i.id, async () => {
+      await api('POST', `/api/integrations/instances/${i.id}/synchroniser`);
+      notifications.show({ color: 'teal', message: 'Synchronisation demandée à l’exécutant d’exploitation.' });
     });
 
   if (!lire)
@@ -344,6 +365,7 @@ export function IntegrationsPage() {
               }}
               onActiver={(actif) => void activer(i, actif)}
               onTester={() => void tester(i)}
+              onSynchroniser={() => void synchroniser(i)}
               onExecutions={() => setHistorique(i)}
             />
           ))}
@@ -466,7 +488,7 @@ function EditeurInstance({
       />
       <TextInput
         label="Adresse du service"
-        description="https://serveur seulement (port 443), sans chemin ni identifiant. Une adresse du réseau interne est admise."
+        description="https://serveur (port 443) ou https://serveur:port, sans chemin ni identifiant. Une adresse du réseau interne est admise. Changer l’adresse ou le port efface les clés."
         required
         value={f.adresse}
         onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
@@ -490,9 +512,24 @@ function EditeurInstance({
         value={f.delaiSecondes}
         onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
       />
+      {type.operations.includes('synchroniser') && (
+        <Checkbox.Group
+          label="Gravités à synchroniser"
+          description="Failles lues chaque jour dans Tenable : critiques et élevées par défaut."
+          value={f.gravites}
+          onChange={(v) => setF({ ...f, gravites: v as FormulaireConfiguration['gravites'] })}
+        >
+          <Group gap="md">
+            {OPTIONS_GRAVITES.map((o) => (
+              <Checkbox key={o.value} value={o.value} label={o.label} />
+            ))}
+          </Group>
+        </Checkbox.Group>
+      )}
       {instance && destinationChangee(instance, f) && Object.values(instance.secrets).some(Boolean) && (
         <Alert color="orange" role="status">
-          Changer l’adresse ou l’autorité de certification supprime les clés enregistrées : il faudra les ressaisir.
+          Changer l’adresse (port compris) ou l’autorité de certification supprime les clés enregistrées : il faudra les
+          ressaisir.
         </Alert>
       )}
       <Group justify="flex-end">

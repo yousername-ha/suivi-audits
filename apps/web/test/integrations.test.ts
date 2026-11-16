@@ -26,6 +26,7 @@ import {
   formulaireDepuis,
   LIEN_INTEGRATIONS,
   messageExecutant,
+  precisionPort,
   resumeExecution,
 } from '../src/integrations/integrations';
 import { famillesVisibles, localiser } from '../src/navigation';
@@ -136,7 +137,12 @@ describe('formulaire', () => {
     expect(corpsCreation(TENABLE, f)).toEqual({
       type: 'tenable',
       nom: 'Tenable Security Center',
-      configuration: { adresse: 'https://tenable.exemple.test', autoriteCertification: '', delaiSecondes: 30 },
+      configuration: {
+        adresse: 'https://tenable.exemple.test',
+        autoriteCertification: '',
+        delaiSecondes: 30,
+        gravites: ['critique', 'elevee'],
+      },
     });
     const i = instance();
     expect(corpsModification(i, formulaireDepuis(i, TENABLE))).toEqual({});
@@ -147,6 +153,31 @@ describe('formulaire', () => {
     expect(destinationChangee(i, formulaireDepuis(i, TENABLE))).toBe(false);
     expect(destinationChangee(i, { ...formulaireDepuis(i, TENABLE), adresse: 'https://autre.exemple.test' })).toBe(
       true,
+    );
+    // Port réglable : admis de 1 à 65535 ; le changer est un changement de destination (clés effacées).
+    expect(erreursFormulaire({ ...f, adresse: 'https://tenable.exemple.test:8443' })).toEqual([]);
+    expect(erreursFormulaire({ ...f, adresse: 'https://tenable.exemple.test:70000' })).toEqual([
+      'Port invalide : un nombre de 1 à 65535 (443 par défaut).',
+    ]);
+    expect(
+      destinationChangee(i, { ...formulaireDepuis(i, TENABLE), adresse: 'https://tenable.exemple.test:8443' }),
+    ).toBe(true);
+    // Gravités de la synchronisation : au moins une ; un changement est envoyé, rangé de la plus grave à la moins grave.
+    expect(erreursFormulaire({ ...f, gravites: [] })).toEqual(['Choisissez au moins une gravité à synchroniser.']);
+    expect(corpsModification(i, { ...formulaireDepuis(i, TENABLE), gravites: ['faible', 'critique'] })).toEqual({
+      configuration: {
+        adresse: 'https://tenable.exemple.test',
+        autoriteCertification: '',
+        delaiSecondes: 30,
+        gravites: ['critique', 'faible'],
+      },
+    });
+  });
+
+  it('validation du flux : le port réglé de l’instance est rappelé', () => {
+    expect(precisionPort(instance())).toBe('Port réglé pour « Tenable fictif » : TCP 443.');
+    expect(precisionPort(instance({ configuration: { adresse: 'https://tenable.exemple.test:8443' } }))).toBe(
+      'Port réglé pour « Tenable fictif » : TCP 8443.',
     );
   });
 });
@@ -191,6 +222,42 @@ describe('rendu', () => {
     const active = rendre(createElement(TuileInstance, { ...props, i: instance(), fluxOuvert: true }));
     expect(bouton(active, 'Désactiver')).toBe(true);
     expect(active).toContain('version 6.9.1');
+    // Synchronisation (ADR 0100, lot V5) : bouton avec le droit de lancer, filtre de gravité et dernier résultat affichés.
+    const synchro = rendre(
+      createElement(TuileInstance, {
+        ...props,
+        i: instance({
+          configuration: { adresse: 'https://tenable.exemple.test', gravites: ['critique', 'elevee'] },
+          derniereExecution: execution({
+            operation: 'synchroniser',
+            resultat: {
+              elements: 9,
+              pages: 1,
+              constats: 2,
+              detections: 4,
+              machines: 3,
+              hotes: 0,
+              ecartes: 0,
+              tronque: true,
+              inventaire: { ok: false, erreur: 'Accès refusé (code 403).' },
+            },
+          }),
+        }),
+        fluxOuvert: true,
+        onSynchroniser: rien,
+      }),
+    );
+    expect(bouton(synchro, 'Synchroniser maintenant')).toBe(true);
+    expect(synchro).toContain('Critique, Élevée');
+    expect(synchro).toContain('2 failles sur 3 machines (4 détections)');
+    expect(synchro).toContain('Incomplète');
+    expect(synchro).toContain('Inventaire des machines (expérimental) indisponible : Accès refusé (code 403).');
+    expect(
+      bouton(
+        rendre(createElement(TuileInstance, { ...props, peutLancer: false, onSynchroniser: rien })),
+        'Synchroniser',
+      ),
+    ).toBe(false);
   });
 
   it('tableau des exécutions', () => {

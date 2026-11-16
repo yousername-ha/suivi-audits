@@ -4,7 +4,15 @@
    est ajoutée à l'exécution. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { TYPES_INTEGRATION, VERSION_TENABLE } from '@suivi/shared';
+import {
+  ADRESSE_IP,
+  CLE_MACHINE,
+  CVE_ID,
+  PLUGIN_ID,
+  TENABLE_BORNES,
+  TYPES_INTEGRATION,
+  VERSION_TENABLE,
+} from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { REPO } from './helpers.js';
 
@@ -37,6 +45,42 @@ describe('architecture : connecteurs du module Intégrations', () => {
       }
   });
 
+  it('paramètres de requête admis : liste fermée identique au catalogue, valeurs entières seulement', () => {
+    expect(constante(SCRIPT, 'PARAMETRES_ACCES')).toEqual(
+      Object.fromEntries(
+        TYPES_INTEGRATION.map((t) => [
+          t.id,
+          Object.fromEntries(
+            t.pointsAcces.filter((p) => p.parametres).map((p) => [`${p.methode} ${p.chemin}`, [...p.parametres!]]),
+          ),
+        ]),
+      ),
+    );
+  });
+
+  it('synchronisation : bornes du script et de l’exécutant identiques à celles du module Vulnérabilités', () => {
+    expect(constante(SCRIPT, 'BORNES_SYNCHRO')).toEqual(TENABLE_BORNES);
+    expect(
+      constante(`INTEGRATION_LOT = {"v": ${/^INTEGRATION_LOT = (\d+)$/m.exec(EXECUTANT)![1]}}`, 'INTEGRATION_LOT'),
+    ).toEqual({
+      v: TENABLE_BORNES.lot,
+    });
+    expect(Number(/^INTEGRATION_LOTS_MAX = (\d+)$/m.exec(EXECUTANT)![1])).toBe(TENABLE_BORNES.lots);
+    // Le délai de l'exécutant couvre la durée maximale du script et une dernière requête.
+    expect(Number(/^SYNCHRO_DELAI = (\d+)$/m.exec(EXECUTANT)![1])).toBeGreaterThanOrEqual(
+      TENABLE_BORNES.dureeSecondes + 60,
+    );
+    // Formes contrôlées recopiées : identiques à celles de l'API.
+    expect(motif(SCRIPT, 'PLUGIN_ID')).toBe(PLUGIN_ID.source);
+    expect(motif(SCRIPT, 'CVE_ID')).toBe(CVE_ID.source);
+    expect(motif(SCRIPT, 'ADRESSE_IP')).toBe(ADRESSE_IP.source);
+    // Les champs lus de Tenable sont une liste fermée qui ne contient ni le texte détaillé ni l'adresse matérielle.
+    const champs = /^CHAMPS_ANALYSE = \(([^)]*)\)$/ms.exec(SCRIPT)![1]!;
+    for (const interdit of ['pluginText', 'macAddress', 'description', 'vulnUUID'])
+      expect(champs).not.toContain(`"${interdit}"`);
+    expect(CLE_MACHINE.test('uuid:00000000-0000-4000-8000-0000000000aa')).toBe(true);
+  });
+
   it('opérations et flux de chaque type : script et exécutant identiques au catalogue', () => {
     const operations = Object.fromEntries(TYPES_INTEGRATION.map((t) => [t.id, [...t.operations]]));
     expect(constante(SCRIPT, 'OPERATIONS')).toEqual(operations);
@@ -55,7 +99,7 @@ describe('architecture : connecteurs du module Intégrations', () => {
 
   it('le script n’utilise que la bibliothèque standard et ne suit aucune redirection', () => {
     const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
-    expect(imports.sort()).toEqual(['http', 'json', 're', 'socket', 'ssl', 'sys']);
+    expect(imports.sort()).toEqual(['html', 'http', 'json', 're', 'socket', 'ssl', 'sys', 'time', 'unicodedata']);
     expect(SCRIPT).not.toMatch(/urllib|HTTPRedirectHandler|subprocess|os\.environ/);
   });
 });

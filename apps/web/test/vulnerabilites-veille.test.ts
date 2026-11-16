@@ -86,6 +86,8 @@ describe('menu', () => {
     expect(vuln.rubriques.map((p) => [p.id, p.to])).toEqual([
       ['vulnerabilites-produits', '/vulnerabilites/produits'],
       ['vulnerabilites-veille', '/vulnerabilites/veille'],
+      ['vulnerabilites-failles', '/vulnerabilites/failles'],
+      ['vulnerabilites-machines', '/vulnerabilites/machines'],
     ]);
     expect(localiser('/vulnerabilites/veille')?.destination.id).toBe('vulnerabilites');
     expect(

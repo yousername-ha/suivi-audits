@@ -5,7 +5,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Agent, createTestApp, login, makeUser, type TestApp, type TestUser } from './helpers.js';
 
 const URL_PRODUITS = '/api/vulnerabilites/produits';
-let t: TestApp, admin: Agent, contributeur: Agent, lecteur: Agent, sansRole: Agent, seulVuln: Agent;
+let t: TestApp, admin: Agent, rssi: Agent, contributeur: Agent, lecteur: Agent, sansRole: Agent, seulVuln: Agent;
+let roleRw: Agent, roleRo: Agent;
 let contributeurUser: TestUser;
 
 const produit = (extra: Record<string, unknown> = {}) => ({
@@ -28,9 +29,19 @@ const audits = async (action: string, target: string) =>
 beforeAll(async () => {
   t = await createTestApp();
   admin = await login(t, await makeUser(t, 'vuln_admin', 'admin'));
-  contributeurUser = await makeUser(t, 'vuln_contributeur', 'rw');
+  rssi = await login(t, await makeUser(t, 'vuln_rssi', 'rssi'));
+  // Droits par défaut resserrés (ADR 0100, lot V5) : le module n'est plus un module métier ; contributeur et lecteur
+  // prédéfinis n'en ont aucun droit. Les rôles « contributeur » et « lecteur » du module sont donc des rôles personnalisés.
+  await t.svc.db.q(
+    `INSERT INTO roles(id, name, permissions) VALUES
+       ('r_vuln_contrib', 'Vulnérabilités, contribution', ARRAY['vulnerabilites:lire','vulnerabilites:modifier','fournisseurs:lire']),
+       ('r_vuln_lecteur', 'Vulnérabilités, lecture', ARRAY['vulnerabilites:lire'])`,
+  );
+  contributeurUser = await makeUser(t, 'vuln_contributeur', 'r_vuln_contrib');
   contributeur = await login(t, contributeurUser);
-  lecteur = await login(t, await makeUser(t, 'vuln_lecteur', 'ro'));
+  lecteur = await login(t, await makeUser(t, 'vuln_lecteur', 'r_vuln_lecteur'));
+  roleRw = await login(t, await makeUser(t, 'vuln_rw', 'rw'));
+  roleRo = await login(t, await makeUser(t, 'vuln_ro', 'ro'));
   sansRole = await login(t, await makeUser(t, 'vuln_sans_role', null));
   // Rôle personnalisé : tous les droits du module, aucun sur les fournisseurs.
   await t.svc.db.q(
@@ -72,6 +83,22 @@ describe('migration 072 sur base vierge', () => {
 });
 
 describe('produits surveillés : droits et module', () => {
+  it('droits par défaut resserrés : administrateur et RSSI seulement ; contributeur et lecteur prédéfinis refusés', async () => {
+    for (const a of [roleRw, roleRo]) {
+      expect((await a.get(URL_PRODUITS)).statusCode).toBe(403);
+      expect((await a.post(URL_PRODUITS, produit())).statusCode).toBe(403);
+      expect((await a.get('/api/vulnerabilites/responsables')).statusCode).toBe(403);
+      expect((await a.me()).permissions.some((x) => x.startsWith('vulnerabilites:'))).toBe(false);
+    }
+    const r = await rssi.post(URL_PRODUITS, produit());
+    expect(r.statusCode).toBe(201);
+    expect((await rssi.get(URL_PRODUITS)).statusCode).toBe(200);
+    expect((await admin.get(URL_PRODUITS)).statusCode).toBe(200);
+    // Un rôle personnalisé peut accorder le module ; il n'ouvre pas pour autant les routes communes « métier ».
+    expect((await lecteur.get(URL_PRODUITS)).statusCode).toBe(200);
+    expect((await lecteur.get('/api/grc/smsis')).statusCode).toBe(403);
+  });
+
   it('lecture : lecteur oui ; sans rôle, refus 403 sur chaque route', async () => {
     expect((await lecteur.get(URL_PRODUITS)).statusCode).toBe(200);
     const fictif = `${URL_PRODUITS}/00000000-0000-4000-8000-000000000000`;

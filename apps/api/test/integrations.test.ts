@@ -209,7 +209,12 @@ describe('instances : création, modification, If-Match', () => {
       smsiId: null,
       actif: false,
       version: 1,
-      configuration: { adresse: 'https://tenable.exemple.test', autoriteCertification: '', delaiSecondes: 30 },
+      configuration: {
+        adresse: 'https://tenable.exemple.test',
+        autoriteCertification: '',
+        delaiSecondes: 30,
+        gravites: ['critique', 'elevee'],
+      },
       secrets: { accessKey: false, secretKey: false },
       derniereExecution: null,
     });
@@ -422,7 +427,12 @@ describe('« Tester la connexion » et exécutant', () => {
       id: d.json().id,
       type: 'tenable',
       operation: 'tester',
-      configuration: { adresse: 'https://tenable.exemple.test', autoriteCertification: '', delaiSecondes: 30 },
+      configuration: {
+        adresse: 'https://tenable.exemple.test',
+        autoriteCertification: '',
+        delaiSecondes: 30,
+        gravites: ['critique', 'elevee'],
+      },
       secrets: { accessKey: CLE_ACCES, secretKey: CLE_SECRETE },
     });
     expect((await lecture.get(`${base}/executions/${job.id}`)).json().etat).toBe('en_cours');

@@ -225,6 +225,21 @@
     n'est pas pris en charge à ce jour.
   Non vérifié : aucune collecte réelle par l'exécutant (tests sur un faux service local), conditions d'usage des cinq sources,
   limites de débit de NVD et d'EPSS.
+- **Lot V5, lecture des failles et des machines de Tenable** (16/11/2026) : migration `075`, opération « synchroniser » du
+  connecteur, écrans « Failles détectées » et « Machines ». À confirmer par le RSSI :
+  - **droits resserrés** : le module est réservé par défaut à l'administrateur et au RSSI (point ouvert 13, réglage prudent
+    appliqué) ; il ne peut plus être ouvert à l'auditeur externe ;
+  - seuls les champs listés d'un résultat sont gardés ; le texte détaillé du contrôle (`pluginText`) ne sort jamais du script ;
+  - une synchronisation par jour et par instance, critiques et élevées par défaut, 20 000 détections au plus ; au-delà, la
+    synchronisation est incomplète et ne fait rien disparaître ;
+  - une détection absente d'une synchronisation complète n'est plus comptée, sans être effacée ; la proposition « corrigée »
+    reste à faire ;
+  - les adresses IP sont affichées, derrière les droits du périmètre (point ouvert 8) ;
+  - retirer le périmètre d'une machine demande `vulnerabilites:administrer` ; l'affectation en masse est tout ou rien ;
+  - pendant une synchronisation (une dizaine de minutes au plus), l'exécutant ne traite pas ses autres demandes ;
+  - port de Tenable réglable (443 par défaut).
+  Non vérifié sur l'instance : la correspondance entre les machines de l'analyse et celles de l'inventaire (`uuid` ou
+  `tenableUUID`), la pagination de l'inventaire, toute synchronisation réelle.
 
 ## Conséquences
 

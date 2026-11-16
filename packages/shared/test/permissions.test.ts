@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALL_PERMISSIONS,
+  AUDITOR_MODULES,
   BUSINESS_MODULES,
   canReceive,
   ENTITIES,
   effectivePermissions,
   legacyKeyModule,
+  MODULES,
   Rights,
   SYSTEM_ROLE_DEFS,
   V2_ROLE_MAPPING,
@@ -35,17 +37,19 @@ describe('modèle de droits', () => {
     for (const r of ['administrateur', 'rssi'] as const) expect(p(r).has('assistant:lire')).toBe(true);
     for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
       expect([...p(r)].some((x) => x.startsWith('assistant:'))).toBe(false);
-    // Vulnérabilités (ADR 0100) : module métier, même règle que les autres (contributeur lit et modifie, lecteur lit,
-    // auditeur externe en lecture sur les modules choisis) ; suppression et administration aux seuls RSSI et administrateur.
+    // Vulnérabilités (ADR 0100, lot V5 : failles et machines) : hors des modules métier, comme l'assistant. Tous les droits
+    // à l'administrateur et au RSSI ; aucun par défaut au contributeur, au lecteur ni à l'auditeur externe (un rôle
+    // personnalisé peut les accorder).
     for (const r of ['administrateur', 'rssi'] as const)
       for (const a of ['lire', 'modifier', 'supprimer', 'administrer'] as const)
         expect(p(r).has(`vulnerabilites:${a}`)).toBe(true);
-    expect([...p('contributeur')].filter((x) => x.startsWith('vulnerabilites:')).sort()).toEqual([
-      'vulnerabilites:lire',
-      'vulnerabilites:modifier',
-    ]);
-    for (const r of ['lecteur', 'auditeur_externe'] as const)
-      expect([...p(r)].filter((x) => x.startsWith('vulnerabilites:'))).toEqual(['vulnerabilites:lire']);
+    for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
+      expect([...p(r)].filter((x) => x.startsWith('vulnerabilites:'))).toEqual([]);
+    expect(BUSINESS_MODULES).not.toContain('vulnerabilites');
+    expect(MODULES).toContain('vulnerabilites');
+    expect(AUDITOR_MODULES).not.toContain('vulnerabilites');
+    // Un droit du module seul n'ouvre ni l'accueil ni les routes communes « métier ».
+    expect(new Rights(['vulnerabilites:lire', 'vulnerabilites:administrer']).canReadAnyBusiness()).toBe(false);
     // Intégrations (ADR 0076) : module non métier, comme l'import et l'export ; RSSI et administrateur seuls par défaut.
     for (const r of ['administrateur', 'rssi'] as const)
       for (const a of ['lire', 'modifier', 'administrer'] as const) expect(p(r).has(`integrations:${a}`)).toBe(true);

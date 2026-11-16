@@ -214,14 +214,13 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     for (const r of guarded) {
       const required: Permission[] =
         r.access === 'metier' || r.access === 'mur' ? ['audit:lire'] : [r.access as Permission];
-      // Sans la permission (toutes les autres accordées ; pour « metier », aucune lecture métier).
+      // Sans la permission (toutes les autres accordées ; pour « metier », aucune lecture métier). Vulnérabilités n'est plus un
+      // module métier (ADR 0100, lot V5) : sa lecture reste accordée ici et ne doit pas ouvrir les routes « metier ».
       await setPerms(
         r.access === 'metier' || r.access === 'mur'
           ? ALL_PERMISSIONS.filter(
               (p) =>
-                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|incidents|cartographie|vulnerabilites):lire$/.test(
-                  p,
-                ),
+                !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|incidents|cartographie):lire$/.test(p),
             )
           : ALL_PERMISSIONS.filter((p) => p !== r.access),
       );

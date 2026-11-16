@@ -145,6 +145,24 @@ export const integrationsRoutes = [
     },
   }),
   route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/synchroniser',
+    summary:
+      'Synchroniser maintenant (Tenable : failles et machines) : inscrit une exécution en file ; module Vulnérabilités actif exigé',
+    tags,
+    access: 'integrations:modifier',
+    params: id,
+    status: 201,
+    handler: async ({ svc, s, params, ip }) => {
+      const sess = s as Session;
+      // Les données reçues sont rangées par le module Vulnérabilités : désactivé, rien n'est inscrit.
+      await svc.modules.assert('vulnerabilites');
+      if (!svc.limits.integrationSynchro(sess.user.id))
+        throw new HttpError(429, 'Trop de demandes de synchronisation. Réessayez dans une heure.');
+      return svc.integrations.demander(params.id, 'synchroniser', sess.user, ip);
+    },
+  }),
+  route({
     method: 'GET',
     url: '/api/integrations/instances/:id/executions',
     summary: 'Dernières exécutions d’une instance (vingt au plus)',

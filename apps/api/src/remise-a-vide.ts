@@ -70,6 +70,10 @@ export const TABLES_CONFIGURATION = [
   // journal de leurs exécutions.
   'integrations',
   'integration_executions',
+  // Synchronisations de Tenable (ADR 0100, lot V5) : état par instance (créneau du jour, numéros de synchronisation) et
+  // journal des synchronisations, rattachés aux instances et à leurs exécutions ; effacés avec elles.
+  'vulnerabilites_tenable_etat',
+  'vulnerabilites_synchronisations',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
@@ -163,6 +167,12 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_veille_cve',
   'vulnerabilites_veille_avis',
   'vulnerabilites_veille_collectes',
+  // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
+  // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
+  'vulnerabilites_machines',
+  'vulnerabilites_constats',
+  'vulnerabilites_constat_cves',
+  'vulnerabilites_detections',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

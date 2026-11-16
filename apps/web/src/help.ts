@@ -114,16 +114,30 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-failles',
+    title: 'Vulnérabilités : failles détectées et machines',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/failles',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Failles détectées. Les failles viennent de Tenable Security Center, synchronisé chaque jour par l’exécutant d’exploitation (Pilotage > Intégrations). Un constat correspond à un contrôle de Tenable, qui peut citer plusieurs CVE ; un constat sans CVE signale un système ou un logiciel qui n’est plus maintenu.',
+      'Vous ne voyez que les machines des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Les compteurs d’une faille ne comptent que ces machines, et une faille sans machine lisible n’apparaît pas.',
+      'Bascule « Par faille » ou « Par machine ». Recherche par identifiant CVE, numéro ou nom du contrôle ; filtres par gravité, « exploitées » (une CVE figure au catalogue KEV de la veille), « exploitables » (Tenable connaît un code d’exploitation), « non maintenus ». La fiche d’une faille donne ses CVE, son vecteur CVSS et le correctif de Tenable, en anglais tels quels, et les machines touchées regroupées par rôle.',
+      'Une faille qui n’est plus vue par une synchronisation complète n’est plus comptée, sans être effacée ; une synchronisation interrompue ou incomplète ne fait rien disparaître.',
+      'Écran « Machines » : indiquez le rôle (front, back applicatif, base de données) et le périmètre, une machine ou plusieurs à la fois (cases à cocher). Il faut le droit de modifier le module et l’écriture sur le périmètre actuel et sur le périmètre visé ; retirer le périmètre demande le droit d’administrer le module. Chaque affectation est inscrite au journal d’audit, sans nom ni adresse de machine.',
+    ],
+  },
+  {
     id: 'integrations',
     title: 'Intégrations : connecteurs vers des outils externes',
     permission: 'integrations:lire',
     link: '/integrations',
     steps: [
       'Ouvrez Pilotage > Intégrations. Chaque connecteur lit un outil de l’organisation, en lecture seule. Le serveur d’application n’a pas d’accès réseau : c’est l’exécutant d’exploitation du serveur qui interroge l’outil, par un script isolé. Si l’exécutant n’est pas vu, la page le dit et aucun appel n’est possible.',
-      'Ajouter une instance (droit d’administrer les intégrations) : choisissez un type dans le catalogue, puis indiquez l’adresse https://serveur (port 443, sans chemin), l’autorité de certification interne si besoin et le délai. Le certificat est toujours vérifié et aucune redirection n’est suivie.',
-      'Secrets : saisissez les clés d’API ; elles sont scellées, jamais réaffichées ni journalisées, et seule la mention « défini » ou « non défini » apparaît. Changer l’adresse ou l’autorité de certification les supprime : il faut les ressaisir.',
-      'Activer un connecteur ouvre le flux vers l’outil : une fenêtre détaille la destination, le port et ce qui sort, et un administrateur la valide (case à cocher). Désactiver le dernier connecteur d’un type, ou désactiver le module Intégrations, referme le flux.',
+      'Ajouter une instance (droit d’administrer les intégrations) : choisissez un type dans le catalogue, puis indiquez l’adresse https://serveur (port 443) ou https://serveur:port (port de 1 à 65535), sans chemin, l’autorité de certification interne si besoin et le délai. Le certificat est toujours vérifié et aucune redirection n’est suivie. Le flux à faire autoriser au pare-feu suit le port réglé.',
+      'Secrets : saisissez les clés d’API ; elles sont scellées, jamais réaffichées ni journalisées, et seule la mention « défini » ou « non défini » apparaît. Changer l’adresse (port compris) ou l’autorité de certification les supprime : il faut les ressaisir.',
+      'Activer un connecteur ouvre le flux vers l’outil : une fenêtre détaille la destination, le port réglé et ce qui sort, et un administrateur la valide (case à cocher). Désactiver le dernier connecteur d’un type, ou désactiver le module Intégrations, referme le flux.',
       '« Tester la connexion » (droit de modifier les intégrations) : la demande part en file, l’exécutant la traite en général en moins d’une minute ; pour Tenable Security Center, seule la version du service est rapportée. Le bouton « Exécutions » montre les vingt dernières, avec leur résultat ou leur erreur. Chaque geste est inscrit au journal d’audit, sans secret.',
+      'Tenable Security Center, failles et machines : une synchronisation par jour et par instance active lit les failles des gravités choisies dans la configuration (critiques et élevées par défaut), puis l’inventaire des machines (accès annoncé expérimental : son échec n’empêche pas la lecture des failles). « Synchroniser maintenant » (droit de modifier les intégrations, module Vulnérabilités actif) la relance, au plus une fois par quart d’heure. Le dernier résultat (nombre de failles, de machines, borne atteinte, inventaire) s’affiche sur la tuile.',
     ],
   },
   {

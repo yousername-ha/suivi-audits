@@ -1559,6 +1559,73 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesConstatCves {
+  constat_id: string;
+  cve: string;
+}
+
+export interface VulnerabilitesConstats {
+  id: Generated<string>;
+  integration_id: string;
+  plugin_id: number;
+  nom: string;
+  gravite: "critique" | "elevee" | "moyenne" | "faible";
+  famille: string | null;
+  synopsis: string | null;
+  correctif: string | null;
+  cvss3_vecteur: string | null;
+  cvss3_score: ColumnType<string | null, number | string | null, number | string | null>;
+  vpr_score: ColumnType<string | null, number | string | null, number | string | null>;
+  epss_score: ColumnType<string | null, number | string | null, number | string | null>;
+  exploitable: boolean;
+  exploit_libelle: string | null;
+  faille_publiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  correctif_publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fin_support_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  voir_aussi: string | null;
+  cves_tronquees: Generated<boolean>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesDetections {
+  id: Generated<string>;
+  constat_id: string;
+  machine_id: string;
+  port: number;
+  protocole: string;
+  premiere_detection: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  derniere_detection: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  attenue: Generated<boolean>;
+  risque_accepte: Generated<boolean>;
+  risque_requalifie: Generated<boolean>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesMachines {
+  id: Generated<string>;
+  integration_id: string;
+  source: Generated<string>;
+  identifiant_source: string;
+  uuid_source: string | null;
+  nom: string | null;
+  adresse: string | null;
+  systeme: string | null;
+  premiere_detection: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  derniere_detection: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  exposition: string | null;
+  acr: ColumnType<string | null, number | string | null, number | string | null>;
+  role: string | null;
+  perimetre_id: string | null;
+  vu_numero: number;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string | null;
+}
+
 export interface VulnerabilitesProduits {
   id: Generated<string>;
   fournisseur_id: string | null;
@@ -1575,6 +1642,26 @@ export interface VulnerabilitesProduits {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSynchronisations {
+  execution_id: string;
+  integration_id: string;
+  numero: number;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  complete: Generated<boolean>;
+}
+
+export interface VulnerabilitesTenableEtat {
+  integration_id: string;
+  creneau: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  numero: Generated<number>;
+  numero_complet: Generated<number>;
+  complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  inventaire_ok: boolean | null;
+  inventaire_erreur: string | null;
+  inventaire_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesVeilleAvis {
@@ -1815,7 +1902,13 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_constat_cves: VulnerabilitesConstatCves;
+  vulnerabilites_constats: VulnerabilitesConstats;
+  vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;
+  vulnerabilites_synchronisations: VulnerabilitesSynchronisations;
+  vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;
   vulnerabilites_veille_collectes: VulnerabilitesVeilleCollectes;
   vulnerabilites_veille_cve: VulnerabilitesVeilleCve;

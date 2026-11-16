@@ -44,6 +44,8 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { FaillesDetectees } from './vulnerabilites/failles.js';
+import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { Integrations } from './integrations/index.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
@@ -85,6 +87,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const assistantDocuments = new DocumentsAssistant(db, vault, assistant, log, flux);
   assistant.documents = assistantDocuments;
   assistant.organisation = historique;
+  /* Connecteurs (ADR 0076) ; la synchronisation de Tenable range ses lots dans le module Vulnérabilités (ADR 0100, lot V5). */
+  const integrations = new Integrations(db, vault, flux);
+  const tenable = new SynchronisationTenable(db, flux, integrations);
+  integrations.enLots.synchroniser = tenable;
   return {
     cfg,
     log,
@@ -95,9 +101,14 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
-    /** Module Vulnérabilités (ADR 0100) : registre des produits surveillés (lot V1). */
-    /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant). */
-    vulnerabilites: { produits: new ProduitsSurveilles(db, grc), veille: new VeilleVulnerabilites(db, flux) },
+    /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
+        failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
+    vulnerabilites: {
+      produits: new ProduitsSurveilles(db, grc),
+      veille: new VeilleVulnerabilites(db, flux),
+      tenable,
+      failles: new FaillesDetectees(db, grc),
+    },
     modules,
     flux,
     updates: new Updates(cfg, db, settings, alertes, flux),
@@ -111,7 +122,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     conservation: new Conservation(db),
     courriel: new Courriel(db, vault, flux),
     /** Module Intégrations (ADR 0076) : connecteurs, secrets scellés, file des exécutions traitée par l'exécutant. */
-    integrations: new Integrations(db, vault, flux),
+    integrations,
     notificationsMetier,
     auth,
     motsDePasse,
@@ -132,6 +143,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       global: limiter(cfg.rateLimitPerMinute, 60e3),
       courrielTest: limiter(5, 10 * 60e3),
       integrationTest: limiter(10, 60e3),
+      /** « Synchroniser maintenant » (Tenable) : six demandes par heure et par personne. */
+      integrationSynchro: limiter(6, 60 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
       veilleCollecte: limiter(4, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),

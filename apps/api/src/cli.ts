@@ -18,7 +18,7 @@
      site-adresse               adresse du site demandée dans l'application
      backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
-     integrations-claim | integrations-finish <id>  connecteurs : réclame une exécution, rapporte son résultat (JSON sur l'entrée standard)
+     integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
      veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
@@ -35,6 +35,7 @@ import crypto from 'node:crypto';
 import {
   FluxAppliques,
   formaterPoivreGenere,
+  LotSynchronisation,
   LotVeille,
   RapportCollecte,
   RapportExecution,
@@ -69,7 +70,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   site-adresse               adresse du site demandée
   backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
-  integrations-claim | integrations-finish <id>  connecteurs : réclame une exécution, rapporte son résultat (JSON sur l'entrée standard)
+  integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
   veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
@@ -187,10 +188,34 @@ async function main() {
       break;
     }
     case 'integrations-claim': {
-      // Connecteurs du module Intégrations (ADR 0076) : module désactivé ou flux du type fermé, rien n'est remis.
-      const actif = !(await svc.modules.state(true)).disabled.includes('integrations');
-      const job = await svc.integrations.reclamer(actif);
+      // Connecteurs du module Intégrations (ADR 0076) : module désactivé ou flux du type fermé, rien n'est remis. Une
+      // synchronisation dont le module destinataire (Vulnérabilités) est désactivé est close sans appel.
+      const { disabled } = await svc.modules.state(true);
+      const job = await svc.integrations.reclamer(!disabled.includes('integrations'), disabled);
       if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'integrations-lot': {
+      // Lot d'une synchronisation (ADR 0100, lot V5), validé strictement : taille bornée, champ inattendu ou élément mal formé
+      // refusés (code 2, rien n'est écrit) ; exécution close ou sans envoi par lots : code 1.
+      const brut = await readStdin(INTEGRATIONS_LOT_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const p = LotSynchronisation.safeParse(valeur);
+      if (!z.uuid().safeParse(arg).success || !p.success) {
+        console.error('Lot refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      try {
+        console.log(JSON.stringify(await svc.integrations.lot(arg!, p.data.elements)));
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
       break;
     }
     case 'integrations-finish': {
@@ -580,6 +605,8 @@ async function main() {
 
 /** Lot de la veille : 500 éléments d'au plus quelques kilooctets chacun. */
 const VEILLE_ENTREE_MAX = 4 * 1024 * 1024;
+/** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
+const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
 
 /** Entrée standard entière ; avec une borne, null au-delà (lecture arrêtée). */
 async function readStdin(): Promise<string>;

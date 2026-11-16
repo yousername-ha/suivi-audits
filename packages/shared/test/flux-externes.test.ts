@@ -61,11 +61,15 @@ describe('registre des flux vers l’extérieur', () => {
     expect(fluxExterne('acme').destinations.find((d) => d.sens === 'entrant')!.ports).toContain('80 et 443');
     for (const m of FLUX_MODULES.filter((x) => x !== 'acme')) expect(sensDuFlux(fluxExterne(m))).toEqual(['sortant']);
     expect(fluxExterne('assistant').destinations[0]!.ports).toContain('443');
-    // Tenable Security Center : adresse réglée, TCP 443 ; ce qui sort : les clés d'API et des requêtes de lecture.
+    // Tenable Security Center : adresse et port réglés (443 par défaut) ; ce qui sort : les clés d'API et des requêtes de
+    // lecture.
+    expect(fluxExterne('tenable').pareFeu).toEqual([
+      'Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).',
+    ]);
     expect(fluxExterne('tenable').destinations).toEqual([
       expect.objectContaining({
         sens: 'sortant',
-        ports: 'TCP 443 (HTTPS)',
+        ports: 'TCP du port réglé (443 par défaut, HTTPS)',
         hote: expect.stringMatching(/Adresse réglée/),
       }),
     ]);

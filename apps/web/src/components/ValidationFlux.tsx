@@ -25,10 +25,13 @@ export function DetailValidationFlux({
   module,
   valide,
   onValide,
+  precision,
 }: {
   module: FluxModule;
   valide: boolean;
   onValide: (v: boolean) => void;
+  /** Précision propre à l'instance qui ouvre le flux (port réglé de Tenable…), affichée sous les destinations. */
+  precision?: string;
 }) {
   const f = fluxExterne(module);
   return (
@@ -42,6 +45,11 @@ export function DetailValidationFlux({
           Destinations et ports
         </Title>
         <Destinations f={f} />
+        {precision && (
+          <Text size="sm" fw={600}>
+            {precision}
+          </Text>
+        )}
       </Stack>
       <Stack gap="xs">
         <Title order={3} size="h6">
@@ -76,10 +84,12 @@ export function ValidationFlux({
   module,
   onConfirm,
   onCancel,
+  precision,
 }: {
   module: FluxModule;
   onConfirm: () => void;
   onCancel: () => void;
+  precision?: string;
 }) {
   const [valide, setValide] = useState(false);
   const f = fluxExterne(module);
@@ -93,7 +103,7 @@ export function ValidationFlux({
       size="lg"
     >
       <Stack>
-        <DetailValidationFlux module={module} valide={valide} onValide={setValide} />
+        <DetailValidationFlux module={module} valide={valide} onValide={setValide} precision={precision} />
         <Group justify="flex-end">
           <Button variant="default" onClick={onCancel}>
             Annuler
@@ -109,10 +119,18 @@ export function ValidationFlux({
 
 /** Geste d'activation : `valider(module)` affiche la fenêtre et rend vrai si l'administrateur a coché et confirmé. Rendre
     `fenetre` dans la page. */
-export function useValidationFlux(): { valider: (m: FluxModule) => Promise<boolean>; fenetre: ReactNode } {
-  const [demande, setDemande] = useState<{ module: FluxModule; repondre: (ok: boolean) => void } | null>(null);
+export function useValidationFlux(): {
+  valider: (m: FluxModule, precision?: string) => Promise<boolean>;
+  fenetre: ReactNode;
+} {
+  const [demande, setDemande] = useState<{
+    module: FluxModule;
+    precision?: string;
+    repondre: (ok: boolean) => void;
+  } | null>(null);
   const valider = useCallback(
-    (module: FluxModule) => new Promise<boolean>((repondre) => setDemande({ module, repondre })),
+    (module: FluxModule, precision?: string) =>
+      new Promise<boolean>((repondre) => setDemande({ module, precision, repondre })),
     [],
   );
   const fin = (ok: boolean) => {
@@ -125,6 +143,7 @@ export function useValidationFlux(): { valider: (m: FluxModule) => Promise<boole
       <ValidationFlux
         key={demande.module}
         module={demande.module}
+        precision={demande.precision}
         onConfirm={() => fin(true)}
         onCancel={() => fin(false)}
       />

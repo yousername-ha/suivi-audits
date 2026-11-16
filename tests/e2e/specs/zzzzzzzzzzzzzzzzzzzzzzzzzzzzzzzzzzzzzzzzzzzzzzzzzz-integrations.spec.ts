@@ -37,7 +37,8 @@ test('Intégrations : connecteur Tenable créé, clés enregistrées sans être 
       .click();
     const ajout = page.getByRole('dialog', { name: 'Ajouter : Tenable Security Center' });
     await ajout.getByLabel('Nom', { exact: true }).fill(nom);
-    await ajout.getByLabel('Adresse du service', { exact: true }).fill('https://tenable.exemple.test');
+    // Port réglable (décision du RSSI du 16/11/2026) : rappelé dans la fenêtre de validation du flux.
+    await ajout.getByLabel('Adresse du service', { exact: true }).fill('https://tenable.exemple.test:8443');
     await ajout.getByRole('button', { name: 'Créer l’instance' }).click();
     const config = page.getByRole('dialog', { name: `Configurer ${nom}` });
     await config.getByLabel(/^Clé d’accès/).fill(cle);
@@ -54,6 +55,7 @@ test('Intégrations : connecteur Tenable créé, clés enregistrées sans être 
     await tuile.getByRole('button', { name: 'Activer', exact: true }).click();
     const validation = page.getByRole('dialog', { name: 'Activer « Tenable Security Center » : ouvrir son flux' });
     await expect(validation).toContainText('clés d’API');
+    await expect(validation).toContainText(`Port réglé pour « ${nom} » : TCP 8443.`);
     await expect(validation.getByRole('button', { name: 'Confirmer' })).toBeDisabled();
     await validation
       .getByLabel(
@@ -62,6 +64,9 @@ test('Intégrations : connecteur Tenable créé, clés enregistrées sans être 
       .check();
     await validation.getByRole('button', { name: 'Confirmer' }).click();
     await expect(tuile.getByRole('button', { name: 'Désactiver', exact: true })).toBeVisible();
+    // Synchronisation des failles (ADR 0100, lot V5) : filtre de gravité et bouton, sans lancer d'appel.
+    await expect(tuile).toContainText('Critique, Élevée');
+    await expect(tuile.getByRole('button', { name: 'Synchroniser maintenant' })).toBeVisible();
     expect(await fluxTenable()).toBe(true);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 

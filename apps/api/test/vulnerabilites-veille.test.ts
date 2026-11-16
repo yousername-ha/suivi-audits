@@ -13,7 +13,7 @@ import { APP_ROLE, APP_ROLE_PASSWORD, PG } from './pg.js';
 const base = '/api/vulnerabilites/veille';
 const SYSTEME = { username: 'test' };
 let t: TestApp;
-let admin: Agent, rssi: Agent, contributeur: Agent, lecteur: Agent, sansRole: Agent;
+let admin: Agent, rssi: Agent, contributeur: Agent, lecteur: Agent, sansRole: Agent, roleRw: Agent, roleRo: Agent;
 
 const kev = (cve: string, extra: Record<string, unknown> = {}) => ({
   cve,
@@ -115,8 +115,16 @@ beforeAll(async () => {
   t = await createTestApp();
   admin = await login(t, await makeUser(t, 'veille_admin', 'admin'));
   rssi = await login(t, await makeUser(t, 'veille_rssi', 'rssi'));
-  contributeur = await login(t, await makeUser(t, 'veille_rw', 'rw'));
-  lecteur = await login(t, await makeUser(t, 'veille_ro', 'ro'));
+  // Droits par défaut resserrés (ADR 0100, lot V5) : contributeur et lecteur du module par des rôles personnalisés.
+  await t.svc.db.q(
+    `INSERT INTO roles(id, name, permissions) VALUES
+       ('r_veille_contrib', 'Veille, contribution', ARRAY['vulnerabilites:lire','vulnerabilites:modifier']),
+       ('r_veille_lecteur', 'Veille, lecture', ARRAY['vulnerabilites:lire'])`,
+  );
+  contributeur = await login(t, await makeUser(t, 'veille_contrib', 'r_veille_contrib'));
+  lecteur = await login(t, await makeUser(t, 'veille_lecteur', 'r_veille_lecteur'));
+  roleRw = await login(t, await makeUser(t, 'veille_rw', 'rw'));
+  roleRo = await login(t, await makeUser(t, 'veille_ro', 'ro'));
   sansRole = await login(t, await makeUser(t, 'veille_sans_role', null));
 }, 60_000);
 afterAll(async () => {
@@ -187,7 +195,7 @@ describe('droits, module et flux', () => {
       expect((await a.post(`${base}/collectes`, {})).statusCode).toBe(403);
     }
     for (const url of [`${base}/etat`, `${base}/avis`, `${base}/failles`])
-      expect((await sansRole.get(url)).statusCode).toBe(403);
+      for (const a of [sansRole, roleRw, roleRo]) expect((await a.get(url)).statusCode).toBe(403);
     expect((await sansRole.post(`${base}/collectes`, {})).statusCode).toBe(403);
     // Administrer passe le contrôle de droit ; refus métier : flux fermé.
     const ferme = await rssi.post(`${base}/collectes`, {});

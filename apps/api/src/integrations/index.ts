@@ -9,6 +9,9 @@
    - Flux (ADR 0097) : activer une instance ouvre le flux de son type, après validation explicite d'un administrateur, dans la
      même transaction ; désactiver la dernière instance active du type le referme. Flux fermé : rien n'est réclamé pour ce
      type, une demande en file est close sans appel.
+   - Opérations rapportées par lots (« synchroniser », ADR 0100 lot V5) : l'exécutant envoie les éléments par lots bornés
+     (`suivi integrations-lot`) avant la fin ; un module destinataire (catalogue OPERATIONS_EN_LOTS) les range. Ce module
+     désactivé : rien n'est inscrit ni réclamé pour l'opération, une demande en file est close sans appel.
    Droits contrôlés par route() ; ce service est seul juge du reste (portée, version, secrets, file). Audit `integration.*`
    sans secret. Accès aux données en Kysely (ADR 0062). */
 import {
@@ -22,6 +25,7 @@ import {
   type IntegrationModification,
   type IntegrationType,
   type OperationIntegration,
+  OPERATIONS_EN_LOTS,
   type OrigineExecution,
   RapportExecution,
   RESULTATS_OPERATION,
@@ -32,7 +36,7 @@ import {
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
 import type { SessionUser } from '../auth.js';
-import type { Client, Db, Kdb } from '../db/db.js';
+import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { IntegrationExecutions, Integrations as LigneIntegrations } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
@@ -45,10 +49,28 @@ type LigneExecution = Selectable<IntegrationExecutions>;
 const cleSecrets = (id: string) => `secret:integration:${id}`;
 const aad = (id: string, champ: string) => `integration:${id}:${champ}`;
 /** Verrou consultatif de la file des exécutions (comme 727277 pour la file des courriels). */
-const verrouFile = (k: Kdb) => sql`SELECT pg_advisory_xact_lock(727278)`.execute(k);
-/** Une demande non réclamée après ce délai expire ; une demande « en cours » au-delà est considérée interrompue. */
+export const verrouFileIntegrations = (k: Kdb) => sql`SELECT pg_advisory_xact_lock(727278)`.execute(k);
+const verrouFile = verrouFileIntegrations;
+/** Une demande non réclamée après ce délai expire ; une demande « en cours » au-delà est considérée interrompue. Une
+    synchronisation dure plus longtemps (lectures paginées bornées à huit minutes, puis envoi des lots) : délais plus longs. */
 const EXPIRATION_FILE = sql<Date>`now() - interval '10 minutes'`;
 const ABANDON_EN_COURS = sql<Date>`now() - interval '5 minutes'`;
+const EXPIRATION_FILE_LONGUE = sql<Date>`now() - interval '60 minutes'`;
+const ABANDON_EN_COURS_LONG = sql<Date>`now() - interval '30 minutes'`;
+/** « Synchroniser maintenant » : une instance déjà synchronisée à la main depuis moins de ce délai ne l'est pas à nouveau. */
+const INTERVALLE_MANUEL = sql<Date>`now() - interval '15 minutes'`;
+const OPERATIONS_LONGUES = Object.keys(OPERATIONS_EN_LOTS) as OperationIntegration[];
+
+/** Module destinataire d'une opération rapportée par lots (synchronisation de Tenable : module Vulnérabilités). */
+export interface OperationEnLots {
+  /** À la réclamation, dans sa transaction : prépare la réception (numéro de synchronisation…). */
+  reclamee(k: Kdb, executionId: string, integrationId: string): Promise<void>;
+  /** Range un lot d'éléments (validés un à un ; un refus fait refuser tout le lot) ; rend les totaux reçus. */
+  lot(k: Kdb, executionId: string, elements: unknown[]): Promise<{ elements: number; lots: number }>;
+  /** Fin de l'exécution : `resultat` validé (succès) ou null (échec). Rend une erreur qui change le succès en échec (bilan
+      incohérent), ou null. */
+  terminee(k: Kdb, c: Client, executionId: string, resultat: Record<string, unknown> | null): Promise<string | null>;
+}
 const NOM_EXISTANT = 'Une intégration porte déjà ce nom.';
 const EXECUTANT = { username: 'exécutant serveur' };
 /** Champs de configuration qui désignent la destination : les changer supprime les secrets (à ressaisir). */
@@ -79,6 +101,8 @@ const nomEnBase = (e: unknown): never => {
 };
 
 export class Integrations {
+  /** Modules destinataires des opérations rapportées par lots, branchés par services.ts. */
+  readonly enLots: Partial<Record<OperationIntegration, OperationEnLots>> = {};
   constructor(
     private readonly db: Db,
     private readonly vault: Vault,
@@ -327,8 +351,22 @@ export class Integrations {
   /* ---------------------------------------------------------------- Exécutions (integrations:modifier) */
   /** Inscrit « Tester la connexion » ; refuse si l'instance est inactive, incomplète, son flux fermé ou l'exécutant absent. */
   async demanderTest(id: string, user: SessionUser, ip: string): Promise<ExecutionIntegrationDto> {
+    return this.demander(id, 'tester', user, ip);
+  }
+
+  /** Inscrit une opération du type (« tester », « synchroniser ») à la main. Le module destinataire d'une opération par lots
+      est contrôlé par la route. « Synchroniser » : refusé si l'instance a déjà été synchronisée à la main depuis moins de
+      quinze minutes. */
+  async demander(
+    id: string,
+    operation: OperationIntegration,
+    user: SessionUser,
+    ip: string,
+  ): Promise<ExecutionIntegrationDto> {
     const i = await this.lire(id);
     const t = typeIntegration(i.type);
+    if (!t.operations.includes(operation))
+      throw new HttpError(422, `Le connecteur « ${t.libelle} » ne connaît pas cette opération.`);
     if (!i.actif) throw new HttpError(409, 'Activez d’abord ce connecteur.');
     const manquants = t.secrets.filter((s) => !i.secrets[s.id]).map((s) => s.libelle);
     if (manquants.length) throw new HttpError(409, `Secrets à enregistrer d’abord : ${manquants.join(', ')}.`);
@@ -348,21 +386,52 @@ export class Integrations {
         .where('etat', 'in', ['en_file', 'en_cours'])
         .executeTakeFirst();
       if (active) throw new HttpError(409, 'Une exécution de ce connecteur est déjà en cours.');
-      const r = await k
-        .insertInto('integration_executions')
-        .values({ integration_id: id, operation: 'tester', origine: 'manuel', demande_par: user.username })
-        .returningAll()
-        .executeTakeFirstOrThrow();
-      await this.db.audit(
-        user,
-        ip,
-        'integration.execution.demandee',
-        r.id,
-        { integration: id, type: i.type, nom: i.nom, operation: 'tester', origine: 'manuel' },
-        c,
-      );
+      if (OPERATIONS_LONGUES.includes(operation)) {
+        const recente = await k
+          .selectFrom('integration_executions')
+          .select('id')
+          .where('integration_id', '=', id)
+          .where('operation', '=', operation)
+          .where('origine', '=', 'manuel')
+          .where('demande_le', '>', INTERVALLE_MANUEL)
+          .executeTakeFirst();
+        if (recente)
+          throw new HttpError(409, 'Synchronisation demandée il y a moins de quinze minutes : réessayez plus tard.');
+      }
+      const r = await this.inscrire(k, c, i, operation, 'manuel', user, ip);
       return versExecution(r);
     }, user.username);
+  }
+
+  /** Inscrit une exécution en file, sous le verrou de la file (à prendre par l'appelant), avec son audit. */
+  async inscrire(
+    k: Kdb,
+    c: Client,
+    i: Pick<IntegrationDto, 'id' | 'type' | 'nom'>,
+    operation: OperationIntegration,
+    origine: OrigineExecution,
+    acteur: Actor,
+    ip: string | null,
+  ): Promise<LigneExecution> {
+    const r = await k
+      .insertInto('integration_executions')
+      .values({ integration_id: i.id, operation, origine, demande_par: acteur.username })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    await this.db.audit(
+      acteur,
+      ip,
+      'integration.execution.demandee',
+      r.id,
+      { integration: i.id, type: i.type, nom: i.nom, operation, origine },
+      c,
+    );
+    return r;
+  }
+
+  /** Ménage de la file, à appeler sous son verrou (planification d'un module destinataire). */
+  async menageFile(k: Kdb, c: Client) {
+    await this.menage(k, c);
   }
 
   /** Ménage de la file, sous son verrou : demande jamais réclamée expirée, demande interrompue close. */
@@ -375,14 +444,24 @@ export class Integrations {
         erreur: 'Demande expirée : l’exécutant ne l’a pas prise en charge à temps.',
       })
       .where('etat', '=', 'en_file')
-      .where('demande_le', '<', EXPIRATION_FILE)
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('operation', 'not in', OPERATIONS_LONGUES), eb('demande_le', '<', EXPIRATION_FILE)]),
+          eb.and([eb('operation', 'in', OPERATIONS_LONGUES), eb('demande_le', '<', EXPIRATION_FILE_LONGUE)]),
+        ]),
+      )
       .returning('id')
       .execute();
     const interrompues = await k
       .updateTable('integration_executions')
       .set({ etat: 'echec', termine_le: sql<Date>`now()`, erreur: 'Exécutant interrompu : aucun résultat reçu.' })
       .where('etat', '=', 'en_cours')
-      .where('debute_le', '<', ABANDON_EN_COURS)
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('operation', 'not in', OPERATIONS_LONGUES), eb('debute_le', '<', ABANDON_EN_COURS)]),
+          eb.and([eb('operation', 'in', OPERATIONS_LONGUES), eb('debute_le', '<', ABANDON_EN_COURS_LONG)]),
+        ]),
+      )
       .returning('id')
       .execute();
     for (const r of expirees)
@@ -395,13 +474,35 @@ export class Integrations {
   /** `suivi integrations-claim` : réclame l'exécution en file la plus ancienne dont le type a son flux ouvert et l'instance
       active ; rend ce qu'il faut pour l'exécuter, secrets compris (seul chemin par lequel un secret quitte l'API). Une
       demande dont le flux est fermé ou l'instance désactivée est close sans appel. Le module désactivé : rien n'est
-      réclamé et les demandes en file sont closes. */
-  async reclamer(moduleActif: boolean): Promise<Record<string, unknown> | null> {
+      réclamé et les demandes en file sont closes. Une opération dont le module destinataire est désactivé
+      (`modulesInactifs`) est close de même. */
+  async reclamer(
+    moduleActif: boolean,
+    modulesInactifs: readonly string[] = [],
+  ): Promise<Record<string, unknown> | null> {
     const ouverts: string[] = [];
     if (moduleActif) for (const t of TYPES_INTEGRATION) if (await this.flux.ouvert(t.flux)) ouverts.push(t.id);
+    const operationsFermees = Object.entries(OPERATIONS_EN_LOTS)
+      .filter(([, m]) => modulesInactifs.includes(m))
+      .map(([o]) => o);
     const r = await this.db.tx(async (c, k) => {
       await verrouFile(k);
       await this.menage(k, c);
+      if (operationsFermees.length) {
+        const fermees = await k
+          .updateTable('integration_executions')
+          .set({
+            etat: 'echec',
+            termine_le: sql<Date>`now()`,
+            erreur: 'Module destinataire désactivé : la demande n’a pas été transmise.',
+          })
+          .where('etat', '=', 'en_file')
+          .where('operation', 'in', operationsFermees)
+          .returning('id')
+          .execute();
+        for (const x of fermees)
+          await this.db.audit(EXECUTANT, null, 'integration.execution.terminee', x.id, { etat: 'echec' }, c);
+      }
       // Demandes à clore sans appel : instance désactivée, ou type dont le flux est fermé (module désactivé : tous).
       const bloquees = k
         .selectFrom('integrations')
@@ -439,7 +540,12 @@ export class Integrations {
         )
         .returningAll()
         .executeTakeFirst();
-      if (reclamee)
+      if (reclamee) {
+        await this.enLots[reclamee.operation as OperationIntegration]?.reclamee(
+          k,
+          reclamee.id,
+          reclamee.integration_id,
+        );
         await this.db.audit(
           EXECUTANT,
           null,
@@ -448,6 +554,7 @@ export class Integrations {
           { integration: reclamee.integration_id, operation: reclamee.operation },
           c,
         );
+      }
       return reclamee;
     });
     if (!r) return null;
@@ -476,6 +583,23 @@ export class Integrations {
     };
   }
 
+  /** `suivi integrations-lot <id>` : un lot d'éléments d'une exécution en cours dont l'opération est rapportée par lots. */
+  async lot(id: string, elements: unknown[]): Promise<{ elements: number; lots: number }> {
+    z.uuid().parse(id);
+    return this.db.tx(async (_c, k) => {
+      const cur = await k
+        .selectFrom('integration_executions')
+        .select(['operation'])
+        .where('id', '=', id)
+        .where('etat', '=', 'en_cours')
+        .forUpdate()
+        .executeTakeFirst();
+      const recepteur = cur && this.enLots[cur.operation as OperationIntegration];
+      if (!recepteur) throw new HttpError(409, 'Exécution absente, terminée ou sans envoi par lots.');
+      return recepteur.lot(k, id, elements);
+    });
+  }
+
   /** `suivi integrations-finish <id>` : enregistre le rapport (validé strictement, résultat typé par opération). */
   async terminer(id: string, rapport: unknown): Promise<ExecutionIntegrationDto> {
     z.uuid().parse(id);
@@ -499,6 +623,14 @@ export class Integrations {
         const v = schema?.safeParse(p.resultat);
         if (v?.success) resultat = v.data as Record<string, unknown>;
         else erreur = 'Résultat refusé : forme inattendue.';
+      }
+      const recepteur = this.enLots[cur.operation as OperationIntegration];
+      if (recepteur) {
+        const refus = await recepteur.terminee(k, c, id, resultat);
+        if (refus) {
+          resultat = null;
+          erreur = refus;
+        }
       }
       const fin = await k
         .updateTable('integration_executions')

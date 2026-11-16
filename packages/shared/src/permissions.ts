@@ -2,7 +2,8 @@
    Liste unique, utilisée par l'API (garde requirePermission, filtrage du temps réel) et par l'interface
    (affichage conditionnel ; le serveur reste seul juge). */
 
-/** Modules métier : chacun recevra ses tables lors de sa reprise (docs/ROADMAP.md). */
+/** Modules métier : chacun recevra ses tables lors de sa reprise (docs/ROADMAP.md). Leurs droits sont donnés par défaut au
+    contributeur et au lecteur, ouvrent l'accueil, les écrans muraux et les routes communes « métier ». */
 export const BUSINESS_MODULES = [
   'audit',
   'ecarts',
@@ -12,10 +13,13 @@ export const BUSINESS_MODULES = [
   'conformite',
   'incidents',
   'cartographie',
-  'vulnerabilites',
 ] as const;
 export const MODULES = [
   ...BUSINESS_MODULES,
+  // Vulnérabilités (ADR 0100) : hors des modules métier depuis le lot V5 (failles et machines de Tenable). Comme l'assistant,
+  // ses droits ne vont par défaut qu'à l'administrateur et au RSSI ; un rôle personnalisé peut les accorder. Réglage prudent,
+  // à confirmer par le RSSI (point ouvert 13 de l'ADR 0100).
+  'vulnerabilites',
   'documents',
   'import_export',
   'administration',

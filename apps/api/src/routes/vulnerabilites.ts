@@ -1,8 +1,13 @@
-/* Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1) et veille sur les sources publiques (lots V2 et V3). Toute
-   route passe par route() : session complète et double authentification, activation du module « vulnerabilites », droit
-   exigé, CSRF et origine sur les écritures. La veille se lit avec `lire` ; « Collecter maintenant » demande `administrer`.
-   Son flux s'ouvre par la route commune des flux (« Activer la veille », administrateur, validation explicite). */
+/* Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1), veille sur les sources publiques (lots V2 et V3), failles
+   et machines lues dans Tenable Security Center (lot V5). Toute route passe par route() : session complète et double
+   authentification, activation du module « vulnerabilites », droit exigé, CSRF et origine sur les écritures. La veille se
+   lit avec `lire` ; « Collecter maintenant » demande `administrer`. Son flux s'ouvre par la route commune des flux
+   (« Activer la veille », administrateur, validation explicite). Failles et machines : lecture à travers les droits du
+   périmètre de chaque machine (service FaillesDetectees) ; rôle et périmètre avec `modifier` et l'écriture sur le
+   périmètre ; « Synchroniser maintenant » relève du module Intégrations (routes/integrations.ts). */
 import {
+  AffectationMachine,
+  AffectationMachines,
   DemandeCollecte,
   type ProduitSurveilleDto,
   RechercheAvis,
@@ -10,6 +15,8 @@ import {
   ProduitSurveilleBody,
   ProduitSurveillePatch,
   ProduitsSurveillesQuery,
+  RechercheConstats,
+  RechercheMachines,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -140,5 +147,95 @@ export const vulnerabilitesRoutes = [
         throw new HttpError(429, 'Trop de demandes de collecte. Réessayez dans une heure.');
       return svc.vulnerabilites.veille.demander(body.source, sess.user, ip);
     },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/synchronisation',
+    summary:
+      'Failles détectées : état de la synchronisation de chaque instance Tenable (dernière exécution, dernière complète, inventaire)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.tenable.etat(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/constats',
+    summary:
+      'Failles détectées par Tenable (un constat par contrôle), présentes sur au moins une machine lisible ; recherche par CVE, numéro ou nom du contrôle ; filtres gravité, exploité, exploitable, non maintenu',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheConstats,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.constats((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/constats/:id',
+    summary: 'Fiche d’un constat : CVE (catalogue KEV), correctif, vecteur CVSS, machines lisibles regroupées par rôle',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines',
+    summary:
+      'Machines lisibles (périmètre, ou administration du module pour celles sans périmètre) ; recherche par nom, filtres rôle et périmètre ; constats présents par gravité',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheMachines,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.machines((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id',
+    summary: 'Une machine lisible (ETag : version du rôle et du périmètre)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const m = await svc.vulnerabilites.failles.machine((s as Session).user, params.id);
+      setEtag(reply, m.version);
+      return m;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/perimetres',
+    summary: 'Périmètres où la personne peut écrire : choix admis pour rattacher une machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    handler: async ({ svc, s }) => svc.vulnerabilites.failles.perimetresAffectables((s as Session).user),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/machines/:id',
+    summary:
+      'Rôle et périmètre d’une machine (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé ; retirer le périmètre demande administrer',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: AffectationMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const m = await svc.vulnerabilites.failles.affecter(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, m.version);
+      return m;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/machines/affectation',
+    summary:
+      'Rôle ou périmètre de plusieurs machines (200 au plus), tout ou rien ; chaque machine porte sa version attendue',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: AffectationMachines,
+    handler: async ({ svc, s, body, ip }) => svc.vulnerabilites.failles.affecterEnMasse(body, (s as Session).user, ip),
   }),
 ];
