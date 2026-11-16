@@ -1,7 +1,8 @@
 # ADR 0101 — Mandataire sortant (proxy) de l'établissement : un réglage unique pour les flux vers Internet
 
-- Statut : **proposée**, à valider par le RSSI. Numéro 0101 annoncé au RSSI le 16/11/2026 (libre sur toutes les branches du
-  dépôt à cette date). Aucun code.
+- Statut : **retenue pour réalisation, lot P1** (réglage et veille). Le RSSI a répondu le 16/11/2026 aux questions de cadrage
+  (décisions M1 à M4) et demandé de prévoir l'authentification et l'inspection ; la session en déduit son accord pour ce
+  premier lot (lecture de la session, à confirmer par lui). Numéro 0101 annoncé au RSSI le 16/11/2026.
 - Date : 2026-11-16
 - Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`)
 - Contexte : en réalisant la veille des vulnérabilités ([ADR 0100](0100-module-vulnerabilites.md)), le RSSI indique que le

@@ -39,6 +39,7 @@
 | V17 | Alerte critique | Une **grande fenêtre rouge** quand une faille critique de type zero-day touche le parc |
 | V18 | Systèmes qui ne sont plus maintenus | Les constats de Tenable **sans CVE** (système ou logiciel obsolète) entrent dans le module et comptent dans le rang de la machine (16/11/2026) |
 | V19 | Textes de Tenable | Affichés **en anglais, tels quels** : pas de traduction par le modèle (16/11/2026) |
+| V20 | Produit déclaré non détecté | Quand un produit surveillé (par exemple GLPI) n'est pas détecté automatiquement, le RSSI **relie lui-même le produit aux machines** qui le portent (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -122,6 +123,10 @@
      sinon par nom normalisé du fournisseur et du produit. Un rapprochement par nom est toujours **confirmé ou rejeté par une
      personne** ; un rejet n'est pas reproposé à données égales ;
    - **sans rapport connu** : la faille n'est pas suivie.
+
+   Un produit surveillé peut être **relié à la main à une ou plusieurs machines** (V20). Une faille publiée pour ce produit
+   est alors rattachée à ces machines avec la mention « déclaré », distincte de « détecté par Tenable » : elle compte pour la
+   machine, sans prétendre à une détection.
 
 9. **Priorité calculée par la plateforme, pas par le modèle.** Des règles déterministes classent chaque faille suivie selon
    quatre faits : exploitation avérée (présence au catalogue KEV, alerte du CERT-FR ou du CERT Santé), présence dans
