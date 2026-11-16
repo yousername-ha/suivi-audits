@@ -176,3 +176,20 @@
   - un tableau de métriques propre au module (doublon du Pilotage) ;
   - un champ « identifiant GLPI » dans le fournisseur (modèle de chaque fournisseur alourdi pour une seule source) ;
   - un second moteur d'import d'écarts à côté de celui de Tenacy.
+
+## Addendum du 16/11/2026 — portée d'une instance : organisation ou SMSI
+
+Accord du RSSI du 16/11/2026, dans la session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`).
+Il modifie la décision R11 (« une instance de connecteur par SMSI ») et le point 2 de la décision.
+
+- **Chaque type de connecteur déclare sa portée dans le catalogue** : `smsi` (une instance appartient à un SMSI, règle
+  d'origine, inchangée pour GLPI, ORADAD et Silène) ou `organisation` (l'instance n'appartient à aucun SMSI).
+- **Motif** : Tenable Security Center, premier connecteur réseau réalisé ([ADR 0100](0100-module-vulnerabilites.md)), couvre
+  tout le parc de l'organisation ; le rattacher à un seul SMSI serait faux.
+- **Conséquences** : le périmètre d'une instance est facultatif en base et contrôlé selon la portée du type. Une instance de
+  portée `organisation` se lit et s'administre avec les seuls droits du module Intégrations ; ce qu'elle rapporte est ensuite
+  lu à travers les droits du module qui l'exploite. La règle R13 (seul un connecteur du périmètre commun alimente des
+  indicateurs) ne change pas.
+- **Ordre de réalisation** : le socle (module, instances, secrets, file d'exécution, appels par l'exécutant) est réalisé avant
+  les lots ORADAD et Silène, pour le connecteur Tenable. Les autres parties du lot I1 (extraction du moteur d'écarts de
+  Tenacy, logos) restent à faire.
