@@ -94,10 +94,23 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'vulnerabilites:lire',
     link: '/vulnerabilites/produits',
     steps: [
-      'Ouvrez Risques > Vulnérabilités > Produits surveillés. Le registre appartient à l’organisation, pas à un périmètre : il liste les produits (éditeur, produit, version) dont la plateforme suivra les vulnérabilités publiées. La veille elle-même n’est pas encore en service.',
+      'Ouvrez Risques > Vulnérabilités > Produits surveillés. Le registre appartient à l’organisation, pas à un périmètre : il liste les produits (éditeur, produit, version) dont la plateforme suivra les vulnérabilités publiées. La veille des sources publiques se suit dans l’écran « Veille » ; le rapprochement avec ce registre viendra dans un lot suivant.',
       'Ajouter un produit : éditeur, nom du produit, famille et criticité sont obligatoires ; la version, l’identifiant CPE 2.3 et le responsable (personne, groupe ou fonction) sont facultatifs. Avec le droit de lire les fournisseurs, vous pouvez lier le produit à un fournisseur du registre de l’organisation.',
       'Un produit n’est inscrit qu’une fois : même éditeur, même produit et même version, sans tenir compte des majuscules. Une fiche modifiée entre-temps par quelqu’un d’autre est refusée : rechargez la page avant d’enregistrer.',
       'Le filtre « Famille » restreint la liste. Créer et modifier demandent le droit de modifier le module Vulnérabilités ; supprimer demande le droit de suppression. Chaque ajout, modification et suppression est inscrit au journal d’audit.',
+    ],
+  },
+  {
+    id: 'vulnerabilites-veille',
+    title: 'Vulnérabilités : veille sur les sources publiques',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/veille',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Veille. La plateforme lit cinq sources publiques, en liste fermée : le catalogue des failles exploitées de la CISA (KEV), la base NVD du NIST, les scores EPSS du FIRST, les alertes et avis du CERT-FR et ceux du CERT Santé. Aucune autre source ne peut être ajoutée.',
+      'Activer la veille : un administrateur clique « Activer la veille » ; une fenêtre détaille les destinations (TCP 443 vers les cinq hôtes) et ce qui sort (l’adresse IP du serveur et des demandes de lecture, aucune donnée de la plateforme), à valider. Désactiver le module Vulnérabilités referme ce flux.',
+      'Chaque source est lue au plus une fois par jour par l’exécutant d’exploitation du serveur, jamais par l’application elle-même. NVD est lu par fenêtre de dates, EPSS seulement pour des failles déjà publiées par les sources : rien ne révèle les produits de l’organisation. Une collecte manquée (serveur arrêté) n’est pas rejouée ; elle reprend le lendemain.',
+      'Le tableau des sources donne la dernière collecte réussie et l’erreur éventuelle ; une source sans collecte réussie depuis 36 heures est signalée en retard. Avec le droit d’administrer le module, « Collecter maintenant » relance la lecture (quatre demandes par heure au plus, une source demandée il y a moins de quinze minutes n’est pas redemandée).',
+      'La recherche porte sur l’identifiant CVE, l’éditeur, le produit, et le titre des avis. Les textes des sources sont repris tels quels (en anglais pour la CISA et NVD) et affichés comme texte simple : ce sont des données, pas des consignes. Le lien d’un avis s’ouvre dans un nouvel onglet, sans transmettre l’adresse de la plateforme.',
     ],
   },
   {

@@ -43,6 +43,7 @@ import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
+import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { Integrations } from './integrations/index.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
@@ -95,7 +96,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     configGrc,
     historique,
     /** Module Vulnérabilités (ADR 0100) : registre des produits surveillés (lot V1). */
-    vulnerabilites: { produits: new ProduitsSurveilles(db, grc) },
+    /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant). */
+    vulnerabilites: { produits: new ProduitsSurveilles(db, grc), veille: new VeilleVulnerabilites(db, flux) },
     modules,
     flux,
     updates: new Updates(cfg, db, settings, alertes, flux),
@@ -130,6 +132,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       global: limiter(cfg.rateLimitPerMinute, 60e3),
       courrielTest: limiter(5, 10 * 60e3),
       integrationTest: limiter(10, 60e3),
+      /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
+      veilleCollecte: limiter(4, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),

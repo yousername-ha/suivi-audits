@@ -132,6 +132,7 @@ test('installation : jeton, création de l’administrateur, activation de la do
     'Antivirus (mise à jour des signatures)',
     'Mises à jour de la plateforme',
     'Tenable Security Center',
+    'Veille sur les vulnérabilités',
   ])
     await expect(page.getByRole('region', { name: nom }).getByRole('button', { name: 'Plus tard' })).toBeVisible();
   await antivirus.getByRole('button', { name: 'Activer' }).click();

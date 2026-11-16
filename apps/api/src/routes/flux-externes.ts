@@ -49,6 +49,17 @@ export const fluxExternesRoutes = [
           `Ce flux s’ouvre en activant le module « ${f.libelle} » (${f.reglage.libelle} : ${f.activation.geste}).`,
           { reason: 'flux_par_module', module: m },
         );
+      // Un flux rattaché à un module désactivé ne s'ouvre pas : la désactivation du module le referme, sa réactivation ne
+      // le rouvre pas (veille des vulnérabilités, ADR 0100).
+      if (body.ouvert && f.moduleActivation && (await svc.modules.state(true)).disabled.includes(f.moduleActivation))
+        throw new HttpError(
+          409,
+          `Activez d’abord le module dans Administration, Modules : le flux « ${f.libelle} » en dépend.`,
+          {
+            reason: 'flux_module_desactive',
+            module: f.moduleActivation,
+          },
+        );
       return svc.flux.changer(m, body.ouvert, s!.user, ip);
     },
   }),

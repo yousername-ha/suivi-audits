@@ -211,6 +211,20 @@
 - **Socle des connecteurs** (16/11/2026) : module `integrations`, migration `073`, connecteur Tenable Security Center limité
   au test de connexion, flux `tenable` ; voir l'addendum de l'[ADR 0076](0076-module-integrations.md). Les points d'accès
   portent le préfixe `/rest`, observé sur l'instance du RSSI.
+- **Veille, lots V2 et V3** (16/11/2026) : migration `074`, collecte des cinq sources par l'exécutant
+  (`scripts/veille-vulnerabilites.py`), flux `veille-vulnerabilites`, écran « Veille » avec recherche. Précisions par rapport
+  aux points 3 et 5, à confirmer par le RSSI :
+  - **aucune redirection n'est suivie**, même vers un hôte de la liste (plus strict que le point 3) ;
+  - CERT-FR : hôte `cert.cyber.gouv.fr` ; son flux RSS ne cite aucune CVE, elles sont lues dans l'export JSON de chaque
+    alerte et de chaque avis nouveau, sur le même hôte (80 lectures au plus par collecte) ;
+  - une collecte par source et par jour, plus « Collecter maintenant » ; NVD par fenêtre de dates de modification (7 jours
+    de rattrapage au plus) ; EPSS demandé seulement pour des CVE déjà publiées par les autres sources, 2 000 au plus par jour ;
+  - une source est signalée en retard après 36 heures sans collecte réussie ;
+  - le retour de l'exécutant se fait par lots bornés (500 éléments, 40 lots par collecte) ;
+  - les scripts de l'exécutant joignent les sources **directement** : un serveur qui ne sort que par un mandataire (proxy)
+    n'est pas pris en charge à ce jour.
+  Non vérifié : aucune collecte réelle par l'exécutant (tests sur un faux service local), conditions d'usage des cinq sources,
+  limites de débit de NVD et d'EPSS.
 
 ## Conséquences
 
@@ -255,3 +269,5 @@
 14. Unité affichée : Tenable raisonne par contrôle (un correctif, plusieurs CVE), la veille par CVE. Les listes et le radar
     montrent-ils les contrôles de Tenable regroupés (proposé), ou chaque CVE ?
 15. Radar : le parc compte plusieurs milliers de constats ; le radar montre-t-il les plus prioritaires seulement (proposé) ?
+16. Sortie du serveur vers Internet : directe (seul cas pris en charge), ou par un mandataire (proxy) de l'établissement ?
+17. Rapprochement du lot V4 : utiliser aussi le champ « affected » de NVD (éditeur et produit hors CPE) ?

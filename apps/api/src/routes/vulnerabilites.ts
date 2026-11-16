@@ -1,7 +1,12 @@
-/* Module Vulnérabilités (ADR 0100), lot V1 : produits surveillés. Toute route passe par route() : session complète et
-   double authentification, activation du module « vulnerabilites », droit exigé, CSRF et origine sur les écritures. */
+/* Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1) et veille sur les sources publiques (lots V2 et V3). Toute
+   route passe par route() : session complète et double authentification, activation du module « vulnerabilites », droit
+   exigé, CSRF et origine sur les écritures. La veille se lit avec `lire` ; « Collecter maintenant » demande `administrer`.
+   Son flux s'ouvre par la route commune des flux (« Activer la veille », administrateur, validation explicite). */
 import {
+  DemandeCollecte,
   type ProduitSurveilleDto,
+  RechercheAvis,
+  RechercheFailles,
   ProduitSurveilleBody,
   ProduitSurveillePatch,
   ProduitsSurveillesQuery,
@@ -9,6 +14,7 @@ import {
 import { z } from 'zod';
 import type { Session } from '../auth.js';
 import { requireIfMatch, setEtag } from '../http/concurrency.js';
+import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 
 const tags = ['Vulnérabilités'];
@@ -89,5 +95,50 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:modifier',
     handler: async ({ svc }) => svc.vulnerabilites.produits.responsables(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/etat',
+    summary:
+      'Veille : état du flux, de l’exécutant et de chaque source (dernière collecte réussie, erreur, retard, dernière collecte)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.veille.etat(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/avis',
+    summary:
+      'Veille : alertes et avis du CERT-FR et du CERT Santé, paginés ; recherche par CVE citée, identifiant ou titre',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAvis,
+    handler: async ({ svc, query }) => svc.vulnerabilites.veille.avis(query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/failles',
+    summary:
+      'Veille : failles (CVE) connues, paginées ; `kev=oui` pour le catalogue des failles exploitées ; recherche par CVE, éditeur, produit ou nom',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheFailles,
+    handler: async ({ svc, query }) => svc.vulnerabilites.veille.failles(query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/veille/collectes',
+    summary:
+      'Collecter maintenant : inscrit une collecte par source (ou pour la source donnée), traitée par l’exécutant ; flux ouvert exigé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: DemandeCollecte,
+    status: 201,
+    handler: async ({ svc, s, body, ip }) => {
+      const sess = s as Session;
+      if (!svc.limits.veilleCollecte(sess.user.id))
+        throw new HttpError(429, 'Trop de demandes de collecte. Réessayez dans une heure.');
+      return svc.vulnerabilites.veille.demander(body.source, sess.user, ip);
+    },
   }),
 ];

@@ -4541,3 +4541,13 @@ tr[data-importe='oui'] {
   width: 2.25em;
   height: 2.25em;
 }
+
+/* Veille des vulnérabilités (module Vulnérabilités, ADR 0100) : identifiants et vecteurs en chasse fixe, textes des sources
+   coupés n'importe où (un mot démesuré ne déborde pas). */
+.veille-code {
+  font-family: var(--mantine-font-family-monospace);
+  overflow-wrap: anywhere;
+}
+.veille-texte {
+  overflow-wrap: anywhere;
+}

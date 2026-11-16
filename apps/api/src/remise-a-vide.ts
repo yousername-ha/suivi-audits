@@ -157,6 +157,12 @@ export const TABLES_TRAVAIL = [
   'cfg_usages',
   // Module Vulnérabilités (ADR 0100) : produits surveillés saisis par les utilisateurs.
   'vulnerabilites_produits',
+  // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : données publiques recalculables par une nouvelle collecte, état des
+  // sources (créneau, fenêtre NVD) et journal des collectes ; effacés ensemble pour repartir d'une veille vierge.
+  'vulnerabilites_veille_sources',
+  'vulnerabilites_veille_cve',
+  'vulnerabilites_veille_avis',
+  'vulnerabilites_veille_collectes',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

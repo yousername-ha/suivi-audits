@@ -58,7 +58,7 @@ const terminer = (html: string) =>
   /<button[^>]*>(?:(?!<\/button>).)*Terminer(?:(?!<\/button>).)*<\/button>/s.exec(html)![0];
 
 describe('installation, flux vers l’extérieur : modes', () => {
-  it('antivirus et mises à jour s’ouvrent depuis l’étape ; courriel, ACME et Tenable depuis leur page', () => {
+  it('antivirus, mises à jour et veille s’ouvrent depuis l’étape ; courriel, ACME et Tenable depuis leur page', () => {
     expect(FLUX_MODULES.map((m) => [m, mode(m)])).toEqual([
       ['assistant', 'direct'],
       ['courriel', 'page'],
@@ -66,6 +66,7 @@ describe('installation, flux vers l’extérieur : modes', () => {
       ['antivirus', 'direct'],
       ['mises-a-jour', 'direct'],
       ['tenable', 'page'],
+      ['veille-vulnerabilites', 'direct'],
     ]);
   });
   it('sans le droit de régler l’assistant (ou module désactivé), l’assistant s’active depuis sa page', () => {

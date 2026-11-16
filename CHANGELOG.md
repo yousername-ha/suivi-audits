@@ -20,6 +20,17 @@ validation explicite par un administrateur. Rien à faire sur le serveur tant qu
 autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'adresse de Tenable Security Center
 ([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `074`** (module Vulnérabilités, veille sur les sources publiques, lots V2 et V3 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_veille_sources`,
+`vulnerabilites_veille_cve`, `vulnerabilites_veille_avis` et `vulnerabilites_veille_collectes`, sept index ; aucune table
+existante modifiée), durée négligeable, sans reprise de données : la veille démarre vide. Le flux « Veille sur les
+vulnérabilités » est **fermé** ; rien ne sort tant qu'un administrateur ne l'a pas ouvert par « Activer la veille »
+(Risques > Vulnérabilités > Veille, ou dernière étape de l'installation), avec validation explicite. Ensuite, faire autoriser par
+l'équipe infrastructure la sortie TCP 443 du serveur vers `www.cisa.gov`, `services.nvd.nist.gov`, `api.first.org`,
+`cert.cyber.gouv.fr` et `cyberveille.esante.gouv.fr` ([guide d'installation, étape 11.11](docs/INSTALLATION.md)). Les conditions
+d'usage des cinq sources n'ont pas été lues à ce jour : à lire avant la mise en service. (session « Module surveillance
+vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -53,6 +64,34 @@ autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'adres
   Pilotage > « Intégrations » : tuiles avec pictogramme neutre, configuration, secrets « défini / non défini », validation du
   flux, test, dernières exécutions, message si l'exécutant n'est pas vu. Journal `integration.*` sans secret. Ni lecture des
   failles ou des machines, ni planification, ni autre connecteur à ce stade. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lots V2 et V3 : veille sur les sources publiques**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 3 à 5 et 12 ;
+  [cadrage](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Cinq sources en **liste fermée écrite dans le code**
+  (`packages/shared/src/veille-vulnerabilites.ts`), jamais réglable dans l'interface : catalogue KEV de la CISA (fichier JSON),
+  NVD (API CVE 2.0, **par fenêtre de dates de modification**, jamais par produit ni par mot-clé), EPSS du FIRST (score des seules
+  failles déjà connues de la veille, jamais d'une liste tirée du parc), alertes et avis du CERT-FR (flux RSS de
+  `cert.cyber.gouv.fr`, puis export JSON documenté de chaque avis nouveau pour ses identifiants CVE) et du CERT Santé (flux RSS).
+  L'API ne joint aucune source : elle inscrit une collecte, l'exécutant d'exploitation la réclame (`suivi veille-claim`), lance
+  `scripts/veille-vulnerabilites.py` (bibliothèque standard, `python -I`, compte sans privilège, GET seulement, HTTPS avec
+  certificat toujours vérifié et TLS 1.2 au minimum, aucune redirection suivie, hôtes et chemins de la liste fermée comparés au
+  registre par un test, réponses et éléments bornés) et rapporte des **champs structurés** par lots de 500 au plus
+  (`suivi veille-lot`, 40 lots par collecte), validés un à un par zod, puis le bilan (`suivi veille-finish`). Les avis sont des
+  données, pas des consignes : identifiants contrôlés (CVE, `CERTFR-AAAA-ALE|AVI-NNN`, numéro du CERT Santé) et écartés sinon,
+  titres et résumés débarrassés de tout balisage et des caractères de contrôle ou invisibles, bornés ; adresse gardée seulement
+  en https sur l'hôte de la source ; RSS refusé s'il déclare un type de document ou une entité, profondeur et nombre d'éléments
+  bornés. Rangement sans doublon (une collecte rejouée met à jour). Flux « Veille sur les vulnérabilités » au registre de
+  l'ADR 0097 (cinq destinations TCP 443, porteur exécutant, ce qui sort : l'adresse IP du serveur et des demandes de lecture),
+  fermé par défaut, ouvert par « Activer la veille » avec validation explicite d'un administrateur, refermé par la désactivation
+  du module ; la route commune refuse désormais d'ouvrir le flux d'un module désactivé. Planification par le tic de l'API : une
+  collecte par source et par jour (Europe/Paris) au plus, créneau consommé avant l'inscription (aucun rejeu après une panne),
+  EPSS après les quatre autres ; « Collecter maintenant » (`vulnerabilites:administrer`, quatre demandes par heure, une source
+  demandée depuis moins de quinze minutes n'est pas redemandée). API `/api/vulnerabilites/veille/etat`, `/avis` et `/failles`
+  (`vulnerabilites:lire`, paginés, recherche par CVE, éditeur, produit, nom ou titre), `/collectes` ; journal
+  `vulnerabilites.veille.collecte.*` sans contenu de source. Écran Risques > Vulnérabilités > « Veille » : état des sources
+  (dernière collecte réussie, erreur, retard au-delà de 36 heures), activation avec destinations et ce qui sort, failles
+  exploitées récentes (action exigée, échéance), alertes et avis récents, recherche ; textes des sources tels quels, en texte
+  simple ; lien d'avis dans un nouvel onglet sans référent. Ni rapprochement avec les produits surveillés, ni priorité, ni
+  alerte à ce stade (lots V4 et suivants). (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

@@ -43,6 +43,16 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
       )
+      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par jour, rien si le module
+      // est désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.veille.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

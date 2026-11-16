@@ -5,9 +5,18 @@
    port est porté par un module de ce registre ou figure dans la courte liste du cœur de plateforme. */
 import { z } from 'zod';
 import type { Module } from './permissions.js';
+import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
-export const FLUX_MODULES = ['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour', 'tenable'] as const;
+export const FLUX_MODULES = [
+  'assistant',
+  'courriel',
+  'acme',
+  'antivirus',
+  'mises-a-jour',
+  'tenable',
+  'veille-vulnerabilites',
+] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
 
@@ -217,6 +226,31 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     pareFeu: ['Sortie TCP 443 du serveur vers l’adresse de Tenable Security Center.'],
     siFerme:
       'Aucune requête ne part vers Tenable Security Center : une demande en file est close sans appel ; la configuration et les clés sont conservées.',
+  },
+  {
+    // Veille du module Vulnérabilités sur cinq sources publiques (ADR 0100, points 3 à 5 ; lots V2 et V3). Les hôtes viennent
+    // de la liste fermée du module (veille-vulnerabilites.ts), recopiée dans le script de l'exécutant.
+    id: 'veille-vulnerabilites',
+    libelle: 'Veille sur les vulnérabilités',
+    role: 'Lire les catalogues et flux publics de vulnérabilités (CISA KEV, NVD, EPSS, CERT-FR, CERT Santé) pour le module Vulnérabilités.',
+    destinations: SOURCES_VEILLE_DEFINITIONS.map((s) => ({
+      sens: 'sortant' as const,
+      hote: `${s.hote} (${s.organisme})`,
+      ports: 'TCP 443 (HTTPS)',
+    })),
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR et du CERT Santé. Aucune donnée métier : ni produit surveillé, ni machine, ni contenu de la plateforme.',
+    reglage: { libelle: 'Risques > Vulnérabilités > Veille', lien: '/vulnerabilites/veille' },
+    activation: { par: 'flux', geste: 'Bouton « Activer la veille »' },
+    moduleActivation: 'vulnerabilites',
+    pareFeu: [`Sortie TCP 443 du serveur vers ${SOURCES_VEILLE_DEFINITIONS.map((s) => s.hote).join(', ')}.`],
+    siFerme:
+      'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les failles et avis déjà collectés restent consultables.',
   },
 ];
 

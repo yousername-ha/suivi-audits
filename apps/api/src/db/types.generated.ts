@@ -1577,6 +1577,80 @@ export interface VulnerabilitesProduits {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesVeilleAvis {
+  id: Generated<string>;
+  source: "cert-fr" | "cert-sante";
+  identifiant: string;
+  nature: "alerte" | "avis";
+  titre: string;
+  resume: Generated<string>;
+  adresse: string | null;
+  publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  cves: Generated<string[]>;
+  cves_lues: Generated<boolean>;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesVeilleCollectes {
+  id: Generated<string>;
+  source: "cisa-kev" | "nvd" | "epss" | "cert-fr" | "cert-sante";
+  origine: "manuel" | "planifie";
+  etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
+  demande_par: string;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fenetre_debut: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fenetre_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  ecartes: Generated<number>;
+  tronque: Generated<boolean>;
+  erreur: string | null;
+}
+
+export interface VulnerabilitesVeilleCve {
+  cve: string;
+  description: string | null;
+  publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  modifie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  cvss31_score: ColumnType<string | null, number | string | null, number | string | null>;
+  cvss31_vecteur: string | null;
+  cvss31_gravite: string | null;
+  cvss40_score: ColumnType<string | null, number | string | null, number | string | null>;
+  cvss40_vecteur: string | null;
+  cvss40_gravite: string | null;
+  editeurs: Generated<string[]>;
+  produits: Generated<string[]>;
+  nvd_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  epss_score: ColumnType<string | null, number | string | null, number | string | null>;
+  epss_centile: ColumnType<string | null, number | string | null, number | string | null>;
+  epss_date: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  epss_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  kev_editeur: string | null;
+  kev_produit: string | null;
+  kev_nom: string | null;
+  kev_description: string | null;
+  kev_action: string | null;
+  kev_ajout: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  kev_echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  kev_rancongiciel: boolean | null;
+  kev_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  avis_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesVeilleSources {
+  source: "cisa-kev" | "nvd" | "epss" | "cert-fr" | "cert-sante";
+  derniere_reussite: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  dernier_essai: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  creneau: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fenetre_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
 export interface WallScreens {
   id: Generated<string>;
   name: string;
@@ -1742,6 +1816,10 @@ export interface DB {
   users: Users;
   v_documents: VDocuments;
   vulnerabilites_produits: VulnerabilitesProduits;
+  vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;
+  vulnerabilites_veille_collectes: VulnerabilitesVeilleCollectes;
+  vulnerabilites_veille_cve: VulnerabilitesVeilleCve;
+  vulnerabilites_veille_sources: VulnerabilitesVeilleSources;
   wall_screens: WallScreens;
   webauthn_challenges: WebauthnChallenges;
   webauthn_credentials: WebauthnCredentials;

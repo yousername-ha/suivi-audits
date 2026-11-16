@@ -1,0 +1,778 @@
+/* Module Vulnérabilités (ADR 0100, lots V2 et V3) : veille sur cinq sources publiques (CISA KEV, NVD, EPSS, CERT-FR,
+   CERT Santé). L'API n'a aucun accès réseau sortant (ADR 0014) : elle inscrit une collecte « en file » (tic quotidien, ou
+   « Collecter maintenant ») ; l'exécutant d'exploitation (scripts/exploitation-worker.py) la réclame par la CLI
+   (`suivi veille-claim`), lance le script isolé scripts/veille-vulnerabilites.py, rapporte les éléments par lots bornés
+   (`suivi veille-lot`) puis termine (`suivi veille-finish`). Modèle suivi : le socle des connecteurs (integrations/index.ts).
+   - Flux « veille-vulnerabilites » (ADR 0097), fermé par défaut, ouvert par « Activer la veille » (route commune des flux,
+     validation explicite), refermé par la désactivation du module. Flux fermé ou module désactivé : rien n'est inscrit ni
+     réclamé ; une collecte en file est close sans appel.
+   - Planification : une collecte par source et par jour (Europe/Paris) au plus ; le créneau du jour est consommé avant
+     l'inscription, dans la même transaction : une collecte perdue (exécutant absent, panne) n'est pas rejouée. EPSS passe
+     après les quatre autres sources du jour, puisqu'il ne note que des failles déjà connues de la veille.
+   - Les éléments sont des données publiques, validées un à un par le schéma de leur source (packages/shared) et rangées sans
+     doublon (clé de la faille, ou source et identifiant de l'avis) : une collecte rejouée met à jour, n'ajoute rien.
+   Droits contrôlés par route() (lire, administrer) ; journal `vulnerabilites.veille.*` sans contenu de source. Accès aux
+   données en Kysely (ADR 0062). */
+import {
+  CVE_ID,
+  ELEMENT_VEILLE,
+  type AvisVeilleDto,
+  type CollecteVeilleDto,
+  type ElementAvis,
+  type ElementEpss,
+  type ElementKev,
+  type ElementNvd,
+  type EtatVeilleDto,
+  type FailleVeilleDto,
+  type GraviteCvss,
+  LotVeille,
+  type PageVeille,
+  RapportCollecte,
+  type RechercheAvis,
+  type RechercheFailles,
+  SOURCES_VEILLE,
+  SOURCES_VEILLE_DEFINITIONS,
+  type SourceVeille,
+  VEILLE_BORNES,
+  VEILLE_PAR_PAGE,
+  VEILLE_RETARD_HEURES,
+} from '@suivi/shared';
+import { sql, type Selectable } from 'kysely';
+import { z } from 'zod';
+import type { Actor, Client, Db, Kdb } from '../db/db.js';
+import type { VulnerabilitesVeilleCollectes } from '../db/types.generated.js';
+import type { FluxExternes } from '../flux-externes.js';
+import { HttpError } from '../http/errors.js';
+
+type LigneCollecte = Selectable<VulnerabilitesVeilleCollectes>;
+
+const FLUX = 'veille-vulnerabilites' as const;
+const FUSEAU = 'Europe/Paris';
+/** Verrou consultatif de la file des collectes (727277 : courriels, 727278 : connecteurs). */
+const verrouFile = (k: Kdb) => sql`SELECT pg_advisory_xact_lock(727279)`.execute(k);
+/** Une collecte non réclamée après ce délai expire ; une collecte « en cours » au-delà est considérée interrompue (NVD
+    attend six secondes entre deux pages, le CERT-FR lit l'export de chaque avis nouveau). */
+const EXPIRATION_FILE = sql<Date>`now() - interval '30 minutes'`;
+const ABANDON_EN_COURS = sql<Date>`now() - interval '20 minutes'`;
+/** « Collecter maintenant » : une source déjà demandée à la main depuis moins de ce délai n'est pas redemandée. */
+const INTERVALLE_MANUEL = sql<Date>`now() - interval '15 minutes'`;
+/** Fenêtre NVD : la suivante part de la fin de la précédente réussie ; jamais plus de sept jours en arrière (le rattrapage
+    d'une longue interruption est borné), un jour pour la première collecte. */
+const NVD_PREMIERE_FENETRE_MS = 24 * 3_600_000;
+const NVD_RATTRAPAGE_MAX_MS = 7 * 24 * 3_600_000;
+/** Avis du CERT-FR déjà lus (identifiants CVE connus) remis au script, qui ne relit pas leur export : bornés. */
+const CERTFR_CONNUS_MAX = 2000;
+const EXECUTANT = { username: 'exécutant serveur' };
+const PLANIFICATION = { username: 'planification' };
+/** Ordre de planification : EPSS en dernier. */
+const AVANT_EPSS: SourceVeille[] = ['cisa-kev', 'nvd', 'cert-fr', 'cert-sante'];
+
+const versCollecte = (r: LigneCollecte): CollecteVeilleDto => ({
+  id: r.id,
+  source: r.source,
+  origine: r.origine,
+  etat: r.etat,
+  demandePar: r.demande_par,
+  demandeLe: r.demande_le.toISOString(),
+  termineLe: r.termine_le?.toISOString() ?? null,
+  elements: r.elements,
+  tronque: r.tronque,
+  erreur: r.erreur,
+});
+
+/** Motif ILIKE littéral : les jokers saisis sont échappés. */
+const litteral = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
+const nombre = (v: string | null) => (v === null ? null : Number(v));
+/** Jour courant (AAAA-MM-JJ) dans le fuseau de la plateforme. */
+const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
+
+export class VeilleVulnerabilites {
+  constructor(
+    private readonly db: Db,
+    private readonly flux: FluxExternes,
+  ) {}
+
+  /* ---------------------------------------------------------------- Lecture (vulnerabilites:lire) */
+  async etat(): Promise<EtatVeilleDto> {
+    const flux = await this.flux.lire(FLUX);
+    const lignes = new Map(
+      (await this.db.k.selectFrom('vulnerabilites_veille_sources').selectAll().execute()).map((l) => [l.source, l]),
+    );
+    const dernieres = new Map(
+      (
+        await this.db.k
+          .selectFrom('vulnerabilites_veille_collectes')
+          .selectAll()
+          .distinctOn('source')
+          .orderBy('source')
+          .orderBy('demande_le', 'desc')
+          .orderBy('id')
+          .execute()
+      ).map((c) => [c.source, versCollecte(c)]),
+    );
+    const limite = Date.now() - VEILLE_RETARD_HEURES * 3_600_000;
+    return {
+      flux: { ouvert: flux.ouvert, applique: flux.applique },
+      executant: { disponible: await this.executantDisponible() },
+      sources: SOURCES_VEILLE_DEFINITIONS.map((d) => {
+        const l = lignes.get(d.id);
+        const reussite = l?.derniere_reussite ?? null;
+        return {
+          source: d.id,
+          libelle: d.libelle,
+          organisme: d.organisme,
+          hote: d.hote,
+          format: d.format,
+          langue: d.langue,
+          demande: d.demande,
+          derniereReussite: reussite?.toISOString() ?? null,
+          dernierEssai: l?.dernier_essai?.toISOString() ?? null,
+          erreur: l?.erreur ?? null,
+          enRetard: flux.ouvert && (!reussite || reussite.getTime() < limite),
+          derniereCollecte: dernieres.get(d.id) ?? null,
+        };
+      }),
+    };
+  }
+
+  /** Alertes et avis, les plus récents d'abord ; recherche par identifiant CVE cité, identifiant de l'avis ou titre. */
+  async avis(q: RechercheAvis): Promise<PageVeille<AvisVeilleDto>> {
+    let base = this.db.k.selectFrom('vulnerabilites_veille_avis');
+    if (q.source) base = base.where('source', '=', q.source);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = litteral(texte);
+      base = /^cve-\d/i.test(texte)
+        ? base.where(sql<boolean>`EXISTS (SELECT 1 FROM unnest(cves) c WHERE c ILIKE ${`${motif.toUpperCase()}%`})`)
+        : base.where((eb) => eb.or([eb('titre', 'ilike', `%${motif}%`), eb('identifiant', 'ilike', `%${motif}%`)]));
+    }
+    const { n } = await base.select(sql<number>`count(*)::int`.as('n')).executeTakeFirstOrThrow();
+    const lignes = await base
+      .select(['id', 'source', 'identifiant', 'nature', 'titre', 'resume', 'adresse', 'publie_le', 'cves', 'vu_le'])
+      .orderBy(sql`publie_le DESC NULLS LAST`)
+      .orderBy('identifiant', 'desc')
+      .limit(VEILLE_PAR_PAGE)
+      .offset((q.page - 1) * VEILLE_PAR_PAGE)
+      .execute();
+    return {
+      total: n,
+      page: q.page,
+      parPage: VEILLE_PAR_PAGE,
+      elements: lignes.map((l) => ({
+        id: l.id,
+        source: l.source,
+        identifiant: l.identifiant,
+        nature: l.nature,
+        titre: l.titre,
+        resume: l.resume,
+        adresse: l.adresse,
+        publieLe: l.publie_le?.toISOString() ?? null,
+        cves: l.cves,
+        vuLe: l.vu_le.toISOString(),
+      })),
+    };
+  }
+
+  /** Failles connues de la veille ; `kev` : celles du catalogue des failles exploitées, les plus récemment ajoutées d'abord.
+      Recherche par identifiant CVE, éditeur, produit ou nom de la faille. */
+  async failles(q: RechercheFailles): Promise<PageVeille<FailleVeilleDto>> {
+    let base = this.db.k.selectFrom('vulnerabilites_veille_cve');
+    if (q.kev) base = base.where('kev_ajout', 'is not', null);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = litteral(texte);
+      base = /^cve-\d/i.test(texte)
+        ? base.where('cve', 'like', `${motif.toUpperCase()}%`)
+        : base.where((eb) =>
+            eb.or([
+              eb('kev_editeur', 'ilike', `%${motif}%`),
+              eb('kev_produit', 'ilike', `%${motif}%`),
+              eb('kev_nom', 'ilike', `%${motif}%`),
+              sql<boolean>`EXISTS (SELECT 1 FROM unnest(editeurs) e WHERE e ILIKE ${`%${motif}%`})`,
+              sql<boolean>`EXISTS (SELECT 1 FROM unnest(produits) p WHERE p ILIKE ${`%${motif}%`})`,
+            ]),
+          );
+    }
+    const { n } = await base.select(sql<number>`count(*)::int`.as('n')).executeTakeFirstOrThrow();
+    const lignes = await base
+      .selectAll()
+      .select([
+        sql<string | null>`kev_ajout::text`.as('kev_ajout_t'),
+        sql<string | null>`kev_echeance::text`.as('kev_echeance_t'),
+        sql<string | null>`epss_date::text`.as('epss_date_t'),
+      ])
+      .orderBy(q.kev ? sql`kev_ajout DESC` : sql`coalesce(modifie_le, kev_le, avis_le, cree_le) DESC`)
+      .orderBy('cve', 'desc')
+      .limit(VEILLE_PAR_PAGE)
+      .offset((q.page - 1) * VEILLE_PAR_PAGE)
+      .execute();
+    const cvss = (score: string | null, vecteur: string | null, gravite: string | null) =>
+      score !== null && vecteur && gravite ? { score: Number(score), vecteur, gravite: gravite as GraviteCvss } : null;
+    return {
+      total: n,
+      page: q.page,
+      parPage: VEILLE_PAR_PAGE,
+      elements: lignes.map((l) => ({
+        cve: l.cve,
+        description: l.description,
+        publieLe: l.publie_le?.toISOString() ?? null,
+        modifieLe: l.modifie_le?.toISOString() ?? null,
+        cvss31: cvss(l.cvss31_score, l.cvss31_vecteur, l.cvss31_gravite),
+        cvss40: cvss(l.cvss40_score, l.cvss40_vecteur, l.cvss40_gravite),
+        editeurs: l.editeurs,
+        produits: l.produits,
+        epss:
+          l.epss_score !== null && l.epss_date_t
+            ? { score: nombre(l.epss_score)!, centile: nombre(l.epss_centile) ?? 0, date: l.epss_date_t }
+            : null,
+        kev: l.kev_ajout_t
+          ? {
+              editeur: l.kev_editeur ?? '',
+              produit: l.kev_produit ?? '',
+              nom: l.kev_nom ?? '',
+              description: l.kev_description ?? '',
+              action: l.kev_action ?? '',
+              ajoutLe: l.kev_ajout_t,
+              echeance: l.kev_echeance_t,
+              rancongiciel: l.kev_rancongiciel,
+            }
+          : null,
+      })),
+    };
+  }
+
+  /* ---------------------------------------------------------------- Collecte manuelle (vulnerabilites:administrer) */
+  /** « Collecter maintenant » : inscrit une collecte par source demandée, sauf si elle est déjà en file ou en cours, ou si
+      elle a été demandée à la main depuis moins de quinze minutes. Refusé si le flux est fermé ou l'exécutant absent. */
+  async demander(source: SourceVeille | undefined, user: Actor, ip: string): Promise<CollecteVeilleDto[]> {
+    await this.flux.exiger(FLUX);
+    if (!(await this.executantDisponible()))
+      throw new HttpError(
+        503,
+        'L’exécutant d’exploitation du serveur n’est pas disponible : c’est lui qui lit les sources (guide d’installation, étape 11.6).',
+      );
+    const voulues = source ? [source] : [...SOURCES_VEILLE];
+    const crees = await this.db.tx(async (c, k) => {
+      await verrouFile(k);
+      await this.menage(k, c);
+      const out: LigneCollecte[] = [];
+      for (const s of voulues) {
+        const occupee = await k
+          .selectFrom('vulnerabilites_veille_collectes')
+          .select('id')
+          .where('source', '=', s)
+          .where((eb) =>
+            eb.or([
+              eb('etat', 'in', ['en_file', 'en_cours']),
+              eb.and([eb('origine', '=', 'manuel'), eb('demande_le', '>', INTERVALLE_MANUEL)]),
+            ]),
+          )
+          .executeTakeFirst();
+        if (occupee) continue;
+        const r = await this.inscrire(k, c, s, 'manuel', user, ip);
+        out.push(r);
+      }
+      return out;
+    }, user.username);
+    if (!crees.length)
+      throw new HttpError(
+        409,
+        'Collecte déjà en cours, ou demandée il y a moins de quinze minutes : réessayez plus tard.',
+      );
+    return crees.map(versCollecte);
+  }
+
+  /* ---------------------------------------------------------------- Planification (tic de l'API) */
+  /** Inscrit au plus une collecte par source et par jour. Le module est contrôlé par l'appelant ; flux fermé : rien. */
+  async planifier(maintenant = new Date()): Promise<string[]> {
+    if (!(await this.flux.ouvert(FLUX))) return [];
+    const jour = jourDe(maintenant);
+    return this.db.tx(async (c, k) => {
+      await verrouFile(k);
+      await this.menage(k, c);
+      await k
+        .insertInto('vulnerabilites_veille_sources')
+        .values(SOURCES_VEILLE.map((source) => ({ source })))
+        .onConflict((oc) => oc.column('source').doNothing())
+        .execute();
+      const etats = new Map(
+        (
+          await k
+            .selectFrom('vulnerabilites_veille_sources')
+            .select(['source', sql<string | null>`creneau::text`.as('creneau')])
+            .forUpdate()
+            .execute()
+        ).map((l) => [l.source, l.creneau]),
+      );
+      const enAttente = async (s?: SourceVeille) => {
+        let q = k
+          .selectFrom('vulnerabilites_veille_collectes')
+          .select('id')
+          .where('etat', 'in', ['en_file', 'en_cours']);
+        if (s) q = q.where('source', '=', s);
+        return !!(await q.executeTakeFirst());
+      };
+      const ids: string[] = [];
+      const consommer = async (s: SourceVeille) => {
+        // Créneau consommé d'abord : une collecte inscrite puis perdue ne sera pas réinscrite le même jour.
+        await k.updateTable('vulnerabilites_veille_sources').set({ creneau: jour }).where('source', '=', s).execute();
+        etats.set(s, jour);
+        // Une collecte de la source déjà en file ou en cours (demandée à la main) tient lieu de celle du jour.
+        if (!(await enAttente(s))) ids.push((await this.inscrire(k, c, s, 'planifie', PLANIFICATION, null)).id);
+      };
+      for (const s of AVANT_EPSS) if (etats.get(s) !== jour) await consommer(s);
+      // EPSS : seulement quand les quatre autres sources du jour sont inscrites et toutes traitées.
+      if (etats.get('epss') !== jour && AVANT_EPSS.every((s) => etats.get(s) === jour) && !(await enAttente()))
+        await consommer('epss');
+      return ids;
+    });
+  }
+
+  private async inscrire(
+    k: Kdb,
+    c: Client,
+    source: SourceVeille,
+    origine: 'manuel' | 'planifie',
+    acteur: Actor,
+    ip: string | null,
+  ): Promise<LigneCollecte> {
+    const r = await k
+      .insertInto('vulnerabilites_veille_collectes')
+      .values({ source, origine, demande_par: acteur.username })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    await this.db.audit(acteur, ip, 'vulnerabilites.veille.collecte.demandee', r.id, { source, origine }, c);
+    return r;
+  }
+
+  /** Ménage de la file, sous son verrou : collecte jamais réclamée expirée, collecte interrompue close. */
+  private async menage(k: Kdb, c: Client) {
+    const expirees = await k
+      .updateTable('vulnerabilites_veille_collectes')
+      .set({
+        etat: 'expire',
+        termine_le: sql<Date>`now()`,
+        erreur: 'Collecte expirée : l’exécutant ne l’a pas prise en charge à temps.',
+      })
+      .where('etat', '=', 'en_file')
+      .where('demande_le', '<', EXPIRATION_FILE)
+      .returning(['id', 'source', 'erreur'])
+      .execute();
+    const interrompues = await k
+      .updateTable('vulnerabilites_veille_collectes')
+      .set({ etat: 'echec', termine_le: sql<Date>`now()`, erreur: 'Exécutant interrompu : aucun résultat reçu.' })
+      .where('etat', '=', 'en_cours')
+      .where('debute_le', '<', ABANDON_EN_COURS)
+      .returning(['id', 'source', 'erreur'])
+      .execute();
+    for (const r of [...expirees, ...interrompues]) {
+      await this.noterEchec(k, r.source, r.erreur!);
+      await this.db.audit(
+        EXECUTANT,
+        null,
+        'vulnerabilites.veille.collecte.terminee',
+        r.id,
+        { source: r.source, etat: expirees.includes(r) ? 'expire' : 'echec' },
+        c,
+      );
+    }
+  }
+
+  private async noterEchec(k: Kdb, source: SourceVeille, erreur: string) {
+    await k
+      .insertInto('vulnerabilites_veille_sources')
+      .values({ source, erreur, dernier_essai: sql<Date>`now()` })
+      .onConflict((oc) => oc.column('source').doUpdateSet({ erreur, dernier_essai: sql<Date>`now()` }))
+      .execute();
+  }
+
+  /* ---------------------------------------------------------------- CLI de l'exécutant */
+  /** `suivi veille-claim` : réclame la collecte en file la plus ancienne et rend ses paramètres (fenêtre NVD, failles à
+      noter par EPSS, avis du CERT-FR déjà lus). Module désactivé ou flux fermé : rien n'est remis, les collectes en file
+      sont closes sans appel. */
+  async reclamer(moduleActif: boolean): Promise<Record<string, unknown> | null> {
+    const ouvert = moduleActif && (await this.flux.ouvert(FLUX));
+    return this.db.tx(async (c, k) => {
+      await verrouFile(k);
+      await this.menage(k, c);
+      if (!ouvert) {
+        const closes = await k
+          .updateTable('vulnerabilites_veille_collectes')
+          .set({
+            etat: 'echec',
+            termine_le: sql<Date>`now()`,
+            erreur: 'Flux fermé ou module désactivé : la collecte n’a pas été transmise.',
+          })
+          .where('etat', '=', 'en_file')
+          .returning(['id', 'source'])
+          .execute();
+        for (const x of closes)
+          await this.db.audit(
+            EXECUTANT,
+            null,
+            'vulnerabilites.veille.collecte.terminee',
+            x.id,
+            { source: x.source, etat: 'echec' },
+            c,
+          );
+        return null;
+      }
+      const r = await k
+        .selectFrom('vulnerabilites_veille_collectes')
+        .selectAll()
+        .where('etat', '=', 'en_file')
+        .orderBy('demande_le')
+        .orderBy('id')
+        .limit(1)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!r) return null;
+      const maintenant = new Date();
+      let parametres: Record<string, unknown> = {};
+      let fenetre: { debut: Date; fin: Date } | null = null;
+      if (r.source === 'nvd') {
+        const s = await k
+          .selectFrom('vulnerabilites_veille_sources')
+          .select('fenetre_fin')
+          .where('source', '=', 'nvd')
+          .executeTakeFirst();
+        const fin = new Date(Math.floor(maintenant.getTime() / 1000) * 1000);
+        const plancher = fin.getTime() - NVD_RATTRAPAGE_MAX_MS;
+        const debut = new Date(
+          Math.max(s?.fenetre_fin?.getTime() ?? fin.getTime() - NVD_PREMIERE_FENETRE_MS, plancher),
+        );
+        fenetre = { debut: debut < fin ? debut : new Date(fin.getTime() - 60_000), fin };
+        parametres = { depuis: fenetre.debut.toISOString(), jusqua: fenetre.fin.toISOString() };
+      } else if (r.source === 'epss') {
+        // Failles déjà connues de la veille (KEV, avis, fenêtre NVD) dont le score n'a pas été lu depuis vingt heures :
+        // celles du catalogue KEV d'abord, puis celles citées par un avis, puis les plus récemment modifiées. Le registre des
+        // produits et le parc n'interviennent jamais dans ce choix.
+        const cves = await k
+          .selectFrom('vulnerabilites_veille_cve')
+          .select('cve')
+          .where((eb) => eb.or([eb('epss_le', 'is', null), eb('epss_le', '<', sql<Date>`now() - interval '20 hours'`)]))
+          .orderBy(sql`(kev_ajout IS NOT NULL) DESC`)
+          .orderBy(sql`avis_le DESC NULLS LAST`)
+          .orderBy(sql`modifie_le DESC NULLS LAST`)
+          .orderBy('cve', 'desc')
+          .limit(VEILLE_BORNES.epss)
+          .execute();
+        parametres = { cves: cves.map((x) => x.cve) };
+      } else if (r.source === 'cert-fr') {
+        // Avis (AVI) dont les identifiants CVE ont déjà été lus : le script ne relit pas leur export. Les alertes (ALE),
+        // mises à jour au fil de l'exploitation, sont relues à chaque collecte.
+        const connus = await k
+          .selectFrom('vulnerabilites_veille_avis')
+          .select('identifiant')
+          .where('source', '=', 'cert-fr')
+          .where('nature', '=', 'avis')
+          .where('cves_lues', '=', true)
+          .orderBy(sql`publie_le DESC NULLS LAST`)
+          .limit(CERTFR_CONNUS_MAX)
+          .execute();
+        parametres = { connus: connus.map((x) => x.identifiant) };
+      }
+      await k
+        .updateTable('vulnerabilites_veille_collectes')
+        .set({
+          etat: 'en_cours',
+          debute_le: sql<Date>`now()`,
+          fenetre_debut: fenetre?.debut ?? null,
+          fenetre_fin: fenetre?.fin ?? null,
+        })
+        .where('id', '=', r.id)
+        .execute();
+      await k
+        .insertInto('vulnerabilites_veille_sources')
+        .values({ source: r.source, dernier_essai: sql<Date>`now()` })
+        .onConflict((oc) => oc.column('source').doUpdateSet({ dernier_essai: sql<Date>`now()` }))
+        .execute();
+      await this.db.audit(
+        EXECUTANT,
+        null,
+        'vulnerabilites.veille.collecte.reclamee',
+        r.id,
+        { source: r.source, ...(fenetre ? { depuis: parametres.depuis, jusqua: parametres.jusqua } : {}) },
+        c,
+      );
+      return { id: r.id, source: r.source, parametres };
+    });
+  }
+
+  /** `suivi veille-lot <id>` : range un lot d'éléments d'une collecte en cours. Chaque élément est validé par le schéma de la
+      source ; un seul élément refusé fait refuser tout le lot (rien n'est écrit). */
+  async lot(id: string, brut: unknown): Promise<{ elements: number; lots: number }> {
+    z.uuid().parse(id);
+    const { elements } = LotVeille.parse(brut);
+    return this.db.tx(async (_c, k) => {
+      const cur = await k
+        .selectFrom('vulnerabilites_veille_collectes')
+        .select(['source', 'lots', 'elements'])
+        .where('id', '=', id)
+        .where('etat', '=', 'en_cours')
+        .forUpdate()
+        .executeTakeFirst();
+      if (!cur) throw new HttpError(409, 'Collecte absente ou déjà terminée.');
+      if (cur.lots >= VEILLE_BORNES.lots) throw new HttpError(409, 'Nombre de lots dépassé pour cette collecte.');
+      const schema = ELEMENT_VEILLE[cur.source];
+      const valides: unknown[] = [];
+      elements.forEach((e, i) => {
+        const v = schema.safeParse(e);
+        if (!v.success)
+          throw new HttpError(
+            422,
+            `Élément ${i + 1} du lot refusé (${v.error.issues[0]?.message ?? 'forme inattendue'}).`,
+          );
+        valides.push(v.data);
+      });
+      await this.ranger(k, cur.source, valides);
+      const r = await k
+        .updateTable('vulnerabilites_veille_collectes')
+        .set((eb) => ({ lots: eb('lots', '+', 1), elements: eb('elements', '+', valides.length) }))
+        .where('id', '=', id)
+        .returning(['lots', 'elements'])
+        .executeTakeFirstOrThrow();
+      return { elements: r.elements, lots: r.lots };
+    });
+  }
+
+  /** `suivi veille-finish <id>` : clôt la collecte. Un succès dont le bilan ne correspond pas aux éléments reçus est
+      consigné en échec. */
+  async terminer(id: string, rapport: unknown): Promise<CollecteVeilleDto> {
+    z.uuid().parse(id);
+    const p = RapportCollecte.parse(rapport);
+    const r = await this.db.tx(async (c, k) => {
+      const cur = await k
+        .selectFrom('vulnerabilites_veille_collectes')
+        .selectAll()
+        .where('id', '=', id)
+        .where('etat', '=', 'en_cours')
+        .forUpdate()
+        .executeTakeFirst();
+      if (!cur) return undefined;
+      let erreur = p.erreur;
+      if (p.ok && p.bilan!.elements !== cur.elements)
+        erreur = `Bilan incohérent : ${p.bilan!.elements} élément(s) annoncé(s), ${cur.elements} reçu(s).`;
+      const ok = p.ok && erreur === null;
+      const fin = await k
+        .updateTable('vulnerabilites_veille_collectes')
+        .set({
+          etat: ok ? 'recu' : 'echec',
+          termine_le: sql<Date>`now()`,
+          ecartes: p.bilan?.ecartes ?? 0,
+          tronque: p.bilan?.tronque ?? false,
+          erreur: ok ? null : erreur,
+        })
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirstOrThrow();
+      if (ok)
+        await k
+          .insertInto('vulnerabilites_veille_sources')
+          .values({
+            source: cur.source,
+            derniere_reussite: sql<Date>`now()`,
+            dernier_essai: sql<Date>`now()`,
+            erreur: null,
+            fenetre_fin: cur.fenetre_fin,
+          })
+          .onConflict((oc) =>
+            oc.column('source').doUpdateSet((eb) => ({
+              derniere_reussite: sql<Date>`now()`,
+              erreur: null,
+              fenetre_fin:
+                cur.source === 'nvd'
+                  ? eb.ref('excluded.fenetre_fin')
+                  : eb.ref('vulnerabilites_veille_sources.fenetre_fin'),
+            })),
+          )
+          .execute();
+      else await this.noterEchec(k, cur.source, fin.erreur!);
+      await this.db.audit(
+        EXECUTANT,
+        null,
+        'vulnerabilites.veille.collecte.terminee',
+        id,
+        {
+          source: cur.source,
+          etat: fin.etat,
+          elements: fin.elements,
+          lots: fin.lots,
+          ...(ok ? { ecartes: fin.ecartes, tronque: fin.tronque } : { erreur: fin.erreur }),
+        },
+        c,
+      );
+      return fin;
+    });
+    if (!r) throw new HttpError(409, 'Collecte absente ou déjà terminée.');
+    return versCollecte(r);
+  }
+
+  /* ---------------------------------------------------------------- Rangement (sans doublon) */
+  private async ranger(k: Kdb, source: SourceVeille, elements: unknown[]) {
+    if (!elements.length) return;
+    switch (source) {
+      case 'cisa-kev':
+        return this.rangerKev(
+          k,
+          dernierParCle(elements as ElementKev[], (e) => e.cve),
+        );
+      case 'nvd':
+        return this.rangerNvd(
+          k,
+          dernierParCle(elements as ElementNvd[], (e) => e.cve),
+        );
+      case 'epss':
+        return this.rangerEpss(
+          k,
+          dernierParCle(elements as ElementEpss[], (e) => e.cve),
+        );
+      case 'cert-fr':
+      case 'cert-sante':
+        return this.rangerAvis(
+          k,
+          source,
+          dernierParCle(elements as ElementAvis[], (e) => e.identifiant),
+        );
+    }
+  }
+
+  private async rangerKev(k: Kdb, el: ElementKev[]) {
+    await k
+      .insertInto('vulnerabilites_veille_cve')
+      .values(
+        el.map((e) => ({
+          cve: e.cve,
+          kev_editeur: e.editeur,
+          kev_produit: e.produit,
+          kev_nom: e.nom,
+          kev_description: e.description,
+          kev_action: e.action,
+          kev_ajout: e.ajoutLe,
+          kev_echeance: e.echeance,
+          kev_rancongiciel: e.rancongiciel,
+          kev_le: sql<Date>`now()`,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.column('cve').doUpdateSet((eb) => ({
+          kev_editeur: eb.ref('excluded.kev_editeur'),
+          kev_produit: eb.ref('excluded.kev_produit'),
+          kev_nom: eb.ref('excluded.kev_nom'),
+          kev_description: eb.ref('excluded.kev_description'),
+          kev_action: eb.ref('excluded.kev_action'),
+          kev_ajout: eb.ref('excluded.kev_ajout'),
+          kev_echeance: eb.ref('excluded.kev_echeance'),
+          kev_rancongiciel: eb.ref('excluded.kev_rancongiciel'),
+          kev_le: sql<Date>`now()`,
+          maj_le: sql<Date>`now()`,
+        })),
+      )
+      .execute();
+  }
+
+  private async rangerNvd(k: Kdb, el: ElementNvd[]) {
+    await k
+      .insertInto('vulnerabilites_veille_cve')
+      .values(
+        el.map((e) => ({
+          cve: e.cve,
+          description: e.description,
+          publie_le: e.publieLe,
+          modifie_le: e.modifieLe,
+          cvss31_score: e.cvss31?.score ?? null,
+          cvss31_vecteur: e.cvss31?.vecteur ?? null,
+          cvss31_gravite: e.cvss31?.gravite ?? null,
+          cvss40_score: e.cvss40?.score ?? null,
+          cvss40_vecteur: e.cvss40?.vecteur ?? null,
+          cvss40_gravite: e.cvss40?.gravite ?? null,
+          editeurs: e.editeurs,
+          produits: e.produits,
+          nvd_le: sql<Date>`now()`,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.column('cve').doUpdateSet((eb) => ({
+          description: eb.ref('excluded.description'),
+          publie_le: eb.ref('excluded.publie_le'),
+          modifie_le: eb.ref('excluded.modifie_le'),
+          cvss31_score: eb.ref('excluded.cvss31_score'),
+          cvss31_vecteur: eb.ref('excluded.cvss31_vecteur'),
+          cvss31_gravite: eb.ref('excluded.cvss31_gravite'),
+          cvss40_score: eb.ref('excluded.cvss40_score'),
+          cvss40_vecteur: eb.ref('excluded.cvss40_vecteur'),
+          cvss40_gravite: eb.ref('excluded.cvss40_gravite'),
+          editeurs: eb.ref('excluded.editeurs'),
+          produits: eb.ref('excluded.produits'),
+          nvd_le: sql<Date>`now()`,
+          maj_le: sql<Date>`now()`,
+        })),
+      )
+      .execute();
+  }
+
+  /** EPSS ne note que des failles déjà connues : un score pour une faille inconnue de la veille est ignoré. */
+  private async rangerEpss(k: Kdb, el: ElementEpss[]) {
+    await sql`UPDATE vulnerabilites_veille_cve AS v
+      SET epss_score = x.score, epss_centile = x.centile, epss_date = x.date, epss_le = now(), maj_le = now()
+      FROM unnest(${el.map((e) => e.cve)}::text[], ${el.map((e) => e.score)}::numeric[],
+                  ${el.map((e) => e.centile)}::numeric[], ${el.map((e) => e.date)}::date[]) AS x(cve, score, centile, date)
+      WHERE v.cve = x.cve`.execute(k);
+  }
+
+  /** Une alerte ou un avis, sans doublon par (source, identifiant). Les CVE citées entrent dans la liste des failles connues
+      (sans autre champ) pour que leur score EPSS puisse être demandé. Un export illisible (cvesLues faux) ne remplace pas
+      les CVE déjà lues. */
+  private async rangerAvis(k: Kdb, source: 'cert-fr' | 'cert-sante', el: ElementAvis[]) {
+    await k
+      .insertInto('vulnerabilites_veille_avis')
+      .values(
+        el.map((e) => ({
+          source,
+          identifiant: e.identifiant,
+          nature: e.nature,
+          titre: e.titre,
+          resume: e.resume,
+          adresse: e.adresse,
+          publie_le: e.publieLe,
+          cves: e.cves,
+          cves_lues: e.cvesLues,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['source', 'identifiant']).doUpdateSet((eb) => ({
+          nature: eb.ref('excluded.nature'),
+          titre: eb.ref('excluded.titre'),
+          resume: eb.ref('excluded.resume'),
+          adresse: eb.ref('excluded.adresse'),
+          publie_le: eb.ref('excluded.publie_le'),
+          cves: sql<string[]>`CASE WHEN excluded.cves_lues THEN excluded.cves ELSE vulnerabilites_veille_avis.cves END`,
+          cves_lues: sql<boolean>`vulnerabilites_veille_avis.cves_lues OR excluded.cves_lues`,
+          maj_le: sql<Date>`now()`,
+        })),
+      )
+      .execute();
+    const cves = [...new Set(el.flatMap((e) => e.cves))].filter((x) => CVE_ID.test(x));
+    if (cves.length)
+      await k
+        .insertInto('vulnerabilites_veille_cve')
+        .values(cves.map((cve) => ({ cve, avis_le: sql<Date>`now()` })))
+        .onConflict((oc) => oc.column('cve').doUpdateSet({ avis_le: sql<Date>`now()` }))
+        .execute();
+  }
+
+  private async executantDisponible(): Promise<boolean> {
+    return !!(await this.db.k
+      .selectFrom('backup_worker')
+      .select('id')
+      .where('id', '=', 1)
+      .where('ready', '=', true)
+      .where('seen_at', '>', sql<Date>`now() - interval '120 seconds'`)
+      .executeTakeFirst());
+  }
+}
+
+/** Dernier élément de chaque clé (un même identifiant ne peut pas être mis à jour deux fois par la même requête). */
+function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
+  return [...new Map(elements.map((e) => [cle(e), e])).values()];
+}

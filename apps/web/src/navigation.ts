@@ -105,9 +105,10 @@ export const FAMILLES: Famille[] = [
     label: 'Risques',
     destinations: [
       dest('risques', 'Gestion des risques', [p('risques'), p('etudes'), p('carte')]),
-      // Module Vulnérabilités (ADR 0100, lot V1) : seul l'écran des produits surveillés existe à ce stade.
+      // Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1), veille sur les sources publiques (lots V2 et V3).
       dest('vulnerabilites', 'Vulnérabilités', [
         page('vulnerabilites-produits', 'Produits surveillés', '/vulnerabilites/produits', 'vulnerabilites'),
+        page('vulnerabilites-veille', 'Veille', '/vulnerabilites/veille', 'vulnerabilites'),
       ]),
     ],
   },
