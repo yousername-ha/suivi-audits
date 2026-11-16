@@ -26,7 +26,10 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
   contrôles, revues, amélioration…) ; registres et éléments par périmètre ; fournisseurs, critères fournisseurs, processus,
   parties intéressées, bibliothèque, objectifs ; registre et cartographie des risques ; couverture et organisation de
   l'audit ; documents et liens ; parcours ISO. Explications repliées : fournisseurs, périmètres, parcours ISO, DdA,
-  incidents, imports, fournisseurs du périmètre, études EBIOS RM, publication.
+  incidents, imports, fournisseurs du périmètre, publication. L'explication des études EBIOS RM reste visible (un test
+  de bout en bout la lit).
+- Cartographie du SMSI : l'ajustement initial de la carte se fait sur la taille réelle du canevas, qui a changé avec
+  l'en-tête compact.
 - Critères sur les titres de colonnes : État, Responsable, Échéance (registre commun, plan d'actions), Famille (registres),
   Type (fournisseurs), Démarche, Étude, Option, Acceptation (risques), référentiel et écarts (couverture).
 - Non migrés, avec la raison : recherche de la Cartographie du SMSI (recherche sur la carte, pas un filtre de liste),
@@ -43,6 +46,6 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
 
 ## Contrôles
 
-Prettier, ESLint, `tsc` (web, e2e), Vitest web (423 tests, Node 26 et paquet partagé reconstruit), largeur sans débordement
+Prettier, ESLint, `tsc` (web, e2e), Vitest web (441 tests, Node 26 et paquet partagé reconstruit), largeur sans débordement
 à 390 px sur sept pages, vidéo de test de la boîte d'outils sans erreur de page. Suite de bout en bout et captures de
 référence : CI de la PR ; les captures modifiées seront présentées au RSSI avant remplacement.
