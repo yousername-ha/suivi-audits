@@ -139,6 +139,12 @@ deux comme susceptibles de changer :
 - le détail de criticité d'une machine porte un champ `internetExposure` : il pourrait aider à repérer les machines de
   première ligne. À confirmer sur l'instance ; le rôle reste décidé par une personne.
 
+**Premier essai sur l'instance du RSSI (16/11/2026)**, avec le script d'exemples et un compte de rôle « Auditor » (groupe
+« Full Access », sans gestion des utilisateurs ni des objets) : les lectures du système, des failles agrégées, des failles par
+machine et des machines ont répondu, avec le préfixe `/rest` ; la lecture des correctifs par `/solutions` a échoué, cause non
+établie (forme de la requête envoyée par le script, ou droit du rôle). Les réponses elles-mêmes n'ont pas encore été lues par
+la session.
+
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
 des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes
 et les temps de réponse.
