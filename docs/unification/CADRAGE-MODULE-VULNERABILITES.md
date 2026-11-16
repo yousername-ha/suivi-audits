@@ -146,6 +146,15 @@ machine et des machines ont répondu, avec le préfixe `/rest` ; la lecture des 
 élargir le rôle du compte. Les réponses elles-mêmes n'ont pas encore été lues par
 la session.
 
+**Forme d'un correctif** (vue `sumremediation`, un résultat lu le 16/11/2026) : `solutionID`, `cpe`, `solution`,
+`remediationList`, `total`, `totalPctg`, `score`, `scorePctg`, `hostTotal`, `msbulletinTotal`, `cveTotal`, `vprScore`,
+`cvssV3BaseScore`, `cvssV4BaseScore`, `epssScore`, `pluginID`. Trois conséquences :
+
+- un correctif est rattaché à un **contrôle de Tenable** (`pluginID`, `remediationList`), pas à une CVE : il n'en donne que le
+  nombre (`cveTotal`). Le lien avec une faille passe par le numéro de contrôle, lu dans les vues des failles ;
+- le texte du correctif (`solution`) est **en anglais** ;
+- `vprScore`, `epssScore` et `cpe` peuvent être vides.
+
 **Non vérifié** : le préfixe des adresses sur l'instance (`/rest`), le rôle minimal du compte en lecture seule, la forme exacte
 des réponses de chaque outil, les champs réellement renseignés selon la licence (score VPR, criticité de l'actif), les volumes
 et les temps de réponse.
