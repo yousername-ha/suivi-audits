@@ -2,8 +2,8 @@
    demande » de la référence, retenue par le RSSI le 14/11/2026). Les champs de recherche et de filtre existants restent
    en place, avec leurs libellés : la barre ajoute une loupe dans le champ de recherche, le raccourci « / » qui y place le
    curseur, et les pastilles des critères actifs, supprimables une à une ou ensemble. Aucun filtre réel n'est retiré. */
-import { Button } from '@mantine/core';
-import { useEffect, type RefObject } from 'react';
+import { ActionIcon, Badge, Button, Group, Menu, Popover, Stack, UnstyledButton } from '@mantine/core';
+import { useEffect, type ReactNode, type RefObject } from 'react';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
 export function IconeLoupe() {
@@ -92,5 +92,105 @@ export function PastillesCriteres({
         </Button>
       )}
     </div>
+  );
+}
+
+/** Entonnoir des filtres avancés (décoratif : le bouton porte son nom). */
+export function IconeFiltre() {
+  return (
+    <svg
+      className="barre-filtre"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 5h16l-6.2 7.4V18l-3.6 1.8v-7.4z" />
+    </svg>
+  );
+}
+
+/** Filtres avancés, dans la boîte d'outils : un bouton à icône ouvre le panneau des critères (maquette 7.3.0). */
+export function FiltresAvances({
+  actifs,
+  onReinitialiser,
+  children,
+}: {
+  actifs: number;
+  onReinitialiser: () => void;
+  children: ReactNode;
+}) {
+  const nom = actifs ? `Filtres avancés (${actifs} actif${actifs > 1 ? 's' : ''})` : 'Filtres avancés';
+  return (
+    <Popover position="bottom-start" shadow="md" trapFocus withArrow>
+      <Popover.Target>
+        <ActionIcon size="lg" variant="subtle" aria-label={nom} title={nom} className="barre-boite__outil">
+          <IconeFiltre />
+          {actifs > 0 && (
+            <Badge size="xs" circle className="barre-boite__compte">
+              {actifs}
+            </Badge>
+          )}
+        </ActionIcon>
+      </Popover.Target>
+      <Popover.Dropdown className="filtres-avances">
+        <Stack gap="sm">
+          {children}
+          <Group justify="flex-end">
+            <Button size="xs" variant="subtle" disabled={!actifs} onClick={onReinitialiser}>
+              Réinitialiser
+            </Button>
+          </Group>
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
+
+/** Filtre posé sur le titre d'une colonne : un clic sur le mot ouvre les valeurs ; la colonne filtrée est marquée. */
+export function FiltreColonne({
+  libelle,
+  valeur,
+  options,
+  onChange,
+}: {
+  libelle: string;
+  valeur: string | null;
+  options: { value: string; label: string }[];
+  onChange: (v: string | null) => void;
+}) {
+  const choisie = options.find((o) => o.value === valeur);
+  return (
+    <Menu position="bottom-start" withArrow shadow="md">
+      <Menu.Target>
+        <UnstyledButton
+          className="filtre-colonne"
+          data-actif={choisie ? 'true' : undefined}
+          aria-label={choisie ? `Filtrer par ${libelle} (filtre : ${choisie.label})` : `Filtrer par ${libelle}`}
+        >
+          {libelle}
+          {choisie && <span className="filtre-colonne__valeur"> : {choisie.label}</span>}
+          <IconeFiltre />
+        </UnstyledButton>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item onClick={() => onChange(null)} disabled={!choisie}>
+          Tous
+        </Menu.Item>
+        <Menu.Divider />
+        {options.map((o) => (
+          <Menu.Item
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            data-choisi={o.value === valeur ? 'true' : undefined}
+          >
+            {o.label}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
   );
 }

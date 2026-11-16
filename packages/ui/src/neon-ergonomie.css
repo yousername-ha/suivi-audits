@@ -50,68 +50,121 @@
   line-height: 1.55;
 }
 
-/* Barre d'outils commune (vues, recherche, filtres, ajout) : bleu nuit du menu, dans les deux thèmes, même ordre partout. */
-.app-main :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres) {
+/* Boîte d'outils (choix du RSSI du 16/11/2026) : une seule forme de barre, une petite boîte bleu nuit aux couleurs du
+   menu avec les vues, la recherche et les filtres avancés ; plus de bande de champs pleine largeur. Les autres filtres se
+   posent sur le titre des colonnes. Action principale (ajouter, créer) en bleu du menu, au bout de la ligne. */
+.app-main .barre-boite-ligne {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.app-main .barre-boite {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  padding: var(--mantine-spacing-2xs);
+  border: 1px solid var(--menu-trait);
+  border-radius: var(--menu-rayon);
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+}
+.app-main .barre-boite .taches-vues {
+  display: inline-flex;
+  gap: var(--mantine-spacing-2xs);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-main .barre-boite__sep {
+  align-self: stretch;
+  inline-size: 1px;
+  margin-inline: var(--mantine-spacing-2xs);
+  background: var(--menu-trait);
+}
+.app-main .barre-boite__recherche .mantine-Input-input {
+  inline-size: calc(var(--mantine-spacing-xl) * 8);
+  border-color: var(--menu-commande-trait);
+  background: var(--menu-famille-fond);
+  color: var(--menu-texte);
+}
+.app-main .barre-boite__recherche .mantine-Input-input::placeholder,
+.app-main .barre-boite__recherche .mantine-Input-section {
+  color: var(--menu-secondaire);
+}
+.app-main .barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil) {
+  --ai-bg: transparent;
+  position: relative;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--menu-commande);
+}
+.app-main .barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil):hover {
+  background: var(--menu-survol);
+}
+.app-main .barre-boite [aria-pressed='true'] {
+  border-color: var(--menu-teinte-pilotage);
+  background: var(--menu-destination-fond);
+  color: var(--menu-selection);
+}
+.app-main .barre-boite .barre-filtre {
+  inline-size: 1.15em;
+  block-size: 1.15em;
+}
+.app-main .barre-boite__compte {
+  position: absolute;
+  inset-block-start: calc(var(--mantine-spacing-2xs) * -1);
+  inset-inline-end: calc(var(--mantine-spacing-2xs) * -1);
+}
+
+/* Registres en studio (Fournisseurs, Processus, Parties, Bibliothèque) et registre commun : la bande s'efface, les groupes
+   d'icônes prennent la forme de la boîte. */
+.app-main :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre) {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-main
+  :is(
+    .barre-boite,
+    .fs-views,
+    .pr-views,
+    .pi-views,
+    .fs-toolbar-end,
+    .pr-toolbar-end,
+    .pi-toolbar-end,
+    .bb-toolbar .bb-search
+  ) {
   border: 1px solid var(--menu-trait);
   border-radius: var(--menu-rayon);
   background: var(--menu-fond);
   box-shadow: none;
   color: var(--menu-texte);
 }
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(h2, h3, h4, strong, b, span, p, div, label) {
-  color: inherit;
+.app-main :is(.fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end) {
+  padding: var(--mantine-spacing-2xs);
 }
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(.mantine-InputWrapper-label, .mantine-InputWrapper-description, small, .fs-note, .pr-view-label, .pi-view-label) {
-  color: var(--menu-secondaire);
-}
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  .mantine-Input-input {
-  border-color: var(--menu-commande-trait);
-  background: var(--menu-famille-fond);
-  color: var(--menu-texte);
-}
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  .mantine-Input-input::placeholder {
-  color: var(--menu-secondaire);
-}
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(.mantine-Input-section, .barre-loupe) {
-  color: var(--menu-secondaire);
-}
-/* Boutons secondaires et icônes : contour clair sur le bleu nuit. */
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(.mantine-ActionIcon-root, .mantine-Button-root[data-variant], .fs-tool, .pr-tool, .pi-tool, .bb-toolbar button) {
-  --button-bg: transparent;
-  --ai-bg: transparent;
-  border-color: var(--menu-commande-trait);
+.app-main :is(.fs-tool, .pr-tool, .pi-tool, .bb-toolbar .bb-search) {
+  border-color: transparent;
   background: transparent;
   color: var(--menu-commande);
 }
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(.mantine-ActionIcon-root, .mantine-Button-root, button):hover {
-  background: var(--menu-survol);
-}
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is([aria-pressed='true'], [data-active='true'], [aria-selected='true']) {
+.app-main :is(.fs-tool, .pr-tool, .pi-tool):is([aria-pressed='true'], [data-active='true']) {
   border-color: var(--menu-teinte-pilotage);
   background: var(--menu-destination-fond);
   color: var(--menu-selection);
 }
-/* Action principale (ajouter, créer) : bleu du menu, texte bleu nuit. */
+.app-main :is(.fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end) .mantine-Button-root[data-variant='default'] {
+  border-color: var(--menu-commande-trait);
+  background: transparent;
+  color: var(--menu-commande);
+}
+
+/* Action principale : bleu du menu, texte bleu nuit ; ajout secondaire : contour. */
 .app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
+  :is(.barre-outils__ajout, .fs-toolbar-end, .pr-toolbar-end, .barre-registre)
   :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter) {
   --button-bg: var(--menu-teinte-pilotage);
   --button-hover: var(--menu-focus);
@@ -120,50 +173,32 @@
   background: var(--menu-teinte-pilotage);
   color: var(--menu-fond-haut);
 }
-.app-main
-  :is(.fs-toolbar, .pr-toolbar, .pi-toolbar, .bb-toolbar, .barre-registre, .taches-filtres)
-  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter):hover {
-  background: var(--menu-focus);
-}
-/* Groupes de vues (icônes) : même cadre sombre que les champs. */
-.app-main :is(.fs-views, .pr-views, .pi-views, .taches-vues) {
-  border-color: var(--menu-commande-trait);
-  background: var(--menu-famille-fond);
-  box-shadow: none;
-}
-/* Recherche du registre commun : libellé lu par les lecteurs d'écran, masqué à l'œil (la loupe suffit). */
-.app-main .barre-registre .barre-recherche .mantine-InputWrapper-label {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-/* Plan d'actions et tâches récurrentes : vues et ajouts sur la première ligne, filtres en dessous. */
-.app-main .taches-filtres {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  align-items: end;
-  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
-}
-.app-main .taches-filtres > .taches-vues {
-  grid-row: 1;
-  grid-column: 1 / 4;
-  justify-self: start;
-}
-.app-main .taches-filtres > .barre-outils__ajout {
+.app-main .barre-outils__ajout {
   display: flex;
-  grid-row: 1;
-  grid-column: 4 / 7;
-  justify-self: end;
   gap: var(--mantine-spacing-xs);
 }
-.app-main .taches-filtres .mantine-InputWrapper-description {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+
+/* Filtre sur le titre d'une colonne : le mot ouvre les valeurs ; la colonne filtrée est marquée. */
+.filtre-colonne {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.filtre-colonne .barre-filtre {
+  inline-size: 0.95em;
+  block-size: 0.95em;
+  opacity: 0.45;
+}
+.filtre-colonne:is(:hover, :focus-visible) .barre-filtre,
+.filtre-colonne[data-actif='true'] .barre-filtre {
+  opacity: 1;
+}
+.filtre-colonne[data-actif='true'] {
+  color: var(--mantine-color-anchor);
+}
+.filtre-colonne__valeur {
+  font-weight: 500;
 }

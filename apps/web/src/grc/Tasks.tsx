@@ -23,7 +23,14 @@ import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
+import {
+  FiltreColonne,
+  FiltresAvances,
+  IconeLoupe,
+  PastillesCriteres,
+  useRaccourciRecherche,
+  type CritereActif,
+} from '../components/BarreOutils';
 import { libelleDesignation, SelecteurResponsable, useProposables, useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useOngletVisible } from '../parcours-iso/mouvement';
@@ -332,66 +339,90 @@ export function Tasks({
           ))}
         </div>
       </div>
-      <Group className="taches-filtres">
-        <div className="taches-vues" role="group" aria-label="Vues des actions">
-          {views.map((v) => (
-            <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
-              <ActionIcon
-                size="lg"
-                variant={view === v.value ? 'filled' : 'subtle'}
-                aria-label={v.label}
-                aria-pressed={view === v.value}
-                onClick={() => setView(v.value)}
-              >
-                <IconeVue vue={v.value} />
-              </ActionIcon>
-            </Tooltip>
-          ))}
+      {/* Boîte d'outils (maquette 7.3.0) : vues, recherche et filtres avancés ; les autres filtres se posent sur le titre
+          des colonnes de la liste. Ajouts au bout de la ligne. */}
+      <div className="barre-boite-ligne">
+        <div className="barre-boite" role="toolbar" aria-label="Outils des actions">
+          <div className="taches-vues" role="group" aria-label="Vues des actions">
+            {views.map((v) => (
+              <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
+                <ActionIcon
+                  size="lg"
+                  variant={view === v.value ? 'filled' : 'subtle'}
+                  aria-label={v.label}
+                  aria-pressed={view === v.value}
+                  onClick={() => setView(v.value)}
+                >
+                  <IconeVue vue={v.value} />
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </div>
+          <span className="barre-boite__sep" aria-hidden="true" />
+          <TextInput
+            ref={champRecherche}
+            className="barre-recherche barre-boite__recherche"
+            aria-label="Rechercher une action"
+            placeholder="Rechercher…"
+            leftSection={<IconeLoupe />}
+            title="Raccourci : touche /"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <FiltresAvances
+            actifs={[owner, registre, status, showClosed ? '1' : ''].filter(Boolean).length}
+            onReinitialiser={() => {
+              setOwner(null);
+              setRegistre('');
+              setStatus(null);
+              setShowClosed(false);
+            }}
+          >
+            <Select
+              allowDeselect={false}
+              label="Vue synchronisée"
+              data={views.map((v) => ({ value: v.value, label: v.label }))}
+              value={view}
+              onChange={(v) => v && setView(v)}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <TextInput
+              label="Mois"
+              type="month"
+              value={month}
+              onChange={(e) => {
+                if (/^\d{4}-\d{2}$/.test(e.currentTarget.value)) setMonth(e.currentTarget.value);
+              }}
+            />
+            <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
+            <Select
+              label="Registre"
+              description="Plans d’actions et tâches récurrentes que vous pouvez lire."
+              clearable
+              value={registre || null}
+              onChange={(v) => setRegistre(v ?? '')}
+              data={(registres.data?.items ?? [])
+                .filter((r) => r.kind === 'plan_actions' || r.kind === 'recurrences')
+                .map((r) => ({ value: r.id, label: r.name }))}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Select
+              label="État"
+              clearable
+              value={status}
+              onChange={setStatus}
+              data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Checkbox
+              label="Afficher les actions closes"
+              checked={showClosed}
+              onChange={(e) => setShowClosed(e.currentTarget.checked)}
+            />
+          </FiltresAvances>
         </div>
-        <Select
-          allowDeselect={false}
-          label="Vue synchronisée"
-          data={views.map((v) => ({ value: v.value, label: v.label }))}
-          value={view}
-          onChange={(v) => v && setView(v)}
-        />
-        <TextInput
-          label="Mois"
-          type="month"
-          value={month}
-          onChange={(e) => {
-            if (/^\d{4}-\d{2}$/.test(e.currentTarget.value)) setMonth(e.currentTarget.value);
-          }}
-        />
-        <TextInput
-          ref={champRecherche}
-          className="barre-recherche"
-          label="Rechercher une action"
-          leftSection={<IconeLoupe />}
-          title="Raccourci : touche /"
-          value={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
-        />
-        <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
-        <Select
-          label="Registre"
-          description="Plans d’actions et tâches récurrentes que vous pouvez lire."
-          clearable
-          value={registre || null}
-          onChange={(v) => setRegistre(v ?? '')}
-          data={(registres.data?.items ?? [])
-            .filter((r) => r.kind === 'plan_actions' || r.kind === 'recurrences')
-            .map((r) => ({ value: r.id, label: r.name }))}
-        />
-        <Select
-          label="État"
-          clearable
-          value={status}
-          onChange={setStatus}
-          data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
-        />
         {outils && <div className="barre-outils__ajout">{outils}</div>}
-      </Group>
+      </div>
       <PastillesCriteres
         criteres={criteresTaches}
         onToutEffacer={() => {
@@ -400,11 +431,6 @@ export function Tasks({
           setRegistre('');
           setStatus(null);
         }}
-      />
-      <Checkbox
-        label="Afficher les actions closes"
-        checked={showClosed}
-        onChange={(e) => setShowClosed(e.currentTarget.checked)}
       />
       {(view === 'calendar' || view === 'timeline') && (
         <>
@@ -431,8 +457,25 @@ export function Tasks({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Action</Table.Th>
-                <Table.Th>État</Table.Th>
-                <Table.Th>Responsable</Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="État"
+                    valeur={status}
+                    options={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
+                    onChange={setStatus}
+                  />
+                </Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="Responsable"
+                    valeur={owner}
+                    options={(responsables.data ?? []).map((r) => ({
+                      value: r.id,
+                      label: r.displayName || r.username,
+                    }))}
+                    onChange={setOwner}
+                  />
+                </Table.Th>
                 <Table.Th>Échéance</Table.Th>
               </Table.Tr>
             </Table.Thead>
