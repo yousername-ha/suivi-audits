@@ -15,6 +15,7 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useOngletVisible } from '../parcours-iso/mouvement';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
 export function IconeLoupe() {
@@ -238,8 +239,10 @@ export function BoiteOutils({
 }) {
   const champ = useRef<HTMLInputElement>(null);
   useRaccourciRecherche(champ);
+  // Lueur du champ de recherche : arrêtée quand l'onglet est masqué (ADR 0099).
+  const ongletVisible = useOngletVisible();
   return (
-    <div className="barre-boite-ligne">
+    <div className="barre-boite-ligne" data-mouvement={ongletVisible ? 'anime' : 'pause'}>
       <div className="barre-boite" role="toolbar" aria-label={label}>
         {vues && vues.length > 0 && (
           <>
