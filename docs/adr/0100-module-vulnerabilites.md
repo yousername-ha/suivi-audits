@@ -49,6 +49,7 @@
 | V27 | Valeurs différentes selon les sources | La **plus sévère** sert à la priorité ; chaque valeur est gardée avec sa source (16/11/2026) |
 | V28 | Branchement de l'assistant | Réalisé par la session du module Vulnérabilités, la session « Assistant RSSI intégré plateforme » en étant informée (16/11/2026) |
 | V29 | Noms des machines dans une action de l'assistant | Une action proposée par l'assistant puis confirmée **peut nommer les machines** ; rien d'identifiant ne part pour autant chez le fournisseur du modèle (16/11/2026) |
+| V30 | Contenu d'une action | Toute action créée depuis le module, par une personne ou sur proposition de l'assistant, **nomme la machine et l'application touchées** (16/11/2026). Remplace le choix du lot V4b (action sans nom de machine) |
 
 ## Faits relevés le 15/11/2026
 
@@ -289,7 +290,8 @@
     ne repasse « à traiter » que si elle avait été vue absente puis revient ;
   - un constat qui n'est plus rapporté a une présence « absente » : sa priorité baisse ;
   - la note d'une décision est gardée dans l'historique, pas dans le journal d'audit ;
-  - une action créée depuis le module ne nomme aucune machine.
+  - une action créée depuis le module ne nommait aucune machine : **remplacé par V30**, à réaliser (machines et application
+    touchées nommées dans l'action, dans la limite de ce que la personne peut lire, liste bornée).
   Non réalisé : notification, lien de la fiche vers l'action dans Pilotage.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
