@@ -64,7 +64,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await capture(page, '06-fiche-indicateur');
     await fiche.getByRole('button', { name: 'Fermer', exact: true }).click();
     // Filtre d'état des indicateurs.
-    await page.getByRole('button', { name: 'Filtres', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('tab', { name: 'Non atteints' }).click();
     await page.keyboard.press('Escape');
 
@@ -84,7 +84,7 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
       await expect(page.locator('th').filter({ hasText: colonne }).first()).toBeVisible();
     await expect(page.getByText('SaaS avec MFA')).toBeVisible();
     await capture(page, '07-fournisseurs');
-    await page.getByRole('button', { name: 'Filtres', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Situation' }).click();
     await page.getByRole('option', { name: 'Sans MFA', exact: true }).click();
     await expect(page.getByText('Logiciel de dossiers fictif')).toBeVisible();

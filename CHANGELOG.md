@@ -8,6 +8,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Modifié
+
+- **Ergonomie sur grand écran : en-tête compact et boîte d'outils commune** (demande du RSSI pour la 7.3.0, modèle validé le
+  16/11/2026 ; relevé : [docs/refonte-neon/RELEVE-ECRAN-1920.md](docs/refonte-neon/RELEVE-ECRAN-1920.md)). Les données
+  arrivent plus haut à l'écran : titre de page compact, d'une seule taille partout, avec la petite liste « Périmètre affiché »
+  sur la même ligne ; la phrase générique de description est retirée et les explications longues sont repliées sous « À
+  propos de cette page » ; marge haute réduite sous la barre du haut. Toutes les listes partagent une même boîte d'outils bleu
+  nuit : vues, recherche (raccourci « / », parcourue par une lueur violette qui fait le tour du champ) et entonnoir « Filtres
+  avancés » ; l'ajout est au bout de la ligne. La bande de champs de filtre pleine largeur disparaît : État, Responsable,
+  Échéance et les autres critères qui ont leur colonne se filtrent en cliquant sur le titre de la colonne, les autres sont
+  dans les filtres avancés, et les pastilles des critères actifs restent sous la barre. Écrans concernés : plan d'actions et
+  tâches récurrentes, registre commun du Pilotage, registres, fournisseurs, critères fournisseurs, processus, parties
+  intéressées, bibliothèque, objectifs, risques, cartographie des risques, couverture et organisation de l'audit, documents et
+  liens, parcours ISO. La lueur n'anime que la rotation, s'arrête avec le mouvement réduit, l'impression, les couleurs
+  forcées et l'onglet masqué (ADR 0099). Aucune migration, aucune API ; noms accessibles des champs conservés.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 ## [7.2.1] — 2026-11-16
 
 Version corrective, numérotée par le RSSI : aucune migration, aucune nouvelle dépendance. Elle applique la règle du RSSI du

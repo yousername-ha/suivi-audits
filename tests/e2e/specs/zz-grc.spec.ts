@@ -121,8 +121,11 @@ test('Pilotage : action réelle, cinq vues synchronisées, historique et clôtur
     await dialog.getByRole('button', { name: 'Enregistrer la fiche', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     for (const name of ['Kanban', 'Calendrier', 'Planning / Gantt', 'Tableau de bord', 'Liste']) {
+      // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+      await page.getByRole('button', { name: /^Filtres avancés/ }).click();
       await page.getByRole('combobox', { name: 'Vue synchronisée', exact: true }).click();
       await page.getByRole('option', { name, exact: true }).click();
+      await page.getByRole('button', { name: /^Filtres avancés/ }).click();
       if (name === 'Tableau de bord') await expect(page.getByText('Total', { exact: true })).toBeVisible();
       else if (name === 'Planning / Gantt')
         await expect(page.getByRole('img', { name: 'Planning des actions et dépendances' })).toBeVisible();

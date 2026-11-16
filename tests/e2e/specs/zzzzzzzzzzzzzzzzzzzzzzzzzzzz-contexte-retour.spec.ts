@@ -79,8 +79,11 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
 
     // Timeline : la période affichée est annoncée.
     await page.goto('/pilotage/actions');
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Timeline', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await expect(page.getByText(/Période affichée : du /)).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
