@@ -24,7 +24,7 @@ import {
   type MesureDda,
   type ReferenceDda,
 } from '@suivi/shared';
-import { DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { APropos, DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
@@ -81,10 +81,10 @@ export function DeclarationApplicabilite({ reference, smsi }: { reference: Refer
       <header className="dda-heading">
         <span className="dda-eyebrow">Conformité et audits / ISO 27001 · HDS</span>
         <h2>Conformité — {nom} (DdA)</h2>
-        <p>
+        <APropos>
           Déclaration d’applicabilité (ISO 27001 et HDS) et référentiels complémentaires importés. Le niveau de mise en
           œuvre de la DdA alimente la couverture présumée des autres référentiels.
-        </p>
+        </APropos>
       </header>
       {d && st && (
         <>

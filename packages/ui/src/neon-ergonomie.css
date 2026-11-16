@@ -10,6 +10,9 @@
 }
 
 /* En-tête compact : titre réduit, périmètre affiché et actions sur la même ligne ; explications repliées. */
+/* Une seule taille de titre de page, y compris pour les modules qui fixaient la leur (tableau de bord, processus,
+   parties intéressées) et les pages qui composent leur propre en-tête (documents, compte, import). */
+.app-main .page h1.mantine-Title-root,
 .app-main .page-header h1 {
   font-size: calc(var(--mantine-h1-font-size) * 0.66);
   line-height: 1.25;

@@ -30,7 +30,7 @@ import {
   type FiltreIncidents,
   type Incident,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
+import { APropos, ConfirmButton, DataTable, StatusChip } from '@suivi/ui';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
@@ -84,12 +84,12 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
       <Group justify="space-between" align="flex-end">
         <div>
           <Text fw={600}>Registre des incidents</Text>
-          <Text size="sm" c="dimmed">
+          <APropos>
             Incidents, événements et demandes. Ouvrez la fiche d’un incident pour le qualifier (qualification guidée),
             suivre ses obligations et conduire son retour d’expérience (chronologie et RETEX). La priorité suit la
             matrice ITIL impact × urgence. Les chiffres alimentent la revue de direction (entrée d 2), le tableau de
             bord et le rapport de pilotage du périmètre.
-          </Text>
+          </APropos>
         </div>
         {modifiable && (
           <Button

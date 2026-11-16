@@ -11,7 +11,7 @@ import {
   type GrcObject,
   type PilotageRecord,
 } from '@suivi/shared';
-import { DataTable, StatusChip } from '@suivi/ui';
+import { APropos, DataTable, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, get } from '../api';
@@ -268,10 +268,10 @@ export function EtudesEbios({
   if (!choisie)
     return (
       <Stack>
-        <Alert>
+        <APropos>
           Démarche inspirée de la méthode EBIOS Risk Manager (guide de l’ANSSI) : cinq ateliers, des éléments reliés et
           des décisions tracées. L’outil ne délivre aucune attestation de conformité.
-        </Alert>
+        </APropos>
         <ErrorAlert error={etudes.error} />
         {modifier && (
           <Group>
