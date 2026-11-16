@@ -48,6 +48,7 @@
 | V26 | Plusieurs sources | **« Ou » logique entre les sources** : la surveillance est multi-source, et **la source en avance prime** (première à publier une CVE, première à signaler une exploitation). Aucune source n'est attendue pour agir (16/11/2026) |
 | V27 | Valeurs différentes selon les sources | La **plus sévère** sert à la priorité ; chaque valeur est gardée avec sa source (16/11/2026) |
 | V28 | Branchement de l'assistant | Réalisé par la session du module Vulnérabilités, la session « Assistant RSSI intégré plateforme » en étant informée (16/11/2026) |
+| V29 | Noms des machines dans une action de l'assistant | Une action proposée par l'assistant puis confirmée **peut nommer les machines** ; rien d'identifiant ne part pour autant chez le fournisseur du modèle (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -308,8 +309,9 @@
   repères** : l'historique d'une conversation repart chez le fournisseur à chaque tour, les noms ne sont donc remis qu'à
   l'affichage, par une table de correspondance qui vit aussi longtemps que la conversation ; ni la mémoire ni les fiches de
   méthode ne gardent de repère ou de nom. Réglages retenus à défaut de décision contraire du RSSI : outils ouverts au
-  profil « Mise en œuvre » seulement ; une action proposée à partir d'un plan **ne nomme aucune machine** et renvoie à la
-  faille, la liste des machines se lisant dans le module.
+  profil « Mise en œuvre » seulement ; une action proposée à partir d'un plan **peut nommer les machines** (V29) : la proposition est gardée avec les
+  repères, et ils sont remplacés par les noms **à la confirmation**, sur le serveur, sans retour vers le modèle ; les noms
+  sont alors lisibles par les personnes qui lisent les actions du périmètre.
 
 ## Conséquences
 
