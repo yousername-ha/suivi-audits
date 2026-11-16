@@ -8,6 +8,62 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [7.2.1] — 2026-11-16
+
+Version corrective, numérotée par le RSSI : aucune migration, aucune nouvelle dépendance. Elle applique la règle du RSSI du
+16/11/2026 « une mise à jour de l'interface ne peut pas enlever le flux ouvert »
+([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), précision du 16/11/2026), avertit avant de quitter un
+certificat ACME (HSTS), annonce l'échec de la vérification des mises à jour et replie proprement les textes du résumé « Flux vers
+l'extérieur » et de sa fenêtre de validation. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Aucune action sur le serveur, aucune migration.** Au premier passage de l'exécutant après la mise à jour, et avant toute
+fermeture, chaque module **jamais décidé** et **réellement en service** est enregistré ouvert par l'acteur système
+`reprise-mise-a-jour` et inscrit au journal d'audit (`flux.externe.repris`, avec le motif) : passerelle en ACME, relais de
+l'assistant ou antivirus présents sur le serveur ou réglés dans `.env` (`ASSISTANT_RELAIS_URL`, `CLAMAV_HOST`), mise à jour déjà
+installée ; le courriel, quand l'envoi est actif avec un serveur SMTP renseigné, est constaté au démarrage de l'application.
+
+- **Serveur en 7.1.x qui passe directement en 7.2.1** : ses flux en service le restent. La passerelle garde son certificat ACME,
+  aucun conteneur n'est arrêté, les mises à jour depuis l'interface restent possibles.
+- **Serveur déjà en 7.2.0** : les modules jamais décidés et encore en service sont rouverts (par exemple, `ASSISTANT_RELAIS_URL` ou
+  `CLAMAV_HOST` encore présents dans `.env` : le relais ou l'antivirus redémarre). Une passerelle que la 7.2.0 a déjà ramenée à
+  l'autorité interne n'est plus en ACME : elle n'est pas reprise ; rouvrir ACME depuis Configuration système > Certificats et
+  opérations si besoin. Si le flux « Mises à jour » de la 7.2.0 est fermé, l'installation depuis l'interface demande de
+  l'activer d'abord (page Mises à jour et versions) ; à défaut, `sudo ./scripts/mettre-a-jour.sh 7.2.1` sur le serveur.
+- **Dans tous les cas**, un module déjà décidé, ouvert ou fermé par un administrateur, n'est jamais touché : une fermeture
+  décidée reste une fermeture. Rien d'autre à faire. Contrôle : Configuration système > Flux vers l'extérieur (« Décidé … par
+  reprise-mise-a-jour »).
+
+_(Session « Projet audit_suivi Coeur ».)_
+
+### Corrigé
+
+- **Une mise à jour ne referme plus un flux en service** ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md),
+  précision du RSSI du 16/11/2026). Incident du 15-16/11/2026 : un serveur en 7.1.1 doté d'un certificat public ACME, mis à jour
+  en 7.2.0 depuis l'interface, a vu tous ses flux fermés par la migration `071` ; l'exécutant a alors ramené la passerelle à
+  l'autorité interne et, le site envoyant HSTS, son nom de domaine est devenu inaccessible dans les navigateurs (rétabli par
+  l'adresse IP du serveur). Désormais, l'exécutant déclare d'abord les modules en service (`suivi flux-reprise`, entrée validée
+  strictement : module inconnu, motif étranger au module ou courriel refusés) : un module jamais décidé est enregistré ouvert,
+  un module décidé n'est jamais touché ; ce n'est qu'ensuite qu'il applique l'état voulu. L'exécutant ne ramène plus jamais la
+  passerelle à l'autorité interne ni n'arrête un conteneur pour un module jamais décidé et en service. Courriel repris au
+  démarrage de l'application. _(Session « Projet audit_suivi Coeur ».)_
+- **Garde-fou HSTS** : fermer le flux « Certificat public ACME » depuis le résumé, ou quitter le mode ACME depuis la page
+  Certificats (autorité interne, certificat fourni, réglage de départ), affiche dans la confirmation que le site repassera sur le
+  certificat interne et risque de devenir inaccessible par son nom de domaine (HSTS, un an), et qu'il reste joignable par
+  l'adresse IP du serveur. Information claire, sans blocage. _(Session « Projet audit_suivi Coeur ».)_
+- **Vérification des mises à jour** : un échec est annoncé dès qu'il est connu, au lieu de « Vérification en cours » pendant
+  90 secondes puis « prend plus de temps que prévu » (R6-03 : l'exécutant laissait la phase « checking » publiée après l'échec,
+  et la page prenait un échec ancien pour le résultat). Le message dit que le serveur n'a pas pu joindre GitHub et renvoie au
+  pare-feu de l'hôte et du réseau (flux à autoriser : Configuration système > Flux vers l'extérieur), au lieu de « GitHub est
+  temporairement indisponible ». _(Session « Projet audit_suivi Coeur ».)_
+- **Résumé « Flux vers l'extérieur » et fenêtre de validation lisibles à toutes les largeurs** : le tableau à huit colonnes,
+  serré dans la fenêtre, coupait les mots lettre par lettre (« Ou-ve-rt », dates coupées) ; il passe à quatre colonnes (module
+  et sens, destinations, état voulu et appliqué avec erreur et dates, action) qui se replient aux mots, puis en lignes
+  empilées avec leurs intitulés dans un cadre étroit (téléphone, tablette). Destinations, ports, données qui sortent, pare-feu
+  et erreurs s'affichent en entier, sans ellipse ; la fenêtre ne dépasse jamais l'écran et ses boutons s'empilent sur
+  téléphone. CSP inchangée (classes de `packages/ui`, aucun style en ligne). _(Session « Projet audit_suivi Coeur ».)_
+
 ## [7.2.0] — 2026-11-15
 
 Version mineure, numérotée par le RSSI. Elle ferme par défaut les **flux vers l'extérieur** et les fait ouvrir par l'activation du

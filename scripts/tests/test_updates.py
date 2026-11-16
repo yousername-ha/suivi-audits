@@ -364,6 +364,23 @@ class Updates(unittest.TestCase):
         self.assertIsInstance(r['dureeSecondes'],int)
         self.assertEqual(self.w.state['finishedAt'],r['fin'])
 
+    def test_verification_en_echec_n_est_plus_affichee_en_cours(self):
+        """R6-03 : une vérification en échec est terminée ; la phase « checking » ne reste pas publiée, pour que la page
+        annonce l'échec dès qu'il est connu. Une installation en échec garde sa phase (elle dit où elle s'est arrêtée)."""
+        self.w.job={'id':self.id,'kind':'check','target':None}
+        self.w.publish(id=self.id,status='running',phase='checking')
+        with patch.object(self.w,'cli',return_value=''):
+            self.w.finish('failed','Le serveur n’a pas pu joindre GitHub.')
+        public=json.loads((self.w.public/'status.json').read_text())
+        self.assertEqual((public['id'],public['status'],public['phase']),(self.id,'failed','idle'))
+        self.assertEqual(public['message'],'Le serveur n’a pas pu joindre GitHub.')
+        autre=str(uuid.uuid4())
+        self.w.job={'id':autre,'kind':'install','target':'3.1.0'}
+        self.w.publish(id=autre,status='running',phase='backup',startedAt=m.now())
+        with patch.object(self.w,'cli',return_value=''):
+            self.w.finish('failed','Échec fictif.')
+        self.assertEqual(self.w.state['phase'],'backup')
+
     def test_pas_de_recu_pour_une_verification(self):
         self.w.job={'id':self.id,'kind':'check','target':None}
         with patch.object(self.w,'cli',return_value=''):

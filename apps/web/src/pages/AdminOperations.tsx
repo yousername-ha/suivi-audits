@@ -31,6 +31,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, errorMessage, get, post, saveBlob } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtOctets } from '../components/common';
 import { FluxFermeAlerte } from '../components/FluxExternes';
+import { messageChangementCertificat } from '../flux-externes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
 
@@ -190,6 +191,8 @@ export function OperationsPanel() {
   const disabled = pending || !q.data?.available || !!active;
   // Flux « acme » fermé (ADR 0097) : aucune demande de certificat public ; inconnu (champ absent), rien n'est bloqué ici.
   const acmeFerme = q.data?.fluxAcmeOuvert === false;
+  // Garde-fou HSTS (précision du RSSI du 16/11/2026) : quitter ACME le dit dans la confirmation, sans le bloquer.
+  const quitteAcme = host?.tlsMode === 'acme' || q.data?.fluxAcmeOuvert === true;
   const archives = host?.archives.filter((a) => a.name.toLowerCase().includes(filter.toLowerCase())) ?? [];
   const archive = host?.archives.find((a) => a.id === selected);
   const verified = (id: string, sha: string) =>
@@ -459,7 +462,7 @@ export function OperationsPanel() {
               <Group>
                 <ConfirmButton
                   disabled={disabled || host.tlsMode === 'interne'}
-                  message="Utiliser le certificat de l’autorité interne ? Le frontal est redémarré, contrôlé, puis la configuration précédente est rétablie en cas d’échec."
+                  message={messageChangementCertificat('tls_internal', quitteAcme)}
                   onConfirm={() => void request({ kind: 'tls_internal', confirmation: 'APPLIQUER' })}
                 >
                   Utiliser l’autorité interne
@@ -607,7 +610,7 @@ export function OperationsPanel() {
                 <ConfirmButton
                   color="red"
                   disabled={disabled || !certificate || !key}
-                  message="Remplacer le certificat TLS ? Le serveur contrôlera la clé, l’hôte, la validité et la santé. La configuration précédente sera rétablie en cas d’échec."
+                  message={messageChangementCertificat('tls_install', quitteAcme)}
                   onConfirm={() => {
                     if (!certificate || !key) return;
                     if (certificate.size > 65536 || key.size > 16384) {
@@ -638,7 +641,7 @@ export function OperationsPanel() {
                 </ConfirmButton>
                 <ConfirmButton
                   disabled={disabled || host.tlsMode === 'env'}
-                  message="Revenir au réglage de départ du serveur (CADDY_TLS dans .env) ? Le mode choisi ici sera désactivé après validation du frontal."
+                  message={messageChangementCertificat('tls_reset', host.tlsMode === 'acme')}
                   onConfirm={() => void request({ kind: 'tls_reset', confirmation: 'REVENIR' })}
                 >
                   Revenir au réglage de départ

@@ -58,7 +58,11 @@ l'ordre, sans bloquer sa boucle) ou arrête et retire (`rm --stop --force`) les 
 aucune vérification ni installation de version flux fermé ; `exploitation-worker.py` ne réclame aucun courriel flux fermé,
 relit le flux avant d'appliquer une demande ACME et ramène la passerelle à l'autorité interne si elle est en ACME flux fermé.
 Profils et services viennent de listes fermées dans les deux scripts, dont la concordance avec le registre est vérifiée par
-le test d'architecture. État voulu illisible : rien n'est émis par l'exécutant lui-même, les conteneurs restent dans leur
+le test d'architecture. Reprise de l'existant (7.2.1, précision du RSSI du 16/11/2026) : avant toute fermeture, chaque
+exécutant lit l'état voulu par `suivi flux-reprise` en déclarant les modules qu'il porte et qui sont en service (passerelle en
+ACME ; conteneur de sortie présent ou réglage de `.env` ; mise à jour déjà installée) ; un module jamais décidé est enregistré
+ouvert par `reprise-mise-a-jour` (journal `flux.externe.repris`), un module décidé n'est jamais touché ; le courriel actif
+est repris par l'API à son démarrage. État voulu illisible : rien n'est émis par l'exécutant lui-même, les conteneurs restent dans leur
 état, rien n'est rapporté. L'assistant ne joint son relais que si le flux est ouvert **et** appliqué ouvert ; l'antivirus suit
 l'état voulu seul (connexion interne à `clamav`, et `CLAMAV_REQUIRED` refuse un dépôt tant que le démon ne répond pas). Un test d'architecture (`apps/api/test/architecture-flux.test.ts`)
 refuse tout service du compose qui sort ou publie un port sans être porté par le registre ou justifié dans le cœur de
