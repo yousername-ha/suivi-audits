@@ -259,8 +259,12 @@ function CartographieContenu() {
   }, [layout, objs, view, inaccessible]);
 
   const vp = vps[view];
+  // Vue ajustée automatiquement à l'ouverture : tant que personne ne l'a déplacée ni zoomée, elle suit la taille de la
+  // zone, connue seulement après la mise en page (CARTO-06, CARTO-07).
+  const ajusteeAuto = useRef(false);
   const setVp = useCallback(
     (v: Viewport, persist?: boolean) => {
+      ajusteeAuto.current = false;
       setVps((x) => ({ ...x, [view]: v }));
       if (persist) {
         if (vpTimer.current) clearTimeout(vpTimer.current);
@@ -278,16 +282,20 @@ function CartographieContenu() {
   // l'observateur de redimensionnement qu'à l'image suivante ; juste après l'ouverture de la carte, elle vaut encore
   // 800 × 500 (CARTO-06, CARTO-07).
   const canevas = useRef<HTMLDivElement>(null);
-  const tailleReelle = useCallback(() => {
+  const mesure = useCallback(() => {
     const r = canevas.current?.querySelector('.carte-zone')?.getBoundingClientRect();
-    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : taille.current;
+    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : null;
   }, []);
-  // Première ouverture (ou génération) : la vue s'ajuste à la carte, sur la taille réelle de la zone.
+  const tailleReelle = useCallback(() => mesure() ?? taille.current, [mesure]);
+  // Première ouverture (ou génération) : la vue s'ajuste à la carte, sur la taille réelle de la zone. Si la zone n'est
+  // pas encore mise en page, l'observateur de taille fait l'ajustement (onSize).
   useEffect(() => {
     if (!scene || vp || !scene.nodes.length) return;
-    const t = tailleReelle();
+    const t = mesure();
+    if (!t) return;
     setVp(fitViewport(scene, t.w, t.h));
-  }, [scene, vp, setVp, tailleReelle]);
+    ajusteeAuto.current = true;
+  }, [scene, vp, setVp, mesure]);
 
   usePresence(`cartographie/${view}`, editMode ? 'edit' : 'view');
   const editeurs = usePresenceOn(`cartographie/${view}`).filter((p) => p.mode === 'edit');
@@ -1275,7 +1283,12 @@ function CartographieContenu() {
                 vp={vp ?? { x: 0, y: 0, k: 1 }}
                 setVp={setVp}
                 onSize={(wd, h) => {
+                  const change = taille.current.w !== wd || taille.current.h !== h;
                   taille.current = { w: wd, h };
+                  if (scene && scene.nodes.length && (!vp || (ajusteeAuto.current && change))) {
+                    setVps((x) => ({ ...x, [view]: fitViewport(scene, wd, h) }));
+                    ajusteeAuto.current = true;
+                  }
                 }}
                 onLive={(l) => majTravail((cur) => ({ ...cur, layout: l }))}
                 onCommit={(before) =>
