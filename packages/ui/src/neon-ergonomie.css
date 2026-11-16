@@ -203,16 +203,36 @@
   font-weight: 500;
 }
 
-/* Lueur violette légère qui tourne autour du champ de recherche de la boîte d'outils (demande du RSSI du 16/11/2026).
-   Seule la rotation (transform) est animée ; le contour garde sa couleur fixe sous la lueur. Continue (ADR 0099),
-   arrêtée par le mouvement réduit, l'impression, les couleurs forcées et l'onglet masqué. */
+/* Champ de recherche de la boîte d'outils, façon verre violet (demande du RSSI du 16/11/2026) : fond violet translucide
+   flouté, reflet clair sur le bord haut, contour parcouru d'un dégradé violet, rose et bleu qui tourne, halo doux qui
+   respire. Seules la rotation (transform) et l'intensité du halo (opacity) sont animées, en continu (ADR 0099) ;
+   arrêtées par le mouvement réduit, l'impression, les couleurs forcées et l'onglet masqué. */
+.app-main .barre-boite__recherche {
+  position: relative;
+  isolation: isolate;
+}
+/* Halo extérieur : lueur violette et rose, floue, qui respire. */
+.app-main .barre-boite__recherche::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: var(--mantine-radius-md);
+  box-shadow:
+    0 0 0.9rem 0.1rem color-mix(in srgb, var(--mantine-color-violet-4) 55%, transparent),
+    0 0 1.8rem 0.3rem color-mix(in srgb, var(--mantine-color-pink-4) 22%, transparent);
+  content: '';
+  opacity: 0.45;
+  pointer-events: none;
+  animation: barre-halo 3.2s ease-in-out infinite alternate;
+}
+/* Contour : anneau d'un pixel et demi, parcouru par le dégradé tournant. */
 .app-main .barre-boite__recherche .mantine-Input-wrapper {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   padding: 1.5px;
   border-radius: var(--mantine-radius-md);
-  background: var(--menu-commande-trait);
+  background: color-mix(in srgb, var(--mantine-color-violet-3) 30%, transparent);
 }
 .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
   position: absolute;
@@ -223,30 +243,50 @@
   aspect-ratio: 1;
   background: conic-gradient(
     from 0deg,
-    transparent 0turn 0.58turn,
-    color-mix(in srgb, var(--mantine-color-violet-4) 35%, transparent) 0.7turn,
-    var(--mantine-color-violet-3) 0.8turn,
-    color-mix(in srgb, var(--mantine-color-violet-4) 35%, transparent) 0.9turn,
-    transparent 1turn
+    var(--mantine-color-violet-4),
+    var(--mantine-color-pink-3),
+    var(--mantine-color-indigo-3),
+    var(--mantine-color-cyan-3),
+    var(--mantine-color-violet-4)
   );
   content: '';
+  opacity: 0.85;
   transform: translate(-50%, -50%) rotate(0turn);
-  animation: barre-lueur 5s linear infinite;
+  animation: barre-lueur 6s linear infinite;
 }
+/* Verre : violet translucide flouté, reflet clair en haut. */
 .app-main .barre-boite__recherche .mantine-Input-input {
   border-color: transparent;
+  background: color-mix(in srgb, var(--mantine-color-violet-9) 55%, var(--menu-fond-haut));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mantine-color-white) 22%, transparent),
+    inset 0 -0.6rem 1.2rem color-mix(in srgb, var(--mantine-color-violet-5) 18%, transparent);
+  color: var(--mantine-color-white);
+  backdrop-filter: blur(0.6rem) saturate(1.4);
+}
+.app-main .barre-boite__recherche .mantine-Input-input::placeholder {
+  color: color-mix(in srgb, var(--mantine-color-violet-1) 75%, transparent);
+}
+.app-main .barre-boite__recherche .mantine-Input-section {
+  color: var(--mantine-color-violet-2);
 }
 @keyframes barre-lueur {
   to {
     transform: translate(-50%, -50%) rotate(1turn);
   }
 }
-.app-main [data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before {
+@keyframes barre-halo {
+  to {
+    opacity: 1;
+  }
+}
+.app-main [data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before,
+.app-main [data-mouvement='pause'] .barre-boite__recherche::after {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
-  .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+  .app-main .barre-boite__recherche .mantine-Input-wrapper::before,
+  .app-main .barre-boite__recherche::after {
     animation: none;
-    opacity: 0;
   }
 }
