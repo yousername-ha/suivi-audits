@@ -45,6 +45,7 @@
 | V23 | CERT Santé et exploitation | Une publication du CERT Santé compte comme exploitation **quand elle l'écrit** : faille exploitée, ou exploitable (16/11/2026) |
 | V24 | Décision de rapprochement | Une confirmation ou un rejet **peut être annulé** (16/11/2026) |
 | V25 | Assistant et CVE | Quand le RSSI donne une CVE à l'assistant, celui-ci dit **si l'organisation est touchée, quoi faire, quels actifs traiter d'abord**, et propose un **plan d'action** ; à voir avec la session « Assistant RSSI intégré plateforme » (16/11/2026) |
+| V26 | Plusieurs sources | **« Ou » logique entre les sources** : la surveillance est multi-source, et **la source en avance prime** (première à publier une CVE, première à signaler une exploitation). Aucune source n'est attendue pour agir (16/11/2026) |
 
 ## Faits relevés le 15/11/2026
 
@@ -273,6 +274,13 @@
     publiées changent ;
   - une faille exploitée que NVD n'a pas republiée dans la fenêtre de collecte n'est pas rapprochée d'un produit déclaré.
   Non réalisé : états de suivi d'une faille, lien avec une action, proposition « corrigée ».
+- **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
+  et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
+  le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
+  dans le rapprochement avec les produits déclarés, par le nom, comme proposition à décider ; l'exploitation est avérée dès
+  qu'une source le dit (catalogue KEV, alerte du CERT-FR, mention du CERT Santé). Quand deux sources donnent une valeur
+  différente pour un même fait (score de gravité), chacune est gardée avec sa source et la **plus sévère** sert à la
+  priorité (lecture de la session, à confirmer par le RSSI).
 - **À réaliser après les décisions V23 et V24** : la fiche de chaque publication du CERT Santé porte des mentions
   structurées, relevées le 16/11/2026 sur une alerte (« La faille est activement exploitée : Oui / Non », « Un correctif
   existe », « Une mesure de contournement existe », rubrique « Preuve de concept »). Le flux RSS ne les porte pas : la veille
