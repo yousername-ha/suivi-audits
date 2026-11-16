@@ -269,5 +269,8 @@
 14. Unité affichée : Tenable raisonne par contrôle (un correctif, plusieurs CVE), la veille par CVE. Les listes et le radar
     montrent-ils les contrôles de Tenable regroupés (proposé), ou chaque CVE ?
 15. Radar : le parc compte plusieurs milliers de constats ; le radar montre-t-il les plus prioritaires seulement (proposé) ?
-16. Sortie du serveur vers Internet : directe (seul cas pris en charge), ou par un mandataire (proxy) de l'établissement ?
+16. Sortie du serveur vers Internet : le RSSI indique le 16/11/2026 qu'elle passe par un **mandataire (proxy) de
+    l'établissement** ; Tenable, lui, est joint directement. La plateforme n'a aujourd'hui aucun réglage de mandataire, pour
+    aucun de ses flux : à cadrer (adresse, authentification éventuelle, autorité de certification si le mandataire inspecte
+    le trafic chiffré) avant la mise en service de la veille.
 17. Rapprochement du lot V4 : utiliser aussi le champ « affected » de NVD (éditeur et produit hors CPE) ?

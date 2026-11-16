@@ -205,8 +205,8 @@ Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `073`), sous-ensemble 
 - **Flux** : le connecteur a son flux au registre de l'[ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md)
   (`tenable`), fermé par défaut, ouvert par l'activation d'une instance avec validation explicite, refermé quand la dernière
   instance active du type est désactivée ou quand le module est désactivé.
-- **Choix de réalisation, à confirmer par le RSSI** : adresse en `https` sur le **port 443 seulement** (pour que le trafic
-  corresponde au flux déclaré) ; changer l'adresse ou l'autorité de certification efface les clés enregistrées, comme pour le
+- **Choix de réalisation, à confirmer par le RSSI** : adresse en `https` ; le **port est réglable** (443 par défaut), décision du RSSI du 16/11/2026
+  qui remplace le choix initial « port 443 seulement » : le flux déclare alors le port réglé ; changer l'adresse ou l'autorité de certification efface les clés enregistrées, comme pour le
   mot de passe du courriel ; droits par défaut d'un module non métier (administrateur et RSSI ; un rôle personnalisé pour
   toute autre personne).
 - **Non réalisé** : extraction du moteur d'écarts de Tenacy, ORADAD, Silène, GLPI, propositions de fournisseurs, liaisons
