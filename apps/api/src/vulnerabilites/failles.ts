@@ -19,12 +19,20 @@
    qui n'est plus présent nulle part reste lisible par les machines où il a été vu en dernier (proposition « corrigée »,
    état décidé). Les failles corrigées, au risque accepté ou non concernées sortent des compteurs et du rang des machines ;
    la priorité reste calculée sur les faits.
+   Lot V4c (V26, V27) : ce que chaque source dit des CVE (sources.ts) accompagne chaque faille ; la priorité prend
+   l'exploitation avérée et « exploitable » selon toutes les sources, et la valeur la plus sévère de chaque fait ; les
+   filtres « exploitée » et « exploitable » valent pour toutes les sources ; le rang compte les exploitations avérées de
+   toutes les sources.
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
   AffectationMachine,
   AffectationMachines,
   calculerPriorite,
   type CompteursMachine,
+  faitsDepuisSources,
+  graviteDepuisScore,
+  type SourcesFailleDto,
+  valeursRetenues,
   type FailleDeclareeDto,
   type FicheDeclareeDto,
   faitsRang,
@@ -32,7 +40,6 @@ import {
   type RechercheDeclarees,
   rangerMachines,
   type ReglagePriorite,
-  type SourceExploitation,
   type ConstatDto,
   type ConstatResumeDto,
   FAILLES_PAR_PAGE,
@@ -55,6 +62,7 @@ import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
+import { lireFaitsCve, exploiteeCve, preuveCertSante, sourcesDe } from './sources.js';
 import { alerteCertFr, detecteeSurMachine, lisible, present, scoreNvd } from './sql.js';
 import { close, colonnesSuivi, filtreSuivi, type LigneSuivi, versSuiviResume } from './suivi.js';
 
@@ -67,6 +75,12 @@ const iso = (d: Date | null) => d?.toISOString() ?? null;
 /** Le constat `c` cite une CVE du catalogue KEV (veille). */
 const exploite = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE cc.constat_id = c.id AND v.kev_ajout IS NOT NULL)`;
+/** Une CVE du constat `c` a une exploitation avérée selon une source (KEV, alerte du CERT-FR, fiche du CERT Santé). */
+const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve')})`;
+/** Le constat `c` est exploitable selon Tenable, ou selon la fiche du CERT Santé d'une de ses CVE. */
+const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+  WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
 const sansCve = sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id)`;
 /** Une CVE du constat `c` est citée par une alerte du CERT-FR (veille). */
 const alerteConstat = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
@@ -132,27 +146,40 @@ interface LigneMachine {
 }
 
 /** Priorité d'un constat présent sur une machine lisible : présence « détectée » (« absente » s'il n'est plus rapporté).
-    EPSS : le plus haut entre Tenable et la veille. Un constat sans CVE (non maintenu) n'a ni exploitation ni EPSS de la
-    veille : il est classé sur sa gravité. L'état de suivi n'entre pas dans la priorité. */
-const prioriteConstat = (l: LigneConstat, reglage: ReglagePriorite) => {
-  const scores = [nombre(l.epss_score), nombre(l.epss_veille)].filter((x): x is number => x !== null);
-  const exploitation: SourceExploitation[] = [
-    ...(l.exploite ? ['kev' as const] : []),
-    ...(l.alerte_certfr ? ['cert-fr' as const] : []),
-  ];
-  return calculerPriorite(
-    {
-      exploitation,
-      presence: l.present ? 'detectee' : 'absente',
-      gravite: l.gravite,
-      epss: scores.length ? Math.max(...scores) : null,
-      exploitDisponible: l.exploitable,
-    },
-    reglage,
-  );
-};
+    Exploitation et « exploitable » selon toutes les sources ; gravité et EPSS : la valeur la plus sévère entre Tenable et
+    les sources de la veille (V27). Un constat sans CVE (non maintenu) n'a que les valeurs de Tenable : il est classé sur sa
+    gravité. L'état de suivi n'entre pas dans la priorité. */
+const prioriteConstat = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite) =>
+  calculerPriorite({ ...faitsDepuisSources(sources), presence: l.present ? 'detectee' : 'absente' }, reglage);
 
-const versResume = (l: LigneConstat, reglage: ReglagePriorite): ConstatResumeDto => ({
+/** Sources d'un constat : faits des CVE qu'il cite, et Tenable lui-même. */
+async function sourcesDesConstats(k: Kdb, lignes: LigneConstat[]): Promise<Map<string, SourcesFailleDto>> {
+  const ids = lignes.map((l) => l.id);
+  // Tableau en un seul paramètre : aucune limite au nombre de constats d'une liste.
+  const cc = ids.length
+    ? (
+        await sql<{ constat_id: string; cve: string }>`SELECT constat_id, cve FROM vulnerabilites_constat_cves
+          WHERE constat_id = ANY(${ids}::uuid[])`.execute(k)
+      ).rows
+    : [];
+  const faits = await lireFaitsCve(
+    k,
+    cc.map((x) => x.cve),
+  );
+  const parConstat = new Map<string, string[]>();
+  for (const x of cc) parConstat.set(x.constat_id, [...(parConstat.get(x.constat_id) ?? []), x.cve]);
+  return new Map(
+    lignes.map((l) => [
+      l.id,
+      sourcesDe(
+        (parConstat.get(l.id) ?? []).flatMap((cve) => (faits.has(cve) ? [faits.get(cve)!] : [])),
+        { gravite: l.gravite, cvss3: nombre(l.cvss3_score), epss: nombre(l.epss_score), exploitable: l.exploitable },
+      ),
+    ]),
+  );
+}
+
+const versResume = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite): ConstatResumeDto => ({
   id: l.id,
   plugin: String(l.plugin_id),
   nom: l.nom,
@@ -171,7 +198,8 @@ const versResume = (l: LigneConstat, reglage: ReglagePriorite): ConstatResumeDto
   derniereDetection: iso(l.derniere),
   present: l.present,
   alerteCertFr: l.alerte_certfr,
-  priorite: prioriteConstat(l, reglage),
+  sources,
+  priorite: prioriteConstat(l, sources, reglage),
   suivi: versSuiviResume(l),
 });
 
@@ -181,6 +209,8 @@ interface DeclareeMachine {
   cve: string;
   cvss31_gravite: string | null;
   cvss40_gravite: string | null;
+  /** Score CVSS v3.1 le plus haut des fiches du CERT Santé qui citent la CVE. */
+  cvss_cert_sante: string | null;
   exploitee: boolean;
 }
 
@@ -196,7 +226,17 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     exploitationAveree: l.exploitees_avere,
   };
   for (const x of declarees) {
-    const g = graviteDepuisNvd(x.cvss31_gravite, x.cvss40_gravite);
+    // Gravité la plus sévère entre NVD et la fiche du CERT Santé (V27).
+    const nvd = graviteDepuisNvd(x.cvss31_gravite, x.cvss40_gravite);
+    const cs = graviteDepuisScore(nombre(x.cvss_cert_sante));
+    const g = valeursRetenues({
+      gravites: [
+        ...(nvd ? [{ source: 'nvd' as const, gravite: nvd }] : []),
+        ...(cs ? [{ source: 'cert-sante' as const, gravite: cs }] : []),
+      ],
+      cvss: [],
+      epss: [],
+    }).gravite?.gravite;
     if (g) compteurs[g]++;
     if (x.exploitee) compteurs.exploitationAveree++;
   }
@@ -262,8 +302,8 @@ export class FaillesDetectees {
   async constats(user: SessionUser, q: RechercheConstats): Promise<PageFailles<ConstatResumeDto>> {
     const conditions: RawBuilder<boolean>[] = [];
     if (q.gravite) conditions.push(sql<boolean>`c.gravite = ${q.gravite}`);
-    if (q.exploite) conditions.push(exploite);
-    if (q.exploitable) conditions.push(sql<boolean>`c.exploitable`);
+    if (q.exploite) conditions.push(exploiteeAvere);
+    if (q.exploitable) conditions.push(exploitableSources);
     if (q.nonMaintenu) conditions.push(sansCve);
     conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
@@ -282,9 +322,10 @@ export class FaillesDetectees {
     const { rows } = await sql<LigneConstat>`SELECT * FROM (${this.requeteConstats(user, conditions)}) c`.execute(
       this.db.k,
     );
+    const sources = await sourcesDesConstats(this.db.k, rows);
     // Priorité calculée par la fonction partagée, puis filtre et ordre : priorité, gravité, exploitée, machines, contrôle.
     const tous = rows
-      .map((l) => ({ l, r: versResume(l, reglage) }))
+      .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage) }))
       .filter((x) => !q.priorite || x.r.priorite.niveau === q.priorite)
       .sort(
         (a, b) =>
@@ -358,8 +399,9 @@ export class FaillesDetectees {
         risqueAccepte: d.risque_accepte,
         risqueRequalifie: d.risque_requalifie,
       } satisfies MachineDetectionDto);
+    const sources = await sourcesDesConstats(this.db.k, [l]);
     return {
-      ...versResume(l, await this.reglage.valeurs()),
+      ...versResume(l, sources.get(l.id)!, await this.reglage.valeurs()),
       synopsis: l.synopsis,
       correctif: l.correctif,
       cvss3Vecteur: l.cvss3_vecteur,
@@ -396,13 +438,15 @@ export class FaillesDetectees {
                count(DISTINCT c.id) FILTER (WHERE c.gravite = 'faible')::int AS faible,
                count(DISTINCT c.id) FILTER (WHERE ${exploite})::int AS exploites,
                count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
-               count(DISTINCT c.id) FILTER (WHERE ${exploite} OR ${alerteConstat})::int AS exploitees_avere
+               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere})::int AS exploitees_avere
         FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
         WHERE d.machine_id = m.id AND ${present} AND NOT ${close('constat')}) k ON true
       WHERE ${lisible(user)}`.execute(this.db.k);
     const { rows: declarees } = await sql<DeclareeMachine>`
       SELECT DISTINCT m.id AS machine_id, r.cve, v.cvss31_gravite, v.cvss40_gravite,
-             (v.kev_ajout IS NOT NULL OR ${alerteCertFr('v.cve')}) AS exploitee
+             (SELECT max(a.fiche_cvss31) FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
+                AND a.cves @> ARRAY[v.cve]) AS cvss_cert_sante,
+             ${exploiteeCve('v.cve')} AS exploitee
       FROM vulnerabilites_produits_machines pm
       JOIN vulnerabilites_machines m ON m.id = pm.machine_id
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
@@ -501,29 +545,32 @@ export class FaillesDetectees {
       this.db.k,
     );
     const reglage = await this.reglage.valeurs();
+    const faits = await lireFaitsCve(
+      this.db.k,
+      rows.map((l) => l.cve),
+    );
     return rows.map((l): FailleDeclareeDto => {
-      const gravite = graviteDepuisNvd(l.cvss31_gravite, l.cvss40_gravite);
-      const epss = nombre(l.epss_score);
+      const f = faits.get(l.cve);
+      const sources = sourcesDe(f ? [f] : []);
+      const retenues = valeursRetenues(sources.valeurs);
       const rattachee = l.statut === 'rattachee' || l.statut === 'confirmee';
       return {
         rapprochementId: l.id,
         cve: l.cve,
         statut: l.statut,
         produit: { id: l.produit_id, editeur: l.editeur, nom: l.nom, versionProduit: l.version_produit },
-        gravite,
-        cvssScore: nombre(l.score),
-        epss,
+        gravite: retenues.gravite?.gravite ?? null,
+        cvssScore: retenues.cvss?.score ?? null,
+        epss: retenues.epss?.score ?? null,
         kev: l.kev,
         alerteCertFr: l.alerte,
+        sources,
         machines: l.machines,
         present: rattachee,
         priorite: calculerPriorite(
           {
-            exploitation: [...(l.kev ? ['kev' as const] : []), ...(l.alerte ? ['cert-fr' as const] : [])],
+            ...faitsDepuisSources(sources),
             presence: rattachee ? 'declaree' : l.statut === 'proposee' ? 'a_confirmer' : 'absente',
-            gravite,
-            epss,
-            exploitDisponible: false,
           },
           reglage,
         ),

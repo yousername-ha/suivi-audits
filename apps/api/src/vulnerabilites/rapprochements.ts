@@ -9,15 +9,26 @@
    - Suggestions d'identifiant : couples éditeur et produit déjà rangés par la veille qui ressemblent au nom saisi (lecture
      de la base seulement, aucun appel réseau).
    Journal `vulnerabilites.rapprochement.*` : identifiants internes, CVE et nombres ; aucun nom ni adresse de machine.
-   Lot V4b : un rapprochement qui cesse d'être rattaché (ou le redevient) est signalé au suivi des failles déclarées. */
+   Lot V4b : un rapprochement qui cesse d'être rattaché (ou le redevient) est signalé au suivi des failles déclarées.
+   Lot V4c :
+   - V26 : une CVE connue seulement par une publication du CERT Santé (NVD n'en donne pas encore les produits touchés) est
+     rapprochée par le nom : le produit cité par le titre de la publication, normalisé, est comparé au nom du produit
+     surveillé et à « éditeur nom », normalisés. Toujours une proposition (motif « avis_seulement ») ; quand NVD publie les
+     produits touchés, la règle par version s'applique, sans écraser une décision tant que les données n'ont pas changé ;
+   - V24 : une confirmation ou un rejet peut être annulé (`vulnerabilites:modifier`, If-Match, note facultative) ; le
+     rapprochement est recalculé par la règle, l'annulation est gardée (auteur, date, note) et journalisée ; le suivi
+     réagit comme à tout changement de rattachement ;
+   - la fiche montre ce que chaque source dit de la CVE (sources.ts) ; la priorité prend toutes les sources (V26, V27). */
 import { createHash } from 'node:crypto';
 import {
+  type AnnulationRapprochement,
   calculerPriorite,
   classerRapprochement,
+  faitsDepuisSources,
+  valeursRetenues,
   cpeDepuisIdentite,
   type DecisionRapprochement,
   type EtatRapprochement,
-  graviteDepuisNvd,
   identiteCpe,
   normaliserNom,
   type PartieCpe,
@@ -25,7 +36,6 @@ import {
   type Presence,
   type RapprochementDto,
   RAPPROCHEMENTS_PAR_STATUT_MAX,
-  type SourceExploitation,
   type StatutRapprochement,
   SUGGESTIONS_CPE_MAX,
   type SuggestionCpeDto,
@@ -38,11 +48,11 @@ import type { Client, Db, Kdb } from '../db/db.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
+import { lireFaitsCve, sourcesDe } from './sources.js';
 import { alerteCertFr, scoreNvd } from './sql.js';
 
 const AUTOMATE = { username: 'rapprochement automatique' };
 const empreinte = (x: unknown) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
-const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 
 interface LigneTouche {
   cve: string;
@@ -143,6 +153,22 @@ export class Rapprochements {
     }
     const candidats = new Map<string, LigneTouche[]>();
     for (const t of touches) candidats.set(t.cve, [...(candidats.get(t.cve) ?? []), t]);
+    // CVE connues seulement par une publication du CERT Santé (aucun produit touché vulnérable publié par NVD), dont le
+    // produit cité porte le nom du produit surveillé, ou « éditeur nom » (V26).
+    const noms = [...new Set([nomNorm, normaliserNom(`${p.editeur} ${p.nom}`)].filter((x) => x))];
+    const parAvis = new Set(
+      noms.length
+        ? (
+            await sql<{ cve: string }>`SELECT DISTINCT c.cve FROM vulnerabilites_veille_avis a
+              CROSS JOIN LATERAL unnest(a.cves) AS c(cve)
+              JOIN vulnerabilites_veille_cve v ON v.cve = c.cve
+              WHERE a.source = 'cert-sante' AND a.produit_norm = ANY(${noms}::text[])
+                AND NOT EXISTS (SELECT 1 FROM vulnerabilites_veille_cve_produits t WHERE t.cve = c.cve AND t.vulnerable)
+              ORDER BY c.cve`.execute(k)
+          ).rows.map((x) => x.cve)
+        : [],
+    );
+    for (const cve of parAvis) if (candidats.has(cve)) parAvis.delete(cve);
     const existants = new Map(
       (await k.selectFrom('vulnerabilites_rapprochements').selectAll().where('produit_id', '=', p.id).execute()).map(
         (r) => [r.cve, r],
@@ -152,8 +178,9 @@ export class Rapprochements {
     let changements = 0;
     const nouveaux: Record<string, unknown>[] = [];
     const bascules: { id: string; rattachee: boolean }[] = [];
-    for (const cve of [...new Set([...candidats.keys(), ...existants.keys()])].sort()) {
+    for (const cve of [...new Set([...candidats.keys(), ...parAvis, ...existants.keys()])].sort()) {
       const plages = candidats.get(cve);
+      const avis = parAvis.has(cve);
       const courant = existants.get(cve);
       const calcul = plages
         ? classerRapprochement({
@@ -162,10 +189,20 @@ export class Rapprochements {
             plages: plages.map(plageDe),
             tronque: plages[0]!.produits_tronques,
           })
-        : null;
+        : avis
+          ? classerRapprochement({
+              versionDeclaree: p.version_produit,
+              parIdentifiant: false,
+              plages: [],
+              tronque: false,
+              parAvis: true,
+            })
+          : null;
       const empreinteCve = plages
         ? empreinte({ plages: plages.map(plageDe), tronque: plages[0]!.produits_tronques })
-        : (courant?.empreinte_cve ?? '');
+        : avis
+          ? empreinte({ avis: 'cert-sante' })
+          : (courant?.empreinte_cve ?? '');
       const etat: EtatRapprochement | null = courant
         ? {
             statut: courant.statut,
@@ -189,7 +226,7 @@ export class Rapprochements {
           : proposee
             ? proposee.versionDansPlage
             : null,
-        par_identifiant: calcul ? !!identite : (courant?.par_identifiant ?? !!identite),
+        par_identifiant: plages ? !!identite : avis ? false : (courant?.par_identifiant ?? !!identite),
         empreinte_produit: empreinteProduit,
         empreinte_cve: empreinteCve,
         version_decidee: t.garderDecision ? (courant?.version_decidee ?? null) : null,
@@ -269,12 +306,16 @@ export class Rapprochements {
       kev: boolean;
       alerte: boolean;
       produits_tronques: boolean;
+      annulation_decision: 'confirmee' | 'rejetee' | null;
+      annule_par: string | null;
+      annule_le: Date | null;
+      annulation_note: string;
     }>`
       SELECT * FROM (
         SELECT r.id, r.cve, r.statut, r.motif, r.version_dans_plage, r.par_identifiant, r.version_decidee, r.decide_par,
                r.decide_le, r.note, r.version, r.calcule_le, v.description, v.cvss31_gravite, v.cvss40_gravite,
                ${scoreNvd} AS score, v.epss_score, v.kev_ajout IS NOT NULL AS kev, ${alerteCertFr('v.cve')} AS alerte,
-               v.produits_tronques,
+               v.produits_tronques, r.annulation_decision, r.annule_par, r.annule_le, r.annulation_note,
                row_number() OVER (PARTITION BY r.statut ORDER BY r.cve DESC) AS n
         FROM vulnerabilites_rapprochements r JOIN vulnerabilites_veille_cve v ON v.cve = r.cve
         WHERE r.produit_id = ${produitId}::uuid AND r.statut <> 'retiree') x
@@ -311,12 +352,14 @@ export class Rapprochements {
       for (const t of await q.orderBy('t.cve').orderBy('t.rang').execute())
         plages.set(t.cve, [...(plages.get(t.cve) ?? []), plageDe({ ...t, partie: 'a', produits_tronques: false })]);
     }
+    const faits = await lireFaitsCve(
+      this.db.k,
+      rows.map((r) => r.cve),
+    );
     const dtos = rows.map((r): RapprochementDto => {
-      const gravite = graviteDepuisNvd(r.cvss31_gravite, r.cvss40_gravite);
-      const exploitation: SourceExploitation[] = [
-        ...(r.kev ? ['kev' as const] : []),
-        ...(r.alerte ? ['cert-fr' as const] : []),
-      ];
+      const f = faits.get(r.cve);
+      const sources = sourcesDe(f ? [f] : []);
+      const retenues = valeursRetenues(sources.valeurs);
       return {
         id: r.id,
         cve: r.cve,
@@ -327,27 +370,28 @@ export class Rapprochements {
         plages: plages.get(r.cve) ?? [],
         tronque: r.produits_tronques,
         description: r.description,
-        gravite,
-        cvssScore: nombre(r.score),
-        epss: nombre(r.epss_score),
+        gravite: retenues.gravite?.gravite ?? null,
+        cvssScore: retenues.cvss?.score ?? null,
+        epss: retenues.epss?.score ?? null,
         kev: r.kev,
         alerteCertFr: r.alerte,
+        sources,
+        annulation:
+          r.annulation_decision && r.annule_par && r.annule_le
+            ? {
+                decision: r.annulation_decision,
+                par: r.annule_par,
+                le: r.annule_le.toISOString(),
+                note: r.annulation_note,
+              }
+            : null,
         decidePar: r.decide_par,
         decideLe: r.decide_le?.toISOString() ?? null,
         note: r.note,
         versionDecidee: r.version_decidee,
         calculeLe: r.calcule_le.toISOString(),
         version: r.version,
-        priorite: calculerPriorite(
-          {
-            exploitation,
-            presence: presenceDe(r.statut),
-            gravite,
-            epss: nombre(r.epss_score),
-            exploitDisponible: false,
-          },
-          reglage,
-        ),
+        priorite: calculerPriorite({ ...faitsDepuisSources(sources), presence: presenceDe(r.statut) }, reglage),
       };
     });
     const ordre = (s: StatutRapprochement) => ORDRE_FICHE.indexOf(s);
@@ -402,7 +446,89 @@ export class Rapprochements {
         { produit: r.produit_id, cve: r.cve, motif: r.motif, versionProduit: r.version_produit, note: body.note },
         c,
       );
+      // Une confirmation rattache la CVE : le suivi réagit comme à tout changement de rattachement (proposition
+      // « corrigée » retirée, faille corrigée réapparue).
+      if (statut === 'confirmee') await this.apresBascules?.(k, c, r.produit_id, [{ id, rattachee: true }]);
       return { id, statut, version: fin.version };
+    }, user.username);
+  }
+
+  /* ---------------------------------------------------------------- Annulation d'une décision (V24) */
+  /** Annule une confirmation ou un rejet (`vulnerabilites:modifier`, If-Match : version du rapprochement), note
+      facultative. La décision est effacée, puis le produit est recalculé : le rapprochement redevient à décider, ou prend
+      le statut que la règle lui donne (rattaché d'office, écarté, retiré). Le passage intermédiaire garde le rattachement
+      de la décision annulée (« rattachée » pour une confirmation, « à décider » pour un rejet) : le recalcul voit ainsi le
+      vrai changement et le signale au suivi (lot V4b), comme tout changement de rattachement. L'annulation est gardée sur
+      le rapprochement (dernière annulation) et journalisée, avec la décision annulée et son auteur. Verrous dans l'ordre du
+      recalcul : produit, puis rapprochement. */
+  async annuler(
+    id: string,
+    body: AnnulationRapprochement,
+    attendue: number,
+    user: SessionUser,
+    ip: string,
+  ): Promise<{ id: string; statut: StatutRapprochement; version: number }> {
+    return this.db.tx(async (c, k) => {
+      const lu = await k
+        .selectFrom('vulnerabilites_rapprochements')
+        .select('produit_id')
+        .where('id', '=', id)
+        .executeTakeFirst();
+      if (!lu) throw new HttpError(404, 'Rapprochement introuvable.');
+      await k.selectFrom('vulnerabilites_produits').select('id').where('id', '=', lu.produit_id).forUpdate().execute();
+      const r = await k
+        .selectFrom('vulnerabilites_rapprochements')
+        .select(['id', 'statut', 'version', 'cve', 'produit_id', 'motif', 'decide_par', 'decide_le', 'version_decidee'])
+        .where('id', '=', id)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!r) throw new HttpError(404, 'Rapprochement introuvable.');
+      if (r.version !== attendue) throw conflict({ id: r.id, statut: r.statut, version: r.version });
+      if (r.statut !== 'confirmee' && r.statut !== 'rejetee')
+        throw new HttpError(409, 'Ce rapprochement n’a pas de décision à annuler : rechargez la fiche du produit.');
+      await k
+        .updateTable('vulnerabilites_rapprochements')
+        .set((eb) => ({
+          statut: r.statut === 'confirmee' ? 'rattachee' : 'proposee',
+          motif: r.statut === 'confirmee' ? r.motif : (r.motif ?? 'nom_seulement'),
+          decide_par: null,
+          decide_le: null,
+          version_decidee: null,
+          note: '',
+          annulation_decision: r.statut,
+          annule_par: user.username,
+          annule_le: sql<Date>`now()`,
+          annulation_note: body.note,
+          version: eb('version', '+', 1),
+        }))
+        .where('id', '=', id)
+        .execute();
+      await this.recalculerProduit(k, c, r.produit_id);
+      const fin = await k
+        .selectFrom('vulnerabilites_rapprochements')
+        .select(['statut', 'version'])
+        .where('id', '=', id)
+        .executeTakeFirstOrThrow();
+      await this.db.audit(
+        user,
+        ip,
+        'vulnerabilites.rapprochement.annule',
+        id,
+        {
+          produit: r.produit_id,
+          cve: r.cve,
+          decisionAnnulee: {
+            statut: r.statut,
+            par: r.decide_par,
+            le: r.decide_le?.toISOString() ?? null,
+            versionProduit: r.version_decidee,
+          },
+          statut: fin.statut,
+          note: body.note,
+        },
+        c,
+      );
+      return { id, statut: fin.statut, version: fin.version };
     }, user.username);
   }
 

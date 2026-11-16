@@ -6,6 +6,8 @@ pnpm-lock.yaml
 *.md
 docs/
 tests/fixtures/
+# Pages au format réel des sources de la veille (balisage d'origine, réduit à l'essentiel).
+scripts/tests/fixtures/veille/*.html
 **/*.generated.ts
 apps/web/src/generated/
 pnpm-workspace.yaml

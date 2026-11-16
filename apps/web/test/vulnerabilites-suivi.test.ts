@@ -5,6 +5,7 @@
    entièrement fictives. */
 import { MantineProvider } from '@mantine/core';
 import type {
+  SourcesFailleDto,
   ActionLieeDto,
   ConstatResumeDto,
   EntreeHistoriqueSuiviDto,
@@ -29,6 +30,12 @@ import {
 } from '../src/vulnerabilites/suivi';
 
 const rendu = (e: ReactElement) => renderToStaticMarkup(createElement(MantineProvider, null, e));
+const SOURCES_VIDES: SourcesFailleDto = {
+  exploitation: [],
+  exploitable: [],
+  valeurs: { gravites: [], cvss: [], epss: [] },
+  certSante: null,
+};
 const rien = () => undefined;
 const suivi = (s: Partial<SuiviResumeDto> = {}): SuiviResumeDto => ({
   etat: 'nouvelle',
@@ -59,6 +66,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   derniereDetection: null,
   present: false,
   alerteCertFr: false,
+  sources: SOURCES_VIDES,
   priorite,
   suivi: suivi({ etat: 'a_traiter', proposition: 'a_confirmer' }),
   ...c,
@@ -78,6 +86,7 @@ const declaree: FailleDeclareeDto = {
   epss: null,
   kev: false,
   alerteCertFr: false,
+  sources: SOURCES_VIDES,
   machines: 1,
   present: false,
   priorite,

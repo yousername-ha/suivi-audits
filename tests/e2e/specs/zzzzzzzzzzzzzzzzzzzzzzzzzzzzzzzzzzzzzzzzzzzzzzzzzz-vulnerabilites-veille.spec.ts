@@ -1,7 +1,7 @@
 /* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille » de bout en bout, sans capture de référence (aucune
    n'est approuvée sans relecture) : état des sources, fenêtre de validation du flux (destinations, ce qui sort), recherche,
    accessibilité, CSP. Le flux n'est jamais ouvert ici : la fenêtre est annulée, pour qu'aucune source réelle ne soit jointe
-   depuis la pile de test. */
+   depuis la pile de test. Lot V4c : état de la lecture des fiches du CERT Santé. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -28,6 +28,8 @@ test('Vulnérabilités : écran « Veille », sources, validation du flux annul�
     ])
       await expect(sources).toContainText(hote);
     await expect(page.getByText('Aucune source n’est lue')).toBeVisible();
+    // Lot V4c : état de la lecture des fiches du CERT Santé, aucune lue sur une pile vierge.
+    await expect(page.getByText(/Fiches du CERT Santé .* 0 fiche lue, aucune à lire\./)).toBeVisible();
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Validation du flux : destinations et ce qui sort ; « Confirmer » exige la case ; annulée, rien n'est ouvert.

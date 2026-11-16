@@ -4,7 +4,10 @@
    Écran sobre avec les composants de la charte (packages/ui), sous la CSP stricte (ADR 0006) ; le style du poste de
    commandement viendra au lot V8. Les textes des sources s'affichent tels quels (anglais pour la CISA et NVD), comme texte
    simple ; un lien vers l'avis s'ouvre dans un nouvel onglet sans transmettre de référent. Les boutons suivent les droits de
-   la session pour l'affichage seulement : le serveur reste seul juge. */
+   la session pour l'affichage seulement : le serveur reste seul juge.
+   Lot V4c : état de la lecture des fiches du CERT Santé ; produit cité et mentions de chaque fiche, telles quelles ; pour
+   une faille connue, sources qui l'ont publiée (la première d'abord), exploitation avérée et « exploitable » avec leur
+   première source et sa date. */
 import { Alert, Anchor, Badge, Button, Group, Pagination, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -24,6 +27,8 @@ import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
+import { resumeFichesCertSante, resumePublications } from './sources';
+import { MarquesSources, MentionsFicheCertSante } from './SourcesFaille';
 import {
   adresseAvis,
   dateCourte,
@@ -101,6 +106,17 @@ export function SourcesTable({ sources, fluxOuvert }: { sources: EtatSourceVeill
         </Table.Tbody>
       </Table>
     </DataTable>
+  );
+}
+
+/** Lecture des fiches du CERT Santé (sans état React) : fiches lues, à lire, date de la dernière lecture. */
+export function FichesCertSante({ f }: { f: EtatVeilleDto['fichesCertSante'] }) {
+  return (
+    <Text size="sm">
+      Fiches du CERT Santé (mentions structurées de chaque publication qui cite une CVE) : {resumeFichesCertSante(f)}{' '}
+      Dernière lecture :{' '}
+      {f.derniereLecture ? <span className="horodatage">{fmtDate(f.derniereLecture)}</span> : 'jamais'}.
+    </Text>
   );
 }
 
@@ -292,6 +308,12 @@ export function AvisTable({ avis }: { avis: AvisVeilleDto[] }) {
                       {a.resume}
                     </Text>
                   )}
+                  {a.produit && (
+                    <Text size="xs" className="veille-texte">
+                      Produit cité : {a.produit}
+                    </Text>
+                  )}
+                  {a.fiche && <MentionsFicheCertSante f={a.fiche} />}
                 </Table.Td>
                 <Table.Td>
                   <Text size="xs" className="veille-code">
@@ -349,6 +371,10 @@ export function FaillesTable({ failles }: { failles: FailleVeilleDto[] }) {
                       {f.description}
                     </Text>
                   )}
+                  <Text size="xs" c="dimmed">
+                    Publiée par : {resumePublications(f.publications)}
+                  </Text>
+                  <MarquesSources s={f.sources} />
                 </Table.Td>
                 <Table.Td>
                   {cvss ? (
@@ -371,9 +397,13 @@ export function FaillesTable({ failles }: { failles: FailleVeilleDto[] }) {
                 </Table.Td>
                 <Table.Td>
                   <Text size="xs" className="veille-texte">
-                    {[...new Set([...(f.kev ? [`${f.kev.editeur} · ${f.kev.produit}`] : []), ...f.produits])].join(
-                      ', ',
-                    ) || '—'}
+                    {[
+                      ...new Set([
+                        ...(f.kev ? [`${f.kev.editeur} · ${f.kev.produit}`] : []),
+                        ...f.produits,
+                        ...f.produitsCites,
+                      ]),
+                    ].join(', ') || '—'}
                   </Text>
                   {f.editeurs.length > 0 && (
                     <Text size="xs" c="dimmed" className="veille-texte">
@@ -533,6 +563,7 @@ export function VeillePage() {
               Sources
             </Title>
             <SourcesTable sources={etat.data.sources} fluxOuvert={etat.data.flux.ouvert} />
+            <FichesCertSante f={etat.data.fichesCertSante} />
           </>
         )}
         <form onSubmit={chercher} role="search">

@@ -69,6 +69,17 @@ cours) : le filtre « Suivi » montre les autres états et les failles « à clo
 Tenable qui suit la mise à jour, les constats qui ne sont plus présents nulle part, y compris ceux disparus avant elle, sont
 proposés « corrigés selon Tenable, à confirmer ». (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `078`** (module Vulnérabilités, plusieurs sources et annulation d'une décision, lot V4c de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes du produit cité et des mentions de la fiche sur
+`vulnerabilites_veille_avis`, réservées au CERT Santé ; colonnes de l'annulation sur `vulnerabilites_rapprochements` ; liste des
+motifs de proposition recréée avec `avis_seulement` ; un index), durée négligeable, sans reprise de données. Rien à faire sur le
+serveur : **le pare-feu ne change pas** (même hôte `cyberveille.esante.gouv.fr`, port 443), mais la veille du CERT Santé lit
+désormais aussi la page de ses publications nouvelles ou modifiées, 30 au plus par collecte
+([guide d'installation, étape 11.11](docs/INSTALLATION.md)) ; derrière le mandataire de l'établissement, ces lectures passent par
+lui comme les autres. Les mentions du CERT Santé ne sont connues qu'à partir des collectes suivant la mise à jour. La priorité
+de certaines failles peut monter : l'exploitation avérée vaut désormais aussi par la fiche du CERT Santé, et la gravité retenue
+est la plus sévère des sources. (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -245,6 +256,34 @@ proposés « corrigés selon Tenable, à confirmer ». (session « Module survei
   `vulnerabilites.suivi.etat_modifie`, `.proposition_refusee`, `.action_creee`, `.action_reliee`, `.action_deliee`,
   `.synchronisation`, `.rapprochement` : identifiants et états, sans note, sans nom ni adresse de machine. Rien ne part vers
   l'assistant, aucune notification, aucun export. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4c : plusieurs sources, la source en avance prime ; mentions du CERT Santé ; valeur la plus
+  sévère ; annulation d'une décision de rapprochement** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), décisions V23,
+  V24, V26 et V27). **Fiches du CERT Santé** : après son flux RSS, le script de veille lit, sur le même hôte et à un chemin à
+  motif strict (`/alertes/<adresse>`, ajouté à la liste fermée du script et du registre partagé), la page de chaque publication
+  nouvelle ou dont le titre a changé (« | modifié le … »), ou lue il y a plus de sept jours, qui cite une CVE : 30 pages au plus
+  par collecte, une seconde entre deux lectures, 512 Kio par page, durée bornée ; `GET` seul, aucune redirection suivie,
+  mandataire de l'établissement emprunté comme pour les autres lectures. La page est analysée par `html.parser` de la
+  bibliothèque standard, sans rien exécuter ni suivre ; seules des mentions structurées en sont tirées (texte exact d'un nœud
+  suivi de sa valeur dans le même bloc, hors commentaires, attributs et scripts ; **aucune recherche de mot-clé**) : faille
+  activement exploitée, correctif, contournement (oui, non), preuve de concept (disponible, indisponible), score CVSS v3.1 ;
+  absente, d'une forme imprévue ou contradictoire, une mention vaut « non renseignée », jamais « non ». Produit cité tiré du
+  titre (« Produit - CVE-… »). **Une faille est suivie dès qu'une source la publie (V26)** : chaque fait reste rangé avec sa
+  source et sa date ; NVD complète sans rien effacer ; la veille montre les sources qui ont publié une CVE, la première d'abord.
+  **Exploitation avérée** dès qu'une source le dit : catalogue KEV, alerte du CERT-FR, ou « activement exploitée : Oui » du CERT
+  Santé (V23) ; **« exploitable »** selon Tenable ou une preuve de concept disponible selon le CERT Santé ; la priorité, le rang
+  des machines et les filtres « exploitation avérée » et « exploitables » les prennent toutes ; les écrans citent les sources
+  avec la date de la première. **Valeur la plus sévère (V27)** : gravité, score CVSS (NVD, Tenable, CERT Santé) et score EPSS
+  (veille, Tenable) gardés par source ; la priorité retient la plus sévère ; la fiche montre les valeurs par source. **CVE
+  publiée par le CERT Santé avant NVD** : rapprochée par le nom (produit cité, normalisé, comparé au nom du produit surveillé ou
+  à « éditeur nom »), toujours **proposée** avec le motif « Publiée par le CERT Santé, pas encore par NVD » ; quand NVD publie les
+  produits touchés, la règle par version s'applique, sans écraser une décision à données égales. **Annuler une décision (V24)** :
+  une confirmation ou un rejet s'annule (`vulnerabilites:modifier`, `If-Match`, note facultative) ; le rapprochement redevient à
+  décider ou prend le statut que la règle lui donne ; l'annulation est affichée (auteur, date, note) ; le suivi réagit comme à
+  tout changement de rattachement (une confirmation rétablie retire aussi la proposition « corrigée »). API
+  `POST /api/vulnerabilites/rapprochements/:id/annulation` ; état de la lecture des fiches dans `/veille/etat`. Journal
+  `vulnerabilites.rapprochement.annule` (décision annulée et son auteur, statut obtenu, note). Écrans : « Ce que disent les
+  sources » dans les fiches, marques dans les listes, bouton « Annuler la décision », mentions du CERT Santé telles quelles et
+  état des fiches dans « Veille ». (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

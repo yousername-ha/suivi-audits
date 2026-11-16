@@ -293,6 +293,21 @@
   - une action créée depuis le module ne nommait aucune machine : **remplacé par V30**, à réaliser (machines et application
     touchées nommées dans l'action, dans la limite de ce que la personne peut lire, liste bornée).
   Non réalisé : notification, lien de la fiche vers l'action dans Pilotage.
+- **Lot V4c, règle des sources** (16/11/2026) : migration `078`. Une faille est suivie dès qu'une source la publie, avec
+  la provenance et la date de chaque fait ; exploitation avérée par le catalogue KEV, une alerte du CERT-FR ou la mention
+  « La faille est activement exploitée : Oui » du CERT Santé ; « exploitable » par Tenable ou par la mention de preuve de
+  concept du CERT Santé ; valeur la plus sévère pour la priorité ; décision de rapprochement annulable. Trois points du lot
+  V4a sont dépassés : le CERT Santé compte, une décision s'annule, une faille citée par le CERT Santé est rapprochée sans
+  attendre NVD. Constaté sur 15 fiches réelles du CERT Santé : les trois mentions oui/non et la phrase de preuve de concept
+  ont une forme unique ; toute autre forme vaut « non renseigné ». À confirmer par le RSSI :
+  - **« exploitable » ne vaut pas exploitation avérée** : une preuve de concept disponible pèse en P2 et ne donne jamais P1,
+    alors que la décision V23 dit « exploitée, ou exploitable » (écart avec la lettre de V23) ;
+  - une fiche du CERT Santé est lue par publication nouvelle ou modifiée : 30 au plus par collecte, relecture après 7 jours ;
+  - le rapprochement par le nom exige que la source cite le produit ; un titre qui ne cite que l'éditeur ne rapproche rien,
+    et les alertes du CERT-FR, qui ne citent aucun produit structuré, ne sont pas rapprochées par le nom ;
+  - annuler une confirmation alors que la règle d'office tranche désormais donne « rattaché d'office » ;
+  - à valeur égale entre sources, l'ordre d'affichage est NVD, Tenable, CERT Santé, FIRST.
+  Non vérifié : conditions d'usage du site du CERT Santé pour la lecture de ses pages, toute collecte réelle.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre

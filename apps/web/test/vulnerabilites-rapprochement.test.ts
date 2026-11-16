@@ -48,6 +48,13 @@ const rapp = (r: Partial<RapprochementDto> = {}): RapprochementDto => ({
   epss: 0.2,
   kev: false,
   alerteCertFr: false,
+  sources: {
+    exploitation: [],
+    exploitable: [],
+    valeurs: { gravites: [], cvss: [], epss: [] },
+    certSante: null,
+  },
+  annulation: null,
   decidePar: null,
   decideLe: null,
   note: '',
@@ -235,6 +242,12 @@ describe('failles déclarées, priorité, machines', () => {
     epss: null,
     kev: true,
     alerteCertFr: false,
+    sources: {
+      exploitation: [{ source: 'kev', le: '2026-11-13T00:00:00.000Z' }],
+      exploitable: [],
+      valeurs: { gravites: [{ source: 'nvd', gravite: 'critique' }], cvss: [{ source: 'nvd', score: 9.3 }], epss: [] },
+      certSante: null,
+    },
     machines: 2,
     present: true,
     priorite: {

@@ -48,6 +48,16 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   derniereDetection: '2026-11-16T06:04:48.000Z',
   present: true,
   alerteCertFr: false,
+  sources: {
+    exploitation: [{ source: 'kev', le: '2026-11-13T00:00:00.000Z' }],
+    exploitable: [{ source: 'tenable', le: null }],
+    valeurs: {
+      gravites: [{ source: 'tenable', gravite: 'critique' }],
+      cvss: [{ source: 'tenable', score: 9.1 }],
+      epss: [],
+    },
+    certSante: null,
+  },
   priorite: {
     niveau: 'P1',
     faits: [

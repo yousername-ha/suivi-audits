@@ -43,9 +43,11 @@ import { fmtDate } from '../components/common';
 import { useCan } from '../session';
 import { libelleMachine, libelleRole, urlMachines, FILTRES_MACHINES_VIDES } from './failles';
 import { PrioriteFaits } from './FaillesDetectees';
+import { MarquesSources } from './SourcesFaille';
 import {
   champsManquants,
   explicationProposition,
+  libelleAnnulation,
   groupesRapprochements,
   libellePlage,
   urlSuggestionsCpe,
@@ -522,15 +524,18 @@ function SuggestionCpe({ formulaire, onChoisir }: { formulaire: FormulaireProdui
   );
 }
 
-/** Rapprochements d'un produit, regroupés par statut (sans état) ; décisions offertes sur les propositions. */
+/** Rapprochements d'un produit, regroupés par statut (sans état) ; décisions offertes sur les propositions, annulation
+    offerte sur une confirmation ou un rejet (V24). */
 export function RapprochementsProduit({
   rapprochements,
   peutDecider,
   onDecider,
+  onAnnuler,
 }: {
   rapprochements: RapprochementDto[];
   peutDecider: boolean;
   onDecider: (r: RapprochementDto) => void;
+  onAnnuler?: (r: RapprochementDto) => void;
 }) {
   const groupes = groupesRapprochements(rapprochements);
   if (!groupes.length)
@@ -553,6 +558,7 @@ export function RapprochementsProduit({
                   <Table.Tr key={r.id}>
                     <Table.Td>
                       <PrioriteFaits p={r.priorite} />
+                      <MarquesSources s={r.sources} />
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm" className="veille-code">
@@ -591,9 +597,26 @@ export function RapprochementsProduit({
                           {r.note ? ` : ${r.note}` : ''}
                         </Text>
                       )}
+                      {r.annulation && (
+                        <Text size="xs" c="dimmed">
+                          {libelleAnnulation(r.annulation)}{' '}
+                          <span className="horodatage">{fmtDate(r.annulation.le)}</span>
+                          {r.annulation.note ? ` : ${r.annulation.note}` : ''}
+                        </Text>
+                      )}
                       {peutDecider && r.statut === 'proposee' && (
                         <Button size="compact-sm" variant="default" onClick={() => onDecider(r)}>
                           Décider {r.cve}
+                        </Button>
+                      )}
+                      {peutDecider && onAnnuler && (r.statut === 'confirmee' || r.statut === 'rejetee') && (
+                        <Button
+                          size="compact-sm"
+                          variant="default"
+                          aria-label={`Annuler la décision sur ${r.cve}`}
+                          onClick={() => onAnnuler(r)}
+                        >
+                          Annuler la décision
                         </Button>
                       )}
                     </Table.Td>
@@ -672,6 +695,7 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
   const [recherche, setRecherche] = useState<string | null>(null);
   const [choix, setChoix] = useState<string | null>(null);
   const [aDecider, setADecider] = useState<RapprochementDto | null>(null);
+  const [aAnnuler, setAAnnuler] = useState<RapprochementDto | null>(null);
   const [note, setNote] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const machines = useQuery({
@@ -686,6 +710,7 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
       notifications.show({ color: 'teal', message });
       setChoix(null);
       setADecider(null);
+      setAAnnuler(null);
       setNote('');
       await qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
       await onChange();
@@ -781,10 +806,52 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
             rapprochements={f.rapprochements}
             peutDecider={modifier}
             onDecider={(r) => {
+              setAAnnuler(null);
               setADecider(r);
               setNote('');
             }}
+            onAnnuler={(r) => {
+              setADecider(null);
+              setAAnnuler(r);
+              setNote('');
+            }}
           />
+          {aAnnuler && (
+            <Stack gap="xs" role="group" aria-label={`Annulation de la décision sur ${aAnnuler.cve}`}>
+              <Text size="sm">
+                {aAnnuler.cve} : {aAnnuler.statut === 'confirmee' ? 'confirmée' : 'rejetée'} par {aAnnuler.decidePar}.
+                Annuler cette décision la retire : le rapprochement redevient à décider, ou prend le statut que la règle
+                lui donne. L’annulation est tracée.
+              </Text>
+              <Textarea
+                label="Note (facultative)"
+                maxLength={1000}
+                value={note}
+                onChange={(e) => setNote(e.currentTarget.value)}
+              />
+              <Group justify="flex-end">
+                <Button variant="default" onClick={() => setAAnnuler(null)}>
+                  Fermer
+                </Button>
+                <Button
+                  loading={envoi}
+                  color="red"
+                  onClick={() =>
+                    void action(
+                      () =>
+                        api('POST', `/api/vulnerabilites/rapprochements/${aAnnuler.id}/annulation`, {
+                          body: { note },
+                          ifMatch: aAnnuler.version,
+                        }),
+                      'Décision annulée.',
+                    )
+                  }
+                >
+                  Annuler la décision
+                </Button>
+              </Group>
+            </Stack>
+          )}
           {aDecider && (
             <Stack gap="xs" role="group" aria-label={`Décision sur ${aDecider.cve}`}>
               <Text size="sm">

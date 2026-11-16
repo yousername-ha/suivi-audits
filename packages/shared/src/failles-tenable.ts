@@ -5,7 +5,7 @@
    refuser tout le lot. Forme des réponses relevée sur une instance 6.9.1 (cadrage, §5 bis) ; aucun autre champ n'est
    supposé. Les textes de Tenable sont gardés en anglais, tels quels (V19), nettoyés et bornés comme un texte externe. */
 import { z } from 'zod';
-import type { Priorite, RangMachineDto } from './priorite-vulnerabilites.js';
+import type { Priorite, RangMachineDto, SourcesFailleDto } from './priorite-vulnerabilites.js';
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
@@ -315,6 +315,9 @@ export interface ConstatResumeDto {
   suivi: SuiviResumeDto;
   /** Une CVE du constat est citée par une alerte du CERT-FR rangée par la veille (lot V4a). */
   alerteCertFr: boolean;
+  /** Ce que chaque source dit des CVE du constat et de Tenable lui-même (V26, V27) : sources de l'exploitation avérée et
+      de « exploitable » avec leur date, valeurs par source, mentions du CERT Santé. */
+  sources: SourcesFailleDto;
   /** Priorité calculée par la plateforme et faits qui la fondent (lot V4a). */
   priorite: Priorite;
 }
@@ -361,7 +364,8 @@ export interface CompteursMachine {
   /** Failles déclarées (CVE rattachées à un produit relié à la machine), comptées une fois et seulement si Tenable ne les
       détecte pas sur cette machine ; déjà incluses dans les compteurs par gravité (lot V4a). */
   declarees: number;
-  /** Failles présentes, détectées ou déclarées, dont l'exploitation est avérée (catalogue KEV ou alerte du CERT-FR). */
+  /** Failles présentes, détectées ou déclarées, dont l'exploitation est avérée (catalogue KEV, alerte du CERT-FR ou fiche du
+      CERT Santé). */
   exploitationAveree: number;
 }
 

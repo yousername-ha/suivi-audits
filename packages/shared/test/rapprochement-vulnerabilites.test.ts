@@ -3,6 +3,7 @@
    remise en jeu). Fonctions pures, données fictives. */
 import { describe, expect, it } from 'vitest';
 import {
+  AnnulationRapprochement,
   classerRapprochement,
   comparerVersions,
   composantesCpe,
@@ -230,6 +231,22 @@ describe('classement d’un rapprochement (règle du point 8)', () => {
     expect(nom(dans)).toEqual({ calcul: 'proposee', motif: 'nom_seulement', versionDansPlage: 'oui' });
     expect(nom(hors)).toEqual({ calcul: 'proposee', motif: 'nom_seulement', versionDansPlage: 'non' });
     expect(nom([plage()])).toEqual({ calcul: 'proposee', motif: 'nom_seulement', versionDansPlage: 'inconnu' });
+  });
+
+  it('CVE connue seulement par un avis (V26) : toujours proposée par le nom, sans position de version', () => {
+    for (const parIdentifiant of [true, false])
+      expect(
+        classerRapprochement({ versionDeclaree: '10.1.2', parIdentifiant, plages: [], tronque: false, parAvis: true }),
+      ).toEqual({ calcul: 'proposee', motif: 'avis_seulement', versionDansPlage: 'inconnu' });
+    expect(MOTIF_PROPOSITION_LIBELLES.avis_seulement).toBe('Publiée par le CERT Santé, pas encore par NVD');
+  });
+
+  it('annulation d’une décision (V24) : note facultative, bornée, sans caractère de contrôle', () => {
+    expect(AnnulationRapprochement.parse({})).toEqual({ note: '' });
+    expect(AnnulationRapprochement.parse({ note: '  Erreur de saisie.  ' })).toEqual({ note: 'Erreur de saisie.' });
+    expect(AnnulationRapprochement.safeParse({ note: 'a\u0007b' }).success).toBe(false);
+    expect(AnnulationRapprochement.safeParse({ note: 'x'.repeat(1001) }).success).toBe(false);
+    expect(AnnulationRapprochement.safeParse({ note: '', decision: 'annuler' }).success).toBe(false);
   });
 
   it('libellés : un par motif et par statut ; décision et recherche contrôlées', () => {

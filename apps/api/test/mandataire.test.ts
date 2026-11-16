@@ -230,6 +230,19 @@ describe('remise à l’exécutant', () => {
     expect(JSON.stringify(await audits('vulnerabilites.veille.%'))).not.toContain('mandataire.exemple.test');
     await t.svc.vulnerabilites.veille.terminer(job.id as string, { ok: false, bilan: null, erreur: 'Essai.' });
 
+    // CERT Santé (lot V4c) : le flux et les fiches sont lus dans la même collecte ; les paramètres du mandataire sont
+    // joints comme pour les autres sources, à côté des fiches déjà lues.
+    await t.svc.db.q(
+      "INSERT INTO vulnerabilites_veille_collectes (source, origine, demande_par) VALUES ('cert-sante', 'manuel', 'test')",
+    );
+    job = (await t.svc.vulnerabilites.veille.reclamer(true))!;
+    expect(job).toMatchObject({
+      source: 'cert-sante',
+      parametres: { lues: {} },
+      mandataire: { hote: 'mandataire.exemple.test', port: 3128, identifiant: 'compte-veille' },
+    });
+    await t.svc.vulnerabilites.veille.terminer(job.id as string, { ok: false, bilan: null, erreur: 'Essai.' });
+
     const etat = (await admin.get('/api/vulnerabilites/veille/etat')).json();
     expect(etat.mandataire).toEqual({ actif: true });
     expect(JSON.stringify(etat)).not.toContain('mandataire.exemple.test');

@@ -21,6 +21,6 @@ it('exécute le script isolé de la veille contre un faux service HTTPS local (m
   const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_veille_vulnerabilites.py')], {
     timeout: 60000,
   });
-  expect(r.stderr).toContain('Ran 32 tests');
+  expect(r.stderr).toContain('Ran 38 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);

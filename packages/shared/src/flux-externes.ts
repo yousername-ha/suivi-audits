@@ -244,7 +244,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
     },
     donnees:
-      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR et du CERT Santé. Aucune donnée métier : ni produit surveillé, ni machine, ni contenu de la plateforme.',
+      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR, le flux RSS du CERT Santé et la page de ses publications nouvelles ou modifiées qui citent une CVE (30 au plus par collecte). Aucune donnée métier : ni produit surveillé, ni machine, ni contenu de la plateforme.',
     reglage: { libelle: 'Risques > Vulnérabilités > Veille', lien: '/vulnerabilites/veille' },
     activation: { par: 'flux', geste: 'Bouton « Activer la veille »' },
     moduleActivation: 'vulnerabilites',

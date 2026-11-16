@@ -1668,6 +1668,10 @@ export interface VulnerabilitesRapprochements {
   version: Generated<number>;
   calcule_le: ColumnType<Date, Date | string | undefined, Date | string>;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  annulation_decision: string | null;
+  annule_par: string | null;
+  annule_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  annulation_note: Generated<string>;
 }
 
 export interface VulnerabilitesSuiviActions {
@@ -1739,6 +1743,17 @@ export interface VulnerabilitesVeilleAvis {
   cves_lues: Generated<boolean>;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  produit: string | null;
+  produit_norm: string | null;
+  fiche_lue_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fiche_titre: string | null;
+  fiche_exploitee: string | null;
+  fiche_correctif: string | null;
+  fiche_contournement: string | null;
+  fiche_preuve: string | null;
+  fiche_cvss31: ColumnType<string | null, number | string | null, number | string | null>;
+  fiche_exploitee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fiche_preuve_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesVeilleCollectes {

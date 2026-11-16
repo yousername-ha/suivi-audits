@@ -471,6 +471,8 @@ describe('collecte par la CLI de l’exécutant', () => {
         publieLe: '2026-11-13T02:06:47.000Z',
         cves: ['CVE-2026-90003'],
         cvesLues: true,
+        produit: 'Produit fictif',
+        fiche: null,
       },
     ]);
     const avis = (await lecteur.get(`${base}/avis`)).json();

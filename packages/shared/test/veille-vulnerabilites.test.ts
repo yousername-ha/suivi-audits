@@ -23,6 +23,7 @@ import {
   RapportCollecte,
   RechercheAvis,
   RechercheFailles,
+  SLUG_CERTSANTE,
   SOURCES_VEILLE,
   SOURCES_VEILLE_DEFINITIONS,
   texteExterneValide,
@@ -84,9 +85,19 @@ const certsante = {
   publieLe: null,
   cves: ['CVE-2026-0004'],
   cvesLues: true,
+  produit: 'Produit fictif',
+  fiche: { exploitee: 'oui', correctif: 'oui', contournement: null, preuveConcept: 'indisponible', cvss31: 7.5 },
 };
 
 describe('liste fermée des sources', () => {
+  it('fiches du CERT Santé : même hôte, chemin à motif strict, lectures bornées', () => {
+    expect(sourceVeille('cert-sante').chemins).toEqual(['/alertes-et-vulnerabilites/rss.xml', '/alertes/{slug}']);
+    expect(SLUG_CERTSANTE.test('openssh-cve-2026-123158-2026-11-06')).toBe(true);
+    for (const ko of ['', '../rss.xml', 'a/b', 'A-B', 'x?y=1', 'x'.repeat(201), 'x%2f'])
+      expect(SLUG_CERTSANTE.test(ko), ko).toBe(false);
+    expect(VEILLE_BORNES.fichesCertSante).toBe(30);
+    expect(sourceVeille('cert-sante').demande).toMatch(/30 au plus par collecte/);
+  });
   it('cinq sources, dans l’ordre des identifiants stables, chacune avec son hôte et ses chemins', () => {
     expect(SOURCES_VEILLE).toEqual(['cisa-kev', 'nvd', 'epss', 'cert-fr', 'cert-sante']);
     expect(SOURCES_VEILLE_DEFINITIONS.map((s) => s.id)).toEqual([...SOURCES_VEILLE]);
@@ -228,6 +239,29 @@ describe('éléments rapportés par l’exécutant', () => {
     ).toBe(false);
     expect(ElementCertSante.safeParse({ ...certsante, identifiant: 'CERTFR-2026-AVI-1500' }).success).toBe(false);
     expect(ElementCertSante.safeParse({ ...certsante, adresse: certfr.adresse }).success).toBe(false);
+  });
+  it('CERT Santé (V23) : produit cité et mentions de la fiche, forme stricte ; fiche non lue : null', () => {
+    expect(ElementCertSante.safeParse({ ...certsante, produit: null, fiche: null }).success).toBe(true);
+    const fiche = (x: Record<string, unknown>) =>
+      ElementCertSante.safeParse({ ...certsante, fiche: { ...certsante.fiche, ...x } }).success;
+    expect(fiche({ exploitee: null, correctif: null, contournement: 'non', preuveConcept: 'disponible' })).toBe(true);
+    expect(fiche({ cvss31: null })).toBe(true);
+    // Valeur hors liste (« Oui » brut, « exploitable », booléen), score hors échelle, champ inattendu : refusés.
+    for (const x of [
+      { exploitee: 'Oui' },
+      { exploitee: true },
+      { preuveConcept: 'oui' },
+      { correctif: 'peut-être' },
+      { cvss31: 10.5 },
+      { cvss31: '7.5' },
+      { texte: 'La faille est activement exploitée' },
+    ])
+      expect(fiche(x), JSON.stringify(x)).toBe(false);
+    const { fiche: _f, ...sansFiche } = certsante;
+    expect(ElementCertSante.safeParse(sansFiche).success).toBe(false);
+    expect(ElementCertSante.safeParse({ ...certsante, produit: '<b>Produit</b>' }).success).toBe(false);
+    // Le CERT-FR ne porte ni produit ni fiche.
+    expect(ElementCertFr.safeParse({ ...certfr, fiche: null }).success).toBe(false);
   });
 });
 

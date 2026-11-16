@@ -9,7 +9,7 @@
    comparée : le résultat est « incertain », jamais un résultat faux. */
 import { z } from 'zod';
 import type { GraviteTenable } from './failles-tenable.js';
-import type { Priorite } from './priorite-vulnerabilites.js';
+import type { Priorite, SourcesFailleDto } from './priorite-vulnerabilites.js';
 import type { ProduitSurveilleDto } from './vulnerabilites.js';
 import { NOM_CPE, type PartieCpe, PARTIES_CPE } from './veille-vulnerabilites.js';
 
@@ -147,13 +147,20 @@ export function cpeDepuisIdentite(i: IdentiteCpe): string {
 }
 
 /* ------------------------------------------------------------------ Classement d'un rapprochement */
-export const MOTIFS_PROPOSITION = ['nom_seulement', 'sans_plage', 'non_comparable', 'donnees_tronquees'] as const;
+export const MOTIFS_PROPOSITION = [
+  'nom_seulement',
+  'sans_plage',
+  'non_comparable',
+  'donnees_tronquees',
+  'avis_seulement',
+] as const;
 export type MotifProposition = (typeof MOTIFS_PROPOSITION)[number];
 export const MOTIF_PROPOSITION_LIBELLES: Record<MotifProposition, string> = {
   nom_seulement: 'Nom seulement',
   sans_plage: 'Aucune plage publiée',
   non_comparable: 'Version non comparable',
   donnees_tronquees: 'Liste des produits touchés incomplète',
+  avis_seulement: 'Publiée par le CERT Santé, pas encore par NVD',
 };
 
 /** La version déclarée semble-t-elle dans la plage (indication donnée avec une proposition) ? */
@@ -174,13 +181,18 @@ export type ResultatRapprochement =
       est dans une plage publiée (comparaison sûre), écartée si elle est hors de toutes ; proposée sinon (aucune plage,
       version non comparable) ;
     - par nom seulement (produit sans identifiant CPE) : toujours proposée, avec l'indication de la position de la version ;
-    - liste des produits touchés tronquée par la veille : jamais écartée (le produit a pu être retiré de la liste), proposée. */
+    - liste des produits touchés tronquée par la veille : jamais écartée (le produit a pu être retiré de la liste), proposée ;
+    - CVE connue seulement par un avis (V26 : publiée par le CERT Santé, NVD n'en donne pas encore les produits touchés),
+      rapprochée par le nom du produit cité : toujours proposée, sans position de version. */
 export function classerRapprochement(a: {
   versionDeclaree: string;
   parIdentifiant: boolean;
   plages: readonly PlageVersions[];
   tronque: boolean;
+  /** Candidat venu d'un avis (nom du produit cité par la source), et non des configurations de NVD. */
+  parAvis?: boolean;
 }): ResultatRapprochement {
+  if (a.parAvis) return { calcul: 'proposee', motif: 'avis_seulement', versionDansPlage: 'inconnu' };
   const pos = positionSurPlages(a.versionDeclaree, a.plages);
   const indication: VersionDansPlage = pos.resultat === 'dans' ? 'oui' : pos.resultat === 'hors' ? 'non' : 'inconnu';
   if (!a.parIdentifiant) return { calcul: 'proposee', motif: 'nom_seulement', versionDansPlage: indication };
@@ -258,6 +270,28 @@ export const DecisionRapprochement = z
   .strict();
 export type DecisionRapprochement = z.infer<typeof DecisionRapprochement>;
 
+/** Annulation d'une confirmation ou d'un rejet (V24 ; `vulnerabilites:modifier`, If-Match : version du rapprochement), note
+    facultative. Le rapprochement redevient à décider, ou reprend le statut que la règle d'office lui donne. */
+export const AnnulationRapprochement = z
+  .object({
+    note: z
+      .string()
+      .trim()
+      .max(1000)
+      .refine((s) => !/\p{Cc}/u.test(s), 'Caractère de contrôle refusé.')
+      .default(''),
+  })
+  .strict();
+export type AnnulationRapprochement = z.infer<typeof AnnulationRapprochement>;
+
+/** Dernière annulation d'une décision sur un rapprochement : décision annulée, auteur, date, note. */
+export interface AnnulationRapprochementDto {
+  decision: 'confirmee' | 'rejetee';
+  par: string;
+  le: string;
+  note: string;
+}
+
 /** Recherche des couples éditeur et produit connus de la veille qui ressemblent au nom saisi (aucun appel réseau). */
 export const SuggestionsCpeQuery = z
   .object({ nom: z.string().trim().min(2).max(200), editeur: z.string().trim().max(200).optional() })
@@ -295,6 +329,10 @@ export interface RapprochementDto {
   epss: number | null;
   kev: boolean;
   alerteCertFr: boolean;
+  /** Ce que chaque source dit de la CVE (V26, V27) ; `gravite`, `cvssScore` et `epss` sont les valeurs retenues. */
+  sources: SourcesFailleDto;
+  /** Dernière décision annulée (V24), ou null. */
+  annulation: AnnulationRapprochementDto | null;
   decidePar: string | null;
   decideLe: string | null;
   note: string;

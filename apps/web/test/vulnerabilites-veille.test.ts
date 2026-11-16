@@ -48,6 +48,8 @@ const avis = (a: Partial<AvisVeilleDto> = {}): AvisVeilleDto => ({
   publieLe: '2026-11-12T00:00:00.000Z',
   cves: ['CVE-2026-0001'],
   vuLe: '2026-11-16T05:00:00.000Z',
+  produit: null,
+  fiche: null,
   ...a,
 });
 const faille = (f: Partial<FailleVeilleDto> = {}): FailleVeilleDto => ({
@@ -70,6 +72,14 @@ const faille = (f: Partial<FailleVeilleDto> = {}): FailleVeilleDto => ({
     echeance: '2026-11-15',
     rancongiciel: true,
   },
+  publications: [{ source: 'cisa-kev', le: '2026-11-13T00:00:00.000Z' }],
+  produitsCites: [],
+  sources: {
+    exploitation: [{ source: 'kev', le: '2026-11-13T00:00:00.000Z' }],
+    exploitable: [],
+    valeurs: { gravites: [], cvss: [], epss: [] },
+    certSante: null,
+  },
   ...f,
 });
 const etat = (ouvert: boolean, disponible = true, mandataire = false): EtatVeilleDto => ({
@@ -77,6 +87,7 @@ const etat = (ouvert: boolean, disponible = true, mandataire = false): EtatVeill
   executant: { disponible },
   mandataire: { actif: mandataire },
   sources: [source()],
+  fichesCertSante: { lues: 0, aLire: 0, derniereLecture: null, relectureJours: 7 },
 });
 
 describe('menu', () => {

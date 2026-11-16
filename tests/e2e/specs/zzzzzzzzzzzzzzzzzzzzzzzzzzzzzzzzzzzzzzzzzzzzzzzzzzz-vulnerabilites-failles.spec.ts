@@ -2,7 +2,7 @@
    référence (aucune n'est approuvée sans relecture) : menu, bascule par faille et par machine, filtres, écran des machines,
    accessibilité, CSP. Aucun Tenable n'est joint : la pile de test n'a ni connecteur actif ni donnée synchronisée. Lot V4a :
    filtre de priorité, liste des failles déclarées, écran « Seuils de priorité ». Lot V4b : filtre « Suivi » (aucune faille à
-   clore sur une pile vierge). */
+   clore sur une pile vierge). Lot V4c : filtre « Exploitation avérée » (toutes les sources). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -20,7 +20,7 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await page.goto('/vulnerabilites/failles');
     await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
-    await page.getByLabel('Exploitées (KEV)').check();
+    await page.getByLabel('Exploitation avérée').check();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
     await expect(page.getByLabel('Priorité', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Suivi', { exact: true })).toBeVisible();

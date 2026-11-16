@@ -38,23 +38,155 @@ export const PRESENCE_LIBELLES: Record<Presence, string> = {
   absente: 'Absente',
 };
 
-/** Sources d'une exploitation avérée : catalogue KEV de la CISA, alerte du CERT-FR qui cite la CVE. */
-export const SOURCES_EXPLOITATION = ['kev', 'cert-fr'] as const;
+/** Sources d'une exploitation avérée (V26 : une seule suffit, « ou » logique) : catalogue KEV de la CISA, alerte du CERT-FR
+    qui cite la CVE, mention « La faille est activement exploitée : Oui » de la fiche du CERT Santé (V23). */
+export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante'] as const;
 export type SourceExploitation = (typeof SOURCES_EXPLOITATION)[number];
 export const SOURCE_EXPLOITATION_LIBELLES: Record<SourceExploitation, string> = {
   kev: 'catalogue KEV',
   'cert-fr': 'alerte du CERT-FR',
+  'cert-sante': 'fiche du CERT Santé',
 };
 
-/** Faits d'une faille, rassemblés par l'API. */
+/** Sources de « exploitable » (un code d'exploitation existe, sans exploitation observée ; V26) : champ `exploitAvailable`
+    de Tenable, preuve de concept disponible selon la fiche du CERT Santé (V23). */
+export const SOURCES_EXPLOITABLE = ['tenable', 'cert-sante'] as const;
+export type SourceExploitable = (typeof SOURCES_EXPLOITABLE)[number];
+export const SOURCE_EXPLOITABLE_LIBELLES: Record<SourceExploitable, string> = {
+  tenable: 'Tenable',
+  'cert-sante': 'preuve de concept selon le CERT Santé',
+};
+
+/** Un fait signalé par une source, avec la date à laquelle elle l'a signalé (null : date inconnue, par exemple Tenable). */
+export interface Signalement<S extends string> {
+  source: S;
+  le: string | null;
+}
+
+/** Signalements rangés de la source en avance à la plus tardive (V26 : « la source en avance prime ») ; date inconnue en
+    dernier ; à date égale, ordre de la liste des sources. Une source n'apparaît qu'une fois, à sa date la plus ancienne. */
+export function rangerSignalements<S extends string>(
+  liste: readonly Signalement<S>[],
+  ordre: readonly S[],
+): Signalement<S>[] {
+  const parSource = new Map<S, Signalement<S>>();
+  for (const x of liste) {
+    if (!ordre.includes(x.source)) continue;
+    const deja = parSource.get(x.source);
+    if (!deja || (x.le !== null && (deja.le === null || x.le < deja.le))) parSource.set(x.source, { ...x });
+  }
+  return [...parSource.values()].sort(
+    (a, b) =>
+      (a.le === null ? 1 : 0) - (b.le === null ? 1 : 0) ||
+      (a.le !== null && b.le !== null && a.le !== b.le ? (a.le < b.le ? -1 : 1) : 0) ||
+      ordre.indexOf(a.source) - ordre.indexOf(b.source),
+  );
+}
+
+/** Première source à avoir signalé le fait, ou null. */
+export const premierSignalement = <S extends string>(
+  liste: readonly Signalement<S>[],
+  ordre: readonly S[],
+): Signalement<S> | null => rangerSignalements(liste, ordre)[0] ?? null;
+
+/* ------------------------------------------------------------------ Valeurs par source (V27) */
+/** Sources d'une gravité ou d'un score : NVD, Tenable, CERT Santé (score CVSS v3.1 de sa fiche), FIRST (score EPSS lu par
+    la veille). */
+export const SOURCES_VALEUR = ['nvd', 'tenable', 'cert-sante', 'first'] as const;
+export type SourceValeur = (typeof SOURCES_VALEUR)[number];
+export const SOURCE_VALEUR_LIBELLES: Record<SourceValeur, string> = {
+  nvd: 'NVD',
+  tenable: 'Tenable',
+  'cert-sante': 'CERT Santé',
+  first: 'FIRST (veille)',
+};
+
+export interface GraviteSource {
+  source: SourceValeur;
+  gravite: GraviteTenable;
+}
+export interface ScoreSource {
+  source: SourceValeur;
+  score: number;
+}
+
+/** Valeurs d'un même fait selon chaque source, toutes gardées (V27). */
+export interface ValeursFaille {
+  gravites: GraviteSource[];
+  /** Scores CVSS (sur 10). */
+  cvss: ScoreSource[];
+  /** Scores EPSS (probabilité entre 0 et 1). */
+  epss: ScoreSource[];
+}
+export const VALEURS_VIDES: ValeursFaille = { gravites: [], cvss: [], epss: [] };
+
+const RANG_GRAVITE: Record<GraviteTenable, number> = { critique: 4, elevee: 3, moyenne: 2, faible: 1 };
+
+/** Gravité qualitative d'un score CVSS v3 (échelle publiée par FIRST) : 9 à 10 critique, 7 à 8,9 élevée, 4 à 6,9 moyenne,
+    0,1 à 3,9 faible ; 0 ou hors échelle : null. */
+export function graviteDepuisScore(score: number | null): GraviteTenable | null {
+  if (score === null || !Number.isFinite(score) || score <= 0 || score > 10) return null;
+  return score >= 9 ? 'critique' : score >= 7 ? 'elevee' : score >= 4 ? 'moyenne' : 'faible';
+}
+
+/** Valeur la plus sévère de chaque fait (V27), avec sa source : gravité la plus haute, score CVSS et score EPSS les plus
+    hauts. À valeur égale, la première source de SOURCES_VALEUR l'emporte (résultat rejouable). Aucune valeur : null. */
+export function valeursRetenues(v: ValeursFaille): {
+  gravite: GraviteSource | null;
+  cvss: ScoreSource | null;
+  epss: ScoreSource | null;
+} {
+  const ordre = (s: SourceValeur) => SOURCES_VALEUR.indexOf(s);
+  const plus = <T extends { source: SourceValeur }>(liste: readonly T[], valeur: (x: T) => number): T | null =>
+    [...liste].sort((a, b) => valeur(b) - valeur(a) || ordre(a.source) - ordre(b.source))[0] ?? null;
+  return {
+    gravite: plus(v.gravites, (x) => RANG_GRAVITE[x.gravite]),
+    cvss: plus(
+      v.cvss.filter((x) => Number.isFinite(x.score)),
+      (x) => x.score,
+    ),
+    epss: plus(
+      v.epss.filter((x) => Number.isFinite(x.score)),
+      (x) => x.score,
+    ),
+  };
+}
+
+/** Mention structurée de la fiche du CERT Santé, telle quelle : oui, non, ou null (non renseignée). */
+export type MentionCertSante = 'oui' | 'non';
+
+/** Ce que chaque source dit d'une faille (V26, V27) : sources de l'exploitation avérée et de « exploitable », rangées de la
+    première à la dernière avec leur date ; valeurs par source ; mentions « correctif » et « contournement » de la fiche du
+    CERT Santé (null : non renseignées, ou aucune fiche lue). */
+export interface SourcesFailleDto {
+  exploitation: Signalement<SourceExploitation>[];
+  exploitable: Signalement<SourceExploitable>[];
+  valeurs: ValeursFaille;
+  certSante: { correctif: MentionCertSante | null; contournement: MentionCertSante | null } | null;
+}
+
+/** Part des faits d'une priorité tirée de ce que disent les sources : exploitation, « exploitable », gravité et score
+    EPSS les plus sévères (V26, V27). La présence vient du rapprochement ou de la détection. */
+export function faitsDepuisSources(s: SourcesFailleDto): Omit<FaitsFaille, 'presence'> {
+  const r = valeursRetenues(s.valeurs);
+  return {
+    exploitation: s.exploitation.map((x) => x.source),
+    exploitable: s.exploitable.map((x) => x.source),
+    gravite: r.gravite?.gravite ?? null,
+    epss: r.epss?.score ?? null,
+  };
+}
+
+/** Faits d'une faille, rassemblés par l'API (fonction faitsDepuisSources pour la part venue des sources). */
 export interface FaitsFaille {
   exploitation: readonly SourceExploitation[];
   presence: Presence;
+  /** Gravité retenue : la plus sévère des sources (V27). */
   gravite: GraviteTenable | null;
-  /** Score EPSS (probabilité entre 0 et 1), ou null s'il n'est pas connu. */
+  /** Score EPSS retenu (probabilité entre 0 et 1, le plus haut des sources), ou null s'il n'est pas connu. */
   epss: number | null;
-  /** Un code d'exploitation est disponible (Tenable). */
-  exploitDisponible: boolean;
+  /** Sources selon lesquelles un code d'exploitation existe (Tenable, preuve de concept du CERT Santé). */
+  exploitable: readonly SourceExploitable[];
 }
 
 export type FaitPriorite =
@@ -62,7 +194,7 @@ export type FaitPriorite =
   | { fait: 'presence'; presence: Presence }
   | { fait: 'gravite'; gravite: GraviteTenable | null }
   | { fait: 'epss'; score: number; seuil: number }
-  | { fait: 'exploit_disponible' };
+  | { fait: 'exploit_disponible'; sources: SourceExploitable[] };
 
 export interface Priorite {
   niveau: NiveauPriorite;
@@ -70,15 +202,16 @@ export interface Priorite {
 }
 
 /** Grille de départ (ADR 0100, point 9) :
-    - P1 : exploitation avérée et présente (détectée ou déclarée) ;
+    - P1 : exploitation avérée (une source suffit, V26) et présente (détectée ou déclarée) ;
     - P2 : exploitation avérée et produit à confirmer ; ou présente et critique ; ou présente et score EPSS au moins égal
-      au seuil ; ou présente, élevée et exploit disponible ;
+      au seuil ; ou présente, élevée et exploitable selon une source (Tenable, CERT Santé) ;
     - P3 : présente et élevée ;
     - P4 : le reste.
     Les faits rendus sont ceux des règles remplies au niveau retenu (dans l'ordre de la grille, sans doublon) ; au niveau
     P4, la présence, la gravité et, le cas échéant, l'exploitation. */
 export function calculerPriorite(f: FaitsFaille, reglage: ReglagePriorite = REGLAGE_PRIORITE_DEFAUT): Priorite {
   const sources = SOURCES_EXPLOITATION.filter((s) => f.exploitation.includes(s));
+  const exploitables = SOURCES_EXPLOITABLE.filter((s) => f.exploitable.includes(s));
   const exploitee = sources.length > 0;
   const presente = f.presence === 'detectee' || f.presence === 'declaree';
   const exploitation: FaitPriorite = { fait: 'exploitation', sources };
@@ -93,8 +226,8 @@ export function calculerPriorite(f: FaitsFaille, reglage: ReglagePriorite = REGL
   if (presente && f.gravite === 'critique') ajouter(presence, gravite);
   if (presente && f.epss !== null && f.epss >= reglage.seuilEpss)
     ajouter(presence, { fait: 'epss', score: f.epss, seuil: reglage.seuilEpss });
-  if (presente && f.gravite === 'elevee' && f.exploitDisponible)
-    ajouter(presence, gravite, { fait: 'exploit_disponible' });
+  if (presente && f.gravite === 'elevee' && exploitables.length)
+    ajouter(presence, gravite, { fait: 'exploit_disponible', sources: exploitables });
   if (p2.length) return { niveau: 'P2', faits: p2 };
   if (presente && f.gravite === 'elevee') return { niveau: 'P3', faits: [presence, gravite] };
   return { niveau: 'P4', faits: exploitee ? [exploitation, presence, gravite] : [presence, gravite] };
@@ -114,7 +247,7 @@ export function libelleFaitPriorite(f: FaitPriorite): string {
     case 'epss':
       return `Score EPSS ${pourcent(f.score)} (seuil ${pourcent(f.seuil)})`;
     case 'exploit_disponible':
-      return 'Code d’exploitation disponible (Tenable)';
+      return `Code d’exploitation disponible (${f.sources.map((s) => SOURCE_EXPLOITABLE_LIBELLES[s]).join(', ')})`;
   }
 }
 
@@ -232,6 +365,8 @@ export interface FailleDeclareeDto {
   epss: number | null;
   kev: boolean;
   alerteCertFr: boolean;
+  /** Ce que chaque source dit de la CVE (V26, V27) : `gravite`, `cvssScore` et `epss` sont les valeurs retenues. */
+  sources: SourcesFailleDto;
   /** Machines lisibles reliées au produit où Tenable ne détecte pas cette CVE. */
   machines: number;
   /** Le rapprochement est rattaché (d'office ou confirmé) : la faille vise toujours la version déclarée (lot V4b). */

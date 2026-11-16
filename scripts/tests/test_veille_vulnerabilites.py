@@ -1,7 +1,9 @@
 """Script isolé de la veille des vulnérabilités (scripts/veille-vulnerabilites.py, ADR 0100 points 3 à 5, lots V2 et V3)
 contre un faux service HTTPS local : liste fermée des hôtes et des chemins, GET seulement, aucune redirection suivie,
 certificat toujours vérifié, réponse bornée, JSON mal formé refusé, RSS piégé (déclaration de type, entités, balisage et
-script dans un titre, texte démesuré, identifiant mal formé) refusé ou nettoyé. Mandataire sortant de l'établissement (ADR
+script dans un titre, texte démesuré, identifiant mal formé) refusé ou nettoyé. Fiches du CERT Santé (V23, V26) : mentions
+structurées seulement, relecture sur changement de titre, bornes (nombre, durée, taille), chemin hors liste refusé, pages
+piégées (libellé dans un commentaire, un attribut, un script ; mention contradictoire ; page démesurée). Mandataire sortant de l'établissement (ADR
 0101, lot P1) contre un faux mandataire local (tunnel CONNECT) : passage par le tunnel, authentification simple exigée puis
 acceptée, refus 407 expliqué, en-tête d'authentification absent de la requête reçue par la source, autorité « de
 l'établissement » acceptée seulement si elle est fournie, nom vérifié, tunnel refusé, mandataire injoignable. Jeux d'essai : petits extraits au format
@@ -110,6 +112,7 @@ class Veille(unittest.TestCase):
         self.patch(v, "NVD_PAUSE", 0)
         self.patch(v, "EPSS_PAUSE", 0)
         self.patch(v, "CERTFR_PAUSE", 0)
+        self.patch(v, "FICHE_PAUSE", 0)
 
     def patch(self, objet, nom, valeur):
         p = patch.object(objet, nom, valeur)
@@ -289,6 +292,149 @@ class Veille(unittest.TestCase):
         self.assertNotIn("<", e["resume"])
         self.assertNotIn("&lt;", e["resume"])
         self.assertIn("décodeur LZX de 7-Zip, utilisé", e["resume"])
+
+    # ---------------------------------------------------------------- Fiches du CERT Santé (V23, V26)
+    FICHE_7ZIP = "/alertes/7-zip-cve-2026-125742-2026-11-13"
+    FICHE_CHECKPOINT = "/alertes/check-point-cve-2026-123039-2026-11-13"
+
+    def test_cert_sante_reads_the_page_of_new_publications_and_keeps_only_structured_mentions(self):
+        self.repondre(v.SOURCES["cert-sante"]["chemins"][0], jeu("certsante.xml"))
+        self.repondre(self.FICHE_7ZIP, jeu("certsante-fiche.html"))
+        sortie = self.collecter("cert-sante")
+        self.assertTrue(sortie["ok"], sortie)
+        a, b = sortie["elements"]
+        self.assertEqual((a["identifiant"], a["produit"]), ("10351", "7-Zip"))
+        # La page porte le libellé « exploitée » dans un script et dans le texte libre : seules les mentions structurées
+        # comptent.
+        self.assertEqual(a["fiche"], {"exploitee": "oui", "correctif": "oui", "contournement": "non",
+                                      "preuveConcept": "disponible", "cvss31": 8.8})
+        # Fiche introuvable (404) : l'élément est gardé sans fiche, l'échec est compté, la collecte réussit.
+        self.assertEqual((b["produit"], b["fiche"]), ("Check Point", None))
+        self.assertEqual(sortie["bilan"]["detailsEchoues"], 1)
+        self.assertEqual(Faux.recues, [("GET", v.SOURCES["cert-sante"]["chemins"][0]), ("GET", self.FICHE_7ZIP),
+                                       ("GET", self.FICHE_CHECKPOINT)])
+
+    def test_cert_sante_known_pages_are_read_again_only_when_the_title_changes(self):
+        titre = "Produit fictif - CVE-2026-0004"
+        item = ("<title>%s</title><link>https://cyberveille.esante.gouv.fr/alertes/produit-fictif-cve-2026-0004</link>"
+                "<guid>20001</guid><pubDate>Fri, 13 Nov 2026 02:06:47 +0000</pubDate>")
+        sans_cve = "<title>Éditeur fictif - WSA-2026-01</title><link>https://cyberveille.esante.gouv.fr/alertes/wsa</link><guid>20002</guid>"
+        self.repondre("/alertes/produit-fictif-cve-2026-0004", jeu("certsante-fiche.html"))
+        self.repondre(v.SOURCES["cert-sante"]["chemins"][0], rss([item % titre, sans_cve]))
+        # Déjà lue sous ce titre : pas relue.
+        sortie = self.collecter("cert-sante", {"lues": {"20001": v.empreinte_titre(titre)}})
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertEqual([e["fiche"] for e in sortie["elements"]], [None, None])
+        self.assertEqual(sortie["bilan"]["detailsEchoues"], 0)
+        self.assertEqual(len(Faux.recues), 1)
+        # Titre modifié (« | modifié le … ») : relue. Une publication sans CVE n'est jamais lue.
+        modifie = titre + " | modifié le 16-11-2026"
+        self.repondre(v.SOURCES["cert-sante"]["chemins"][0], rss([item % modifie, sans_cve]))
+        Faux.recues = []
+        sortie = self.collecter("cert-sante", {"lues": {"20001": v.empreinte_titre(titre)}})
+        a, b = sortie["elements"]
+        self.assertEqual((a["titre"], a["produit"], a["fiche"]["exploitee"]), (modifie, "Produit fictif", "oui"))
+        self.assertEqual((b["cves"], b["produit"], b["fiche"]), ([], None, None))
+        self.assertEqual([c for _, c in Faux.recues], [v.SOURCES["cert-sante"]["chemins"][0], "/alertes/produit-fictif-cve-2026-0004"])
+        # Liste reçue de l'application contrôlée : forme stricte, bornée, sinon rien n'est lu.
+        Faux.recues = []
+        for lues in ({"../1": "0" * 16}, {"20001": "pas-une-empreinte"}, ["20001"],
+                     {str(i + 1): "0" * 16 for i in range(v.FICHES_LUES_MAX + 1)}):
+            with self.subTest(lues=str(lues)[:30]):
+                self.echec(self.collecter("cert-sante", {"lues": lues}), "fiches déjà lues illisible")
+        self.assertEqual(Faux.recues, [])
+
+    def test_cert_sante_page_reads_are_bounded_in_number_time_and_size(self):
+        items = ["<title>Produit %d - CVE-2026-000%d</title><link>https://cyberveille.esante.gouv.fr/alertes/p-%d</link>"
+                 "<guid>%d</guid>" % (i, i, i, 30000 + i) for i in range(1, 5)]
+        self.repondre(v.SOURCES["cert-sante"]["chemins"][0], rss(items))
+        for i in range(1, 5):
+            self.repondre("/alertes/p-%d" % i, jeu("certsante-fiche.html"))
+        attentes = []
+        self.patch(v, "FICHE_PAUSE", 0.01)
+        self.patch(v.time, "sleep", lambda d: attentes.append(d))
+        self.patch(v, "BORNES", {**v.BORNES, "fichesCertSante": 2})
+        sortie = self.collecter("cert-sante")
+        self.assertEqual([e["fiche"] is not None for e in sortie["elements"]], [True, True, False, False])
+        self.assertEqual(sortie["bilan"]["detailsEchoues"], 2)
+        self.assertEqual(attentes, [0.01])
+        # Durée de lecture des fiches dépassée : plus aucune fiche, le flux reste rapporté.
+        self.patch(v, "FICHE_DUREE_MAX", -1)
+        sortie = self.collecter("cert-sante")
+        self.assertTrue(sortie["ok"])
+        self.assertEqual([e["fiche"] for e in sortie["elements"]], [None] * 4)
+        self.assertEqual(sortie["bilan"]["detailsEchoues"], 4)
+        # Page démesurée : refusée (annoncée ou non), l'élément est gardé sans fiche.
+        self.patch(v, "FICHE_DUREE_MAX", 150)
+        self.patch(v, "FICHE_MAX", 1000)
+        self.repondre("/alertes/p-1", jeu("certsante-fiche.html"))
+        self.repondre("/alertes/p-2", jeu("certsante-fiche.html"), en_tetes=[("sans-longueur", "1")])
+        sortie = self.collecter("cert-sante")
+        self.assertTrue(sortie["ok"])
+        self.assertEqual([e["fiche"] for e in sortie["elements"]][:2], [None, None])
+
+    def test_cert_sante_page_paths_outside_the_closed_list_are_refused(self):
+        client = v.Client("cert-sante")
+        for chemin in ("/alertes/", "/alertes/../rss.xml", "/alertes/x/y", "/alertes/Majuscule", "/alertes/x?y=1",
+                       "/alertes/x%2f", "/alertes/" + "x" * 201, "/alerte/x", "/alertes-et-vulnerabilites/x"):
+            with self.subTest(chemin=chemin), self.assertRaises(v.Refus):
+                client.lire(chemin)
+        with self.assertRaises(v.Refus):
+            client.lire("/alertes/x", "page=2")
+        # Le motif des fiches ne vaut que pour le CERT Santé.
+        with self.assertRaises(v.Refus):
+            v.Client("cert-fr").lire("/alertes/x")
+        self.assertEqual(Faux.recues, [])
+        # Lien du flux hors de l'hôte ou du chemin des fiches : aucune lecture.
+        items = ["<title>A - CVE-2026-0001</title><link>https://ailleurs.exemple.test/alertes/a</link><guid>1</guid>",
+                 "<title>B - CVE-2026-0002</title><link>https://cyberveille.esante.gouv.fr/autre/b</link><guid>2</guid>"]
+        self.repondre(v.SOURCES["cert-sante"]["chemins"][0], rss(items))
+        sortie = self.collecter("cert-sante")
+        self.assertEqual([e["fiche"] for e in sortie["elements"]], [None, None])
+        self.assertEqual(Faux.recues, [("GET", v.SOURCES["cert-sante"]["chemins"][0])])
+
+    def test_cert_sante_trapped_pages_never_produce_a_mention_by_keyword(self):
+        def page(corps):
+            return ("<html><head><title>t</title></head><body>%s</body></html>" % corps).encode("utf-8")
+
+        def mention(libelle, valeur):
+            return '<p><span class="fw-medium">%s : </span> %s</p>' % (libelle, valeur)
+        rien = {"exploitee": None, "correctif": None, "contournement": None, "preuveConcept": None, "cvss31": None}
+        # Libellés dans un commentaire, un attribut, un script, un style, un gabarit : rien.
+        for corps in ("<!-- La faille est activement exploitée : Oui -->",
+                      '<p title="La faille est activement exploitée : ">Oui</p>',
+                      "<script>La faille est activement exploitée :</script><p>Oui</p>",
+                      "<style>Un correctif existe :</style><p>Non</p>",
+                      "<template>%s</template>" % mention("La faille est activement exploitée", "Oui"),
+                      "<p>La faille est activement exploitée : Oui</p>",
+                      "<p>La vulnérabilité exploitée est activement exploitée et une preuve de concept est disponible.</p>",
+                      "<p>[Score CVSS v3.1 : 9.8] et plus</p>"):
+            with self.subTest(corps=corps[:40]):
+                self.assertEqual(v.lire_fiche(page(corps)), rien)
+        # Mention répétée : gardée si elle concorde, non renseignée si elle se contredit ou prend une forme imprévue.
+        self.assertEqual(v.lire_fiche(page(mention("Un correctif existe", "Oui") * 2))["correctif"], "oui")
+        for corps in (mention("Un correctif existe", "Oui") + mention("Un correctif existe", "Non"),
+                      mention("Un correctif existe", "Oui, partiellement"),
+                      mention("Un correctif existe", "") + "<p>Oui</p>",
+                      mention("Un correctif existe", "oui")):
+            with self.subTest(corps=corps[:60]):
+                self.assertIsNone(v.lire_fiche(page(corps))["correctif"])
+        # Preuve de concept : seules les deux phrases observées ; une autre phrase, même affirmative, n'est pas lue.
+        preuve = "<div><strong>Preuve de concept</strong><br>%s</div>"
+        self.assertEqual(v.lire_fiche(page(preuve % "Une preuve de concept est disponible en sources ouvertes."))["preuveConcept"], "disponible")
+        self.assertEqual(v.lire_fiche(page(preuve % "Actuellement, aucune preuve de concept n’est disponible en sources ouvertes."))["preuveConcept"], "indisponible")
+        for phrase in ("Une preuve de concept serait disponible.", "Oui", ""):
+            self.assertIsNone(v.lire_fiche(page(preuve % phrase))["preuveConcept"])
+        # Score : forme exacte, dans l'échelle ; sinon non renseigné.
+        for score, attendu in (("7.5", 7.5), ("10", 10.0), ("7,5", None), ("11.0", None), ("7.55", None), ("-1", None)):
+            with self.subTest(score=score):
+                self.assertEqual(v.lire_fiche(page("<a>[Score CVSS v3.1 : %s]</a>" % score))["cvss31"], attendu)
+        self.assertIsNone(v.lire_fiche(page("<a>[Score CVSS v3.1 : 7.5]</a><a>[Score CVSS v3.1 : 9.8]</a>"))["cvss31"])
+        # Page illisible : refusée.
+        with self.assertRaises(v.Refus):
+            v.lire_fiche(b"\xff\xfe<p>")
+        with self.assertRaises(v.Refus):
+            v.lire_fiche(("<p>x</p>" * (v.FICHE_FRAGMENTS_MAX + 1)).encode())
 
     # ---------------------------------------------------------------- Réseau
     def test_hosts_and_paths_outside_the_closed_list_are_refused_before_any_call(self):
@@ -669,6 +815,24 @@ class Mandataire(unittest.TestCase):
         self.assertTrue(sortie["ok"], sortie)
         self.assertEqual(self.mandataire.demandes, [])
         self.assertEqual(Faux.recues, [("GET", v.SOURCES["cisa-kev"]["chemins"][0])])
+
+    def test_cert_sante_feed_and_pages_go_through_the_proxy(self):
+        """Les lectures des fiches du CERT Santé passent par le mandataire comme les autres : un tunnel par lecture, vers
+        l'hôte de la liste fermée, GET sur le flux puis sur la fiche."""
+        Faux.reponses[v.SOURCES["cert-sante"]["chemins"][0]] = (200, jeu("certsante.xml"), ())
+        Faux.reponses["/alertes/7-zip-cve-2026-125742-2026-11-13"] = (200, jeu("certsante-fiche.html"), ())
+        self.mandataire.attendu = (self.IDENTIFIANT, self.MOT_DE_PASSE)
+        with patch.object(v, "FICHE_PAUSE", 0):
+            sortie = v.executer({"source": "cert-sante", "parametres": {},
+                                 "mandataire": self.parametres(identifiant=self.IDENTIFIANT, motDePasse=self.MOT_DE_PASSE)})
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertEqual(sortie["elements"][0]["fiche"]["exploitee"], "oui")
+        self.assertEqual([c for _, c in Faux.recues], [v.SOURCES["cert-sante"]["chemins"][0],
+                                                      "/alertes/7-zip-cve-2026-125742-2026-11-13",
+                                                      "/alertes/check-point-cve-2026-123039-2026-11-13"])
+        self.assertEqual([d["ligne"] for d in self.mandataire.demandes], ["CONNECT localhost:%d HTTP/1.1" % self.port] * 3)
+        self.assertTrue(all("proxy-authorization" not in e for e in Faux.entetes))
+        self.assertNotIn(self.MOT_DE_PASSE, json.dumps(sortie))
 
     def test_runs_isolated_with_proxy_parameters_on_stdin_only(self):
         self.mandataire.attendu = (self.IDENTIFIANT, self.MOT_DE_PASSE)

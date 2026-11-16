@@ -101,7 +101,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const reglagePriorite = new ReglagePrioriteVulnerabilites(db);
   const rapprochements = new Rapprochements(db, reglagePriorite);
   const veille = new VeilleVulnerabilites(db, flux, mandataire);
-  veille.apresNvd = () => rapprochements.recalculerTout();
+  veille.apresCollecte = () => rapprochements.recalculerTout();
   /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
   const suivi = new SuiviFailles(db, grc);
   tenable.apresSynchronisation = (k, c, id, complete) => suivi.apresSynchronisation(k, c, id, complete);

@@ -11,11 +11,17 @@
      après les quatre autres sources du jour, puisqu'il ne note que des failles déjà connues de la veille.
    - Les éléments sont des données publiques, validées un à un par le schéma de leur source (packages/shared) et rangées sans
      doublon (clé de la faille, ou source et identifiant de l'avis) : une collecte rejouée met à jour, n'ajoute rien.
+   - Lot V4c (V23, V26) : une CVE citée par un avis existe dans la veille dès cette publication, avant NVD ; chaque fait
+     reste rangé avec sa source et sa date (sources.ts). Fiches du CERT Santé : le script reçoit l'empreinte du titre des
+     fiches lues depuis moins de FICHE_CERTSANTE_RELECTURE_JOURS jours et ne relit que les autres ; les mentions lues sont
+     rangées sur la publication, avec la date du premier signalement de l'exploitation et de la preuve de concept.
    Droits contrôlés par route() (lire, administrer) ; journal `vulnerabilites.veille.*` sans contenu de source. Accès aux
    données en Kysely (ADR 0062). */
+import { createHash } from 'node:crypto';
 import {
   CVE_ID,
   ELEMENT_VEILLE,
+  FICHE_CERTSANTE_RELECTURE_JOURS,
   type AvisVeilleDto,
   type CollecteVeilleDto,
   type ElementAvis,
@@ -45,6 +51,7 @@ import type { VulnerabilitesVeilleCollectes } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import type { Mandataire } from '../mandataire.js';
+import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
 
 type LigneCollecte = Selectable<VulnerabilitesVeilleCollectes>;
 
@@ -64,6 +71,10 @@ const NVD_PREMIERE_FENETRE_MS = 24 * 3_600_000;
 const NVD_RATTRAPAGE_MAX_MS = 7 * 24 * 3_600_000;
 /** Avis du CERT-FR déjà lus (identifiants CVE connus) remis au script, qui ne relit pas leur export : bornés. */
 const CERTFR_CONNUS_MAX = 2000;
+/** Fiches du CERT Santé déjà lues remises au script (identifiant et empreinte du titre lu) : bornées. */
+const CERTSANTE_LUES_MAX = 2000;
+/** Empreinte du titre sous lequel une fiche a été lue : le script la recalcule sur le titre du flux (même texte nettoyé). */
+const empreinteTitre = (titre: string) => createHash('sha256').update(titre, 'utf8').digest('hex').slice(0, 16);
 const EXECUTANT = { username: 'exécutant serveur' };
 const PLANIFICATION = { username: 'planification' };
 /** Ordre de planification : EPSS en dernier. */
@@ -89,8 +100,9 @@ const nombre = (v: string | null) => (v === null ? null : Number(v));
 const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 export class VeilleVulnerabilites {
-  /** Lot V4a : recalcul des rapprochements après une collecte NVD réussie (branché par services.ts). */
-  apresNvd: (() => Promise<unknown>) | null = null;
+  /** Recalcul des rapprochements après une collecte NVD (lot V4a) ou CERT Santé (lot V4c : produit cité par une CVE
+      absente de NVD) réussie, branché par services.ts. */
+  apresCollecte: (() => Promise<unknown>) | null = null;
 
   constructor(
     private readonly db: Db,
@@ -118,6 +130,22 @@ export class VeilleVulnerabilites {
       ).map((c) => [c.source, versCollecte(c)]),
     );
     const limite = Date.now() - VEILLE_RETARD_HEURES * 3_600_000;
+    const fiches = await this.db.k
+      .selectFrom('vulnerabilites_veille_avis')
+      .select([
+        sql<number>`count(*) FILTER (WHERE fiche_lue_le IS NOT NULL AND fiche_titre = titre
+          AND fiche_lue_le >= now() - make_interval(days => ${FICHE_CERTSANTE_RELECTURE_JOURS}))::int`.as('lues'),
+        sql<number>`count(*) FILTER (WHERE fiche_lue_le IS NULL OR fiche_titre <> titre
+          OR fiche_lue_le < now() - make_interval(days => ${FICHE_CERTSANTE_RELECTURE_JOURS}))::int`.as('a_lire'),
+        sql<Date | null>`max(fiche_lue_le)`.as('derniere'),
+      ])
+      .where('source', '=', 'cert-sante')
+      .where('adresse', 'is not', null)
+      .where(sql<boolean>`cardinality(cves) > 0`)
+      // Publications encore présentes dans le flux (vues par une collecte des deux derniers jours) : une publication sortie
+      // du flux n'est plus jamais lue, elle ne compte ni comme lue ni comme à lire.
+      .where('maj_le', '>=', sql<Date>`now() - interval '48 hours'`)
+      .executeTakeFirstOrThrow();
     return {
       flux: { ouvert: flux.ouvert, applique: flux.applique },
       executant: { disponible: await this.executantDisponible() },
@@ -140,6 +168,12 @@ export class VeilleVulnerabilites {
           derniereCollecte: dernieres.get(d.id) ?? null,
         };
       }),
+      fichesCertSante: {
+        lues: fiches.lues,
+        aLire: fiches.a_lire,
+        derniereLecture: fiches.derniere?.toISOString() ?? null,
+        relectureJours: FICHE_CERTSANTE_RELECTURE_JOURS,
+      },
     };
   }
 
@@ -156,7 +190,27 @@ export class VeilleVulnerabilites {
     }
     const { n } = await base.select(sql<number>`count(*)::int`.as('n')).executeTakeFirstOrThrow();
     const lignes = await base
-      .select(['id', 'source', 'identifiant', 'nature', 'titre', 'resume', 'adresse', 'publie_le', 'cves', 'vu_le'])
+      .select([
+        'id',
+        'source',
+        'identifiant',
+        'nature',
+        'titre',
+        'resume',
+        'adresse',
+        'publie_le',
+        'cves',
+        'vu_le',
+        'produit',
+        'fiche_lue_le',
+        'fiche_exploitee',
+        'fiche_correctif',
+        'fiche_contournement',
+        'fiche_preuve',
+        'fiche_cvss31',
+        'fiche_exploitee_le',
+        'fiche_preuve_le',
+      ])
       .orderBy(sql`publie_le DESC NULLS LAST`)
       .orderBy('identifiant', 'desc')
       .limit(VEILLE_PAR_PAGE)
@@ -177,6 +231,19 @@ export class VeilleVulnerabilites {
         publieLe: l.publie_le?.toISOString() ?? null,
         cves: l.cves,
         vuLe: l.vu_le.toISOString(),
+        produit: l.produit,
+        fiche: l.fiche_lue_le
+          ? {
+              exploitee: l.fiche_exploitee as 'oui' | 'non' | null,
+              correctif: l.fiche_correctif as 'oui' | 'non' | null,
+              contournement: l.fiche_contournement as 'oui' | 'non' | null,
+              preuveConcept: l.fiche_preuve as 'disponible' | 'indisponible' | null,
+              cvss31: nombre(l.fiche_cvss31),
+              lueLe: l.fiche_lue_le.toISOString(),
+              exploiteeLe: l.fiche_exploitee_le?.toISOString() ?? null,
+              preuveLe: l.fiche_preuve_le?.toISOString() ?? null,
+            }
+          : null,
       })),
     };
   }
@@ -198,6 +265,8 @@ export class VeilleVulnerabilites {
               eb('kev_nom', 'ilike', `%${motif}%`),
               sql<boolean>`EXISTS (SELECT 1 FROM unnest(editeurs) e WHERE e ILIKE ${`%${motif}%`})`,
               sql<boolean>`EXISTS (SELECT 1 FROM unnest(produits) p WHERE p ILIKE ${`%${motif}%`})`,
+              sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
+                AND a.cves @> ARRAY[vulnerabilites_veille_cve.cve] AND a.produit ILIKE ${`%${motif}%`})`,
             ]),
           );
     }
@@ -216,6 +285,10 @@ export class VeilleVulnerabilites {
       .execute();
     const cvss = (score: string | null, vecteur: string | null, gravite: string | null) =>
       score !== null && vecteur && gravite ? { score: Number(score), vecteur, gravite: gravite as GraviteCvss } : null;
+    const faits = await lireFaitsCve(
+      this.db.k,
+      lignes.map((l) => l.cve),
+    );
     return {
       total: n,
       page: q.page,
@@ -245,6 +318,16 @@ export class VeilleVulnerabilites {
               rancongiciel: l.kev_rancongiciel,
             }
           : null,
+        ...(() => {
+          const f = faits.get(l.cve);
+          return {
+            publications: f ? publicationsDe(f) : [],
+            produitsCites: [
+              ...new Set((f?.avis ?? []).flatMap((a) => (a.source === 'cert-sante' && a.produit ? [a.produit] : []))),
+            ],
+            sources: sourcesDe(f ? [f] : []),
+          };
+        })(),
       })),
     };
   }
@@ -484,6 +567,18 @@ export class VeilleVulnerabilites {
           .limit(CERTFR_CONNUS_MAX)
           .execute();
         parametres = { connus: connus.map((x) => x.identifiant) };
+      } else if (r.source === 'cert-sante') {
+        // Fiches lues depuis moins du délai de relecture : le script ne les relit que si le titre du flux a changé.
+        const lues = await k
+          .selectFrom('vulnerabilites_veille_avis')
+          .select(['identifiant', 'fiche_titre'])
+          .where('source', '=', 'cert-sante')
+          .where('fiche_lue_le', '>=', sql<Date>`now() - make_interval(days => ${FICHE_CERTSANTE_RELECTURE_JOURS})`)
+          .orderBy(sql`publie_le DESC NULLS LAST`)
+          .orderBy('identifiant', 'desc')
+          .limit(CERTSANTE_LUES_MAX)
+          .execute();
+        parametres = { lues: Object.fromEntries(lues.map((x) => [x.identifiant, empreinteTitre(x.fiche_titre!)])) };
       }
       await k
         .updateTable('vulnerabilites_veille_collectes')
@@ -618,10 +713,11 @@ export class VeilleVulnerabilites {
       return fin;
     });
     if (!r) throw new HttpError(409, 'Collecte absente ou déjà terminée.');
-    // Rapprochement par version (lot V4a) : recalculé après chaque collecte NVD réussie, hors de la transaction de clôture
-    // (la collecte reste close et reçue même si le recalcul échoue ; il est refait à la collecte ou à la modification
-    // suivante).
-    if (r.source === 'nvd' && r.etat === 'recu' && this.apresNvd) await this.apresNvd();
+    // Rapprochement (lots V4a et V4c) : recalculé après chaque collecte NVD ou CERT Santé réussie, hors de la transaction de
+    // clôture (la collecte reste close et reçue même si le recalcul échoue ; il est refait à la collecte ou à la
+    // modification suivante).
+    if ((r.source === 'nvd' || r.source === 'cert-sante') && r.etat === 'recu' && this.apresCollecte)
+      await this.apresCollecte();
     return versCollecte(r);
   }
 
@@ -771,35 +867,78 @@ export class VeilleVulnerabilites {
   }
 
   /** Une alerte ou un avis, sans doublon par (source, identifiant). Les CVE citées entrent dans la liste des failles connues
-      (sans autre champ) pour que leur score EPSS puisse être demandé. Un export illisible (cvesLues faux) ne remplace pas
-      les CVE déjà lues. */
+      dès cette publication (V26 : avant NVD s'il le faut, sans autre champ ; leur score EPSS peut être demandé). Un export
+      illisible (cvesLues faux) ne remplace pas les CVE déjà lues. CERT Santé (lot V4c) : produit cité par le titre ;
+      mentions de la fiche lue à cette collecte, sinon celles déjà rangées sont gardées. Date du premier signalement de
+      l'exploitation (et de la preuve de concept) : date de publication si la mention figurait dès la première lecture de la
+      fiche, sinon date de la lecture qui l'a vue ; effacée si la source change d'avis. */
   private async rangerAvis(k: Kdb, source: 'cert-fr' | 'cert-sante', el: ElementAvis[]) {
+    const lu = (e: ElementAvis) => source === 'cert-sante' && !!e.fiche;
     await k
       .insertInto('vulnerabilites_veille_avis')
       .values(
-        el.map((e) => ({
-          source,
-          identifiant: e.identifiant,
-          nature: e.nature,
-          titre: e.titre,
-          resume: e.resume,
-          adresse: e.adresse,
-          publie_le: e.publieLe,
-          cves: e.cves,
-          cves_lues: e.cvesLues,
-        })),
+        el.map((e) => {
+          const produit = source === 'cert-sante' ? (e.produit ?? null) : null;
+          const premier = sql<Date>`coalesce(${e.publieLe}::timestamptz, now())`;
+          return {
+            source,
+            identifiant: e.identifiant,
+            nature: e.nature,
+            titre: e.titre,
+            resume: e.resume,
+            adresse: e.adresse,
+            publie_le: e.publieLe,
+            cves: e.cves,
+            cves_lues: e.cvesLues,
+            produit,
+            produit_norm: produit ? normaliserNom(produit) || null : null,
+            fiche_lue_le: lu(e) ? sql<Date>`now()` : null,
+            fiche_titre: lu(e) ? e.titre : null,
+            fiche_exploitee: lu(e) ? e.fiche!.exploitee : null,
+            fiche_correctif: lu(e) ? e.fiche!.correctif : null,
+            fiche_contournement: lu(e) ? e.fiche!.contournement : null,
+            fiche_preuve: lu(e) ? e.fiche!.preuveConcept : null,
+            fiche_cvss31: lu(e) ? e.fiche!.cvss31 : null,
+            fiche_exploitee_le: lu(e) && e.fiche!.exploitee === 'oui' ? premier : null,
+            fiche_preuve_le: lu(e) && e.fiche!.preuveConcept === 'disponible' ? premier : null,
+          };
+        }),
       )
       .onConflict((oc) =>
-        oc.columns(['source', 'identifiant']).doUpdateSet((eb) => ({
-          nature: eb.ref('excluded.nature'),
-          titre: eb.ref('excluded.titre'),
-          resume: eb.ref('excluded.resume'),
-          adresse: eb.ref('excluded.adresse'),
-          publie_le: eb.ref('excluded.publie_le'),
-          cves: sql<string[]>`CASE WHEN excluded.cves_lues THEN excluded.cves ELSE vulnerabilites_veille_avis.cves END`,
-          cves_lues: sql<boolean>`vulnerabilites_veille_avis.cves_lues OR excluded.cves_lues`,
-          maj_le: sql<Date>`now()`,
-        })),
+        oc.columns(['source', 'identifiant']).doUpdateSet((eb) => {
+          const garder = <C extends string>(c: C) =>
+            sql`CASE WHEN excluded.fiche_lue_le IS NULL THEN vulnerabilites_veille_avis.${sql.ref(c)}
+                ELSE excluded.${sql.ref(c)} END`;
+          /** Premier signalement : gardé tant que la source le dit ; date de la lecture s'il apparaît après la première. */
+          const premier = (mention: 'fiche_exploitee' | 'fiche_preuve', valeur: string, date: string) =>
+            sql<Date | null>`CASE WHEN excluded.fiche_lue_le IS NULL THEN vulnerabilites_veille_avis.${sql.ref(date)}
+              WHEN excluded.${sql.ref(mention)} = ${valeur} THEN coalesce(vulnerabilites_veille_avis.${sql.ref(date)},
+                CASE WHEN vulnerabilites_veille_avis.fiche_lue_le IS NULL THEN excluded.${sql.ref(date)} ELSE now() END)
+              ELSE NULL END`;
+          return {
+            nature: eb.ref('excluded.nature'),
+            titre: eb.ref('excluded.titre'),
+            resume: eb.ref('excluded.resume'),
+            adresse: eb.ref('excluded.adresse'),
+            publie_le: eb.ref('excluded.publie_le'),
+            cves: sql<
+              string[]
+            >`CASE WHEN excluded.cves_lues THEN excluded.cves ELSE vulnerabilites_veille_avis.cves END`,
+            cves_lues: sql<boolean>`vulnerabilites_veille_avis.cves_lues OR excluded.cves_lues`,
+            produit: eb.ref('excluded.produit'),
+            produit_norm: eb.ref('excluded.produit_norm'),
+            fiche_exploitee_le: premier('fiche_exploitee', 'oui', 'fiche_exploitee_le'),
+            fiche_preuve_le: premier('fiche_preuve', 'disponible', 'fiche_preuve_le'),
+            fiche_lue_le: garder('fiche_lue_le') as never,
+            fiche_titre: garder('fiche_titre') as never,
+            fiche_exploitee: garder('fiche_exploitee') as never,
+            fiche_correctif: garder('fiche_correctif') as never,
+            fiche_contournement: garder('fiche_contournement') as never,
+            fiche_preuve: garder('fiche_preuve') as never,
+            fiche_cvss31: garder('fiche_cvss31') as never,
+            maj_le: sql<Date>`now()`,
+          };
+        }),
       )
       .execute();
     const cves = [...new Set(el.flatMap((e) => e.cves))].filter((x) => CVE_ID.test(x));

@@ -12,9 +12,12 @@
    Lot V4b : fiche d'une faille déclarée (`lire`) ; suivi d'un constat ou d'une faille déclarée (lecture `lire` ; état,
    refus de la proposition « corrigée », création, lien et retrait d'une action avec `modifier` et If-Match sur la version du
    suivi). Le service exige en plus de lire toutes les machines touchées ; créer une action exige le droit du module des
-   actions et l'écriture sur le périmètre choisi (service du registre). */
+   actions et l'écriture sur le périmètre choisi (service du registre).
+   Lot V4c : annulation d'une confirmation ou d'un rejet de rapprochement (`modifier`, If-Match sur le rapprochement, note
+   facultative ; V24). */
 import {
   AffectationMachine,
+  AnnulationRapprochement,
   AffectationMachines,
   ChangementEtatSuivi,
   CreationActionSuivi,
@@ -344,6 +347,27 @@ export const vulnerabilitesRoutes = [
     body: DecisionRapprochement,
     handler: async ({ svc, s, params, body, req, ip, reply }) => {
       const r = await svc.vulnerabilites.rapprochements.decider(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/rapprochements/:id/annulation',
+    summary:
+      'Annuler la confirmation ou le rejet d’un rapprochement, note facultative (If-Match : version du rapprochement) ; il est recalculé par la règle',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: AnnulationRapprochement,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.rapprochements.annuler(
         params.id,
         body,
         requireIfMatch(req),

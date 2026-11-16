@@ -1,6 +1,6 @@
 /* Produits surveillés (ADR 0100, lot V1) : présentation et formulaire, sans état ni appel réseau (testés à part). Le serveur
    reste seul juge des droits, des doublons et des versions. Lot V4a : version obligatoire, suggestion d'identifiant CPE,
-   rapprochements de la fiche regroupés par statut, motifs et plages en clair. */
+   rapprochements de la fiche regroupés par statut, motifs et plages en clair. Lot V4c : annulation d’une décision (V24). */
 import {
   CRITICITE_PRODUIT_LIBELLES,
   MOTIF_PROPOSITION_LIBELLES,
@@ -180,3 +180,7 @@ export function explicationProposition(r: Pick<RapprochementDto, 'motif' | 'vers
   const motif = r.motif ? MOTIF_PROPOSITION_LIBELLES[r.motif] : 'Rapprochement';
   return r.versionDansPlage ? `${motif} · ${VERSION_DANS_PLAGE_LIBELLES[r.versionDansPlage]}` : motif;
 }
+
+/** Dernière annulation d'une décision (V24) : décision annulée et auteur ; la date est rendue à part (horodatage). */
+export const libelleAnnulation = (a: NonNullable<RapprochementDto['annulation']>) =>
+  `${a.decision === 'confirmee' ? 'Confirmation annulée' : 'Rejet annulé'} par ${a.par} le`;

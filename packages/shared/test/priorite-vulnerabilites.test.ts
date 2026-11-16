@@ -4,6 +4,14 @@ import { describe, expect, it } from 'vitest';
 import {
   calculerPriorite,
   comparerMachines,
+  faitsDepuisSources,
+  graviteDepuisScore,
+  premierSignalement,
+  rangerSignalements,
+  SOURCES_EXPLOITABLE,
+  SOURCES_EXPLOITATION,
+  type SourcesFailleDto,
+  valeursRetenues,
   type FaitsFaille,
   faitsRang,
   graviteDepuisNvd,
@@ -22,7 +30,7 @@ const faits = (f: Partial<FaitsFaille> = {}): FaitsFaille => ({
   presence: 'detectee',
   gravite: 'moyenne',
   epss: null,
-  exploitDisponible: false,
+  exploitable: [],
   ...f,
 });
 
@@ -78,12 +86,12 @@ describe('priorité d’une faille (grille de départ)', () => {
   });
 
   it('P2 : présente, élevée et exploit disponible ; plusieurs règles remplies : faits réunis sans doublon', () => {
-    expect(calculerPriorite(faits({ gravite: 'elevee', exploitDisponible: true }))).toEqual({
+    expect(calculerPriorite(faits({ gravite: 'elevee', exploitable: ['tenable'] }))).toEqual({
       niveau: 'P2',
       faits: [
         { fait: 'presence', presence: 'detectee' },
         { fait: 'gravite', gravite: 'elevee' },
-        { fait: 'exploit_disponible' },
+        { fait: 'exploit_disponible', sources: ['tenable'] },
       ],
     });
     expect(calculerPriorite(faits({ gravite: 'critique', epss: 0.9 })).faits).toEqual([
@@ -92,7 +100,7 @@ describe('priorité d’une faille (grille de départ)', () => {
       { fait: 'epss', score: 0.9, seuil: 0.5 },
     ]);
     // Exploit disponible sans gravité élevée : pas de P2 pour autant.
-    expect(calculerPriorite(faits({ gravite: 'moyenne', exploitDisponible: true })).niveau).toBe('P4');
+    expect(calculerPriorite(faits({ gravite: 'moyenne', exploitable: ['tenable'] })).niveau).toBe('P4');
   });
 
   it('P3 : présente et élevée', () => {
@@ -163,7 +171,15 @@ describe('priorité d’une faille (grille de départ)', () => {
     expect(libelleFaitPriorite({ fait: 'gravite', gravite: 'elevee' })).toBe('Gravité élevée');
     expect(libelleFaitPriorite({ fait: 'gravite', gravite: null })).toBe('Gravité non publiée');
     expect(libelleFaitPriorite({ fait: 'epss', score: 0.62, seuil: 0.5 })).toBe('Score EPSS 62 % (seuil 50 %)');
-    expect(libelleFaitPriorite({ fait: 'exploit_disponible' })).toBe('Code d’exploitation disponible (Tenable)');
+    expect(libelleFaitPriorite({ fait: 'exploit_disponible', sources: ['tenable'] })).toBe(
+      'Code d’exploitation disponible (Tenable)',
+    );
+    expect(libelleFaitPriorite({ fait: 'exploitation', sources: ['cert-sante'] })).toBe(
+      'Exploitation avérée (fiche du CERT Santé)',
+    );
+    expect(libelleFaitPriorite({ fait: 'exploit_disponible', sources: ['tenable', 'cert-sante'] })).toBe(
+      'Code d’exploitation disponible (Tenable, preuve de concept selon le CERT Santé)',
+    );
     expect(graviteDepuisNvd('CRITICAL', 'LOW')).toBe('critique');
     expect(graviteDepuisNvd(null, 'HIGH')).toBe('elevee');
     expect(graviteDepuisNvd('MEDIUM', null)).toBe('moyenne');
@@ -246,5 +262,170 @@ describe('rang d’une machine', () => {
     ]);
     expect(libelleFaitRang({ fait: 'exploitation', nombre: 0 })).toBe('Aucune exploitation avérée');
     expect(libelleFaitRang({ fait: 'role', role: null })).toBe('Rôle non renseigné');
+  });
+});
+
+describe('plusieurs sources (V26) : exploitation avérée et « exploitable »', () => {
+  it('une seule source suffit pour l’exploitation avérée, quelle qu’elle soit', () => {
+    for (const source of SOURCES_EXPLOITATION)
+      expect(calculerPriorite(faits({ exploitation: [source], presence: 'declaree' }))).toEqual({
+        niveau: 'P1',
+        faits: [
+          { fait: 'exploitation', sources: [source] },
+          { fait: 'presence', presence: 'declaree' },
+        ],
+      });
+    // Plusieurs sources : toutes citées, dans l'ordre de la liste, quel que soit l'ordre reçu.
+    expect(
+      calculerPriorite(faits({ exploitation: ['cert-sante', 'kev', 'cert-fr'], presence: 'detectee' })).faits[0],
+    ).toEqual({ fait: 'exploitation', sources: ['kev', 'cert-fr', 'cert-sante'] });
+    // Produit à confirmer et exploitation signalée par le seul CERT Santé : P2.
+    expect(calculerPriorite(faits({ exploitation: ['cert-sante'], presence: 'a_confirmer' })).niveau).toBe('P2');
+  });
+
+  it('« exploitable » selon une seule source suffit (Tenable ou preuve de concept du CERT Santé)', () => {
+    for (const source of SOURCES_EXPLOITABLE)
+      expect(calculerPriorite(faits({ gravite: 'elevee', exploitable: [source] })).faits).toContainEqual({
+        fait: 'exploit_disponible',
+        sources: [source],
+      });
+    expect(calculerPriorite(faits({ gravite: 'elevee', exploitable: ['cert-sante', 'tenable'] })).faits.at(-1)).toEqual(
+      { fait: 'exploit_disponible', sources: ['tenable', 'cert-sante'] },
+    );
+    // « Exploitable » n'est pas une exploitation avérée : jamais de P1 à lui seul.
+    expect(calculerPriorite(faits({ gravite: 'critique', exploitable: ['cert-sante'] })).niveau).toBe('P2');
+    expect(calculerPriorite(faits({ gravite: 'faible', exploitable: ['cert-sante'] })).niveau).toBe('P4');
+  });
+
+  it('la source en avance prime : signalements rangés par date, date inconnue en dernier, une fois par source', () => {
+    const liste = [
+      { source: 'kev' as const, le: '2026-11-13T00:00:00.000Z' },
+      { source: 'cert-sante' as const, le: '2026-11-10T02:28:01.000Z' },
+      { source: 'cert-fr' as const, le: null },
+      { source: 'cert-sante' as const, le: '2026-11-12T00:00:00.000Z' },
+    ];
+    expect(rangerSignalements(liste, SOURCES_EXPLOITATION)).toEqual([
+      { source: 'cert-sante', le: '2026-11-10T02:28:01.000Z' },
+      { source: 'kev', le: '2026-11-13T00:00:00.000Z' },
+      { source: 'cert-fr', le: null },
+    ]);
+    expect(premierSignalement(liste, SOURCES_EXPLOITATION)).toEqual({
+      source: 'cert-sante',
+      le: '2026-11-10T02:28:01.000Z',
+    });
+    expect(premierSignalement([], SOURCES_EXPLOITATION)).toBeNull();
+    // Dates égales ou toutes inconnues : ordre de la liste des sources ; source hors liste ignorée.
+    expect(
+      rangerSignalements(
+        [
+          { source: 'cert-sante', le: null },
+          { source: 'tenable', le: null },
+          { source: 'autre' as 'tenable', le: '2000-01-01T00:00:00.000Z' },
+        ],
+        SOURCES_EXPLOITABLE,
+      ),
+    ).toEqual([
+      { source: 'tenable', le: null },
+      { source: 'cert-sante', le: null },
+    ]);
+  });
+});
+
+describe('valeur la plus sévère entre les sources (V27)', () => {
+  it('gravité, score CVSS et score EPSS : la plus haute, avec sa source ; chaque valeur reste disponible', () => {
+    const v = {
+      gravites: [
+        { source: 'tenable' as const, gravite: 'elevee' as const },
+        { source: 'nvd' as const, gravite: 'moyenne' as const },
+        { source: 'cert-sante' as const, gravite: 'critique' as const },
+      ],
+      cvss: [
+        { source: 'nvd' as const, score: 6.5 },
+        { source: 'cert-sante' as const, score: 9.8 },
+        { source: 'tenable' as const, score: 7.5 },
+      ],
+      epss: [
+        { source: 'first' as const, score: 0.12 },
+        { source: 'tenable' as const, score: 0.31 },
+      ],
+    };
+    expect(valeursRetenues(v)).toEqual({
+      gravite: { source: 'cert-sante', gravite: 'critique' },
+      cvss: { source: 'cert-sante', score: 9.8 },
+      epss: { source: 'tenable', score: 0.31 },
+    });
+    // L'entrée n'est pas modifiée (chaque valeur gardée avec sa source).
+    expect(v.cvss.map((x) => x.source)).toEqual(['nvd', 'cert-sante', 'tenable']);
+  });
+
+  it('égalité : la première source de la liste ; aucune valeur : null ; rejouable', () => {
+    const v = {
+      gravites: [
+        { source: 'cert-sante' as const, gravite: 'elevee' as const },
+        { source: 'nvd' as const, gravite: 'elevee' as const },
+      ],
+      cvss: [
+        { source: 'tenable' as const, score: 7.5 },
+        { source: 'nvd' as const, score: 7.5 },
+      ],
+      epss: [],
+    };
+    const r = valeursRetenues(v);
+    expect(r).toEqual({
+      gravite: { source: 'nvd', gravite: 'elevee' },
+      cvss: { source: 'nvd', score: 7.5 },
+      epss: null,
+    });
+    expect(valeursRetenues({ gravites: [...v.gravites].reverse(), cvss: [...v.cvss].reverse(), epss: [] })).toEqual(r);
+  });
+
+  it('gravité tirée d’un score CVSS v3 (échelle de FIRST)', () => {
+    expect([10, 9, 8.9, 7, 6.9, 4, 3.9, 0.1].map(graviteDepuisScore)).toEqual([
+      'critique',
+      'critique',
+      'elevee',
+      'elevee',
+      'moyenne',
+      'moyenne',
+      'faible',
+      'faible',
+    ]);
+    for (const x of [0, -1, 10.1, Number.NaN, null]) expect(graviteDepuisScore(x)).toBeNull();
+  });
+
+  it('la priorité prend la valeur la plus sévère et les sources de l’exploitation', () => {
+    const s: SourcesFailleDto = {
+      exploitation: [{ source: 'cert-sante', le: '2026-11-10T02:28:01.000Z' }],
+      exploitable: [{ source: 'cert-sante', le: '2026-11-10T02:28:01.000Z' }],
+      valeurs: {
+        gravites: [
+          { source: 'nvd', gravite: 'moyenne' },
+          { source: 'cert-sante', gravite: 'critique' },
+        ],
+        cvss: [],
+        epss: [
+          { source: 'first', score: 0.2 },
+          { source: 'tenable', score: 0.7 },
+        ],
+      },
+      certSante: { correctif: 'oui', contournement: null },
+    };
+    expect(faitsDepuisSources(s)).toEqual({
+      exploitation: ['cert-sante'],
+      exploitable: ['cert-sante'],
+      gravite: 'critique',
+      epss: 0.7,
+    });
+    expect(calculerPriorite({ ...faitsDepuisSources(s), presence: 'a_confirmer' }).niveau).toBe('P2');
+    expect(calculerPriorite({ ...faitsDepuisSources(s), presence: 'declaree' }).niveau).toBe('P1');
+    const sansExploitation = { ...s, exploitation: [] };
+    expect(calculerPriorite({ ...faitsDepuisSources(sansExploitation), presence: 'declaree' })).toEqual({
+      niveau: 'P2',
+      faits: [
+        { fait: 'presence', presence: 'declaree' },
+        { fait: 'gravite', gravite: 'critique' },
+        { fait: 'epss', score: 0.7, seuil: 0.5 },
+      ],
+    });
   });
 });

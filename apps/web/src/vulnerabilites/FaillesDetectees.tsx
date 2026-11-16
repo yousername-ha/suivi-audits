@@ -7,7 +7,9 @@
    plateforme et faits qui le fondent), failles « déclarées » (CVE rattachées à un produit surveillé relié à des machines),
    distinctes des failles détectées par Tenable. Lot V4b : état de suivi et filtre de suivi (par défaut, les failles encore à
    traiter ; « à clore » : corrigées selon la source, à confirmer), fiche d'une faille déclarée, suivi dans chaque fiche
-   (SuiviFaille). */
+   (SuiviFaille). Lot V4c : ce que chaque source dit de la faille (SourcesFaille) : exploitation avérée et « exploitable »
+   avec la première source et sa date, valeurs par source et celle retenue, mentions du CERT Santé ; gravité retenue (la plus
+   sévère) dans la liste des failles déclarées. */
 import {
   Alert,
   Anchor,
@@ -69,6 +71,7 @@ import {
 } from './failles';
 import { nombrePages } from './veille';
 import { MachinesTable } from './Machines';
+import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
@@ -136,6 +139,7 @@ export function ConstatsTable({
                     </StatusChip>
                   ))}
                 </Group>
+                <MarquesSources s={c.sources} />
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
@@ -203,7 +207,7 @@ export function DeclareesTable({
             <Table.Th>CVE</Table.Th>
             <Table.Th>Suivi</Table.Th>
             <Table.Th>Produit surveillé</Table.Th>
-            <Table.Th>Gravité (NVD)</Table.Th>
+            <Table.Th>Gravité (la plus sévère)</Table.Th>
             <Table.Th>Machines</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -234,6 +238,7 @@ export function DeclareesTable({
                   {f.kev && <StatusChip etat="erreur">Exploitée (KEV)</StatusChip>}
                   {f.alerteCertFr && <StatusChip etat="erreur">Alerte CERT-FR</StatusChip>}
                 </Group>
+                <MarquesSources s={f.sources} />
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={f.suivi} present={f.present} source="la veille" />
@@ -303,6 +308,7 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
           {c.synopsis}
         </Text>
       )}
+      <SourcesFaille s={c.sources} />
       <Stack gap="2xs">
         <Title order={3} size="h6">
           Correctif indiqué par Tenable
@@ -438,6 +444,7 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
           {f.description}
         </Text>
       )}
+      <SourcesFaille s={f.sources} />
       <Stack gap="2xs">
         <Title order={3} size="h6">
           Action exigée par le catalogue KEV
@@ -570,7 +577,7 @@ export function FaillesDetecteesPage() {
     <Page>
       <PageHeader
         title="Failles détectées"
-        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitée » : une de ses CVE figure au catalogue KEV de la veille ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
+        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
         actions={
           <Button component={Link} to="/vulnerabilites/machines" variant="default">
             Machines
@@ -636,7 +643,7 @@ export function FaillesDetecteesPage() {
               comboboxProps={{ withinPortal: false }}
             />
             <Checkbox
-              label="Exploitées (KEV)"
+              label="Exploitation avérée"
               checked={filtres.exploite}
               onChange={(e) => changer({ exploite: e.currentTarget.checked })}
             />

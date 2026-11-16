@@ -13,6 +13,12 @@ Règles :
 - liste fermée des hôtes et des chemins, écrite ici (SOURCES), recopiée de packages/shared/src/veille-vulnerabilites.ts et
   comparée par apps/api/test/veille-architecture.test.ts ; aucune adresse n'est reçue de l'application ;
 - GET seulement, HTTPS, certificat toujours vérifié (magasin du système), TLS 1.2 au minimum ;
+- CERT Santé (V23, V26) : après le flux RSS, la page (« fiche ») de chaque publication nouvelle ou dont le titre a changé
+  (« | modifié le … ») et qui cite une CVE, sur le même hôte, au chemin tiré de l'adresse contrôlée du flux ; 30 fiches au
+  plus par collecte, une seconde entre deux lectures, durée bornée. La page est lue avec html.parser, sans rien exécuter ni
+  suivre ; seules des mentions structurées en sont tirées (texte exact d'un nœud, hors commentaires, attributs et scripts),
+  jamais par mot-clé dans le texte libre : une mention absente, d'une forme imprévue ou contradictoire vaut « non
+  renseigné » (null), jamais « non » ;
 - mandataire sortant de l'établissement (ADR 0101, lot P1), seulement s'il est reçu : tunnel CONNECT vers l'hôte de la liste
   fermée à travers le mandataire, puis TLS jusqu'à la source, certificat et nom toujours vérifiés ; l'identifiant et le mot
   de passe ne vont qu'au mandataire (en-tête Proxy-Authorization de la demande CONNECT, authentification simple seulement :
@@ -28,7 +34,9 @@ Règles :
 import base64
 import datetime as dt
 from email.utils import parsedate_to_datetime
+import hashlib
 import html
+from html.parser import HTMLParser
 import http.client
 import ipaddress
 import json
@@ -42,13 +50,14 @@ import xml.etree.ElementTree as ET
 
 # Liste fermée des sources : hôte et chemins exacts ({reference} : identifiant CERT-FR contrôlé). Une seule ligne JSON : le
 # test d'architecture la lit telle quelle.
-SOURCES = {"cisa-kev": {"hote": "www.cisa.gov", "chemins": ["/sites/default/files/feeds/known_exploited_vulnerabilities.json"]}, "nvd": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cves/2.0"]}, "epss": {"hote": "api.first.org", "chemins": ["/data/v1/epss"]}, "cert-fr": {"hote": "cert.cyber.gouv.fr", "chemins": ["/alerte/feed/", "/avis/feed/", "/alerte/{reference}/json/", "/avis/{reference}/json/"]}, "cert-sante": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/alertes-et-vulnerabilites/rss.xml"]}}
+SOURCES = {"cisa-kev": {"hote": "www.cisa.gov", "chemins": ["/sites/default/files/feeds/known_exploited_vulnerabilities.json"]}, "nvd": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cves/2.0"]}, "epss": {"hote": "api.first.org", "chemins": ["/data/v1/epss"]}, "cert-fr": {"hote": "cert.cyber.gouv.fr", "chemins": ["/alerte/feed/", "/avis/feed/", "/alerte/{reference}/json/", "/avis/{reference}/json/"]}, "cert-sante": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/alertes-et-vulnerabilites/rss.xml", "/alertes/{slug}"]}}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
-BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "lot": 500, "lots": 40, "epss": 2000}
+BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
 CERTFR_ID = re.compile(r"^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$")
 CERTSANTE_ID = re.compile(r"^[1-9]\d{0,9}$")
 ADRESSE_CERTSANTE = re.compile(r"^https:\/\/cyberveille\.esante\.gouv\.fr\/alertes\/[a-z0-9-]{1,200}$")
+SLUG_CERTSANTE = re.compile(r"^[a-z0-9-]{1,200}$")
 CVSS31_VECTEUR = re.compile(r"^CVSS:3\.1(?:\/[A-Z]{1,3}:[A-Z]{1,2}){8,20}$")
 CVSS40_VECTEUR = re.compile(r"^CVSS:4\.0(?:\/[A-Za-z]{1,3}:[A-Za-z]{1,10}){11,40}$")
 NOM_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,100}$")
@@ -84,6 +93,17 @@ EPSS_PAUSE = 1
 # CERT-FR : export JSON des alertes et des avis nouveaux, au plus 80 par collecte, une demi-seconde entre deux lectures.
 CERTFR_DETAILS_MAX = 80
 CERTFR_PAUSE = 0.5
+# CERT Santé : fiches (pages HTML d'environ 35 Kio, relevé du 16/11/2026) bornées en taille, une seconde entre deux lectures,
+# plus aucune lecture de fiche passé FICHE_DUREE_MAX secondes de collecte (la collecte entière reste sous DUREE_MAX).
+FICHE_MAX = 512 * 1024
+FICHE_PAUSE = 1
+FICHE_DUREE_MAX = 150
+FICHE_FRAGMENTS_MAX = 20000
+# Fiches déjà lues, reçues de l'application : identifiant -> empreinte du titre lu (16 caractères hexadécimaux).
+FICHES_LUES_MAX = 2000
+EMPREINTE = re.compile(r"^[0-9a-f]{16}$")
+# Titre du flux : « Produit - CVE-… », suivi au besoin de « | modifié le JJ-MM-AAAA ».
+PRODUIT_TITRE = re.compile(r"^(.{1,200}?) - CVE-[12]\d{3}-\d{4,9}(?:\s|$)")
 # RSS : profondeur et nombre d'éléments XML bornés, éléments <item> gardés bornés.
 RSS_PROFONDEUR_MAX = 8
 RSS_ELEMENTS_MAX = 5000
@@ -295,12 +315,16 @@ class ConnexionMandataire(http.client.HTTPSConnection):
 
 def chemin_admis(source, chemin):
     for motif in SOURCES.get(source, {}).get("chemins", ()):
-        if "{reference}" in motif:
-            debut, fin = motif.split("{reference}")
-            if chemin.startswith(debut) and chemin.endswith(fin) and CERTFR_ID.fullmatch(chemin[len(debut): len(chemin) - len(fin)]):
+        for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE)):
+            if variable in motif:
+                debut, fin = motif.split(variable)
+                if (len(chemin) > len(debut) + len(fin) and chemin.startswith(debut) and chemin.endswith(fin)
+                        and forme.fullmatch(chemin[len(debut): len(chemin) - len(fin)])):
+                    return True
+                break
+        else:
+            if chemin == motif:
                 return True
-        elif chemin == motif:
-            return True
     return False
 
 
@@ -340,14 +364,15 @@ class Client:
                 raise Refus("Autorité de certification de l'établissement illisible : rien n'a été lu.") from None
         self.debut = time.monotonic() if debut is None else debut
 
-    def lire(self, chemin, requete=""):
+    def lire(self, chemin, requete="", maximum=None):
         if not chemin_admis(self.source, chemin):
             raise Refus("Lecture refusée : %s hors de la liste fermée de la source." % chemin[:80])
-        if requete and not re.fullmatch(r"[A-Za-z0-9=&,:.\-]{1,4000}", requete):
+        if requete and (not re.fullmatch(r"[A-Za-z0-9=&,:.\-]{1,4000}", requete)
+                        or chemin not in SOURCES[self.source]["chemins"]):
             raise Refus("Paramètres de lecture refusés.")
         if time.monotonic() - self.debut > DUREE_MAX:
             raise Refus("Durée maximale de la collecte atteinte : collecte interrompue.")
-        maximum = REPONSE_MAX[self.source]
+        maximum = maximum or REPONSE_MAX[self.source]
         if self.mandataire:
             connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire)
         else:
@@ -705,9 +730,131 @@ def cert_fr(client, parametres, bilan):
     return elements
 
 
-def cert_sante(client, _parametres, bilan):
-    """Flux RSS : identifiant = numéro de l'élément (guid) ; CVE relevées dans le titre (« Produit - CVE-… ») et le résumé."""
-    elements, vus = [], set()
+# ------------------------------------------------------------------ Fiches du CERT Santé
+# Libellés exacts relevés sur les fiches le 16/11/2026 (quinze fiches, une seule forme) : chaque libellé est le texte entier
+# d'un nœud, suivi du nœud de la valeur (« Oui » ou « Non »). La rubrique « Preuve de concept » est suivie d'une phrase ;
+# seules les deux phrases observées sont reconnues. Le score figure dans un lien « [Score CVSS v3.1 : 7.5] ».
+FICHE_MENTIONS = {
+    "La faille est activement exploitée :": "exploitee",
+    "Un correctif existe :": "correctif",
+    "Une mesure de contournement existe :": "contournement",
+}
+FICHE_OUI_NON = {"Oui": "oui", "Non": "non"}
+FICHE_PREUVE = "Preuve de concept"
+FICHE_PREUVES = {
+    "Actuellement, aucune preuve de concept n'est disponible en sources ouvertes.": "indisponible",
+    "Une preuve de concept est disponible en sources ouvertes.": "disponible",
+}
+FICHE_SCORE = re.compile(r"^\[Score CVSS v3\.1 : (\d{1,2}(?:\.\d)?)\]$")
+# Éléments de bloc : une valeur n'est lue que dans le même bloc que son libellé (« <p><span>libellé</span> Oui</p> »).
+FICHE_BLOCS = ("p", "div", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6", "table", "tr", "td", "th", "section",
+               "article", "header", "footer", "main", "nav", "aside", "dl", "dt", "dd", "blockquote", "form", "body",
+               "html", "pre")
+# Éléments dont le contenu n'est jamais lu (code, styles, gabarits, en-tête, objets embarqués).
+FICHE_IGNORES = ("script", "style", "template", "noscript", "textarea", "head", "title", "iframe", "object", "svg", "math")
+
+
+class Fragments(HTMLParser):
+    """Texte d'une page découpé aux balises : un fragment (texte, numéro de bloc) par nœud de texte, espaces réduits,
+    apostrophe typographique ramenée à l'apostrophe simple. Commentaires, déclarations, instructions et attributs ne
+    produisent aucun texte ; le contenu des éléments de FICHE_IGNORES est écarté. Rien n'est exécuté ni suivi."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.fragments = []
+        self.tampon = []
+        self.ignore = 0
+        self.bloc = 0
+
+    def vider(self):
+        t = " ".join("".join(self.tampon).replace("\u2019", "'").split())
+        self.tampon = []
+        if t and not self.ignore:
+            if len(self.fragments) >= FICHE_FRAGMENTS_MAX:
+                raise Refus("Fiche refusée : trop de fragments.")
+            self.fragments.append((t, self.bloc))
+
+    def balise(self, tag):
+        self.vider()
+        if tag in FICHE_BLOCS:
+            self.bloc += 1
+
+    def handle_starttag(self, tag, attrs):
+        self.balise(tag)
+        if tag in FICHE_IGNORES:
+            self.ignore += 1
+
+    def handle_startendtag(self, tag, attrs):
+        self.balise(tag)
+
+    def handle_endtag(self, tag):
+        self.balise(tag)
+        if tag in FICHE_IGNORES and self.ignore:
+            self.ignore -= 1
+
+    def handle_data(self, data):
+        if not self.ignore:
+            self.tampon.append(data)
+
+
+def unique(valeurs):
+    """Valeur d'une mention lue une ou plusieurs fois : la même partout, sinon null (contradiction ou forme imprévue)."""
+    return valeurs[0] if valeurs and None not in valeurs and len(set(valeurs)) == 1 else None
+
+
+def lire_fiche(brut):
+    """Mentions structurées d'une fiche : exploitée, correctif, contournement (oui, non, null), preuve de concept
+    (disponible, indisponible, null), score CVSS v3.1 (null s'il n'a pas une forme valide)."""
+    try:
+        page = brut.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Refus("Fiche refusée : UTF-8 attendu.") from None
+    f = Fragments()
+    try:
+        f.feed(page)
+        f.close()
+    except (AssertionError, ValueError):
+        raise Refus("Fiche illisible.") from None
+    f.vider()
+    lu = {cle: [] for cle in FICHE_MENTIONS.values()}
+    preuves, scores = [], []
+    fr = f.fragments
+    for i, (x, bloc) in enumerate(fr):
+        # Valeur : le fragment suivant, s'il est dans le même bloc que le libellé.
+        suivant = fr[i + 1][0] if i + 1 < len(fr) and fr[i + 1][1] == bloc else None
+        if x in FICHE_MENTIONS:
+            lu[FICHE_MENTIONS[x]].append(FICHE_OUI_NON.get(suivant))
+        elif x == FICHE_PREUVE:
+            preuves.append(FICHE_PREUVES.get(suivant))
+        else:
+            m = FICHE_SCORE.fullmatch(x)
+            if m:
+                score = float(m.group(1))
+                scores.append(score if 0 <= score <= 10 else None)
+    return {"exploitee": unique(lu["exploitee"]), "correctif": unique(lu["correctif"]),
+            "contournement": unique(lu["contournement"]), "preuveConcept": unique(preuves), "cvss31": unique(scores)}
+
+
+def empreinte_titre(titre):
+    return hashlib.sha256(titre.encode("utf-8")).hexdigest()[:16]
+
+
+def fiches_lues(parametres):
+    lues = parametres.get("lues", {})
+    if (not isinstance(lues, dict) or len(lues) > FICHES_LUES_MAX
+            or not all(isinstance(k, str) and CERTSANTE_ID.fullmatch(k) and isinstance(e, str) and EMPREINTE.fullmatch(e)
+                       for k, e in lues.items())):
+        raise Refus("Liste des fiches déjà lues illisible : rien n'a été lu.")
+    return lues
+
+
+def cert_sante(client, parametres, bilan):
+    """Flux RSS : identifiant = numéro de l'élément (guid) ; CVE relevées dans le titre (« Produit - CVE-… ») et le résumé ;
+    produit tiré du titre. Puis la fiche des publications qui citent une CVE, nouvelles ou dont le titre a changé depuis la
+    lecture précédente (empreinte reçue de l'application), dans les bornes de la collecte. Une fiche non lue (borne, échec)
+    est comptée dans `detailsEchoues` et rendue à null : l'application garde les mentions déjà lues."""
+    lues = fiches_lues(parametres)
+    elements, vus, lus = [], set(), 0
     for item in lire_rss(client.lire(SOURCES["cert-sante"]["chemins"][0])):
         guid = (item.get("guid") or "").strip()
         if not CERTSANTE_ID.fullmatch(guid):
@@ -718,10 +865,25 @@ def cert_sante(client, _parametres, bilan):
             continue
         vus.add(guid)
         lien = (item.get("link") or "").strip()
+        adresse = lien if ADRESSE_CERTSANTE.fullmatch(lien) else None
         cves = list(dict.fromkeys(CVE_DANS_TEXTE.findall(commun["titre"] + " " + commun["resume"])))[: BORNES["cvesParAvis"]]
-        elements.append({"identifiant": guid, "nature": "alerte", **commun,
-                         "adresse": lien if ADRESSE_CERTSANTE.fullmatch(lien) else None,
-                         "cves": [c for c in cves if CVE_ID.fullmatch(c)], "cvesLues": True})
+        cves = [c for c in cves if CVE_ID.fullmatch(c)]
+        m = PRODUIT_TITRE.match(commun["titre"])
+        produit = texte(m.group(1), BORNES["produit"]) if m else ""
+        fiche = None
+        if cves and adresse and lues.get(guid) != empreinte_titre(commun["titre"]):
+            if lus >= BORNES["fichesCertSante"] or time.monotonic() - client.debut > FICHE_DUREE_MAX:
+                bilan.details_echoues += 1
+            else:
+                if lus:
+                    time.sleep(FICHE_PAUSE)
+                lus += 1
+                try:
+                    fiche = lire_fiche(client.lire(adresse[len("https://" + SOURCES["cert-sante"]["hote"]):], maximum=FICHE_MAX))
+                except (Refus, OSError, http.client.HTTPException, ssl.SSLError):
+                    bilan.details_echoues += 1
+        elements.append({"identifiant": guid, "nature": "alerte", **commun, "adresse": adresse, "cves": cves,
+                         "cvesLues": True, "produit": produit or None, "fiche": fiche})
     return elements
 
 

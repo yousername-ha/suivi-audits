@@ -115,6 +115,18 @@ de la personne. La fin d'une synchronisation de Tenable (`tenable.ts`, même tra
 (`rapprochements.ts`, même transaction) préviennent le suivi, qui propose « corrigée » (après une synchronisation complète
 seulement), retire la proposition ou remet « à traiter » une faille corrigée qui réapparaît ; il ne passe jamais rien à
 « corrigée ».
+Depuis le lot V4c (migration `078`, décisions V23, V24, V26 et V27), la collecte du CERT Santé lit aussi, sur le même hôte et à
+un chemin à motif strict de la liste fermée (`/alertes/{slug}`), la page des publications nouvelles ou dont le titre a changé
+(empreinte du titre remise par l'API, relecture après sept jours), 30 au plus par collecte, avec `html.parser` de la
+bibliothèque standard : seules des mentions structurées en sortent (exploitée, correctif, contournement, preuve de concept,
+score CVSS v3.1), rangées avec le produit cité sur la ligne de `vulnerabilites_veille_avis`, avec la date du premier
+signalement. Chaque fait reste dans les colonnes de sa source ; `apps/api/src/vulnerabilites/sources.ts` les rassemble à la
+lecture (exploitation avérée et « exploitable » par source, rangées de la première à la dernière ; valeurs par source), et la
+priorité prend la plus sévère (`valeursRetenues`, fonction pure). Une CVE connue seulement par une publication du CERT Santé est
+rapprochée par le nom du produit cité (proposition « avis_seulement ») ; la collecte du CERT Santé déclenche aussi le recalcul
+des rapprochements. Une confirmation ou un rejet s'annule (`POST …/rapprochements/:id/annulation`, `If-Match`) : décision
+effacée, rapprochement recalculé, annulation gardée sur la ligne et au journal ; le suivi est prévenu comme pour tout
+changement de rattachement (une confirmation aussi).
 
 Mandataire sortant de l'établissement ([ADR 0101](../adr/0101-mandataire-sortant.md), lot P1) : réglage système unique
 (`administration:administrer`, `If-Match`), rangé sans migration dans `settings` (`systeme:mandataire` : actif, adresse
