@@ -44,6 +44,27 @@ describe('masque des machines', () => {
     expect(await masquer('Le mot masque seul reste.')).toBe('Le mot masque seul reste.');
   });
 
+  it('noms que le découpage en jetons ne reconnaît pas : espace, accent, « $ », « DOMAINE\\MACHINE » (relecture du 16/11/2026)', async () => {
+    const masquer = creerMasque(
+      [
+        m('a', 'PC ACCUEIL 3', '192.0.2.221'),
+        m('b', 'srv-été01', '192.0.2.222'),
+        m('c', 'IMPRIMANTE$', '192.0.2.223'),
+        m('d', 'EXEMPLE\\SRVBASE01', '192.0.2.224'),
+      ],
+      attribuer,
+    );
+    expect(await masquer('Le poste PC ACCUEIL 3 est touché, comme pc accueil 3.')).toBe(
+      'Le poste M-001 est touché, comme M-001.',
+    );
+    expect(await masquer('{"machine":"PC ACCUEIL 3"}')).toBe('{"machine":"M-001"}');
+    expect(await masquer('Redémarrer srv-été01 ce soir.')).toBe('Redémarrer M-002 ce soir.');
+    expect(await masquer('File IMPRIMANTE$ et imprimante seule.')).toBe('File M-003 et M-003 seule.');
+    expect(await masquer('Compte EXEMPLE\\SRVBASE01, ou srvbase01 seul.')).toBe('Compte M-004, ou M-004 seul.');
+    // Frontière de mot : la clé au milieu d'un mot plus long n'est pas masquée.
+    expect(await masquer('Le mot superPC ACCUEIL 30 reste.')).toBe('Le mot superPC ACCUEIL 30 reste.');
+  });
+
   it('machine non lisible, libellé partagé par deux machines : « [machine] », sans repère', async () => {
     const vus: string[] = [];
     const masquer = creerMasque(parc, async (ids) => {

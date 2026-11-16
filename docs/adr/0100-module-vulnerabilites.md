@@ -326,6 +326,19 @@
   - **contenu d'une action (V30)** : les noms des machines et des applications touchées sont ajoutés par le serveur à la
     description (20 machines au plus, puis « et N autres ») ; aucune adresse ; une machine sans nom est comptée « sans nom » ;
     le journal d'audit reste sans nom de machine.
+  **Relecture par la session « Assistant RSSI intégré plateforme » (16/11/2026, commit `9739bb73`)**, en lecture seule, avec
+  des essais du masque. Défaut bloquant trouvé et corrigé : un nom de machine qui contient un espace, une lettre accentuée,
+  « $ », ou de la forme « DOMAINE\\MACHINE », n'était pas reconnu et serait parti chez le fournisseur du modèle. Le masque
+  cherche désormais ces noms tels quels, entre deux frontières de mot, et reconnaît aussi « MACHINE » seul et le nom sans
+  « $ » final. Les trois risques relus (historique, points de sortie, déclaration des outils) sont jugés conformes ; un test
+  échoue désormais si le masque n'est plus branché par les services. Restent, à trancher par le RSSI ou à connaître :
+  - **sur-masquage** : quand une machine porte le nom d'une application (« dpi », « web », « pacs »), ce mot est masqué
+    partout ; en conversation, la personne peut lire le nom d'un serveur là où elle avait écrit le nom de l'application ;
+  - toute ronde de l'assistant dépend désormais de l'inventaire des machines, même quand le module Vulnérabilités ne sert
+    pas : une lecture en échec fait échouer la ronde, ce qui est le sens prudent de la panne ;
+  - l'identifiant interne d'une machine n'est pas masqué ; il ne désigne rien hors de la base ;
+  - un petit modèle peut écrire qu'il a déposé une proposition sans l'avoir fait : la consigne l'interdit, mais seule une
+    mention posée par la plateforme le garantirait.
   Non vérifié : aucun modèle réel n'a répondu (faux transport) ; la qualité des réponses n'est pas mesurée.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou

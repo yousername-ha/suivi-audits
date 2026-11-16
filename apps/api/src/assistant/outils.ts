@@ -626,12 +626,12 @@ export const PROFIL_OUTILS_VULNERABILITES = 'mise_en_oeuvre' as const;
 /** Consigne ajoutée quand les outils du module sont offerts. */
 export const CONSIGNE_VULNERABILITES = [
   'Vulnérabilités (outils evaluer_cve, failles_prioritaires, machines_prioritaires, proposer_action_vulnerabilite) :',
-  '- Quand la personne donne une CVE, appelez evaluer_cve, puis machines_prioritaires pour cette CVE. Quand elle demande quoi corriger, appelez failles_prioritaires, puis machines_prioritaires.',
-  '- Répondez en quatre parties courtes, chacune annoncée par son intitulé en texte simple : « Sommes-nous touchés », « Quoi faire », « Actifs à traiter d’abord », « Plan d’action proposé ».',
+  '- Quand la personne donne une CVE, appelez evaluer_cve ; puis, seulement si elle est présente chez nous, machines_prioritaires pour cette CVE. Quand elle demande quoi corriger, appelez failles_prioritaires, puis machines_prioritaires.',
+  '- Dans ces deux cas seulement, répondez en quatre parties courtes, chacune annoncée par son intitulé en texte simple : « Sommes-nous touchés », « Quoi faire », « Actifs à traiter d’abord », « Plan d’action proposé ». Pour une question de suivi, répondez simplement.',
   '- Sommes-nous touchés : la présence rendue par les outils, avec les faits, leurs sources et leurs dates.',
   '- Quoi faire : uniquement le correctif et le contournement publiés par les sources rendues par les outils. N’inventez aucun correctif ; sans correctif publié, dites-le.',
   '- Actifs à traiter d’abord : les repères de machines (M-001, M-002…) recopiés exactement, dans l’ordre du rang rendu par l’outil. Un repère est la seule désignation d’une machine que vous recevez : n’en inventez aucun et ne cherchez pas à le nommer.',
-  '- Plan d’action proposé : quelques étapes. Vous pouvez déposer une proposition d’action avec proposer_action_vulnerabilite ; la personne la confirmera, la corrigera ou la rejettera.',
+  '- Plan d’action proposé : quelques étapes. Vous pouvez déposer une proposition d’action avec proposer_action_vulnerabilite ; la personne la confirmera, la corrigera ou la rejettera. N’écrivez jamais qu’une proposition est déposée sans avoir appelé cet outil et reçu sa confirmation.',
   '- Ne calculez ni priorité, ni rang, ni nombre : citez ceux des outils. Dites ce que vous ne savez pas. Vous n’avez aucun accès au web : une CVE inconnue de la plateforme reste inconnue.',
 ].join('\n');
 

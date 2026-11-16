@@ -421,6 +421,12 @@ describe('outils offerts', () => {
   };
   const NOUVEAUX = ['evaluer_cve', 'machines_prioritaires', 'failles_prioritaires', 'proposer_action_vulnerabilite'];
 
+  it('le masque des machines est branché par les services : sans lui, l’assistant enverrait les demandes sans contrôle', () => {
+    // Le masque n'est posé que si le service du module est branché sur l'assistant (services.ts). Ce test échoue si ce
+    // branchement disparaît : l'assistant partirait alors sans masque et sans erreur (relecture du 16/11/2026).
+    expect(t.svc.assistant.vulnerabilites).toBeDefined();
+  });
+
   it('présents pour la mise en œuvre avec le droit de lecture du module, et la consigne qui va avec', async () => {
     const noms = await declares(rssiA);
     expect(noms).toEqual(expect.arrayContaining(NOUVEAUX));
