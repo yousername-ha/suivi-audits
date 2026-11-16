@@ -4,13 +4,17 @@
    CLI de l'exécutant lit la même source. Absence d'enregistrement : flux fermé. */
 import {
   FLUX_MODULES,
+  FLUX_REPRISE_ACTEUR,
+  FLUX_REPRISE_MOTIFS,
   fluxExterne,
   sensDuFlux,
   type FluxAppliques,
   type FluxEtatApplique,
   type FluxExterneEtat,
   type FluxModule,
+  type FluxRepriseMotif,
   type FluxSouhaites,
+  type SettingsValues,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Config } from './config.js';
@@ -176,6 +180,69 @@ export class FluxExternes {
       c,
     );
     return versEtat(m, l);
+  }
+
+  /** Reprise de l'existant (précision du RSSI du 16/11/2026 : « une mise à jour de l'interface ne peut pas enlever le flux
+      ouvert ») : chaque module réellement en service et encore jamais décidé (aucune ligne, ou une ligne sans décision, que
+      l'état appliqué seul a créée) est enregistré ouvert par l'acteur système FLUX_REPRISE_ACTEUR, avec son motif, au journal
+      `flux.externe.repris`. Un module déjà décidé, ouvert ou fermé, n'est jamais touché. Rend les modules repris. */
+  async reprendre(
+    enService: Partial<{ [M in FluxModule]: FluxRepriseMotif<M> }>,
+    origine: string,
+  ): Promise<FluxModule[]> {
+    const repris: FluxModule[] = [];
+    const acteur = { username: FLUX_REPRISE_ACTEUR };
+    await this.db.tx(async (c, k) => {
+      for (const m of FLUX_MODULES) {
+        const motif = enService[m];
+        if (!motif) continue;
+        const motifs: Record<string, string> = FLUX_REPRISE_MOTIFS[m];
+        if (!(motif in motifs)) throw new Error(`Motif de reprise inconnu pour ${m}.`);
+        await k
+          .insertInto('flux_externes')
+          .values({ module: m })
+          .onConflict((oc) => oc.column('module').doNothing())
+          .execute();
+        const cur = await k
+          .selectFrom('flux_externes')
+          .select('decide_par')
+          .where('module', '=', m)
+          .forUpdate()
+          .executeTakeFirstOrThrow();
+        if (cur.decide_par !== null) continue;
+        await k
+          .updateTable('flux_externes')
+          .set({ ouvert: true, decide_par: FLUX_REPRISE_ACTEUR, decide_le: sql<Date>`now()` })
+          .where('module', '=', m)
+          .execute();
+        const f = fluxExterne(m);
+        await this.db.audit(
+          acteur,
+          null,
+          'flux.externe.repris',
+          m,
+          {
+            module: m,
+            libelle: f.libelle,
+            origine,
+            motif,
+            raison: motifs[motif],
+            sens: sensDuFlux(f),
+            destinations: f.destinations.map((d) => ({ sens: d.sens, hote: d.hote, ports: d.ports })),
+            porteur: f.porteur.libelle,
+          },
+          c,
+        );
+        repris.push(m);
+      }
+    }, FLUX_REPRISE_ACTEUR);
+    return repris;
+  }
+
+  /** Reprise du courriel, constatée par l'API elle-même au démarrage : envoi actif dans les réglages et serveur SMTP renseigné. */
+  async reprendreCourriel(courriel: Pick<SettingsValues['courriel'], 'actif' | 'hote'>): Promise<FluxModule[]> {
+    if (courriel.actif !== true || !courriel.hote.trim()) return [];
+    return this.reprendre({ courriel: 'envoi-actif' }, 'demarrage');
   }
 
   /** CLI de l'exécutant : modules voulus ouverts. */

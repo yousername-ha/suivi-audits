@@ -280,6 +280,81 @@ table,
   white-space: nowrap;
 }
 
+/* Tableau empilable (premier usage : résumé des flux vers l'extérieur, ADR 0097, demande du RSSI du 16/11/2026) : rien
+   n'est tronqué ni remplacé par une ellipse. Large, le tableau garde ses colonnes, le texte se replie aux mots (un mot trop
+   long se coupe) et le conteneur défile horizontalement s'il le faut ; étroit (téléphone, tablette, fenêtre réduite),
+   chaque ligne devient un bloc et chaque cellule affiche son intitulé (attribut data-label). Requête de conteneur : la
+   largeur retenue est celle du cadre (fenêtre, carte), pas celle de l'écran. */
+.tableau-empilable-conteneur {
+  container-type: inline-size;
+  max-inline-size: 100%;
+}
+.tableau-empilable :is(th, td) {
+  overflow-wrap: break-word;
+  white-space: normal;
+  vertical-align: top;
+}
+@container (max-width: 48em) {
+  .tableau-empilable,
+  .tableau-empilable :is(tbody, tr, td) {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .tableau-empilable thead {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .tableau-empilable tbody tr {
+    padding-block: var(--mantine-spacing-xs);
+    border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
+  }
+  .tableau-empilable tbody td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: var(--mantine-spacing-sm);
+    padding-block: var(--mantine-spacing-2xs);
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .tableau-empilable tbody td::before {
+    content: attr(data-label);
+    color: var(--mantine-color-dimmed);
+    font-size: var(--mantine-font-size-xs);
+    font-weight: 600;
+  }
+}
+@container (max-width: 28em) {
+  .tableau-empilable tbody td {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mantine-spacing-2xs);
+  }
+}
+
+/* Textes des flux vers l'extérieur (résumé, fenêtre de validation, assistant d'installation) : repli aux mots, coupure des
+   noms d'hôte trop longs, jamais d'ellipse ; les ports restent groupés quand la place le permet. */
+.flux-texte {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.flux-texte :is(.mantine-List-itemLabel, .mantine-List-itemWrapper, .mantine-Text-root, .mantine-Alert-message) {
+  min-inline-size: 0;
+  white-space: normal;
+  text-overflow: clip;
+}
+.flux-ports {
+  display: inline-block;
+  max-inline-size: 100%;
+  color: var(--mantine-color-dimmed);
+}
+.flux-erreur {
+  overflow-wrap: anywhere;
+}
+
 /* ---------------------------------------------------------------- Sections de formulaire */
 .form-section__pied {
   display: flex;

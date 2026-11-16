@@ -8,12 +8,15 @@ import { fluxExterne, type FluxExterneDefinition, type FluxModule } from '@suivi
 import { useCallback, useState, type ReactNode } from 'react';
 import { peutConfirmer } from '../flux-externes';
 
+/** Destinations d'un module : hôte puis ports, chacun sur sa ligne si la place manque ; les noms d'hôte longs se coupent
+    plutôt que de déborder (classe « flux-texte », packages/ui). */
 export function Destinations({ f }: { f: FluxExterneDefinition }) {
   return (
-    <List size="sm" spacing="xs">
+    <List size="sm" spacing="xs" className="flux-texte flux-destinations">
       {f.destinations.map((d) => (
         <List.Item key={`${d.sens}-${d.hote}`}>
-          {d.sens === 'entrant' ? 'Entrant depuis' : 'Sortant vers'} {d.hote} · {d.ports}
+          {`${d.sens === 'entrant' ? 'Entrant depuis' : 'Sortant vers'} ${d.hote} `}
+          <span className="flux-ports">{`· ${d.ports}`}</span>
         </List.Item>
       ))}
     </List>
@@ -32,7 +35,7 @@ export function DetailValidationFlux({
 }) {
   const f = fluxExterne(module);
   return (
-    <Stack>
+    <Stack className="flux-texte">
       <Text size="sm">
         Activer ce module ouvre un flux vers l’extérieur du serveur. {f.role} La décision est inscrite au journal
         d’audit ; désactiver le module referme le flux.
@@ -57,7 +60,12 @@ export function DetailValidationFlux({
       </Stack>
       <Alert color="blue" title="Pare-feu de l’hôte et du réseau">
         La plateforme ouvre son propre flux ; le pare-feu reste du ressort de l’équipe infrastructure. À faire autoriser
-        : {f.pareFeu.join(' ')}
+        :
+        <List size="sm" mt="xs">
+          {f.pareFeu.map((r) => (
+            <List.Item key={r}>{r}</List.Item>
+          ))}
+        </List>
       </Alert>
       <Text size="sm">
         L’exécutant d’exploitation applique la décision à son prochain passage (moins d’une minute).
@@ -91,10 +99,11 @@ export function ValidationFlux({
       centered
       lockScroll={false}
       size="lg"
+      classNames={{ content: 'fenetre-flux' }}
     >
       <Stack>
         <DetailValidationFlux module={module} valide={valide} onValide={setValide} />
-        <Group justify="flex-end">
+        <Group justify="flex-end" className="fenetre-flux__actions">
           <Button variant="default" onClick={onCancel}>
             Annuler
           </Button>

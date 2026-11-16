@@ -5,9 +5,13 @@ import {
   FLUX_ERREUR_MAX,
   FLUX_EXTERNES,
   FLUX_MODULES,
+  FLUX_REPRISE_ACTEUR,
+  FLUX_REPRISE_EXECUTANT,
+  FLUX_REPRISE_MOTIFS,
   FluxAppliques,
   FluxChangement,
   FluxConfirme,
+  FluxReprise,
   FluxSouhaites,
   fluxExterne,
   sensDuFlux,
@@ -108,5 +112,43 @@ describe('protocole de l’exécutant', () => {
     ).toBe(false);
     expect(FluxAppliques.safeParse({ assistant: { etat: 'erreur', erreur: 'ligne 1\nligne 2' } }).success).toBe(false);
     expect(FluxAppliques.safeParse({ assistant: { etat: 'ferme', erreur: null } }).success).toBe(true);
+  });
+});
+
+describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
+  it('un acteur système explicite, des motifs pour chaque module du registre', () => {
+    expect(FLUX_REPRISE_ACTEUR).toBe('reprise-mise-a-jour');
+    expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...FLUX_MODULES].sort());
+    for (const m of FLUX_MODULES)
+      for (const [code, phrase] of Object.entries(FLUX_REPRISE_MOTIFS[m])) {
+        expect(code, m).toMatch(/^[a-z][a-z-]{2,40}$/);
+        expect(phrase, `${m}.${code}`).toMatch(/\.$/);
+      }
+    // Le courriel est constaté par l'API au démarrage, jamais déclaré par un exécutant.
+    expect([...FLUX_REPRISE_EXECUTANT].sort()).toEqual(FLUX_MODULES.filter((m) => m !== 'courriel').sort());
+  });
+  it('l’entrée de l’exécutant est validée strictement', () => {
+    expect(FluxReprise.safeParse({ enService: {} }).success).toBe(true);
+    expect(
+      FluxReprise.safeParse({
+        enService: {
+          assistant: 'conteneur-present',
+          acme: 'env-acme',
+          antivirus: 'env-renseigne',
+          'mises-a-jour': 'mise-a-jour-installee',
+        },
+      }).success,
+    ).toBe(true);
+    for (const entree of [
+      {},
+      { enService: { inconnu: 'conteneur-present' } },
+      { enService: { courriel: 'envoi-actif' } },
+      { enService: { acme: 'conteneur-present' } },
+      { enService: { 'mises-a-jour': 'env-renseigne' } },
+      { enService: { acme: '' } },
+      { enService: { acme: 'passerelle-acme' }, motif: 'texte' },
+      { enService: ['acme'] },
+    ])
+      expect(FluxReprise.safeParse(entree).success, JSON.stringify(entree)).toBe(false);
   });
 });
