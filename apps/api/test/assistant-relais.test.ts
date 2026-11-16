@@ -3,6 +3,7 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { fournisseurDeAdresse } from '@suivi/shared';
 import { adapterDemande, lireReponse, RelaisModele } from '../src/assistant/modele.js';
 import { adressePrivee, cibleAutorisee, creerRelais } from '../src/assistant/relais.js';
 import { HttpError } from '../src/http/errors.js';
@@ -182,6 +183,14 @@ describe('demande adaptée au fournisseur', () => {
     expect(a).not.toHaveProperty('temperature');
     expect(a).toMatchObject({ max_tokens: 4096, tool_choice: 'auto' });
     expect(adapterDemande('https://api.anthropic.com/v1', { ...demande, max_tokens: 8000 }).max_tokens).toBe(8000);
+  });
+
+  it('reconnaît un fournisseur préenregistré à son adresse, barres finales comprises', () => {
+    expect(fournisseurDeAdresse('https://api.mistral.ai/v1')?.id).toBe('mistral');
+    expect(fournisseurDeAdresse(' https://api.anthropic.com/v1/// ')?.id).toBe('anthropic');
+    expect(fournisseurDeAdresse('https://api.openai.com/v2')).toBeNull();
+    expect(fournisseurDeAdresse('')).toBeNull();
+    expect(fournisseurDeAdresse('/'.repeat(200_000))).toBeNull();
   });
 
   it('ne se fie qu’à l’hôte exact', () => {

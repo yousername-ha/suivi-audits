@@ -59,7 +59,12 @@ export const FOURNISSEURS_ASSISTANT = [
 export type FournisseurAssistant = (typeof FOURNISSEURS_ASSISTANT)[number];
 export const FOURNISSEUR_PERSONNALISE = 'personnalise';
 
-const sansBarreFinale = (adresse: string) => adresse.trim().replace(/\/+$/, '');
+/** Retire les barres finales sans expression régulière (une suite de barres ne coûte qu'un parcours). */
+const sansBarreFinale = (adresse: string) => {
+  let a = adresse.trim();
+  while (a.endsWith('/')) a = a.slice(0, -1);
+  return a;
+};
 /** Fournisseur préenregistré dont l'adresse est celle-ci, à une barre finale près ; null pour toute autre adresse. */
 export function fournisseurDeAdresse(adresse: string): FournisseurAssistant | null {
   const a = sansBarreFinale(adresse);
