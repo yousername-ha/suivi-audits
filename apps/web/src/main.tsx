@@ -45,6 +45,7 @@ import { MurActiverPage, MurPage } from './pages/Mur';
 import { ErrorPage, NotFoundPage } from './pages/NotFound';
 import { SettingsPage } from './pages/Settings';
 import { SetupPage } from './pages/Setup';
+import { QuestionsFluxPage } from './pages/QuestionsFlux';
 import { RealtimeProvider } from './realtime';
 import { canAdminArea, SessionProvider, useCan, useMe } from './session';
 import { theme } from '@suivi/ui/theme';
@@ -97,6 +98,8 @@ const router = createBrowserRouter([
       { path: '/documents/:id', element: <DocumentsPage /> },
       { path: '/cartographie/:vue?', element: <CartographiePage /> },
       { path: '/account', element: <AccountPage /> },
+      // Dernière étape de l'installation (ADR 0097, lot 3) : proposée une fois, à la première connexion complète.
+      { path: '/installation/flux-externes', element: <QuestionsFluxPage /> },
       // Anciennes rubriques du menu Résilience, devenues des onglets de la fiche de l'incident (ADR 0091).
       { path: '/pilotage/incidents-retex', element: <RedirectionRetex /> },
       { path: '/pilotage/incidents-qualifier', element: <RedirectionQualifier /> },

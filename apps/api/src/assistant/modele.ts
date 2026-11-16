@@ -34,7 +34,8 @@ export interface ReponseModele {
   jetonsSortie: number;
 }
 export interface TransportModele {
-  /** Le relais est déclaré sur le serveur (sinon l'assistant ne peut pas répondre, et l'interface le dit). */
+  /** Une adresse de relais est connue (sinon l'assistant ne peut pas répondre, et l'interface le dit). Le flux vers le
+      fournisseur, lui, est contrôlé par l'assistant avant tout appel (ADR 0097). */
   declare(): boolean;
   completer(adresse: string, cle: string, demande: DemandeModele): Promise<ReponseModele>;
 }
@@ -123,7 +124,11 @@ export class RelaisModele implements TransportModele {
         signal: AbortSignal.timeout(this.delaiMs),
       });
     } catch {
-      throw new HttpError(502, 'Le relais de modèle ne répond pas.');
+      // Flux ouvert mais relais injoignable : il démarre dans la minute qui suit l'ouverture, sinon l'état appliqué le dit.
+      throw new HttpError(
+        502,
+        'Le relais de modèle ne répond pas. Après l’ouverture du flux, il démarre en moins d’une minute ; sinon, consultez l’état appliqué dans Administration, Configuration système, Flux vers l’extérieur.',
+      );
     }
     const brut = DuRelais.safeParse(await r.json().catch(() => null));
     if (!r.ok || !brut.success) throw new HttpError(502, 'Le relais de modèle a renvoyé une réponse inattendue.');

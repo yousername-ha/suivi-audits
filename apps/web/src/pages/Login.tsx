@@ -2,6 +2,7 @@
    (avec ajout facultatif d'une clé), enrôlement d'une clé imposé, changement de mot de passe imposé. */
 import { Alert, Button, Loader, PasswordInput, PinInput, Stack, Text, TextInput, VisuallyHidden } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import type { QuestionsFluxOut } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import {
@@ -25,8 +26,7 @@ import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } f
 import { Sceau } from '../connexion/Sceau';
 import { fetchMe, useMe, useRefreshMe } from '../session';
 import { connexionParCle, MESSAGE_NAVIGATEUR, navigateurCompatible } from '../webauthn';
-
-const safeNext = (n: string | null) => (n && /^\/(?!\/)/.test(n) ? n : '/');
+import { destinationApresConnexion, retourSur } from '../installation-flux';
 
 /* Panneau unique centré : bandeau, accroche, puis le formulaire de l'étape (connexion, code, enrôlement, mot de passe). */
 /** Horizon de l'onde : à mi-chemin entre le bas du titre et le haut de la première carte, mesuré sur la mise en page
@@ -99,7 +99,7 @@ export function LoginPage() {
   const refresh = useRefreshMe();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const next = safeNext(params.get('next'));
+  const next = retourSur(params.get('next'));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const setup = useQuery({
@@ -108,9 +108,26 @@ export function LoginPage() {
     enabled: me.stage === 'anon',
   });
 
+  // Session complète : la page demandée, ou d'abord la dernière étape de l'installation (flux vers l'extérieur, ADR 0097)
+  // tant que le compte créé par l'installation ne l'a ni terminée ni passée. Un échec de lecture ne bloque pas la connexion.
+  const administrateur = me.permissions.includes('administration:administrer');
   useEffect(() => {
-    if (me.stage === 'ok') nav(next, { replace: true });
-  }, [me.stage, next, nav]);
+    if (me.stage !== 'ok') return;
+    if (!administrateur) {
+      nav(next, { replace: true });
+      return;
+    }
+    let actif = true;
+    get<QuestionsFluxOut>('/api/installation/flux-externes')
+      .then((r) => r.aProposer)
+      .catch(() => false)
+      .then((aProposer) => {
+        if (actif) nav(destinationApresConnexion(next, aProposer), { replace: true });
+      });
+    return () => {
+      actif = false;
+    };
+  }, [me.stage, next, nav, administrateur]);
   if (me.stage === 'anon' && setup.data?.needed && !setup.data.adminExists) return <Navigate to="/setup" replace />;
 
   const run = async (fn: () => Promise<unknown>, o: { rafraichir?: boolean } = {}) => {

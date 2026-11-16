@@ -1,8 +1,8 @@
 /* Mise en page : barre supérieure, navigation, indicateur temps réel, préférences d'affichage.
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
    Menu bleu nuit opaque de la refonte Neon (packages/ui/src/neon-menu.css) : même charte dans les deux thèmes, teinte par
-   identité d'entrée (data-identite), pictogrammes animés avec pause ; familles, destinations, compteurs et alertes restent
-   ceux de la navigation réelle filtrée par les droits.
+   identité d'entrée (data-identite), pictogrammes animés en continu (ADR 0099) ; familles, destinations, compteurs et
+   alertes restent ceux de la navigation réelle filtrée par les droits.
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
   Anchor,
@@ -42,7 +42,7 @@ import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
 import { MarqueOrganisation } from './MarqueOrganisation';
-import { useMouvementMenu } from './mouvement-menu';
+import { useOngletVisible } from '../parcours-iso/mouvement';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -89,7 +89,9 @@ export function Layout({ children }: { children: ReactNode }) {
   const theme = useAffichage();
   const schema = useComputedColorScheme('light');
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
-  const mouvement = useMouvementMenu();
+  // Pictogrammes animés en continu, sans bouton de pause (ADR 0099) : arrêtés quand l'onglet est masqué ; le mouvement
+  // réduit du système et l'impression les arrêtent par neon-menu.css.
+  const ongletVisible = useOngletVisible();
 
   type Item = [string, string, IdentiteMenu | 'retex'];
   const accueil: Item[] = [['/', 'Tableau de bord', 'dashboard']];
@@ -163,7 +165,7 @@ export function Layout({ children }: { children: ReactNode }) {
       aria-label="Navigation principale"
       className="shell-nav-inner nav-neon"
       data-tri-actif={tri.glisse || undefined}
-      data-mouvement={mouvement.arrete ? 'pause' : 'anime'}
+      data-mouvement={ongletVisible ? 'anime' : 'pause'}
       onClickCapture={tri.surClicCapture}
     >
       <Link to="/" className="nav-marque" onClick={close} aria-label={`${me.appName} — accueil`}>
@@ -258,22 +260,6 @@ export function Layout({ children }: { children: ReactNode }) {
               <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
             </Button>,
           )}
-          <Tooltip
-            label={mouvement.pause ? 'Reprendre les animations du menu' : 'Mettre en pause les animations du menu'}
-            position="right"
-          >
-            <button
-              type="button"
-              className="nav-pause"
-              aria-label="Animations du menu en pause"
-              aria-pressed={mouvement.pause}
-              onClick={mouvement.basculer}
-            >
-              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                {mouvement.pause ? <path d="M5 3.5v9l7-4.5Z" /> : <path d="M4.5 3h2.5v10H4.5ZM9 3h2.5v10H9Z" />}
-              </svg>
-            </button>
-          </Tooltip>
         </div>
         <Text size="xs" c="dimmed" ta="center" className="app-version nav-annexe">
           Version {me.version}

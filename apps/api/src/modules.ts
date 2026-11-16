@@ -4,6 +4,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import {
   activeRights,
+  FLUX_EXTERNES,
   legacyKeyModule,
   planModules,
   type Module,
@@ -15,6 +16,7 @@ import { sql } from 'kysely';
 import pg from 'pg';
 import type { Config } from './config.js';
 import type { Actor, Db } from './db/db.js';
+import type { FluxExternes } from './flux-externes.js';
 
 // Les noms désactivés ne sont écrits que par apply() (sortie de planModules) et par les migrations : relus tels quels.
 const versEtat = (r: { version: number; disabled: string[] }): ModuleState => ({
@@ -30,6 +32,7 @@ export class Modules {
   constructor(
     cfg: Config['db'],
     private readonly db: Db,
+    private readonly flux: FluxExternes,
   ) {
     // Séparé des transactions métier : aucune saturation circulaire du pool principal.
     this.locks = new pg.Pool({
@@ -130,6 +133,15 @@ export class Modules {
             .returning(['version', 'disabled'])
             .executeTakeFirstOrThrow(),
         );
+        // Flux vers l'extérieur (ADR 0097) : désactiver un module referme son flux dans la même transaction ; le
+        // réactiver ne rouvre rien (il faut repasser par le geste d'activation et sa validation).
+        for (const f of FLUX_EXTERNES)
+          if (
+            f.moduleActivation &&
+            next.disabled.includes(f.moduleActivation) &&
+            !current.disabled.includes(f.moduleActivation)
+          )
+            await this.flux.desactiver(c, k, f.id, actor, ip, 'modules.update');
         await this.db.audit(
           actor,
           ip,

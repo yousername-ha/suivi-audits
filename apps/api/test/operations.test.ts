@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Agent, createTestApp, login, makeUser, nextCode, type TestApp, type TestUser } from './helpers.js';
+import { Agent, createTestApp, login, makeUser, nextCode, type TestApp, type TestUser, ouvrirFlux } from './helpers.js';
 import { certificateInfo } from '../src/certificates.js';
 let t: TestApp, a: Agent, reader: Agent, dir: string, admin: TestUser;
 const hash = 'a'.repeat(64),
@@ -50,6 +50,8 @@ beforeAll(async () => {
   dir = mkdtempSync(path.join(os.tmpdir(), 'suivi-operations-'));
   mkdirSync(path.join(dir, 'exploitation'));
   t = await createTestApp({ ETAT_DIR: dir });
+  // Flux « acme » ouvert par l'administrateur (ADR 0097) : fermé, rien n'est remis à l'exécutant.
+  await ouvrirFlux(t, 'acme');
   admin = await makeUser(t, 'operation-admin', 'admin');
   a = await login(t, admin);
   await t.svc.db.q(
@@ -315,11 +317,13 @@ describe('Lot A : pilotage opérationnel', () => {
     expect(jobInterne!.payload).toEqual({ mode: 'interne' });
     expect(jobInterne).not.toHaveProperty('privateKey');
     await termine(interne.json().id, 'tls_internal');
+    // Le passage à l'autorité interne a refermé le flux « acme » (ADR 0097) : choisir ACME le rouvre, après validation.
     const acme = await a.post(url, {
       requestId: randomUUID(),
       kind: 'tls_acme',
       email: 'rssi@exemple.fr',
       confirmation: 'APPLIQUER',
+      fluxConfirme: true,
     });
     expect(acme.statusCode).toBe(202);
     const jobAcme = await t.svc.operations.claim();
@@ -338,6 +342,54 @@ describe('Lot A : pilotage opérationnel', () => {
       (await a.post(url, { requestId: randomUUID(), kind: 'tls_internal', confirmation: 'APPLIQUER' })).statusCode,
     ).toBe(409);
     publish();
+  });
+  it('flux « acme » (ADR 0097) : choisir ACME l’ouvre après validation, le quitter le referme, une demande en attente est annulée à la fermeture', async () => {
+    publish();
+    const url = '/api/admin/exploitation/operations';
+    const corps = (extra: Record<string, unknown> = {}) => ({
+      requestId: randomUUID(),
+      kind: 'tls_acme',
+      email: 'rssi@exemple.fr',
+      confirmation: 'APPLIQUER',
+      ...extra,
+    });
+    const origine = async (action: string) =>
+      (
+        await t.svc.db.q<{ details: { origine: string } }>(
+          "SELECT details FROM audit_log WHERE action = $1 AND target = 'acme' ORDER BY id DESC LIMIT 1",
+          [action],
+        )
+      ).rows[0]?.details.origine;
+    // Flux fermé : la demande sans validation est refusée et rien n'est mis en file.
+    await t.svc.flux.changer('acme', false, { username: 'test' }, '127.0.0.1');
+    expect((await a.get('/api/admin/exploitation')).json().fluxAcmeOuvert).toBe(false);
+    const refus = await a.post(url, corps());
+    expect(refus.statusCode).toBe(409);
+    expect(refus.json()).toMatchObject({ reason: 'flux_validation', module: 'acme' });
+    expect((await t.svc.db.q('SELECT 1 FROM operation_jobs')).rowCount).toBe(0);
+    // Validée : demande et ouverture du flux en une seule opération.
+    const enAttente = await a.post(url, corps({ fluxConfirme: true }));
+    expect(enAttente.statusCode, enAttente.body).toBe(202);
+    expect((await a.get('/api/admin/exploitation')).json().fluxAcmeOuvert).toBe(true);
+    expect(await origine('flux.externe.ouvert')).toBe('operation.tls_acme');
+    // Flux refermé (depuis le résumé) avant la prise en charge : la demande est annulée, jamais remise à l'exécutant.
+    await t.svc.flux.changer('acme', false, { username: 'test' }, '127.0.0.1');
+    expect(await t.svc.operations.claim()).toBeNull();
+    const ligne = await t.svc.db.one<{ status: string; message: string }>(
+      'SELECT status, message FROM operation_jobs WHERE id=$1',
+      [enAttente.json().id],
+    );
+    expect(ligne).toMatchObject({ status: 'annulee' });
+    expect(ligne!.message).toContain('fermé');
+    // Quitter le mode ACME (autorité interne) referme le flux dans la même opération.
+    expect((await a.post(url, corps({ fluxConfirme: true }))).statusCode).toBe(202);
+    await t.svc.db.q("DELETE FROM operation_jobs WHERE kind = 'tls_acme'");
+    const interne = await a.post(url, { requestId: randomUUID(), kind: 'tls_internal', confirmation: 'APPLIQUER' });
+    expect(interne.statusCode).toBe(202);
+    expect(await t.svc.flux.ouvert('acme')).toBe(false);
+    expect(await origine('flux.externe.ferme')).toBe('operation.tls_internal');
+    expect((await t.svc.operations.claim())!.payload).toEqual({ mode: 'interne' });
+    await ouvrirFlux(t, 'acme');
   });
   it('clé TLS scellée, jamais dans sorties/audit, et détruite après achèvement', async () => {
     const response = await a.post('/api/admin/exploitation/operations', {

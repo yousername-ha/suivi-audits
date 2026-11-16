@@ -2,6 +2,7 @@
    L'assistant lit avec les droits de la personne qui l'interroge, bornés aux périmètres du profil ; il n'écrit dans aucun
    registre. */
 import { z } from 'zod';
+import { FluxConfirme } from './flux-externes.js';
 
 /** Deux profils séparés : un auditeur n'audite pas son propre travail (ADR 0086, point 14). */
 export const PROFILS_ASSISTANT = ['mise_en_oeuvre', 'audit_interne'] as const;
@@ -105,6 +106,8 @@ export const ReglagesAssistantBody = z
       .length(PROFILS_ASSISTANT.length)
       .refine((l) => new Set(l.map((p) => p.id)).size === l.length, 'Un profil ne peut apparaître qu’une fois.'),
     version: z.number().int().min(1),
+    /** Validation explicite de l'ouverture du flux (ADR 0097), exigée pour activer l'assistant tant que le flux est fermé. */
+    fluxConfirme: FluxConfirme.optional(),
   })
   .strict()
   .superRefine((v, ctx) => {
@@ -165,7 +168,9 @@ export interface ReglagesAssistantDto {
   indexDocuments: { extraits: number; nonLus: number; enAttente: number };
   /** Une clé est enregistrée (elle n'est jamais renvoyée). */
   cleDefinie: boolean;
-  /** Le relais de modèle est déclaré sur le serveur (profil Compose « assistant »). */
+  /** Le flux de l'assistant vers le fournisseur du modèle est ouvert par l'administrateur (ADR 0097). */
+  fluxOuvert: boolean;
+  /** Une adresse de relais de modèle est connue de l'API (par défaut le conteneur « assistant-relais »). */
   relaisDeclare: boolean;
   updatedAt: string | null;
   updatedBy: string;
@@ -174,7 +179,7 @@ export interface ReglagesAssistantDto {
 export interface EtatAssistantDto {
   /** L'assistant est activé dans les réglages (le menu ne le propose qu'alors). */
   actif: boolean;
-  /** Activé, réglé, clé présente et relais déclaré. */
+  /** Activé, réglé, clé présente, flux ouvert et relais déclaré. */
   pret: boolean;
   /** Raison affichée quand l'assistant n'est pas prêt. */
   motif: string | null;

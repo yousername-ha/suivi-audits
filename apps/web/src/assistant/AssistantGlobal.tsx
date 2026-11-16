@@ -116,11 +116,11 @@ function PanneauAssistant({
   const qc = useQueryClient(),
     loc = useLocation();
   const large = useMediaQuery('(min-width: 1700px)');
+  // Animations en continu, sans bouton de pause (ADR 0099) : seule la préférence système de mouvement réduit les arrête.
   const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [open, setOpen] = useState(false),
     [expanded, setExpanded] = useState(false),
-    [pinned, setPinned] = useState(true),
-    [pauseMotion, setPauseMotion] = useState(false);
+    [pinned, setPinned] = useState(true);
   const [tab, setTab] = useState<'chat' | 'inbox'>(canRead ? 'chat' : 'inbox'),
     [detail, setDetail] = useState<Detail | null>(null),
     [contextOpen, setContextOpen] = useState(false);
@@ -477,7 +477,7 @@ function PanneauAssistant({
     </article>
   );
   return (
-    <div className="as-global" data-assistant-motion={pauseMotion || reduced ? 'off' : 'on'}>
+    <div className="as-global" data-assistant-motion={reduced ? 'off' : 'on'}>
       <button
         ref={launcher}
         className="as-launcher"
@@ -1102,20 +1102,6 @@ function PanneauAssistant({
         <footer className="as-bottom">
           <span className="as-live-mark" aria-hidden="true" />
           <span>{provider ? `Questions et extraits transmis à ${provider}` : 'Selon vos droits et périmètres'}</span>
-          <button
-            type="button"
-            onClick={() => setPauseMotion(!pauseMotion)}
-            disabled={!!reduced}
-            aria-label={
-              reduced
-                ? 'Animations réduites par votre système'
-                : pauseMotion
-                  ? 'Reprendre les animations'
-                  : 'Suspendre les animations'
-            }
-          >
-            <IconeAssistant nom={pauseMotion || reduced ? 'play' : 'pause'} />
-          </button>
         </footer>
       </aside>
     </div>

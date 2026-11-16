@@ -2354,7 +2354,8 @@ rect.audit-niv-faible {
 }
 
 /* Couche visuelle EBIOS RM (décision 5, 003-07 à 003-10) : aucune couleur ni position ne porte un score ; les valeurs sont
-   écrites à côté. Animations décoratives, désactivées par la pause, le réglage « Arrêtées » et le mouvement réduit. */
+   écrites à côté. Animations décoratives en continu, sans bouton de pause (ADR 0099), désactivées par le réglage
+   « Arrêtées », le mouvement réduit et l'onglet masqué. */
 .ebios-chemins__liste {
   display: flex;
   flex-wrap: wrap;

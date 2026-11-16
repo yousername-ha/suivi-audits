@@ -1,6 +1,6 @@
-/* Couche visuelle EBIOS RM (décision 5) : chemins stratégiques avec flux animé sur le chemin choisi seulement, pause et
-   mouvement réduit, pictogrammes indicatifs, suivi / matrice / cercle à sélection commune. Périmètre privé de recette,
-   données fictives créées par l'API. */
+/* Couche visuelle EBIOS RM (décision 5) : chemins stratégiques avec flux animé sur le chemin choisi seulement, réglage
+   « Animées / Automatiques / Arrêtées » sans bouton de pause (ADR 0099) et mouvement réduit, pictogrammes indicatifs,
+   suivi / matrice / cercle à sélection commune. Périmètre privé de recette, données fictives créées par l'API. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { csrfOf, sessionAdmin, watchPage } from '../helpers';
@@ -70,7 +70,7 @@ async function ouvrirEtude(page: Page, nom: string) {
   await page.getByRole('button', { name: 'Ouvrir l’étude' }).click();
 }
 
-test('EBIOS visuel : chemins, flux sur le chemin choisi seulement, pause et pictogrammes indicatifs', async ({
+test('EBIOS visuel : chemins, flux sur le chemin choisi seulement, réglage du mouvement et pictogrammes indicatifs', async ({
   browser,
 }) => {
   const ctx = await browser.newContext({ storageState: (await sessionAdmin(browser)).state, ignoreHTTPSErrors: true });
@@ -100,10 +100,14 @@ test('EBIOS visuel : chemins, flux sur le chemin choisi seulement, pause et pict
     await expect(page.getByText('Chemins alternatifs')).toBeVisible();
     await sansViolation(page, '.ebios-chemins');
 
-    await page.getByRole('button', { name: 'Mettre en pause' }).click();
+    // Animations en continu (ADR 0099) : plus de bouton de pause ; le réglage « Arrêtées » reste le moyen de les arrêter.
+    await expect(page.getByRole('button', { name: /Mettre en pause|Reprendre le mouvement/ })).toHaveCount(0);
+    await page.getByRole('combobox', { name: 'Animations' }).click();
+    await page.getByRole('option', { name: 'Arrêtées', exact: true }).click();
     await expect(zone).toHaveAttribute('data-anime', 'non');
     await expect(page.locator('.ebios-lien--choisi').first()).toBeAttached();
-    await page.getByRole('button', { name: 'Reprendre le mouvement' }).click();
+    await page.getByRole('combobox', { name: 'Animations' }).click();
+    await page.getByRole('option', { name: 'Automatiques (selon le système)', exact: true }).click();
     await expect(zone).toHaveAttribute('data-anime', 'oui');
 
     await page.getByRole('button', { name: 'Voir tous les chemins' }).click();

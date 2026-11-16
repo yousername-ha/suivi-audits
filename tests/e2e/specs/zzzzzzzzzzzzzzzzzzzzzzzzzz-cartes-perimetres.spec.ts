@@ -128,7 +128,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
       '/pilotage/fournisseurs',
     );
 
-    // Liaisons orientées (pointe de flèche) ; le flux animé se met en pause et reprend.
+    // Liaisons orientées (pointe de flèche) ; le flux animé tourne en continu, sans bouton de pause (ADR 0099).
     await post(page, '/api/grc/smsis', {
       name: `Enfant ${suffixe}`,
       nature: '',
@@ -143,12 +143,7 @@ test('Graphe des périmètres : modification depuis le graphe, flèches et flux,
     const lien = page.locator('path.graphe-lien').first();
     await expect(lien).toHaveAttribute('marker-end', 'url(#graphe-fleche)');
     await expect(lien).toHaveClass(/graphe-lien--flux/);
-    const pause = page.getByRole('button', { name: 'Mettre le flux en pause' });
-    await pause.click();
-    await expect(page.getByRole('button', { name: 'Reprendre le flux' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(lien).not.toHaveClass(/graphe-lien--flux/);
-    await page.getByRole('button', { name: 'Reprendre le flux' }).click();
-    await expect(lien).toHaveClass(/graphe-lien--flux/);
+    await expect(page.getByRole('button', { name: /Mettre le flux en pause|Reprendre le flux/ })).toHaveCount(0);
 
     // Modification depuis le graphe : même formulaire, même identifiant, retrouvée dans la liste.
     await page.getByRole('button', { name: `Modifier le périmètre ${nom}` }).click();
@@ -237,8 +232,10 @@ test('Graphe des périmètres : mouvement réduit, flux arrêté d’emblée', a
   try {
     await page.goto('/pilotage/perimetres');
     await page.getByText('Graphe', { exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Reprendre le flux' })).toBeVisible();
+    // Le mouvement réduit du système reste le moyen d'arrêter le flux (ADR 0099) : liaisons tracées, sans flux ni bouton.
+    await expect(page.locator('path.graphe-lien').first()).toBeAttached();
     await expect(page.locator('path.graphe-lien--flux')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Mettre le flux en pause|Reprendre le flux/ })).toHaveCount(0);
   } finally {
     await ctx.close();
   }

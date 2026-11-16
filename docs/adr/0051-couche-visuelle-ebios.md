@@ -2,6 +2,8 @@
 
 - Statut : acceptée
 - Date : 2026-10-25
+- **Modifiée par** l'[ADR 0099](0099-animations-en-continu-sans-bouton-de-pause.md) (15/11/2026) : le bouton de pause des
+  chemins est retiré ; le flux tourne en continu, arrêté par le réglage « Arrêtées », le mouvement réduit et l'onglet masqué.
 - Contexte : décision 5 du 25/10/2026 (dossiers 003-07 à 003-10), « dans le style du parcours 024 » ; contraintes de l'[ADR 0006](0006-front-react-mantine-csp-stricte.md) (CSP stricte, aucun style en ligne) et de l'[ADR 0029](0029-recette-automatisee.md).
 
 ## Décision

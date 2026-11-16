@@ -1,43 +1,588 @@
 <!doctype html>
-<html lang="fr" data-mantine-color-scheme="light">
+<html lang="fr" data-mantine-color-scheme="dark" data-art="neutral">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
     <title>Mise à jour · Suivi SMSI</title>
     <link rel="stylesheet" href="/update/theme.css" />
     <link rel="stylesheet" href="/update/maintenance.css" />
     <script defer src="/update/maintenance.js"></script>
   </head>
   <body>
-    <main class="maintenance-card">
-      <div class="brand" aria-hidden="true">S</div>
-      <p class="eyebrow">ESPACE DE PILOTAGE · SMSI</p>
-      <h1 id="title">Mise à jour en cours</h1>
-      <p id="message" role="status" aria-live="polite">
-        Nous préparons le retour de votre espace de travail. Vos données sont conservées.
-      </p>
-      <div id="animation" class="spinner" aria-label="Opération en cours"></div>
-      <ol id="steps">
-        <li data-phase="preparing">Préparation <time></time></li>
-        <li data-phase="backup">Sauvegarde de sécurité <time></time></li>
-        <li data-phase="installing">Installation <time></time></li>
-        <li data-phase="verifying">Vérification <time></time></li>
-        <li data-phase="rollback" hidden>Retour à la version précédente <time></time></li>
-        <li data-phase="complete">Retour à l’application <time></time></li>
-      </ol>
-      <p id="elapsed" hidden></p>
-      <p id="delay" hidden>
-        L’opération prend plus de temps que prévu. Cette page continue à suivre son état ; vous pouvez la laisser
-        ouverte.
-      </p>
-      <p id="connection" hidden>Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
-      <p id="versions"></p>
-      <p id="receipt" hidden>
-        Le reçu de cette opération (étapes, signatures vérifiées, sauvegarde, contrôles) est téléchargeable par un
-        administrateur dans Administration, Mises à jour.
-      </p>
-      <a id="return" href="/admin/system" hidden>Consulter le résultat dans l’application</a>
-      <p class="footnote">Votre espace revient automatiquement dès qu’il est disponible.</p>
+    <!-- Refonte Neon, lot 1 « Maintenance Neon » : SVG repris de la maquette validée (géométrie inchangée, couleurs du
+         thème). Le décor et les illustrations sont masqués aux technologies d'assistance ; ils découlent de l'état publié
+         et ne simulent aucune progression. -->
+    <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z" />
+      </symbol>
+      <symbol id="i-chip" viewBox="0 0 24 24">
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+        <path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4M10 10h4v4h-4Z" />
+      </symbol>
+      <symbol id="i-backup" viewBox="0 0 24 24">
+        <path d="M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6Z" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10" cy="10" r="6" />
+        <path d="m15 15 6 6M7 10h6m-3-3v6" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h16m-6-6 6 6-6 6" />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </symbol>
+      <symbol id="i-signal" viewBox="0 0 24 24">
+        <path d="M5 18v2m5-8v8m5-13v13m5-18v18" />
+      </symbol>
+      <symbol id="i-warning" viewBox="0 0 24 24">
+        <path d="m12 3 10 18H2Zm0 5v6m0 3v1" />
+      </symbol>
+      <symbol id="i-rollback" viewBox="0 0 24 24">
+        <path d="M4 9h10a6 6 0 1 1-6 6M4 9l5-5M4 9l5 5" />
+      </symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M5 3h9l5 5v13H5Zm9 0v6h5M9 13h6m-6 4h6" />
+      </symbol>
+    </svg>
+    <div class="ambient" aria-hidden="true">
+      <div class="fx-data-field" aria-hidden="true">
+        <svg
+          class="fx-network"
+          viewBox="0 0 1600 1000"
+          preserveAspectRatio="xMidYMid slice"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path class="fx-link" d="M-30 310 68 310 142 235 240 235 304 172 420 172" />
+          <path class="fx-traffic fx-traffic-0" d="M-30 310 68 310 142 235 240 235 304 172 420 172" />
+          <path class="fx-link" d="M-30 660 82 660 142 600 142 465 204 403 296 403" />
+          <path class="fx-traffic fx-traffic-1" d="M-30 660 82 660 142 600 142 465 204 403 296 403" />
+          <path class="fx-link" d="M8 940 116 832 234 832 302 764 410 764" />
+          <path class="fx-traffic fx-traffic-2" d="M8 940 116 832 234 832 302 764 410 764" />
+          <path class="fx-link" d="M40 108 122 108 183 169 260 169 310 119 400 119" />
+          <path class="fx-traffic fx-traffic-0" d="M40 108 122 108 183 169 260 169 310 119 400 119" />
+          <path class="fx-link" d="M1180 182 1294 182 1363 251 1471 251 1517 205 1630 205" />
+          <path class="fx-traffic fx-traffic-1" d="M1180 182 1294 182 1363 251 1471 251 1517 205 1630 205" />
+          <path class="fx-link" d="M1303 402 1390 402 1450 462 1450 580 1500 630 1630 630" />
+          <path class="fx-traffic fx-traffic-2" d="M1303 402 1390 402 1450 462 1450 580 1500 630 1630 630" />
+          <path class="fx-link" d="M1208 810 1310 810 1385 885 1538 885 1610 957" />
+          <path class="fx-traffic fx-traffic-0" d="M1208 810 1310 810 1385 885 1538 885 1610 957" />
+          <path class="fx-link" d="M1340 85 1440 85 1480 125 1620 125" />
+          <path class="fx-traffic fx-traffic-1" d="M1340 85 1440 85 1480 125 1620 125" />
+          <path class="fx-link" d="M-20 488 52 488 109 545 202 545" />
+          <path class="fx-traffic fx-traffic-2" d="M-20 488 52 488 109 545 202 545" />
+          <path class="fx-link" d="M1450 735 1535 735 1605 805" />
+          <path class="fx-traffic fx-traffic-0" d="M1450 735 1535 735 1605 805" />
+          <path class="fx-link" d="M370 1035 490 915 565 915 615 865" />
+          <path class="fx-traffic fx-traffic-1" d="M370 1035 490 915 565 915 615 865" />
+          <path class="fx-link" d="M920 1035 1020 935 1140 935 1205 1000" />
+          <path class="fx-traffic fx-traffic-2" d="M920 1035 1020 935 1140 935 1205 1000" />
+          <circle class="fx-node" cx="68" cy="310" r="5" />
+          <circle class="fx-node-ring" cx="68" cy="310" r="10" />
+          <circle class="fx-node-pulse fx-pulse-0" cx="68" cy="310" r="10" />
+          <circle class="fx-node" cx="142" cy="235" r="3" />
+          <circle class="fx-node" cx="240" cy="235" r="3" />
+          <circle class="fx-node" cx="304" cy="172" r="5" />
+          <circle class="fx-node-ring" cx="304" cy="172" r="10" />
+          <circle class="fx-node-pulse fx-pulse-1" cx="304" cy="172" r="10" />
+          <circle class="fx-node" cx="82" cy="660" r="3" />
+          <circle class="fx-node" cx="142" cy="600" r="3" />
+          <circle class="fx-node" cx="142" cy="465" r="5" />
+          <circle class="fx-node-ring" cx="142" cy="465" r="10" />
+          <circle class="fx-node-pulse fx-pulse-2" cx="142" cy="465" r="10" />
+          <circle class="fx-node" cx="116" cy="832" r="3" />
+          <circle class="fx-node" cx="234" cy="832" r="3" />
+          <circle class="fx-node" cx="122" cy="108" r="5" />
+          <circle class="fx-node-ring" cx="122" cy="108" r="10" />
+          <circle class="fx-node-pulse fx-pulse-0" cx="122" cy="108" r="10" />
+          <circle class="fx-node" cx="183" cy="169" r="3" />
+          <circle class="fx-node" cx="1294" cy="182" r="3" />
+          <circle class="fx-node" cx="1363" cy="251" r="5" />
+          <circle class="fx-node-ring" cx="1363" cy="251" r="10" />
+          <circle class="fx-node-pulse fx-pulse-1" cx="1363" cy="251" r="10" />
+          <circle class="fx-node" cx="1471" cy="251" r="3" />
+          <circle class="fx-node" cx="1390" cy="402" r="3" />
+          <circle class="fx-node" cx="1450" cy="462" r="5" />
+          <circle class="fx-node-ring" cx="1450" cy="462" r="10" />
+          <circle class="fx-node-pulse fx-pulse-2" cx="1450" cy="462" r="10" />
+          <circle class="fx-node" cx="1450" cy="580" r="3" />
+          <circle class="fx-node" cx="1310" cy="810" r="3" />
+          <circle class="fx-node" cx="1385" cy="885" r="5" />
+          <circle class="fx-node-ring" cx="1385" cy="885" r="10" />
+          <circle class="fx-node-pulse fx-pulse-0" cx="1385" cy="885" r="10" />
+          <circle class="fx-node" cx="1538" cy="885" r="3" />
+          <circle class="fx-node" cx="1440" cy="85" r="3" />
+          <circle class="fx-node" cx="1480" cy="125" r="5" />
+          <circle class="fx-node-ring" cx="1480" cy="125" r="10" />
+          <circle class="fx-node-pulse fx-pulse-1" cx="1480" cy="125" r="10" />
+          <circle class="fx-node" cx="52" cy="488" r="3" />
+          <circle class="fx-node" cx="109" cy="545" r="3" />
+          <circle class="fx-node" cx="1535" cy="735" r="5" />
+          <circle class="fx-node-ring" cx="1535" cy="735" r="10" />
+          <circle class="fx-node-pulse fx-pulse-2" cx="1535" cy="735" r="10" />
+          <circle class="fx-node" cx="490" cy="915" r="3" />
+          <circle class="fx-node" cx="1020" cy="935" r="3" /></svg
+        ><svg
+          class="fx-download"
+          viewBox="0 0 1600 1000"
+          preserveAspectRatio="xMidYMid slice"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <g transform="translate(38 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-0">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(95 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-1">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(195 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-2">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(288 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-3">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(425 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-0">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(585 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-1">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1025 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-2">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1210 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-3">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1338 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-0">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1440 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-1">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1502 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-2">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g>
+          <g transform="translate(1574 0)">
+            <path class="fx-rail" d="M0 -100V1100" />
+            <g class="fx-packets fx-speed-3">
+              <path class="fx-tail" d="M0 -100V-18" />
+              <rect class="fx-block" x="-3" y="-10" width="6" height="14" rx="1" />
+              <path class="fx-chevron" d="m-6 14 6 6 6-6m-6-9v14" />
+              <rect class="fx-block fx-block-small" x="-2" y="-46" width="4" height="5" />
+            </g>
+          </g></svg
+        ><svg
+          class="fx-waves"
+          viewBox="0 0 1600 1000"
+          preserveAspectRatio="none"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path class="fx-wave-soft" d="M-100 790C200 1000 290 685 520 835S960 1085 1170 870 1450 725 1700 900" />
+          <path class="fx-wave-fine" d="M-100 815C180 1025 350 720 570 860S1000 1100 1240 900 1450 750 1700 925" />
+          <path
+            class="fx-wave-fine fx-wave-second"
+            d="M-100 765C220 975 250 650 480 800S920 1040 1110 835 1410 700 1700 860"
+          />
+        </svg>
+        <div class="fx-halo fx-halo-left"></div>
+        <div class="fx-halo fx-halo-right"></div>
+        <div class="fx-scan"></div>
+      </div>
+      <div class="floor-grid"></div>
+      <div class="sky-grid"></div>
+      <span class="star s1"></span><span class="star s2"></span><span class="star s3"></span
+      ><span class="star s4"></span>
+    </div>
+    <header class="page-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"
+          ><svg class="icone"><use href="#i-star" /></svg
+        ></span>
+        <p class="brand-name">Suivi des audits <strong>SMSI</strong><small>Qualité, sécurité et référentiels</small></p>
+      </div>
+      <p class="header-label"><span aria-hidden="true"></span>Maintenance de la plateforme</p>
+    </header>
+    <main>
+      <div class="intro">
+        <p class="eyebrow">
+          <span class="signal-dot" aria-hidden="true"></span>Espace de pilotage · SMSI<span
+            class="eyebrow-line"
+            aria-hidden="true"
+          ></span>
+        </p>
+        <h1 id="title">Mise à jour en cours</h1>
+      </div>
+      <!-- « maintenance-card » : repère de la page lu par la CI (scripts/ci/update-integree.py), à conserver. -->
+      <section class="operation-shell maintenance-card" aria-label="Suivi de la mise à jour">
+        <div class="shell-top">
+          <span><span class="small-square" aria-hidden="true"></span>Suivi de l’opération</span>
+          <span class="live-label"
+            ><span class="signal-dot" aria-hidden="true"></span><span id="live-label">En cours</span></span
+          >
+        </div>
+        <div id="connection" class="notice" hidden>
+          <svg class="icone" aria-hidden="true"><use href="#i-warning" /></svg>
+          <p>Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
+        </div>
+        <div id="delay" class="notice" hidden>
+          <svg class="icone" aria-hidden="true"><use href="#i-clock" /></svg>
+          <p>
+            L’opération prend plus de temps que prévu. Cette page continue à suivre son état. Vous pouvez la laisser
+            ouverte.
+          </p>
+        </div>
+        <div class="operation-body">
+          <div class="reactor-column">
+            <div id="animation" class="reactor" aria-hidden="true">
+              <span id="axis-label" class="axis-label">Mise à jour</span>
+              <svg
+                class="orbit-art"
+                aria-hidden="true"
+                viewBox="0 0 480 480"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="cyan-ring" x1="60" y1="400" x2="420" y2="80" gradientUnits="userSpaceOnUse">
+                    <stop class="anneau-a" />
+                    <stop offset=".5" class="anneau-b" />
+                    <stop offset="1" class="anneau-c" />
+                  </linearGradient>
+                  <g id="unit-cube">
+                    <path class="cube-top" d="m0-24 24 14-24 14-24-14Z" />
+                    <path class="cube-left" d="m-24-10 24 14v28l-24-14Z" />
+                    <path class="cube-right" d="m0 4 24-14v28L0 32Z" />
+                  </g>
+                  <clipPath id="transfer-clip">
+                    <rect x="158" y="282" width="164" height="16" rx="8" />
+                  </clipPath>
+                  <clipPath id="portal-clip">
+                    <rect x="183" y="172" width="114" height="128" rx="10" />
+                  </clipPath>
+                </defs>
+                <g class="crosshair">
+                  <path
+                    d="M240 22v24m0 388v24M22 240h24m388 0h24M78 78l14 14m296 296 14 14M78 402l14-14M388 92l14-14"
+                  />
+                  <circle cx="240" cy="240" r="205" stroke-dasharray="1 11" />
+                  <circle cx="240" cy="240" r="187" />
+                </g>
+                <g class="ring-outer">
+                  <circle
+                    cx="240"
+                    cy="240"
+                    r="176"
+                    stroke="url(#cyan-ring)"
+                    stroke-width="2"
+                    stroke-dasharray="120 20 35 16 230 80 80 45"
+                  />
+                  <path d="M240 64a176 176 0 0 1 152 88" class="anneau-arc" stroke-width="5" />
+                  <circle class="anneau-point" cx="392" cy="152" r="5" />
+                </g>
+                <g class="ring-inner">
+                  <circle cx="240" cy="240" r="153" stroke-width="8" stroke-dasharray="2 12" />
+                  <circle cx="240" cy="240" r="140" stroke-width="1.5" stroke-dasharray="70 14 240 100" />
+                </g>
+                <g class="energy-orbit">
+                  <ellipse cx="240" cy="240" rx="222" ry="89" transform="rotate(-31 240 240)" />
+                  <ellipse cx="240" cy="240" rx="222" ry="89" transform="rotate(31 240 240)" />
+                  <circle class="satellite" cx="430" cy="132" r="4" />
+                </g>
+                <g class="stage-art stage-waiting">
+                  <circle class="wait-halo" cx="186" cy="232" r="25" />
+                  <circle class="wait-halo" cx="294" cy="232" r="25" />
+                  <path class="wait-link" d="M213 232h54" />
+                  <path class="stage-stroke" d="m176 232 10-10 10 10-10 10Zm108-10h20v20h-20Z" />
+                  <text class="art-label" x="240" y="303">PRISE EN CHARGE</text>
+                </g>
+                <g class="stage-art stage-download">
+                  <path class="cloud-shell" d="M203 224h71a24 24 0 0 0 1-48 36 36 0 0 0-67-4 26 26 0 0 0-5 52Z" />
+                  <path class="download-arrow" d="M240 211v45m-14-14 14 14 14-14" />
+                  <path class="download-particles" d="M210 237v23m60-23v23" />
+                  <rect class="transfer-shell" x="152" y="276" width="176" height="28" rx="14" />
+                  <g clip-path="url(#transfer-clip)">
+                    <rect class="transfer-band" x="82" y="282" width="77" height="16" rx="8" />
+                    <path
+                      class="transfer-marks"
+                      d="m160 283-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14m25-14-10 14"
+                    />
+                  </g>
+                  <text class="art-label" x="240" y="333">TRANSFERT EN COURS</text>
+                </g>
+                <g class="stage-art stage-backup">
+                  <g class="source-file">
+                    <path class="document-shell" d="M159 171h40l15 15v67h-55Z" />
+                    <path class="stage-stroke" d="M197 172v17h16m-42 18h28m-28 12h28m-28 12h19" />
+                  </g>
+                  <path class="backup-route" d="M192 264c20 37 54 34 67 10" />
+                  <g class="backup-bit bit-0">
+                    <path d="M184 205h18v23h-18Zm4 7h10m-10 5h10" />
+                  </g>
+                  <g class="backup-bit bit-1">
+                    <path d="M184 205h18v23h-18Zm4 7h10m-10 5h10" />
+                  </g>
+                  <g class="backup-bit bit-2">
+                    <path d="M184 205h18v23h-18Zm4 7h10m-10 5h10" />
+                  </g>
+                  <rect class="vault-body" x="230" y="209" width="91" height="103" rx="10" />
+                  <rect class="vault-door" x="241" y="222" width="66" height="77" rx="5" />
+                  <g class="vault-wheel">
+                    <circle cx="274" cy="260" r="16" />
+                    <path d="M274 237v46m-23-23h46m-39-16 32 32m-32 0 32-32" />
+                  </g>
+                  <path class="vault-hinge" d="M235 230h-9m9 58h-9" />
+                  <text class="art-label" x="240" y="341">COPIE DE SÉCURITÉ</text>
+                </g>
+                <g class="stage-art stage-building">
+                  <path class="assembly-base" d="m240 224 114 66-114 66-114-66Z" />
+                  <path class="assembly-grid" d="m159 271 114 66m-81-85 114 66m-147 0 114-66m-81 85 114-66" />
+                  <g transform="translate(216 246)">
+                    <g class="voxel voxel-0"><use href="#unit-cube" /></g>
+                  </g>
+                  <g transform="translate(264 246)">
+                    <g class="voxel voxel-1"><use href="#unit-cube" /></g>
+                  </g>
+                  <g transform="translate(240 260)">
+                    <g class="voxel voxel-2"><use href="#unit-cube" /></g>
+                  </g>
+                  <g transform="translate(216 212)">
+                    <g class="voxel voxel-3"><use href="#unit-cube" /></g>
+                  </g>
+                  <g transform="translate(264 212)">
+                    <g class="voxel voxel-4"><use href="#unit-cube" /></g>
+                  </g>
+                  <g transform="translate(240 226)">
+                    <g class="voxel voxel-5"><use href="#unit-cube" /></g>
+                  </g>
+                  <path class="assembly-lock" d="m150 291 90 52 90-52" />
+                  <text class="art-label" x="240" y="380">ASSEMBLAGE DES MODULES</text>
+                </g>
+                <g class="stage-art stage-verifying">
+                  <rect class="verify-panel" x="158" y="170" width="164" height="139" rx="12" />
+                  <path class="verify-lines" d="M204 200h89m-89 36h89m-89 36h65" />
+                  <path class="verify-tick tick-0" d="m176 197 7 7 12-15" />
+                  <path class="verify-tick tick-1" d="m176 233 7 7 12-15" />
+                  <path class="verify-tick tick-2" d="m176 269 7 7 12-15" />
+                  <path class="verify-separators" d="M170 216h140m-140 36h140" />
+                  <g class="verification-scan">
+                    <rect x="165" y="175" width="150" height="12" rx="5" />
+                    <path d="M165 187h150" />
+                  </g>
+                  <circle class="verification-lens" cx="303" cy="300" r="25" />
+                  <path class="lens-glint" d="M296 291a12 12 0 0 1 17 17m7 11 19 19" />
+                  <text class="art-label" x="240" y="365">CONTRÔLES EN COURS</text>
+                </g>
+                <g class="stage-art stage-complete">
+                  <rect class="portal-frame" x="176" y="165" width="128" height="143" rx="14" />
+                  <g clip-path="url(#portal-clip)">
+                    <rect class="portal-glow" x="183" y="172" width="114" height="128" />
+                    <rect class="portal-door" x="183" y="172" width="114" height="128" rx="10" />
+                    <path class="complete-check" d="m210 237 22 22 40-47" />
+                  </g>
+                  <path class="portal-return" d="M208 329h65m-13-13 13 13-13 13" />
+                  <text class="art-label" x="240" y="374">ESPACE DISPONIBLE</text>
+                </g>
+                <g class="stage-art stage-rollback">
+                  <rect class="previous-version" x="151" y="219" width="91" height="90" rx="9" />
+                  <path class="previous-lines" d="M167 242h57m-57 17h42m-42 17h57" />
+                  <path class="restore-route" d="M312 210c-28-51-94-36-113-1m0 0 3-21m-3 21 21-1" />
+                  <g transform="translate(291 240)">
+                    <g class="restore-cube restore-cube-0">
+                      <use href="#unit-cube" />
+                    </g>
+                  </g>
+                  <g transform="translate(315 254)">
+                    <g class="restore-cube restore-cube-1">
+                      <use href="#unit-cube" />
+                    </g>
+                  </g>
+                  <g transform="translate(291 274)">
+                    <g class="restore-cube restore-cube-2">
+                      <use href="#unit-cube" />
+                    </g>
+                  </g>
+                  <text class="art-label" x="240" y="350">RETOUR À LA VERSION PRÉCÉDENTE</text>
+                </g>
+                <g class="stage-art stage-restored">
+                  <rect class="previous-version" x="177" y="173" width="126" height="132" rx="12" />
+                  <path class="complete-check" d="m211 235 21 22 39-46" />
+                  <path class="portal-return" d="M208 330h65m-13-13 13 13-13 13" />
+                  <text class="art-label" x="240" y="371">VERSION PRÉCÉDENTE RÉTABLIE</text>
+                </g>
+                <g class="stage-art stage-alert">
+                  <path class="alert-triangle" d="m240 161 91 153H149Z" />
+                  <path class="alert-mark" d="M240 209v46m0 22v4" />
+                  <text class="art-label" x="240" y="352">OPÉRATION INTERROMPUE</text>
+                </g>
+                <g class="orbit-nodes">
+                  <circle cx="65" cy="240" r="5" />
+                  <circle cx="295" cy="408" r="4" />
+                  <circle cx="315" cy="81" r="3" />
+                </g>
+              </svg>
+              <p id="phase-index" class="phase-index" hidden>
+                <span id="phase-rank"></span><span id="phase-denominator" class="phase-denominator">/ 05</span
+                ><small id="phase-rank-label"></small>
+              </p>
+            </div>
+          </div>
+          <div class="details-column">
+            <div id="versions" class="version-path">
+              <p class="version">
+                <span id="installed-label" class="field-label">Version installée</span><strong id="installed">—</strong>
+              </p>
+              <span id="version-connector" class="version-connector" aria-hidden="true" hidden
+                ><span></span><svg class="icone"><use href="#i-arrow" /></svg
+              ></span>
+              <p id="target-block" class="version version-target" hidden>
+                <span class="field-label">Version cible</span><strong id="target"></strong
+                ><span class="version-tag">Nouvelle version</span>
+              </p>
+            </div>
+            <div class="current-operation">
+              <div class="operation-heading">
+                <span id="step-chip" class="step-chip">Suivi</span
+                ><span class="operation-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              </div>
+              <p id="phase-title" class="phase-title">Suivi de l’opération</p>
+              <p id="message" role="status" aria-live="polite">
+                Nous préparons le retour de votre espace de travail. Vos données sont conservées.
+              </p>
+              <div class="operation-metrics">
+                <p id="elapsed" class="metric" hidden>
+                  <svg class="icone" aria-hidden="true"><use href="#i-clock" /></svg
+                  ><span
+                    ><span id="elapsed-label" class="metric-label">Durée écoulée</span
+                    ><span class="visually-hidden"> : </span><strong id="elapsed-value"></strong
+                  ></span>
+                </p>
+                <p class="metric">
+                  <svg class="icone" aria-hidden="true"><use href="#i-signal" /></svg
+                  ><span
+                    ><span class="metric-label">Suivi automatique</span><span class="visually-hidden"> : </span
+                    ><strong id="tracking">Connexion…</strong></span
+                  >
+                </p>
+              </div>
+            </div>
+            <p class="return-hint">
+              <svg class="icone" aria-hidden="true"><use href="#i-arrow" /></svg
+              ><span id="return-hint">Votre espace revient automatiquement dès qu’il est disponible.</span>
+            </p>
+          </div>
+          <!-- Zone du journal technique : le journal n'est pas affiché sur cette page (option C retenue par le RSSI le
+               15/11/2026). Le diagnostic reste dans le reçu et les journaux privés du serveur ; aucune ligne n'est simulée. -->
+          <section class="journal" aria-label="Journal technique">
+            <div class="journal-fenetre">
+              <p class="journal-vide">Journal technique indisponible pendant cette opération.</p>
+            </div>
+          </section>
+        </div>
+        <div class="journey-heading">
+          <h2 id="journey-title">Le parcours de mise à jour</h2>
+          <span id="journey-note">Chaque étape est horodatée à son début</span>
+        </div>
+        <!-- Une ligne par étape : le texte de chaque étape reste exactement « libellé + heure » (lu par les tests de
+             bout en bout) ; icône, rang et état sont décoratifs ou viennent de la feuille de style. -->
+        <!-- prettier-ignore -->
+        <ol id="steps" class="journey">
+          <li data-phase="preparing"><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-chip" /></svg></span><span class="step-label">Préparation</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+          <li data-phase="backup"><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-backup" /></svg></span><span class="step-label">Sauvegarde de sécurité</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+          <li data-phase="installing"><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-chip" /></svg></span><span class="step-label">Installation</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+          <li data-phase="verifying"><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-search" /></svg></span><span class="step-label">Vérification</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+          <li data-phase="rollback" hidden><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-rollback" /></svg></span><span class="step-label">Retour à la version précédente</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+          <li data-phase="complete"><span class="step-icon" aria-hidden="true"><svg class="icone"><use href="#i-arrow" /></svg></span><span class="step-label">Retour à l’application</span> <time></time><span class="step-status" aria-hidden="true"></span></li>
+        </ol>
+        <div id="receipt" class="notice notice-recu" hidden>
+          <svg class="icone" aria-hidden="true"><use href="#i-file" /></svg>
+          <p>
+            Le reçu de cette opération (étapes, signatures vérifiées, sauvegarde, contrôles) est téléchargeable par un
+            administrateur dans Administration, Mises à jour.
+          </p>
+        </div>
+        <a id="return" class="return-link" href="/admin/system" hidden
+          >Consulter le résultat dans l’application<svg class="icone" aria-hidden="true"><use href="#i-arrow" /></svg
+        ></a>
+        <p class="shell-footer">
+          <span class="footer-diamond" aria-hidden="true"></span>Cette page suit l’opération toute seule. Vous pouvez la
+          laisser ouverte.
+        </p>
+      </section>
     </main>
   </body>
 </html>

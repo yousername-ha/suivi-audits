@@ -202,8 +202,6 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
     [vue, setVue] = useState<Vue>(vueInitiale),
     [ouvert, setOuvert] = useState<Ouvert>(null),
     [etat, setEtat] = useState('all'),
-    // Confort d'affichage seulement : les animations n'ajoutent aucune information.
-    [animationsActives, setAnimationsActives] = useState(true),
     { ecrire, erreur } = useEcriture(smsi);
   const q = useQuery({
     queryKey: ['grc', smsi, 'legacy-objectifs'],
@@ -349,7 +347,7 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
   );
 
   return (
-    <Stack className="objectifs-module" data-animations={animationsActives ? 'actives' : 'pause'}>
+    <Stack className="objectifs-module">
       <Group justify="space-between" className="objectifs-commandes">
         <Text size="sm">
           Processus, objectifs de sécurité et indicateurs associés. Les indicateurs marqués « calculé » sont alimentés
@@ -436,14 +434,6 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               <span className="objectifs-repere">Suivi des résultats</span>
               <h2>Les objectifs et leurs indicateurs</h2>
             </div>
-            <Button
-              variant="default"
-              size="compact-sm"
-              aria-pressed={!animationsActives}
-              onClick={() => setAnimationsActives((active) => !active)}
-            >
-              {animationsActives ? 'Pause animations' : 'Activer les animations'}
-            </Button>
           </header>
           <Tabs
             className="objectifs-vues"

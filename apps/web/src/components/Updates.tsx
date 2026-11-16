@@ -1,11 +1,14 @@
 import { Alert, Anchor, Button, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UpdateReceiptSummary, UpdateState } from '@suivi/shared';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api, download, get } from '../api';
-import { ErrorAlert } from './common';
+import { ConfirmButton, ErrorAlert } from './common';
+import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from './FluxExternes';
+import { useValidationFlux } from './ValidationFlux';
 import { useCan, useMe } from '../session';
+import { ECHEC_GITHUB_PERSISTANT, issueVerification, nouvelleVersion } from '../mises-a-jour';
 
 const ATTENTE_MAX_MS = 90_000;
 const PAS_DE_SUIVI_MS = 1000;
@@ -13,13 +16,6 @@ const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function useUpdateState() {
   return useQuery({ queryKey: ['updates'], queryFn: () => get<UpdateState>('/api/updates'), refetchInterval: 15000 });
-}
-function available(s?: UpdateState) {
-  if (!s?.available || !/^\d+\.\d+\.\d+$/.test(s.installed)) return false;
-  const a = s.installed.split('.').map(Number),
-    b = s.available.split('.').map(Number);
-  const i = a.findIndex((v, index) => v !== b[index]);
-  return i >= 0 && a[i]! < b[i]!;
 }
 function useUpdateAdmin() {
   const me = useMe();
@@ -29,7 +25,7 @@ function useUpdateAdmin() {
 export function UpdateNotice() {
   const q = useUpdateState();
   const admin = useUpdateAdmin();
-  if (!available(q.data)) return <div data-native-updates hidden />;
+  if (!nouvelleVersion(q.data)) return <div data-native-updates hidden />;
   return (
     <div className="update-notice" data-native-updates role="status">
       <span>
@@ -136,6 +132,8 @@ export function UpdatesPanel() {
   const [verification, setVerification] = useState(false);
   const [resultat, setResultat] = useState<{ ton: 'info' | 'erreur'; texte: string } | null>(null);
   const id = useRef<string | null>(null);
+  const flux = useValidationFlux();
+  const qc = useQueryClient();
   const s = q.data;
   const busy =
     pending || verification || !!queued || !!s?.maintenance || s?.status === 'queued' || s?.status === 'running';
@@ -156,26 +154,16 @@ export function UpdatesPanel() {
     setResultat(null);
     const avant = s?.checkedAt ?? null;
     try {
-      await api('POST', '/api/admin/updates/check');
+      const demande = await api<{ id?: string } | undefined>('POST', '/api/admin/updates/check');
       setPending(false);
       const debut = Date.now();
-      let vuEnCours = false;
       for (;;) {
         await attendre(PAS_DE_SUIVI_MS);
         const etat = (await q.refetch()).data;
-        if (etat) {
-          vuEnCours ||= etat.checking || etat.phase === 'checking';
-          const termine = !etat.checking && etat.phase !== 'checking';
-          if (termine && (etat.checkedAt !== avant || etat.checkError || vuEnCours)) {
-            setResultat(
-              etat.checkError
-                ? { ton: 'erreur', texte: 'La vérification a échoué : GitHub est temporairement indisponible.' }
-                : available(etat)
-                  ? { ton: 'info', texte: `Une nouvelle version est disponible : ${etat.available}.` }
-                  : { ton: 'info', texte: 'Vérification terminée : aucune nouvelle version.' },
-            );
-            break;
-          }
+        const issue = etat ? issueVerification(etat, { id: demande?.id ?? null, checkedAt: avant }) : null;
+        if (issue) {
+          setResultat(issue);
+          break;
         }
         if (Date.now() - debut > ATTENTE_MAX_MS) {
           setResultat({
@@ -215,6 +203,24 @@ export function UpdatesPanel() {
     }
   }
   const fenetreFermee = !!s?.fenetre?.active && !s.fenetre.ouverte;
+  // Flux « mises-a-jour » fermé (ADR 0097) : ni vérification ni installation ; inconnu (champ absent), rien n'est bloqué.
+  const fluxFerme = s?.fluxOuvert === false;
+  /* Activer les mises à jour depuis l'interface, c'est ouvrir leur flux (ADR 0097, précision du RSSI du 15/11/2026) :
+     validation explicite une fois ; les désactiver le referme. */
+  async function basculerFlux(ouvert: boolean) {
+    if (ouvert && !(await flux.valider('mises-a-jour'))) return;
+    setPending(true);
+    setError(null);
+    try {
+      await api('PUT', '/api/admin/flux-externes/mises-a-jour', { body: { ouvert, confirmation: true } });
+      await q.refetch();
+      await qc.invalidateQueries({ queryKey: CLE_FLUX_EXTERNES });
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPending(false);
+    }
+  }
   const codeValide = /^\d{6}$/.test(code);
   return (
     <Card withBorder id="updates">
@@ -225,7 +231,7 @@ export function UpdatesPanel() {
         <ErrorAlert error={error || q.error} />
         <Text size="sm">
           Version installée : {s?.installed ?? '…'}.{' '}
-          {available(s)
+          {nouvelleVersion(s)
             ? `Nouvelle version : ${s?.available}.`
             : s?.checkedAt && !s.checkError
               ? 'Aucune nouvelle version détectée.'
@@ -236,9 +242,7 @@ export function UpdatesPanel() {
             Consulter les nouveautés
           </Anchor>
         )}
-        {s?.checkError && (
-          <Text size="sm">GitHub est temporairement indisponible. La dernière information connue est conservée.</Text>
-        )}
+        {s?.checkError && <Text size="sm">{ECHEC_GITHUB_PERSISTANT}</Text>}
         {s?.checkedAt && (
           <Text size="xs" c="dimmed">
             Dernière vérification : {new Date(s.checkedAt).toLocaleString()}.
@@ -251,13 +255,34 @@ export function UpdatesPanel() {
         )}
         {queued && <Text size="sm">Demande enregistrée. Ouverture de l’écran de mise à jour…</Text>}
         {!s?.ready && <Text size="sm">Le service de mise à jour n’est pas disponible actuellement.</Text>}
+        {fluxFerme && <FluxFermeAlerte module="mises-a-jour" />}
+        {admin && s?.fluxOuvert !== undefined && (
+          <Group>
+            {fluxFerme ? (
+              <Button variant="default" disabled={pending} onClick={() => void basculerFlux(true)}>
+                Activer les mises à jour depuis l’interface
+              </Button>
+            ) : (
+              <ConfirmButton
+                variant="subtle"
+                color="red"
+                disabled={busy}
+                message="Désactiver les mises à jour depuis l’interface ? Le flux vers GitHub et le registre d’images est refermé : plus aucune vérification ni installation jusqu’à sa réactivation."
+                onConfirm={() => void basculerFlux(false)}
+              >
+                Désactiver les mises à jour depuis l’interface
+              </ConfirmButton>
+            )}
+            {flux.fenetre}
+          </Group>
+        )}
         {admin && (
           <>
             <Group>
               <Button
                 variant="default"
                 loading={verification}
-                disabled={busy || !s?.ready || s?.checking}
+                disabled={busy || fluxFerme || !s?.ready || s?.checking}
                 onClick={() => void check()}
               >
                 Vérifier les mises à jour
@@ -280,7 +305,7 @@ export function UpdatesPanel() {
                 {resultat.texte}
               </Alert>
             )}
-            {available(s) && (
+            {nouvelleVersion(s) && (
               <>
                 <Text size="sm">
                   Enregistrez vos modifications en cours. Le serveur créera une sauvegarde chiffrée, vérifiera la
@@ -297,14 +322,14 @@ export function UpdatesPanel() {
                 <TextInput
                   label="Taper METTRE À JOUR pour confirmer"
                   value={confirm}
-                  disabled={busy || fenetreFermee}
+                  disabled={busy || fluxFerme || fenetreFermee}
                   onChange={(e) => setConfirm(e.currentTarget.value)}
                 />
                 <TextInput
                   label="Code de double authentification"
                   description="Code à 6 chiffres de votre application d’authentification, demandé à chaque installation."
                   value={code}
-                  disabled={busy || fenetreFermee}
+                  disabled={busy || fluxFerme || fenetreFermee}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   // Pas de maxLength : un code collé avec espace (« 123 456 ») serait tronqué avant le filtrage.
@@ -312,7 +337,9 @@ export function UpdatesPanel() {
                 />
                 <Group>
                   <Button
-                    disabled={busy || !s?.ready || fenetreFermee || confirm !== 'METTRE À JOUR' || !codeValide}
+                    disabled={
+                      busy || fluxFerme || !s?.ready || fenetreFermee || confirm !== 'METTRE À JOUR' || !codeValide
+                    }
                     loading={pending}
                     onClick={() => void install()}
                   >

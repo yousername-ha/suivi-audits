@@ -21,6 +21,7 @@ import type { Kdb } from '../db/db.js';
 import type { Logger } from 'pino';
 import type { SessionUser } from '../auth.js';
 import type { Actor, Db } from '../db/db.js';
+import type { FluxExternes } from '../flux-externes.js';
 import type { Grc } from '../grc/core.js';
 import type { Historique } from '../historique/index.js';
 import { HttpError } from '../http/errors.js';
@@ -63,6 +64,7 @@ export class Assistant {
     private readonly grc: Grc,
     private readonly transport: TransportModele,
     private readonly log: Logger,
+    private readonly flux: FluxExternes,
   ) {}
 
   /* ---------------------------------------------------------------- Réglages (assistant:administrer) */
@@ -121,23 +123,41 @@ export class Assistant {
       version: r.version,
       indexDocuments: (await this.documents?.etat()) ?? { extraits: 0, nonLus: 0, enAttente: 0 },
       cleDefinie: await this.cleDefinie(),
+      fluxOuvert: await this.flux.ouvert('assistant'),
       relaisDeclare: this.transport.declare(),
       updatedAt: r.updated_at?.toISOString() ?? null,
       updatedBy: r.updated_by,
     };
   }
 
-  async modifierReglages(b: ReglagesAssistantBody, user: Actor, ip: string): Promise<ReglagesAssistantDto> {
+  /** « administrateur » : la personne a le droit administration:administrer, seul à valider l'ouverture du flux. */
+  async modifierReglages(
+    b: ReglagesAssistantBody,
+    user: Actor,
+    ip: string,
+    administrateur = false,
+  ): Promise<ReglagesAssistantDto> {
     for (const p of b.profils) if (p.referent) await this.rondes?.exigerReferent(p.referent);
     await this.db.tx(async (c, k) => {
       const cur = await k
         .selectFrom('assistant_reglages')
-        .select('version')
+        .select(['version', 'actif'])
         .where('id', '=', 1)
         .forUpdate()
         .executeTakeFirstOrThrow();
       if (cur.version !== b.version)
         throw new HttpError(409, 'Les réglages ont été modifiés entre-temps. Rechargez la page.');
+      // Précision du RSSI (15/11/2026, ADR 0097) : activer l'assistant ouvre son flux, dans la même opération, après
+      // validation explicite par un administrateur ; le désactiver le referme.
+      if (b.actif)
+        await this.flux.activer(c, k, 'assistant', {
+          confirme: b.fluxConfirme,
+          administrateur,
+          actor: user,
+          ip,
+          origine: 'assistant.reglages',
+        });
+      else if (cur.actif) await this.flux.desactiver(c, k, 'assistant', user, ip, 'assistant.reglages');
       const demandes = [...new Set(b.profils.flatMap((p) => p.perimetres))];
       if (demandes.length) {
         const connus = await k.selectFrom('grc_smsis').select('id').where('id', 'in', demandes).execute();
@@ -244,9 +264,13 @@ export class Assistant {
     const { r } = await this.lire();
     const cle = await this.lireCle();
     let resultat: TestModeleDto;
+    let fluxEmpeche: string | null;
     if (!r.adresse || !r.modele)
       resultat = { ok: false, detail: 'Renseignez l’adresse et le modèle, puis enregistrez.' };
     else if (!cle) resultat = { ok: false, detail: 'Aucune clé n’est enregistrée.' };
+    // Flux fermé (ADR 0097) : rien ne part vers le fournisseur, même pour un essai ; ouvert, le relais n'est joint qu'une
+    // fois son conteneur démarré par l'exécutant (état appliqué « ouvert »).
+    else if ((fluxEmpeche = await this.flux.empechement('assistant'))) resultat = { ok: false, detail: fluxEmpeche };
     else if (!this.transport.declare())
       resultat = { ok: false, detail: 'Le relais de modèle n’est pas installé sur le serveur.' };
     else
@@ -284,6 +308,8 @@ export class Assistant {
     if (!r.actif) return 'L’assistant n’est pas activé.';
     if (!r.adresse || !r.modele) return 'Le modèle de l’assistant n’est pas réglé.';
     if (!(await this.cleDefinie())) return 'Aucune clé de modèle n’est enregistrée.';
+    const flux = await this.flux.empechement('assistant');
+    if (flux) return flux;
     if (!this.transport.declare()) return 'Le relais de modèle n’est pas installé sur le serveur.';
     return null;
   }

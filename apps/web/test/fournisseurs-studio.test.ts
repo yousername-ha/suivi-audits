@@ -8,10 +8,17 @@ import { describe, expect, it } from 'vitest';
 import { FournisseursStudio, type FournisseursStudioProps } from '../src/pilotage/FournisseursStudio';
 import {
   attentionFournisseur,
+  detailCritere,
+  ecartRattachements,
   filtrerFournisseurs,
+  filtrerParNom,
   jourFr,
+  libelleReponse,
+  resumeCriteresLigne,
   tonCertificats,
   tonChamp,
+  tonReponse,
+  type CritereRattache,
   type Fournisseur,
 } from '../src/pilotage/fournisseurs-types';
 
@@ -33,6 +40,7 @@ const fournisseur = (p: Partial<Fournisseur> = {}): Fournisseur => ({
   current: null,
   toReview: false,
   scopes: [],
+  criteria: [],
   ...p,
 });
 
@@ -182,5 +190,99 @@ describe('registre compact', () => {
   });
   it('signale la non-évaluation par le libellé existant', () => {
     expect(rendu({ tous: [fournisseur()], affiches: [fournisseur()] })).toContain('Non évalué');
+  });
+});
+
+describe('critères rattachés (ADR 0098)', () => {
+  const critere = (
+    id: string,
+    meets: boolean | null | undefined,
+    p: Partial<CritereRattache> = {},
+  ): CritereRattache => ({
+    id,
+    label: `Critère fictif ${id}`,
+    archived: false,
+    answer: meets === undefined ? null : { meets, evaluatedAt: '2026-10-01', evaluationId: 'e1' },
+    ...p,
+  });
+  it('donne la dernière réponse : Oui, Non, Non évalué (jamais évalué ou sans réponse)', () => {
+    expect([true, false, null, undefined].map((m) => libelleReponse(critere('k', m)))).toEqual([
+      'Oui',
+      'Non',
+      'Non évalué',
+      'Non évalué',
+    ]);
+    expect([true, false, null, undefined].map((m) => tonReponse(critere('k', m)))).toEqual([
+      'good',
+      'bad',
+      'neutral',
+      'neutral',
+    ]);
+    expect(detailCritere(critere('k1', true))).toBe('Critère fictif k1 : Oui le 01/10/2026');
+    expect(detailCritere(critere('k2', undefined, { archived: true }))).toBe('Critère fictif k2 (retiré) : Non évalué');
+  });
+  it('résume la ligne sans score : remplis sur le total, non et non évalués', () => {
+    expect(resumeCriteresLigne([])).toEqual({ texte: 'Aucun critère rattaché', ton: 'neutral' });
+    expect(
+      resumeCriteresLigne([
+        critere('a', true),
+        critere('b', true),
+        critere('c', true),
+        critere('d', false),
+        critere('e', undefined),
+      ]),
+    ).toEqual({ texte: '3/5 critères remplis · 1 non · 1 non évalué', ton: 'bad' });
+    expect(resumeCriteresLigne([critere('a', true)])).toEqual({ texte: '1/1 critère rempli', ton: 'good' });
+    expect(resumeCriteresLigne([critere('a', null), critere('b', undefined)])).toEqual({
+      texte: '0/2 critères remplis · 2 non évalués',
+      ton: 'neutral',
+    });
+  });
+  it('sélection en masse : recherche par nom et écart à enregistrer', () => {
+    const liste = [fournisseur(), fournisseur({ id: 'SUP-002', name: 'Hébergeur fictif' })];
+    expect(filtrerParNom(liste, ' hebergeur ').map((f) => f.id)).toEqual(['SUP-002']);
+    expect(filtrerParNom(liste, '')).toHaveLength(2);
+    expect(ecartRattachements(new Set(['SUP-001', 'SUP-003']), new Set(['SUP-003', 'SUP-002']))).toEqual({
+      attach: ['SUP-002'],
+      detach: ['SUP-001'],
+    });
+    expect(ecartRattachements(new Set(['SUP-001']), new Set(['SUP-001']))).toEqual({ attach: [], detach: [] });
+  });
+  it('montre le résumé sur la ligne du registre, et « Aucun critère rattaché » sinon', () => {
+    const rendreAvec = (f: Fournisseur) =>
+      renderToStaticMarkup(
+        createElement(
+          MantineProvider,
+          null,
+          createElement(FournisseursStudio, {
+            tous: [f],
+            affiches: [f],
+            chargement: false,
+            disponible: true,
+            modifier: false,
+            recherche: '',
+            filtre: 'all',
+            type: 'all',
+            situations: [{ value: 'all', label: 'Tous' }],
+            mfa: { oui: 0, saas: 1, pct: 0 },
+            sso: { oui: 1, saas: 1, pct: 100 },
+            onRecherche: () => undefined,
+            onFiltre: () => undefined,
+            onType: () => undefined,
+            onCreer: () => undefined,
+            onFiche: () => undefined,
+            onEvaluer: () => undefined,
+            onHistorique: () => undefined,
+            onPerimetres: () => undefined,
+            cellule: (x, champ) => x[champ],
+          }),
+        ),
+      );
+    const html = rendreAvec(
+      fournisseur({ criteria: [critere('a', true), critere('b', false), critere('c', undefined)] }),
+    );
+    expect(html).toContain('1/3 critères remplis · 1 non · 1 non évalué');
+    expect(html).toContain('Critères rattachés');
+    expect(rendreAvec(fournisseur())).toContain('Aucun critère rattaché');
   });
 });

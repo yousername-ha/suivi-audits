@@ -35,41 +35,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert } from '../components/common';
+import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
+import { useValidationFlux } from '../components/ValidationFlux';
 import { ASSISTANT_GLOBAL } from './cles';
+import { corpsReglages, saisieDe, type Saisie } from './reglages-corps';
 import { MemoireAssistant, MesuresAssistant, MethodesAssistant, MissionsAssistant } from './AutonomieAssistant';
 
 export const CLE_ETAT_ASSISTANT = ['assistant', 'etat'];
 const CLE_REGLAGES = ['assistant', 'reglages'];
 
-type Saisie = Pick<
-  ReglagesAssistantDto,
-  | 'actif'
-  | 'adresse'
-  | 'modele'
-  | 'budgetJetonsJour'
-  | 'enPause'
-  | 'heureRonde'
-  | 'plafondRappelsJour'
-  | 'delaiRelanceJours'
-  | 'jourSynthese'
-  | 'rondesSurEvenement'
-  | 'contexte'
-  | 'profils'
->;
-const saisieDe = (d: ReglagesAssistantDto): Saisie => ({
-  actif: d.actif,
-  adresse: d.adresse,
-  modele: d.modele,
-  budgetJetonsJour: d.budgetJetonsJour,
-  enPause: d.enPause,
-  heureRonde: d.heureRonde,
-  plafondRappelsJour: d.plafondRappelsJour,
-  delaiRelanceJours: d.delaiRelanceJours,
-  jourSynthese: d.jourSynthese,
-  rondesSurEvenement: d.rondesSurEvenement,
-  contexte: d.contexte,
-  profils: d.profils,
-});
 const NIVEAUX = [
   { value: 'public', label: 'Public' },
   { value: 'interne', label: 'Interne' },
@@ -102,6 +76,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   const [test, setTest] = useState<TestModeleDto | null>(null);
   // « Personnalisé » choisi à la main : il reste affiché même si l'adresse saisie est celle d'un fournisseur connu.
   const [personnalise, setPersonnalise] = useState(false);
+  const flux = useValidationFlux();
 
   useEffect(() => {
     if (q.data && !saisie) setSaisie(saisieDe(q.data));
@@ -136,43 +111,26 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
     }
   };
   // Le formulaire reprend la réponse du serveur : il affiche exactement ce qui est enregistré, et redevient « à jour ».
-  const enregistrer = () =>
-    agir(async () => {
+  const enregistrer = async () => {
+    // Activer l'assistant ouvre son flux (ADR 0097, précision du RSSI du 15/11/2026) : validation explicite une fois, puis
+    // activation et ouverture en une seule opération.
+    const valide = saisie.actif && !d.fluxOuvert ? await flux.valider('assistant') : null;
+    if (valide === false) return;
+    await agir(async () => {
+      // La clé saisie est scellée d'abord : un seul bouton pour la clé et les réglages.
       if (cle) {
         await api('PUT', '/api/assistant/reglages/cle', { body: { cle } });
         setCle('');
       }
-      if (!modifie) return;
+      if (!modifie && !valide) return;
       const enregistre = await api<ReglagesAssistantDto>('PUT', '/api/assistant/reglages', {
-        body: {
-          ...saisie,
-          profils: saisie.profils.map(
-            ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }) => ({
-              id,
-              actif,
-              perimetres: p,
-              tousPerimetres,
-              rondeQuotidienne,
-              referent,
-              documents,
-              classificationMax,
-            }),
-          ),
-          version: d.version,
-        },
+        body: corpsReglages(saisie, d.version, !!valide),
       });
       qc.setQueryData(CLE_REGLAGES, enregistre);
       setSaisie(saisieDe(enregistre));
+      await qc.invalidateQueries({ queryKey: CLE_FLUX_EXTERNES });
     }, 'Réglages de l’assistant enregistrés.');
+  };
   const tester = async () => {
     setEnvoi(true);
     try {
@@ -204,17 +162,23 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
   // Un seul niveau d'habilitation pour les deux profils ; null quand ils diffèrent (réglés un par un, plus bas).
   const niveaux = new Set(saisie.profils.map((p) => p.classificationMax));
   const niveauCommun = niveaux.size === 1 ? saisie.profils[0]!.classificationMax : null;
-  const aEnregistrer = modifie || cle.length >= 8;
+  // Assistant activé mais flux encore fermé : « Enregistrer » sert aussi à valider l'ouverture du flux.
+  const aEnregistrer = modifie || cle.length >= 8 || (saisie.actif && !d.fluxOuvert);
   const erreurTexte = erreur ? errorMessage(erreur) : null;
   const choixReferents = (referents.data ?? []).map((r) => ({ value: r.id, label: r.nom }));
 
   return (
     <Stack>
-      {!d.relaisDeclare && (
-        <Alert color="red" title="Relais de modèle absent">
-          Le relais de modèle n’est pas installé sur le serveur : l’assistant ne peut pas répondre. Voir le guide
-          d’installation, « Assistant RSSI ».
-        </Alert>
+      {flux.fenetre}
+      {!d.fluxOuvert ? (
+        <FluxFermeAlerte module="assistant" />
+      ) : (
+        !d.relaisDeclare && (
+          <Alert color="red" title="Relais de modèle absent">
+            Aucune adresse de relais de modèle n’est connue du serveur : l’assistant ne peut pas répondre. Voir le guide
+            d’installation, « Assistant RSSI ».
+          </Alert>
+        )
       )}
 
       <FormSection

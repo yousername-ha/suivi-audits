@@ -2,7 +2,8 @@
    utilisés par les parcours existants restent présents (région nommée par le type, classe « carte-processus »,
    compteurs « Objectifs 1 », bouton « Afficher les sous-processus (1) », commande « Nouveau processus ») et que les
    règles de présentation sont tenues : catégorie inaccessible distincte de vide, nature inconnue sans liaison inventée,
-   revue à vérifier au seuil existant de 365 jours. Données fictives. */
+   revue à vérifier au seuil existant de 365 jours ; animations en continu, sans bouton de pause (ADR 0099). Données
+   fictives. */
 import { MantineProvider } from '@mantine/core';
 import type { CarteProcessus, GrcObject, ProcessusCartes } from '@suivi/shared';
 import { createElement, type ReactElement } from 'react';
@@ -106,6 +107,10 @@ describe('Processus Studio : repères conservés', () => {
     expect(sansDroit).toContain('Risques : accès non disponible');
     expect(sansDroit).toContain('Indicateurs <b>0</b>');
   });
+  it('anime en continu : aucun bouton de pause ni de reprise des animations (ADR 0099)', () => {
+    expect(html).toContain('data-motion="on"');
+    expect(html).not.toMatch(/en pause|Reprendre les animations|Mouvement réduit activé/);
+  });
   it('présente un état vide explicite', () => {
     const vide = rendu(
       createElement(ProcessusStudio, {
@@ -178,5 +183,8 @@ describe('Parties intéressées Studio', () => {
     expect(html).toContain('aria-label="Afficher Partie A"');
     expect(html).toContain('Ouvrir le registre détaillé');
     expect(html).toContain('Ajouter une partie intéressée');
+    // Animations en continu (ADR 0099) : plus de bouton de pause ni de reprise.
+    expect(html).toContain('data-motion="on"');
+    expect(html).not.toMatch(/en pause|Reprendre les animations|Mouvement réduit activé/);
   });
 });

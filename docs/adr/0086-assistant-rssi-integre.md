@@ -3,6 +3,8 @@
 - Statut : **acceptée** par le RSSI le 11/11/2026, dans la session (numéro 0086 annoncé et confirmé ; libre sur toutes les
   branches du dépôt à cette date).
 - Date : 2026-11-11
+- **Complétée par** l'[ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md) (15/11/2026) : le relais est démarré et arrêté par la
+  plateforme quand l'administrateur active ou désactive l'assistant, sans commande sur le serveur.
 - Rédaction : session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`)
 - Contexte : le RSSI demande, le 11/11/2026, un **assistant RSSI intégré à la plateforme**, qui surveille, analyse et
   questionne pour maintenir la certification ISO/IEC 27001 et HDS, en tenant deux rôles : aide à la mise en œuvre (« lead
@@ -518,7 +520,14 @@ d'habilitation pour les deux profils.
 - **Confidentialité** : choisir un fournisseur, c'est lui confier la question posée et les extraits lus. L'écran continue
   de nommer le fournisseur réglé ; l'API garde zéro accès sortant, seul le relais sort.
 
-Contrôles du 15/11/2026 (Node 22, PostgreSQL 16) : voir le message de commit. Recette navigateur de l'écran avec un faux
-fournisseur (14 points). **Non vérifié : OpenAI et Anthropic avec un modèle réel** (aucune clé d'essai) ; les noms de
+- **Habillage** (15/11/2026) : l'écran reprend la section de formulaire commune des autres écrans de la Plateforme ; le
+  texte « ce qui quitte le serveur » y figure en entier, sans bandeau de couleur.
+- **Flux sortants** (16/11/2026, [ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md)) : la validation explicite de
+  l'ouverture du flux à la première activation et le bandeau « flux fermé » sont conservés tels que livrés en 7.2.0.
+
+Contrôles du 16/11/2026 après fusion de `claude-suivi-smsi` (7.2.1 ; Node 22, PostgreSQL 16) : API 174 fichiers 1 301/1 301,
+partagé 622/622, interface commune 284/284, web 441/441, ESLint, Prettier, construction web. Recette navigateur de l'écran
+avec un faux fournisseur (16 points, validation du flux comprise). Essai réel avec Mistral le 15/11/2026, avant cette
+fusion, par un relais de substitution (la sortie de l'environnement d'essai impose un mandataire). **Non vérifié : OpenAI et Anthropic avec un modèle réel** (aucune clé d'essai) ; les noms de
 modèles préenregistrés viennent des documentations publiques relevées le 15/11/2026 et vieilliront.
 

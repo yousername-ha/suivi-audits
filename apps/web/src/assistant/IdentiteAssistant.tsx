@@ -8,8 +8,6 @@ const TRACES: Record<string, string> = {
   chevron: 'm7 9 5 5 5-5',
   pin: 'm8 3 8 0-1 6 4 4v2H5v-2l4-4Zm4 12v7',
   send: 'm3 3 19 9-19 9 4-9Zm4 9h15',
-  pause: 'M8 4v16M16 4v16',
-  play: 'm7 4 14 8-14 8Z',
   file: 'M6 3h8l4 4v14H6Zm8 0v5h4M9 12h6M9 16h6',
   question: 'M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6M12 18h.01',
   arrow: 'M5 12h14m-5-5 5 5-5 5',

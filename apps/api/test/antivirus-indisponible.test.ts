@@ -1,11 +1,12 @@
 /* ClamAV indisponible (L10, G3) : analyse limitée à 15 s, refus clair si elle est obligatoire, et au plus une alerte par heure
-   au contact technique (ni aux administrateurs, ni pour chaque dépôt). Pas de disjoncteur : chaque dépôt retente l'analyse. */
+   au contact technique (ni aux administrateurs, ni pour chaque dépôt). Pas de disjoncteur : chaque dépôt retente l'analyse.
+   L'antivirus n'est en service que si le flux « antivirus » est ouvert (ADR 0097) : fermé, le dépôt passe « non analysé ». */
 import net from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DEMANDEUR_ALERTE } from '../src/alertes-exploitation.js';
 import { loadConfig } from '../src/config.js';
 import { DELAI_ANALYSE_MS, FileRejected, scanFile } from '../src/files.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp } from './helpers.js';
+import { createTestApp, login, makeUser, ouvrirFlux, type Agent, type TestApp } from './helpers.js';
 
 const PDF = Buffer.from('%PDF-1.4\n% test\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n');
 const CONTACT = 'tech-antivirus@exemple.test';
@@ -15,8 +16,9 @@ afterEach(async () => {
   for (const s of serveurs.splice(0)) s.close();
   for (const a of apps.splice(0)) await a.close();
 });
+/** Démon antivirus de la configuration, tel que l'utilise un serveur dont le flux « antivirus » est ouvert. */
 const config = (env: Record<string, string>) =>
-  loadConfig({ DB_HOST: 'x', DB_PASSWORD: 'x', DOC_MASTER_KEY: Buffer.alloc(32, 1).toString('base64'), ...env });
+  loadConfig({ DB_HOST: 'x', DB_PASSWORD: 'x', DOC_MASTER_KEY: Buffer.alloc(32, 1).toString('base64'), ...env }).clamav;
 /** Démon qui accepte les connexions et ne répond jamais. */
 const demonMuet = () =>
   new Promise<number>((resolve) => {
@@ -62,10 +64,13 @@ describe('délai de l’analyse', () => {
     expect(r).toBe('non_analysé');
     expect(echecs).toBe(1);
   });
-  it('sans antivirus configuré, rien n’est signalé', async () => {
+  it('sans antivirus en service (flux fermé), le fichier passe « non analysé » et rien n’est signalé', async () => {
     let echecs = 0;
-    expect(await scanFile(config({}), PDF, { surEchec: () => echecs++ })).toBe('non_analysé');
+    expect(await scanFile(null, PDF, { surEchec: () => echecs++ })).toBe('non_analysé');
     expect(echecs).toBe(0);
+  });
+  it('l’hôte par défaut est le conteneur « clamav », l’analyse obligatoire par défaut', () => {
+    expect(config({})).toEqual({ host: 'clamav', port: 3310, required: true });
   });
 });
 
@@ -74,6 +79,7 @@ describe('alerte au contact technique', () => {
     // Port 1 : connexion refusée aussitôt, comme un service arrêté.
     const t = await createTestApp({ CLAMAV_HOST: '127.0.0.1', CLAMAV_PORT: '1', CLAMAV_REQUIRED: String(requis) });
     apps.push(t);
+    await ouvrirFlux(t, 'antivirus', 'courriel');
     const admin = await makeUser(t, 'rssi', 'admin');
     await t.svc.db.q('UPDATE users SET email=$2 WHERE id=$1', [admin.id, 'rssi@exemple.test']);
     const a = await login(t, admin);
@@ -141,10 +147,26 @@ describe('alerte au contact technique', () => {
   it('sans courriel configuré, aucun message n’est mis en file et le refus reste clair', async () => {
     const t = await createTestApp({ CLAMAV_HOST: '127.0.0.1', CLAMAV_PORT: '1', CLAMAV_REQUIRED: 'true' });
     apps.push(t);
+    await ouvrirFlux(t, 'antivirus');
     const a = await login(t, await makeUser(t, 'rssi', 'admin'));
     const r = await deposer(a, 'rapport.pdf');
     expect(r.statusCode).toBe(422);
     await attendre();
     expect((await alertes(t)).rows).toHaveLength(0);
+  }, 30_000);
+
+  it('flux « antivirus » fermé : même obligatoire et injoignable, le démon n’est pas appelé et le dépôt passe « non analysé »', async () => {
+    const t = await createTestApp({ CLAMAV_HOST: '127.0.0.1', CLAMAV_PORT: '1', CLAMAV_REQUIRED: 'true' });
+    apps.push(t);
+    const a = await login(t, await makeUser(t, 'rssi', 'admin'));
+    const r = await deposer(a, 'rapport.pdf');
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json().scan_status).toBe('non_analysé');
+    await attendre();
+    expect((await alertes(t)).rows).toHaveLength(0);
+    expect((await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='document.scan_unavailable'")).rowCount).toBe(0);
+    // Réouvert sans redémarrer l'API : le démon (injoignable) est de nouveau appelé et le dépôt refusé.
+    await ouvrirFlux(t, 'antivirus');
+    expect((await deposer(a, 'rapport-2.pdf')).statusCode).toBe(422);
   }, 30_000);
 });

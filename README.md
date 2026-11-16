@@ -63,7 +63,7 @@ Tout le reste se fait dans le navigateur : adresse du site, poivre des mots de p
 | Sauvegarde chiffrée | Administration → Sauvegardes et restauration (planification : Certificats et opérations) ; en ligne de commande : `sudo ./scripts/backup.sh /srv/sauvegardes/suivi-audits` |
 | Restauration | `sudo ./scripts/restore.sh <archive>.tar.age` |
 | Mise à jour | Configuration système → Mises à jour et versions ; pour le premier passage ou l’entretien serveur, suivre [INSTALLATION, section 12](docs/INSTALLATION.md) (sauvegarde et signatures). |
-| Antivirus | `CLAMAV_HOST=clamav` dans `.env`, puis `sudo docker compose --profile antivirus up -d` |
+| Antivirus, assistant RSSI | Aucune commande : activer le module dans l'application ouvre son flux après validation ; l'exécutant d'exploitation démarre ou arrête ses conteneurs ([ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). État appliqué : Configuration système → Flux vers l'extérieur |
 
 La vue SQL `v_documents` permet d'interroger les documents en lecture, par exemple : `sudo docker compose exec -u postgres db psql -d suivi -c "SELECT * FROM v_documents"`.
 

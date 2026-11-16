@@ -40,10 +40,36 @@ flowchart LR
   identifiants SSH ni registre par défaut ; installation commandée depuis
   l’interface avec code TOTP et fenêtre de maintenance, reçu structuré
   ([ADR 0061](../adr/0061-mise-a-jour-web-renforcee.md)).
-- `clamav` : facultatif, profil antivirus.
+- `clamav` : facultatif, profil antivirus, démarré et arrêté par l'exécutant selon le flux « antivirus » (ADR 0097).
 
 API et base appartiennent à des réseaux internes ; les flux externes de mise
-à jour viennent du worker. Il n’existe pas de bus distribué ou Redis ajouté.
+à jour viennent du worker.
+
+Flux vers l'extérieur ([ADR 0097](../adr/0097-flux-sortants-pilotes-par-les-modules.md), lots 1 à 3 livrés) : un registre partagé
+(`packages/shared/src/flux-externes.ts`) décrit chaque module qui sort ou expose un port (assistant par `assistant-relais`,
+courriel et mises à jour par `updater`, ACME par `gateway`, signatures antivirus par `freshclam`). Tout est fermé par défaut ;
+activer un module ouvre son flux, dans la même transaction que l'activation, après validation explicite par un
+administrateur (`fluxConfirme`) ; le désactiver le referme (table `flux_externes`, migration `071`, journal
+`flux.externe.ouvert` / `flux.externe.ferme` avec l'origine du geste). La carte « Flux vers l'extérieur » n'est qu'un résumé, où
+l'on ferme un flux. L'API relit l'état à chaque usage et refuse de faire sortir un module fermé ;
+l'exécutant lit l'état voulu (`suivi flux-souhaites`) et rapporte l'état appliqué (`suivi flux-appliques`, au changement et
+toutes les 30 minutes). Lot 2 : `update-worker.py` démarre (`docker compose --profile <profil> up -d --no-deps`, services dans
+l'ordre, sans bloquer sa boucle) ou arrête et retire (`rm --stop --force`) les profils `assistant` et `antivirus`, et n'émet
+aucune vérification ni installation de version flux fermé ; `exploitation-worker.py` ne réclame aucun courriel flux fermé,
+relit le flux avant d'appliquer une demande ACME et ramène la passerelle à l'autorité interne si elle est en ACME flux fermé.
+Profils et services viennent de listes fermées dans les deux scripts, dont la concordance avec le registre est vérifiée par
+le test d'architecture. Reprise de l'existant (7.2.1, précision du RSSI du 16/11/2026) : avant toute fermeture, chaque
+exécutant lit l'état voulu par `suivi flux-reprise` en déclarant les modules qu'il porte et qui sont en service (passerelle en
+ACME ; conteneur de sortie présent ou réglage de `.env` ; mise à jour déjà installée) ; un module jamais décidé est enregistré
+ouvert par `reprise-mise-a-jour` (journal `flux.externe.repris`), un module décidé n'est jamais touché ; le courriel actif
+est repris par l'API à son démarrage. État voulu illisible : rien n'est émis par l'exécutant lui-même, les conteneurs restent dans leur
+état, rien n'est rapporté. L'assistant ne joint son relais que si le flux est ouvert **et** appliqué ouvert ; l'antivirus suit
+l'état voulu seul (connexion interne à `clamav`, et `CLAMAV_REQUIRED` refuse un dépôt tant que le démon ne répond pas). Un test d'architecture (`apps/api/test/architecture-flux.test.ts`)
+refuse tout service du compose qui sort ou publie un port sans être porté par le registre ou justifié dans le cœur de
+plateforme (`gateway`, `web`, `updater`). Lot 3 : la dernière étape de l'installation, à la première connexion complète du
+compte créé (demande mémorisée dans `settings`, `flux_questions_en_attente`, comme la démonstration), pose « Activer » ou
+« Plus tard » pour chaque module et ouvre par les mêmes gestes (route commune, réglages de l'assistant) ; courriel et ACME
+renvoient à leur page. Il n’existe pas de bus distribué ou Redis ajouté.
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 

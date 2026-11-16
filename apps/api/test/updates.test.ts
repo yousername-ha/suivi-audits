@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { hotp } from '../src/security/crypto.js';
-import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
+import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser, ouvrirFlux } from './helpers.js';
 
 let t: TestApp, admin: TestUser, reader: TestUser, a: Agent;
 const dir = mkdtempSync(path.join(os.tmpdir(), 'suivi-updates-'));
@@ -62,6 +62,8 @@ const fenetre = async (f: Record<string, unknown> | null) => {
 };
 beforeAll(async () => {
   t = await createTestApp({ ETAT_DIR: dir, APP_VERSION: '3.0.0' });
+  // Flux « mises-a-jour » ouvert par l'administrateur (ADR 0097) : fermé, rien n'est remis à l'exécutant.
+  await ouvrirFlux(t, 'mises-a-jour');
   admin = await makeUser(t, 'update-admin', 'admin');
   reader = await makeUser(t, 'update-reader', 'ro');
 });
@@ -183,6 +185,48 @@ describe('mise à jour intégrée : frontière de privilèges', () => {
     expect(
       (await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='update.neutralized' AND target=$1", [id])).rowCount,
     ).toBe(1);
+  });
+});
+
+describe('mise à jour intégrée : flux « mises-a-jour » (ADR 0097)', () => {
+  const fermer = () => t.svc.flux.changer('mises-a-jour', false, { username: 'test' }, '127.0.0.1');
+  afterAll(() => ouvrirFlux(t, 'mises-a-jour'));
+
+  it('fermé : vérification et installation refusées (409) sans consommer le code, la page le sait', async () => {
+    await fermer();
+    expect((await a.get('/api/updates')).json()).toMatchObject({ fluxOuvert: false, available: '3.1.0' });
+    const verif = await a.post('/api/admin/updates/check');
+    expect(verif.statusCode).toBe(409);
+    expect(verif.json()).toMatchObject({ reason: 'flux_ferme', module: 'mises-a-jour' });
+    expect(verif.json().error).toContain('activant le module');
+    const corps = await request();
+    const inst = await a.post('/api/admin/updates/install', corps);
+    expect(inst.statusCode).toBe(409);
+    expect(inst.json().reason).toBe('flux_ferme');
+    expect((await t.svc.db.q('SELECT 1 FROM update_jobs')).rowCount).toBe(0);
+    expect((await t.svc.db.q("SELECT 1 FROM audit_log WHERE action='update.install.mfa_failed'")).rowCount).toBe(0);
+    // Le code n'a pas été consommé : rouvert, la même demande passe.
+    await ouvrirFlux(t, 'mises-a-jour');
+    expect((await a.get('/api/updates')).json().fluxOuvert).toBe(true);
+    expect((await a.post('/api/admin/updates/install', corps)).statusCode).toBe(202);
+  });
+
+  it('fermé après la demande : l’exécutant ne reçoit rien et la demande en file est close, tracée', async () => {
+    const r = await a.post('/api/admin/updates/check');
+    expect(r.statusCode).toBe(202);
+    await fermer();
+    expect(await t.svc.updates.claim()).toBeNull();
+    expect((await t.svc.db.q('SELECT status FROM update_jobs WHERE id=$1', [r.json().id])).rows[0]?.status).toBe(
+      'failed',
+    );
+    const audit = await t.svc.db.q<{ details: { reason: string } }>(
+      "SELECT details FROM audit_log WHERE action='update.neutralized' AND target=$1",
+      [r.json().id],
+    );
+    expect(audit.rows.map((x) => x.details.reason)).toEqual(['flux_ferme']);
+    // Rouvert : plus rien n'est en file, rien ne part de lui-même.
+    await ouvrirFlux(t, 'mises-a-jour');
+    expect(await t.svc.updates.claim()).toBeNull();
   });
 });
 
