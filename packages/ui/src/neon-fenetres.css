@@ -195,6 +195,22 @@
   font-weight: 650;
 }
 
+/* Fenêtres des flux vers l'extérieur (validation d'une ouverture, fermeture depuis le résumé ; demande du RSSI du
+   16/11/2026) : jamais plus larges que l'écran, contenu replié sans débordement ni ellipse ; sur téléphone, les boutons
+   prennent toute la largeur, l'action principale en premier. */
+.mantine-Modal-content.fenetre-flux {
+  max-inline-size: 100%;
+}
+.mantine-Modal-content.fenetre-flux > .mantine-Modal-body {
+  min-inline-size: 0;
+}
+@media (max-width: 36em) {
+  .fenetre-flux__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
+
 /* Fiches des registres : hauteur naturelle, sans défilement imbriqué dans les onglets. */
 .fenetre-fiche-corps {
   padding-bottom: 0;

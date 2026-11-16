@@ -76,6 +76,34 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
 - La fenêtre de validation est un composant réutilisable (`apps/web/src/components/ValidationFlux.tsx` : fenêtre, contenu seul
   et `useValidationFlux`), que l'assistant d'installation (lot 3) reprendra pour « Activer / Plus tard ».
 
+## Précision du RSSI (16/11/2026) : une mise à jour ne referme pas un flux en service
+
+- **Incident (15-16/11/2026).** Un serveur en 7.1.1 doté d'un certificat public ACME a été mis à jour en 7.2.0 depuis
+  l'interface. La migration `071` a fermé tous les flux (point « Ce qui n'est pas fait » ci-dessus : pas de reprise) ; l'exécutant
+  d'exploitation (lot 2) a alors ramené la passerelle à l'autorité interne. Comme le site envoie l'en-tête HSTS (un an), son nom
+  de domaine est devenu inaccessible dans les navigateurs ; le RSSI a rétabli le service en passant par l'adresse IP du serveur et
+  en rouvrant ACME. Le RSSI a aussi signalé que l'ouverture du flux des mises à jour (GitHub, Sigstore) « n'avait pas bien
+  fonctionné ».
+- **Règle : « une mise à jour de l'interface ne peut pas enlever le flux ouvert ».** Elle remplace, pour les serveurs déjà
+  installés, le point « un serveur déjà installé retrouve ses flux fermés » de la section « Ce qui n'est pas fait » :
+  - **reprise de l'existant** : un module du registre qui n'a encore **aucune décision enregistrée** et qui est **réellement en
+    service** sur le serveur voit son flux enregistré **ouvert**, par l'acteur système `reprise-mise-a-jour`, inscrit au journal
+    d'audit sous un événement distinct (`flux.externe.repris`) avec le motif constaté. Critères : ACME, passerelle en mode `acme`
+    ou `CADDY_TLS` de `.env` réglé sur une adresse ACME ; assistant, conteneur `assistant-relais` présent ou
+    `ASSISTANT_RELAIS_URL` renseigné dans `.env` ; antivirus, conteneur `freshclam` ou `clamav` présent ou `CLAMAV_HOST`
+    renseigné ; courriel, envoi actif avec un hôte SMTP renseigné ; mises à jour, au moins une mise à jour déjà installée (reçu
+    d'installation réussie ou rapport réussi du script de mise à jour) : une installation neuve reste fermée ;
+  - **jamais sur un module décidé** : ouvert ou fermé par un administrateur, il n'est pas touché ; une fermeture décidée reste
+    une fermeture ;
+  - **avant toute fermeture** : l'exécutant ne ramène plus jamais la passerelle à l'autorité interne, ni n'arrête un conteneur,
+    pour un module jamais décidé et en service ;
+  - **pas de migration** : la table `flux_externes` distingue déjà un module décidé (`decide_par` renseigné) d'un module jamais
+    décidé (aucune ligne, ou une ligne créée par le seul rapport de l'état appliqué).
+- **Garde-fou HSTS** : fermer le flux ACME (depuis le résumé, ou en quittant le mode ACME dans la page Certificats) affiche dans
+  la confirmation que le site repassera sur le certificat interne, risque de devenir inaccessible par son nom de domaine (HSTS)
+  et reste joignable par l'adresse IP du serveur. Information claire, sans blocage.
+- Version corrective **7.2.1**, numérotée par le RSSI.
+
 ## Mise en œuvre
 
 - **Lot 1 — registre, état, gestes d'activation et résumé : livré** (session « Projet audit_suivi Coeur »). Registre partagé
@@ -151,6 +179,41 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
   Tests : `apps/web/test/installation-flux.test.ts`, `apps/api/test/installation-flux.test.ts`, parcours d'installation e2e
   (`parcours.spec.ts`, `rssi-virtuel/specs/00-installation.spec.ts`).
 - Lot 4 — documentation : à faire.
+- **Précision du 16/11/2026 — reprise de l'existant et garde-fou HSTS : livrée en 7.2.1** (session « Projet audit_suivi
+  Coeur »), sans migration ni dépendance nouvelle :
+  - registre partagé : acteur `FLUX_REPRISE_ACTEUR` (`reprise-mise-a-jour`), motifs fermés par module `FLUX_REPRISE_MOTIFS`
+    (code et phrase), schéma strict `FluxReprise` de l'entrée de l'exécutant (modules qu'il constate : `FLUX_REPRISE_EXECUTANT`,
+    tous sauf le courriel) ;
+  - API (`apps/api/src/flux-externes.ts`, `reprendre`) : dans une transaction, pour chaque module déclaré en service, ligne
+    verrouillée ; si aucune décision n'est enregistrée, `ouvert = true`, `decide_par = reprise-mise-a-jour`, journal
+    `flux.externe.repris` (motif, phrase, origine `executant` ou `demarrage`, destinations, porteur) ; sinon rien. Courriel :
+    constaté au démarrage de l'API (`prepareDatabase`, après le chargement des réglages) ;
+  - CLI `suivi flux-reprise` : entrée JSON validée strictement (module inconnu, courriel, motif étranger au module, champ
+    inattendu ou JSON illisible : code 2, rien n'est enregistré), sortie identique à `suivi flux-souhaites` ;
+  - exécutants : au début de chaque passage, avant toute fermeture, l'état voulu est lu par `flux-reprise` quand un module porté
+    est en service (`flux-souhaites` sinon). `scripts/update-worker.py` lit d'abord l'état des conteneurs (lecture seule), puis
+    déclare assistant et antivirus (conteneur présent, ou réglage de `.env`) et les mises à jour (reçu d'installation réussie
+    dans `etat/recus-mises-a-jour`, ou rapport réussi dans `etat/mises-a-jour`) ; Docker muet, aucun conteneur n'est touché.
+    `scripts/exploitation-worker.py` déclare la passerelle en ACME (`acme_motif` : mode `acme`, ou `CADDY_TLS` ACME en mode
+    `env`). Réponse illisible : rien n'est fermé ni rapporté (règle du lot 2). Les codes de motif des deux scripts concordent
+    avec le registre (test d'architecture) ;
+  - interface : confirmation de fermeture du flux ACME (résumé) et de changement de mode (page Certificats : autorité
+    interne, certificat fourni, réglage de départ) avec l'avertissement HSTS et le recours par l'adresse IP
+    (`apps/web/src/flux-externes.ts`) ;
+  - mises à jour (signalement GitHub/Sigstore) : cause trouvée dans l'annonce de la vérification (constat R6-03 de la recette).
+    Après un échec, l'exécutant laissait la phase `checking` publiée et la page affichait « Vérification en cours » pendant
+    90 s, puis « prend plus de temps que prévu », sans jamais dire l'échec ; un échec ancien (`checkError` resté vrai) pouvait
+    aussi passer pour le résultat d'une nouvelle vérification. L'exécutant publie désormais la phase `idle` après l'échec
+    d'une vérification, et la page reconnaît sa demande à son identifiant ; le message dit que le serveur n'a pas pu joindre
+    GitHub et renvoie au pare-feu (le flux ouvert dans l'application ne règle pas le pare-feu). Sur un serveur passé de la
+    7.1.1 à la 7.2.0, le flux « mises-a-jour » était en outre fermé par la migration `071` : c'est la reprise qui le garde
+    ouvert désormais ;
+  - affichage (demande du RSSI du 16/11/2026) : le résumé passe de huit à quatre colonnes repliées aux mots, puis en lignes
+    empilées avec intitulés dans un cadre étroit (classes `tableau-empilable` et `flux-texte` de `packages/ui`) ; la fenêtre de
+    validation liste le pare-feu ligne à ligne, garde les ports groupés et ne dépasse jamais l'écran (`fenetre-flux`).
+  Tests : `apps/api/test/flux-reprise.test.ts`, `apps/api/test/architecture-flux.test.ts`, `packages/shared/test/flux-externes.test.ts`,
+  `scripts/tests/test_flux_executant.py`, `scripts/tests/test_exploitation.py`, `scripts/tests/test_updates.py`,
+  `apps/web/test/flux-repli-hsts.test.ts`, `apps/web/test/mises-a-jour-verification.test.ts`.
 
 ## Conséquences
 

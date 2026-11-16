@@ -21,6 +21,7 @@ import {
   LIEN_FLUX_EXTERNES,
   pareFeuAOuvrir,
   peutConfirmer,
+  texteFermeture,
   type Ton,
 } from '../flux-externes';
 import { useCan } from '../session';
@@ -71,14 +72,21 @@ function Fermeture({
     }
   };
   return (
-    <Modal opened onClose={onClose} title={`Fermer le flux « ${f.libelle} »`} centered lockScroll={false}>
+    <Modal
+      opened
+      onClose={onClose}
+      title={`Fermer le flux « ${f.libelle} »`}
+      centered
+      lockScroll={false}
+      size="lg"
+      classNames={{ content: 'fenetre-flux' }}
+    >
       <Stack>
         <ErrorAlert error={erreur} />
-        <Text size="sm">
-          Plus aucun échange de ce module avec l’extérieur : {f.siFerme.charAt(0).toLowerCase()}
-          {f.siFerme.slice(1)} Pour le rouvrir, réactivez le module dans sa page ({f.reglage.libelle}).
+        <Text size="sm" className="flux-texte">
+          {texteFermeture(f)}
         </Text>
-        <Group justify="flex-end">
+        <Group justify="flex-end" className="fenetre-flux__actions">
           <Button variant="default" onClick={onClose}>
             Annuler
           </Button>
@@ -96,6 +104,105 @@ function Fermeture({
   );
 }
 
+/** Tableau du résumé, sans requête : une ligne par module du registre. Quatre colonnes (module et sens, destinations, état,
+    action) qui se replient sans rien tronquer ; dans un conteneur étroit (téléphone, fenêtre réduite), chaque ligne devient
+    un bloc dont chaque cellule porte son intitulé (classe « tableau-empilable » de packages/ui). */
+export function TableauFlux({
+  etats,
+  ecriture,
+  onFermer,
+}: {
+  etats: ReadonlyMap<FluxModule, FluxExterneEtat>;
+  ecriture: boolean;
+  onFermer: (f: FluxExterneDefinition) => void;
+}) {
+  return (
+    <div
+      className="table-wrap tableau-empilable-conteneur"
+      role="region"
+      aria-label="Flux vers l’extérieur"
+      tabIndex={0}
+    >
+      <Table striped className="tableau-empilable flux-tableau">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Module</Table.Th>
+            <Table.Th>Destinations</Table.Th>
+            <Table.Th>État</Table.Th>
+            <Table.Th>Action</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {FLUX_EXTERNES.map((f) => {
+            const e = etats.get(f.id);
+            const a = e ? etatApplique(e) : null;
+            return (
+              <Table.Tr key={f.id}>
+                <Table.Td data-label="Module">
+                  <Text size="sm" fw={600}>
+                    {f.libelle}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {libelleSens(f)}
+                  </Text>
+                </Table.Td>
+                <Table.Td data-label="Destinations">
+                  <Destinations f={f} />
+                </Table.Td>
+                <Table.Td data-label="État">
+                  <Stack gap="2xs" align="flex-start">
+                    <Group gap="xs">
+                      {e && (
+                        <Badge variant="light" color={e.ouvert ? 'green' : 'gray'}>
+                          {`Voulu : ${e.ouvert ? 'ouvert' : 'fermé'}`}
+                        </Badge>
+                      )}
+                      {a && (
+                        <Badge variant="light" color={COULEURS[a.ton]}>
+                          {`Appliqué : ${a.libelle.charAt(0).toLowerCase()}${a.libelle.slice(1)}`}
+                        </Badge>
+                      )}
+                    </Group>
+                    {e?.erreur && (
+                      <Text size="sm" c="red" className="flux-erreur">
+                        {`Erreur : ${e.erreur}`}
+                      </Text>
+                    )}
+                    <div className="horodatage">
+                      <Text size="xs">
+                        {e?.decideLe ? `Décidé le ${fmtDate(e.decideLe)} par ${e.decidePar ?? '?'}` : 'Jamais décidé'}
+                      </Text>
+                      {e?.appliqueLe && <Text size="xs">Appliqué le {fmtDate(e.appliqueLe)}</Text>}
+                    </div>
+                  </Stack>
+                </Table.Td>
+                <Table.Td data-label="Action">
+                  <Stack gap="xs" align="flex-start">
+                    <Anchor size="xs" component={Link} to={f.reglage.lien}>
+                      {e?.ouvert ? 'Page du module' : 'Activer dans la page du module'}
+                    </Anchor>
+                    {ecriture && e?.ouvert && (
+                      <Button
+                        size="compact-sm"
+                        variant="default"
+                        color="red"
+                        aria-label={`Fermer le flux ${f.libelle}`}
+                        onClick={() => onFermer(f)}
+                      >
+                        Fermer
+                      </Button>
+                    )}
+                  </Stack>
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
+        </Table.Tbody>
+      </Table>
+    </div>
+  );
+}
+
 export function FluxExternesPanel() {
   const can = useCan();
   const ecriture = can('administration', 'administrer');
@@ -109,7 +216,7 @@ export function FluxExternesPanel() {
   const etats = new Map<FluxModule, FluxExterneEtat>((q.data?.modules ?? []).map((e) => [e.module, e]));
   const pareFeu = pareFeuAOuvrir(FLUX_EXTERNES, q.data?.modules ?? []);
   return (
-    <Card withBorder>
+    <Card withBorder className="flux-resume">
       <Stack>
         <Title order={2} size="h4">
           Flux vers l’extérieur
@@ -121,82 +228,7 @@ export function FluxExternesPanel() {
           journal d’audit. L’exécutant d’exploitation applique la décision et rapporte l’état appliqué.
         </Text>
         <ErrorAlert error={q.error} />
-        <div className="table-wrap" role="region" aria-label="Flux vers l’extérieur" tabIndex={0}>
-          <Table striped>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Module</Table.Th>
-                <Table.Th>Sens</Table.Th>
-                <Table.Th>Destinations</Table.Th>
-                <Table.Th>Voulu</Table.Th>
-                <Table.Th>Appliqué</Table.Th>
-                <Table.Th>Erreur</Table.Th>
-                <Table.Th>Date</Table.Th>
-                <Table.Th>Action</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {FLUX_EXTERNES.map((f) => {
-                const e = etats.get(f.id);
-                const a = e ? etatApplique(e) : null;
-                return (
-                  <Table.Tr key={f.id}>
-                    <Table.Td>
-                      <Text size="sm" fw={600}>
-                        {f.libelle}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>{libelleSens(f)}</Table.Td>
-                    <Table.Td>
-                      <Destinations f={f} />
-                    </Table.Td>
-                    <Table.Td>
-                      {e && (
-                        <Badge variant="light" color={e.ouvert ? 'green' : 'gray'}>
-                          {e.ouvert ? 'Ouvert' : 'Fermé'}
-                        </Badge>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      {a && (
-                        <Badge variant="light" color={COULEURS[a.ton]}>
-                          {a.libelle}
-                        </Badge>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{e?.erreur ?? '—'}</Text>
-                    </Table.Td>
-                    <Table.Td className="horodatage">
-                      <Text size="xs">
-                        {e?.decideLe ? `Décidé le ${fmtDate(e.decideLe)} par ${e.decidePar ?? '?'}` : 'Jamais décidé'}
-                      </Text>
-                      {e?.appliqueLe && <Text size="xs">Appliqué le {fmtDate(e.appliqueLe)}</Text>}
-                    </Table.Td>
-                    <Table.Td>
-                      <Stack gap="xs" align="flex-start">
-                        <Anchor size="xs" component={Link} to={f.reglage.lien}>
-                          {e?.ouvert ? 'Page du module' : 'Activer dans la page du module'}
-                        </Anchor>
-                        {ecriture && e?.ouvert && (
-                          <Button
-                            size="compact-sm"
-                            variant="default"
-                            color="red"
-                            aria-label={`Fermer le flux ${f.libelle}`}
-                            onClick={() => setFermeture(f)}
-                          >
-                            Fermer
-                          </Button>
-                        )}
-                      </Stack>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
-        </div>
+        <TableauFlux etats={etats} ecriture={ecriture} onFermer={setFermeture} />
         <Alert color="blue" title="Pare-feu de l’hôte et du réseau">
           La plateforme ouvre ou ferme ses propres flux (conteneurs et exécutants). Le pare-feu du serveur et celui du
           réseau restent du ressort de l’équipe infrastructure.
