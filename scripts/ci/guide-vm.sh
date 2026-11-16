@@ -71,7 +71,9 @@ fi
 command -v qemu-system-x86_64 > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 qemu-utils > /dev/null; }
 
 # --- Image officielle, empreinte vérifiée
-curl -fsSL --retry 3 --proto '=https' --tlsv1.2 -o image.qcow2 "$IMAGE_URL"
+# HTTP/1.1 et nouvelle tentative sur toute erreur : un transfert HTTP/2 coupé par le miroir (curl 92) n'est pas rejoué par
+# « --retry » seul. L'empreinte vérifiée juste après reste le seul juge du contenu.
+curl -fsSL --http1.1 --retry 3 --retry-all-errors --retry-delay 5 --proto '=https' --tlsv1.2 -o image.qcow2 "$IMAGE_URL"
 echo "$IMAGE_SOMME  image.qcow2" | "${IMAGE_ALGO}sum" -c --quiet - || arret "Empreinte de l'image $SYSTEME incorrecte : refus."
 qemu-img create -q -f qcow2 -b image.qcow2 -F qcow2 disque.qcow2 40G
 
