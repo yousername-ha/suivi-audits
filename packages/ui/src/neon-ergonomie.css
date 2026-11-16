@@ -202,3 +202,51 @@
 .filtre-colonne__valeur {
   font-weight: 500;
 }
+
+/* Lueur violette légère qui tourne autour du champ de recherche de la boîte d'outils (demande du RSSI du 16/11/2026).
+   Seule la rotation (transform) est animée ; le contour garde sa couleur fixe sous la lueur. Continue (ADR 0099),
+   arrêtée par le mouvement réduit, l'impression, les couleurs forcées et l'onglet masqué. */
+.app-main .barre-boite__recherche .mantine-Input-wrapper {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 1.5px;
+  border-radius: var(--mantine-radius-md);
+  background: var(--menu-commande-trait);
+}
+.app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  inline-size: 300%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.58turn,
+    color-mix(in srgb, var(--mantine-color-violet-4) 35%, transparent) 0.7turn,
+    var(--mantine-color-violet-3) 0.8turn,
+    color-mix(in srgb, var(--mantine-color-violet-4) 35%, transparent) 0.9turn,
+    transparent 1turn
+  );
+  content: '';
+  transform: translate(-50%, -50%) rotate(0turn);
+  animation: barre-lueur 5s linear infinite;
+}
+.app-main .barre-boite__recherche .mantine-Input-input {
+  border-color: transparent;
+}
+@keyframes barre-lueur {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+.app-main [data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
+  .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+    animation: none;
+    opacity: 0;
+  }
+}
