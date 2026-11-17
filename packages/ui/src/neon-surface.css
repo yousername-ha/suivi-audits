@@ -133,6 +133,10 @@
 .sc-hote {
   stroke: var(--sc-texte);
 }
+/* Service exposé (lot ALH6) : capsule sur la ligne de l'actif, entre l'IP publique et l'alerte. */
+.sc-service {
+  stroke: var(--sc-faisceau);
+}
 .sc-machine .sc-forme,
 .sc-forme.sc-machine {
   stroke: var(--sc-machine);

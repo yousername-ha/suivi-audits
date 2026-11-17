@@ -65,6 +65,7 @@ import type { Client, Db, Kdb } from '../db/db.js';
 import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
+import { servicesDesActifs } from './services-surface.js';
 import { lisible, lisibleAlh, perimetreMachine } from './sql.js';
 
 const AUTOMATE = { username: 'rapprochement automatique' };
@@ -384,6 +385,8 @@ export class LiaisonsMachines {
       rejetees: de('rejetee'),
       autresMachines: rows.some((r) => !r.lisible && r.statut === 'confirmee'),
       max: LIAISONS_MACHINES_PAR_ACTIF_MAX,
+      // Lot ALH6 : services connus de l'actif, avec les alertes lisibles qui les portent.
+      services: (await servicesDesActifs(k, user, [actifId])).get(actifId)!,
     };
   }
 

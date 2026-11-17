@@ -8,11 +8,16 @@ import {
   CRITICITES_ALH,
   ElementSurfaceExterne,
   erreurAdresseAlh,
+  fusionnerServices,
   LiaisonPerimetreAlh,
+  libelleProduitService,
+  libelleService,
   memeVersionDetectee,
   rapprochementTechnologie,
   RechercheAlertesAlh,
   RechercheTechnologiesAlh,
+  type ServiceAlhDto,
+  serviceCorrespond,
   STATUTS_ALERTE_ALH,
   STATUTS_ALERTE_ALH_OUVERTS,
   TENABLE_BORNES,
@@ -191,6 +196,88 @@ describe('surface externe : défauts et résolutions de l’éditeur (lot ALH2)'
     expect(
       ElementSurfaceExterne.safeParse(alerte({ defauts: Array(ALH_BORNES.defautsParAlerte + 1).fill(defaut) })).success,
     ).toBe(false);
+  });
+});
+
+describe('surface externe : services portés par les alertes (lot ALH6)', () => {
+  const service = (extra: Partial<ServiceAlhDto> = {}): ServiceAlhDto => ({
+    port: 443,
+    protocole: 'tcp',
+    nom: 'https',
+    produit: 'nginx',
+    version: '1.18.0',
+    editeur: 'F5',
+    cpe: 'cpe:/a:f5:nginx:1.18.0',
+    statutVersion: null,
+    ...extra,
+  });
+  it('liste blanche stricte : port de 1 à 65535, protocole tcp ou udp ou non communiqué, textes nettoyés', () => {
+    const ok = (services: unknown[]) => ElementSurfaceExterne.safeParse(alerte({ services })).success;
+    expect(ok([service()])).toBe(true);
+    expect(ok([service({ protocole: null, nom: null, produit: null, version: null, editeur: null, cpe: null })])).toBe(
+      true,
+    );
+    expect(ok([service({ statutVersion: 'eol' })])).toBe(true);
+    for (const refuse of [
+      { port: 0 },
+      { port: 65536 },
+      { port: 44.3 },
+      { protocole: 'sctp' },
+      { nom: '<b>https</b>' },
+      { cpe: 'pas un cpe' },
+      { statutVersion: 'unknown' },
+      { banner: 'SSH-2.0-fictif' },
+      { state: 'open' },
+    ])
+      expect(ok([{ ...service(), ...refuse }]), JSON.stringify(refuse)).toBe(false);
+    // Un même port et protocole une seule fois ; bornés en nombre.
+    expect(ok([service(), service({ nom: 'http' })])).toBe(false);
+    expect(ok([service(), service({ protocole: null })])).toBe(true);
+    expect(ok(Array.from({ length: ALH_BORNES.servicesParAlerte + 1 }, (_, i) => service({ port: 1000 + i })))).toBe(
+      false,
+    );
+    // Absents (exécutant d'avant le lot) : aucun service ; seulement avec le détail.
+    const sans = ElementSurfaceExterne.parse(alerte()) as { services: unknown[] };
+    expect(sans.services).toEqual([]);
+    expect(ElementSurfaceExterne.safeParse(alerte({ detail: false, services: [service()] })).success).toBe(false);
+  });
+  it('fusion : même port et protocole une fois ; un port sans protocole rejoint le seul service de même port', () => {
+    const l = fusionnerServices([
+      service({ port: 8443, protocole: null, nom: null, produit: 'nginx', version: null, cpe: null }),
+      service({ produit: null, version: null, cpe: null }),
+      service({ protocole: null, nom: null, produit: 'nginx', version: '1.18.0', statutVersion: 'eol' }),
+      service({ port: 53, protocole: 'udp', nom: 'domain', produit: null, version: null, editeur: null, cpe: null }),
+      service({ port: 53, protocole: 'tcp', nom: 'domain', produit: null, version: null, editeur: null, cpe: null }),
+      service({ port: 53, protocole: null, nom: null, produit: 'bind', version: null, editeur: null, cpe: null }),
+    ]);
+    expect(l.map((s) => `${s.port}/${s.protocole ?? '?'}`)).toEqual(['53/tcp', '53/udp', '53/?', '443/tcp', '8443/?']);
+    expect(l[3]).toEqual(service({ statutVersion: 'eol' }));
+    // Fusion du reste (alertes) par la fonction donnée.
+    const avec = fusionnerServices(
+      [
+        { ...service(), alertes: ['a'] },
+        { ...service({ protocole: null }), alertes: ['b'] },
+      ],
+      (a, b) => ({ ...a, alertes: [...a.alertes, ...b.alertes] }),
+    );
+    expect(avec).toHaveLength(1);
+    expect(avec[0]!.alertes).toEqual(['a', 'b']);
+  });
+  it('libellés exacts : « 443/tcp · HTTPS » puis « nginx 1.18 » ; protocole jamais inventé', () => {
+    expect(libelleService(service())).toBe('443/tcp · HTTPS');
+    expect(libelleService(service({ protocole: null }))).toBe('443 · HTTPS');
+    expect(libelleService(service({ protocole: 'udp', port: 53, nom: null }))).toBe('53/udp');
+    expect(libelleProduitService(service({ version: '1.18' }))).toBe('nginx 1.18');
+    expect(libelleProduitService(service({ version: null }))).toBe('nginx');
+    expect(libelleProduitService(service({ produit: null, version: null }))).toBeNull();
+  });
+  it('recherche : port exact, port et protocole, nom, produit ou éditeur', () => {
+    const s = service();
+    for (const t of ['443', '443/tcp', '443/t', ' 443/TCP ', 'https', 'NGINX', 'nginx 1.18', 'f5'])
+      expect(serviceCorrespond(s, t), t).toBe(true);
+    for (const t of ['44', '8443', '443/udp', 'apache', '', '4430']) expect(serviceCorrespond(s, t), t).toBe(false);
+    expect(serviceCorrespond(service({ protocole: null }), '443/tcp')).toBe(false);
+    expect(serviceCorrespond(service({ protocole: null }), '443')).toBe(true);
   });
 });
 

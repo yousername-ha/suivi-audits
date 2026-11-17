@@ -208,6 +208,10 @@ export const TABLES_TRAVAIL = [
   // Actifs exposés reliés aux machines internes (ADR 0100, lot ALH3) : propositions recalculées à la synchronisation suivante,
   // décisions des utilisateurs, effacées avec les actifs et les machines qu'elles relient.
   'vulnerabilites_alh_liaisons_machines',
+  // Services exposés des actifs et leurs alertes (ADR 0100, lot ALH6) : relus à la synchronisation suivante, effacés avec
+  // les actifs et les alertes qui les portent.
+  'vulnerabilites_alh_services',
+  'vulnerabilites_alh_service_alertes',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

@@ -10,7 +10,9 @@
    pile vierge (le dessin, les filtres, le repli et le chemin critique sont couverts par les tests de l'interface et de
    l'API). Lot ALH5 : fenêtre « Relier en masse » de l'onglet des actifs (motifs, mode, aperçu vide sur une pile vierge,
    motif refusé par le serveur) ; rien n'est écrit, la pile reste dans son état initial (la liaison elle-même, les droits
-   par paire et la majoration sont couverts par les tests de l'API). */
+   par paire et la majoration sont couverts par les tests de l'API). Lot ALH6 : colonne « Services connus » de l'onglet des
+   actifs et limite « seuls les services portés par une alerte sont connus » (sans données ; la colonne « Service » de la
+   carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -107,6 +109,8 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await page.getByRole('tab', { name: 'Actifs', exact: true }).click();
     await expect(page.getByText('Aucun actif ne correspond')).toBeVisible();
     await expect(page.locator('th', { hasText: /^Machine interne$/ })).toBeVisible();
+    await expect(page.locator('th', { hasText: /^Services connus$/ })).toBeVisible();
+    await expect(page.getByText(/Seuls les services portés par une alerte sont connus/)).toBeVisible();
     const filtreMachine = page.getByRole('combobox', { name: 'Machine interne', exact: true });
     await filtreMachine.click();
     await page.getByRole('option', { name: 'Proposée, à décider', exact: true }).click();

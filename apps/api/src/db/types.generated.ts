@@ -1650,6 +1650,26 @@ export interface VulnerabilitesAlhPerimetres {
   maj_par: string | null;
 }
 
+export interface VulnerabilitesAlhServiceAlertes {
+  service_id: string;
+  alerte_id: string;
+}
+
+export interface VulnerabilitesAlhServices {
+  id: Generated<string>;
+  integration_id: string;
+  actif_id: string;
+  port: number;
+  protocole: string | null;
+  nom: string | null;
+  produit: string | null;
+  version: string | null;
+  editeur: string | null;
+  cpe: string | null;
+  statut_version: string | null;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesAlhSynchronisations {
   execution_id: string;
   integration_id: string;
@@ -2184,6 +2204,8 @@ export interface DB {
   vulnerabilites_alh_etat: VulnerabilitesAlhEtat;
   vulnerabilites_alh_liaisons_machines: VulnerabilitesAlhLiaisonsMachines;
   vulnerabilites_alh_perimetres: VulnerabilitesAlhPerimetres;
+  vulnerabilites_alh_service_alertes: VulnerabilitesAlhServiceAlertes;
+  vulnerabilites_alh_services: VulnerabilitesAlhServices;
   vulnerabilites_alh_synchronisations: VulnerabilitesAlhSynchronisations;
   vulnerabilites_alh_technologie_actifs: VulnerabilitesAlhTechnologieActifs;
   vulnerabilites_alh_technologie_cves: VulnerabilitesAlhTechnologieCves;

@@ -120,6 +120,8 @@ const actif = (x: Partial<ActifAlhDto> = {}): ActifAlhDto => ({
   integration,
   machinesInternes: { reliees: [], nombreReliees: 0, propositions: 0, autresMachines: false },
   versionLiaisons: 1,
+  services: [],
+  nombreServices: 0,
   ...x,
 });
 const techno: TechnologieAlhDto = {
@@ -367,6 +369,28 @@ describe('rendu', () => {
           ],
         },
       ],
+      services: [
+        {
+          port: 443,
+          protocole: 'tcp',
+          nom: 'https',
+          produit: 'nginx',
+          version: '1.18',
+          editeur: 'F5',
+          cpe: 'cpe:/a:f5:nginx:1.18',
+          statutVersion: 'eol',
+        },
+        {
+          port: 8443,
+          protocole: null,
+          nom: null,
+          produit: '<b>nginx</b>',
+          version: null,
+          editeur: null,
+          cpe: null,
+          statutVersion: null,
+        },
+      ],
     };
     const html = rendre(createElement(FicheAlerteAlh, { a: fiche }));
     for (const x of [
@@ -378,12 +402,25 @@ describe('rendu', () => {
       'Exposed port &lt;img src=x onerror=alert(1)&gt;',
       'Service &lt;script&gt;alert(1)&lt;/script&gt; exposé.',
       '&lt;b&gt;Filtrer&lt;/b&gt; par adresse IP.',
+      // Lot ALH6 : services de l'alerte, termes exacts ; protocole jamais inventé ; texte de l'éditeur jamais en HTML.
+      'Services portés par l’alerte',
+      'Service (port/protocole · service)',
+      '443/tcp · HTTPS',
+      'nginx 1.18',
+      'éditeur : F5 · version en fin de vie',
+      'cpe:/a:f5:nginx:1.18',
+      '8443',
+      'protocole non communiqué',
+      '&lt;b&gt;nginx&lt;/b&gt;',
     ])
       expect(html).toContain(x);
-    expect(html).not.toMatch(/<img|<script|<b>Filtrer/i);
+    expect(html).not.toMatch(/<img|<script|<b>Filtrer|<b>nginx|8443\/tcp/i);
     const vide = rendre(createElement(FicheAlerteAlh, { a: { ...fiche, cvesDetail: [], defauts: [], detail: false } }));
     expect(vide).toContain('Détail pas encore lu');
     expect(vide).toContain('Aucune CVE citée par l’éditeur');
+    expect(rendre(createElement(FicheAlerteAlh, { a: { ...fiche, services: [] } }))).toContain(
+      'Port non communiqué : le détail de l’alerte ne donne aucun service',
+    );
   });
   it('liaison des périmètres : un sélecteur nommé par périmètre, « non relié » signalé', () => {
     const p: PerimetreAlhDto = {

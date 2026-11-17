@@ -9,7 +9,10 @@
    fragments (`sensitive_data`, `has_sensitive_data`), contacts.
    Lot ALH2 (décisions du RSSI du 17/11/2026) : les défauts et leurs résolutions (`defects` du détail d'une alerte) sont lus
    en liste blanche (nom, description, résolutions avec leur nom, leur description, leur facilité et leur gain), balises
-   retirées par le script : du texte simple, jamais du HTML ; les CVE vues par l'éditeur entrent dans la priorité (V26). */
+   retirées par le script : du texte simple, jamais du HTML ; les CVE vues par l'éditeur entrent dans la priorité (V26).
+   Lot ALH6 (décision du RSSI du 17/11/2026) : l'éditeur ne publie pas la liste des ports ouverts d'un hôte ; les services
+   (port, protocole, produit) ne sont connus que par les fragments d'une alerte (`json_data`, types `port`,
+   `vulnerable_component` et `subdomain`), lus en liste blanche (CHAMPS_SERVICE_ALH) : jamais la bannière ni l'état brut. */
 import { z } from 'zod';
 import type { PageFailles } from './failles-tenable.js';
 import { ADRESSE_IP } from './failles-tenable.js';
@@ -184,6 +187,11 @@ export const ALH_BORNES = {
   nomDefaut: 300,
   descriptionDefaut: 4000,
   niveauResolution: 60,
+  /** Services d'une alerte (lot ALH6), ports d'un composant vulnérable, longueur du nom du service et du CPE. */
+  servicesParAlerte: 50,
+  portsParComposant: 20,
+  nomService: 100,
+  cpe: 300,
   /** Éléments par lot rapporté par l'exécutant, et lots par synchronisation. */
   lot: 500,
   lots: 200,
@@ -278,6 +286,56 @@ export type DefautAlh = z.infer<typeof DefautAlh>;
 /** Défauts rangés avec une alerte (colonne `defauts` de la migration 081), relus avec ce schéma ; illisibles : aucun. */
 export const DefautsAlh = z.array(DefautAlh).max(ALH_BORNES.defautsParAlerte);
 
+/* ------------------------------------------------------------------ Services (lot ALH6) */
+/** Champs lus d'un fragment de détail d'alerte, et de son `json_data` (recopiés par le script de l'exécutant, comparés par
+    apps/api/test/integrations-architecture.test.ts). Jamais : `banner`, `state`, `subdomain`, `description`, `note`,
+    `sensitive_data`, ni aucun champ des autres types de fragment. */
+export const CHAMPS_FRAGMENT_ALH = ['alert_cves', 'json_data'] as const;
+export const CHAMPS_SERVICE_ALH = [
+  'fragment_type',
+  'port',
+  'protocol',
+  'service_name',
+  'product',
+  'version',
+  'vendor',
+  'cpe',
+  'ports',
+  'version_status',
+] as const;
+/** Types de fragment dont un service est tiré ; les autres (fuite, mention git, S3, chemin, WordPress, certificat TLS,
+    faiblesse) sont ignorés. */
+export const TYPES_FRAGMENT_SERVICE_ALH = ['port', 'vulnerable_component', 'subdomain'] as const;
+export const PROTOCOLES_SERVICE_ALH = ['tcp', 'udp'] as const;
+export const ProtocoleServiceAlh = z.enum(PROTOCOLES_SERVICE_ALH);
+export type ProtocoleServiceAlh = z.infer<typeof ProtocoleServiceAlh>;
+/** Cycle de vie de la version d'un composant vulnérable selon l'éditeur. */
+export const STATUTS_VERSION_ALH = ['eol', 'outdated'] as const;
+export const StatutVersionAlh = z.enum(STATUTS_VERSION_ALH);
+export type StatutVersionAlh = z.infer<typeof StatutVersionAlh>;
+export const STATUT_VERSION_ALH_LIBELLES: Record<StatutVersionAlh, string> = {
+  eol: 'version en fin de vie',
+  outdated: 'version dépassée',
+};
+
+/** Service exposé porté par une alerte : port (1 à 65535), protocole (null : non communiqué par l'éditeur, jamais « tcp »
+    par défaut), nom du service selon le scanner, produit, version, éditeur, CPE, cycle de vie de la version. */
+export const ServiceAlh = z
+  .object({
+    port: z.number().int().min(1).max(65535),
+    protocole: ProtocoleServiceAlh.nullable(),
+    nom: texte(ALH_BORNES.nomService).nullable(),
+    produit: texte(ALH_BORNES.produit).nullable(),
+    version: texte(ALH_BORNES.version).nullable(),
+    editeur: texte(ALH_BORNES.editeur).nullable(),
+    cpe: texte(ALH_BORNES.cpe)
+      .refine((c) => c.toLowerCase().startsWith('cpe:'), 'CPE attendu.')
+      .nullable(),
+    statutVersion: StatutVersionAlh.nullable(),
+  })
+  .strict();
+export type ServiceAlh = z.infer<typeof ServiceAlh>;
+
 /** Alerte : champs de la liste ; type, criticité, cible, CVE et défauts viennent du détail (`detail` vrai), lu pour les
     alertes les plus récentes seulement (ALH_BORNES.details). Sans détail, la valeur déjà rangée est gardée. */
 export const ElementAlerteAlh = z
@@ -297,6 +355,15 @@ export const ElementAlerteAlh = z
     cibleDomaine: uuid.nullable(),
     cves: cves(ALH_BORNES.cvesParAlerte),
     defauts: DefautsAlh,
+    /** Services lus dans les fragments du détail (lot ALH6) ; un même port et protocole n'y figure qu'une fois. */
+    services: z
+      .array(ServiceAlh)
+      .max(ALH_BORNES.servicesParAlerte)
+      .refine(
+        (l) => new Set(l.map((s) => `${s.port}/${s.protocole ?? ''}`)).size === l.length,
+        'Service en double (même port et protocole).',
+      )
+      .default([]),
     creeLe: instant,
     majLe: instant,
     termineeLe: instant,
@@ -304,8 +371,13 @@ export const ElementAlerteAlh = z
   .strict()
   .refine(
     (a) =>
-      a.detail || (a.cves.length === 0 && a.defauts.length === 0 && a.cibleType === null && a.cibleValeur === null),
-    { message: 'Cible, CVE et défauts ne viennent que du détail d’une alerte.' },
+      a.detail ||
+      (a.cves.length === 0 &&
+        a.defauts.length === 0 &&
+        a.services.length === 0 &&
+        a.cibleType === null &&
+        a.cibleValeur === null),
+    { message: 'Cible, CVE, défauts et services ne viennent que du détail d’une alerte.' },
   );
 export type ElementAlerteAlh = z.infer<typeof ElementAlerteAlh>;
 
@@ -470,6 +542,16 @@ export interface CveAlerteAlhDto {
 export interface FicheAlerteAlhDto extends AlerteAlhDto {
   cvesDetail: CveAlerteAlhDto[];
   defauts: DefautAlh[];
+  /** Services portés par l'alerte (lot ALH6), sur son actif s'il est lisible et présent ; vide sinon. */
+  services: ServiceAlhDto[];
+}
+
+/** Service exposé d'un actif (lot ALH6), tel que lu dans les alertes qui le portent. */
+export type ServiceAlhDto = ServiceAlh;
+
+/** Service exposé d'un actif avec les alertes ouvertes lisibles qui le portent (fiche d'un actif). */
+export interface ServiceExposeDto extends ServiceAlhDto {
+  alertes: { id: string; titre: string; criticite: CriticiteAlh | null }[];
 }
 
 export interface ActifAlhDto extends PerimetreLieDto {
@@ -499,6 +581,10 @@ export interface ActifAlhDto extends PerimetreLieDto {
   machinesInternes: ResumeLiaisonsActifDto;
   /** Version des liaisons de l'actif : If-Match de toute décision, liaison ou déliaison (lot ALH3). */
   versionLiaisons: number;
+  /** Services connus de l'actif (lot ALH6) : seulement ceux que porte une alerte ouverte et présente ; l'éditeur ne publie
+      pas la liste des ports ouverts. SERVICES_PAR_ACTIF_MAX au plus, `nombreServices` en donne le total. */
+  services: ServiceAlhDto[];
+  nombreServices: number;
 }
 
 export interface CveTechnologieAlhDto {
@@ -649,4 +735,62 @@ export function memeVersionDetectee(versions: readonly string[], versionDeclaree
   const r = connues.map((v) => comparerVersions(v.trim(), versionDeclaree.trim()));
   if (r.includes(0)) return true;
   return r.every((x) => x !== null) ? false : null;
+}
+
+/* ------------------------------------------------------------------ Services : fusion et libellés (lot ALH6) */
+/** Services rendus au plus par actif dans une liste ou sur la carte (la fiche de l'actif les donne tous). */
+export const SERVICES_PAR_ACTIF_MAX = 20;
+
+const cleService = (s: Pick<ServiceAlhDto, 'port' | 'protocole'>) => `${s.port}/${s.protocole ?? ''}`;
+const CHAMPS_FUSION = ['nom', 'produit', 'version', 'editeur', 'cpe', 'statutVersion'] as const;
+
+/** Services d'un actif ou d'une ligne, sans doublon : un même port et protocole n'apparaît qu'une fois (les champs connus se
+    complètent, le premier connu l'emporte) ; un port dont le protocole n'est pas communiqué rejoint le seul service de même
+    port dont le protocole est connu (s'il y en a deux, tcp et udp, il reste à part). `joindre` fusionne le reste (alertes).
+    Trié par port, puis protocole. */
+export function fusionnerServices<T extends ServiceAlhDto>(services: readonly T[], joindre?: (a: T, b: T) => T): T[] {
+  const tries = [...services].sort((a, b) => Number(a.protocole === null) - Number(b.protocole === null));
+  const out: T[] = [];
+  for (const s of tries) {
+    let i = out.findIndex((x) => cleService(x) === cleService(s));
+    if (i < 0 && s.protocole === null) {
+      const memes = out.flatMap((x, j) => (x.port === s.port ? [j] : []));
+      if (memes.length === 1) i = memes[0]!;
+    }
+    if (i < 0) {
+      out.push({ ...s });
+      continue;
+    }
+    const x = { ...out[i]! };
+    for (const k of CHAMPS_FUSION) if (x[k] === null && s[k] !== null) (x as Record<string, unknown>)[k] = s[k];
+    out[i] = joindre ? joindre(x, s) : x;
+  }
+  const rang = (p: ProtocoleServiceAlh | null) =>
+    p ? PROTOCOLES_SERVICE_ALH.indexOf(p) : PROTOCOLES_SERVICE_ALH.length;
+  return out.sort((a, b) => a.port - b.port || rang(a.protocole) - rang(b.protocole));
+}
+
+/** « 443/tcp · HTTPS » : port et protocole, puis le nom du service selon le scanner (en capitales). Protocole non
+    communiqué : « 443 · HTTPS » (jamais « tcp » inventé). */
+export function libelleService(s: Pick<ServiceAlhDto, 'port' | 'protocole' | 'nom'>): string {
+  const port = s.protocole ? `${s.port}/${s.protocole}` : String(s.port);
+  return s.nom ? `${port} · ${s.nom.toUpperCase()}` : port;
+}
+
+/** « nginx 1.18 » : produit et version (null : aucun des deux connu). */
+export function libelleProduitService(s: Pick<ServiceAlhDto, 'produit' | 'version'>): string | null {
+  return [s.produit, s.version].filter(Boolean).join(' ') || null;
+}
+
+/** Le texte saisi désigne le service : port seul (« 443 »), port et protocole (« 443/tcp », « 443/t »), ou une partie du
+    nom du service, du produit, de sa version ou de son éditeur (sans distinction de casse). */
+export function serviceCorrespond(
+  s: Pick<ServiceAlhDto, 'port' | 'protocole' | 'nom' | 'produit' | 'version' | 'editeur'>,
+  texte: string,
+): boolean {
+  const t = texte.trim().toLowerCase();
+  if (!t) return false;
+  if (/^[0-9]{1,5}$/.test(t)) return String(s.port) === t;
+  if (/^[0-9]{1,5}\//.test(t)) return `${s.port}/${s.protocole ?? ''}`.startsWith(t);
+  return [s.nom, s.produit, s.editeur, libelleProduitService(s)].some((v) => !!v && v.toLowerCase().includes(t));
 }

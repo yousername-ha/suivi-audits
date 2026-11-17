@@ -68,6 +68,7 @@ const fiche = (f: Partial<FicheLiaisonsActifDto> = {}): FicheLiaisonsActifDto =>
   rejetees: [],
   autresMachines: false,
   max: 20,
+  services: [],
   ...f,
 });
 const actif = (x: Partial<ActifAlhDto> = {}): ActifAlhDto => ({
@@ -93,6 +94,8 @@ const actif = (x: Partial<ActifAlhDto> = {}): ActifAlhDto => ({
   integration: { id: '00000000-0000-4000-8000-0000000000a2', nom: 'AlgoLightHouse fictif' },
   machinesInternes: { reliees: [], nombreReliees: 0, propositions: 0, autresMachines: false },
   versionLiaisons: 1,
+  services: [],
+  nombreServices: 0,
   ...x,
 });
 

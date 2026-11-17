@@ -32,6 +32,7 @@ import {
   replisParDefaut,
   toutDeplier,
   toutReplier,
+  X,
   ZOOM_MIN,
   zoomer,
 } from '../src/vulnerabilites/carte-surface';
@@ -52,6 +53,8 @@ const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
   propositions: 0,
   autresMachines: false,
   versionLiaisons: 1,
+  services: [],
+  nombreServices: 0,
   ...v,
 });
 const alerte = (v: Partial<AlerteCarteDto>): AlerteCarteDto => ({
@@ -258,7 +261,8 @@ describe('carte « Lignes d’approche » : repli et mise en page', () => {
     expect(vpn.machinesY).toHaveLength(1);
     const critiques = s.liens.filter((l) => l.critique).map((l) => l.cle);
     expect(critiques).toEqual(expect.arrayContaining([`o:${f.groupes[0]!.cle}`, `${vpn.cle}:g`, `${vpn.cle}:t`]));
-    expect(s.liens.find((l) => l.cle === `${vpn.cle}:t`)!.d).toMatch(/L944 /);
+    // Le tracé va jusqu'à la colonne des machines internes (abscisse X.machine).
+    expect(s.liens.find((l) => l.cle === `${vpn.cle}:t`)!.d).toMatch(new RegExp(`L${X.machine} `));
     expect(s.liens.filter((l) => l.critique)).toHaveLength(3);
   });
 

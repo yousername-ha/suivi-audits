@@ -1003,3 +1003,101 @@ lisibles et toutes les machines lisibles parcourus en mémoire) ; Docker et Node
    tranchant le cas d'une CVE portée par plusieurs actifs.
 3. Chaînage machine interne → machine interne : une machine « derrière » une machine vulnérable n'est pas prise en compte.
 4. Annuler une liaison en masse d'un coup (aujourd'hui : délier liaison par liaison).
+
+## Addendum du 17/11/2026 — lot ALH6 : services exposés et colonne « Service » de la carte
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `085`
+(additive : tables `vulnerabilites_alh_services` et `vulnerabilites_alh_service_alertes`, deux index). Aucun appel réseau
+nouveau (liste fermée inchangée), aucune dépendance nouvelle. Lève le point ouvert 1 (« ranger les services ») de l'addendum
+« lot ALH4 » et l'écart « pas de colonne services » de cet addendum ; la liaison au niveau du service (point 4 du lot ALH3)
+reste ouverte.
+
+### Décision du RSSI (17/11/2026)
+
+Lire les services (ports) chez AlgoLightHouse pour afficher la colonne « Service » de la carte « Lignes d'approche », avec des
+termes techniques exacts : « 443/tcp · HTTPS » puis le produit (« nginx 1.18 »). Chaque colonne porte un terme précis (domaine
+parent, nom de domaine, IP publique, service port/protocole, machine interne).
+
+### Faits relevés sur le descriptif de l'éditeur
+
+Le descriptif (OpenAPI, version 1.14.0) ne documente **aucune liste des services d'un hôte**. Les ports n'apparaissent que
+dans le détail d'une alerte, dans `fragments[].json_data`, objet discriminé par `fragment_type` : `PortFragmentData` (`port`,
+`protocol` tcp ou udp, `state`, `service_name`, `product`, `version`, `vendor`, `banner`, `cpe`, `is_cdn`),
+`VulnerableComponentFragmentData` (`ports` : entiers, `vendor`, `product`, `version`, `cpe`, `latest_version`,
+`version_status` eol ou outdated), `SubdomainFragmentData` (`subdomain`, `port`) ; les autres types (fuite, mention git, S3,
+chemin, WordPress, certificat TLS, faiblesse) ne portent pas de service. Sur les exemples réels anonymisés relevés par le RSSI,
+`json_data` valait `null` dans les deux détails vus ; la liste des alertes portait un objet `data` (déclaré obsolète) avec un
+port et un produit, qui n'est pas lu.
+
+### Réalisation
+
+- **Exécutant** (`scripts/integration-http.py`) : dans le détail déjà lu, un fragment est réduit à `alert_cves` et `json_data`
+  (`CHAMPS_FRAGMENT_ALH`), puis `json_data`, pour les seuls types `port`, `vulnerable_component` et `subdomain`
+  (`TYPES_FRAGMENT_SERVICE_ALH`), à `fragment_type`, `port`, `protocol`, `service_name`, `product`, `version`, `vendor`,
+  `cpe`, `ports`, `version_status` (`CHAMPS_SERVICE_ALH`). Jamais `banner`, `state`, `subdomain` (un nom de domaine),
+  `latest_version`, `description` ni `note` de fragment, `sensitive_data`, ni aucun champ des autres types. Port entier de 1 à
+  65535 (un texte est écarté), protocole `tcp` ou `udp` sinon **non renseigné** (jamais « tcp » par défaut), textes nettoyés et
+  bornés comme les autres (nom du service 100, produit, version, éditeur 100, CPE 300 commençant par `cpe:`), « * » et vide
+  tiennent lieu d'absence. Un composant vulnérable donne un service par port (20 ports au plus), sans protocole ; un
+  sous-domaine, le port seul. Dans une alerte, un même port et protocole n'apparaît qu'une fois (les champs connus se
+  complètent) et un port sans protocole rejoint le seul service de même port dont le protocole est connu ; 50 services au plus
+  par alerte. Forme absente, nulle ou inattendue : rien n'est retenu, la synchronisation continue. Les listes et les bornes
+  sont recopiées du paquet partagé et comparées par `apps/api/test/integrations-architecture.test.ts`.
+- **Stockage** (migration `085`, `apps/api/src/vulnerabilites/services-surface.ts`) : un service par instance, actif, port et
+  protocole (`UNIQUE NULLS NOT DISTINCT`, protocole nul admis), avec nom, produit, version, éditeur, CPE et cycle de vie ;
+  liens vers les alertes qui le portent. À chaque lecture du détail d'une alerte, ses liens sont remplacés et ses services
+  rangés sur l'actif qu'elle vise (hôte, sinon domaine) ; une valeur lue remplace la valeur rangée, une valeur absente ne
+  l'efface pas ; un service qu'aucune alerte ne porte plus est supprimé. Une alerte dont le détail n'est pas relu garde ses
+  liens (comme ses CVE). Remise à vide : avec le travail.
+- **Présence** : un service n'est rendu que si son actif est présent et qu'au moins une alerte **ouverte et présente** le porte
+  (vue par la dernière synchronisation complète) : seule une synchronisation complète le fait disparaître, comme le reste de
+  la surface externe.
+- **API** : la carte (`services`, `nombreServices` de chaque actif), la liste des actifs (même champs), la fiche d'un actif
+  (`GET …/surface/actifs/{id}/machines`, `services` avec les alertes ouvertes lisibles qui les portent) et la fiche d'une
+  alerte (`services` qu'elle porte) les rendent **sous les droits de lecture de l'actif** ; vingt services au plus par actif
+  dans la carte et la liste (`SERVICES_PAR_ACTIF_MAX`), tous dans la fiche. Priorité inchangée (règles des lots ALH2 et ALH5).
+- **Écrans** : colonne « Service » de la carte entre « IP publique » et « Alerte ouverte » : « port/protocole · service » (nom
+  du service en capitales, « (+n) » s'il y en a d'autres), produit et version en dessous ; « port non communiqué » pour un
+  actif en alerte sans port connu ; nombre de services connus dans les faisceaux ; le filtre cherche aussi le port (« 443 »,
+  « 443/tcp ») et le nom du service, le produit, sa version ou son éditeur. Onglet « Actifs » : colonne « Services connus » ;
+  fiche d'un actif : « Services exposés » ; fiche d'une alerte : « Services portés par l'alerte ». La légende, l'aide de la
+  carte, l'onglet « Actifs », la fiche d'un actif et l'aide en ligne disent que seuls les services portés par une alerte sont
+  connus.
+- **Défaut corrigé côté Internet** : les traits d'Internet vers les branches filent à droite de la colonne « Internet » avant de
+  descendre ; les libellés du typosquatting et des fuites tiennent sur trois lignes de 24 caractères au plus, coupées après un
+  point, un tiret ou une espace. Au passage : les traits d'une branche vers ses lignes passent sous les noms de domaine, une
+  IPv6 longue tient sur deux lignes, les en-têtes de colonnes ne chevauchent plus les libellés de la première ligne.
+- **Assistant** : rien de nouveau ; aucun outil ne lit les services, le masque et les outils sont inchangés. Les champs
+  nouveaux (port, protocole, nom du service, produit, version, éditeur, CPE) ne désignent ni domaine ni adresse.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Colonne séparée** plutôt que fusionnée avec l'alerte : à 1440 px, la scène passe de 1 176 à 1 460 unités (texte un peu plus
+  petit, environ 11,5 px à l'écran) ; aucun chevauchement de texte mesuré (banc de rendu, noms de domaine de 30 caractères et plus).
+- **Un service par ligne affiché** (le plus petit port), les autres comptés « (+n ») et listés dans la fiche de l'actif.
+- **Nom du service en capitales** (« HTTPS » pour `https` du scanner), comme l'exemple du RSSI.
+- **Fusion d'un port sans protocole** dans le seul service de même port dont le protocole est connu (sinon il reste à part,
+  affiché « 8443 » seul) ; au rangement, la fusion n'a lieu que dans une même alerte, à l'affichage sur tout l'actif.
+- **Services d'un actif portés par une alerte illisible** : rendus (droits de l'actif), sans nommer l'alerte. **Fiche d'une
+  alerte lisible dont l'actif ne l'est pas** : aucun service.
+- **Alerte dont l'actif n'est pas rangé** : ses services ne sont pas rangés (l'éditeur range l'actif dans la même
+  synchronisation, avant l'alerte).
+- **Alerte terminée** : ses services ne sont plus rendus dans la carte ni la liste ; sa fiche les montre encore.
+- **Champ `resolved` d'un fragment** : non lu (hors de la liste) ; un port d'un constat résolu peut donc être montré tant que
+  l'alerte est ouverte.
+
+### Non vérifié
+
+**Forme réelle de `json_data`** : lue sur le descriptif seulement ; sur les deux détails réels relevés, elle valait `null`. Le
+lecteur est tolérant (rien n'est rangé si la forme diffère) : la colonne peut rester vide (« port non communiqué ») sur un
+espace réel. Volumes réels (nombre de fragments, de services par actif) ; Docker et Node 26. Le parcours Playwright adapté n'a
+pas été joué (CI seulement) ; sur une pile vierge, la carte est vide. Rendu vu sur un banc local (Chromium, clair et sombre,
+1440 et 390 px, axe `wcag2a`/`wcag2aa` sans violation), pas dans la pile complète.
+
+### Points ouverts (hors lot)
+
+1. Vérifier sur un espace réel la forme de `json_data` (et si `data` de la liste, obsolète, porte des ports que les détails
+   n'ont pas) ; demander à l'éditeur une liste des services d'un hôte.
+2. Liaison au niveau du **service** (actif + port vers une machine interne), au lieu de l'actif.
+3. Lire `resolved` d'un fragment pour écarter un port résolu, si le RSSI le veut.
+4. Services lus aussi dans les détections de Tenable (port et protocole des constats) pour la machine interne.

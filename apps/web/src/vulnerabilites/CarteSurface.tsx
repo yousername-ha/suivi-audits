@@ -4,7 +4,8 @@
    packages/ui/src/neon-surface.css (jetons de la charte, clair et sombre ; animations coupées par le mouvement réduit).
    Mise en page calculée par des fonctions pures (carte-surface.ts). Chaque nœud est atteignable au clavier avec un nom
    lisible ; un clic ou Entrée ouvre la fiche existante (alerte, actif, machine) ou déplie une branche. Les onglets
-   « Alertes » et « Actifs » en sont l'équivalent en tableau. */
+   « Alertes » et « Actifs » en sont l'équivalent en tableau. Lot ALH6 : colonne « Service » (port/protocole · service, puis
+   produit et version) ; libellés du typosquatting et des fuites hors des traits, sur trois lignes au plus. */
 import { ActionIcon, Alert, Button, Checkbox, Group, Select, Stack, Switch, Text, TextInput } from '@mantine/core';
 import {
   type ActifCarteDto,
@@ -25,7 +26,9 @@ import {
   cameraInitiale,
   centrerSur,
   COLONNES,
+  colonneService,
   construireModele,
+  couperLibelle,
   deplacer,
   disposer,
   type EtatReplis,
@@ -34,6 +37,8 @@ import {
   filtrerModele,
   hauteurCamera,
   HAUT,
+  INTERNET_CARACTERES,
+  INTERNET_INTERLIGNE,
   INTERNET_MAX,
   libelleAlertes,
   libelleResume,
@@ -59,6 +64,12 @@ import {
 import { libelleCriticite, libelleTypeAlerte } from './surface';
 
 const tronque = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+/** Adresse longue (IPv6 de plus de 20 caractères) sur deux lignes, coupée après un deux-points. */
+function couperIp(ip: string): string[] {
+  if (ip.length <= 20) return [ip];
+  const i = ip.lastIndexOf(':', Math.ceil(ip.length / 2));
+  return i > 0 ? [ip.slice(0, i + 1), ip.slice(i + 1)] : [ip];
+}
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 const classeCriticite = (c: CriticiteAlh | null | undefined) => `sc-crit-${c ?? 'inconnue'}`;
 const OPTIONS_TYPE = TYPES_ALERTE_ALH.map((t) => ({ value: t, label: libelleTypeAlerte(t) }));
@@ -102,9 +113,12 @@ function Bouton({
   );
 }
 
+/** Largeur d'une pastille (unités de la viewBox) pour son texte. */
+const largeurPastille = (texte: string) => texte.length * 6.4 + 16;
+
 /** Étiquette encadrée (pastille) centrée sur un point. */
 function Pastille({ x, y, texte, className }: { x: number; y: number; texte: string; className?: string }) {
-  const l = texte.length * 6.4 + 16;
+  const l = largeurPastille(texte);
   return (
     <g className={`sc-pastille${className ? ` ${className}` : ''}`}>
       <rect x={x - l / 2} y={y - 10} width={l} height={20} rx={10} className="sc-pastille__fond" />
@@ -152,28 +166,28 @@ function DessinRangee({
       : r.resume.domaines
         ? pluriel(r.resume.domaines, 'domaine', 'domaines')
         : pluriel(r.resume.hotes, 'hôte', 'hôtes');
+    const alertes = `${pluriel(r.resume.alertes, 'alerte', 'alertes')}${r.resume.parCriticite.critical ? ` (${r.resume.parCriticite.critical} crit.)` : ''}`;
     return (
       <g className="sc-faisceau">
         <Bouton
           nom={`Déplier ${r.calmes ? 'les lignes sans alerte' : 'la branche'} : ${tete} (${libelleResume(r.resume)})`}
           onActiver={() => onBasculer(r)}
         >
-          <Pastille x={X.domaine + 56} y={r.y} texte={`▸ ${tete}`} className="sc-pastille--faisceau" />
+          <Pastille x={X.domaine + 40} y={r.y} texte={`▸ ${tete}`} className="sc-pastille--faisceau" />
         </Bouton>
         {r.resume.hotes > 0 && <Pastille x={X.hote} y={r.y} texte={pluriel(r.resume.hotes, 'hôte', 'hôtes')} />}
+        {r.resume.services > 0 && (
+          <Pastille x={X.service} y={r.y} texte={pluriel(r.resume.services, 'service connu', 'services connus')} />
+        )}
         {r.resume.alertes > 0 && (
           <g>
             <circle
-              cx={X.alerte - 42}
+              cx={X.alerte + 12 - largeurPastille(alertes) / 2 - 10}
               cy={r.y}
               r={5}
               className={`sc-forme ${classeCriticite(haute === 'inconnue' ? null : haute)}`}
             />
-            <Pastille
-              x={X.alerte + 12}
-              y={r.y}
-              texte={`${pluriel(r.resume.alertes, 'alerte', 'alertes')}${r.resume.parCriticite.critical ? ` (${r.resume.parCriticite.critical} crit.)` : ''}`}
-            />
+            <Pastille x={X.alerte + 12} y={r.y} texte={alertes} />
           </g>
         )}
         {r.resume.machines > 0 && (
@@ -184,6 +198,9 @@ function DessinRangee({
   }
   const l = r.ligne;
   const p = l.principale;
+  const sv = colonneService(l);
+  // Adresse IPv6 longue : sur deux lignes, coupées après un deux-points, pour ne pas déborder sur les colonnes voisines.
+  const ip = l.hote ? couperIp(l.hote.valeur) : [];
   return (
     <g className={`sc-ligne${l.critique ? ' sc-ligne--critique' : ''}`}>
       {l.domaine && (
@@ -204,11 +221,42 @@ function DessinRangee({
       {l.hote && (
         <Bouton nom={`Hôte ${l.hote.valeur} : ouvrir sa fiche`} onActiver={() => actions.onActif(l.hote!)}>
           <rect x={X.hote - 6} y={r.y - 6} width={12} height={12} rx={2} className="sc-forme sc-hote" />
-          <text x={X.hote} y={r.y - 13} textAnchor="middle" className="sc-texte sc-texte--code">
-            {l.hote.valeur}
-          </text>
+          {ip.map((morceau, i) => (
+            <text
+              key={morceau}
+              x={X.hote}
+              y={r.y - 13 - (ip.length - 1 - i) * 15}
+              textAnchor="middle"
+              className="sc-texte sc-texte--code"
+            >
+              {morceau}
+            </text>
+          ))}
         </Bouton>
       )}
+      {sv &&
+        (sv.connu ? (
+          <Bouton
+            nom={`${sv.nom} : ouvrir la fiche de ${(l.actifServices ?? l.domaine ?? l.hote)!.valeur}`}
+            onActiver={() => actions.onActif((l.actifServices ?? l.domaine ?? l.hote)!)}
+          >
+            <rect x={X.service - 8} y={r.y - 4} width={16} height={8} rx={4} className="sc-forme sc-service" />
+            <text x={X.service} y={r.y - 13} textAnchor="middle" className="sc-texte sc-texte--code">
+              {tronque(sv.libelle, 24)}
+            </text>
+            {sv.produit && (
+              <text x={X.service} y={r.y + 17} textAnchor="middle" className="sc-texte sc-texte--secondaire">
+                {tronque(sv.produit, 24)}
+              </text>
+            )}
+          </Bouton>
+        ) : (
+          <g role="img" aria-label={sv.nom}>
+            <text x={X.service} y={r.y - 13} textAnchor="middle" className="sc-texte sc-texte--secondaire">
+              {sv.libelle}
+            </text>
+          </g>
+        ))}
       {p && (
         <Bouton
           nom={`${libelleAlertes(l)} : ${p.titre}${p.cves.length ? ` (${p.cves.slice(0, 3).join(', ')})` : ''}. Ouvrir la fiche de l’alerte`}
@@ -216,7 +264,7 @@ function DessinRangee({
         >
           {l.critique && <circle cx={X.alerte} cy={r.y} r={13} className="sc-halo" />}
           <circle cx={X.alerte} cy={r.y} r={7} className={`sc-forme sc-alerte ${classeCriticite(p.criticite)}`} />
-          <text x={X.alerte} y={r.y - 27} textAnchor="middle" className="sc-texte sc-texte--secondaire">
+          <text x={X.alerte} y={r.y - 30} textAnchor="middle" className="sc-texte sc-texte--secondaire">
             {tronque(libelleTypeAlerte(p.type), 26)}
           </text>
           <text x={X.alerte} y={r.y - 15} textAnchor="middle" className="sc-texte">
@@ -424,7 +472,7 @@ export function CarteSurface({
       <Group align="flex-end" wrap="wrap" gap="sm">
         <TextInput
           label="Filtrer la carte"
-          description="Domaine, adresse ou identifiant CVE."
+          description="Domaine, adresse, CVE, port (443, 443/tcp) ou produit."
           maxLength={100}
           value={filtres.texte}
           onChange={(e) => changer({ texte: e.currentTarget.value })}
@@ -559,7 +607,7 @@ export function CarteSurface({
               className="sc-fond"
             />
             {COLONNES.map((c) => (
-              <text key={c.cle} x={c.x} y={HAUT - 34} textAnchor="middle" className="sc-texte sc-colonne">
+              <text key={c.cle} x={c.x} y={HAUT - 56} textAnchor="middle" className="sc-texte sc-colonne">
                 {c.cle === 'groupe' && regroupement === 'perimetre' ? 'Périmètre' : c.libelle}
               </text>
             ))}
@@ -595,21 +643,22 @@ export function CarteSurface({
             {scene.internet.map(({ alerte, y }) => (
               <AlerteInternet key={alerte.id} alerte={alerte} y={y} onOuvrir={actions.onAlerte} />
             ))}
-            {(scene.internetAutres > 0 || filtre.sansActif.length > 0) && (
-              <text
-                x={X.internet}
-                y={yInternet(Math.min(INTERNET_MAX, scene.internet.length)) - 10}
-                textAnchor="middle"
-                className="sc-texte sc-texte--secondaire"
-              >
-                {[
-                  scene.internetAutres ? `+ ${scene.internetAutres} côté Internet` : null,
-                  filtre.sansActif.length ? `${filtre.sansActif.length} hors carte` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </text>
-            )}
+            {[
+              scene.internetAutres ? `+ ${scene.internetAutres} côté Internet` : null,
+              filtre.sansActif.length ? `${filtre.sansActif.length} hors carte` : null,
+            ]
+              .filter((x): x is string => !!x)
+              .map((texte, i) => (
+                <text
+                  key={texte}
+                  x={X.internet}
+                  y={yInternet(Math.min(INTERNET_MAX, scene.internet.length)) - 4 + i * 14}
+                  textAnchor="middle"
+                  className="sc-texte sc-texte--secondaire"
+                >
+                  {texte}
+                </text>
+              ))}
             {scene.groupes.map((g) => {
               const haute = criticiteHaute(g.resume);
               return (
@@ -679,7 +728,9 @@ export function CarteSurface({
       <Text size="xs" c="dimmed" id={aideId}>
         Glisser pour se déplacer ; Ctrl (ou ⌘) et la molette pour zoomer ; au clavier, les flèches déplacent, + et −
         zooment, 0 recadre. Cliquez ou appuyez sur Entrée sur une branche pour la déplier ou la replier, sur un point
-        pour ouvrir sa fiche. Les onglets « Alertes » et « Actifs » donnent les mêmes informations en tableau.
+        pour ouvrir sa fiche. Les onglets « Alertes » et « Actifs » donnent les mêmes informations en tableau. Colonne «
+        Service » : seuls les services portés par une alerte sont connus, car AlgoLightHouse ne publie pas la liste des
+        ports ouverts ; un actif en alerte dont le détail ne donne aucun port affiche « port non communiqué ».
       </Text>
       <Legende />
     </Stack>
@@ -698,6 +749,7 @@ function AlerteInternet({
 }) {
   const typo = alerte.type === 'typosquatting';
   const valeur = alerte.cible?.valeur ?? alerte.titre;
+  const lignes = couperLibelle(valeur, INTERNET_CARACTERES);
   return (
     <Bouton
       nom={`${libelleTypeAlerte(alerte.type)}, ${libelleCriticite(alerte.criticite)} : ${valeur}. Ouvrir la fiche de l’alerte`}
@@ -707,10 +759,23 @@ function AlerteInternet({
         d={typo ? losange(X.internet, y, 8) : triangle(X.internet, y, 8)}
         className={`sc-forme ${typo ? 'sc-typo' : 'sc-fuite'}`}
       />
-      <text x={X.internet} y={y + 22} textAnchor="middle" className="sc-texte">
-        {tronque(valeur, 18)}
-      </text>
-      <text x={X.internet} y={y + 34} textAnchor="middle" className="sc-texte sc-texte--secondaire">
+      {lignes.map((ligne, i) => (
+        <text
+          key={`${i}-${ligne}`}
+          x={X.internet}
+          y={y + 22 + i * INTERNET_INTERLIGNE}
+          textAnchor="middle"
+          className="sc-texte"
+        >
+          {ligne}
+        </text>
+      ))}
+      <text
+        x={X.internet}
+        y={y + 22 + lignes.length * INTERNET_INTERLIGNE}
+        textAnchor="middle"
+        className="sc-texte sc-texte--secondaire"
+      >
         {typo ? 'typosquatting' : 'fuite de données'}
       </text>
     </Bouton>
@@ -731,6 +796,10 @@ function Legende() {
     ]),
     [icone(<path d={losange(0, 0, 7)} className="sc-forme sc-sans-alerte" />), 'Domaine (losange)'],
     [icone(<rect x={-5} y={-5} width={10} height={10} rx={2} className="sc-forme sc-hote" />), 'Hôte exposé (carré)'],
+    [
+      icone(<rect x={-8} y={-4} width={16} height={8} rx={4} className="sc-forme sc-service" />),
+      'Service : port/protocole · service, puis produit et version (seuls les services portés par une alerte sont connus)',
+    ],
     [
       icone(<rect x={-8} y={-6} width={16} height={11} rx={2} className="sc-forme sc-machine" />),
       'Machine interne reliée',

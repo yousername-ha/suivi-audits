@@ -124,6 +124,13 @@ de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (la contrain
 négligeable, sans reprise de données. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance
 vulnérabilités SMSI »)
 
+**Migration automatique `085`** (module Vulnérabilités, services exposés de la surface externe, lot ALH6 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_alh_services` et
+`vulnerabilites_alh_service_alertes`, deux index ; aucune table existante modifiée), durée négligeable, sans reprise de données :
+les services se remplissent à la synchronisation d'AlgoLightHouse qui suit la mise à jour, pour les alertes dont le détail est
+relu. Aucun appel réseau nouveau (liste fermée inchangée), aucune action sur le serveur. (session « Module surveillance
+vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -496,6 +503,20 @@ vulnérabilités SMSI »)
   une entrée de journal par opération (motifs, mode, nombres). Routes `POST /api/vulnerabilites/surface/liaisons/masse/apercu`
   et `POST /api/vulnerabilites/surface/liaisons/masse`. Migration `084`. Aide mise à jour.
   (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH6 : colonne « Service » de la carte et services exposés des actifs**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH6 » ; décision du RSSI du 17/11/2026). AlgoLightHouse
+  ne publie pas la liste des ports ouverts d'un hôte : **seuls les services portés par une alerte sont connus**, lus dans
+  `json_data` des fragments du détail déjà lu (types `port`, `vulnerable_component` et `subdomain`), en liste blanche (port,
+  protocole, nom du service, produit, version, éditeur, CPE, ports d'un composant, cycle de vie de la version) ; jamais la
+  bannière, l'état brut, le nom d'un sous-domaine, ni les autres types de fragment. Aucun appel réseau nouveau. Protocole non
+  communiqué par l'éditeur : non renseigné, jamais « tcp » par défaut. Rangés par instance, actif, port et protocole et reliés
+  aux alertes qui les portent ; un service n'est montré que tant qu'une alerte ouverte et présente le porte (seule une
+  synchronisation complète le fait disparaître), sous les droits de lecture de l'actif ; aucun effet sur la priorité. Carte :
+  colonne « Service » entre « IP publique » et « Alerte ouverte » (« 443/tcp · HTTPS » puis « nginx 1.18 » ; « port non
+  communiqué » pour un actif en alerte sans port connu ; nombre de services connus dans les faisceaux) ; le filtre cherche aussi
+  le port (« 443 », « 443/tcp ») et le produit. Onglet « Actifs » (colonne « Services connus »), fiche d'un actif (services et
+  alertes lisibles qui les portent) et fiche d'une alerte. Migration `085`. Aide mise à jour.
+  (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 
@@ -507,6 +528,11 @@ vulnérabilités SMSI »)
   liens) restent limités à ce que la personne lit : elle peut voir « P1 : exploitée et exposée sur Internet » sans voir sur
   quel actif ; la veille et l'assistant disent une exposition hors de ses droits sans nom ni nombre. Carte : le regroupement
   par domaine parent est confirmé (mention « à confirmer » retirée). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH6 : carte « Lignes d'approche » plus lisible.** Les libellés du typosquatting et des
+  fuites de données, côté Internet, ne sont plus croisés par les traits (ceux-ci descendent vers les branches à droite de la
+  colonne) ni tronqués (trois lignes au plus, coupées après un point, un tiret ou une espace) ; les traits d'une branche vers
+  ses lignes passent sous les noms de domaine ; une adresse IPv6 longue tient sur deux lignes ; en-têtes de colonnes et
+  libellés des alertes ne se chevauchent plus. (session « Module surveillance vulnérabilités SMSI »)
 
 - **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), décision du RSSI du
   17/11/2026) : l'avis GHSA-fc5q-39xc-vjpf (déni de service dans `picomatch` ≤ 4.0.7, gravité élevée, sans version corrigée

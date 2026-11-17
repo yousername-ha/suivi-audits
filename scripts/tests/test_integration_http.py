@@ -500,7 +500,8 @@ class IntegrationHttp(unittest.TestCase):
 # ------------------------------------------------------------------ AlgoLightHouse (lot ALH1)
 CLE_ALH = "cle-api-fictive-0123456789abcdef"
 MARQUES_INTERDITES = ("NOTE-SENSIBLE", "DONNEE-DEPRECIEE", "PIECE-JOINTE", "DESCRIPTION-FRAGMENT", "MOT-DE-PASSE-FUITE",
-                      "NOTE-FRAGMENT", "DEFAUT-FICTIF", "NOTE-HOTE", "CHAMP-INCONNU-ALH")
+                      "NOTE-FRAGMENT", "DEFAUT-FICTIF", "NOTE-HOTE", "CHAMP-INCONNU-ALH", "BANNIERE-INTERDITE",
+                      "ETAT-BRUT-INTERDIT", "sous-domaine-interdit", "fuite-interdite", "DEPOT-GIT-INTERDIT")
 U = "0190a000-0000-7000-8000-%012d"
 
 
@@ -553,7 +554,10 @@ def alh_donnees():
                  "cves": [{"id": U % 51, "name": "CVE-2026-91001", "score": 9.8}, "CVE-2026-91003", {"x": "pas une CVE"}],
                  "fragments": [{"id": U % 61, "description": "DESCRIPTION-FRAGMENT", "note": "NOTE-FRAGMENT",
                                 "has_sensitive_data": True, "sensitive_data": {"password": "MOT-DE-PASSE-FUITE"},
-                                "json_data": {"fragment_type": "port", "note": "NOTE-FRAGMENT"},
+                                "json_data": {"fragment_type": "port", "note": "NOTE-FRAGMENT", "port": 3389,
+                                              "protocol": "tcp", "state": "ETAT-BRUT-INTERDIT", "service_name": "ms-wbt-server",
+                                              "product": "Microsoft Terminal Services", "banner": "BANNIERE-INTERDITE",
+                                              "is_cdn": True},
                                 "alert_cves": [{"cve_id": U % 52, "cve": {"id": "CVE-2026-91002", "x": "MOT-DE-PASSE-FUITE CVE-2026-99999"}}]}],
                  "completed_at": None, "created_at": "2026-11-10T10:00:00Z"},
         U % 32: {"id": U % 32, "type": {"id": U % 82, "value": "typosquatting"},
@@ -777,6 +781,8 @@ class AlgoLightHouse(unittest.TestCase):
             "defauts": [{"nom": "Exposed port or service", "description": "Service exposé & joignable sur Internet .",
                          "resolutions": [{"nom": "Restrict access", "description": "Filtrer par adresse IP. alert(1)",
                                           "facilite": "Quick Win", "gain": "Strong"}]}],
+            "services": [{"port": 3389, "protocole": "tcp", "nom": "ms-wbt-server", "produit": "Microsoft Terminal Services",
+                          "version": None, "editeur": None, "cpe": None, "statutVersion": None}],
             "creeLe": "2026-11-10T10:00:00.000Z", "majLe": "2026-11-15T10:00:00.000Z", "termineeLe": None})
         # Les défauts ne viennent que du détail ; sans défaut publié, la liste est vide.
         self.assertEqual(next(a for a in par["alerte"] if a["id"] == U % 32)["defauts"], [])
@@ -824,6 +830,78 @@ class AlgoLightHouse(unittest.TestCase):
             self.assertNotIn(balise, texte)
         self.assertEqual(set(premier), {"nom", "description", "resolutions"})
 
+    def test_services_are_read_from_port_component_and_subdomain_fragments_only(self):
+        """Lot ALH6 : services lus dans `json_data` des fragments `port`, `vulnerable_component` et `subdomain`, réduits à
+        la liste blanche ; protocole non renseigné quand l'éditeur ne le donne pas (jamais « tcp » par défaut) ; ni bannière,
+        ni état brut, ni nom de sous-domaine, ni aucun champ des autres types de fragment."""
+        d = FauxAlh.donnees["details"][U % 31]
+        d["fragments"] = [
+            {"id": U % 61, "description": "DESCRIPTION-FRAGMENT", "note": "NOTE-FRAGMENT",
+             "json_data": {"fragment_type": "port", "port": 443, "protocol": "tcp", "state": "ETAT-BRUT-INTERDIT",
+                           "service_name": "https", "product": "nginx", "version": "1.18.0", "vendor": "F5",
+                           "banner": "BANNIERE-INTERDITE", "cpe": "cpe:/a:f5:nginx:1.18.0",
+                           "description": "DESCRIPTION-FRAGMENT", "autre": "CHAMP-INCONNU-ALH"}},
+            {"json_data": {"fragment_type": "vulnerable_component", "vendor": "", "product": "nginx", "version": "1.18.0",
+                           "cpe": "cpe:2.3:a:f5:nginx:1.18.0", "ports": [443, 8443, "80", 70000, True, 8443],
+                           "latest_version": "1.27.0", "version_status": "eol"}},
+            {"json_data": {"fragment_type": "port", "port": 53, "protocol": "udp", "service_name": "<b>domain</b>"}},
+            {"json_data": {"fragment_type": "port", "port": 22, "protocol": "sctp", "product": "*"}},
+            {"json_data": {"fragment_type": "subdomain", "subdomain": "sous-domaine-interdit.example", "port": 8080}},
+            {"json_data": {"fragment_type": "leak", "leak_type": "email", "email": "fuite-interdite@exemple.example",
+                           "port": 25}},
+            {"json_data": {"fragment_type": "git_mention", "match_type": "repo_mention", "provider": "GitHub",
+                           "repo": "DEPOT-GIT-INTERDIT", "port": 9418}},
+            {"json_data": {"fragment_type": "tls_certificate", "weakness": "expired", "serial_number": "00", "port": 993}},
+            {"json_data": {"fragment_type": "port", "port": "21", "protocol": "tcp"}},
+            {"json_data": {"fragment_type": "port", "port": 0, "protocol": "tcp"}},
+            {"json_data": None}, {"json_data": "port 80"}, {"json_data": [{"fragment_type": "port", "port": 81}]},
+            "pas un objet", None,
+        ]
+        sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.propre(sortie)
+        self.lecture_seule()
+        a1 = next(e for e in sortie["elements"] if e["type"] == "alerte" and e["id"] == U % 31)
+        vide = {"nom": None, "produit": None, "version": None, "editeur": None, "cpe": None, "statutVersion": None}
+        self.assertEqual(a1["services"], [
+            dict(vide, port=22, protocole=None),
+            dict(vide, port=53, protocole="udp", nom="domain"),
+            {"port": 443, "protocole": "tcp", "nom": "https", "produit": "nginx", "version": "1.18.0", "editeur": "F5",
+             "cpe": "cpe:/a:f5:nginx:1.18.0", "statutVersion": "eol"},
+            dict(vide, port=8080, protocole=None),
+            dict(vide, port=8443, protocole=None, produit="nginx", version="1.18.0", cpe="cpe:2.3:a:f5:nginx:1.18.0",
+                 statutVersion="eol"),
+        ])
+        for s in a1["services"]:
+            self.assertEqual(set(s), {"port", "protocole", "nom", "produit", "version", "editeur", "cpe", "statutVersion"})
+        texte = json.dumps(sortie, ensure_ascii=False)
+        for interdit in ("<b>", "latest_version", "1.27.0", '"tcp", "port": 21', "is_cdn"):
+            self.assertNotIn(interdit, texte)
+
+    def test_services_with_unexpected_shapes_are_skipped_and_bounded(self):
+        """Forme réelle de `json_data` non vérifiée : fragments absents, nuls ou d'une autre forme ne rangent rien et la
+        synchronisation continue ; le nombre de services par alerte est borné ; aucun appel n'est ajouté."""
+        details = FauxAlh.donnees["details"]
+        details[U % 31]["fragments"] = {"json_data": {"fragment_type": "port", "port": 443}}
+        details[U % 32]["fragments"] = [{"json_data": {"fragment_type": "port", "port": 1000 + i, "protocol": "tcp"}}
+                                        for i in range(60)]
+        details[U % 33]["fragments"] = [{"json_data": {"fragment_type": "vulnerable_component", "ports": "443"}},
+                                        {"json_data": {"fragment_type": "subdomain", "port": None}},
+                                        {"json_data": {"fragment_type": None, "port": 443}}]
+        with patch.dict(h.BORNES_ALH, {"servicesParAlerte": 5}):
+            sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertFalse(sortie["resultat"]["tronque"])
+        par = {e["id"]: e for e in sortie["elements"] if e["type"] == "alerte"}
+        self.assertEqual(par[U % 31]["services"], [])
+        self.assertEqual([s["port"] for s in par[U % 32]["services"]], [1000, 1001, 1002, 1003, 1004])
+        self.assertEqual(par[U % 33]["services"], [])
+        # Aucun appel nouveau : les listes, puis un détail par alerte, puis les technologies, comme avant le lot ALH6.
+        self.assertEqual(sorted(r["chemin"] for r in FauxAlh.recues), sorted(
+            ["/api/v1/perimeters", "/api/v1/targets/hosts", "/api/v1/targets/domains", "/api/v1/alerts",
+             "/api/v1/technologies"] + ["/api/v1/alerts/" + U % n for n in (31, 32, 33)]))
+        self.lecture_seule()
+
     def test_alerts_without_detail_get_type_and_criticity_from_known_identifiers(self):
         with patch.dict(h.BORNES_ALH, {"details": 2}):
             sortie = h.executer(self.demande("synchroniser"))
@@ -832,8 +910,8 @@ class AlgoLightHouse(unittest.TestCase):
         self.assertEqual(sortie["resultat"]["details"], 2)
         a3 = next(e for e in sortie["elements"] if e["type"] == "alerte" and e["id"] == U % 33)
         # Plus ancienne, son détail n'est pas lu : type et criticité viennent des identifiants vus dans d'autres détails.
-        self.assertEqual((a3["detail"], a3["typeAlerte"], a3["criticite"], a3["cves"], a3["cibleType"]),
-                         (False, "vulnerable_service", "major", [], None))
+        self.assertEqual((a3["detail"], a3["typeAlerte"], a3["criticite"], a3["cves"], a3["cibleType"], a3["services"]),
+                         (False, "vulnerable_service", "major", [], None, []))
         self.assertNotIn("/api/v1/alerts/" + U % 33, [r["chemin"] for r in FauxAlh.recues])
 
     def test_shapes_seen_on_a_real_workspace_are_read(self):

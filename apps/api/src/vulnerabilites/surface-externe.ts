@@ -32,7 +32,10 @@
      la même pour tout le monde ; les lignes rendues (alertes, actifs, technologies, versions détaillées, comptes d'actifs)
      restent filtrées par les droits ;
    - B : une alerte ouverte ou une technologie dont l'actif mène, par une liaison confirmée, à une machine interne
-     vulnérable monte d'un cran (majorerPriorite, majoration.ts), sans nommer la machine. */
+     vulnérable monte d'un cran (majorerPriorite, majoration.ts), sans nommer la machine.
+   Lot ALH6 (décision du RSSI du 17/11/2026) : services exposés (port, protocole, produit) lus dans les fragments du détail
+   d'une alerte, rangés sur l'actif visé (services-surface.ts) et rendus avec la carte, la liste et la fiche des actifs et
+   la fiche d'une alerte, sous les droits de lecture de l'actif ; aucun effet sur la priorité. */
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
@@ -76,6 +79,7 @@ import {
   type RechercheActifsAlh,
   type RechercheAlertesAlh,
   type RechercheTechnologiesAlh,
+  SERVICES_PAR_ACTIF_MAX,
   STATUTS_ALERTE_ALH_OUVERTS,
   type StatutActifAlh,
   type StatutAlerteAlh,
@@ -97,6 +101,7 @@ import { type Integrations, type OperationEnLots, verrouFileIntegrations } from 
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { filtreLiaison, liaisonsCarte, resumesLiaisons } from './liaisons-machines.js';
 import { actifsMenantAUneMachineVulnerable } from './majoration.js';
+import { rangerServicesAlertes, sansAlertes, servicesDeLAlerte, servicesDesActifs } from './services-surface.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
 import { cvesAlh, lisibleAlh } from './sql.js';
 
@@ -481,6 +486,17 @@ export class SurfaceExterneAlh implements OperationEnLots {
         .insertInto('vulnerabilites_alh_alerte_cves')
         .values(liens.slice(i, i + 5000))
         .execute();
+    // Lot ALH6 : services lus dans les fragments du détail, rangés sur l'actif visé (liens de l'alerte remplacés).
+    await rangerServicesAlertes(
+      k,
+      integration,
+      detaillees.map((a) => ({
+        alerteId: parAlh.get(a.id)!,
+        cibleHote: a.cibleHote,
+        cibleDomaine: a.cibleDomaine,
+        services: a.services,
+      })),
+    );
   }
 
   /** Une technologie relue remplace ses actifs et ses CVE, qui la suivent dans les lots. */
@@ -844,6 +860,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
         .map((cve): CveAlerteAlhDto => ({ cve, priorite: priorite(cve, presence, mene), sources: sources(cve) }))
         .sort((x, y) => rangPriorite(x.priorite) - rangPriorite(y.priorite) || (x.cve < y.cve ? -1 : 1)),
       defauts: defauts.success ? (defauts.data as DefautAlh[]) : [],
+      services: await servicesDeLAlerte(this.db.k, user, id),
     };
   }
 
@@ -912,6 +929,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
       user,
       rows.map((x) => x.id),
     );
+    // Lot ALH6 : services connus de chaque actif (portés par une alerte ouverte et présente).
+    const services = await servicesDesActifs(
+      this.db.k,
+      user,
+      rows.map((x) => x.id),
+    );
     return {
       total: rows[0]?.total ?? 0,
       page: q.page,
@@ -939,6 +962,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
         integration: { id: x.integration_id, nom: x.integration_nom },
         machinesInternes: liaisons.get(x.id)!,
         versionLiaisons: x.liaisons_version,
+        services: sansAlertes(services.get(x.id)!.slice(0, SERVICES_PAR_ACTIF_MAX)),
+        nombreServices: services.get(x.id)!.length,
       })),
     };
   }
@@ -1229,10 +1254,16 @@ export class SurfaceExterneAlh implements OperationEnLots {
       user,
       actifs.map((x) => x.id),
     );
+    const services = await servicesDesActifs(
+      this.db.k,
+      user,
+      actifs.map((x) => x.id),
+    );
     const { priorite, menants } = await this.evaluateur(alertes.flatMap((a) => a.cves));
     return {
       actifs: actifs.map((x) => {
         const l = liaisons.get(x.id)!;
+        const sv = services.get(x.id)!;
         return {
           id: x.id,
           type: x.type,
@@ -1249,6 +1280,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
           propositions: l.propositions,
           autresMachines: l.autresMachines,
           versionLiaisons: x.liaisons_version,
+          services: sansAlertes(sv.slice(0, SERVICES_PAR_ACTIF_MAX)),
+          nombreServices: sv.length,
         };
       }),
       alertes: alertes.map((a): AlerteCarteDto => ({

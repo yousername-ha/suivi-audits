@@ -28,7 +28,8 @@ AlgoLightHouse (lot ALH1), service sur Internet de l'éditeur AlgoSecure :
 - adresse https://<espace>.algolighthouse.fr seulement (ADRESSE_ALH, recopiée du paquet partagé), port 443 ;
 - seuls les champs listés sont lus (CHAMPS_*_ALH) ; ne sont jamais lus : la description HTML (`note`), les pièces jointes
   (`uploads`), les commentaires, les données sensibles des fragments (`sensitive_data`, `has_sensitive_data`), le champ
-  déprécié `data` ;
+  déprécié `data`, la bannière d'un service (`banner`) ; d'un fragment, seuls `alert_cves` et les champs de service de
+  `json_data` sont lus (lot ALH6, CHAMPS_FRAGMENT_ALH et CHAMPS_SERVICE_ALH) ;
 - le descriptif ne documente aucune pagination : chaque liste est lue en une réponse, bornée en taille et en nombre
   d'éléments (BORNES_ALH, recopiées de packages/shared/src/surface-externe.ts) ;
 - mandataire de l'établissement (ADR 0101), seulement s'il est reçu et seulement pour ce type (TYPES_MANDATAIRE) : tunnel
@@ -58,7 +59,7 @@ OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester"
 # Types qui sortent vers Internet et peuvent passer par le mandataire de l'établissement (USAGE_MANDATAIRE « utilise » du
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
-BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "defautsParAlerte": 20, "resolutionsParDefaut": 10, "nomDefaut": 300, "descriptionDefaut": 4000, "niveauResolution": 60, "lot": 500, "lots": 200}
+BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "defautsParAlerte": 20, "resolutionsParDefaut": 10, "nomDefaut": 300, "descriptionDefaut": 4000, "niveauResolution": 60, "servicesParAlerte": 50, "portsParComposant": 20, "nomService": 100, "cpe": 300, "lot": 500, "lots": 200}
 BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "nomDepot": 200, "lot": 500, "lots": 200}
 ENTREE_MAX = 65536
 REPONSE_MAX = 1024 * 1024
@@ -721,11 +722,18 @@ def tenable_synchroniser(client, configuration, horloge=time.monotonic):
     return resultat, elements
 
 
-# ------------------------------------------------------------------ AlgoLightHouse (lots ALH1 et ALH2)
+# ------------------------------------------------------------------ AlgoLightHouse (lots ALH1, ALH2 et ALH6)
 # Champs lus, par réponse : tout autre champ est écarté dès la lecture et ne sort jamais du script. Jamais lus : `note`
 # (description HTML), `data` (déprécié), `uploads`, commentaires, `sensitive_data`, `has_sensitive_data`, et dans un fragment
-# tout ce qui n'est pas `alert_cves`. Lot ALH2 (décision A du RSSI du 17/11/2026) : les défauts (`defects`) d'un détail sont
-# lus en liste blanche (CHAMPS_DEFAUT_ALH, CHAMPS_RESOLUTION_ALH), balises retirées : du texte simple, jamais du HTML.
+# tout ce qui n'est ni `alert_cves` ni `json_data` (CHAMPS_FRAGMENT_ALH). Lot ALH2 (décision A du RSSI du 17/11/2026) : les
+# défauts (`defects`) d'un détail sont lus en liste blanche (CHAMPS_DEFAUT_ALH, CHAMPS_RESOLUTION_ALH), balises retirées : du
+# texte simple, jamais du HTML. Lot ALH6 (décision du RSSI du 17/11/2026) : les services (port, protocole, produit) d'une
+# alerte sont lus dans `json_data` de ses fragments, pour les seuls types `port`, `vulnerable_component` et `subdomain`
+# (TYPES_FRAGMENT_SERVICE_ALH), réduits à CHAMPS_SERVICE_ALH : ni `banner`, ni `state`, ni `subdomain`, ni `description`, ni
+# aucun champ des autres types (fuite, mention git, S3, chemin, WordPress, certificat TLS).
+CHAMPS_FRAGMENT_ALH = ("alert_cves", "json_data")
+CHAMPS_SERVICE_ALH = ("fragment_type", "port", "protocol", "service_name", "product", "version", "vendor", "cpe", "ports",
+                      "version_status")
 CHAMPS_PERIMETRE_ALH = ("id", "name")
 CHAMPS_HOTE_ALH = ("id", "perimeter_id", "status", "ip_address", "isp", "asn", "country", "is_shared_server", "is_cdn",
                    "is_alive", "alive_at", "is_manual_import", "created_at", "updated_at")
@@ -747,6 +755,9 @@ STATUTS_ALERTE_ALH = ("untreated", "in-progress", "to-retest", "to-reprocess", "
 STATUTS_ACTIF_ALH = ("new", "monitored", "ignored", "pending-approval", "provider")
 TYPES_CIBLE_ALH = ("domain", "host", "service", "keyword")
 TYPES_ACTIF_ALH = {"host": "hote", "domain": "domaine"}
+TYPES_FRAGMENT_SERVICE_ALH = ("port", "vulnerable_component", "subdomain")
+PROTOCOLES_ALH = ("tcp", "udp")
+STATUTS_VERSION_ALH = ("eol", "outdated")
 NOM_DOMAINE_ALH = re.compile(r"^(?:\*\.)?(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 ASN_ALH = re.compile(r"^[0-9]{1,10}$")
 PAYS_ALH = re.compile(r"^[A-Z]{2}$")
@@ -862,6 +873,76 @@ def defauts_alh(brut):
     return out
 
 
+def port_alh(v):
+    """Numéro de port entier de 1 à 65535 ; toute autre valeur (texte, booléen, hors bornes) : None."""
+    return v if isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 65535 else None
+
+
+def services_de_fragment(j):
+    """Services (port, protocole, produit) d'un `json_data` de fragment, déjà réduit à CHAMPS_SERVICE_ALH. `port` : un service ;
+    `vulnerable_component` : un service par port de `ports` (protocole non renseigné) ; `subdomain` : le port seul (le nom du
+    sous-domaine n'est pas lu). Protocole absent ou inconnu : non renseigné (jamais « tcp » par défaut). Les valeurs « * » et
+    vides tiennent lieu d'absence."""
+    type_ = j.get("fragment_type")
+    connu = lambda v: None if v == "*" else v
+    commun = {
+        "nom": None, "produit": connu(texte(j.get("product"), BORNES_ALH["produit"])),
+        "version": connu(texte(j.get("version"), BORNES_ALH["version"])),
+        "editeur": connu(texte(j.get("vendor"), BORNES_ALH["editeur"])), "cpe": None, "statutVersion": None,
+    }
+    cpe = texte(j.get("cpe"), BORNES_ALH["cpe"])
+    commun["cpe"] = cpe if cpe and cpe.lower().startswith("cpe:") else None
+    if type_ == "port":
+        port = port_alh(j.get("port"))
+        if port is None:
+            return []
+        return [dict(commun, port=port, protocole=parmi(j.get("protocol"), PROTOCOLES_ALH),
+                     nom=texte(j.get("service_name"), BORNES_ALH["nomService"]))]
+    if type_ == "vulnerable_component":
+        commun["statutVersion"] = parmi(j.get("version_status"), STATUTS_VERSION_ALH)
+        ports = j.get("ports") if isinstance(j.get("ports"), list) else []
+        vus = []
+        for p in ports[: BORNES_ALH["portsParComposant"]]:
+            p = port_alh(p)
+            if p is not None and p not in vus:
+                vus.append(p)
+        return [dict(commun, port=p, protocole=None) for p in vus]
+    if type_ == "subdomain":
+        port = port_alh(j.get("port"))
+        vide = dict.fromkeys(commun)
+        return [dict(vide, port=port, protocole=None)] if port is not None else []
+    return []
+
+
+def services_alh(fragments):
+    """Services d'une alerte, lus dans `json_data` de ses fragments (lot ALH6). Forme absente, nulle ou inattendue : rien
+    n'est retenu, la lecture continue. Un même port et protocole n'apparaît qu'une fois (les champs connus se complètent) ;
+    un port sans protocole rejoint le seul service de même port dont le protocole est connu. Bornés à
+    BORNES_ALH["servicesParAlerte"]."""
+    trouves = []
+    for fragment in fragments if isinstance(fragments, list) else []:
+        f = {k: fragment[k] for k in CHAMPS_FRAGMENT_ALH if k in fragment} if isinstance(fragment, dict) else {}
+        j = f.get("json_data")
+        if not isinstance(j, dict) or j.get("fragment_type") not in TYPES_FRAGMENT_SERVICE_ALH:
+            continue
+        trouves += services_de_fragment({k: j[k] for k in CHAMPS_SERVICE_ALH if k in j})
+    # Protocole connu d'abord : un port sans protocole peut alors rejoindre le service de même port.
+    trouves.sort(key=lambda s: s["protocole"] is None)
+    out = []
+    for s in trouves:
+        meme = [x for x in out if x["port"] == s["port"] and x["protocole"] == s["protocole"]]
+        if not meme and s["protocole"] is None:
+            meme = [x for x in out if x["port"] == s["port"]]
+            meme = meme if len(meme) == 1 else []
+        if meme:
+            for k, v in s.items():
+                if meme[0][k] is None and v is not None:
+                    meme[0][k] = v
+        elif len(out) < BORNES_ALH["servicesParAlerte"]:
+            out.append(s)
+    return sorted(out, key=lambda s: (s["port"], s["protocole"] or ""))
+
+
 def alh_detail(client, alerte, types, criticites):
     """Détail d'une alerte : type, criticité, cible, CVE et défauts (lot ALH2, liste blanche) ; tout autre champ (note,
     pièces jointes, données sensibles des fragments) est écarté dès la lecture. Les correspondances identifiant -> valeur de
@@ -891,12 +972,14 @@ def alh_detail(client, alerte, types, criticites):
     for objet in d.get("cves") if isinstance(d.get("cves"), list) else []:
         trouvees += [c for c in cves_de(objet) if c not in trouvees]
     for fragment in d.get("fragments") if isinstance(d.get("fragments"), list) else []:
-        liens = fragment.get("alert_cves") if isinstance(fragment, dict) else None
+        f = {k: fragment[k] for k in CHAMPS_FRAGMENT_ALH if k in fragment} if isinstance(fragment, dict) else {}
+        liens = f.get("alert_cves")
         for lien in liens if isinstance(liens, list) else []:
             if isinstance(lien, dict):
                 trouvees += [c for c in cves_de(lien.get("cve")) if c not in trouvees]
     alerte["cves"] = trouvees[: BORNES_ALH["cvesParAlerte"]]
     alerte["defauts"] = defauts_alh(d.get("defects"))
+    alerte["services"] = services_alh(d.get("fragments"))
     # Constaté sur un espace réel : la liste peut rendre une date de création vide (an 1), le détail porte la vraie.
     if alerte.get("creeLe") is None:
         alerte["creeLe"] = instant_iso(d.get("created_at"))
@@ -1064,7 +1147,7 @@ def alh_synchroniser(client, configuration, horloge=time.monotonic):
             "type": "alerte", "id": ident, "perimetre": uuid_strict(a.get("perimeter_id")), "typeAlerte": None,
             "criticite": None, "statut": statut, "titre": titre, "verifiee": booleen(a.get("is_verified")),
             "detail": False, "cibleType": None, "cibleValeur": None, "cibleHote": None, "cibleDomaine": None,
-            "cves": [], "defauts": [], "creeLe": instant_iso(a.get("created_at")), "majLe": instant_iso(a.get("updated_at")),
+            "cves": [], "defauts": [], "services": [], "creeLe": instant_iso(a.get("created_at")), "majLe": instant_iso(a.get("updated_at")),
             "termineeLe": None,
         }
     # Détail des alertes les plus récemment modifiées, dans la limite des bornes (nombre, durée).

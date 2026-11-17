@@ -8,13 +8,18 @@ import {
   ADRESSE_ALH,
   ADRESSE_IP,
   ALH_BORNES,
+  CHAMPS_FRAGMENT_ALH,
+  CHAMPS_SERVICE_ALH,
   CLE_API_ALH,
   CLE_MACHINE,
   CVE_ID,
   DEPOT_TENABLE,
   NOM_DOMAINE_ALH,
   PLUGIN_ID,
+  PROTOCOLES_SERVICE_ALH,
+  STATUTS_VERSION_ALH,
   TENABLE_BORNES,
+  TYPES_FRAGMENT_SERVICE_ALH,
   TYPES_INTEGRATION,
   USAGE_MANDATAIRE,
   VERSION_ALH,
@@ -149,15 +154,45 @@ describe('architecture : connecteurs du module Intégrations', () => {
     expect(section).not.toMatch(/requete\("GET", [^)]*corps|requete\([^)]*parametres=/);
     // Liste blanche des champs : ni description HTML, ni pièces jointes, ni commentaires, ni données sensibles. Lot ALH2
     // (décision A) : les défauts (`defects`) ne sont lus que dans le détail, et leur description (texte, balises retirées)
-    // seulement par les listes des défauts et des résolutions.
+    // seulement par les listes des défauts et des résolutions. Lot ALH6 : `json_data` d'un fragment est lu, par la seule
+    // liste des fragments, et réduit aux champs de service (jamais la bannière, l'état brut ni le nom d'un sous-domaine).
     const listes = new Map(
       [...SCRIPT.matchAll(/^(CHAMPS_[A-Z_]+_ALH) = \(([^)]*)\)$/gms)].map((m) => [m[1]!, m[2]!] as const),
     );
     const champs = [...listes.values()].join(' ');
     expect(champs).toContain('"title"');
-    for (const interdit of ['note', 'data', 'uploads', 'comments', 'sensitive_data', 'has_sensitive_data', 'json_data'])
+    for (const interdit of [
+      'note',
+      'data',
+      'uploads',
+      'comments',
+      'sensitive_data',
+      'has_sensitive_data',
+      'banner',
+      'state',
+      'subdomain',
+      'email',
+      'leak_type',
+      'repo',
+      'bucket',
+      'path',
+      'url',
+      'latest_version',
+    ])
       expect(champs, interdit).not.toContain(`"${interdit}"`);
     const avec = (champ: string) => [...listes].filter(([, v]) => v.includes(`"${champ}"`)).map(([k]) => k);
+    expect(avec('json_data')).toEqual(['CHAMPS_FRAGMENT_ALH']);
+    /** Tuple Python `NOM = ("a", "b")`, sur une ou plusieurs lignes. */
+    const tuple = (nom: string) => {
+      const m = new RegExp(`^${nom} = \\(([^)]*)\\)$`, 'm').exec(SCRIPT);
+      expect(m, nom).not.toBeNull();
+      return [...m![1]!.matchAll(/"([^"]*)"/g)].map((x) => x[1]);
+    };
+    expect(tuple('CHAMPS_FRAGMENT_ALH')).toEqual([...CHAMPS_FRAGMENT_ALH]);
+    expect(tuple('CHAMPS_SERVICE_ALH')).toEqual([...CHAMPS_SERVICE_ALH]);
+    expect(tuple('TYPES_FRAGMENT_SERVICE_ALH')).toEqual([...TYPES_FRAGMENT_SERVICE_ALH]);
+    expect(tuple('PROTOCOLES_ALH')).toEqual([...PROTOCOLES_SERVICE_ALH]);
+    expect(tuple('STATUTS_VERSION_ALH')).toEqual([...STATUTS_VERSION_ALH]);
     expect(avec('defects')).toEqual(['CHAMPS_DETAIL_ALH']);
     expect(avec('description').sort()).toEqual(['CHAMPS_DEFAUT_ALH', 'CHAMPS_RESOLUTION_ALH']);
     expect(listes.get('CHAMPS_DEFAUT_ALH')).toBe('"name", "description", "resolutions"');

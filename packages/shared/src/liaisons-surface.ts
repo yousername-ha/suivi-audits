@@ -13,7 +13,7 @@
 import { z } from 'zod';
 import type { RoleMachine } from './failles-tenable.js';
 import { DecisionRapprochement, transitionRapprochement } from './rapprochement-vulnerabilites.js';
-import type { ActifAlhDto, TypeActifAlh } from './surface-externe.js';
+import type { ActifAlhDto, ServiceExposeDto, TypeActifAlh } from './surface-externe.js';
 
 /* ------------------------------------------------------------------ Critères */
 export const MOTIFS_LIAISON_MACHINE = ['adresse', 'nom_complet', 'nom_court'] as const;
@@ -379,6 +379,10 @@ export interface FicheLiaisonsActifDto {
   rejetees: LiaisonMachineDto[];
   autresMachines: boolean;
   max: number;
+  /** Services connus de l'actif (lot ALH6), avec les alertes ouvertes lisibles qui les portent : seuls ceux que porte au
+      moins une alerte ouverte et présente (l'éditeur ne publie pas la liste des ports ouverts) ; vide si l'actif n'est plus
+      présent. */
+  services: ServiceExposeDto[];
 }
 
 /** Proposition (ou liaison) de la liste, avec son actif. */

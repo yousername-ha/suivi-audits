@@ -156,6 +156,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '082_vulnerabilites_tenable_depots.sql',
         '083_vulnerabilites_surface_machines.sql',
         '084_vulnerabilites_liaisons_masse.sql',
+        '085_vulnerabilites_surface_services.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();

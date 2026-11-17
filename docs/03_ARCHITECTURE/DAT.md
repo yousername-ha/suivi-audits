@@ -118,6 +118,14 @@ liaison confirmée vers une machine interne portant une faille présente en P1 o
 Liaison en masse (`POST …/surface/liaisons/masse/apercu`, puis `POST …/surface/liaisons/masse`) : joker `*` comparé en
 littéral (`correspondanceJoker`), aperçu borné à 200 paires et lié à son empreinte (personne, demande, paires et versions),
 paires revérifiées sous le même verrou consultatif, origine `masse`, une entrée de journal par opération.
+Lot ALH6 (migration `085`) : aucun appel nouveau ; dans le détail d'alerte déjà lu, le script ne garde d'un fragment que
+`alert_cves` et `json_data` (`CHAMPS_FRAGMENT_ALH`), et de `json_data`, pour les seuls types `port`, `vulnerable_component` et
+`subdomain`, les champs de service (`CHAMPS_SERVICE_ALH` : `fragment_type`, `port`, `protocol`, `service_name`, `product`,
+`version`, `vendor`, `cpe`, `ports`, `version_status`) ; jamais `banner`, `state`, `subdomain`, `sensitive_data`. Listes
+recopiées du paquet partagé et comparées par `integrations-architecture.test.ts`. Rangement par instance, actif, port et
+protocole (`vulnerabilites_alh_services`, `UNIQUE NULLS NOT DISTINCT`), liens vers les alertes
+(`vulnerabilites_alh_service_alertes`) remplacés à chaque lecture du détail (`apps/api/src/vulnerabilites/services-surface.ts`) ;
+rendu sous les droits de l'actif, tant qu'une alerte ouverte et présente porte le service ; rien ne part vers l'assistant.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant

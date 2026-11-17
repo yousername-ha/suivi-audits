@@ -14,7 +14,10 @@
    tableau.
    Lot ALH5 : priorités les mêmes pour tout le monde (une technologie peut tenir sa priorité de versions que la personne ne
    voit pas : dit sans nom) ; « Relier en masse » dans l'onglet « Actifs » (droit de modifier) : motifs à joker, aperçu
-   obligatoire, puis liaison des seules paires de l'aperçu. */
+   obligatoire, puis liaison des seules paires de l'aperçu.
+   Lot ALH6 : services exposés (port/protocole · service, produit et version) dans l'onglet « Actifs », la fiche d'un actif
+   et la fiche d'une alerte ; seuls les services portés par une alerte sont connus (l'éditeur ne publie pas la liste des
+   ports ouverts). */
 import {
   Alert,
   Anchor,
@@ -48,11 +51,16 @@ import {
   type FicheLiaisonsActifDto,
   type FiltreLiaisonActif,
   type LiaisonMachineDto,
+  libelleProduitService,
+  libelleService,
   type MachineDto,
   type PageMachines,
   type PageSurface,
   type PerimetreAffectableDto,
   type PerimetreAlhDto,
+  type ServiceAlhDto,
+  type ServiceExposeDto,
+  STATUT_VERSION_ALH_LIBELLES,
   STATUTS_ALERTE_ALH,
   type TechnologieAlhDto,
   TYPES_ACTIF_ALH,
@@ -265,6 +273,74 @@ export function AlertesAlhTable({
   );
 }
 
+/** Limite de la connaissance des services, dite partout où ils s'affichent (lot ALH6). */
+export const LIMITE_SERVICES =
+  'Seuls les services portés par une alerte sont connus : AlgoLightHouse ne publie pas la liste des ports ouverts.';
+
+/** Services exposés (sans état, lot ALH6) : port/protocole · service, produit et version, éditeur et CPE ; avec les
+    alertes ouvertes lisibles qui les portent quand elles sont données. */
+export function ServicesTable({ services, titre }: { services: (ServiceAlhDto | ServiceExposeDto)[]; titre: string }) {
+  const avecAlertes = services.some((s) => 'alertes' in s);
+  return (
+    <DataTable label={titre}>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Service (port/protocole · service)</Table.Th>
+            <Table.Th>Produit et version</Table.Th>
+            {avecAlertes && <Table.Th>Alertes ouvertes qui le portent</Table.Th>}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {services.map((s) => (
+            <Table.Tr key={`${s.port}/${s.protocole ?? ''}`}>
+              <Table.Td>
+                <Text size="sm" className="veille-code">
+                  {libelleService(s)}
+                </Text>
+                {!s.protocole && (
+                  <Text size="xs" c="dimmed">
+                    protocole non communiqué
+                  </Text>
+                )}
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm" className="veille-texte">
+                  {libelleProduitService(s) ?? '—'}
+                </Text>
+                {(s.editeur || s.statutVersion) && (
+                  <Text size="xs" c="dimmed" className="veille-texte">
+                    {[
+                      s.editeur ? `éditeur : ${s.editeur}` : null,
+                      s.statutVersion ? STATUT_VERSION_ALH_LIBELLES[s.statutVersion] : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                )}
+                {s.cpe && (
+                  <Text size="xs" c="dimmed" className="veille-code">
+                    {s.cpe}
+                  </Text>
+                )}
+              </Table.Td>
+              {avecAlertes && (
+                <Table.Td>
+                  <Text size="sm" className="veille-texte">
+                    {'alertes' in s && s.alertes.length
+                      ? s.alertes.map((a) => a.titre).join(' ; ')
+                      : 'Aucune que vous pouvez lire'}
+                  </Text>
+                </Table.Td>
+              )}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </DataTable>
+  );
+}
+
 /** Fiche d'une alerte (sans état) : CVE avec leur priorité et leurs sources, défauts et résolutions recommandés par
     l'éditeur. Les textes de l'éditeur sont rendus comme texte (React les échappe) : aucun HTML n'est interprété. */
 export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
@@ -278,6 +354,18 @@ export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
       <Text size="sm">
         Cible : <span className="veille-code">{libelleCible(a)}</span> · Périmètre : {libellePerimetre(a)}
       </Text>
+      <Title order={3} size="h6">
+        Services portés par l’alerte
+      </Title>
+      {a.services.length ? (
+        <ServicesTable services={a.services} titre="Services portés par l’alerte" />
+      ) : (
+        <Text size="sm" c="dimmed">
+          {a.detail
+            ? 'Port non communiqué : le détail de l’alerte ne donne aucun service (ou son actif n’est pas lisible).'
+            : 'Détail pas encore lu : les services viendront à une prochaine synchronisation.'}
+        </Text>
+      )}
       <Title order={3} size="h6">
         Priorité calculée par la plateforme
       </Title>
@@ -375,6 +463,7 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
             <Table.Th>Surveillance</Table.Th>
             <Table.Th>Réseau</Table.Th>
             <Table.Th>Alertes ouvertes</Table.Th>
+            <Table.Th>Services connus</Table.Th>
             <Table.Th>Technologies</Table.Th>
             <Table.Th>Machine interne</Table.Th>
             <Table.Th>Périmètre</Table.Th>
@@ -422,6 +511,33 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
                     <Text size="sm">0</Text>
                   )}
                 </Table.Td>
+                <Table.Td>
+                  {x.services.length ? (
+                    <>
+                      {x.services.slice(0, 3).map((sv) => (
+                        <div key={`${sv.port}/${sv.protocole ?? ''}`}>
+                          <Text size="sm" className="veille-code">
+                            {libelleService(sv)}
+                          </Text>
+                          {libelleProduitService(sv) && (
+                            <Text size="xs" c="dimmed" className="veille-texte">
+                              {libelleProduitService(sv)}
+                            </Text>
+                          )}
+                        </div>
+                      ))}
+                      {x.nombreServices > 3 && (
+                        <Text size="xs" c="dimmed">
+                          et {x.nombreServices - 3} autre{x.nombreServices - 3 > 1 ? 's' : ''}
+                        </Text>
+                      )}
+                    </>
+                  ) : (
+                    <Text size="sm" c="dimmed">
+                      {x.alertesOuvertes ? 'port non communiqué' : '—'}
+                    </Text>
+                  )}
+                </Table.Td>
                 <Table.Td>{x.technologies}</Table.Td>
                 <Table.Td>
                   <StatusChip etat={mi.etat}>{mi.libelle}</StatusChip>
@@ -437,7 +553,7 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
           })}
           {actifs.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={7}>
+              <Table.Td colSpan={8}>
                 <Text size="sm" c="dimmed">
                   Aucun actif ne correspond, parmi ceux que vous pouvez lire.
                 </Text>
@@ -618,6 +734,27 @@ export function FicheLiaisonsActif({
   );
 }
 
+/** Services exposés d'un actif (sans état, lot ALH6), dans sa fiche. */
+export function ServicesActif({ services }: { services: ServiceExposeDto[] }) {
+  return (
+    <Stack gap="xs">
+      <Title order={3} size="h6">
+        Services exposés
+      </Title>
+      {services.length ? (
+        <ServicesTable services={services} titre="Services exposés de l’actif" />
+      ) : (
+        <Text size="sm" c="dimmed">
+          Aucun service connu pour cet actif.
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        {LIMITE_SERVICES}
+      </Text>
+    </Stack>
+  );
+}
+
 /** Actif dont on ouvre la fiche : ligne de la liste ou nœud de la carte. */
 type ActifOuvert = Pick<ActifAlhDto, 'id' | 'type' | 'valeur' | 'adresse' | 'perimetreNom' | 'perimetreAlh'>;
 
@@ -669,6 +806,7 @@ function FicheActif({ actif, modifier }: { actif: ActifOuvert; modifier: boolean
         inscrite au journal d’audit, sans nom de machine ni adresse.
       </Text>
       <ErrorAlert error={fiche.error ?? machines.error} />
+      {fiche.data && <ServicesActif services={fiche.data.services} />}
       {fiche.data && (
         <FicheLiaisonsActif
           fiche={fiche.data}
@@ -1285,6 +1423,11 @@ function OngletActifs() {
       </form>
       <ErrorAlert error={q.error} />
       {q.data && <ActifsAlhTable actifs={q.data.elements} onOuvrir={setOuvert} />}
+      {q.data && (
+        <Text size="xs" c="dimmed">
+          Services connus : {LIMITE_SERVICES}
+        </Text>
+      )}
       {q.data && <Pages donnees={q.data} page={page} onPage={setPage} nom="actifs" />}
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}

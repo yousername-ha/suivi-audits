@@ -2,10 +2,10 @@
    surface externe rendu par une route de lecture dédiée, déjà filtré par les droits de la personne (périmètres ALH lisibles,
    périmètre effectif des machines), borné ; la mise en page est calculée côté interface par une fonction pure.
    La carte ne montre que ce qui est rangé : des hôtes et des domaines (lot ALH1), leurs alertes ouvertes, et les machines
-   internes reliées par une liaison confirmée (lot ALH3). Les services (ports) ne sont pas rangés comme objets : aucune
-   colonne « services » n'est inventée, l'alerte la plus haute d'un actif en tient lieu. */
+   internes reliées par une liaison confirmée (lot ALH3). Lot ALH6 : les services (port, protocole, produit) d'un actif,
+   connus seulement par les alertes ouvertes qui les portent (l'éditeur ne publie pas la liste des ports ouverts). */
 import type { NiveauPriorite, RoleMachine } from './failles-tenable.js';
-import type { CriticiteAlh, TypeActifAlh, TypeAlerteAlh, TypeCibleAlh } from './surface-externe.js';
+import type { CriticiteAlh, ServiceAlhDto, TypeActifAlh, TypeAlerteAlh, TypeCibleAlh } from './surface-externe.js';
 
 /** Bornes de la carte : au-delà, la route rend les premiers éléments (actifs portant une alerte ouverte d'abord, alertes les
     plus graves d'abord) et signale la troncature. Une liaison d'actif mène au plus à LIAISONS_MACHINES_PAR_ACTIF_MAX
@@ -46,6 +46,10 @@ export interface ActifCarteDto {
   autresMachines: boolean;
   /** Version des liaisons de l'actif (If-Match de la fiche de l'actif). */
   versionLiaisons: number;
+  /** Services connus de l'actif (lot ALH6) : ceux que porte au moins une alerte ouverte et présente, mêmes droits de
+      lecture que l'actif ; SERVICES_PAR_ACTIF_MAX au plus, `nombreServices` en donne le total. */
+  services: ServiceAlhDto[];
+  nombreServices: number;
 }
 
 /** Alerte ouverte chez l'éditeur, lisible et présente. */
