@@ -114,6 +114,27 @@ BLOC_ACTIF = re.compile(r"<(script|style)\b[^>]{0,2000}>.{0,100000}?</\1\s*>", r
 INVISIBLES = ("Cc", "Cf", "Co", "Cs", "Zl", "Zp")
 
 
+# Profondeur d'imbrication admise dans une réponse JSON. Selon la version et la construction de Python, un JSON très
+# imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
+# le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
+PROFONDEUR_JSON_MAX = 64
+CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
+
+
+def trop_imbrique(brut):
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
+    profondeur = 0
+    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
+        if c in (91, 123):
+            profondeur += 1
+            if profondeur > PROFONDEUR_JSON_MAX:
+                return True
+        elif profondeur:
+            profondeur -= 1
+    return False
+
+
 class Refus(Exception):
     """Erreur expliquée, sans contenu de réponse."""
 
@@ -402,6 +423,8 @@ class Client:
 
     def json(self, chemin, requete=""):
         brut = self.lire(chemin, requete)  # hors du try : une erreur TLS est aussi une ValueError
+        if trop_imbrique(brut):
+            raise Refus("Réponse illisible : JSON attendu (imbrication excessive).")
         try:
             return json.loads(brut.decode("utf-8"))
         except (UnicodeDecodeError, ValueError, RecursionError):

@@ -49,6 +49,27 @@ CLE_API = re.compile(r"^[A-Za-z0-9]{16,128}$")
 VERSION_TENABLE = re.compile(r"^[0-9]{1,4}(?:\.[0-9]{1,6}){0,4}$")
 
 
+# Profondeur d'imbrication admise dans une réponse JSON. Selon la version et la construction de Python, un JSON très
+# imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
+# le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
+PROFONDEUR_JSON_MAX = 64
+CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
+
+
+def trop_imbrique(brut):
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
+    profondeur = 0
+    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
+        if c in (91, 123):
+            profondeur += 1
+            if profondeur > PROFONDEUR_JSON_MAX:
+                return True
+        elif profondeur:
+            profondeur -= 1
+    return False
+
+
 class Refus(Exception):
     """Erreur expliquée, sans secret ni contenu de réponse."""
 
@@ -164,9 +185,11 @@ class Client:
                 raise Refus("Réponse trop volumineuse : refusée.")
         finally:
             connexion.close()
+        if trop_imbrique(brut):
+            raise Refus("Réponse illisible : JSON attendu (imbrication excessive).")
         try:
             return json.loads(brut.decode("utf-8"))
-        except (UnicodeDecodeError, ValueError):
+        except (UnicodeDecodeError, ValueError, RecursionError):
             raise Refus("Réponse illisible : JSON attendu.") from None
 
 

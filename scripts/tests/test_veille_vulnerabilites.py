@@ -77,6 +77,15 @@ class Faux(http.server.BaseHTTPRequestHandler):
 
 
 class Veille(unittest.TestCase):
+    def test_json_trop_imbrique_est_refuse_avant_l_analyse(self):
+        # Le refus ne dépend ni de la version ni de la construction de Python (RecursionError ou non).
+        self.assertTrue(v.trop_imbrique(b"[" * 100000 + b"]" * 100000))
+        self.assertTrue(v.trop_imbrique(b'{"a":' * 65 + b"1" + b"}" * 65))
+        self.assertFalse(v.trop_imbrique(b'{"a":' * 64 + b"1" + b"}" * 64))
+        # Crochets et accolades écrits dans une chaîne, guillemet échappé compris : ils ne comptent pas.
+        self.assertFalse(v.trop_imbrique(b'{"texte": "' + b"[{" * 500 + b' \\" [[[", "n": [1, 2]}'))
+        self.assertFalse(v.trop_imbrique(b""))
+
     @classmethod
     def setUpClass(cls):
         cls.dossier = tempfile.TemporaryDirectory()
@@ -84,6 +93,7 @@ class Veille(unittest.TestCase):
         cls.ca = certificat(d, "serveur")
         cls.serveur = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Faux)
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain(cls.ca, str(d / "serveur.key"))
         cls.serveur.socket = ctx.wrap_socket(cls.serveur.socket, server_side=True)
         cls.port = cls.serveur.server_address[1]
@@ -675,6 +685,7 @@ class Mandataire(unittest.TestCase):
         cls.autre_autorite = Path(certificat(Path(cls.dossier.name), "autre")).read_text()
         cls.serveur = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Faux)
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain(feuille, cle)
         cls.serveur.socket = ctx.wrap_socket(cls.serveur.socket, server_side=True)
         cls.port = cls.serveur.server_address[1]
