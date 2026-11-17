@@ -23,11 +23,19 @@
    Lot ALH2 : fiche d'une alerte (défauts et résolutions de l'éditeur, CVE avec leur priorité) avec `lire`, mêmes droits que
    la liste ; tri des alertes et des technologies par priorité.
    Lot V4d : liste et liaison des dépôts de Tenable à un périmètre (périmètre hérité par les machines du dépôt sans
-   périmètre indiqué à la main) avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé. */
+   périmètre indiqué à la main) avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé.
+   Lot ALH3 : actif exposé relié aux machines internes. Fiche des liaisons d'un actif, liste des propositions et actifs
+   reliés à une machine avec `lire` (actif et machine lisibles tous deux) ; confirmer, rejeter, relier à la main et délier
+   avec `modifier`, If-Match sur la version des liaisons de l'actif, écriture sur le périmètre de l'actif et sur le
+   périmètre effectif de la machine (service LiaisonsMachines). */
 import {
   AffectationMachine,
   AnnulationRapprochement,
   AffectationMachines,
+  CorpsDeliaisonMachine,
+  CorpsLiaisonMachine,
+  DecisionLiaisonMachine,
+  RechercheLiaisonsMachines,
   ChangementEtatSuivi,
   CreationActionSuivi,
   DecisionRapprochement,
@@ -636,6 +644,103 @@ export const vulnerabilitesRoutes = [
       setEtag(reply, r.version);
       return r;
     },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/actifs/:id/machines',
+    summary:
+      'Machines internes reliées à un actif exposé lisible, propositions à décider et rejets (machines lisibles seulement ; ETag : version des liaisons de l’actif)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.fiche((s as Session).user, params.id);
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/actifs/:id/machines',
+    summary:
+      'Relier à la main un actif exposé à une machine interne lisible (If-Match : version des liaisons de l’actif) ; écriture exigée sur le périmètre de l’actif et sur celui de la machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsLiaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.relier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/liaisons',
+    summary:
+      'Liaisons entre actifs exposés et machines internes d’un statut (par défaut : propositions à décider), actif et machine lisibles',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheLiaisonsMachines,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.liaisonsMachines.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/:id/decision',
+    summary:
+      'Confirmer ou rejeter une proposition de liaison (If-Match : version des liaisons de l’actif) ; écriture exigée sur le périmètre de l’actif et sur celui de la machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: DecisionLiaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.decider(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/:id/deliaison',
+    summary:
+      'Délier une machine interne d’un actif exposé (If-Match : version des liaisons de l’actif) ; elle n’est pas reproposée à données égales',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsDeliaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.delier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id/surface',
+    summary: 'Actifs exposés sur Internet lisibles reliés à une machine lisible (« exposée sur Internet par … »)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) =>
+      svc.vulnerabilites.liaisonsMachines.deMachine((s as Session).user, params.id),
   }),
   route({
     method: 'GET',

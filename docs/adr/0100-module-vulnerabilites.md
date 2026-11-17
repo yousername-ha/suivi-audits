@@ -359,6 +359,8 @@
   résolutions de l'éditeur dans la fiche d'une alerte, AlgoLightHouse source de plus pour la priorité (présence « exposée »),
   tri par priorité, vue dans la veille, rapprochement avec les produits surveillés, exposition d'une CVE pour l'assistant avec
   repères « E-… » et masque étendu. Voir l'addendum « lot ALH2 » ci-dessous.
+- **Lot ALH3, actif exposé relié aux machines internes** (17/11/2026) : migration `083`, liaison d'un actif d'AlgoLightHouse
+  à une ou plusieurs machines de Tenable, à la main ou par proposition confirmée. Voir l'addendum « lot ALH3 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -688,3 +690,102 @@ Playwright adapté n'a pas été joué (CI seulement).
    nouveau à valider.
 2. Exception « sans périmètre malgré le dépôt » (machine réservée à l'administration du module), si le RSSI la veut.
 3. Choix du dépôt d'une machine vue dans plusieurs dépôts (plus petit identifiant aujourd'hui).
+
+## Addendum du 17/11/2026 — lot ALH3 : actif exposé relié aux machines internes
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `083`
+(additive : table `vulnerabilites_alh_liaisons_machines` et deux index, colonne `liaisons_version` de
+`vulnerabilites_alh_actifs`). Aucun appel réseau nouveau ; liste fermée des appels et liste blanche des champs inchangées.
+
+### Décision du RSSI (17/11/2026)
+
+Relier chaque actif exposé sur Internet (vu par AlgoLightHouse) à la machine interne vers laquelle va la connexion (machine
+lue dans Tenable), pour montrer la chaîne domaine → sous-domaine → hôte → service → machine interne. Deux voies, toutes deux
+retenues :
+
+1. **À la main** : sur un actif exposé, choisir la machine interne ; délier.
+2. **Proposé par la plateforme, confirmé par une personne** : proposition quand l'adresse de l'hôte (ou l'adresse de
+   résolution d'un domaine) est une adresse de la machine, ou quand le nom de la machine correspond au sous-domaine (nom
+   complet égal, ou première étiquette du domaine égale au nom court de la machine, après normalisation). La personne
+   confirme ou rejette ; un rejet n'est pas reproposé à données égales ; rien n'est relié sans confirmation.
+
+Seul le premier maillon est demandé (actif exposé → machine interne).
+
+### Réalisation
+
+- **Granularité : l'actif.** La migration `080` ne range que des hôtes et des domaines ; un service n'est connu que comme
+  cible d'une alerte (`cible_type = 'service'`, texte libre) et une technologie comme un lien vers un actif. Sans appel nouveau
+  ni champ nouveau, le niveau le plus fin rangé est l'actif : **un actif → une ou plusieurs machines internes** (répartiteur),
+  **vingt au plus** (`LIAISONS_MACHINES_PAR_ACTIF_MAX`).
+- **Mécanisme repris du rapprochement des failles** (migration `076`, `transitionRapprochement` du paquet partagé) :
+  statuts « proposée, confirmée, rejetée, retirée » (sans « rattachée d'office » ni « écartée »), empreintes des données de
+  l'actif (nature, valeur, adresse) et de la machine (nom, adresse), schéma de décision `DecisionRapprochement`. Une liaison
+  confirmée tient quelles que soient les données ; une rejetée reste tant que les empreintes sont les mêmes, puis est
+  reproposée si un critère tient encore, retirée sinon. Règles pures : `packages/shared/src/liaisons-surface.ts`.
+- **Critères** (du plus sûr au moins sûr, un seul gardé par paire) : même adresse (IPv4 sans zéro de tête, IPv6 développée,
+  IPv4 portée par une IPv6 ramenée à l'IPv4) ; nom complet égal (minuscules, point final retiré, joker jamais comparé) ; nom
+  court de la machine (première étiquette de son nom) égal à la première étiquette du domaine. Le nom ne vaut que pour un
+  domaine. Seuls les actifs et les machines vus par la dernière synchronisation complète de leur instance sont proposés ;
+  vingt propositions au plus par actif (`PROPOSITIONS_MACHINES_PAR_ACTIF_MAX`).
+- **Calcul** : à la fin de chaque synchronisation **reçue** d'AlgoLightHouse ou de Tenable, dans sa transaction, sous un verrou
+  consultatif partagé avec les décisions ; jamais à la lecture (une lecture n'écrit rien) ; journal
+  `vulnerabilites.surface.liaisons.recalculees` (nombres seulement).
+- **Lecture** (`vulnerabilites:lire`) : une liaison ou une proposition n'est rendue que si la personne lit l'actif (périmètre
+  ALH relié visible, sinon administrer) **et** la machine (périmètre effectif, `lisible`). Sinon la machine n'est ni nommée ni
+  comptée ; une liaison **confirmée** vers une machine illisible est seulement signalée (« reliée aussi à une machine que vous
+  ne pouvez pas lire », drapeau sans nombre) ; une **proposition** vers une machine illisible ne laisse aucune trace (ni
+  ligne, ni compteur, ni filtre). Symétriquement, la fiche d'une machine ne nomme que les actifs lisibles et signale les
+  autres sans nombre.
+- **Écriture** (`vulnerabilites:modifier`) : confirmer, rejeter, relier, délier exigent de lire l'actif et la machine (sinon
+  404, même réponse qu'un élément inconnu), l'écriture sur le périmètre de l'actif et sur le périmètre effectif de la machine
+  (un élément sans périmètre n'est lisible qu'avec administrer : sa lecture vaut le contrôle, comme l'affectation d'une
+  machine), et `If-Match` sur `liaisons_version` de l'actif. Journal `vulnerabilites.surface.liaison.confirmee`, `.rejetee`,
+  `.reliee`, `.deliee` : identifiants internes, critère, origine, version ; ni nom de machine, ni domaine, ni adresse, ni note.
+- **API** : `GET /api/vulnerabilites/surface/actifs/{id}/machines` (fiche, ETag), `POST` même adresse (relier à la main),
+  `GET /api/vulnerabilites/surface/liaisons?statut=` (propositions par défaut), `POST …/liaisons/{id}/decision`,
+  `POST …/liaisons/{id}/deliaison`, `GET /api/vulnerabilites/machines/{id}/surface` ; la liste des actifs porte
+  `machinesInternes` (trois machines reliées lisibles au plus, nombres, drapeau) et `versionLiaisons`, et se filtre par
+  `liaison=reliee|proposee|a_relier`.
+- **Écrans** : « Surface externe », onglet « Actifs » : colonne et filtre « Machine interne » (« Reliée », « Proposée, à
+  décider », « À relier »), fiche d'un actif ouverte par sa valeur (confirmer, rejeter, relier à la main par un sélecteur avec
+  recherche, délier, note facultative) ; « Machines » : rubrique « Exposition sur Internet » de la fiche d'une machine
+  (« Exposée sur Internet par … »). Pas de carte graphique dans ce lot.
+- **Assistant** : rien de nouveau ; aucun outil ne lit les liaisons, `MachineDto` est inchangé ; les repères « M-… » et
+  « E-… » et le masque restent tels quels.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Calcul à la fin des synchronisations**, plutôt qu'à la lecture : une lecture n'écrit rien et un rejet doit être gardé ;
+  conséquence : une proposition n'apparaît qu'après la synchronisation suivante d'AlgoLightHouse ou de Tenable.
+- **Délier = rejeter** : une liaison déliée devient « rejetée » et n'est pas reproposée tant que les données ne changent pas.
+  Une confirmation ou un rejet s'annule en reliant à la main (ou en déliant), sans route d'annulation propre.
+- **Relier à la main une machine proposée** vaut confirmation de la proposition (origine « proposition »).
+- **Liaison confirmée vers une machine illisible** : signalée par un drapeau sans nom ni nombre (le maximum permis par la
+  consigne), dans la liste, la fiche de l'actif et, symétriquement, la fiche d'une machine. Le refus « nombre maximal
+  atteint » compte aussi les liaisons vers des machines illisibles.
+- **Nom court** : la règle est appliquée telle quelle ; une première étiquette courante (« www », « mail ») peut proposer une
+  machine nommée ainsi, d'où la confirmation humaine. Le nom ne vaut que pour un domaine ; un hôte ne se rapproche que par
+  l'adresse.
+- **Concurrence** : `If-Match` porte sur l'ensemble des liaisons de l'actif (`liaisons_version`), pas sur chaque liaison ; un
+  recalcul ne change pas cette version (une décision vérifie de toute façon que la proposition est encore à décider).
+- **Vingt** machines au plus par actif et vingt propositions au plus par actif (choix de la session).
+- **Note** d'une décision gardée sur la liaison, jamais au journal (elle pourrait nommer une machine).
+
+### Non vérifié
+
+Aucune synchronisation réelle (tests sur données fictives rangées par le service) ; pertinence des propositions sur un parc
+réel (adresses traduites par un équipement de filtrage, répartiteurs, noms DNS internes différents des noms publics : une
+adresse publique d'AlgoLightHouse rencontre rarement l'adresse interne vue par Tenable, d'où l'intérêt du nom et de la
+liaison à la main) ; volumes réels pour le recalcul (tous les actifs et toutes les machines à chaque fin de
+synchronisation) ; Docker et Node 26. Le parcours Playwright adapté n'a pas été joué (CI seulement), et il ne couvre ni la
+fiche d'un actif ni la liaison (aucune donnée sur une pile vierge).
+
+### Points ouverts (hors lot)
+
+1. **Priorité** : une machine interne reliée à un actif exposé doit-elle peser dans la priorité d'une faille ou dans le rang
+   de la machine ? Le RSSI n'a pas tranché ; ce lot n'a **aucun effet sur la priorité**.
+2. **Chaînage front → back → base de données** (machine interne vers machine interne) : non réalisé dans ce lot.
+3. **Carte graphique** de la chaîne domaine → sous-domaine → hôte → machine interne : à venir.
+4. Liaison au niveau du **service** (port) si AlgoLightHouse le documente comme objet, ou à partir des détections de Tenable
+   (port et protocole), au prix d'un champ ou d'un appel nouveau à valider.
+5. Faut-il signaler une liaison vers une machine illisible (choix actuel : drapeau sans nom), ou ne rien en montrer ?

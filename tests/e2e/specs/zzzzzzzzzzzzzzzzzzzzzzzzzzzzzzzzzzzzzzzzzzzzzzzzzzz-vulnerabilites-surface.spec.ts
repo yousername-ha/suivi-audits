@@ -4,7 +4,9 @@
    (ADR 0097), écran avec ses onglets (alertes, actifs, technologies, périmètres), accessibilité, CSP, puis désactivation qui
    referme le flux. Aucun appel n'est lancé vers l'éditeur : l'adresse et la clé sont fictives, aucune synchronisation n'est
    demandée. Lot ALH2 : colonne « Priorité » et tri par priorité des alertes et des technologies (sans données, la fiche
-   d'une alerte et ses recommandations sont couvertes par les tests de l'interface et de l'API). */
+   d'une alerte et ses recommandations sont couvertes par les tests de l'interface et de l'API). Lot ALH3 : colonne et
+   filtre « Machine interne » de l'onglet des actifs (sans données, la fiche d'un actif, ses propositions et la liaison à la
+   main sont couvertes par les tests de l'interface et de l'API). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -95,6 +97,13 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await accessible();
     await page.getByRole('tab', { name: 'Actifs', exact: true }).click();
     await expect(page.getByText('Aucun actif ne correspond')).toBeVisible();
+    await expect(page.locator('th', { hasText: /^Machine interne$/ })).toBeVisible();
+    const filtreMachine = page.getByRole('combobox', { name: 'Machine interne', exact: true });
+    await filtreMachine.click();
+    await page.getByRole('option', { name: 'Proposée, à décider', exact: true }).click();
+    await expect(filtreMachine).toHaveValue('Proposée, à décider');
+    await expect(page.getByText('Aucun actif ne correspond')).toBeVisible();
+    await accessible();
     await page.getByRole('tab', { name: 'Technologies', exact: true }).click();
     await expect(page.getByText('Aucune technologie ne correspond')).toBeVisible();
     const triTechnologies = page.getByRole('combobox', { name: 'Trier les technologies par', exact: true });

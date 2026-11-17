@@ -1582,6 +1582,7 @@ export interface VulnerabilitesAlhActifs {
   maj_alh_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   vu_numero: number;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  liaisons_version: Generated<number>;
 }
 
 export interface VulnerabilitesAlhAlerteCves {
@@ -1618,6 +1619,22 @@ export interface VulnerabilitesAlhEtat {
   numero: Generated<number>;
   numero_complet: Generated<number>;
   complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesAlhLiaisonsMachines {
+  id: Generated<string>;
+  actif_id: string;
+  machine_id: string;
+  statut: "proposee" | "confirmee" | "rejetee" | "retiree";
+  motif: string | null;
+  origine: "proposition" | "manuelle";
+  empreinte_actif: string;
+  empreinte_machine: string;
+  decide_par: string | null;
+  decide_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  note: Generated<string>;
+  calcule_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface VulnerabilitesAlhPerimetres {
@@ -2165,6 +2182,7 @@ export interface DB {
   vulnerabilites_alh_alerte_cves: VulnerabilitesAlhAlerteCves;
   vulnerabilites_alh_alertes: VulnerabilitesAlhAlertes;
   vulnerabilites_alh_etat: VulnerabilitesAlhEtat;
+  vulnerabilites_alh_liaisons_machines: VulnerabilitesAlhLiaisonsMachines;
   vulnerabilites_alh_perimetres: VulnerabilitesAlhPerimetres;
   vulnerabilites_alh_synchronisations: VulnerabilitesAlhSynchronisations;
   vulnerabilites_alh_technologie_actifs: VulnerabilitesAlhTechnologieActifs;

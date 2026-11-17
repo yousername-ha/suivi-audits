@@ -118,6 +118,8 @@ const actif = (x: Partial<ActifAlhDto> = {}): ActifAlhDto => ({
   perimetreAlh: 'Périmètre ALH fictif 2',
   perimetreNom: null,
   integration,
+  machinesInternes: { reliees: [], nombreReliees: 0, propositions: 0, autresMachines: false },
+  versionLiaisons: 1,
   ...x,
 });
 const techno: TechnologieAlhDto = {
@@ -310,7 +312,8 @@ describe('rendu', () => {
   });
   it('actifs, technologies et état', () => {
     const a = rendre(createElement(ActifsAlhTable, { actifs: [actif()] }));
-    for (const t of ['198.51.100.20', 'Surveillé', 'AS64500', 'CDN', '(non relié)']) expect(a).toContain(t);
+    for (const t of ['198.51.100.20', 'Surveillé', 'AS64500', 'CDN', '(non relié)', 'Machine interne', 'À relier'])
+      expect(a).toContain(t);
     const t = rendre(createElement(TechnologiesAlh, { technologies: [techno] }));
     for (const x of [
       'nginx',

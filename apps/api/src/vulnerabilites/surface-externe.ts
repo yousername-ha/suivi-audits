@@ -22,7 +22,9 @@
      alertes et technologies se trient par priorité ; une technologie est rapprochée des produits surveillés par la règle
      du rapprochement des CVE (indication, sans décision) ; la veille montre sur combien d'actifs lisibles une CVE est vue ;
    - C : lecture pour l'assistant (exposition d'une CVE) et liste des actifs à masquer (domaines et adresses), utilisées par
-     le service de l'assistant (assistant.ts), qui ne remet au modèle que des repères (« E-001 ») et des compteurs. */
+     le service de l'assistant (assistant.ts), qui ne remet au modèle que des repères (« E-001 ») et des compteurs.
+   Lot ALH3 : la fin d'une synchronisation reçue recalcule les propositions de liaison des actifs aux machines internes
+   (liaisons-machines.ts) ; la liste des actifs porte leurs machines internes lisibles et se filtre par leur état. */
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
@@ -81,6 +83,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
+import { filtreLiaison, resumesLiaisons } from './liaisons-machines.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
 import { lisibleAlh } from './sql.js';
 
@@ -107,6 +110,10 @@ const present = (alias: 'a' | 'x' | 't' | 'lp' | 'a2'): RawBuilder<boolean> =>
   sql<boolean>`(${sql.ref(`${alias}.vu_numero`)} >= coalesce(e.numero_complet, 0))`;
 
 export class SurfaceExterneAlh implements OperationEnLots {
+  /** Lot ALH3 : propositions de liaison entre actifs exposés et machines internes, recalculées dans la transaction de la fin
+      d'une synchronisation reçue. */
+  apresSynchronisation?: (k: Kdb, c: Client) => Promise<void>;
+
   constructor(
     private readonly db: Db,
     private readonly flux: FluxExternes,
@@ -233,6 +240,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
       },
       c,
     );
+    if (bilan && !refus) await this.apresSynchronisation?.(k, c);
     return refus;
   }
 
@@ -809,6 +817,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
   async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifAlhDto>> {
     const conditions: RawBuilder<boolean>[] = [lisible(user), present('x')];
     if (q.type) conditions.push(sql<boolean>`x.type = ${q.type}`);
+    if (q.liaison) conditions.push(filtreLiaison(user, q.liaison));
     const texte = q.q?.trim();
     if (texte) {
       const motif = `%${litteral(texte.toLowerCase())}%`;
@@ -836,10 +845,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
       perimetre_nom: string | null;
       alertes_ouvertes: number;
       technologies: number;
+      liaisons_version: number;
       total: number;
     }>`
       SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
         x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
+        x.liaisons_version,
         lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
         (SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
            LEFT JOIN vulnerabilites_alh_perimetres lp2 ON lp2.integration_id = a2.integration_id
@@ -862,6 +873,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
       WHERE ${sql.join(conditions, sql` AND `)}
       ORDER BY alertes_ouvertes DESC, x.type, x.valeur, x.id
       LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    // Lot ALH3 : machines internes reliées ou proposées, limitées à celles que la personne peut lire.
+    const liaisons = await resumesLiaisons(
+      this.db.k,
+      user,
+      rows.map((x) => x.id),
+    );
     return {
       total: rows[0]?.total ?? 0,
       page: q.page,
@@ -887,6 +904,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
         perimetreAlh: x.perimetre_alh_nom,
         perimetreNom: x.perimetre_nom,
         integration: { id: x.integration_id, nom: x.integration_nom },
+        machinesInternes: liaisons.get(x.id)!,
+        versionLiaisons: x.liaisons_version,
       })),
     };
   }

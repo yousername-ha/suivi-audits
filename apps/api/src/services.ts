@@ -48,6 +48,7 @@ import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { DepotsTenable } from './vulnerabilites/depots.js';
 import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
+import { LiaisonsMachines } from './vulnerabilites/liaisons-machines.js';
 import { MotsNonMasquesVulnerabilites } from './vulnerabilites/mots-non-masques.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
@@ -116,7 +117,14 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   veille.apresCollecte = () => rapprochements.recalculerTout();
   /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
   const suivi = new SuiviFailles(db, grc);
-  tenable.apresSynchronisation = (k, c, id, complete) => suivi.apresSynchronisation(k, c, id, complete);
+  /* Lot ALH3 : actifs exposés reliés aux machines internes ; propositions recalculées à la fin de chaque synchronisation
+     reçue d'AlgoLightHouse ou de Tenable, dans sa transaction. */
+  const liaisonsMachines = new LiaisonsMachines(db, grc);
+  surfaceExterne.apresSynchronisation = (k, c) => liaisonsMachines.recalculer(k, c).then(() => undefined);
+  tenable.apresSynchronisation = async (k, c, id, complete) => {
+    await suivi.apresSynchronisation(k, c, id, complete);
+    await liaisonsMachines.recalculer(k, c);
+  };
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
   /* V30 : les machines nommées dans une action suivent le rang des machines. */
@@ -151,6 +159,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
       depots: new DepotsTenable(db, grc),
       surfaceExterne,
+      /** Lot ALH3 : actifs exposés (AlgoLightHouse) reliés aux machines internes (Tenable). */
+      liaisonsMachines,
       failles,
       rapprochements,
       priorite: reglagePriorite,

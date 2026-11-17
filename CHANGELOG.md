@@ -112,6 +112,12 @@ nullable `depot_id` de `vulnerabilites_machines` et un index), durée négligeab
 apparaissent à la synchronisation suivante, non reliés ; les machines déjà rattachées à la main gardent leur périmètre. Aucun
 appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `083`** (module Vulnérabilités, actifs exposés reliés aux machines internes, lot ALH3 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (table `vulnerabilites_alh_liaisons_machines` et deux index,
+colonne `liaisons_version` de `vulnerabilites_alh_actifs`, valeur par défaut 1), durée négligeable, sans reprise de données :
+les propositions apparaissent à la synchronisation suivante d'AlgoLightHouse ou de Tenable ; rien n'est relié sans une
+personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -439,6 +445,19 @@ appel réseau nouveau, aucune action sur le serveur. (session « Module surveill
   « Hérité du dépôt » (qui remplace « Retirer le périmètre ») le retire. Les droits de lecture, compteurs, priorité, fiches,
   assistant et masque suivent le périmètre effectif ; la liste dit « hérité du dépôt » ou « indiqué à la main ». Rôle
   inchangé, par machine. Migration `082`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH3 : actif exposé relié aux machines internes**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH3 » ; décision du RSSI du 17/11/2026). Premier maillon
+  de la chaîne domaine → sous-domaine → hôte → service → machine interne : AlgoLightHouse ne rangeant pas les services à part,
+  c'est **l'actif** (hôte ou domaine) qui est relié, à une ou plusieurs machines de Tenable (vingt au plus). Deux voies : relier
+  à la main (et délier), ou confirmer une **proposition de la plateforme**, calculée à la fin de chaque synchronisation
+  d'AlgoLightHouse ou de Tenable (même adresse IP, nom complet égal, ou nom court de la machine égal à la première étiquette du
+  domaine) ; rien n'est relié sans une personne, un rejet n'est pas reproposé à données égales (cycle de vie du rapprochement
+  des failles). Une liaison ne se voit qu'en lisant l'actif et la machine ; une machine illisible n'est ni nommée ni comptée
+  (liaison signalée sans nom, proposition invisible) ; écrire exige `vulnerabilites:modifier`, l'écriture sur le périmètre de
+  l'actif et sur le périmètre effectif de la machine, et If-Match ; journal sans nom, domaine, adresse ni note. Écran
+  « Surface externe » : colonne et filtre « Machine interne », fiche d'un actif (confirmer, rejeter, relier avec recherche,
+  délier) ; écran « Machines » : « Exposée sur Internet par … » dans la fiche. Sans effet sur la priorité ; l'assistant n'en
+  reçoit rien. Migration `083`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
 
 ### Ajouté
 

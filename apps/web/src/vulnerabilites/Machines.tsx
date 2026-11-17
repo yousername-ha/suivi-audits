@@ -8,6 +8,8 @@
    Lot V4d : périmètre relié par dépôt de Tenable (onglet « Dépôts Tenable », droit d'administrer le module, comme l'onglet
    « Périmètres » de la surface externe) ; la liste dit si le périmètre d'une machine est hérité du dépôt ou indiqué à la
    main, et « Hérité du dépôt » retire le périmètre indiqué à la main.
+   Lot ALH3 : la fiche d'une machine dit par quels actifs exposés sur Internet (AlgoLightHouse) elle est jointe, pour les
+   actifs que la personne peut lire.
    Composants de la charte, CSP stricte (ADR 0006). */
 import {
   Alert,
@@ -28,6 +30,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   type DepotTenableDto,
+  type ExpositionMachineDto,
   type MachineDto,
   type PageMachines,
   type PerimetreAffectableDto,
@@ -52,6 +55,7 @@ import {
   originePerimetre,
   urlMachines,
 } from './failles';
+import { libelleExposition, urlExpositionMachine } from './surface';
 import { nombrePages } from './veille';
 
 const CLE = ['vulnerabilites', 'machines'] as const;
@@ -365,7 +369,17 @@ export function ProduitsRelies({
   );
 }
 
-/** Fiche d'une machine : rang et faits, produits surveillés reliés, relier un produit (droit de modifier le module). */
+/** Actifs exposés sur Internet reliés à une machine (sans état) : seuls ceux que la personne lit sont nommés. */
+export function ExpositionMachine({ exposition }: { exposition: ExpositionMachineDto }) {
+  return (
+    <Text size="sm" className="veille-texte">
+      {libelleExposition(exposition)}
+    </Text>
+  );
+}
+
+/** Fiche d'une machine : rang et faits, exposition sur Internet, produits surveillés reliés, relier un produit (droit de
+    modifier le module). */
 function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: boolean }) {
   const qc = useQueryClient();
   const [choix, setChoix] = useState<string | null>(null);
@@ -378,6 +392,10 @@ function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: bo
     queryKey: ['vulnerabilites', 'produits', 'toutes'],
     queryFn: () => get<ProduitSurveilleDto[]>('/api/vulnerabilites/produits'),
     enabled: modifier,
+  });
+  const exposition = useQuery({
+    queryKey: [...CLE, 'exposition', machine.id],
+    queryFn: () => get<ExpositionMachineDto>(urlExpositionMachine(machine.id)),
   });
   const dejaRelies = new Set((relies.data ?? []).map((p) => p.id));
   const action = async (fn: () => Promise<unknown>, message: string) => {
@@ -413,6 +431,11 @@ function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: bo
         </Title>
         <Text size="sm">{faitsDuRang(machine.rang).join(' · ')}</Text>
       </Stack>
+      <Title order={3} size="h6">
+        Exposition sur Internet
+      </Title>
+      <ErrorAlert error={exposition.error} />
+      {exposition.data && <ExpositionMachine exposition={exposition.data} />}
       <Title order={3} size="h6">
         Produits surveillés reliés
       </Title>

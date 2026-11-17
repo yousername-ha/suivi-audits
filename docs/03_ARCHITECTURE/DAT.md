@@ -105,6 +105,12 @@ du périmètre de la plateforme relié à son périmètre de l'éditeur (`vulner
 `vulnerabilites:administrer`, `If-Match`, écriture sur les périmètres), `grc_smsi_visible` ; non relié :
 `vulnerabilites:administrer`. Une technologie se lit par ses actifs. Ces données ne partent nulle part ailleurs (ni
 assistant, ni priorité, ni notification).
+Lot ALH3 (migration `083`) : un actif (hôte ou domaine) se relie aux machines internes de Tenable
+(`vulnerabilites_alh_liaisons_machines`, cycle « proposée, confirmée, rejetée, retirée » du rapprochement des failles,
+`apps/api/src/vulnerabilites/liaisons-machines.ts`). Les propositions (même adresse, nom complet, nom court) sont recalculées
+dans la transaction de fin de chaque synchronisation reçue d'AlgoLightHouse ou de Tenable, sous un verrou consultatif ;
+lecture si l'actif (`lisibleAlh`) et la machine (`lisible`, périmètre effectif) sont lisibles ; écriture par
+`vulnerabilites:modifier`, `If-Match` (`vulnerabilites_alh_actifs.liaisons_version`), écriture sur les deux périmètres.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant

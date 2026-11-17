@@ -1,7 +1,16 @@
 /* Module Vulnérabilités (ADR 0100, lots ALH1 et ALH2) : surface externe lue dans AlgoLightHouse, présentation sans état ni
    appel réseau (testée à part). Le serveur reste seul juge des droits (périmètre relié, administration du module) ; les
-   textes de l'éditeur (titres, défauts, résolutions) s'affichent tels quels, comme texte simple, jamais comme HTML. */
+   textes de l'éditeur (titres, défauts, résolutions) s'affichent tels quels, comme texte simple, jamais comme HTML.
+   Lot ALH3 : actif exposé relié à la ou aux machines internes (colonne « Machine interne », fiche de l'actif, fiche d'une
+   machine « exposée sur Internet par … »). */
 import {
+  type ExpositionMachineDto,
+  FILTRE_LIAISON_ACTIF_LIBELLES,
+  FILTRES_LIAISON_ACTIF,
+  type FiltreLiaisonActif,
+  type LiaisonMachineDto,
+  MOTIF_LIAISON_MACHINE_LIBELLES,
+  type ResumeLiaisonsActifDto,
   type AlerteAlhDto,
   CRITICITE_ALH_LIBELLES,
   type CriticiteAlh,
@@ -47,7 +56,8 @@ const adresse = (chemin: string, valeurs: Record<string, string>, page: number) 
 
 export const urlAlertesAlh = (f: FiltresAlertesAlh, page = 1) =>
   adresse('alertes', { q: f.q, type: f.type, criticite: f.criticite, statut: f.statut, tri: f.tri }, page);
-export const urlActifsAlh = (q: string, type: TypeActifAlh | '', page = 1) => adresse('actifs', { q, type }, page);
+export const urlActifsAlh = (q: string, type: TypeActifAlh | '', page = 1, liaison: FiltreLiaisonActif | '' = '') =>
+  adresse('actifs', { q, type, liaison }, page);
 export const urlTechnologiesAlh = (q: string, exploitee: boolean, page = 1, tri: TriSurface | '' = '') =>
   adresse('technologies', { q, exploitee: exploitee ? 'oui' : '', tri }, page);
 export const urlFicheAlerteAlh = (id: string) => `${API}/alertes/${encodeURIComponent(id)}`;
@@ -153,4 +163,60 @@ export function libelleProduitRapproche(p: ProduitRapprocheAlhDto): string {
 export function libelleTechnologieRapprochee(t: TechnologieRapprocheeDto): string {
   const versions = t.versions.filter(Boolean);
   return `${[t.editeur, t.nom].filter(Boolean).join(' ')}${versions.length ? ` ${versions.join(', ')}` : ' (version inconnue)'} sur ${pluriel(t.actifs, 'actif exposé', 'actifs exposés')} (${t.par === 'cpe' ? 'par identifiant CPE' : 'par nom'}, ${versionRapprochee(t.memeVersion)})`;
+}
+
+/* ------------------------------------------------------------------ Machines internes (lot ALH3) */
+export const urlLiaisonsActif = (id: string) => `${API}/actifs/${encodeURIComponent(id)}/machines`;
+export const urlDecisionLiaison = (id: string) => `${API}/liaisons/${encodeURIComponent(id)}/decision`;
+export const urlDeliaison = (id: string) => `${API}/liaisons/${encodeURIComponent(id)}/deliaison`;
+export const urlExpositionMachine = (id: string) => `/api/vulnerabilites/machines/${encodeURIComponent(id)}/surface`;
+export const OPTIONS_LIAISON_ACTIF = FILTRES_LIAISON_ACTIF.map((f) => ({
+  value: f,
+  label: FILTRE_LIAISON_ACTIF_LIBELLES[f],
+}));
+
+const nomMachine = (m: { nom: string | null; adresse: string | null }) => m.nom ?? m.adresse ?? 'Machine sans nom';
+
+/** Colonne « Machine interne » d'un actif : machines reliées lisibles, sinon propositions à décider, sinon « à relier » ;
+    une liaison vers une machine que la personne ne lit pas est signalée sans nom ni nombre. */
+export function resumeMachineInterne(r: ResumeLiaisonsActifDto): { libelle: string; etat: Etat; detail: string } {
+  const autres = r.autresMachines ? 'Reliée aussi à une machine que vous ne pouvez pas lire.' : '';
+  const propositions = r.propositions ? `${pluriel(r.propositions, 'proposition', 'propositions')} à décider.` : '';
+  if (r.nombreReliees) {
+    const noms = r.reliees.map(nomMachine).join(', ');
+    const reste = r.nombreReliees - r.reliees.length;
+    return {
+      libelle: `Reliée : ${noms}${reste > 0 ? ` et ${pluriel(reste, 'autre', 'autres')}` : ''}`,
+      etat: 'succes',
+      detail: [propositions, autres].filter(Boolean).join(' '),
+    };
+  }
+  if (r.propositions)
+    return { libelle: 'Proposée, à décider', etat: 'info', detail: [propositions, autres].filter(Boolean).join(' ') };
+  if (r.autresMachines)
+    return { libelle: 'Reliée à une machine que vous ne pouvez pas lire', etat: 'neutre', detail: '' };
+  return { libelle: 'À relier', etat: 'neutre', detail: '' };
+}
+
+/** Critère et origine d'une liaison, en une ligne. */
+export function libelleLiaison(l: Pick<LiaisonMachineDto, 'statut' | 'motif' | 'origine' | 'decidePar'>): string {
+  const critere = l.motif ? `critère : ${MOTIF_LIAISON_MACHINE_LIBELLES[l.motif]}` : 'sans critère de la plateforme';
+  if (l.statut === 'proposee') return `Proposée par la plateforme (${critere})`;
+  const par = l.decidePar ? ` par ${l.decidePar}` : '';
+  if (l.statut === 'confirmee')
+    return l.origine === 'manuelle'
+      ? `Reliée à la main${par} (${critere})`
+      : `Proposition confirmée${par} (${critere})`;
+  if (l.statut === 'rejetee') return `Rejetée ou déliée${par} : pas reproposée tant que les données ne changent pas`;
+  return 'Retirée : le critère ne tient plus';
+}
+
+/** Fiche d'une machine : « exposée sur Internet par … » (actifs lisibles seulement). */
+export function libelleExposition(e: ExpositionMachineDto): string {
+  const actifs = e.actifs.map((a) => `${a.valeur} (${libelleTypeActif(a.type).toLowerCase()})`);
+  const autres = e.autresActifs ? 'un actif exposé que vous ne pouvez pas lire' : '';
+  const tout = [...actifs, ...(autres ? [autres] : [])];
+  return tout.length
+    ? `Exposée sur Internet par ${tout.join(', ')}.`
+    : 'Aucun actif exposé sur Internet relié à cette machine, parmi ceux que vous pouvez lire.';
 }

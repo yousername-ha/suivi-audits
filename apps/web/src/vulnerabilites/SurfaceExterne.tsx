@@ -6,7 +6,10 @@
    stricte (ADR 0006) ; le serveur est seul juge des droits, les onglets ne font que suivre la session.
    Lot ALH2 : priorité calculée par la plateforme (alertes, technologies et leurs CVE), tri par priorité, fiche d'une alerte
    avec les défauts et résolutions recommandés par l'éditeur, rendus comme texte (jamais comme HTML), produits surveillés
-   rapprochés d'une technologie. */
+   rapprochés d'une technologie.
+   Lot ALH3 : colonne « Machine interne » des actifs (reliée, proposée, à relier) et filtre ; fiche d'un actif pour confirmer
+   ou rejeter une proposition de la plateforme, relier à la main une machine (sélecteur avec recherche) et délier. Le
+   serveur ne rend que les machines que la personne peut lire et reste seul juge des droits d'écriture. */
 import {
   Alert,
   Anchor,
@@ -32,6 +35,10 @@ import {
   CRITICITES_ALH,
   type EtatSurfaceExterneDto,
   type FicheAlerteAlhDto,
+  type FicheLiaisonsActifDto,
+  type FiltreLiaisonActif,
+  type LiaisonMachineDto,
+  type PageMachines,
   type PageSurface,
   type PerimetreAffectableDto,
   type PerimetreAlhDto,
@@ -43,12 +50,12 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
-import { ETAT_PRIORITE } from './failles';
+import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
 import { PrioriteFaits } from './FaillesDetectees';
 import { MarquesSources } from './SourcesFaille';
 import {
@@ -58,6 +65,7 @@ import {
   type FiltresAlertesAlh,
   libelleCible,
   libelleCriticite,
+  libelleLiaison,
   libellePerimetre,
   libelleProduitRapproche,
   libelleStatutActif,
@@ -65,8 +73,13 @@ import {
   libelleTypeActif,
   libelleTypeAlerte,
   pourcentage,
+  OPTIONS_LIAISON_ACTIF,
   resumeEtatAlh,
+  resumeMachineInterne,
   urlActifsAlh,
+  urlDecisionLiaison,
+  urlDeliaison,
+  urlLiaisonsActif,
   OPTIONS_TRI_ALERTES,
   OPTIONS_TRI_TECHNOLOGIES,
   triDepuis,
@@ -328,8 +341,8 @@ export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
   );
 }
 
-/** Hôtes et domaines (sans état). */
-export function ActifsAlhTable({ actifs }: { actifs: ActifAlhDto[] }) {
+/** Hôtes et domaines (sans état) ; `onOuvrir` ouvre la fiche d'un actif (machines internes). */
+export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; onOuvrir?: (x: ActifAlhDto) => void }) {
   return (
     <DataTable label="Actifs exposés">
       <Table>
@@ -340,48 +353,68 @@ export function ActifsAlhTable({ actifs }: { actifs: ActifAlhDto[] }) {
             <Table.Th>Réseau</Table.Th>
             <Table.Th>Alertes ouvertes</Table.Th>
             <Table.Th>Technologies</Table.Th>
+            <Table.Th>Machine interne</Table.Th>
             <Table.Th>Périmètre</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {actifs.map((x) => (
-            <Table.Tr key={x.id}>
-              <Table.Td>
-                <Text size="sm" className="veille-code">
-                  {x.valeur}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {libelleTypeActif(x.type)}
-                  {x.adresse ? ` · résout vers ${x.adresse}` : ''}
-                </Text>
-              </Table.Td>
-              <Table.Td>{libelleStatutActif(x.statut)}</Table.Td>
-              <Table.Td>
-                <Text size="sm">{[x.fai, x.asn ? `AS${x.asn}` : null, x.pays].filter(Boolean).join(' · ') || '—'}</Text>
-                <Text size="xs" c="dimmed">
-                  {[
-                    x.cdn ? 'CDN' : null,
-                    x.mutualise ? 'serveur mutualisé' : null,
-                    x.joignable === false ? 'ne répond plus' : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                {x.alertesOuvertes ? (
-                  <StatusChip etat="attention">{x.alertesOuvertes}</StatusChip>
-                ) : (
-                  <Text size="sm">0</Text>
-                )}
-              </Table.Td>
-              <Table.Td>{x.technologies}</Table.Td>
-              <Table.Td>{libellePerimetre(x)}</Table.Td>
-            </Table.Tr>
-          ))}
+          {actifs.map((x) => {
+            const mi = resumeMachineInterne(x.machinesInternes);
+            return (
+              <Table.Tr key={x.id}>
+                <Table.Td>
+                  {onOuvrir ? (
+                    <Anchor component="button" type="button" onClick={() => onOuvrir(x)} className="veille-code">
+                      {x.valeur}
+                    </Anchor>
+                  ) : (
+                    <Text size="sm" className="veille-code">
+                      {x.valeur}
+                    </Text>
+                  )}
+                  <Text size="xs" c="dimmed">
+                    {libelleTypeActif(x.type)}
+                    {x.adresse ? ` · résout vers ${x.adresse}` : ''}
+                  </Text>
+                </Table.Td>
+                <Table.Td>{libelleStatutActif(x.statut)}</Table.Td>
+                <Table.Td>
+                  <Text size="sm">
+                    {[x.fai, x.asn ? `AS${x.asn}` : null, x.pays].filter(Boolean).join(' · ') || '—'}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {[
+                      x.cdn ? 'CDN' : null,
+                      x.mutualise ? 'serveur mutualisé' : null,
+                      x.joignable === false ? 'ne répond plus' : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  {x.alertesOuvertes ? (
+                    <StatusChip etat="attention">{x.alertesOuvertes}</StatusChip>
+                  ) : (
+                    <Text size="sm">0</Text>
+                  )}
+                </Table.Td>
+                <Table.Td>{x.technologies}</Table.Td>
+                <Table.Td>
+                  <StatusChip etat={mi.etat}>{mi.libelle}</StatusChip>
+                  {mi.detail && (
+                    <Text size="xs" c="dimmed">
+                      {mi.detail}
+                    </Text>
+                  )}
+                </Table.Td>
+                <Table.Td>{libellePerimetre(x)}</Table.Td>
+              </Table.Tr>
+            );
+          })}
           {actifs.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={6}>
+              <Table.Td colSpan={7}>
                 <Text size="sm" c="dimmed">
                   Aucun actif ne correspond, parmi ceux que vous pouvez lire.
                 </Text>
@@ -391,6 +424,292 @@ export function ActifsAlhTable({ actifs }: { actifs: ActifAlhDto[] }) {
         </Table.Tbody>
       </Table>
     </DataTable>
+  );
+}
+
+/** Liaisons d'un même statut (sans état) ; `actions` rend les boutons d'une ligne. */
+function TableLiaisons({
+  titre,
+  liaisons,
+  actions,
+}: {
+  titre: string;
+  liaisons: LiaisonMachineDto[];
+  actions?: (l: LiaisonMachineDto) => ReactNode;
+}) {
+  return (
+    <DataTable label={titre}>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Machine</Table.Th>
+            <Table.Th>Périmètre de la machine</Table.Th>
+            <Table.Th>Liaison</Table.Th>
+            {actions && <Table.Th>Décision</Table.Th>}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {liaisons.map((l) => (
+            <Table.Tr key={l.id}>
+              <Table.Td>
+                <Text size="sm" className="veille-texte">
+                  {libelleMachine(l.machine)}
+                </Text>
+                {l.machine.nom && l.machine.adresse && (
+                  <Text size="xs" c="dimmed" className="veille-code">
+                    {l.machine.adresse}
+                  </Text>
+                )}
+              </Table.Td>
+              <Table.Td>{l.machine.perimetreNom ?? 'Sans périmètre'}</Table.Td>
+              <Table.Td>
+                <Text size="sm">{libelleLiaison(l)}</Text>
+                {l.decideLe && (
+                  <Text size="xs" c="dimmed" className="horodatage">
+                    {fmtDate(l.decideLe)}
+                  </Text>
+                )}
+                {l.note && (
+                  <Text size="xs" c="dimmed" className="veille-texte">
+                    Note : {l.note}
+                  </Text>
+                )}
+              </Table.Td>
+              {actions && (
+                <Table.Td>
+                  <Group gap="xs" wrap="nowrap">
+                    {actions(l)}
+                  </Group>
+                </Table.Td>
+              )}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </DataTable>
+  );
+}
+
+/** Fiche des machines internes d'un actif (sans état) : reliées (délier), propositions (confirmer, rejeter), rejetées. Les
+    boutons ne paraissent qu'avec le droit de modifier le module ; le serveur juge l'écriture sur les deux périmètres. */
+export function FicheLiaisonsActif({
+  fiche,
+  peutModifier,
+  enCours,
+  onDecider,
+  onDelier,
+}: {
+  fiche: FicheLiaisonsActifDto;
+  peutModifier: boolean;
+  enCours: boolean;
+  onDecider: (l: LiaisonMachineDto, decision: 'confirmer' | 'rejeter') => void;
+  onDelier: (l: LiaisonMachineDto) => void;
+}) {
+  return (
+    <Stack>
+      <Title order={3} size="h6">
+        Machines internes reliées
+      </Title>
+      {fiche.reliees.length ? (
+        <TableLiaisons
+          titre="Machines internes reliées"
+          liaisons={fiche.reliees}
+          actions={
+            peutModifier
+              ? (l) => (
+                  <Button
+                    size="compact-sm"
+                    variant="light"
+                    color="red"
+                    disabled={enCours}
+                    onClick={() => onDelier(l)}
+                    aria-label={`Délier ${libelleMachine(l.machine)}`}
+                  >
+                    Délier
+                  </Button>
+                )
+              : undefined
+          }
+        />
+      ) : (
+        <Text size="sm" c="dimmed">
+          Aucune machine interne reliée, parmi celles que vous pouvez lire.
+        </Text>
+      )}
+      {fiche.autresMachines && (
+        <Text size="sm" role="status">
+          L’actif est aussi relié à une machine que vous ne pouvez pas lire : elle n’est ni nommée ni comptée.
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        Un actif peut mener à plusieurs machines (répartiteur de charge), {fiche.max} au plus.
+      </Text>
+      <Title order={3} size="h6">
+        Propositions de la plateforme
+      </Title>
+      {fiche.propositions.length ? (
+        <TableLiaisons
+          titre="Propositions de la plateforme"
+          liaisons={fiche.propositions}
+          actions={
+            peutModifier
+              ? (l) => (
+                  <>
+                    <Button
+                      size="compact-sm"
+                      disabled={enCours}
+                      onClick={() => onDecider(l, 'confirmer')}
+                      aria-label={`Confirmer ${libelleMachine(l.machine)}`}
+                    >
+                      Confirmer
+                    </Button>
+                    <Button
+                      size="compact-sm"
+                      variant="default"
+                      disabled={enCours}
+                      onClick={() => onDecider(l, 'rejeter')}
+                      aria-label={`Rejeter ${libelleMachine(l.machine)}`}
+                    >
+                      Rejeter
+                    </Button>
+                  </>
+                )
+              : undefined
+          }
+        />
+      ) : (
+        <Text size="sm" c="dimmed">
+          Aucune proposition à décider. La plateforme propose une machine de même adresse IP, ou dont le nom correspond
+          au domaine ; rien n’est relié sans votre confirmation.
+        </Text>
+      )}
+      {fiche.rejetees.length > 0 && (
+        <>
+          <Title order={3} size="h6">
+            Rejetées ou déliées
+          </Title>
+          <TableLiaisons titre="Liaisons rejetées ou déliées" liaisons={fiche.rejetees} />
+        </>
+      )}
+    </Stack>
+  );
+}
+
+/** Fiche d'un actif : liaisons, décisions et liaison à la main (droit de modifier le module). */
+function FicheActif({ actif, modifier }: { actif: ActifAlhDto; modifier: boolean }) {
+  const qc = useQueryClient();
+  const [enCours, setEnCours] = useState(false);
+  const [terme, setTerme] = useState('');
+  const [choix, setChoix] = useState<{ value: string; label: string } | null>(null);
+  const [note, setNote] = useState('');
+  const fiche = useQuery({
+    queryKey: [...CLE, 'liaisons', actif.id],
+    queryFn: () => get<FicheLiaisonsActifDto>(urlLiaisonsActif(actif.id)),
+  });
+  const machines = useQuery({
+    queryKey: ['vulnerabilites', 'machines', 'recherche', terme],
+    queryFn: () => get<PageMachines>(urlMachines({ ...FILTRES_MACHINES_VIDES, q: terme })),
+    enabled: modifier,
+  });
+  const dejaReliees = new Set((fiche.data?.reliees ?? []).map((l) => l.machine.id));
+  const resultats = (machines.data?.elements ?? [])
+    .filter((m) => !dejaReliees.has(m.id))
+    .map((m) => ({ value: m.id, label: m.nom && m.adresse ? `${m.nom} (${m.adresse})` : libelleMachine(m) }));
+  const action = async (fn: (version: number) => Promise<unknown>, message: string) => {
+    if (!fiche.data) return;
+    setEnCours(true);
+    try {
+      await fn(fiche.data.versionLiaisons);
+      notifications.show({ color: 'teal', message });
+      setChoix(null);
+      setNote('');
+      await qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+      await qc.invalidateQueries({ queryKey: [...CLE, 'liaisons', actif.id] });
+    } finally {
+      setEnCours(false);
+    }
+  };
+  return (
+    <Stack>
+      <Text size="sm">
+        {libelleTypeActif(actif.type)} <span className="veille-code">{actif.valeur}</span>
+        {actif.adresse ? ` · résout vers ${actif.adresse}` : ''} · Périmètre : {libellePerimetre(actif)}
+      </Text>
+      <Text size="xs" c="dimmed">
+        Reliez l’actif exposé à la ou aux machines internes vers lesquelles va la connexion (machines lues dans
+        Tenable). Il faut pouvoir écrire sur le périmètre de l’actif et sur celui de la machine ; chaque décision est
+        inscrite au journal d’audit, sans nom de machine ni adresse.
+      </Text>
+      <ErrorAlert error={fiche.error ?? machines.error} />
+      {fiche.data && (
+        <FicheLiaisonsActif
+          fiche={fiche.data}
+          peutModifier={modifier}
+          enCours={enCours}
+          onDecider={(l, decision) =>
+            void action(
+              (v) => api('POST', urlDecisionLiaison(l.id), { body: { decision, note }, ifMatch: v }),
+              decision === 'confirmer' ? 'Machine interne reliée.' : 'Proposition rejetée.',
+            )
+          }
+          onDelier={(l) =>
+            void action(
+              (v) => api('POST', urlDeliaison(l.id), { body: { note }, ifMatch: v }),
+              'Machine interne déliée.',
+            )
+          }
+        />
+      )}
+      {modifier && fiche.data && (
+        <Stack gap="xs" role="group" aria-label="Relier à la main">
+          <Title order={3} size="h6">
+            Relier à la main
+          </Title>
+          <Group align="flex-end">
+            <Select
+              label="Machine interne à relier"
+              description="Recherche par nom de machine, parmi celles que vous pouvez lire."
+              placeholder="Choisir une machine"
+              searchable
+              clearable
+              searchValue={terme}
+              onSearchChange={setTerme}
+              value={choix?.value ?? null}
+              onChange={(_v, option) => setChoix(option ?? null)}
+              data={[
+                // La machine choisie reste proposée même quand la recherche (son libellé) ne la renvoie plus.
+                ...(choix && !resultats.some((o) => o.value === choix.value) ? [choix] : []),
+                ...resultats,
+              ]}
+              nothingFoundMessage="Aucune machine"
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Button
+              loading={enCours}
+              disabled={!choix}
+              onClick={() =>
+                void action(
+                  (v) =>
+                    api('POST', urlLiaisonsActif(actif.id), { body: { machineId: choix?.value, note }, ifMatch: v }),
+                  'Machine interne reliée.',
+                )
+              }
+            >
+              Relier
+            </Button>
+          </Group>
+          <TextInput
+            label="Note de la décision (facultative)"
+            description="Gardée avec la liaison, jamais inscrite au journal d’audit."
+            maxLength={1000}
+            value={note}
+            onChange={(e) => setNote(e.currentTarget.value)}
+          />
+        </Stack>
+      )}
+    </Stack>
   );
 }
 
@@ -679,13 +998,17 @@ function OngletAlertes() {
 }
 
 function OngletActifs() {
+  const can = useCan();
+  const modifier = can('vulnerabilites', 'modifier');
   const [saisie, setSaisie] = useState('');
   const [recherche, setRecherche] = useState('');
   const [type, setType] = useState<TypeActifAlh | ''>('');
+  const [liaison, setLiaison] = useState<FiltreLiaisonActif | ''>('');
   const [page, setPage] = useState(1);
+  const [ouvert, setOuvert] = useState<ActifAlhDto | null>(null);
   const q = useQuery({
-    queryKey: [...CLE, 'actifs', recherche, type, page],
-    queryFn: () => get<PageSurface<ActifAlhDto>>(urlActifsAlh(recherche, type, page)),
+    queryKey: [...CLE, 'actifs', recherche, type, liaison, page],
+    queryFn: () => get<PageSurface<ActifAlhDto>>(urlActifsAlh(recherche, type, page, liaison)),
   });
   return (
     <Stack>
@@ -720,11 +1043,34 @@ function OngletActifs() {
             data={OPTIONS_ACTIF}
             comboboxProps={{ withinPortal: false }}
           />
+          <Select
+            label="Machine interne"
+            placeholder="Toutes"
+            clearable
+            value={liaison || null}
+            onChange={(v) => {
+              setLiaison((v ?? '') as FiltreLiaisonActif | '');
+              setPage(1);
+            }}
+            data={OPTIONS_LIAISON_ACTIF}
+            comboboxProps={{ withinPortal: false }}
+          />
         </Group>
       </form>
       <ErrorAlert error={q.error} />
-      {q.data && <ActifsAlhTable actifs={q.data.elements} />}
+      {q.data && <ActifsAlhTable actifs={q.data.elements} onOuvrir={setOuvert} />}
       {q.data && <Pages donnees={q.data} page={page} onPage={setPage} nom="actifs" />}
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!ouvert}
+        onClose={() => setOuvert(null)}
+        title={ouvert ? `Machines internes de ${ouvert.valeur}` : 'Actif exposé'}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {ouvert && <FicheActif actif={ouvert} modifier={modifier} />}
+      </Modal>
     </Stack>
   );
 }
@@ -853,7 +1199,7 @@ export function SurfaceExternePage() {
     <Page>
       <PageHeader
         title="Surface externe"
-        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. Textes de l’éditeur tels quels."
+        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
       />
       <Stack>
         <ErrorAlert error={etat.error} />

@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import type { PageFailles } from './failles-tenable.js';
 import { ADRESSE_IP } from './failles-tenable.js';
+import { FiltreLiaisonActif, type ResumeLiaisonsActifDto } from './liaisons-surface.js';
 import type { Priorite, SourcesFailleDto } from './priorite-vulnerabilites.js';
 import { comparerVersions, identiteCpe, normaliserNom } from './rapprochement-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
@@ -415,8 +416,10 @@ export const RechercheAlertesAlh = z
   .strict();
 export type RechercheAlertesAlh = z.infer<typeof RechercheAlertesAlh>;
 
-/** Actifs : recherche dans l'adresse ou le domaine ; filtre par type. */
-export const RechercheActifsAlh = z.object({ q: recherche, type: TypeActifAlh.optional(), page }).strict();
+/** Actifs : recherche dans l'adresse ou le domaine ; filtre par type ; filtre « Machine interne » (lot ALH3). */
+export const RechercheActifsAlh = z
+  .object({ q: recherche, type: TypeActifAlh.optional(), liaison: FiltreLiaisonActif.optional(), page })
+  .strict();
 export type RechercheActifsAlh = z.infer<typeof RechercheActifsAlh>;
 
 /** Technologies : recherche dans le nom, l'éditeur, le produit ou une CVE ; filtre « exploitée selon l'éditeur ». */
@@ -490,6 +493,10 @@ export interface ActifAlhDto extends PerimetreLieDto {
   creeLe: string | null;
   majLe: string | null;
   integration: { id: string; nom: string };
+  /** Machines internes reliées ou proposées (lot ALH3), limitées à celles que la personne peut lire. */
+  machinesInternes: ResumeLiaisonsActifDto;
+  /** Version des liaisons de l'actif : If-Match de toute décision, liaison ou déliaison (lot ALH3). */
+  versionLiaisons: number;
 }
 
 export interface CveTechnologieAlhDto {
