@@ -14,7 +14,9 @@
    suivi). Le service exige en plus de lire toutes les machines touchées ; créer une action exige le droit du module des
    actions et l'écriture sur le périmètre choisi (service du registre).
    Lot V4c : annulation d'une confirmation ou d'un rejet de rapprochement (`modifier`, If-Match sur le rapprochement, note
-   facultative ; V24). */
+   facultative ; V24).
+   V31 : liste de mots à ne pas masquer par le masque des machines de l'assistant (lecture, effet d'un mot et écriture avec
+   `administrer`, écriture avec If-Match). */
 import {
   AffectationMachine,
   AnnulationRapprochement,
@@ -26,7 +28,9 @@ import {
   NatureSuivi,
   RefusPropositionSuivi,
   DemandeCollecte,
+  EffetMotQuery,
   RechercheDeclarees,
+  ReglageMasque,
   ReglagePriorite,
   SuggestionsCpeQuery,
   type ProduitSurveilleDto,
@@ -541,6 +545,41 @@ export const vulnerabilitesRoutes = [
     body: ReglagePriorite,
     handler: async ({ svc, s, body, req, ip, reply }) => {
       const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/masque/reglage',
+    summary:
+      'Mots à ne pas masquer par le masque des machines de l’assistant, avec ce que chaque mot laisse sortir (ETag : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc, s, reply }) => {
+      const r = await svc.vulnerabilites.masque.lire((s as Session).user);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/masque/effet',
+    summary: 'Ce qu’un mot laisserait sortir : machines de l’inventaire dont il est le nom court ou le nom entier',
+    tags,
+    access: 'vulnerabilites:administrer',
+    query: EffetMotQuery,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.masque.effet((s as Session).user, query.mot),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/masque/reglage',
+    summary: 'Régler la liste des mots à ne pas masquer (If-Match : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ReglageMasque,
+    handler: async ({ svc, s, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.masque.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
       setEtag(reply, r.version);
       return r;
     },

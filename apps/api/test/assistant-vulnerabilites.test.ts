@@ -5,7 +5,9 @@
    nom de périmètre des jeux d'essai. Aussi : migration 079 sur base vierge ; outils absents sans le droit, module désactivé,
    autre profil ; intersection des droits ; stabilité des repères ; remplacement à l'affichage selon les droits ; repère
    inventé non remplacé ; CVE inconnue ; proposition déposée, corrigée, confirmée, rejetée, redépôt refusé ; refus sans les
-   droits de la cible ; journal sans nom ; suppression de la conversation. Faux modèle seulement, aucun service joint.
+   droits de la cible ; journal sans nom ; suppression de la conversation. Liste de mots à ne pas masquer (V31) : droits,
+   If-Match, journal, ce que chaque mot laisse sortir selon les droits de lecture, réglage illisible = masque strict, et
+   confidentialité : avec « dpi » dans la liste, seul le mot « dpi » sort. Faux modèle seulement, aucun service joint.
    Données entièrement fictives : noms en .invalid, adresses de 192.0.2.0/24, CVE et contrôles fictifs. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { ConversationAssistantDetailDto, PropositionVulnerabiliteDto } from '@suivi/shared';
@@ -882,5 +884,162 @@ describe('masque en ronde et action créée depuis la fiche (V30)', () => {
     expect(a.data.description).not.toContain(adresse(3));
     const j = await t.svc.db.q("SELECT details FROM audit_log WHERE action = 'vulnerabilites.suivi.action_creee'");
     sansIdentifiant(JSON.stringify(j.rows), 'journal du suivi');
+  });
+});
+
+describe('mots à ne pas masquer (V31)', () => {
+  const M = `${V}/masque`;
+  const UUID_DPI = '00000000-0000-4000-8000-0000000007b1';
+  const UUID_DPI_B = '00000000-0000-4000-8000-0000000007b2';
+  const NOM_DPI = 'dpi.exemple.invalid';
+  const NOM_DPI_B = 'dpi.autre.invalid';
+  const ADRESSE_DPI = '192.0.2.150';
+  const ADRESSE_DPI_B = '192.0.2.151';
+  let adminVuln: Agent;
+  const journal = async () =>
+    (
+      await t.svc.db.q<{ username: string; details: Record<string, unknown> }>(
+        "SELECT username, details FROM audit_log WHERE action = 'vulnerabilites.masque.reglage_modifie' ORDER BY id",
+      )
+    ).rows;
+  const masqueRonde = async () => t.svc.assistant.vulnerabilites!.masque(await sessionUser(t, adminUser), null);
+
+  beforeAll(async () => {
+    // Deux machines nommées comme une application : l'une dans le périmètre Alpha, l'autre dans Bravo.
+    for (const [k, nom, adr, uuid, perim] of [
+      [5, NOM_DPI, ADRESSE_DPI, UUID_DPI, perimA],
+      [6, NOM_DPI_B, ADRESSE_DPI_B, UUID_DPI_B, perimB],
+    ] as const)
+      idMachine[k] = (await t.svc.db.one<{ id: string }>(
+        `INSERT INTO vulnerabilites_machines (integration_id, identifiant_source, uuid_source, nom, adresse, perimetre_id, vu_numero)
+         VALUES ($1, $2, $3, $4, $5, $6, 1) RETURNING id`,
+        [instance, `uuid:${uuid}`, uuid, nom, adr, perim],
+      ))!.id;
+    await t.svc.db.q(
+      `INSERT INTO roles(id, name, permissions) VALUES ('r_av_admin_vuln', 'Administration des vulnérabilités',
+         ARRAY['assistant:lire','assistant:modifier','vulnerabilites:lire','vulnerabilites:administrer','ecarts:lire'])`,
+    );
+    const u = await makeUser(t, 'av_admin_vuln', 'r_av_admin_vuln', { rattache: false });
+    await t.svc.db.q('INSERT INTO grc_members(smsi_id, user_id, can_write) VALUES ($1, $2, true)', [perimA, u.id]);
+    adminVuln = await login(t, u);
+  });
+  afterAll(async () => {
+    await t.svc.db.q("DELETE FROM settings WHERE key = 'vulnerabilites:masque'");
+    await t.svc.db.q('DELETE FROM vulnerabilites_machines WHERE id = ANY($1::uuid[])', [[idMachine[5], idMachine[6]]]);
+  });
+
+  it('lecture, effet et écriture réservés au droit d’administrer le module ; liste vide par défaut', async () => {
+    for (const a of [rssiA, lecteurVuln, sansVuln]) {
+      expect((await a.get(`${M}/reglage`)).statusCode).toBe(403);
+      expect((await a.get(`${M}/effet?mot=dpi`)).statusCode).toBe(403);
+      expect((await a.put(`${M}/reglage`, { mots: ['dpi'] }, ifMatch(0))).statusCode).toBe(403);
+    }
+    const r = await adminVuln.get(`${M}/reglage`);
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toEqual({ values: { mots: [] }, version: 0, effets: [] });
+    expect(r.headers.etag).toBe('"0"');
+  });
+
+  it('effet d’un mot : machines désignées comptées, noms montrés seulement à qui peut les lire', async () => {
+    const effet = async (a: Agent, mot: string) => {
+      const r = await a.get(`${M}/effet?mot=${encodeURIComponent(mot)}`);
+      expect(r.statusCode, r.body).toBe(200);
+      return r.json();
+    };
+    // Périmètre Alpha seulement : la machine de Bravo est comptée, jamais nommée.
+    expect(await effet(adminVuln, 'DPI')).toEqual({ mot: 'DPI', machines: 2, noms: [NOM_DPI], nonLisibles: 1 });
+    expect(await effet(admin, 'dpi')).toEqual({
+      mot: 'dpi',
+      machines: 2,
+      noms: [NOM_DPI_B, NOM_DPI],
+      nonLisibles: 0,
+    });
+    expect(await effet(adminVuln, libelleMachine(1))).toEqual({
+      mot: libelleMachine(1),
+      machines: 1,
+      noms: [nomMachine(1)],
+      nonLisibles: 0,
+    });
+    expect(await effet(adminVuln, libelleMachine(2))).toEqual({
+      mot: libelleMachine(2),
+      machines: 1,
+      noms: [],
+      nonLisibles: 1,
+    });
+    expect(await effet(adminVuln, 'pacs')).toEqual({ mot: 'pacs', machines: 0, noms: [], nonLisibles: 0 });
+    for (const mot of [NOM_DPI, 'dpi:8443', ADRESSE_DPI, UUID_DPI, 'M-001', 'x'])
+      expect((await adminVuln.get(`${M}/effet?mot=${encodeURIComponent(mot)}`)).statusCode, mot).toBe(422);
+  });
+
+  it('écriture : If-Match, formes et doublons refusés, journal des mots ajoutés et retirés', async () => {
+    const url = `${M}/reglage`;
+    expect((await adminVuln.put(url, { mots: ['dpi'] })).statusCode).toBe(428);
+    for (const mots of [['dpi.exemple'], ['d pi'], ['dpi:80'], [ADRESSE_DPI], ['M-001'], [UUID_DPI], ['dpi', 'DPI']])
+      expect((await adminVuln.put(url, { mots }, ifMatch(0))).statusCode, mots.join(',')).toBe(422);
+    expect((await adminVuln.put(url, { mots: ['dpi'], autre: 1 }, ifMatch(0))).statusCode).toBe(422);
+    const ok = await adminVuln.put(url, { mots: ['dpi', 'pacs'] }, ifMatch(0));
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json()).toEqual({
+      values: { mots: ['dpi', 'pacs'] },
+      version: 1,
+      effets: [
+        { mot: 'dpi', machines: 2, noms: [NOM_DPI], nonLisibles: 1 },
+        { mot: 'pacs', machines: 0, noms: [], nonLisibles: 0 },
+      ],
+    });
+    expect((await adminVuln.put(url, { mots: ['web'] }, ifMatch(0))).statusCode).toBe(412);
+    const ok2 = await admin.put(url, { mots: ['pacs', 'web'] }, ifMatch(1));
+    expect(ok2.statusCode, ok2.body).toBe(200);
+    expect(await journal()).toEqual([
+      { username: 'av_admin_vuln', details: { ajoutes: ['dpi', 'pacs'], retires: [], mots: 2, version: 1 } },
+      { username: 'av_admin', details: { ajoutes: ['web'], retires: ['dpi'], mots: 2, version: 2 } },
+    ]);
+    expect((await adminVuln.put(url, { mots: ['dpi'] }, ifMatch(2))).statusCode).toBe(200);
+    expect((await adminVuln.get(url)).json()).toMatchObject({ values: { mots: ['dpi'] }, version: 3 });
+  });
+
+  it('confidentialité : avec « dpi » dans la liste, seul le mot « dpi » sort ; ni le nom, ni l’adresse, ni l’identifiant', async () => {
+    const conv = await ouvrir(rssiA);
+    modele.demandes = [];
+    modele.etapes = [() => reponse('Réponse fictive.')];
+    await demander(
+      rssiA,
+      conv,
+      `Le DPI est lent : ${NOM_DPI} (${ADRESSE_DPI}, uuid:${UUID_DPI}, ${UUID_DPI}) et dpi:8443 ; aussi ${NOM_DPI_B} et ${ADRESSE_DPI_B}.`,
+    );
+    expect(modele.etapes).toHaveLength(0);
+    const r5 = await repereDe(conv, 5);
+    expect(r5).toMatch(/^M-\d{3}$/);
+    expect(await repereDe(conv, 6)).toBeNull();
+    const question = modele.demandes[0]!.messages.filter((m) => m.role === 'user').at(-1)!.content!;
+    // « dpi:8443 » : jeton plus long, désigné par « dpi », que portent deux machines : « [machine] ».
+    expect(question).toBe(`Le DPI est lent : ${r5} (${r5}, ${r5}, ${r5}) et [machine] ; aussi [machine] et [machine].`);
+    const tout = JSON.stringify(modele.demandes);
+    for (const x of [NOM_DPI, NOM_DPI_B, ADRESSE_DPI, ADRESSE_DPI_B, UUID_DPI, UUID_DPI_B, 'dpi:8443', 'dpi.'])
+      expect(tout, x).not.toContain(x);
+    sansIdentifiant(tout, 'requêtes au modèle avec la liste');
+    // En ronde, de même : le mot seul sort, le reste devient « [machine] ».
+    expect(await (await masqueRonde())(`Le dpi et ${NOM_DPI} (${ADRESSE_DPI}) ; ${libelleMachine(1)}.`)).toBe(
+      'Le dpi et [machine] ([machine]) ; [machine].',
+    );
+  });
+
+  it('réglage illisible : liste vide, le masque reste strict', async () => {
+    for (const valeur of [
+      { values: { mots: ['dpi', 'dpi.exemple'] }, version: 7 },
+      { values: { mots: ['dpi', 'DPI'] }, version: 7 },
+      { values: 'dpi', version: 7 },
+    ]) {
+      await t.svc.db.q("UPDATE settings SET value = $1::jsonb WHERE key = 'vulnerabilites:masque'", [
+        JSON.stringify(valeur),
+      ]);
+      expect(await (await masqueRonde())('Le dpi est lent.')).toBe('Le [machine] est lent.');
+      expect((await adminVuln.get(`${M}/reglage`)).json()).toEqual({ values: { mots: [] }, version: 7, effets: [] });
+    }
+    await t.svc.db.q("UPDATE settings SET value = '\"illisible\"'::jsonb WHERE key = 'vulnerabilites:masque'");
+    expect(await (await masqueRonde())('Le dpi est lent.')).toBe('Le [machine] est lent.');
+    // Un réglage illisible se remplace par une nouvelle liste.
+    expect((await adminVuln.put(`${M}/reglage`, { mots: ['pacs'] }, ifMatch(0))).statusCode).toBe(200);
+    expect(await (await masqueRonde())('Le dpi et le pacs.')).toBe('Le [machine] et le pacs.');
   });
 });

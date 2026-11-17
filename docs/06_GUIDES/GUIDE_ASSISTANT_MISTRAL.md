@@ -49,6 +49,13 @@ Avant d'aller plus loin :
    conversation, et la plateforme relit toute demande avant l'envoi pour remplacer un nom ou une adresse de machine qui s'y
    trouverait (question tapée, action, document) par un repère ou par « [machine] ». Partent en revanche les identifiants CVE,
    les faits publiés par les sources, le nom et la version des produits surveillés et le nom des contrôles de Tenable.
+   Ce masque ne connaît que l'inventaire des machines : un nom absent de l'inventaire n'est pas reconnu. Il est strict : quand
+   une machine porte le nom d'une application (`dpi.exemple.invalid`, ou une machine nommée `web`), le mot « dpi » ou « web »
+   est masqué partout, et la réponse peut parler d'un serveur là où vous parliez de l'application. Pour lever ce contresens,
+   une personne qui a le droit d'administrer le module Vulnérabilités tient la liste des **mots à ne pas masquer** (Risques >
+   Vulnérabilités > Mots à ne pas masquer) : un mot de la liste écrit seul part tel quel chez Mistral ; le nom complet de la
+   machine, `dpi:8443`, son adresse et ses identifiants restent masqués. L'écran dit, pour chaque mot, combien de machines il
+   désigne : n'y mettez que des noms d'applications que vous acceptez de voir sortir. La liste est vide par défaut.
 
 ## Étape 2 — Obtenir une clé chez Mistral
 

@@ -340,6 +340,27 @@ documents, les actions et le contexte de l'organisation relus par l'assistant, e
   « Pour vous » avec leur décision, bloc des actifs touchés dans le formulaire de la fiche ; aide « Vulnérabilités : demander à
   l'assistant RSSI ». Non vérifié : aucun modèle réel (faux transport seulement). (session « Module surveillance
   vulnérabilités SMSI »)
+- **Mots à ne pas masquer par le masque des machines de l'assistant** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision V31). Le masque strict reste la règle : avant tout envoi au fournisseur du modèle, tout nom de machine de
+  l'inventaire, toute adresse et tout identifiant de Tenable devient un repère ou « [machine] ». Quand une machine porte le
+  nom d'une application (« dpi », « pacs », « web »), ce mot était masqué partout ; une **liste de mots à ne pas masquer**,
+  tenue avec le droit `vulnerabilites:administrer`, lève ce contresens mot par mot : un mot de la liste qui apparaît **seul**
+  (mot entier, ni « \\ » devant, ni « $ » derrière, ni point, tiret, tiret bas ou deux-points qui le relie à un autre mot)
+  n'est plus masqué, quelle que soit la casse et quelle que soit la forme du nom qui en faisait une désignation (premier
+  libellé, partie après « \\ », nom sans « $ », nom entier égal au mot). Le nom complet d'une machine
+  (`dpi.exemple.invalid`), tout jeton plus long qui commence par le mot (`dpi:8443`), l'adresse et les identifiants restent
+  toujours masqués. Un mot fait de 2 à 60 caractères, lettres et chiffres de toute écriture et tirets seulement (ni point, ni
+  espace, ni « \\ », ni « : ») ; la forme d'un identifiant de Tenable et celle d'un repère sont refusées ; 200 mots au plus,
+  doublons refusés sans tenir compte de la casse ; le masque ignore en plus tout mot qui serait l'adresse ou l'identifiant
+  d'une machine. Réglage rangé dans `settings` (clé `vulnerabilites:masque`, version pour `If-Match`), **sans migration**,
+  vide par défaut ; **un réglage illisible vaut liste vide** (masque strict). API `GET` et `PUT
+  /api/vulnerabilites/masque/reglage` et `GET /api/vulnerabilites/masque/effet?mot=…`, toutes avec
+  `vulnerabilites:administrer` : pour chaque mot, et pour un mot en cours de saisie, nombre de machines de l'inventaire dont
+  il est le nom court ou le nom entier, avec le nom des seules machines que la personne peut lire (20 au plus ; les autres sont
+  comptées). Journal `vulnerabilites.masque.reglage_modifie` (mots ajoutés et retirés, nombre de mots, version). La liste vaut
+  pour les conversations et pour les rondes. Écran Risques > Vulnérabilités > « Mots à ne pas masquer » (visible avec le droit
+  d'administrer le module) : avertissement, exemple, ajout et retrait, effet de chaque mot en clair ; aide « Vulnérabilités :
+  mots à ne pas masquer par l'assistant ». (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.0] — 2026-11-15
 

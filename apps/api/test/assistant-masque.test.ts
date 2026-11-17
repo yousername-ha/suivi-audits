@@ -1,9 +1,17 @@
 /* Masque des machines (ADR 0100, V14) : dernier contrôle avant l'envoi au fournisseur du modèle. Fonctions pures, sans base :
    nom complet, premier libellé, adresse IPv4 et IPv6, identifiants de la source, casse, ponctuation, machine non lisible,
    libellé partagé par deux machines, repères laissés tels quels, inventaire vide ; transport masquant tous les messages et
-   les arguments d'appels d'outils. Données fictives. */
+   les arguments d'appels d'outils. Liste de mots à ne pas masquer (V31) : mot seul laissé, casse, nom complet, adresse et
+   identifiants toujours masqués, jeton plus long toujours masqué, mot sans machine, mot partagé par deux machines, nom entier
+   égal au mot, « DOMAINE\\MACHINE » et « $ », mot de forme interdite ignoré. Données fictives. */
 import { describe, expect, it } from 'vitest';
-import { creerMasque, type MachineAMasquer, MACHINE_MASQUEE, transportMasque } from '../src/assistant/masque.js';
+import {
+  creerMasque,
+  formesDuNom,
+  type MachineAMasquer,
+  MACHINE_MASQUEE,
+  transportMasque,
+} from '../src/assistant/masque.js';
 import type { DemandeModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
 
 const m = (id: string, nom: string | null, adresse: string | null, lisible = true, uuid?: string): MachineAMasquer => ({
@@ -130,5 +138,90 @@ describe('masque des machines', () => {
     expect(recus[0]!.messages[2]!.tool_calls![0]!.function.arguments).toBe('{"q":"M-002"}');
     // La demande d'origine n'est pas modifiée.
     expect(demande.messages[0]!.content).toContain('srv-masque-01');
+  });
+});
+
+describe('liste de mots à ne pas masquer (V31)', () => {
+  const UUID_DPI = '00000000-0000-4000-8000-0000000009b1';
+  const dpi = m('a', 'dpi.exemple.invalid', '192.0.2.231', true, UUID_DPI);
+
+  it('sans liste, le masque reste strict ; avec « dpi », le mot seul sort, quelle que soit sa casse', async () => {
+    expect(await creerMasque([dpi], attribuer)('Le DPI est lent.')).toBe('Le M-001 est lent.');
+    const masquer = creerMasque([dpi], attribuer, ['DPI']);
+    expect(await masquer('Le DPI est lent ; dpi aussi, et Dpi.')).toBe('Le DPI est lent ; dpi aussi, et Dpi.');
+    expect(await masquer('{"q":"dpi"} (dpi) « dpi »')).toBe('{"q":"dpi"} (dpi) « dpi »');
+  });
+
+  it('nom complet, adresse, identifiants et jetons plus longs restent masqués', async () => {
+    const masquer = creerMasque([dpi], attribuer, ['dpi']);
+    expect(
+      await masquer(`dpi.exemple.invalid, DPI.autre.invalid, dpi:8443, 192.0.2.231, uuid:${UUID_DPI} et ${UUID_DPI}.`),
+    ).toBe('M-001, M-001, M-001, M-001, M-001 et M-001.');
+    // « \ » devant ou « $ » derrière : forme d'un nom de machine Windows, toujours masquée.
+    expect(await masquer('EXEMPLE\\dpi et dpi$ ; le dpi seul.')).toBe('EXEMPLE\\M-001 et M-001$ ; le dpi seul.');
+    expect(await masquer('https://dpi/chemin')).toBe('https://dpi/chemin');
+  });
+
+  it('mot sans machine : aucun effet ; les autres clés restent masquées', async () => {
+    const masquer = creerMasque([dpi], attribuer, ['pacs']);
+    expect(await masquer('Le PACS et le DPI.')).toBe('Le PACS et le M-001.');
+  });
+
+  it('mot partagé par deux machines : laissé seul, noms complets distincts toujours masqués', async () => {
+    const machines = [m('d', 'web.exemple.invalid', '192.0.2.234'), m('e', 'web.autre.invalid', '192.0.2.235')];
+    expect(await creerMasque(machines, attribuer)('Le web.')).toBe(`Le ${MACHINE_MASQUEE}.`);
+    expect(await creerMasque(machines, attribuer, ['web'])('Le web, web.exemple.invalid et web.autre.invalid.')).toBe(
+      'Le web, M-004 et M-005.',
+    );
+  });
+
+  it('nom entier égal au mot : le mot seul sort ; adresse, identifiant et jeton plus long restent masqués', async () => {
+    const masquer = creerMasque([m('a', 'web', '192.0.2.240')], attribuer, ['WEB']);
+    expect(await masquer('Le web répond sur web:443 (192.0.2.240), ip:192.0.2.240|web.')).toBe(
+      'Le web répond sur M-001 (M-001), M-001.',
+    );
+  });
+
+  it('« DOMAINE\\MACHINE » et nom terminé par « $ » : le mot seul sort, le nom complet reste masqué', async () => {
+    const masquer = creerMasque([m('a', 'EXEMPLE\\PACS', '192.0.2.241'), m('b', 'RIS$', '192.0.2.242')], attribuer, [
+      'pacs',
+      'ris',
+    ]);
+    expect(await masquer('Le pacs et le RIS ; EXEMPLE\\PACS, AUTRE\\PACS et RIS$.')).toBe(
+      'Le pacs et le RIS ; M-001, AUTRE\\M-001 et M-002.',
+    );
+  });
+
+  it('mot accentué : cherché tel quel, laissé seul, masqué quand il est relié à un autre mot', async () => {
+    const masquer = creerMasque([m('a', 'été.exemple.invalid', '192.0.2.243')], attribuer, ['ÉTÉ']);
+    expect(await masquer('En été ; été.exemple.invalid ; été.autre.')).toBe('En été ; M-001 ; M-001.autre.');
+  });
+
+  it('jamais une adresse, un identifiant, un repère ni un nom complet, même remis sans contrôle', async () => {
+    const machines = [dpi, { ...m('b', 'pacs.exemple.invalid', '2001:db8::7'), identifiants: ['abc123'] }];
+    const masquer = creerMasque(machines, attribuer, [
+      UUID_DPI,
+      `uuid:${UUID_DPI}`,
+      '192.0.2.231',
+      '2001:db8::7',
+      'ip:192.0.2.231',
+      'dpi.exemple.invalid',
+      'dpi:8443',
+      'M-001',
+      // Forme admise, mais identifiant d'une machine : ignoré.
+      'abc123',
+    ]);
+    expect(
+      await masquer(`${UUID_DPI} uuid:${UUID_DPI} 192.0.2.231 [2001:db8::7] dpi.exemple.invalid dpi:8443 abc123 dpi`),
+    ).toBe('M-001 M-001 M-001 [M-002] M-001 M-001 M-002 M-001');
+  });
+
+  it('formes d’un nom : nom entier, partie après « \\ », nom sans « $ », premier libellé', () => {
+    expect(formesDuNom('dpi.exemple.invalid')).toEqual(['dpi.exemple.invalid', 'dpi']);
+    expect(formesDuNom('EXEMPLE\\PACS$')).toEqual(['exemple\\pacs$', 'pacs$', 'exemple\\pacs', 'pacs']);
+    expect(formesDuNom('web')).toEqual(['web']);
+    expect(formesDuNom('db.exemple.invalid')).toEqual(['db.exemple.invalid']);
+    expect(formesDuNom('10.exemple.invalid')).toEqual(['10.exemple.invalid']);
+    expect(formesDuNom(null)).toEqual([]);
   });
 });

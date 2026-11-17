@@ -46,6 +46,7 @@ import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { MotsNonMasquesVulnerabilites } from './vulnerabilites/mots-non-masques.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
 import { SuiviFailles } from './vulnerabilites/suivi.js';
@@ -110,8 +111,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
   /* V30 : les machines nommées dans une action suivent le rang des machines. */
   suivi.rangs = (user) => failles.machinesRangees(user);
-  /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie. */
-  assistant.vulnerabilites = new AssistantVulnerabilites(db, failles, suivi, reglagePriorite);
+  /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
+     ne pas masquer (V31). */
+  const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
+  assistant.vulnerabilites = new AssistantVulnerabilites(db, failles, suivi, reglagePriorite, motsNonMasques);
   return {
     cfg,
     log,
@@ -131,6 +134,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       failles,
       rapprochements,
       priorite: reglagePriorite,
+      masque: motsNonMasques,
       suivi,
     },
     modules,

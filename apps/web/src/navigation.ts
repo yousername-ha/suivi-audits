@@ -106,13 +106,21 @@ export const FAMILLES: Famille[] = [
     destinations: [
       dest('risques', 'Gestion des risques', [p('risques'), p('etudes'), p('carte')]),
       // Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1), veille sur les sources publiques (lots V2 et V3),
-      // failles détectées par Tenable et machines (lot V5), seuils de priorité (lot V4a).
+      // failles détectées par Tenable et machines (lot V5), seuils de priorité (lot V4a), mots à ne pas masquer par le
+      // masque de l'assistant (V31, droit d'administrer le module).
       dest('vulnerabilites', 'Vulnérabilités', [
         page('vulnerabilites-produits', 'Produits surveillés', '/vulnerabilites/produits', 'vulnerabilites'),
         page('vulnerabilites-veille', 'Veille', '/vulnerabilites/veille', 'vulnerabilites'),
         page('vulnerabilites-failles', 'Failles détectées', '/vulnerabilites/failles', 'vulnerabilites'),
         page('vulnerabilites-machines', 'Machines', '/vulnerabilites/machines', 'vulnerabilites'),
         page('vulnerabilites-priorite', 'Seuils de priorité', '/vulnerabilites/priorite', 'vulnerabilites'),
+        page(
+          'vulnerabilites-masque',
+          'Mots à ne pas masquer',
+          '/vulnerabilites/masque',
+          'vulnerabilites',
+          'administrer',
+        ),
       ]),
     ],
   },

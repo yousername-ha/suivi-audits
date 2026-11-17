@@ -135,7 +135,10 @@ repère de la conversation (`vulnerabilites_assistant_reperes`, clé étrangère
 à `SET NULL` pour qu'un numéro ne soit jamais réattribué) ; la table de correspondance ne sort pas du serveur. Le transport du
 modèle est enveloppé par un masque (`apps/api/src/assistant/masque.ts`, en conversation et en ronde) qui relit toute la demande
 avant le relais et remplace tout nom, premier libellé, adresse ou identifiant de Tenable de l'inventaire par le repère ou par
-« [machine] » : c'est le dernier point de contrôle avant la sortie. Le texte du modèle est rangé avec ses repères
+« [machine] » : c'est le dernier point de contrôle avant la sortie. Le masque reçoit aussi la liste de mots à ne pas masquer
+(décision V31 ; `apps/api/src/vulnerabilites/mots-non-masques.ts`, clé `vulnerabilites:masque` de `settings`, droit
+`vulnerabilites:administrer`, sans migration) : un mot de la liste écrit seul n'est plus remplacé ; le nom complet, tout jeton
+plus long, l'adresse et les identifiants le restent, et un réglage illisible vaut liste vide. Le texte du modèle est rangé avec ses repères
 (`assistant_messages`, `vulnerabilites_assistant_propositions`) ; la route d'une conversation et celle des propositions les
 remplacent à la lecture, selon les droits de la personne. À la confirmation d'une proposition, la création de l'action et la
 mise à jour de la proposition se font dans une seule transaction (`SuiviFailles.creerActionProposee`), repères remplacés par les

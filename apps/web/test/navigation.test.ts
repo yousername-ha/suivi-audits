@@ -45,6 +45,7 @@ const INVENTAIRE = [
   'risques|vulnerabilites|vulnerabilites-failles|/vulnerabilites/failles|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-machines|/vulnerabilites/machines|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-priorite|/vulnerabilites/priorite|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-masque|/vulnerabilites/masque|vulnerabilites|administrer',
   'conformite|referentiels|bibliotheque|/pilotage/bibliotheque|conformite|lire',
   'conformite|applicabilite|dda-iso|/pilotage/dda-iso|audit|lire',
   'conformite|applicabilite|dda-annexe-a|/pilotage/dda-annexe-a|audit|lire',

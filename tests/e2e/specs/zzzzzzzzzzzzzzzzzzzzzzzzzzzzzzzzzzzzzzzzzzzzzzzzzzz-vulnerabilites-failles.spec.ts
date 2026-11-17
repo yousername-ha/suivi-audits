@@ -2,7 +2,8 @@
    référence (aucune n'est approuvée sans relecture) : menu, bascule par faille et par machine, filtres, écran des machines,
    accessibilité, CSP. Aucun Tenable n'est joint : la pile de test n'a ni connecteur actif ni donnée synchronisée. Lot V4a :
    filtre de priorité, liste des failles déclarées, écran « Seuils de priorité ». Lot V4b : filtre « Suivi » (aucune faille à
-   clore sur une pile vierge). Lot V4c : filtre « Exploitation avérée » (toutes les sources). */
+   clore sur une pile vierge). Lot V4c : filtre « Exploitation avérée » (toutes les sources). V31 : écran « Mots à ne pas
+   masquer » (ajout et retrait d'un mot, effet affiché). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -42,6 +43,18 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByLabel('Seuil EPSS (en %)')).toHaveValue('50');
     await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeEnabled();
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+
+    // Mots à ne pas masquer (V31) : liste vide par défaut ; un mot ajouté dit son effet (aucune machine ici), puis retiré.
+    await page.goto('/vulnerabilites/masque');
+    await expect(page.getByRole('heading', { name: 'Mots à ne pas masquer', level: 1 })).toBeVisible();
+    await expect(page.getByText('Aucun mot : le masque est strict.')).toBeVisible();
+    await page.getByLabel('Mot', { exact: true }).fill('dpi');
+    await expect(page.getByText(/aucun effet aujourd’hui/)).toBeVisible();
+    await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await expect(page.getByText('dpi', { exact: true })).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    await page.getByRole('button', { name: 'Retirer', exact: true }).click();
+    await expect(page.getByText('Aucun mot : le masque est strict.')).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

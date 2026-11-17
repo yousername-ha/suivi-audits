@@ -13,7 +13,8 @@
      personne qui regarde et selon ses droits, et à la confirmation d'une proposition (V29), sur le serveur, sans retour vers
      le modèle.
    - Masque de sortie (masque.ts) : construit ici à partir de l'inventaire, il remplace tout nom, adresse ou identifiant de
-     machine qui figurerait encore dans une demande au modèle.
+     machine qui figurerait encore dans une demande au modèle ; un mot de la liste à ne pas masquer (V31) qui apparaît seul
+     est laissé tel quel.
    Journal : `assistant.vulnerabilites.*`, identifiants et nombres seulement, jamais un nom, une adresse ni un repère. */
 import {
   calculerPriorite,
@@ -58,6 +59,7 @@ import type { LectureVulnerabilites } from '../assistant/outils.js';
 import type { Db, Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { FaillesDetectees } from './failles.js';
+import type { MotsNonMasquesVulnerabilites } from './mots-non-masques.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
 import { lisible, present } from './sql.js';
@@ -139,6 +141,7 @@ export class AssistantVulnerabilites {
     private readonly failles: FaillesDetectees,
     private readonly suivi: SuiviFailles,
     private readonly reglage: ReglagePrioriteVulnerabilites,
+    private readonly nonMasques: MotsNonMasquesVulnerabilites,
   ) {}
 
   /** La personne lit le module (droit, module actif : les droits de la session tiennent compte de l'activation). */
@@ -206,7 +209,8 @@ export class AssistantVulnerabilites {
   }
 
   /** Masque de sortie pour une demande au modèle : en conversation, repère pour une machine lisible par la personne ; en
-      ronde (pas de conversation), « [machine] » pour toutes. */
+      ronde (pas de conversation), « [machine] » pour toutes. La liste de mots à ne pas masquer (V31) vaut pour les deux ;
+      illisible, elle est vide (masque strict). */
   async masque(user: SessionUser, conversationId: string | null): Promise<Masquer> {
     const lit = AssistantVulnerabilites.lit(user) && conversationId !== null;
     const { rows } = await sql<{
@@ -226,7 +230,11 @@ export class AssistantVulnerabilites {
       identifiants: [m.identifiant_source, ...(m.uuid_source ? [m.uuid_source] : [])],
       lisible: lit && m.lisible,
     }));
-    return creerMasque(machines, conversationId ? (ids) => this.reperes(conversationId, ids) : undefined);
+    return creerMasque(
+      machines,
+      conversationId ? (ids) => this.reperes(conversationId, ids) : undefined,
+      await this.nonMasques.mots(),
+    );
   }
 
   /* ---------------------------------------------------------------- Capacité offerte aux outils */
