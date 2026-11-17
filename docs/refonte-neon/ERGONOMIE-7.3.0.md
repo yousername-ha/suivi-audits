@@ -43,6 +43,10 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
 3. Documents : Catégorie et Étiquettes sur les titres de colonnes (demande d'étendre le filtre de colonne au choix multiple).
 4. Suite du relevé : taille commune des fenêtres, champs de tableau coupés, tuile de l'assistant, densité de Processus,
    titre en double dans les cartes de Plateforme et de Configuration système.
+5. Cartographie du SMSI : à l'ouverture, la carte s'ajuste à la taille réelle de sa zone quand elle est déjà mesurable,
+   sinon à la taille par défaut. Plusieurs parcours de la carte sont calés sur ce comportement. Un ajustement toujours fait
+   sur la taille réelle, essayé puis retiré, demande d'adapter le parcours 29. Le parcours 15 peut se montrer instable en CI
+   (réussi au second essai).
 
 ## Contrôles
 
