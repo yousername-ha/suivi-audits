@@ -344,9 +344,9 @@ if [ -z "$(valeur_env UPDATER_SSH_DIR)" ] && git remote get-url origin 2> /dev/n
   info "Clé de déploiement conservée pour l'exécutant (UPDATER_SSH_DIR=/root/.ssh dans .env) : dépôt non lisible en HTTPS."
 fi
 if [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then
-  # Mise à jour web : frontal figé (ADR 0061). Seule exception, ponctuelle (RSSI, 17/11/2026, à retirer à la version
-  # suivante) : FRONTAL_AVEC_LA_VERSION dans scripts/update-worker.py, appliquée par l'exécutant de la cible en fin
-  # d'opération, car ce script-ci est alors celui de la version installée.
+  # Mise à jour web : frontal figé pendant l'opération (ADR 0061). À la toute fin, l'exécutant de la cible le met à jour
+  # si son empreinte diffère de celle de la nouvelle image web (ADR 0103, scripts/update-worker.py) : ce script-ci est
+  # alors celui de la version installée.
   ecrire_env GATEWAY_VERSION "$(valeur_env GATEWAY_VERSION "$ACTUELLE")"
   # --images-locales est une option CLI de recette ; jamais exposée dans la demande web.
   if [ "$LOCALES" = 1 ]; then

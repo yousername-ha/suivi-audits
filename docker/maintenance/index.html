@@ -297,7 +297,16 @@
         </div>
         <div id="connection" class="notice" hidden>
           <svg class="icone" aria-hidden="true"><use href="#i-warning" /></svg>
-          <p>Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
+          <p id="connection-text">Connexion momentanément interrompue. Le suivi reprendra automatiquement.</p>
+        </div>
+        <!-- Coupure du frontal annoncée par le service (ADR 0103). Pas de zone annoncée ici : le texte de l'étape (#message,
+             role="status") annonce déjà le redémarrage ; cet encadré ne serait qu'un doublon de lecture. -->
+        <div id="coupure" class="notice" hidden>
+          <svg class="icone" aria-hidden="true"><use href="#i-rollback" /></svg>
+          <p id="coupure-text">
+            Redémarrage du frontal du site : cette page va s’interrompre quelques secondes puis reprendra toute seule.
+            Si elle ne revient pas après une minute, rechargez-la.
+          </p>
         </div>
         <div id="delay" class="notice" hidden>
           <svg class="icone" aria-hidden="true"><use href="#i-clock" /></svg>

@@ -117,3 +117,48 @@ test('maintenance Neon : la phase finale sans succès publié n’affiche aucune
     await ctx.close();
   }
 });
+
+test('maintenance : la coupure annoncée du frontal est affichée, puis reprise par l’avis de connexion', async ({
+  browser,
+}) => {
+  // ADR 0103 : redémarrage du frontal annoncé par le service (indicateur « coupure » de l'état publié).
+  const etape =
+    'Redémarrage du frontal du site. Cette page peut s’interrompre quelques secondes, puis elle reprend toute seule.';
+  const avis =
+    'Redémarrage du frontal du site : cette page va s’interrompre quelques secondes puis reprendra toute seule. Si elle ne revient pas après une minute, rechargez-la.';
+  const { ctx, page, problems, suivi } = await ouvrir(
+    browser,
+    enCours({ phase: 'verifying', message: etape, coupure: true }),
+    'reduce',
+  );
+  let horsLigne = false;
+  await page.route('**/update/status.json', (route) =>
+    horsLigne ? route.abort() : route.fulfill({ json: suivi.etat }),
+  );
+  const coupure = page.locator('#coupure');
+  const connexion = page.locator('#connection');
+  try {
+    await expect(coupure).toBeVisible();
+    await expect(coupure).toHaveText(avis);
+    await expect(connexion).toBeHidden();
+    // Une seule zone annoncée : le texte de l'étape ; l'encadré n'en fait pas un doublon de lecture.
+    await expect(page.getByRole('status')).toHaveText(etape);
+    // Frontal en cours de redémarrage : l'avis de connexion reprend le message de la coupure, affiché une seule fois.
+    horsLigne = true;
+    await expect(connexion).toBeVisible();
+    await expect(connexion).toHaveText(avis);
+    await expect(coupure).toBeHidden();
+    // Frontal revenu, coupure retirée : plus aucun avis.
+    suivi.etat = enCours({ phase: 'verifying', message: 'Vérification finale du système de mise à jour.' });
+    horsLigne = false;
+    await expect(connexion).toBeHidden();
+    await expect(coupure).toBeHidden();
+    // Sans coupure annoncée, une perte de connexion garde l'avis générique.
+    horsLigne = true;
+    await expect(connexion).toBeVisible();
+    await expect(connexion).toHaveText('Connexion momentanément interrompue. Le suivi reprendra automatiquement.');
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

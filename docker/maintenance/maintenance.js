@@ -129,11 +129,19 @@
           : 'Votre espace revient automatiquement dès qu’il est disponible.',
     );
   }
+  // Coupure du frontal annoncée par le dernier état reçu (ADR 0103) : si la connexion se perd alors, l'avis de connexion
+  // reprend ce message au lieu de l'avis générique. Textes lus dans la page.
+  const texte = (id) => get(id).textContent.replace(/\s+/g, ' ').trim();
+  const AVIS_CONNEXION = texte('connection-text');
+  const AVIS_COUPURE = texte('coupure-text');
+  let coupure = false;
   async function tick() {
     try {
       const response = await fetch('/update/status.json', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
       if (!response.ok) throw new Error('status');
       const state = await response.json();
+      coupure = state.coupure === true;
+      get('coupure').hidden = !coupure;
       get('connection').hidden = true;
       root.dataset.suivi = 'actif';
       ecrire('tracking', 'Actif');
@@ -219,7 +227,10 @@
       }
       indiquerRetour(state, waiting, failed);
     } catch {
-      // Dernier état connu conservé (titre, frise, illustration figée) ; seul l'avis de connexion change.
+      // Dernier état connu conservé (titre, frise, illustration figée) ; seul l'avis de connexion change. Pendant une coupure
+      // annoncée, il en reprend le message, qui n'est alors affiché qu'une fois.
+      ecrire('connection-text', coupure ? AVIS_COUPURE : AVIS_CONNEXION);
+      get('coupure').hidden = true;
       get('connection').hidden = false;
       root.dataset.suivi = 'interrompu';
       ecrire('tracking', 'Interrompu');
