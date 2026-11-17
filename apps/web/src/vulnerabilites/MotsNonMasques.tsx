@@ -167,7 +167,7 @@ function Reglage({ reglage }: { reglage: ReglageMasqueOut }) {
         onRetirer={(mot) =>
           void enregistrer(
             mots.filter((m) => m !== mot),
-            `« ${mot} » est retiré : il est de nouveau masqué.`,
+            `« ${mot} » est retiré de la liste.`,
           )
         }
       />

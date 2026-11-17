@@ -341,6 +341,18 @@
   - un petit modèle peut écrire qu'il a déposé une proposition sans l'avoir fait : la consigne l'interdit, mais seule une
     mention posée par la plateforme le garantirait.
   Non vérifié : aucun modèle réel n'a répondu (faux transport) ; la qualité des réponses n'est pas mesurée.
+- **Liste de mots à ne pas masquer (V31)** (17/11/2026) : réglage du module, rangé avec les réglages existants, sans
+  migration, lu et écrit avec `vulnerabilites:administrer`, vide par défaut ; il vaut pour les conversations et pour les
+  rondes. À confirmer par le RSSI :
+  - un mot de la liste n'est laissé que **seul** : collé à une lettre ou un chiffre, précédé de « \\ », suivi de « $ », ou
+    relié par un point, un tiret, un tiret bas ou deux-points, il reste masqué ; le nom complet d'une machine, son adresse
+    et ses identifiants restent toujours masqués ;
+  - **limite** : la barre oblique ne relie pas ; `https://dpi/chemin` laisse sortir « dpi » ;
+  - forme d'un mot : lettres, chiffres et tirets, de 2 à 60 caractères ; une adresse, un identifiant ou un repère sont
+    refusés, et le masque les ignore même s'ils lui étaient remis ;
+  - l'écran indique combien de machines chaque mot désigne ; le nom de ces machines n'est montré qu'à qui peut les lire,
+    le nombre l'est à tout administrateur du module ;
+  - un réglage illisible vaut liste vide : le masque strict s'applique.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
