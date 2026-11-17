@@ -8,8 +8,8 @@ Bibliothèque standard seule.
 Entrée : un objet JSON sur l'entrée standard (type, opération, configuration, secrets, mandataire facultatif) ; ni argument ni variable
 d'environnement ne porte de secret. Sortie : un objet JSON {ok, resultat, erreur} sur la sortie standard, normalisé et
 borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. « synchroniser » ajoute `elements` : les machines,
-constats, détections et machines d'inventaire, réduits aux seuls champs listés (CHAMPS_ANALYSE, CHAMPS_HOTE), que
-l'exécutant rapporte par lots bornés.
+constats, détections et machines d'inventaire, réduits aux seuls champs listés (CHAMPS_ANALYSE, CHAMPS_DEPOT pour le dépôt
+d'une machine, CHAMPS_HOTE), que l'exécutant rapporte par lots bornés.
 
 Règles :
 - HTTPS seulement, sur le port réglé (443 par défaut), certificat toujours vérifié (autorité fournie, sinon magasin du système), TLS 1.2 au minimum ;
@@ -59,7 +59,7 @@ OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester"
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
 BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "defautsParAlerte": 20, "resolutionsParDefaut": 10, "nomDefaut": 300, "descriptionDefaut": 4000, "niveauResolution": 60, "lot": 500, "lots": 200}
-BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "lot": 500, "lots": 200}
+BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "nomDepot": 200, "lot": 500, "lots": 200}
 ENTREE_MAX = 65536
 REPONSE_MAX = 1024 * 1024
 ERREUR_MAX = 300
@@ -410,13 +410,16 @@ def tenable_tester(client):
 CHAMPS_ANALYSE = ("pluginID", "pluginName", "severity", "family", "synopsis", "solution", "cvssV3Vector", "cvssV3BaseScore",
                   "vprScore", "epssScore", "exploitAvailable", "exploitEase", "vulnPubDate", "patchPubDate", "seolDate",
                   "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore", "keyDrivers",
-                  "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk")
+                  "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
+# Champs lus du dépôt d'un résultat (`repository`, objet ; lot V4d) : identifiant et nom seulement.
+CHAMPS_DEPOT = ("id", "name")
 # Champs lus dans une machine de l'inventaire (`GET /rest/hosts`, liste directe).
 CHAMPS_HOTE = ("uuid", "tenableUUID", "name", "os", "firstSeen", "lastSeen", "ipAddress")
 GRAVITES = {"critique": "4", "elevee": "3", "moyenne": "2", "faible": "1"}
 GRAVITE_DE_ID = {v: k for k, v in GRAVITES.items()}
 GRAVITES_DEFAUT = ["critique", "elevee"]
 PLUGIN_ID = re.compile(r"^[1-9]\d{0,8}$")
+DEPOT_TENABLE = re.compile(r"^[1-9]\d{0,8}$")
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
 UUID_STRICT = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 ADRESSE_IP = re.compile(r"^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?=[0-9a-f:.]*:)[0-9a-f:.]{2,45})$")
@@ -547,6 +550,20 @@ def nom_objet(v):
     return v if isinstance(v, dict) else {}
 
 
+def depot(v):
+    """Dépôt d'un résultat (`repository` : objet {id, name, …}) : identifiant entier positif et nom nettoyé, rien d'autre.
+    Forme inattendue : None (la machine garde son dépôt rangé)."""
+    if not isinstance(v, dict):
+        return None
+    d = {k: v[k] for k in CHAMPS_DEPOT if k in v}
+    ident = d.get("id")
+    ident = str(ident).strip() if isinstance(ident, (str, int)) and not isinstance(ident, bool) else ""
+    nom = texte(d.get("name"), BORNES_SYNCHRO["nomDepot"])
+    if not DEPOT_TENABLE.fullmatch(ident) or not nom:
+        return None
+    return {"id": ident, "nom": nom}
+
+
 def lire_resultat(brut, sortie, bilan):
     """Un résultat de `vulndetails` : réduit d'abord aux champs listés, puis réparti en machine, constat et détection."""
     if not isinstance(brut, dict):
@@ -564,6 +581,7 @@ def lire_resultat(brut, sortie, bilan):
         bilan["ecartes"] += 1
         return
     premiere, derniere = instant(r.get("firstSeen")), instant(r.get("lastSeen"))
+    d = depot(r.get("repository"))
     m = sortie["machines"].get(cle)
     if m is None:
         acr = decimal(r.get("acrScore"), 0, 10)
@@ -571,12 +589,16 @@ def lire_resultat(brut, sortie, bilan):
             "type": "machine", "cle": cle, "uuid": uuid, "nom": nom_m, "adresse": adresse,
             "systeme": texte(r.get("operatingSystem"), BORNES_SYNCHRO["systeme"]),
             "premiere": premiere, "derniere": derniere, "exposition": exposition(r.get("keyDrivers")), "acr": acr,
+            "depot": d,
         }
     else:
         if premiere and (not m["premiere"] or premiere < m["premiere"]):
             m["premiere"] = premiere
         if derniere and (not m["derniere"] or derniere > m["derniere"]):
             m["derniere"] = derniere
+        # Machine vue dans plusieurs dépôts : le plus petit identifiant, pour un choix stable d'une synchronisation à l'autre.
+        if d and (not m["depot"] or int(d["id"]) < int(m["depot"]["id"])):
+            m["depot"] = d
     if plugin not in sortie["constats"]:
         liste, tronquees = cves(r.get("cve"))
         vecteur = r.get("cvssV3Vector").strip() if isinstance(r.get("cvssV3Vector"), str) else ""

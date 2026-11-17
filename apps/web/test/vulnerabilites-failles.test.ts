@@ -1,16 +1,17 @@
 /* Module Vulnérabilités (ADR 0100, lot V5) : écrans « Failles détectées » et « Machines ». Menu conditionné par le droit du
    module, adresses de recherche et de filtres, marques (exploitée, exploitable, non maintenu), fiche (CVE, vecteur CVSS et
    correctif tels quels, machines par rôle, lien « voir aussi » contrôlé), textes de Tenable rendus comme texte simple,
-   affectation en masse (versions jointes), bandeau des machines sans rôle. Données entièrement fictives. */
+   affectation en masse (versions jointes), bandeau des machines sans rôle. Lot V4d : origine du périmètre d'une machine
+   (hérité du dépôt ou indiqué à la main), dépôts de Tenable et leur liaison. Données entièrement fictives. */
 import { MantineProvider } from '@mantine/core';
-import type { Action, ConstatDto, ConstatResumeDto, MachineDto, Module } from '@suivi/shared';
+import type { Action, ConstatDto, ConstatResumeDto, DepotTenableDto, MachineDto, Module } from '@suivi/shared';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 import { famillesVisibles, localiser } from '../src/navigation';
 import { ConstatsTable, EtatSynchronisations, FicheConstat } from '../src/vulnerabilites/FaillesDetectees';
-import { BandeauSansRole, MachinesTable } from '../src/vulnerabilites/Machines';
+import { BandeauSansRole, DepotsTenableTable, MachinesTable } from '../src/vulnerabilites/Machines';
 import {
   corpsAffectation,
   FILTRES_CONSTATS_VIDES,
@@ -20,6 +21,7 @@ import {
   libelleMachine,
   lienVoirAussi,
   marquesConstat,
+  originePerimetre,
   resumeCves,
   urlConstats,
   urlDeclarees,
@@ -114,6 +116,8 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   role: null,
   perimetreId: null,
   perimetreNom: null,
+  perimetreOrigine: null,
+  depot: null,
   exposition: 'internal',
   acr: 4,
   premiere: null,
@@ -177,6 +181,11 @@ describe('menu et aide', () => {
       'catalogue KEV',
       'en anglais',
       'sans nom ni adresse',
+      // Lot V4d : dépôts de Tenable.
+      'Dépôts Tenable',
+      'hérité du dépôt',
+      'indiqué à la main',
+      'prime',
     ])
       expect(texte).toContain(m);
   });
@@ -305,6 +314,75 @@ describe('rendu', () => {
     expect(choix).toContain('type="checkbox"');
     expect(rendu(createElement(BandeauSansRole, { n: 3 }))).toContain('3 machines lisibles sans rôle');
     expect(rendu(createElement(BandeauSansRole, { n: 0 }))).not.toContain('sans rôle');
+  });
+  it('machines (lot V4d) : périmètre hérité du dépôt, indiqué à la main, ou dépôt non relié', () => {
+    const depot = {
+      id: '00000000-0000-4000-8000-0000000000d1',
+      nom: 'Dépôt fictif Nord',
+      perimetreId: null,
+      perimetreNom: null,
+    };
+    const herite = machine({ perimetreId: 'p', perimetreNom: 'Périmètre fictif A', perimetreOrigine: 'depot', depot });
+    const main = machine({ perimetreId: 'p', perimetreNom: 'Périmètre fictif B', perimetreOrigine: 'machine', depot });
+    expect(originePerimetre(herite)).toBe('Hérité du dépôt « Dépôt fictif Nord »');
+    expect(originePerimetre({ perimetreOrigine: 'depot', depot: null })).toBe('Hérité du dépôt');
+    expect(originePerimetre(main)).toBe('Indiqué à la main');
+    expect(originePerimetre(machine())).toBeNull();
+    const html = rendu(createElement(MachinesTable, { machines: [herite, main, machine({ depot })] }));
+    expect(html).toContain('Périmètre fictif A');
+    expect(html).toContain('Hérité du dépôt « Dépôt fictif Nord »');
+    expect(html).toContain('Indiqué à la main');
+    expect(html).toContain('Dépôt « Dépôt fictif Nord » non relié');
+    expect(rendu(createElement(MachinesTable, { machines: [machine()] }))).not.toContain('dépôt');
+  });
+  it('dépôts de Tenable : liaison, machines et exceptions, absence signalée ; liste vide', () => {
+    const d = (x: Partial<DepotTenableDto> = {}): DepotTenableDto => ({
+      id: '00000000-0000-4000-8000-0000000000d1',
+      depotTenable: 11,
+      nom: 'Dépôt fictif Nord',
+      perimetreId: null,
+      perimetreNom: null,
+      present: true,
+      machines: 3,
+      exceptions: 1,
+      version: 2,
+      majPar: null,
+      majLe: '2026-11-17T08:00:00.000Z',
+      integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+      ...x,
+    });
+    const html = rendu(
+      createElement(DepotsTenableTable, {
+        depots: [
+          d(),
+          d({
+            id: '00000000-0000-4000-8000-0000000000d2',
+            nom: '<b>Dépôt</b> fictif Sud',
+            present: false,
+            machines: 1,
+            exceptions: 0,
+            perimetreId: '00000000-0000-4000-8000-0000000000f1',
+            perimetreNom: 'Périmètre fictif B',
+          }),
+        ],
+        options: [{ id: '00000000-0000-4000-8000-0000000000f2', nom: 'Périmètre fictif A' }],
+        enCours: null,
+        onLier: rien,
+      }),
+    );
+    expect(html).toContain('Tenable fictif · dépôt 11');
+    expect(html).toContain('3 machines');
+    expect(html).toContain('dont 1 au périmètre indiqué à la main');
+    expect(html).toContain('Non relié : ses machines sans périmètre indiqué à la main');
+    expect(html).toContain('absent de la dernière synchronisation complète');
+    expect(html).toContain('Périmètre de la plateforme pour Dépôt fictif Nord');
+    // Périmètre relié hors des choix de la personne : affiché quand même ; nom du dépôt en texte simple.
+    expect(html).toContain('Périmètre fictif B');
+    expect(html).toContain('&lt;b&gt;Dépôt&lt;/b&gt; fictif Sud');
+    expect(html).not.toContain('<b>Dépôt');
+    expect(
+      rendu(createElement(DepotsTenableTable, { depots: [], options: [], enCours: null, onLier: rien })),
+    ).toContain('Aucun dépôt Tenable');
   });
   it('état des synchronisations : aucune instance, ou dernier bilan', () => {
     expect(rendu(createElement(EtatSynchronisations, { etats: [] }))).toContain('Pilotage &gt; Intégrations');

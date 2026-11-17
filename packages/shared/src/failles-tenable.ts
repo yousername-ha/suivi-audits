@@ -68,6 +68,8 @@ export const TENABLE_BORNES = {
   nomMachine: 255,
   systeme: 200,
   exposition: 40,
+  /** Nom d'un dépôt de Tenable (`repository.name`, lot V4d). */
+  nomDepot: 200,
   /** Éléments par lot rapporté par l'exécutant, et lots par synchronisation. */
   lot: 500,
   lots: 200,
@@ -95,6 +97,8 @@ export const CVSS3_VECTEUR_TENABLE =
 export const VOIR_AUSSI = /^https:\/\/[A-Za-z0-9.-]{1,253}(?::\d{1,5})?(?:[/?#][\x21-\x7e]*)?$/;
 const VOIR_AUSSI_INTERDITS = /["'<>\\`]/;
 export const PROTOCOLE = /^[A-Z0-9]{1,10}$/;
+/** Identifiant d'un dépôt de Tenable (`repository.id`, nombre entier positif ; lot V4d). */
+export const DEPOT_TENABLE = /^[1-9]\d{0,8}$/;
 
 /** Identifiant d'une machine dans sa source, calculé de la même façon par le script (cle_machine) et par l'API. */
 export function cleMachine(uuid: string | null, adresse: string | null, nom: string | null): string | null {
@@ -110,7 +114,14 @@ const uuid = z.string().regex(new RegExp(`^${UUID_MINUSCULES}$`), 'Identifiant U
 const score10 = z.number().min(0).max(10).nullable();
 
 /* ------------------------------------------------------------------ Éléments rapportés par l'exécutant */
-/** Machine vue par l'analyse : identifiant, nom, adresse, système, dates, indice d'exposition, criticité de l'actif. */
+/** Dépôt de Tenable où l'analyse a vu la machine (lot V4d) : identifiant et nom seulement (liste blanche du script). */
+export const DepotElementTenable = z
+  .object({ id: z.string().regex(DEPOT_TENABLE), nom: texteTenable(TENABLE_BORNES.nomDepot) })
+  .strict();
+export type DepotElementTenable = z.infer<typeof DepotElementTenable>;
+
+/** Machine vue par l'analyse : identifiant, nom, adresse, système, dates, indice d'exposition, criticité de l'actif, dépôt
+    (lot V4d ; absent : inconnu, la machine garde son dépôt rangé). */
 export const ElementMachineTenable = z
   .object({
     type: z.literal('machine'),
@@ -123,6 +134,7 @@ export const ElementMachineTenable = z
     derniere: instant,
     exposition: z.string().max(TENABLE_BORNES.exposition).regex(EXPOSITION).nullable(),
     acr: score10,
+    depot: DepotElementTenable.nullable().optional(),
   })
   .strict()
   .refine((m) => m.cle === cleMachine(m.uuid, m.adresse, m.nom), { message: 'Identifiant de machine incohérent.' });
@@ -269,7 +281,8 @@ export const RechercheConstats = z
   .strict();
 export type RechercheConstats = z.infer<typeof RechercheConstats>;
 
-/** Machines : recherche par nom ; filtres par rôle (`aucun` : sans rôle) et par périmètre (`aucun` : sans périmètre). */
+/** Machines : recherche par nom ; filtres par rôle (`aucun` : sans rôle) et par périmètre effectif (`aucun` : sans périmètre,
+    ni propre ni hérité du dépôt). */
 export const RechercheMachines = z
   .object({
     q: recherche,
@@ -369,14 +382,23 @@ export interface CompteursMachine {
   exploitationAveree: number;
 }
 
+/** Origine du périmètre effectif d'une machine (lot V4d) : indiqué à la main sur la machine (prime), ou hérité de son dépôt
+    Tenable relié ; `null` : sans périmètre. */
+export const ORIGINES_PERIMETRE_MACHINE = ['machine', 'depot'] as const;
+export type OriginePerimetreMachine = (typeof ORIGINES_PERIMETRE_MACHINE)[number];
+
 export interface MachineDto {
   id: string;
   nom: string | null;
   adresse: string | null;
   systeme: string | null;
   role: RoleMachine | null;
+  /** Périmètre effectif : celui de la machine, sinon celui de son dépôt relié (lot V4d). */
   perimetreId: string | null;
   perimetreNom: string | null;
+  perimetreOrigine: OriginePerimetreMachine | null;
+  /** Dépôt de Tenable où la machine a été vue (lot V4d), et le périmètre auquel il est relié. */
+  depot: { id: string; nom: string; perimetreId: string | null; perimetreNom: string | null } | null;
   exposition: string | null;
   acr: number | null;
   premiere: string | null;
@@ -396,7 +418,8 @@ export interface PageMachines extends PageFailles<MachineDto> {
 }
 
 /* ------------------------------------------------------------------ API : écriture */
-/** Rôle et périmètre d'une machine : `null` retire ; absent, inchangé. La version attendue passe par If-Match. */
+/** Rôle et périmètre d'une machine : absent, inchangé. Rôle `null` : retiré. Périmètre `null` : plus de périmètre indiqué à
+    la main, la machine reprend celui de son dépôt relié, s'il y en a un (lot V4d). La version attendue passe par If-Match. */
 export const AffectationMachine = z
   .object({ role: RoleMachine.nullable(), perimetreId: z.uuid().nullable() })
   .partial()
@@ -425,6 +448,31 @@ export interface PerimetreAffectableDto {
   id: string;
   nom: string;
 }
+
+/* ------------------------------------------------------------------ Dépôts de Tenable (lot V4d) */
+/** Dépôt de Tenable et sa liaison à un périmètre de la plateforme (administration du module). Ses machines sans périmètre
+    indiqué à la main prennent ce périmètre. */
+export interface DepotTenableDto {
+  id: string;
+  /** Identifiant du dépôt dans Tenable. */
+  depotTenable: number;
+  nom: string;
+  perimetreId: string | null;
+  perimetreNom: string | null;
+  /** Vu par la dernière synchronisation complète, ou plus récemment. */
+  present: boolean;
+  /** Machines rangées dans ce dépôt, et celles dont le périmètre est indiqué à la main (exceptions). */
+  machines: number;
+  exceptions: number;
+  version: number;
+  majPar: string | null;
+  majLe: string;
+  integration: { id: string; nom: string };
+}
+
+/** Relier un dépôt à un périmètre (`null` : délier). La version attendue passe par If-Match. */
+export const LiaisonDepotTenable = z.object({ perimetreId: z.uuid().nullable() }).strict();
+export type LiaisonDepotTenable = z.infer<typeof LiaisonDepotTenable>;
 
 /* ------------------------------------------------------------------ API : état */
 export interface EtatSynchronisationDto {

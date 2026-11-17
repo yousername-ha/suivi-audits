@@ -1,5 +1,6 @@
 /* Module Vulnérabilités (ADR 0100, lot V5) : schémas des éléments rapportés par l'exécutant (machines, constats, détections,
-   inventaire), bilan d'une synchronisation, corps des routes d'affectation. Données entièrement fictives : noms en
+   inventaire), bilan d'une synchronisation, corps des routes d'affectation, dépôt d'une machine et liaison d'un dépôt (lot
+   V4d). Données entièrement fictives : noms en
    .invalid, adresses de 192.0.2.0/24, identifiants de CVE fictifs. */
 import { describe, expect, it } from 'vitest';
 import {
@@ -7,7 +8,9 @@ import {
   AffectationMachines,
   BilanSynchronisation,
   cleMachine,
+  DEPOT_TENABLE,
   ElementSynchronisation,
+  LiaisonDepotTenable,
   LotSynchronisation,
   RechercheConstats,
   RechercheMachines,
@@ -192,5 +195,34 @@ describe('corps des routes', () => {
     expect(AffectationMachines.safeParse({ machines: [m, m], role: 'front' }).success).toBe(false);
     expect(AffectationMachines.safeParse({ machines: [], role: 'front' }).success).toBe(false);
     expect(AffectationMachines.safeParse({ machines: [{ id: UUID }], role: 'front' }).success).toBe(false);
+  });
+});
+
+describe('dépôts de Tenable (lot V4d)', () => {
+  it('dépôt d’une machine : identifiant entier positif et nom nettoyé seulement ; absent ou nul admis', () => {
+    expect(ok(machine({ depot: { id: '11', nom: 'Dépôt fictif Nord' } }))).toBe(true);
+    expect(ok(machine({ depot: null }))).toBe(true);
+    expect(ok(machine())).toBe(true);
+    for (const depot of [
+      { id: '0', nom: 'Dépôt fictif' },
+      { id: '01', nom: 'Dépôt fictif' },
+      { id: '1234567890', nom: 'Dépôt fictif' },
+      { id: 11, nom: 'Dépôt fictif' },
+      { id: '11', nom: '' },
+      { id: '11', nom: 'x'.repeat(TENABLE_BORNES.nomDepot + 1) },
+      { id: '11', nom: '<b>Dépôt</b>' },
+      { id: '11', nom: 'Dépôt fictif', description: 'Texte fictif' },
+      '11',
+    ])
+      expect(ok(machine({ depot })), JSON.stringify(depot).slice(0, 60)).toBe(false);
+  });
+
+  it('liaison d’un dépôt : un périmètre ou null, rien d’autre', () => {
+    expect(LiaisonDepotTenable.parse({ perimetreId: UUID })).toEqual({ perimetreId: UUID });
+    expect(LiaisonDepotTenable.parse({ perimetreId: null })).toEqual({ perimetreId: null });
+    expect(LiaisonDepotTenable.safeParse({}).success).toBe(false);
+    expect(LiaisonDepotTenable.safeParse({ perimetreId: 'x' }).success).toBe(false);
+    expect(LiaisonDepotTenable.safeParse({ perimetreId: UUID, nom: 'x' }).success).toBe(false);
+    expect(DEPOT_TENABLE.test('999999999')).toBe(true);
   });
 });

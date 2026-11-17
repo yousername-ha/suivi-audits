@@ -11,6 +11,7 @@ import {
   CLE_API_ALH,
   CLE_MACHINE,
   CVE_ID,
+  DEPOT_TENABLE,
   NOM_DOMAINE_ALH,
   PLUGIN_ID,
   TENABLE_BORNES,
@@ -80,6 +81,9 @@ describe('architecture : connecteurs du module Intégrations', () => {
     expect(motif(SCRIPT, 'PLUGIN_ID')).toBe(PLUGIN_ID.source);
     expect(motif(SCRIPT, 'CVE_ID')).toBe(CVE_ID.source);
     expect(motif(SCRIPT, 'ADRESSE_IP')).toBe(ADRESSE_IP.source);
+    // Lot V4d : identifiant d'un dépôt, et du dépôt rien d'autre que son identifiant et son nom.
+    expect(motif(SCRIPT, 'DEPOT_TENABLE')).toBe(DEPOT_TENABLE.source);
+    expect(/^CHAMPS_DEPOT = \(([^)]*)\)$/m.exec(SCRIPT)![1]).toBe('"id", "name"');
     // Les champs lus de Tenable sont une liste fermée qui ne contient ni le texte détaillé ni l'adresse matérielle.
     const champs = /^CHAMPS_ANALYSE = \(([^)]*)\)$/ms.exec(SCRIPT)![1]!;
     for (const interdit of ['pluginText', 'macAddress', 'description', 'vulnUUID'])

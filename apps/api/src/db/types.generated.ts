@@ -1775,6 +1775,7 @@ export interface VulnerabilitesMachines {
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_par: string | null;
+  depot_id: string | null;
 }
 
 export interface VulnerabilitesProduits {
@@ -1868,6 +1869,19 @@ export interface VulnerabilitesSynchronisations {
   lots: Generated<number>;
   elements: Generated<number>;
   complete: Generated<boolean>;
+}
+
+export interface VulnerabilitesTenableDepots {
+  id: Generated<string>;
+  integration_id: string;
+  depot_tenable: number;
+  nom: string;
+  perimetre_id: string | null;
+  vu_numero: number;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string | null;
 }
 
 export interface VulnerabilitesTenableEtat {
@@ -2170,6 +2184,7 @@ export interface DB {
   vulnerabilites_suivi_historique: VulnerabilitesSuiviHistorique;
   vulnerabilites_suivis: VulnerabilitesSuivis;
   vulnerabilites_synchronisations: VulnerabilitesSynchronisations;
+  vulnerabilites_tenable_depots: VulnerabilitesTenableDepots;
   vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;
   vulnerabilites_veille_collectes: VulnerabilitesVeilleCollectes;

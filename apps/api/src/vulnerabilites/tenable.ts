@@ -18,7 +18,10 @@
    machine. Accès aux données en Kysely (ADR 0062).
    Lot V4b : à la fin d'une synchronisation reçue, le suivi des failles retire les propositions « corrigée » des constats
    de nouveau présents et remet « à traiter » ceux qui étaient corrigés ; après une synchronisation complète seulement, il
-   propose « corrigé selon Tenable, à confirmer » pour les constats qui ne sont plus présents nulle part (suivi.ts). */
+   propose « corrigé selon Tenable, à confirmer » pour les constats qui ne sont plus présents nulle part (suivi.ts).
+   Lot V4d : le dépôt de chaque machine (identifiant et nom) est rangé par instance ; une synchronisation met à jour son nom
+   et le dépôt de la machine, jamais la liaison du dépôt à un périmètre, ni le périmètre, le rôle ou la version d'une
+   machine. Une machine rapportée sans dépôt (inventaire, forme inattendue) garde celui qu'elle avait. */
 import {
   BilanSynchronisation,
   cleMachine,
@@ -184,8 +187,38 @@ export class SynchronisationTenable implements OperationEnLots {
   }
 
   /* ---------------------------------------------------------------- Rangement (sans doublon) */
+  /** Dépôts vus dans le lot (identifiant et nom) : rangés sans doublon, nom mis à jour, liaison jamais touchée. Rend la
+      correspondance identifiant Tenable -> identifiant interne. */
+  private async rangerDepots(k: Kdb, integration: string, numero: number, el: ElementMachineTenable[]) {
+    const depots = dernierParCle(
+      el.flatMap((m) => (m.depot ? [m.depot] : [])),
+      (d) => d.id,
+    );
+    if (!depots.length) return new Map<string, string>();
+    const r = await k
+      .insertInto('vulnerabilites_tenable_depots')
+      .values(
+        depots.map((d) => ({
+          integration_id: integration,
+          depot_tenable: Number(d.id),
+          nom: d.nom,
+          vu_numero: numero,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'depot_tenable']).doUpdateSet({
+          nom: sql`excluded.nom`,
+          vu_numero: sql`greatest(vulnerabilites_tenable_depots.vu_numero, excluded.vu_numero)`,
+        }),
+      )
+      .returning(['id', 'depot_tenable'])
+      .execute();
+    return new Map(r.map((d) => [String(d.depot_tenable), d.id]));
+  }
+
   private async rangerMachines(k: Kdb, integration: string, numero: number, el: ElementMachineTenable[]) {
     if (!el.length) return;
+    const depots = await this.rangerDepots(k, integration, numero, el);
     await k
       .insertInto('vulnerabilites_machines')
       .values(
@@ -200,6 +233,7 @@ export class SynchronisationTenable implements OperationEnLots {
           derniere_detection: m.derniere,
           exposition: m.exposition,
           acr: m.acr === null ? null : String(m.acr),
+          depot_id: m.depot ? (depots.get(m.depot.id) ?? null) : null,
           vu_numero: numero,
         })),
       )
@@ -214,6 +248,7 @@ export class SynchronisationTenable implements OperationEnLots {
           derniere_detection: sql`greatest(vulnerabilites_machines.derniere_detection, excluded.derniere_detection)`,
           exposition: sql`coalesce(excluded.exposition, vulnerabilites_machines.exposition)`,
           acr: sql`coalesce(excluded.acr, vulnerabilites_machines.acr)`,
+          depot_id: sql`coalesce(excluded.depot_id, vulnerabilites_machines.depot_id)`,
           vu_numero: sql`greatest(vulnerabilites_machines.vu_numero, excluded.vu_numero)`,
           maj_le: sql`now()`,
         }),

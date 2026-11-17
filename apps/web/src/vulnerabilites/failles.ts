@@ -2,7 +2,8 @@
    serveur reste seul juge des droits (module, périmètre de chaque machine) ; les textes de Tenable s'affichent tels quels,
    en anglais (V19), comme texte simple. Un lien « voir aussi » n'est rendu que s'il a la forme contrôlée (https).
    Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. Lot V4b : filtre
-   de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). */
+   de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). Lot V4d : origine du périmètre d'une
+   machine (hérité du dépôt Tenable ou indiqué à la main). */
 import {
   type ConstatDto,
   type ConstatResumeDto,
@@ -149,7 +150,7 @@ export function groupesParRole(c: Pick<ConstatDto, 'parRole'>) {
 }
 
 /** Corps de l'affectation en masse : chaque machine avec sa version ; rôle ou périmètre (vide : inchangé, « aucun » :
-    retiré). */
+    retiré ; pour le périmètre, la machine reprend alors celui de son dépôt, lot V4d). */
 export function corpsAffectation(
   machines: Pick<MachineDto, 'id' | 'version'>[],
   role: RoleMachine | 'aucun' | '',
@@ -160,6 +161,13 @@ export function corpsAffectation(
     ...(role ? { role: role === 'aucun' ? null : role } : {}),
     ...(perimetre ? { perimetreId: perimetre === 'aucun' ? null : perimetre } : {}),
   };
+}
+
+/** Origine du périmètre d'une machine, en clair (lot V4d) ; `null` si elle n'a pas de périmètre. */
+export function originePerimetre(m: Pick<MachineDto, 'perimetreOrigine' | 'depot'>): string | null {
+  if (m.perimetreOrigine === 'depot') return m.depot ? `Hérité du dépôt « ${m.depot.nom} »` : 'Hérité du dépôt';
+  if (m.perimetreOrigine === 'machine') return 'Indiqué à la main';
+  return null;
 }
 
 export const totalCompteurs = (m: Pick<MachineDto, 'compteurs'>) =>

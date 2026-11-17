@@ -611,3 +611,80 @@ pas été joué (CI seulement).
 3. Rapprochement technologie ↔ produit **décidé** (confirmer, rejeter) et effet sur les failles déclarées, si le RSSI le veut.
 4. Masquer aussi les noms de périmètres d'ALH (risque de sur-masquage) ?
 5. Propositions d'action de l'assistant sur une alerte d'ALH (aujourd'hui : constats de Tenable et failles déclarées seulement).
+
+## Addendum du 17/11/2026 — lot V4d : périmètre des machines Tenable relié par dépôt
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `082`
+(additive : table `vulnerabilites_tenable_depots`, colonne nullable `depot_id` de `vulnerabilites_machines`). Amende le
+point 14 (lecture d'une machine par son périmètre) sans en changer la règle : le périmètre lu est désormais le périmètre
+**effectif** de la machine.
+
+### Décision du RSSI (17/11/2026)
+
+Pour Tenable, le périmètre se relie **par groupe entier**, et non machine par machine, comme les périmètres AlgoLightHouse se
+relient aux périmètres de la plateforme (lot ALH1, onglet « Périmètres » de « Surface externe »). Le rattachement d'une
+machine à la main (une machine ou une sélection, lot V5) reste possible.
+
+### Réalisation
+
+- **Groupe = dépôt de Tenable** (`repository`, choix à confirmer ci-dessous). Le script de l'exécutant le lit dans chaque
+  résultat de l'analyse `vulndetails` **déjà reçu** : aucun appel nouveau, liste fermée inchangée (`POST /rest/analysis`,
+  `GET /rest/hosts`, `GET /rest/hosts/{uuid}`, `GET /rest/system`). Liste blanche `CHAMPS_DEPOT` : `id` (entier positif, motif
+  `DEPOT_TENABLE` recopié du paquet partagé et comparé par le test d'architecture) et `name` (texte nettoyé, 200 caractères) ;
+  `description`, `dataFormat` et tout autre champ ne sortent pas du script. L'élément « machine » porte `depot` (facultatif,
+  nul si inconnu).
+- **Rangement** : un dépôt par instance et par identifiant Tenable, nom mis à jour à chaque synchronisation, **liaison jamais
+  touchée** par une synchronisation ; le dépôt d'une machine suit Tenable, une machine rapportée sans dépôt garde le sien.
+- **Règle** : périmètre effectif = celui **indiqué à la main** sur la machine, qui **prime**, sinon celui de son **dépôt relié**,
+  sinon aucun (machine lisible avec `vulnerabilites:administrer` seulement, comme avant). Un seul fragment SQL
+  (`perimetreMachine`, `apps/api/src/vulnerabilites/sql.ts`) porte cette règle ; le contrôle de lecture `lisible` s'appuie
+  dessus, donc **tous** ses usages suivent : listes et fiches des machines, fiche et compteurs d'un constat, failles déclarées
+  et leur fiche, fiche d'un produit, suivi des failles (lecture de toutes les machines touchées), rang et priorité, outils de
+  l'assistant (machines rangées, repères et leur résolution), masque de sortie et décompte des mots à ne pas masquer. Le nom
+  de périmètre affiché (fiches, listes) est aussi le périmètre effectif ; le filtre « Périmètre » de la liste aussi.
+- **Retour à l'hérité** : retirer le périmètre indiqué à la main (`perimetreId: null`, unitaire ou en masse) fait revenir la
+  machine au périmètre de son dépôt. Garde-fous : écriture sur le périmètre effectif actuel ; écriture sur le périmètre du dépôt
+  s'il diffère ; sans dépôt relié, la machine n'aurait plus de périmètre : `vulnerabilites:administrer`, comme avant.
+- **API** : `GET /api/vulnerabilites/depots` (dépôts, périmètre relié, présence, machines et exceptions) et
+  `PUT /api/vulnerabilites/depots/{id}` (relier ou délier), avec `vulnerabilites:administrer`, If-Match, écriture sur le
+  périmètre actuel et sur le périmètre visé (périmètre visé inaccessible : 422, comme un inconnu), journal
+  `vulnerabilites.depot.relie` / `.delie` (identifiants, nombre de machines qui héritent ; ni nom de machine ni nom de dépôt).
+  `MachineDto` porte `perimetreOrigine` (`machine`, `depot` ou nul) et `depot` (identifiant, nom, et périmètre du dépôt
+  **seulement s'il est visible** de la personne).
+- **Écran « Machines »** : onglet « Dépôts Tenable » (administrateurs du module) pour relier chaque dépôt ; la colonne
+  « Périmètre » dit « Hérité du dépôt « … » », « Indiqué à la main » ou « Dépôt « … » non relié » ; le choix « Hérité du dépôt
+  (retirer le périmètre indiqué à la main) » remplace « Retirer le périmètre » et est proposé à toute personne qui peut
+  modifier (le serveur juge).
+- **Rôle** : inchangé, toujours par machine.
+- Sans reprise de données : les machines déjà rattachées à la main gardent leur périmètre (elles deviennent des exceptions).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Le groupe est le dépôt de Tenable** (choix de la session principale), parce qu'il est déjà dans les réponses lues et ne
+  demande ni appel ni droit nouveau. Les autres groupes de Tenable (listes d'actifs `/rest/asset`, dépôts lus par
+  `/rest/repository`) demanderaient un appel hors de la liste fermée, peut-être refusé au rôle « Auditor ».
+- **Machine vue dans plusieurs dépôts** : le script retient le plus petit identifiant (choix stable d'une synchronisation à
+  l'autre). La forme exacte de `repository` (objet `{id, name, description, dataFormat}`) est celle des exemples anonymisés
+  du 16/11/2026 ; une autre forme donne « dépôt inconnu », sans écarter le résultat.
+- **« Retirer le périmètre » devient « revenir au dépôt »** : il n'y a pas d'exception « aucun périmètre malgré le dépôt ».
+  Pour soustraire une machine au périmètre de son dépôt, il faut l'indiquer à la main dans un autre périmètre.
+- **Garde-fou du retour à l'hérité** : écriture exigée sur le périmètre du dépôt (c'est un changement de périmètre) ; sans
+  dépôt relié, `administrer`.
+- **Périmètre du dépôt montré dans la liste des machines** seulement à qui le lit (sinon nul) : son nom ne fuit pas par une
+  machine lue par un autre périmètre. Le nom du dépôt, lui, est montré à qui lit la machine.
+- **Journal des affectations** : `avant` et `apres` gardent le périmètre **indiqué à la main** (`perimetreId`), pas le
+  périmètre effectif.
+- Une liaison qui change pendant l'affectation d'une machine n'est pas verrouillée : le contrôle lit la liaison du moment.
+
+### Non vérifié
+
+Aucun appel vers une vraie instance Tenable ; **forme réelle de `repository`** sur l'instance (relevée sur des exemples
+anonymisés seulement), nombre de dépôts et cas d'une même machine dans plusieurs dépôts ; Docker et Node 26 ; le parcours
+Playwright adapté n'a pas été joué (CI seulement).
+
+### Points ouverts (hors lot)
+
+1. Confirmer le dépôt comme groupe, ou désigner un autre groupe de Tenable (liste d'actifs, étiquette), au prix d'un appel
+   nouveau à valider.
+2. Exception « sans périmètre malgré le dépôt » (machine réservée à l'administration du module), si le RSSI la veut.
+3. Choix du dépôt d'une machine vue dans plusieurs dépôts (plus petit identifiant aujourd'hui).

@@ -4,10 +4,16 @@
 import { sql, type RawBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
 
-/** Machine `m` lisible par la personne : périmètre visible (pyramide), ou sans périmètre avec administrer. */
+/** Périmètre effectif de la machine `m` (lot V4d) : le sien, indiqué à la main, qui prime ; sinon celui de son dépôt Tenable
+    relié ; sinon NULL. Seule source du périmètre d'une machine pour les droits de lecture et l'affichage. */
+export const perimetreMachine = sql<string | null>`coalesce(m.perimetre_id,
+  (SELECT td.perimetre_id FROM vulnerabilites_tenable_depots td WHERE td.id = m.depot_id))`;
+
+/** Machine `m` lisible par la personne : périmètre effectif visible (pyramide), ou sans périmètre effectif avec
+    administrer. */
 export const lisible = (user: SessionUser): RawBuilder<boolean> =>
-  sql<boolean>`(CASE WHEN m.perimetre_id IS NULL THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
-                ELSE grc_smsi_visible(m.perimetre_id, ${user.id}::uuid) END)`;
+  sql<boolean>`(CASE WHEN ${perimetreMachine} IS NULL THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
+                ELSE grc_smsi_visible(${perimetreMachine}, ${user.id}::uuid) END)`;
 
 /** Détection `d` présente : vue par la dernière synchronisation complète de son instance (alias `e`), ou plus récemment. */
 export const present = sql<boolean>`(d.vu_numero >= coalesce(e.numero_complet, 0))`;

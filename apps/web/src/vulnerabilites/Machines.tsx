@@ -5,6 +5,9 @@
    module et l'écriture sur le périmètre visé : le serveur en est seul juge, les boutons ne font que suivre la session.
    Lot V4a : machines rangées de la plus critique à la moins critique (rang calculé par la plateforme, faits affichés),
    fiche d'une machine avec ses produits surveillés reliés à la main (relier, délier : droit de modifier le module).
+   Lot V4d : périmètre relié par dépôt de Tenable (onglet « Dépôts Tenable », droit d'administrer le module, comme l'onglet
+   « Périmètres » de la surface externe) ; la liste dit si le périmètre d'une machine est hérité du dépôt ou indiqué à la
+   main, et « Hérité du dépôt » retire le périmètre indiqué à la main.
    Composants de la charte, CSP stricte (ADR 0006). */
 import {
   Alert,
@@ -17,12 +20,14 @@ import {
   Select,
   Stack,
   Table,
+  Tabs,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  type DepotTenableDto,
   type MachineDto,
   type PageMachines,
   type PerimetreAffectableDto,
@@ -44,6 +49,7 @@ import {
   type FiltresMachines,
   libelleMachine,
   libelleRole,
+  originePerimetre,
   urlMachines,
 } from './failles';
 import { nombrePages } from './veille';
@@ -126,7 +132,19 @@ export function MachinesTable({
               <Table.Td>
                 {m.role ? libelleRole(m.role) : <StatusChip etat="attention">{libelleRole(null)}</StatusChip>}
               </Table.Td>
-              <Table.Td>{m.perimetreNom ?? 'Sans périmètre'}</Table.Td>
+              <Table.Td>
+                <Text size="sm">{m.perimetreNom ?? 'Sans périmètre'}</Text>
+                {originePerimetre(m) && (
+                  <Text size="xs" c="dimmed" className="veille-texte">
+                    {originePerimetre(m)}
+                  </Text>
+                )}
+                {!m.perimetreOrigine && m.depot && (
+                  <Text size="xs" c="dimmed" className="veille-texte">
+                    Dépôt « {m.depot.nom} » non relié
+                  </Text>
+                )}
+              </Table.Td>
               <Table.Td>
                 {m.compteurs.critique} · {m.compteurs.elevee} · {m.compteurs.moyenne} · {m.compteurs.faible}
               </Table.Td>
@@ -147,6 +165,138 @@ export function MachinesTable({
         </Table.Tbody>
       </Table>
     </DataTable>
+  );
+}
+
+/** Dépôts de Tenable et leur liaison (sans état) ; `onLier` reçoit le périmètre visé (null : délier). */
+export function DepotsTenableTable({
+  depots,
+  options,
+  enCours,
+  onLier,
+}: {
+  depots: DepotTenableDto[];
+  options: PerimetreAffectableDto[];
+  enCours: string | null;
+  onLier: (d: DepotTenableDto, perimetreId: string | null) => void;
+}) {
+  return (
+    <DataTable label="Dépôts Tenable">
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Dépôt Tenable</Table.Th>
+            <Table.Th>Machines</Table.Th>
+            <Table.Th>Périmètre de la plateforme</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {depots.map((d) => (
+            <Table.Tr key={d.id}>
+              <Table.Td>
+                <Text size="sm" fw={600} className="veille-texte">
+                  {d.nom}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {d.integration.nom} · dépôt {d.depotTenable}
+                  {d.present ? '' : ' · absent de la dernière synchronisation complète'}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                {d.machines} machine{d.machines > 1 ? 's' : ''}
+                {d.exceptions > 0 && (
+                  <Text size="xs" c="dimmed">
+                    dont {d.exceptions} au périmètre indiqué à la main
+                  </Text>
+                )}
+              </Table.Td>
+              <Table.Td>
+                <Select
+                  label={`Périmètre de la plateforme pour ${d.nom}`}
+                  placeholder="Non relié"
+                  clearable
+                  disabled={enCours === d.id}
+                  value={d.perimetreId}
+                  onChange={(v) => {
+                    if ((v ?? null) !== d.perimetreId) onLier(d, v ?? null);
+                  }}
+                  data={[
+                    ...options.map((o) => ({ value: o.id, label: o.nom })),
+                    // Un périmètre relié que la personne ne peut plus choisir reste affiché.
+                    ...(d.perimetreId && !options.some((o) => o.id === d.perimetreId)
+                      ? [{ value: d.perimetreId, label: d.perimetreNom ?? 'Périmètre non accessible' }]
+                      : []),
+                  ]}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                {!d.perimetreId && (
+                  <Text size="xs" c="dimmed">
+                    Non relié : ses machines sans périmètre indiqué à la main ne sont visibles que de l’administration
+                    du module.
+                  </Text>
+                )}
+              </Table.Td>
+            </Table.Tr>
+          ))}
+          {depots.length === 0 && (
+            <Table.Tr>
+              <Table.Td colSpan={3}>
+                <Text size="sm" c="dimmed">
+                  Aucun dépôt Tenable : lancez une synchronisation depuis Pilotage &gt; Intégrations.
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
+      </Table>
+    </DataTable>
+  );
+}
+
+/** Onglet « Dépôts Tenable » (droit d'administrer le module ; le serveur en reste seul juge). */
+function OngletDepots() {
+  const qc = useQueryClient();
+  const [enCours, setEnCours] = useState<string | null>(null);
+  const depots = useQuery({
+    queryKey: [...CLE, 'depots'],
+    queryFn: () => get<DepotTenableDto[]>('/api/vulnerabilites/depots'),
+  });
+  const options = useQuery({
+    queryKey: ['vulnerabilites', 'perimetres-affectables'],
+    queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
+  });
+  const lier = async (d: DepotTenableDto, perimetreId: string | null) => {
+    setEnCours(d.id);
+    try {
+      await api('PUT', `/api/vulnerabilites/depots/${d.id}`, { body: { perimetreId }, ifMatch: d.version });
+      notifications.show({ color: 'teal', message: perimetreId ? 'Dépôt relié.' : 'Liaison retirée.' });
+      await qc.invalidateQueries({ queryKey: CLE });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+      await qc.invalidateQueries({ queryKey: [...CLE, 'depots'] });
+    } finally {
+      setEnCours(null);
+    }
+  };
+  return (
+    <Stack>
+      <Text size="sm">
+        Reliez chaque dépôt de Tenable à un périmètre de la plateforme : ses machines sans périmètre indiqué à la main
+        prennent ce périmètre et deviennent lisibles par les personnes qui le lisent. Un périmètre indiqué à la main sur
+        une machine prime sur celui du dépôt. Il faut pouvoir écrire sur le périmètre choisi (et sur celui d’avant). Une
+        synchronisation ne change jamais une liaison ; chaque liaison est inscrite au journal d’audit, sans nom de
+        machine.
+      </Text>
+      <ErrorAlert error={depots.error ?? options.error} />
+      {depots.data && (
+        <DepotsTenableTable
+          depots={depots.data}
+          options={options.data ?? []}
+          enCours={enCours}
+          onLier={(d, v) => void lier(d, v)}
+        />
+      )}
+    </Stack>
   );
 }
 
@@ -304,12 +454,10 @@ function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: bo
   );
 }
 
-export function MachinesPage() {
+function OngletMachines() {
   const can = useCan();
   const qc = useQueryClient();
-  const lire = can('vulnerabilites', 'lire');
   const modifier = can('vulnerabilites', 'modifier');
-  const administrer = can('vulnerabilites', 'administrer');
   const [saisie, setSaisie] = useState('');
   const [filtres, setFiltres] = useState<FiltresMachines>(FILTRES_MACHINES_VIDES);
   const [page, setPage] = useState(1);
@@ -321,7 +469,6 @@ export function MachinesPage() {
   const machines = useQuery({
     queryKey: [...CLE, filtres, page],
     queryFn: () => get<PageMachines>(urlMachines(filtres, page)),
-    enabled: lire,
   });
   const perimetres = useQuery({
     queryKey: [...CLE, 'perimetres'],
@@ -359,23 +506,14 @@ export function MachinesPage() {
     }
   };
 
-  if (!lire)
-    return (
-      <Page>
-        <Alert>Vous ne disposez pas du droit de lire les vulnérabilités.</Alert>
-      </Page>
-    );
+  // « Hérité du dépôt » : retire le périmètre indiqué à la main (sans dépôt relié, le serveur exige administrer).
   const optionsPerimetre = [
     ...(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.nom })),
-    ...(administrer ? [{ value: 'aucun', label: 'Retirer le périmètre' }] : []),
+    { value: 'aucun', label: 'Hérité du dépôt (retirer le périmètre indiqué à la main)' },
   ];
   const pages = machines.data ? nombrePages(machines.data.total, machines.data.parPage) : 1;
   return (
-    <Page>
-      <PageHeader
-        title="Machines"
-        description="Machines lues dans Tenable Security Center, de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
-      />
+    <>
       <Stack>
         {machines.data && <BandeauSansRole n={machines.data.sansRole} />}
         <form onSubmit={chercher} role="search">
@@ -480,6 +618,41 @@ export function MachinesPage() {
       >
         {ouverte && <FicheMachine machine={ouverte} modifier={modifier} />}
       </Modal>
+    </>
+  );
+}
+
+export function MachinesPage() {
+  const can = useCan();
+  const lire = can('vulnerabilites', 'lire');
+  const administrer = can('vulnerabilites', 'administrer');
+  const [onglet, setOnglet] = useState<string | null>('machines');
+  if (!lire)
+    return (
+      <Page>
+        <Alert>Vous ne disposez pas du droit de lire les vulnérabilités.</Alert>
+      </Page>
+    );
+  return (
+    <Page>
+      <PageHeader
+        title="Machines"
+        description="Machines lues dans Tenable Security Center, de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
+      />
+      <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab value="machines">Machines</Tabs.Tab>
+          {administrer && <Tabs.Tab value="depots">Dépôts Tenable</Tabs.Tab>}
+        </Tabs.List>
+        <Tabs.Panel value="machines" pt="md">
+          <OngletMachines />
+        </Tabs.Panel>
+        {administrer && (
+          <Tabs.Panel value="depots" pt="md">
+            <OngletDepots />
+          </Tabs.Panel>
+        )}
+      </Tabs>
     </Page>
   );
 }

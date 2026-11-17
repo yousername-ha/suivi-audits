@@ -32,7 +32,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { Rapprochements } from './rapprochements.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
-import { lisible } from './sql.js';
+import { lisible, perimetreMachine } from './sql.js';
 
 type Ligne = Selectable<VulnerabilitesProduits> & { rattachees: number; a_decider: number };
 const MACHINE_INTROUVABLE = 'Machine introuvable ou non accessible.';
@@ -262,7 +262,7 @@ export class ProduitsSurveilles {
     }>`SELECT m.id, m.nom, m.adresse, m.role, s.name AS perimetre_nom, pm.relie_le
        FROM vulnerabilites_produits_machines pm
        JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-       LEFT JOIN grc_smsis s ON s.id = m.perimetre_id
+       LEFT JOIN grc_smsis s ON s.id = ${perimetreMachine}
        WHERE pm.produit_id = ${id}::uuid AND ${lisible(user)}
        ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id`.execute(this.db.k);
     return {

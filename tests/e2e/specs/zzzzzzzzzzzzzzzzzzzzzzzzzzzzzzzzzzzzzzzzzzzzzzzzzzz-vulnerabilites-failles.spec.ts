@@ -3,7 +3,8 @@
    accessibilité, CSP. Aucun Tenable n'est joint : la pile de test n'a ni connecteur actif ni donnée synchronisée. Lot V4a :
    filtre de priorité, liste des failles déclarées, écran « Seuils de priorité ». Lot V4b : filtre « Suivi » (aucune faille à
    clore sur une pile vierge). Lot V4c : filtre « Exploitation avérée » (toutes les sources). V31 : écran « Mots à ne pas
-   masquer » (ajout et retrait d'un mot, effet affiché). */
+   masquer » (ajout et retrait d'un mot, effet affiché). Lot V4d : onglet « Dépôts Tenable » de l'écran « Machines »
+   (administration du module ; aucun dépôt sur une pile vierge), choix « Hérité du dépôt » de l'affectation. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -37,9 +38,24 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByRole('heading', { name: 'Machines', level: 1 })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Appliquer à 0 machine/ })).toBeDisabled();
+    await expect(page.locator('th', { hasText: /^Périmètre$/ })).toBeVisible();
+    // Lot V4d : « Hérité du dépôt » retire le périmètre indiqué à la main.
+    await page.getByRole('combobox', { name: 'Périmètre à indiquer', exact: true }).click();
+    await expect(
+      page.getByRole('option', { name: 'Hérité du dépôt (retirer le périmètre indiqué à la main)', exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    // Onglet « Dépôts Tenable » (administrateur) : aucun dépôt sur une pile vierge.
+    await page.getByRole('tab', { name: 'Dépôts Tenable', exact: true }).click();
+    await expect(page.locator('th', { hasText: /^Dépôt Tenable$/ })).toBeVisible();
+    await expect(page.getByText(/Aucun dépôt Tenable/)).toBeVisible();
+    await page.waitForTimeout(400);
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    await page.getByRole('tab', { name: 'Machines', exact: true }).click();
+    await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
 
     // Seuils de priorité : grille en clair, seuil EPSS à 50 % par défaut, réglable par l'administrateur.
     await page.goto('/vulnerabilites/priorite');

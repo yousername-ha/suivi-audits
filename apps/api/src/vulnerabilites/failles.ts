@@ -23,10 +23,16 @@
    l'exploitation avérée et « exploitable » selon toutes les sources, et la valeur la plus sévère de chaque fait ; les
    filtres « exploitée » et « exploitable » valent pour toutes les sources ; le rang compte les exploitations avérées de
    toutes les sources.
+   Lot V4d : le périmètre d'une machine est son périmètre effectif (sql.ts, perimetreMachine) : celui indiqué à la main, qui
+   prime, sinon celui de son dépôt Tenable relié (depots.ts). Il vaut pour toutes les lectures, les compteurs, le rang et
+   l'affichage. Retirer le périmètre indiqué à la main fait revenir la machine au périmètre de son dépôt : écriture exigée
+   sur ce périmètre ; sans dépôt relié, la machine ne serait plus lisible que par l'administration du module, d'où
+   administrer, comme avant.
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
   AffectationMachine,
   AffectationMachines,
+  type OriginePerimetreMachine,
   calculerPriorite,
   type CompteursMachine,
   faitsDepuisSources,
@@ -63,7 +69,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, exploiteeCve, preuveCertSante, sourcesDe } from './sources.js';
-import { alerteCertFr, detecteeSurMachine, lisible, present, scoreNvd } from './sql.js';
+import { alerteCertFr, detecteeSurMachine, lisible, perimetreMachine, present, scoreNvd } from './sql.js';
 import { close, colonnesSuivi, filtreSuivi, type LigneSuivi, versSuiviResume } from './suivi.js';
 
 const INTROUVABLE = 'Machine introuvable ou non accessible.';
@@ -130,6 +136,11 @@ interface LigneMachine {
   role: RoleMachine | null;
   perimetre_id: string | null;
   perimetre_nom: string | null;
+  perimetre_origine: OriginePerimetreMachine | null;
+  depot_id: string | null;
+  depot_nom: string | null;
+  depot_perimetre_id: string | null;
+  depot_perimetre_nom: string | null;
   exposition: string | null;
   acr: string | null;
   premiere_detection: Date | null;
@@ -255,6 +266,16 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     role: l.role,
     perimetreId: l.perimetre_id,
     perimetreNom: l.perimetre_nom,
+    perimetreOrigine: l.perimetre_origine,
+    depot:
+      l.depot_id && l.depot_nom
+        ? {
+            id: l.depot_id,
+            nom: l.depot_nom,
+            perimetreId: l.depot_perimetre_id,
+            perimetreNom: l.depot_perimetre_nom,
+          }
+        : null,
     exposition: l.exposition,
     acr: nombre(l.acr),
     premiere: iso(l.premiere_detection),
@@ -381,11 +402,12 @@ export class FaillesDetectees {
       risque_accepte: boolean;
       risque_requalifie: boolean;
     }>`
-      SELECT m.id AS machine_id, m.nom, m.adresse, m.role, m.perimetre_id, s.name AS perimetre_nom, d.port, d.protocole,
-             d.premiere_detection, d.derniere_detection, d.attenue, d.risque_accepte, d.risque_requalifie
+      SELECT m.id AS machine_id, m.nom, m.adresse, m.role, ${perimetreMachine} AS perimetre_id, s.name AS perimetre_nom,
+             d.port, d.protocole, d.premiere_detection, d.derniere_detection, d.attenue, d.risque_accepte,
+             d.risque_requalifie
       FROM vulnerabilites_detections d
       JOIN vulnerabilites_machines m ON m.id = d.machine_id
-      LEFT JOIN grc_smsis s ON s.id = m.perimetre_id
+      LEFT JOIN grc_smsis s ON s.id = ${perimetreMachine}
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
       WHERE d.constat_id = ${id}::uuid AND (${present} OR NOT ${l.present}::boolean) AND ${lisible(user)}
       ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id, d.port, d.protocole`.execute(this.db.k);
@@ -430,14 +452,23 @@ export class FaillesDetectees {
       même rang. */
   async machinesRangees(user: SessionUser): Promise<MachineDto[]> {
     const { rows } = await sql<LigneMachine>`
-      SELECT m.id, m.nom, m.adresse, m.systeme, m.role, m.perimetre_id, s.name AS perimetre_nom, m.exposition, m.acr,
+      SELECT m.id, m.nom, m.adresse, m.systeme, m.role, ${perimetreMachine} AS perimetre_id, s.name AS perimetre_nom,
+             CASE WHEN m.perimetre_id IS NOT NULL THEN 'machine' WHEN td.perimetre_id IS NOT NULL THEN 'depot' END
+               AS perimetre_origine,
+             td.id AS depot_id, td.nom AS depot_nom,
+             -- Périmètre du dépôt : montré seulement s'il est visible de la personne (son nom ne fuit pas autrement).
+             CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN td.perimetre_id END AS depot_perimetre_id,
+             CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN sd.name END AS depot_perimetre_nom,
+             m.exposition, m.acr,
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
              coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere
       FROM vulnerabilites_machines m
       JOIN integrations i ON i.id = m.integration_id
-      LEFT JOIN grc_smsis s ON s.id = m.perimetre_id
+      LEFT JOIN vulnerabilites_tenable_depots td ON td.id = m.depot_id
+      LEFT JOIN grc_smsis sd ON sd.id = td.perimetre_id
+      LEFT JOIN grc_smsis s ON s.id = ${perimetreMachine}
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
       LEFT JOIN LATERAL (
         SELECT count(DISTINCT c.id) FILTER (WHERE c.gravite = 'critique')::int AS critique,
@@ -649,7 +680,7 @@ export class FaillesDetectees {
       FROM vulnerabilites_rapprochements r
       JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
       JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-      LEFT JOIN grc_smsis sm ON sm.id = m.perimetre_id
+      LEFT JOIN grc_smsis sm ON sm.id = ${perimetreMachine}
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
       WHERE r.id = ${id}::uuid AND ${lisible(user)}
       ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id`.execute(this.db.k);
@@ -678,7 +709,7 @@ export class FaillesDetectees {
   }
 
   /* ---------------------------------------------------------------- Affectation (vulnerabilites:modifier) */
-  /** Rôle et périmètre d'une machine (If-Match). */
+  /** Rôle et périmètre d'une machine (If-Match). Périmètre `null` : retour au périmètre du dépôt (lot V4d). */
   async affecter(
     id: string,
     patch: AffectationMachine,
@@ -750,23 +781,31 @@ export class FaillesDetectees {
       id: string;
       role: RoleMachine | null;
       perimetre_id: string | null;
+      perimetre_depot: string | null;
       version: number;
       maj_par: string | null;
-    }>`SELECT m.id, m.role, m.perimetre_id, m.version, m.maj_par FROM vulnerabilites_machines m
+    }>`SELECT m.id, m.role, m.perimetre_id,
+              (SELECT td.perimetre_id FROM vulnerabilites_tenable_depots td WHERE td.id = m.depot_id) AS perimetre_depot,
+              m.version, m.maj_par
+       FROM vulnerabilites_machines m
        WHERE m.id = ANY(${ids}::uuid[]) AND ${lisible(user)} ORDER BY m.id FOR UPDATE OF m`.execute(k);
     return rows;
   }
 
-  /** Écriture sur le périmètre actuel ; sur le périmètre visé s'il change ; administrer pour retirer le périmètre. */
+  /** Écriture sur le périmètre effectif actuel ; sur le périmètre effectif visé s'il change. Retirer le périmètre indiqué à
+      la main fait revenir la machine à celui de son dépôt (lot V4d) : écriture exigée sur ce périmètre ; sans dépôt relié,
+      administrer, la machine n'étant plus lisible que par ce droit. */
   private async controlerEcriture(
     c: Client,
     user: SessionUser,
-    m: { perimetre_id: string | null },
+    m: { perimetre_id: string | null; perimetre_depot: string | null },
     vise: string | null | undefined,
   ) {
-    if (m.perimetre_id) await this.g.access(m.perimetre_id, user, true, c);
+    const actuel = m.perimetre_id ?? m.perimetre_depot;
+    if (actuel) await this.g.access(actuel, user, true, c);
     if (vise === undefined || vise === m.perimetre_id) return;
-    if (vise === null) {
+    const apres = vise ?? m.perimetre_depot;
+    if (apres === null) {
       if (!user.rights.can('vulnerabilites', 'administrer'))
         throw new HttpError(
           403,
@@ -774,7 +813,8 @@ export class FaillesDetectees {
         );
       return;
     }
-    await this.g.access(vise, user, true, c).catch((e: unknown) => {
+    if (apres === actuel) return;
+    await this.g.access(apres, user, true, c).catch((e: unknown) => {
       if (e instanceof HttpError && e.status === 404)
         throw new HttpError(422, 'Périmètre introuvable ou non accessible.');
       throw e;

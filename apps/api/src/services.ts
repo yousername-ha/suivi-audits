@@ -46,6 +46,7 @@ import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { DepotsTenable } from './vulnerabilites/depots.js';
 import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
 import { MotsNonMasquesVulnerabilites } from './vulnerabilites/mots-non-masques.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
@@ -147,6 +148,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       produits: new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne),
       veille,
       tenable,
+      /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
+      depots: new DepotsTenable(db, grc),
       surfaceExterne,
       failles,
       rapprochements,

@@ -330,7 +330,7 @@ class IntegrationHttp(unittest.TestCase):
         self.sans_secret(sortie)
         texte = json.dumps(sortie)
         for interdit in (TEXTE_SENSIBLE, "pluginText", CHAMP_INCONNU, "macAddress", "00:00:5e", "vulnUUID", "description",
-                         "Description fictive", "cpe:/a", "repository", "Depot", "assetExposureScore"):
+                         "Description fictive", "cpe:/a", "repository", "dataFormat", "universal", "assetExposureScore"):
             self.assertNotIn(interdit, texte)
         el = sortie["elements"]
         self.assertEqual([e["type"] for e in el], ["machine"] * 3 + ["constat"] * 2 + ["detection"] * 4 + ["hote"] * 2)
@@ -353,7 +353,9 @@ class IntegrationHttp(unittest.TestCase):
                                 "uuid": "00000000-0000-4000-8000-0000000000a1", "nom": "srv-exemple-01.exemple.invalid",
                                 "adresse": "192.0.2.11", "systeme": "Linux Kernel 5.14 on Exemple Linux 9",
                                 "premiere": "2026-07-18T01:05:01.000Z", "derniere": "2026-11-16T06:04:48.000Z",
-                                "exposition": "internal", "acr": 4.0})
+                                "exposition": "internal", "acr": 4.0,
+                                # Lot V4d : dépôt de Tenable, identifiant et nom seulement.
+                                "depot": {"id": "1", "nom": "Depot"}})
         d = [e for e in el if e["type"] == "detection"]
         self.assertEqual(sorted((x["machine"][-2:], x["port"]) for x in d), [("02", 0), ("a1", 0), ("a1", 443), ("a2", 0)])
         # Sans hostUUID, la machine est identifiée par son adresse et son nom (ici NetBIOS).
@@ -368,6 +370,41 @@ class IntegrationHttp(unittest.TestCase):
         Faux.recues, Faux.corps = [], []
         self.synchro(gravites=["moyenne", "critique"])
         self.assertEqual(Faux.corps[0]["query"]["filters"][0]["value"], "4,2")
+
+    def test_synchronisation_reads_only_the_id_and_name_of_the_repository(self):
+        """Lot V4d : le dépôt d'une machine est lu dans le résultat de l'analyse déjà reçu (aucun appel nouveau), réduit à son
+        identifiant et à son nom nettoyé ; vue dans plusieurs dépôts, la machine garde le plus petit identifiant ; une forme
+        inattendue donne un dépôt inconnu (None), sans écarter le résultat."""
+        Faux.mode = "synchro"
+        Faux.analyse = [
+            resultat_fictif(1, repository={"id": "7", "name": "<b>Dépôt</b> fictif B", "description": "Texte fictif",
+                                           "dataFormat": "IPv4", "organization": {"id": "1"}}),
+            resultat_fictif(2, hote=1, port="443", repository={"id": 3, "name": "Dépôt fictif A"}),
+            resultat_fictif(3, hote=1, port="22", repository={"id": "12", "name": "Dépôt fictif C"}),
+            resultat_fictif(4, hote=2, repository={"id": "0", "name": "Dépôt fictif"}),
+            resultat_fictif(5, hote=3, repository={"id": "4", "name": ""}),
+            resultat_fictif(6, hote=4, repository="5"),
+            resultat_fictif(7, hote=5, repository={"id": True, "name": "Dépôt fictif"}),
+            resultat_fictif(8, hote=6, repository={"id": "1; DROP", "name": "Dépôt fictif"}),
+            resultat_fictif(9, hote=7, repository={"id": "8", "name": "x" * 500}),
+        ]
+        Faux.hotes = []
+        sortie = self.synchro()
+        self.assertTrue(sortie["ok"], sortie.get("erreur"))
+        texte = json.dumps(sortie)
+        for interdit in ("Texte fictif", "IPv4", "organization", "repository", "<b>"):
+            self.assertNotIn(interdit, texte)
+        depots = {e["cle"][-2:]: e["depot"] for e in sortie["elements"] if e["type"] == "machine"}
+        self.assertEqual(depots["a1"], {"id": "3", "nom": "Dépôt fictif A"})
+        for cle in ("a2", "a3", "a4", "a5", "a6"):
+            self.assertIsNone(depots[cle], cle)
+        self.assertEqual(depots["a7"]["id"], "8")
+        self.assertEqual(len(depots["a7"]["nom"]), h.BORNES_SYNCHRO["nomDepot"])
+        self.assertEqual(sortie["resultat"]["ecartes"], 0)
+        # Aucun appel nouveau : l'analyse, puis l'inventaire, comme avant.
+        self.assertEqual([(r["methode"], r["chemin"].split("?")[0]) for r in Faux.recues],
+                         [("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
+        self.assertEqual(h.depot({"id": "7", "name": "<b>Dépôt</b> fictif B"}), {"id": "7", "nom": "Dépôt fictif B"})
 
     def test_synchronisation_paginates_and_stops_at_its_bounds(self):
         Faux.mode = "synchro"

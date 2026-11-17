@@ -106,6 +106,12 @@ défaut ; table `vulnerabilites_assistant_reperes_externes` et un index), durée
 recommandations de l'éditeur arrivent à la synchronisation suivante. Aucun appel réseau nouveau, aucune action sur le serveur.
 (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `082`** (module Vulnérabilités, périmètre des machines Tenable relié par dépôt, lot V4d de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (table `vulnerabilites_tenable_depots` et un index, colonne
+nullable `depot_id` de `vulnerabilites_machines` et un index), durée négligeable, sans reprise de données : les dépôts
+apparaissent à la synchronisation suivante, non reliés ; les machines déjà rattachées à la main gardent leur périmètre. Aucun
+appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -423,6 +429,16 @@ recommandations de l'éditeur arrivent à la synchronisation suivante. Aucun app
   domaine ou l'adresse à l'affichage, selon les droits) ; le masque de sortie couvre désormais les domaines (et leurs
   sous-domaines), adresses, FAI et numéros d'AS d'AlgoLightHouse, en conversation comme en ronde. Migration `081`. Aide mise
   à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4d : périmètre des machines Tenable relié par dépôt**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot V4d » ; décision du RSSI du 17/11/2026 : par groupe
+  entier, comme les périmètres AlgoLightHouse). Le groupe est le **dépôt de Tenable** (choix à confirmer par le RSSI), lu dans
+  les résultats de l'analyse déjà reçus (identifiant et nom seulement, aucun appel nouveau). Onglet « Dépôts Tenable » de
+  l'écran « Machines » (administration du module) pour relier chaque dépôt à un périmètre
+  (`GET /api/vulnerabilites/depots`, `PUT /api/vulnerabilites/depots/{id}` : If-Match, écriture sur le périmètre actuel et
+  visé, journal sans nom). Une machine prend le périmètre de son dépôt relié ; un périmètre indiqué à la main prime, et
+  « Hérité du dépôt » (qui remplace « Retirer le périmètre ») le retire. Les droits de lecture, compteurs, priorité, fiches,
+  assistant et masque suivent le périmètre effectif ; la liste dit « hérité du dépôt » ou « indiqué à la main ». Rôle
+  inchangé, par machine. Migration `082`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
 
 ### Ajouté
 

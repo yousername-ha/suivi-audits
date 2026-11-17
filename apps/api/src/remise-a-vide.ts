@@ -173,6 +173,9 @@ export const TABLES_TRAVAIL = [
   // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
   // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
   'vulnerabilites_machines',
+  // Dépôts de Tenable (ADR 0100, lot V4d) : relus à la synchronisation suivante ; liaison à un périmètre saisie par les
+  // utilisateurs, rattachée à grc_smsis (effacée avec le travail, comme le périmètre des machines).
+  'vulnerabilites_tenable_depots',
   'vulnerabilites_constats',
   'vulnerabilites_constat_cves',
   'vulnerabilites_detections',

@@ -21,7 +21,9 @@
    périmètre de la plateforme relié à chaque périmètre ALH (non relié : `administrer`) ; liste et liaison des périmètres ALH
    avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé.
    Lot ALH2 : fiche d'une alerte (défauts et résolutions de l'éditeur, CVE avec leur priorité) avec `lire`, mêmes droits que
-   la liste ; tri des alertes et des technologies par priorité. */
+   la liste ; tri des alertes et des technologies par priorité.
+   Lot V4d : liste et liaison des dépôts de Tenable à un périmètre (périmètre hérité par les machines du dépôt sans
+   périmètre indiqué à la main) avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé. */
 import {
   AffectationMachine,
   AnnulationRapprochement,
@@ -34,6 +36,7 @@ import {
   RefusPropositionSuivi,
   DemandeCollecte,
   EffetMotQuery,
+  LiaisonDepotTenable,
   LiaisonPerimetreAlh,
   RechercheActifsAlh,
   RechercheAlertesAlh,
@@ -248,7 +251,7 @@ export const vulnerabilitesRoutes = [
     method: 'PATCH',
     url: '/api/vulnerabilites/machines/:id',
     summary:
-      'Rôle et périmètre d’une machine (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé ; retirer le périmètre demande administrer',
+      'Rôle et périmètre d’une machine (If-Match) ; écriture exigée sur le périmètre effectif actuel et le périmètre visé ; retirer le périmètre indiqué à la main rend celui du dépôt Tenable relié (sans dépôt relié : administrer)',
     tags,
     access: 'vulnerabilites:modifier',
     params: id,
@@ -263,6 +266,30 @@ export const vulnerabilitesRoutes = [
       );
       setEtag(reply, m.version);
       return m;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/depots',
+    summary:
+      'Dépôts de Tenable et leur liaison à un périmètre de la plateforme, hérité par leurs machines sans périmètre indiqué à la main (administration du module)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.depots.lister(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/depots/:id',
+    summary:
+      'Relier (ou délier) un dépôt de Tenable à un périmètre de la plateforme (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonDepotTenable,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.depots.lier(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
     },
   }),
   route({

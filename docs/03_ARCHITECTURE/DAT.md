@@ -90,7 +90,10 @@ détections sont rangés sans doublon ; une détection garde le numéro de la de
 « présente » qu'après une synchronisation **complète** plus récente qui ne l'a pas vue (rien n'est supprimé ; une
 synchronisation interrompue ou incomplète ne fait rien disparaître). Lecture par l'interface à travers le périmètre de chaque
 machine (`grc_smsi_visible`, pyramide des ADR 0092 et 0095) ; une machine sans périmètre n'est lisible qu'avec
-`vulnerabilites:administrer`. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
+`vulnerabilites:administrer`. Lot V4d (migration `082`) : le périmètre lu est le périmètre **effectif**, celui indiqué à la
+main sur la machine, sinon celui de son dépôt de Tenable (`vulnerabilites_tenable_depots.perimetre_id`, dépôt lu dans les
+résultats de l'analyse, liaison par `vulnerabilites:administrer`, `If-Match`, écriture sur les périmètres) ; un seul fragment
+SQL (`perimetreMachine`) porte cette règle pour toutes les lectures. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
 Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
 `updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête
