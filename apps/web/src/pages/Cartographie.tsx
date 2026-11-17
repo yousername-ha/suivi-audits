@@ -278,18 +278,16 @@ function CartographieContenu() {
   // l'observateur de redimensionnement qu'à l'image suivante ; juste après l'ouverture de la carte, elle vaut encore
   // 800 × 500 (CARTO-06, CARTO-07).
   const canevas = useRef<HTMLDivElement>(null);
-  const mesure = useCallback(() => {
+  const tailleReelle = useCallback(() => {
     const r = canevas.current?.querySelector('.carte-zone')?.getBoundingClientRect();
-    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : null;
+    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : taille.current;
   }, []);
-  const tailleReelle = useCallback(() => mesure() ?? taille.current, [mesure]);
-  // Première ouverture (ou génération) : la vue s'ajuste à la carte, sur la taille réelle de la zone. Si la zone n'est
-  // pas encore mise en page, l'observateur de taille fait l'ajustement (onSize).
+  // Première ouverture (ou génération) : la vue s'ajuste à la carte, sur la taille réelle de la zone.
   useEffect(() => {
     if (!scene || vp || !scene.nodes.length) return;
-    const t = mesure();
-    if (t) setVp(fitViewport(scene, t.w, t.h));
-  }, [scene, vp, setVp, mesure]);
+    const t = tailleReelle();
+    setVp(fitViewport(scene, t.w, t.h));
+  }, [scene, vp, setVp, tailleReelle]);
 
   usePresence(`cartographie/${view}`, editMode ? 'edit' : 'view');
   const editeurs = usePresenceOn(`cartographie/${view}`).filter((p) => p.mode === 'edit');
@@ -1278,8 +1276,6 @@ function CartographieContenu() {
                 setVp={setVp}
                 onSize={(wd, h) => {
                   taille.current = { w: wd, h };
-                  // Ajustement initial que l'effet n'a pas pu faire, la zone n'étant pas encore mise en page.
-                  if (!vp && scene && scene.nodes.length) setVp(fitViewport(scene, wd, h));
                 }}
                 onLive={(l) => majTravail((cur) => ({ ...cur, layout: l }))}
                 onCommit={(before) =>
