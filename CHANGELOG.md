@@ -472,6 +472,14 @@ personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session «
   colonne « services » : AlgoLightHouse ne les range pas à part, l'alerte la plus haute de la ligne en tient lieu. Sans
   migration ni dépendance. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
 
+### Modifié
+
+- **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), décision du RSSI du
+  17/11/2026) : l'avis GHSA-fc5q-39xc-vjpf (déni de service dans `picomatch` ≤ 4.0.7, gravité élevée, sans version corrigée
+  publiée) est ignoré par `pnpm audit`. Le paquet n'est tiré que par des outils de développement et de construction
+  (`typescript-eslint`, Vite, Vitest), absents des dépendances d'exécution. Réexamen au plus tard le 30/11/2026.
+  (session « Module surveillance vulnérabilités SMSI »)
+
 ## [7.2.3] — 2026-11-17
 
 ### Notes de mise à jour
