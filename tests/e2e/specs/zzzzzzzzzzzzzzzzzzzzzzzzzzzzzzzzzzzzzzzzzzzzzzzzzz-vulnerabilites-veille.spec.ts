@@ -30,6 +30,8 @@ test('Vulnérabilités : écran « Veille », sources, validation du flux annul�
     await expect(page.getByText('Aucune source n’est lue')).toBeVisible();
     // Lot V4c : état de la lecture des fiches du CERT Santé, aucune lue sur une pile vierge.
     await expect(page.getByText(/Fiches du CERT Santé .* 0 fiche lue, aucune à lire\./)).toBeVisible();
+    // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
+    await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Validation du flux : destinations et ce qui sort ; « Confirmer » exige la case ; annulée, rien n'est ouvert.

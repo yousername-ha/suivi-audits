@@ -23,10 +23,12 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
     await page.getByLabel('Exploitation avérée').check();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
-    await expect(page.getByLabel('Priorité', { exact: true })).toBeVisible();
-    await expect(page.getByLabel('Suivi', { exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Priorité', exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Suivi', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Failles déclarées/ })).toBeVisible();
     await expect(page.getByText('Aucune faille déclarée ne correspond')).toBeVisible();
+    // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
+    await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     await page.getByText('Par machine', { exact: true }).click();
     await expect(page.getByText('Aucune machine ne correspond')).toBeVisible();
@@ -35,6 +37,8 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByRole('heading', { name: 'Machines', level: 1 })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Appliquer à 0 machine/ })).toBeDisabled();
+    // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
+    await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Seuils de priorité : grille en clair, seuil EPSS à 50 % par défaut, réglable par l'administrateur.
@@ -42,16 +46,20 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByRole('heading', { name: 'Seuils de priorité', level: 1 })).toBeVisible();
     await expect(page.getByLabel('Seuil EPSS (en %)')).toHaveValue('50');
     await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeEnabled();
+    // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
+    await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Mots à ne pas masquer (V31) : liste vide par défaut ; un mot ajouté dit son effet (aucune machine ici), puis retiré.
     await page.goto('/vulnerabilites/masque');
     await expect(page.getByRole('heading', { name: 'Mots à ne pas masquer', level: 1 })).toBeVisible();
     await expect(page.getByText('Aucun mot : le masque est strict.')).toBeVisible();
-    await page.getByLabel('Mot', { exact: true }).fill('dpi');
+    await page.getByRole('textbox', { name: 'Mot', exact: true }).fill('dpi');
     await expect(page.getByText(/aucun effet aujourd’hui/)).toBeVisible();
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(page.getByText('dpi', { exact: true })).toBeVisible();
+    // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
+    await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     await page.getByRole('button', { name: 'Retirer', exact: true }).click();
     await expect(page.getByText('Aucun mot : le masque est strict.')).toBeVisible();

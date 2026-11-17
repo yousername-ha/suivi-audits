@@ -386,6 +386,7 @@ export function IntegrationsPage() {
       </Stack>
       {flux.fenetre}
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!edition}
         onClose={() => setEdition(null)}
         title={edition?.instance ? `Configurer ${edition.instance.nom}` : `Ajouter : ${edition?.type.libelle ?? ''}`}
@@ -405,6 +406,7 @@ export function IntegrationsPage() {
         )}
       </Modal>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!historique}
         onClose={() => setHistorique(null)}
         title={`Exécutions : ${historique?.nom ?? ''}`}

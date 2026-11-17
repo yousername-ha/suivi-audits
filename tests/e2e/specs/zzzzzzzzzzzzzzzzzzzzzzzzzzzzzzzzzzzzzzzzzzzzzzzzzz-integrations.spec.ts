@@ -36,9 +36,11 @@ test('Intégrations : connecteur Tenable créé, clés enregistrées sans être 
       .getByRole('button', { name: 'Ajouter une instance' })
       .click();
     const ajout = page.getByRole('dialog', { name: 'Ajouter : Tenable Security Center' });
-    await ajout.getByLabel('Nom', { exact: true }).fill(nom);
+    await ajout.getByRole('textbox', { name: 'Nom', exact: true }).fill(nom);
     // Port réglable (décision du RSSI du 16/11/2026) : rappelé dans la fenêtre de validation du flux.
-    await ajout.getByLabel('Adresse du service', { exact: true }).fill('https://tenable.exemple.test:8443');
+    await ajout
+      .getByRole('textbox', { name: 'Adresse du service', exact: true })
+      .fill('https://tenable.exemple.test:8443');
     await ajout.getByRole('button', { name: 'Créer l’instance' }).click();
     const config = page.getByRole('dialog', { name: `Configurer ${nom}` });
     await config.getByLabel(/^Clé d’accès/).fill(cle);

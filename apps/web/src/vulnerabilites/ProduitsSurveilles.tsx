@@ -265,6 +265,7 @@ export function ProduitsSurveillesPage() {
         )}
       </Stack>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!edition}
         onClose={() => setEdition(null)}
         title={edition?.produit ? `Modifier ${edition.produit.nom}` : 'Ajouter un produit surveillé'}
@@ -284,6 +285,7 @@ export function ProduitsSurveillesPage() {
         )}
       </Modal>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!ouvert}
         onClose={() => setOuvert(null)}
         title={ouvert ? `${ouvert.nom} ${ouvert.versionProduit}` : 'Produit surveillé'}
@@ -294,6 +296,7 @@ export function ProduitsSurveillesPage() {
         {ouvert && <FicheProduit id={ouvert.id} modifier={modifier} onChange={rafraichir} />}
       </Modal>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!aSupprimer}
         onClose={() => setASupprimer(null)}
         title="Supprimer un produit surveillé"

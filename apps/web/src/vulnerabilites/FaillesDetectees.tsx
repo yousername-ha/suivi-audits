@@ -701,6 +701,7 @@ export function FaillesDetecteesPage() {
         )}
       </Stack>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!ouvert}
         onClose={() => setOuvert(null)}
         title={fiche.data?.nom ?? 'Faille détectée'}
@@ -717,6 +718,7 @@ export function FaillesDetecteesPage() {
         )}
       </Modal>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!declareeOuverte}
         onClose={() => setDeclareeOuverte(null)}
         title={ficheDeclaree.data ? `${ficheDeclaree.data.cve} (faille déclarée)` : 'Faille déclarée'}

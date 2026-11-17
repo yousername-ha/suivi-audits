@@ -16,7 +16,7 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     problems = watchPage(page);
   const nom = `Produit fictif ${Date.now().toString(36)}`;
   const choisir = async (champ: string, option: string, portee = page.getByRole('main')) => {
-    await portee.getByLabel(champ, { exact: true }).click();
+    await portee.getByRole('combobox', { name: champ, exact: true }).click();
     await page.getByRole('option', { name: option, exact: true }).click();
   };
   try {
@@ -28,14 +28,14 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
 
     await page.getByRole('button', { name: 'Ajouter un produit' }).click();
     const ajout = page.getByRole('dialog', { name: 'Ajouter un produit surveillé' });
-    await ajout.getByLabel('Éditeur', { exact: true }).fill('Éditeur fictif de recette');
-    await ajout.getByLabel('Nom du produit', { exact: true }).fill(nom);
+    await ajout.getByRole('textbox', { name: 'Éditeur', exact: true }).fill('Éditeur fictif de recette');
+    await ajout.getByRole('textbox', { name: 'Nom du produit', exact: true }).fill(nom);
     // Version obligatoire (lot V4a) : sans elle, l'ajout est refusé à l'écran.
     await choisir('Famille', 'Web', ajout);
     await choisir('Criticité', 'Élevée', ajout);
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout.getByRole('alert')).toContainText('version');
-    await ajout.getByLabel('Version', { exact: true }).fill('1.0');
+    await ajout.getByRole('textbox', { name: 'Version', exact: true }).fill('1.0');
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout).toBeHidden();
     const ligne = page.getByRole('row', { name: new RegExp(nom) });

@@ -470,6 +470,7 @@ export function MachinesPage() {
         )}
       </Stack>
       <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!ouverte}
         onClose={() => setOuverte(null)}
         title={ouverte ? libelleMachine(ouverte) : 'Machine'}
