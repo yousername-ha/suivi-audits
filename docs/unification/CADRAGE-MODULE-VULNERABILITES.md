@@ -73,6 +73,7 @@ Elles ne montrent ni le menu latéral de l'application, ni le thème clair, ni l
 | Vue par périmètre | [05-perimetre](maquettes-vulnerabilites/05-perimetre.png) | Front, back applicatif et bases, reliés par ligne |
 | Produits surveillés | [06-produits](maquettes-vulnerabilites/06-produits.png) | Registre, origine, propositions venues d'Ekialis |
 | Alerte critique | [07-alerte-critique](maquettes-vulnerabilites/07-alerte-critique.png) | Grande fenêtre rouge affichée quand une faille est exploitée et détectée, à prendre en compte |
+| Surface externe | [08-surface-externe](maquettes-vulnerabilites/08-surface-externe.png) | Ce qu'un attaquant voit de l'extérieur : domaines, hôtes et services exposés en anneaux autour du SI interne, chemin d'entrée critique en rouge, typosquatting et fuites hors périmètre (maquette, données fictives, connecteur AlgoLightHouse) |
 
 ## 4. Lots proposés (sans calendrier ; estimations non établies)
 
