@@ -6,8 +6,10 @@ import {
   FLUX_EXTERNES,
   FLUX_MODULES,
   FLUX_REPRISE_ACTEUR,
+  estFluxRepris,
   FLUX_REPRISE_EXECUTANT,
   FLUX_REPRISE_MOTIFS,
+  FLUX_SANS_REPRISE,
   FluxAppliques,
   FluxChangement,
   FluxConfirme,
@@ -162,14 +164,20 @@ describe('protocole de l’exécutant', () => {
 describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
   it('un acteur système explicite, des motifs pour chaque module du registre', () => {
     expect(FLUX_REPRISE_ACTEUR).toBe('reprise-mise-a-jour');
-    expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...FLUX_MODULES].sort());
-    for (const m of FLUX_MODULES)
+    // Les flux nés avec le registre (Tenable, veille des vulnérabilités) n'ont rien à reprendre : ils sont nommés, pas oubliés.
+    expect([...FLUX_SANS_REPRISE].sort()).toEqual(['tenable', 'veille-vulnerabilites']);
+    const repris = FLUX_MODULES.filter(estFluxRepris);
+    expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...repris].sort());
+    for (const m of repris)
       for (const [code, phrase] of Object.entries(FLUX_REPRISE_MOTIFS[m])) {
         expect(code, m).toMatch(/^[a-z][a-z-]{2,40}$/);
         expect(phrase, `${m}.${code}`).toMatch(/\.$/);
       }
     // Le courriel est constaté par l'API au démarrage, jamais déclaré par un exécutant.
-    expect([...FLUX_REPRISE_EXECUTANT].sort()).toEqual(FLUX_MODULES.filter((m) => m !== 'courriel').sort());
+    expect([...FLUX_REPRISE_EXECUTANT].sort()).toEqual(repris.filter((m) => m !== 'courriel').sort());
+    // Aucune déclaration d'exécutant ne peut ouvrir un flux né avec le registre.
+    for (const m of FLUX_SANS_REPRISE)
+      expect(FluxReprise.safeParse({ enService: { [m]: 'conteneur-present' } }).success).toBe(false);
   });
   it('l’entrée de l’exécutant est validée strictement', () => {
     expect(FluxReprise.safeParse({ enService: {} }).success).toBe(true);

@@ -334,6 +334,15 @@ export type FluxAppliques = z.infer<typeof FluxAppliques>;
     jamais touché : une fermeture décidée reste une fermeture. */
 export const FLUX_REPRISE_ACTEUR = 'reprise-mise-a-jour';
 
+/** Flux nés avec le registre (connecteur Tenable de l'ADR 0076, veille de l'ADR 0100) : ils n'ont jamais pu être en service
+    sans décision enregistrée, puisqu'ils ne s'ouvrent que par leur geste d'activation. Il n'y a donc rien à reprendre pour
+    eux : la reprise ne les concerne pas, et aucune déclaration d'un exécutant ne peut les ouvrir. */
+export const FLUX_SANS_REPRISE = ['tenable', 'veille-vulnerabilites'] as const satisfies readonly FluxModule[];
+/** Modules que la reprise de l'existant peut concerner : ceux qui existaient avant le registre des flux. */
+export type FluxModuleRepris = Exclude<FluxModule, (typeof FLUX_SANS_REPRISE)[number]>;
+export const estFluxRepris = (m: FluxModule): m is FluxModuleRepris =>
+  !(FLUX_SANS_REPRISE as readonly FluxModule[]).includes(m);
+
 /** Motifs de la reprise, par module : codes fermés (journal d'audit, CLI de l'exécutant) et phrase affichée. Les exécutants
     Python recopient ces codes (concordance vérifiée par apps/api/test/architecture-flux.test.ts). */
 export const FLUX_REPRISE_MOTIFS = {
@@ -355,13 +364,14 @@ export const FLUX_REPRISE_MOTIFS = {
   'mises-a-jour': {
     'mise-a-jour-installee': 'Au moins une mise à jour a déjà été installée sur ce serveur.',
   },
-} as const satisfies Record<FluxModule, Record<string, string>>;
-export type FluxRepriseMotif<M extends FluxModule = FluxModule> = keyof (typeof FLUX_REPRISE_MOTIFS)[M] & string;
+} as const satisfies Record<FluxModuleRepris, Record<string, string>>;
+export type FluxRepriseMotif<M extends FluxModuleRepris = FluxModuleRepris> = keyof (typeof FLUX_REPRISE_MOTIFS)[M] &
+  string;
 
 /** Modules dont l'exécutant constate la mise en service ; le courriel est constaté par l'API elle-même, au démarrage. */
 export const FLUX_REPRISE_EXECUTANT = ['assistant', 'acme', 'antivirus', 'mises-a-jour'] as const;
 
-const motifs = <M extends FluxModule>(m: M) =>
+const motifs = <M extends FluxModuleRepris>(m: M) =>
   z.enum(Object.keys(FLUX_REPRISE_MOTIFS[m]) as [FluxRepriseMotif<M>, ...FluxRepriseMotif<M>[]]).optional();
 
 /** Entrée de `suivi flux-reprise` (exécutant) : modules réellement en service et motif constaté. Un module inconnu ou que
