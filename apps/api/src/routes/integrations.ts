@@ -148,7 +148,7 @@ export const integrationsRoutes = [
     method: 'POST',
     url: '/api/integrations/instances/:id/synchroniser',
     summary:
-      'Synchroniser maintenant (Tenable : failles et machines) : inscrit une exécution en file ; module Vulnérabilités actif exigé',
+      'Synchroniser maintenant (Tenable : failles et machines ; AlgoLightHouse : surface externe) : inscrit une exécution en file ; module Vulnérabilités actif exigé',
     tags,
     access: 'integrations:modifier',
     params: id,

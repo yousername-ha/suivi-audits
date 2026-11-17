@@ -16,6 +16,7 @@ export const FLUX_MODULES = [
   'mises-a-jour',
   'tenable',
   'veille-vulnerabilites',
+  'algolighthouse',
 ] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
@@ -252,6 +253,33 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     siFerme:
       'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les failles et avis déjà collectés restent consultables.',
   },
+  {
+    // Connecteur AlgoLightHouse du module Intégrations (ADR 0076 ; ADR 0100, lot ALH1). Service de l'éditeur sur Internet :
+    // la sortie passe par le mandataire de l'établissement quand il est actif (ADR 0101), contrairement à Tenable.
+    id: 'algolighthouse',
+    libelle: 'AlgoLightHouse',
+    role: 'Lire AlgoLightHouse (surveillance de la surface exposée sur Internet), en lecture seule, pour le module Intégrations : tester la connexion, lire les périmètres, hôtes, domaines, alertes et technologies pour le module Vulnérabilités.',
+    destinations: [
+      {
+        sens: 'sortant',
+        hote: 'Espace AlgoLightHouse réglé (espace.algolighthouse.fr, sur Internet)',
+        ports: 'TCP 443 (HTTPS)',
+      },
+    ],
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'La clé d’API de l’espace AlgoLightHouse et des requêtes de lecture (version du service, périmètres, hôtes, domaines, alertes et leur détail, technologies), ainsi que l’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif. Aucune donnée de la plateforme n’est envoyée : ni commentaire, ni changement de statut, ni recherche.',
+    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur AlgoLightHouse' },
+    moduleActivation: 'integrations',
+    pareFeu: ['Sortie TCP 443 du serveur vers l’espace AlgoLightHouse réglé (espace.algolighthouse.fr).'],
+    siFerme:
+      'Aucune requête ne part vers AlgoLightHouse : une demande en file est close sans appel ; la configuration, la clé et les données déjà lues sont conservées.',
+  },
 ];
 
 export const fluxExterne = (id: FluxModule): FluxExterneDefinition => FLUX_EXTERNES.find((f) => f.id === id)!;
@@ -334,10 +362,14 @@ export type FluxAppliques = z.infer<typeof FluxAppliques>;
     jamais touché : une fermeture décidée reste une fermeture. */
 export const FLUX_REPRISE_ACTEUR = 'reprise-mise-a-jour';
 
-/** Flux nés avec le registre (connecteur Tenable de l'ADR 0076, veille de l'ADR 0100) : ils n'ont jamais pu être en service
-    sans décision enregistrée, puisqu'ils ne s'ouvrent que par leur geste d'activation. Il n'y a donc rien à reprendre pour
-    eux : la reprise ne les concerne pas, et aucune déclaration d'un exécutant ne peut les ouvrir. */
-export const FLUX_SANS_REPRISE = ['tenable', 'veille-vulnerabilites'] as const satisfies readonly FluxModule[];
+/** Flux nés avec le registre (connecteurs Tenable et AlgoLightHouse de l'ADR 0076, veille de l'ADR 0100) : ils n'ont jamais
+    pu être en service sans décision enregistrée, puisqu'ils ne s'ouvrent que par leur geste d'activation. Il n'y a donc rien
+    à reprendre pour eux : la reprise ne les concerne pas, et aucune déclaration d'un exécutant ne peut les ouvrir. */
+export const FLUX_SANS_REPRISE = [
+  'tenable',
+  'veille-vulnerabilites',
+  'algolighthouse',
+] as const satisfies readonly FluxModule[];
 /** Modules que la reprise de l'existant peut concerner : ceux qui existaient avant le registre des flux. */
 export type FluxModuleRepris = Exclude<FluxModule, (typeof FLUX_SANS_REPRISE)[number]>;
 export const estFluxRepris = (m: FluxModule): m is FluxModuleRepris =>

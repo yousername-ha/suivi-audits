@@ -20,7 +20,7 @@ import {
 } from '../src/index.js';
 
 describe('registre des flux vers l’extérieur', () => {
-  it('décrit les cinq modules de l’ADR, puis le connecteur Tenable et la veille, dans l’ordre des identifiants stables', () => {
+  it('décrit les cinq modules de l’ADR, puis les connecteurs Tenable et AlgoLightHouse et la veille, dans l’ordre des identifiants stables', () => {
     expect(FLUX_MODULES).toEqual([
       'assistant',
       'courriel',
@@ -29,6 +29,7 @@ describe('registre des flux vers l’extérieur', () => {
       'mises-a-jour',
       'tenable',
       'veille-vulnerabilites',
+      'algolighthouse',
     ]);
     expect(FLUX_EXTERNES.map((f) => f.id)).toEqual([...FLUX_MODULES]);
   });
@@ -115,8 +116,10 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
       ['assistant', 'assistant'],
       ['tenable', 'integrations'],
       ['veille-vulnerabilites', 'vulnerabilites'],
+      ['algolighthouse', 'integrations'],
     ]);
     expect(fluxExterne('tenable').activation.par).toBe('module');
+    expect(fluxExterne('algolighthouse').activation.par).toBe('module');
   });
   it('la validation jointe à l’activation est un « vrai » explicite', () => {
     expect(FluxConfirme.safeParse(true).success).toBe(true);
@@ -164,8 +167,9 @@ describe('protocole de l’exécutant', () => {
 describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
   it('un acteur système explicite, des motifs pour chaque module du registre', () => {
     expect(FLUX_REPRISE_ACTEUR).toBe('reprise-mise-a-jour');
-    // Les flux nés avec le registre (Tenable, veille des vulnérabilités) n'ont rien à reprendre : ils sont nommés, pas oubliés.
-    expect([...FLUX_SANS_REPRISE].sort()).toEqual(['tenable', 'veille-vulnerabilites']);
+    // Les flux nés avec le registre (Tenable, AlgoLightHouse, veille des vulnérabilités) n'ont rien à reprendre : ils sont
+    // nommés, pas oubliés.
+    expect([...FLUX_SANS_REPRISE].sort()).toEqual(['algolighthouse', 'tenable', 'veille-vulnerabilites']);
     const repris = FLUX_MODULES.filter(estFluxRepris);
     expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...repris].sort());
     for (const m of repris)

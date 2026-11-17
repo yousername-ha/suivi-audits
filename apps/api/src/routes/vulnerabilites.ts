@@ -16,7 +16,10 @@
    Lot V4c : annulation d'une confirmation ou d'un rejet de rapprochement (`modifier`, If-Match sur le rapprochement, note
    facultative ; V24).
    V31 : liste de mots à ne pas masquer par le masque des machines de l'assistant (lecture, effet d'un mot et écriture avec
-   `administrer`, écriture avec If-Match). */
+   `administrer`, écriture avec If-Match).
+   Lot ALH1 : surface externe lue dans AlgoLightHouse (alertes, actifs, technologies) avec `lire`, à travers les droits du
+   périmètre de la plateforme relié à chaque périmètre ALH (non relié : `administrer`) ; liste et liaison des périmètres ALH
+   avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé. */
 import {
   AffectationMachine,
   AnnulationRapprochement,
@@ -29,6 +32,10 @@ import {
   RefusPropositionSuivi,
   DemandeCollecte,
   EffetMotQuery,
+  LiaisonPerimetreAlh,
+  RechercheActifsAlh,
+  RechercheAlertesAlh,
+  RechercheTechnologiesAlh,
   RechercheDeclarees,
   ReglageMasque,
   ReglagePriorite,
@@ -516,6 +523,73 @@ export const vulnerabilitesRoutes = [
         params.nature,
         params.id,
         params.actionId,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/etat',
+    summary:
+      'Surface externe : état de la synchronisation de chaque instance AlgoLightHouse (dernière exécution, dernière complète)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.etat((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/alertes',
+    summary:
+      'Alertes AlgoLightHouse lisibles (périmètre relié, ou administration du module pour un périmètre non relié) ; recherche par titre, cible ou CVE ; filtres type, criticité, statut',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAlertesAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.alertes((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/actifs',
+    summary: 'Hôtes et domaines AlgoLightHouse lisibles ; recherche par adresse ou domaine ; filtre par type',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheActifsAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.actifs((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/technologies',
+    summary:
+      'Technologies AlgoLightHouse détectées sur des actifs lisibles, versions et CVE (score, EPSS, preuve, exploitation selon l’éditeur)',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheTechnologiesAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.technologies((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/perimetres',
+    summary: 'Périmètres AlgoLightHouse et leur liaison à un périmètre de la plateforme (administration du module)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.surfaceExterne.perimetres(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/surface/perimetres/:id',
+    summary:
+      'Relier (ou délier) un périmètre AlgoLightHouse à un périmètre de la plateforme (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonPerimetreAlh,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.surfaceExterne.lier(
+        params.id,
+        body,
         requireIfMatch(req),
         (s as Session).user,
         ip,

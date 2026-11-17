@@ -5,12 +5,18 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
+  ADRESSE_ALH,
   ADRESSE_IP,
+  ALH_BORNES,
+  CLE_API_ALH,
   CLE_MACHINE,
   CVE_ID,
+  NOM_DOMAINE_ALH,
   PLUGIN_ID,
   TENABLE_BORNES,
   TYPES_INTEGRATION,
+  USAGE_MANDATAIRE,
+  VERSION_ALH,
   VERSION_TENABLE,
 } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
@@ -97,9 +103,98 @@ describe('architecture : connecteurs du module Intégrations', () => {
     for (const s of tenable.secrets) expect(motif(SCRIPT, 'CLE_API')).toBe(s.motif.source);
   });
 
+  it('AlgoLightHouse : bornes, adresse de l’éditeur, clé, version et domaines identiques au paquet partagé', () => {
+    expect(constante(SCRIPT, 'BORNES_ALH')).toEqual(ALH_BORNES);
+    expect(ALH_BORNES.lot).toBe(TENABLE_BORNES.lot);
+    expect(ALH_BORNES.lots).toBe(TENABLE_BORNES.lots);
+    expect(Number(/^SYNCHRO_DELAI = (\d+)$/m.exec(EXECUTANT)![1])).toBeGreaterThanOrEqual(
+      ALH_BORNES.dureeSecondes + 60,
+    );
+    expect(motif(SCRIPT, 'ADRESSE_ALH')).toBe(ADRESSE_ALH.source);
+    expect(motif(SCRIPT, 'CLE_API_ALH')).toBe(CLE_API_ALH.source);
+    expect(motif(SCRIPT, 'VERSION_ALH')).toBe(VERSION_ALH.source);
+    expect(motif(SCRIPT, 'NOM_DOMAINE_ALH')).toBe(NOM_DOMAINE_ALH.source);
+    const alh = TYPES_INTEGRATION.find((t) => t.id === 'algolighthouse')!;
+    expect(alh.secrets.map((s) => s.motif.source)).toEqual([CLE_API_ALH.source]);
+    expect(ADRESSE_ALH.test('https://espace-fictif.algolighthouse.fr')).toBe(true);
+    for (const refusee of [
+      'https://algolighthouse.fr',
+      'https://espace.algolighthouse.fr:8443',
+      'https://espace.algolighthouse.fr.exemple.invalid',
+      'https://espace.algolighthouse.fr/api',
+      'http://espace.algolighthouse.fr',
+    ])
+      expect(ADRESSE_ALH.test(refusee), refusee).toBe(false);
+  });
+
+  it('AlgoLightHouse en lecture seule : GET seulement, version 1 de l’API, jamais commentaires, statut, contacts ni recherche', () => {
+    const alh = TYPES_INTEGRATION.find((t) => t.id === 'algolighthouse')!;
+    expect(alh.pointsAcces.map((p) => p.methode)).toEqual(alh.pointsAcces.map(() => 'GET'));
+    for (const p of alh.pointsAcces) {
+      expect(p.chemin).toMatch(/^\/api\/v1\//);
+      expect(p.chemin).not.toMatch(/comments|status|contacts|search|keywords/);
+      expect(p.parametres).toBeUndefined();
+    }
+    // Dans le script, chaque appel du connecteur est une lecture (GET), sans corps.
+    const section = SCRIPT.slice(
+      SCRIPT.indexOf('# ------------------------------------------------------------------ AlgoLightHouse'),
+    );
+    const appels = [...section.matchAll(/requete\("([A-Z]+)"/g)].map((m) => m[1]);
+    expect(appels.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(appels)).toEqual(new Set(['GET']));
+    expect(section).not.toMatch(/requete\("GET", [^)]*corps|requete\([^)]*parametres=/);
+    // Liste blanche des champs : ni description HTML, ni pièces jointes, ni commentaires, ni données sensibles.
+    const champs = [...SCRIPT.matchAll(/^CHAMPS_[A-Z_]+_ALH = \(([^)]*)\)$/gms)].map((m) => m[1]!).join(' ');
+    expect(champs).toContain('"title"');
+    for (const interdit of [
+      'note',
+      'data',
+      'uploads',
+      'comments',
+      'sensitive_data',
+      'has_sensitive_data',
+      'description',
+      'defects',
+      'json_data',
+    ])
+      expect(champs, interdit).not.toContain(`"${interdit}"`);
+  });
+
+  it('mandataire : seuls les types dont le flux l’utilise le reçoivent ; tunnel CONNECT, aucune option qui coupe la vérification', () => {
+    const utilisent = TYPES_INTEGRATION.filter((t) => USAGE_MANDATAIRE[t.flux] === 'utilise').map((t) => t.id);
+    expect(utilisent).toEqual(['algolighthouse']);
+    expect(
+      constante(`TYPES_MANDATAIRE = {"v": ${/^TYPES_MANDATAIRE = (\[.*\])$/m.exec(SCRIPT)![1]}}`, 'TYPES_MANDATAIRE'),
+    ).toEqual({
+      v: utilisent,
+    });
+    expect(
+      /^INTEGRATIONS_MANDATAIRE = \(([^)]*)\)$/m.exec(EXECUTANT)![1]!.replace(/[\s"]/g, '').split(',').filter(Boolean),
+    ).toEqual(utilisent);
+    expect(USAGE_MANDATAIRE.tenable).toBe('direct');
+    expect(SCRIPT.match(/"CONNECT /g)).toHaveLength(1);
+    expect(SCRIPT.match(/Proxy-Authorization: Basic/g)).toHaveLength(1);
+    expect(SCRIPT).not.toMatch(/CERT_NONE|check_hostname = False|_create_unverified_context|set_tunnel/);
+    const champs = (texte: string) => /^MANDATAIRE_CHAMPS = (\(.*\))$/m.exec(texte)![1];
+    expect(champs(SCRIPT)).toBe(champs(EXECUTANT));
+  });
+
   it('le script n’utilise que la bibliothèque standard et ne suit aucune redirection', () => {
-    const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
-    expect(imports.sort()).toEqual(['html', 'http', 'json', 're', 'socket', 'ssl', 'sys', 'time', 'unicodedata']);
+    const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z0-9_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
+    expect(imports.sort()).toEqual([
+      'base64',
+      'datetime',
+      'html',
+      'http',
+      'ipaddress',
+      'json',
+      're',
+      'socket',
+      'ssl',
+      'sys',
+      'time',
+      'unicodedata',
+    ]);
     expect(SCRIPT).not.toMatch(/urllib|HTTPRedirectHandler|subprocess|os\.environ/);
   });
 });

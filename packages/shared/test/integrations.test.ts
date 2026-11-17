@@ -24,8 +24,8 @@ import {
 const UUID = '0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
 
 describe('catalogue des connecteurs', () => {
-  it('un seul type livré, Tenable Security Center, de portée organisation, avec son flux et ses deux secrets', () => {
-    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual(['tenable']);
+  it('deux types livrés, Tenable Security Center et AlgoLightHouse, de portée organisation, chacun avec son flux et ses secrets', () => {
+    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual(['tenable', 'algolighthouse']);
     const t = typeIntegration('tenable');
     expect(t.libelle).toBe('Tenable Security Center');
     expect(t.portee).toBe('organisation');
@@ -33,7 +33,12 @@ describe('catalogue des connecteurs', () => {
     expect(t.secrets.map((s) => s.id)).toEqual(['accessKey', 'secretKey']);
     expect(t.operations).toEqual(['tester', 'synchroniser']);
     expect(OPERATIONS_EN_LOTS).toEqual({ synchroniser: 'vulnerabilites' });
-    expect(SECRETS_INTEGRATION).toEqual(['accessKey', 'secretKey']);
+    expect(SECRETS_INTEGRATION).toEqual(['accessKey', 'secretKey', 'cleApi']);
+    const alh = typeIntegration('algolighthouse');
+    expect([alh.libelle, alh.portee, alh.flux]).toEqual(['AlgoLightHouse', 'organisation', 'algolighthouse']);
+    expect(alh.secrets.map((s) => s.id)).toEqual(['cleApi']);
+    expect(alh.operations).toEqual(['tester', 'synchroniser']);
+    expect(alh.champs).toEqual(['adresse', 'delaiSecondes']);
     // Chaque type emprunte un flux du registre (ADR 0097), refermé par la désactivation du module Intégrations.
     for (const x of TYPES_INTEGRATION) {
       expect(FLUX_MODULES).toContain(x.flux);
@@ -202,5 +207,56 @@ describe('rapport de l’exécutant', () => {
       {},
     ])
       expect(s.safeParse(r).success).toBe(false);
+  });
+});
+
+describe('connecteur AlgoLightHouse (lot ALH1)', () => {
+  it('liste fermée en lecture seule : GET seulement, version 1 de l’API, jamais d’écriture ni d’adresse obsolète', () => {
+    const alh = typeIntegration('algolighthouse');
+    expect(alh.pointsAcces.map((p) => `${p.methode} ${p.chemin}`)).toEqual([
+      'GET /api/v1/health',
+      'GET /api/v1/version',
+      'GET /api/v1/alerts',
+      'GET /api/v1/alerts/{uuid}',
+      'GET /api/v1/perimeters',
+      'GET /api/v1/targets/hosts',
+      'GET /api/v1/targets/domains',
+      'GET /api/v1/technologies',
+    ]);
+    expect(pointAccesAdmis('algolighthouse', 'GET', `/api/v1/alerts/${UUID}`)).toBe(true);
+    for (const [m, c] of [
+      ['POST', `/api/alerts/${UUID}/comments`],
+      ['PUT', `/api/alerts/${UUID}/status`],
+      ['GET', '/api/alerts'],
+      ['GET', '/api/contacts'],
+      ['POST', '/api/search'],
+      ['GET', `/api/v1/alerts/${UUID}/comments`],
+      ['GET', '/api/v1/targets/keywords'],
+      ['POST', '/api/v1/alerts'],
+    ] as const)
+      expect(pointAccesAdmis('algolighthouse', m, c), `${m} ${c}`).toBe(false);
+  });
+
+  it('configuration : espace chez l’éditeur seulement, port 443, pas d’autorité propre ; clé de forme contrôlée', () => {
+    expect(configurationValide('algolighthouse', { adresse: 'https://Espace-Fictif.algolighthouse.fr/' })).toEqual({
+      adresse: 'https://espace-fictif.algolighthouse.fr',
+      delaiSecondes: 30,
+    });
+    for (const adresse of [
+      'https://algolighthouse.fr',
+      'https://espace.algolighthouse.fr:443',
+      'https://espace.algolighthouse.fr/api/v1',
+      'https://espace.algolighthouse.fr.exemple.invalid',
+      'https://compte@espace.algolighthouse.fr',
+      'http://espace.algolighthouse.fr',
+    ])
+      expect(() => configurationValide('algolighthouse', { adresse }), adresse).toThrow();
+    expect(() =>
+      configurationValide('algolighthouse', { adresse: 'https://e.algolighthouse.fr', autoriteCertification: '' }),
+    ).toThrow();
+    const cle = typeIntegration('algolighthouse').secrets[0]!.motif;
+    expect(cle.test('cle-api-fictive-0123456789abcdef')).toBe(true);
+    for (const x of ['courte', 'avec espace 0123456789abc', 'x'.repeat(257), 'ligne\n0123456789abcdef'])
+      expect(cle.test(x), x).toBe(false);
   });
 });

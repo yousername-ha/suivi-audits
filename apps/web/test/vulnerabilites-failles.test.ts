@@ -154,6 +154,7 @@ describe('menu et aide', () => {
       'vulnerabilites-veille',
       'vulnerabilites-failles',
       'vulnerabilites-machines',
+      'vulnerabilites-surface',
       'vulnerabilites-priorite',
     ]);
     expect(localiser('/vulnerabilites/failles')?.rubrique.id).toBe('vulnerabilites-failles');

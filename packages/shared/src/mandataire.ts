@@ -3,7 +3,8 @@
    obligatoire), sans identifiant dans l'adresse, sans chemin, paramètre ni fragment ; identifiant facultatif ; mot de passe
    facultatif, scellé à part et jamais relu ; autorité de certification de l'établissement facultative (PEM), ajoutée aux
    autorités du système pour les seuls flux qui passent par le mandataire. Authentification simple seulement (Basic) : NTLM
-   et Kerberos ne sont pas pris en charge. Lot P1 : seule la veille des vulnérabilités l'emprunte. */
+   et Kerberos ne sont pas pris en charge. Lot P1 : la veille des vulnérabilités l'emprunte ; lot ALH1 : le connecteur
+   AlgoLightHouse aussi (service sur Internet). */
 import { z } from 'zod';
 import { AutoriteCertificationPem } from './integrations.js';
 import { FLUX_EXTERNES, type FluxExterneDefinition, type FluxModule } from './flux-externes.js';
@@ -144,6 +145,7 @@ export type MandataireMotDePasseBody = z.infer<typeof MandataireMotDePasseBody>;
 export type UsageMandataire = 'utilise' | 'direct' | 'non_pris_en_charge';
 export const USAGE_MANDATAIRE: Record<FluxModule, UsageMandataire> = {
   'veille-vulnerabilites': 'utilise',
+  algolighthouse: 'utilise',
   tenable: 'direct',
   courriel: 'direct',
   assistant: 'non_pris_en_charge',
@@ -160,6 +162,8 @@ export const LIBELLES_USAGE_MANDATAIRE: Record<UsageMandataire, string> = {
 export const MOTIFS_USAGE_MANDATAIRE: Record<FluxModule, string> = {
   'veille-vulnerabilites':
     'Les demandes vers les sources publiques passent par un tunnel à travers le mandataire ; le certificat de chaque source reste vérifié.',
+  algolighthouse:
+    'Les demandes vers l’espace AlgoLightHouse passent par un tunnel à travers le mandataire ; le certificat de l’éditeur reste vérifié.',
   tenable: 'Tenable Security Center est interne : il est joint directement, jamais par le mandataire.',
   courriel: 'Le courriel parle SMTP, pas HTTP : il est envoyé directement au serveur de messagerie réglé.',
   assistant: 'Sort encore directement : le passage par le mandataire n’est pas réalisé (lot à venir).',

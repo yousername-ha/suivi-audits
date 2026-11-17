@@ -1,0 +1,1010 @@
+/* Module Vulnérabilités (ADR 0100, lot ALH1) : surface externe lue dans AlgoLightHouse (ALH, éditeur AlgoSecure), en lecture
+   seule. L'opération « synchroniser » du connecteur « algolighthouse » (module Intégrations, ADR 0076) est inscrite par le tic
+   quotidien ou par « Synchroniser maintenant », réclamée par l'exécutant (`suivi integrations-claim`), qui lance le script
+   isolé scripts/integration-http.py (par le mandataire de l'établissement s'il est actif, ADR 0101) puis rapporte les
+   éléments par lots bornés (`suivi integrations-lot`) et termine (`suivi integrations-finish`). Modèle suivi : Tenable
+   (tenable.ts).
+   - Chaque élément est validé par son schéma (packages/shared/src/surface-externe.ts) ; un seul refus fait refuser le lot.
+     Rangement sans doublon : périmètre, actif, alerte et technologie par (instance, identifiant chez l'éditeur) ; les
+     actifs et les CVE d'une technologie sont remplacés quand elle est relue ; les CVE d'une alerte, quand son détail l'est.
+   - Présence : comme pour Tenable, seule une synchronisation complète fait avancer le numéro de référence ; un élément plus
+     ancien n'est plus listé, rien n'est supprimé.
+   - Droits (décision du RSSI) : tout ce qui vient d'un périmètre ALH relié à un périmètre de la plateforme hérite de ce
+     périmètre pour la lecture (pyramide des ADR 0092 et 0095, grc_smsi_visible) ; un périmètre ALH non relié n'est lisible
+     qu'avec vulnerabilites:administrer. Une technologie se lit par ses actifs (un actif inconnu : administrer). Relier un
+     périmètre demande administrer (route), l'écriture sur le périmètre actuel et sur le périmètre visé, If-Match.
+   Journal `vulnerabilites.surface.*` : identifiants internes et nombres seulement, jamais une adresse ni un domaine.
+   Accès aux données en Kysely (ADR 0062). */
+import {
+  type ActifAlhDto,
+  type AlerteAlhDto,
+  BilanSynchronisationAlh,
+  type CriticiteAlh,
+  type CveTechnologieAlhDto,
+  type ElementAlerteAlh,
+  type ElementDomaineAlh,
+  type ElementHoteAlh,
+  type ElementPerimetreAlh,
+  ElementSurfaceExterne,
+  type ElementTechnologieActifAlh,
+  type ElementTechnologieAlh,
+  type ElementTechnologieCveAlh,
+  type EtatSurfaceExterneDto,
+  LiaisonPerimetreAlh,
+  LotSynchronisation,
+  ALH_BORNES,
+  type PageSurface,
+  type PerimetreAlhDto,
+  type RechercheActifsAlh,
+  type RechercheAlertesAlh,
+  type RechercheTechnologiesAlh,
+  STATUTS_ALERTE_ALH_OUVERTS,
+  type StatutActifAlh,
+  type StatutAlerteAlh,
+  SURFACE_PAR_PAGE,
+  type TechnologieAlhDto,
+  type TypeActifAlh,
+  type TypeAlerteAlh,
+  type TypeCibleAlh,
+  type VersionTechnologieAlhDto,
+} from '@suivi/shared';
+import { sql, type RawBuilder } from 'kysely';
+import type { SessionUser } from '../auth.js';
+import type { Client, Db, Kdb } from '../db/db.js';
+import type { FluxExternes } from '../flux-externes.js';
+import type { Grc } from '../grc/core.js';
+import { conflict } from '../http/concurrency.js';
+import { HttpError } from '../http/errors.js';
+import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
+
+const TYPE = 'algolighthouse';
+const FUSEAU = 'Europe/Paris';
+const PLANIFICATION = { username: 'planification' };
+const EXECUTANT = { username: 'exécutant serveur' };
+const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
+const iso = (d: Date | null) => d?.toISOString() ?? null;
+const nombre = (v: string | number | null) => (v === null ? null : Number(v));
+/** Motif ILIKE littéral : les jokers saisis sont échappés. */
+const litteral = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
+const OUVERTS = [...STATUTS_ALERTE_ALH_OUVERTS];
+
+/** Dernier élément de chaque clé (un même identifiant ne peut pas être mis à jour deux fois par la même requête). */
+function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
+  return [...new Map(elements.map((e) => [cle(e), e])).values()];
+}
+
+/** Élément du périmètre ALH (alias fermé `lp` ou `lp2`) lisible : périmètre relié visible, ou non relié avec administrer. */
+const lisible = (user: SessionUser, alias: 'lp' | 'lp2' = 'lp'): RawBuilder<boolean> =>
+  sql<boolean>`(CASE WHEN ${sql.ref(`${alias}.perimetre_id`)} IS NULL
+                THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
+                ELSE grc_smsi_visible(${sql.ref(`${alias}.perimetre_id`)}, ${user.id}::uuid) END)`;
+/** Élément (alias fermé) vu par la dernière synchronisation complète de son instance (alias `e`), ou plus récemment. */
+const present = (alias: 'a' | 'x' | 't' | 'lp' | 'a2'): RawBuilder<boolean> =>
+  sql<boolean>`(${sql.ref(`${alias}.vu_numero`)} >= coalesce(e.numero_complet, 0))`;
+
+export class SurfaceExterneAlh implements OperationEnLots {
+  constructor(
+    private readonly db: Db,
+    private readonly flux: FluxExternes,
+    private readonly integrations: Integrations,
+    private readonly g: Grc,
+  ) {}
+
+  /* ---------------------------------------------------------------- Réception (CLI de l'exécutant) */
+  async reclamee(k: Kdb, executionId: string, integrationId: string): Promise<void> {
+    await k
+      .insertInto('vulnerabilites_alh_etat')
+      .values({ integration_id: integrationId })
+      .onConflict((oc) => oc.column('integration_id').doNothing())
+      .execute();
+    const { numero } = await k
+      .updateTable('vulnerabilites_alh_etat')
+      .set((eb) => ({ numero: eb('numero', '+', 1) }))
+      .where('integration_id', '=', integrationId)
+      .returning('numero')
+      .executeTakeFirstOrThrow();
+    await k
+      .insertInto('vulnerabilites_alh_synchronisations')
+      .values({ execution_id: executionId, integration_id: integrationId, numero })
+      .execute();
+  }
+
+  async lot(k: Kdb, executionId: string, brut: unknown[]): Promise<{ elements: number; lots: number }> {
+    const { elements } = LotSynchronisation.parse({ elements: brut });
+    const s = await k
+      .selectFrom('vulnerabilites_alh_synchronisations')
+      .select(['integration_id', 'numero', 'lots'])
+      .where('execution_id', '=', executionId)
+      .forUpdate()
+      .executeTakeFirst();
+    if (!s) throw new HttpError(409, 'Synchronisation absente.');
+    if (s.lots >= ALH_BORNES.lots) throw new HttpError(409, 'Nombre de lots dépassé pour cette synchronisation.');
+    const valides: ElementSurfaceExterne[] = [];
+    elements.forEach((e, i) => {
+      const v = ElementSurfaceExterne.safeParse(e);
+      if (!v.success)
+        throw new HttpError(
+          422,
+          `Élément ${i + 1} du lot refusé (${v.error.issues[0]?.message ?? 'forme inattendue'}).`,
+        );
+      valides.push(v.data);
+    });
+    const de = <T extends ElementSurfaceExterne['type']>(t: T) =>
+      valides.filter((e): e is Extract<ElementSurfaceExterne, { type: T }> => e.type === t);
+    // Ordre : périmètres et actifs, alertes, technologies, puis les liens et CVE qui se réfèrent aux technologies.
+    await this.rangerPerimetres(k, s.integration_id, s.numero, de('perimetre'));
+    await this.rangerHotes(k, s.integration_id, s.numero, de('hote'));
+    await this.rangerDomaines(k, s.integration_id, s.numero, de('domaine'));
+    await this.rangerAlertes(k, s.integration_id, s.numero, de('alerte'));
+    await this.rangerTechnologies(k, s.integration_id, s.numero, de('technologie'));
+    await this.rangerLiens(k, s.integration_id, de('technologie_actif'));
+    await this.rangerCves(k, s.integration_id, de('technologie_cve'));
+    const r = await k
+      .updateTable('vulnerabilites_alh_synchronisations')
+      .set((eb) => ({ lots: eb('lots', '+', 1), elements: eb('elements', '+', valides.length) }))
+      .where('execution_id', '=', executionId)
+      .returning(['lots', 'elements'])
+      .executeTakeFirstOrThrow();
+    return { elements: r.elements, lots: r.lots };
+  }
+
+  async terminee(
+    k: Kdb,
+    c: Client,
+    executionId: string,
+    resultat: Record<string, unknown> | null,
+  ): Promise<string | null> {
+    const s = await k
+      .selectFrom('vulnerabilites_alh_synchronisations')
+      .select(['integration_id', 'numero', 'elements', 'lots'])
+      .where('execution_id', '=', executionId)
+      .forUpdate()
+      .executeTakeFirst();
+    if (!s) return resultat ? 'Synchronisation absente : résultat refusé.' : null;
+    const bilan = resultat ? BilanSynchronisationAlh.parse(resultat) : null;
+    let refus: string | null = null;
+    if (bilan && bilan.elements !== s.elements)
+      refus = `Bilan incohérent : ${bilan.elements} élément(s) annoncé(s), ${s.elements} reçu(s).`;
+    const complete = !!bilan && !refus && !bilan.tronque;
+    if (bilan && !refus) {
+      await k
+        .updateTable('vulnerabilites_alh_synchronisations')
+        .set({ complete })
+        .where('execution_id', '=', executionId)
+        .execute();
+      if (complete)
+        await k
+          .updateTable('vulnerabilites_alh_etat')
+          .set((eb) => ({
+            numero_complet: sql<number>`greatest(${eb.ref('numero_complet')}, ${s.numero}::int)`,
+            complete_le: sql<Date>`now()`,
+          }))
+          .where('integration_id', '=', s.integration_id)
+          .execute();
+    }
+    await this.db.audit(
+      EXECUTANT,
+      null,
+      'vulnerabilites.surface.synchronisation.terminee',
+      executionId,
+      {
+        integration: s.integration_id,
+        numero: s.numero,
+        lots: s.lots,
+        elements: s.elements,
+        etat: bilan && !refus ? 'recu' : 'echec',
+        complete,
+        ...(bilan && !refus
+          ? {
+              perimetres: bilan.perimetres,
+              hotes: bilan.hotes,
+              domaines: bilan.domaines,
+              alertes: bilan.alertes,
+              details: bilan.details,
+              technologies: bilan.technologies,
+              tronque: bilan.tronque,
+            }
+          : {}),
+      },
+      c,
+    );
+    return refus;
+  }
+
+  /* ---------------------------------------------------------------- Rangement (sans doublon) */
+  private async rangerPerimetres(k: Kdb, integration: string, numero: number, el: ElementPerimetreAlh[]) {
+    if (!el.length) return;
+    await k
+      .insertInto('vulnerabilites_alh_perimetres')
+      .values(
+        dernierParCle(el, (p) => p.id).map((p) => ({
+          integration_id: integration,
+          alh_id: p.id,
+          nom: p.nom,
+          vu_numero: numero,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'alh_id']).doUpdateSet((eb) => ({
+          // La liaison (perimetre_id, version) n'est jamais touchée par une synchronisation.
+          nom: eb.ref('excluded.nom'),
+          vu_numero: sql`greatest(vulnerabilites_alh_perimetres.vu_numero, excluded.vu_numero)`,
+        })),
+      )
+      .execute();
+  }
+
+  private async rangerActifs(
+    k: Kdb,
+    lignes: {
+      integration_id: string;
+      type: TypeActifAlh;
+      alh_id: string;
+      perimetre_alh: string | null;
+      statut: StatutActifAlh | null;
+      valeur: string;
+      adresse: string | null;
+      fai: string | null;
+      asn: string | null;
+      pays: string | null;
+      mutualise: boolean | null;
+      cdn: boolean | null;
+      joignable: boolean | null;
+      joignable_le: string | null;
+      niveau: number | null;
+      import_manuel: boolean | null;
+      parent_alh: string | null;
+      cree_alh_le: string | null;
+      maj_alh_le: string | null;
+      vu_numero: number;
+    }[],
+  ) {
+    if (!lignes.length) return;
+    await k
+      .insertInto('vulnerabilites_alh_actifs')
+      .values(lignes)
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'type', 'alh_id']).doUpdateSet((eb) => ({
+          perimetre_alh: eb.ref('excluded.perimetre_alh'),
+          statut: eb.ref('excluded.statut'),
+          valeur: eb.ref('excluded.valeur'),
+          adresse: eb.ref('excluded.adresse'),
+          fai: eb.ref('excluded.fai'),
+          asn: eb.ref('excluded.asn'),
+          pays: eb.ref('excluded.pays'),
+          mutualise: eb.ref('excluded.mutualise'),
+          cdn: eb.ref('excluded.cdn'),
+          joignable: eb.ref('excluded.joignable'),
+          joignable_le: eb.ref('excluded.joignable_le'),
+          niveau: eb.ref('excluded.niveau'),
+          import_manuel: eb.ref('excluded.import_manuel'),
+          parent_alh: eb.ref('excluded.parent_alh'),
+          cree_alh_le: eb.ref('excluded.cree_alh_le'),
+          maj_alh_le: eb.ref('excluded.maj_alh_le'),
+          vu_numero: sql`greatest(vulnerabilites_alh_actifs.vu_numero, excluded.vu_numero)`,
+          vu_le: sql`now()`,
+        })),
+      )
+      .execute();
+  }
+
+  private rangerHotes(k: Kdb, integration: string, numero: number, el: ElementHoteAlh[]) {
+    return this.rangerActifs(
+      k,
+      dernierParCle(el, (h) => h.id).map((h) => ({
+        integration_id: integration,
+        type: 'hote' as const,
+        alh_id: h.id,
+        perimetre_alh: h.perimetre,
+        statut: h.statut,
+        valeur: h.adresse,
+        adresse: null,
+        fai: h.fai,
+        asn: h.asn,
+        pays: h.pays,
+        mutualise: h.mutualise,
+        cdn: h.cdn,
+        joignable: h.joignable,
+        joignable_le: h.joignableLe,
+        niveau: null,
+        import_manuel: h.importManuel,
+        parent_alh: null,
+        cree_alh_le: h.creeLe,
+        maj_alh_le: h.majLe,
+        vu_numero: numero,
+      })),
+    );
+  }
+
+  private rangerDomaines(k: Kdb, integration: string, numero: number, el: ElementDomaineAlh[]) {
+    return this.rangerActifs(
+      k,
+      dernierParCle(el, (d) => d.id).map((d) => ({
+        integration_id: integration,
+        type: 'domaine' as const,
+        alh_id: d.id,
+        perimetre_alh: d.perimetre,
+        statut: d.statut,
+        valeur: d.domaine,
+        adresse: d.adresse,
+        fai: null,
+        asn: null,
+        pays: null,
+        mutualise: null,
+        cdn: null,
+        joignable: null,
+        joignable_le: null,
+        niveau: d.niveau,
+        import_manuel: d.importManuel,
+        parent_alh: d.parent,
+        cree_alh_le: d.creeLe,
+        maj_alh_le: d.majLe,
+        vu_numero: numero,
+      })),
+    );
+  }
+
+  /** Alertes : un détail lu remplace type, criticité, cible et CVE ; sans détail, les valeurs déjà rangées sont gardées (le
+      type et la criticité connus par le script le sont toutefois). */
+  private async rangerAlertes(k: Kdb, integration: string, numero: number, el: ElementAlerteAlh[]) {
+    if (!el.length) return;
+    const uniques = dernierParCle(el, (a) => a.id);
+    const ligne = (a: ElementAlerteAlh) => ({
+      integration_id: integration,
+      alh_id: a.id,
+      perimetre_alh: a.perimetre,
+      type: a.typeAlerte,
+      criticite: a.criticite,
+      statut: a.statut,
+      titre: a.titre,
+      verifiee: a.verifiee,
+      detail: a.detail,
+      cible_type: a.cibleType,
+      cible_valeur: a.cibleValeur,
+      cible_hote: a.cibleHote,
+      cible_domaine: a.cibleDomaine,
+      cree_alh_le: a.creeLe,
+      maj_alh_le: a.majLe,
+      terminee_le: a.termineeLe,
+      vu_numero: numero,
+    });
+    const detaillees = uniques.filter((a) => a.detail);
+    const simples = uniques.filter((a) => !a.detail);
+    if (simples.length)
+      await k
+        .insertInto('vulnerabilites_alh_alertes')
+        .values(simples.map(ligne))
+        .onConflict((oc) =>
+          oc.columns(['integration_id', 'alh_id']).doUpdateSet((eb) => ({
+            perimetre_alh: eb.ref('excluded.perimetre_alh'),
+            statut: eb.ref('excluded.statut'),
+            titre: eb.ref('excluded.titre'),
+            verifiee: eb.ref('excluded.verifiee'),
+            cree_alh_le: eb.ref('excluded.cree_alh_le'),
+            maj_alh_le: eb.ref('excluded.maj_alh_le'),
+            terminee_le: sql`coalesce(excluded.terminee_le, vulnerabilites_alh_alertes.terminee_le)`,
+            vu_numero: sql`greatest(vulnerabilites_alh_alertes.vu_numero, excluded.vu_numero)`,
+            vu_le: sql`now()`,
+            // Sans détail : type et criticité connus par le script remplacent, sinon la valeur rangée est gardée.
+            type: sql`coalesce(excluded.type, vulnerabilites_alh_alertes.type)`,
+            criticite: sql`coalesce(excluded.criticite, vulnerabilites_alh_alertes.criticite)`,
+          })),
+        )
+        .execute();
+    if (!detaillees.length) return;
+    const ids = await k
+      .insertInto('vulnerabilites_alh_alertes')
+      .values(detaillees.map(ligne))
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'alh_id']).doUpdateSet((eb) => ({
+          perimetre_alh: eb.ref('excluded.perimetre_alh'),
+          statut: eb.ref('excluded.statut'),
+          titre: eb.ref('excluded.titre'),
+          verifiee: eb.ref('excluded.verifiee'),
+          cree_alh_le: eb.ref('excluded.cree_alh_le'),
+          maj_alh_le: eb.ref('excluded.maj_alh_le'),
+          terminee_le: sql`coalesce(excluded.terminee_le, vulnerabilites_alh_alertes.terminee_le)`,
+          vu_numero: sql`greatest(vulnerabilites_alh_alertes.vu_numero, excluded.vu_numero)`,
+          vu_le: sql`now()`,
+          type: eb.ref('excluded.type'),
+          criticite: eb.ref('excluded.criticite'),
+          detail: sql`true`,
+          cible_type: eb.ref('excluded.cible_type'),
+          cible_valeur: eb.ref('excluded.cible_valeur'),
+          cible_hote: eb.ref('excluded.cible_hote'),
+          cible_domaine: eb.ref('excluded.cible_domaine'),
+        })),
+      )
+      .returning(['id', 'alh_id'])
+      .execute();
+    const parAlh = new Map(ids.map((r) => [r.alh_id, r.id]));
+    await k
+      .deleteFrom('vulnerabilites_alh_alerte_cves')
+      .where(
+        'alerte_id',
+        'in',
+        ids.map((r) => r.id),
+      )
+      .execute();
+    const liens = detaillees.flatMap((a) => a.cves.map((cve) => ({ alerte_id: parAlh.get(a.id)!, cve })));
+    for (let i = 0; i < liens.length; i += 5000)
+      await k
+        .insertInto('vulnerabilites_alh_alerte_cves')
+        .values(liens.slice(i, i + 5000))
+        .execute();
+  }
+
+  /** Une technologie relue remplace ses actifs et ses CVE, qui la suivent dans les lots. */
+  private async rangerTechnologies(k: Kdb, integration: string, numero: number, el: ElementTechnologieAlh[]) {
+    if (!el.length) return;
+    const ids = await k
+      .insertInto('vulnerabilites_alh_technologies')
+      .values(
+        dernierParCle(el, (t) => t.cle).map((t) => ({
+          integration_id: integration,
+          cle: t.cle,
+          nom: t.nom,
+          editeur: t.editeur,
+          produit: t.produit,
+          technologie: t.technologie,
+          derniere: t.derniere,
+          tronquee: t.tronquee,
+          vu_numero: numero,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'cle']).doUpdateSet((eb) => ({
+          nom: eb.ref('excluded.nom'),
+          editeur: eb.ref('excluded.editeur'),
+          produit: eb.ref('excluded.produit'),
+          technologie: eb.ref('excluded.technologie'),
+          derniere: eb.ref('excluded.derniere'),
+          tronquee: eb.ref('excluded.tronquee'),
+          vu_numero: sql`greatest(vulnerabilites_alh_technologies.vu_numero, excluded.vu_numero)`,
+          vu_le: sql`now()`,
+        })),
+      )
+      .returning('id')
+      .execute();
+    const liste = ids.map((r) => r.id);
+    await k.deleteFrom('vulnerabilites_alh_technologie_actifs').where('technologie_id', 'in', liste).execute();
+    await k.deleteFrom('vulnerabilites_alh_technologie_cves').where('technologie_id', 'in', liste).execute();
+  }
+
+  /** Lien technologie-actif : la technologie doit être rangée (lot courant ou précédent), sinon tout le lot est refusé. */
+  private async rangerLiens(k: Kdb, integration: string, el: ElementTechnologieActifAlh[]) {
+    if (!el.length) return;
+    // Un même actif peut figurer comme actuel et comme inactif sous la même version : actuel l'emporte.
+    const fusion = new Map<string, ElementTechnologieActifAlh>();
+    for (const x of el) {
+      const cle = [x.technologie, x.version, x.typeActif, x.actif].join('\u0000');
+      const avant = fusion.get(cle);
+      fusion.set(cle, avant ? { ...x, actuel: avant.actuel || x.actuel } : x);
+    }
+    const d = [...fusion.values()];
+    const r = await sql<{ technologie_id: string }>`
+      INSERT INTO vulnerabilites_alh_technologie_actifs AS ta (technologie_id, version, actif_alh, actif_type, libelle, actuel)
+      SELECT t.id, x.version, x.actif, x.type_actif, x.libelle, x.actuel
+      FROM unnest(${d.map((x) => x.technologie)}::text[], ${d.map((x) => x.version)}::text[],
+                  ${d.map((x) => x.actif)}::uuid[], ${d.map((x) => x.typeActif)}::text[],
+                  ${d.map((x) => x.libelle)}::text[], ${d.map((x) => x.actuel)}::boolean[])
+             AS x(cle, version, actif, type_actif, libelle, actuel)
+      JOIN vulnerabilites_alh_technologies t ON t.integration_id = ${integration}::uuid AND t.cle = x.cle
+      ON CONFLICT (technologie_id, version, actif_type, actif_alh) DO UPDATE SET
+        libelle = excluded.libelle,
+        actuel = ta.actuel OR excluded.actuel
+      RETURNING ta.technologie_id`.execute(k);
+    if (r.rows.length !== d.length)
+      throw new HttpError(422, 'Lot refusé : actif d’une technologie inconnue de cette synchronisation.');
+  }
+
+  private async rangerCves(k: Kdb, integration: string, el: ElementTechnologieCveAlh[]) {
+    if (!el.length) return;
+    const d = dernierParCle(el, (x) => [x.technologie, x.version, x.cve].join('\u0000'));
+    const r = await sql<{ technologie_id: string }>`
+      INSERT INTO vulnerabilites_alh_technologie_cves AS tc (technologie_id, version, cve, titre, cvss, epss, severite,
+        preuve, exploitee, publiee_le)
+      SELECT t.id, x.version, x.cve, x.titre, x.cvss, x.epss, x.severite, x.preuve, x.exploitee, x.publiee
+      FROM unnest(${d.map((x) => x.technologie)}::text[], ${d.map((x) => x.version)}::text[],
+                  ${d.map((x) => x.cve)}::text[], ${d.map((x) => x.titre)}::text[],
+                  ${d.map((x) => x.cvss)}::numeric[], ${d.map((x) => x.epss)}::numeric[],
+                  ${d.map((x) => x.severite)}::text[], ${d.map((x) => x.preuve)}::boolean[],
+                  ${d.map((x) => x.exploitee)}::boolean[], ${d.map((x) => x.publieeLe)}::timestamptz[])
+             AS x(cle, version, cve, titre, cvss, epss, severite, preuve, exploitee, publiee)
+      JOIN vulnerabilites_alh_technologies t ON t.integration_id = ${integration}::uuid AND t.cle = x.cle
+      ON CONFLICT (technologie_id, version, cve) DO UPDATE SET
+        titre = excluded.titre, cvss = excluded.cvss, epss = excluded.epss, severite = excluded.severite,
+        preuve = excluded.preuve, exploitee = excluded.exploitee, publiee_le = excluded.publiee_le
+      RETURNING tc.technologie_id`.execute(k);
+    if (r.rows.length !== d.length)
+      throw new HttpError(422, 'Lot refusé : CVE d’une technologie inconnue de cette synchronisation.');
+  }
+
+  /* ---------------------------------------------------------------- Planification (tic de l'API) */
+  /** Inscrit au plus une synchronisation par jour et par instance AlgoLightHouse active dont la clé est enregistrée. Les
+      modules Intégrations et Vulnérabilités sont contrôlés par l'appelant ; flux « algolighthouse » fermé : rien. */
+  async planifier(maintenant = new Date()): Promise<string[]> {
+    if (!(await this.flux.ouvert('algolighthouse'))) return [];
+    const jour = jourDe(maintenant);
+    const instances = (await this.integrations.lister()).filter(
+      (i) => i.type === TYPE && i.actif && Object.values(i.secrets).every(Boolean),
+    );
+    const ids: string[] = [];
+    for (const i of instances)
+      await this.db.tx(async (c, k) => {
+        await verrouFileIntegrations(k);
+        await this.integrations.menageFile(k, c);
+        await k
+          .insertInto('vulnerabilites_alh_etat')
+          .values({ integration_id: i.id })
+          .onConflict((oc) => oc.column('integration_id').doNothing())
+          .execute();
+        const e = await k
+          .selectFrom('vulnerabilites_alh_etat')
+          .select(sql<string | null>`creneau::text`.as('creneau'))
+          .where('integration_id', '=', i.id)
+          .forUpdate()
+          .executeTakeFirstOrThrow();
+        if (e.creneau === jour) return;
+        // Créneau consommé d'abord : une synchronisation inscrite puis perdue n'est pas réinscrite le même jour.
+        await k
+          .updateTable('vulnerabilites_alh_etat')
+          .set({ creneau: jour })
+          .where('integration_id', '=', i.id)
+          .execute();
+        const occupee = await k
+          .selectFrom('integration_executions')
+          .select('id')
+          .where('integration_id', '=', i.id)
+          .where('etat', 'in', ['en_file', 'en_cours'])
+          .executeTakeFirst();
+        if (!occupee)
+          ids.push((await this.integrations.inscrire(k, c, i, 'synchroniser', 'planifie', PLANIFICATION, null)).id);
+      });
+    return ids;
+  }
+
+  /* ---------------------------------------------------------------- État (vulnerabilites:lire) */
+  async etat(user: SessionUser): Promise<EtatSurfaceExterneDto[]> {
+    const instances = (await this.integrations.lister()).filter((i) => i.type === TYPE);
+    const administrer = user.rights.can('vulnerabilites', 'administrer');
+    const out: EtatSurfaceExterneDto[] = [];
+    for (const i of instances) {
+      const e = await this.db.k
+        .selectFrom('vulnerabilites_alh_etat')
+        .selectAll()
+        .where('integration_id', '=', i.id)
+        .executeTakeFirst();
+      const d = await this.db.k
+        .selectFrom('integration_executions')
+        .selectAll()
+        .where('integration_id', '=', i.id)
+        .where('operation', '=', 'synchroniser')
+        .orderBy('demande_le', 'desc')
+        .orderBy('id')
+        .limit(1)
+        .executeTakeFirst();
+      const bilan = d?.resultat ? BilanSynchronisationAlh.safeParse(d.resultat) : null;
+      // Le nombre de périmètres non reliés ne se lit qu'avec administrer : leur contenu n'est visible que de ce droit.
+      const nonRelies = administrer
+        ? Number(
+            (
+              await sql<{ n: number }>`SELECT count(*)::int AS n FROM vulnerabilites_alh_perimetres lp
+                WHERE lp.integration_id = ${i.id}::uuid AND lp.perimetre_id IS NULL
+                  AND lp.vu_numero >= ${e?.numero_complet ?? 0}::int`.execute(this.db.k)
+            ).rows[0]!.n,
+          )
+        : null;
+      out.push({
+        integrationId: i.id,
+        nom: i.nom,
+        actif: i.actif,
+        derniere: d
+          ? {
+              id: d.id,
+              etat: d.etat as NonNullable<EtatSurfaceExterneDto['derniere']>['etat'],
+              origine: d.origine as 'manuel' | 'planifie',
+              demandeLe: d.demande_le.toISOString(),
+              termineLe: d.termine_le?.toISOString() ?? null,
+              bilan: bilan?.success ? bilan.data : null,
+              erreur: d.erreur,
+            }
+          : null,
+        derniereCompleteLe: e?.complete_le?.toISOString() ?? null,
+        perimetresNonRelies: nonRelies,
+      });
+    }
+    return out;
+  }
+
+  /* ---------------------------------------------------------------- Lecture par périmètre (vulnerabilites:lire) */
+  async alertes(user: SessionUser, q: RechercheAlertesAlh): Promise<PageSurface<AlerteAlhDto>> {
+    const conditions: RawBuilder<boolean>[] = [lisible(user), present('a')];
+    if (!q.statut) conditions.push(sql<boolean>`a.statut = ANY(${OUVERTS}::text[])`);
+    else if (q.statut !== 'toutes') conditions.push(sql<boolean>`a.statut = ${q.statut}`);
+    if (q.type) conditions.push(sql<boolean>`a.type = ${q.type}`);
+    if (q.criticite) conditions.push(sql<boolean>`a.criticite = ${q.criticite}`);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = litteral(texte);
+      conditions.push(
+        sql<boolean>`(a.titre ILIKE ${`%${motif}%`} OR a.cible_valeur ILIKE ${`%${motif}%`}
+          OR EXISTS (SELECT 1 FROM vulnerabilites_alh_alerte_cves ac WHERE ac.alerte_id = a.id
+                     AND ac.cve LIKE ${`${motif.toUpperCase()}%`}))`,
+      );
+    }
+    const { rows } = await sql<{
+      id: string;
+      type: TypeAlerteAlh | null;
+      criticite: CriticiteAlh | null;
+      statut: StatutAlerteAlh;
+      titre: string;
+      verifiee: boolean | null;
+      detail: boolean;
+      cible_type: TypeCibleAlh | null;
+      cible_valeur: string | null;
+      cree_alh_le: Date | null;
+      maj_alh_le: Date | null;
+      terminee_le: Date | null;
+      integration_id: string;
+      integration_nom: string;
+      perimetre_alh_nom: string | null;
+      perimetre_nom: string | null;
+      cves: string[];
+      total: number;
+    }>`
+      SELECT a.id, a.type, a.criticite, a.statut, a.titre, a.verifiee, a.detail, a.cible_type, a.cible_valeur,
+        a.cree_alh_le, a.maj_alh_le, a.terminee_le, a.integration_id, i.nom AS integration_nom,
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
+        coalesce((SELECT array_agg(ac.cve ORDER BY ac.cve) FROM vulnerabilites_alh_alerte_cves ac
+                  WHERE ac.alerte_id = a.id), '{}') AS cves,
+        count(*) OVER ()::int AS total
+      FROM vulnerabilites_alh_alertes a
+      JOIN integrations i ON i.id = a.integration_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = a.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = a.integration_id AND lp.alh_id = a.perimetre_alh
+      LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
+      WHERE ${sql.join(conditions, sql` AND `)}
+      ORDER BY CASE a.criticite WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'important' THEN 2 WHEN 'minor' THEN 3
+               ELSE 4 END, coalesce(a.maj_alh_le, a.cree_alh_le) DESC NULLS LAST, a.id
+      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    return {
+      total: rows[0]?.total ?? 0,
+      page: q.page,
+      parPage: SURFACE_PAR_PAGE,
+      elements: rows.map((a) => ({
+        id: a.id,
+        type: a.type,
+        criticite: a.criticite,
+        statut: a.statut,
+        titre: a.titre,
+        verifiee: a.verifiee,
+        detail: a.detail,
+        cible: a.cible_type || a.cible_valeur ? { type: a.cible_type, valeur: a.cible_valeur } : null,
+        cves: a.cves,
+        creeLe: iso(a.cree_alh_le),
+        majLe: iso(a.maj_alh_le),
+        termineeLe: iso(a.terminee_le),
+        perimetreAlh: a.perimetre_alh_nom,
+        perimetreNom: a.perimetre_nom,
+        integration: { id: a.integration_id, nom: a.integration_nom },
+      })),
+    };
+  }
+
+  async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifAlhDto>> {
+    const conditions: RawBuilder<boolean>[] = [lisible(user), present('x')];
+    if (q.type) conditions.push(sql<boolean>`x.type = ${q.type}`);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = `%${litteral(texte.toLowerCase())}%`;
+      conditions.push(sql<boolean>`(x.valeur LIKE ${motif} OR x.adresse LIKE ${motif})`);
+    }
+    const { rows } = await sql<{
+      id: string;
+      type: TypeActifAlh;
+      valeur: string;
+      statut: StatutActifAlh | null;
+      adresse: string | null;
+      fai: string | null;
+      asn: string | null;
+      pays: string | null;
+      cdn: boolean | null;
+      mutualise: boolean | null;
+      joignable: boolean | null;
+      joignable_le: Date | null;
+      niveau: number | null;
+      cree_alh_le: Date | null;
+      maj_alh_le: Date | null;
+      integration_id: string;
+      integration_nom: string;
+      perimetre_alh_nom: string | null;
+      perimetre_nom: string | null;
+      alertes_ouvertes: number;
+      technologies: number;
+      total: number;
+    }>`
+      SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
+        x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
+        (SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
+           LEFT JOIN vulnerabilites_alh_perimetres lp2 ON lp2.integration_id = a2.integration_id
+             AND lp2.alh_id = a2.perimetre_alh
+           WHERE a2.integration_id = x.integration_id AND a2.statut = ANY(${OUVERTS}::text[]) AND ${present('a2')}
+             AND ${lisible(user, 'lp2')}
+             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id))
+        ) AS alertes_ouvertes,
+        (SELECT count(DISTINCT ta.technologie_id)::int FROM vulnerabilites_alh_technologie_actifs ta
+           JOIN vulnerabilites_alh_technologies t2 ON t2.id = ta.technologie_id
+           WHERE t2.integration_id = x.integration_id AND ta.actif_type = x.type AND ta.actif_alh = x.alh_id AND ta.actuel
+             AND t2.vu_numero >= coalesce(e.numero_complet, 0)
+        ) AS technologies,
+        count(*) OVER ()::int AS total
+      FROM vulnerabilites_alh_actifs x
+      JOIN integrations i ON i.id = x.integration_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+      LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
+      WHERE ${sql.join(conditions, sql` AND `)}
+      ORDER BY alertes_ouvertes DESC, x.type, x.valeur, x.id
+      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    return {
+      total: rows[0]?.total ?? 0,
+      page: q.page,
+      parPage: SURFACE_PAR_PAGE,
+      elements: rows.map((x) => ({
+        id: x.id,
+        type: x.type,
+        valeur: x.valeur,
+        statut: x.statut,
+        adresse: x.adresse,
+        fai: x.fai,
+        asn: x.asn,
+        pays: x.pays,
+        cdn: x.cdn,
+        mutualise: x.mutualise,
+        joignable: x.joignable,
+        joignableLe: iso(x.joignable_le),
+        niveau: x.niveau,
+        alertesOuvertes: x.alertes_ouvertes,
+        technologies: x.technologies,
+        creeLe: iso(x.cree_alh_le),
+        majLe: iso(x.maj_alh_le),
+        perimetreAlh: x.perimetre_alh_nom,
+        perimetreNom: x.perimetre_nom,
+        integration: { id: x.integration_id, nom: x.integration_nom },
+      })),
+    };
+  }
+
+  /** Liens technologie-actif lisibles (actif rangé dont le périmètre est lisible ; actif inconnu : administrer), versions
+      encore détectées sur un actif lisible, et leurs CVE. Seules ces versions comptent : une CVE d'une version qui ne
+      tourne que sur des actifs illisibles n'est ni listée ni comptée. */
+  private cteTechnologies(user: SessionUser) {
+    return sql`
+      WITH liens AS (
+        SELECT ta.technologie_id, ta.version, ta.actuel, ta.actif_type, ta.libelle
+        FROM vulnerabilites_alh_technologie_actifs ta
+        JOIN vulnerabilites_alh_technologies tt ON tt.id = ta.technologie_id
+        LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = tt.integration_id AND xa.type = ta.actif_type
+          AND xa.alh_id = ta.actif_alh
+        LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = tt.integration_id AND lp.alh_id = xa.perimetre_alh
+        WHERE ${lisible(user)}
+      ),
+      versions AS (SELECT DISTINCT technologie_id, version FROM liens WHERE actuel),
+      cv AS (SELECT c.* FROM vulnerabilites_alh_technologie_cves c
+             JOIN versions v ON v.technologie_id = c.technologie_id AND v.version = c.version)`;
+  }
+
+  async technologies(user: SessionUser, q: RechercheTechnologiesAlh): Promise<PageSurface<TechnologieAlhDto>> {
+    const conditions: RawBuilder<boolean>[] = [
+      present('t'),
+      sql<boolean>`EXISTS (SELECT 1 FROM liens l WHERE l.technologie_id = t.id)`,
+    ];
+    if (q.exploitee)
+      conditions.push(sql<boolean>`EXISTS (SELECT 1 FROM cv WHERE cv.technologie_id = t.id AND cv.exploitee)`);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = litteral(texte);
+      conditions.push(
+        sql<boolean>`(t.nom ILIKE ${`%${motif}%`} OR t.editeur ILIKE ${`%${motif}%`} OR t.produit ILIKE ${`%${motif}%`}
+          OR EXISTS (SELECT 1 FROM cv WHERE cv.technologie_id = t.id AND cv.cve LIKE ${`${motif.toUpperCase()}%`}))`,
+      );
+    }
+    const { rows } = await sql<{
+      id: string;
+      nom: string;
+      editeur: string | null;
+      produit: string | null;
+      technologie: string | null;
+      derniere: Date | null;
+      tronquee: boolean;
+      integration_id: string;
+      integration_nom: string;
+      nombre_cves: number;
+      exploitees: number;
+      preuves: number;
+      cvss_max: string | null;
+      inactifs: number;
+      total: number;
+    }>`${this.cteTechnologies(user)}
+      SELECT t.id, t.nom, t.editeur, t.produit, t.technologie, t.derniere, t.tronquee, t.integration_id,
+        i.nom AS integration_nom,
+        (SELECT count(DISTINCT cv.cve)::int FROM cv WHERE cv.technologie_id = t.id) AS nombre_cves,
+        (SELECT count(DISTINCT cv.cve)::int FROM cv WHERE cv.technologie_id = t.id AND cv.exploitee) AS exploitees,
+        (SELECT count(DISTINCT cv.cve)::int FROM cv WHERE cv.technologie_id = t.id AND cv.preuve) AS preuves,
+        (SELECT max(cv.cvss) FROM cv WHERE cv.technologie_id = t.id) AS cvss_max,
+        (SELECT count(*)::int FROM liens l WHERE l.technologie_id = t.id AND NOT l.actuel) AS inactifs,
+        count(*) OVER ()::int AS total
+      FROM vulnerabilites_alh_technologies t
+      JOIN integrations i ON i.id = t.integration_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = t.integration_id
+      WHERE ${sql.join(conditions, sql` AND `)}
+      ORDER BY exploitees DESC, cvss_max DESC NULLS LAST, lower(t.nom), t.id
+      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    const ids = rows.map((r) => r.id);
+    const versions = new Map<string, Map<string, VersionTechnologieAlhDto>>();
+    if (ids.length) {
+      const liens = await sql<{ technologie_id: string; version: string; actif_type: TypeActifAlh; libelle: string }>`
+        ${this.cteTechnologies(user)}
+        SELECT DISTINCT technologie_id, version, actif_type, libelle FROM liens
+        WHERE actuel AND technologie_id = ANY(${ids}::uuid[]) ORDER BY technologie_id, version, actif_type, libelle`.execute(
+        this.db.k,
+      );
+      const cves = await sql<{
+        technologie_id: string;
+        version: string;
+        cve: string;
+        titre: string | null;
+        cvss: string | null;
+        epss: string | null;
+        severite: string | null;
+        preuve: boolean | null;
+        exploitee: boolean | null;
+        publiee_le: Date | null;
+      }>`${this.cteTechnologies(user)}
+        SELECT technologie_id, version, cve, titre, cvss, epss, severite, preuve, exploitee, publiee_le FROM cv
+        WHERE technologie_id = ANY(${ids}::uuid[])
+        ORDER BY technologie_id, version, exploitee DESC NULLS LAST, cvss DESC NULLS LAST, cve`.execute(this.db.k);
+      const version = (t: string, v: string) => {
+        let m = versions.get(t);
+        if (!m) versions.set(t, (m = new Map()));
+        let x = m.get(v);
+        if (!x) m.set(v, (x = { version: v, actifs: [], cves: [] }));
+        return x;
+      };
+      for (const l of liens.rows)
+        version(l.technologie_id, l.version).actifs.push({ type: l.actif_type, libelle: l.libelle });
+      for (const c of cves.rows)
+        version(c.technologie_id, c.version).cves.push({
+          cve: c.cve,
+          titre: c.titre,
+          cvss: nombre(c.cvss),
+          epss: nombre(c.epss),
+          severite: c.severite,
+          preuve: c.preuve,
+          exploitee: c.exploitee,
+          publieeLe: iso(c.publiee_le),
+        } satisfies CveTechnologieAlhDto);
+    }
+    return {
+      total: rows[0]?.total ?? 0,
+      page: q.page,
+      parPage: SURFACE_PAR_PAGE,
+      elements: rows.map((t) => ({
+        id: t.id,
+        nom: t.nom,
+        editeur: t.editeur,
+        produit: t.produit,
+        technologie: t.technologie,
+        derniere: iso(t.derniere),
+        tronquee: t.tronquee,
+        versions: [...(versions.get(t.id)?.values() ?? [])],
+        actifsInactifs: t.inactifs,
+        nombreCves: t.nombre_cves,
+        exploitees: t.exploitees,
+        preuves: t.preuves,
+        cvssMax: nombre(t.cvss_max),
+        integration: { id: t.integration_id, nom: t.integration_nom },
+      })),
+    };
+  }
+
+  /* ---------------------------------------------------------------- Périmètres ALH (vulnerabilites:administrer) */
+  async perimetres(id?: string, k: Kdb = this.db.k): Promise<PerimetreAlhDto[]> {
+    const { rows } = await sql<{
+      id: string;
+      nom: string;
+      perimetre_id: string | null;
+      perimetre_nom: string | null;
+      present: boolean;
+      alertes: number;
+      actifs: number;
+      version: number;
+      maj_par: string | null;
+      maj_le: Date;
+      integration_id: string;
+      integration_nom: string;
+    }>`
+      SELECT lp.id, lp.nom, lp.perimetre_id, sm.name AS perimetre_nom, ${present('lp')} AS present,
+        (SELECT count(*)::int FROM vulnerabilites_alh_alertes a WHERE a.integration_id = lp.integration_id
+           AND a.perimetre_alh = lp.alh_id AND ${present('a')}) AS alertes,
+        (SELECT count(*)::int FROM vulnerabilites_alh_actifs x WHERE x.integration_id = lp.integration_id
+           AND x.perimetre_alh = lp.alh_id AND ${present('x')}) AS actifs,
+        lp.version, lp.maj_par, lp.maj_le, lp.integration_id, i.nom AS integration_nom
+      FROM vulnerabilites_alh_perimetres lp
+      JOIN integrations i ON i.id = lp.integration_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = lp.integration_id
+      LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
+      WHERE ${id ? sql<boolean>`lp.id = ${id}::uuid` : sql<boolean>`true`}
+      ORDER BY ${present('lp')} DESC, lower(lp.nom), lp.id`.execute(k);
+    return rows.map((p) => ({
+      id: p.id,
+      nom: p.nom,
+      perimetreId: p.perimetre_id,
+      perimetreNom: p.perimetre_nom,
+      present: p.present,
+      alertes: p.alertes,
+      actifs: p.actifs,
+      version: p.version,
+      majPar: p.maj_par,
+      majLe: p.maj_le.toISOString(),
+      integration: { id: p.integration_id, nom: p.integration_nom },
+    }));
+  }
+
+  /** Relier (ou délier) un périmètre ALH : If-Match ; écriture exigée sur le périmètre actuel et sur le périmètre visé. */
+  async lier(
+    id: string,
+    corps: LiaisonPerimetreAlh,
+    attendue: number,
+    user: SessionUser,
+    ip: string,
+  ): Promise<PerimetreAlhDto> {
+    const p = LiaisonPerimetreAlh.parse(corps);
+    await this.db.tx(async (c, k) => {
+      const lp = await k
+        .selectFrom('vulnerabilites_alh_perimetres')
+        .select(['id', 'integration_id', 'perimetre_id', 'version', 'maj_par'])
+        .where('id', '=', id)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!lp) throw new HttpError(404, 'Périmètre AlgoLightHouse introuvable.');
+      if (lp.version !== attendue)
+        throw conflict({ ...(await this.perimetres(id, k))[0]!, updated_by: lp.maj_par ?? '' });
+      if (lp.perimetre_id === p.perimetreId) return;
+      if (lp.perimetre_id) await this.g.access(lp.perimetre_id, user, true, c);
+      if (p.perimetreId)
+        await this.g.access(p.perimetreId, user, true, c).catch((e: unknown) => {
+          if (e instanceof HttpError && e.status === 404)
+            throw new HttpError(422, 'Périmètre introuvable ou non accessible.');
+          throw e;
+        });
+      const apres = await k
+        .updateTable('vulnerabilites_alh_perimetres')
+        .set((eb) => ({
+          perimetre_id: p.perimetreId,
+          version: eb('version', '+', 1),
+          maj_le: sql<Date>`now()`,
+          maj_par: user.username,
+        }))
+        .where('id', '=', id)
+        .returning('version')
+        .executeTakeFirstOrThrow();
+      await this.db.audit(
+        user,
+        ip,
+        p.perimetreId ? 'vulnerabilites.surface.perimetre.relie' : 'vulnerabilites.surface.perimetre.delie',
+        id,
+        {
+          integration: lp.integration_id,
+          avant: { perimetreId: lp.perimetre_id },
+          apres: { perimetreId: p.perimetreId },
+          version: apres.version,
+        },
+        c,
+      );
+    }, user.username);
+    return (await this.perimetres(id))[0]!;
+  }
+}

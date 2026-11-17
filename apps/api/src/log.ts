@@ -31,6 +31,12 @@ export const REDACT = [
   '*.sessionToken',
   '*.secrets',
   'req.headers["x-apikey"]',
+  // Clé d'API d'AlgoLightHouse (ADR 0100, lot ALH1) : champ du secret et en-tête X-API-Key.
+  'cleApi',
+  '*.cleApi',
+  'req.headers["x-api-key"]',
+  '*["X-API-Key"]',
+  '*["x-api-key"]',
   // Mandataire sortant de l'établissement (ADR 0101) : mot de passe (champ de l'API et paramètre remis à l'exécutant) et
   // en-tête d'authentification auprès d'un mandataire.
   'motDePasse',

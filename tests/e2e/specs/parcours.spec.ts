@@ -133,6 +133,7 @@ test('installation : jeton, création de l’administrateur, activation de la do
     'Mises à jour de la plateforme',
     'Tenable Security Center',
     'Veille sur les vulnérabilités',
+    'AlgoLightHouse',
   ])
     await expect(page.getByRole('region', { name: nom }).getByRole('button', { name: 'Plus tard' })).toBeVisible();
   await antivirus.getByRole('button', { name: 'Activer' }).click();

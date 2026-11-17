@@ -139,6 +139,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-surface',
+    title: 'Vulnérabilités : surface externe (AlgoLightHouse)',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/surface-externe',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Surface externe. Les données viennent d’AlgoLightHouse (éditeur AlgoSecure), qui surveille ce que l’organisation expose sur Internet ; un administrateur des intégrations configure le connecteur dans Pilotage > Intégrations (adresse de votre espace https://espace.algolighthouse.fr et clé d’API). L’exécutant d’exploitation le lit une fois par jour, en lecture seule, par le mandataire de l’établissement s’il est réglé : la plateforme n’écrit jamais chez l’éditeur (ni commentaire, ni changement de statut).',
+      'Onglet « Alertes » : les alertes approuvées par les analystes de l’éditeur, de tous types (service vulnérable, service exposé, défaut de configuration, fuite de données, typosquatting), avec leur criticité, leur cible, leurs CVE et leur statut chez l’éditeur. Par défaut, seules les alertes encore ouvertes chez l’éditeur sont listées ; le filtre « Statut chez l’éditeur » montre les autres. Le titre est repris tel quel. La description détaillée, les pièces jointes, les commentaires et les données sensibles des constats ne sont jamais lus.',
+      'Onglet « Actifs » : les hôtes (adresses IP) et les domaines exposés, avec leur statut de surveillance, leur réseau (fournisseur, système autonome, pays, CDN) et le nombre d’alertes ouvertes qui les visent. Onglet « Technologies » : les logiciels détectés sur ces actifs, version par version, avec les CVE et ce qu’en dit l’éditeur (score, EPSS, preuve de concept, exploitation).',
+      'Droits : ce qui vient d’un périmètre d’AlgoLightHouse relié à un périmètre de la plateforme se lit avec les droits de ce périmètre ; un périmètre non relié n’est visible qu’avec le droit d’administrer le module. Une technologie se lit par ses actifs : une version qui ne tourne que sur des actifs que vous ne lisez pas, et ses CVE, ne sont pas montrées.',
+      'Onglet « Périmètres » (droit d’administrer le module) : reliez chaque périmètre d’AlgoLightHouse à un périmètre de la plateforme, ou retirez la liaison. Il faut aussi pouvoir écrire sur le périmètre choisi et sur celui d’avant. Une modification faite entre-temps par quelqu’un d’autre est refusée : rechargez la page. Une synchronisation ne change jamais une liaison ; chaque liaison est inscrite au journal d’audit, sans adresse ni domaine.',
+      'Un élément qui n’est plus vu par une synchronisation complète n’est plus listé, sans être effacé ; une synchronisation incomplète (trop d’éléments, durée dépassée) ne fait rien disparaître. L’éditeur ne documente aucune pagination : chaque liste est lue en une fois, dans des limites fixes, et le détail des alertes (type, cible, CVE) est lu pour les 300 plus récentes à chaque passage. Ces données ne sont pas encore prises en compte dans la priorité des failles.',
+    ],
+  },
+  {
     id: 'vulnerabilites-suivi',
     title: 'Vulnérabilités : suivi d’une faille et actions',
     permission: 'vulnerabilites:lire',
@@ -201,6 +215,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Activer un connecteur ouvre le flux vers l’outil : une fenêtre détaille la destination, le port réglé et ce qui sort, et un administrateur la valide (case à cocher). Désactiver le dernier connecteur d’un type, ou désactiver le module Intégrations, referme le flux.',
       '« Tester la connexion » (droit de modifier les intégrations) : la demande part en file, l’exécutant la traite en général en moins d’une minute ; pour Tenable Security Center, seule la version du service est rapportée. Le bouton « Exécutions » montre les vingt dernières, avec leur résultat ou leur erreur. Chaque geste est inscrit au journal d’audit, sans secret.',
       'Tenable Security Center, failles et machines : une synchronisation par jour et par instance active lit les failles des gravités choisies dans la configuration (critiques et élevées par défaut), puis l’inventaire des machines (accès annoncé expérimental : son échec n’empêche pas la lecture des failles). « Synchroniser maintenant » (droit de modifier les intégrations, module Vulnérabilités actif) la relance, au plus une fois par quart d’heure. Le dernier résultat (nombre de failles, de machines, borne atteinte, inventaire) s’affiche sur la tuile.',
+      'AlgoLightHouse, surface externe : l’adresse est celle de votre espace chez l’éditeur (https://espace.algolighthouse.fr, port 443), la clé d’API se saisit à part. Le service est sur Internet : s’il est réglé, le mandataire de l’établissement est emprunté (Configuration système > Mandataire sortant), le certificat de l’éditeur restant vérifié. Une synchronisation par jour lit, en lecture seule, les périmètres, hôtes, domaines, alertes et technologies, rangés dans Risques > Vulnérabilités > Surface externe.',
     ],
   },
   {
@@ -383,7 +398,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Adresse sous la forme http://hôte:port : nom ou adresse IP (IPv6 entre crochets, adresses privées admises), port obligatoire, sans identifiant, chemin ni paramètre. Identifiant facultatif ; authentification simple seulement (identifiant et mot de passe) : NTLM et Kerberos ne sont pas pris en charge.',
       'Le mot de passe s’enregistre à part : scellé sur le serveur, jamais affiché ni relu, seulement « défini » ou « non défini ». Il n’est envoyé qu’au mandataire, jamais aux destinations. Changer l’adresse ou l’identifiant efface le mot de passe : il faut le ressaisir. Chaque changement est inscrit au journal d’audit, sans secret.',
       'Le chiffrement reste vérifié de bout en bout : un tunnel est ouvert à travers le mandataire, puis le certificat de chaque destination est vérifié. Si le mandataire inspecte le trafic chiffré, il présente son propre certificat et lit ce qui passe : collez alors l’autorité de certification de l’établissement (PEM), obtenue d’une source sûre. Elle est ajoutée aux autorités reconnues pour les seuls flux qui passent par le mandataire.',
-      'Flux concernés : la veille des vulnérabilités utilise le mandataire ; Tenable Security Center (interne) et le courriel (SMTP) restent en accès direct, par construction ; l’assistant, les mises à jour, l’antivirus et le certificat ACME ne passent pas encore par le mandataire. Le démon Docker de l’hôte (téléchargement des images) se règle hors de la plateforme (guide d’installation).',
+      'Flux concernés : la veille des vulnérabilités et le connecteur AlgoLightHouse (service sur Internet) utilisent le mandataire ; Tenable Security Center (interne) et le courriel (SMTP) restent en accès direct, par construction ; l’assistant, les mises à jour, l’antivirus et le certificat ACME ne passent pas encore par le mandataire. Le démon Docker de l’hôte (téléchargement des images) se règle hors de la plateforme (guide d’installation).',
       'Pare-feu : pour un flux qui passe par le mandataire, autorisez la sortie du serveur vers le mandataire, sur le port réglé, au lieu de la sortie vers les destinations.',
     ],
   },

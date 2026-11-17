@@ -1,8 +1,11 @@
 /* Module Intégrations (ADR 0076), socle des connecteurs réseau : présentation et formulaires, sans état ni appel réseau
    (testés à part). Le serveur reste seul juge des droits, de la configuration, des secrets et du flux. */
 import {
+  CHAMPS_CONFIGURATION,
+  type ChampConfiguration,
   ETAT_EXECUTION_LIBELLES,
   erreurAdresse,
+  erreurAdresseAlh,
   GRAVITES_PAR_DEFAUT,
   GRAVITES_TENABLE,
   GRAVITE_TENABLE_LIBELLES,
@@ -15,6 +18,7 @@ import {
   type TypeIntegrationDto,
 } from '@suivi/shared';
 import type { Etat } from '@suivi/ui';
+import { resumeBilanAlh } from '../vulnerabilites/surface';
 
 export const LIEN_INTEGRATIONS = '/integrations';
 
@@ -78,6 +82,7 @@ export function resumeExecution(e: Pick<ExecutionIntegrationDto, 'etat' | 'resul
     const v = e.resultat?.version;
     if (typeof v === 'string') return `Connexion établie : version ${v}.`;
     if (e.resultat && typeof e.resultat.constats === 'number') return resumeSynchronisation(e.resultat);
+    if (e.resultat && typeof e.resultat.alertes === 'number') return resumeBilanAlh(e.resultat);
     return 'Résultat reçu.';
   }
   if (e.etat === 'en_file') return 'En attente de l’exécutant d’exploitation (en général moins d’une minute).';
@@ -97,7 +102,11 @@ export function messageExecutant(e: EtatIntegrationsDto['executant']): string | 
 export const fluxOuvertPour = (etat: EtatIntegrationsDto | undefined, type: IntegrationDto['type']) =>
   etat?.flux.find((f) => f.type === type)?.ouvert === true;
 
-/* ------------------------------------------------------------------ Formulaire de configuration (Tenable) */
+/* ------------------------------------------------------------------ Formulaire de configuration */
+/** Le formulaire porte tous les champs connus ; seuls ceux du type (catalogue, `champs`) sont affichés, contrôlés et
+    envoyés. Sans type précisé : tous (Tenable). */
+type TypeChamps = Pick<TypeIntegrationDto, 'id' | 'champs'> | undefined;
+const champsDe = (t: TypeChamps): readonly ChampConfiguration[] => t?.champs ?? CHAMPS_CONFIGURATION;
 export interface FormulaireConfiguration {
   nom: string;
   adresse: string;
@@ -130,40 +139,49 @@ export function formulaireDepuis(i: IntegrationDto | null, t: TypeIntegrationDto
   };
 }
 
-/** Erreurs à corriger avant l'envoi (le serveur refait chaque contrôle). */
-export function erreursFormulaire(f: FormulaireConfiguration): string[] {
+/** Erreurs à corriger avant l'envoi (le serveur refait chaque contrôle). AlgoLightHouse : adresse de l'espace chez
+    l'éditeur seulement. */
+export function erreursFormulaire(f: FormulaireConfiguration, t?: TypeChamps): string[] {
   const r: string[] = [];
   if (!f.nom.trim()) r.push('Nom obligatoire.');
-  const a = erreurAdresse(f.adresse);
+  const a = t?.id === 'algolighthouse' ? erreurAdresseAlh(f.adresse) : erreurAdresse(f.adresse);
   if (a) r.push(a);
-  if (!f.gravites.length) r.push('Choisissez au moins une gravité à synchroniser.');
+  if (champsDe(t).includes('gravites') && !f.gravites.length) r.push('Choisissez au moins une gravité à synchroniser.');
   return r;
 }
 
-export const configurationDepuis = (f: FormulaireConfiguration) => ({
-  adresse: f.adresse.trim(),
-  autoriteCertification: f.autoriteCertification,
-  delaiSecondes: f.delaiSecondes,
-  gravites: GRAVITES_TENABLE.filter((g) => f.gravites.includes(g)),
-});
+/** Configuration envoyée : les seuls champs du type. */
+export function configurationDepuis(f: FormulaireConfiguration, t?: TypeChamps) {
+  const champs = champsDe(t);
+  const c: {
+    adresse: string;
+    autoriteCertification?: string;
+    delaiSecondes?: number;
+    gravites?: GraviteTenable[];
+  } = { adresse: f.adresse.trim() };
+  if (champs.includes('autoriteCertification')) c.autoriteCertification = f.autoriteCertification;
+  if (champs.includes('delaiSecondes')) c.delaiSecondes = f.delaiSecondes;
+  if (champs.includes('gravites')) c.gravites = GRAVITES_TENABLE.filter((g) => f.gravites.includes(g));
+  return c;
+}
 
 export const corpsCreation = (t: TypeIntegrationDto, f: FormulaireConfiguration) => ({
   type: t.id,
   nom: f.nom.trim(),
-  configuration: configurationDepuis(f),
+  configuration: configurationDepuis(f, t),
 });
 
 /** Modification : seuls le nom et la configuration changés sont envoyés. */
-export function corpsModification(i: IntegrationDto, f: FormulaireConfiguration) {
+export function corpsModification(i: IntegrationDto, f: FormulaireConfiguration, t?: TypeChamps) {
   const out: { nom?: string; configuration?: ReturnType<typeof configurationDepuis> } = {};
   if (f.nom.trim() !== i.nom) out.nom = f.nom.trim();
-  const c = configurationDepuis(f);
+  const c = configurationDepuis(f, t);
   const avant = formulaireDepuis(i, { libelle: i.nom } as TypeIntegrationDto);
   if (
     c.adresse.replace(/\/$/, '').toLowerCase() !== avant.adresse ||
-    c.autoriteCertification !== avant.autoriteCertification ||
-    c.delaiSecondes !== avant.delaiSecondes ||
-    c.gravites.join() !== avant.gravites.join()
+    (c.autoriteCertification !== undefined && c.autoriteCertification !== avant.autoriteCertification) ||
+    (c.delaiSecondes !== undefined && c.delaiSecondes !== avant.delaiSecondes) ||
+    (c.gravites !== undefined && c.gravites.join() !== avant.gravites.join())
   )
     out.configuration = c;
   return out;

@@ -42,6 +42,7 @@ import { ProduitsSurveillesPage } from './vulnerabilites/ProduitsSurveilles';
 import { VeillePage } from './vulnerabilites/Veille';
 import { FaillesDetecteesPage } from './vulnerabilites/FaillesDetectees';
 import { MachinesPage } from './vulnerabilites/Machines';
+import { SurfaceExternePage } from './vulnerabilites/SurfaceExterne';
 import { SeuilsPrioritePage } from './vulnerabilites/SeuilsPriorite';
 import { MotsNonMasquesPage } from './vulnerabilites/MotsNonMasques';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
@@ -132,6 +133,7 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/veille', element: <VeillePage /> },
       { path: '/vulnerabilites/failles', element: <FaillesDetecteesPage /> },
       { path: '/vulnerabilites/machines', element: <MachinesPage /> },
+      { path: '/vulnerabilites/surface-externe', element: <SurfaceExternePage /> },
       { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },
       { path: '/vulnerabilites/masque', element: <MotsNonMasquesPage /> },
       { path: '/integrations', element: <IntegrationsPage /> },

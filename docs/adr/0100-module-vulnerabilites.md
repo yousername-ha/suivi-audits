@@ -353,6 +353,8 @@
   - l'écran indique combien de machines chaque mot désigne ; le nom de ces machines n'est montré qu'à qui peut les lire,
     le nombre l'est à tout administrateur du module ;
   - un réglage illisible vaut liste vide : le masque strict s'applique.
+- **Lot ALH1, surface externe lue dans AlgoLightHouse** (17/11/2026) : migration `080`, connecteur `algolighthouse` en lecture
+  seule, écran « Surface externe ». Décisions et choix de réalisation : voir l'addendum du 17/11/2026 ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -423,3 +425,86 @@
     aucun de ses flux : à cadrer (adresse, authentification éventuelle, autorité de certification si le mandataire inspecte
     le trafic chiffré) avant la mise en service de la veille.
 17. Rapprochement du lot V4 : utiliser aussi le champ « affected » de NVD (éditeur et produit hors CPE) ?
+
+## Addendum du 17/11/2026 — connecteur AlgoLightHouse (lot ALH1)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). AlgoLightHouse (ALH),
+de l'éditeur AlgoSecure, surveille la surface d'attaque exposée sur Internet (EASM) : alertes de ses analystes, hôtes, domaines,
+technologies détectées. Forme des réponses lue sur le descriptif OpenAPI 3 de l'éditeur (version 1.14.0, non versé au dépôt) ;
+**aucune réponse réelle n'a été vue**.
+
+### Décisions du RSSI (17/11/2026)
+
+| N°   | Question                     | Décision                                                                                                         |
+| ---- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| ALH1 | Place                        | Un type de connecteur de plus du module Intégrations, rattaché au module Vulnérabilités comme Tenable ; clé saisie dans la plateforme, jamais réaffichée |
+| ALH2 | Appels                       | Lecture seule, liste fermée : `GET /api/v1/health`, `/version`, `/alerts` (filtres), `/alerts/{id}`, `/perimeters`, `/targets/hosts`, `/targets/domains`, `/technologies`. Jamais `POST` ni `PUT` (commentaires, statut), jamais les adresses sans `/v1`, ni `/api/contacts` ni `/api/search`. En-tête `X-API-Key`. Preuve par test qu'aucune écriture n'est émise |
+| ALH3 | Flux                         | Service sur Internet : flux propre, fermé par défaut ; sortie par le mandataire de l'établissement quand il est actif (Tenable reste direct) ; certificat toujours vérifié |
+| ALH4 | Droits                       | L'administrateur du module relie chaque périmètre ALH à un périmètre de la plateforme ; ce qui en vient hérite de ce périmètre ; un périmètre ALH non relié n'est visible que de qui administre le module |
+| ALH5 | Types d'alerte               | Tous repris : `vulnerable_service`, `exposed_service`, `config_defect`, `data_leak`, `typosquatting`              |
+| ALH6 | Textes et données            | Textes de l'éditeur gardés tels quels ; aucune donnée réelle dans le dépôt                                       |
+| ALH7 | Assistant et masque          | Ce lot ne branche pas l'assistant ; rien n'est exposé qui contournerait le masque ; `sensitive_data`, `has_sensitive_data`, `uploads`, `note`, `comments` ne sont pas stockés (liste blanche de champs) |
+
+### Réalisation
+
+- **Catalogue** (`packages/shared/src/integrations.ts`) : type `algolighthouse`, portée organisation, opérations « Tester la
+  connexion » (`health` puis `version`, seule la version sort) et « Synchroniser » ; flux `algolighthouse` au registre
+  (`FLUX_SANS_REPRISE`, `USAGE_MANDATAIRE` « utilise ») ; liste fermée recopiée dans `scripts/integration-http.py` et comparée par
+  `apps/api/test/integrations-architecture.test.ts`.
+- **Socle** : chaque opération par lots est rangée par le récepteur de **son type** (`enLots['<type>:<opération>']`) ; le
+  mandataire est joint à la réclamation pour les seuls types dont le flux l'utilise ; l'exécutant ne le passe qu'à eux
+  (`INTEGRATIONS_MANDATAIRE`) ; le script le refuse pour tout autre type et reprend le tunnel `CONNECT` de la veille.
+- **Données** (migration `080`) : périmètres ALH et leur liaison, actifs (hôtes, domaines), alertes et leurs CVE, technologies,
+  leurs actifs et leurs CVE, état et journal des synchronisations ; même règle de présence que Tenable.
+- **Lecture** (`apps/api/src/vulnerabilites/surface-externe.ts`) : alertes, actifs, technologies à travers le périmètre relié
+  (`grc_smsi_visible`) ; liste et liaison des périmètres avec `vulnerabilites:administrer`. Écran Risques > Vulnérabilités >
+  « Surface externe ».
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Adresse** : `https://<espace>.algolighthouse.fr` seulement (domaine de l'éditeur écrit dans le code, recontrôlé par le
+  script), port 443, sans autorité de certification propre ; la clé d'API ne peut partir vers aucun autre hôte.
+- **Forme de la clé** non documentée par l'éditeur : 16 à 256 caractères parmi lettres, chiffres et `._~+/=-`.
+- **Aucun paramètre de requête n'est émis** (filtres admis par ALH2 mais inutiles ici) et l'en-tête `X-Perimeters-Filter`
+  n'est pas envoyé : chaque liste est lue en entier, dans la limite des droits de la clé.
+- **Pas de pagination documentée** : chaque liste est lue en une réponse, bornée à 16 Mio et en nombre (500 périmètres,
+  5 000 alertes, 10 000 hôtes, 10 000 domaines, 2 000 technologies ; par technologie, 50 versions, 200 actifs et 200 CVE par
+  version ; 20 000 liens et 20 000 CVE de technologies), profondeur JSON bornée (`trop_imbrique`), huit minutes de lecture.
+  Au-delà, la synchronisation est incomplète et ne fait rien disparaître.
+- **Détail des alertes** : lu pour les 300 alertes les plus récemment modifiées à chaque synchronisation (la liste ne donne
+  que des identifiants de type et de criticité) ; le type et la criticité des autres sont déduits des identifiants vus dans ces
+  détails, sinon « non renseignés » ; leur cible et leurs CVE gardent la dernière valeur lue. Un détail introuvable (404) est
+  écarté et rend la synchronisation incomplète ; toute autre erreur l'arrête.
+- **CVE d'une alerte** (forme non décrite par l'éditeur) : seules les valeurs texte du premier niveau des objets `cves` et
+  `fragments[].alert_cves[].cve` qui sont exactement un identifiant CVE sont retenues ; rien n'est lu plus loin.
+- **Défauts et résolutions** (`defects`) : ni lus ni rangés (hors de la liste de champs du lot) ; les recommandations de
+  l'éditeur ne sont donc pas affichées.
+- **EPSS** des technologies : gardé seulement entre 0 et 1 ; une autre valeur est écartée, jamais convertie.
+- **Liaison d'un périmètre** : en plus de `vulnerabilites:administrer`, l'écriture sur le périmètre actuel et sur le périmètre
+  visé (même règle que le périmètre d'une machine de Tenable) ; un périmètre visé illisible est « introuvable » (422). Le
+  nombre de périmètres non reliés n'est donné qu'à l'administration du module.
+- **Technologie** : lue par ses actifs ; une version qui ne tourne que sur des actifs illisibles, et ses CVE, ne sont ni
+  listées ni comptées ; un actif inconnu de la cartographie n'est lisible qu'avec `vulnerabilites:administrer`.
+- **Liste des alertes** : par défaut, celles encore ouvertes chez l'éditeur (non traitée, en cours, à retester, à retraiter,
+  en attente).
+- **Réglage du mandataire illisible** : la demande est close sans appel, jamais faite en direct (même règle que la veille).
+- Le client HTTP commun explique désormais un code 429 (limite de débit), aussi pour Tenable.
+
+### Non vérifié
+
+Aucun appel vers un vrai espace AlgoLightHouse (tests sur un faux service HTTPS local et un faux mandataire) ; forme réelle des
+objets CVE d'une alerte ; volumes réels (nombre d'alertes, taille des réponses) ; limites de débit et conditions d'usage de
+l'API ; passage par le mandataire réel de l'établissement ; Playwright, Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Priorité et règle du « ou » entre sources** (V26, V27) : faire entrer les CVE d'ALH (exploitation selon l'éditeur, preuve
+   de concept, score) dans les faits de la priorité, avec leur provenance.
+2. **Rapprochement** des technologies d'ALH avec les produits surveillés (éditeur, produit, version).
+3. **Assistant** : aucun outil ne lit la surface externe. Avant de l'y brancher, le masque devra couvrir les adresses et les
+   domaines d'ALH, qui ne sont pas dans l'inventaire des machines.
+4. **Alertes** : notification ou fenêtre d'alerte sur une alerte critique d'ALH.
+5. Affichage des **défauts et résolutions** de l'éditeur (texte HTML à nettoyer).
+6. Lecture **incrémentale** des détails (toutes les alertes finissent par être détaillées) ; pagination si l'éditeur la
+   documente ; usage de `X-Perimeters-Filter`.
+

@@ -160,9 +160,14 @@ export function TuileInstance({
             </Badge>
           ))}
         </Group>
-        {synchronisable && (
+        {synchronisable && t?.champs.includes('gravites') && (
           <Text size="xs" c="dimmed">
             Synchronisation quotidienne des failles : {libelleGravites(i.configuration.gravites)}.
+          </Text>
+        )}
+        {synchronisable && t && !t.champs.includes('gravites') && (
+          <Text size="xs" c="dimmed">
+            Synchronisation quotidienne, rangée dans Risques &gt; Vulnérabilités &gt; Surface externe.
           </Text>
         )}
         {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
@@ -449,7 +454,7 @@ function EditeurInstance({
   const [enCours, setEnCours] = useState(false);
   const enregistrer = async () => {
     setErreur(null);
-    const e = erreursFormulaire(f);
+    const e = erreursFormulaire(f, type);
     if (e.length) {
       setErreur(e.join(' '));
       return;
@@ -458,7 +463,7 @@ function EditeurInstance({
     try {
       let i: IntegrationDto;
       if (instance) {
-        const patch = corpsModification(instance, f);
+        const patch = corpsModification(instance, f, type);
         i = Object.keys(patch).length
           ? await api<IntegrationDto>('PATCH', `/api/integrations/instances/${instance.id}`, {
               body: patch,
@@ -490,22 +495,24 @@ function EditeurInstance({
       />
       <TextInput
         label="Adresse du service"
-        description="https://serveur (port 443) ou https://serveur:port, sans chemin ni identifiant. Une adresse du réseau interne est admise. Changer l’adresse ou le port efface les clés."
+        description={type.aideAdresse}
         required
         value={f.adresse}
         onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
         spellCheck={false}
       />
-      <Textarea
-        label="Autorité de certification (facultatif)"
-        description="Pour un service dont le certificat est signé par une autorité interne : collez son certificat PEM. Vide : autorités reconnues du système. Le certificat est toujours vérifié."
-        autosize
-        minRows={2}
-        maxRows={8}
-        value={f.autoriteCertification}
-        onChange={(e) => setF({ ...f, autoriteCertification: e.currentTarget.value })}
-        spellCheck={false}
-      />
+      {type.champs.includes('autoriteCertification') && (
+        <Textarea
+          label="Autorité de certification (facultatif)"
+          description="Pour un service dont le certificat est signé par une autorité interne : collez son certificat PEM. Vide : autorités reconnues du système. Le certificat est toujours vérifié."
+          autosize
+          minRows={2}
+          maxRows={8}
+          value={f.autoriteCertification}
+          onChange={(e) => setF({ ...f, autoriteCertification: e.currentTarget.value })}
+          spellCheck={false}
+        />
+      )}
       <NumberInput
         label="Délai d’une requête (secondes)"
         min={DELAI_MIN}
@@ -514,7 +521,7 @@ function EditeurInstance({
         value={f.delaiSecondes}
         onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
       />
-      {type.operations.includes('synchroniser') && (
+      {type.champs.includes('gravites') && (
         <Checkbox.Group
           label="Gravités à synchroniser"
           description="Failles lues chaque jour dans Tenable : critiques et élevées par défaut."

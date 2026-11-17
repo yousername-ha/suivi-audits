@@ -9,9 +9,14 @@
    - Flux (ADR 0097) : activer une instance ouvre le flux de son type, après validation explicite d'un administrateur, dans la
      même transaction ; désactiver la dernière instance active du type le referme. Flux fermé : rien n'est réclamé pour ce
      type, une demande en file est close sans appel.
-   - Opérations rapportées par lots (« synchroniser », ADR 0100 lot V5) : l'exécutant envoie les éléments par lots bornés
-     (`suivi integrations-lot`) avant la fin ; un module destinataire (catalogue OPERATIONS_EN_LOTS) les range. Ce module
-     désactivé : rien n'est inscrit ni réclamé pour l'opération, une demande en file est close sans appel.
+   - Opérations rapportées par lots (« synchroniser », ADR 0100 lots V5 et ALH1) : l'exécutant envoie les éléments par lots
+     bornés (`suivi integrations-lot`) avant la fin ; un module destinataire (catalogue OPERATIONS_EN_LOTS) les range, par un
+     récepteur propre à chaque type (Tenable, AlgoLightHouse). Ce module désactivé : rien n'est inscrit ni réclamé pour
+     l'opération, une demande en file est close sans appel.
+   - Mandataire sortant de l'établissement (ADR 0101) : remis à l'exécutant avec la demande, seulement pour un type dont le
+     flux l'utilise (USAGE_MANDATAIRE : AlgoLightHouse, service sur Internet) et seulement s'il est actif ; jamais pour un
+     connecteur interne (Tenable), qui reste en accès direct par construction. Réglage illisible : la demande est close sans
+     appel, jamais faite en direct.
    Droits contrôlés par route() ; ce service est seul juge du reste (portée, version, secrets, file). Audit `integration.*`
    sans secret. Accès aux données en Kysely (ADR 0062). */
 import {
@@ -32,6 +37,7 @@ import {
   TYPES_INTEGRATION,
   typeIntegration,
   INTEGRATION_TYPES,
+  USAGE_MANDATAIRE,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
@@ -40,6 +46,7 @@ import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { IntegrationExecutions, Integrations as LigneIntegrations } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
+import type { Mandataire } from '../mandataire.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 
@@ -100,9 +107,18 @@ const nomEnBase = (e: unknown): never => {
   throw e;
 };
 
+/** Clé d'un récepteur d'opération par lots : type de connecteur et opération. */
+export type CleRecepteur = `${IntegrationType}:${OperationIntegration}`;
+
 export class Integrations {
-  /** Modules destinataires des opérations rapportées par lots, branchés par services.ts. */
-  readonly enLots: Partial<Record<OperationIntegration, OperationEnLots>> = {};
+  /** Modules destinataires des opérations rapportées par lots, par type et par opération, branchés par services.ts. */
+  readonly enLots: Partial<Record<CleRecepteur, OperationEnLots>> = {};
+  /** Mandataire sortant de l'établissement (ADR 0101), branché par services.ts : seuls les types dont le flux l'utilise le
+      reçoivent. */
+  mandataire?: Pick<Mandataire, 'pourExecutant'>;
+  private recepteur(type: string, operation: string): OperationEnLots | undefined {
+    return typeConnu(type) ? this.enLots[`${type}:${operation as OperationIntegration}`] : undefined;
+  }
   constructor(
     private readonly db: Db,
     private readonly vault: Vault,
@@ -541,11 +557,12 @@ export class Integrations {
         .returningAll()
         .executeTakeFirst();
       if (reclamee) {
-        await this.enLots[reclamee.operation as OperationIntegration]?.reclamee(
-          k,
-          reclamee.id,
-          reclamee.integration_id,
-        );
+        const type = await k
+          .selectFrom('integrations')
+          .select('type')
+          .where('id', '=', reclamee.integration_id)
+          .executeTakeFirstOrThrow();
+        await this.recepteur(type.type, reclamee.operation)?.reclamee(k, reclamee.id, reclamee.integration_id);
         await this.db.audit(
           EXECUTANT,
           null,
@@ -574,12 +591,27 @@ export class Integrations {
       }
       secrets[s.id] = this.vault.openSmall(Buffer.from(b, 'base64'), aad(i.id, s.id)).toString('utf8');
     }
+    // Mandataire (ADR 0101) : seulement pour un flux qui l'utilise (service sur Internet), et seulement s'il est actif.
+    let mandataire: Awaited<ReturnType<Mandataire['pourExecutant']>> = null;
+    if (USAGE_MANDATAIRE[t.flux] === 'utilise' && this.mandataire) {
+      mandataire = await this.mandataire.pourExecutant();
+      if (mandataire === 'illisible') {
+        await this.terminer(r.id, {
+          ok: false,
+          resultat: null,
+          erreur:
+            'Réglage du mandataire sortant illisible : la demande n’a pas été transmise (Configuration système, Mandataire sortant).',
+        });
+        return null;
+      }
+    }
     return {
       id: r.id,
       type: i.type,
       operation: r.operation,
       configuration: i.configuration,
       secrets,
+      ...(mandataire ? { mandataire } : {}),
     };
   }
 
@@ -588,13 +620,14 @@ export class Integrations {
     z.uuid().parse(id);
     return this.db.tx(async (_c, k) => {
       const cur = await k
-        .selectFrom('integration_executions')
-        .select(['operation'])
-        .where('id', '=', id)
-        .where('etat', '=', 'en_cours')
+        .selectFrom('integration_executions as e')
+        .innerJoin('integrations as i', 'i.id', 'e.integration_id')
+        .select(['e.operation', 'i.type'])
+        .where('e.id', '=', id)
+        .where('e.etat', '=', 'en_cours')
         .forUpdate()
         .executeTakeFirst();
-      const recepteur = cur && this.enLots[cur.operation as OperationIntegration];
+      const recepteur = cur && this.recepteur(cur.type, cur.operation);
       if (!recepteur) throw new HttpError(409, 'Exécution absente, terminée ou sans envoi par lots.');
       return recepteur.lot(k, id, elements);
     });
@@ -624,7 +657,7 @@ export class Integrations {
         if (v?.success) resultat = v.data as Record<string, unknown>;
         else erreur = 'Résultat refusé : forme inattendue.';
       }
-      const recepteur = this.enLots[cur.operation as OperationIntegration];
+      const recepteur = this.recepteur(cur.type, cur.operation);
       if (recepteur) {
         const refus = await recepteur.terminee(k, c, id, resultat);
         if (refus) {

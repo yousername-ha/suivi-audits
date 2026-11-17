@@ -98,7 +98,7 @@ beforeEach(async () => {
   await t.svc.db.q("UPDATE module_activation SET disabled='{}', version=version+1 WHERE id=1");
   await t.svc.db.q('DELETE FROM integrations');
   await t.svc.db.q("DELETE FROM settings WHERE key LIKE 'secret:integration:%'");
-  await t.svc.db.q("DELETE FROM flux_externes WHERE module = 'tenable'");
+  await t.svc.db.q("DELETE FROM flux_externes WHERE module IN ('tenable', 'algolighthouse')");
   await t.svc.db.q('DELETE FROM backup_worker');
   // Limite de débit des tests de connexion remise à neuf : chaque cas part de zéro.
   t.svc.limits.integrationTest.reset();
@@ -245,6 +245,55 @@ describe('instances : création, modification, If-Match', () => {
     ).toBe(409);
   });
 
+  it('AlgoLightHouse : adresse de l’espace chez l’éditeur seulement, sans autorité propre ; clé de forme contrôlée', async () => {
+    for (const adresse of [
+      'https://tenable.exemple.test',
+      'https://espace.algolighthouse.fr:8443',
+      'https://espace.algolighthouse.fr/api',
+      'https://espace.algolighthouse.fr.exemple.invalid',
+      'http://espace.algolighthouse.fr',
+    ])
+      expect(
+        (await admin.post(`${base}/instances`, { type: 'algolighthouse', nom: 'A', configuration: { adresse } }))
+          .statusCode,
+        adresse,
+      ).toBe(422);
+    expect(
+      (
+        await admin.post(`${base}/instances`, {
+          type: 'algolighthouse',
+          nom: 'A',
+          configuration: { adresse: 'https://espace.algolighthouse.fr', autoriteCertification: '' },
+        })
+      ).statusCode,
+    ).toBe(422);
+    const r = await admin.post(`${base}/instances`, {
+      type: 'algolighthouse',
+      nom: 'AlgoLightHouse fictif',
+      configuration: { adresse: 'https://Espace-Fictif.AlgoLightHouse.fr/' },
+    });
+    expect(r.statusCode, r.body).toBe(201);
+    expect(r.json()).toMatchObject({
+      configuration: { adresse: 'https://espace-fictif.algolighthouse.fr', delaiSecondes: 30 },
+      secrets: { cleApi: false },
+    });
+    const id = r.json().id as string;
+    expect((await admin.put(`${base}/instances/${id}/secrets`, { cleApi: 'courte' })).statusCode).toBe(422);
+    expect((await admin.put(`${base}/instances/${id}/secrets`, { accessKey: CLE_ACCES })).statusCode).toBe(422);
+    expect(
+      (await admin.put(`${base}/instances/${id}/secrets`, { cleApi: 'cle-api-fictive-0123456789abcdef' })).statusCode,
+    ).toBe(204);
+    expect((await admin.get(`${base}/instances/${id}`)).json().secrets).toEqual({ cleApi: true });
+    expect(JSON.stringify(await audits('integration.secret_defini'))).not.toContain('cle-api-fictive');
+    // Activer ouvre le flux propre au type, et lui seul.
+    const a = await admin.put(`${base}/instances/${id}/activation`, { actif: true, fluxConfirme: true }, ifMatch(1));
+    expect(a.statusCode, a.body).toBe(200);
+    expect(await t.svc.flux.ouvert('algolighthouse')).toBe(true);
+    expect(await t.svc.flux.ouvert('tenable')).toBe(false);
+    const cat = (await admin.get(`${base}/catalogue`)).json() as { id: string; pointsAcces: { methode: string }[] }[];
+    expect(cat.find((x) => x.id === 'algolighthouse')!.pointsAcces.every((p) => p.methode === 'GET')).toBe(true);
+  });
+
   it('modification : If-Match exigé, version périmée refusée, version incrémentée', async () => {
     const i = await creer();
     expect((await admin.patch(`${base}/instances/${i.id}`, { nom: 'Renommé' })).statusCode).toBe(428);
@@ -363,7 +412,11 @@ describe('activation et flux « tenable » (ADR 0097)', () => {
     expect(await t.svc.flux.ouvert('tenable')).toBe(false);
     expect(await audits('integration.desactivee')).toHaveLength(2);
     const etat = (await lecture.get(`${base}/etat`)).json();
-    expect(etat.flux).toEqual([{ type: 'tenable', flux: 'tenable', ouvert: false }]);
+    // Un flux par type du catalogue : celui d'AlgoLightHouse est resté fermé.
+    expect(etat.flux).toEqual([
+      { type: 'tenable', flux: 'tenable', ouvert: false },
+      { type: 'algolighthouse', flux: 'algolighthouse', ouvert: false },
+    ]);
   });
 
   it('désactiver le module Intégrations referme le flux ; le réactiver ne rouvre rien', async () => {
@@ -535,11 +588,14 @@ describe('débit', () => {
 
 describe('journaux techniques', () => {
   it('les noms des champs secrets des connecteurs sont masqués', () => {
-    for (const champ of ['*.accessKey', '*.secretKey', '*.appToken', '*.userToken', '*.clientSecret'])
+    for (const champ of ['*.accessKey', '*.secretKey', '*.appToken', '*.userToken', '*.clientSecret', '*.cleApi'])
       expect(REDACT).toContain(champ);
     const lignes: string[] = [];
     const l = pino({ redact: { paths: REDACT, censor: '[masqué]' } }, { write: (s: string) => lignes.push(s) });
     l.info({ job: { accessKey: CLE_ACCES, secretKey: CLE_SECRETE } }, 'réclamation');
+    l.info({ secrets: { cleApi: 'cle-api-fictive-0123456789abcdef' } }, 'réclamation');
+    l.info({ job: { cleApi: 'cle-api-fictive-0123456789abcdef' } }, 'réclamation');
+    expect(lignes.join('')).not.toContain('cle-api-fictive');
     expect(lignes.join('')).not.toContain(CLE_SECRETE);
     expect(lignes.join('')).not.toContain(CLE_ACCES);
   });

@@ -90,6 +90,16 @@ identifiant de machine part chez le fournisseur du modèle sous la forme d'un re
 documents, les actions et le contexte de l'organisation relus par l'assistant, en conversation comme en ronde. (session
 « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `080`** (module Vulnérabilités, surface externe lue dans AlgoLightHouse, lot ALH1 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_alh_perimetres`,
+`vulnerabilites_alh_actifs`, `vulnerabilites_alh_alertes`, `vulnerabilites_alh_alerte_cves`, `vulnerabilites_alh_technologies`,
+`vulnerabilites_alh_technologie_actifs`, `vulnerabilites_alh_technologie_cves`, `vulnerabilites_alh_etat` et
+`vulnerabilites_alh_synchronisations`, six index ; aucune table existante modifiée), durée négligeable, sans reprise de données.
+Rien à faire sur le serveur tant qu'aucun connecteur AlgoLightHouse n'est activé : son flux « AlgoLightHouse » est **fermé**.
+Ensuite, faire autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'espace `<espace>.algolighthouse.fr`, ou,
+si le mandataire de l'établissement est réglé, la sortie vers le mandataire, qui doit autoriser cet hôte en `CONNECT`
+([guide d'installation, étapes 11.10 et 11.12](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -361,6 +371,34 @@ documents, les actions et le contexte de l'organisation relus par l'assistant, e
   pour les conversations et pour les rondes. Écran Risques > Vulnérabilités > « Mots à ne pas masquer » (visible avec le droit
   d'administrer le module) : avertissement, exemple, ajout et retrait, effet de chaque mot en clair ; aide « Vulnérabilités :
   mots à ne pas masquer par l'assistant ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH1 : surface externe lue dans AlgoLightHouse**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum du 17/11/2026). Nouveau type de connecteur `algolighthouse` du
+  module Intégrations (éditeur AlgoSecure, portée organisation), **en lecture seule** : adresse de l'espace
+  `https://<espace>.algolighthouse.fr` seulement (domaine de l'éditeur écrit dans le code, port 443, pas d'autorité propre),
+  délai, clé d'API en écriture seule (en-tête `X-API-Key`, scellée, masquée dans les journaux). Liste fermée de huit `GET` de la
+  version 1 de l'API (`health`, `version`, `alerts`, `alerts/{uuid}`, `perimeters`, `targets/hosts`, `targets/domains`,
+  `technologies`), sans paramètre de requête ; jamais `POST` ni `PUT` (commentaires, statut), jamais les adresses sans `/v1`,
+  ni `/api/contacts` ni `/api/search` (prouvé par des tests sur un faux service). Flux propre au registre des flux,
+  « AlgoLightHouse », fermé par défaut, ouvert à l'activation du connecteur après validation explicite, sans reprise de l'existant
+  (`FLUX_SANS_REPRISE`) ; **sortie par le mandataire de l'établissement quand il est actif** (tunnel `CONNECT`, certificat de
+  l'éditeur toujours vérifié, autorité de l'établissement ajoutée pour ces seules connexions), contrairement à Tenable, toujours
+  direct : l'API ne joint le mandataire qu'aux types dont le flux l'utilise, l'exécutant ne le passe qu'à eux, et le script le
+  refuse pour tout autre type. Le socle range désormais chaque opération par lots dans le récepteur de **son type**.
+  « Tester la connexion » lit `health` puis `version` et ne garde que la version. « Synchroniser » (une par jour et par instance
+  active, plus « Synchroniser maintenant ») lit périmètres, hôtes, domaines, alertes (les cinq types : service vulnérable,
+  service exposé, défaut de configuration, fuite de données, typosquatting ; détail des 300 alertes les plus récemment modifiées
+  pour le type, la criticité, la cible et les CVE) et technologies (versions, actifs, CVE avec score, EPSS, preuve de concept,
+  exploitation) ; **liste blanche de champs** : description HTML, champ déprécié `data`, défauts, pièces jointes, commentaires
+  et données sensibles des constats ne sont jamais lus. Aucune pagination documentée par l'éditeur : chaque liste est lue en une
+  réponse bornée (16 Mio, 5 000 alertes, 10 000 hôtes, 10 000 domaines, 2 000 technologies, profondeur JSON), huit minutes au
+  plus ; au-delà, synchronisation incomplète qui ne fait rien disparaître. Textes de l'éditeur gardés tels quels, nettoyés et
+  bornés. Migration `080`. **Droits** : chaque élément hérite du périmètre de la plateforme relié à son périmètre AlgoLightHouse ;
+  un périmètre non relié n'est visible qu'avec `vulnerabilites:administrer` ; une technologie se lit par ses actifs. Liaison
+  des périmètres avec `vulnerabilites:administrer`, `If-Match` et l'écriture sur le périmètre actuel et le périmètre visé ;
+  journal `vulnerabilites.surface.*` sans adresse ni domaine. API `/api/vulnerabilites/surface/{etat,alertes,actifs,technologies,perimetres}`.
+  Écran Risques > Vulnérabilités > « Surface externe » (onglets Alertes, Actifs, Technologies et, pour l'administration du
+  module, Périmètres) ; tuile du connecteur à pictogramme neutre ; aide. Ni priorité, ni rapprochement avec les produits
+  surveillés, ni assistant, ni alerte à ce stade. (session « Module surveillance vulnérabilités SMSI »)
 
 ### Ajouté
 

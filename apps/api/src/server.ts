@@ -64,6 +64,17 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation de Tenable')),
       )
+      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par jour et par instance active, rien si le module
+      // Intégrations ou le module Vulnérabilités est désactivé, ou si le flux « algolighthouse » est fermé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            const { disabled } = await svc.modules.state();
+            if (disabled.includes('vulnerabilites') || disabled.includes('integrations')) return;
+            await svc.vulnerabilites.surfaceExterne.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

@@ -1559,6 +1559,124 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesAlhActifs {
+  id: Generated<string>;
+  integration_id: string;
+  type: "hote" | "domaine";
+  alh_id: string;
+  perimetre_alh: string | null;
+  statut: string | null;
+  valeur: string;
+  adresse: string | null;
+  fai: string | null;
+  asn: string | null;
+  pays: string | null;
+  mutualise: boolean | null;
+  cdn: boolean | null;
+  joignable: boolean | null;
+  joignable_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  niveau: number | null;
+  import_manuel: boolean | null;
+  parent_alh: string | null;
+  cree_alh_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  maj_alh_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAlhAlerteCves {
+  alerte_id: string;
+  cve: string;
+}
+
+export interface VulnerabilitesAlhAlertes {
+  id: Generated<string>;
+  integration_id: string;
+  alh_id: string;
+  perimetre_alh: string | null;
+  type: string | null;
+  criticite: string | null;
+  statut: "untreated" | "in-progress" | "to-retest" | "to-reprocess" | "standbye" | "completed" | "abandoned" | "accepted-risk";
+  titre: string;
+  verifiee: boolean | null;
+  detail: Generated<boolean>;
+  cible_type: string | null;
+  cible_valeur: string | null;
+  cible_hote: string | null;
+  cible_domaine: string | null;
+  cree_alh_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  maj_alh_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  terminee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAlhEtat {
+  integration_id: string;
+  creneau: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  numero: Generated<number>;
+  numero_complet: Generated<number>;
+  complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesAlhPerimetres {
+  id: Generated<string>;
+  integration_id: string;
+  alh_id: string;
+  nom: string;
+  perimetre_id: string | null;
+  vu_numero: number;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string | null;
+}
+
+export interface VulnerabilitesAlhSynchronisations {
+  execution_id: string;
+  integration_id: string;
+  numero: number;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  complete: Generated<boolean>;
+}
+
+export interface VulnerabilitesAlhTechnologieActifs {
+  technologie_id: string;
+  version: string;
+  actif_alh: string;
+  actif_type: "hote" | "domaine";
+  libelle: string;
+  actuel: boolean;
+}
+
+export interface VulnerabilitesAlhTechnologieCves {
+  technologie_id: string;
+  version: string;
+  cve: string;
+  titre: string | null;
+  cvss: ColumnType<string | null, number | string | null, number | string | null>;
+  epss: ColumnType<string | null, number | string | null, number | string | null>;
+  severite: string | null;
+  preuve: boolean | null;
+  exploitee: boolean | null;
+  publiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesAlhTechnologies {
+  id: Generated<string>;
+  integration_id: string;
+  cle: string;
+  nom: string;
+  editeur: string | null;
+  produit: string | null;
+  technologie: string | null;
+  derniere: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  tronquee: Generated<boolean>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesAssistantPropositions {
   id: Generated<string>;
   conversation_id: string;
@@ -2021,6 +2139,15 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_alh_actifs: VulnerabilitesAlhActifs;
+  vulnerabilites_alh_alerte_cves: VulnerabilitesAlhAlerteCves;
+  vulnerabilites_alh_alertes: VulnerabilitesAlhAlertes;
+  vulnerabilites_alh_etat: VulnerabilitesAlhEtat;
+  vulnerabilites_alh_perimetres: VulnerabilitesAlhPerimetres;
+  vulnerabilites_alh_synchronisations: VulnerabilitesAlhSynchronisations;
+  vulnerabilites_alh_technologie_actifs: VulnerabilitesAlhTechnologieActifs;
+  vulnerabilites_alh_technologie_cves: VulnerabilitesAlhTechnologieCves;
+  vulnerabilites_alh_technologies: VulnerabilitesAlhTechnologies;
   vulnerabilites_assistant_propositions: VulnerabilitesAssistantPropositions;
   vulnerabilites_assistant_reperes: VulnerabilitesAssistantReperes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;

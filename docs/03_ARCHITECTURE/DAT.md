@@ -92,6 +92,17 @@ synchronisation interrompue ou incomplète ne fait rien disparaître). Lecture p
 machine (`grc_smsi_visible`, pyramide des ADR 0092 et 0095) ; une machine sans périmètre n'est lisible qu'avec
 `vulnerabilites:administrer`. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
+Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
+`updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête
+`X-API-Key`). Liste fermée de huit `GET` de la version 1 de l'API, sans paramètre ; jamais d'écriture. Le socle range chaque
+opération par lots dans le récepteur de son type (`enLots['<type>:<opération>']`) : `apps/api/src/vulnerabilites/surface-externe.ts`
+range périmètres de l'éditeur, hôtes, domaines, alertes (détail des 300 plus récentes), technologies, leurs actifs et leurs
+CVE (migration `080`), avec la même règle de présence que Tenable (`vulnerabilites_alh_etat`). Lecture : chaque élément hérite
+du périmètre de la plateforme relié à son périmètre de l'éditeur (`vulnerabilites_alh_perimetres.perimetre_id`, liaison par
+`vulnerabilites:administrer`, `If-Match`, écriture sur les périmètres), `grc_smsi_visible` ; non relié :
+`vulnerabilites:administrer`. Une technologie se lit par ses actifs. Ces données ne partent nulle part ailleurs (ni
+assistant, ni priorité, ni notification).
+
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant
 l'inscription) dans `vulnerabilites_veille_collectes` (migration `074`) ; `exploitation-worker.py` la réclame
@@ -154,15 +165,18 @@ Mandataire sortant de l'établissement ([ADR 0101](../adr/0101-mandataire-sortan
 `http://hôte:port`, identifiant, autorité PEM ; `secret:mandataire` : mot de passe scellé par le coffre, AAD dédiée, jamais
 relu ni renvoyé, effacé quand l'adresse ou l'identifiant change). Service `apps/api/src/mandataire.ts`, routes
 `/api/admin/mandataire`, journal `systeme.mandataire.*` sans secret, `motDePasse` et `Proxy-Authorization` dans `REDACT`. Le
-mandataire ne sert qu'aux flux vers Internet, flux par flux : au lot P1, seule la veille l'emprunte. `veille-claim` joint ses
+mandataire ne sert qu'aux flux vers Internet, flux par flux : au lot P1, la veille l'emprunte ; au lot ALH1, le connecteur
+AlgoLightHouse aussi (`integrations-claim` joint ses paramètres pour les seuls types dont le flux l'utilise, l'exécutant ne
+les passe qu'aux types de `INTEGRATIONS_MANDATAIRE`, et le script les refuse pour tout autre type). `veille-claim` joint ses
 paramètres (mot de passe compris) à la demande remise à l'exécutant, seulement s'il est actif (réglage illisible : collecte
 close, jamais en direct) ; l'exécutant les passe au script par l'entrée standard ; le script ouvre un tunnel `CONNECT` vers
 l'hôte de la liste fermée, n'envoie `Proxy-Authorization: Basic` qu'au mandataire, puis TLS jusqu'à la source (certificat et nom
 vérifiés, autorité de l'établissement ajoutée au magasin du système pour ces seules connexions). Les connecteurs internes
-(Tenable, `integration-http.py`) restent en accès direct par construction : ni paramètre remis, ni lecture dans le script ;
+(Tenable) restent en accès direct par construction : aucun paramètre remis, et `integration-http.py` refuse un mandataire
+reçu pour eux ;
 le courriel (SMTP) aussi. L'assistant, les mises à jour, l'antivirus et ACME ne l'empruntent pas encore (lots P2 et P3). Le
-registre des flux (`USAGE_MANDATAIRE`, `fluxSelonMandataire`) dit, quand il est actif, que la veille passe par lui et remplace
-sa ligne de pare-feu par la sortie vers le mandataire.
+registre des flux (`USAGE_MANDATAIRE`, `fluxSelonMandataire`) dit, quand il est actif, que la veille et AlgoLightHouse passent
+par lui et remplace leur ligne de pare-feu par la sortie vers le mandataire.
 SSE transmet identifiants/version/opération après filtrage des droits ; TanStack
 Query invalide les données concernées. If-Match protège les mises à jour.
 

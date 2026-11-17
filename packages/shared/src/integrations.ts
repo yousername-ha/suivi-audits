@@ -2,11 +2,16 @@
    déclare sa portée (organisation ou SMSI), son schéma de configuration non secrète, les noms de ses champs secrets, le
    flux vers l'extérieur qu'il emprunte (ADR 0097) et la liste fermée des points d'accès de lecture qu'il peut appeler.
    L'API n'appelle jamais ces points d'accès : l'exécutant d'exploitation le fait, dans un script isolé
-   (scripts/integration-http.py) dont la liste recopiée est comparée à celle-ci par un test. Un seul type, « tenable »
-   (Tenable Security Center, ADR 0100, point 6), et deux opérations : « Tester la connexion » et « Synchroniser » (failles et
-   machines, lot V5, rapportées par lots bornés au module Vulnérabilités). */
+   (scripts/integration-http.py) dont la liste recopiée est comparée à celle-ci par un test. Deux types, chacun avec deux
+   opérations, « Tester la connexion » et « Synchroniser », rapportées par lots bornés au module Vulnérabilités :
+   - « tenable » (Tenable Security Center, ADR 0100, point 6, lot V5) : failles et machines ; outil interne, joint
+     directement ;
+   - « algolighthouse » (AlgoLightHouse, éditeur AlgoSecure, lot ALH1) : surface externe (périmètres, hôtes, domaines,
+     alertes, technologies) ; service sur Internet, joint par le mandataire de l'établissement quand il est actif
+     (ADR 0101). */
 import { z } from 'zod';
 import { FiltreGravites, GRAVITES_PAR_DEFAUT, BilanSynchronisation } from './failles-tenable.js';
+import { AdresseAlh, BilanSynchronisationAlh, CLE_API_ALH, ResultatTestAlh } from './surface-externe.js';
 import type { FluxModule } from './flux-externes.js';
 import type { Module } from './permissions.js';
 
@@ -98,8 +103,20 @@ export type ConfigurationTenable = z.infer<typeof ConfigurationTenable>;
 export const VERSION_TENABLE = /^[0-9]{1,4}(?:\.[0-9]{1,6}){0,4}$/;
 export const ResultatTestTenable = z.object({ version: z.string().max(40).regex(VERSION_TENABLE) }).strict();
 
+/* ------------------------------------------------------------------ AlgoLightHouse (lot ALH1) */
+/** Espace AlgoLightHouse : adresse `https://<espace>.algolighthouse.fr` (port 443), délai. Pas d'autorité de certification
+    propre : le certificat de l'éditeur est vérifié par les autorités du système (et celle de l'établissement, si le
+    mandataire inspecte le trafic). */
+export const ConfigurationAlh = z
+  .object({
+    adresse: AdresseAlh,
+    delaiSecondes: DelaiSecondes.default(30),
+  })
+  .strict();
+export type ConfigurationAlh = z.infer<typeof ConfigurationAlh>;
+
 /* ------------------------------------------------------------------ Catalogue */
-export const INTEGRATION_TYPES = ['tenable'] as const;
+export const INTEGRATION_TYPES = ['tenable', 'algolighthouse'] as const;
 export const IntegrationType = z.enum(INTEGRATION_TYPES);
 export type IntegrationType = z.infer<typeof IntegrationType>;
 
@@ -137,11 +154,18 @@ export interface SecretIntegration {
   aide: string;
 }
 
+/** Champs de configuration présentés par l'interface pour un type (le schéma du type reste seul juge). */
+export const CHAMPS_CONFIGURATION = ['adresse', 'autoriteCertification', 'delaiSecondes', 'gravites'] as const;
+export type ChampConfiguration = (typeof CHAMPS_CONFIGURATION)[number];
+
 export interface TypeIntegrationDefinition {
   id: IntegrationType;
   libelle: string;
   description: string;
   portee: PorteeIntegration;
+  /** Champs de configuration affichés, et aide de l'adresse. */
+  champs: readonly ChampConfiguration[];
+  aideAdresse: string;
   configuration: z.ZodType<Record<string, unknown>, unknown>;
   secrets: readonly SecretIntegration[];
   /** Flux vers l'extérieur emprunté (registre de l'ADR 0097) : fermé, rien n'est réclamé ni émis pour ce type. */
@@ -160,6 +184,9 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     description:
       'Lecture seule de Tenable Security Center par clés d’API : test de connexion (version du service) et synchronisation quotidienne des failles détectées et des machines, rangées dans le module Vulnérabilités.',
     portee: 'organisation',
+    champs: ['adresse', 'autoriteCertification', 'delaiSecondes', 'gravites'],
+    aideAdresse:
+      'https://serveur (port 443) ou https://serveur:port, sans chemin ni identifiant. Une adresse du réseau interne est admise. Changer l’adresse ou le port efface les clés.',
     configuration: ConfigurationTenable as unknown as z.ZodType<Record<string, unknown>, unknown>,
     secrets: [
       {
@@ -182,6 +209,40 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
       { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
+    ],
+    operations: ['tester', 'synchroniser'],
+  },
+  {
+    // AlgoLightHouse (ADR 0100, lot ALH1) : lecture seule, liste fermée des seuls points d'accès de la version 1 de l'API
+    // (les adresses sans /v1 sont obsolètes). Jamais d'écriture (commentaires, statut), jamais /api/contacts ni /api/search.
+    // Le descriptif ne documente aucune pagination : aucun paramètre de requête n'est émis.
+    id: 'algolighthouse',
+    libelle: 'AlgoLightHouse',
+    description:
+      'Lecture seule d’AlgoLightHouse (surveillance de la surface exposée sur Internet, éditeur AlgoSecure) par clé d’API : test de connexion (version du service) et synchronisation quotidienne des périmètres, hôtes, domaines, alertes et technologies, rangés dans le module Vulnérabilités (onglet « Surface externe »).',
+    portee: 'organisation',
+    champs: ['adresse', 'delaiSecondes'],
+    aideAdresse:
+      'Adresse de votre espace : https://espace.algolighthouse.fr (port 443), sans chemin ni identifiant. Changer l’adresse efface la clé.',
+    configuration: ConfigurationAlh as unknown as z.ZodType<Record<string, unknown>, unknown>,
+    secrets: [
+      {
+        id: 'cleApi',
+        libelle: 'Clé d’API',
+        motif: CLE_API_ALH,
+        aide: 'Clé d’API de l’espace (en-tête X-API-Key), de 16 à 256 caractères sans espace.',
+      },
+    ],
+    flux: 'algolighthouse',
+    pointsAcces: [
+      { methode: 'GET', chemin: '/api/v1/health' },
+      { methode: 'GET', chemin: '/api/v1/version' },
+      { methode: 'GET', chemin: '/api/v1/alerts' },
+      { methode: 'GET', chemin: '/api/v1/alerts/{uuid}' },
+      { methode: 'GET', chemin: '/api/v1/perimeters' },
+      { methode: 'GET', chemin: '/api/v1/targets/hosts' },
+      { methode: 'GET', chemin: '/api/v1/targets/domains' },
+      { methode: 'GET', chemin: '/api/v1/technologies' },
     ],
     operations: ['tester', 'synchroniser'],
   },
@@ -216,6 +277,8 @@ export interface TypeIntegrationDto {
   libelle: string;
   description: string;
   portee: PorteeIntegration;
+  champs: ChampConfiguration[];
+  aideAdresse: string;
   secrets: { id: string; libelle: string; aide: string }[];
   flux: FluxModule;
   pointsAcces: PointAcces[];
@@ -227,6 +290,8 @@ export const catalogueIntegrations = (): TypeIntegrationDto[] =>
     libelle: t.libelle,
     description: t.description,
     portee: t.portee,
+    champs: [...t.champs],
+    aideAdresse: t.aideAdresse,
     secrets: t.secrets.map((s) => ({ id: s.id, libelle: s.libelle, aide: s.aide })),
     flux: t.flux,
     pointsAcces: t.pointsAcces.map((p) => ({ ...p, ...(p.parametres ? { parametres: [...p.parametres] } : {}) })),
@@ -343,6 +408,7 @@ export const ErreurExecution = z
 /** Résultat admis par opération : borné et typé ; tout champ inattendu est refusé. */
 export const RESULTATS_OPERATION: Record<IntegrationType, Record<OperationIntegration, z.ZodType>> = {
   tenable: { tester: ResultatTestTenable, synchroniser: BilanSynchronisation },
+  algolighthouse: { tester: ResultatTestAlh, synchroniser: BilanSynchronisationAlh },
 };
 
 /** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */

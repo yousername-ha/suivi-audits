@@ -46,6 +46,7 @@ import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
 import { MotsNonMasquesVulnerabilites } from './vulnerabilites/mots-non-masques.js';
 import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
@@ -96,9 +97,14 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Connecteurs (ADR 0076) ; la synchronisation de Tenable range ses lots dans le module Vulnérabilités (ADR 0100, lot V5). */
   const integrations = new Integrations(db, vault, flux);
   const tenable = new SynchronisationTenable(db, flux, integrations);
-  integrations.enLots.synchroniser = tenable;
-  /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. */
+  integrations.enLots['tenable:synchroniser'] = tenable;
+  /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités. */
+  const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc);
+  integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
+  /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. Remis aussi à
+      l'exécutant pour les connecteurs sur Internet (AlgoLightHouse, lot ALH1), jamais pour Tenable. */
   const mandataire = new Mandataire(db, vault);
+  integrations.mandataire = mandataire;
   /* Vulnérabilités, lot V4a : seuils de priorité, rapprochements recalculés après chaque collecte NVD réussie. */
   const reglagePriorite = new ReglagePrioriteVulnerabilites(db);
   const rapprochements = new Rapprochements(db, reglagePriorite);
@@ -131,6 +137,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       produits: new ProduitsSurveilles(db, grc, rapprochements),
       veille,
       tenable,
+      surfaceExterne,
       failles,
       rapprochements,
       priorite: reglagePriorite,

@@ -62,6 +62,7 @@ export * from './vulnerabilites.js';
 export * from './integrations.js';
 export * from './veille-vulnerabilites.js';
 export * from './failles-tenable.js';
+export * from './surface-externe.js';
 export * from './mandataire.js';
 export * from './rapprochement-vulnerabilites.js';
 export * from './priorite-vulnerabilites.js';

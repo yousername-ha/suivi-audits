@@ -74,6 +74,9 @@ export const TABLES_CONFIGURATION = [
   // journal des synchronisations, rattachés aux instances et à leurs exécutions ; effacés avec elles.
   'vulnerabilites_tenable_etat',
   'vulnerabilites_synchronisations',
+  // Synchronisations d'AlgoLightHouse (ADR 0100, lot ALH1) : même règle que pour Tenable.
+  'vulnerabilites_alh_etat',
+  'vulnerabilites_alh_synchronisations',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
@@ -188,6 +191,15 @@ export const TABLES_TRAVAIL = [
   // conversations de l'assistant (travail des utilisateurs, effacées par les deux portées) et effacés avec elles.
   'vulnerabilites_assistant_reperes',
   'vulnerabilites_assistant_propositions',
+  // Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1) : relue à la synchronisation suivante ; liaison des
+  // périmètres saisie par les utilisateurs, rattachée à grc_smsis (effacée avec le travail).
+  'vulnerabilites_alh_perimetres',
+  'vulnerabilites_alh_actifs',
+  'vulnerabilites_alh_alertes',
+  'vulnerabilites_alh_alerte_cves',
+  'vulnerabilites_alh_technologies',
+  'vulnerabilites_alh_technologie_actifs',
+  'vulnerabilites_alh_technologie_cves',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

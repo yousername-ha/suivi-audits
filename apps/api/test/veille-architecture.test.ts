@@ -117,12 +117,18 @@ describe('architecture : veille des vulnérabilités', () => {
     expect(constante(SCRIPT, 'MANDATAIRE_CHAMPS')).toEqual(constante(EXECUTANT, 'MANDATAIRE_CHAMPS'));
   });
 
-  it('le connecteur interne n’emprunte jamais le mandataire : ni lecture dans son script, ni transmission par l’exécutant', () => {
+  it('le connecteur interne n’emprunte jamais le mandataire : refusé par son script, jamais transmis par l’exécutant', () => {
     const INTEGRATION = lire('scripts/integration-http.py');
-    expect(INTEGRATION).not.toMatch(/mandataire|proxy|set_tunnel|"CONNECT/i);
-    // L'exécution d'un connecteur reçoit une demande composée champ par champ, sans paramètre de mandataire.
+    // Seuls les connecteurs sur Internet (AlgoLightHouse, lot ALH1) l'admettent ; tout autre type le refuse avant tout appel.
+    expect(INTEGRATION).toMatch(/^TYPES_MANDATAIRE = \["algolighthouse"\]$/m);
+    expect(INTEGRATION).toContain('if mandataire is not None and type_ not in TYPES_MANDATAIRE:');
+    // L'exécution d'un connecteur reçoit une demande composée champ par champ ; le mandataire n'y est ajouté que pour un
+    // connecteur sur Internet.
     const corps = /def integration\(self, voulus\):([\s\S]*?)\n {4}def /.exec(EXECUTANT)![1]!;
-    expect(corps).toContain('json.dumps({"type": type_, "operation": operation, "configuration"');
-    expect(corps).not.toMatch(/mandataire/i);
+    expect(corps).toContain(
+      'demande = {"type": type_, "operation": operation, "configuration": job["configuration"], "secrets": job["secrets"]}',
+    );
+    expect(corps).toContain('if type_ in INTEGRATIONS_MANDATAIRE and "mandataire" in job:');
+    expect(EXECUTANT).toMatch(/^INTEGRATIONS_MANDATAIRE = \("algolighthouse",\)$/m);
   });
 });

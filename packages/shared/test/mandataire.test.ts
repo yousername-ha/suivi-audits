@@ -158,10 +158,10 @@ describe('réglage du mandataire', () => {
 });
 
 describe('flux et mandataire', () => {
-  it('lot P1 : la veille l’utilise ; Tenable et le courriel en accès direct ; les autres pas encore pris en charge', () => {
+  it('lots P1 et ALH1 : la veille et AlgoLightHouse l’utilisent ; Tenable et le courriel en accès direct ; les autres pas encore pris en charge', () => {
     expect(Object.keys(USAGE_MANDATAIRE).sort()).toEqual([...FLUX_MODULES].sort());
     const g = fluxParUsageMandataire();
-    expect(g.utilise.map((f) => f.id)).toEqual(['veille-vulnerabilites']);
+    expect(g.utilise.map((f) => f.id)).toEqual(['veille-vulnerabilites', 'algolighthouse']);
     expect(g.direct.map((f) => f.id)).toEqual(['courriel', 'tenable']);
     expect(g.non_pris_en_charge.map((f) => f.id)).toEqual(['assistant', 'acme', 'antivirus', 'mises-a-jour']);
   });
@@ -174,8 +174,13 @@ describe('flux et mandataire', () => {
     expect(par.destinations).toEqual(veille.destinations);
     expect(passeParMandataire('veille-vulnerabilites', true)).toBe(true);
     expect(passeParMandataire('veille-vulnerabilites', false)).toBe(false);
+    // AlgoLightHouse (service sur Internet) passe aussi par le mandataire ; sa destination finale est inchangée.
+    const alh = fluxExterne('algolighthouse');
+    expect(fluxSelonMandataire(alh, true).pareFeu).toEqual([PARE_FEU_MANDATAIRE]);
+    expect(fluxSelonMandataire(alh, true).destinations).toEqual(alh.destinations);
+    expect(passeParMandataire('algolighthouse', true)).toBe(true);
     // Les autres flux ne changent pas : aucun n'est présenté comme passant par le mandataire.
-    for (const f of FLUX_EXTERNES.filter((x) => x.id !== 'veille-vulnerabilites')) {
+    for (const f of FLUX_EXTERNES.filter((x) => x.id !== 'veille-vulnerabilites' && x.id !== 'algolighthouse')) {
       expect(fluxSelonMandataire(f, true), f.id).toBe(f);
       expect(passeParMandataire(f.id, true), f.id).toBe(false);
     }

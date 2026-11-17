@@ -1,13 +1,19 @@
 """Script isolé des connecteurs (scripts/integration-http.py, ADR 0076 point 5, ADR 0100 point 6) contre un faux service
 HTTPS local : seule la version sort de /rest/system, liste fermée des points d'accès, aucune redirection suivie, certificat
 toujours vérifié, réponse bornée, erreur sur une ligne sans secret. Synchronisation (ADR 0100, lot V5) : seuls les champs
-listés sortent (jamais pluginText), pagination et bornes, inventaire en échec toléré, score EPSS converti. Données
-entièrement fictives (noms en .invalid, adresses de 192.0.2.0/24, CVE fictives) ; aucun service réel."""
+listés sortent (jamais pluginText), pagination et bornes, inventaire en échec toléré, score EPSS converti.
+AlgoLightHouse (lot ALH1) contre un faux espace local et un faux mandataire (tunnel CONNECT) : GET seulement sur la liste
+fermée, jamais d'écriture, champs en liste blanche (ni note, ni pièces jointes, ni données sensibles des fragments), bornes,
+mandataire refusé pour Tenable. Données entièrement fictives (noms en .invalid et .example, adresses de 192.0.2.0/24 et
+198.51.100.0/24, CVE fictives) ; aucun service réel."""
+import base64
 import http.server
 import importlib.util
 import json
 import os
 from pathlib import Path
+import socket
+import socketserver
 import ssl
 import subprocess
 import sys
@@ -453,6 +459,408 @@ class IntegrationHttp(unittest.TestCase):
         self.assertIsNone(h.nom_machine("srv exemple"))
         self.assertEqual(h.adresse_ip("192.0.2.300,192.0.2.4"), "192.0.2.4")
         self.assertEqual(h.cle_machine(None, "192.0.2.4", "srv.exemple.invalid"), "ip:192.0.2.4|srv.exemple.invalid")
+
+# ------------------------------------------------------------------ AlgoLightHouse (lot ALH1)
+CLE_ALH = "cle-api-fictive-0123456789abcdef"
+MARQUES_INTERDITES = ("NOTE-SENSIBLE", "DONNEE-DEPRECIEE", "PIECE-JOINTE", "DESCRIPTION-FRAGMENT", "MOT-DE-PASSE-FUITE",
+                      "NOTE-FRAGMENT", "DEFAUT-FICTIF", "NOTE-HOTE", "CHAMP-INCONNU-ALH")
+U = "0190a000-0000-7000-8000-%012d"
+
+
+def alh_donnees():
+    """Un espace fictif : deux périmètres, deux hôtes, deux domaines, trois alertes, une technologie."""
+    perimetres = [{"id": U % 1, "name": "Périmètre fictif A", "created_at": "2026-01-01T00:00:00Z", "autre": "CHAMP-INCONNU-ALH"},
+                  {"id": U % 2, "name": "Périmètre fictif B"}, {"id": "pas-un-uuid", "name": "Écarté"}]
+    hotes = [{"id": U % 11, "perimeter_id": U % 1, "status": "monitored", "ip_address": "192.0.2.10", "ip_version": 4,
+              "isp": "FAI fictif", "asn": "64500", "country": "fr", "is_shared_server": False, "is_cdn": False,
+              "is_alive": True, "alive_at": "2026-11-16T08:00:00+01:00", "is_manual_import": False,
+              "alerts_by_criticity": {U % 90: 1}, "created_at": "2026-06-10T14:00:00.175603Z", "updated_at": None,
+              "note": "NOTE-HOTE"},
+             {"id": U % 12, "perimeter_id": U % 2, "status": "new", "ip_address": "198.51.100.20"},
+             {"id": U % 13, "perimeter_id": U % 2, "ip_address": "192.0.2.10, 192.0.2.11"}]
+    domaines = [{"id": U % 21, "perimeter_id": U % 1, "status": "monitored", "domain": "WWW.Exemple-Fictif.example.",
+                 "level": 2, "is_manual_import": True, "ip_address": "192.0.2.10", "parent_target_domain_id": None,
+                 "created_at": "2026-02-01T10:11:01Z"},
+                {"id": U % 22, "perimeter_id": U % 2, "domain": "app.exemple-fictif.example", "level": 2},
+                {"id": U % 23, "domain": "<script>.example"}]
+    alertes = [
+        {"id": U % 31, "title": "Exposed RDP service (fictif)", "status": "untreated", "type_id": U % 81,
+         "perimeter_id": U % 1, "criticity_id": U % 91, "is_verified": True, "created_at": "2026-11-10T10:00:00Z",
+         "updated_at": "2026-11-15T10:00:00Z", "note": "<p>NOTE-SENSIBLE</p>", "data": {"x": "DONNEE-DEPRECIEE"}},
+        {"id": U % 32, "title": "Typosquatting fictif", "status": "in-progress", "type_id": U % 82,
+         "perimeter_id": U % 2, "criticity_id": U % 92, "created_at": "2026-11-09T10:00:00Z",
+         "updated_at": "2026-11-14T10:00:00Z"},
+        {"id": U % 33, "title": "Autre service exposé (fictif)", "status": "completed", "type_id": U % 81,
+         "perimeter_id": U % 1, "criticity_id": U % 92, "created_at": "2026-10-01T10:00:00Z",
+         "updated_at": "2026-10-02T10:00:00Z"},
+    ]
+    details = {
+        U % 31: {"id": U % 31, "title": "Exposed RDP service (fictif)", "status": "untreated",
+                 "note": "<p>NOTE-SENSIBLE</p>", "data": {"x": "DONNEE-DEPRECIEE"},
+                 "type": {"id": U % 81, "value": "vulnerable_service"}, "criticity": {"id": U % 91, "value": "critical", "level": 4},
+                 "perimeter": {"id": U % 1, "name": "Périmètre fictif A"},
+                 "target": {"id": U % 41, "perimeter_id": U % 1, "type": "host", "value": "192.0.2.10",
+                            "target_host_id": U % 11, "target_domain_id": None,
+                            "target_host": {"id": U % 11, "note": "NOTE-HOTE", "isp": "FAI fictif"}},
+                 "defects": [{"name": "DEFAUT-FICTIF", "description": "<p>DEFAUT-FICTIF</p>"}],
+                 "uploads": [{"name": "PIECE-JOINTE"}],
+                 "cves": [{"id": U % 51, "name": "CVE-2026-91001", "score": 9.8}, "CVE-2026-91003", {"x": "pas une CVE"}],
+                 "fragments": [{"id": U % 61, "description": "DESCRIPTION-FRAGMENT", "note": "NOTE-FRAGMENT",
+                                "has_sensitive_data": True, "sensitive_data": {"password": "MOT-DE-PASSE-FUITE"},
+                                "json_data": {"fragment_type": "port", "note": "NOTE-FRAGMENT"},
+                                "alert_cves": [{"cve_id": U % 52, "cve": {"id": "CVE-2026-91002", "x": "MOT-DE-PASSE-FUITE CVE-2026-99999"}}]}],
+                 "completed_at": None, "created_at": "2026-11-10T10:00:00Z"},
+        U % 32: {"id": U % 32, "type": {"id": U % 82, "value": "typosquatting"},
+                 "criticity": {"id": U % 92, "value": "major"},
+                 "target": {"type": "domain", "value": "app.exemple-fictif.example", "target_domain_id": U % 22},
+                 "cves": [], "fragments": []},
+        U % 33: {"id": U % 33, "type": {"id": U % 81, "value": "vulnerable_service"},
+                 "criticity": {"id": U % 92, "value": "major"}, "completed_at": "2026-10-02T10:00:00Z"},
+    }
+    technologies = [{
+        "display_name": "nginx", "vendor": "F5", "product": "Nginx", "technology": "", "last_scanned_at": "2026-11-16T00:00:00Z",
+        "active_versions": [{"version": "1.18.0", "assets": [{"id": U % 11, "label": "192.0.2.10", "type": "host"},
+                                                             {"id": U % 21, "label": "www.exemple-fictif.example", "type": "domain"},
+                                                             {"id": "x", "label": "écarté", "type": "host"}],
+                             "cves": [{"cve": "CVE-2026-92001", "title": "Faille fictive", "cvss": 7.5, "epss": 0.42,
+                                       "severity": "HIGH", "has_poc": True, "is_exploited": False,
+                                       "published_at": "2026-03-01T00:00:00Z", "autre": "CHAMP-INCONNU-ALH"},
+                                      {"cve": "CVE-2026-92002", "epss": 42, "cvss": 11, "is_exploited": True}]}],
+        "inactive_assets": [{"id": U % 22, "label": "app.exemple-fictif.example", "type": "domain"}],
+    }, {"vendor": None}]
+    return {"/api/v1/perimeters": perimetres, "/api/v1/targets/hosts": hotes, "/api/v1/targets/domains": domaines,
+            "/api/v1/alerts": alertes, "/api/v1/technologies": technologies, "details": details}
+
+
+class FauxAlh(http.server.BaseHTTPRequestHandler):
+    """Faux espace AlgoLightHouse : listes en tableaux directs, détail d'une alerte, santé et version."""
+
+    protocol_version = "HTTP/1.0"
+    donnees = {}
+    recues = []
+    absentes = set()
+
+    def log_message(self, *args):
+        pass
+
+    def repondre(self, code, valeur):
+        corps = json.dumps(valeur).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(corps)))
+        self.end_headers()
+        self.wfile.write(corps)
+
+    def traiter(self):
+        FauxAlh.recues.append({"methode": self.command, "chemin": self.path, "cle": self.headers.get("X-API-Key"),
+                               "mandataire": self.headers.get("Proxy-Authorization")})
+        if self.path == "/api/v1/health":
+            return self.repondre(200, {"status": FauxAlh.donnees.get("sante", "ok")})
+        if self.path == "/api/v1/version":
+            return self.repondre(200, {"version": "1.14.0", "date": "2026-11-05", "autre": "CHAMP-INCONNU-ALH"})
+        if self.path in FauxAlh.donnees:
+            return self.repondre(200, FauxAlh.donnees[self.path])
+        if self.path.startswith("/api/v1/alerts/"):
+            ident = self.path.rsplit("/", 1)[1]
+            if ident in FauxAlh.absentes or ident not in FauxAlh.donnees["details"]:
+                return self.repondre(404, {"message": "introuvable"})
+            return self.repondre(200, FauxAlh.donnees["details"][ident])
+        return self.repondre(404, {})
+
+    do_GET = do_POST = do_PUT = do_PATCH = do_DELETE = traiter
+
+
+class FauxMandataire(socketserver.ThreadingTCPServer):
+    """Faux mandataire HTTP : n'accepte que CONNECT, exige au besoin l'authentification simple, puis relaie les octets."""
+
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def __init__(self):
+        super().__init__(("127.0.0.1", 0), TraitementMandataire)
+        self.demandes = []
+        self.attendu = None
+
+
+class TraitementMandataire(socketserver.BaseRequestHandler):
+    def handle(self):
+        srv, client = self.server, self.request
+        brut = b""
+        while b"\r\n\r\n" not in brut:
+            d = client.recv(4096)
+            if not d:
+                return
+            brut += d
+        tete, _, reste = brut.partition(b"\r\n\r\n")
+        lignes = tete.decode("latin-1").split("\r\n")
+        entetes = {k.strip().lower(): val.strip() for k, _, val in (x.partition(":") for x in lignes[1:])}
+        srv.demandes.append({"ligne": lignes[0], "entetes": entetes})
+        methode, cible, _ = lignes[0].split(" ", 2)
+        if methode != "CONNECT":
+            client.sendall(b"HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n")
+            return
+        if srv.attendu is not None:
+            jeton = "Basic " + base64.b64encode(("%s:%s" % srv.attendu).encode("utf-8")).decode("ascii")
+            if entetes.get("proxy-authorization") != jeton:
+                client.sendall(b"HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"fictif\"\r\nContent-Length: 0\r\n\r\n")
+                return
+        hote, port = cible.rsplit(":", 1)
+        dest = socket.create_connection(("127.0.0.1" if hote == "localhost" else hote, int(port)), timeout=10)
+        client.sendall(b"HTTP/1.1 200 Connection established\r\n\r\n")
+        if reste:
+            dest.sendall(reste)
+
+        def copier(de, vers):
+            try:
+                while True:
+                    d = de.recv(65536)
+                    if not d:
+                        break
+                    vers.sendall(d)
+            except OSError:
+                pass
+            finally:
+                try:
+                    vers.shutdown(socket.SHUT_WR)
+                except OSError:
+                    pass
+        t = threading.Thread(target=copier, args=(dest, client), daemon=True)
+        t.start()
+        copier(client, dest)
+        t.join(10)
+        dest.close()
+
+
+class AlgoLightHouse(unittest.TestCase):
+    """Connecteur AlgoLightHouse contre un faux espace local. L'adresse de l'éditeur est remplacée par celle du faux service
+    (ADRESSE_ALH élargie au seul localhost pour le test) ; le certificat du faux service est reconnu par le contexte de test."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.dossier = tempfile.TemporaryDirectory()
+        d = Path(cls.dossier.name)
+        cls.ca = certificat(d, "alh")
+        cls.serveur = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FauxAlh)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        ctx.load_cert_chain(str(d / "alh.crt"), str(d / "alh.key"))
+        cls.serveur.socket = ctx.wrap_socket(cls.serveur.socket, server_side=True)
+        cls.port = cls.serveur.server_address[1]
+        threading.Thread(target=cls.serveur.serve_forever, daemon=True).start()
+        cls.mandataire = FauxMandataire()
+        threading.Thread(target=cls.mandataire.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        for srv in (cls.serveur, cls.mandataire):
+            srv.shutdown()
+            srv.server_close()
+        cls.dossier.cleanup()
+
+    def setUp(self):
+        FauxAlh.donnees, FauxAlh.recues, FauxAlh.absentes = alh_donnees(), [], set()
+        self.mandataire.demandes, self.mandataire.attendu = [], None
+        reel = h.contexte
+        self.reconnu = True
+        for cible, valeur in (("ADRESSE_ALH", h.re.compile(r"^https://localhost:%d$" % self.port)),
+                              ("contexte", lambda ca: reel(self.ca if self.reconnu else ca))):
+            p = patch.object(h, cible, valeur)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def demande(self, operation="tester", **extra):
+        p = {"type": "algolighthouse", "operation": operation,
+             "configuration": {"adresse": "https://localhost:%d" % self.port, "delaiSecondes": 5},
+             "secrets": {"cleApi": CLE_ALH}}
+        p.update(extra)
+        return p
+
+    def propre(self, sortie):
+        texte = json.dumps(sortie, ensure_ascii=False)
+        self.assertNotIn(CLE_ALH, texte)
+        for marque in MARQUES_INTERDITES:
+            self.assertNotIn(marque, texte)
+        if sortie.get("erreur") is not None:
+            self.assertNotIn("\n", sortie["erreur"])
+            self.assertLessEqual(len(sortie["erreur"]), h.ERREUR_MAX)
+
+    def lecture_seule(self):
+        """Chaque appel reçu est une lecture (GET) d'un chemin de la liste fermée, sans paramètre de requête."""
+        for r in FauxAlh.recues:
+            self.assertEqual(r["methode"], "GET", r)
+            self.assertNotIn("?", r["chemin"])
+            self.assertTrue(h.point_admis("algolighthouse", "GET", r["chemin"]), r)
+            self.assertTrue(r["chemin"].startswith("/api/v1/"), r)
+            self.assertEqual(r["cle"], CLE_ALH)
+
+    def test_tester_reads_health_then_version_and_only_the_version_leaves(self):
+        sortie = h.executer(self.demande())
+        self.assertEqual(sortie, {"ok": True, "resultat": {"version": "1.14.0"}, "erreur": None})
+        self.assertEqual([r["chemin"] for r in FauxAlh.recues], ["/api/v1/health", "/api/v1/version"])
+        self.lecture_seule()
+        self.propre(sortie)
+        FauxAlh.donnees["sante"] = "unavailable"
+        sortie = h.executer(self.demande())
+        self.assertFalse(sortie["ok"])
+        self.assertIn("indisponible", sortie["erreur"])
+
+    def test_synchronisation_keeps_only_listed_fields_and_never_writes(self):
+        sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.propre(sortie)
+        self.lecture_seule()
+        self.assertEqual(sortie["resultat"], {"perimetres": 2, "hotes": 2, "domaines": 2, "alertes": 3, "details": 3,
+                                              "technologies": 1, "ecartes": 5, "tronque": False})
+        par = {}
+        for e in sortie["elements"]:
+            par.setdefault(e["type"], []).append(e)
+        self.assertEqual(par["perimetre"][0], {"type": "perimetre", "id": U % 1, "nom": "Périmètre fictif A"})
+        self.assertEqual(par["hote"][0], {
+            "type": "hote", "id": U % 11, "perimetre": U % 1, "statut": "monitored", "adresse": "192.0.2.10",
+            "fai": "FAI fictif", "asn": "64500", "pays": "FR", "mutualise": False, "cdn": False, "joignable": True,
+            "joignableLe": "2026-11-16T07:00:00.000Z", "importManuel": False, "creeLe": "2026-06-10T14:00:00.000Z",
+            "majLe": None})
+        self.assertEqual(par["domaine"][0]["domaine"], "www.exemple-fictif.example")
+        self.assertEqual(par["domaine"][1]["perimetre"], U % 2)
+        a1 = next(a for a in par["alerte"] if a["id"] == U % 31)
+        self.assertEqual(a1, {
+            "type": "alerte", "id": U % 31, "perimetre": U % 1, "typeAlerte": "vulnerable_service", "criticite": "critical",
+            "statut": "untreated", "titre": "Exposed RDP service (fictif)", "verifiee": True, "detail": True,
+            "cibleType": "host", "cibleValeur": "192.0.2.10", "cibleHote": U % 11, "cibleDomaine": None,
+            "cves": ["CVE-2026-91001", "CVE-2026-91003", "CVE-2026-91002"], "creeLe": "2026-11-10T10:00:00.000Z",
+            "majLe": "2026-11-15T10:00:00.000Z", "termineeLe": None})
+        # Une valeur au-delà du premier niveau d'un objet CVE n'est jamais lue (CVE-2026-99999 dans un texte libre).
+        self.assertNotIn("CVE-2026-99999", json.dumps(sortie))
+        self.assertEqual(next(a for a in par["alerte"] if a["id"] == U % 33)["termineeLe"], "2026-10-02T10:00:00.000Z")
+        self.assertEqual(par["technologie"], [{"type": "technologie", "cle": "f5|nginx|", "nom": "nginx", "editeur": "F5",
+                                              "produit": "Nginx", "technologie": None, "derniere": "2026-11-16T00:00:00.000Z",
+                                              "tronquee": False}])
+        self.assertEqual([(x["version"], x["typeActif"], x["libelle"], x["actuel"]) for x in par["technologie_actif"]],
+                         [("1.18.0", "hote", "192.0.2.10", True), ("1.18.0", "domaine", "www.exemple-fictif.example", True),
+                          ("", "domaine", "app.exemple-fictif.example", False)])
+        self.assertEqual(par["technologie_cve"][0], {
+            "type": "technologie_cve", "technologie": "f5|nginx|", "version": "1.18.0", "cve": "CVE-2026-92001",
+            "titre": "Faille fictive", "cvss": 7.5, "epss": 0.42, "severite": "high", "preuve": True, "exploitee": False,
+            "publieeLe": "2026-03-01T00:00:00.000Z"})
+        # EPSS hors de 0 à 1 et score hors de 0 à 10 : écartés, jamais convertis.
+        self.assertEqual((par["technologie_cve"][1]["epss"], par["technologie_cve"][1]["cvss"]), (None, None))
+        # Ordre : chaque technologie précède ses actifs et ses CVE.
+        types = [e["type"] for e in sortie["elements"]]
+        self.assertLess(types.index("technologie"), types.index("technologie_actif"))
+        self.assertEqual(types[: len(par["perimetre"])], ["perimetre"] * len(par["perimetre"]))
+
+    def test_alerts_without_detail_get_type_and_criticity_from_known_identifiers(self):
+        with patch.dict(h.BORNES_ALH, {"details": 2}):
+            sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.assertTrue(sortie["resultat"]["tronque"])
+        self.assertEqual(sortie["resultat"]["details"], 2)
+        a3 = next(e for e in sortie["elements"] if e["type"] == "alerte" and e["id"] == U % 33)
+        # Plus ancienne, son détail n'est pas lu : type et criticité viennent des identifiants vus dans d'autres détails.
+        self.assertEqual((a3["detail"], a3["typeAlerte"], a3["criticite"], a3["cves"], a3["cibleType"]),
+                         (False, "vulnerable_service", "major", [], None))
+        self.assertNotIn("/api/v1/alerts/" + U % 33, [r["chemin"] for r in FauxAlh.recues])
+
+    def test_bounds_missing_details_and_duration_make_an_incomplete_synchronisation(self):
+        with patch.dict(h.BORNES_ALH, {"alertes": 2, "hotes": 1}):
+            sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["resultat"]["tronque"])
+        self.assertEqual((sortie["resultat"]["alertes"], sortie["resultat"]["hotes"]), (2, 1))
+        FauxAlh.absentes = {U % 32}
+        sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"])
+        self.assertTrue(sortie["resultat"]["tronque"])
+        self.assertEqual(sortie["resultat"]["details"], 2)
+        horloge = iter([0] + [10 ** 6] * 50)
+        client = h.Client("algolighthouse", self.demande()["configuration"], h.cle_alh({"cleApi": CLE_ALH}))
+        with self.assertRaises(h.Refus):
+            h.alh_synchroniser(client, {}, horloge=lambda: next(horloge))
+
+    def test_writes_and_paths_outside_the_closed_list_are_refused_before_any_call(self):
+        client = h.Client("algolighthouse", self.demande()["configuration"], h.cle_alh({"cleApi": CLE_ALH}))
+        for methode, chemin in (("POST", "/api/alerts/%s/comments" % (U % 31)), ("PUT", "/api/alerts/%s/status" % (U % 31)),
+                                ("POST", "/api/v1/alerts/%s/comments" % (U % 31)), ("PUT", "/api/v1/alerts/" + U % 31),
+                                ("GET", "/api/alerts"), ("GET", "/api/contacts"), ("POST", "/api/search"),
+                                ("GET", "/api/v1/targets/keywords"), ("GET", "/api/alert-types"), ("DELETE", "/api/v1/alerts"),
+                                ("GET", "/api/v1/alerts/../contacts"), ("GET", "/api/v1/alerts?status=untreated")):
+            with self.subTest(chemin=chemin), self.assertRaises(h.Refus):
+                client.requete(methode, chemin)
+        self.assertEqual(FauxAlh.recues, [])
+        with self.assertRaises(h.Refus):
+            client.requete("GET", "/api/v1/alerts", parametres={"status": 1})
+        # Toute la liste fermée du type est en lecture.
+        self.assertEqual({m for m, _ in h.POINTS_ACCES["algolighthouse"]}, {"GET"})
+
+    def test_address_key_and_configuration_are_checked_before_any_call(self):
+        p = patch.object(h, "ADRESSE_ALH", h.re.compile(r"^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.algolighthouse\.fr$"))
+        p.start()
+        self.addCleanup(p.stop)
+        for adresse in ("https://localhost:%d" % self.port, "https://espace.algolighthouse.fr:8443",
+                        "https://espace.algolighthouse.fr.exemple.invalid", "http://espace.algolighthouse.fr",
+                        "https://espace.algolighthouse.fr/api", "https://compte@espace.algolighthouse.fr"):
+            with self.subTest(adresse=adresse):
+                sortie = h.executer(self.demande(configuration={"adresse": adresse, "delaiSecondes": 5}))
+                self.assertFalse(sortie["ok"])
+                self.assertIn("Adresse refusée", sortie["erreur"])
+        sortie = h.executer(self.demande(configuration={"adresse": "https://espace.algolighthouse.fr", "autoriteCertification": self.ca}))
+        self.assertIn("pas d'autorité de certification propre", sortie["erreur"])
+        for cle in ("courte", "avec espace 0123456789", "x" * 257, None):
+            with self.subTest(cle=cle):
+                sortie = h.executer(self.demande(secrets={"cleApi": cle}))
+                self.assertIn("Clé d'API absente", sortie["erreur"])
+        self.assertEqual(FauxAlh.recues, [])
+        self.assertTrue(h.ADRESSE_ALH.fullmatch("https://espace-fictif.algolighthouse.fr"))
+
+    def mandataire_params(self, **extra):
+        m = {"hote": "127.0.0.1", "port": self.mandataire.server_address[1], "identifiant": "", "motDePasse": "",
+             "autorite": ""}
+        m.update(extra)
+        return m
+
+    def test_through_the_proxy_the_key_never_reaches_it_and_basic_auth_goes_to_the_proxy_only(self):
+        self.mandataire.attendu = ("compte-fictif", "Mdp-fictif:42")
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params(identifiant="compte-fictif", motDePasse="Mdp-fictif:42")))
+        self.assertEqual(sortie, {"ok": True, "resultat": {"version": "1.14.0"}, "erreur": None})
+        self.assertEqual([d["ligne"] for d in self.mandataire.demandes], ["CONNECT localhost:%d HTTP/1.1" % self.port] * 2)
+        for d in self.mandataire.demandes:
+            self.assertNotIn(CLE_ALH, json.dumps(d))
+        # Le service reçoit la clé, jamais l'authentification du mandataire.
+        self.assertEqual({(r["cle"], r["mandataire"]) for r in FauxAlh.recues}, {(CLE_ALH, None)})
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params()))
+        self.assertIn("exige une authentification (code 407)", sortie["erreur"])
+        self.assertNotIn("Mdp-fictif", json.dumps(sortie))
+
+    def test_through_the_proxy_the_certificate_is_still_verified_and_the_authority_can_be_added(self):
+        self.reconnu = False  # autorités du système seulement : le faux service n'y est pas
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params()))
+        self.assertFalse(sortie["ok"])
+        self.assertIn("Certificat du service refusé à travers le mandataire", sortie["erreur"])
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params(autorite=self.ca)))
+        self.assertTrue(sortie["ok"], sortie)
+
+    def test_malformed_proxy_or_proxy_for_tenable_calls_nothing(self):
+        for m in ("http://mandataire.exemple.invalid:3128", {"hote": "x"}, self.mandataire_params(port="3128"),
+                  self.mandataire_params(identifiant="a:b"), self.mandataire_params(autorite="pas un certificat")):
+            with self.subTest(mandataire=str(m)[:40]):
+                sortie = h.executer(self.demande(mandataire=m))
+                self.assertIn("Paramètres du mandataire illisibles", sortie["erreur"])
+        # Tenable est interne : un mandataire reçu pour lui est refusé, rien n'est appelé.
+        sortie = h.executer({"type": "tenable", "operation": "tester", "configuration": {"adresse": "https://localhost:%d" % self.port},
+                             "secrets": {"accessKey": CLE_ACCES, "secretKey": CLE_SECRETE}, "mandataire": self.mandataire_params()})
+        self.assertIn("Mandataire refusé", sortie["erreur"])
+        self.assertEqual((FauxAlh.recues, self.mandataire.demandes), ([], []))
+
+    def test_iso_dates_and_field_parsers(self):
+        self.assertEqual(h.instant_iso("2024-02-01T10:11:01.175603Z"), "2024-02-01T10:11:01.000Z")
+        self.assertEqual(h.instant_iso("2026-11-16T08:00:00+01:00"), "2026-11-16T07:00:00.000Z")
+        for refusee in ("2024-02-01", "2024-02-01T10:11:01", "2024-13-01T00:00:00Z", "demain", 1794787200, None):
+            self.assertIsNone(h.instant_iso(refusee))
+        self.assertEqual(h.adresse_unique("2001:DB8::1"), "2001:db8::1")
+        self.assertIsNone(h.adresse_unique("192.0.2.1, 192.0.2.2"))
+        self.assertEqual(h.domaine_alh("*.Exemple.example"), "*.exemple.example")
+        self.assertIsNone(h.domaine_alh("exemple.example/chemin"))
+        self.assertEqual(h.cves_de({"a": "cve-2026-90001", "b": {"c": "CVE-2026-90002"}}), ["CVE-2026-90001"])
+
 
 
 class Adresse(unittest.TestCase):
