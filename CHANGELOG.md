@@ -8,6 +8,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+### Corrigé
+
+- **Connexion : plus de formulaire vide après le code de double authentification.** Une fois le code validé, la page
+  attendait le choix de la destination (étape des flux de l'installation) en réaffichant une seconde le formulaire de
+  connexion vide ; un panneau « Ouverture de votre espace… » le remplace. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Ajouté
 
 - **Étiquette de version par un workflow approuvé** ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) :
