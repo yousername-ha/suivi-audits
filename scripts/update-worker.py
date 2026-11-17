@@ -493,6 +493,7 @@ class Worker:
         if not re.fullmatch(r"[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?", site):
             raise Failure("Adresse du site invalide")
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         with socket.create_connection(("gateway", 8443), timeout=5) as brut:
