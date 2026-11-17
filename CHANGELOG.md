@@ -6,7 +6,43 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action.
+**Aucune action sur le serveur, aucune migration.**
+
+- **Mise à jour depuis l'interface** : à la fin de l'opération, le frontal du site (`gateway`) est mis à jour seulement si son
+  contenu change ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)). Un frontal installé avant cette règle n'a
+  pas d'empreinte : il est mis à jour une fois, à la première mise à jour web, avec une coupure de quelques secondes de la page
+  de suivi. Si elle ne revient pas après une minute, recharger la page.
+- L'encadré qui annonce ce redémarrage est servi par le frontal en service : il n'apparaît qu'à partir des mises à jour lancées
+  depuis une version qui le contient. La mise à jour qui l'introduit montre seulement le texte de l'étape.
+- **Mise à jour par le script du serveur** (`scripts/mettre-a-jour.sh`) : inchangée, elle recrée toute la pile, frontal compris.
+
+_(Session « Projet audit_suivi Coeur ».)_
+
+### Ajouté
+
+- **Empreinte du frontal dans l'image `web`** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) : calculée à la
+  construction (`/etc/suivi-frontal.sha256`, lecture seule), sur le contenu seul de tout ce que le frontal exécute ou sert :
+  Caddy, `Caddyfile.gateway` et `Caddyfile.internal`, `demarrer-gateway`, la page de maintenance entière (thème et polices),
+  busybox et son chargeur. Chemins triés, sans date : deux constructions des mêmes fichiers donnent la même empreinte.
+  _(Session « Projet audit_suivi Coeur ».)_
+- **Coupure du frontal annoncée sur la page de maintenance** : l'état publié porte un indicateur `coupure` pendant la
+  recréation du frontal ; la page affiche alors un encadré (redémarrage du frontal, interruption de quelques secondes, reprise
+  automatique, recharger si la page ne revient pas après une minute), repris par l'avis de connexion si la connexion se perd.
+  _(Session « Projet audit_suivi Coeur ».)_
+
+### Modifié
+
+- **Frontal mis à jour à la demande** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), modifie l'ADR 0061) : à
+  la fin d'une mise à jour web réussie, l'exécutant de la cible compare l'empreinte du frontal en service à celle de l'image
+  `web` vérifiée de la cible (lue dans l'image épinglée par son empreinte de dépôt, sans réseau). Identiques : rien n'est
+  touché, aucune coupure. Différentes, ou frontal sans empreinte : procédure de la 7.2.2 inchangée (configuration validée dans
+  un conteneur éphémère, même certificat exigé, ancien frontal rétabli sinon). Empreinte de la cible illisible : frontal non
+  touché, avertissement « Frontal non mis à jour ». _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Exception ponctuelle de la 7.2.2** : constante `FRONTAL_AVEC_LA_VERSION` et test garde-fou qui obligeait à la retirer,
+  remplacés par la règle générale de l'ADR 0103. _(Session « Projet audit_suivi Coeur ».)_
 
 ## [7.2.2] — 2026-11-17
 

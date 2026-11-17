@@ -392,16 +392,18 @@ class Updates(unittest.TestCase):
         self.assertFalse((self.data/'etat/recus-mises-a-jour').exists())
 
 
-class FrontalPonctuel(unittest.TestCase):
-    """Exception ponctuelle du RSSI du 17/11/2026 (ADR 0061, addendum) : la mise à jour web vers FRONTAL_AVEC_LA_VERSION met
-    aussi le frontal à jour, à la fin. À retirer avec la constante à la version suivante (voir le garde-fou ci-dessous)."""
+class FrontalALaDemande(unittest.TestCase):
+    """Frontal mis à jour à la demande (ADR 0103, qui remplace l'exception ponctuelle de la 7.2.2) : à la fin d'une mise à jour
+    web réussie, le frontal n'est recréé que si son empreinte diffère de celle de l'image web vérifiée de la cible, avec la
+    coupure annoncée sur la page de maintenance."""
     WEB = 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'a' * 64
+    CIBLE = 'e' * 64
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.cible = m.FRONTAL_AVEC_LA_VERSION or '7.2.2'
+        self.cible = '7.3.0'
         (self.root/'.env').write_text(f'APP_VERSION={self.cible}\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION=7.1.0\n')
         self.data = self.root/'data'
         (self.data/'etat').mkdir(parents=True)
@@ -412,12 +414,23 @@ class FrontalPonctuel(unittest.TestCase):
         self.validation_refusee = False
         self.certificats = ['c' * 64]
         self.ordre = []
+        # Empreinte lue dans l'image de la cible, et dans le frontal en service (None : fichier absent, image antérieure).
+        self.empreinte_cible = self.CIBLE
+        self.empreinte_en_service = None
 
     def gateway_version(self):
         return self.w.env().get('GATEWAY_VERSION')
 
     def faux_run(self, args, timeout=120, extra_env=None, input_text=None):
-        self.journal.append((args, extra_env, self.gateway_version()))
+        self.journal.append((args, extra_env, self.gateway_version(), self.w.state.get('coupure')))
+        if args[:2] == ['docker', 'run']:
+            self.ordre.append('empreinte-cible')
+            if isinstance(self.empreinte_cible, Exception): raise self.empreinte_cible
+            return self.empreinte_cible + '\n'
+        if args[:5] == ['docker', 'compose', 'exec', '-T', 'gateway'] and args[5:] == ['cat', m.FRONTAL_EMPREINTE]:
+            self.ordre.append('empreinte-service')
+            if self.empreinte_en_service is None: raise m.Failure('Commande interrompue')
+            return self.empreinte_en_service + '\n'
         if args[:3] == ['docker', 'image', 'inspect']:
             self.ordre.append('image')
             return json.dumps([self.WEB])
@@ -435,11 +448,20 @@ class FrontalPonctuel(unittest.TestCase):
         return self.certificats[0] if len(self.certificats) == 1 else self.certificats.pop(0)
 
     def reprendre(self, target=None, **job):
-        self.w.job = {'id': self.id, 'kind': 'install', 'target': target or self.cible, 'installed': '7.2.1', 'handoff': True,
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': target or self.cible, 'installed': '7.2.2', 'handoff': True,
                       'images': {'api': 'x', 'web': self.WEB, 'updater': 'y'}, **job}
         self.w.publish(id=self.id, status='running', phase='verifying', startedAt=m.now(), maintenance=True)
+        self.messages = []
+        publier = self.w.publish
+        def publication(**changes):
+            # Changements de l'indicateur de coupure, dans l'ordre des commandes ; messages d'étape publiés.
+            if 'coupure' in changes and changes['coupure'] != self.w.state.get('coupure'):
+                self.ordre.append('coupure' if changes['coupure'] else 'fin de coupure')
+            if 'message' in changes: self.messages.append(changes['message'])
+            publier(**changes)
         with patch.object(self.w, 'health', side_effect=lambda v: self.ordre.append('sante')) as health, \
                 patch.object(self.w, 'cli', return_value=''), patch.object(self.w, 'run', side_effect=self.faux_run), \
+                patch.object(self.w, 'publish', side_effect=publication), \
                 patch.object(self.w, 'frontal_sonde', side_effect=lambda: self.fausse_sonde()), \
                 patch.object(m.time, 'sleep'), patch.object(m, 'FRONTAL_DELAI', 0):
             self.w.recover()
@@ -447,6 +469,9 @@ class FrontalPonctuel(unittest.TestCase):
 
     def recu(self):
         return json.loads((self.data/'etat/recus-mises-a-jour'/f'{self.id}.json').read_text())
+
+    def etat_public(self):
+        return json.loads((self.w.public/'status.json').read_text())
 
     def test_sonde_releve_le_certificat_servi_en_https_local(self):
         """Sonde réelle sur un serveur TLS local : empreinte du certificat présenté et réponse « 200 » de /healthz."""
@@ -484,38 +509,106 @@ class FrontalPonctuel(unittest.TestCase):
             with self.assertRaises(m.Failure): self.w.frontal_sonde()
         connexion.assert_not_called()
 
-    def test_garde_fou_constante_a_retirer_a_la_version_suivante(self):
-        """Échoue dès que le dépôt passe à une version postérieure : retirer alors FRONTAL_AVEC_LA_VERSION, frontal_ponctuel()
-        et ces tests (décision du RSSI : « remettre comme avant après la mise à jour »)."""
-        depot = json.loads((ROOT/'package.json').read_text())['version']
-        if m.FRONTAL_AVEC_LA_VERSION:
-            self.assertGreaterEqual(m.version(m.FRONTAL_AVEC_LA_VERSION), m.version(depot),
-                                    'FRONTAL_AVEC_LA_VERSION désigne une version déjà publiée : retirer l’exception ponctuelle.')
+    def test_empreinte_calculee_a_la_construction_de_l_image_web(self):
+        """L'image web écrit, à sa construction, l'empreinte lue par l'exécutant, au chemin qu'il lit : contenu de tout ce que
+        le frontal exécute ou sert, chemins triés, après la dernière copie de ces fichiers."""
+        dockerfile = (ROOT/'docker/web.Dockerfile').read_text()
+        calcul = dockerfile.index(f'> {m.FRONTAL_EMPREINTE}')
+        for fichier in ('/usr/local/bin/caddy', '/usr/local/bin/demarrer-gateway', '/etc/caddy/Caddyfile.gateway',
+                        '/etc/caddy/Caddyfile.internal', '/bin/busybox', '/lib/ld-musl-*.so.1', 'find /maintenance -type f'):
+            self.assertIn(fichier, dockerfile[dockerfile.rindex('RUN ', 0, calcul):calcul])
+        self.assertIn('LC_ALL=C sort', dockerfile[:calcul])
+        self.assertIn(f'chmod 0444 {m.FRONTAL_EMPREINTE}', dockerfile)
+        copies = [ligne for ligne in dockerfile.splitlines() if ligne.startswith('COPY ')
+                  and any(c in ligne for c in ('/maintenance', '/etc/caddy', 'demarrer-gateway', '/usr/local/bin/caddy'))]
+        self.assertGreaterEqual(len(copies), 6)
+        self.assertTrue(all(dockerfile.index(c) < calcul for c in copies))
+        # Le frontal du compose est bien cette image (étiquette GATEWAY_VERSION).
+        self.assertIn('image: ghcr.io/yousername-ha/suivi-audits-web:${GATEWAY_VERSION:-${APP_VERSION}}',
+                      (ROOT/'docker-compose.yml').read_text())
 
-    def test_version_designee_valide_puis_recree_le_frontal_a_la_fin(self):
+    def test_frontal_sans_empreinte_valide_puis_recree_le_frontal_a_la_fin(self):
+        # Frontal en service d'une image antérieure à l'ADR 0103 : pas d'empreinte, il est mis à jour.
         health = self.reprendre()
         health.assert_called_once_with(self.cible)
-        # Santé et données d'abord, puis image vérifiée, validation dans un conteneur éphémère, certificat relevé,
-        # recréation et contrôle du nouveau frontal (même certificat).
-        self.assertEqual(self.ordre, ['sante', 'image', 'validation', 'sonde', 'recreation', 'sonde'])
+        # Santé et données d'abord, puis empreintes, image vérifiée, validation dans un conteneur éphémère, certificat relevé,
+        # coupure annoncée, recréation et contrôle du nouveau frontal (même certificat), coupure retirée.
+        self.assertEqual(self.ordre, ['sante', 'empreinte-cible', 'empreinte-service', 'image', 'validation', 'sonde', 'coupure',
+                                      'recreation', 'sonde', 'fin de coupure'])
+        lecture = next(c for c in self.journal if c[0][:2] == ['docker', 'run'])
+        # Empreinte de la cible lue dans l'image vérifiée, désignée par son empreinte de dépôt, sans réseau ni téléchargement.
+        self.assertEqual(lecture[0], ['docker', 'run', '--rm', '--pull', 'never', '--network', 'none', '--cap-drop', 'ALL',
+                                      '--read-only', '--entrypoint', 'cat', self.WEB, '/etc/suivi-frontal.sha256'])
         validation = next(c for c in self.journal if c[0][:3] == ['docker', 'compose', 'run'])
         self.assertEqual(validation[0][3:], ['--rm', '--no-deps', 'gateway', '/usr/local/bin/demarrer-gateway', '--valider'])
         # La nouvelle image est désignée pour la seule validation ; .env n'est pas encore modifié, aucun réglage TLS transmis.
         self.assertEqual(validation[1], {'GATEWAY_VERSION': self.cible})
         self.assertEqual(validation[2], '7.1.0')
+        self.assertFalse(validation[3])
         recreation = next(c for c in self.journal if c[0][:3] == ['docker', 'compose', 'up'])
         self.assertEqual(recreation[0], ['docker', 'compose', 'up', '-d', '--no-deps', 'gateway'])
         self.assertIsNone(recreation[1])
         self.assertEqual(recreation[2], self.cible)
+        # Coupure publiée dans l'état public pendant la recréation.
+        self.assertIs(recreation[3], True)
         self.assertEqual(self.gateway_version(), self.cible)
         self.assertEqual((self.w.state['status'], self.w.state['maintenance']), ('success', False))
+        self.assertIs(self.etat_public()['coupure'], False)
+        self.assertIn('Redémarrage du frontal du site. Cette page peut s’interrompre quelques secondes, puis elle reprend toute seule.',
+                      self.messages)
+        self.assertFalse(any('page de maintenance' in message for message in self.messages))
         self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
         self.assertIn('mis à jour de 7.1.0', (self.w.private/f'{self.id}.log').read_text())
+
+    def test_empreintes_differentes_ou_illisibles_en_service_le_frontal_est_mis_a_jour(self):
+        for en_service in ('f' * 64, 'pas une empreinte'):
+            self.setUp()
+            self.empreinte_en_service = en_service
+            self.reprendre()
+            self.assertEqual(self.ordre.count('recreation'), 1)
+            self.assertEqual(self.gateway_version(), self.cible)
+            self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
+
+    def test_empreintes_identiques_rien_n_est_touche(self):
+        self.empreinte_en_service = self.CIBLE
+        env = (self.root/'.env').read_text()
+        self.reprendre()
+        self.assertEqual(self.ordre, ['sante', 'empreinte-cible', 'empreinte-service'])
+        # Aucune validation, aucune recréation, GATEWAY_VERSION inchangée, ni coupure ni message d'étape publiés.
+        self.assertEqual([c[0][:3] for c in self.journal], [['docker', 'run', '--rm'], ['docker', 'compose', 'exec']])
+        self.assertEqual((self.root/'.env').read_text(), env)
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertFalse(any('frontal' in message.lower() for message in self.messages))
+        self.assertIs(self.etat_public()['coupure'], False)
+        self.assertNotIn('frontal', self.w.job or {})
+        self.assertEqual((self.w.state['status'], self.w.state['maintenance']), ('success', False))
+        self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
+        self.assertIn('inchangé', (self.w.private/f'{self.id}.log').read_text())
+
+    def test_empreinte_de_la_cible_illisible_frontal_non_touche_et_avertissement(self):
+        cas = [(m.Failure('Commande interrompue'), self.WEB, ['sante', 'empreinte-cible']),
+               ('abc', self.WEB, ['sante', 'empreinte-cible']),
+               (self.CIBLE + '\n' + self.CIBLE, self.WEB, ['sante', 'empreinte-cible']),
+               # Image de la cible non désignée par une empreinte de dépôt vérifiée : rien n'est lu ni exécuté.
+               (self.CIBLE, 'ghcr.io/yousername-ha/suivi-audits-web:7.3.0', ['sante'])]
+        for empreinte, image, ordre in cas:
+            self.setUp()
+            self.empreinte_cible = empreinte
+            self.reprendre(images={'api': 'x', 'web': image, 'updater': 'y'})
+            self.assertEqual(self.ordre, ordre)
+            self.assertFalse(any(c[0][:3] in (['docker', 'compose', 'up'], ['docker', 'compose', 'run']) for c in self.journal))
+            self.assertEqual(self.gateway_version(), '7.1.0')
+            self.assertIs(self.etat_public()['coupure'], False)
+            self.assertEqual(self.w.state['status'], 'success')
+            self.assertEqual(self.recu()['statut'], 'success')
+            self.assertIn('Frontal non mis à jour : l’empreinte de sa nouvelle image n’a pas pu être lue', self.recu()['message'])
+            self.assertIn('Frontal non mis à jour', (self.w.private/f'{self.id}.log').read_text())
 
     def test_validation_refusee_garde_l_ancien_frontal_et_l_annonce(self):
         self.validation_refusee = True
         self.reprendre()
         self.assertNotIn('recreation', self.ordre)
+        self.assertNotIn('coupure', self.ordre)
         self.assertEqual(self.gateway_version(), '7.1.0')
         self.assertEqual(self.w.state['status'], 'success')
         self.assertIn('Frontal non mis à jour', self.w.state['message'])
@@ -525,7 +618,7 @@ class FrontalPonctuel(unittest.TestCase):
     def test_image_locale_differente_de_l_image_verifiee_refusee_sans_rien_toucher(self):
         self.WEB = 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'b' * 64
         self.reprendre(images={'web': 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'a' * 64})
-        self.assertEqual(self.ordre, ['sante', 'image'])
+        self.assertEqual(self.ordre, ['sante', 'empreinte-cible', 'empreinte-service', 'image'])
         self.assertEqual(self.gateway_version(), '7.1.0')
         self.assertIn('Frontal non mis à jour', self.recu()['message'])
 
@@ -535,6 +628,11 @@ class FrontalPonctuel(unittest.TestCase):
         self.reprendre()
         recreations = [c for c in self.journal if c[0][:3] == ['docker', 'compose', 'up']]
         self.assertEqual([c[2] for c in recreations], [self.cible, '7.1.0'])
+        # Coupure annoncée pendant la recréation et le rétablissement, retirée une seule fois, ancien frontal vérifié.
+        self.assertEqual([c[3] for c in recreations], [True, True])
+        self.assertEqual(self.ordre[-4:], ['sonde', 'recreation', 'sonde', 'fin de coupure'])
+        self.assertEqual(self.ordre.count('coupure'), 1)
+        self.assertIs(self.etat_public()['coupure'], False)
         self.assertEqual(self.gateway_version(), '7.1.0')
         self.assertEqual(self.w.state['status'], 'success')
         self.assertIn('l’ancien a été rétabli', self.recu()['message'])
@@ -549,7 +647,9 @@ class FrontalPonctuel(unittest.TestCase):
         self.reprendre()
         self.assertEqual(self.gateway_version(), '7.1.0')
         self.assertIn('Frontal non mis à jour', self.recu()['message'])
-        # Rétablissement impossible : avertissement explicite, l'application reste mise à jour.
+        self.assertEqual(self.ordre[-1], 'fin de coupure')
+        self.assertIs(self.etat_public()['coupure'], False)
+        # Rétablissement impossible : avertissement explicite, coupure retirée, l'application reste mise à jour.
         self.setUp()
         def muette():
             if self.ordre.count('recreation'): raise m.Failure('rien')
@@ -557,17 +657,11 @@ class FrontalPonctuel(unittest.TestCase):
         self.fausse_sonde = muette
         self.reprendre()
         self.assertEqual(self.ordre.count('recreation'), 4)
+        self.assertEqual(self.ordre[-1], 'fin de coupure')
+        self.assertIs(self.etat_public()['coupure'], False)
         self.assertEqual(self.gateway_version(), '7.1.0')
         self.assertEqual(self.w.state['status'], 'success')
         self.assertIn('sudo docker compose up -d gateway', self.recu()['message'])
-
-    def test_autre_cible_ne_touche_pas_au_frontal(self):
-        (self.root/'.env').write_text('APP_VERSION=99.0.0\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION=7.1.0\n')
-        self.reprendre(target='99.0.0')
-        self.assertEqual(self.ordre, ['sante'])
-        self.assertEqual(self.journal, [])
-        self.assertEqual(self.gateway_version(), '7.1.0')
-        self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
 
     def test_frontal_deja_a_la_version_ou_sans_reglage_rien_a_faire(self):
         for env in (f'APP_VERSION={self.cible}\nGATEWAY_VERSION={self.cible}\n', f'APP_VERSION={self.cible}\n'):
@@ -588,12 +682,27 @@ class FrontalPonctuel(unittest.TestCase):
 
     def test_executant_relance_pendant_la_recreation_retablit_l_ancien_frontal_avant_la_sante(self):
         (self.root/'.env').write_text(f'APP_VERSION={self.cible}\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION={self.cible}\n')
+        # Coupure annoncée par l'exécutant interrompu, encore dans l'état public.
+        self.w.publish(coupure=True)
         self.reprendre(frontal={'avant': '7.1.0', 'etape': 'recreation'})
-        self.assertEqual(self.ordre[:3], ['recreation', 'sonde', 'sante'])
+        self.assertEqual(self.ordre[:4], ['recreation', 'sonde', 'fin de coupure', 'sante'])
+        self.assertEqual(self.journal[0][3], True)
         self.assertEqual(self.ordre.count('validation'), 0)
+        self.assertNotIn('empreinte-cible', self.ordre)
         self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertIs(self.etat_public()['coupure'], False)
         self.assertEqual(self.w.state['status'], 'success')
         self.assertIn('Frontal non mis à jour', self.recu()['message'])
 
+    def test_coupure_jamais_conservee_sans_operation_active(self):
+        # État public resté avec une coupure (arrêt brutal) : sans demande active, l'exécutant redémarré la retire ; une
+        # opération terminée la retire aussi.
+        self.w.publish(coupure=True)
+        with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
+            self.assertIs(m.Worker().state['coupure'], False)
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': self.cible}
+        with patch.object(self.w, 'cli', return_value=''):
+            self.w.finish('failed', 'Échec fictif.')
+        self.assertIs(self.etat_public()['coupure'], False)
 
 if __name__=='__main__': unittest.main()
