@@ -191,6 +191,8 @@ export const TABLES_TRAVAIL = [
   // conversations de l'assistant (travail des utilisateurs, effacées par les deux portées) et effacés avec elles.
   'vulnerabilites_assistant_reperes',
   'vulnerabilites_assistant_propositions',
+  // Repères des actifs exposés (AlgoLightHouse) dans une conversation (ADR 0100, lot ALH2), même règle.
+  'vulnerabilites_assistant_reperes_externes',
   // Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1) : relue à la synchronisation suivante ; liaison des
   // périmètres saisie par les utilisateurs, rattachée à grc_smsis (effacée avec le travail).
   'vulnerabilites_alh_perimetres',

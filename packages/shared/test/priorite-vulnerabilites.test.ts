@@ -7,7 +7,9 @@ import {
   faitsDepuisSources,
   graviteDepuisScore,
   premierSignalement,
+  prioriteLaPlusHaute,
   rangerSignalements,
+  rangPriorite,
   SOURCES_EXPLOITABLE,
   SOURCES_EXPLOITATION,
   type SourcesFailleDto,
@@ -427,5 +429,57 @@ describe('valeur la plus sévère entre les sources (V27)', () => {
         { fait: 'epss', score: 0.7, seuil: 0.5 },
       ],
     });
+  });
+});
+
+describe('surface externe (lot ALH2) : présence « exposée » et AlgoLightHouse, source de plus', () => {
+  it('une CVE portée par un actif exposé est présente chez nous : P1 avec une exploitation avérée, quelle qu’en soit la source', () => {
+    expect(calculerPriorite(faits({ exploitation: ['alh'], presence: 'exposee' }))).toEqual({
+      niveau: 'P1',
+      faits: [
+        { fait: 'exploitation', sources: ['alh'] },
+        { fait: 'presence', presence: 'exposee' },
+      ],
+    });
+    expect(calculerPriorite(faits({ exploitation: ['kev'], presence: 'exposee' })).niveau).toBe('P1');
+    expect(calculerPriorite(faits({ gravite: 'critique', presence: 'exposee' })).niveau).toBe('P2');
+    expect(
+      calculerPriorite(faits({ gravite: 'elevee', presence: 'exposee', exploitable: ['alh'] })).faits,
+    ).toContainEqual({ fait: 'exploit_disponible', sources: ['alh'] });
+    expect(calculerPriorite(faits({ gravite: 'elevee', presence: 'exposee' })).niveau).toBe('P3');
+    expect(libelleFaitPriorite({ fait: 'presence', presence: 'exposee' })).toBe(
+      'Exposée sur Internet (AlgoLightHouse)',
+    );
+    expect(libelleFaitPriorite({ fait: 'exploitation', sources: ['kev', 'alh'] })).toBe(
+      'Exploitation avérée (catalogue KEV, AlgoLightHouse)',
+    );
+  });
+
+  it('valeurs d’AlgoLightHouse gardées avec leur source ; la plus sévère prime (V27)', () => {
+    const r = valeursRetenues({
+      gravites: [
+        { source: 'nvd', gravite: 'elevee' },
+        { source: 'alh', gravite: 'critique' },
+      ],
+      cvss: [
+        { source: 'nvd', score: 8.1 },
+        { source: 'alh', score: 9.8 },
+      ],
+      epss: [
+        { source: 'first', score: 0.42 },
+        { source: 'alh', score: 0.42 },
+      ],
+    });
+    expect(r.gravite).toEqual({ source: 'alh', gravite: 'critique' });
+    expect(r.cvss).toEqual({ source: 'alh', score: 9.8 });
+    // À valeur égale, l'ordre des sources départage (FIRST avant AlgoLightHouse).
+    expect(r.epss).toEqual({ source: 'first', score: 0.42 });
+  });
+
+  it('priorité la plus haute d’une liste ; rang d’un niveau', () => {
+    const p = (niveau: 'P1' | 'P2' | 'P3' | 'P4') => ({ niveau, faits: [] });
+    expect(prioriteLaPlusHaute([p('P3'), p('P2'), p('P4')])).toEqual(p('P2'));
+    expect(prioriteLaPlusHaute([])).toBeNull();
+    expect(rangPriorite(p('P1'))).toBe(1);
   });
 });

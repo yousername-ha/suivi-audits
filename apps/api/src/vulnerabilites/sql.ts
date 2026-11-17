@@ -26,3 +26,34 @@ export const detecteeSurMachine = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabili
 export const scoreNvd = sql<
   string | null
 >`CASE WHEN v.cvss31_gravite IS NOT NULL THEN v.cvss31_score ELSE v.cvss40_score END`;
+
+/* ------------------------------------------------------------------ Surface externe (AlgoLightHouse, lots ALH1 et ALH2) */
+/** Élément du périmètre ALH (alias fermé `lp` ou `lp2` de vulnerabilites_alh_perimetres) lisible : périmètre relié visible,
+    ou non relié avec administrer. */
+export const lisibleAlh = (user: SessionUser, alias: 'lp' | 'lp2' = 'lp'): RawBuilder<boolean> =>
+  sql<boolean>`(CASE WHEN ${sql.ref(`${alias}.perimetre_id`)} IS NULL
+                THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
+                ELSE grc_smsi_visible(${sql.ref(`${alias}.perimetre_id`)}, ${user.id}::uuid) END)`;
+
+/** CVE de technologies vues par AlgoLightHouse et lisibles par la personne (lot ALH2) : version encore détectée sur au moins
+    un actif lisible (un actif inconnu de la cartographie : administrer), technologie vue par la dernière synchronisation
+    complète de son instance. Colonnes : cve, technologie_id, version, cvss, epss, preuve, exploitee. Même règle que la
+    lecture des technologies (surface-externe.ts). */
+export const cvesAlhLisibles = (user: SessionUser) => sql<{
+  cve: string;
+  technologie_id: string;
+  version: string;
+  cvss: string | null;
+  epss: string | null;
+  preuve: boolean | null;
+  exploitee: boolean | null;
+}>`SELECT tc.cve, tc.technologie_id, tc.version, tc.cvss, tc.epss, tc.preuve, tc.exploitee
+  FROM vulnerabilites_alh_technologie_cves tc
+  JOIN vulnerabilites_alh_technologies tt ON tt.id = tc.technologie_id
+  LEFT JOIN vulnerabilites_alh_etat te ON te.integration_id = tt.integration_id
+  WHERE tt.vu_numero >= coalesce(te.numero_complet, 0)
+    AND EXISTS (SELECT 1 FROM vulnerabilites_alh_technologie_actifs ta
+      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = tt.integration_id AND xa.type = ta.actif_type
+        AND xa.alh_id = ta.actif_alh
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = tt.integration_id AND lp.alh_id = xa.perimetre_alh
+      WHERE ta.technologie_id = tc.technologie_id AND ta.version = tc.version AND ta.actuel AND ${lisibleAlh(user)})`;

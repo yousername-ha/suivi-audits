@@ -15,7 +15,15 @@
    - Masque de sortie (masque.ts) : construit ici à partir de l'inventaire, il remplace tout nom, adresse ou identifiant de
      machine qui figurerait encore dans une demande au modèle ; un mot de la liste à ne pas masquer (V31) qui apparaît seul
      est laissé tel quel.
-   Journal : `assistant.vulnerabilites.*`, identifiants et nombres seulement, jamais un nom, une adresse ni un repère. */
+   Journal : `assistant.vulnerabilites.*`, identifiants et nombres seulement, jamais un nom, une adresse ni un repère.
+   Lot ALH2 (décision C du RSSI du 17/11/2026) : surface externe (AlgoLightHouse). Un actif exposé (domaine ou adresse) n'est
+   remis au modèle que sous un repère « E-001 », attribué comme ceux des machines (table propre, gardée sur le serveur) ;
+   partent aussi des compteurs, le nom, l'éditeur et les versions des technologies touchées, ce que l'éditeur dit des CVE,
+   la criticité, le type, le statut et le titre des alertes, et les recommandations de l'éditeur (bornées). Ne partent
+   jamais : domaine, adresse, nom de périmètre, FAI, AS. Le masque couvre en plus tous les domaines et adresses de la surface
+   externe (et les sous-domaines d'un domaine connu), les fournisseurs d'accès et les numéros d'AS des hôtes, AVANT tout
+   envoi : un titre, une recommandation ou une question qui les citerait part avec un repère, « [actif externe] » ou
+   « [réseau externe] ». */
 import {
   calculerPriorite,
   type ConstatDto,
@@ -33,11 +41,14 @@ import {
   type MotifProposition,
   type NatureSuivi,
   numeroRepere,
+  numeroRepereExterne,
+  type Presence,
   type Priorite,
   PROPOSITION_VULN_MACHINES_MAX,
   type PropositionVulnerabiliteDto,
   RechercheConstats,
   RechercheDeclarees,
+  repereExterne,
   repereMachine,
   REPERES_MAX,
   reperesCites,
@@ -51,6 +62,9 @@ import {
   decouperReperes,
   texteDesSegments,
   valeursRetenues,
+  CRITICITE_ALH_LIBELLES,
+  STATUT_ALERTE_ALH_LIBELLES,
+  TYPE_ALERTE_ALH_LIBELLES,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
@@ -62,8 +76,14 @@ import type { FaillesDetectees } from './failles.js';
 import type { MotsNonMasquesVulnerabilites } from './mots-non-masques.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
-import { lisible, present } from './sql.js';
+import { lisible, lisibleAlh, present } from './sql.js';
 import type { SuiviFailles } from './suivi.js';
+import type { SurfaceExterneAlh } from './surface-externe.js';
+
+/** Remplacement d'un actif exposé qui n'a pas de repère (ronde, actif non lisible, valeur sans fiche). */
+export const ACTIF_EXTERNE_MASQUE = '[actif externe]';
+/** Remplacement d'un fournisseur d'accès ou d'un numéro d'AS d'un hôte exposé. */
+export const RESEAU_EXTERNE_MASQUE = '[réseau externe]';
 
 /** Bornes de ce qui est remis au modèle. */
 export const BORNES_ASSISTANT_VULN = {
@@ -77,6 +97,12 @@ export const BORNES_ASSISTANT_VULN = {
   avis: 10,
   constats: 10,
   produits: 10,
+  /** Surface externe (lot ALH2) : repères d'actifs, technologies, alertes, défauts par alerte, résolutions par défaut. */
+  reperesExternes: 20,
+  technologies: 10,
+  alertes: 5,
+  defauts: 3,
+  resolutions: 3,
   /** Propositions par conversation (toutes), en attente par conversation, en attente par personne. */
   propositionsConversation: 10,
   propositionsEnAttenteConversation: 5,
@@ -142,6 +168,8 @@ export class AssistantVulnerabilites {
     private readonly suivi: SuiviFailles,
     private readonly reglage: ReglagePrioriteVulnerabilites,
     private readonly nonMasques: MotsNonMasquesVulnerabilites,
+    /** Surface externe (lot ALH2) : exposition d'une CVE et actifs à masquer. */
+    private readonly surface: SurfaceExterneAlh | null = null,
   ) {}
 
   /** La personne lit le module (droit, module actif : les droits de la session tiennent compte de l'activation). */
@@ -189,8 +217,47 @@ export class AssistantVulnerabilites {
     }, 'assistant');
   }
 
+  /** Repères des actifs exposés (lisibles par la personne : à vérifier par l'appelant), même règle que reperes() : stables,
+      jamais réattribués, 999 au plus par conversation (lot ALH2). */
+  async reperesExternes(conversationId: string, actifIds: readonly string[]): Promise<Map<string, string>> {
+    const ids = [...new Set(actifIds)];
+    if (!ids.length) return new Map();
+    return this.db.tx(async (_c, k) => {
+      const conv = await k
+        .selectFrom('assistant_conversations')
+        .select('id')
+        .where('id', '=', conversationId)
+        .forUpdate()
+        .executeTakeFirst();
+      if (!conv) throw new HttpError(404, 'Conversation introuvable.');
+      const connus = await k
+        .selectFrom('vulnerabilites_assistant_reperes_externes')
+        .select(['numero', 'actif_id'])
+        .where('conversation_id', '=', conversationId)
+        .where('actif_id', 'in', ids)
+        .execute();
+      const out = new Map(connus.map((r) => [r.actif_id!, repereExterne(r.numero)]));
+      const { max } = await k
+        .selectFrom('vulnerabilites_assistant_reperes_externes')
+        .select(sql<number>`coalesce(max(numero), 0)::int`.as('max'))
+        .where('conversation_id', '=', conversationId)
+        .executeTakeFirstOrThrow();
+      let suivant = max + 1;
+      for (const id of ids) {
+        if (out.has(id) || suivant > REPERES_MAX) continue;
+        await k
+          .insertInto('vulnerabilites_assistant_reperes_externes')
+          .values({ conversation_id: conversationId, numero: suivant, actif_id: id })
+          .execute();
+        out.set(id, repereExterne(suivant++));
+      }
+      return out;
+    }, 'assistant');
+  }
+
   /** Résolution des repères d'une conversation pour la personne qui regarde : nom (ou adresse) si elle lit la machine,
-      « non lisible » si le repère désigne une machine qu'elle ne lit pas (ou une machine effacée), « inconnu » sinon. */
+      domaine ou adresse si elle lit l'actif exposé (lot ALH2), « non lisible » si le repère désigne une machine ou un actif
+      qu'elle ne lit pas (ou effacé), « inconnu » sinon. */
   async resolveur(user: SessionUser, conversationId: string): Promise<(repere: string) => ResolutionRepere> {
     const lit = AssistantVulnerabilites.lit(user);
     const { rows } = await sql<{ numero: number; nom: string | null; adresse: string | null; lisible: boolean | null }>`
@@ -199,7 +266,21 @@ export class AssistantVulnerabilites {
       LEFT JOIN vulnerabilites_machines m ON m.id = r.machine_id
       WHERE r.conversation_id = ${conversationId}::uuid`.execute(this.db.k);
     const table = new Map(rows.map((r) => [r.numero, r]));
+    const { rows: externes } = await sql<{ numero: number; valeur: string | null; lisible: boolean | null }>`
+      SELECT r.numero, x.valeur, CASE WHEN x.id IS NULL THEN NULL ELSE ${lisibleAlh(user)} END AS lisible
+      FROM vulnerabilites_assistant_reperes_externes r
+      LEFT JOIN vulnerabilites_alh_actifs x ON x.id = r.actif_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+      WHERE r.conversation_id = ${conversationId}::uuid`.execute(this.db.k);
+    const tableExterne = new Map(externes.map((r) => [r.numero, r]));
     return (repere) => {
+      if (repere.startsWith('E-')) {
+        const n = numeroRepereExterne(repere);
+        const x = n === null ? undefined : tableExterne.get(n);
+        if (!x) return 'inconnu';
+        if (!lit || !x.lisible || !x.valeur) return 'non_lisible';
+        return { machine: x.valeur };
+      }
       const n = numeroRepere(repere);
       const r = n === null ? undefined : table.get(n);
       if (!r) return 'inconnu';
@@ -230,9 +311,50 @@ export class AssistantVulnerabilites {
       identifiants: [m.identifiant_source, ...(m.uuid_source ? [m.uuid_source] : [])],
       lisible: lit && m.lisible,
     }));
+    // Surface externe (lot ALH2) : domaines et adresses d'AlgoLightHouse, qui ne sont pas dans l'inventaire des machines.
+    // Toujours protégés (jamais démasqués par la liste V31) ; un sous-domaine d'un domaine connu l'est aussi.
+    const PREFIXE = 'alh:';
+    const externes: MachineAMasquer[] = this.surface
+      ? (await this.surface.actifsAMasquer(user)).map((x, i) => {
+          const valeurs = [...new Set(x.valeurs.flatMap((v) => (v.startsWith('*.') ? [v, v.slice(2)] : [v])))];
+          return {
+            id: x.id ? `${PREFIXE}${x.id}` : `${PREFIXE}sans-fiche-${i}`,
+            nom: null,
+            adresse: null,
+            identifiants: valeurs,
+            domaines: valeurs.filter((v) => v.includes('.') && !/^[0-9.]+$/.test(v) && !v.includes(':')),
+            lisible: lit && x.id !== null && x.lisible,
+            masque: ACTIF_EXTERNE_MASQUE,
+          };
+        })
+      : [];
+    // Fournisseurs d'accès et numéros d'AS des hôtes : jamais de repère.
+    const reseaux: MachineAMasquer[] = this.surface
+      ? (await this.surface.reseauxAMasquer()).map((v, i) => ({
+          id: `reseau:${i}`,
+          nom: null,
+          adresse: null,
+          identifiants: [v],
+          lisible: false,
+          masque: RESEAU_EXTERNE_MASQUE,
+        }))
+      : [];
     return creerMasque(
-      machines,
-      conversationId ? (ids) => this.reperes(conversationId, ids) : undefined,
+      [...machines, ...externes, ...reseaux],
+      conversationId
+        ? async (ids) => {
+            const out = await this.reperes(
+              conversationId,
+              ids.filter((id) => !id.startsWith(PREFIXE)),
+            );
+            const ext = await this.reperesExternes(
+              conversationId,
+              ids.filter((id) => id.startsWith(PREFIXE)).map((id) => id.slice(PREFIXE.length)),
+            );
+            for (const [id, r] of ext) out.set(`${PREFIXE}${id}`, r);
+            return out;
+          }
+        : undefined,
       await this.nonMasques.mots(),
     );
   }
@@ -269,11 +391,59 @@ export class AssistantVulnerabilites {
     return { reperes: premieres.map((m) => r.get(m.id) ?? null), total: retenues.length };
   }
 
-  /** Évaluer une CVE : ce que la veille en sait, ce que Tenable et les produits surveillés en disent, priorité et suivi. */
+  /** Exposition d'une CVE sur la surface externe (lot ALH2), telle que remise au modèle : repères « E-… » des actifs lisibles
+      qui la portent, compteurs, technologies, alertes ouvertes et recommandations de l'éditeur, bornés. Aucun domaine,
+      adresse, nom de périmètre, FAI ni AS ; titres et recommandations repassent par le masque avant l'envoi. */
+  private async surfaceExterne(user: SessionUser, conversationId: string, cve: string) {
+    if (!this.surface) return null;
+    const x = await this.surface.exposition(user, cve);
+    if (!x.actifs.length && !x.alertes.length && !x.technologies.length) return null;
+    const ranges = x.actifs.filter((id): id is string => id !== null);
+    const premiers = ranges.slice(0, BORNES_ASSISTANT_VULN.reperesExternes);
+    const r = await this.reperesExternes(conversationId, premiers);
+    const reperes = premiers.map((id) => r.get(id) ?? null);
+    const B = BORNES_ASSISTANT_VULN;
+    return {
+      exposeeSurInternet: x.actifs.length > 0 || x.alertes.length > 0,
+      actifsExposes: x.actifs.length,
+      reperes,
+      ...(x.actifs.length > reperes.length ? { actifsSansRepere: x.actifs.length - reperes.length } : {}),
+      technologies: x.technologies.slice(0, B.technologies).map((t) => ({
+        nom: coupe(t.nom, 100),
+        editeur: coupe(t.editeur, 100),
+        produit: coupe(t.produit, 100),
+        versions: t.versions.slice(0, 10).map((v) => coupe(v, 60) || 'inconnue'),
+        selonAlgoLightHouse: { exploitee: t.exploitee, preuveDeConcept: t.preuve, cvss: t.cvss, epss: t.epss },
+      })),
+      ...(x.technologies.length > B.technologies
+        ? { technologiesNonRendues: x.technologies.length - B.technologies }
+        : {}),
+      alertesOuvertes: x.alertes.length,
+      alertes: x.alertes.slice(0, B.alertes).map((a) => ({
+        criticite: a.criticite ? CRITICITE_ALH_LIBELLES[a.criticite] : null,
+        type: a.type ? TYPE_ALERTE_ALH_LIBELLES[a.type] : null,
+        statut: STATUT_ALERTE_ALH_LIBELLES[a.statut],
+        titre: coupe(a.titre, 200),
+        recommandationsDeLEditeur: a.defauts.slice(0, B.defauts).map((d) => ({
+          defaut: coupe(d.nom, 200),
+          description: coupe(d.description, 600),
+          resolutions: d.resolutions.slice(0, B.resolutions).map((z) => ({
+            resolution: coupe(z.nom, 200),
+            description: coupe(z.description, 600),
+            facilite: z.facilite,
+            gain: z.gain,
+          })),
+        })),
+      })),
+    };
+  }
+
+  /** Évaluer une CVE : ce que la veille en sait, ce que Tenable, les produits surveillés et la surface externe en disent,
+      priorité et suivi. */
   private async evaluerCve(user: SessionUser, conversationId: string, cve: string) {
     this.exigerLecture(user);
     const k = this.db.k;
-    const faits = (await lireFaitsCve(k, [cve])).get(cve) ?? null;
+    const faits = (await lireFaitsCve(k, [cve], user)).get(cve) ?? null;
     const reglage = await this.reglage.valeurs();
     const rangees = await this.failles.machinesRangees(user);
 
@@ -369,13 +539,14 @@ export class AssistantVulnerabilites {
       produits.push(entree);
     }
 
-    if (!faits && !constats.length)
+    const exposition = await this.surfaceExterne(user, conversationId, cve);
+    if (!faits && !constats.length && !exposition)
       return {
         donnees: {
           cve,
           connue: false,
           message:
-            'CVE inconnue de la plateforme : la veille ne la connaît pas et aucun constat de Tenable lisible ne la porte. Vous n’avez aucun accès au web : dites-le, sans rien supposer.',
+            'CVE inconnue de la plateforme : la veille ne la connaît pas, aucun constat de Tenable lisible ne la porte et la surface externe lisible ne la montre pas. Vous n’avez aucun accès au web : dites-le, sans rien supposer.',
         },
         elements: 0,
       };
@@ -383,16 +554,19 @@ export class AssistantVulnerabilites {
     // Présence dans l'organisation et priorité de la CVE, calculées par la plateforme.
     const detectee = constats.some((c) => c.present);
     const declaree = rapprochements.some((r) => r.statut === 'rattachee' || r.statut === 'confirmee');
-    const presence = detectee
+    const exposee = !!exposition?.exposeeSurInternet;
+    const presence: Presence = detectee
       ? 'detectee'
       : declaree
         ? 'declaree'
-        : rapprochements.some((r) => r.statut === 'proposee')
-          ? 'a_confirmer'
-          : 'absente';
-    const sources = faits ? sourcesDe([faits]) : null;
+        : exposee
+          ? 'exposee'
+          : rapprochements.some((r) => r.statut === 'proposee')
+            ? 'a_confirmer'
+            : 'absente';
+    const sources = faits || exposition ? sourcesDe(faits ? [faits] : []) : null;
     const prioriteCve = sources ? calculerPriorite({ ...faitsDepuisSources(sources), presence }, reglage) : null;
-    const v = faits
+    const v = faits?.veille
       ? await k
           .selectFrom('vulnerabilites_veille_cve')
           .select(['description', 'kev_action', sql<string | null>`kev_echeance::text`.as('kev_echeance')])
@@ -413,10 +587,11 @@ export class AssistantVulnerabilites {
       donnees: {
         cve,
         connue: true,
-        connueDeLaVeille: !!faits,
+        connueDeLaVeille: !!faits?.veille,
         presence: {
           detecteeParTenable: detectee,
           declareeParUnProduitSurveille: declaree,
+          exposeeSurInternet: exposee,
           constatsLisibles: constats.length,
           ...(constats.length > constatsRendus.length
             ? { constatsNonRendus: constats.length - constatsRendus.length }
@@ -436,6 +611,9 @@ export class AssistantVulnerabilites {
             ? { correctifExiste: sources.certSante.correctif, contournementExiste: sources.certSante.contournement }
             : null,
           correctifsTenable: 'voir chaque constat (correctifPublieParTenable)',
+          ...(exposition
+            ? { recommandationsAlgoLightHouse: 'voir surfaceExterne.alertes (recommandationsDeLEditeur)' }
+            : {}),
         },
         avis: avis.slice(0, BORNES_ASSISTANT_VULN.avis).map((a) => ({
           source: a.source === 'cert-fr' ? 'CERT-FR' : 'CERT Santé',
@@ -448,10 +626,11 @@ export class AssistantVulnerabilites {
         constats: constatsRendus,
         produitsSurveilles: produits,
         ...(rapprochements.length > produits.length ? { produitsNonRendus: true } : {}),
+        ...(exposition ? { surfaceExterne: exposition } : {}),
         ...(prioriteCve ? { priorite: priorite(prioriteCve) } : {}),
-        note: 'Priorité, rang et nombres sont calculés par la plateforme. Les repères désignent des machines : citez-les tels quels.',
+        note: 'Priorité, rang et nombres sont calculés par la plateforme. Les repères M-… désignent des machines, les repères E-… des actifs exposés sur Internet (domaines, adresses) : citez-les tels quels.',
       },
-      elements: 1 + constatsRendus.length + produits.length,
+      elements: 1 + constatsRendus.length + produits.length + (exposition ? 1 : 0),
     };
   }
 

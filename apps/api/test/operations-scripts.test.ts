@@ -14,7 +14,7 @@ it('exécute le script isolé des connecteurs contre un faux service HTTPS local
   const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_integration_http.py')], {
     timeout: 60000,
   });
-  expect(r.stderr).toContain('Ran 30 tests');
+  expect(r.stderr).toContain('Ran 31 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé de la veille contre un faux service HTTPS local (module Vulnérabilités, ADR 0100)', async () => {

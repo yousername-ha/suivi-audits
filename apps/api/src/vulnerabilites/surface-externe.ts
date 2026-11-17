@@ -14,11 +14,35 @@
      qu'avec vulnerabilites:administrer. Une technologie se lit par ses actifs (un actif inconnu : administrer). Relier un
      périmètre demande administrer (route), l'écriture sur le périmètre actuel et sur le périmètre visé, If-Match.
    Journal `vulnerabilites.surface.*` : identifiants internes et nombres seulement, jamais une adresse ni un domaine.
-   Accès aux données en Kysely (ADR 0062). */
+   Accès aux données en Kysely (ADR 0062).
+   Lot ALH2 (décisions du RSSI du 17/11/2026) :
+   - A : défauts et résolutions de l'éditeur rangés avec l'alerte (texte simple, liste blanche), rendus dans sa fiche ;
+   - B : une CVE portée par un actif exposé est une faille présente chez nous (présence « exposée ») ; sa priorité est
+     calculée par la grille commune avec toutes les sources (AlgoLightHouse en est une, pour ce que la personne lit) ;
+     alertes et technologies se trient par priorité ; une technologie est rapprochée des produits surveillés par la règle
+     du rapprochement des CVE (indication, sans décision) ; la veille montre sur combien d'actifs lisibles une CVE est vue ;
+   - C : lecture pour l'assistant (exposition d'une CVE) et liste des actifs à masquer (domaines et adresses), utilisées par
+     le service de l'assistant (assistant.ts), qui ne remet au modèle que des repères (« E-001 ») et des compteurs. */
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
   BilanSynchronisationAlh,
+  calculerPriorite,
+  type CveAlerteAlhDto,
+  DefautsAlh,
+  type DefautAlh,
+  faitsDepuisSources,
+  type FicheAlerteAlhDto,
+  memeVersionDetectee,
+  type Presence,
+  type Priorite,
+  prioriteLaPlusHaute,
+  type ProduitRapprocheAlhDto,
+  rangPriorite,
+  rapprochementTechnologie,
+  type SourcesFailleDto,
+  type SurfaceCveDto,
+  type TechnologieRapprocheeDto,
   type CriticiteAlh,
   type CveTechnologieAlhDto,
   type ElementAlerteAlh,
@@ -56,6 +80,9 @@ import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
+import type { ReglagePrioriteVulnerabilites } from './priorite.js';
+import { lireFaitsCve, sourcesDe } from './sources.js';
+import { lisibleAlh } from './sql.js';
 
 const TYPE = 'algolighthouse';
 const FUSEAU = 'Europe/Paris';
@@ -74,10 +101,7 @@ function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
 }
 
 /** Élément du périmètre ALH (alias fermé `lp` ou `lp2`) lisible : périmètre relié visible, ou non relié avec administrer. */
-const lisible = (user: SessionUser, alias: 'lp' | 'lp2' = 'lp'): RawBuilder<boolean> =>
-  sql<boolean>`(CASE WHEN ${sql.ref(`${alias}.perimetre_id`)} IS NULL
-                THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
-                ELSE grc_smsi_visible(${sql.ref(`${alias}.perimetre_id`)}, ${user.id}::uuid) END)`;
+const lisible = lisibleAlh;
 /** Élément (alias fermé) vu par la dernière synchronisation complète de son instance (alias `e`), ou plus récemment. */
 const present = (alias: 'a' | 'x' | 't' | 'lp' | 'a2'): RawBuilder<boolean> =>
   sql<boolean>`(${sql.ref(`${alias}.vu_numero`)} >= coalesce(e.numero_complet, 0))`;
@@ -88,6 +112,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
     private readonly flux: FluxExternes,
     private readonly integrations: Integrations,
     private readonly g: Grc,
+    private readonly reglage: ReglagePrioriteVulnerabilites,
   ) {}
 
   /* ---------------------------------------------------------------- Réception (CLI de l'exécutant) */
@@ -363,6 +388,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
       cible_valeur: a.cibleValeur,
       cible_hote: a.cibleHote,
       cible_domaine: a.cibleDomaine,
+      // Défauts (lot ALH2) : du détail seulement ; relus avec leur schéma.
+      defauts: JSON.stringify(a.defauts),
       cree_alh_le: a.creeLe,
       maj_alh_le: a.majLe,
       terminee_le: a.termineeLe,
@@ -413,6 +440,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
           cible_valeur: eb.ref('excluded.cible_valeur'),
           cible_hote: eb.ref('excluded.cible_hote'),
           cible_domaine: eb.ref('excluded.cible_domaine'),
+          defauts: eb.ref('excluded.defauts'),
         })),
       )
       .returning(['id', 'alh_id'])
@@ -617,22 +645,36 @@ export class SurfaceExterneAlh implements OperationEnLots {
     return out;
   }
 
+  /* ---------------------------------------------------------------- Priorité (lot ALH2) */
+  /** Sources et priorité des CVE demandées, pour la personne qui regarde (veille et AlgoLightHouse lisible). */
+  private async evaluateur(user: SessionUser, cves: readonly string[]) {
+    const faits = await lireFaitsCve(this.db.k, cves, user);
+    const reglage = await this.reglage.valeurs();
+    const cache = new Map<string, SourcesFailleDto>();
+    const sources = (cve: string): SourcesFailleDto => {
+      let x = cache.get(cve);
+      if (!x) {
+        const f = faits.get(cve);
+        x = sourcesDe(f ? [f] : []);
+        cache.set(cve, x);
+      }
+      return x;
+    };
+    return {
+      sources,
+      priorite: (cve: string, presence: Presence): Priorite =>
+        calculerPriorite({ ...faitsDepuisSources(sources(cve)), presence }, reglage),
+    };
+  }
+
   /* ---------------------------------------------------------------- Lecture par périmètre (vulnerabilites:lire) */
-  async alertes(user: SessionUser, q: RechercheAlertesAlh): Promise<PageSurface<AlerteAlhDto>> {
-    const conditions: RawBuilder<boolean>[] = [lisible(user), present('a')];
-    if (!q.statut) conditions.push(sql<boolean>`a.statut = ANY(${OUVERTS}::text[])`);
-    else if (q.statut !== 'toutes') conditions.push(sql<boolean>`a.statut = ${q.statut}`);
-    if (q.type) conditions.push(sql<boolean>`a.type = ${q.type}`);
-    if (q.criticite) conditions.push(sql<boolean>`a.criticite = ${q.criticite}`);
-    const texte = q.q?.trim();
-    if (texte) {
-      const motif = litteral(texte);
-      conditions.push(
-        sql<boolean>`(a.titre ILIKE ${`%${motif}%`} OR a.cible_valeur ILIKE ${`%${motif}%`}
-          OR EXISTS (SELECT 1 FROM vulnerabilites_alh_alerte_cves ac WHERE ac.alerte_id = a.id
-                     AND ac.cve LIKE ${`${motif.toUpperCase()}%`}))`,
-      );
-    }
+  /** Alertes lisibles et présentes, dans l'ordre par défaut (criticité de l'éditeur, puis la plus récente) ; `page` absent :
+      toutes (tri par priorité, fiche). */
+  private async lignesAlertes(
+    user: SessionUser,
+    conditions: RawBuilder<boolean>[],
+    page: { limite: number; decalage: number } | null,
+  ) {
     const { rows } = await sql<{
       id: string;
       type: TypeAlerteAlh | null;
@@ -651,6 +693,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
       perimetre_alh_nom: string | null;
       perimetre_nom: string | null;
       cves: string[];
+      nombre_defauts: number;
       total: number;
     }>`
       SELECT a.id, a.type, a.criticite, a.statut, a.titre, a.verifiee, a.detail, a.cible_type, a.cible_valeur,
@@ -658,6 +701,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
         lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
         coalesce((SELECT array_agg(ac.cve ORDER BY ac.cve) FROM vulnerabilites_alh_alerte_cves ac
                   WHERE ac.alerte_id = a.id), '{}') AS cves,
+        jsonb_array_length(a.defauts)::int AS nombre_defauts,
         count(*) OVER ()::int AS total
       FROM vulnerabilites_alh_alertes a
       JOIN integrations i ON i.id = a.integration_id
@@ -667,28 +711,98 @@ export class SurfaceExterneAlh implements OperationEnLots {
       WHERE ${sql.join(conditions, sql` AND `)}
       ORDER BY CASE a.criticite WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'important' THEN 2 WHEN 'minor' THEN 3
                ELSE 4 END, coalesce(a.maj_alh_le, a.cree_alh_le) DESC NULLS LAST, a.id
-      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+      ${page ? sql`LIMIT ${page.limite} OFFSET ${page.decalage}` : sql``}`.execute(this.db.k);
+    return rows;
+  }
+
+  /** Alerte rendue, avec sa priorité : la plus haute de ses CVE, présence « exposée » tant qu'elle est ouverte chez
+      l'éditeur (sinon « absente ») ; null sans CVE. */
+  private static versAlerte(
+    a: Awaited<ReturnType<SurfaceExterneAlh['lignesAlertes']>>[number],
+    priorite: (cve: string, presence: Presence) => Priorite,
+  ): AlerteAlhDto {
+    const presence: Presence = OUVERTS.includes(a.statut) ? 'exposee' : 'absente';
     return {
-      total: rows[0]?.total ?? 0,
-      page: q.page,
-      parPage: SURFACE_PAR_PAGE,
-      elements: rows.map((a) => ({
-        id: a.id,
-        type: a.type,
-        criticite: a.criticite,
-        statut: a.statut,
-        titre: a.titre,
-        verifiee: a.verifiee,
-        detail: a.detail,
-        cible: a.cible_type || a.cible_valeur ? { type: a.cible_type, valeur: a.cible_valeur } : null,
-        cves: a.cves,
-        creeLe: iso(a.cree_alh_le),
-        majLe: iso(a.maj_alh_le),
-        termineeLe: iso(a.terminee_le),
-        perimetreAlh: a.perimetre_alh_nom,
-        perimetreNom: a.perimetre_nom,
-        integration: { id: a.integration_id, nom: a.integration_nom },
-      })),
+      id: a.id,
+      type: a.type,
+      criticite: a.criticite,
+      statut: a.statut,
+      titre: a.titre,
+      verifiee: a.verifiee,
+      detail: a.detail,
+      cible: a.cible_type || a.cible_valeur ? { type: a.cible_type, valeur: a.cible_valeur } : null,
+      cves: a.cves,
+      creeLe: iso(a.cree_alh_le),
+      majLe: iso(a.maj_alh_le),
+      termineeLe: iso(a.terminee_le),
+      perimetreAlh: a.perimetre_alh_nom,
+      perimetreNom: a.perimetre_nom,
+      integration: { id: a.integration_id, nom: a.integration_nom },
+      priorite: prioriteLaPlusHaute(a.cves.map((c) => priorite(c, presence))),
+      nombreDefauts: a.nombre_defauts,
+    };
+  }
+
+  async alertes(user: SessionUser, q: RechercheAlertesAlh): Promise<PageSurface<AlerteAlhDto>> {
+    const conditions: RawBuilder<boolean>[] = [lisible(user), present('a')];
+    if (!q.statut) conditions.push(sql<boolean>`a.statut = ANY(${OUVERTS}::text[])`);
+    else if (q.statut !== 'toutes') conditions.push(sql<boolean>`a.statut = ${q.statut}`);
+    if (q.type) conditions.push(sql<boolean>`a.type = ${q.type}`);
+    if (q.criticite) conditions.push(sql<boolean>`a.criticite = ${q.criticite}`);
+    const texte = q.q?.trim();
+    if (texte) {
+      const motif = litteral(texte);
+      conditions.push(
+        sql<boolean>`(a.titre ILIKE ${`%${motif}%`} OR a.cible_valeur ILIKE ${`%${motif}%`}
+          OR EXISTS (SELECT 1 FROM vulnerabilites_alh_alerte_cves ac WHERE ac.alerte_id = a.id
+                     AND ac.cve LIKE ${`${motif.toUpperCase()}%`}))`,
+      );
+    }
+    const decalage = (q.page - 1) * SURFACE_PAR_PAGE;
+    // Tri par priorité : toutes les alertes lisibles sont évaluées (5 000 au plus par instance), puis la page est découpée.
+    const rows = await this.lignesAlertes(
+      user,
+      conditions,
+      q.tri === 'priorite' ? null : { limite: SURFACE_PAR_PAGE, decalage },
+    );
+    const { priorite } = await this.evaluateur(
+      user,
+      rows.flatMap((a) => a.cves),
+    );
+    let elements = rows.map((a) => SurfaceExterneAlh.versAlerte(a, priorite));
+    if (q.tri === 'priorite')
+      elements = elements
+        .map((a, i) => ({ a, i }))
+        .sort(
+          (x, y) =>
+            (x.a.priorite ? rangPriorite(x.a.priorite) : 5) - (y.a.priorite ? rangPriorite(y.a.priorite) : 5) ||
+            x.i - y.i,
+        )
+        .map((x) => x.a)
+        .slice(decalage, decalage + SURFACE_PAR_PAGE);
+    return { total: rows[0]?.total ?? 0, page: q.page, parPage: SURFACE_PAR_PAGE, elements };
+  }
+
+  /** Fiche d'une alerte lisible et présente (lot ALH2) : ses CVE avec leur priorité et ce que chaque source en dit, ses
+      défauts et résolutions tels que l'éditeur les décrit (texte simple). Illisible, absente ou inconnue : 404. */
+  async alerte(user: SessionUser, id: string): Promise<FicheAlerteAlhDto> {
+    const [a] = await this.lignesAlertes(user, [lisible(user), present('a'), sql<boolean>`a.id = ${id}::uuid`], null);
+    if (!a) throw new HttpError(404, 'Alerte introuvable ou non accessible.');
+    const { sources, priorite } = await this.evaluateur(user, a.cves);
+    const dto = SurfaceExterneAlh.versAlerte(a, priorite);
+    const presence: Presence = OUVERTS.includes(a.statut) ? 'exposee' : 'absente';
+    const brut = await this.db.k
+      .selectFrom('vulnerabilites_alh_alertes')
+      .select('defauts')
+      .where('id', '=', id)
+      .executeTakeFirst();
+    const defauts = DefautsAlh.safeParse(brut?.defauts ?? []);
+    return {
+      ...dto,
+      cvesDetail: a.cves
+        .map((cve): CveAlerteAlhDto => ({ cve, priorite: priorite(cve, presence), sources: sources(cve) }))
+        .sort((x, y) => rangPriorite(x.priorite) - rangPriorite(y.priorite) || (x.cve < y.cve ? -1 : 1)),
+      defauts: defauts.success ? (defauts.data as DefautAlh[]) : [],
     };
   }
 
@@ -811,7 +925,9 @@ export class SurfaceExterneAlh implements OperationEnLots {
           OR EXISTS (SELECT 1 FROM cv WHERE cv.technologie_id = t.id AND cv.cve LIKE ${`${motif.toUpperCase()}%`}))`,
       );
     }
-    const { rows } = await sql<{
+    const decalage = (q.page - 1) * SURFACE_PAR_PAGE;
+    const parPriorite = q.tri === 'priorite';
+    const { rows: toutes } = await sql<{
       id: string;
       nom: string;
       editeur: string | null;
@@ -841,7 +957,49 @@ export class SurfaceExterneAlh implements OperationEnLots {
       LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = t.integration_id
       WHERE ${sql.join(conditions, sql` AND `)}
       ORDER BY exploitees DESC, cvss_max DESC NULLS LAST, lower(t.nom), t.id
-      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+      ${parPriorite ? sql`` : sql`LIMIT ${SURFACE_PAR_PAGE} OFFSET ${decalage}`}`.execute(this.db.k);
+    // CVE des versions lisibles : de la page, ou de toutes les technologies pour le tri par priorité (2 000 au plus).
+    const cvesDe = async (ids: string[]) =>
+      ids.length
+        ? (
+            await sql<{
+              technologie_id: string;
+              version: string;
+              cve: string;
+              titre: string | null;
+              cvss: string | null;
+              epss: string | null;
+              severite: string | null;
+              preuve: boolean | null;
+              exploitee: boolean | null;
+              publiee_le: Date | null;
+            }>`${this.cteTechnologies(user)}
+            SELECT technologie_id, version, cve, titre, cvss, epss, severite, preuve, exploitee, publiee_le FROM cv
+            WHERE technologie_id = ANY(${ids}::uuid[])
+            ORDER BY technologie_id, version, exploitee DESC NULLS LAST, cvss DESC NULLS LAST, cve`.execute(this.db.k)
+          ).rows
+        : [];
+    const cves = await cvesDe(toutes.map((r) => r.id));
+    // Une CVE d'une version encore détectée sur un actif lisible est présente chez nous : présence « exposée ».
+    const { priorite } = await this.evaluateur(
+      user,
+      cves.map((c) => c.cve),
+    );
+    const prioriteCve = new Map<string, Priorite>();
+    const prioriteTechno = new Map<string, Priorite[]>();
+    for (const c of cves) {
+      let p = prioriteCve.get(c.cve);
+      if (!p) prioriteCve.set(c.cve, (p = priorite(c.cve, 'exposee')));
+      prioriteTechno.set(c.technologie_id, [...(prioriteTechno.get(c.technologie_id) ?? []), p]);
+    }
+    const laPlusHaute = (id: string) => prioriteLaPlusHaute(prioriteTechno.get(id) ?? []);
+    const rows = parPriorite
+      ? toutes
+          .map((t, i) => ({ t, i, p: laPlusHaute(t.id) }))
+          .sort((x, y) => (x.p ? rangPriorite(x.p) : 5) - (y.p ? rangPriorite(y.p) : 5) || x.i - y.i)
+          .map((x) => x.t)
+          .slice(decalage, decalage + SURFACE_PAR_PAGE)
+      : toutes;
     const ids = rows.map((r) => r.id);
     const versions = new Map<string, Map<string, VersionTechnologieAlhDto>>();
     if (ids.length) {
@@ -851,21 +1009,6 @@ export class SurfaceExterneAlh implements OperationEnLots {
         WHERE actuel AND technologie_id = ANY(${ids}::uuid[]) ORDER BY technologie_id, version, actif_type, libelle`.execute(
         this.db.k,
       );
-      const cves = await sql<{
-        technologie_id: string;
-        version: string;
-        cve: string;
-        titre: string | null;
-        cvss: string | null;
-        epss: string | null;
-        severite: string | null;
-        preuve: boolean | null;
-        exploitee: boolean | null;
-        publiee_le: Date | null;
-      }>`${this.cteTechnologies(user)}
-        SELECT technologie_id, version, cve, titre, cvss, epss, severite, preuve, exploitee, publiee_le FROM cv
-        WHERE technologie_id = ANY(${ids}::uuid[])
-        ORDER BY technologie_id, version, exploitee DESC NULLS LAST, cvss DESC NULLS LAST, cve`.execute(this.db.k);
       const version = (t: string, v: string) => {
         let m = versions.get(t);
         if (!m) versions.set(t, (m = new Map()));
@@ -875,39 +1018,288 @@ export class SurfaceExterneAlh implements OperationEnLots {
       };
       for (const l of liens.rows)
         version(l.technologie_id, l.version).actifs.push({ type: l.actif_type, libelle: l.libelle });
-      for (const c of cves.rows)
-        version(c.technologie_id, c.version).cves.push({
-          cve: c.cve,
-          titre: c.titre,
-          cvss: nombre(c.cvss),
-          epss: nombre(c.epss),
-          severite: c.severite,
-          preuve: c.preuve,
-          exploitee: c.exploitee,
-          publieeLe: iso(c.publiee_le),
-        } satisfies CveTechnologieAlhDto);
+      const page = new Set(ids);
+      for (const c of cves)
+        if (page.has(c.technologie_id))
+          version(c.technologie_id, c.version).cves.push({
+            cve: c.cve,
+            titre: c.titre,
+            cvss: nombre(c.cvss),
+            epss: nombre(c.epss),
+            severite: c.severite,
+            preuve: c.preuve,
+            exploitee: c.exploitee,
+            publieeLe: iso(c.publiee_le),
+            priorite: prioriteCve.get(c.cve)!,
+          } satisfies CveTechnologieAlhDto);
     }
+    const produits = ids.length ? await this.produitsSurveilles() : [];
     return {
-      total: rows[0]?.total ?? 0,
+      total: toutes[0]?.total ?? 0,
       page: q.page,
       parPage: SURFACE_PAR_PAGE,
-      elements: rows.map((t) => ({
-        id: t.id,
-        nom: t.nom,
-        editeur: t.editeur,
-        produit: t.produit,
-        technologie: t.technologie,
-        derniere: iso(t.derniere),
-        tronquee: t.tronquee,
-        versions: [...(versions.get(t.id)?.values() ?? [])],
-        actifsInactifs: t.inactifs,
-        nombreCves: t.nombre_cves,
-        exploitees: t.exploitees,
-        preuves: t.preuves,
-        cvssMax: nombre(t.cvss_max),
-        integration: { id: t.integration_id, nom: t.integration_nom },
-      })),
+      elements: rows.map((t) => {
+        const vs = [...(versions.get(t.id)?.values() ?? [])];
+        return {
+          id: t.id,
+          nom: t.nom,
+          editeur: t.editeur,
+          produit: t.produit,
+          technologie: t.technologie,
+          derniere: iso(t.derniere),
+          tronquee: t.tronquee,
+          versions: vs,
+          actifsInactifs: t.inactifs,
+          nombreCves: t.nombre_cves,
+          exploitees: t.exploitees,
+          preuves: t.preuves,
+          cvssMax: nombre(t.cvss_max),
+          integration: { id: t.integration_id, nom: t.integration_nom },
+          priorite: laPlusHaute(t.id),
+          produits: produits.flatMap((p): ProduitRapprocheAlhDto[] => {
+            const par = rapprochementTechnologie(t, p);
+            return par
+              ? [
+                  {
+                    id: p.id,
+                    editeur: p.editeur,
+                    nom: p.nom,
+                    versionProduit: p.versionProduit,
+                    par,
+                    memeVersion: memeVersionDetectee(
+                      vs.map((v) => v.version),
+                      p.versionProduit,
+                    ),
+                  },
+                ]
+              : [];
+          }),
+        };
+      }),
     };
+  }
+
+  /* ---------------------------------------------------------------- Produits surveillés (lot ALH2) */
+  /** Produits surveillés du registre (organisation, lisible avec vulnerabilites:lire), pour le rapprochement. */
+  private async produitsSurveilles() {
+    return (
+      await this.db.k
+        .selectFrom('vulnerabilites_produits')
+        .select(['id', 'editeur', 'nom', 'version_produit', 'cpe'])
+        .orderBy(sql`lower(editeur)`)
+        .orderBy(sql`lower(nom)`)
+        .orderBy(sql`lower(version_produit)`)
+        .orderBy('id')
+        .execute()
+    ).map((p) => ({ id: p.id, editeur: p.editeur, nom: p.nom, versionProduit: p.version_produit, cpe: p.cpe }));
+  }
+
+  /** Technologies vues sur des actifs lisibles et rapprochées d'un produit surveillé (fiche du produit) : versions encore
+      détectées et nombre d'actifs lisibles qui les portent. Indication seulement, sans décision ni effet sur la priorité. */
+  async technologiesDuProduit(
+    user: SessionUser,
+    p: { editeur: string; nom: string; cpe: string | null; versionProduit: string },
+  ): Promise<TechnologieRapprocheeDto[]> {
+    const { rows } = await sql<{
+      id: string;
+      nom: string;
+      editeur: string | null;
+      produit: string | null;
+      versions: string[];
+      actifs: number;
+    }>`${this.cteTechnologies(user)}
+      SELECT t.id, t.nom, t.editeur, t.produit,
+        coalesce((SELECT array_agg(DISTINCT l.version ORDER BY l.version) FROM liens l
+                  WHERE l.technologie_id = t.id AND l.actuel), '{}') AS versions,
+        (SELECT count(DISTINCT (l.actif_type, l.libelle))::int FROM liens l WHERE l.technologie_id = t.id AND l.actuel)
+          AS actifs
+      FROM vulnerabilites_alh_technologies t
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = t.integration_id
+      WHERE ${present('t')} AND t.editeur IS NOT NULL AND t.produit IS NOT NULL
+        AND EXISTS (SELECT 1 FROM liens l WHERE l.technologie_id = t.id AND l.actuel)
+      ORDER BY lower(t.nom), t.id`.execute(this.db.k);
+    return rows.flatMap((t): TechnologieRapprocheeDto[] => {
+      const par = rapprochementTechnologie(t, p);
+      return par
+        ? [
+            {
+              id: t.id,
+              nom: t.nom,
+              editeur: t.editeur,
+              produit: t.produit,
+              versions: t.versions,
+              actifs: t.actifs,
+              par,
+              memeVersion: memeVersionDetectee(t.versions, p.versionProduit),
+            },
+          ]
+        : [];
+    });
+  }
+
+  /* ---------------------------------------------------------------- Exposition d'une CVE (lot ALH2) */
+  /** Ce qui porte les CVE demandées, pour la personne : actif lisible où tourne une version encore détectée d'une
+      technologie touchée (ligne « technologie »), ou alerte ouverte et présente qui cite la CVE (ligne « alerte », avec
+      l'actif qu'elle vise s'il est rangé). `actif_id` : actif rangé (null : inconnu de la cartographie) ; `cle` : identité
+      de l'actif chez l'éditeur (instance, nature, identifiant), pour compter sans doublon. */
+  private async porteurs(user: SessionUser, cves: readonly string[]) {
+    const liste = [...new Set(cves)];
+    if (!liste.length) return [];
+    const { rows } = await sql<{
+      cve: string;
+      nature: 'technologie' | 'alerte';
+      cle: string | null;
+      actif_id: string | null;
+      alerte_id: string | null;
+      technologie_id: string | null;
+    }>`
+      SELECT tc.cve, 'technologie' AS nature, concat_ws('|', tt.integration_id, ta.actif_type, ta.actif_alh) AS cle,
+        xa.id AS actif_id, NULL::uuid AS alerte_id, tt.id AS technologie_id
+      FROM vulnerabilites_alh_technologie_cves tc
+      JOIN vulnerabilites_alh_technologies tt ON tt.id = tc.technologie_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = tt.integration_id
+      JOIN vulnerabilites_alh_technologie_actifs ta ON ta.technologie_id = tc.technologie_id AND ta.version = tc.version
+        AND ta.actuel
+      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = tt.integration_id AND xa.type = ta.actif_type
+        AND xa.alh_id = ta.actif_alh
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = tt.integration_id AND lp.alh_id = xa.perimetre_alh
+      WHERE tc.cve = ANY(${liste}::text[]) AND tt.vu_numero >= coalesce(e.numero_complet, 0) AND ${lisible(user)}
+      UNION ALL
+      SELECT ac.cve, 'alerte', CASE WHEN a.cible_hote IS NOT NULL THEN concat_ws('|', a.integration_id, 'hote', a.cible_hote)
+                                    WHEN a.cible_domaine IS NOT NULL THEN concat_ws('|', a.integration_id, 'domaine', a.cible_domaine)
+                                    END,
+        xa.id, a.id, NULL::uuid
+      FROM vulnerabilites_alh_alerte_cves ac
+      JOIN vulnerabilites_alh_alertes a ON a.id = ac.alerte_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = a.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = a.integration_id AND lp.alh_id = a.perimetre_alh
+      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = a.integration_id
+        AND ((xa.type = 'hote' AND xa.alh_id = a.cible_hote) OR (xa.type = 'domaine' AND xa.alh_id = a.cible_domaine))
+      WHERE ac.cve = ANY(${liste}::text[]) AND ${present('a')} AND a.statut = ANY(${OUVERTS}::text[])
+        AND ${lisible(user)}`.execute(this.db.k);
+    return rows;
+  }
+
+  /** Pour la veille : sur combien d'actifs lisibles chaque CVE est vue, et par combien d'alertes ouvertes lisibles. Une CVE
+      que la surface externe ne porte pas pour la personne est absente de la table rendue. */
+  async surfaceDesCves(user: SessionUser, cves: readonly string[]): Promise<Map<string, SurfaceCveDto>> {
+    const par = new Map<string, { actifs: Set<string>; alertes: Set<string> }>();
+    for (const r of await this.porteurs(user, cves)) {
+      let x = par.get(r.cve);
+      if (!x) par.set(r.cve, (x = { actifs: new Set(), alertes: new Set() }));
+      if (r.cle) x.actifs.add(r.cle);
+      if (r.alerte_id) x.alertes.add(r.alerte_id);
+    }
+    return new Map([...par].map(([cve, x]) => [cve, { actifs: x.actifs.size, alertes: x.alertes.size }]));
+  }
+
+  /** Pour l'assistant (décision C) : exposition d'une CVE lisible par la personne. Rend les actifs rangés qui la portent
+      (identifiants internes seulement : l'appelant les remplace par des repères), le nombre d'actifs sans fiche, les
+      technologies touchées (nom, éditeur, produit, versions, ce qu'en dit l'éditeur) et les alertes ouvertes qui la citent
+      (criticité, type, statut, titre, défauts). Ni domaine, ni adresse, ni nom de périmètre, ni FAI, ni AS. */
+  async exposition(user: SessionUser, cve: string) {
+    const lignes = await this.porteurs(user, [cve]);
+    const actifs = new Map<string, string | null>();
+    for (const r of lignes) if (r.cle && !actifs.has(r.cle)) actifs.set(r.cle, r.actif_id);
+    const techIds = [...new Set(lignes.flatMap((r) => (r.technologie_id ? [r.technologie_id] : [])))];
+    const alerteIds = [...new Set(lignes.flatMap((r) => (r.alerte_id ? [r.alerte_id] : [])))];
+    const technologies = techIds.length
+      ? (
+          await sql<{
+            nom: string;
+            editeur: string | null;
+            produit: string | null;
+            versions: string[];
+            exploitee: boolean;
+            preuve: boolean;
+            cvss: string | null;
+            epss: string | null;
+          }>`SELECT t.nom, t.editeur, t.produit, array_agg(DISTINCT tc.version ORDER BY tc.version) AS versions,
+                    bool_or(coalesce(tc.exploitee, false)) AS exploitee, bool_or(coalesce(tc.preuve, false)) AS preuve,
+                    max(tc.cvss) AS cvss, max(tc.epss) AS epss
+             FROM vulnerabilites_alh_technologies t
+             JOIN vulnerabilites_alh_technologie_cves tc ON tc.technologie_id = t.id AND tc.cve = ${cve}
+             WHERE t.id = ANY(${techIds}::uuid[])
+               AND EXISTS (SELECT 1 FROM vulnerabilites_alh_technologie_actifs ta WHERE ta.technologie_id = t.id
+                           AND ta.version = tc.version AND ta.actuel)
+             GROUP BY t.id ORDER BY lower(t.nom), t.id`.execute(this.db.k)
+        ).rows
+      : [];
+    const alertes = alerteIds.length
+      ? (
+          await sql<{
+            id: string;
+            criticite: CriticiteAlh | null;
+            type: TypeAlerteAlh | null;
+            statut: StatutAlerteAlh;
+            titre: string;
+            defauts: unknown;
+          }>`SELECT a.id, a.criticite, a.type, a.statut, a.titre, a.defauts FROM vulnerabilites_alh_alertes a
+             WHERE a.id = ANY(${alerteIds}::uuid[])
+             ORDER BY CASE a.criticite WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'important' THEN 2
+                      WHEN 'minor' THEN 3 ELSE 4 END, coalesce(a.maj_alh_le, a.cree_alh_le) DESC NULLS LAST, a.id`.execute(
+            this.db.k,
+          )
+        ).rows.map((a) => {
+          const d = DefautsAlh.safeParse(a.defauts);
+          return { ...a, defauts: d.success ? (d.data as DefautAlh[]) : [] };
+        })
+      : [];
+    return {
+      actifs: [...actifs.values()],
+      technologies: technologies.map((t) => ({
+        ...t,
+        cvss: nombre(t.cvss),
+        epss: nombre(t.epss),
+      })),
+      alertes,
+    };
+  }
+
+  /** Pour le masque de l'assistant (décision C) : toutes les valeurs qui désignent un actif de la surface externe
+      (domaine, adresse, adresse vers laquelle un domaine résout, libellé d'un actif d'une technologie, cible d'une alerte
+      de nature domaine ou hôte), quelle que soit la synchronisation qui les a vues, avec l'actif rangé qu'elles désignent
+      (null : aucun) et sa lisibilité pour la personne. */
+  async actifsAMasquer(user: SessionUser): Promise<{ id: string | null; valeurs: string[]; lisible: boolean }[]> {
+    const { rows } = await sql<{ id: string; valeur: string; adresse: string | null; lisible: boolean }>`
+      SELECT x.id, x.valeur, x.adresse, ${lisible(user)} AS lisible
+      FROM vulnerabilites_alh_actifs x
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh`.execute(
+      this.db.k,
+    );
+    const { rows: autres } = await sql<{ id: string | null; valeur: string }>`
+      SELECT xa.id, ta.libelle AS valeur
+      FROM vulnerabilites_alh_technologie_actifs ta
+      JOIN vulnerabilites_alh_technologies t ON t.id = ta.technologie_id
+      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = t.integration_id AND xa.type = ta.actif_type
+        AND xa.alh_id = ta.actif_alh
+      UNION
+      SELECT xa.id, a.cible_valeur
+      FROM vulnerabilites_alh_alertes a
+      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = a.integration_id
+        AND ((xa.type = 'hote' AND xa.alh_id = a.cible_hote) OR (xa.type = 'domaine' AND xa.alh_id = a.cible_domaine))
+      WHERE a.cible_valeur IS NOT NULL AND a.cible_type IN ('domain', 'host')`.execute(this.db.k);
+    const parId = new Map(
+      rows.map((r) => [r.id, { id: r.id, valeurs: [r.valeur, ...(r.adresse ? [r.adresse] : [])], lisible: r.lisible }]),
+    );
+    const orphelines: { id: null; valeurs: string[]; lisible: false }[] = [];
+    for (const a of autres) {
+      const x = a.id ? parId.get(a.id) : undefined;
+      if (x) {
+        if (!x.valeurs.includes(a.valeur)) x.valeurs.push(a.valeur);
+      } else orphelines.push({ id: null, valeurs: [a.valeur], lisible: false });
+    }
+    return [...parId.values(), ...orphelines];
+  }
+
+  /** Pour le masque de l'assistant (décision C) : fournisseurs d'accès et numéros d'AS des hôtes (« 64500 » et « AS64500 »),
+      qui ne doivent pas partir non plus. */
+  async reseauxAMasquer(): Promise<string[]> {
+    const { rows } = await sql<{ fai: string | null; asn: string | null }>`
+      SELECT DISTINCT fai, asn FROM vulnerabilites_alh_actifs WHERE fai IS NOT NULL OR asn IS NOT NULL`.execute(
+      this.db.k,
+    );
+    return [...new Set(rows.flatMap((r) => [...(r.fai ? [r.fai] : []), ...(r.asn ? [r.asn, `AS${r.asn}`] : [])]))];
   }
 
   /* ---------------------------------------------------------------- Périmètres ALH (vulnerabilites:administrer) */

@@ -10,6 +10,7 @@
 import { z } from 'zod';
 import type { GraviteTenable } from './failles-tenable.js';
 import type { Priorite, SourcesFailleDto } from './priorite-vulnerabilites.js';
+import type { TechnologieRapprocheeDto } from './surface-externe.js';
 import type { ProduitSurveilleDto } from './vulnerabilites.js';
 import { NOM_CPE, type PartieCpe, PARTIES_CPE } from './veille-vulnerabilites.js';
 
@@ -375,4 +376,7 @@ export interface FicheProduitDto {
   machines: MachineRelieeDto[];
   compteurs: Record<Exclude<StatutRapprochement, 'retiree'>, number>;
   rapprochements: RapprochementDto[];
+  /** Technologies de la surface externe (AlgoLightHouse) rapprochées du produit, sur des actifs que la personne peut lire
+      (lot ALH2) : indication, sans décision. */
+  surfaceExterne: TechnologieRapprocheeDto[];
 }

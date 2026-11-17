@@ -40,18 +40,21 @@ import {
   SOURCES_VEILLE,
   SOURCES_VEILLE_DEFINITIONS,
   type SourceVeille,
+  type SurfaceCveDto,
   VEILLE_BORNES,
   VEILLE_PAR_PAGE,
   VEILLE_RETARD_HEURES,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
+import type { SessionUser } from '../auth.js';
 import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { VulnerabilitesVeilleCollectes } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import type { Mandataire } from '../mandataire.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
+import type { SurfaceExterneAlh } from './surface-externe.js';
 
 type LigneCollecte = Selectable<VulnerabilitesVeilleCollectes>;
 
@@ -103,6 +106,8 @@ export class VeilleVulnerabilites {
   /** Recalcul des rapprochements après une collecte NVD (lot V4a) ou CERT Santé (lot V4c : produit cité par une CVE
       absente de NVD) réussie, branché par services.ts. */
   apresCollecte: (() => Promise<unknown>) | null = null;
+  /** Surface externe (lot ALH2), branchée par services.ts : actifs exposés lisibles qui portent une CVE. */
+  surface: SurfaceExterneAlh | null = null;
 
   constructor(
     private readonly db: Db,
@@ -249,8 +254,9 @@ export class VeilleVulnerabilites {
   }
 
   /** Failles connues de la veille ; `kev` : celles du catalogue des failles exploitées, les plus récemment ajoutées d'abord.
-      Recherche par identifiant CVE, éditeur, produit ou nom de la faille. */
-  async failles(q: RechercheFailles): Promise<PageVeille<FailleVeilleDto>> {
+      Recherche par identifiant CVE, éditeur, produit ou nom de la faille. Lot ALH2 : ce que dit AlgoLightHouse et la vue sur
+      la surface externe, pour ce que la personne lit. */
+  async failles(q: RechercheFailles, user: SessionUser): Promise<PageVeille<FailleVeilleDto>> {
     let base = this.db.k.selectFrom('vulnerabilites_veille_cve');
     if (q.kev) base = base.where('kev_ajout', 'is not', null);
     const texte = q.q?.trim();
@@ -288,7 +294,14 @@ export class VeilleVulnerabilites {
     const faits = await lireFaitsCve(
       this.db.k,
       lignes.map((l) => l.cve),
+      user,
     );
+    const surface = this.surface
+      ? await this.surface.surfaceDesCves(
+          user,
+          lignes.map((l) => l.cve),
+        )
+      : new Map<string, SurfaceCveDto>();
     return {
       total: n,
       page: q.page,
@@ -326,6 +339,7 @@ export class VeilleVulnerabilites {
               ...new Set((f?.avis ?? []).flatMap((a) => (a.source === 'cert-sante' && a.produit ? [a.produit] : []))),
             ],
             sources: sourcesDe(f ? [f] : []),
+            surfaceExterne: surface.get(l.cve) ?? null,
           };
         })(),
       })),

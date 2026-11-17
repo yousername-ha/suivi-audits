@@ -5,6 +5,7 @@ import { MantineProvider } from '@mantine/core';
 import type { Action, AvisVeilleDto, EtatSourceVeilleDto, EtatVeilleDto, FailleVeilleDto, Module } from '@suivi/shared';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { famillesVisibles, localiser } from '../src/navigation';
 import { ActivationVeille, AvisTable, FaillesTable, KevTable, SourcesTable } from '../src/vulnerabilites/Veille';
@@ -80,6 +81,7 @@ const faille = (f: Partial<FailleVeilleDto> = {}): FailleVeilleDto => ({
     valeurs: { gravites: [], cvss: [], epss: [] },
     certSante: null,
   },
+  surfaceExterne: null,
   ...f,
 });
 const etat = (ouvert: boolean, disponible = true, mandataire = false): EtatVeilleDto => ({
@@ -222,6 +224,23 @@ describe('rendu', () => {
     expect(html).toContain('Exploitée (KEV)');
     expect(html).toContain('Non publiée');
     expect(html).toContain('editeur_fictif');
+    expect(html).not.toContain('surface externe');
+  });
+  it('faille vue sur la surface externe (lot ALH2) : actifs exposés lisibles, lien vers l’écran', () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(
+          MantineProvider,
+          null,
+          createElement(FaillesTable, { failles: [faille({ surfaceExterne: { actifs: 2, alertes: 1 } })] }),
+        ),
+      ),
+    );
+    expect(html).toContain('Exposée sur Internet');
+    expect(html).toContain('Vue sur la surface externe : 2 actifs exposés, 1 alerte ouverte.');
+    expect(html).toContain('href="/vulnerabilites/surface-externe"');
   });
   it('activation : destinations et ce qui sort ; bouton réservé à l’administrateur ; exécutant absent signalé', () => {
     const rien = () => {};

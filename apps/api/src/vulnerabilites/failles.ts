@@ -75,12 +75,13 @@ const iso = (d: Date | null) => d?.toISOString() ?? null;
 /** Le constat `c` cite une CVE du catalogue KEV (veille). */
 const exploite = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE cc.constat_id = c.id AND v.kev_ajout IS NOT NULL)`;
-/** Une CVE du constat `c` a une exploitation avérée selon une source (KEV, alerte du CERT-FR, fiche du CERT Santé). */
-const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
-  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve')})`;
-/** Le constat `c` est exploitable selon Tenable, ou selon la fiche du CERT Santé d'une de ses CVE. */
-const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
-  WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
+/** Une CVE du constat `c` a une exploitation avérée selon une source (KEV, alerte du CERT-FR, fiche du CERT Santé,
+    AlgoLightHouse sur une technologie que la personne lit). */
+const exploiteeAvere = (user: SessionUser) => sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve', user)})`;
+/** Le constat `c` est exploitable selon Tenable, ou selon la fiche du CERT Santé ou AlgoLightHouse pour une de ses CVE. */
+const exploitableSources = (user: SessionUser) => sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
+  FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve', user)}))`;
 const sansCve = sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id)`;
 /** Une CVE du constat `c` est citée par une alerte du CERT-FR (veille). */
 const alerteConstat = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
@@ -152,8 +153,13 @@ interface LigneMachine {
 const prioriteConstat = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite) =>
   calculerPriorite({ ...faitsDepuisSources(sources), presence: l.present ? 'detectee' : 'absente' }, reglage);
 
-/** Sources d'un constat : faits des CVE qu'il cite, et Tenable lui-même. */
-async function sourcesDesConstats(k: Kdb, lignes: LigneConstat[]): Promise<Map<string, SourcesFailleDto>> {
+/** Sources d'un constat : faits des CVE qu'il cite (AlgoLightHouse compris, pour ce que la personne lit), et Tenable
+    lui-même. */
+async function sourcesDesConstats(
+  k: Kdb,
+  lignes: LigneConstat[],
+  user: SessionUser,
+): Promise<Map<string, SourcesFailleDto>> {
   const ids = lignes.map((l) => l.id);
   // Tableau en un seul paramètre : aucune limite au nombre de constats d'une liste.
   const cc = ids.length
@@ -165,6 +171,7 @@ async function sourcesDesConstats(k: Kdb, lignes: LigneConstat[]): Promise<Map<s
   const faits = await lireFaitsCve(
     k,
     cc.map((x) => x.cve),
+    user,
   );
   const parConstat = new Map<string, string[]>();
   for (const x of cc) parConstat.set(x.constat_id, [...(parConstat.get(x.constat_id) ?? []), x.cve]);
@@ -302,8 +309,8 @@ export class FaillesDetectees {
   async constats(user: SessionUser, q: RechercheConstats): Promise<PageFailles<ConstatResumeDto>> {
     const conditions: RawBuilder<boolean>[] = [];
     if (q.gravite) conditions.push(sql<boolean>`c.gravite = ${q.gravite}`);
-    if (q.exploite) conditions.push(exploiteeAvere);
-    if (q.exploitable) conditions.push(exploitableSources);
+    if (q.exploite) conditions.push(exploiteeAvere(user));
+    if (q.exploitable) conditions.push(exploitableSources(user));
     if (q.nonMaintenu) conditions.push(sansCve);
     conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
@@ -322,7 +329,7 @@ export class FaillesDetectees {
     const { rows } = await sql<LigneConstat>`SELECT * FROM (${this.requeteConstats(user, conditions)}) c`.execute(
       this.db.k,
     );
-    const sources = await sourcesDesConstats(this.db.k, rows);
+    const sources = await sourcesDesConstats(this.db.k, rows, user);
     // Priorité calculée par la fonction partagée, puis filtre et ordre : priorité, gravité, exploitée, machines, contrôle.
     const tous = rows
       .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage) }))
@@ -399,7 +406,7 @@ export class FaillesDetectees {
         risqueAccepte: d.risque_accepte,
         risqueRequalifie: d.risque_requalifie,
       } satisfies MachineDetectionDto);
-    const sources = await sourcesDesConstats(this.db.k, [l]);
+    const sources = await sourcesDesConstats(this.db.k, [l], user);
     return {
       ...versResume(l, sources.get(l.id)!, await this.reglage.valeurs()),
       synopsis: l.synopsis,
@@ -439,7 +446,7 @@ export class FaillesDetectees {
                count(DISTINCT c.id) FILTER (WHERE c.gravite = 'faible')::int AS faible,
                count(DISTINCT c.id) FILTER (WHERE ${exploite})::int AS exploites,
                count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
-               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere})::int AS exploitees_avere
+               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere(user)})::int AS exploitees_avere
         FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
         WHERE d.machine_id = m.id AND ${present} AND NOT ${close('constat')}) k ON true
       WHERE ${lisible(user)}`.execute(this.db.k);
@@ -447,7 +454,7 @@ export class FaillesDetectees {
       SELECT DISTINCT m.id AS machine_id, r.cve, v.cvss31_gravite, v.cvss40_gravite,
              (SELECT max(a.fiche_cvss31) FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
                 AND a.cves @> ARRAY[v.cve]) AS cvss_cert_sante,
-             ${exploiteeCve('v.cve')} AS exploitee
+             ${exploiteeCve('v.cve', user)} AS exploitee
       FROM vulnerabilites_produits_machines pm
       JOIN vulnerabilites_machines m ON m.id = pm.machine_id
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
@@ -549,6 +556,7 @@ export class FaillesDetectees {
     const faits = await lireFaitsCve(
       this.db.k,
       rows.map((l) => l.cve),
+      user,
     );
     return rows.map((l): FailleDeclareeDto => {
       const f = faits.get(l.cve);

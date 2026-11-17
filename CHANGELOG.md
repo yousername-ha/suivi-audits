@@ -100,6 +100,12 @@ Ensuite, faire autoriser par l'équipe infrastructure la sortie TCP 443 du serve
 si le mandataire de l'établissement est réglé, la sortie vers le mandataire, qui doit autoriser cet hôte en `CONNECT`
 ([guide d'installation, étapes 11.10 et 11.12](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `081`** (module Vulnérabilités, surface externe : recommandations, priorité et assistant, lot ALH2 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `defauts` de `vulnerabilites_alh_alertes`, vide par
+défaut ; table `vulnerabilites_assistant_reperes_externes` et un index), durée négligeable, sans reprise de données : les
+recommandations de l'éditeur arrivent à la synchronisation suivante. Aucun appel réseau nouveau, aucune action sur le serveur.
+(session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -399,6 +405,24 @@ si le mandataire de l'établissement est réglé, la sortie vers le mandataire, 
   Écran Risques > Vulnérabilités > « Surface externe » (onglets Alertes, Actifs, Technologies et, pour l'administration du
   module, Périmètres) ; tuile du connecteur à pictogramme neutre ; aide. Ni priorité, ni rapprochement avec les produits
   surveillés, ni assistant, ni alerte à ce stade. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH2 : recommandations, priorité et assistant pour la surface externe**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH2 » ; décisions A à C du RSSI du 17/11/2026).
+  **Recommandations de l'éditeur** : les défauts et résolutions d'une alerte (`defects` du détail déjà lu, aucun appel nouveau)
+  sont lus en liste blanche (nom, description ; résolutions avec nom, description, facilité et gain), balises retirées et
+  bornés, puis affichés dans la nouvelle **fiche d'une alerte** (`GET /api/vulnerabilites/surface/alertes/{id}`, ouverte par
+  le titre), toujours comme texte, jamais comme HTML. **Priorité** : une CVE portée par un actif exposé est une faille présente
+  chez nous (présence « Exposée sur Internet ») ; AlgoLightHouse devient une source de plus pour la grille commune
+  (`is_exploited` = exploitation avérée, `has_poc` = exploitable, CVSS et EPSS : la valeur la plus sévère), pour ce que la
+  personne peut lire, partout où la règle du « ou » s'applique (constats de Tenable, failles déclarées, veille, assistant,
+  filtres et compteurs). Alertes et technologies affichent leur priorité et se trient par priorité (`?tri=priorite`) ; chaque
+  CVE d'une technologie porte la sienne. **Veille** : « Vue sur la surface externe : n actifs exposés », avec un lien vers
+  l'écran. **Produits surveillés** : chaque technologie est rapprochée des produits par la règle des failles (CPE, sinon nom),
+  version comparée ; affiché sur la technologie et dans la fiche du produit (indication, sans décision). **Assistant** :
+  `evaluer_cve` dit si la CVE est exposée sur Internet, sur combien d'actifs, avec quelles technologies, alertes et
+  recommandations, et en tient compte dans la priorité ; chaque actif exposé n'est qu'un repère « E-001 » (remplacé par le
+  domaine ou l'adresse à l'affichage, selon les droits) ; le masque de sortie couvre désormais les domaines (et leurs
+  sous-domaines), adresses, FAI et numéros d'AS d'AlgoLightHouse, en conversation comme en ronde. Migration `081`. Aide mise
+  à jour. (session « Module surveillance vulnérabilités SMSI »)
 
 ### Ajouté
 

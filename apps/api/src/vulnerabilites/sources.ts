@@ -8,7 +8,12 @@
      concept disponible selon le CERT Santé. Sources rangées de la première à la dernière, avec leur date ;
    - valeurs par source (gravité, score CVSS, score EPSS), toutes gardées ; la priorité prend la plus sévère (V27,
      valeursRetenues du paquet partagé).
-   Lecture seule, en deux requêtes pour un lot de CVE. */
+   Lecture seule, en deux requêtes pour un lot de CVE.
+   Lot ALH2 (décision B du RSSI du 17/11/2026) : AlgoLightHouse est une source de plus, pour les CVE des technologies qu'il
+   voit sur des actifs que la personne peut lire (jamais sans elle : un fait d'ALH révélerait qu'une CVE est exposée dans un
+   périmètre qu'elle ne lit pas) : `is_exploited` vaut exploitation avérée, `has_poc` vaut « exploitable », score CVSS et
+   EPSS gardés avec leur source (gravité déduite du score, comme pour le CERT Santé). Les CVE des alertes ne portent aucun
+   fait : elles ne disent que la présence. */
 import {
   type GraviteSource,
   type GraviteTenable,
@@ -28,7 +33,9 @@ import {
   type SourceVeille,
 } from '@suivi/shared';
 import { sql, type RawBuilder } from 'kysely';
+import type { SessionUser } from '../auth.js';
 import type { Kdb } from '../db/db.js';
+import { cvesAlhLisibles } from './sql.js';
 
 const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 const iso = (d: Date | null) => d?.toISOString() ?? null;
@@ -48,16 +55,26 @@ interface FicheLue {
 /** Faits d'une CVE, par source. */
 export interface FaitsCve {
   cve: string;
+  /** La CVE est connue de la veille (sinon seulement d'AlgoLightHouse). */
+  veille: boolean;
   nvd: { publieLe: string | null; gravite: GraviteTenable | null; score: number | null } | null;
   kevAjout: string | null;
   epss: number | null;
   /** Publications d'avis qui citent la CVE (source, nature, date de publication ou, à défaut, de première vue). */
   avis: { source: 'cert-fr' | 'cert-sante'; nature: 'alerte' | 'avis'; le: string; produit: string | null }[];
   fiches: FicheLue[];
+  /** Ce qu'AlgoLightHouse dit de la CVE, sur les technologies lisibles par la personne (lot ALH2) : null sans personne ou
+      sans technologie lisible. Exploitée ou preuve : vrai dès qu'une version le dit ; scores : le plus haut. */
+  alh: { exploitee: boolean; preuve: boolean; cvss: number | null; epss: number | null } | null;
 }
 
-/** Faits de chaque CVE demandée (les CVE inconnues de la veille sont absentes de la table rendue). */
-export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map<string, FaitsCve>> {
+/** Faits de chaque CVE demandée (les CVE inconnues de la veille et d'AlgoLightHouse sont absentes de la table rendue).
+    `user` : la personne qui regarde ; sans elle, AlgoLightHouse n'est pas lu. */
+export async function lireFaitsCve(
+  k: Kdb,
+  cves: readonly string[],
+  user?: SessionUser,
+): Promise<Map<string, FaitsCve>> {
   const liste = [...new Set(cves)];
   const out = new Map<string, FaitsCve>();
   if (!liste.length) return out;
@@ -77,6 +94,7 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
   for (const l of v)
     out.set(l.cve, {
       cve: l.cve,
+      veille: true,
       nvd: l.nvd_le
         ? {
             publieLe: iso(l.publie_le),
@@ -88,7 +106,26 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
       epss: nombre(l.epss_score),
       avis: [],
       fiches: [],
+      alh: null,
     });
+  if (user) {
+    const { rows: x } = await sql<{
+      cve: string;
+      exploitee: boolean;
+      preuve: boolean;
+      cvss: string | null;
+      epss: string | null;
+    }>`SELECT c.cve, bool_or(coalesce(c.exploitee, false)) AS exploitee, bool_or(coalesce(c.preuve, false)) AS preuve,
+              max(c.cvss) AS cvss, max(c.epss) AS epss
+       FROM (${cvesAlhLisibles(user)}) c WHERE c.cve = ANY(${liste}::text[]) GROUP BY c.cve`.execute(k);
+    for (const l of x) {
+      const alh = { exploitee: l.exploitee, preuve: l.preuve, cvss: nombre(l.cvss), epss: nombre(l.epss) };
+      const f = out.get(l.cve);
+      if (f) f.alh = alh;
+      else
+        out.set(l.cve, { cve: l.cve, veille: false, nvd: null, kevAjout: null, epss: null, avis: [], fiches: [], alh });
+    }
+  }
   const { rows: a } = await sql<{
     cve: string;
     source: 'cert-fr' | 'cert-sante';
@@ -175,6 +212,17 @@ export function sourcesDe(faits: readonly FaitsCve[], tenable?: FaitsTenable): S
     if (f.nvd?.gravite) gravites.push({ source: 'nvd', gravite: f.nvd.gravite });
     if (f.nvd?.score !== null && f.nvd?.score !== undefined) cvss.push({ source: 'nvd', score: f.nvd.score });
     if (f.epss !== null) epss.push({ source: 'first', score: f.epss });
+    if (f.alh) {
+      // AlgoLightHouse ne date pas ses faits : date inconnue, rangée après les sources datées (V26).
+      if (f.alh.exploitee) exploitation.push({ source: 'alh', le: null });
+      if (f.alh.preuve) exploitable.push({ source: 'alh', le: null });
+      if (f.alh.cvss !== null) {
+        cvss.push({ source: 'alh', score: f.alh.cvss });
+        const g = graviteDepuisScore(f.alh.cvss);
+        if (g) gravites.push({ source: 'alh', gravite: g });
+      }
+      if (f.alh.epss !== null) epss.push({ source: 'alh', score: f.alh.epss });
+    }
   }
   if (tenable) {
     gravites.push({ source: 'tenable', gravite: tenable.gravite });
@@ -209,15 +257,18 @@ export function publicationsDe(f: FaitsCve): Signalement<Exclude<SourceVeille, '
 }
 
 /** La CVE de la colonne désignée (liste fermée écrite dans le code) a une exploitation avérée selon une source : catalogue
-    KEV, alerte du CERT-FR, ou fiche du CERT Santé (« activement exploitée : Oui »). Pour les filtres et les compteurs
-    calculés en SQL ; même règle que sourcesDe. */
-export const exploiteeCve = (colonne: 'v.cve' | 'cc.cve' | 'r.cve'): RawBuilder<boolean> =>
+    KEV, alerte du CERT-FR, fiche du CERT Santé (« activement exploitée : Oui »), ou AlgoLightHouse sur une technologie que
+    la personne peut lire (lot ALH2). Pour les filtres et les compteurs calculés en SQL ; même règle que sourcesDe. */
+export const exploiteeCve = (colonne: 'v.cve' | 'cc.cve' | 'r.cve', user: SessionUser): RawBuilder<boolean> =>
   sql<boolean>`(EXISTS (SELECT 1 FROM vulnerabilites_veille_cve vk WHERE vk.cve = ${sql.ref(colonne)}
       AND vk.kev_ajout IS NOT NULL)
     OR EXISTS (SELECT 1 FROM vulnerabilites_veille_avis a WHERE a.cves @> ARRAY[${sql.ref(colonne)}]::text[]
-      AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui'))))`;
+      AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui')))
+    OR EXISTS (SELECT 1 FROM (${cvesAlhLisibles(user)}) za WHERE za.cve = ${sql.ref(colonne)} AND za.exploitee))`;
 
-/** La CVE de la colonne désignée est « exploitable » selon la fiche du CERT Santé (preuve de concept disponible). */
-export const preuveCertSante = (colonne: 'cc.cve'): RawBuilder<boolean> =>
-  sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
-    AND a.fiche_preuve = 'disponible' AND a.cves @> ARRAY[${sql.ref(colonne)}]::text[])`;
+/** La CVE de la colonne désignée est « exploitable » selon la fiche du CERT Santé (preuve de concept disponible), ou selon
+    AlgoLightHouse sur une technologie que la personne peut lire (lot ALH2). */
+export const preuveCertSante = (colonne: 'cc.cve', user: SessionUser): RawBuilder<boolean> =>
+  sql<boolean>`(EXISTS (SELECT 1 FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
+    AND a.fiche_preuve = 'disponible' AND a.cves @> ARRAY[${sql.ref(colonne)}]::text[])
+    OR EXISTS (SELECT 1 FROM (${cvesAlhLisibles(user)}) za WHERE za.cve = ${sql.ref(colonne)} AND za.preuve))`;

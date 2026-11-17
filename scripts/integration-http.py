@@ -58,7 +58,7 @@ OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester"
 # Types qui sortent vers Internet et peuvent passer par le mandataire de l'établissement (USAGE_MANDATAIRE « utilise » du
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
-BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "lot": 500, "lots": 200}
+BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "defautsParAlerte": 20, "resolutionsParDefaut": 10, "nomDefaut": 300, "descriptionDefaut": 4000, "niveauResolution": 60, "lot": 500, "lots": 200}
 BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "lot": 500, "lots": 200}
 ENTREE_MAX = 65536
 REPONSE_MAX = 1024 * 1024
@@ -699,10 +699,11 @@ def tenable_synchroniser(client, configuration, horloge=time.monotonic):
     return resultat, elements
 
 
-# ------------------------------------------------------------------ AlgoLightHouse (lot ALH1)
+# ------------------------------------------------------------------ AlgoLightHouse (lots ALH1 et ALH2)
 # Champs lus, par réponse : tout autre champ est écarté dès la lecture et ne sort jamais du script. Jamais lus : `note`
-# (description HTML), `data` (déprécié), `uploads`, `defects`, commentaires, `sensitive_data`, `has_sensitive_data`, et dans un
-# fragment tout ce qui n'est pas `alert_cves`.
+# (description HTML), `data` (déprécié), `uploads`, commentaires, `sensitive_data`, `has_sensitive_data`, et dans un fragment
+# tout ce qui n'est pas `alert_cves`. Lot ALH2 (décision A du RSSI du 17/11/2026) : les défauts (`defects`) d'un détail sont
+# lus en liste blanche (CHAMPS_DEFAUT_ALH, CHAMPS_RESOLUTION_ALH), balises retirées : du texte simple, jamais du HTML.
 CHAMPS_PERIMETRE_ALH = ("id", "name")
 CHAMPS_HOTE_ALH = ("id", "perimeter_id", "status", "ip_address", "isp", "asn", "country", "is_shared_server", "is_cdn",
                    "is_alive", "alive_at", "is_manual_import", "created_at", "updated_at")
@@ -710,7 +711,9 @@ CHAMPS_DOMAINE_ALH = ("id", "perimeter_id", "status", "domain", "level", "is_man
                       "parent_target_domain_id", "created_at", "updated_at")
 CHAMPS_ALERTE_ALH = ("id", "title", "status", "type_id", "perimeter_id", "criticity_id", "is_verified", "created_at",
                      "updated_at")
-CHAMPS_DETAIL_ALH = ("id", "type", "criticity", "target", "cves", "fragments", "completed_at", "created_at")
+CHAMPS_DETAIL_ALH = ("id", "type", "criticity", "target", "cves", "fragments", "defects", "completed_at", "created_at")
+CHAMPS_DEFAUT_ALH = ("name", "description", "resolutions")
+CHAMPS_RESOLUTION_ALH = ("name", "description", "ease_of_execution", "security_gain")
 CHAMPS_CIBLE_ALH = ("type", "value", "target_host_id", "target_domain_id")
 CHAMPS_TECHNOLOGIE_ALH = ("display_name", "vendor", "product", "technology", "active_versions", "inactive_assets",
                           "last_scanned_at")
@@ -812,10 +815,35 @@ def alh_tester(client):
     return {"version": version}
 
 
+def defauts_alh(brut):
+    """Défauts d'un détail (lot ALH2) : nom, description et résolutions (nom, description, facilité, gain), en liste blanche,
+    balises retirées et textes bornés ; un défaut ou une résolution sans nom est écarté. Seule la valeur (`value`) de la
+    facilité et du gain est lue."""
+    out = []
+    for d in brut[: BORNES_ALH["defautsParAlerte"]] if isinstance(brut, list) else []:
+        d = {k: d[k] for k in CHAMPS_DEFAUT_ALH if k in d} if isinstance(d, dict) else {}
+        nom = texte(d.get("name"), BORNES_ALH["nomDefaut"])
+        if not nom:
+            continue
+        resolutions = []
+        brutes = d.get("resolutions") if isinstance(d.get("resolutions"), list) else []
+        for r in brutes[: BORNES_ALH["resolutionsParDefaut"]]:
+            r = {k: r[k] for k in CHAMPS_RESOLUTION_ALH if k in r} if isinstance(r, dict) else {}
+            nom_r = texte(r.get("name"), BORNES_ALH["nomDefaut"])
+            if not nom_r:
+                continue
+            niveau = lambda o: texte(o.get("value"), BORNES_ALH["niveauResolution"]) if isinstance(o, dict) else None
+            resolutions.append({"nom": nom_r, "description": texte(r.get("description"), BORNES_ALH["descriptionDefaut"]),
+                                "facilite": niveau(r.get("ease_of_execution")), "gain": niveau(r.get("security_gain"))})
+        out.append({"nom": nom, "description": texte(d.get("description"), BORNES_ALH["descriptionDefaut"]),
+                    "resolutions": resolutions})
+    return out
+
+
 def alh_detail(client, alerte, types, criticites):
-    """Détail d'une alerte : type, criticité, cible et CVE ; tout autre champ (note, défauts, pièces jointes, données
-    sensibles des fragments) est écarté dès la lecture. Les correspondances identifiant -> valeur de type et de criticité
-    sont apprises au passage, pour les alertes dont le détail n'est pas lu."""
+    """Détail d'une alerte : type, criticité, cible, CVE et défauts (lot ALH2, liste blanche) ; tout autre champ (note,
+    pièces jointes, données sensibles des fragments) est écarté dès la lecture. Les correspondances identifiant -> valeur de
+    type et de criticité sont apprises au passage, pour les alertes dont le détail n'est pas lu."""
     brut = client.requete("GET", "/api/v1/alerts/" + alerte["id"], maximum=BORNES_ALH["reponseDetail"])
     if not isinstance(brut, dict):
         raise Refus("Détail d'alerte illisible.")
@@ -846,6 +874,7 @@ def alh_detail(client, alerte, types, criticites):
             if isinstance(lien, dict):
                 trouvees += [c for c in cves_de(lien.get("cve")) if c not in trouvees]
     alerte["cves"] = trouvees[: BORNES_ALH["cvesParAlerte"]]
+    alerte["defauts"] = defauts_alh(d.get("defects"))
     # Constaté sur un espace réel : la liste peut rendre une date de création vide (an 1), le détail porte la vraie.
     if alerte.get("creeLe") is None:
         alerte["creeLe"] = instant_iso(d.get("created_at"))
@@ -1013,7 +1042,7 @@ def alh_synchroniser(client, configuration, horloge=time.monotonic):
             "type": "alerte", "id": ident, "perimetre": uuid_strict(a.get("perimeter_id")), "typeAlerte": None,
             "criticite": None, "statut": statut, "titre": titre, "verifiee": booleen(a.get("is_verified")),
             "detail": False, "cibleType": None, "cibleValeur": None, "cibleHote": None, "cibleDomaine": None,
-            "cves": [], "creeLe": instant_iso(a.get("created_at")), "majLe": instant_iso(a.get("updated_at")),
+            "cves": [], "defauts": [], "creeLe": instant_iso(a.get("created_at")), "majLe": instant_iso(a.get("updated_at")),
             "termineeLe": None,
         }
     # Détail des alertes les plus récemment modifiées, dans la limite des bornes (nombre, durée).

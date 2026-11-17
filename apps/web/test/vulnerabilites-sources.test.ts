@@ -190,6 +190,7 @@ describe('rendu', () => {
       publications: [{ source: 'cert-sante', le: '2026-11-10T02:28:01.000Z' }],
       produitsCites: ['Produit fictif'],
       sources,
+      surfaceExterne: null,
     };
     const f = rendu(createElement(FaillesTable, { failles: [faille] }));
     expect(f).toContain('Publiée par : CERT Santé (le 10/11/2026)');

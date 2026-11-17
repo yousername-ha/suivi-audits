@@ -1,11 +1,15 @@
-/* Module Vulnérabilités (ADR 0100, lot ALH1) : surface externe lue dans AlgoLightHouse, présentation sans état ni appel
-   réseau (testée à part). Le serveur reste seul juge des droits (périmètre relié, administration du module) ; les textes de
-   l'éditeur s'affichent tels quels, comme texte simple. */
+/* Module Vulnérabilités (ADR 0100, lots ALH1 et ALH2) : surface externe lue dans AlgoLightHouse, présentation sans état ni
+   appel réseau (testée à part). Le serveur reste seul juge des droits (périmètre relié, administration du module) ; les
+   textes de l'éditeur (titres, défauts, résolutions) s'affichent tels quels, comme texte simple, jamais comme HTML. */
 import {
   type AlerteAlhDto,
   CRITICITE_ALH_LIBELLES,
   type CriticiteAlh,
   type EtatSurfaceExterneDto,
+  type ProduitRapprocheAlhDto,
+  type SurfaceCveDto,
+  type TechnologieRapprocheeDto,
+  type TriSurface,
   STATUT_ACTIF_ALH_LIBELLES,
   STATUT_ALERTE_ALH_LIBELLES,
   STATUTS_ALERTE_ALH_OUVERTS,
@@ -28,8 +32,10 @@ export interface FiltresAlertesAlh {
   criticite: CriticiteAlh | '';
   /** Vide : alertes encore ouvertes chez l'éditeur. */
   statut: StatutAlerteAlh | 'toutes' | '';
+  /** Vide : ordre par défaut (criticité de l'éditeur) ; `priorite` : priorité calculée par la plateforme (lot ALH2). */
+  tri: TriSurface | '';
 }
-export const FILTRES_ALERTES_VIDES: FiltresAlertesAlh = { q: '', type: '', criticite: '', statut: '' };
+export const FILTRES_ALERTES_VIDES: FiltresAlertesAlh = { q: '', type: '', criticite: '', statut: '', tri: '' };
 
 const adresse = (chemin: string, valeurs: Record<string, string>, page: number) => {
   const p = new URLSearchParams();
@@ -40,10 +46,23 @@ const adresse = (chemin: string, valeurs: Record<string, string>, page: number) 
 };
 
 export const urlAlertesAlh = (f: FiltresAlertesAlh, page = 1) =>
-  adresse('alertes', { q: f.q, type: f.type, criticite: f.criticite, statut: f.statut }, page);
+  adresse('alertes', { q: f.q, type: f.type, criticite: f.criticite, statut: f.statut, tri: f.tri }, page);
 export const urlActifsAlh = (q: string, type: TypeActifAlh | '', page = 1) => adresse('actifs', { q, type }, page);
-export const urlTechnologiesAlh = (q: string, exploitee: boolean, page = 1) =>
-  adresse('technologies', { q, exploitee: exploitee ? 'oui' : '' }, page);
+export const urlTechnologiesAlh = (q: string, exploitee: boolean, page = 1, tri: TriSurface | '' = '') =>
+  adresse('technologies', { q, exploitee: exploitee ? 'oui' : '', tri }, page);
+export const urlFicheAlerteAlh = (id: string) => `${API}/alertes/${encodeURIComponent(id)}`;
+
+/** Ordres proposés par les listes (lot ALH2). */
+export const OPTIONS_TRI_ALERTES = [
+  { value: 'criticite', label: 'Criticité de l’éditeur' },
+  { value: 'priorite', label: 'Priorité calculée' },
+];
+export const OPTIONS_TRI_TECHNOLOGIES = [
+  { value: 'exploitation', label: 'CVE exploitées, puis score' },
+  { value: 'priorite', label: 'Priorité calculée' },
+];
+/** Valeur du sélecteur d'ordre -> paramètre de l'API (vide : ordre par défaut). */
+export const triDepuis = (v: string | null): TriSurface | '' => (v === 'priorite' ? 'priorite' : '');
 
 export const CRITICITE_ALH_ETAT: Record<CriticiteAlh, Etat> = {
   critical: 'erreur',
@@ -111,4 +130,27 @@ export function resumeEtatAlh(e: EtatSurfaceExterneDto): { libelle: string; etat
     etat: d.bilan?.tronque ? 'attention' : 'succes',
     detail: `${d.bilan ? resumeBilanAlh(d.bilan as unknown as Record<string, unknown>) : ''}${nonRelies}`.trim(),
   };
+}
+
+/** Vue d'une CVE sur la surface externe, pour la veille (lot ALH2). */
+export function libelleSurfaceCve(s: SurfaceCveDto): string {
+  const actifs = pluriel(s.actifs, 'actif exposé', 'actifs exposés');
+  return s.alertes
+    ? `Vue sur la surface externe : ${actifs}, ${pluriel(s.alertes, 'alerte ouverte', 'alertes ouvertes')}.`
+    : `Vue sur la surface externe : ${actifs}.`;
+}
+
+/** Correspondance de version entre un produit déclaré et ce que la surface externe détecte. */
+const versionRapprochee = (m: boolean | null) =>
+  m === true ? 'même version' : m === false ? 'version différente : à vérifier' : 'version non comparable';
+
+/** Produit surveillé rapproché d'une technologie (lot ALH2). */
+export function libelleProduitRapproche(p: ProduitRapprocheAlhDto): string {
+  return `${p.editeur} ${p.nom} ${p.versionProduit} (${p.par === 'cpe' ? 'par identifiant CPE' : 'par nom'}, ${versionRapprochee(p.memeVersion)})`;
+}
+
+/** Technologie de la surface externe rapprochée d'un produit (fiche du produit, lot ALH2). */
+export function libelleTechnologieRapprochee(t: TechnologieRapprocheeDto): string {
+  const versions = t.versions.filter(Boolean);
+  return `${[t.editeur, t.nom].filter(Boolean).join(' ')}${versions.length ? ` ${versions.join(', ')}` : ' (version inconnue)'} sur ${pluriel(t.actifs, 'actif exposé', 'actifs exposés')} (${t.par === 'cpe' ? 'par identifiant CPE' : 'par nom'}, ${versionRapprochee(t.memeVersion)})`;
 }

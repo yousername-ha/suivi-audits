@@ -521,3 +521,22 @@ V30). La session « Assistant RSSI intégré plateforme » en a été informée.
   conversation ; elles ne sont **pas relues par le modèle** (écart avec le point 13, qui fait relire les décisions rendues).
 - La mémoire, les fiches de méthode et le journal d'audit ne reçoivent ni nom ni repère de machine venant de ces outils.
 - Non vérifié : aucun essai avec un modèle réel.
+
+## Addendum du 17/11/2026 — surface externe (AlgoLightHouse) dans `evaluer_cve`, masque étendu
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `081`) par la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`), sur décision du RSSI du 17/11/2026 ([ADR 0100](0100-module-vulnerabilites.md),
+addendum « lot ALH2 », décision C). Aucun outil nouveau ; la déclaration des outils et les réglages de l'assistant ne changent
+pas.
+
+- `evaluer_cve` rend aussi l'**exposition sur Internet** de la CVE vue par AlgoLightHouse, pour ce que la personne lit :
+  nombre d'actifs exposés, repères « E-001 » (table propre par conversation, même règle que « M-001 »), technologies et
+  versions, alertes ouvertes (criticité, type, statut, titre) et recommandations de l'éditeur, bornées. Jamais de domaine,
+  d'adresse, de nom de périmètre, de FAI ni d'AS. La consigne du module cite les repères « E-… » après les machines.
+- **Masque de sortie étendu** (en conversation et en ronde) : domaines, adresses, adresses de résolution, libellés d'actifs et
+  cibles d'alertes d'AlgoLightHouse, sous-domaines d'un domaine connu, FAI et numéros d'AS des hôtes ; ils ne sont pas dans
+  l'inventaire des machines. Toujours protégés, jamais démasqués par la liste de mots (V31). Toute ronde dépend désormais
+  aussi de la lecture de la surface externe : une lecture en échec fait échouer la ronde (sens prudent de la panne).
+- À l'affichage, un repère « E-… » est remplacé par le domaine ou l'adresse pour une personne qui lit l'actif ; sinon il reste
+  affiché. Les propositions d'action ne visent toujours que des machines.
+- Non vérifié : aucun essai avec un modèle réel (faux transport).

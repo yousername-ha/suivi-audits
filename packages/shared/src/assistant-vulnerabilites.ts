@@ -19,7 +19,22 @@ export function numeroRepere(repere: string): number | null {
   const n = Number(repere.slice(2));
   return n >= 1 && n <= REPERES_MAX ? n : null;
 }
-/** Repères cités dans un texte, dans l'ordre et sans doublon. Un repère est un mot entier : « M-0012 » n'en est pas un. */
+/** Repère d'un actif exposé sur Internet (domaine ou adresse vu par AlgoLightHouse, lot ALH2) : « E- » et trois chiffres. Même
+    règle que les machines : attribué par la plateforme pour une conversation, jamais le domaine ni l'adresse. */
+export const repereExterne = (numero: number): string => `E-${String(numero).padStart(3, '0')}`;
+export const REPERE_EXTERNE_FORMAT = /^E-\d{3}$/;
+/** Numéro d'un repère externe bien formé (1 à 999), sinon null. */
+export function numeroRepereExterne(repere: string): number | null {
+  if (!REPERE_EXTERNE_FORMAT.test(repere)) return null;
+  const n = Number(repere.slice(2));
+  return n >= 1 && n <= REPERES_MAX ? n : null;
+}
+/** Un repère de machine ou d'actif externe, mot entier (pour l'affichage). */
+const TOUT_REPERE = /(?<![A-Za-z0-9_-])[ME]-\d{3}(?![A-Za-z0-9_-])/g;
+const repereValide = (r: string) => (r.startsWith('E-') ? numeroRepereExterne(r) : numeroRepere(r)) !== null;
+
+/** Repères de machines cités dans un texte, dans l'ordre et sans doublon. Un repère est un mot entier : « M-0012 » n'en
+    est pas un. Les repères d'actifs externes (« E-001 ») n'en sont pas : une proposition d'action ne vise que des machines. */
 export function reperesCites(texte: string): string[] {
   const vus = new Set<string>();
   for (const m of texte.matchAll(/(?<![A-Za-z0-9_-])M-\d{3}(?![A-Za-z0-9_-])/g)) vus.add(m[0]);
@@ -33,14 +48,15 @@ export type SegmentTexte =
 
 export type ResolutionRepere = { machine: string } | 'non_lisible' | 'inconnu';
 
-/** Découpe un texte autour des repères qu'il cite ; chaque repère est résolu par l'appelant. */
+/** Découpe un texte autour des repères qu'il cite (machines « M-001 » et actifs externes « E-001 ») ; chaque repère est
+    résolu par l'appelant (le champ `machine` porte alors le nom de la machine, ou le domaine ou l'adresse de l'actif). */
 export function decouperReperes(texte: string, resoudre: (repere: string) => ResolutionRepere): SegmentTexte[] {
   const out: SegmentTexte[] = [];
   let debut = 0;
-  for (const m of texte.matchAll(/(?<![A-Za-z0-9_-])M-\d{3}(?![A-Za-z0-9_-])/g)) {
+  for (const m of texte.matchAll(TOUT_REPERE)) {
     const i = m.index;
     if (i > debut) out.push({ texte: texte.slice(debut, i) });
-    const r = numeroRepere(m[0]) === null ? 'inconnu' : resoudre(m[0]);
+    const r = repereValide(m[0]) ? resoudre(m[0]) : 'inconnu';
     out.push(typeof r === 'string' ? { repere: m[0], etat: r } : { repere: m[0], machine: r.machine });
     debut = i + m[0].length;
   }
@@ -50,8 +66,8 @@ export function decouperReperes(texte: string, resoudre: (repere: string) => Res
 /** Texte affiché : nom à la place des repères résolus, repère laissé tel quel sinon. */
 export const texteDesSegments = (segments: readonly SegmentTexte[]): string =>
   segments.map((s) => ('texte' in s ? s.texte : 'machine' in s ? s.machine : s.repere)).join('');
-/** Le texte cite au moins un repère. */
-export const citeUnRepere = (texte: string): boolean => reperesCites(texte).length > 0;
+/** Le texte cite au moins un repère (machine ou actif externe). */
+export const citeUnRepere = (texte: string): boolean => [...texte.matchAll(TOUT_REPERE)].length > 0;
 
 /* ------------------------------------------------------------------ Propositions d'action (conversation) */
 export const PROPOSITION_VULN_TITRE_MAX = 200;

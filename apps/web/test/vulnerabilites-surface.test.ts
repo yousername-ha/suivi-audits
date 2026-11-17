@@ -1,7 +1,9 @@
 /* Module Vulnérabilités (ADR 0100, lot ALH1) : écran « Surface externe » (AlgoLightHouse) et formulaire du connecteur. Menu
    conditionné par le droit du module, adresses de recherche et de filtres, libellés, périmètre non relié signalé, textes de
    l'éditeur rendus comme texte simple, liaison des périmètres, bilan d'une synchronisation, formulaire du connecteur limité à
-   ses champs (adresse de l'espace chez l'éditeur, délai), aide. Données entièrement fictives. */
+   ses champs (adresse de l'espace chez l'éditeur, délai), aide. Lot ALH2 : priorité des alertes et des technologies,
+   tri par priorité, fiche d'une alerte avec les recommandations de l'éditeur rendues comme texte (jamais comme HTML),
+   produits surveillés rapprochés. Données entièrement fictives. */
 import { MantineProvider } from '@mantine/core';
 import {
   type Action,
@@ -9,7 +11,9 @@ import {
   type AlerteAlhDto,
   catalogueIntegrations,
   type EtatSurfaceExterneDto,
+  type FicheAlerteAlhDto,
   type IntegrationDto,
+  type Priorite,
   type Module,
   type PerimetreAlhDto,
   type TechnologieAlhDto,
@@ -33,6 +37,7 @@ import {
   ActifsAlhTable,
   AlertesAlhTable,
   EtatSurface,
+  FicheAlerteAlh,
   PerimetresAlhTable,
   TechnologiesAlh,
 } from '../src/vulnerabilites/SurfaceExterne';
@@ -40,6 +45,11 @@ import {
   FILTRES_ALERTES_VIDES,
   libelleCible,
   libellePerimetre,
+  libelleProduitRapproche,
+  libelleSurfaceCve,
+  libelleTechnologieRapprochee,
+  triDepuis,
+  urlFicheAlerteAlh,
   pourcentage,
   resumeEtatAlh,
   urlActifsAlh,
@@ -52,6 +62,20 @@ const rendre = (n: ReactNode) =>
 const rien = () => undefined;
 const ALH = catalogueIntegrations().find((t) => t.id === 'algolighthouse')!;
 const integration = { id: '00000000-0000-4000-8000-0000000000a2', nom: 'AlgoLightHouse fictif' };
+const P1: Priorite = {
+  niveau: 'P1',
+  faits: [
+    { fait: 'exploitation', sources: ['alh'] },
+    { fait: 'presence', presence: 'exposee' },
+  ],
+};
+const P3: Priorite = {
+  niveau: 'P3',
+  faits: [
+    { fait: 'presence', presence: 'exposee' },
+    { fait: 'gravite', gravite: 'elevee' },
+  ],
+};
 
 const alerte = (a: Partial<AlerteAlhDto> = {}): AlerteAlhDto => ({
   id: '00000000-0000-4000-8000-000000000031',
@@ -69,6 +93,8 @@ const alerte = (a: Partial<AlerteAlhDto> = {}): AlerteAlhDto => ({
   perimetreAlh: 'Périmètre ALH fictif 1',
   perimetreNom: 'Périmètre fictif A',
   integration,
+  priorite: P1,
+  nombreDefauts: 1,
   ...a,
 });
 const actif = (x: Partial<ActifAlhDto> = {}): ActifAlhDto => ({
@@ -116,6 +142,7 @@ const techno: TechnologieAlhDto = {
           preuve: true,
           exploitee: true,
           publieeLe: null,
+          priorite: P1,
         },
       ],
     },
@@ -126,6 +153,17 @@ const techno: TechnologieAlhDto = {
   preuves: 1,
   cvssMax: 7.5,
   integration,
+  priorite: P1,
+  produits: [
+    {
+      id: '00000000-0000-4000-8000-0000000000c1',
+      editeur: 'F5',
+      nom: 'Nginx',
+      versionProduit: '1.16',
+      par: 'nom',
+      memeVersion: false,
+    },
+  ],
 };
 
 describe('menu et aide', () => {
@@ -145,7 +183,17 @@ describe('menu et aide', () => {
     const a = HELP_ARTICLES.find((x) => x.id === 'vulnerabilites-surface')!;
     expect(a.permission).toBe('vulnerabilites:lire');
     const texte = a.steps.join(' ');
-    for (const attendu of ['lecture seule', 'non relié', 'administrer le module', 'données sensibles', 'mandataire'])
+    for (const attendu of [
+      'lecture seule',
+      'non relié',
+      'administrer le module',
+      'données sensibles',
+      'mandataire',
+      'Priorité calculée',
+      'recommandations de l’éditeur',
+      'texte simple',
+      '« E-001 »',
+    ])
       expect(texte).toContain(attendu);
     expect(HELP_ARTICLES.find((x) => x.id === 'integrations')!.steps.join(' ')).toContain('AlgoLightHouse');
   });
@@ -154,11 +202,37 @@ describe('menu et aide', () => {
 describe('adresses et libellés', () => {
   it('recherche et filtres', () => {
     expect(urlAlertesAlh(FILTRES_ALERTES_VIDES)).toBe('/api/vulnerabilites/surface/alertes');
-    expect(urlAlertesAlh({ q: ' rdp ', type: 'typosquatting', criticite: 'major', statut: 'toutes' }, 2)).toBe(
+    expect(urlAlertesAlh({ q: ' rdp ', type: 'typosquatting', criticite: 'major', statut: 'toutes', tri: '' }, 2)).toBe(
       '/api/vulnerabilites/surface/alertes?q=rdp&type=typosquatting&criticite=major&statut=toutes&page=2',
+    );
+    expect(urlAlertesAlh({ ...FILTRES_ALERTES_VIDES, tri: 'priorite' })).toBe(
+      '/api/vulnerabilites/surface/alertes?tri=priorite',
     );
     expect(urlActifsAlh('exemple', 'domaine')).toBe('/api/vulnerabilites/surface/actifs?q=exemple&type=domaine');
     expect(urlTechnologiesAlh('', true, 3)).toBe('/api/vulnerabilites/surface/technologies?exploitee=oui&page=3');
+    expect(urlTechnologiesAlh('', false, 1, 'priorite')).toBe('/api/vulnerabilites/surface/technologies?tri=priorite');
+    expect(urlFicheAlerteAlh('00000000-0000-4000-8000-000000000031')).toBe(
+      '/api/vulnerabilites/surface/alertes/00000000-0000-4000-8000-000000000031',
+    );
+    expect([triDepuis('priorite'), triDepuis('criticite'), triDepuis(null)]).toEqual(['priorite', '', '']);
+  });
+  it('vue sur la surface externe, produits et technologies rapprochés (lot ALH2)', () => {
+    expect(libelleSurfaceCve({ actifs: 1, alertes: 0 })).toBe('Vue sur la surface externe : 1 actif exposé.');
+    expect(libelleProduitRapproche(techno.produits[0]!)).toBe(
+      'F5 Nginx 1.16 (par nom, version différente : à vérifier)',
+    );
+    expect(
+      libelleTechnologieRapprochee({
+        id: techno.id,
+        nom: 'nginx',
+        editeur: 'F5',
+        produit: 'nginx',
+        versions: ['1.18.0'],
+        actifs: 2,
+        par: 'cpe',
+        memeVersion: true,
+      }),
+    ).toBe('F5 nginx 1.18.0 sur 2 actifs exposés (par identifiant CPE, même version)');
   });
   it('cible, périmètre non relié, EPSS en pourcentage', () => {
     expect(libelleCible(alerte())).toBe('Hôte : 192.0.2.10');
@@ -214,11 +288,16 @@ describe('adresses et libellés', () => {
 });
 
 describe('rendu', () => {
-  it('alertes : textes de l’éditeur en texte simple, criticité, cible, périmètre', () => {
-    const html = rendre(createElement(AlertesAlhTable, { alertes: [alerte()] }));
+  it('alertes : textes de l’éditeur en texte simple, priorité, criticité, cible, périmètre', () => {
+    const html = rendre(createElement(AlertesAlhTable, { alertes: [alerte(), alerte({ id: 'x', priorite: null })] }));
     expect(html).toContain('Exposed RDP service &lt;b&gt;(fictif)&lt;/b&gt;');
     expect(html).not.toContain('<b>(fictif)');
     for (const t of [
+      'P1',
+      'Exploitation avérée (AlgoLightHouse)',
+      'Exposée sur Internet (AlgoLightHouse)',
+      'Sans CVE',
+      '1 recommandation de l’éditeur',
       'Critique',
       'Service vulnérable',
       'Hôte : 192.0.2.10',
@@ -241,9 +320,58 @@ describe('rendu', () => {
       'EPSS 42 %',
       'exploitée',
       'Plus détectée sur 1 actif',
+      'P1',
+      'Produit surveillé : F5 Nginx 1.16 (par nom, version différente : à vérifier)',
     ])
       expect(t).toContain(x);
     expect(rendre(createElement(EtatSurface, { etats: [] }))).toContain('Aucune instance AlgoLightHouse');
+  });
+  it('fiche d’une alerte : CVE et priorité, recommandations de l’éditeur en texte, jamais en HTML', () => {
+    const fiche: FicheAlerteAlhDto = {
+      ...alerte(),
+      cvesDetail: [
+        {
+          cve: 'CVE-2026-91001',
+          priorite: P3,
+          sources: {
+            exploitation: [],
+            exploitable: [],
+            valeurs: { gravites: [], cvss: [], epss: [] },
+            certSante: null,
+          },
+        },
+      ],
+      defauts: [
+        {
+          nom: 'Exposed port <img src=x onerror=alert(1)>',
+          description: 'Service <script>alert(1)</script> exposé.',
+          resolutions: [
+            {
+              nom: 'Restrict access',
+              description: '<b>Filtrer</b> par adresse IP.',
+              facilite: 'Quick Win',
+              gain: 'Strong',
+            },
+          ],
+        },
+      ],
+    };
+    const html = rendre(createElement(FicheAlerteAlh, { a: fiche }));
+    for (const x of [
+      'Priorité calculée par la plateforme',
+      'P3',
+      'Recommandations de l’éditeur',
+      'Restrict access',
+      'facilité : Quick Win · gain : Strong',
+      'Exposed port &lt;img src=x onerror=alert(1)&gt;',
+      'Service &lt;script&gt;alert(1)&lt;/script&gt; exposé.',
+      '&lt;b&gt;Filtrer&lt;/b&gt; par adresse IP.',
+    ])
+      expect(html).toContain(x);
+    expect(html).not.toMatch(/<img|<script|<b>Filtrer/);
+    const vide = rendre(createElement(FicheAlerteAlh, { a: { ...fiche, cvesDetail: [], defauts: [], detail: false } }));
+    expect(vide).toContain('Détail pas encore lu');
+    expect(vide).toContain('Aucune CVE citée par l’éditeur');
   });
   it('liaison des périmètres : un sélecteur nommé par périmètre, « non relié » signalé', () => {
     const p: PerimetreAlhDto = {

@@ -3,7 +3,8 @@
    l'éditeur, clé en écriture seule (« défini »), activation qui ouvre son propre flux après validation explicite
    (ADR 0097), écran avec ses onglets (alertes, actifs, technologies, périmètres), accessibilité, CSP, puis désactivation qui
    referme le flux. Aucun appel n'est lancé vers l'éditeur : l'adresse et la clé sont fictives, aucune synchronisation n'est
-   demandée. */
+   demandée. Lot ALH2 : colonne « Priorité » et tri par priorité des alertes et des technologies (sans données, la fiche
+   d'une alerte et ses recommandations sont couvertes par les tests de l'interface et de l'API). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -81,6 +82,13 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Criticité', exact: true })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Statut chez l’éditeur', exact: true })).toBeVisible();
+    await expect(page.locator('th', { hasText: /^Priorité$/ }).first()).toBeVisible();
+    const triAlertes = page.getByRole('combobox', { name: 'Trier les alertes par', exact: true });
+    await expect(triAlertes).toHaveValue('Criticité de l’éditeur');
+    await triAlertes.click();
+    await page.getByRole('option', { name: 'Priorité calculée', exact: true }).click();
+    await expect(triAlertes).toHaveValue('Priorité calculée');
+    await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();
     await page.getByRole('textbox', { name: 'Rechercher une alerte', exact: true }).fill('CVE-2026-91001');
     await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
     await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();
@@ -89,6 +97,12 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(page.getByText('Aucun actif ne correspond')).toBeVisible();
     await page.getByRole('tab', { name: 'Technologies', exact: true }).click();
     await expect(page.getByText('Aucune technologie ne correspond')).toBeVisible();
+    const triTechnologies = page.getByRole('combobox', { name: 'Trier les technologies par', exact: true });
+    await triTechnologies.click();
+    await page.getByRole('option', { name: 'Priorité calculée', exact: true }).click();
+    await expect(triTechnologies).toHaveValue('Priorité calculée');
+    await expect(page.getByText('Aucune technologie ne correspond')).toBeVisible();
+    await accessible();
     await page.getByRole('tab', { name: 'Périmètres', exact: true }).click();
     await expect(page.getByText(/Aucun périmètre AlgoLightHouse/)).toBeVisible();
     await accessible();

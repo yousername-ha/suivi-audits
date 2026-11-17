@@ -143,21 +143,21 @@ describe('architecture : connecteurs du module Intégrations', () => {
     expect(appels.length).toBeGreaterThanOrEqual(4);
     expect(new Set(appels)).toEqual(new Set(['GET']));
     expect(section).not.toMatch(/requete\("GET", [^)]*corps|requete\([^)]*parametres=/);
-    // Liste blanche des champs : ni description HTML, ni pièces jointes, ni commentaires, ni données sensibles.
-    const champs = [...SCRIPT.matchAll(/^CHAMPS_[A-Z_]+_ALH = \(([^)]*)\)$/gms)].map((m) => m[1]!).join(' ');
+    // Liste blanche des champs : ni description HTML, ni pièces jointes, ni commentaires, ni données sensibles. Lot ALH2
+    // (décision A) : les défauts (`defects`) ne sont lus que dans le détail, et leur description (texte, balises retirées)
+    // seulement par les listes des défauts et des résolutions.
+    const listes = new Map(
+      [...SCRIPT.matchAll(/^(CHAMPS_[A-Z_]+_ALH) = \(([^)]*)\)$/gms)].map((m) => [m[1]!, m[2]!] as const),
+    );
+    const champs = [...listes.values()].join(' ');
     expect(champs).toContain('"title"');
-    for (const interdit of [
-      'note',
-      'data',
-      'uploads',
-      'comments',
-      'sensitive_data',
-      'has_sensitive_data',
-      'description',
-      'defects',
-      'json_data',
-    ])
+    for (const interdit of ['note', 'data', 'uploads', 'comments', 'sensitive_data', 'has_sensitive_data', 'json_data'])
       expect(champs, interdit).not.toContain(`"${interdit}"`);
+    const avec = (champ: string) => [...listes].filter(([, v]) => v.includes(`"${champ}"`)).map(([k]) => k);
+    expect(avec('defects')).toEqual(['CHAMPS_DETAIL_ALH']);
+    expect(avec('description').sort()).toEqual(['CHAMPS_DEFAUT_ALH', 'CHAMPS_RESOLUTION_ALH']);
+    expect(listes.get('CHAMPS_DEFAUT_ALH')).toBe('"name", "description", "resolutions"');
+    expect(listes.get('CHAMPS_RESOLUTION_ALH')).toBe('"name", "description", "ease_of_execution", "security_gain"');
   });
 
   it('mandataire : seuls les types dont le flux l’utilise le reçoivent ; tunnel CONNECT, aucune option qui coupe la vérification', () => {

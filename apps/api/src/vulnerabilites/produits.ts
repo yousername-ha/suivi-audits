@@ -6,7 +6,9 @@
    Lot V4a : version obligatoire (V21) ; rapprochements recalculés dans la transaction de chaque création ou modification ;
    fiche du produit (machines reliées lisibles, rapprochements) ; produit relié à la main aux machines (V20), avec
    `vulnerabilites:modifier` et la lecture de la machine par son périmètre (une machine non lisible répond comme une machine
-   inconnue), If-Match sur la fiche du produit, journal sans nom ni adresse de machine. */
+   inconnue), If-Match sur la fiche du produit, journal sans nom ni adresse de machine.
+   Lot ALH2 : la fiche montre les technologies de la surface externe (AlgoLightHouse) rapprochées du produit, sur des actifs
+   que la personne peut lire (indication, sans décision). */
 import {
   type FicheProduitDto,
   identiteCpe,
@@ -29,6 +31,7 @@ import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { Rapprochements } from './rapprochements.js';
+import type { SurfaceExterneAlh } from './surface-externe.js';
 import { lisible } from './sql.js';
 
 type Ligne = Selectable<VulnerabilitesProduits> & { rattachees: number; a_decider: number };
@@ -96,6 +99,8 @@ export class ProduitsSurveilles {
     private readonly db: Db,
     private readonly grc: Grc,
     private readonly rapprochements: Rapprochements,
+    /** Surface externe (lot ALH2) : technologies rapprochées du produit, dans sa fiche. */
+    private readonly surface?: SurfaceExterneAlh,
   ) {}
 
   /** Registre, éventuellement filtré par famille ; ordre : éditeur, produit, version. */
@@ -271,7 +276,8 @@ export class ProduitsSurveilles {
         perimetreNom: m.perimetre_nom,
         relieLe: m.relie_le.toISOString(),
       })),
-      ...(await this.rapprochements.duProduit(id)),
+      ...(await this.rapprochements.duProduit(id, user)),
+      surfaceExterne: this.surface ? await this.surface.technologiesDuProduit(user, produit) : [],
     };
   }
 

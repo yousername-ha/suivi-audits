@@ -98,17 +98,20 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const integrations = new Integrations(db, vault, flux);
   const tenable = new SynchronisationTenable(db, flux, integrations);
   integrations.enLots['tenable:synchroniser'] = tenable;
-  /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités. */
-  const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc);
-  integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
   /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. Remis aussi à
       l'exécutant pour les connecteurs sur Internet (AlgoLightHouse, lot ALH1), jamais pour Tenable. */
   const mandataire = new Mandataire(db, vault);
   integrations.mandataire = mandataire;
   /* Vulnérabilités, lot V4a : seuils de priorité, rapprochements recalculés après chaque collecte NVD réussie. */
   const reglagePriorite = new ReglagePrioriteVulnerabilites(db);
+  /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités ; priorité de ses CVE
+     par la grille commune (lot ALH2). */
+  const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc, reglagePriorite);
+  integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
   const rapprochements = new Rapprochements(db, reglagePriorite);
   const veille = new VeilleVulnerabilites(db, flux, mandataire);
+  /* Lot ALH2 : la veille dit sur combien d'actifs exposés lisibles une CVE est vue. */
+  veille.surface = surfaceExterne;
   veille.apresCollecte = () => rapprochements.recalculerTout();
   /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
   const suivi = new SuiviFailles(db, grc);
@@ -120,7 +123,14 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
-  assistant.vulnerabilites = new AssistantVulnerabilites(db, failles, suivi, reglagePriorite, motsNonMasques);
+  assistant.vulnerabilites = new AssistantVulnerabilites(
+    db,
+    failles,
+    suivi,
+    reglagePriorite,
+    motsNonMasques,
+    surfaceExterne,
+  );
   return {
     cfg,
     log,
@@ -134,7 +144,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {
-      produits: new ProduitsSurveilles(db, grc, rapprochements),
+      produits: new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne),
       veille,
       tenable,
       surfaceExterne,

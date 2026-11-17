@@ -26,7 +26,10 @@ const dateJour = (v: string | null) =>
       })
     : 'Non définie';
 
-/** Texte affiché avec ses machines marquées. */
+/** Nature d'un repère : machine (« M-… ») ou actif exposé sur Internet (« E-… », lot ALH2). */
+const nature = (repere: string) => (repere.startsWith('E-') ? 'Actif exposé' : 'Machine');
+
+/** Texte affiché avec ses machines et ses actifs exposés marqués. */
 export function TexteMachines({ segments }: { segments: readonly SegmentTexte[] }) {
   return (
     <>
@@ -34,15 +37,23 @@ export function TexteMachines({ segments }: { segments: readonly SegmentTexte[] 
         'texte' in s ? (
           <span key={i}>{s.texte}</span>
         ) : 'machine' in s ? (
-          <span key={i} className="as-machine" title={`Machine (repère ${s.repere} pour l’assistant)`}>
+          <span key={i} className="as-machine" title={`${nature(s.repere)} (repère ${s.repere} pour l’assistant)`}>
             {s.machine}
           </span>
         ) : s.etat === 'non_lisible' ? (
-          <span key={i} className="as-repere" title="Machine que vous ne pouvez pas lire : son repère reste affiché">
+          <span
+            key={i}
+            className="as-repere"
+            title={`${nature(s.repere)} que vous ne pouvez pas lire : son repère reste affiché`}
+          >
             {s.repere}
           </span>
         ) : (
-          <mark key={i} className="as-repere-inconnu" title="Repère non reconnu : il ne désigne aucune machine connue">
+          <mark
+            key={i}
+            className="as-repere-inconnu"
+            title="Repère non reconnu : il ne désigne aucune machine ni aucun actif connu"
+          >
             {s.repere} (repère non reconnu)
           </mark>
         ),

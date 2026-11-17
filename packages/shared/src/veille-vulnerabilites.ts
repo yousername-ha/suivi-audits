@@ -7,6 +7,7 @@
 import { z } from 'zod';
 import type { FluxEtatApplique } from './flux-externes.js';
 import type { MentionCertSante, Signalement, SourcesFailleDto } from './priorite-vulnerabilites.js';
+import type { SurfaceCveDto } from './surface-externe.js';
 
 /* ------------------------------------------------------------------ Sources (liste fermée) */
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
@@ -462,4 +463,7 @@ export interface FailleVeilleDto {
   produitsCites: string[];
   /** Ce que chaque source dit de la faille (exploitation, « exploitable », valeurs, mentions du CERT Santé). */
   sources: SourcesFailleDto;
+  /** Vue sur la surface externe (AlgoLightHouse) : actifs exposés et alertes ouvertes que la personne peut lire et qui
+      portent la CVE (lot ALH2) ; null : la surface externe ne la porte pas pour elle. */
+  surfaceExterne: SurfaceCveDto | null;
 }

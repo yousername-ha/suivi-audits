@@ -6,10 +6,15 @@
    Forme des réponses lue sur le descriptif OpenAPI 3 de l'éditeur (version 1.14.0) ; aucune réponse réelle n'a été vue.
    Textes de l'éditeur gardés tels quels (titres en anglais ou en français), nettoyés et bornés comme un texte externe. Ne
    sont jamais lus ni gardés : description HTML (`note`), commentaires, pièces jointes (`uploads`), données sensibles des
-   fragments (`sensitive_data`, `has_sensitive_data`), contacts. */
+   fragments (`sensitive_data`, `has_sensitive_data`), contacts.
+   Lot ALH2 (décisions du RSSI du 17/11/2026) : les défauts et leurs résolutions (`defects` du détail d'une alerte) sont lus
+   en liste blanche (nom, description, résolutions avec leur nom, leur description, leur facilité et leur gain), balises
+   retirées par le script : du texte simple, jamais du HTML ; les CVE vues par l'éditeur entrent dans la priorité (V26). */
 import { z } from 'zod';
 import type { PageFailles } from './failles-tenable.js';
 import { ADRESSE_IP } from './failles-tenable.js';
+import type { Priorite, SourcesFailleDto } from './priorite-vulnerabilites.js';
+import { comparerVersions, identiteCpe, normaliserNom } from './rapprochement-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Adresse de l'espace */
@@ -172,6 +177,12 @@ export const ALH_BORNES = {
   cleTechnologie: 410,
   titreCve: 300,
   severite: 20,
+  /** Défauts d'une alerte, résolutions par défaut (lot ALH2), et longueur de leurs textes. */
+  defautsParAlerte: 20,
+  resolutionsParDefaut: 10,
+  nomDefaut: 300,
+  descriptionDefaut: 4000,
+  niveauResolution: 60,
   /** Éléments par lot rapporté par l'exécutant, et lots par synchronisation. */
   lot: 500,
   lots: 200,
@@ -242,8 +253,32 @@ export const ElementDomaineAlh = z
   .strict();
 export type ElementDomaineAlh = z.infer<typeof ElementDomaineAlh>;
 
-/** Alerte : champs de la liste ; type, criticité, cible et CVE viennent du détail (`detail` vrai), lu pour les alertes les
-    plus récentes seulement (ALH_BORNES.details). Sans détail, la valeur déjà rangée est gardée. */
+/** Résolution recommandée par l'éditeur pour un défaut (lot ALH2) : texte simple, balises retirées par le script. Facilité
+    (`ease_of_execution.value`, par exemple « Quick Win ») et gain (`security_gain.value`, par exemple « Strong ») tels quels. */
+export const ResolutionAlh = z
+  .object({
+    nom: texte(ALH_BORNES.nomDefaut),
+    description: texte(ALH_BORNES.descriptionDefaut).nullable(),
+    facilite: texte(ALH_BORNES.niveauResolution).nullable(),
+    gain: texte(ALH_BORNES.niveauResolution).nullable(),
+  })
+  .strict();
+export type ResolutionAlh = z.infer<typeof ResolutionAlh>;
+
+/** Défaut d'une alerte (description de la vulnérabilité) et ses résolutions, lus dans le détail. */
+export const DefautAlh = z
+  .object({
+    nom: texte(ALH_BORNES.nomDefaut),
+    description: texte(ALH_BORNES.descriptionDefaut).nullable(),
+    resolutions: z.array(ResolutionAlh).max(ALH_BORNES.resolutionsParDefaut),
+  })
+  .strict();
+export type DefautAlh = z.infer<typeof DefautAlh>;
+/** Défauts rangés avec une alerte (colonne `defauts` de la migration 081), relus avec ce schéma ; illisibles : aucun. */
+export const DefautsAlh = z.array(DefautAlh).max(ALH_BORNES.defautsParAlerte);
+
+/** Alerte : champs de la liste ; type, criticité, cible, CVE et défauts viennent du détail (`detail` vrai), lu pour les
+    alertes les plus récentes seulement (ALH_BORNES.details). Sans détail, la valeur déjà rangée est gardée. */
 export const ElementAlerteAlh = z
   .object({
     type: z.literal('alerte'),
@@ -260,14 +295,17 @@ export const ElementAlerteAlh = z
     cibleHote: uuid.nullable(),
     cibleDomaine: uuid.nullable(),
     cves: cves(ALH_BORNES.cvesParAlerte),
+    defauts: DefautsAlh,
     creeLe: instant,
     majLe: instant,
     termineeLe: instant,
   })
   .strict()
-  .refine((a) => a.detail || (a.cves.length === 0 && a.cibleType === null && a.cibleValeur === null), {
-    message: 'Cible et CVE ne viennent que du détail d’une alerte.',
-  });
+  .refine(
+    (a) =>
+      a.detail || (a.cves.length === 0 && a.defauts.length === 0 && a.cibleType === null && a.cibleValeur === null),
+    { message: 'Cible, CVE et défauts ne viennent que du détail d’une alerte.' },
+  );
 export type ElementAlerteAlh = z.infer<typeof ElementAlerteAlh>;
 
 /** Technologie détectée : identifiée par une clé calculée par le script (éditeur, produit, technologie, en minuscules). */
@@ -358,14 +396,20 @@ export const SURFACE_PAR_PAGE = 25;
 const recherche = z.string().trim().max(100).optional();
 const page = z.coerce.number().int().min(1).max(1000).default(1);
 
+/** Ordre des listes (lot ALH2) : `priorite` (priorité calculée par la plateforme, puis l'ordre par défaut) ; absent : ordre
+    par défaut (criticité de l'éditeur pour les alertes, CVE exploitées pour les technologies). */
+export const TriSurface = z.enum(['priorite']);
+export type TriSurface = z.infer<typeof TriSurface>;
+
 /** Alertes : recherche dans le titre, la cible ou une CVE ; filtres type, criticité, statut (absent : les alertes encore
-    ouvertes chez l'éditeur ; `toutes`). */
+    ouvertes chez l'éditeur ; `toutes`) ; ordre. */
 export const RechercheAlertesAlh = z
   .object({
     q: recherche,
     type: TypeAlerteAlh.optional(),
     criticite: CriticiteAlh.optional(),
     statut: z.union([StatutAlerteAlh, z.literal('toutes')]).optional(),
+    tri: TriSurface.optional(),
     page,
   })
   .strict();
@@ -377,7 +421,7 @@ export type RechercheActifsAlh = z.infer<typeof RechercheActifsAlh>;
 
 /** Technologies : recherche dans le nom, l'éditeur, le produit ou une CVE ; filtre « exploitée selon l'éditeur ». */
 export const RechercheTechnologiesAlh = z
-  .object({ q: recherche, exploitee: z.enum(['oui']).optional(), page })
+  .object({ q: recherche, exploitee: z.enum(['oui']).optional(), tri: TriSurface.optional(), page })
   .strict();
 export type RechercheTechnologiesAlh = z.infer<typeof RechercheTechnologiesAlh>;
 
@@ -402,6 +446,25 @@ export interface AlerteAlhDto extends PerimetreLieDto {
   majLe: string | null;
   termineeLe: string | null;
   integration: { id: string; nom: string };
+  /** Priorité calculée par la plateforme (lot ALH2) : la plus haute des CVE de l'alerte, présence « exposée » tant que
+      l'alerte est ouverte chez l'éditeur (sinon « absente ») ; null pour une alerte sans CVE. */
+  priorite: Priorite | null;
+  /** Défauts décrits par l'éditeur (recommandations, dans la fiche de l'alerte). */
+  nombreDefauts: number;
+}
+
+/** CVE d'une alerte, avec sa priorité et ce que chaque source en dit (fiche de l'alerte). */
+export interface CveAlerteAlhDto {
+  cve: string;
+  priorite: Priorite;
+  sources: SourcesFailleDto;
+}
+
+/** Fiche d'une alerte (lot ALH2) : ses CVE avec leur priorité, et les défauts et résolutions recommandés par l'éditeur,
+    en texte simple (à afficher comme texte, jamais comme HTML). */
+export interface FicheAlerteAlhDto extends AlerteAlhDto {
+  cvesDetail: CveAlerteAlhDto[];
+  defauts: DefautAlh[];
 }
 
 export interface ActifAlhDto extends PerimetreLieDto {
@@ -438,6 +501,20 @@ export interface CveTechnologieAlhDto {
   preuve: boolean | null;
   exploitee: boolean | null;
   publieeLe: string | null;
+  /** Priorité calculée par la plateforme (présence « exposée », toutes les sources ; lot ALH2). */
+  priorite: Priorite;
+}
+
+/** Produit surveillé rapproché d'une technologie (lot ALH2), par la règle du rapprochement des CVE : identifiant normalisé
+    (CPE) du produit s'il en porte un, sinon noms normalisés de l'éditeur et du produit. Indication seulement : rien n'est
+    rattaché ni décidé ; `memeVersion` compare la version déclarée aux versions détectées (null : non comparable). */
+export interface ProduitRapprocheAlhDto {
+  id: string;
+  editeur: string;
+  nom: string;
+  versionProduit: string;
+  par: 'cpe' | 'nom';
+  memeVersion: boolean | null;
 }
 
 export interface VersionTechnologieAlhDto {
@@ -465,6 +542,29 @@ export interface TechnologieAlhDto {
   preuves: number;
   cvssMax: number | null;
   integration: { id: string; nom: string };
+  /** Priorité la plus haute de ses CVE (null : aucune CVE) ; lot ALH2. */
+  priorite: Priorite | null;
+  /** Produits surveillés rapprochés (lot ALH2). */
+  produits: ProduitRapprocheAlhDto[];
+}
+
+/** Ce que la surface externe dit d'une CVE, pour la personne qui regarde (lot ALH2) : actifs lisibles qui la portent (par
+    une version détectée d'une technologie, ou comme cible d'une alerte ouverte), alertes ouvertes lisibles qui la citent. */
+export interface SurfaceCveDto {
+  actifs: number;
+  alertes: number;
+}
+
+/** Technologie de la surface externe rapprochée d'un produit surveillé (fiche du produit, lot ALH2). */
+export interface TechnologieRapprocheeDto {
+  id: string;
+  nom: string;
+  editeur: string | null;
+  produit: string | null;
+  versions: string[];
+  actifs: number;
+  par: 'cpe' | 'nom';
+  memeVersion: boolean | null;
 }
 
 /** Périmètre ALH et sa liaison (lecture et liaison réservées à vulnerabilites:administrer). */
@@ -507,3 +607,31 @@ export interface EtatSurfaceExterneDto {
 }
 
 export type PageSurface<T> = PageFailles<T>;
+
+/* ------------------------------------------------------------------ Rapprochement avec les produits surveillés (lot ALH2) */
+/** Règle du rapprochement des CVE (ADR 0100, point 8), appliquée à une technologie détectée : par l'identifiant normalisé
+    (CPE) du produit s'il en porte un (éditeur et produit exacts, à la casse près : l'éditeur les tire du CPE), sinon par
+    les noms normalisés de l'éditeur et du produit. Une technologie sans éditeur ou sans produit connu n'est pas rapprochée.
+    Rend la manière du rapprochement, ou null. */
+export function rapprochementTechnologie(
+  t: { editeur: string | null; produit: string | null },
+  p: { editeur: string; nom: string; cpe: string | null },
+): 'cpe' | 'nom' | null {
+  if (!t.editeur || !t.produit) return null;
+  const identite = identiteCpe(p.cpe);
+  if (identite)
+    return t.editeur.toLowerCase() === identite.editeur && t.produit.toLowerCase() === identite.produit ? 'cpe' : null;
+  const e = normaliserNom(p.editeur);
+  const n = normaliserNom(p.nom);
+  return e && n && normaliserNom(t.editeur) === e && normaliserNom(t.produit) === n ? 'nom' : null;
+}
+
+/** La version déclarée d'un produit figure parmi les versions détectées : vrai si l'une est égale ; faux si toutes se
+    comparent et aucune n'est égale ; null sinon (version vide ou non comparable). */
+export function memeVersionDetectee(versions: readonly string[], versionDeclaree: string): boolean | null {
+  const connues = versions.filter((v) => v.trim());
+  if (!connues.length) return null;
+  const r = connues.map((v) => comparerVersions(v.trim(), versionDeclaree.trim()));
+  if (r.includes(0)) return true;
+  return r.every((x) => x !== null) ? false : null;
+}

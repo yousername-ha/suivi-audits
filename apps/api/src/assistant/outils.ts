@@ -628,9 +628,9 @@ export const CONSIGNE_VULNERABILITES = [
   'Vulnérabilités (outils evaluer_cve, failles_prioritaires, machines_prioritaires, proposer_action_vulnerabilite) :',
   '- Quand la personne donne une CVE, appelez evaluer_cve ; puis, seulement si elle est présente chez nous, machines_prioritaires pour cette CVE. Quand elle demande quoi corriger, appelez failles_prioritaires, puis machines_prioritaires.',
   '- Dans ces deux cas seulement, répondez en quatre parties courtes, chacune annoncée par son intitulé en texte simple : « Sommes-nous touchés », « Quoi faire », « Actifs à traiter d’abord », « Plan d’action proposé ». Pour une question de suivi, répondez simplement.',
-  '- Sommes-nous touchés : la présence rendue par les outils, avec les faits, leurs sources et leurs dates.',
-  '- Quoi faire : uniquement le correctif et le contournement publiés par les sources rendues par les outils. N’inventez aucun correctif ; sans correctif publié, dites-le.',
-  '- Actifs à traiter d’abord : les repères de machines (M-001, M-002…) recopiés exactement, dans l’ordre du rang rendu par l’outil. Un repère est la seule désignation d’une machine que vous recevez : n’en inventez aucun et ne cherchez pas à le nommer.',
+  '- Sommes-nous touchés : la présence rendue par les outils, avec les faits, leurs sources et leurs dates ; dites aussi si la faille est exposée sur Internet (surfaceExterne : nombre d’actifs exposés).',
+  '- Quoi faire : uniquement le correctif et le contournement publiés par les sources rendues par les outils, et les recommandations de l’éditeur de la surface externe quand elles sont rendues. N’inventez aucun correctif ; sans correctif publié, dites-le.',
+  '- Actifs à traiter d’abord : les repères de machines (M-001, M-002…) recopiés exactement, dans l’ordre du rang rendu par l’outil, puis les repères des actifs exposés sur Internet (E-001, E-002…). Un repère est la seule désignation d’une machine ou d’un actif que vous recevez : n’en inventez aucun et ne cherchez pas à le nommer.',
   '- Plan d’action proposé : quelques étapes. Vous pouvez déposer une proposition d’action avec proposer_action_vulnerabilite ; la personne la confirmera, la corrigera ou la rejettera. N’écrivez jamais qu’une proposition est déposée sans avoir appelé cet outil et reçu sa confirmation.',
   '- Ne calculez ni priorité, ni rang, ni nombre : citez ceux des outils. Dites ce que vous ne savez pas. Vous n’avez aucun accès au web : une CVE inconnue de la plateforme reste inconnue.',
 ].join('\n');
@@ -652,7 +652,7 @@ export const OUTILS_VULNERABILITES: readonly Outil[] = [
   outil({
     nom: 'evaluer_cve',
     description:
-      'Évalue une faille désignée par son identifiant CVE, d’après la plateforme seulement : connue ou non de la veille, faits par source avec leurs dates (exploitation avérée, exploitable, gravités, scores, EPSS), avis et alertes qui la citent, correctif et contournement publiés, présence dans l’organisation (constats de Tenable avec les repères des machines touchées, produits surveillés rattachés, à décider ou écartés), priorité calculée, état de suivi. Une CVE inconnue de la plateforme est rendue comme telle.',
+      'Évalue une faille désignée par son identifiant CVE, d’après la plateforme seulement : connue ou non de la veille, faits par source avec leurs dates (exploitation avérée, exploitable, gravités, scores, EPSS), avis et alertes qui la citent, correctif et contournement publiés, présence dans l’organisation (constats de Tenable avec les repères des machines touchées, produits surveillés rattachés, à décider ou écartés, exposition sur Internet selon la surface externe avec les repères E-… des actifs exposés, les technologies touchées et les recommandations de l’éditeur), priorité calculée, état de suivi. Une CVE inconnue de la plateforme est rendue comme telle.',
     parametres: z.object({ cve }).strict(),
     async executer(ctx, a) {
       const r = await exigerVulnerabilites(ctx).evaluerCve(a.cve);

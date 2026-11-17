@@ -22,6 +22,7 @@ import {
 import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
@@ -29,6 +30,7 @@ import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
 import { resumeFichesCertSante, resumePublications } from './sources';
 import { MarquesSources, MentionsFicheCertSante } from './SourcesFaille';
+import { libelleSurfaceCve, LIEN_SURFACE } from './surface';
 import {
   adresseAvis,
   dateCourte,
@@ -375,6 +377,14 @@ export function FaillesTable({ failles }: { failles: FailleVeilleDto[] }) {
                     Publiée par : {resumePublications(f.publications)}
                   </Text>
                   <MarquesSources s={f.sources} />
+                  {f.surfaceExterne && (
+                    <Group gap="2xs">
+                      <StatusChip etat="attention">Exposée sur Internet</StatusChip>
+                      <Anchor component={Link} to={LIEN_SURFACE} size="xs">
+                        {libelleSurfaceCve(f.surfaceExterne)}
+                      </Anchor>
+                    </Group>
+                  )}
                 </Table.Td>
                 <Table.Td>
                   {cvss ? (

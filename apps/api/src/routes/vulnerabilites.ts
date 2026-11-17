@@ -19,7 +19,9 @@
    `administrer`, écriture avec If-Match).
    Lot ALH1 : surface externe lue dans AlgoLightHouse (alertes, actifs, technologies) avec `lire`, à travers les droits du
    périmètre de la plateforme relié à chaque périmètre ALH (non relié : `administrer`) ; liste et liaison des périmètres ALH
-   avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé. */
+   avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé.
+   Lot ALH2 : fiche d'une alerte (défauts et résolutions de l'éditeur, CVE avec leur priorité) avec `lire`, mêmes droits que
+   la liste ; tri des alertes et des technologies par priorité. */
 import {
   AffectationMachine,
   AnnulationRapprochement,
@@ -165,7 +167,7 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheFailles,
-    handler: async ({ svc, query }) => svc.vulnerabilites.veille.failles(query),
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.veille.failles(query, (s as Session).user),
   }),
   route({
     method: 'POST',
@@ -544,11 +546,21 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/surface/alertes',
     summary:
-      'Alertes AlgoLightHouse lisibles (périmètre relié, ou administration du module pour un périmètre non relié) ; recherche par titre, cible ou CVE ; filtres type, criticité, statut',
+      'Alertes AlgoLightHouse lisibles (périmètre relié, ou administration du module pour un périmètre non relié), avec leur priorité ; recherche par titre, cible ou CVE ; filtres type, criticité, statut ; tri par priorité',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheAlertesAlh,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.alertes((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/alertes/:id',
+    summary:
+      'Fiche d’une alerte AlgoLightHouse lisible : CVE avec leur priorité et leurs sources, défauts et résolutions recommandés par l’éditeur (texte simple)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.surfaceExterne.alerte((s as Session).user, params.id),
   }),
   route({
     method: 'GET',
@@ -563,7 +575,7 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/surface/technologies',
     summary:
-      'Technologies AlgoLightHouse détectées sur des actifs lisibles, versions et CVE (score, EPSS, preuve, exploitation selon l’éditeur)',
+      'Technologies AlgoLightHouse détectées sur des actifs lisibles, versions et CVE (score, EPSS, preuve, exploitation selon l’éditeur, priorité), produits surveillés rapprochés ; tri par priorité',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheTechnologiesAlh,

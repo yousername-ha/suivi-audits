@@ -1609,6 +1609,7 @@ export interface VulnerabilitesAlhAlertes {
   terminee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   vu_numero: number;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  defauts: ColumnType<JsonValue, string | undefined, string>;
 }
 
 export interface VulnerabilitesAlhEtat {
@@ -1699,6 +1700,13 @@ export interface VulnerabilitesAssistantReperes {
   conversation_id: string;
   numero: number;
   machine_id: string | null;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAssistantReperesExternes {
+  conversation_id: string;
+  numero: number;
+  actif_id: string | null;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
@@ -2150,6 +2158,7 @@ export interface DB {
   vulnerabilites_alh_technologies: VulnerabilitesAlhTechnologies;
   vulnerabilites_assistant_propositions: VulnerabilitesAssistantPropositions;
   vulnerabilites_assistant_reperes: VulnerabilitesAssistantReperes;
+  vulnerabilites_assistant_reperes_externes: VulnerabilitesAssistantReperesExternes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;
   vulnerabilites_constats: VulnerabilitesConstats;
   vulnerabilites_detections: VulnerabilitesDetections;

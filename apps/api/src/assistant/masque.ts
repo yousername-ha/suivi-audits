@@ -14,8 +14,11 @@
    derrière, sans point, tiret, tiret bas ou deux-points qui le relie à un autre mot) n'est plus masqué, quelle que soit la
    raison pour laquelle il désignait une machine (y compris un nom entier qui est exactement ce mot, « web »). Le nom complet,
    l'adresse et les identifiants d'une machine restent masqués, comme tout jeton plus long qui commence par le mot (« dpi.exemple.invalid », « dpi:8443 ») ; un mot qui a la forme d'une
-   adresse, d'un identifiant ou d'un repère, ou qui est l'adresse ou l'identifiant d'une machine, est ignoré. */
-import { cleMotNonMasque, motNonMasqueAdmis, REPERE_FORMAT } from '@suivi/shared';
+   adresse, d'un identifiant ou d'un repère, ou qui est l'adresse ou l'identifiant d'une machine, est ignoré.
+   Surface externe (ADR 0100, lot ALH2, décision C) : les domaines et adresses vus par AlgoLightHouse sont remis au masque
+   comme des identifiants (toujours protégés), avec leur propre remplacement (« [actif externe] ») et leurs repères (« E-001 ») ;
+   un jeton qui finit par « .<domaine connu> » (sous-domaine) les désigne aussi. */
+import { cleMotNonMasque, motNonMasqueAdmis, REPERE_EXTERNE_FORMAT, REPERE_FORMAT } from '@suivi/shared';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from './modele.js';
 
 /** Machine de l'inventaire, avec les chaînes qui la désignent. */
@@ -27,6 +30,10 @@ export interface MachineAMasquer {
   identifiants: string[];
   /** La personne peut lire la machine : elle reçoit un repère ; sinon, « [machine] ». */
   lisible: boolean;
+  /** Domaines dont tout sous-domaine désigne aussi cet élément (surface externe, lot ALH2). */
+  domaines?: string[];
+  /** Remplacement sans repère (défaut : « [machine] »). */
+  masque?: string;
 }
 
 export const MACHINE_MASQUEE = '[machine]';
@@ -86,6 +93,8 @@ export function creerMasque(
   const cles = new Map<string, MachineAMasquer | null>();
   /** Adresses et identifiants (et leurs parties autres que le nom) : jamais démasqués, même par un mot de la liste. */
   const proteges = new Set<string>();
+  /** Domaine connu -> élément (null : partagé) : tout jeton qui finit par « .<domaine> » le désigne (sous-domaine). */
+  const suffixes = new Map<string, MachineAMasquer | null>();
   const poser = (cle: string | null | undefined, m: MachineAMasquer, protege = false) => {
     const k = cle?.trim().toLowerCase();
     if (!k) return;
@@ -94,6 +103,12 @@ export function creerMasque(
     cles.set(k, deja === undefined || deja?.id === m.id ? m : null);
   };
   for (const m of machines) {
+    for (const d of m.domaines ?? []) {
+      const k = d.trim().toLowerCase();
+      if (!k.includes('.')) continue;
+      const deja = suffixes.get(k);
+      suffixes.set(k, deja === undefined || deja?.id === m.id ? m : null);
+    }
     for (const f of formesDuNom(m.nom)) poser(f, m);
     poser(m.adresse, m, true);
     for (const x of m.identifiants) {
@@ -130,6 +145,12 @@ export function creerMasque(
       if (cles.has(partie)) return cles.get(partie);
       const premier = partie.split('.')[0]!;
       if (premier !== partie && premier.length >= LIBELLE_MIN && cles.has(premier)) return cles.get(premier);
+      // Sous-domaine d'un domaine connu de la surface externe.
+      if (suffixes.size)
+        for (let i = partie.indexOf('.'); i !== -1; i = partie.indexOf('.', i + 1)) {
+          const suite = partie.slice(i + 1);
+          if (suffixes.has(suite)) return suffixes.get(suite);
+        }
     }
     return undefined;
   };
@@ -155,7 +176,7 @@ export function creerMasque(
     // 2. Jetons, hors de ce qui est déjà pris.
     const dejaPris = [...trouves];
     for (const j of texte.matchAll(JETON)) {
-      if (REPERE_FORMAT.test(j[0])) continue;
+      if (REPERE_FORMAT.test(j[0]) || REPERE_EXTERNE_FORMAT.test(j[0])) continue;
       const d = j.index;
       const f = d + j[0].length;
       if (dejaPris.some((x) => d < x.fin && f > x.debut)) continue;
@@ -170,7 +191,7 @@ export function creerMasque(
     let out = '';
     let pos = 0;
     for (const x of trouves) {
-      out += texte.slice(pos, x.debut) + ((x.m?.lisible && reperes.get(x.m.id)) || MACHINE_MASQUEE);
+      out += texte.slice(pos, x.debut) + ((x.m?.lisible && reperes.get(x.m.id)) || x.m?.masque || MACHINE_MASQUEE);
       pos = x.fin;
     }
     return out + texte.slice(pos);

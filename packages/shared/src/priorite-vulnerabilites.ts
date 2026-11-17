@@ -27,34 +27,42 @@ export interface ReglagePrioriteOut {
 }
 
 /* ------------------------------------------------------------------ Priorité d'une faille */
-/** Présence dans l'organisation : détectée par Tenable, déclarée (produit surveillé, rapprochement rattaché), produit à
-    confirmer (rapprochement proposé), ou absente. */
-export const PRESENCES = ['detectee', 'declaree', 'a_confirmer', 'absente'] as const;
+/** Présence dans l'organisation : détectée par Tenable, déclarée (produit surveillé, rapprochement rattaché), exposée sur
+    Internet (CVE portée par un actif vu par AlgoLightHouse, lot ALH2 : une faille présente chez nous), produit à confirmer
+    (rapprochement proposé), ou absente. */
+export const PRESENCES = ['detectee', 'declaree', 'exposee', 'a_confirmer', 'absente'] as const;
 export type Presence = (typeof PRESENCES)[number];
 export const PRESENCE_LIBELLES: Record<Presence, string> = {
   detectee: 'Détectée par Tenable',
   declaree: 'Déclarée (produit surveillé)',
+  exposee: 'Exposée sur Internet (AlgoLightHouse)',
   a_confirmer: 'Produit à confirmer',
   absente: 'Absente',
 };
+/** Présences qui valent « présente chez nous » pour la grille. */
+export const presenceAveree = (p: Presence): boolean => p === 'detectee' || p === 'declaree' || p === 'exposee';
 
 /** Sources d'une exploitation avérée (V26 : une seule suffit, « ou » logique) : catalogue KEV de la CISA, alerte du CERT-FR
-    qui cite la CVE, mention « La faille est activement exploitée : Oui » de la fiche du CERT Santé (V23). */
-export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante'] as const;
+    qui cite la CVE, mention « La faille est activement exploitée : Oui » de la fiche du CERT Santé (V23), champ
+    `is_exploited` d'une CVE de technologie selon AlgoLightHouse (lot ALH2, décision B du 17/11/2026). */
+export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante', 'alh'] as const;
 export type SourceExploitation = (typeof SOURCES_EXPLOITATION)[number];
 export const SOURCE_EXPLOITATION_LIBELLES: Record<SourceExploitation, string> = {
   kev: 'catalogue KEV',
   'cert-fr': 'alerte du CERT-FR',
   'cert-sante': 'fiche du CERT Santé',
+  alh: 'AlgoLightHouse',
 };
 
 /** Sources de « exploitable » (un code d'exploitation existe, sans exploitation observée ; V26) : champ `exploitAvailable`
-    de Tenable, preuve de concept disponible selon la fiche du CERT Santé (V23). */
-export const SOURCES_EXPLOITABLE = ['tenable', 'cert-sante'] as const;
+    de Tenable, preuve de concept disponible selon la fiche du CERT Santé (V23), champ `has_poc` d'AlgoLightHouse (lot
+    ALH2). */
+export const SOURCES_EXPLOITABLE = ['tenable', 'cert-sante', 'alh'] as const;
 export type SourceExploitable = (typeof SOURCES_EXPLOITABLE)[number];
 export const SOURCE_EXPLOITABLE_LIBELLES: Record<SourceExploitable, string> = {
   tenable: 'Tenable',
   'cert-sante': 'preuve de concept selon le CERT Santé',
+  alh: 'preuve de concept selon AlgoLightHouse',
 };
 
 /** Un fait signalé par une source, avec la date à laquelle elle l'a signalé (null : date inconnue, par exemple Tenable). */
@@ -91,14 +99,15 @@ export const premierSignalement = <S extends string>(
 
 /* ------------------------------------------------------------------ Valeurs par source (V27) */
 /** Sources d'une gravité ou d'un score : NVD, Tenable, CERT Santé (score CVSS v3.1 de sa fiche), FIRST (score EPSS lu par
-    la veille). */
-export const SOURCES_VALEUR = ['nvd', 'tenable', 'cert-sante', 'first'] as const;
+    la veille), AlgoLightHouse (score CVSS et EPSS d'une CVE de technologie, gravité déduite du score ; lot ALH2). */
+export const SOURCES_VALEUR = ['nvd', 'tenable', 'cert-sante', 'first', 'alh'] as const;
 export type SourceValeur = (typeof SOURCES_VALEUR)[number];
 export const SOURCE_VALEUR_LIBELLES: Record<SourceValeur, string> = {
   nvd: 'NVD',
   tenable: 'Tenable',
   'cert-sante': 'CERT Santé',
   first: 'FIRST (veille)',
+  alh: 'AlgoLightHouse',
 };
 
 export interface GraviteSource {
@@ -202,7 +211,7 @@ export interface Priorite {
 }
 
 /** Grille de départ (ADR 0100, point 9) :
-    - P1 : exploitation avérée (une source suffit, V26) et présente (détectée ou déclarée) ;
+    - P1 : exploitation avérée (une source suffit, V26) et présente (détectée, déclarée ou exposée sur Internet) ;
     - P2 : exploitation avérée et produit à confirmer ; ou présente et critique ; ou présente et score EPSS au moins égal
       au seuil ; ou présente, élevée et exploitable selon une source (Tenable, CERT Santé) ;
     - P3 : présente et élevée ;
@@ -213,7 +222,7 @@ export function calculerPriorite(f: FaitsFaille, reglage: ReglagePriorite = REGL
   const sources = SOURCES_EXPLOITATION.filter((s) => f.exploitation.includes(s));
   const exploitables = SOURCES_EXPLOITABLE.filter((s) => f.exploitable.includes(s));
   const exploitee = sources.length > 0;
-  const presente = f.presence === 'detectee' || f.presence === 'declaree';
+  const presente = presenceAveree(f.presence);
   const exploitation: FaitPriorite = { fait: 'exploitation', sources };
   const presence: FaitPriorite = { fait: 'presence', presence: f.presence };
   const gravite: FaitPriorite = { fait: 'gravite', gravite: f.gravite };
@@ -231,6 +240,15 @@ export function calculerPriorite(f: FaitsFaille, reglage: ReglagePriorite = REGL
   if (p2.length) return { niveau: 'P2', faits: p2 };
   if (presente && f.gravite === 'elevee') return { niveau: 'P3', faits: [presence, gravite] };
   return { niveau: 'P4', faits: exploitee ? [exploitation, presence, gravite] : [presence, gravite] };
+}
+
+/** Rang d'un niveau (P1 : 1). */
+export const rangPriorite = (p: Pick<Priorite, 'niveau'>): number => Number(p.niveau.slice(1));
+/** Priorité la plus haute d'une liste (la première à niveau égal), ou null pour une liste vide. */
+export function prioriteLaPlusHaute(liste: readonly Priorite[]): Priorite | null {
+  let m: Priorite | null = null;
+  for (const p of liste) if (!m || rangPriorite(p) < rangPriorite(m)) m = p;
+  return m;
 }
 
 const pourcent = (x: number) => `${(x * 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} %`;

@@ -355,6 +355,10 @@
   - un réglage illisible vaut liste vide : le masque strict s'applique.
 - **Lot ALH1, surface externe lue dans AlgoLightHouse** (17/11/2026) : migration `080`, connecteur `algolighthouse` en lecture
   seule, écran « Surface externe ». Décisions et choix de réalisation : voir l'addendum du 17/11/2026 ci-dessous.
+- **Lot ALH2, recommandations, priorité et assistant pour la surface externe** (17/11/2026) : migration `081`, défauts et
+  résolutions de l'éditeur dans la fiche d'une alerte, AlgoLightHouse source de plus pour la priorité (présence « exposée »),
+  tri par priorité, vue dans la veille, rapprochement avec les produits surveillés, exposition d'une CVE pour l'assistant avec
+  repères « E-… » et masque étendu. Voir l'addendum « lot ALH2 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -518,3 +522,92 @@ forme réelle des objets CVE d'une alerte reste non vérifiée.
 6. Lecture **incrémentale** des détails (toutes les alertes finissent par être détaillées) ; pagination si l'éditeur la
    documente ; usage de `X-Perimeters-Filter`.
 
+## Addendum du 17/11/2026 — lot ALH2 : recommandations, priorité et assistant pour la surface externe
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `081`
+(additive : colonne `defauts` de `vulnerabilites_alh_alertes`, table `vulnerabilites_assistant_reperes_externes`). Lève les
+points ouverts 1, 2, 3 et 5 de l'addendum du lot ALH1 ; les points 4 (alerte ou fenêtre sur une alerte critique) et 6
+(lecture incrémentale, pagination, `X-Perimeters-Filter`) restent ouverts.
+
+### Décisions du RSSI (17/11/2026)
+
+| N° | Question | Décision |
+| --- | --- | --- |
+| A | Recommandations de l'éditeur | Affichées dans la fiche d'une alerte : `defects` du détail déjà lu, en **liste blanche** (nom, description, résolutions), bornés ; texte de l'éditeur tel quel mais **toujours rendu en texte**, jamais de HTML interprété. `note`, `uploads`, `comments`, `sensitive_data` restent non lus |
+| B | Priorité | Les CVE vues par ALH (technologies, alertes) entrent dans la priorité selon la règle du « ou » : ALH est une **source de plus** (`is_exploited` = exploitation avérée, `has_poc` = exploitable, CVSS et EPSS : la valeur la plus sévère). Une CVE portée par un actif exposé est une **faille présente chez nous** : elle apparaît avec sa priorité dans « Surface externe » (alertes et technologies triables par priorité) et, si le modèle le permet, dans la veille (« vue sur la surface externe : n actifs »). Rapprochement des technologies avec les produits surveillés par le mécanisme existant |
+| C | Assistant | Il répond sur l'exposition externe d'une CVE (touchés ou non, combien d'actifs, quoi faire, priorité). **Rien d'identifiant ne part** : ni domaine, ni adresse, ni nom de périmètre, ni FAI ou AS ; seulement des repères locaux (« E-001 ») et des compteurs, remplacés en local. Le masque couvre les domaines et adresses d'ALH avant que tout outil les expose ; les recommandations passent par le masque ou ne sont pas envoyées |
+
+### Réalisation
+
+- **Recommandations (A)** : le script de l'exécutant lit `defects` dans le détail déjà demandé (aucun appel nouveau, liste
+  fermée inchangée) avec deux listes blanches (`CHAMPS_DEFAUT_ALH` : `name`, `description`, `resolutions` ;
+  `CHAMPS_RESOLUTION_ALH` : `name`, `description`, `ease_of_execution`, `security_gain`, dont seule la valeur est lue), balises
+  retirées et entités décodées comme pour les titres (texte sur une ligne), 20 défauts par alerte, 10 résolutions par défaut,
+  300 caractères pour un nom, 4 000 pour une description, 60 pour la facilité et le gain. L'API valide chaque défaut (schéma
+  strict, texte externe nettoyé) ; rangés avec l'alerte (colonne `defauts`), remplacés quand le détail est relu, gardés sinon.
+  Fiche d'une alerte : `GET /api/vulnerabilites/surface/alertes/{id}` (mêmes droits que la liste) ; à l'écran, fenêtre ouverte
+  par le titre, textes rendus comme texte (échappés par React).
+- **Priorité (B)** : nouvelle présence « exposée sur Internet » (`exposee`), qui vaut présence avérée pour la grille (P1 avec
+  une exploitation avérée). Nouvelle source `alh` pour l'exploitation, « exploitable » et les valeurs (CVSS, EPSS, gravité
+  déduite du score comme pour le CERT Santé). Alerte : priorité la plus haute de ses CVE, présence « exposée » tant qu'elle est
+  ouverte chez l'éditeur ; technologie : priorité la plus haute des CVE de ses versions encore détectées ; tri `?tri=priorite`.
+  La règle du « ou » vaut **partout** : constats de Tenable, failles déclarées, fiche d'un produit, veille et assistant prennent
+  aussi ce que dit ALH, et les filtres et compteurs « exploitation avérée » et « exploitable » en SQL aussi.
+- **Veille** : chaque faille connue porte `surfaceExterne` (actifs exposés lisibles qui la portent, alertes ouvertes lisibles
+  qui la citent), affichée « Vue sur la surface externe : n actifs exposés » avec un lien vers l'écran.
+- **Rapprochement** : une technologie est rapprochée d'un produit surveillé par l'identifiant CPE du produit (éditeur et
+  produit exacts) s'il en porte un, sinon par les noms normalisés de l'éditeur et du produit ; la version déclarée est comparée
+  aux versions détectées (même version, différente, non comparable). Affiché sur la technologie et dans la fiche du produit
+  (« Vu sur la surface externe »).
+- **Assistant (C)** : `evaluer_cve` rend en plus une section `surfaceExterne` (exposée ou non, nombre d'actifs exposés,
+  repères « E-… » des 20 premiers, technologies avec nom, éditeur, versions et faits de l'éditeur, 5 alertes ouvertes avec
+  criticité, type, statut, titre et 3 défauts de 3 résolutions au plus, bornés à 600 caractères) et la présence
+  `exposeeSurInternet` ; la priorité de la CVE tient compte de la présence « exposée ». Repères « E-001 » à « E-999 » par
+  conversation (table `vulnerabilites_assistant_reperes_externes`, même règle que « M-… »), remplacés à l'affichage par le
+  domaine ou l'adresse pour une personne qui lit l'actif. Le **masque de sortie** reçoit tous les domaines, adresses, adresses
+  de résolution, libellés d'actifs des technologies et cibles d'alertes (domaine ou hôte) d'ALH, toujours protégés (jamais
+  démasqués par la liste V31), plus les sous-domaines d'un domaine connu, et les FAI et numéros d'AS des hôtes ; remplacement :
+  le repère « E-… » pour un actif lisible en conversation, sinon « [actif externe] » (« [réseau externe] » pour un FAI ou un AS).
+  Un test échoue si le masque n'est plus branché sur ces valeurs.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Ce que dit ALH ne compte que pour ce que la personne lit** : un fait d'ALH (exploitée, preuve, score) n'entre dans une
+  priorité, une liste de la veille ou une fiche que si la version touchée tourne sur un actif qu'elle peut lire. Sans cela, il
+  révélerait qu'une CVE est exposée dans un périmètre qu'elle ne lit pas. Conséquence : deux personnes peuvent voir deux
+  priorités différentes pour la même faille.
+- **ALH ne date pas ses faits** : ses signalements sont « date inconnue », rangés après les sources datées (V26).
+- **Gravité ALH** déduite de son score CVSS (échelle de FIRST), comme pour le CERT Santé ; le champ `severity` n'est pas lu
+  pour la priorité.
+- **Ordre des sources** à valeur égale : NVD, Tenable, CERT Santé, FIRST, puis AlgoLightHouse.
+- **Alerte sans CVE** : pas de priorité calculée (« Sans CVE »), seule la criticité de l'éditeur ; triée après les alertes
+  qui en ont une. **Alerte terminée** : présence « absente ».
+- **Tri par priorité** : toutes les alertes (5 000 au plus) ou technologies (2 000 au plus) lisibles sont évaluées à chaque
+  page ; à priorité égale, l'ordre par défaut est gardé. L'ordre par défaut reste celui du lot ALH1.
+- **Rapprochement technologie ↔ produit** : indication calculée à la lecture, **sans décision ni table** (pas de
+  confirmation, pas de rejet), sans effet sur la priorité ni sur les failles déclarées ; une technologie sans éditeur ou sans
+  produit connu n'est pas rapprochée. Le mécanisme existant fait confirmer un rapprochement par nom : ce n'est pas repris ici.
+- **Défauts** : texte rendu sur une ligne (paragraphes et listes de l'éditeur aplatis), bornes ci-dessus ; un défaut ou une
+  résolution sans nom est écarté ; un défaut rangé illisible n'est pas affiché.
+- **Masque** : les noms de périmètres d'ALH ne sont pas masqués (des mots courants seraient masqués partout) ; les outils ne
+  les envoient jamais. Un FAI ou un numéro d'AS est masqué partout où il apparaît, y compris un nombre identique sans rapport.
+  Un domaine sans point (« intranet ») est masqué partout. Les sous-domaines d'un domaine connu sont masqués, pas ses parents.
+- **Propositions d'action** : elles ne visent que des machines (« M-… ») ; un repère « E-… » cité dans une proposition reste tel
+  quel dans l'action confirmée (ni domaine ni adresse n'y est écrit).
+- **Veille** : « actifs » compte les actifs distincts (par identifiant chez l'éditeur) qui portent la CVE par une version
+  encore détectée ou comme cible d'une alerte ouverte ; une alerte qui vise un service ou un mot-clé ne compte qu'en alerte.
+
+### Non vérifié
+
+Aucun appel vers un vrai espace AlgoLightHouse ; **forme réelle des `defects`**, lue sur le descriptif de l'éditeur seulement
+(champs `name`, `description` en HTML, `resolutions`) ; forme réelle des objets CVE d'une alerte ; qualité des réponses de l'assistant avec un modèle
+réel (faux transport seulement) ; volumes réels pour le tri par priorité ; Docker et Node 26. Le parcours Playwright adapté n'a
+pas été joué (CI seulement).
+
+### Points ouverts (hors lot)
+
+1. **Alertes** : notification ou fenêtre d'alerte sur une alerte critique d'ALH, ou sur une CVE exposée en P1.
+2. Lecture **incrémentale** des détails ; pagination si l'éditeur la documente ; usage de `X-Perimeters-Filter`.
+3. Rapprochement technologie ↔ produit **décidé** (confirmer, rejeter) et effet sur les failles déclarées, si le RSSI le veut.
+4. Masquer aussi les noms de périmètres d'ALH (risque de sur-masquage) ?
+5. Propositions d'action de l'assistant sur une alerte d'ALH (aujourd'hui : constats de Tenable et failles déclarées seulement).

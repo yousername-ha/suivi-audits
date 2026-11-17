@@ -6,7 +6,11 @@
    l'administration du module, technologie lue par ses actifs), liaison des périmètres (administrer, If-Match, écriture sur
    les périmètres, journal sans adresse ni domaine), planification quotidienne, flux fermé, module désactivé. Données
    entièrement fictives : domaines en .example, adresses de 192.0.2.0/24 et 198.51.100.0/24, CVE fictives ; aucun service
-   n'est joint. */
+   n'est joint.
+   Lot ALH2 : migration 081 ; défauts et résolutions de l'éditeur rangés avec le détail, gardés sans détail, rendus dans la
+   fiche (texte simple, illisibles : aucun) ; priorité des alertes et des technologies (présence « exposée », AlgoLightHouse
+   source de plus pour ce que la personne lit, règle du « ou ») et tri par priorité ; vue sur la surface externe dans la
+   veille ; rapprochement des technologies avec les produits surveillés (liste et fiche du produit). */
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -70,6 +74,7 @@ const alerte = (n: number, perim: number | null, extra: Record<string, unknown> 
   cibleHote: U(11),
   cibleDomaine: null,
   cves: ['CVE-2026-91001', 'CVE-2026-91002'],
+  defauts: [],
   creeLe: '2026-11-10T10:00:00.000Z',
   majLe: '2026-11-15T10:00:00.000Z',
   termineeLe: null,
@@ -275,6 +280,8 @@ afterAll(async () => {
 beforeEach(async () => {
   await t.svc.db.q("UPDATE module_activation SET disabled='{}', version=version+1 WHERE id=1");
   for (const table of [
+    'vulnerabilites_produits',
+    'vulnerabilites_veille_cve',
     'vulnerabilites_alh_technologie_cves',
     'vulnerabilites_alh_technologie_actifs',
     'vulnerabilites_alh_technologies',
@@ -609,5 +616,204 @@ describe('exécutant, mandataire, planification', () => {
       expect(r.statusCode).toBe(409);
       expect(r.json()).toMatchObject({ reason: 'module_disabled', module: 'vulnerabilites' });
     }
+  });
+});
+
+/* ------------------------------------------------------------------ Lot ALH2 */
+const DEFAUT = {
+  nom: 'Exposed port or service',
+  description: 'L’exposition de ce service le rend accessible depuis Internet.',
+  resolutions: [
+    { nom: 'Restrict access', description: 'Filtrer par adresse IP.', facilite: 'Quick Win', gain: 'Strong' },
+  ],
+};
+
+describe('migration 081 sur base vierge', () => {
+  it('ajoute les défauts (tableau, vide par défaut) et la table des repères externes', async () => {
+    expect(
+      (
+        await t.svc.db.one(
+          "SELECT 1 AS ok FROM schema_migrations WHERE name = '081_vulnerabilites_surface_externe_priorite.sql'",
+        )
+      )?.ok,
+    ).toBe(1);
+    await synchroniser(espace());
+    expect(await n('vulnerabilites_alh_alertes', "defauts = '[]'::jsonb")).toBe(3);
+    await expect(t.svc.db.q(`UPDATE vulnerabilites_alh_alertes SET defauts = '{"x": 1}'::jsonb`)).rejects.toThrow();
+    expect(await n('vulnerabilites_assistant_reperes_externes')).toBe(0);
+  });
+});
+
+describe('défauts et résolutions de l’éditeur (décision A)', () => {
+  it('rangés avec le détail, gardés sans détail, rendus dans la fiche ; jamais sans détail ni en HTML', async () => {
+    await synchroniser(espace().map((e) => (e.id === U(31) ? { ...e, defauts: [DEFAUT] } : e)));
+    const id = (await t.svc.db.one<{ id: string }>('SELECT id FROM vulnerabilites_alh_alertes WHERE alh_id = $1', [
+      U(31),
+    ]))!.id;
+    const liste = (await rssi.get(`${S}/alertes`)).json();
+    expect(liste.elements.find((a: { id: string }) => a.id === id).nombreDefauts).toBe(1);
+    const f = await rssi.get(`${S}/alertes/${id}`);
+    expect(f.statusCode, f.body).toBe(200);
+    expect(f.json().defauts).toEqual([DEFAUT]);
+    // Relue sans détail : les défauts restent ; relue avec un détail sans défaut : ils sont remplacés.
+    await synchroniser(
+      espace().map((e) =>
+        e.type === 'alerte'
+          ? { ...e, detail: false, cves: [], cibleType: null, cibleValeur: null, cibleHote: null }
+          : e,
+      ),
+    );
+    expect((await rssi.get(`${S}/alertes/${id}`)).json().defauts).toEqual([DEFAUT]);
+    await synchroniser(espace());
+    expect((await rssi.get(`${S}/alertes/${id}`)).json().defauts).toEqual([]);
+    // Un défaut sans détail, un texte balisé ou un champ hors liste : tout le lot est refusé.
+    for (const mauvais of [
+      { ...alerte(31, 1, { detail: false, cves: [], cibleType: null, cibleValeur: null }), defauts: [DEFAUT] },
+      alerte(31, 1, { defauts: [{ ...DEFAUT, description: '<p>Texte balisé</p>' }] }),
+      alerte(31, 1, { defauts: [{ ...DEFAUT, note: 'hors liste' }] }),
+    ]) {
+      await t.svc.db.q(
+        "INSERT INTO integration_executions (integration_id, operation, origine, demande_par) VALUES ($1, 'synchroniser', 'manuel', 'test')",
+        [instance],
+      );
+      const job = (await t.svc.integrations.reclamer(true))!;
+      await expect(t.svc.integrations.lot(job.id as string, [mauvais])).rejects.toThrow(/Élément 1/);
+      await t.svc.integrations.terminer(job.id as string, { ok: false, resultat: null, erreur: 'Lot refusé.' });
+    }
+    // Une valeur illisible en base (hors schéma) n'est pas rendue.
+    await t.svc.db.q(`UPDATE vulnerabilites_alh_alertes SET defauts = '[{"nom": 1}]'::jsonb WHERE id = $1`, [id]);
+    expect((await rssi.get(`${S}/alertes/${id}`)).json().defauts).toEqual([]);
+  });
+
+  it('fiche : mêmes droits que la liste ; illisible ou inconnue : 404', async () => {
+    await synchroniser(espace());
+    const id = (await t.svc.db.one<{ id: string }>('SELECT id FROM vulnerabilites_alh_alertes WHERE alh_id = $1', [
+      U(31),
+    ]))!.id;
+    expect((await lecteurA.get(`${S}/alertes/${id}`)).statusCode).toBe(404);
+    expect((await roleRw.get(`${S}/alertes/${id}`)).statusCode).toBe(403);
+    expect((await rssi.get(`${S}/alertes/${U(999)}`)).statusCode).toBe(404);
+    await lierEnBase(1, perimA);
+    const f = (await lecteurA.get(`${S}/alertes/${id}`)).json();
+    expect(f).toMatchObject({ id, titre: 'Alerte fictive 31', perimetreNom: 'Périmètre fictif A' });
+    expect(f.cvesDetail.map((c: { cve: string }) => c.cve)).toEqual(['CVE-2026-91001', 'CVE-2026-91002']);
+  });
+});
+
+describe('priorité des CVE de la surface externe (décision B)', () => {
+  const kev = (cve: string) =>
+    t.svc.db.q("INSERT INTO vulnerabilites_veille_cve (cve, kev_ajout) VALUES ($1, '2026-11-01')", [cve]);
+
+  it('alerte ouverte : présence « exposée » ; une source suffit (KEV) pour P1 ; alerte terminée : absente ; sans CVE : aucune', async () => {
+    await kev('CVE-2026-91002');
+    await synchroniser([...espace(), alerte(34, 1, { criticite: 'minor', cves: ['CVE-2026-91002'] })]);
+    const toutes = (await rssi.get(`${S}/alertes?statut=toutes`)).json().elements as {
+      titre: string;
+      priorite: { niveau: string; faits: unknown[] } | null;
+    }[];
+    const par = new Map(toutes.map((a) => [a.titre, a.priorite]));
+    expect(par.get('Alerte fictive 31')).toEqual({
+      niveau: 'P1',
+      faits: [
+        { fait: 'exploitation', sources: ['kev'] },
+        { fait: 'presence', presence: 'exposee' },
+      ],
+    });
+    expect(par.get('Alerte fictive 32')).toBeNull();
+    expect(par.get('Alerte fictive 33')).toBeNull();
+    // Ordre par défaut : criticité de l'éditeur ; tri par priorité : P1 d'abord, puis l'ordre par défaut, sans CVE en dernier.
+    const defaut = (await rssi.get(`${S}/alertes`)).json().elements.map((a: { titre: string }) => a.titre);
+    expect(defaut).toEqual(['Alerte fictive 31', 'Alerte fictive 32', 'Alerte fictive 34']);
+    const tri = (await rssi.get(`${S}/alertes?tri=priorite`)).json();
+    expect(tri.elements.map((a: { titre: string }) => a.titre)).toEqual([
+      'Alerte fictive 31',
+      'Alerte fictive 34',
+      'Alerte fictive 32',
+    ]);
+    expect(tri.total).toBe(3);
+    expect((await rssi.get(`${S}/alertes?tri=inconnu`)).statusCode).toBe(422);
+  });
+
+  it('technologies : AlgoLightHouse source de plus (is_exploited, has_poc, scores) ; tri par priorité ; sans fuite entre périmètres', async () => {
+    await synchroniser(espace());
+    await lierEnBase(1, perimA);
+    await lierEnBase(2, perimB);
+    const tout = (await admin.get(`${S}/technologies?tri=priorite`)).json();
+    const nginx = tout.elements[0];
+    // CVE 92002 exploitée selon l'éditeur sur une version encore détectée : P1, source AlgoLightHouse.
+    expect(nginx.priorite).toEqual({
+      niveau: 'P1',
+      faits: [
+        { fait: 'exploitation', sources: ['alh'] },
+        { fait: 'presence', presence: 'exposee' },
+      ],
+    });
+    const cve92001 = nginx.versions
+      .flatMap((v: { cves: { cve: string }[] }) => v.cves)
+      .find((c: { cve: string }) => c.cve === 'CVE-2026-92001');
+    // 92001 : CVSS 7,5 (élevée selon l'éditeur), preuve de concept : P2 (exploitable).
+    expect(cve92001.priorite.niveau).toBe('P2');
+    expect(cve92001.priorite.faits).toContainEqual({ fait: 'exploit_disponible', sources: ['alh'] });
+    // Le lecteur du périmètre A ne voit que la version 1.18.0 : ni la CVE exploitée de B, ni ce qu'ALH en dit.
+    const a = (await lecteurA.get(`${S}/technologies?tri=priorite`)).json().elements[0];
+    expect(a.priorite.niveau).toBe('P2');
+    expect(JSON.stringify(a)).not.toContain('CVE-2026-92002');
+  });
+
+  it('veille : vue sur la surface externe (actifs lisibles) et AlgoLightHouse dans les sources, pour ce que la personne lit', async () => {
+    for (const c of ['CVE-2026-91001', 'CVE-2026-92001', 'CVE-2026-92002'])
+      await t.svc.db.q('INSERT INTO vulnerabilites_veille_cve (cve) VALUES ($1)', [c]);
+    await synchroniser(espace());
+    await lierEnBase(1, perimA);
+    await lierEnBase(2, perimB);
+    const veille = async (a: Agent, cve: string) =>
+      (await a.get(`/api/vulnerabilites/veille/failles?q=${cve}`)).json().elements[0];
+    // 92001 : version 1.18.0 sur l'hôte 11 et le domaine 21 (périmètre A).
+    expect((await veille(lecteurA, 'CVE-2026-92001')).surfaceExterne).toEqual({ actifs: 2, alertes: 0 });
+    // 91001 : alerte 31 ouverte sur l'hôte 11.
+    expect((await veille(lecteurA, 'CVE-2026-91001')).surfaceExterne).toEqual({ actifs: 1, alertes: 1 });
+    // 92002 : hôte 12 du périmètre B, illisible pour le lecteur de A : ni compte, ni fait d'AlgoLightHouse.
+    const b = await veille(lecteurA, 'CVE-2026-92002');
+    expect(b.surfaceExterne).toBeNull();
+    expect(b.sources.exploitation).toEqual([]);
+    const tout = await veille(admin, 'CVE-2026-92002');
+    expect(tout.surfaceExterne).toEqual({ actifs: 1, alertes: 0 });
+    expect(tout.sources.exploitation).toEqual([{ source: 'alh', le: null }]);
+    expect(tout.sources.valeurs.cvss).toContainEqual({ source: 'alh', score: 9.8 });
+  });
+
+  it('rapprochement avec les produits surveillés : par nom ou par CPE, version comparée ; fiche du produit', async () => {
+    await synchroniser(espace());
+    const produit = async (corps: Record<string, unknown>) => {
+      const r = await admin.post('/api/vulnerabilites/produits', {
+        famille: 'web',
+        criticite: 'elevee',
+        ...corps,
+      });
+      expect(r.statusCode, r.body).toBe(201);
+      return r.json().id as string;
+    };
+    const parNom = await produit({ editeur: 'F5', nom: 'Nginx', versionProduit: '1.18.0' });
+    await produit({ editeur: 'F5', nom: 'nginx', versionProduit: '1.19', cpe: 'cpe:2.3:a:f5:nginx:*:*:*:*:*:*:*:*' });
+    await produit({ editeur: 'Autre éditeur', nom: 'Nginx', versionProduit: '1.18.0' });
+    await lierEnBase(1, perimA);
+    const techno = (await lecteurA.get(`${S}/technologies`)).json().elements[0];
+    expect(
+      techno.produits.map((p: { versionProduit: string; par: string; memeVersion: boolean | null }) => [
+        p.versionProduit,
+        p.par,
+        p.memeVersion,
+      ]),
+    ).toEqual([
+      ['1.18.0', 'nom', true],
+      ['1.19', 'cpe', false],
+    ]);
+    const fiche = (await lecteurA.get(`/api/vulnerabilites/produits/${parNom}/fiche`)).json();
+    expect(fiche.surfaceExterne).toEqual([
+      expect.objectContaining({ nom: 'nginx', versions: ['1.18.0'], actifs: 2, par: 'nom', memeVersion: true }),
+    ]);
+    // Sans actif lisible : rien.
+    await lierEnBase(1, perimB);
+    expect((await lecteurA.get(`/api/vulnerabilites/produits/${parNom}/fiche`)).json().surfaceExterne).toEqual([]);
   });
 });

@@ -502,7 +502,16 @@ def alh_donnees():
                  "target": {"id": U % 41, "perimeter_id": U % 1, "type": "host", "value": "192.0.2.10",
                             "target_host_id": U % 11, "target_domain_id": None,
                             "target_host": {"id": U % 11, "note": "NOTE-HOTE", "isp": "FAI fictif"}},
-                 "defects": [{"name": "DEFAUT-FICTIF", "description": "<p>DEFAUT-FICTIF</p>"}],
+                 "defects": [{"id": U % 71, "category_id": U % 72, "category": {"name": "DEFAUT-FICTIF"}, "note": "DEFAUT-FICTIF",
+                              "name": "Exposed port or service",
+                              "description": "<p>Service <b>exposé</b> &amp; joignable sur <a href='https://x.example'>Internet</a>.</p>",
+                              "resolutions": [{"id": U % 73, "name": "Restrict access",
+                                               "description": "<p>Filtrer par adresse IP.</p><script>alert(1)</script>",
+                                               "ease_of_execution": {"id": U % 74, "value": "Quick Win", "level": 1},
+                                               "security_gain": {"value": "Strong", "level": 3, "note": "DEFAUT-FICTIF"},
+                                               "created_at": "2026-01-15T10:00:00Z", "autre": "DEFAUT-FICTIF"},
+                                              {"description": "sans nom : écartée"}]},
+                             {"description": "défaut sans nom : écarté"}],
                  "uploads": [{"name": "PIECE-JOINTE"}],
                  "cves": [{"id": U % 51, "name": "CVE-2026-91001", "score": 9.8}, "CVE-2026-91003", {"x": "pas une CVE"}],
                  "fragments": [{"id": U % 61, "description": "DESCRIPTION-FRAGMENT", "note": "NOTE-FRAGMENT",
@@ -727,8 +736,13 @@ class AlgoLightHouse(unittest.TestCase):
             "type": "alerte", "id": U % 31, "perimetre": U % 1, "typeAlerte": "vulnerable_service", "criticite": "critical",
             "statut": "untreated", "titre": "Exposed RDP service (fictif)", "verifiee": True, "detail": True,
             "cibleType": "host", "cibleValeur": "192.0.2.10", "cibleHote": U % 11, "cibleDomaine": None,
-            "cves": ["CVE-2026-91001", "CVE-2026-91003", "CVE-2026-91002"], "creeLe": "2026-11-10T10:00:00.000Z",
-            "majLe": "2026-11-15T10:00:00.000Z", "termineeLe": None})
+            "cves": ["CVE-2026-91001", "CVE-2026-91003", "CVE-2026-91002"],
+            "defauts": [{"nom": "Exposed port or service", "description": "Service exposé & joignable sur Internet .",
+                         "resolutions": [{"nom": "Restrict access", "description": "Filtrer par adresse IP. alert(1)",
+                                          "facilite": "Quick Win", "gain": "Strong"}]}],
+            "creeLe": "2026-11-10T10:00:00.000Z", "majLe": "2026-11-15T10:00:00.000Z", "termineeLe": None})
+        # Les défauts ne viennent que du détail ; sans défaut publié, la liste est vide.
+        self.assertEqual(next(a for a in par["alerte"] if a["id"] == U % 32)["defauts"], [])
         # Une valeur au-delà du premier niveau d'un objet CVE n'est jamais lue (CVE-2026-99999 dans un texte libre).
         self.assertNotIn("CVE-2026-99999", json.dumps(sortie))
         self.assertEqual(next(a for a in par["alerte"] if a["id"] == U % 33)["termineeLe"], "2026-10-02T10:00:00.000Z")
@@ -748,6 +762,30 @@ class AlgoLightHouse(unittest.TestCase):
         types = [e["type"] for e in sortie["elements"]]
         self.assertLess(types.index("technologie"), types.index("technologie_actif"))
         self.assertEqual(types[: len(par["perimetre"])], ["perimetre"] * len(par["perimetre"]))
+
+    def test_defects_are_plain_bounded_text_from_a_closed_list_of_fields(self):
+        """Lot ALH2 : défauts et résolutions en liste blanche, balises retirées (jamais de HTML), bornés en nombre et en
+        longueur ; aucun autre champ (catégorie, notes, identifiants) ne sort."""
+        d = FauxAlh.donnees["details"][U % 31]
+        d["defects"] = [{"name": "Défaut %d <img src=x onerror=alert(1)>" % i, "description": "<p>" + "x" * 5000 + "</p>",
+                         "resolutions": [{"name": "Résolution %d" % j, "ease_of_execution": "pas un objet"}
+                                         for j in range(12)]} for i in range(22)]
+        sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.propre(sortie)
+        a1 = next(e for e in sortie["elements"] if e["type"] == "alerte" and e["id"] == U % 31)
+        self.assertEqual(len(a1["defauts"]), h.BORNES_ALH["defautsParAlerte"])
+        premier = a1["defauts"][0]
+        self.assertEqual(premier["nom"], "Défaut 0")
+        self.assertEqual(len(premier["description"]), h.BORNES_ALH["descriptionDefaut"])
+        self.assertTrue(premier["description"].endswith("…"))
+        self.assertEqual(len(premier["resolutions"]), h.BORNES_ALH["resolutionsParDefaut"])
+        self.assertEqual(premier["resolutions"][0], {"nom": "Résolution 0", "description": None, "facilite": None,
+                                                     "gain": None})
+        texte = json.dumps(sortie, ensure_ascii=False)
+        for balise in ("<img", "<p>", "onerror=alert(1)>"):
+            self.assertNotIn(balise, texte)
+        self.assertEqual(set(premier), {"nom", "description", "resolutions"})
 
     def test_alerts_without_detail_get_type_and_criticity_from_known_identifiers(self):
         with patch.dict(h.BORNES_ALH, {"details": 2}):

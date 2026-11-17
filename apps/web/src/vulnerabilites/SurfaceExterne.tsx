@@ -3,13 +3,19 @@
    relié à chaque périmètre de l'éditeur ; un périmètre non relié n'est visible qu'avec le droit d'administrer le module.
    Onglet « Périmètres » (administration du module) : relier chaque périmètre de l'éditeur à un périmètre de la plateforme.
    Lecture seule : rien n'est jamais écrit chez l'éditeur ; ses textes s'affichent tels quels. Composants de la charte, CSP
-   stricte (ADR 0006) ; le serveur est seul juge des droits, les onglets ne font que suivre la session. */
+   stricte (ADR 0006) ; le serveur est seul juge des droits, les onglets ne font que suivre la session.
+   Lot ALH2 : priorité calculée par la plateforme (alertes, technologies et leurs CVE), tri par priorité, fiche d'une alerte
+   avec les défauts et résolutions recommandés par l'éditeur, rendus comme texte (jamais comme HTML), produits surveillés
+   rapprochés d'une technologie. */
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Checkbox,
   Group,
+  List,
+  Modal,
   Pagination,
   Select,
   Stack,
@@ -17,6 +23,7 @@ import {
   Tabs,
   Text,
   TextInput,
+  Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -24,6 +31,7 @@ import {
   type AlerteAlhDto,
   CRITICITES_ALH,
   type EtatSurfaceExterneDto,
+  type FicheAlerteAlhDto,
   type PageSurface,
   type PerimetreAffectableDto,
   type PerimetreAlhDto,
@@ -40,6 +48,9 @@ import { Link } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
+import { ETAT_PRIORITE } from './failles';
+import { PrioriteFaits } from './FaillesDetectees';
+import { MarquesSources } from './SourcesFaille';
 import {
   alerteOuverte,
   CRITICITE_ALH_ETAT,
@@ -48,6 +59,7 @@ import {
   libelleCible,
   libelleCriticite,
   libellePerimetre,
+  libelleProduitRapproche,
   libelleStatutActif,
   libelleStatutAlerte,
   libelleTypeActif,
@@ -55,7 +67,11 @@ import {
   pourcentage,
   resumeEtatAlh,
   urlActifsAlh,
+  OPTIONS_TRI_ALERTES,
+  OPTIONS_TRI_TECHNOLOGIES,
+  triDepuis,
   urlAlertesAlh,
+  urlFicheAlerteAlh,
   urlTechnologiesAlh,
 } from './surface';
 import { nombrePages } from './veille';
@@ -108,13 +124,31 @@ export function EtatSurface({ etats }: { etats: EtatSurfaceExterneDto[] }) {
   );
 }
 
-/** Alertes (sans état). */
-export function AlertesAlhTable({ alertes }: { alertes: AlerteAlhDto[] }) {
+/** Priorité d'une alerte ou d'une technologie : faits, ou « sans CVE » (sans état). */
+function PrioriteOuSansCve({ p }: { p: AlerteAlhDto['priorite'] }) {
+  return p ? (
+    <PrioriteFaits p={p} />
+  ) : (
+    <Text size="sm" c="dimmed">
+      Sans CVE
+    </Text>
+  );
+}
+
+/** Alertes (sans état) ; `onOuvrir` ouvre la fiche d'une alerte. */
+export function AlertesAlhTable({
+  alertes,
+  onOuvrir = () => undefined,
+}: {
+  alertes: AlerteAlhDto[];
+  onOuvrir?: (id: string) => void;
+}) {
   return (
     <DataTable label="Alertes AlgoLightHouse">
       <Table>
         <Table.Thead>
           <Table.Tr>
+            <Table.Th>Priorité</Table.Th>
             <Table.Th>Criticité</Table.Th>
             <Table.Th>Alerte</Table.Th>
             <Table.Th>Cible</Table.Th>
@@ -127,6 +161,9 @@ export function AlertesAlhTable({ alertes }: { alertes: AlerteAlhDto[] }) {
           {alertes.map((a) => (
             <Table.Tr key={a.id}>
               <Table.Td>
+                <PrioriteOuSansCve p={a.priorite} />
+              </Table.Td>
+              <Table.Td>
                 {a.criticite ? (
                   <StatusChip etat={CRITICITE_ALH_ETAT[a.criticite]}>{libelleCriticite(a.criticite)}</StatusChip>
                 ) : (
@@ -136,12 +173,15 @@ export function AlertesAlhTable({ alertes }: { alertes: AlerteAlhDto[] }) {
                 )}
               </Table.Td>
               <Table.Td>
-                <Text size="sm" className="veille-texte">
+                <Anchor component="button" type="button" onClick={() => onOuvrir(a.id)} className="veille-texte">
                   {a.titre}
-                </Text>
+                </Anchor>
                 <Text size="xs" c="dimmed">
                   {libelleTypeAlerte(a.type)}
                   {a.verifiee ? ' · vérifiée par un analyste de l’éditeur' : ''}
+                  {a.nombreDefauts
+                    ? ` · ${a.nombreDefauts} recommandation${a.nombreDefauts > 1 ? 's' : ''} de l’éditeur`
+                    : ''}
                 </Text>
               </Table.Td>
               <Table.Td>
@@ -176,7 +216,7 @@ export function AlertesAlhTable({ alertes }: { alertes: AlerteAlhDto[] }) {
           ))}
           {alertes.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={6}>
+              <Table.Td colSpan={7}>
                 <Text size="sm" c="dimmed">
                   Aucune alerte ne correspond, parmi celles que vous pouvez lire.
                 </Text>
@@ -186,6 +226,105 @@ export function AlertesAlhTable({ alertes }: { alertes: AlerteAlhDto[] }) {
         </Table.Tbody>
       </Table>
     </DataTable>
+  );
+}
+
+/** Fiche d'une alerte (sans état) : CVE avec leur priorité et leurs sources, défauts et résolutions recommandés par
+    l'éditeur. Les textes de l'éditeur sont rendus comme texte (React les échappe) : aucun HTML n'est interprété. */
+export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
+  return (
+    <Stack>
+      <Group gap="xs">
+        {a.criticite && <StatusChip etat={CRITICITE_ALH_ETAT[a.criticite]}>{libelleCriticite(a.criticite)}</StatusChip>}
+        <StatusChip etat={alerteOuverte(a.statut) ? 'attention' : 'neutre'}>{libelleStatutAlerte(a.statut)}</StatusChip>
+        <Text size="sm">{libelleTypeAlerte(a.type)}</Text>
+      </Group>
+      <Text size="sm">
+        Cible : <span className="veille-code">{libelleCible(a)}</span> · Périmètre : {libellePerimetre(a)}
+      </Text>
+      <Title order={3} size="h6">
+        Priorité calculée par la plateforme
+      </Title>
+      {a.cvesDetail.length ? (
+        <DataTable label="CVE de l’alerte">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>CVE</Table.Th>
+                <Table.Th>Priorité</Table.Th>
+                <Table.Th>Sources</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {a.cvesDetail.map((c) => (
+                <Table.Tr key={c.cve}>
+                  <Table.Td className="veille-code">{c.cve}</Table.Td>
+                  <Table.Td>
+                    <PrioriteFaits p={c.priorite} />
+                  </Table.Td>
+                  <Table.Td>
+                    <MarquesSources s={c.sources} />
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      ) : (
+        <Text size="sm" c="dimmed">
+          Aucune CVE citée par l’éditeur : l’alerte n’a pas de priorité calculée ; sa criticité est celle de l’éditeur.
+        </Text>
+      )}
+      <Title order={3} size="h6">
+        Recommandations de l’éditeur
+      </Title>
+      {a.defauts.length ? (
+        a.defauts.map((d, i) => (
+          <Stack key={`${i}-${d.nom}`} gap="2xs" role="group" aria-label={`Défaut : ${d.nom}`}>
+            <Text size="sm" fw={600} className="veille-texte">
+              {d.nom}
+            </Text>
+            {d.description && (
+              <Text size="sm" className="veille-texte">
+                {d.description}
+              </Text>
+            )}
+            {d.resolutions.length > 0 && (
+              <List size="sm" spacing="2xs">
+                {d.resolutions.map((r, j) => (
+                  <List.Item key={`${j}-${r.nom}`}>
+                    <Text size="sm" fw={600} span className="veille-texte">
+                      {r.nom}
+                    </Text>
+                    {(r.facilite || r.gain) && (
+                      <Text size="xs" c="dimmed" span>
+                        {` (${[r.facilite ? `facilité : ${r.facilite}` : null, r.gain ? `gain : ${r.gain}` : null]
+                          .filter(Boolean)
+                          .join(' · ')})`}
+                      </Text>
+                    )}
+                    {r.description && (
+                      <Text size="sm" className="veille-texte">
+                        {r.description}
+                      </Text>
+                    )}
+                  </List.Item>
+                ))}
+              </List>
+            )}
+          </Stack>
+        ))
+      ) : (
+        <Text size="sm" c="dimmed">
+          {a.detail
+            ? 'L’éditeur ne publie aucune recommandation pour cette alerte.'
+            : 'Détail pas encore lu : les recommandations viendront à une prochaine synchronisation.'}
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        Textes de l’éditeur tels quels (anglais ou français), sans mise en forme.
+      </Text>
+    </Stack>
   );
 }
 
@@ -262,6 +401,7 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
       <Table>
         <Table.Thead>
           <Table.Tr>
+            <Table.Th>Priorité</Table.Th>
             <Table.Th>Technologie</Table.Th>
             <Table.Th>Versions et actifs</Table.Th>
             <Table.Th>CVE selon l’éditeur</Table.Th>
@@ -270,6 +410,9 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
         <Table.Tbody>
           {technologies.map((t) => (
             <Table.Tr key={t.id}>
+              <Table.Td>
+                <PrioriteOuSansCve p={t.priorite} />
+              </Table.Td>
               <Table.Td>
                 <Text size="sm" fw={600} className="veille-texte">
                   {t.nom}
@@ -282,6 +425,11 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
                   {t.preuves > 0 && <Badge variant="outline">{t.preuves} avec preuve de concept</Badge>}
                   {t.tronquee && <Badge variant="outline">Liste tronquée</Badge>}
                 </Group>
+                {t.produits.map((p) => (
+                  <Text key={p.id} size="xs">
+                    Produit surveillé : {libelleProduitRapproche(p)}
+                  </Text>
+                ))}
               </Table.Td>
               <Table.Td>
                 <Stack gap="2xs">
@@ -303,6 +451,7 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
                   {t.versions.flatMap((v) =>
                     v.cves.slice(0, 10).map((c) => (
                       <Text key={`${v.version}-${c.cve}`} size="sm">
+                        <StatusChip etat={ETAT_PRIORITE[c.priorite.niveau]}>{c.priorite.niveau}</StatusChip>{' '}
                         <span className="veille-code">{c.cve}</span>
                         {` · CVSS ${c.cvss ?? '—'} · EPSS ${pourcentage(c.epss)}`}
                         {c.exploitee ? ' · exploitée' : ''}
@@ -321,7 +470,7 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
           ))}
           {technologies.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={3}>
+              <Table.Td colSpan={4}>
                 <Text size="sm" c="dimmed">
                   Aucune technologie ne correspond, parmi celles des actifs que vous pouvez lire.
                 </Text>
@@ -439,9 +588,15 @@ function OngletAlertes() {
   const [saisie, setSaisie] = useState('');
   const [filtres, setFiltres] = useState<FiltresAlertesAlh>(FILTRES_ALERTES_VIDES);
   const [page, setPage] = useState(1);
+  const [ouverte, setOuverte] = useState<string | null>(null);
   const q = useQuery({
     queryKey: [...CLE, 'alertes', filtres, page],
     queryFn: () => get<PageSurface<AlerteAlhDto>>(urlAlertesAlh(filtres, page)),
+  });
+  const fiche = useQuery({
+    queryKey: [...CLE, 'alerte', ouverte],
+    queryFn: () => get<FicheAlerteAlhDto>(urlFicheAlerteAlh(ouverte!)),
+    enabled: !!ouverte,
   });
   const changer = (f: Partial<FiltresAlertesAlh>) => {
     setFiltres({ ...filtres, ...f });
@@ -495,10 +650,30 @@ function OngletAlertes() {
           data={OPTIONS_STATUT}
           comboboxProps={{ withinPortal: false }}
         />
+        <Select
+          label="Trier les alertes par"
+          allowDeselect={false}
+          value={filtres.tri || 'criticite'}
+          onChange={(v) => changer({ tri: triDepuis(v) })}
+          data={OPTIONS_TRI_ALERTES}
+          comboboxProps={{ withinPortal: false }}
+        />
       </Group>
       <ErrorAlert error={q.error} />
-      {q.data && <AlertesAlhTable alertes={q.data.elements} />}
+      {q.data && <AlertesAlhTable alertes={q.data.elements} onOuvrir={setOuverte} />}
       {q.data && <Pages donnees={q.data} page={page} onPage={setPage} nom="alertes" />}
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!ouverte}
+        onClose={() => setOuverte(null)}
+        title={fiche.data?.titre ?? 'Alerte AlgoLightHouse'}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        <ErrorAlert error={fiche.error} />
+        {fiche.data && <FicheAlerteAlh a={fiche.data} />}
+      </Modal>
     </Stack>
   );
 }
@@ -558,10 +733,11 @@ function OngletTechnologies() {
   const [saisie, setSaisie] = useState('');
   const [recherche, setRecherche] = useState('');
   const [exploitee, setExploitee] = useState(false);
+  const [tri, setTri] = useState<ReturnType<typeof triDepuis>>('');
   const [page, setPage] = useState(1);
   const q = useQuery({
-    queryKey: [...CLE, 'technologies', recherche, exploitee, page],
-    queryFn: () => get<PageSurface<TechnologieAlhDto>>(urlTechnologiesAlh(recherche, exploitee, page)),
+    queryKey: [...CLE, 'technologies', recherche, exploitee, tri, page],
+    queryFn: () => get<PageSurface<TechnologieAlhDto>>(urlTechnologiesAlh(recherche, exploitee, page, tri)),
   });
   return (
     <Stack>
@@ -591,6 +767,17 @@ function OngletTechnologies() {
               setExploitee(e.currentTarget.checked);
               setPage(1);
             }}
+          />
+          <Select
+            label="Trier les technologies par"
+            allowDeselect={false}
+            value={tri || 'exploitation'}
+            onChange={(v) => {
+              setTri(triDepuis(v));
+              setPage(1);
+            }}
+            data={OPTIONS_TRI_TECHNOLOGIES}
+            comboboxProps={{ withinPortal: false }}
           />
         </Group>
       </form>
@@ -666,7 +853,7 @@ export function SurfaceExternePage() {
     <Page>
       <PageHeader
         title="Surface externe"
-        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. Textes de l’éditeur tels quels."
+        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. Textes de l’éditeur tels quels."
       />
       <Stack>
         <ErrorAlert error={etat.error} />

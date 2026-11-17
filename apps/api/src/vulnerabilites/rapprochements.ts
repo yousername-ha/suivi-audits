@@ -271,8 +271,12 @@ export class Rapprochements {
   }
 
   /* ---------------------------------------------------------------- Lecture (fiche d'un produit) */
-  /** Rapprochements d'un produit (sauf retirés), comptés par statut, chaque statut borné, avec leur priorité. */
-  async duProduit(produitId: string): Promise<{
+  /** Rapprochements d'un produit (sauf retirés), comptés par statut, chaque statut borné, avec leur priorité (sources lues
+      pour la personne qui regarde : AlgoLightHouse seulement pour ce qu'elle lit, lot ALH2). */
+  async duProduit(
+    produitId: string,
+    user: SessionUser,
+  ): Promise<{
     compteurs: Record<Exclude<StatutRapprochement, 'retiree'>, number>;
     rapprochements: RapprochementDto[];
   }> {
@@ -355,6 +359,7 @@ export class Rapprochements {
     const faits = await lireFaitsCve(
       this.db.k,
       rows.map((r) => r.cve),
+      user,
     );
     const dtos = rows.map((r): RapprochementDto => {
       const f = faits.get(r.cve);

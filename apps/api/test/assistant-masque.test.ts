@@ -3,7 +3,9 @@
    libellé partagé par deux machines, repères laissés tels quels, inventaire vide ; transport masquant tous les messages et
    les arguments d'appels d'outils. Liste de mots à ne pas masquer (V31) : mot seul laissé, casse, nom complet, adresse et
    identifiants toujours masqués, jeton plus long toujours masqué, mot sans machine, mot partagé par deux machines, nom entier
-   égal au mot, « DOMAINE\\MACHINE » et « $ », mot de forme interdite ignoré. Données fictives. */
+   égal au mot, « DOMAINE\\MACHINE » et « $ », mot de forme interdite ignoré. Surface externe (lot ALH2) : domaines et
+   adresses remis comme identifiants, sous-domaines d'un domaine connu, remplacement propre, repères « E-… » laissés tels
+   quels, jamais démasqués par la liste. Données fictives. */
 import { describe, expect, it } from 'vitest';
 import {
   creerMasque,
@@ -223,5 +225,38 @@ describe('liste de mots à ne pas masquer (V31)', () => {
     expect(formesDuNom('db.exemple.invalid')).toEqual(['db.exemple.invalid']);
     expect(formesDuNom('10.exemple.invalid')).toEqual(['10.exemple.invalid']);
     expect(formesDuNom(null)).toEqual([]);
+  });
+});
+
+describe('surface externe (lot ALH2)', () => {
+  const actif = (id: string, valeurs: string[], lisible = true): MachineAMasquer => ({
+    id,
+    nom: null,
+    adresse: null,
+    identifiants: valeurs,
+    domaines: valeurs.filter((v) => v.includes('.') && !/^[0-9.]+$/.test(v)),
+    lisible,
+    masque: '[actif externe]',
+  });
+  const reperes = async (ids: string[]) => new Map(ids.map((id) => [id, id === 'x1' ? 'E-001' : 'E-002']));
+
+  it('domaine, sous-domaine, adresse : repère externe pour qui les lit, sinon leur propre remplacement', async () => {
+    const masquer = creerMasque(
+      [actif('x1', ['www.exemple-fictif.example', '192.0.2.10']), actif('x2', ['198.51.100.20'], false)],
+      reperes,
+    );
+    expect(
+      await masquer(
+        'WWW.Exemple-Fictif.example, https://api.www.exemple-fictif.example/x, 192.0.2.10:443, 198.51.100.20.',
+      ),
+    ).toBe('E-001, https://E-001/x, E-001, [actif externe].');
+    // Un domaine parent ou voisin, inconnu, n'est pas masqué ; un repère E-… déjà présent est laissé tel quel.
+    expect(await masquer('exemple-fictif.example et E-002')).toBe('exemple-fictif.example et E-002');
+  });
+
+  it('jamais démasqués par la liste de mots (V31) ; sans repère, en ronde : leur propre remplacement', async () => {
+    const parcExterne = [actif('x1', ['intranet', 'intranet.exemple-fictif.example'])];
+    expect(await creerMasque(parcExterne, reperes, ['intranet'])('Voir intranet.')).toBe('Voir E-001.');
+    expect(await creerMasque(parcExterne)('Voir intranet.')).toBe('Voir [actif externe].');
   });
 });

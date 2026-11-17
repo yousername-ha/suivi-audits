@@ -44,6 +44,7 @@ import { useCan } from '../session';
 import { libelleMachine, libelleRole, urlMachines, FILTRES_MACHINES_VIDES } from './failles';
 import { PrioriteFaits } from './FaillesDetectees';
 import { MarquesSources } from './SourcesFaille';
+import { libelleTechnologieRapprochee } from './surface';
 import {
   champsManquants,
   explicationProposition,
@@ -795,6 +796,27 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
                 Relier
               </Button>
             </Group>
+          )}
+          <Title order={2} size="h5">
+            Vu sur la surface externe
+          </Title>
+          {f.surfaceExterne.length ? (
+            <Stack gap="2xs">
+              {f.surfaceExterne.map((t) => (
+                <Text key={t.id} size="sm" className="veille-texte">
+                  {libelleTechnologieRapprochee(t)}
+                </Text>
+              ))}
+              <Text size="xs" c="dimmed">
+                Technologies détectées par AlgoLightHouse et rapprochées du produit par la règle du rapprochement des
+                failles (identifiant CPE, sinon nom) : indication, sans décision ; seuls les actifs que vous pouvez lire
+                sont comptés.
+              </Text>
+            </Stack>
+          ) : (
+            <Text size="sm" c="dimmed">
+              Aucune technologie de la surface externe rapprochée de ce produit, parmi les actifs que vous pouvez lire.
+            </Text>
           )}
           <Title order={2} size="h5">
             Failles de la veille rapprochées

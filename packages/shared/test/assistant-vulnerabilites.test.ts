@@ -9,6 +9,8 @@ import {
   decouperReperes,
   descriptionAvecActifs,
   numeroRepere,
+  numeroRepereExterne,
+  repereExterne,
   repereMachine,
   reperesCites,
   texteDesSegments,
@@ -46,6 +48,30 @@ describe('repères', () => {
     expect(texteDesSegments(s)).toBe('D’abord srv-fictif-01.exemple.invalid, puis M-002 et M-777.');
     expect(decouperReperes('Sans repère.', () => 'inconnu')).toEqual([{ texte: 'Sans repère.' }]);
     expect(decouperReperes('', () => 'inconnu')).toEqual([]);
+  });
+});
+
+describe('repères des actifs exposés (lot ALH2)', () => {
+  it('format E-001 à E-999 ; jamais cités comme machines d’une proposition ; découpés et résolus pour l’affichage', () => {
+    expect(repereExterne(3)).toBe('E-003');
+    expect(numeroRepereExterne('E-042')).toBe(42);
+    for (const x of ['E-000', 'E-1000', 'e-001', 'M-001']) expect(numeroRepereExterne(x)).toBeNull();
+    expect(reperesCites('Traiter E-001 puis M-002.')).toEqual(['M-002']);
+    expect(citeUnRepere('Actif E-001.')).toBe(true);
+    const s = decouperReperes('Exposés : E-001, E-002 ; machine M-001 ; E-000.', (r) =>
+      r === 'E-001' ? { machine: 'www.exemple-fictif.example' } : r === 'E-002' ? 'non_lisible' : { machine: 'srv' },
+    );
+    expect(s).toEqual([
+      { texte: 'Exposés : ' },
+      { repere: 'E-001', machine: 'www.exemple-fictif.example' },
+      { texte: ', ' },
+      { repere: 'E-002', etat: 'non_lisible' },
+      { texte: ' ; machine ' },
+      { repere: 'M-001', machine: 'srv' },
+      { texte: ' ; ' },
+      { repere: 'E-000', etat: 'inconnu' },
+      { texte: '.' },
+    ]);
   });
 });
 
