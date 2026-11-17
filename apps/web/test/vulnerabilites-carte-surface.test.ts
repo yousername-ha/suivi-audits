@@ -350,7 +350,7 @@ describe('carte « Lignes d’approche » : rendu', () => {
     expect(html).toContain('exemple-sante.example');
     expect(html).toContain('lignes sans alerte');
     expect(html).toContain('sc-lien--critique');
-    expect(html).toContain('Un actif exposé sur Internet porte une faille exploitée');
+    expect(html).toContain('Un actif exposé sur Internet porte une faille en priorité P1');
     expect(html).toContain('À relier à une machine interne (1 proposition à décider)');
     expect(html).toContain('Reliée à une machine que vous ne pouvez pas lire');
     expect(html).toContain('srv-vpn-01.interne.invalid');
@@ -362,7 +362,9 @@ describe('carte « Lignes d’approche » : rendu', () => {
     expect(html).toContain('aria-label="Rapprocher (zoom avant)"');
     expect(html).toContain('aria-label="Recadrer : toute la carte"');
     expect(html).toContain('Pointillé rouge : chemin d’entrée critique (P1)');
-    expect(html).toContain('Choix par défaut à confirmer.');
+    // Regroupement par défaut confirmé par le RSSI (lot ALH5) : plus de mention « à confirmer ».
+    expect(html).toContain('Regrouper par');
+    expect(html).not.toContain('Choix par défaut à confirmer.');
   });
 
   it('sans droit de modifier : aucune marque « à relier »', () => {

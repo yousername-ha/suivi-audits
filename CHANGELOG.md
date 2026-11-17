@@ -118,6 +118,12 @@ colonne `liaisons_version` de `vulnerabilites_alh_actifs`, valeur par défaut 1)
 les propositions apparaissent à la synchronisation suivante d'AlgoLightHouse ou de Tenable ; rien n'est relié sans une
 personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `084`** (module Vulnérabilités, liaison en masse des actifs exposés aux machines internes, lot ALH5
+de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (la contrainte des origines de
+`vulnerabilites_alh_liaisons_machines` est recréée pour admettre la valeur `masse` ; aucune donnée modifiée), durée
+négligeable, sans reprise de données. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance
+vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -471,8 +477,36 @@ personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session «
   l'alerte, de l'actif ou de la machine. Dessin SVG sans style en ligne, animations coupées par le mouvement réduit. Pas de
   colonne « services » : AlgoLightHouse ne les range pas à part, l'alerte la plus haute de la ligne en tient lieu. Sans
   migration ni dépendance. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH5 : une faille exposée qui mène à une machine interne vulnérable monte en priorité**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH5 » ; décision B du RSSI du 17/11/2026). Une alerte
+  ouverte ou une technologie exposée (et ses CVE sur la surface externe) dont l'actif est relié, par une liaison **confirmée**,
+  à une machine interne qui porte une faille présente en P1 ou P2 monte d'un cran (P4 → P3, P3 → P2, P2 → P1 ; P1 reste P1),
+  avec le fait « Mène à une machine interne vulnérable », sans nom de machine. Jamais sur une proposition ; une faille close
+  sur la machine ne compte pas. Règle dans la grille partagée ; la carte trace en chemin critique une alerte en P1 après
+  majoration. Les failles des machines et la priorité d'une CVE dans la veille ou chez l'assistant ne sont pas majorées.
+  (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH5 : « Relier en masse » des actifs exposés aux machines internes**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH5 » ; décision C du RSSI du 17/11/2026, interprétation
+  à confirmer). Onglet « Actifs » de « Surface externe », droit de modifier : motif des actifs (domaine ou adresse) et, en mode
+  « un pour un », motif des machines, avec le seul joker `*` (sans distinction de casse, aucun autre métacaractère ni
+  expression régulière) ; mode « tous vers une machine ». **Aperçu obligatoire** (paires, sans correspondance, correspondances
+  multiples écartées, déjà reliées, au plafond, hors droits d'écriture ; 200 paires au plus, sinon refus avec le nombre) ;
+  l'application ne relie que les paires de l'aperçu validé (empreinte), chacune revérifiée (droits de lecture et d'écriture sur
+  les deux périmètres, version des liaisons de l'actif, vingt machines par actif) ; liaisons confirmées d'origine « en masse » ;
+  une entrée de journal par opération (motifs, mode, nombres). Routes `POST /api/vulnerabilites/surface/liaisons/masse/apercu`
+  et `POST /api/vulnerabilites/surface/liaisons/masse`. Migration `084`. Aide mise à jour.
+  (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
+
+- **Module « Vulnérabilités », lot ALH5 : la priorité est la même pour tout le monde** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot ALH5 » ; décision A du RSSI du 17/11/2026, qui remplace le choix n° 1 du lot ALH2). La priorité d'une CVE,
+  d'une faille, d'une alerte, d'une technologie, le rang d'une machine et les filtres et compteurs « exploitée » et
+  « exploitable » se calculent sur tous les faits connus de la plateforme (AlgoLightHouse compris), sans tenir compte des droits
+  de lecture. Les noms et le détail (domaines, adresses, machines, périmètres, versions détaillées, nombre d'actifs touchés,
+  liens) restent limités à ce que la personne lit : elle peut voir « P1 : exploitée et exposée sur Internet » sans voir sur
+  quel actif ; la veille et l'assistant disent une exposition hors de ses droits sans nom ni nombre. Carte : le regroupement
+  par domaine parent est confirmé (mention « à confirmer » retirée). (session « Module surveillance vulnérabilités SMSI »)
 
 - **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), décision du RSSI du
   17/11/2026) : l'avis GHSA-fc5q-39xc-vjpf (déni de service dans `picomatch` ≤ 4.0.7, gravité élevée, sans version corrigée

@@ -255,7 +255,8 @@ export class VeilleVulnerabilites {
 
   /** Failles connues de la veille ; `kev` : celles du catalogue des failles exploitées, les plus récemment ajoutées d'abord.
       Recherche par identifiant CVE, éditeur, produit ou nom de la faille. Lot ALH2 : ce que dit AlgoLightHouse et la vue sur
-      la surface externe, pour ce que la personne lit. */
+      la surface externe ; lot ALH5 : les faits d'AlgoLightHouse sont les mêmes pour tout le monde, les actifs et alertes
+      comptés sont ceux que la personne lit (une exposition ailleurs est signalée sans nom ni nombre). */
   async failles(q: RechercheFailles, user: SessionUser): Promise<PageVeille<FailleVeilleDto>> {
     let base = this.db.k.selectFrom('vulnerabilites_veille_cve');
     if (q.kev) base = base.where('kev_ajout', 'is not', null);
@@ -294,7 +295,6 @@ export class VeilleVulnerabilites {
     const faits = await lireFaitsCve(
       this.db.k,
       lignes.map((l) => l.cve),
-      user,
     );
     const surface = this.surface
       ? await this.surface.surfaceDesCves(

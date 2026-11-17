@@ -219,7 +219,16 @@ describe('adresses et libellés', () => {
     expect([triDepuis('priorite'), triDepuis('criticite'), triDepuis(null)]).toEqual(['priorite', '', '']);
   });
   it('vue sur la surface externe, produits et technologies rapprochés (lot ALH2)', () => {
-    expect(libelleSurfaceCve({ actifs: 1, alertes: 0 })).toBe('Vue sur la surface externe : 1 actif exposé.');
+    expect(libelleSurfaceCve({ actifs: 1, alertes: 0, horsLecture: false })).toBe(
+      'Vue sur la surface externe : 1 actif exposé.',
+    );
+    // Lot ALH5 : exposée aussi hors de ce que la personne lit, dit sans nom ni nombre.
+    expect(libelleSurfaceCve({ actifs: 1, alertes: 0, horsLecture: true })).toBe(
+      'Vue sur la surface externe : 1 actif exposé. Exposée aussi sur des actifs que vous ne pouvez pas lire.',
+    );
+    expect(libelleSurfaceCve({ actifs: 0, alertes: 0, horsLecture: true })).toBe(
+      'Exposée sur Internet, sur des actifs que vous ne pouvez pas lire (ni nommés ni comptés).',
+    );
     expect(libelleProduitRapproche(techno.produits[0]!)).toBe(
       'F5 Nginx 1.16 (par nom, version différente : à vérifier)',
     );

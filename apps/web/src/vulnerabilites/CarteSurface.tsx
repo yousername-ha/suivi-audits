@@ -407,12 +407,13 @@ export function CarteSurface({
   return (
     <Stack gap="sm" className="surface-carte">
       {premiereCritique && (
-        <Alert color="red" title="Un actif exposé sur Internet porte une faille exploitée">
+        <Alert color="red" title="Un actif exposé sur Internet porte une faille en priorité P1">
           <Group justify="space-between" wrap="wrap">
             <Text size="sm">
               {pluriel(critiques.length, 'chemin d’entrée critique', 'chemins d’entrée critiques')} : une alerte ouverte
-              porte une CVE dont l’exploitation est avérée (priorité P1), tracé en rouge pointillé jusqu’aux machines
-              internes reliées. « {premiereCritique.titre} »
+              est en priorité P1 (CVE dont l’exploitation est avérée, ou priorité majorée parce que l’actif mène à une
+              machine interne vulnérable), tracé en rouge pointillé jusqu’aux machines internes reliées. «{' '}
+              {premiereCritique.titre} »
             </Text>
             <Button size="compact-sm" variant="light" color="red" onClick={() => actions.onAlerte(premiereCritique.id)}>
               Ouvrir la fiche de l’alerte
@@ -430,7 +431,6 @@ export function CarteSurface({
         />
         <Select
           label="Regrouper par"
-          description="Choix par défaut à confirmer."
           allowDeselect={false}
           value={regroupement}
           onChange={(v) => {

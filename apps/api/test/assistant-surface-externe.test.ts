@@ -4,7 +4,9 @@
    actifs exposés n'y sont que des repères « E-001 », stables, remplacés à l'affichage selon les droits de la personne qui
    regarde ; les recommandations de l'éditeur partent masquées. Le masque couvre les domaines et adresses d'AlgoLightHouse
    (sous-domaines compris), même en ronde : un test échoue s'il n'y est plus branché. Faux modèle seulement, aucun service
-   joint. Données entièrement fictives : domaines en .example, adresses de 192.0.2.0/24 et 198.51.100.0/24, CVE fictives. */
+   joint. Données entièrement fictives : domaines en .example, adresses de 192.0.2.0/24 et 198.51.100.0/24, CVE fictives.
+   Lot ALH5 (décision A) : la priorité d'une CVE est la même pour qui ne lit pas les actifs exposés ; l'exposition lui est
+   dite par un oui, sans repère, nom ni nombre. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { ConversationAssistantDetailDto } from '@suivi/shared';
 import type { DemandeModele, MessageModele, ReponseModele, TransportModele } from '../src/assistant/modele.js';
@@ -399,14 +401,39 @@ describe('évaluer une CVE exposée sur Internet (décision C)', () => {
     }
   });
 
-  it('pour qui ne lit pas ces actifs : rien d’exposé, rien de ce que dit l’éditeur', async () => {
-    const c = await ouvrir(lecteurB);
-    let r: Record<string, unknown> = {};
-    modele.etapes = [
-      () => appel('e2', 'evaluer_cve', { cve: CVE }),
-      (d) => ((r = dernierOutil(d)), { role: 'assistant', content: 'ok' }),
-    ];
-    await demander(lecteurB, c, `Et ${CVE} ?`);
-    expect(r).toMatchObject({ cve: CVE, connue: false });
+  it('pour qui ne lit pas ces actifs : même priorité (lot ALH5), exposition dite sans repère, nom ni nombre', async () => {
+    const evaluer = async (a: Agent) => {
+      const c = await ouvrir(a);
+      let r: Record<string, unknown> = {};
+      modele.etapes = [
+        () => appel('e2', 'evaluer_cve', { cve: CVE }),
+        (d) => ((r = dernierOutil(d)), { role: 'assistant', content: 'ok' }),
+      ];
+      await demander(a, c, `Et ${CVE} ?`);
+      return r as {
+        connue: boolean;
+        priorite: unknown;
+        presence: Record<string, unknown>;
+        surfaceExterne: Record<string, unknown>;
+      };
+    };
+    const rA = await evaluer(lecteurA);
+    const rB = await evaluer(lecteurB);
+    // Décision A : la priorité et les faits sont les mêmes pour tout le monde.
+    expect(rB).toMatchObject({ cve: CVE, connue: true });
+    expect(rB.priorite).toEqual(rA.priorite);
+    expect(rB.presence).toMatchObject({ exposeeSurInternet: true });
+    // Le détail reste limité à ce que la personne lit : aucun actif, aucune technologie, aucune alerte, aucun repère.
+    expect(rB.surfaceExterne).toMatchObject({
+      exposeeSurInternet: true,
+      aussiHorsDeVosDroits: true,
+      actifsExposes: 0,
+      reperes: [],
+      technologies: [],
+      alertesOuvertes: 0,
+    });
+    const texte = JSON.stringify(rB);
+    for (const x of [DOMAINE, SOUS_DOMAINE, IP_A, RESOLUTION, FAI, NOM_A, PERIM_ALH_A, 'E-0'])
+      expect(texte, x).not.toContain(x);
   });
 });

@@ -1,5 +1,6 @@
 /* Module Vulnérabilités (ADR 0100, points 9 et 16 ; lot V4a) : priorité d'une faille (chaque ligne de la grille, seuil
-   réglé, faits rendus, rejouabilité) et rang d'une machine (ordre, faits). Fonctions pures, données fictives. */
+   réglé, faits rendus, rejouabilité) et rang d'une machine (ordre, faits). Lot ALH5 : majoration d'un cran quand l'actif
+   exposé mène à une machine interne vulnérable (cas en table). Fonctions pures, données fictives. */
 import { describe, expect, it } from 'vitest';
 import {
   calculerPriorite,
@@ -19,7 +20,11 @@ import {
   graviteDepuisNvd,
   libelleFaitPriorite,
   libelleFaitRang,
+  machineVulnerable,
+  majorerPriorite,
+  NIVEAUX_MACHINE_VULNERABLE,
   NIVEAUX_PRIORITE,
+  type Priorite,
   rangerMachines,
   REGLAGE_PRIORITE_DEFAUT,
   ReglagePriorite,
@@ -481,5 +486,51 @@ describe('surface externe (lot ALH2) : présence « exposée » et AlgoLightHous
     expect(prioriteLaPlusHaute([p('P3'), p('P2'), p('P4')])).toEqual(p('P2'));
     expect(prioriteLaPlusHaute([])).toBeNull();
     expect(rangPriorite(p('P1'))).toBe(1);
+  });
+});
+
+describe('majoration par la machine interne (lot ALH5, décision B)', () => {
+  const p = (niveau: 'P1' | 'P2' | 'P3' | 'P4'): Priorite => ({
+    niveau,
+    faits: [{ fait: 'presence', presence: 'exposee' }],
+  });
+  it.each([
+    ['P4', true, 'P3'],
+    ['P3', true, 'P2'],
+    ['P2', true, 'P1'],
+    ['P1', true, 'P1'],
+    ['P4', false, 'P4'],
+    ['P3', false, 'P3'],
+    ['P2', false, 'P2'],
+    ['P1', false, 'P1'],
+  ] as const)('%s, mène à une machine vulnérable : %s → %s', (avant, mene, apres) => {
+    const r = majorerPriorite(p(avant), mene);
+    expect(r.niveau).toBe(apres);
+    if (mene) expect(r.faits.at(-1)).toEqual({ fait: 'machine_interne_vulnerable' });
+    else expect(r).toEqual(p(avant));
+  });
+
+  it('enchaînée à la grille : P3 (présente et élevée) devient P2 avec le fait ; rien ne monte au-delà de P1', () => {
+    const base = calculerPriorite(faits({ presence: 'exposee', gravite: 'elevee' }));
+    expect(base.niveau).toBe('P3');
+    expect(majorerPriorite(base, true)).toEqual({
+      niveau: 'P2',
+      faits: [...base.faits, { fait: 'machine_interne_vulnerable' }],
+    });
+    expect(majorerPriorite(majorerPriorite(p('P2'), true), true).niveau).toBe('P1');
+  });
+
+  it.each([
+    [['P1'], true],
+    [['P2', 'P4'], true],
+    [['P3', 'P4'], false],
+    [[], false],
+  ] as const)('machine vulnérable si une faille présente est en P1 ou P2 : %j → %s', (niveaux, attendu) => {
+    expect(machineVulnerable(niveaux.map((n) => p(n)))).toBe(attendu);
+  });
+
+  it('libellé du fait, sans nom de machine', () => {
+    expect(NIVEAUX_MACHINE_VULNERABLE).toEqual(['P1', 'P2']);
+    expect(libelleFaitPriorite({ fait: 'machine_interne_vulnerable' })).toBe('Mène à une machine interne vulnérable');
   });
 });

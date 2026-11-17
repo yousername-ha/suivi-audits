@@ -450,7 +450,9 @@ export interface AlerteAlhDto extends PerimetreLieDto {
   termineeLe: string | null;
   integration: { id: string; nom: string };
   /** Priorité calculée par la plateforme (lot ALH2) : la plus haute des CVE de l'alerte, présence « exposée » tant que
-      l'alerte est ouverte chez l'éditeur (sinon « absente ») ; null pour une alerte sans CVE. */
+      l'alerte est ouverte chez l'éditeur (sinon « absente ») ; null pour une alerte sans CVE. Lot ALH5 : calculée sur tous
+      les faits connus (la même pour tout le monde), majorée d'un cran si l'alerte est ouverte et que son actif mène, par une
+      liaison confirmée, à une machine interne vulnérable. */
   priorite: Priorite | null;
   /** Défauts décrits par l'éditeur (recommandations, dans la fiche de l'alerte). */
   nombreDefauts: number;
@@ -508,7 +510,8 @@ export interface CveTechnologieAlhDto {
   preuve: boolean | null;
   exploitee: boolean | null;
   publieeLe: string | null;
-  /** Priorité calculée par la plateforme (présence « exposée », toutes les sources ; lot ALH2). */
+  /** Priorité calculée par la plateforme (présence « exposée », toutes les sources ; lot ALH2), majorée si la version
+      tourne sur un actif qui mène à une machine interne vulnérable (lot ALH5). */
   priorite: Priorite;
 }
 
@@ -549,17 +552,22 @@ export interface TechnologieAlhDto {
   preuves: number;
   cvssMax: number | null;
   integration: { id: string; nom: string };
-  /** Priorité la plus haute de ses CVE (null : aucune CVE) ; lot ALH2. */
+  /** Priorité la plus haute de ses CVE (null : aucune CVE) ; lot ALH2. Lot ALH5 : sur toutes ses versions encore détectées,
+      y compris sur des actifs que la personne ne lit pas (la même pour tout le monde), majorée par version comme ses CVE ;
+      seules les versions lisibles sont détaillées. */
   priorite: Priorite | null;
   /** Produits surveillés rapprochés (lot ALH2). */
   produits: ProduitRapprocheAlhDto[];
 }
 
 /** Ce que la surface externe dit d'une CVE, pour la personne qui regarde (lot ALH2) : actifs lisibles qui la portent (par
-    une version détectée d'une technologie, ou comme cible d'une alerte ouverte), alertes ouvertes lisibles qui la citent. */
+    une version détectée d'une technologie, ou comme cible d'une alerte ouverte), alertes ouvertes lisibles qui la citent.
+    Lot ALH5 (décision A) : `horsLecture` signale, sans nom ni nombre, que la CVE est aussi exposée sur des actifs ou par des
+    alertes que la personne ne lit pas (fait de la priorité, le même pour tout le monde). */
 export interface SurfaceCveDto {
   actifs: number;
   alertes: number;
+  horsLecture: boolean;
 }
 
 /** Technologie de la surface externe rapprochée d'un produit surveillé (fiche du produit, lot ALH2). */

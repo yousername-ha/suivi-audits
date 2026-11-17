@@ -1627,7 +1627,7 @@ export interface VulnerabilitesAlhLiaisonsMachines {
   machine_id: string;
   statut: "proposee" | "confirmee" | "rejetee" | "retiree";
   motif: string | null;
-  origine: "proposition" | "manuelle";
+  origine: "proposition" | "manuelle" | "masse";
   empreinte_actif: string;
   empreinte_machine: string;
   decide_par: string | null;

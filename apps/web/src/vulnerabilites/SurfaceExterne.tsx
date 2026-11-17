@@ -11,7 +11,10 @@
    ou rejeter une proposition de la plateforme, relier à la main une machine (sélecteur avec recherche) et délier. Le
    serveur ne rend que les machines que la personne peut lire et reste seul juge des droits d'écriture.
    Lot ALH4 : onglet « Carte » (lignes d'approche), affiché en premier ; les autres onglets en sont l'équivalent en
-   tableau. */
+   tableau.
+   Lot ALH5 : priorités les mêmes pour tout le monde (une technologie peut tenir sa priorité de versions que la personne ne
+   voit pas : dit sans nom) ; « Relier en masse » dans l'onglet « Actifs » (droit de modifier) : motifs à joker, aperçu
+   obligatoire, puis liaison des seules paires de l'aperçu. */
 import {
   Alert,
   Anchor,
@@ -34,8 +37,12 @@ import { notifications } from '@mantine/notifications';
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
+  type ApercuLiaisonMasseDto,
+  type ModeLiaisonMasse,
+  type ResultatLiaisonMasseDto,
   type CarteSurfaceDto,
   CRITICITES_ALH,
+  LIAISONS_MASSE_MAX,
   type EtatSurfaceExterneDto,
   type FicheAlerteAlhDto,
   type FicheLiaisonsActifDto,
@@ -67,6 +74,15 @@ import { MarquesSources } from './SourcesFaille';
 import {
   alerteOuverte,
   CRITICITE_ALH_ETAT,
+  demandeMasse,
+  OPTIONS_MODE_MASSE,
+  prioriteHorsDetail,
+  resumeApercuMasse,
+  resumeResultatMasse,
+  SAISIE_MASSE_VIDE,
+  type SaisieMasse,
+  URL_APERCU_MASSE,
+  URL_LIAISON_MASSE,
   FILTRES_ALERTES_VIDES,
   type FiltresAlertesAlh,
   libelleCible,
@@ -741,6 +757,12 @@ export function TechnologiesAlh({ technologies }: { technologies: TechnologieAlh
             <Table.Tr key={t.id}>
               <Table.Td>
                 <PrioriteOuSansCve p={t.priorite} />
+                {prioriteHorsDetail(t) && (
+                  <Text size="xs" c="dimmed">
+                    Priorité tenue de versions détectées sur des actifs que vous ne pouvez pas lire (ni nommés ni
+                    détaillés).
+                  </Text>
+                )}
               </Table.Td>
               <Table.Td>
                 <Text size="sm" fw={600} className="veille-texte">
@@ -913,6 +935,194 @@ function Pages({
   );
 }
 
+/** Aperçu d'une liaison en masse (sans état) : résumé, paires proposées, actifs sans correspondance ou écartés. Tout est
+    limité à ce que la personne lit. */
+export function ApercuMasse({ apercu }: { apercu: ApercuLiaisonMasseDto }) {
+  return (
+    <Stack gap="xs">
+      <Text size="sm" role="status">
+        {resumeApercuMasse(apercu)}
+      </Text>
+      {apercu.paires.length > 0 && (
+        <DataTable label="Paires à relier">
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Actif exposé</Table.Th>
+                <Table.Th>Machine interne</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {apercu.paires.map((p) => (
+                <Table.Tr key={`${p.actif.id}-${p.machine.id}`}>
+                  <Table.Td className="veille-code">{p.actif.valeur}</Table.Td>
+                  <Table.Td className="veille-texte">{libelleMachine(p.machine)}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </DataTable>
+      )}
+      {apercu.sansCorrespondance.length > 0 && (
+        <Text size="xs" c="dimmed" className="veille-code">
+          Sans correspondance : {apercu.sansCorrespondance.map((a) => a.valeur).join(', ')}
+          {apercu.nombreSansCorrespondance > apercu.sansCorrespondance.length
+            ? ` et ${apercu.nombreSansCorrespondance - apercu.sansCorrespondance.length} autres`
+            : ''}
+        </Text>
+      )}
+      {apercu.multiples.length > 0 && (
+        <Text size="xs" c="dimmed" className="veille-code">
+          Écartés, plusieurs machines correspondent :{' '}
+          {apercu.multiples.map((m) => `${m.actif.valeur} (${m.machines})`).join(', ')}
+          {apercu.nombreMultiples > apercu.multiples.length
+            ? ` et ${apercu.nombreMultiples - apercu.multiples.length} autres`
+            : ''}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+/** « Relier en masse » (lot ALH5, droit de modifier) : motifs à joker « * », aperçu obligatoire, puis liaison des seules
+    paires de l'aperçu (le serveur revérifie chacune). Toute modification de la saisie efface l'aperçu. */
+function RelierEnMasse({ onFini }: { onFini: () => void }) {
+  const qc = useQueryClient();
+  const [saisie, setSaisie] = useState<SaisieMasse>(SAISIE_MASSE_VIDE);
+  const [apercu, setApercu] = useState<ApercuLiaisonMasseDto | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [enCours, setEnCours] = useState(false);
+  const [terme, setTerme] = useState('');
+  const [choix, setChoix] = useState<{ value: string; label: string } | null>(null);
+  const machines = useQuery({
+    queryKey: ['vulnerabilites', 'machines', 'recherche', terme],
+    queryFn: () => get<PageMachines>(urlMachines({ ...FILTRES_MACHINES_VIDES, q: terme })),
+    enabled: saisie.mode === 'tous_vers_une',
+  });
+  const resultats = (machines.data?.elements ?? []).map((m) => ({
+    value: m.id,
+    label: m.nom && m.adresse ? `${m.nom} (${m.adresse})` : libelleMachine(m),
+  }));
+  const changer = (x: Partial<SaisieMasse>) => {
+    setSaisie({ ...saisie, ...x });
+    setApercu(null);
+    setErreur(null);
+  };
+  const voir = async () => {
+    const d = demandeMasse(saisie);
+    if (typeof d === 'string') {
+      setErreur(d);
+      return;
+    }
+    setEnCours(true);
+    try {
+      setApercu(await api<ApercuLiaisonMasseDto>('POST', URL_APERCU_MASSE, { body: d }));
+      setErreur(null);
+    } catch (e) {
+      setApercu(null);
+      setErreur(errorMessage(e));
+    } finally {
+      setEnCours(false);
+    }
+  };
+  const relier = async () => {
+    if (!apercu?.paires.length) return;
+    setEnCours(true);
+    try {
+      const r = await api<ResultatLiaisonMasseDto>('POST', URL_LIAISON_MASSE, {
+        body: {
+          demande: apercu.demande,
+          empreinte: apercu.empreinte,
+          paires: apercu.paires.map((p) => ({
+            actifId: p.actif.id,
+            machineId: p.machine.id,
+            versionLiaisons: p.versionLiaisons,
+          })),
+        },
+      });
+      notifications.show({ color: r.ecartees ? 'orange' : 'teal', message: resumeResultatMasse(r) });
+      await qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+      onFini();
+    } catch (e) {
+      setErreur(errorMessage(e));
+    } finally {
+      setEnCours(false);
+    }
+  };
+  return (
+    <Stack>
+      <Text size="xs" c="dimmed">
+        Reliez d’un coup les actifs exposés dont le domaine ou l’adresse suit un motif. Seul joker : « * » (zéro ou
+        plusieurs caractères), sans distinction de casse. « Un pour un » relie chaque actif à la machine dont la partie
+        couverte par le joker est la même (pre-*.exemple.example et srv-pre-* relient pre-web01.exemple.example à
+        srv-pre-web01). L’aperçu est obligatoire ; seules ses paires sont reliées, {LIAISONS_MASSE_MAX} au plus, et
+        chacune est revérifiée. Une seule entrée au journal d’audit, avec les motifs et les nombres.
+      </Text>
+      <Select
+        label="Mode"
+        allowDeselect={false}
+        value={saisie.mode}
+        onChange={(v) => changer({ mode: (v ?? 'un_pour_un') as ModeLiaisonMasse })}
+        data={OPTIONS_MODE_MASSE}
+        comboboxProps={{ withinPortal: false }}
+      />
+      <TextInput
+        label="Motif des actifs"
+        description="Domaine ou adresse, avec le joker « * »."
+        placeholder="pre-*.exemple.example"
+        maxLength={253}
+        value={saisie.motifActifs}
+        onChange={(e) => changer({ motifActifs: e.currentTarget.value })}
+      />
+      {saisie.mode === 'un_pour_un' ? (
+        <TextInput
+          label="Motif des machines"
+          description="Nom de machine interne, avec autant de jokers « * »."
+          placeholder="srv-pre-*"
+          maxLength={253}
+          value={saisie.motifMachines}
+          onChange={(e) => changer({ motifMachines: e.currentTarget.value })}
+        />
+      ) : (
+        <Select
+          label="Machine interne"
+          description="Recherche par nom de machine, parmi celles que vous pouvez lire."
+          placeholder="Choisir une machine"
+          searchable
+          clearable
+          searchValue={terme}
+          onSearchChange={setTerme}
+          value={choix?.value ?? null}
+          onChange={(_v, option) => {
+            setChoix(option ?? null);
+            changer({ machineId: option?.value ?? null });
+          }}
+          data={[...(choix && !resultats.some((o) => o.value === choix.value) ? [choix] : []), ...resultats]}
+          nothingFoundMessage="Aucune machine"
+          comboboxProps={{ withinPortal: false }}
+        />
+      )}
+      {erreur && (
+        <Alert color="red" role="alert">
+          {erreur}
+        </Alert>
+      )}
+      <ErrorAlert error={machines.error} />
+      <Group>
+        <Button variant="default" loading={enCours && !apercu} onClick={() => void voir()}>
+          Voir l’aperçu
+        </Button>
+        {apercu && (
+          <Button loading={enCours} disabled={!apercu.paires.length} onClick={() => void relier()}>
+            {`Relier ${apercu.paires.length} paire${apercu.paires.length > 1 ? 's' : ''}`}
+          </Button>
+        )}
+      </Group>
+      {apercu && <ApercuMasse apercu={apercu} />}
+    </Stack>
+  );
+}
+
 function OngletAlertes() {
   const [saisie, setSaisie] = useState('');
   const [filtres, setFiltres] = useState<FiltresAlertesAlh>(FILTRES_ALERTES_VIDES);
@@ -1016,6 +1226,7 @@ function OngletActifs() {
   const [liaison, setLiaison] = useState<FiltreLiaisonActif | ''>('');
   const [page, setPage] = useState(1);
   const [ouvert, setOuvert] = useState<ActifAlhDto | null>(null);
+  const [masse, setMasse] = useState(false);
   const q = useQuery({
     queryKey: [...CLE, 'actifs', recherche, type, liaison, page],
     queryFn: () => get<PageSurface<ActifAlhDto>>(urlActifsAlh(recherche, type, page, liaison)),
@@ -1065,6 +1276,11 @@ function OngletActifs() {
             data={OPTIONS_LIAISON_ACTIF}
             comboboxProps={{ withinPortal: false }}
           />
+          {modifier && (
+            <Button variant="light" onClick={() => setMasse(true)}>
+              Relier en masse
+            </Button>
+          )}
         </Group>
       </form>
       <ErrorAlert error={q.error} />
@@ -1080,6 +1296,17 @@ function OngletActifs() {
         lockScroll={false}
       >
         {ouvert && <FicheActif actif={ouvert} modifier={modifier} />}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={masse}
+        onClose={() => setMasse(false)}
+        title="Relier en masse les actifs exposés aux machines internes"
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {masse && <RelierEnMasse onFini={() => setMasse(false)} />}
       </Modal>
     </Stack>
   );

@@ -111,6 +111,13 @@ Lot ALH3 (migration `083`) : un actif (hôte ou domaine) se relie aux machines i
 dans la transaction de fin de chaque synchronisation reçue d'AlgoLightHouse ou de Tenable, sous un verrou consultatif ;
 lecture si l'actif (`lisibleAlh`) et la machine (`lisible`, périmètre effectif) sont lisibles ; écriture par
 `vulnerabilites:modifier`, `If-Match` (`vulnerabilites_alh_actifs.liaisons_version`), écriture sur les deux périmètres.
+Lot ALH5 (migration `084`) : la priorité se calcule sur tous les faits connus, sans les droits de la personne (fragment
+`cvesAlh` de `apps/api/src/vulnerabilites/sql.ts`) ; seules les lignes rendues restent filtrées. Majoration d'un cran par
+liaison confirmée vers une machine interne portant une faille présente en P1 ou P2 (`majoration.ts`, règle
+`majorerPriorite` du paquet partagé), appliquée à l'alerte, à la technologie et à leurs CVE sur la surface externe seulement.
+Liaison en masse (`POST …/surface/liaisons/masse/apercu`, puis `POST …/surface/liaisons/masse`) : joker `*` comparé en
+littéral (`correspondanceJoker`), aperçu borné à 200 paires et lié à son empreinte (personne, demande, paires et versions),
+paires revérifiées sous le même verrou consultatif, origine `masse`, une entrée de journal par opération.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant

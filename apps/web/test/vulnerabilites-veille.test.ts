@@ -234,7 +234,9 @@ describe('rendu', () => {
         createElement(
           MantineProvider,
           null,
-          createElement(FaillesTable, { failles: [faille({ surfaceExterne: { actifs: 2, alertes: 1 } })] }),
+          createElement(FaillesTable, {
+            failles: [faille({ surfaceExterne: { actifs: 2, alertes: 1, horsLecture: false } })],
+          }),
         ),
       ),
     );

@@ -13,10 +13,25 @@
      l'écriture sur le périmètre de l'actif et sur le périmètre effectif de la machine (sans périmètre : lisible seulement
      avec administrer), If-Match sur la version des liaisons de l'actif. Une machine ou une liaison illisible répond
      comme inconnue.
-   Journal `vulnerabilites.surface.liaison.*` et `vulnerabilites.surface.liaisons.recalculees` : identifiants internes,
-   statuts, critères et nombres ; jamais un nom de machine, un domaine, une adresse ni la note. Kysely (ADR 0062). */
+   - Liaison en masse (lot ALH5, décision C du RSSI du 17/11/2026) : motif à joker « * » pour les actifs et, en mode « un
+     pour un », pour les machines (comparaison littérale, packages/shared : correspondanceJoker) ; aperçu obligatoire et
+     borné, application sur les seules paires de l'aperçu validé (empreinte), chacune revérifiée (droits de lecture et
+     d'écriture, version des liaisons de l'actif, plafond) ; liaisons confirmées d'origine « masse ».
+   Journal `vulnerabilites.surface.liaison.*`, `vulnerabilites.surface.liaisons.recalculees` et
+   `vulnerabilites.surface.liaisons.reliees_en_masse` (une entrée par opération : motifs saisis, mode et nombres) :
+   identifiants internes, statuts, critères et nombres ; jamais un nom de machine, un domaine, une adresse ni la note.
+   Kysely (ADR 0062). */
 import { createHash } from 'node:crypto';
 import {
+  type ActifMasseDto,
+  ApplicationLiaisonMasse,
+  type ApercuLiaisonMasseDto,
+  correspondanceJoker,
+  DemandeLiaisonMasse,
+  LIAISONS_MASSE_MAX,
+  LIGNES_APERCU_MASSE_MAX,
+  type MachineMasseDto,
+  type ResultatLiaisonMasseDto,
   type CorpsDeliaisonMachine,
   type CorpsLiaisonMachine,
   critereLiaisonMachine,
@@ -686,5 +701,236 @@ export class LiaisonsMachines {
       return a.id;
     }, user.username);
     return this.fiche(user, actifId);
+  }
+
+  /* ---------------------------------------------------------------- Liaison en masse (lot ALH5, décision C) */
+  /** Paires d'une demande, calculées sur ce que la personne lit : actifs lisibles et présents dont la valeur (domaine ou
+      adresse) correspond au motif ; machines lisibles dont le nom correspond au motif (un pour un : même partie couverte
+      par les jokers, une seule machine), ou la machine choisie. Écartées et comptées : sans correspondance, plusieurs
+      machines, déjà reliées, actif au plafond, écriture refusée sur l'un des deux périmètres. Rien n'est écrit. */
+  private async calculerMasse(k: Kdb, user: SessionUser, d: DemandeLiaisonMasse) {
+    const { rows: actifs } = await sql<{
+      id: string;
+      type: TypeActifAlh;
+      valeur: string;
+      adresse: string | null;
+      liaisons_version: number;
+      perimetre_id: string | null;
+      reliees: number;
+    }>`SELECT x.id, x.type, x.valeur, x.adresse, x.liaisons_version, lp.perimetre_id,
+         (SELECT count(*)::int FROM vulnerabilites_alh_liaisons_machines lc
+            WHERE lc.actif_id = x.id AND lc.statut = 'confirmee') AS reliees
+       FROM vulnerabilites_alh_actifs x
+       LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+       LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+       WHERE ${lisibleAlh(user)} AND x.vu_numero >= coalesce(e.numero_complet, 0)
+       ORDER BY x.type, x.valeur, x.id`.execute(k);
+    const retenus = actifs.flatMap((a) => {
+      const parts = correspondanceJoker(d.motifActifs, a.valeur);
+      return parts ? [{ a, cle: parts.join('\u0000') }] : [];
+    });
+    type Machine = { id: string; nom: string | null; adresse: string | null; perimetre_id: string | null };
+    let choisie: Machine | null = null;
+    const parCle = new Map<string, Machine[]>();
+    if (d.mode === 'tous_vers_une') {
+      choisie = (await this.machine(k, user, d.machineId)) ?? null;
+      if (!choisie) throw new HttpError(404, MACHINE_INTROUVABLE);
+    } else {
+      const { rows: machines } = await sql<Machine>`
+        SELECT m.id, m.nom, m.adresse, ${perimetreMachine} AS perimetre_id FROM vulnerabilites_machines m
+        WHERE m.nom IS NOT NULL AND ${lisible(user)} ORDER BY lower(m.nom), m.id`.execute(k);
+      for (const m of machines) {
+        const parts = correspondanceJoker(d.motifMachines, m.nom!);
+        if (!parts) continue;
+        const cle = parts.join('\u0000');
+        parCle.set(cle, [...(parCle.get(cle) ?? []), m]);
+      }
+    }
+    const ids = retenus.map((x) => x.a.id);
+    const deja = new Set(
+      ids.length
+        ? (
+            await sql<{
+              cle: string;
+            }>`SELECT actif_id || '|' || machine_id AS cle FROM vulnerabilites_alh_liaisons_machines
+              WHERE statut = 'confirmee' AND actif_id = ANY(${ids}::uuid[])`.execute(k)
+          ).rows.map((x) => x.cle)
+        : [],
+    );
+    const perimetres = [
+      ...new Set(
+        [
+          ...retenus.map((x) => x.a.perimetre_id),
+          choisie?.perimetre_id,
+          ...[...parCle.values()].flat().map((m) => m.perimetre_id),
+        ].filter((x): x is string => !!x),
+      ),
+    ];
+    // Écriture sur un périmètre : même règle que les périmètres affectables (administration de la plateforme, ou accès en
+    // écriture par la pyramide) ; un élément sans périmètre n'est lisible qu'avec administrer, sa lecture vaut le contrôle.
+    const ecriture = new Set(
+      perimetres.length
+        ? (
+            await sql<{ id: string }>`SELECT s.id FROM grc_smsis s WHERE s.id = ANY(${perimetres}::uuid[])
+              AND (grc_est_admin(${user.id}::uuid) OR grc_acces_perimetre(s.id, ${user.id}::uuid) IS TRUE)`.execute(k)
+          ).rows.map((x) => x.id)
+        : [],
+    );
+    const ecrit = (p: string | null) => p === null || ecriture.has(p);
+    const actifDto = (a: (typeof actifs)[number]): ActifMasseDto => ({ id: a.id, type: a.type, valeur: a.valeur });
+    const machineDto = (m: Machine): MachineMasseDto => ({ id: m.id, nom: m.nom, adresse: m.adresse });
+    const paires: { a: (typeof actifs)[number]; m: Machine }[] = [];
+    const sansCorrespondance: ActifMasseDto[] = [];
+    const multiples: { actif: ActifMasseDto; machines: number }[] = [];
+    let dejaReliees = 0;
+    let plafond = 0;
+    let nonModifiables = 0;
+    for (const { a, cle } of retenus) {
+      const candidates = choisie ? [choisie] : (parCle.get(cle) ?? []);
+      if (!candidates.length) {
+        sansCorrespondance.push(actifDto(a));
+        continue;
+      }
+      if (candidates.length > 1) {
+        multiples.push({ actif: actifDto(a), machines: candidates.length });
+        continue;
+      }
+      const m = candidates[0]!;
+      if (deja.has(`${a.id}|${m.id}`)) dejaReliees++;
+      else if (a.reliees >= LIAISONS_MACHINES_PAR_ACTIF_MAX) plafond++;
+      else if (!ecrit(a.perimetre_id) || !ecrit(m.perimetre_id)) nonModifiables++;
+      else paires.push({ a, m });
+    }
+    return {
+      paires,
+      dto: (empreinte: string): ApercuLiaisonMasseDto => ({
+        demande: d,
+        machine: choisie ? machineDto(choisie) : null,
+        paires: paires.map((x) => ({
+          actif: actifDto(x.a),
+          machine: machineDto(x.m),
+          versionLiaisons: x.a.liaisons_version,
+        })),
+        actifs: retenus.length,
+        sansCorrespondance: sansCorrespondance.slice(0, LIGNES_APERCU_MASSE_MAX),
+        nombreSansCorrespondance: sansCorrespondance.length,
+        multiples: multiples.slice(0, LIGNES_APERCU_MASSE_MAX),
+        nombreMultiples: multiples.length,
+        dejaReliees,
+        plafond,
+        nonModifiables,
+        empreinte,
+        max: LIAISONS_MASSE_MAX,
+      }),
+    };
+  }
+
+  /** Empreinte d'un aperçu : la personne, la demande et les paires (identifiants et version des liaisons de l'actif). */
+  private static empreinteMasse(
+    user: SessionUser,
+    d: DemandeLiaisonMasse,
+    paires: readonly { actifId: string; machineId: string; versionLiaisons: number }[],
+  ): string {
+    return empreinte([
+      'vulnerabilites.liaisons-masse',
+      user.id,
+      d.mode,
+      d.motifActifs,
+      d.mode === 'un_pour_un' ? d.motifMachines : d.machineId,
+      [...paires]
+        .map((p) => [p.actifId, p.machineId, p.versionLiaisons] as const)
+        .sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : x[1] < y[1] ? -1 : x[1] > y[1] ? 1 : 0)),
+    ]);
+  }
+
+  /** Aperçu d'une liaison en masse (rien n'est écrit) ; au-delà de LIAISONS_MASSE_MAX paires : 422 avec le nombre. */
+  async apercuMasse(user: SessionUser, body: DemandeLiaisonMasse): Promise<ApercuLiaisonMasseDto> {
+    const d = DemandeLiaisonMasse.parse(body);
+    const r = await this.calculerMasse(this.db.k, user, d);
+    if (r.paires.length > LIAISONS_MASSE_MAX)
+      throw new HttpError(
+        422,
+        `Le motif donne ${r.paires.length} paires à relier : ${LIAISONS_MASSE_MAX} au plus par opération. Précisez les motifs.`,
+      );
+    return r.dto(
+      LiaisonsMachines.empreinteMasse(
+        user,
+        d,
+        r.paires.map((x) => ({ actifId: x.a.id, machineId: x.m.id, versionLiaisons: x.a.liaisons_version })),
+      ),
+    );
+  }
+
+  /** Application d'un aperçu validé : seules les paires envoyées, si leur empreinte est celle de l'aperçu, sont reliées ;
+      chacune est revérifiée (elle figure encore parmi les paires que la demande donne à la personne, avec la même version des
+      liaisons de l'actif ; écriture sur les deux périmètres) ; sinon elle est écartée et comptée. Une seule entrée de
+      journal, sans nom d'actif ni de machine. */
+  async appliquerMasse(user: SessionUser, body: ApplicationLiaisonMasse, ip: string): Promise<ResultatLiaisonMasseDto> {
+    const p = ApplicationLiaisonMasse.parse(body);
+    if (new Set(p.paires.map((x) => x.actifId)).size !== p.paires.length)
+      throw new HttpError(422, 'Un actif ne peut figurer qu’une fois par opération.');
+    if (LiaisonsMachines.empreinteMasse(user, p.demande, p.paires) !== p.empreinte)
+      throw new HttpError(422, 'Les paires envoyées ne sont pas celles de l’aperçu : refaites l’aperçu.');
+    return this.db.tx(async (c, k) => {
+      await verrou(k);
+      // Actifs verrouillés avant le calcul de contrôle : leur version ne peut plus changer jusqu'à la fin.
+      await sql`SELECT x.id FROM vulnerabilites_alh_actifs x WHERE x.id = ANY(${p.paires.map((x) => x.actifId)}::uuid[])
+        ORDER BY x.id FOR UPDATE`.execute(k);
+      const controle = await this.calculerMasse(k, user, p.demande);
+      const valides = new Map(controle.paires.map((x) => [`${x.a.id}|${x.m.id}`, x]));
+      let reliees = 0;
+      let ecartees = 0;
+      for (const q of [...p.paires].sort((x, y) => (x.actifId < y.actifId ? -1 : 1))) {
+        const v = valides.get(`${q.actifId}|${q.machineId}`);
+        if (!v || v.a.liaisons_version !== q.versionLiaisons) {
+          ecartees++;
+          continue;
+        }
+        await this.controlerEcriture(c, user, [v.a.perimetre_id, v.m.perimetre_id]);
+        const valeurs = {
+          statut: 'confirmee' as const,
+          motif: critereLiaisonMachine(v.a, v.m),
+          origine: 'masse' as const,
+          empreinte_actif: empreinteActif(v.a),
+          empreinte_machine: empreinteMachine(v.m),
+          decide_par: user.username,
+          decide_le: sql<Date>`now()`,
+          note: '',
+        };
+        const avant = await k
+          .selectFrom('vulnerabilites_alh_liaisons_machines')
+          .select('id')
+          .where('actif_id', '=', v.a.id)
+          .where('machine_id', '=', v.m.id)
+          .forUpdate()
+          .executeTakeFirst();
+        if (avant)
+          await k.updateTable('vulnerabilites_alh_liaisons_machines').set(valeurs).where('id', '=', avant.id).execute();
+        else
+          await k
+            .insertInto('vulnerabilites_alh_liaisons_machines')
+            .values({ actif_id: v.a.id, machine_id: v.m.id, ...valeurs })
+            .execute();
+        await this.nouvelleVersion(k, v.a.id);
+        reliees++;
+      }
+      await this.db.audit(
+        user,
+        ip,
+        'vulnerabilites.surface.liaisons.reliees_en_masse',
+        '',
+        {
+          mode: p.demande.mode,
+          motifActifs: p.demande.motifActifs,
+          motifMachines: p.demande.mode === 'un_pour_un' ? p.demande.motifMachines : null,
+          machine: p.demande.mode === 'tous_vers_une' ? p.demande.machineId : null,
+          demandees: p.paires.length,
+          reliees,
+          ecartees,
+        },
+        c,
+      );
+      return { reliees, ecartees };
+    }, user.username);
   }
 }

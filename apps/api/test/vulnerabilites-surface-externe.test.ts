@@ -9,8 +9,10 @@
    n'est joint.
    Lot ALH2 : migration 081 ; défauts et résolutions de l'éditeur rangés avec le détail, gardés sans détail, rendus dans la
    fiche (texte simple, illisibles : aucun) ; priorité des alertes et des technologies (présence « exposée », AlgoLightHouse
-   source de plus pour ce que la personne lit, règle du « ou ») et tri par priorité ; vue sur la surface externe dans la
-   veille ; rapprochement des technologies avec les produits surveillés (liste et fiche du produit). */
+   source de plus, règle du « ou ») et tri par priorité ; vue sur la surface externe dans la veille ; rapprochement des
+   technologies avec les produits surveillés (liste et fiche du produit). Lot ALH5 (décision A) : la priorité et les faits
+   d'AlgoLightHouse sont les mêmes pour tout le monde ; le détail (versions, CVE listées, actifs comptés) reste limité à ce
+   que la personne lit. */
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -754,13 +756,18 @@ describe('priorité des CVE de la surface externe (décision B)', () => {
     // 92001 : CVSS 7,5 (élevée selon l'éditeur), preuve de concept : P2 (exploitable).
     expect(cve92001.priorite.niveau).toBe('P2');
     expect(cve92001.priorite.faits).toContainEqual({ fait: 'exploit_disponible', sources: ['alh'] });
-    // Le lecteur du périmètre A ne voit que la version 1.18.0 : ni la CVE exploitée de B, ni ce qu'ALH en dit.
+    // Lot ALH5 (décision A) : le lecteur du périmètre A voit la même priorité (P1, exploitée selon AlgoLightHouse et
+    // exposée), sans voir sur quel actif ni quelle version : seule la version 1.18.0 est détaillée, la CVE exploitée de B
+    // et son hôte n'apparaissent pas.
     const a = (await lecteurA.get(`${S}/technologies?tri=priorite`)).json().elements[0];
-    expect(a.priorite.niveau).toBe('P2');
+    expect(a.priorite).toEqual(nginx.priorite);
+    expect(a.versions.map((v: { version: string }) => v.version)).toEqual(['1.18.0']);
     expect(JSON.stringify(a)).not.toContain('CVE-2026-92002');
+    expect(JSON.stringify(a)).not.toContain('1.20.0');
+    expect(JSON.stringify(a)).not.toContain('198.51.100.20');
   });
 
-  it('veille : vue sur la surface externe (actifs lisibles) et AlgoLightHouse dans les sources, pour ce que la personne lit', async () => {
+  it('veille : vue sur la surface externe (actifs lisibles) ; AlgoLightHouse dans les sources, le même pour tout le monde', async () => {
     for (const c of ['CVE-2026-91001', 'CVE-2026-92001', 'CVE-2026-92002'])
       await t.svc.db.q('INSERT INTO vulnerabilites_veille_cve (cve) VALUES ($1)', [c]);
     await synchroniser(espace());
@@ -769,15 +776,26 @@ describe('priorité des CVE de la surface externe (décision B)', () => {
     const veille = async (a: Agent, cve: string) =>
       (await a.get(`/api/vulnerabilites/veille/failles?q=${cve}`)).json().elements[0];
     // 92001 : version 1.18.0 sur l'hôte 11 et le domaine 21 (périmètre A).
-    expect((await veille(lecteurA, 'CVE-2026-92001')).surfaceExterne).toEqual({ actifs: 2, alertes: 0 });
+    expect((await veille(lecteurA, 'CVE-2026-92001')).surfaceExterne).toEqual({
+      actifs: 2,
+      alertes: 0,
+      horsLecture: false,
+    });
     // 91001 : alerte 31 ouverte sur l'hôte 11.
-    expect((await veille(lecteurA, 'CVE-2026-91001')).surfaceExterne).toEqual({ actifs: 1, alertes: 1 });
-    // 92002 : hôte 12 du périmètre B, illisible pour le lecteur de A : ni compte, ni fait d'AlgoLightHouse.
+    expect((await veille(lecteurA, 'CVE-2026-91001')).surfaceExterne).toEqual({
+      actifs: 1,
+      alertes: 1,
+      horsLecture: false,
+    });
+    // 92002 : hôte 12 du périmètre B, illisible pour le lecteur de A. Lot ALH5 (décision A) : ce qu'en dit AlgoLightHouse
+    // est un fait de la priorité, le même pour tout le monde ; l'exposition est signalée sans actif ni nombre.
     const b = await veille(lecteurA, 'CVE-2026-92002');
-    expect(b.surfaceExterne).toBeNull();
-    expect(b.sources.exploitation).toEqual([]);
+    expect(b.surfaceExterne).toEqual({ actifs: 0, alertes: 0, horsLecture: true });
+    expect(b.sources.exploitation).toEqual([{ source: 'alh', le: null }]);
+    expect(JSON.stringify(b)).not.toContain('198.51.100.20');
     const tout = await veille(admin, 'CVE-2026-92002');
-    expect(tout.surfaceExterne).toEqual({ actifs: 1, alertes: 0 });
+    expect(tout.surfaceExterne).toEqual({ actifs: 1, alertes: 0, horsLecture: false });
+    expect(tout.sources).toEqual(b.sources);
     expect(tout.sources.exploitation).toEqual([{ source: 'alh', le: null }]);
     expect(tout.sources.valeurs.cvss).toContainEqual({ source: 'alh', score: 9.8 });
   });

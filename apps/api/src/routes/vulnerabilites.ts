@@ -27,8 +27,12 @@
    Lot ALH3 : actif exposé relié aux machines internes. Fiche des liaisons d'un actif, liste des propositions et actifs
    reliés à une machine avec `lire` (actif et machine lisibles tous deux) ; confirmer, rejeter, relier à la main et délier
    avec `modifier`, If-Match sur la version des liaisons de l'actif, écriture sur le périmètre de l'actif et sur le
-   périmètre effectif de la machine (service LiaisonsMachines). */
+   périmètre effectif de la machine (service LiaisonsMachines).
+   Lot ALH5 : liaison en masse par motif à joker, avec `modifier` : aperçu obligatoire (rien n'est écrit), puis application
+   des seules paires de l'aperçu validé (empreinte), chacune revérifiée ; une entrée de journal par opération. */
 import {
+  ApplicationLiaisonMasse,
+  DemandeLiaisonMasse,
   AffectationMachine,
   AnnulationRapprochement,
   AffectationMachines,
@@ -698,6 +702,27 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     query: RechercheLiaisonsMachines,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.liaisonsMachines.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/masse/apercu',
+    summary:
+      'Aperçu d’une liaison en masse par motif à joker « * » (actifs lisibles et présents, machines lisibles ; 200 paires au plus, sinon 422 avec le nombre) ; rien n’est écrit',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: DemandeLiaisonMasse,
+    handler: async ({ svc, s, body }) => svc.vulnerabilites.liaisonsMachines.apercuMasse((s as Session).user, body),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/masse',
+    summary:
+      'Relier en masse les paires d’un aperçu validé (empreinte) ; chaque paire est revérifiée (droits, version des liaisons de l’actif, plafond), sinon écartée et comptée',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: ApplicationLiaisonMasse,
+    handler: async ({ svc, s, body, ip }) =>
+      svc.vulnerabilites.liaisonsMachines.appliquerMasse((s as Session).user, body, ip),
   }),
   route({
     method: 'POST',

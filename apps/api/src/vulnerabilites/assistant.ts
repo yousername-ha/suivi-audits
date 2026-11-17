@@ -393,18 +393,21 @@ export class AssistantVulnerabilites {
 
   /** Exposition d'une CVE sur la surface externe (lot ALH2), telle que remise au modèle : repères « E-… » des actifs lisibles
       qui la portent, compteurs, technologies, alertes ouvertes et recommandations de l'éditeur, bornés. Aucun domaine,
-      adresse, nom de périmètre, FAI ni AS ; titres et recommandations repassent par le masque avant l'envoi. */
+      adresse, nom de périmètre, FAI ni AS ; titres et recommandations repassent par le masque avant l'envoi. Lot ALH5
+      (décision A) : « exposée sur Internet » est un fait de la priorité, le même pour tout le monde ; une exposition sur des
+      actifs que la personne ne lit pas n'est dite que par un oui (`aussiHorsDeVosDroits`), sans repère, nom ni nombre. */
   private async surfaceExterne(user: SessionUser, conversationId: string, cve: string) {
     if (!this.surface) return null;
     const x = await this.surface.exposition(user, cve);
-    if (!x.actifs.length && !x.alertes.length && !x.technologies.length) return null;
+    if (!x.exposee && !x.technologies.length) return null;
     const ranges = x.actifs.filter((id): id is string => id !== null);
     const premiers = ranges.slice(0, BORNES_ASSISTANT_VULN.reperesExternes);
     const r = await this.reperesExternes(conversationId, premiers);
     const reperes = premiers.map((id) => r.get(id) ?? null);
     const B = BORNES_ASSISTANT_VULN;
     return {
-      exposeeSurInternet: x.actifs.length > 0 || x.alertes.length > 0,
+      exposeeSurInternet: x.exposee,
+      ...(x.horsLecture ? { aussiHorsDeVosDroits: true } : {}),
       actifsExposes: x.actifs.length,
       reperes,
       ...(x.actifs.length > reperes.length ? { actifsSansRepere: x.actifs.length - reperes.length } : {}),
@@ -443,7 +446,7 @@ export class AssistantVulnerabilites {
   private async evaluerCve(user: SessionUser, conversationId: string, cve: string) {
     this.exigerLecture(user);
     const k = this.db.k;
-    const faits = (await lireFaitsCve(k, [cve], user)).get(cve) ?? null;
+    const faits = (await lireFaitsCve(k, [cve])).get(cve) ?? null;
     const reglage = await this.reglage.valeurs();
     const rangees = await this.failles.machinesRangees(user);
 
@@ -539,8 +542,19 @@ export class AssistantVulnerabilites {
       produits.push(entree);
     }
 
+    // Présence dans l'organisation et priorité de la CVE, calculées par la plateforme sur tous les faits connus (lot ALH5,
+    // décision A : la même pour tout le monde) ; les constats et machines rendus restent ceux que la personne lit.
+    const detectee =
+      constats.some((c) => c.present) ||
+      (
+        await sql<{ oui: boolean }>`SELECT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+          JOIN vulnerabilites_detections d ON d.constat_id = cc.constat_id
+          JOIN vulnerabilites_machines m ON m.id = d.machine_id
+          LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+          WHERE cc.cve = ${cve} AND ${present}) AS oui`.execute(k)
+      ).rows[0]!.oui;
     const exposition = await this.surfaceExterne(user, conversationId, cve);
-    if (!faits && !constats.length && !exposition)
+    if (!faits && !constats.length && !exposition && !detectee)
       return {
         donnees: {
           cve,
@@ -551,8 +565,6 @@ export class AssistantVulnerabilites {
         elements: 0,
       };
 
-    // Présence dans l'organisation et priorité de la CVE, calculées par la plateforme.
-    const detectee = constats.some((c) => c.present);
     const declaree = rapprochements.some((r) => r.statut === 'rattachee' || r.statut === 'confirmee');
     const exposee = !!exposition?.exposeeSurInternet;
     const presence: Presence = detectee
@@ -564,7 +576,7 @@ export class AssistantVulnerabilites {
           : rapprochements.some((r) => r.statut === 'proposee')
             ? 'a_confirmer'
             : 'absente';
-    const sources = faits || exposition ? sourcesDe(faits ? [faits] : []) : null;
+    const sources = faits || exposition || detectee ? sourcesDe(faits ? [faits] : []) : null;
     const prioriteCve = sources ? calculerPriorite({ ...faitsDepuisSources(sources), presence }, reglage) : null;
     const v = faits?.veille
       ? await k

@@ -6,6 +6,7 @@ import {
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
   NiveauPriorite,
+  NIVEAUX_PRIORITE,
   ROLE_MACHINE_LIBELLES,
   type RoleMachine,
 } from './failles-tenable.js';
@@ -203,7 +204,10 @@ export type FaitPriorite =
   | { fait: 'presence'; presence: Presence }
   | { fait: 'gravite'; gravite: GraviteTenable | null }
   | { fait: 'epss'; score: number; seuil: number }
-  | { fait: 'exploit_disponible'; sources: SourceExploitable[] };
+  | { fait: 'exploit_disponible'; sources: SourceExploitable[] }
+  /** Lot ALH5 (décision B) : l'actif exposé est relié (liaison confirmée) à une machine interne qui porte elle-même une
+      faille présente en P1 ou P2. Aucun nom : la machine n'est montrée qu'à qui la lit, ailleurs. */
+  | { fait: 'machine_interne_vulnerable' };
 
 export interface Priorite {
   niveau: NiveauPriorite;
@@ -251,6 +255,26 @@ export function prioriteLaPlusHaute(liste: readonly Priorite[]): Priorite | null
   return m;
 }
 
+/* ------------------------------------------------------------------ Majoration par la machine interne (lot ALH5) */
+/** Niveaux d'une faille présente qui rendent une machine interne « vulnérable » (décision B du RSSI du 17/11/2026). */
+export const NIVEAUX_MACHINE_VULNERABLE: readonly NiveauPriorite[] = ['P1', 'P2'];
+
+/** Une machine interne est « vulnérable » si au moins une faille présente chez elle (détectée ou déclarée, non close) est
+    en P1 ou en P2. Les priorités reçues sont celles de ces failles, calculées sur tous les faits connus. */
+export const machineVulnerable = (priorites: readonly Pick<Priorite, 'niveau'>[]): boolean =>
+  priorites.some((p) => NIVEAUX_MACHINE_VULNERABLE.includes(p.niveau));
+
+/** Majoration d'une alerte ouverte ou d'une technologie exposée (et des CVE qu'elle porte sur la surface externe) dont
+    l'actif est relié, par une liaison CONFIRMÉE, à une machine interne vulnérable : un cran de plus (P4 → P3, P3 → P2,
+    P2 → P1 ; P1 reste P1), avec le fait « mène à une machine interne vulnérable » ajouté à la fin. Sans liaison
+    confirmée vers une telle machine (proposition non confirmée comprise), la priorité est rendue telle quelle. Seconde
+    étape de la grille, jamais appliquée aux failles des machines elles-mêmes (pas de cycle). */
+export function majorerPriorite(p: Priorite, meneAUneMachineVulnerable: boolean): Priorite {
+  if (!meneAUneMachineVulnerable) return p;
+  const niveau = NIVEAUX_PRIORITE[Math.max(0, rangPriorite(p) - 2)]!;
+  return { niveau, faits: [...p.faits, { fait: 'machine_interne_vulnerable' }] };
+}
+
 const pourcent = (x: number) => `${(x * 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} %`;
 
 /** Libellé d'un fait, pour l'affichage. */
@@ -266,6 +290,8 @@ export function libelleFaitPriorite(f: FaitPriorite): string {
       return `Score EPSS ${pourcent(f.score)} (seuil ${pourcent(f.seuil)})`;
     case 'exploit_disponible':
       return `Code d’exploitation disponible (${f.sources.map((s) => SOURCE_EXPLOITABLE_LIBELLES[s]).join(', ')})`;
+    case 'machine_interne_vulnerable':
+      return 'Mène à une machine interne vulnérable';
   }
 }
 

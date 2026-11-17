@@ -8,7 +8,9 @@
    filtre « Machine interne » de l'onglet des actifs (sans données, la fiche d'un actif, ses propositions et la liaison à la
    main sont couvertes par les tests de l'interface et de l'API). Lot ALH4 : onglet « Carte » affiché en premier, vide sur une
    pile vierge (le dessin, les filtres, le repli et le chemin critique sont couverts par les tests de l'interface et de
-   l'API). */
+   l'API). Lot ALH5 : fenêtre « Relier en masse » de l'onglet des actifs (motifs, mode, aperçu vide sur une pile vierge,
+   motif refusé par le serveur) ; rien n'est écrit, la pile reste dans son état initial (la liaison elle-même, les droits
+   par paire et la majoration sont couverts par les tests de l'API). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -111,6 +113,28 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(filtreMachine).toHaveValue('Proposée, à décider');
     await expect(page.getByText('Aucun actif ne correspond')).toBeVisible();
     await accessible();
+    // Lot ALH5 : « Relier en masse » ; un aperçu n'écrit rien.
+    await page.getByRole('button', { name: 'Relier en masse', exact: true }).click();
+    const masse = page.getByRole('dialog', { name: 'Relier en masse les actifs exposés aux machines internes' });
+    await expect(masse.getByRole('combobox', { name: 'Mode', exact: true })).toHaveValue(
+      'Un pour un (même partie couverte par le joker)',
+    );
+    await masse.getByRole('textbox', { name: 'Motif des actifs', exact: true }).fill('pre-*.exemple.example');
+    await masse.getByRole('textbox', { name: 'Motif des machines', exact: true }).fill('srv-pre-*');
+    await masse.getByRole('button', { name: 'Voir l’aperçu', exact: true }).click();
+    await expect(masse.getByText('0 actif correspond au motif : 0 paire à relier.')).toBeVisible();
+    await expect(masse.getByRole('button', { name: 'Relier 0 paire', exact: true })).toBeDisabled();
+    await accessible();
+    // Un métacaractère autre que « * » est refusé par le serveur.
+    await masse.getByRole('textbox', { name: 'Motif des machines', exact: true }).fill('srv-pre-*%');
+    await masse.getByRole('button', { name: 'Voir l’aperçu', exact: true }).click();
+    await expect(masse.getByRole('alert')).toBeVisible();
+    // Mode « tous vers une machine » : sélecteur de machine dans la fenêtre.
+    await masse.getByRole('combobox', { name: 'Mode', exact: true }).click();
+    await page.getByRole('option', { name: 'Tous vers une machine', exact: true }).click();
+    await expect(masse.getByRole('combobox', { name: 'Machine interne', exact: true })).toBeVisible();
+    await masse.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+    await expect(masse).toBeHidden();
     await page.getByRole('tab', { name: 'Technologies', exact: true }).click();
     await expect(page.getByText('Aucune technologie ne correspond')).toBeVisible();
     const triTechnologies = page.getByRole('combobox', { name: 'Trier les technologies par', exact: true });

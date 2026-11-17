@@ -540,3 +540,20 @@ pas.
 - À l'affichage, un repère « E-… » est remplacé par le domaine ou l'adresse pour une personne qui lit l'actif ; sinon il reste
   affiché. Les propositions d'action ne visent toujours que des machines.
 - Non vérifié : aucun essai avec un modèle réel (faux transport).
+
+## Addendum du 17/11/2026 — priorité commune dans `evaluer_cve` (lot ALH5)
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `084`, sans effet sur l'assistant) par la session « Module surveillance
+vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`), sur décision du RSSI du 17/11/2026
+([ADR 0100](0100-module-vulnerabilites.md), addendum « lot ALH5 », décision A : « une priorité est la même pour tout le
+monde »). Aucun outil nouveau ; la déclaration des outils, les réglages, le masque et les repères ne changent pas.
+
+- `evaluer_cve` calcule la **présence** (détectée par Tenable, déclarée, exposée sur Internet) et la **priorité** de la CVE sur
+  tous les faits connus de la plateforme, AlgoLightHouse compris, sans tenir compte des droits de la personne : deux personnes
+  obtiennent la même priorité. Une CVE connue seulement par un constat que la personne ne lit pas n'est plus « inconnue ».
+- Le détail reste limité à ce qu'elle lit : constats, machines et repères « M-… », actifs exposés et repères « E-… »,
+  technologies et alertes. Une exposition sur des actifs qu'elle ne lit pas est dite par `aussiHorsDeVosDroits: true` (et
+  `exposeeSurInternet: true`), sans repère, nom ni nombre. La consigne du module le précise en une phrase.
+- La priorité d'une CVE rendue par l'assistant n'est **pas majorée** par la machine interne vulnérable (décision B) : la
+  majoration ne vaut que pour une alerte ou une technologie de la surface externe.
+- Non vérifié : aucun essai avec un modèle réel (faux transport).

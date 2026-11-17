@@ -41,11 +41,11 @@ export const lisibleAlh = (user: SessionUser, alias: 'lp' | 'lp2' = 'lp'): RawBu
                 THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
                 ELSE grc_smsi_visible(${sql.ref(`${alias}.perimetre_id`)}, ${user.id}::uuid) END)`;
 
-/** CVE de technologies vues par AlgoLightHouse et lisibles par la personne (lot ALH2) : version encore détectée sur au moins
-    un actif lisible (un actif inconnu de la cartographie : administrer), technologie vue par la dernière synchronisation
-    complète de son instance. Colonnes : cve, technologie_id, version, cvss, epss, preuve, exploitee. Même règle que la
-    lecture des technologies (surface-externe.ts). */
-export const cvesAlhLisibles = (user: SessionUser) => sql<{
+/** CVE de technologies vues par AlgoLightHouse (lot ALH2) : version encore détectée sur au moins un actif, technologie vue par
+    la dernière synchronisation complète de son instance. Colonnes : cve, technologie_id, version, cvss, epss, preuve,
+    exploitee. Lot ALH5 (décision A du RSSI du 17/11/2026) : ce sont des faits de la priorité, la même pour tout le monde ;
+    ils ne dépendent donc pas de ce que la personne lit (aucun nom d'actif n'en sort). */
+export const cvesAlh = sql<{
   cve: string;
   technologie_id: string;
   version: string;
@@ -59,7 +59,4 @@ export const cvesAlhLisibles = (user: SessionUser) => sql<{
   LEFT JOIN vulnerabilites_alh_etat te ON te.integration_id = tt.integration_id
   WHERE tt.vu_numero >= coalesce(te.numero_complet, 0)
     AND EXISTS (SELECT 1 FROM vulnerabilites_alh_technologie_actifs ta
-      LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = tt.integration_id AND xa.type = ta.actif_type
-        AND xa.alh_id = ta.actif_alh
-      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = tt.integration_id AND lp.alh_id = xa.perimetre_alh
-      WHERE ta.technologie_id = tc.technologie_id AND ta.version = tc.version AND ta.actuel AND ${lisibleAlh(user)})`;
+      WHERE ta.technologie_id = tc.technologie_id AND ta.version = tc.version AND ta.actuel)`;

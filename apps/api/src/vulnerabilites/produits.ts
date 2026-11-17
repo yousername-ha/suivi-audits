@@ -276,7 +276,7 @@ export class ProduitsSurveilles {
         perimetreNom: m.perimetre_nom,
         relieLe: m.relie_le.toISOString(),
       })),
-      ...(await this.rapprochements.duProduit(id, user)),
+      ...(await this.rapprochements.duProduit(id)),
       surfaceExterne: this.surface ? await this.surface.technologiesDuProduit(user, produit) : [],
     };
   }

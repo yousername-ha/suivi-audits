@@ -2,9 +2,22 @@
    appel réseau (testée à part). Le serveur reste seul juge des droits (périmètre relié, administration du module) ; les
    textes de l'éditeur (titres, défauts, résolutions) s'affichent tels quels, comme texte simple, jamais comme HTML.
    Lot ALH3 : actif exposé relié à la ou aux machines internes (colonne « Machine interne », fiche de l'actif, fiche d'une
-   machine « exposée sur Internet par … »). */
+   machine « exposée sur Internet par … »).
+   Lot ALH5 : priorité la même pour tout le monde (une exposition hors de ce que la personne lit est signalée sans nom ni
+   nombre) ; liaison en masse par motif à joker « * », sur aperçu validé. */
 import {
+  type ApercuLiaisonMasseDto,
+  type DemandeLiaisonMasse,
   type ExpositionMachineDto,
+  type ModeLiaisonMasse,
+  MODE_LIAISON_MASSE_LIBELLES,
+  MODES_LIAISON_MASSE,
+  nombreJokers,
+  NIVEAUX_PRIORITE,
+  type Priorite,
+  prioriteLaPlusHaute,
+  type ResultatLiaisonMasseDto,
+  type TechnologieAlhDto,
   FILTRE_LIAISON_ACTIF_LIBELLES,
   FILTRES_LIAISON_ACTIF,
   type FiltreLiaisonActif,
@@ -144,12 +157,25 @@ export function resumeEtatAlh(e: EtatSurfaceExterneDto): { libelle: string; etat
   };
 }
 
-/** Vue d'une CVE sur la surface externe, pour la veille (lot ALH2). */
+/** Vue d'une CVE sur la surface externe, pour la veille (lot ALH2) ; une exposition sur des actifs que la personne ne lit
+    pas est dite sans nom ni nombre (lot ALH5). */
 export function libelleSurfaceCve(s: SurfaceCveDto): string {
+  const ailleurs = s.horsLecture ? ' Exposée aussi sur des actifs que vous ne pouvez pas lire.' : '';
+  if (!s.actifs && !s.alertes)
+    return 'Exposée sur Internet, sur des actifs que vous ne pouvez pas lire (ni nommés ni comptés).';
   const actifs = pluriel(s.actifs, 'actif exposé', 'actifs exposés');
   return s.alertes
-    ? `Vue sur la surface externe : ${actifs}, ${pluriel(s.alertes, 'alerte ouverte', 'alertes ouvertes')}.`
-    : `Vue sur la surface externe : ${actifs}.`;
+    ? `Vue sur la surface externe : ${actifs}, ${pluriel(s.alertes, 'alerte ouverte', 'alertes ouvertes')}.${ailleurs}`
+    : `Vue sur la surface externe : ${actifs}.${ailleurs}`;
+}
+
+/** Priorité d'une technologie portée par des versions que la personne ne voit pas (lot ALH5, décision A : la priorité est
+    calculée sur toutes les versions encore détectées, seules les versions lisibles sont détaillées) : vrai quand aucune CVE
+    détaillée n'atteint le niveau de la technologie. */
+export function prioriteHorsDetail(t: Pick<TechnologieAlhDto, 'priorite' | 'versions'>): boolean {
+  if (!t.priorite) return false;
+  const detail: Priorite | null = prioriteLaPlusHaute(t.versions.flatMap((v) => v.cves.map((c) => c.priorite)));
+  return !detail || NIVEAUX_PRIORITE.indexOf(detail.niveau) > NIVEAUX_PRIORITE.indexOf(t.priorite.niveau);
 }
 
 /** Correspondance de version entre un produit déclaré et ce que la surface externe détecte. */
@@ -208,7 +234,9 @@ export function libelleLiaison(l: Pick<LiaisonMachineDto, 'statut' | 'motif' | '
   if (l.statut === 'confirmee')
     return l.origine === 'manuelle'
       ? `Reliée à la main${par} (${critere})`
-      : `Proposition confirmée${par} (${critere})`;
+      : l.origine === 'masse'
+        ? `Reliée en masse par motif${par} (${critere})`
+        : `Proposition confirmée${par} (${critere})`;
   if (l.statut === 'rejetee') return `Rejetée ou déliée${par} : pas reproposée tant que les données ne changent pas`;
   return 'Retirée : le critère ne tient plus';
 }
@@ -221,4 +249,56 @@ export function libelleExposition(e: ExpositionMachineDto): string {
   return tout.length
     ? `Exposée sur Internet par ${tout.join(', ')}.`
     : 'Aucun actif exposé sur Internet relié à cette machine, parmi ceux que vous pouvez lire.';
+}
+
+/* ------------------------------------------------------------------ Liaison en masse (lot ALH5) */
+export const URL_APERCU_MASSE = `${API}/liaisons/masse/apercu`;
+export const URL_LIAISON_MASSE = `${API}/liaisons/masse`;
+export const OPTIONS_MODE_MASSE = MODES_LIAISON_MASSE.map((m) => ({ value: m, label: MODE_LIAISON_MASSE_LIBELLES[m] }));
+
+/** Saisie du formulaire « Relier en masse ». */
+export interface SaisieMasse {
+  mode: ModeLiaisonMasse;
+  motifActifs: string;
+  motifMachines: string;
+  machineId: string | null;
+}
+export const SAISIE_MASSE_VIDE: SaisieMasse = {
+  mode: 'un_pour_un',
+  motifActifs: '',
+  motifMachines: '',
+  machineId: null,
+};
+
+/** Demande envoyée à l'aperçu, ou message qui dit ce qui manque (le serveur revalide tout). */
+export function demandeMasse(s: SaisieMasse): DemandeLiaisonMasse | string {
+  const motifActifs = s.motifActifs.trim();
+  if (!motifActifs) return 'Indiquez le motif des actifs.';
+  if (s.mode === 'tous_vers_une')
+    return s.machineId ? { mode: s.mode, motifActifs, machineId: s.machineId } : 'Choisissez la machine interne.';
+  const motifMachines = s.motifMachines.trim();
+  if (!motifMachines) return 'Indiquez le motif des machines.';
+  const n = nombreJokers(motifActifs);
+  if (n < 1 || n !== nombreJokers(motifMachines))
+    return 'Un pour un : les deux motifs doivent porter le même nombre de jokers « * », au moins un.';
+  return { mode: s.mode, motifActifs, motifMachines };
+}
+
+/** Résumé d'un aperçu (nombres seulement, tous limités à ce que la personne lit). */
+export function resumeApercuMasse(a: ApercuLiaisonMasseDto): string {
+  const ecartes = [
+    a.nombreSansCorrespondance ? `${pluriel(a.nombreSansCorrespondance, 'actif', 'actifs')} sans correspondance` : '',
+    a.nombreMultiples
+      ? `${pluriel(a.nombreMultiples, 'actif écarté', 'actifs écartés')} (plusieurs machines correspondent)`
+      : '',
+    a.dejaReliees ? `${pluriel(a.dejaReliees, 'paire déjà reliée', 'paires déjà reliées')}` : '',
+    a.plafond ? `${pluriel(a.plafond, 'actif', 'actifs')} déjà au nombre maximal de machines` : '',
+    a.nonModifiables ? `${pluriel(a.nonModifiables, 'paire', 'paires')} hors de vos droits d’écriture` : '',
+  ].filter(Boolean);
+  return `${pluriel(a.actifs, 'actif correspond', 'actifs correspondent')} au motif : ${pluriel(a.paires.length, 'paire à relier', 'paires à relier')}${ecartes.length ? ` ; ${ecartes.join(' ; ')}` : ''}.`;
+}
+
+/** Bilan d'une application. */
+export function resumeResultatMasse(r: ResultatLiaisonMasseDto): string {
+  return `${pluriel(r.reliees, 'paire reliée', 'paires reliées')}${r.ecartees ? ` ; ${pluriel(r.ecartees, 'paire écartée', 'paires écartées')} (${r.ecartees > 1 ? 'changées' : 'changée'} depuis l’aperçu)` : ''}.`;
 }

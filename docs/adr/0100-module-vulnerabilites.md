@@ -890,3 +890,116 @@ carte vide (aucune donnée sur une pile vierge).
 2. **Chaînage** machine interne → machine interne (« derrière ») pour prolonger le chemin critique.
 3. Confirmer le **regroupement par défaut** et les bornes d'affichage.
 4. Panneaux de la maquette autour de la carte (exposition prioritaire, journal, capteurs), si le RSSI les veut.
+
+## Addendum du 17/11/2026 — lot ALH5 : priorité commune, majoration par la machine interne, liaison en masse
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `084`
+(additive : la contrainte des origines de `vulnerabilites_alh_liaisons_machines` est recréée pour admettre `masse` ; aucune
+donnée modifiée). Aucun appel réseau nouveau, aucune dépendance nouvelle ; liste fermée des appels et liste blanche des champs
+inchangées. Remplace le choix n° 1 de l'addendum « lot ALH2 » ; lève le point ouvert 1 de l'addendum « lot ALH3 » et le
+point ouvert 3 (regroupement par défaut) de l'addendum « lot ALH4 ».
+
+### Décisions du RSSI (17/11/2026)
+
+| N° | Question | Décision |
+| --- | --- | --- |
+| A | Priorité selon les droits | « Une priorité est la même pour tout le monde, sinon ça n'a pas de logique. » La priorité d'une CVE, d'une faille, d'une alerte, d'une technologie, le rang d'une machine et tout filtre ou compteur fondé sur la priorité se calculent sur **tous les faits connus** de la plateforme, sans tenir compte des droits de lecture. Restent soumis aux droits : les **noms et le détail** (domaines, adresses, machines, périmètres, nombre d'actifs touchés hors de ce que la personne lit, liens vers les fiches) |
+| B | Faille exposée qui mène à une machine vulnérable | Une alerte ouverte ou une technologie exposée dont l'actif a une liaison **confirmée** (lot ALH3) vers au moins une machine interne portant elle-même au moins une faille présente en P1 ou P2 monte d'**un cran** (P4 → P3, P3 → P2, P2 → P1 ; P1 reste P1), avec le fait « mène à une machine interne vulnérable ». Jamais sur une proposition non confirmée. Même résultat pour tout le monde ; la machine n'est nommée qu'à qui la lit |
+| C | Liaison en masse | « Si la machine a le même préfixe, type pre ou preprod, la possibilité de faire un rapprochement massif via filtre avec wildcard. » Interprétation de la session principale, **à confirmer** : voir « Réalisation » |
+| — | Regroupement par défaut de la carte (lot ALH4) | **Domaine parent**, confirmé ; la mention « Choix par défaut à confirmer » est retirée de l'écran |
+| — | Groupe de Tenable (lot V4d) | Le groupe est bien le **dépôt** de Tenable : confirmé (choix n° 1 et point ouvert 1 de l'addendum « lot V4d » levés) |
+| — | Preuve de concept du CERT Santé | Elle reste « **exploitable** » (P2 avec une gravité élevée et une présence avérée), pas « exploitée » : règle V23 inchangée |
+
+### Réalisation
+
+- **A — priorité commune.** Le fragment SQL des faits d'AlgoLightHouse devient `cvesAlh` (`apps/api/src/vulnerabilites/sql.ts`) :
+  CVE des versions encore détectées des technologies présentes, sur **tout** actif. `lireFaitsCve`, `exploiteeCve` et
+  `preuveCertSante` (`sources.ts`) perdent leur paramètre « personne » ; tous leurs appelants suivent : constats de Tenable
+  (liste, fiche, filtres « exploitée » et « exploitable »), machines (compteurs et rang), failles déclarées, fiche d'un
+  produit, veille, surface externe (alertes, fiche, technologies, carte) et assistant. `lisible(user)` et `lisibleAlh(user)`
+  filtrent toujours les **lignes** rendues.
+  - Technologie : sa priorité porte sur **toutes** ses versions encore détectées, y compris sur des actifs que la personne ne
+    lit pas ; les versions détaillées (avec leurs actifs et leurs CVE), les compteurs de CVE (`nombreCves`, `exploitees`,
+    `preuves`, `cvssMax`), la recherche par CVE et le filtre « exploitée selon l'éditeur » restent ceux des versions lisibles
+    (détail). L'écran dit « Priorité tenue de versions détectées sur des actifs que vous ne pouvez pas lire » quand aucune CVE
+    détaillée n'atteint le niveau de la technologie.
+  - Veille : les sources (AlgoLightHouse compris) sont les mêmes pour tous ; `surfaceExterne` compte les actifs et alertes
+    lisibles et porte `horsLecture` (exposée aussi ailleurs, sans nom ni nombre).
+  - Assistant (`evaluer_cve`, addendum à l'ADR 0086) : présence (détectée, déclarée, exposée) et priorité sur tous les faits ;
+    constats, machines, repères « M-… » et « E-… », technologies et alertes limités aux droits ; `aussiHorsDeVosDroits` signale
+    une exposition ailleurs, sans repère, nom ni nombre.
+  - Une personne peut donc voir « P1 : exploitée et exposée sur Internet » sans voir sur quel actif. Aucun nom ni identifiant
+    d'un actif ou d'une machine illisible ne sort : ni en API (listes, fiches, carte, veille), ni dans les faits (le fait de la
+    majoration est sans nom), ni au journal (une lecture n'écrit rien), ni chez l'assistant. Tests : « deux personnes, même
+    priorité » et non-fuite (`apps/api/test/vulnerabilites-priorite-commune.test.ts`), tests du lot ALH2 adaptés.
+- **B — majoration.** Règle dans la grille partagée (`majorerPriorite`, `machineVulnerable`, `NIVEAUX_MACHINE_VULNERABLE`,
+  fait `machine_interne_vulnerable`, `packages/shared/src/priorite-vulnerabilites.ts`), testée par des cas en table ; pas de
+  seconde grille. `apps/api/src/vulnerabilites/majoration.ts` dit quels actifs mènent, par une liaison confirmée, à une machine
+  vulnérable : au moins une faille **présente** en P1 ou P2 (constat de Tenable présent sur la machine, présence « détectée » ;
+  ou faille déclarée par un produit relié à la machine et non détectée sur elle, présence « déclarée »), calculée sur tous les
+  faits. **Majorés** : la priorité d'une alerte ouverte (et de ses CVE dans sa fiche) dont l'actif visé mène à une machine
+  vulnérable ; la priorité d'une CVE de technologie pour une version encore détectée sur un tel actif, et celle de la
+  technologie (la plus haute de ses CVE) ; la carte (chemin critique = alerte ouverte en P1 **après** majoration) et les tris par
+  priorité qui en découlent. **Non majorés** : les failles des machines elles-mêmes (constats, failles déclarées, rang), la
+  priorité d'une CVE dans la veille ou chez l'assistant (CVE « globale ») — la majorer ferait dépendre la priorité d'une faille
+  de machine de celle d'une autre machine par la surface externe (cycle possible) et rendrait ambiguë la priorité d'une CVE
+  portée à la fois par des actifs qui mènent à une machine vulnérable et par d'autres ; une alerte terminée (présence
+  « absente ») ; une alerte sans CVE (pas de priorité à majorer).
+- **C — liaison en masse.** Onglet « Actifs » de « Surface externe », bouton « Relier en masse » (droit de modifier) :
+  - Motif des actifs (valeur : domaine ou adresse) et, en mode « **un pour un** », motif des machines (nom), avec le seul joker
+    `*` (zéro caractère ou plus), sans distinction de casse ; caractères admis : lettres, chiffres, `.`, `-`, `_`, `:` et `*`,
+    au moins un caractère qui n'est pas un joker. Comparaison **littérale** par découpage sur `*` (`correspondanceJoker`,
+    `packages/shared/src/liaisons-surface.ts`), en temps linéaire : ni `LIKE`, ni expression régulière construite. Un pour un :
+    même nombre de jokers dans les deux motifs (au moins un) ; un actif est relié à la machine dont les parties couvertes par
+    les jokers sont identiques aux siennes (`pre-*.exemple.example` et `srv-pre-*` relient `pre-web01.exemple.example` à
+    `srv-pre-web01`) ; plusieurs machines : écarté. Mode « **tous vers une machine** » : tous les actifs du motif vers la
+    machine choisie.
+  - **Aperçu obligatoire** (`POST /api/vulnerabilites/surface/liaisons/masse/apercu`, rien n'est écrit) : paires proposées,
+    actifs sans correspondance, correspondances multiples écartées (200 lignes au plus par liste, nombres exacts), déjà
+    reliées, actifs au plafond de vingt machines, paires hors des droits d'écriture ; au-delà de **200 paires**, refus (422)
+    avec le nombre. Seuls les actifs lisibles et présents et les machines lisibles y paraissent ou y sont comptés.
+  - **Application** (`POST /api/vulnerabilites/surface/liaisons/masse`) sur l'aperçu validé : l'interface renvoie les paires
+    (identifiants et version des liaisons de l'actif) et l'**empreinte** de l'aperçu (SHA-256 de la personne, de la demande et
+    des paires) ; une empreinte qui ne correspond pas est refusée (422). Sous le verrou consultatif des liaisons, les actifs
+    sont verrouillés, puis chaque paire est **revérifiée** : elle doit figurer encore parmi les paires que la demande donne à la
+    personne (lecture et écriture sur le périmètre de l'actif et sur le périmètre effectif de la machine, plafond, pas déjà
+    reliée) avec la même version ; sinon elle est **écartée et comptée**. Jamais une paire calculée de nouveau n'est reliée.
+  - Liaisons créées : **confirmées**, origine `masse` (« Reliée en masse par motif »), auteur et date de la décision, sans note ;
+    une proposition ou un rejet existant pour la paire devient cette liaison. La version des liaisons de chaque actif touché
+    avance. **Une entrée de journal** par opération, `vulnerabilites.surface.liaisons.reliees_en_masse` : mode, motifs saisis,
+    machine choisie (identifiant interne) en mode « tous vers une machine », nombres demandés, reliés et écartés ; ni nom
+    d'actif ni nom de machine au-delà des motifs saisis.
+  - Pas de nouvelle table : la table du lot ALH3 suffit (migration `084` pour la valeur d'origine) ; le recalcul des
+    propositions garde l'origine d'une liaison confirmée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Interprétation de la décision C** (session principale) : les deux modes, l'aperçu obligatoire, la borne de 200 paires et
+  l'application sur l'aperçu validé ci-dessus.
+- **Machine vulnérable** : les failles **closes** (corrigée, risque accepté, non concernée) ne comptent pas, comme pour le rang
+  des machines ; une faille déclarée compte comme un constat présent.
+- **Fait de la majoration sur un P1** : ajouté aussi quand le niveau ne change pas (P1 reste P1), pour dire que l'actif mène à
+  une machine vulnérable.
+- **Technologie** : priorité sur toutes les versions, détail (versions, CVE, compteurs, recherche, filtre « exploitée selon
+  l'éditeur ») sur les versions lisibles seulement.
+- **Veille et assistant** : exposition hors des droits signalée par un drapeau sans nombre (`horsLecture`,
+  `aussiHorsDeVosDroits`) ; l'assistant ne dit plus « CVE inconnue » quand seul un constat illisible la porte.
+- **Liaison en masse** : actifs **présents** seulement (vus par la dernière synchronisation complète), machines lisibles de tout
+  état de présence (comme la liaison à la main) ; une machine sans nom n'est jamais retenue par un motif ; un actif ne figure
+  qu'une fois par opération ; une paire hors des droits d'écriture est comptée dans l'aperçu (elle est lisible) et non reliée ;
+  la machine choisie en mode « tous vers une machine » devenue illisible fait échouer l'opération (404).
+
+### Non vérifié
+
+Aucune donnée réelle (tests sur données fictives) ; volumes réels pour le calcul des machines vulnérables (toutes les machines
+liées par une liaison confirmée, à chaque lecture d'une liste de la surface externe) et pour l'aperçu en masse (tous les actifs
+lisibles et toutes les machines lisibles parcourus en mémoire) ; Docker et Node 26. Le parcours Playwright adapté (fenêtre
+« Relier en masse », aperçu vide, motif refusé) n'a pas été joué (CI seulement) : sur une pile vierge, il ne relie rien.
+
+### Points ouverts (hors lot)
+
+1. Confirmer l'interprétation de la décision C (modes, borne, aperçu).
+2. Majorer aussi la priorité d'une CVE « globale » (veille, assistant) ou d'une faille de machine, si le RSSI le veut, en
+   tranchant le cas d'une CVE portée par plusieurs actifs.
+3. Chaînage machine interne → machine interne : une machine « derrière » une machine vulnérable n'est pas prise en compte.
+4. Annuler une liaison en masse d'un coup (aujourd'hui : délier liaison par liaison).

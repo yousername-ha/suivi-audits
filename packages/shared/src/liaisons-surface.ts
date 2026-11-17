@@ -34,8 +34,9 @@ export const STATUT_LIAISON_MACHINE_LIBELLES: Record<StatutLiaisonMachine, strin
   rejetee: 'Rejetée',
   retiree: 'Retirée',
 };
-/** Origine d'une liaison : proposition de la plateforme, ou choix d'une personne (relier à la main). */
-export const ORIGINES_LIAISON_MACHINE = ['proposition', 'manuelle'] as const;
+/** Origine d'une liaison : proposition de la plateforme, choix d'une personne (relier à la main), ou liaison en masse par
+    motif à joker, sur un aperçu validé par une personne (lot ALH5, migration 084). */
+export const ORIGINES_LIAISON_MACHINE = ['proposition', 'manuelle', 'masse'] as const;
 export type OrigineLiaisonMachine = (typeof ORIGINES_LIAISON_MACHINE)[number];
 
 /** Liaison multiple bornée : un actif mène au plus à ce nombre de machines reliées (répartiteur de charge). */
@@ -160,6 +161,137 @@ export function transitionLiaisonMachine(
   if (!(STATUTS_LIAISON_MACHINE as readonly string[]).includes(t.statut))
     throw new Error(`Statut de liaison inattendu : ${t.statut}`);
   return { statut: t.statut as StatutLiaisonMachine, garderDecision: t.garderDecision };
+}
+
+/* ------------------------------------------------------------------ Liaison en masse par motif (lot ALH5, décision C) */
+/** Seul joker admis : « * », zéro caractère ou plus. Aucun autre métacaractère, aucune expression régulière : un motif est
+    comparé par découpage sur « * » et recherche de texte littéral (jamais traduit en LIKE ni en RegExp). */
+export const JOKER = '*';
+/** Paires au plus par opération (aperçu et application) ; au-delà, l'aperçu est refusé avec le nombre trouvé. */
+export const LIAISONS_MASSE_MAX = 200;
+/** Lignes au plus rendues par liste de l'aperçu (sans correspondance, correspondances multiples) ; les nombres sont exacts. */
+export const LIGNES_APERCU_MASSE_MAX = 200;
+
+/** Motif : lettres, chiffres, « . », « - », « _ », « : » (adresse IPv6) et le joker ; au moins un caractère qui n'est pas un
+    joker ; insensible à la casse. */
+export const MotifJoker = z
+  .string()
+  .trim()
+  .min(1, 'Motif vide.')
+  .max(253, 'Motif trop long (253 caractères au plus).')
+  .regex(/^[A-Za-z0-9._:*-]+$/, 'Motif : lettres, chiffres, « . », « - », « _ », « : » et le joker « * » seulement.')
+  .refine((s) => /[^*]/.test(s), 'Un motif ne peut pas être fait que de jokers.');
+export type MotifJoker = z.infer<typeof MotifJoker>;
+
+export const nombreJokers = (motif: string): number => motif.split(JOKER).length - 1;
+
+/** Valeur qui correspond au motif (insensible à la casse) : parties couvertes par chaque joker, de gauche à droite (en
+    minuscules), ou null. Le texte entre deux jokers est cherché au plus tôt, le dernier morceau est ancré à la fin : une
+    correspondance est trouvée dès qu'il en existe une, en temps linéaire (aucun retour arrière). */
+export function correspondanceJoker(motif: string, valeur: string): string[] | null {
+  const morceaux = motif.toLowerCase().split(JOKER);
+  const v = valeur.toLowerCase();
+  if (morceaux.length === 1) return v === morceaux[0] ? [] : null;
+  const tete = morceaux[0]!;
+  const queue = morceaux[morceaux.length - 1]!;
+  if (!v.startsWith(tete) || v.length < tete.length + queue.length || !v.endsWith(queue)) return null;
+  const fin = v.length - queue.length;
+  let pos = tete.length;
+  const parts: string[] = [];
+  for (const m of morceaux.slice(1, -1)) {
+    const i = m ? v.indexOf(m, pos) : pos;
+    if (i < 0 || i + m.length > fin) return null;
+    parts.push(v.slice(pos, i));
+    pos = i + m.length;
+  }
+  parts.push(v.slice(pos, fin));
+  return parts;
+}
+
+/** Modes : « un pour un » (l'actif est relié à la machine dont la partie couverte par les jokers est identique à la sienne)
+    ou « tous vers une machine » (tous les actifs du motif vers la machine choisie). */
+export const MODES_LIAISON_MASSE = ['un_pour_un', 'tous_vers_une'] as const;
+export type ModeLiaisonMasse = (typeof MODES_LIAISON_MASSE)[number];
+export const MODE_LIAISON_MASSE_LIBELLES: Record<ModeLiaisonMasse, string> = {
+  un_pour_un: 'Un pour un (même partie couverte par le joker)',
+  tous_vers_une: 'Tous vers une machine',
+};
+
+/** Demande d'aperçu (`vulnerabilites:modifier`) : motif des actifs (domaine ou adresse) et, selon le mode, motif des machines
+    internes (nom ; autant de jokers, au moins un) ou machine choisie. */
+export const DemandeLiaisonMasse = z
+  .discriminatedUnion('mode', [
+    z.object({ mode: z.literal('un_pour_un'), motifActifs: MotifJoker, motifMachines: MotifJoker }).strict(),
+    z.object({ mode: z.literal('tous_vers_une'), motifActifs: MotifJoker, machineId: z.uuid() }).strict(),
+  ])
+  .superRefine((d, ctx) => {
+    if (d.mode !== 'un_pour_un') return;
+    const a = nombreJokers(d.motifActifs);
+    if (a < 1 || a !== nombreJokers(d.motifMachines))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['motifMachines'],
+        message: 'Un pour un : les deux motifs doivent porter le même nombre de jokers « * », au moins un.',
+      });
+  });
+export type DemandeLiaisonMasse = z.infer<typeof DemandeLiaisonMasse>;
+
+/** Paire validée par la personne : identifiants et version des liaisons de l'actif lue à l'aperçu. */
+export const PaireLiaisonMasse = z
+  .object({ actifId: z.uuid(), machineId: z.uuid(), versionLiaisons: z.number().int().positive() })
+  .strict();
+export type PaireLiaisonMasse = z.infer<typeof PaireLiaisonMasse>;
+
+/** Application d'un aperçu validé : la demande, les paires de l'aperçu et son empreinte. Le serveur relie seulement ces
+    paires, après les avoir vérifiées une à une ; il ne relie jamais une paire qu'il calculerait de nouveau. */
+export const ApplicationLiaisonMasse = z
+  .object({
+    demande: DemandeLiaisonMasse,
+    empreinte: z.string().regex(/^[0-9a-f]{64}$/, 'Empreinte d’aperçu invalide.'),
+    paires: z.array(PaireLiaisonMasse).min(1).max(LIAISONS_MASSE_MAX),
+  })
+  .strict();
+export type ApplicationLiaisonMasse = z.infer<typeof ApplicationLiaisonMasse>;
+
+export interface ActifMasseDto {
+  id: string;
+  type: TypeActifAlh;
+  valeur: string;
+}
+export interface MachineMasseDto {
+  id: string;
+  nom: string | null;
+  adresse: string | null;
+}
+
+/** Aperçu, limité à ce que la personne lit : aucun actif ni machine illisible n'y paraît ni n'y est compté. */
+export interface ApercuLiaisonMasseDto {
+  demande: DemandeLiaisonMasse;
+  /** Machine choisie (mode « tous vers une machine »). */
+  machine: MachineMasseDto | null;
+  paires: (Omit<PaireLiaisonMasse, 'actifId' | 'machineId'> & { actif: ActifMasseDto; machine: MachineMasseDto })[];
+  /** Actifs lisibles et présents qui correspondent au motif. */
+  actifs: number;
+  sansCorrespondance: ActifMasseDto[];
+  nombreSansCorrespondance: number;
+  /** Un pour un : plusieurs machines lisibles correspondent ; l'actif est écarté. */
+  multiples: { actif: ActifMasseDto; machines: number }[];
+  nombreMultiples: number;
+  /** Paires déjà reliées (rien à faire). */
+  dejaReliees: number;
+  /** Actifs déjà reliés au nombre maximal de machines. */
+  plafond: number;
+  /** Paires écartées faute de droit d'écriture sur le périmètre de l'actif ou sur celui de la machine. */
+  nonModifiables: number;
+  empreinte: string;
+  max: number;
+}
+
+/** Bilan de l'application : paires reliées, et paires écartées parce que l'actif, la machine, la liaison ou les droits ont
+    changé depuis l'aperçu. */
+export interface ResultatLiaisonMasseDto {
+  reliees: number;
+  ecartees: number;
 }
 
 /* ------------------------------------------------------------------ API */

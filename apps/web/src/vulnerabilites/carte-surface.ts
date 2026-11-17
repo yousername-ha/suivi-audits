@@ -23,7 +23,7 @@ export const OPTIONS_REGROUPEMENT: { value: Regroupement; label: string }[] = [
   { value: 'parent', label: 'Domaine parent' },
   { value: 'perimetre', label: 'Périmètre' },
 ];
-/** Regroupement par défaut : par domaine parent (choix de la session, à confirmer par le RSSI). */
+/** Regroupement par défaut : par domaine parent (confirmé par le RSSI le 17/11/2026, lot ALH5). */
 export const REGROUPEMENT_DEFAUT: Regroupement = 'parent';
 
 /** Alertes tracées du côté d'Internet, hors des branches : elles ne visent pas un actif de l'organisation. */
@@ -173,7 +173,8 @@ export const alerteRetenue = (a: AlerteCarteDto, f: FiltresCarte) =>
   (!f.criticites.length || (a.criticite !== null && f.criticites.includes(a.criticite))) &&
   (!f.typeAlerte || a.type === f.typeAlerte);
 
-/** Chemin d'entrée critique : une alerte ouverte en P1 (exploitation avérée d'une CVE portée par un actif exposé). */
+/** Chemin d'entrée critique : une alerte ouverte en P1 (exploitation avérée d'une CVE portée par un actif exposé, ou
+    priorité majorée parce que l'actif mène à une machine interne vulnérable ; lot ALH5). */
 export const alerteCritique = (a: AlerteCarteDto) => a.priorite === 'P1';
 
 export interface LigneFiltree extends LigneCarte {

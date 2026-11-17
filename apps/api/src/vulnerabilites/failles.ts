@@ -22,7 +22,8 @@
    Lot V4c (V26, V27) : ce que chaque source dit des CVE (sources.ts) accompagne chaque faille ; la priorité prend
    l'exploitation avérée et « exploitable » selon toutes les sources, et la valeur la plus sévère de chaque fait ; les
    filtres « exploitée » et « exploitable » valent pour toutes les sources ; le rang compte les exploitations avérées de
-   toutes les sources.
+   toutes les sources. Lot ALH5 (décision A) : ces faits, AlgoLightHouse compris, sont les mêmes pour tout le monde ;
+   seules les lignes (machines, constats) restent filtrées par les droits.
    Lot V4d : le périmètre d'une machine est son périmètre effectif (sql.ts, perimetreMachine) : celui indiqué à la main, qui
    prime, sinon celui de son dépôt Tenable relié (depots.ts). Il vaut pour toutes les lectures, les compteurs, le rang et
    l'affichage. Retirer le périmètre indiqué à la main fait revenir la machine au périmètre de son dépôt : écriture exigée
@@ -82,12 +83,12 @@ const iso = (d: Date | null) => d?.toISOString() ?? null;
 const exploite = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE cc.constat_id = c.id AND v.kev_ajout IS NOT NULL)`;
 /** Une CVE du constat `c` a une exploitation avérée selon une source (KEV, alerte du CERT-FR, fiche du CERT Santé,
-    AlgoLightHouse sur une technologie que la personne lit). */
-const exploiteeAvere = (user: SessionUser) => sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
-  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve', user)})`;
+    AlgoLightHouse sur une technologie encore détectée) ; le même résultat pour tout le monde (lot ALH5). */
+const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve')})`;
 /** Le constat `c` est exploitable selon Tenable, ou selon la fiche du CERT Santé ou AlgoLightHouse pour une de ses CVE. */
-const exploitableSources = (user: SessionUser) => sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
-  FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve', user)}))`;
+const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
+  FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
 const sansCve = sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id)`;
 /** Une CVE du constat `c` est citée par une alerte du CERT-FR (veille). */
 const alerteConstat = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
@@ -164,12 +165,11 @@ interface LigneMachine {
 const prioriteConstat = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite) =>
   calculerPriorite({ ...faitsDepuisSources(sources), presence: l.present ? 'detectee' : 'absente' }, reglage);
 
-/** Sources d'un constat : faits des CVE qu'il cite (AlgoLightHouse compris, pour ce que la personne lit), et Tenable
+/** Sources d'un constat : faits des CVE qu'il cite (AlgoLightHouse compris, les mêmes pour tout le monde), et Tenable
     lui-même. */
-async function sourcesDesConstats(
+export async function sourcesDesConstats(
   k: Kdb,
-  lignes: LigneConstat[],
-  user: SessionUser,
+  lignes: Pick<LigneConstat, 'id' | 'gravite' | 'cvss3_score' | 'epss_score' | 'exploitable'>[],
 ): Promise<Map<string, SourcesFailleDto>> {
   const ids = lignes.map((l) => l.id);
   // Tableau en un seul paramètre : aucune limite au nombre de constats d'une liste.
@@ -182,7 +182,6 @@ async function sourcesDesConstats(
   const faits = await lireFaitsCve(
     k,
     cc.map((x) => x.cve),
-    user,
   );
   const parConstat = new Map<string, string[]>();
   for (const x of cc) parConstat.set(x.constat_id, [...(parConstat.get(x.constat_id) ?? []), x.cve]);
@@ -330,8 +329,8 @@ export class FaillesDetectees {
   async constats(user: SessionUser, q: RechercheConstats): Promise<PageFailles<ConstatResumeDto>> {
     const conditions: RawBuilder<boolean>[] = [];
     if (q.gravite) conditions.push(sql<boolean>`c.gravite = ${q.gravite}`);
-    if (q.exploite) conditions.push(exploiteeAvere(user));
-    if (q.exploitable) conditions.push(exploitableSources(user));
+    if (q.exploite) conditions.push(exploiteeAvere);
+    if (q.exploitable) conditions.push(exploitableSources);
     if (q.nonMaintenu) conditions.push(sansCve);
     conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
@@ -350,7 +349,7 @@ export class FaillesDetectees {
     const { rows } = await sql<LigneConstat>`SELECT * FROM (${this.requeteConstats(user, conditions)}) c`.execute(
       this.db.k,
     );
-    const sources = await sourcesDesConstats(this.db.k, rows, user);
+    const sources = await sourcesDesConstats(this.db.k, rows);
     // Priorité calculée par la fonction partagée, puis filtre et ordre : priorité, gravité, exploitée, machines, contrôle.
     const tous = rows
       .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage) }))
@@ -428,7 +427,7 @@ export class FaillesDetectees {
         risqueAccepte: d.risque_accepte,
         risqueRequalifie: d.risque_requalifie,
       } satisfies MachineDetectionDto);
-    const sources = await sourcesDesConstats(this.db.k, [l], user);
+    const sources = await sourcesDesConstats(this.db.k, [l]);
     return {
       ...versResume(l, sources.get(l.id)!, await this.reglage.valeurs()),
       synopsis: l.synopsis,
@@ -477,7 +476,7 @@ export class FaillesDetectees {
                count(DISTINCT c.id) FILTER (WHERE c.gravite = 'faible')::int AS faible,
                count(DISTINCT c.id) FILTER (WHERE ${exploite})::int AS exploites,
                count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
-               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere(user)})::int AS exploitees_avere
+               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere})::int AS exploitees_avere
         FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
         WHERE d.machine_id = m.id AND ${present} AND NOT ${close('constat')}) k ON true
       WHERE ${lisible(user)}`.execute(this.db.k);
@@ -485,7 +484,7 @@ export class FaillesDetectees {
       SELECT DISTINCT m.id AS machine_id, r.cve, v.cvss31_gravite, v.cvss40_gravite,
              (SELECT max(a.fiche_cvss31) FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'
                 AND a.cves @> ARRAY[v.cve]) AS cvss_cert_sante,
-             ${exploiteeCve('v.cve', user)} AS exploitee
+             ${exploiteeCve('v.cve')} AS exploitee
       FROM vulnerabilites_produits_machines pm
       JOIN vulnerabilites_machines m ON m.id = pm.machine_id
       LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
@@ -587,7 +586,6 @@ export class FaillesDetectees {
     const faits = await lireFaitsCve(
       this.db.k,
       rows.map((l) => l.cve),
-      user,
     );
     return rows.map((l): FailleDeclareeDto => {
       const f = faits.get(l.cve);
