@@ -327,6 +327,60 @@ export const FluxAppliques = z
   .strict();
 export type FluxAppliques = z.infer<typeof FluxAppliques>;
 
+/* ------------------------------------------------------------------ Reprise de l'existant (précision du RSSI du 16/11/2026) */
+/** « Une mise à jour de l'interface ne peut pas enlever le flux ouvert. » Un module du registre qui n'a encore aucune décision
+    enregistrée et qui est réellement en service sur le serveur voit son flux enregistré ouvert par cet acteur système, inscrit
+    au journal (`flux.externe.repris`) avec le motif. Un module déjà décidé (ouvert ou fermé par un administrateur) n'est
+    jamais touché : une fermeture décidée reste une fermeture. */
+export const FLUX_REPRISE_ACTEUR = 'reprise-mise-a-jour';
+
+/** Motifs de la reprise, par module : codes fermés (journal d'audit, CLI de l'exécutant) et phrase affichée. Les exécutants
+    Python recopient ces codes (concordance vérifiée par apps/api/test/architecture-flux.test.ts). */
+export const FLUX_REPRISE_MOTIFS = {
+  assistant: {
+    'conteneur-present': 'Le conteneur « assistant-relais » est présent sur le serveur.',
+    'env-renseigne': 'ASSISTANT_RELAIS_URL est renseigné dans .env.',
+  },
+  courriel: {
+    'envoi-actif': 'L’envoi de courriels est actif dans les réglages, avec un serveur SMTP renseigné.',
+  },
+  acme: {
+    'passerelle-acme': 'La passerelle HTTPS est en mode ACME (choisi dans l’application).',
+    'env-acme': 'CADDY_TLS de .env est réglé sur une adresse de contact ACME.',
+  },
+  antivirus: {
+    'conteneur-present': 'Les conteneurs « freshclam » ou « clamav » sont présents sur le serveur.',
+    'env-renseigne': 'CLAMAV_HOST est renseigné dans .env.',
+  },
+  'mises-a-jour': {
+    'mise-a-jour-installee': 'Au moins une mise à jour a déjà été installée sur ce serveur.',
+  },
+} as const satisfies Record<FluxModule, Record<string, string>>;
+export type FluxRepriseMotif<M extends FluxModule = FluxModule> = keyof (typeof FLUX_REPRISE_MOTIFS)[M] & string;
+
+/** Modules dont l'exécutant constate la mise en service ; le courriel est constaté par l'API elle-même, au démarrage. */
+export const FLUX_REPRISE_EXECUTANT = ['assistant', 'acme', 'antivirus', 'mises-a-jour'] as const;
+
+const motifs = <M extends FluxModule>(m: M) =>
+  z.enum(Object.keys(FLUX_REPRISE_MOTIFS[m]) as [FluxRepriseMotif<M>, ...FluxRepriseMotif<M>[]]).optional();
+
+/** Entrée de `suivi flux-reprise` (exécutant) : modules réellement en service et motif constaté. Un module inconnu ou que
+    l'exécutant ne constate pas (courriel), un motif étranger au module ou un champ inattendu sont refusés. La sortie est
+    celle de `suivi flux-souhaites`. */
+export const FluxReprise = z
+  .object({
+    enService: z
+      .object({
+        assistant: motifs('assistant'),
+        acme: motifs('acme'),
+        antivirus: motifs('antivirus'),
+        'mises-a-jour': motifs('mises-a-jour'),
+      })
+      .strict(),
+  })
+  .strict();
+export type FluxReprise = z.infer<typeof FluxReprise>;
+
 /* ------------------------------------------------------------------ Questions de l'installation (lot 3) */
 /** Étape « Flux vers l'extérieur » de l'assistant d'installation (ADR 0097, point 5) : proposée une seule fois, à la première
     connexion complète du compte administrateur créé par l'installation, jusqu'à ce qu'il la termine ou la passe. Elle

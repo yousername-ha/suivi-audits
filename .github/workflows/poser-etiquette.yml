@@ -1,0 +1,81 @@
+# Pose de l'étiquette de version vX.Y.Z (ADR 0102). Lancé à la main (par l'agent, par l'API, ou par le RSSI depuis l'onglet
+# Actions) sur la branche main. Le premier job vérifie tout en lecture seule et fige le commit ; le second attend
+# l'approbation du RSSI (environnement « etiquette-version ») puis pousse l'étiquette avec un jeton dédié, ce qui déclenche
+# release.yml inchangé (ADR 0063 : identité de signature release.yml@refs/tags/vX.Y.Z, approbation « publication »).
+name: Poser l'étiquette de version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version à publier, X.Y.Z (canal stable, depuis main)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: poser-etiquette
+  cancel-in-progress: false
+
+jobs:
+  verifier:
+    name: Vérifications avant approbation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      commit: ${{ steps.controles.outputs.commit }}
+      etiquette: ${{ steps.controles.outputs.etiquette }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          # Aucun paquet n'est installé dans ce job ; ne pas chercher pnpm pour un cache automatique.
+          package-manager-cache: false
+      - id: controles
+        name: Manifeste, CHANGELOG, CI et CodeQL du commit exact, étiquette absente
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/ci/verifier-etiquette.mjs
+
+  etiqueter:
+    name: Étiquette (approbation du RSSI)
+    needs: [verifier]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Approbation du RSSI ; le jeton dédié n'est lisible qu'après elle (secret de l'environnement).
+    environment: etiquette-version
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verifier.outputs.commit }}
+          persist-credentials: false
+      - name: Poser et pousser l'étiquette sur le commit vérifié
+        env:
+          COMMIT: ${{ needs.verifier.outputs.commit }}
+          ETIQUETTE: ${{ needs.verifier.outputs.etiquette }}
+          JETON: ${{ secrets.ETIQUETTE_VERSION_JETON }}
+        run: |
+          set -euo pipefail
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Commit vérifié invalide."; exit 1; }
+          [[ "$ETIQUETTE" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo "::error::Étiquette invalide."; exit 1; }
+          [ -n "$JETON" ] || { echo "::error::Secret ETIQUETTE_VERSION_JETON absent de l'environnement etiquette-version."; exit 1; }
+          [ "$(git rev-parse HEAD)" = "$COMMIT" ] || { echo "::error::Le commit extrait n'est pas le commit vérifié."; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$ETIQUETTE" "$COMMIT" -m "Version ${ETIQUETTE#v} (approuvée par le RSSI, ADR 0102)"
+          auth="$(printf 'x-access-token:%s' "$JETON" | base64 -w0)"
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push "https://github.com/${GITHUB_REPOSITORY}.git" "refs/tags/${ETIQUETTE}:refs/tags/${ETIQUETTE}"
+          echo "Étiquette $ETIQUETTE posée sur $COMMIT ; la publication (release.yml) démarre et attendra l'approbation « publication »."

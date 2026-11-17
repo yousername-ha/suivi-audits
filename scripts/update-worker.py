@@ -42,6 +42,14 @@ FLUX_RAPPORT_PERIODE = 1800
 # à jour, réglage changé) ; Compose ne recrée un conteneur que si sa configuration a changé.
 FLUX_CONVERGENCE_PERIODE = 3600
 FLUX_REESSAI = 600
+# Reprise de l'existant (précision du RSSI du 16/11/2026 : une mise à jour ne referme pas un flux en service). Avant toute
+# fermeture, l'exécutant déclare à l'application (« suivi flux-reprise ») les modules qu'il porte et qui sont réellement en
+# service, avec le motif constaté ; un module jamais décidé est alors enregistré ouvert, un module décidé n'est jamais touché.
+# Codes recopiés de FLUX_REPRISE_MOTIFS (packages/shared/src/flux-externes.ts), concordance vérifiée par le test d'architecture.
+FLUX_REPRISE_MOTIFS = {"assistant": ["conteneur-present", "env-renseigne"], "antivirus": ["conteneur-present", "env-renseigne"], "mises-a-jour": ["mise-a-jour-installee"]}
+# Réglage de .env qui, renseigné, montre que le module était en service avant la 7.2 (guide d'installation de la 7.1).
+FLUX_REPRISE_ENV = {"assistant": "ASSISTANT_RELAIS_URL", "antivirus": "CLAMAV_HOST"}
+UUID_JSON = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$")
 
 
 def now():
@@ -149,6 +157,8 @@ class Worker:
         # Après une erreur de démarrage, nouvel essai à ce moment (monotone) seulement : un téléchargement d'image qui
         # échoue ne bloque pas la boucle à chaque passage.
         self.flux_reessai = {}
+        # Une mise à jour déjà installée ne disparaît pas : constatée une fois, elle n'est plus recherchée.
+        self.mise_a_jour_vue = False
 
     def env(self):
         result = {}
@@ -366,7 +376,11 @@ class Worker:
         atomic(self.private / "receipts" / f'{self.job["id"]}.json', {"id": self.job["id"], "status": status, "at": now()})
         self.reconcile()
         end = now()
-        self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase="complete" if status == "success" else self.state["phase"],
+        phase = "complete" if status == "success" else self.state["phase"]
+        if self.job.get("kind") == "check" and phase == "checking":
+            # Vérification en échec : elle est terminée, la page ne doit plus l'afficher « en cours » (R6-03).
+            phase = "idle"
+        self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase=phase,
                      maintenance=status == "intervention", ready=status != "intervention", message=message, finishedAt=end,
                      installed=self.env().get("APP_VERSION", self.state["installed"]))
         self.receipt(status, message, end)
@@ -599,12 +613,63 @@ class Worker:
     # sans rien rapporter ; il reprend au premier passage où l'état se relit. Une indisponibilité passagère de l'application
     # n'arrête donc pas l'assistant ni l'antivirus, et elle n'ouvre jamais rien.
 
-    def lire_flux(self):
+    def lire_flux(self, en_service=None):
+        """État voulu. Avec des modules en service (reprise de l'existant), « suivi flux-reprise » les enregistre ouverts s'ils
+        n'ont jamais été décidés, puis rend l'état voulu sous la même forme que « suivi flux-souhaites »."""
         try:
-            self.flux_voulus = flux_souhaites(self.cli("flux-souhaites"))
+            if en_service:
+                brut = self.run(["docker", "compose", "exec", "-T", "app", "suivi", "flux-reprise"],
+                                input_text=json.dumps({"enService": en_service}))
+            else:
+                brut = self.cli("flux-souhaites")
+            self.flux_voulus = flux_souhaites(brut)
         except Failure:
             self.flux_voulus = None
         return self.flux_voulus
+
+    def mise_a_jour_installee(self):
+        """Au moins une mise à jour déjà installée sur ce serveur : reçu d'une installation réussie depuis l'interface
+        (etat/recus-mises-a-jour) ou rapport réussi du script de mise à jour (etat/mises-a-jour). Une installation neuve n'en a
+        aucun. Fichiers ordinaires seulement (ni lien ni fichier spécial), lecture bornée."""
+        if self.mise_a_jour_vue:
+            return True
+        for dossier, cle, valeur, nom_valide in (
+                (self.data / "etat/recus-mises-a-jour", "statut", "success", UUID_JSON.fullmatch),
+                (self.data / "etat/mises-a-jour", "resultat", "reussie", lambda n: re.fullmatch(r"[\w.-]{1,120}\.json", n))):
+            try:
+                noms = sorted(n for n in os.listdir(dossier) if nom_valide(n))
+            except OSError:
+                continue
+            for nom in noms[-200:]:
+                fichier = dossier / nom
+                try:
+                    if fichier.is_symlink() or not fichier.is_file() or fichier.stat().st_size > 65536:
+                        continue
+                    data = json.loads(fichier.read_text())
+                except (OSError, ValueError):
+                    continue
+                if isinstance(data, dict) and data.get(cle) == valeur:
+                    self.mise_a_jour_vue = True
+                    return True
+        return False
+
+    def en_service(self, presents):
+        """Modules portés ici et réellement en service sur le serveur, avec le motif constaté (reprise de l'existant) :
+        conteneur de sortie présent (en marche ou arrêté), ou réglage de .env renseigné ; mises à jour : une mise à jour déjà
+        installée. « presents » vaut None si Docker n'a pas répondu : seuls les autres motifs sont alors constatés."""
+        try:
+            config = self.env()
+        except OSError:
+            config = {}
+        result = {}
+        for module, c in FLUX_CONTENEURS.items():
+            if presents and any(s in presents for s in c["services"]):
+                result[module] = "conteneur-present"
+            elif config.get(FLUX_REPRISE_ENV[module], "").strip():
+                result[module] = "env-renseigne"
+        if self.mise_a_jour_installee():
+            result["mises-a-jour"] = "mise-a-jour-installee"
+        return result
 
     def flux_ouvert(self, module):
         """État voulu relu au moment de l'usage ; illisible vaut fermé."""
@@ -665,11 +730,10 @@ class Worker:
             return flux_entree("erreur", f"Arrêt des conteneurs du profil Compose « {profil} » en échec : le flux peut rester ouvert.")
         return flux_entree("ferme")
 
-    def appliquer_conteneurs(self, voulus):
-        """Profils Compose des modules à conteneur dédié (assistant, antivirus) : ouverts démarrés, fermés arrêtés et retirés."""
-        try:
-            presents = self.conteneurs()
-        except Failure:
+    def appliquer_conteneurs(self, voulus, presents):
+        """Profils Compose des modules à conteneur dédié (assistant, antivirus) : ouverts démarrés, fermés arrêtés et retirés.
+        « presents » : conteneurs lus avant la reprise de l'existant ; None si Docker n'a pas répondu (rien n'est touché)."""
+        if presents is None:
             return {m: flux_entree("erreur", "État des conteneurs illisible : Docker ne répond pas.") for m in FLUX_CONTENEURS}
         if not self.flux_convergence or time.monotonic() - self.flux_convergence > FLUX_CONVERGENCE_PERIODE:
             # Chaque service ouvert reçoit un « up -d » une fois dans la période, même s'il tourne déjà.
@@ -707,12 +771,18 @@ class Worker:
         self.flux_rapporte, self.flux_rapporte_le = rapport, time.monotonic()
 
     def flux(self):
-        """Un passage : lit l'état voulu, l'applique aux conteneurs dédiés et à l'exécutant lui-même (mises à jour), rapporte
-        l'état appliqué. Le courriel et l'ACME sont appliqués et rapportés par scripts/exploitation-worker.py."""
-        voulus = self.lire_flux()
+        """Un passage : constate les modules en service, fait la reprise de l'existant AVANT toute fermeture (un module jamais
+        décidé et en service est enregistré ouvert : ni son conteneur n'est arrêté, ni ses mises à jour coupées), lit l'état
+        voulu qui en résulte, l'applique aux conteneurs dédiés et à l'exécutant lui-même (mises à jour), rapporte l'état
+        appliqué. Le courriel et l'ACME sont appliqués et rapportés par scripts/exploitation-worker.py."""
+        try:
+            presents = self.conteneurs()
+        except Failure:
+            presents = None
+        voulus = self.lire_flux(self.en_service(presents))
         if voulus is None:
             return
-        etats = self.appliquer_conteneurs(voulus)
+        etats = self.appliquer_conteneurs(voulus, presents)
         # Porteur « exécutant » : fermé, aucune vérification automatique ni demande de vérification ou d'installation ne part.
         etats["mises-a-jour"] = flux_entree("ouvert" if "mises-a-jour" in voulus else "ferme")
         with contextlib.suppress(Failure):
@@ -755,7 +825,7 @@ class Worker:
                                 self.check()
                                 self.finish("success", "Vérification des publications terminée.")
                             except Failure:
-                                self.finish("failed", "GitHub est temporairement indisponible. La dernière version connue est conservée.")
+                                self.finish("failed", "Le serveur n’a pas pu joindre GitHub (pare-feu de l’hôte ou du réseau, ou GitHub indisponible). La dernière version connue est conservée.")
                             last_check = time.monotonic()
                         elif job["kind"] == "install" and self.state["status"] != "intervention":
                             try:
