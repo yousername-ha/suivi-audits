@@ -11,7 +11,9 @@ set -euo pipefail
 SYSTEME="${1:-}"
 case "$SYSTEME" in
   rocky10)
-    IMAGE_URL="https://dl.rockylinux.org/pub/rocky/10/images/x86_64/Rocky-10-GenericCloud-Base-10.2-20260525.0.x86_64.qcow2"
+    # Archive officielle (« vault ») : le chemin « pub/rocky/10 » coupe le transfert vers 15 Mo depuis le 17/11/2026 ; même
+    # image, même empreinte.
+    IMAGE_URL="https://dl.rockylinux.org/vault/rocky/10.2/images/x86_64/Rocky-10-GenericCloud-Base-10.2-20260525.0.x86_64.qcow2"
     IMAGE_ALGO=sha256
     IMAGE_SOMME=9fc9e9ff16888bb68ac39b0392e25c9c92684d50c85f1cce6ab549363bbc4b48
     UTILISATEUR=rocky
