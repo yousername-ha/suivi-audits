@@ -267,6 +267,8 @@ jobs:
           test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/events)" = 401
           test "$(docker compose exec -T app id -u)" = 1000
           test "$(docker compose exec -T web id -u)" = 1001
+          # Empreinte du frontal écrite à la construction de l'image web (ADR 0103) : une ligne de 64 caractères hexadécimaux.
+          docker compose exec -T gateway cat /etc/suivi-frontal.sha256 | grep -Eqx '[a-f0-9]{64}'
 
       - run: pnpm install --frozen-lockfile --filter @suivi/e2e
       - name: Tests de bout en bout et captures de référence (conteneur Playwright officiel)

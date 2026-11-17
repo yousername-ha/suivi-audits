@@ -1,4 +1,5 @@
-/* Tous les écrans, y compris l'outil historique et les écrans muraux : suivi indépendant de l'API. */
+/* Chargé par toutes les pages de l'interface, écran mural (/mur) compris : renvoi vers /update/ pendant une maintenance et
+   bandeau de version disponible là où l'interface n'affiche pas le sien. Suivi indépendant de l'API. */
 (() => {
   let banner = null;
   let admin = false;

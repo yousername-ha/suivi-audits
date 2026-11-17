@@ -67,7 +67,6 @@
   /* Couleur d'état : cyan pendant le travail, rouge en échec, ambre en restauration, vert en réussite. */
   --m-accent: var(--m-cyan);
   --m-active: color-mix(in srgb, var(--m-accent) 9%, var(--m-panel));
-  --m-wash: color-mix(in srgb, var(--m-accent) 7%, transparent);
   --m-orbit: color-mix(in srgb, var(--m-accent) 45%, var(--m-line));
 }
 :root[data-art='alert'] {

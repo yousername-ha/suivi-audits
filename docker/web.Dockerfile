@@ -62,6 +62,10 @@ COPY --chmod=0555 docker/demarrer-gateway.sh /usr/local/bin/demarrer-gateway
 COPY --from=build /src/apps/web/dist /srv
 RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance \
  && chmod 0555 /usr/local/bin/demarrer-web /usr/local/bin/demarrer-gateway
+# Empreinte du frontal « gateway » (ADR 0103), comparée par l'exécutant de mise à jour à celle du frontal en service, écrite
+# dans /etc/suivi-frontal.sha256 après la dernière copie des fichiers du frontal. Calcul et liste des fichiers dans le script
+# partagé avec la recette CI ; monté pour cette seule étape, il n'est pas copié dans l'image.
+RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh
 USER caddy
 EXPOSE 8080 8443
 CMD ["/usr/local/bin/demarrer-web"]
