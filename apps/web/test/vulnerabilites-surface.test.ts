@@ -368,7 +368,7 @@ describe('rendu', () => {
       '&lt;b&gt;Filtrer&lt;/b&gt; par adresse IP.',
     ])
       expect(html).toContain(x);
-    expect(html).not.toMatch(/<img|<script|<b>Filtrer/);
+    expect(html).not.toMatch(/<img|<script|<b>Filtrer/i);
     const vide = rendre(createElement(FicheAlerteAlh, { a: { ...fiche, cvesDetail: [], defauts: [], detail: false } }));
     expect(vide).toContain('Détail pas encore lu');
     expect(vide).toContain('Aucune CVE citée par l’éditeur');
