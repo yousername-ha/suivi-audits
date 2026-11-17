@@ -1,9 +1,15 @@
 """Recette Docker réelle, dans une copie privée : API administrative -> sauvegarde -> migration -> santé ->
-remplacement de l'exécutant ; puis échec injecté -> restauration réelle. Les publications locales de recette
-remplacent uniquement le téléchargement/signature (contrat de vérification testé séparément). Aucun push/tag distant.
+remplacement de l'exécutant, frontal inchangé (même empreinte) ; puis échec injecté -> restauration réelle ; puis frontal
+réellement mis à jour (image web cible dont le frontal diffère, ADR 0103). Les publications locales de recette remplacent
+uniquement le téléchargement/signature (contrat de vérification testé séparément). Aucun push/tag distant.
+
+Les images locales sont désignées, comme par l'exécutant, par leur empreinte de dépôt : le magasin d'images containerd (celui
+du runner) en donne une aux images construites localement. L'exécutant de la cible, qui met à jour le frontal, est le code de
+production de l'image updater, sans aucun contournement.
 """
 import base64
 import contextlib
+from http.client import HTTPException
 import hashlib
 import hmac
 import http.cookiejar
@@ -113,10 +119,14 @@ def next_code():
     if step>int(time.time()//30)+1: time.sleep(31); step=max(int(time.time()//30)-1,used[0]+1)
     used[0]=step
     return totp(step)
-call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
-csrf=call('GET','/api/auth/me')['csrf']
-call('POST','/api/auth/mfa',{'code':next_code()})
-csrf=call('GET','/api/auth/me')['csrf']
+def connexion():
+    global csrf
+    jar.clear()
+    call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
+    csrf=call('GET','/api/auth/me')['csrf']
+    call('POST','/api/auth/mfa',{'code':next_code()})
+    csrf=call('GET','/api/auth/me')['csrf']
+connexion()
 # Flux « mises-a-jour » fermé par défaut (ADR 0097) : l'administrateur l'ouvre, comme depuis la carte « Flux vers l'extérieur ».
 assert call('PUT','/api/admin/flux-externes/mises-a-jour',{'ouvert':True,'confirmation':True})['ouvert'] is True
 before=json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))
@@ -126,15 +136,26 @@ before_environment=donnees_snapshot()
 data=Path(re.search(r'^DATA_DIR=(.*)$',original_env,re.M).group(1).strip('"\'')) if re.search(r'^DATA_DIR=(.*)$',original_env,re.M) else Path('/srv/suivi-audits/donnees')
 spec=importlib.util.spec_from_file_location('update_worker',repo/'scripts/update-worker.py'); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 os.environ.update(REPO=str(repo),DATA_DIR=str(data),PWD=str(repo));os.environ.pop('APP_VERSION',None)
+# L'exécutant met à jour le frontal avec l'image web de ce nom (ADR 0103) : celui des images de la recette.
+assert m.FRONTAL_IMAGE==IMAGE+'web'
 class Fixture(m.Worker):
     def check(self): self.publish(available='99.0.0',notes='https://github.com/yousername-ha/suivi-audits/releases/tag/v99.0.0',checkedAt=m.now(),checking=False,checkError=False)
     def signatures(self,target):
-        self.job['images']={c:IMAGE+c+':'+target for c in ('api','web','updater')}
+        # Ni git fetch, ni téléchargement, ni cosign, ni SBOM. Chaque image est désignée comme le fait l'exécutant : empreinte de
+        # dépôt lue sur l'étiquette locale, même sélection. L'exécutant de la cible lit alors l'empreinte du frontal dans l'image
+        # web épinglée et vérifie que l'étiquette du frontal la désigne, sans contournement.
+        for c in ('api','web','updater'):
+            prefix=IMAGE+c+'@sha256:'
+            digests=json.loads(run(['docker','image','inspect','--format','{{json .RepoDigests}}',IMAGE+c+':'+target]))
+            digest=next((d for d in digests if d.startswith(prefix) and re.fullmatch(r'[a-f0-9]{64}',d[len(prefix):])),None)
+            assert digest, f'{c}:{target} sans empreinte de dépôt locale : magasin d’images containerd requis pour cette recette'
+            self.job.setdefault('images',{})[c]=digest
         m.atomic(self.private/'active.json',self.job)
 
 observations=[]; errors=[]; stop=threading.Event()
 def monitor():
     while not stop.is_set():
+        debut=time.monotonic()
         try:
             with urllib.request.urlopen('https://localhost/update/status.json',context=context,timeout=5) as r: state=json.loads(r.read())
             if state['maintenance']:
@@ -151,9 +172,43 @@ def monitor():
                 for asset in ('maintenance.js','maintenance.css'):
                     with urllib.request.urlopen('https://localhost/update/'+asset,context=context,timeout=5) as r: assert r.status==200 and r.read()
                 observations.append(state['phase'])
-        except Exception as e: errors.append(type(e).__name__)
+        except Exception as e: errors.append((debut,time.monotonic(),e))
         stop.wait(.4)
+# Indicateur « coupure » de l'état publié (ADR 0103), relevé sur l'hôte toutes les 50 ms, indépendamment du frontal : chaque
+# changement est noté avec son instant. La coupure, annoncée avant la recréation du frontal et retirée après sa vérification,
+# dure au moins le temps de « docker compose up » : elle ne peut pas échapper à ce relevé.
+coupures=[(time.monotonic(),False)]
+def relever_coupure():
+    while not stop.is_set():
+        etat=m.read(data/'etat/updates/status.json',None)
+        if isinstance(etat,dict) and (etat.get('coupure') is True)!=coupures[-1][1]: coupures.append((time.monotonic(),etat.get('coupure') is True))
+        stop.wait(.05)
+def pendant_coupure(debut,fin,marge=2.0):
+    """Lectures [debut, fin] chevauchant une coupure annoncée (changements alternés, relevés ci-dessus), à 2 s près après son
+    retrait (relevé toutes les 50 ms)."""
+    ouverture=None
+    for t,v in coupures:
+        if v: ouverture=t
+        elif ouverture is not None:
+            if ouverture<=fin and debut<=t+marge: return True
+            ouverture=None
+    return ouverture is not None and ouverture<=fin
+def noms(erreurs): return [type(e).__name__+': '+str(e)[:120] for _,_,e in erreurs]
 thread=threading.Thread(target=monitor,daemon=True);thread.start()
+releve=threading.Thread(target=relever_coupure,daemon=True);releve.start()
+def attendre_reprise(identifiant):
+    """Le successeur (exécutant de la cible, image updater) termine l'opération après la relève."""
+    for _ in range(100):
+        state=m.read(data/'etat/updates/status.json',{})
+        if state.get('id')==identifiant and state.get('status')=='success' and state.get('installed')=='99.0.0' and not state.get('maintenance'): return state
+        time.sleep(2)
+    raise AssertionError('Reprise par le nouvel exécutant non terminée')
+def gateway_version(): return re.search(r'^GATEWAY_VERSION=(.*)$',(repo/'.env').read_text(),re.M).group(1)
+def journal(identifiant): return (data/'reprise-updates'/f'{identifiant}.log').read_text()
+def empreinte_frontal(image):
+    return run(['docker','run','--rm','--pull','never','--network','none','--cap-drop','ALL','--read-only','--entrypoint','cat',image,m.FRONTAL_EMPREINTE]).strip()
+def certificat_servi(): return ssl.get_server_certificate(('localhost',443))
+FIN='Mise à jour installée et vérifiée. Votre espace est prêt.'
 gateway=compose('ps','-q','gateway').strip()
 original_popen=subprocess.Popen
 forced=False
@@ -170,11 +225,7 @@ try:
     assert audited_ip and audited_ip not in ['203.0.113.10',*[n['IPAddress'] for n in gateway_networks.values()]]
     claimed=json.loads(worker.cli('update-claim'));assert claimed['id']==requested['id']
     with patch.object(m.subprocess,'Popen',side_effect=local_popen): worker.locked_operation(lambda:worker.install(claimed))
-    for _ in range(100):
-        state=m.read(data/'etat/updates/status.json',{})
-        if state.get('status')=='success' and state.get('installed')=='99.0.0' and not state.get('maintenance'): break
-        time.sleep(2)
-    else: raise AssertionError('Reprise par le nouvel exécutant non terminée')
+    state=attendre_reprise(requested['id'])
     # ADR 0061 : frise horodatée publique et reçu structuré, servi par l'API à l'administrateur.
     assert [e['phase'] for e in state['etapes']][:1]==['preparing'] and state['etapes'][-1]['phase']=='complete', state['etapes']
     receipt=json.loads((data/'etat/recus-mises-a-jour'/f"{requested['id']}.json").read_text())
@@ -182,14 +233,20 @@ try:
     assert receipt['sauvegarde'] and receipt['sauvegarde']['fichier'].endswith('.tar.age'), receipt
     assert 'previousEnv' not in json.dumps(receipt) and str(data) not in json.dumps(receipt)
     assert any(r['id']==requested['id'] for r in call('GET','/api/admin/updates/receipts'))
+    # ADR 0103, empreintes identiques (web:99.0.0 = web:ci) : l'exécutant de la cible a lu l'empreinte dans l'image web
+    # épinglée et n'a pas touché au frontal. Ni recréation, ni GATEWAY_VERSION modifiée, ni coupure, ni avertissement.
     assert compose('ps','-q','gateway').strip()==gateway
+    assert gateway_version()=='ci'
+    assert state['message']==FIN and receipt['message']==FIN, (state['message'],receipt['message'])
+    assert 'Frontal : inchangé, même empreinte que l’image de la version 99.0.0' in journal(requested['id'])
+    assert state['coupure'] is False and not any(v for _,v in coupures), coupures
     updater=compose('ps','-q','updater',cwd=repo).strip()
     assert run(['docker','inspect','-f','{{.Config.Image}}',updater]).strip().endswith(':99.0.0')
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
     assert donnees_snapshot()==before_environment
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc','SELECT count(*) FROM recette_update_temoin',cwd=repo).strip()=='1'
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='success'
-    print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal intact.')
+    print('Mise à jour API 98 -> 99 : sauvegarde chiffrée, migration réelle, données identiques, exécutant remplacé, frontal inchangé (même empreinte, sans coupure).')
     # Revenir à la base de la fixture avec la sauvegarde précédente, puis injecter un échec après migration.
     compose('stop','updater',cwd=repo)
     private=m.read(data/'reprise-updates/progress.json');backup=private['backup'];assert backup.endswith('.tar.age')
@@ -197,11 +254,7 @@ try:
     compose('up','-d','db','app','web',cwd=repo);wait_health(repo)
     run(['bash',str(repo/'scripts/restore.sh'),backup],cwd=repo,timeout=1800,env={'SUIVI_MAJ_WEB':'1','RESTAURER_SANS_CONFIRMATION':'1'})
     wait_health(repo)
-    jar.clear()
-    call('POST','/api/auth/login',{'username':'recette_update','password':'Recette-Update-2026!'})
-    csrf=call('GET','/api/auth/me')['csrf']
-    call('POST','/api/auth/mfa',{'code':next_code()})
-    csrf=call('GET','/api/auth/me')['csrf']
+    connexion()
     # La sauvegarde restaurée date d'après l'ouverture du flux : il reste ouvert (demande idempotente).
     assert call('PUT','/api/admin/flux-externes/mises-a-jour',{'ouvert':True,'confirmation':True})['ouvert'] is True
     assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
@@ -218,14 +271,67 @@ try:
     assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',"SELECT to_regclass('recette_update_temoin') IS NULL",cwd=repo).strip()=='t'
     assert compose('ps','-q','gateway').strip()==gateway
     assert {'backup','installing','verifying'}.intersection(observations) and len(observations)>5
-    assert not errors, errors
+    assert not errors, noms(errors)
+    assert not any(v for _,v in coupures), coupures
     print('Échec après migration : restauration réelle PostgreSQL/secrets/documents, retour 98 vérifié, maintenance accessible en continu.')
+    # ADR 0103, frontal réellement mis à jour : nouvelle installation de la 99.0.0 depuis la 98.0.0 restaurée, avec une image web
+    # dont le frontal diffère de celui en service par un fichier de la page de maintenance. Empreinte recalculée par le script
+    # même de l'image web (docker/empreinte-frontal.sh), monté comme dans docker/web.Dockerfile.
+    frontal=work/'frontal';frontal.mkdir()
+    jeton='recette-frontal-'+uuid.uuid4().hex
+    (frontal/'recette-frontal.txt').write_text(jeton+'\n')
+    shutil.copy(ROOT/'docker/empreinte-frontal.sh',frontal/'empreinte-frontal.sh')
+    calcul='RUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh\n'
+    # Mêmes fichiers recalculés : même empreinte que l'image construite par la CI (calcul reproductible, sans date).
+    (frontal/'Dockerfile.identique').write_text('FROM '+IMAGE+'web:ci\nUSER root\n'+calcul+'USER caddy\n')
+    run(['docker','build','-f',str(frontal/'Dockerfile.identique'),'-t','suivi-recette/frontal-identique:local',str(frontal)])
+    empreinte_ci=empreinte_frontal(IMAGE+'web:ci')
+    assert empreinte_frontal('suivi-recette/frontal-identique:local')==empreinte_ci
+    run(['docker','image','rm','suivi-recette/frontal-identique:local'])
+    (frontal/'Dockerfile').write_text('FROM '+IMAGE+'web:ci\nUSER root\nCOPY --chmod=0444 recette-frontal.txt /maintenance/recette-frontal.txt\n'+calcul+'USER caddy\n')
+    run(['docker','build','-t',IMAGE+'web:99.0.0',str(frontal)])
+    empreinte_cible=empreinte_frontal(IMAGE+'web:99.0.0')
+    assert re.fullmatch(r'[a-f0-9]{64}',empreinte_cible) and empreinte_cible!=empreinte_ci
+    def fichier_ajoute():
+        with urllib.request.urlopen('https://localhost/update/recette-frontal.txt',context=context,timeout=5) as r: return r.status,r.read().decode()
+    assert fichier_ajoute()[1].strip()!=jeton
+    certificat=certificat_servi()
+    debut_passage=time.monotonic()
+    connexion()
+    worker=Fixture();worker.reconcile();worker.check();worker.publish(ready=True,status='idle',maintenance=False)
+    requested=call('POST','/api/admin/updates/install',{'requestId':str(uuid.uuid4()),'version':'99.0.0','confirm':'METTRE À JOUR','code':next_code()})
+    claimed=json.loads(worker.cli('update-claim'));assert claimed['id']==requested['id']
+    forced=False
+    with patch.object(m.subprocess,'Popen',side_effect=local_popen): worker.locked_operation(lambda:worker.install(claimed))
+    state=attendre_reprise(requested['id'])
+    receipt=json.loads((data/'etat/recus-mises-a-jour'/f"{requested['id']}.json").read_text())
+    assert receipt['statut']=='success' and receipt['vers']=='99.0.0' and receipt['controles']['apres'] is True, receipt
+    assert state['message']==FIN and receipt['message']==FIN, (state['message'],receipt['message'])
+    assert 'Frontal : mis à jour de ci à 99.0.0 ; configuration validée, même certificat servi, frontal vérifié.' in journal(requested['id'])
+    # Frontal recréé avec la nouvelle image : nouveau conteneur, GATEWAY_VERSION passée à la cible, empreinte de la cible en
+    # service, fichier ajouté servi par le frontal, même certificat qu'avant.
+    nouveau=compose('ps','-q','gateway').strip()
+    assert nouveau and nouveau!=gateway
+    assert run(['docker','inspect','-f','{{.Config.Image}}',nouveau]).strip()==IMAGE+'web:99.0.0'
+    assert gateway_version()=='99.0.0'
+    assert compose('exec','-T','gateway','cat',m.FRONTAL_EMPREINTE).strip()==empreinte_cible
+    assert fichier_ajoute()==(200,jeton+'\n')
+    assert certificat_servi()==certificat
+    # Coupure annoncée pendant la recréation, retirée à la fin ; pages de suivi interrompues seulement pendant la coupure.
+    assert any(v for t,v in coupures if t>=debut_passage), coupures
+    assert coupures[-1][1] is False and state['coupure'] is False, coupures
+    assert all(isinstance(e,(OSError,HTTPException)) and pendant_coupure(d,f) for d,f,e in errors), (noms(errors),coupures)
+    assert json.loads(compose('exec','-T','app','suivi','controle-donnees',cwd=repo))==before
+    assert compose('exec','-T','-u','postgres','db','psql','-d','suivi','-Atc',f"SELECT status FROM update_jobs WHERE id='{requested['id']}'",cwd=repo).strip()=='success'
+    duree=sum(f-d for (d,v),(f,_) in zip(coupures,coupures[1:]) if v and d>=debut_passage)
+    print(f'Frontal mis à jour : empreinte différente, configuration validée, frontal recréé avec le même certificat, coupure annoncée {duree:.1f} s puis retirée ({len(errors)} lecture(s) de la page interrompue(s), toutes pendant la coupure).')
 finally:
-    stop.set();thread.join(timeout=10)
+    stop.set();thread.join(timeout=10);releve.join(timeout=10)
     compose('stop','updater',cwd=repo)
     # Revenir à la pile originale de CI sans modifier son checkout ni sa branche.
     (repo/'.env').write_text(original_env)
     for component,image in original_images.items(): run(['docker','tag',image,IMAGE+component+':ci'])
-    compose('up','-d','db','app','web','updater')
+    # Frontal compris : recréé avec l'image d'origine s'il a été mis à jour par la recette (inchangé sinon).
+    compose('up','-d','db','app','web','gateway','updater')
     wait_health(ROOT)
     shutil.rmtree(work)

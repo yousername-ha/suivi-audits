@@ -48,6 +48,10 @@
 
 ## Addendum du 17/11/2026 — exception ponctuelle, décision du RSSI
 
+> **Remplacé par l'[ADR 0103](0103-frontal-mis-a-jour-a-la-demande.md)** (17/11/2026) : l'exception ponctuelle devient la règle
+> générale, le frontal est mis à jour à la demande, d'après son empreinte, et la constante `FRONTAL_AVEC_LA_VERSION` est
+> retirée. Le texte ci-dessous est conservé pour l'historique.
+
 Le frontal stable (`gateway`) n'étant jamais recréé par une mise à jour web, la page de maintenance Neon (7.2.0) n'était pas
 servie aux serveurs mis à jour depuis l'interface. Décision du RSSI : la mise à jour web **vers la 7.2.2, et elle seule**, met
 aussi le frontal à jour ; une coupure de quelques secondes est acceptée ; le comportement antérieur revient ensuite.
