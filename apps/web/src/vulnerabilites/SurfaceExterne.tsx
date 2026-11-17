@@ -9,7 +9,9 @@
    rapprochés d'une technologie.
    Lot ALH3 : colonne « Machine interne » des actifs (reliée, proposée, à relier) et filtre ; fiche d'un actif pour confirmer
    ou rejeter une proposition de la plateforme, relier à la main une machine (sélecteur avec recherche) et délier. Le
-   serveur ne rend que les machines que la personne peut lire et reste seul juge des droits d'écriture. */
+   serveur ne rend que les machines que la personne peut lire et reste seul juge des droits d'écriture.
+   Lot ALH4 : onglet « Carte » (lignes d'approche), affiché en premier ; les autres onglets en sont l'équivalent en
+   tableau. */
 import {
   Alert,
   Anchor,
@@ -32,12 +34,14 @@ import { notifications } from '@mantine/notifications';
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
+  type CarteSurfaceDto,
   CRITICITES_ALH,
   type EtatSurfaceExterneDto,
   type FicheAlerteAlhDto,
   type FicheLiaisonsActifDto,
   type FiltreLiaisonActif,
   type LiaisonMachineDto,
+  type MachineDto,
   type PageMachines,
   type PageSurface,
   type PerimetreAffectableDto,
@@ -55,7 +59,9 @@ import { Link } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
+import { CarteSurface } from './CarteSurface';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
+import { FicheMachine } from './Machines';
 import { PrioriteFaits } from './FaillesDetectees';
 import { MarquesSources } from './SourcesFaille';
 import {
@@ -84,6 +90,7 @@ import {
   OPTIONS_TRI_TECHNOLOGIES,
   triDepuis,
   urlAlertesAlh,
+  URL_CARTE_SURFACE,
   urlFicheAlerteAlh,
   urlTechnologiesAlh,
 } from './surface';
@@ -595,8 +602,11 @@ export function FicheLiaisonsActif({
   );
 }
 
+/** Actif dont on ouvre la fiche : ligne de la liste ou nœud de la carte. */
+type ActifOuvert = Pick<ActifAlhDto, 'id' | 'type' | 'valeur' | 'adresse' | 'perimetreNom' | 'perimetreAlh'>;
+
 /** Fiche d'un actif : liaisons, décisions et liaison à la main (droit de modifier le module). */
-function FicheActif({ actif, modifier }: { actif: ActifAlhDto; modifier: boolean }) {
+function FicheActif({ actif, modifier }: { actif: ActifOuvert; modifier: boolean }) {
   const qc = useQueryClient();
   const [enCours, setEnCours] = useState(false);
   const [terme, setTerme] = useState('');
@@ -1134,6 +1144,77 @@ function OngletTechnologies() {
   );
 }
 
+/** Onglet « Carte » (lot ALH4) : graphe lu une fois, filtré par les droits côté serveur ; un nœud ouvre la fiche
+    existante de l'alerte, de l'actif ou de la machine. */
+function OngletCarte() {
+  const can = useCan();
+  const modifier = can('vulnerabilites', 'modifier');
+  const [alerte, setAlerte] = useState<string | null>(null);
+  const [actif, setActif] = useState<ActifOuvert | null>(null);
+  const [machine, setMachine] = useState<string | null>(null);
+  const carte = useQuery({
+    queryKey: [...CLE, 'carte'],
+    queryFn: () => get<CarteSurfaceDto>(URL_CARTE_SURFACE),
+  });
+  const ficheAlerte = useQuery({
+    queryKey: [...CLE, 'alerte', alerte],
+    queryFn: () => get<FicheAlerteAlhDto>(urlFicheAlerteAlh(alerte!)),
+    enabled: !!alerte,
+  });
+  const ficheMachine = useQuery({
+    queryKey: ['vulnerabilites', 'machines', 'fiche', machine],
+    queryFn: () => get<MachineDto>(`/api/vulnerabilites/machines/${encodeURIComponent(machine!)}`),
+    enabled: !!machine,
+  });
+  return (
+    <Stack>
+      <ErrorAlert error={carte.error} />
+      {carte.data && (
+        <CarteSurface
+          carte={carte.data}
+          peutModifier={modifier}
+          actions={{ onAlerte: setAlerte, onActif: setActif, onMachine: setMachine }}
+        />
+      )}
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!alerte}
+        onClose={() => setAlerte(null)}
+        title={ficheAlerte.data?.titre ?? 'Alerte AlgoLightHouse'}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        <ErrorAlert error={ficheAlerte.error} />
+        {ficheAlerte.data && <FicheAlerteAlh a={ficheAlerte.data} />}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!actif}
+        onClose={() => setActif(null)}
+        title={actif ? `Machines internes de ${actif.valeur}` : 'Actif exposé'}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {actif && <FicheActif actif={actif} modifier={modifier} />}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!machine}
+        onClose={() => setMachine(null)}
+        title={ficheMachine.data ? libelleMachine(ficheMachine.data) : 'Machine'}
+        size="lg"
+        centered
+        lockScroll={false}
+      >
+        <ErrorAlert error={ficheMachine.error} />
+        {ficheMachine.data && <FicheMachine machine={ficheMachine.data} modifier={modifier} />}
+      </Modal>
+    </Stack>
+  );
+}
+
 function OngletPerimetres() {
   const qc = useQueryClient();
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -1183,7 +1264,7 @@ export function SurfaceExternePage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
   const administrer = can('vulnerabilites', 'administrer');
-  const [onglet, setOnglet] = useState<string | null>('alertes');
+  const [onglet, setOnglet] = useState<string | null>('carte');
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatSurfaceExterneDto[]>('/api/vulnerabilites/surface/etat'),
@@ -1199,18 +1280,22 @@ export function SurfaceExternePage() {
     <Page>
       <PageHeader
         title="Surface externe"
-        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
+        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. L’onglet « Carte » trace les lignes d’approche, de l’Internet aux machines internes reliées. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
       />
       <Stack>
         <ErrorAlert error={etat.error} />
         {etat.data && <EtatSurface etats={etat.data} />}
         <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
           <Tabs.List>
+            <Tabs.Tab value="carte">Carte</Tabs.Tab>
             <Tabs.Tab value="alertes">Alertes</Tabs.Tab>
             <Tabs.Tab value="actifs">Actifs</Tabs.Tab>
             <Tabs.Tab value="technologies">Technologies</Tabs.Tab>
             {administrer && <Tabs.Tab value="perimetres">Périmètres</Tabs.Tab>}
           </Tabs.List>
+          <Tabs.Panel value="carte" pt="md">
+            <OngletCarte />
+          </Tabs.Panel>
           <Tabs.Panel value="alertes" pt="md">
             <OngletAlertes />
           </Tabs.Panel>

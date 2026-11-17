@@ -1,0 +1,356 @@
+/* Module Vulnérabilités (ADR 0100, lot ALH4) : carte « Lignes d'approche » de l'écran « Surface externe ». Couleurs tirées
+   des jetons de la cartographie (--carte-*, tokens.ts), dont les contrastes sont vérifiés en clair et en sombre : textes
+   (--carte-texte, --carte-secondaire) au moins 4,5:1 sur le canevas et les pastilles ; traits et formes porteurs de sens
+   en teinte « accent », au moins 3:1 sur le canevas. Aucune longueur en px ni en rem : unités de la viewBox (attributs
+   SVG) et jetons. Animations (flux du chemin d'entrée critique, halo, balayage) décoratives et continues (ADR 0099),
+   coupées par la préférence de mouvement réduit et à l'impression. Aucun style en ligne (ADR 0006). */
+.surface-carte {
+  --sc-fond: var(--carte-canevas);
+  --sc-texte: var(--carte-texte);
+  --sc-secondaire: var(--carte-secondaire);
+  --sc-boite: var(--carte-boite);
+  --sc-lien: var(--carte-gris-accent);
+  --sc-faisceau: var(--carte-bleu-accent);
+  --sc-critique: var(--carte-rouge-accent);
+  --sc-majeure: var(--carte-orange-accent);
+  --sc-importante: var(--carte-bleu-accent);
+  --sc-mineure: var(--carte-gris-accent);
+  --sc-machine: var(--carte-vert-accent);
+  --sc-internet: var(--carte-violet-accent);
+  --sc-rempart: var(--carte-marine-accent);
+  min-inline-size: 0;
+}
+.sc-scene {
+  position: relative;
+  min-inline-size: 0;
+}
+/* Petit écran : la carte garde une largeur lisible et défile dans son cadre, jamais la page. */
+.sc-cadre {
+  overflow-x: auto;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--sc-fond);
+}
+.sc-svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: calc(var(--suivi-champ-l) * 2);
+  /* Même rapport que la caméra (RAPPORT = 0,6, carte-surface.ts). */
+  aspect-ratio: 5 / 3;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.sc-svg:active {
+  cursor: grabbing;
+}
+.sc-svg:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: calc(var(--suivi-trait-focus) * -1);
+}
+.sc-fond {
+  fill: var(--sc-fond);
+}
+.sc-texte {
+  fill: var(--sc-texte);
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-xs);
+  /* Liseré du fond : le libellé reste lisible quand un trait passe dessous. */
+  paint-order: stroke;
+  stroke: var(--sc-fond);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.sc-pastille .sc-texte,
+.sc-groupe .sc-texte {
+  stroke: var(--sc-boite);
+}
+.sc-texte--secondaire {
+  fill: var(--sc-secondaire);
+}
+.sc-texte--code {
+  font-family: var(--mantine-font-family-monospace);
+}
+.sc-colonne {
+  fill: var(--sc-secondaire);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* Traits : liaisons ordinaires, faisceaux (épaisseur par attribut, selon le nombre de lignes repliées), chemin critique. */
+.sc-lien {
+  fill: none;
+  stroke: var(--sc-lien);
+  stroke-linecap: round;
+}
+.sc-lien:not(.sc-lien--faisceau) {
+  stroke-width: 1.4;
+}
+.sc-lien--faisceau {
+  stroke: var(--sc-faisceau);
+  stroke-opacity: 0.85;
+}
+.sc-lien--critique {
+  stroke: var(--sc-critique);
+  stroke-opacity: 1;
+  stroke-dasharray: 6 5;
+}
+.sc-lien--critique:not(.sc-lien--faisceau) {
+  stroke-width: 2.2;
+}
+.sc-rempart path {
+  fill: none;
+  stroke: var(--sc-rempart);
+  stroke-width: 1.6;
+}
+/* Formes : la teinte double toujours une forme (losange, carré, rond, écran) et un libellé. */
+.sc-forme {
+  fill: var(--sc-boite);
+  stroke: var(--sc-lien);
+  stroke-width: 1.5;
+}
+.sc-crit-critical {
+  fill: var(--sc-critique);
+  stroke: var(--sc-critique);
+}
+.sc-crit-major {
+  fill: var(--sc-majeure);
+  stroke: var(--sc-majeure);
+}
+.sc-crit-important {
+  fill: var(--sc-importante);
+  stroke: var(--sc-importante);
+}
+.sc-crit-minor,
+.sc-crit-inconnue {
+  fill: var(--sc-mineure);
+  stroke: var(--sc-mineure);
+}
+.sc-sans-alerte {
+  fill: var(--sc-boite);
+  stroke: var(--sc-importante);
+}
+.sc-hote {
+  stroke: var(--sc-texte);
+}
+.sc-machine .sc-forme,
+.sc-forme.sc-machine {
+  stroke: var(--sc-machine);
+  fill: var(--sc-boite);
+}
+.sc-machine-illisible {
+  stroke: var(--sc-secondaire);
+  stroke-dasharray: 3 2;
+}
+.sc-a-relier {
+  stroke: var(--sc-internet);
+  stroke-dasharray: 3 2;
+}
+.sc-origine {
+  fill: var(--sc-boite);
+  stroke: var(--sc-critique);
+  stroke-width: 2;
+}
+.sc-typo {
+  stroke: var(--sc-internet);
+  stroke-dasharray: 3 2;
+}
+.sc-fuite {
+  stroke: var(--sc-majeure);
+}
+.sc-groupe > .sc-forme {
+  fill: var(--sc-boite);
+  stroke: var(--sc-faisceau);
+}
+.sc-groupe--critique > .sc-forme {
+  stroke: var(--sc-critique);
+  stroke-width: 2;
+}
+.sc-groupe .sc-crit-critical,
+.sc-groupe .sc-crit-major,
+.sc-groupe .sc-crit-important,
+.sc-groupe .sc-crit-minor,
+.sc-groupe .sc-crit-inconnue {
+  stroke-width: 1;
+}
+.sc-pastille__fond {
+  fill: var(--sc-boite);
+  stroke: var(--sc-faisceau);
+  stroke-width: 1;
+}
+.sc-halo {
+  fill: none;
+  stroke: var(--sc-critique);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* Nœuds activables : survol et focus visibles (contour de la forme). */
+.sc-bouton {
+  cursor: pointer;
+}
+.sc-bouton:focus {
+  outline: none;
+}
+.sc-bouton:hover .sc-forme,
+.sc-bouton:hover .sc-pastille__fond {
+  stroke-width: 2.5;
+}
+.sc-bouton:focus-visible .sc-forme,
+.sc-bouton:focus-visible .sc-pastille__fond {
+  stroke: var(--neon-accent);
+  stroke-width: 3;
+}
+.sc-bouton:focus-visible .sc-texte {
+  text-decoration: underline;
+}
+/* Balayage : bande claire qui parcourt la carte de gauche à droite (décoratif). */
+.sc-balayage {
+  pointer-events: none;
+  transform-box: fill-box;
+  opacity: 0;
+}
+.sc-balayage__bord {
+  stop-color: var(--sc-faisceau);
+  stop-opacity: 0;
+}
+.sc-balayage__coeur {
+  stop-color: var(--sc-faisceau);
+  stop-opacity: 0.14;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sc-lien--critique {
+    animation: sc-flux 1s linear infinite;
+  }
+  .sc-halo {
+    animation: sc-pouls 1.8s ease-in-out infinite;
+  }
+  .sc-balayage {
+    opacity: 1;
+    animation: sc-balaie 9s linear infinite;
+  }
+}
+@keyframes sc-flux {
+  to {
+    stroke-dashoffset: -11;
+  }
+}
+@keyframes sc-pouls {
+  50% {
+    transform: scale(1.5);
+    opacity: 0.3;
+  }
+}
+@keyframes sc-balaie {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(1100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .surface-carte .sc-lien--critique,
+  .surface-carte .sc-halo,
+  .surface-carte .sc-balayage {
+    animation: none !important;
+  }
+  .surface-carte .sc-balayage {
+    display: none;
+  }
+}
+@media print {
+  .surface-carte .sc-lien--critique,
+  .surface-carte .sc-halo {
+    animation: none;
+  }
+  .surface-carte .sc-balayage,
+  .sc-commandes,
+  .sc-mini {
+    display: none;
+  }
+}
+/* Commandes de zoom et vue d'ensemble, posées sur la carte (hors de la zone qui défile). */
+.sc-commandes {
+  position: absolute;
+  inset-block-start: var(--mantine-spacing-xs);
+  inset-inline-end: var(--mantine-spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+}
+.sc-mini {
+  position: absolute;
+  inset-block-end: var(--mantine-spacing-xs);
+  inset-inline-end: var(--mantine-spacing-xs);
+  display: grid;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  inline-size: var(--suivi-champ-s);
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--sc-boite);
+  box-shadow: var(--suivi-ombre);
+}
+.sc-mini__titre {
+  color: var(--sc-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sc-mini__svg {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 5 / 3;
+  background: var(--sc-fond);
+  cursor: crosshair;
+}
+.sc-mini__lien {
+  fill: none;
+  stroke: var(--sc-faisceau);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.sc-mini__lien--critique {
+  stroke: var(--sc-critique);
+}
+.sc-mini__cadre {
+  fill: color-mix(in srgb, var(--neon-accent) 10%, transparent);
+  stroke: var(--neon-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+@media (max-width: 48em) {
+  .sc-mini {
+    display: none;
+  }
+}
+/* Légende : forme et libellé pour chaque teinte. */
+.sc-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-xs);
+}
+.sc-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.sc-legende__icone {
+  inline-size: 1.4em;
+  block-size: 1.4em;
+  flex: none;
+}
+.sc-legende__trait {
+  stroke-width: 2;
+  animation: none;
+}
+.sc-legende__epais {
+  stroke-width: 6;
+}

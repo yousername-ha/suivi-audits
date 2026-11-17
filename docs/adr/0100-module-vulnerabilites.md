@@ -361,6 +361,9 @@
   repères « E-… » et masque étendu. Voir l'addendum « lot ALH2 » ci-dessous.
 - **Lot ALH3, actif exposé relié aux machines internes** (17/11/2026) : migration `083`, liaison d'un actif d'AlgoLightHouse
   à une ou plusieurs machines de Tenable, à la main ou par proposition confirmée. Voir l'addendum « lot ALH3 » ci-dessous.
+- **Lot ALH4, carte « Lignes d'approche »** (17/11/2026) : sans migration, onglet « Carte » de « Surface externe » (de
+  l'Internet aux machines internes reliées, branches repliables, filtres, chemin d'entrée critique). Voir l'addendum « lot
+  ALH4 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -789,3 +792,101 @@ fiche d'un actif ni la liaison (aucune donnée sur une pile vierge).
 4. Liaison au niveau du **service** (port) si AlgoLightHouse le documente comme objet, ou à partir des détections de Tenable
    (port et protocole), au prix d'un champ ou d'un appel nouveau à valider.
 5. Faut-il signaler une liaison vers une machine illisible (choix actuel : drapeau sans nom), ou ne rien en montrer ?
+
+## Addendum du 17/11/2026 — lot ALH4 : carte « Lignes d'approche » de la surface externe
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau ; liste fermée des appels et liste blanche des champs inchangées ; aucune
+dépendance nouvelle (dessin SVG fait à la main). Lève le point ouvert 3 (« carte graphique ») de l'addendum « lot ALH3 ».
+
+### Décision du RSSI (17/11/2026)
+
+Carte « Lignes d'approche » retenue, d'après les maquettes `08d` (grande échelle : environ 150 domaines, plus de 100 hôtes,
+branches repliables, filtres, déplacement) et `08e` (prolongement jusqu'aux machines internes) de
+`docs/unification/maquettes-vulnerabilites`. Nouvel onglet « Carte » de l'écran « Surface externe », affiché en premier ; les
+onglets « Alertes », « Actifs », « Technologies » et « Périmètres » restent et en sont l'équivalent en tableau.
+
+### Réalisation
+
+- **Route de lecture** `GET /api/vulnerabilites/surface/carte` (`vulnerabilites:lire`) : graphe déjà filtré par les droits —
+  actifs lisibles et présents (périmètre ALH relié visible, sinon `administrer`), domaine parent (`parent_alh` de la migration
+  080) rendu seulement s'il est lui aussi rendu, alertes **ouvertes** lisibles et présentes avec leur priorité (la plus haute
+  de leurs CVE, présence « exposée », règle du lot ALH2), actif visé seulement s'il est rendu, machines internes des liaisons
+  **confirmées** lisibles (périmètre effectif), propositions lisibles comptées, liaison vers une machine illisible réduite à un
+  drapeau (règles de lecture du lot ALH3, fonction `liaisonsCarte`). Bornée (`CARTE_SURFACE_BORNES` : 3 000 actifs, ceux qui
+  portent une alerte ouverte d'abord ; 3 000 alertes, les plus graves d'abord ; 20 CVE par alerte), troncature signalée avec
+  les totaux. Rien n'est écrit, aucune entrée de journal.
+- **Mise en page côté web**, fonctions pures (`apps/web/src/vulnerabilites/carte-surface.ts`) : branches, filtres, repli, mise
+  en page en colonnes et caméra. Colonnes : Internet → branches → domaines → hôtes exposés → alertes ouvertes → rempart →
+  machines internes. Un domaine est suivi de l'hôte vers lequel il résout (même adresse) ; un hôte sans domaine forme sa
+  propre ligne (branche « Hôtes sans domaine »).
+- **Regroupement** par domaine parent (racine de la chaîne `parent`) ou par périmètre (« Regrouper par »).
+- **Échelle** : par défaut, seules les branches qui portent une alerte retenue sont dépliées ; leurs lignes sans alerte et les
+  autres branches sont repliées en **faisceaux chiffrés** (lignes, hôtes, alertes dont critiques, machines), d'épaisseur
+  croissante avec le nombre de lignes (bornée). Clic ou Entrée sur une branche ou un faisceau : déplier ou replier ; une
+  branche sans alerte se déplie directement sur ses lignes. « Tout replier », « Tout déplier » **borné à 250 lignes affichées**
+  (`LIGNES_MAX`) : au-delà, les branches suivantes restent en faisceau et l'écran le dit.
+- **Filtres** (côté web, sur le graphe reçu) : texte (domaine, adresse, CVE), criticité (cases), « Branches en alerte
+  seulement », périmètre, type d'alerte.
+- **Chemin d'entrée critique** : une ligne dont une alerte ouverte est en **P1** (CVE d'exploitation avérée portée par un actif
+  exposé) est tracée en rouge pointillé animé de l'Internet jusqu'aux machines reliées, avec un halo sur l'alerte et un
+  bandeau qui ouvre la fiche. Typosquatting et fuites de données sont tracés **côté Internet**, hors des branches. Balayage
+  animé décoratif. Toutes les animations sont coupées sous `prefers-reduced-motion: reduce` et à l'impression (le pointillé
+  reste, immobile).
+- **Déplacement et zoom** par la seule `viewBox` : glisser, Ctrl (ou ⌘) + molette (la molette seule fait défiler la page),
+  boutons « Rapprocher », « Éloigner », « Recadrer », flèches, + / − / 0 au clavier ; vue d'ensemble miniature avec le cadre de
+  la zone affichée (clic pour y centrer la vue).
+- **Clic sur un nœud** : fiche existante de l'alerte (défauts et recommandations), de l'actif (machines internes, décisions) ou
+  de la machine (`GET /api/vulnerabilites/machines/{id}`, fiche de l'écran « Machines ») ; aucun écran nouveau.
+- **Accessibilité** : SVG nommé (`role="group"`, résumé et mode d'emploi en `aria-describedby`), nœuds atteignables au
+  clavier (`role="button"`, nom lisible), formes distinctes (losange : domaine, carré : hôte, rond : alerte, écran : machine,
+  « ? » : à relier, losange pointillé : typosquatting, triangle : fuite) et libellés en plus de la couleur, légende, boutons
+  nommés. Couleurs des jetons de la cartographie (`--carte-*`), contrastes vérifiés en clair et en sombre. Sur petit écran, la
+  carte garde une largeur lisible et défile dans son cadre.
+- **CSP** : aucun attribut `style` ; positions par attributs SVG, couleurs, traits et animations par les classes de
+  `packages/ui/src/neon-surface.css` (sans px ni rem).
+
+### Écarts à la maquette
+
+- **Pas de colonne « services »** : la migration 080 ne range que des hôtes et des domaines ; un service (port) n'est connu que
+  comme cible d'une alerte (`cible_type = 'service'`, texte libre) ou par une technologie. La carte montre à la place, sur la
+  ligne de l'actif, l'**alerte ouverte la plus haute** (criticité de l'éditeur, P1 signalé) et le nombre d'alertes. Pour avoir
+  la colonne de la maquette, il faudrait ranger les services comme objets (port, protocole, produit) : un champ ou un appel
+  nouveau d'AlgoLightHouse (`/targets/services` si l'éditeur le documente) ou les détections de Tenable, à valider par le RSSI
+  (point ouvert 4 du lot ALH3).
+- **Pas de colonne « derrière »** (machine interne vers machine interne, 08e) : le chaînage front → back → base n'est pas
+  rangé (point ouvert 2 du lot ALH3).
+- **Pas de panneaux** « exposition prioritaire », « journal de la surface externe », « technologies », « capteurs » ni de
+  chiffres clés en tête : hors du lot (carte seulement) ; les onglets existants donnent ces informations.
+- **Le sous-domaine racine** est une ligne de sa branche, comme les autres ; la maquette ne le montre pas.
+- **Plusieurs machines** sur une ligne : trois dessinées, les autres comptées (« et n autres »).
+- **Une alerte par ligne** est dessinée (la plus haute) ; un clic ouvre sa fiche, les autres sont dans l'onglet « Alertes ».
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Regroupement par défaut : domaine parent** (le RSSI n'a pas tranché ; le sélecteur dit « Choix par défaut à confirmer »).
+- **« À relier »** : affiché sur une ligne sans machine lisible reliée **et** sans liaison vers une machine illisible, pour qui a
+  `vulnerabilites:modifier` (le serveur juge l'écriture) ; une proposition en attente donne « à relier (proposée) ». Une
+  liaison confirmée vers une machine illisible s'affiche « machine non lisible », sans nom (choix du lot ALH3).
+- **Chemin critique = alerte ouverte en P1**, priorité calculée pour ce que la personne lit (lot ALH2).
+- **Bornes** : 3 000 actifs, 3 000 alertes, 250 lignes affichées, six alertes tracées côté Internet (les autres comptées).
+- **Filtres côté web** sur le graphe reçu (une seule lecture, pas de paramètre de requête) ; la criticité et le type ne font
+  que choisir les alertes retenues, « Branches en alerte seulement » masque les lignes sans alerte retenue.
+- **Molette** : zoom seulement avec Ctrl ou ⌘, pour ne pas piéger le défilement de la page.
+- **Alertes sans actif de la carte** (cible non rangée ou illisible) : comptées sous la colonne Internet (« n hors carte »).
+
+### Non vérifié
+
+Aucune donnée réelle (tests et rendu sur données fictives) ; volumes réels au-delà de la fixture de test (150 domaines,
+120 hôtes) et de la borne ; lisibilité sur un parc réel (noms longs, branches très inégales). Rendu vu par une capture locale
+(Chromium, banc de rendu temporaire hors base, clair et sombre, 1440 et 390 px, axe `wcag2a`/`wcag2aa` sans violation), pas
+dans la pile complète ; Docker et Node 26 ; le parcours Playwright adapté n'a pas été joué (CI seulement) et ne voit qu'une
+carte vide (aucune donnée sur une pile vierge).
+
+### Points ouverts (hors lot)
+
+1. Ranger les **services** (port, protocole) pour la colonne de la maquette, et relier au niveau du service (point 4 du lot
+   ALH3).
+2. **Chaînage** machine interne → machine interne (« derrière ») pour prolonger le chemin critique.
+3. Confirmer le **regroupement par défaut** et les bornes d'affichage.
+4. Panneaux de la maquette autour de la carte (exposition prioritaire, journal, capteurs), si le RSSI les veut.

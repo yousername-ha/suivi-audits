@@ -116,6 +116,60 @@ export async function resumesLiaisons(
   return out;
 }
 
+/** Liaisons d'actifs déjà lisibles, pour la carte de la surface externe (lot ALH4) : toutes les machines reliées lisibles
+    (vingt au plus par actif), propositions lisibles comptées ; mêmes règles que le résumé de la liste (une proposition vers
+    une machine illisible ne laisse aucune trace, une liaison confirmée vers elle n'est qu'un drapeau). */
+export async function liaisonsCarte(
+  k: Kdb,
+  user: SessionUser,
+  actifs: readonly string[],
+): Promise<
+  Map<
+    string,
+    {
+      machines: { id: string; nom: string | null; adresse: string | null; role: RoleMachine | null }[];
+      propositions: number;
+      autresMachines: boolean;
+    }
+  >
+> {
+  const out = new Map(
+    actifs.map((id) => [
+      id,
+      {
+        machines: [] as { id: string; nom: string | null; adresse: string | null; role: RoleMachine | null }[],
+        propositions: 0,
+        autresMachines: false,
+      },
+    ]),
+  );
+  if (!actifs.length) return out;
+  const { rows } = await sql<{
+    actif_id: string;
+    statut: 'proposee' | 'confirmee';
+    id: string;
+    nom: string | null;
+    adresse: string | null;
+    role: RoleMachine | null;
+    lisible: boolean;
+  }>`SELECT l.actif_id, l.statut, m.id, m.nom, m.adresse, m.role, ${lisible(user)} AS lisible
+     FROM vulnerabilites_alh_liaisons_machines l
+     JOIN vulnerabilites_machines m ON m.id = l.machine_id
+     WHERE l.actif_id = ANY(${[...actifs]}::uuid[]) AND l.statut IN ('proposee', 'confirmee')
+     ORDER BY lower(coalesce(m.nom, m.adresse, '')), m.id`.execute(k);
+  for (const r of rows) {
+    const x = out.get(r.actif_id)!;
+    if (!r.lisible) {
+      if (r.statut === 'confirmee') x.autresMachines = true;
+      continue;
+    }
+    if (r.statut === 'proposee') x.propositions++;
+    else if (x.machines.length < LIAISONS_MACHINES_PAR_ACTIF_MAX)
+      x.machines.push({ id: r.id, nom: r.nom, adresse: r.adresse, role: r.role });
+  }
+  return out;
+}
+
 interface LigneLiaison {
   id: string;
   actif_id: string;

@@ -608,6 +608,15 @@ export const vulnerabilitesRoutes = [
   }),
   route({
     method: 'GET',
+    url: '/api/vulnerabilites/surface/carte',
+    summary:
+      'Carte « Lignes d’approche » de la surface externe : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles ; bornée, déjà filtrée par les droits',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.carte((s as Session).user),
+  }),
+  route({
+    method: 'GET',
     url: '/api/vulnerabilites/surface/technologies',
     summary:
       'Technologies AlgoLightHouse détectées sur des actifs lisibles, versions et CVE (score, EPSS, preuve, exploitation selon l’éditeur, priorité), produits surveillés rapprochés ; tri par priorité',

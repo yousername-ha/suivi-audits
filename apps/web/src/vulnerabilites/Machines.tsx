@@ -380,7 +380,7 @@ export function ExpositionMachine({ exposition }: { exposition: ExpositionMachin
 
 /** Fiche d'une machine : rang et faits, exposition sur Internet, produits surveillés reliés, relier un produit (droit de
     modifier le module). */
-function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: boolean }) {
+export function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: boolean }) {
   const qc = useQueryClient();
   const [choix, setChoix] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);

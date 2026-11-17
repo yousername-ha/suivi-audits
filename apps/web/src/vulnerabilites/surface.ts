@@ -61,6 +61,8 @@ export const urlActifsAlh = (q: string, type: TypeActifAlh | '', page = 1, liais
 export const urlTechnologiesAlh = (q: string, exploitee: boolean, page = 1, tri: TriSurface | '' = '') =>
   adresse('technologies', { q, exploitee: exploitee ? 'oui' : '', tri }, page);
 export const urlFicheAlerteAlh = (id: string) => `${API}/alertes/${encodeURIComponent(id)}`;
+/** Carte « Lignes d'approche » (lot ALH4). */
+export const URL_CARTE_SURFACE = `${API}/carte`;
 
 /** Ordres proposés par les listes (lot ALH2). */
 export const OPTIONS_TRI_ALERTES = [

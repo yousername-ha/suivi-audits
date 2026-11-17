@@ -6,7 +6,9 @@
    demandée. Lot ALH2 : colonne « Priorité » et tri par priorité des alertes et des technologies (sans données, la fiche
    d'une alerte et ses recommandations sont couvertes par les tests de l'interface et de l'API). Lot ALH3 : colonne et
    filtre « Machine interne » de l'onglet des actifs (sans données, la fiche d'un actif, ses propositions et la liaison à la
-   main sont couvertes par les tests de l'interface et de l'API). */
+   main sont couvertes par les tests de l'interface et de l'API). Lot ALH4 : onglet « Carte » affiché en premier, vide sur une
+   pile vierge (le dessin, les filtres, le repli et le chemin critique sont couverts par les tests de l'interface et de
+   l'API). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -81,6 +83,11 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(page.getByRole('heading', { name: 'Surface externe', level: 1 })).toBeVisible();
     await expect(page.getByText(nom, { exact: true })).toBeVisible();
     await expect(page.getByText('Jamais synchronisé').first()).toBeVisible();
+    // Lot ALH4 : l'onglet « Carte » s'affiche en premier ; sans données, la carte se dit vide.
+    await expect(page.getByRole('tab', { name: 'Carte', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByText(/la carte est vide/)).toBeVisible();
+    await accessible();
+    await page.getByRole('tab', { name: 'Alertes', exact: true }).click();
     await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Criticité', exact: true })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Statut chez l’éditeur', exact: true })).toBeVisible();

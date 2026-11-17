@@ -458,6 +458,19 @@ personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session «
   « Surface externe » : colonne et filtre « Machine interne », fiche d'un actif (confirmer, rejeter, relier avec recherche,
   délier) ; écran « Machines » : « Exposée sur Internet par … » dans la fiche. Sans effet sur la priorité ; l'assistant n'en
   reçoit rien. Migration `083`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH4 : carte « Lignes d'approche » de la surface externe**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH4 » ; carte retenue par le RSSI le 17/11/2026).
+  Nouvel onglet « Carte », affiché en premier dans « Surface externe » : de l'Internet aux branches (par domaine parent ou par
+  périmètre, défaut à confirmer), aux domaines, aux hôtes exposés, aux alertes ouvertes, puis, derrière le rempart, aux
+  machines internes reliées. Route `GET /api/vulnerabilites/surface/carte` (lecture, déjà filtrée par les droits du lot ALH3,
+  bornée, troncature signalée) ; mise en page par fonctions pures côté web. Branches sans alerte repliées en faisceaux chiffrés,
+  « Tout replier », « Tout déplier » borné à 250 lignes ; filtres texte, criticité, « Branches en alerte seulement »,
+  périmètre et type d'alerte ; chemin d'entrée critique (alerte ouverte en P1) en rouge pointillé animé jusqu'aux machines,
+  typosquatting et fuites côté Internet, « à relier » pour qui peut modifier, machine illisible jamais nommée ; glisser,
+  Ctrl + molette, boutons et clavier pour se déplacer et zoomer, vue d'ensemble ; clic sur un nœud : fiche existante de
+  l'alerte, de l'actif ou de la machine. Dessin SVG sans style en ligne, animations coupées par le mouvement réduit. Pas de
+  colonne « services » : AlgoLightHouse ne les range pas à part, l'alerte la plus haute de la ligne en tient lieu. Sans
+  migration ni dépendance. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
 
 ### Ajouté
 

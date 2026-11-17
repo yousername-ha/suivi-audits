@@ -24,11 +24,16 @@
    - C : lecture pour l'assistant (exposition d'une CVE) et liste des actifs à masquer (domaines et adresses), utilisées par
      le service de l'assistant (assistant.ts), qui ne remet au modèle que des repères (« E-001 ») et des compteurs.
    Lot ALH3 : la fin d'une synchronisation reçue recalcule les propositions de liaison des actifs aux machines internes
-   (liaisons-machines.ts) ; la liste des actifs porte leurs machines internes lisibles et se filtre par leur état. */
+   (liaisons-machines.ts) ; la liste des actifs porte leurs machines internes lisibles et se filtre par leur état.
+   Lot ALH4 : graphe de la carte « Lignes d'approche » (actifs, alertes ouvertes, machines reliées), lu par les mêmes règles
+   de droits, borné ; la mise en page est faite par l'interface. */
 import {
   type ActifAlhDto,
   type AlerteAlhDto,
+  type AlerteCarteDto,
   BilanSynchronisationAlh,
+  CARTE_SURFACE_BORNES,
+  type CarteSurfaceDto,
   calculerPriorite,
   type CveAlerteAlhDto,
   DefautsAlh,
@@ -83,7 +88,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
-import { filtreLiaison, resumesLiaisons } from './liaisons-machines.js';
+import { filtreLiaison, liaisonsCarte, resumesLiaisons } from './liaisons-machines.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
 import { lisibleAlh } from './sql.js';
 
@@ -1095,6 +1100,117 @@ export class SurfaceExterneAlh implements OperationEnLots {
           }),
         };
       }),
+    };
+  }
+
+  /* ---------------------------------------------------------------- Carte « Lignes d'approche » (lot ALH4) */
+  /** Graphe de la surface externe pour la carte, déjà filtré par les droits de la personne : actifs lisibles et présents
+      (ceux qui portent une alerte ouverte lisible d'abord), leur domaine parent s'il est lui aussi rendu, leurs machines
+      internes reliées lisibles (lot ALH3), et les alertes ouvertes lisibles et présentes avec leur priorité (la plus haute
+      de leurs CVE, présence « exposée »). Borné (CARTE_SURFACE_BORNES) ; rien n'est écrit. */
+  async carte(user: SessionUser): Promise<CarteSurfaceDto> {
+    const { rows: actifs } = await sql<{
+      id: string;
+      type: TypeActifAlh;
+      valeur: string;
+      adresse: string | null;
+      niveau: number | null;
+      parent_alh: string | null;
+      alh_id: string;
+      integration_id: string;
+      liaisons_version: number;
+      perimetre_alh_nom: string | null;
+      perimetre_nom: string | null;
+      total: number;
+    }>`
+      SELECT x.id, x.type, x.valeur, x.adresse, x.niveau, x.parent_alh, x.alh_id, x.integration_id, x.liaisons_version,
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom, count(*) OVER ()::int AS total
+      FROM vulnerabilites_alh_actifs x
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+      LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
+      WHERE ${lisible(user)} AND ${present('x')}
+      ORDER BY EXISTS (SELECT 1 FROM vulnerabilites_alh_alertes a2
+           LEFT JOIN vulnerabilites_alh_perimetres lp2 ON lp2.integration_id = a2.integration_id
+             AND lp2.alh_id = a2.perimetre_alh
+           WHERE a2.integration_id = x.integration_id AND a2.statut = ANY(${OUVERTS}::text[]) AND ${present('a2')}
+             AND ${lisible(user, 'lp2')}
+             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id))
+        ) DESC, x.type, x.valeur, x.id
+      LIMIT ${CARTE_SURFACE_BORNES.actifs}`.execute(this.db.k);
+    const { rows: alertes } = await sql<{
+      id: string;
+      type: TypeAlerteAlh | null;
+      criticite: CriticiteAlh | null;
+      titre: string;
+      cible_type: TypeCibleAlh | null;
+      cible_valeur: string | null;
+      cible_hote: string | null;
+      cible_domaine: string | null;
+      integration_id: string;
+      cves: string[];
+      total: number;
+    }>`
+      SELECT a.id, a.type, a.criticite, a.titre, a.cible_type, a.cible_valeur, a.cible_hote, a.cible_domaine,
+        a.integration_id,
+        coalesce((SELECT array_agg(ac.cve ORDER BY ac.cve) FROM vulnerabilites_alh_alerte_cves ac
+                  WHERE ac.alerte_id = a.id), '{}') AS cves,
+        count(*) OVER ()::int AS total
+      FROM vulnerabilites_alh_alertes a
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = a.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = a.integration_id AND lp.alh_id = a.perimetre_alh
+      WHERE ${lisible(user)} AND ${present('a')} AND a.statut = ANY(${OUVERTS}::text[])
+      ORDER BY CASE a.criticite WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'important' THEN 2 WHEN 'minor' THEN 3
+               ELSE 4 END, coalesce(a.maj_alh_le, a.cree_alh_le) DESC NULLS LAST, a.id
+      LIMIT ${CARTE_SURFACE_BORNES.alertes}`.execute(this.db.k);
+    // Identité d'un actif chez l'éditeur (instance, nature, identifiant) -> actif rendu par la carte.
+    const cle = (integration: string, type: TypeActifAlh, alh: string) => `${integration}|${type}|${alh}`;
+    const rendus = new Map(actifs.map((x) => [cle(x.integration_id, x.type, x.alh_id), x.id]));
+    const liaisons = await liaisonsCarte(
+      this.db.k,
+      user,
+      actifs.map((x) => x.id),
+    );
+    const { priorite } = await this.evaluateur(
+      user,
+      alertes.flatMap((a) => a.cves),
+    );
+    return {
+      actifs: actifs.map((x) => {
+        const l = liaisons.get(x.id)!;
+        return {
+          id: x.id,
+          type: x.type,
+          valeur: x.valeur,
+          adresse: x.adresse,
+          niveau: x.niveau,
+          parentId:
+            x.type === 'domaine' && x.parent_alh
+              ? (rendus.get(cle(x.integration_id, 'domaine', x.parent_alh)) ?? null)
+              : null,
+          perimetreNom: x.perimetre_nom,
+          perimetreAlh: x.perimetre_alh_nom,
+          machines: l.machines,
+          propositions: l.propositions,
+          autresMachines: l.autresMachines,
+          versionLiaisons: x.liaisons_version,
+        };
+      }),
+      alertes: alertes.map((a): AlerteCarteDto => ({
+        id: a.id,
+        type: a.type,
+        criticite: a.criticite,
+        titre: a.titre,
+        cves: a.cves.slice(0, CARTE_SURFACE_BORNES.cvesParAlerte),
+        priorite: prioriteLaPlusHaute(a.cves.map((c) => priorite(c, 'exposee')))?.niveau ?? null,
+        cible: a.cible_type || a.cible_valeur ? { type: a.cible_type, valeur: a.cible_valeur } : null,
+        actifId:
+          (a.cible_hote ? rendus.get(cle(a.integration_id, 'hote', a.cible_hote)) : undefined) ??
+          (a.cible_domaine ? rendus.get(cle(a.integration_id, 'domaine', a.cible_domaine)) : undefined) ??
+          null,
+      })),
+      tronquee: (actifs[0]?.total ?? 0) > actifs.length || (alertes[0]?.total ?? 0) > alertes.length,
+      totaux: { actifs: actifs[0]?.total ?? 0, alertes: alertes[0]?.total ?? 0 },
     };
   }
 
