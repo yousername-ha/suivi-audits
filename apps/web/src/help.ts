@@ -164,6 +164,23 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-alertes',
+    title: 'Vulnérabilités : alertes et fenêtre d’alerte critique',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/alertes',
+    steps: [
+      'Les alertes sont décidées par la plateforme, par une règle fixe, jamais par l’assistant ni par le modèle. Une alerte critique s’ouvre quand une faille exploitée est présente chez nous (priorité P1 : exploitation avérée selon une source, et faille détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet), y compris quand la priorité monte parce qu’un actif exposé mène à une machine interne vulnérable. Une alerte simple s’ouvre quand une faille présente passe en P2 (seuil à confirmer par le RSSI) ; rien pour P3 et P4.',
+      'Elles sont évaluées à la fin de chaque collecte de la veille, de chaque synchronisation de Tenable ou d’AlgoLightHouse, et après une décision qui change les faits (produit surveillé, rapprochement, état d’une faille, liaison d’un actif, seuil de priorité). Une faille (une CVE, ou un constat de Tenable sans CVE) n’a qu’une alerte à la fois : elle se met à jour sans se rejouer ; une alerte simple qui devient critique est notifiée une fois de plus.',
+      'Une alerte se clôt d’elle-même, avec son motif : la faille n’est plus présente (absente des synchronisations complètes, produit non rattaché, exposition close), elle est traitée (corrigée, risque accepté ou non concernée), ou sa priorité redescend sous le seuil. Si la faille revient, une nouvelle alerte s’ouvre.',
+      'Fenêtre d’alerte critique : tant qu’une alerte critique n’est pas prise en compte, une grande fenêtre rouge s’affiche sur toutes les pages aux personnes qui lisent le module Vulnérabilités. Elle donne le titre de la faille, la CVE, le produit, la présence chez nous, les sources de l’exploitation et l’heure ; plusieurs alertes sont listées dans la même fenêtre, la plus récente en tête. Elle s’affiche au-dessus de la page sans la fermer : une saisie en cours est gardée. La touche Échap ne la ferme pas.',
+      'Avec le droit de modifier le module : « Pris en compte » la retire pour tout le monde et l’inscrit au journal d’audit (qui, quand) ; « Plus tard » la masque jusqu’à votre prochaine connexion ; « Ouvrir la fiche » la masque aussi et ouvre la fiche de l’alerte. Avec la lecture seule : « Fermer pour cette session » (elle réapparaît à la connexion suivante tant que l’alerte n’est pas prise en compte) et « Ouvrir la fiche ». Les animations s’arrêtent quand le système demande de réduire les mouvements.',
+      'Onglet « Alertes » : la liste (niveau, faille, priorité et ses faits, présence, état : ouverte, prise en compte ou close, par qui et quand), filtrée par état et par niveau ; la fiche s’ouvre par le titre. Un rappel discret s’affiche en tête des écrans du module tant qu’une alerte critique est en cours.',
+      'Droits et confidentialité : la priorité et l’existence d’une alerte sont les mêmes pour tout le monde ; les nombres ne comptent que les machines et les actifs exposés que vous pouvez lire, et disent seulement qu’il y en a d’autres, sans nombre. Aucune alerte ne nomme une machine, un domaine, une adresse ou un périmètre : ils se lisent dans les écrans du module, selon vos droits.',
+      'Notifications : chaque alerte est aussi notifiée aux personnes qui lisent le module (types « Vulnérabilités : alerte critique » et « Vulnérabilités : alerte » de Mon compte, rubrique Notifications), dans l’application et par courriel si vous l’avez choisi et si le courriel est configuré. Le courriel ne contient que le niveau, la CVE, le produit et le lien vers l’application. Les alertes simples sont notifiées vingt au plus par évaluation ; les autres sont dans l’onglet « Alertes ». Elles paraissent dans Mes rappels si vous lisez aussi un module métier.',
+      'Module désactivé : aucune alerte n’est évaluée, affichée ni notifiée.',
+    ],
+  },
+  {
     id: 'vulnerabilites-suivi',
     title: 'Vulnérabilités : suivi d’une faille et actions',
     permission: 'vulnerabilites:lire',

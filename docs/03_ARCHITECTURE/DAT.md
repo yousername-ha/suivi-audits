@@ -126,6 +126,16 @@ recopiées du paquet partagé et comparées par `integrations-architecture.test.
 protocole (`vulnerabilites_alh_services`, `UNIQUE NULLS NOT DISTINCT`), liens vers les alertes
 (`vulnerabilites_alh_service_alertes`) remplacés à chaque lecture du détail (`apps/api/src/vulnerabilites/services-surface.ts`) ;
 rendu sous les droits de l'actif, tant qu'une alerte ouverte et présente porte le service ; rien ne part vers l'assistant.
+Lot V6 (migration `086`, `apps/api/src/vulnerabilites/alertes.ts`) : alertes décidées par la plateforme (règles pures
+`packages/shared/src/alertes-vulnerabilites.ts`, aucun appel au modèle ni réseau). Évaluation sous un verrou consultatif, à la
+fin de chaque synchronisation reçue de Tenable ou d'AlgoLightHouse (dans sa transaction, sous un point de sauvegarde : un échec
+est journalisé et annulé seul), après chaque collecte reçue de la veille et après les décisions qui changent les faits (dans une
+transaction propre, après la leur) ; module désactivé : rien. Faits sur tous les faits connus (lot ALH5), une alerte ouverte par
+faille (`vulnerabilites_alertes`, index unique partiel sur `cle`), prise en compte par `vulnerabilites:modifier` avec `If-Match`.
+Notifications par le module existant (`grc_notifications`, types `vulnerabilites_alerte_critique` et `vulnerabilites_alerte`
+sans SMSI ni objet, `NotificationsMetier.diffuser`, courriel par l'exécutant si la personne l'a choisi) : niveau, CVE, produit et
+lien seulement, jamais de nom de machine, de domaine, d'adresse ni de périmètre. Temps réel : entité `vulnerabilites_alertes`
+(`vulnerabilites:lire`). Fenêtre d'alerte critique côté interface, montée une fois dans la mise en page.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
 connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant

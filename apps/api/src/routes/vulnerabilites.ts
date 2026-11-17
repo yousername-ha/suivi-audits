@@ -29,8 +29,13 @@
    avec `modifier`, If-Match sur la version des liaisons de l'actif, écriture sur le périmètre de l'actif et sur le
    périmètre effectif de la machine (service LiaisonsMachines).
    Lot ALH5 : liaison en masse par motif à joker, avec `modifier` : aperçu obligatoire (rien n'est écrit), puis application
-   des seules paires de l'aperçu validé (empreinte), chacune revérifiée ; une entrée de journal par opération. */
+   des seules paires de l'aperçu validé (empreinte), chacune revérifiée ; une entrée de journal par opération.
+   Lot V6 : alertes décidées par la plateforme. Liste, fiche et fenêtre d'alerte critique avec `lire` (priorité et faits pour
+   tous, nombres limités à ce que la personne lit, aucun nom) ; prise en compte avec `modifier` et If-Match sur la version de
+   l'alerte. Les décisions qui changent les faits (produit, rapprochement, état de suivi, liaison d'un actif, seuil) font
+   réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision. */
 import {
+  RechercheAlertesVulnerabilites,
   ApplicationLiaisonMasse,
   DemandeLiaisonMasse,
   AffectationMachine,
@@ -82,6 +87,57 @@ const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uui
 export const vulnerabilitesRoutes = [
   route({
     method: 'GET',
+    url: '/api/vulnerabilites/alertes',
+    summary:
+      'Alertes du module (critiques : P1, faille exploitée présente ; simples : P2), filtrées par état et niveau ; nombres limités à ce que la personne lit, aucun nom',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAlertesVulnerabilites,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.alertes.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/alertes/fenetre',
+    summary:
+      'Fenêtre d’alerte critique : alertes critiques ouvertes non prises en compte, la plus récente en tête (bornées), et droit de les prendre en compte',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.alertes.fenetre((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/alertes/:id',
+    summary: 'Fiche d’une alerte (ETag : version de l’alerte)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const a = await svc.vulnerabilites.alertes.lire((s as Session).user, params.id);
+      setEtag(reply, a.version);
+      return a;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/alertes/:id/prise-en-compte',
+    summary:
+      'Prendre une alerte en compte, pour tout le monde (If-Match : version de l’alerte) ; tracé au journal ; la fenêtre d’alerte critique disparaît',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const a = await svc.vulnerabilites.alertes.prendreEnCompte(
+        params.id,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, a.version);
+      return a;
+    },
+  }),
+  route({
+    method: 'GET',
     url: '/api/vulnerabilites/produits',
     summary: 'Produits surveillés du registre de l’organisation, éventuellement filtrés par famille',
     tags,
@@ -112,6 +168,7 @@ export const vulnerabilitesRoutes = [
     status: 201,
     handler: async ({ svc, s, body, ip, reply }) => {
       const p = await svc.vulnerabilites.produits.creer(body, (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('produit-cree');
       setEtag(reply, p.version);
       return p;
     },
@@ -132,6 +189,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('produit-modifie');
       setEtag(reply, p.version);
       return p;
     },
@@ -145,6 +203,7 @@ export const vulnerabilitesRoutes = [
     params: id,
     handler: async ({ svc, s, params, req, ip }) => {
       await svc.vulnerabilites.produits.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('produit-supprime');
     },
   }),
   route({
@@ -405,6 +464,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('rapprochement-decide');
       setEtag(reply, r.version);
       return r;
     },
@@ -426,6 +486,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('rapprochement-annule');
       setEtag(reply, r.version);
       return r;
     },
@@ -482,6 +543,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('suivi-etat');
       setEtag(reply, r.version);
       return r;
     },
@@ -689,6 +751,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('liaison-manuelle');
       setEtag(reply, f.versionLiaisons);
       return f;
     },
@@ -721,8 +784,11 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:modifier',
     body: ApplicationLiaisonMasse,
-    handler: async ({ svc, s, body, ip }) =>
-      svc.vulnerabilites.liaisonsMachines.appliquerMasse((s as Session).user, body, ip),
+    handler: async ({ svc, s, body, ip }) => {
+      const r = await svc.vulnerabilites.liaisonsMachines.appliquerMasse((s as Session).user, body, ip);
+      await svc.vulnerabilites.alertes.evaluer('liaison-masse');
+      return r;
+    },
   }),
   route({
     method: 'POST',
@@ -741,6 +807,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('liaison-decidee');
       setEtag(reply, f.versionLiaisons);
       return f;
     },
@@ -762,6 +829,7 @@ export const vulnerabilitesRoutes = [
         (s as Session).user,
         ip,
       );
+      await svc.vulnerabilites.alertes.evaluer('liaison-deliee');
       setEtag(reply, f.versionLiaisons);
       return f;
     },
@@ -797,6 +865,7 @@ export const vulnerabilitesRoutes = [
     body: ReglagePriorite,
     handler: async ({ svc, s, body, req, ip, reply }) => {
       const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('seuil-priorite');
       setEtag(reply, r.version);
       return r;
     },

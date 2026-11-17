@@ -71,3 +71,4 @@ export * from './priorite-vulnerabilites.js';
 export * from './suivi-vulnerabilites.js';
 export * from './assistant-vulnerabilites.js';
 export * from './masque-vulnerabilites.js';
+export * from './alertes-vulnerabilites.js';

@@ -212,6 +212,9 @@ export const TABLES_TRAVAIL = [
   // les actifs et les alertes qui les portent.
   'vulnerabilites_alh_services',
   'vulnerabilites_alh_service_alertes',
+  // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
+  // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
+  'vulnerabilites_alertes',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

@@ -1370,7 +1370,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
       de l'actif chez l'éditeur (instance, nature, identifiant), pour compter sans doublon. `user` null : tous les porteurs,
       sans droits (lot ALH5, décision A : la présence « exposée sur Internet » est un fait de la priorité, le même pour tout
       le monde) ; ces lignes ne servent alors qu'à un oui ou non et ne sont jamais rendues. */
-  private async porteurs(user: SessionUser | null, cves: readonly string[]) {
+  private async porteurs(user: SessionUser | null, cves: readonly string[], k: Kdb = this.db.k) {
     const lu = user ? lisible(user) : sql<boolean>`true`;
     const liste = [...new Set(cves)];
     if (!liste.length) return [];
@@ -1405,8 +1405,36 @@ export class SurfaceExterneAlh implements OperationEnLots {
       LEFT JOIN vulnerabilites_alh_actifs xa ON xa.integration_id = a.integration_id
         AND ((xa.type = 'hote' AND xa.alh_id = a.cible_hote) OR (xa.type = 'domaine' AND xa.alh_id = a.cible_domaine))
       WHERE ac.cve = ANY(${liste}::text[]) AND ${present('a')} AND a.statut = ANY(${OUVERTS}::text[])
-        AND ${lu}`.execute(this.db.k);
+        AND ${lu}`.execute(k);
     return rows;
+  }
+
+  /** Pour les alertes du module (lot V6) : toutes les CVE exposées sur Internet (version encore détectée d'une technologie
+      présente, ou alerte ouverte et présente qui la cite), sur tous les faits connus et sans droits (décision A du lot
+      ALH5), avec les actifs qui les portent : `cles` (instance, nature, identifiant chez l'éditeur, pour compter sans
+      doublon) et `actifs` (identifiants internes rangés, pour la majoration seulement). Rien n'est rendu tel quel. `k` :
+      la transaction de l'appelant (une synchronisation en cours y est visible). */
+  async expositionsGlobales(k: Kdb = this.db.k): Promise<Map<string, { cles: Set<string>; actifs: Set<string> }>> {
+    const { rows } = await sql<{ cve: string }>`
+      SELECT DISTINCT x.cve FROM (${cvesAlh}) x
+      UNION
+      SELECT ac.cve FROM vulnerabilites_alh_alerte_cves ac
+      JOIN vulnerabilites_alh_alertes a ON a.id = ac.alerte_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = a.integration_id
+      WHERE ${present('a')} AND a.statut = ANY(${OUVERTS}::text[])`.execute(k);
+    const out = new Map<string, { cles: Set<string>; actifs: Set<string> }>();
+    if (!rows.length) return out;
+    for (const r of await this.porteurs(
+      null,
+      rows.map((x) => x.cve),
+      k,
+    )) {
+      let x = out.get(r.cve);
+      if (!x) out.set(r.cve, (x = { cles: new Set(), actifs: new Set() }));
+      if (r.cle) x.cles.add(r.cle);
+      if (r.actif_id) x.actifs.add(r.actif_id);
+    }
+    return out;
   }
 
   /** Pour la veille : sur combien d'actifs lisibles chaque CVE est vue, et par combien d'alertes ouvertes lisibles ;

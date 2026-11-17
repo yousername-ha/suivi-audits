@@ -106,6 +106,9 @@ export class VeilleVulnerabilites {
   /** Recalcul des rapprochements après une collecte NVD (lot V4a) ou CERT Santé (lot V4c : produit cité par une CVE
       absente de NVD) réussie, branché par services.ts. */
   apresCollecte: (() => Promise<unknown>) | null = null;
+  /** Lot V6 : après toute collecte reçue (quelle que soit la source, après le rapprochement), évaluation des alertes. Ne lève
+      jamais (le service des alertes journalise ses échecs). */
+  apresReception: ((source: SourceVeille) => Promise<unknown>) | null = null;
   /** Surface externe (lot ALH2), branchée par services.ts : actifs exposés lisibles qui portent une CVE. */
   surface: SurfaceExterneAlh | null = null;
 
@@ -732,6 +735,7 @@ export class VeilleVulnerabilites {
     // modification suivante).
     if ((r.source === 'nvd' || r.source === 'cert-sante') && r.etat === 'recu' && this.apresCollecte)
       await this.apresCollecte();
+    if (r.etat === 'recu' && this.apresReception) await this.apresReception(r.source);
     return versCollecte(r);
   }
 

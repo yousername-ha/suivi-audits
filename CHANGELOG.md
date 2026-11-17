@@ -131,6 +131,13 @@ les services se remplissent à la synchronisation d'AlgoLightHouse qui suit la m
 relu. Aucun appel réseau nouveau (liste fermée inchangée), aucune action sur le serveur. (session « Module surveillance
 vulnérabilités SMSI »)
 
+**Migration automatique `086`** (module Vulnérabilités, alertes, lot V6 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (table `vulnerabilites_alertes`, trois index et son déclencheur de temps réel ; contrainte de portée de
+`grc_notifications` recréée pour admettre les deux types de notification du module, et un index unique partiel ; aucune donnée
+modifiée), durée négligeable, sans reprise de données : les alertes s'ouvrent à la collecte de la veille ou à la synchronisation
+qui suit la mise à jour, si une faille présente est en P1 ou en P2. Aucun appel réseau nouveau, aucune action sur le serveur.
+(session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -517,6 +524,31 @@ vulnérabilités SMSI »)
   le port (« 443 », « 443/tcp ») et le produit. Onglet « Actifs » (colonne « Services connus »), fiche d'un actif (services et
   alertes lisibles qui les portent) et fiche d'une alerte. Migration `085`. Aide mise à jour.
   (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V6 : alertes et fenêtre d'alerte critique** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  point 21 et addendum « lot V6 » ; décision du RSSI du 17/11/2026). Les alertes sont **décidées par la plateforme**, par règle
+  (paquet partagé, fonctions pures), jamais par l'assistant ; aucun appel au modèle ni appel réseau. **Alerte critique** : une
+  faille présente chez nous (détectée par Tenable, déclarée par un produit surveillé, exposée sur Internet) passe en **P1**
+  (exploitation avérée et présence), majoration du lot ALH5 comprise ; **alerte simple** : une faille présente passe en **P2**
+  (seuil à confirmer par le RSSI) ; rien pour P3 et P4. Évaluées à la fin de chaque collecte reçue de la veille, de chaque
+  synchronisation de Tenable ou d'AlgoLightHouse (dans sa transaction, sous un point de sauvegarde : un échec est journalisé et
+  ne fait pas échouer la synchronisation) et après les décisions qui changent les faits (produit, rapprochement, état de suivi,
+  liaison d'un actif, seuil de priorité). Une alerte par faille (CVE, ou constat sans CVE) tant qu'elle n'est pas close : mise à
+  jour sans rejeu, montée d'une alerte simple en critique notifiée une fois, **clôture automatique** avec son motif (plus
+  présente, traitée, sous le seuil). **Fenêtre d'alerte critique** sur toutes les pages pour qui lit le module, tant que
+  l'alerte n'est pas prise en compte : grande fenêtre rouge (maquette 07), bandes diagonales animées et onde du pictogramme,
+  coupées par le mouvement réduit ; `role="alertdialog"`, focus piégé et rendu, Échap sans effet ; plusieurs alertes dans une
+  seule fenêtre, la plus récente en tête. **Prise en compte par alerte**, pour tout le monde, avec `vulnerabilites:modifier`,
+  `If-Match` et journal (`vulnerabilites.alerte.prise_en_compte`) ; « Plus tard », ou « Fermer pour cette session » en lecture
+  seule (la fenêtre réapparaît à la connexion suivante). Onglet « Alertes » (liste, filtres par état et niveau, fiche, prise en
+  compte) et rappel discret en tête des écrans du module. Priorité et existence de l'alerte pour tous ; nombres limités à ce que
+  la personne lit (drapeau sans nombre pour le reste) ; **aucun nom** de machine, domaine, adresse ni périmètre dans l'API des
+  alertes, la notification ou le courriel. **Notifications** par le module existant : types « Vulnérabilités : alerte
+  critique » et « Vulnérabilités : alerte » (réglages par groupe, rôle et personne ; courriel si choisi et configuré : niveau,
+  CVE, produit et lien seulement), aux personnes qui lisent le module ; vingt alertes simples notifiées au plus par évaluation ;
+  listées dans « Mes rappels » avec un lien vers l'alerte. Temps réel : entité `vulnerabilites_alertes`. Module désactivé : rien
+  n'est évalué, affiché ni notifié. Routes `GET /api/vulnerabilites/alertes`, `GET …/alertes/fenetre`, `GET …/alertes/{id}`,
+  `POST …/alertes/{id}/prise-en-compte`. Migration `086`. Aide en ligne : article « Vulnérabilités : alertes et fenêtre
+  d'alerte critique ». (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 

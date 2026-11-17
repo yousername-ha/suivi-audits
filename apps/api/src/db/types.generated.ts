@@ -1559,6 +1559,29 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesAlertes {
+  id: Generated<string>;
+  cle: string;
+  cve: string | null;
+  niveau: "critique" | "simple";
+  priorite: "P1" | "P2" | "P3" | "P4";
+  etat: Generated<"ouverte" | "prise_en_compte" | "close">;
+  titre: string;
+  produit: string | null;
+  faits: ColumnType<JsonValue, string, string>;
+  empreinte: string;
+  notifiee: Generated<boolean>;
+  ouverte_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  critique_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  prise_par: string | null;
+  prise_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  close_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  motif_cloture: string | null;
+  version: Generated<number>;
+  updated_by: Generated<string>;
+}
+
 export interface VulnerabilitesAlhActifs {
   id: Generated<string>;
   integration_id: string;
@@ -2198,6 +2221,7 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_alertes: VulnerabilitesAlertes;
   vulnerabilites_alh_actifs: VulnerabilitesAlhActifs;
   vulnerabilites_alh_alerte_cves: VulnerabilitesAlhAlerteCves;
   vulnerabilites_alh_alertes: VulnerabilitesAlhAlertes;

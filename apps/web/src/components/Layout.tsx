@@ -43,6 +43,8 @@ import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
 import { MarqueOrganisation } from './MarqueOrganisation';
 import { useOngletVisible } from '../parcours-iso/mouvement';
+import { FenetreAlerteCritique } from '../vulnerabilites/FenetreAlerteCritique';
+import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -345,11 +347,17 @@ export function Layout({ children }: { children: ReactNode }) {
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
           <OngletsRubriques />
+          {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours. */}
+          {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
+            <RappelAlertesCritiques />
+          )}
           {children}
         </main>
       </div>
       {/* Hors de l’Outlet : l’instance et ses brouillons survivent aux changements de rubrique. */}
       <AssistantGlobal onPinned={setAssistantPinned} />
+      {/* Fenêtre d'alerte critique (ADR 0100, lot V6) : sur toutes les pages, au-dessus de la page sans la démonter. */}
+      <FenetreAlerteCritique />
       <Drawer
         opened={opened}
         onClose={close}

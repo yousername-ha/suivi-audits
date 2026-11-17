@@ -364,6 +364,9 @@
 - **Lot ALH4, carte « Lignes d'approche »** (17/11/2026) : sans migration, onglet « Carte » de « Surface externe » (de
   l'Internet aux machines internes reliées, branches repliables, filtres, chemin d'entrée critique). Voir l'addendum « lot
   ALH4 » ci-dessous.
+- **Lot V6, alertes et fenêtre d'alerte critique** (17/11/2026) : migration `086`, alertes décidées par la plateforme (critique
+  en P1, simple en P2), fenêtre rouge sur toutes les pages, prise en compte par alerte, onglet « Alertes », notifications par le
+  module existant. Voir l'addendum « lot V6 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1101,3 +1104,120 @@ pas été joué (CI seulement) ; sur une pile vierge, la carte est vide. Rendu v
 2. Liaison au niveau du **service** (actif + port vers une machine interne), au lieu de l'actif.
 3. Lire `resolved` d'un fragment pour écarter un port résolu, si le RSSI le veut.
 4. Services lus aussi dans les détections de Tenable (port et protocole des constats) pour la machine interne.
+
+## Addendum du 17/11/2026 — lot V6 : alertes décidées par la plateforme, fenêtre d'alerte critique
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `086` (additive :
+table `vulnerabilites_alertes`, trois index et son déclencheur de temps réel ; contrainte de portée de `grc_notifications`
+recréée pour admettre deux types de plus, index unique partiel). Aucun appel réseau, aucun appel au modèle, aucune dépendance
+nouvelle. Réalise le point 21 et la notification « sans assistant » du point 11 ; lève le point ouvert 4 de l'addendum « lot
+ALH1 » et le point ouvert 1 de l'addendum « lot ALH2 » pour les CVE exposées (pas pour une alerte de l'éditeur sans CVE).
+
+### Décision du RSSI (17/11/2026)
+
+« Les alertes ensuite » : être alerté quand une faille devient prioritaire ; « en cas d'alerte critique zero-day, comme PHP, une
+fenêtre alerte rouge en gros comme notification », avec des bandes diagonales animées (maquette validée
+`docs/unification/maquettes-vulnerabilites/07-alerte-critique.png`). La plateforme décide d'une alerte, par règle ; jamais
+l'assistant.
+
+### Réalisation
+
+- **Règles** (`packages/shared/src/alertes-vulnerabilites.ts`, fonctions pures testées en table) : niveau d'alerte d'une faille
+  présente (`niveauAlerte` : P1 critique, P2 simple, rien pour P3 et P4), décision (`deciderAlerte` : créer, mettre à jour sans
+  rejeu, monter, descendre, clore), motif de clôture (`motifCloture` : plus présente, traitée, sous le seuil), empreinte des
+  faits, clé d'une faille (`cleAlerte` : la CVE, ou « constat:<identifiant> » pour un constat sans CVE), titre de notification
+  (niveau, CVE, produit). La priorité reste celle de la grille (`calculerPriorite`, `majorerPriorite`).
+- **Faits** (`apps/api/src/vulnerabilites/alertes.ts`) sur **tous** les faits connus (lot ALH5, décision A) : une faille est
+  présente par un constat de Tenable présent et non traité (présence « détectée », avec les valeurs de Tenable pour ce constat),
+  par une faille déclarée rattachée et non traitée (« déclarée »), ou par une exposition sur Internet (« exposée », version
+  encore détectée d'une technologie ou alerte ouverte et présente de l'éditeur ; majorée si l'actif mène, par liaison
+  confirmée, à une machine interne vulnérable). Sa priorité est la plus haute de ses présences. Rangés avec l'alerte : priorité
+  et faits, présences, sources de l'exploitation avec leur date, nombres globaux, titre et produit ; aucun nom.
+- **Déclenchement** : à la fin de chaque synchronisation reçue de Tenable ou d'AlgoLightHouse, dans sa transaction, sous un point
+  de sauvegarde (un échec est journalisé et annulé seul, la synchronisation reste reçue ; l'évaluation suivante rattrape) ; après
+  chaque collecte reçue de la veille, quelle que soit la source (après le recalcul des rapprochements) ; après une décision qui
+  change les faits, dans une transaction propre qui suit la sienne (produit surveillé créé, modifié ou supprimé, rapprochement
+  décidé ou annulé, état de suivi, liaison d'un actif à la main, décidée, déliée ou en masse, seuil de priorité). Verrou
+  consultatif propre. Module désactivé : rien n'est évalué ni créé.
+- **Une alerte par faille** tant qu'elle n'est pas close (index unique partiel) ; une faille revenue après clôture ouvre une
+  nouvelle alerte. Journal : `vulnerabilites.alerte.ouverte`, `.niveau`, `.close`, `.prise_en_compte`,
+  `vulnerabilites.alertes.evaluees` (identifiants, CVE, niveaux, motifs, nombres, déclencheur ; jamais de nom).
+- **Prise en compte** : `POST /api/vulnerabilites/alertes/{id}/prise-en-compte`, `vulnerabilites:modifier`, `If-Match` sur la
+  version de l'alerte ; 409 sur une alerte close ou déjà prise en compte. Lecture : `GET /api/vulnerabilites/alertes` (filtres
+  état et niveau), `GET …/alertes/fenetre`, `GET …/alertes/{id}` (ETag), avec `vulnerabilites:lire`.
+- **Fenêtre d'alerte critique** (`apps/web/src/vulnerabilites/FenetreAlerteCritique.tsx`), montée une fois dans la mise en page,
+  pour qui lit le module, tant qu'une alerte critique est ouverte et non prise en compte : grande fenêtre rouge centrée d'après la
+  maquette 07, bandes diagonales qui défilent et onde du pictogramme (classes `ac-*` de `packages/ui/src/neon-surface.css`, sans
+  style en ligne ni longueur en px ou rem), toutes coupées sous `prefers-reduced-motion: reduce` et à l'impression ; pas de
+  texte clignotant (contrairement à la maquette). `role="alertdialog"`, `aria-modal`, nom et description accessibles, focus
+  piégé (`FocusTrap`) puis rendu (`useFocusReturn`), Échap sans effet. Au-dessus de la page sans la démonter. Contenu : niveau et
+  priorité, titre, CVE et produit, présence en nombres lisibles, sources de l'exploitation, heure ; plusieurs alertes dans la
+  même fenêtre, la plus récente en tête, cinq listées au plus et le reste compté. Boutons : « Pris en compte », « Plus tard » et
+  « Ouvrir la fiche » avec le droit de modifier ; « Fermer pour cette session » et « Ouvrir la fiche » en lecture seule.
+- **Onglet « Alertes »** (Risques > Vulnérabilités) : liste (niveau, faille, priorité et faits, présence, état, par qui et quand),
+  filtres par état et par niveau, fiche ouverte par le titre ou par `?alerte=` (lien des notifications), prise en compte ; rappel
+  discret en tête des écrans du module tant qu'une alerte critique est en cours. Temps réel : entité `vulnerabilites_alertes`.
+- **Notifications** par le module existant (ADR 0058) : types `vulnerabilites_alerte_critique` et `vulnerabilites_alerte`
+  (réglables par groupe, rôle et personne ; application par défaut, courriel si choisi et si le courriel est configuré), sans
+  SMSI ni objet ; une par personne, alerte et niveau ; titre et courriel : niveau, CVE, produit et lien seulement. Listées dans
+  « Mes rappels » avec un lien vers l'alerte, à qui lit encore le module.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Seuil de l'alerte simple : P2** (le RSSI ne l'a pas fixé ; option prudente). Rien pour P3 et P4.
+- **Prise en compte par alerte, pour tout le monde**, réservée à `vulnerabilites:modifier` (option la plus prudente du cadrage).
+  **Écart avec le point 21**, qui parle d'une prise en compte et d'une fenêtre « par faille et par personne ».
+- **Destinataires** : tous les comptes actifs qui lisent le module, selon leurs réglages de notification (point ouvert 2 : pas de
+  ciblage du responsable du produit). Les réglages personnels s'appliquent aussi aux alertes critiques (contrairement aux
+  alertes de sécurité de l'ADR 0074) ; la fenêtre, elle, ne dépend d'aucun réglage.
+- **Plafond** : vingt alertes simples notifiées par évaluation (les critiques le sont toutes) ; au-delà, elles sont ouvertes et
+  listées sans notification (« notifiée : non »), pour ne pas inonder les personnes au premier passage sur un grand parc.
+- **Montée et descente** : une alerte simple qui devient critique est notifiée une fois de plus et sa prise en compte éventuelle
+  est annulée (la fenêtre doit paraître) ; une alerte critique qui redescend en P2 reste ouverte en alerte simple, sans
+  notification, avec sa prise en compte.
+- **« Plus tard », « Fermer pour cette session » et « Ouvrir la fiche »** masquent la fenêtre dans l'onglet jusqu'à la fin de la
+  session (mémoire de l'onglet, effacée à la déconnexion) ou jusqu'à une nouvelle montée en critique ; un autre onglet la
+  remontre.
+- **Nombres** : machines et actifs exposés que la personne lit, et un drapeau sans nombre pour les autres (comme le lot ALH5) ;
+  jamais de total global, même si la mention « dont n que vous pouvez lire » du cadrage pouvait le laisser entendre.
+- **Faille** : la CVE ; un constat de Tenable avec plusieurs CVE donne une alerte par CVE (priorité de la CVE avec les valeurs de
+  Tenable pour ce constat) ; un constat sans CVE a sa propre alerte (P2 au plus). Une alerte d'AlgoLightHouse sans CVE n'en
+  donne aucune (pas de priorité).
+- **Titre** : nom du catalogue KEV, sinon nom du contrôle de Tenable, sinon éditeur et produit déclaré ; **produit** : celui du
+  catalogue KEV, sinon de NVD, sinon le nom du produit surveillé (sans sa version).
+- **Évaluation globale** à chaque déclencheur (toutes les failles présentes) ; relier un produit à une machine ou changer un
+  périmètre ne la déclenche pas (seuls des nombres changeraient ; ceux qu'on lit sont recalculés à chaque lecture).
+- **« Mes rappels »** : la route des rappels est réservée à qui lit un module métier ; une personne qui ne lit que le module
+  Vulnérabilités reçoit la notification (et le courriel si elle l'a choisi) mais ne la voit pas dans « Mes rappels » ; elle a la
+  fenêtre et l'onglet « Alertes ». Limite du module de notifications, laissée telle quelle (pas de contournement).
+
+### Contradictions relevées avec le cadrage antérieur (non tranchées)
+
+- Point 21 : fenêtre « pour les personnes qui ont le droit de lire le module **et la faille** » et prise en compte « par
+  personne » ; le lot suit le cadrage du 17/11/2026 (existence et priorité communes, lot ALH5 ; prise en compte par alerte).
+- Point 11 et V6 : « l'assistant priorise et alerte », « ronde sur événement » : non réalisé ici (la plateforme alerte sans
+  l'assistant) ; la ronde sur événement reste à faire.
+- Point ouvert 12 : la fenêtre ne s'ouvre qu'au plus haut niveau (P1 : exploitée et présente) ; « exploitée, produit à
+  confirmer » (P2 de la grille) n'ouvre **aucune** alerte, puisque la faille n'est pas présente.
+- Point ouvert 11 (zero-day) : l'alerte critique vaut pour toute faille dont l'exploitation est avérée et présente (réponse
+  proposée), sans distinguer les failles sans correctif publié.
+
+### Non vérifié
+
+Aucune donnée réelle (tests sur données fictives) ; durée de l'évaluation globale sur un parc réel (tous les constats présents,
+toutes les failles déclarées et toutes les expositions à chaque déclencheur, dans la transaction d'une synchronisation) ; envoi
+réel d'un courriel ; plusieurs onglets ouverts ; Docker et Node 26. Rendu vu sur un banc local (Chromium, clair et sombre, 1440
+et 390 px, mouvement normal et réduit, axe `wcag2a`/`wcag2aa` sans violation, CSP stricte, focus piégé et rendu, Échap sans
+effet), pas dans la pile complète. Le parcours Playwright (onglet « Alertes » sur une pile vierge, aucune fenêtre) n'a pas été
+joué (CI seulement) : une pile de test n'a aucune faille présente, la fenêtre n'y est jamais affichée.
+
+### Points ouverts (hors lot)
+
+1. **Niveau d'alerte 1 à 4 et radar** (point 18, maquettes du poste de commandement) : non réalisés ; la fenêtre dit « priorité
+   P1 » et non « niveau 4 sur 4 ».
+2. Confirmer le seuil P2, la prise en compte par alerte, le plafond de notifications et les destinataires (responsable du
+   produit, point ouvert 2).
+3. **Ronde de l'assistant sur événement** quand une alerte critique s'ouvre (point 11).
+4. Alerte sur une alerte **critique d'AlgoLightHouse sans CVE** (criticité de l'éditeur), si le RSSI le veut.
+5. Synthèse périodique des alertes simples (au lieu du plafond), si le volume réel l'exige.
+6. Visibilité dans « Mes rappels » pour une personne qui ne lit que le module Vulnérabilités (route des rappels).

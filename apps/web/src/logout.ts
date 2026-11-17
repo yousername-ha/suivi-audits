@@ -3,6 +3,7 @@
 import type { MeOut } from '@suivi/shared';
 import type { QueryClient } from '@tanstack/react-query';
 import { ApiError, api, setCsrf } from './api';
+import { oublierEcartees } from './vulnerabilites/alertes-session';
 
 export const SESSION_CHANNEL = 'suivi-session';
 export const SESSION_KEY = ['me'] as const;
@@ -17,6 +18,8 @@ export const isPrivateSessionQuery = (q: { queryKey: readonly unknown[] }) =>
 export async function closeLocalSession(qc: QueryClient) {
   await qc.cancelQueries();
   setCsrf(null);
+  // Fenêtre d'alerte critique écartée « pour cette session » : elle réapparaît à la connexion suivante (ADR 0100, lot V6).
+  oublierEcartees();
   qc.setQueryData<MeOut>(SESSION_KEY, (me) =>
     me ? { ...me, stage: 'anon', csrf: null, user: null, permissions: [], preferences: null } : me,
   );

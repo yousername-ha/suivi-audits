@@ -54,6 +54,7 @@ import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
 import { Rapprochements } from './vulnerabilites/rapprochements.js';
 import { SuiviFailles } from './vulnerabilites/suivi.js';
 import { AssistantVulnerabilites } from './vulnerabilites/assistant.js';
+import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -120,11 +121,25 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Lot ALH3 : actifs exposés reliés aux machines internes ; propositions recalculées à la fin de chaque synchronisation
      reçue d'AlgoLightHouse ou de Tenable, dans sa transaction. */
   const liaisonsMachines = new LiaisonsMachines(db, grc);
-  surfaceExterne.apresSynchronisation = (k, c) => liaisonsMachines.recalculer(k, c).then(() => undefined);
+  /* Lot V6 : alertes décidées par la plateforme, évaluées à la fin de chaque synchronisation reçue (dans sa transaction, sous
+     un point de sauvegarde), de chaque collecte reçue de la veille et après les décisions qui changent les faits. */
+  const alertesVulnerabilites = new AlertesVulnerabilites(
+    db,
+    reglagePriorite,
+    modules,
+    surfaceExterne,
+    notificationsMetier,
+  );
+  surfaceExterne.apresSynchronisation = async (k, c) => {
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('synchronisation-algolighthouse', { k, c });
+  };
   tenable.apresSynchronisation = async (k, c, id, complete) => {
     await suivi.apresSynchronisation(k, c, id, complete);
     await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('synchronisation-tenable', { k, c });
   };
+  veille.apresReception = (source) => alertesVulnerabilites.evaluer(`collecte-${source}`);
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
   /* V30 : les machines nommées dans une action suivent le rang des machines. */
@@ -166,6 +181,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       priorite: reglagePriorite,
       masque: motsNonMasques,
       suivi,
+      /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
+      alertes: alertesVulnerabilites,
     },
     modules,
     flux,
