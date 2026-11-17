@@ -1,6 +1,6 @@
 {
   "name": "@suivi/ui",
-  "version": "7.2.2",
+  "version": "7.2.3",
   "private": true,
   "type": "module",
   "description": "Charte graphique : jetons, thème Mantine (clair et sombre), styles statiques et composants communs",
