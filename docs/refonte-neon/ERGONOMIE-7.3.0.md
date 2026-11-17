@@ -51,5 +51,8 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
 ## Contrôles
 
 Prettier, ESLint, `tsc` (web, e2e), Vitest web (441 tests, Node 26 et paquet partagé reconstruit), largeur sans débordement
-à 390 px sur sept pages, vidéo de test de la boîte d'outils sans erreur de page. Suite de bout en bout et captures de
-référence : CI de la PR ; les captures modifiées seront présentées au RSSI avant remplacement.
+à 390 px sur sept pages, vidéo de test de la boîte d'outils sans erreur de page. Suite de bout en bout complète dans le
+conteneur Playwright officiel, sur pile neuve : 238 tests réussis, 2 instables (accessibilité : contraste du lien « Résumé
+des flux vers l'extérieur », hors de ce lot ; courriel : interrupteur au premier essai), aucun échec. Les 68 captures de
+référence changent avec l'en-tête compact. Elles ont été régénérées dans ce conteneur, présentées au RSSI en avant/après
+et remplacées avec son accord du 17/11/2026.
