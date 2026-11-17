@@ -44,3 +44,6 @@ l’historique ; elles ne remplacent pas les consignes actuelles.
 - `conseiller` (Fable, lecture seule) : à consulter seulement sur un point vraiment difficile (conception aux effets étendus, bug
   qui résiste, migration destructive, droits). Son avis se vérifie par les tests et la CI ; il ne remplace aucune décision du RSSI.
 - `rssi-virtuel` : recette exploratoire sur une pile vierge (voir sa définition).
+- `expert-referentiels` (Fable, lecture seule) : fidélité des référentiels livrés et des fonctions aux référentiels officiels
+  (ISO 27001, HDS, ISO 27035, EBIOS RM, ISO 9001, NIS 2…), veille des éditions, contrôle de la mise en œuvre. Son rapport se
+  vérifie ; il ne certifie rien et ne remplace aucune décision du RSSI.
