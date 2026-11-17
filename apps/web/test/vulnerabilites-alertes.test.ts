@@ -77,12 +77,19 @@ const fenetre = (props: Partial<Parameters<typeof FenetreAlerteCritiqueVue>[0]> 
     }),
   );
 const boutons = (html: string) => [...html.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/gi)].map((m) => texte(m[1]!));
-const texte = (html: string) =>
-  html
-    .replace(/<[^>]+>/g, '')
+/** Texte lisible d'un fragment rendu : les balises sont retirées jusqu'à ce qu'il n'en reste plus aucune. */
+const texte = (html: string) => {
+  let reste = html;
+  let avant: string;
+  do {
+    avant = reste;
+    reste = reste.replace(/<[^>]*>/g, '');
+  } while (reste !== avant);
+  return reste
     .replace(/&#x27;|&#39;/g, '’')
     .replace(/\s+/g, ' ')
     .trim();
+};
 
 describe('fenêtre d’alerte critique', () => {
   it('rôle alertdialog, modale, nom et description accessibles reliés', () => {
