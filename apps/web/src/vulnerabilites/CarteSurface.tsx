@@ -196,7 +196,8 @@ function DessinRangee({
             className={`sc-forme sc-domaine ${p ? classeCriticite(p.criticite) : 'sc-sans-alerte'}`}
           />
           <text x={X.domaine} y={r.y - 13} textAnchor="middle" className="sc-texte sc-texte--secondaire">
-            {tronque(l.etiquette, 28)}
+            {/* Nom de domaine complet : un libellé court comme « vpn » se lirait comme un nom de service. */}
+            {tronque(l.domaine?.valeur ?? l.etiquette, 32)}
           </text>
         </Bouton>
       )}
@@ -215,7 +216,10 @@ function DessinRangee({
         >
           {l.critique && <circle cx={X.alerte} cy={r.y} r={13} className="sc-halo" />}
           <circle cx={X.alerte} cy={r.y} r={7} className={`sc-forme sc-alerte ${classeCriticite(p.criticite)}`} />
-          <text x={X.alerte} y={r.y - 16} textAnchor="middle" className="sc-texte">
+          <text x={X.alerte} y={r.y - 27} textAnchor="middle" className="sc-texte sc-texte--secondaire">
+            {tronque(libelleTypeAlerte(p.type), 26)}
+          </text>
+          <text x={X.alerte} y={r.y - 15} textAnchor="middle" className="sc-texte">
             {tronque(libelleAlertes(l), 26)}
           </text>
         </Bouton>
@@ -556,7 +560,7 @@ export function CarteSurface({
             />
             {COLONNES.map((c) => (
               <text key={c.cle} x={c.x} y={HAUT - 34} textAnchor="middle" className="sc-texte sc-colonne">
-                {c.libelle}
+                {c.cle === 'groupe' && regroupement === 'perimetre' ? 'Périmètre' : c.libelle}
               </text>
             ))}
             <rect

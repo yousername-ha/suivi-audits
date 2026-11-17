@@ -300,12 +300,12 @@ export const MACHINES_PAR_LIGNE = 3;
 
 export const COLONNES = [
   { cle: 'internet', libelle: 'Internet', x: X.internet },
-  { cle: 'groupe', libelle: 'Branches', x: (X.groupe + X.groupeFin) / 2 },
-  { cle: 'domaine', libelle: 'Domaines', x: X.domaine },
-  { cle: 'hote', libelle: 'Hôtes exposés', x: X.hote },
-  { cle: 'alerte', libelle: 'Alertes ouvertes', x: X.alerte },
-  { cle: 'rempart', libelle: 'Rempart', x: X.rempart },
-  { cle: 'machine', libelle: 'Machines internes', x: X.machine + 70 },
+  { cle: 'groupe', libelle: 'Domaine parent', x: (X.groupe + X.groupeFin) / 2 },
+  { cle: 'domaine', libelle: 'Nom de domaine', x: X.domaine },
+  { cle: 'hote', libelle: 'IP publique', x: X.hote },
+  { cle: 'alerte', libelle: 'Alerte ouverte', x: X.alerte },
+  { cle: 'rempart', libelle: 'Limite du SI', x: X.rempart },
+  { cle: 'machine', libelle: 'Machine interne', x: X.machine + 70 },
 ] as const;
 
 export type ParCriticite = Record<CriticiteAlh | 'inconnue', number>;
