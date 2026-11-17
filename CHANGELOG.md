@@ -25,6 +25,12 @@ _(Session « Projet audit_suivi Coeur ».)_
   Caddy, `Caddyfile.gateway` et `Caddyfile.internal`, `demarrer-gateway`, la page de maintenance entière (thème et polices),
   busybox et son chargeur. Chemins triés, sans date : deux constructions des mêmes fichiers donnent la même empreinte.
   _(Session « Projet audit_suivi Coeur ».)_
+- **Frontal à la demande rejoué sur une pile réelle en CI** (`scripts/ci/update-integree.py`) : les images locales de la recette
+  sont désignées par leur empreinte de dépôt, comme par l'exécutant ; l'exécutant de la cible (code de l'image `updater`, sans
+  contournement) laisse le frontal intact quand les empreintes sont identiques, et le recrée réellement (validation, même
+  certificat, coupure annoncée puis retirée, fichier ajouté servi) vers une image `web` dont le frontal diffère. Calcul de
+  l'empreinte déplacé dans `docker/empreinte-frontal.sh`, partagé par l'image `web` et la recette (même valeur qu'avant).
+  _(Session « Projet audit_suivi Coeur ».)_
 - **Coupure du frontal annoncée sur la page de maintenance** : l'état publié porte un indicateur `coupure` pendant la
   recréation du frontal ; la page affiche alors un encadré (redémarrage du frontal, interruption de quelques secondes, reprise
   automatique, recharger si la page ne revient pas après une minute), repris par l'avis de connexion si la connexion se perd.

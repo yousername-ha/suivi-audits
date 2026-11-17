@@ -52,3 +52,6 @@ revenir au frontal figé, le RSSI retient une mise à jour du frontal **à la de
 - Une coupure de quelques secondes de la page à la fin des seules mises à jour qui changent le frontal, annoncée sur la page.
 - Une ancienne installation (frontal sans empreinte) voit son frontal mis à jour une fois, à la première mise à jour web.
 - Toute modification d'un fichier servi par le frontal (page de maintenance, thème, polices) déclenche ce redémarrage.
+- Vérification : la recette CI de la mise à jour intégrée (`scripts/ci/update-integree.py`) rejoue sur une pile réelle les deux
+  cas, empreintes identiques (frontal intact, sans coupure) et différentes (frontal recréé, même certificat, coupure annoncée
+  puis retirée), avec l'exécutant de production. Le calcul de l'empreinte est un script unique (`docker/empreinte-frontal.sh`).

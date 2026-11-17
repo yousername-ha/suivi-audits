@@ -62,17 +62,10 @@ COPY --chmod=0555 docker/demarrer-gateway.sh /usr/local/bin/demarrer-gateway
 COPY --from=build /src/apps/web/dist /srv
 RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance \
  && chmod 0555 /usr/local/bin/demarrer-web /usr/local/bin/demarrer-gateway
-# Empreinte du frontal « gateway » (ADR 0103), comparée par l'exécutant de mise à jour à celle du frontal en service : contenu
-# de tout ce qu'il exécute ou sert. Caddy, ses deux configurations, demarrer-gateway, la page de maintenance entière (thème et
-# polices compris), et busybox avec le chargeur musl (shell, cat, sed et grep de demarrer-gateway, nc et wget des contrôles
-# de santé). Chemins triés et contenus seuls, sans date : deux constructions des mêmes fichiers donnent la même empreinte.
-RUN set -euo pipefail; \
-    { printf '%s\n' /usr/local/bin/caddy /usr/local/bin/demarrer-gateway /etc/caddy/Caddyfile.gateway \
-        /etc/caddy/Caddyfile.internal /bin/busybox /lib/ld-musl-*.so.1; find /maintenance -type f; } \
-    | LC_ALL=C sort | while IFS= read -r fichier; do sha256sum "$fichier"; done \
-    | sha256sum | cut -d ' ' -f 1 > /etc/suivi-frontal.sha256 \
- && grep -Eqx '[a-f0-9]{64}' /etc/suivi-frontal.sha256 \
- && chown root:root /etc/suivi-frontal.sha256 && chmod 0444 /etc/suivi-frontal.sha256
+# Empreinte du frontal « gateway » (ADR 0103), comparée par l'exécutant de mise à jour à celle du frontal en service, écrite
+# dans /etc/suivi-frontal.sha256 après la dernière copie des fichiers du frontal. Calcul et liste des fichiers dans le script
+# partagé avec la recette CI ; monté pour cette seule étape, il n'est pas copié dans l'image.
+RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh
 USER caddy
 EXPOSE 8080 8443
 CMD ["/usr/local/bin/demarrer-web"]

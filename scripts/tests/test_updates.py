@@ -511,14 +511,26 @@ class FrontalALaDemande(unittest.TestCase):
 
     def test_empreinte_calculee_a_la_construction_de_l_image_web(self):
         """L'image web écrit, à sa construction, l'empreinte lue par l'exécutant, au chemin qu'il lit : contenu de tout ce que
-        le frontal exécute ou sert, chemins triés, après la dernière copie de ces fichiers."""
+        le frontal exécute ou sert, chemins triés, après la dernière copie de ces fichiers. Un seul calcul, dans le script
+        partagé par l'image web et la recette CI qui construit une image web dont le frontal diffère."""
         dockerfile = (ROOT/'docker/web.Dockerfile').read_text()
-        calcul = dockerfile.index(f'> {m.FRONTAL_EMPREINTE}')
+        script = (ROOT/'docker/empreinte-frontal.sh').read_text()
+        self.assertIn(f'SORTIE={m.FRONTAL_EMPREINTE}\n', script)
+        calcul_script = script.index('> "$SORTIE"')
         for fichier in ('/usr/local/bin/caddy', '/usr/local/bin/demarrer-gateway', '/etc/caddy/Caddyfile.gateway',
                         '/etc/caddy/Caddyfile.internal', '/bin/busybox', '/lib/ld-musl-*.so.1', 'find /maintenance -type f'):
-            self.assertIn(fichier, dockerfile[dockerfile.rindex('RUN ', 0, calcul):calcul])
-        self.assertIn('LC_ALL=C sort', dockerfile[:calcul])
-        self.assertIn(f'chmod 0444 {m.FRONTAL_EMPREINTE}', dockerfile)
+            self.assertIn(fichier, script[:calcul_script])
+        self.assertIn('LC_ALL=C sort', script[:calcul_script])
+        self.assertIn('set -eu\n', script)
+        self.assertIn("grep -Eqx '[a-f0-9]{64}' \"$SORTIE\"", script)
+        self.assertIn('chmod 0444 "$SORTIE"', script)
+        # Le Dockerfile lance ce script, monté pour cette seule étape (jamais copié dans l'image) ; la recette CI aussi.
+        appel = 'RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh'
+        self.assertFalse([ligne for ligne in dockerfile.splitlines() if 'empreinte-frontal' in ligne and ligne.startswith(('COPY', 'ADD'))])
+        calcul = dockerfile.index(appel)
+        recette = (ROOT/'scripts/ci/update-integree.py').read_text()
+        self.assertIn("'docker/empreinte-frontal.sh'", recette)
+        self.assertIn('RUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh', recette)
         copies = [ligne for ligne in dockerfile.splitlines() if ligne.startswith('COPY ')
                   and any(c in ligne for c in ('/maintenance', '/etc/caddy', 'demarrer-gateway', '/usr/local/bin/caddy'))]
         self.assertGreaterEqual(len(copies), 6)
