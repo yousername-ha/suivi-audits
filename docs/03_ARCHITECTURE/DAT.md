@@ -137,7 +137,8 @@ reçus. Un arrêt/suppression de conteneur n’est pas une remise à zéro des d
 Sauvegarde complète chiffrée ; clés gardées sur le serveur, pas dans l’API.
 Mise à jour : versions numériques, signatures, sauvegarde avant maintenance,
 migrations, santé et données ; rollback selon reçu durable et archive.
-Le frontal stable est entretenu séparément de la mise à jour web.
+Le frontal stable est entretenu séparément de la mise à jour web (exception
+ponctuelle : la mise à jour web vers 7.2.2 le met aussi à jour, à la fin ; ADR 0061, addendum).
 
 **Dimensionnement retenu (28/10/2026) : une organisation, une quinzaine d’utilisateurs
 simultanés au plus, une seule instance d’API** (limiteurs en mémoire, verrous

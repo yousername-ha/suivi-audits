@@ -1,6 +1,7 @@
 # ADR 0063 — Chaîne de publication durcie (actions par empreinte, Trivy isolé, attestation SBOM vérifiée)
 
 - Statut : acceptée
+- **Complétée par** l'[ADR 0102](0102-etiquette-de-version-par-workflow-approuve.md) (étiquette posée par un workflow approuvé par le RSSI).
 - Date : 2026-10-26
 - Contexte : décisions du RSSI du 26/10/2026 (points 3, 4 et 7). Depuis l'[ADR 0061](0061-mise-a-jour-web-renforcee.md),
   un compte administrateur compromis ne peut installer qu'une version publiée et signée : le risque principal devient une

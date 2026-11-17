@@ -8,6 +8,72 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune action.
 
+## [7.2.2] — 2026-11-17
+
+Version corrective, numérotée par le RSSI : aucune migration, aucune nouvelle dépendance. Décision du RSSI du 17/11/2026 : la
+mise à jour **depuis l'interface** vers la 7.2.2, et elle seule, met aussi à jour le frontal du site (`gateway`), habituellement
+figé pendant une mise à jour web ([ADR 0061](docs/adr/0061-mise-a-jour-web-renforcee.md), addendum du 17/11/2026), pour que la
+nouvelle page de maintenance Neon (7.2.0) soit enfin servie. Exception ponctuelle, retirée à la version suivante : ensuite, le
+frontal redevient figé comme avant. Section rédigée par la session « Projet audit_suivi Coeur ».
+
+### Notes de mise à jour
+
+**Aucune action sur le serveur, aucune migration.**
+
+- **Mise à jour depuis l'interface** (Configuration système → Mises à jour et versions) : à la fin de l'opération, une fois la
+  7.2.2 démarrée et ses contrôles de santé et de données réussis, le frontal est mis à jour à son tour (nouvelle page de
+  maintenance). Sa configuration est d'abord validée avec la nouvelle image ; il garde son mode de certificat (ACME, fourni ou
+  autorité interne) et doit servir exactement le même certificat qu'avant.
+- **Coupure de quelques secondes à la fin : elle est normale.** La page de mise à jour signale une connexion interrompue
+  pendant la recréation du frontal, puis reprend toute seule et ramène à l'application. Si elle reste interrompue plus d'une minute,
+  recharger la page.
+- **Si le frontal ne peut pas être mis à jour**, l'ancien est rétabli et l'application est mise à jour quand même : le message
+  de fin et le reçu de l'opération l'indiquent (« Frontal non mis à jour… ») ; la page de maintenance reste alors l'ancienne. Si
+  le message demande de relancer le frontal : `sudo docker compose up -d gateway` dans le dossier de l'application.
+- **Mise à jour par le script du serveur** (`sudo ./scripts/mettre-a-jour.sh 7.2.2`, section 12.1) : inchangée, elle met déjà
+  le frontal à jour.
+
+_(Session « Projet audit_suivi Coeur ».)_
+
+### Ajouté
+
+- **Étiquette de version par un workflow approuvé** ([ADR 0102](docs/adr/0102-etiquette-de-version-par-workflow-approuve.md)) :
+  `poser-etiquette.yml`, lancé à la main (ou par l'agent par l'API) avec la version, vérifie avant toute approbation le
+  manifeste de publication, la section du CHANGELOG, la CI et CodeQL du commit exact de `main` et l'absence de l'étiquette ;
+  il attend ensuite l'approbation du RSSI (environnement `etiquette-version`) et pousse l'étiquette avec un jeton dédié, ce
+  qui déclenche la publication habituelle. Réglages GitHub à faire une fois par le RSSI (environnement, jeton). _(Session
+  « Projet audit_suivi Coeur ».)_
+
+### Modifié
+
+- **Frontal mis à jour une fois, à la fin de la mise à jour web vers 7.2.2** (décision du RSSI du 17/11/2026, addendum de
+  l'[ADR 0061](docs/adr/0061-mise-a-jour-web-renforcee.md)). Le nouvel exécutant (`updater` de la cible), après la santé et le
+  contrôle des données, vérifie que l'image `web` locale est bien l'image signée et épinglée, valide la configuration du frontal
+  dans un conteneur éphémère (`demarrer-gateway --valider`, mêmes réglages et volumes), relève le certificat servi, inscrit
+  `GATEWAY_VERSION=7.2.2`, recrée le frontal et exige qu'il réponde (relais interne et `/healthz` en HTTPS) avec le même
+  certificat. Tout échec rétablit l'ancienne `GATEWAY_VERSION` et l'ancien frontal ; l'application reste mise à jour, avec
+  l'avertissement « Frontal non mis à jour » dans le message de fin, le reçu et le journal privé. Un exécutant relancé pendant
+  la recréation rétablit l'ancien frontal avant tout contrôle. Constante unique `FRONTAL_AVEC_LA_VERSION` dans
+  `scripts/update-worker.py` : le script de mise à jour qui s'exécute pendant une mise à jour web est celui de la version
+  installée, seul l'exécutant de la cible agit en fin d'opération. **À retirer à la version suivante** : un test échoue tant
+  qu'elle désigne une version antérieure à celle du dépôt. Toute autre version cible garde le frontal figé. _(Session « Projet
+  audit_suivi Coeur ».)_
+
+### Corrigé
+
+- **Connexion : plus de formulaire vide après le code de double authentification.** Une fois le code validé, la page
+  attendait le choix de la destination (étape des flux de l'installation) en réaffichant une seconde le formulaire de
+  connexion vide ; un panneau « Ouverture de votre espace… » le remplace. _(Session « Projet audit_suivi Coeur ».)_
+- **Reçu de mise à jour sans heure de début** : l'exécutant écrit le reçu avec une durée inconnue au lieu d'échouer à la
+  clôture de l'opération. _(Session « Projet audit_suivi Coeur ».)_
+
+### Retiré
+
+- **Restes de l'ancienne page de maintenance** (antérieure à la page Neon, #284) : identifiants `animation` et `versions` de
+  `docker/maintenance/index.html`, qu'aucun script, style ni test ne lit plus, et jeton CSS `--m-wash` jamais employé ; en-tête
+  de `docker/maintenance/client.js` actualisé (l'outil historique est retiré). Aucun changement d'affichage. _(Session « Projet
+  audit_suivi Coeur ».)_
+
 ## [7.2.1] — 2026-11-16
 
 Version corrective, numérotée par le RSSI : aucune migration, aucune nouvelle dépendance. Elle applique la règle du RSSI du
