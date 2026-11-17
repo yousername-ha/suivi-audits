@@ -5,7 +5,11 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import socket
+import ssl
+import subprocess
 import tempfile
+import threading
 import urllib.error
 import unittest
 import uuid
@@ -386,6 +390,210 @@ class Updates(unittest.TestCase):
         with patch.object(self.w,'cli',return_value=''):
             self.w.finish('success','Vérification terminée.')
         self.assertFalse((self.data/'etat/recus-mises-a-jour').exists())
+
+
+class FrontalPonctuel(unittest.TestCase):
+    """Exception ponctuelle du RSSI du 17/11/2026 (ADR 0061, addendum) : la mise à jour web vers FRONTAL_AVEC_LA_VERSION met
+    aussi le frontal à jour, à la fin. À retirer avec la constante à la version suivante (voir le garde-fou ci-dessous)."""
+    WEB = 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'a' * 64
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.cible = m.FRONTAL_AVEC_LA_VERSION or '7.2.2'
+        (self.root/'.env').write_text(f'APP_VERSION={self.cible}\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION=7.1.0\n')
+        self.data = self.root/'data'
+        (self.data/'etat').mkdir(parents=True)
+        with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
+            self.w = m.Worker()
+        self.id = str(uuid.uuid4())
+        self.journal = []
+        self.validation_refusee = False
+        self.certificats = ['c' * 64]
+        self.ordre = []
+
+    def gateway_version(self):
+        return self.w.env().get('GATEWAY_VERSION')
+
+    def faux_run(self, args, timeout=120, extra_env=None, input_text=None):
+        self.journal.append((args, extra_env, self.gateway_version()))
+        if args[:3] == ['docker', 'image', 'inspect']:
+            self.ordre.append('image')
+            return json.dumps([self.WEB])
+        if args[:3] == ['docker', 'compose', 'run']:
+            self.ordre.append('validation')
+            if self.validation_refusee: raise m.Failure('Commande interrompue')
+            return ''
+        if args[:3] == ['docker', 'compose', 'up']:
+            self.ordre.append('recreation')
+            return ''
+        return ''
+
+    def fausse_sonde(self):
+        self.ordre.append('sonde')
+        return self.certificats[0] if len(self.certificats) == 1 else self.certificats.pop(0)
+
+    def reprendre(self, target=None, **job):
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': target or self.cible, 'installed': '7.2.1', 'handoff': True,
+                      'images': {'api': 'x', 'web': self.WEB, 'updater': 'y'}, **job}
+        self.w.publish(id=self.id, status='running', phase='verifying', startedAt=m.now(), maintenance=True)
+        with patch.object(self.w, 'health', side_effect=lambda v: self.ordre.append('sante')) as health, \
+                patch.object(self.w, 'cli', return_value=''), patch.object(self.w, 'run', side_effect=self.faux_run), \
+                patch.object(self.w, 'frontal_sonde', side_effect=lambda: self.fausse_sonde()), \
+                patch.object(m.time, 'sleep'), patch.object(m, 'FRONTAL_DELAI', 0):
+            self.w.recover()
+        return health
+
+    def recu(self):
+        return json.loads((self.data/'etat/recus-mises-a-jour'/f'{self.id}.json').read_text())
+
+    def test_sonde_releve_le_certificat_servi_en_https_local(self):
+        """Sonde réelle sur un serveur TLS local : empreinte du certificat présenté et réponse « 200 » de /healthz."""
+        p = self.root/'tls'
+        p.mkdir()
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(p/'key'), '-out', str(p/'cert'),
+                        '-days', '2', '-subj', '/CN=suivi.example.test'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(p/'cert', p/'key')
+        serveur = socket.create_server(('127.0.0.1', 0))
+        self.addCleanup(serveur.close)
+        recues = []
+        def servir(reponse):
+            brut, _ = serveur.accept()
+            with context.wrap_socket(brut, server_side=True) as tls:
+                recues.append(tls.recv(1024))
+                tls.sendall(reponse)
+        connecter = socket.create_connection
+        adresses = []
+        def vers_local(adresse, timeout=None):
+            adresses.append(adresse)
+            return connecter(('127.0.0.1', serveur.getsockname()[1]), timeout=timeout)
+        attendue = hashlib.sha256(ssl.PEM_cert_to_DER_cert((p/'cert').read_text())).hexdigest()
+        with patch.object(self.w, 'run', return_value='ok\n'), patch.object(m.socket, 'create_connection', side_effect=vers_local):
+            fil = threading.Thread(target=servir, args=(b'HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok',)); fil.start()
+            self.assertEqual(self.w.frontal_sonde(), attendue)
+            fil.join(5)
+            fil = threading.Thread(target=servir, args=(b'HTTP/1.1 503 Service Unavailable\r\n\r\n',)); fil.start()
+            with self.assertRaises(m.Failure): self.w.frontal_sonde()
+            fil.join(5)
+        self.assertEqual(adresses, [('gateway', 8443)] * 2)
+        self.assertTrue(recues[0].startswith(b'GET /healthz HTTP/1.1\r\nHost: suivi.example.test\r\n'))
+        # Relais interne en échec : rien n'est tenté en HTTPS.
+        with patch.object(self.w, 'run', return_value='erreur'), patch.object(m.socket, 'create_connection') as connexion:
+            with self.assertRaises(m.Failure): self.w.frontal_sonde()
+        connexion.assert_not_called()
+
+    def test_garde_fou_constante_a_retirer_a_la_version_suivante(self):
+        """Échoue dès que le dépôt passe à une version postérieure : retirer alors FRONTAL_AVEC_LA_VERSION, frontal_ponctuel()
+        et ces tests (décision du RSSI : « remettre comme avant après la mise à jour »)."""
+        depot = json.loads((ROOT/'package.json').read_text())['version']
+        if m.FRONTAL_AVEC_LA_VERSION:
+            self.assertGreaterEqual(m.version(m.FRONTAL_AVEC_LA_VERSION), m.version(depot),
+                                    'FRONTAL_AVEC_LA_VERSION désigne une version déjà publiée : retirer l’exception ponctuelle.')
+
+    def test_version_designee_valide_puis_recree_le_frontal_a_la_fin(self):
+        health = self.reprendre()
+        health.assert_called_once_with(self.cible)
+        # Santé et données d'abord, puis image vérifiée, validation dans un conteneur éphémère, certificat relevé,
+        # recréation et contrôle du nouveau frontal (même certificat).
+        self.assertEqual(self.ordre, ['sante', 'image', 'validation', 'sonde', 'recreation', 'sonde'])
+        validation = next(c for c in self.journal if c[0][:3] == ['docker', 'compose', 'run'])
+        self.assertEqual(validation[0][3:], ['--rm', '--no-deps', 'gateway', '/usr/local/bin/demarrer-gateway', '--valider'])
+        # La nouvelle image est désignée pour la seule validation ; .env n'est pas encore modifié, aucun réglage TLS transmis.
+        self.assertEqual(validation[1], {'GATEWAY_VERSION': self.cible})
+        self.assertEqual(validation[2], '7.1.0')
+        recreation = next(c for c in self.journal if c[0][:3] == ['docker', 'compose', 'up'])
+        self.assertEqual(recreation[0], ['docker', 'compose', 'up', '-d', '--no-deps', 'gateway'])
+        self.assertIsNone(recreation[1])
+        self.assertEqual(recreation[2], self.cible)
+        self.assertEqual(self.gateway_version(), self.cible)
+        self.assertEqual((self.w.state['status'], self.w.state['maintenance']), ('success', False))
+        self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
+        self.assertIn('mis à jour de 7.1.0', (self.w.private/f'{self.id}.log').read_text())
+
+    def test_validation_refusee_garde_l_ancien_frontal_et_l_annonce(self):
+        self.validation_refusee = True
+        self.reprendre()
+        self.assertNotIn('recreation', self.ordre)
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertEqual(self.w.state['status'], 'success')
+        self.assertIn('Frontal non mis à jour', self.w.state['message'])
+        self.assertIn('Frontal non mis à jour', self.recu()['message'])
+        self.assertEqual(self.recu()['statut'], 'success')
+
+    def test_image_locale_differente_de_l_image_verifiee_refusee_sans_rien_toucher(self):
+        self.WEB = 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'b' * 64
+        self.reprendre(images={'web': 'ghcr.io/yousername-ha/suivi-audits-web@sha256:' + 'a' * 64})
+        self.assertEqual(self.ordre, ['sante', 'image'])
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertIn('Frontal non mis à jour', self.recu()['message'])
+
+    def test_certificat_different_apres_recreation_retablit_l_ancien_frontal(self):
+        # HSTS : le frontal recréé doit servir le même certificat (même mode TLS) ; sinon retour à l'ancien.
+        self.certificats = ['c' * 64, 'd' * 64, 'c' * 64]
+        self.reprendre()
+        recreations = [c for c in self.journal if c[0][:3] == ['docker', 'compose', 'up']]
+        self.assertEqual([c[2] for c in recreations], [self.cible, '7.1.0'])
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertEqual(self.w.state['status'], 'success')
+        self.assertIn('l’ancien a été rétabli', self.recu()['message'])
+        self.assertEqual(self.w.job, None)
+
+    def test_frontal_qui_ne_repond_plus_est_retabli_puis_signale(self):
+        def sonde():
+            self.ordre.append('sonde')
+            if self.gateway_version() == self.cible: raise m.Failure('ne répond pas')
+            return 'c' * 64
+        self.fausse_sonde = sonde
+        self.reprendre()
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertIn('Frontal non mis à jour', self.recu()['message'])
+        # Rétablissement impossible : avertissement explicite, l'application reste mise à jour.
+        self.setUp()
+        def muette():
+            if self.ordre.count('recreation'): raise m.Failure('rien')
+            return 'c' * 64
+        self.fausse_sonde = muette
+        self.reprendre()
+        self.assertEqual(self.ordre.count('recreation'), 4)
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertEqual(self.w.state['status'], 'success')
+        self.assertIn('sudo docker compose up -d gateway', self.recu()['message'])
+
+    def test_autre_cible_ne_touche_pas_au_frontal(self):
+        (self.root/'.env').write_text('APP_VERSION=99.0.0\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION=7.1.0\n')
+        self.reprendre(target='99.0.0')
+        self.assertEqual(self.ordre, ['sante'])
+        self.assertEqual(self.journal, [])
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
+
+    def test_frontal_deja_a_la_version_ou_sans_reglage_rien_a_faire(self):
+        for env in (f'APP_VERSION={self.cible}\nGATEWAY_VERSION={self.cible}\n', f'APP_VERSION={self.cible}\n'):
+            (self.root/'.env').write_text(env)
+            self.journal, self.ordre = [], []
+            self.reprendre()
+            self.assertEqual(self.ordre, ['sante'])
+            self.assertEqual((self.root/'.env').read_text(), env)
+
+    def test_sante_en_echec_intervention_sans_toucher_au_frontal(self):
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': self.cible, 'handoff': True, 'images': {'web': self.WEB}}
+        with patch.object(self.w, 'health', side_effect=m.Failure('absent')), patch.object(self.w, 'cli', return_value=''), \
+                patch.object(self.w, 'run', side_effect=self.faux_run):
+            self.w.recover()
+        self.assertEqual(self.w.state['status'], 'intervention')
+        self.assertEqual(self.journal, [])
+        self.assertEqual(self.gateway_version(), '7.1.0')
+
+    def test_executant_relance_pendant_la_recreation_retablit_l_ancien_frontal_avant_la_sante(self):
+        (self.root/'.env').write_text(f'APP_VERSION={self.cible}\nSITE_ADDRESS=suivi.example.test\nGATEWAY_VERSION={self.cible}\n')
+        self.reprendre(frontal={'avant': '7.1.0', 'etape': 'recreation'})
+        self.assertEqual(self.ordre[:3], ['recreation', 'sonde', 'sante'])
+        self.assertEqual(self.ordre.count('validation'), 0)
+        self.assertEqual(self.gateway_version(), '7.1.0')
+        self.assertEqual(self.w.state['status'], 'success')
+        self.assertIn('Frontal non mis à jour', self.recu()['message'])
 
 
 if __name__=='__main__': unittest.main()

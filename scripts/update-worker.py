@@ -1,6 +1,7 @@
 """Exécutant Compose isolé : pas de serveur HTTP, commandes fermées, état durable non sensible.
 
-Le frontal stable n'est jamais recréé. La dernière étape remplace cet exécutant lui-même ;
+Le frontal stable n'est pas recréé au milieu d'une mise à jour (ADR 0061), sauf l'exception ponctuelle
+FRONTAL_AVEC_LA_VERSION, à la toute fin. La dernière étape remplace cet exécutant lui-même ;
 son successeur lit le reçu durable et ouvre l'application seulement après santé réelle.
 """
 import contextlib
@@ -13,6 +14,8 @@ import os
 from pathlib import Path
 import re
 import signal
+import socket
+import ssl
 import subprocess
 import tempfile
 import threading
@@ -49,6 +52,15 @@ FLUX_REESSAI = 600
 FLUX_REPRISE_MOTIFS = {"assistant": ["conteneur-present", "env-renseigne"], "antivirus": ["conteneur-present", "env-renseigne"], "mises-a-jour": ["mise-a-jour-installee"]}
 # Réglage de .env qui, renseigné, montre que le module était en service avant la 7.2 (guide d'installation de la 7.1).
 FLUX_REPRISE_ENV = {"assistant": "ASSISTANT_RELAIS_URL", "antivirus": "CLAMAV_HOST"}
+# Exception ponctuelle décidée par le RSSI le 17/11/2026 (ADR 0061, addendum) : la mise à jour depuis l'interface vers cette
+# version, et elle seule, met aussi à jour le frontal stable « gateway » (nouvelle page de maintenance). À RETIRER À LA VERSION
+# SUIVANTE, avec frontal_ponctuel() et ses tests (scripts/tests/test_updates.py échoue tant qu'elle désigne une version
+# antérieure à celle du dépôt). Toute autre cible garde le frontal figé à GATEWAY_VERSION. La constante est ici et non dans
+# scripts/mettre-a-jour.sh : pendant une mise à jour web, ce script est celui de la version installée, alors que ce successeur
+# de l'exécutant (image de la version cible) est le seul code de la cible qui s'exécute à la fin de l'opération.
+FRONTAL_AVEC_LA_VERSION = "7.2.2"
+FRONTAL_IMAGE = f"ghcr.io/{REPOSITORY}-web"
+FRONTAL_DELAI = 120
 UUID_JSON = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$")
 
 
@@ -348,7 +360,8 @@ class Worker:
             backup = {"fichier": path.name[:200], "sha256": digest}
         start = self.state.get("startedAt")
         duration = None
-        with contextlib.suppress(TypeError, ValueError):
+        # Début inconnu (état public perdu) : durée inconnue, le reçu est écrit quand même.
+        with contextlib.suppress(AttributeError, TypeError, ValueError):
             parse = lambda v: dt.datetime.fromisoformat(v.replace("Z", "+00:00"))
             duration = max(0, int((parse(end) - parse(start)).total_seconds()))
         before, after = job.get("before") or {}, job.get("after") or {}
@@ -401,8 +414,13 @@ class Worker:
             return
         if self.job.get("handoff"):
             try:
+                # Exécutant interrompu pendant la recréation du frontal : l'ancien est rétabli avant tout contrôle.
+                self.frontal_reprise()
                 self.health(self.job["target"])
-                self.finish("success", "Mise à jour installée et vérifiée. Votre espace est prêt.")
+                message = "Mise à jour installée et vérifiée. Votre espace est prêt."
+                # Après santé et contrôle des données réussis, juste avant la sortie de maintenance ; ne lève jamais.
+                avertissement = self.frontal_ponctuel()
+                self.finish("success", message + (" " + avertissement if avertissement else ""))
             except Exception:
                 self.finish("intervention", "Le contrôle final a échoué. Les accès restent protégés ; contactez l’administrateur.")
             return
@@ -428,6 +446,143 @@ class Worker:
             self.finish("rolled_back", "La mise à jour a été interrompue. La version précédente a été restaurée et vérifiée.")
         except Exception:
             self.finish("intervention", "Le retour sécurisé nécessite une intervention de l’administrateur. Les accès restent protégés.")
+
+    # ------------------------------------------------------------------ Frontal : exception ponctuelle (FRONTAL_AVEC_LA_VERSION)
+    # À retirer à la version suivante, avec la constante et ses tests. Ordre retenu : rien n'est touché avant que la nouvelle
+    # version soit en service, saine et ses données contrôlées (health) ; la configuration du nouveau frontal est validée dans
+    # un conteneur éphémère avant toute modification ; la recréation a lieu maintenance encore active, juste avant sa levée.
+    # Les réglages TLS ne sont jamais transmis ni modifiés : le frontal recréé lit les mêmes .env et volumes (mode choisi dans
+    # l'interface, certificats ACME, fourni ou interne), et il doit servir exactement le même certificat qu'avant.
+
+    def ecrire_env(self, cle, valeur):
+        """Réglage de .env remplacé, ou ajouté s'il manque (comme ecrire_env de scripts/lib-commun.sh)."""
+        fichier = self.repo / ".env"
+        texte = fichier.read_text()
+        ligne = f"{cle}={valeur}"
+        motif = re.compile(rf"^{re.escape(cle)}=.*$", re.M)
+        if motif.search(texte):
+            texte = motif.sub(lambda _: ligne, texte)
+        else:
+            texte += ("" if not texte or texte.endswith("\n") else "\n") + ligne + "\n"
+        fichier.write_text(texte)
+
+    def frontal_etat(self, **changes):
+        """Avancement durable de l'exception, dans la demande active : un exécutant relancé sait où il en était."""
+        self.job["frontal"] = {**(self.job.get("frontal") or {}), **changes}
+        atomic(self.private / "active.json", self.job)
+
+    def frontal_journal(self, texte):
+        """Phrase fixe ajoutée au journal privé de l'opération, jamais une sortie de commande."""
+        with contextlib.suppress(Exception):
+            with (self.private / f'{self.job["id"]}.log').open("a") as journal:
+                journal.write(f"{now()} Frontal : {texte}\n")
+
+    def frontal_echec(self, avertissement):
+        with contextlib.suppress(Exception):
+            self.frontal_etat(etape="echec", avertissement=avertissement)
+        self.frontal_journal(avertissement)
+        return avertissement
+
+    def frontal_sonde(self):
+        """Frontal en service : relais interne vers l'interface, puis /healthz en HTTPS local avec le nom du site. Renvoie
+        l'empreinte du certificat servi. Observation seulement : aucun cookie ni aucune donnée n'est envoyé."""
+        relais = self.run(["docker", "compose", "exec", "-T", "gateway", "wget", "-qO-", "http://web:8080/healthz"], timeout=30)
+        if relais.strip() != "ok":
+            raise Failure("Le frontal ne relaie pas l'interface")
+        site = self.env().get("SITE_ADDRESS", "")
+        if not re.fullmatch(r"[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?", site):
+            raise Failure("Adresse du site invalide")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        with socket.create_connection(("gateway", 8443), timeout=5) as brut:
+            with context.wrap_socket(brut, server_hostname=site) as tls:
+                empreinte = hashlib.sha256(tls.getpeercert(binary_form=True)).hexdigest()
+                tls.sendall(f"GET /healthz HTTP/1.1\r\nHost: {site}\r\nConnection: close\r\n\r\n".encode())
+                if not tls.recv(1024).startswith((b"HTTP/1.1 200", b"HTTP/1.0 200")):
+                    raise Failure("Le frontal ne répond pas en HTTPS")
+        return empreinte
+
+    def frontal_attendre(self, certificat=None):
+        """Attend que le frontal recréé réponde (FRONTAL_DELAI au plus). Avec une empreinte, il doit servir exactement ce
+        certificat : un autre (retour à l'autorité interne, par exemple) bloquerait le site par HSTS."""
+        limite = time.monotonic() + FRONTAL_DELAI
+        while True:
+            try:
+                servi = self.frontal_sonde()
+            except (Failure, OSError):
+                servi = None
+            if servi is not None:
+                if certificat and servi != certificat:
+                    raise Failure("Certificat servi différent")
+                return
+            if time.monotonic() >= limite:
+                raise Failure("Le frontal ne répond pas")
+            time.sleep(2)
+
+    def frontal_retablir(self):
+        """Ancienne GATEWAY_VERSION réinscrite et ancien frontal recréé, jusqu'à trois essais : le site ne reste pas sans
+        frontal. L'application, elle, reste mise à jour."""
+        avant = (self.job.get("frontal") or {}).get("avant")
+        for _ in range(3 if avant else 0):
+            try:
+                self.ecrire_env("GATEWAY_VERSION", avant)
+                self.run(["docker", "compose", "up", "-d", "--no-deps", "gateway"], timeout=180)
+                self.frontal_attendre()
+                return self.frontal_echec("Frontal non mis à jour : le nouveau frontal n’a pas pu être vérifié ; l’ancien a été rétabli et répond (la page de maintenance reste l’ancienne).")
+            except Exception:
+                continue
+        return self.frontal_echec("Frontal non mis à jour, et l’ancien frontal ne répond pas après son rétablissement : sur le serveur, dans le dossier de l’application, lancer « sudo docker compose up -d gateway » (docs/INSTALLATION.md, section 12).")
+
+    def frontal_reprise(self):
+        """Exécutant relancé pendant l'exception : recréation entamée, l'ancien frontal est rétabli avant le contrôle de santé
+        (qui passe par lui) ; validation entamée, rien n'avait été modifié. Ne lève jamais."""
+        etape = ((self.job or {}).get("frontal") or {}).get("etape")
+        if etape == "recreation":
+            self.frontal_retablir()
+        elif etape == "validation":
+            self.frontal_echec("Frontal non mis à jour : opération interrompue avant toute modification ; l’ancien frontal reste en service.")
+
+    def frontal_ponctuel(self):
+        """Exception ponctuelle FRONTAL_AVEC_LA_VERSION : à la fin d'une mise à jour réussie vers cette version, maintenance
+        encore active, GATEWAY_VERSION passe à la cible et le frontal est recréé. Image : l'image web vérifiée et épinglée de
+        la cible. Renvoie None (autre cible, rien à faire, ou frontal mis à jour et vérifié) ou l'avertissement à porter au
+        reçu ; ne lève jamais : l'application reste mise à jour quoi qu'il arrive au frontal."""
+        try:
+            target = self.job.get("target")
+            if not FRONTAL_AVEC_LA_VERSION or target != FRONTAL_AVEC_LA_VERSION:
+                return None
+            if self.job.get("frontal"):
+                return self.job["frontal"].get("avertissement")
+            avant = self.env().get("GATEWAY_VERSION", "")
+            if not avant or avant == target:
+                return None
+            if not re.fullmatch(r"[\w.-]{1,40}", avant):
+                raise Failure("GATEWAY_VERSION inattendue")
+            self.frontal_etat(avant=avant, etape="validation")
+            self.publish(phase="verifying", message="Mise à jour du frontal du site (nouvelle page de maintenance). Cette page peut s’interrompre quelques secondes, puis elle reprend toute seule.")
+            # L'étiquette locale doit désigner l'image web vérifiée (signature, attestation, révision) de la cible.
+            attendue = str((self.job.get("images") or {}).get("web", ""))
+            empreintes = json.loads(self.run(["docker", "image", "inspect", "--format", "{{json .RepoDigests}}", f"{FRONTAL_IMAGE}:{target}"]))
+            if not attendue.startswith(FRONTAL_IMAGE + "@sha256:") or attendue not in empreintes:
+                raise Failure("Image du frontal non vérifiée")
+            # Même principe que fermer_acme (exploitation-worker.py) : configuration contrôlée avec la nouvelle image, les
+            # réglages et les volumes en service, sans port publié ni recréation.
+            self.run(["docker", "compose", "run", "--rm", "--no-deps", "gateway", "/usr/local/bin/demarrer-gateway", "--valider"],
+                     timeout=120, extra_env={"GATEWAY_VERSION": target})
+            certificat = self.frontal_sonde()
+        except Exception:
+            return self.frontal_echec("Frontal non mis à jour : sa nouvelle image ou sa configuration n’a pas été validée ; l’ancien frontal reste en service, sans changement.")
+        try:
+            self.frontal_etat(etape="recreation")
+            self.ecrire_env("GATEWAY_VERSION", target)
+            self.run(["docker", "compose", "up", "-d", "--no-deps", "gateway"], timeout=180)
+            self.frontal_attendre(certificat)
+            self.frontal_etat(etape="fait")
+            self.frontal_journal(f"mis à jour de {avant} à {target} ; configuration validée, même certificat servi, frontal vérifié.")
+            return None
+        except Exception:
+            return self.frontal_retablir()
 
     def signatures(self, target):
         # Le commit des sources doit correspondre à celui des images signées (label inclus dans l'empreinte).
