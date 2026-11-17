@@ -761,6 +761,28 @@ class AlgoLightHouse(unittest.TestCase):
                          (False, "vulnerable_service", "major", [], None))
         self.assertNotIn("/api/v1/alerts/" + U % 33, [r["chemin"] for r in FauxAlh.recues])
 
+    def test_shapes_seen_on_a_real_workspace_are_read(self):
+        """Formes relevées sur un espace réel (exemples anonymisés du RSSI) : date de création vide dans la liste, joker
+        « * » pour le produit et le nom affiché, version vide, numéro d'AS préfixé, date de dernier passage absente."""
+        d = FauxAlh.donnees
+        d["/api/v1/alerts"][0]["created_at"] = "0001-01-01T00:00:00Z"
+        d["details"][U % 31]["created_at"] = "2026-03-03T07:27:20.927961Z"
+        d["/api/v1/targets/hosts"][0]["asn"] = "AS64500"
+        d["/api/v1/technologies"].append({
+            "display_name": "*", "vendor": "editeur-fictif", "product": "*", "technology": "Service fictif",
+            "active_versions": [{"version": "", "assets": [{"id": U % 21, "label": "www.exemple-fictif.example", "type": "domain"}],
+                                 "cves": []}],
+            "inactive_assets": [], "last_scanned_at": None})
+        sortie = h.executer(self.demande("synchroniser"))
+        self.assertTrue(sortie["ok"], sortie)
+        self.propre(sortie)
+        texte = json.dumps(sortie, ensure_ascii=False)
+        self.assertIn("2026-03-03T07:27:20.000Z", texte)
+        self.assertNotIn("0001-01-01", texte)
+        self.assertIn('"asn": "64500"', texte)
+        self.assertIn("Service fictif", texte)
+        self.assertNotIn('"*"', texte)
+
     def test_bounds_missing_details_and_duration_make_an_incomplete_synchronisation(self):
         with patch.dict(h.BORNES_ALH, {"alertes": 2, "hotes": 1}):
             sortie = h.executer(self.demande("synchroniser"))

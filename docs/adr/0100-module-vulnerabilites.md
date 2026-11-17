@@ -494,7 +494,17 @@ technologies détectées. Forme des réponses lue sur le descriptif OpenAPI 3 de
 
 Aucun appel vers un vrai espace AlgoLightHouse (tests sur un faux service HTTPS local et un faux mandataire) ; forme réelle des
 objets CVE d'une alerte ; volumes réels (nombre d'alertes, taille des réponses) ; limites de débit et conditions d'usage de
-l'API ; passage par le mandataire réel de l'établissement ; Playwright, Docker et Node 26.
+l'API ; passage par le mandataire réel de l'établissement ; Docker et Node 26. Le parcours Playwright du connecteur a été
+joué en local seulement, sur une pile sans Docker.
+
+### Formes constatées sur un espace réel (17/11/2026)
+
+Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt). Elles confirment
+que les listes sont des tableaux directs, sans pagination, et que les volumes tiennent très en dessous des bornes. Trois
+formes ont demandé une adaptation, couverte par un test : la liste des alertes peut rendre une date de création vide (an 1),
+le détail porte la vraie ; « * » tient lieu de valeur absente pour le produit et le nom affiché d'une technologie, dont la
+version peut être vide ; le numéro d'AS peut être préfixé par « AS ». Les deux détails relevés n'avaient aucune CVE : la
+forme réelle des objets CVE d'une alerte reste non vérifiée.
 
 ### Points ouverts (hors lot)
 

@@ -17,10 +17,11 @@ $Resume = New-Object System.Collections.ArrayList
 $MaxElements = 3
 
 # Champs dont la valeur est gardée telle quelle : vocabulaire technique, jamais un nom, une adresse ou un texte libre.
-$Gardes = 'status', 'value', 'type', 'fragment_type', 'version_status', 'severity', 'cve', 'vendor', 'product', 'version',
+$Gardes = 'status', 'type', 'fragment_type', 'version_status', 'severity', 'cve', 'vendor', 'product', 'version',
   'latest_version', 'cpe', 'technology', 'display_name', 'template_id', 'cwe_id'
+$Valeurs = 'typosquatting', 'data_leak', 'exposed_service', 'vulnerable_service', 'config_defect', 'minor', 'important', 'major', 'critical'
 # Champs retirés en entier, quel que soit leur contenu.
-$Retires = 'sensitive_data', 'uploads', 'note', 'comments', 'defects'
+$Retires = 'sensitive_data', 'uploads', 'note', 'comments', 'defects', 'data'
 
 $Table = @{}
 function Remplacer([string]$Valeur) {
@@ -32,6 +33,8 @@ function Nettoyer($Objet, [string]$Champ) {
   if ($null -eq $Objet) { return $null }
   if ($Objet -is [string]) {
     if ($Gardes -contains $Champ) { return $Objet }
+    # « value » sert au type et à la criticité, mais aussi à la cible (adresse, domaine, mot-clé) : gardé pour ce vocabulaire seulement.
+    if ($Champ -eq 'value' -and $Valeurs -contains $Objet) { return $Objet }
     if ($Objet -match '^\d{4}-\d{2}-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?$') { return $Objet }
     if ($Champ -eq 'id' -or $Champ -like '*_id') { return (Remplacer $Objet) }
     return "(texte de $($Objet.Length) caractères)"

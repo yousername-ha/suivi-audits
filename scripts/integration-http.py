@@ -710,7 +710,7 @@ CHAMPS_DOMAINE_ALH = ("id", "perimeter_id", "status", "domain", "level", "is_man
                       "parent_target_domain_id", "created_at", "updated_at")
 CHAMPS_ALERTE_ALH = ("id", "title", "status", "type_id", "perimeter_id", "criticity_id", "is_verified", "created_at",
                      "updated_at")
-CHAMPS_DETAIL_ALH = ("id", "type", "criticity", "target", "cves", "fragments", "completed_at")
+CHAMPS_DETAIL_ALH = ("id", "type", "criticity", "target", "cves", "fragments", "completed_at", "created_at")
 CHAMPS_CIBLE_ALH = ("type", "value", "target_host_id", "target_domain_id")
 CHAMPS_TECHNOLOGIE_ALH = ("display_name", "vendor", "product", "technology", "active_versions", "inactive_assets",
                           "last_scanned_at")
@@ -846,6 +846,9 @@ def alh_detail(client, alerte, types, criticites):
             if isinstance(lien, dict):
                 trouvees += [c for c in cves_de(lien.get("cve")) if c not in trouvees]
     alerte["cves"] = trouvees[: BORNES_ALH["cvesParAlerte"]]
+    # Constaté sur un espace réel : la liste peut rendre une date de création vide (an 1), le détail porte la vraie.
+    if alerte.get("creeLe") is None:
+        alerte["creeLe"] = instant_iso(d.get("created_at"))
     termine = instant_iso(d.get("completed_at"))
     if termine:
         alerte["termineeLe"] = termine
@@ -858,10 +861,12 @@ def alh_technologie(brut, sortie, bilan, totaux):
         bilan["ecartes"] += 1
         return
     t = {k: brut[k] for k in CHAMPS_TECHNOLOGIE_ALH if k in brut}
-    editeur = texte(t.get("vendor"), BORNES_ALH["editeur"])
-    produit = texte(t.get("product"), BORNES_ALH["produit"])
+    # Constaté sur un espace réel : « * » (joker de CPE) tient lieu de valeur absente pour le produit et le nom affiché.
+    connu = lambda v: None if v == "*" else v
+    editeur = connu(texte(t.get("vendor"), BORNES_ALH["editeur"]))
+    produit = connu(texte(t.get("product"), BORNES_ALH["produit"]))
     techno = texte(t.get("technology"), BORNES_ALH["nomTechnologie"])
-    nom = texte(t.get("display_name"), BORNES_ALH["nomTechnologie"]) or produit or techno
+    nom = connu(texte(t.get("display_name"), BORNES_ALH["nomTechnologie"])) or produit or techno
     if not nom:
         bilan["ecartes"] += 1
         return
@@ -967,6 +972,7 @@ def alh_synchroniser(client, configuration, horloge=time.monotonic):
             bilan["ecartes"] += 1
             continue
         asn = h.get("asn").strip() if isinstance(h.get("asn"), str) else ""
+        asn = asn[2:] if asn[:2].upper() == "AS" else asn  # « AS64500 » comme « 64500 »
         pays = h.get("country").strip().upper() if isinstance(h.get("country"), str) else ""
         hotes[ident] = {
             "type": "hote", "id": ident, "perimetre": uuid_strict(h.get("perimeter_id")),
