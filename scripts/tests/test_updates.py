@@ -339,6 +339,21 @@ class Updates(unittest.TestCase):
         self.w.publish(phase='checking')
         self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing'])
 
+    def test_retour_a_l_application_seulement_a_la_reussite(self):
+        """Fin du script (phase « termine ») : les vérifications finales restent à faire (santé, relève de l'exécutant, frontal) ;
+        l'étape « Retour à l'application » n'est franchie que par finish('success'), jamais avant la vérification."""
+        self.assertEqual(m.PHASES['termine'],'verifying')
+        self.assertNotIn('complete',m.PHASES.values())
+        self.w.job={'id':self.id,'kind':'install','target':'3.1.0'}
+        self.w.publish(id=self.id,status='running',phase='preparing',etapes=[],startedAt=m.now())
+        for phase in ('backup','installing','verifying',m.PHASES['termine']):
+            self.w.publish(phase=phase)
+        self.w.publish(phase='verifying',message='Vérification finale du système de mise à jour.')
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing','backup','installing','verifying'])
+        with patch.object(self.w,'cli',return_value=''), patch.object(self.w,'receipt'):
+            self.w.finish('success','Mise à jour installée et vérifiée.')
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']][-2:],['verifying','complete'])
+
     def test_recu_structure_sans_donnee_sensible(self):
         backup=self.data/'sauvegardes-updates/avant-maj-3.0.0-vers-3.1.0.tar.age'
         backup.parent.mkdir(parents=True)

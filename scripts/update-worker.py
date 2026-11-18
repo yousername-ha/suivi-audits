@@ -31,7 +31,7 @@ CYCLONEDX = "https://cyclonedx.org/bom"
 SBOM_MAX = 20_000_000
 VERSION = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TERMINAL = {"success", "rolled_back", "failed", "intervention"}
-PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "complete"}
+PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "verifying"}
 # Flux vers l'extérieur (ADR 0097) : identifiants du registre partagé (packages/shared/src/flux-externes.ts) et conteneurs de
 # sortie démarrés par leur profil Compose, services dans l'ordre de démarrage (clamav attend les signatures de freshclam).
 # Listes fermées : aucun nom reçu de l'application ne sert d'argument de commande. Leur concordance avec le registre et le
@@ -752,7 +752,7 @@ class Worker:
                 phase = PHASES.get(progress.get("phase"), "rollback" if str(progress.get("phase", "")).startswith("retour") else "installing")
                 messages = {"preparing": "Préparation de la version.", "backup": "Sauvegarde de sécurité de vos données.",
                     "installing": "Installation de la nouvelle version.", "verifying": "Vérification du service et de vos données.",
-                    "rollback": "Retour sécurisé à la version précédente.", "complete": "Dernières vérifications."}
+                    "rollback": "Retour sécurisé à la version précédente."}
                 self.publish(phase=phase, message=messages[phase])
             if time.monotonic() - start > 3600:
                 os.killpg(p.pid, signal.SIGTERM)

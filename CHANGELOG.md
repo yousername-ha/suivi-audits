@@ -145,6 +145,10 @@ ou groupes) ; sans compte qui le tienne, aucune alerte ne peut être prise en co
 satisfont plus la nouvelle règle se closent d'elles-mêmes à la première évaluation qui suit la mise à jour (motif « sous le
 seuil »). (session « Module surveillance vulnérabilités SMSI »)
 
+La correction de la frise de la page de maintenance vient de l'exécutant de la version **installée** et de la page du
+frontal en service : elle s'applique aux mises à jour lancées depuis une version qui la contient. (session « Projet
+audit_suivi Coeur »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -612,6 +616,13 @@ seuil »). (session « Module surveillance vulnérabilités SMSI »)
   publiée) est ignoré par `pnpm audit`. Le paquet n'est tiré que par des outils de développement et de construction
   (`typescript-eslint`, Vite, Vitest), absents des dépendances d'exécution. Réexamen au plus tard le 25/11/2026.
   (session « Module surveillance vulnérabilités SMSI »)
+
+### Corrigé
+
+- **Frise de la page de maintenance** : l'étape « Retour à l'application » apparaissait terminée avant la vérification finale
+  (fin du script notée « complete », puis « Vérification » de nouveau en cours). La fin du script reste dans « Vérification » ;
+  « Retour à l'application » n'est franchi qu'à la réussite publiée, et la page ne l'affiche jamais terminée ni horodatée
+  avant. _(Session « Projet audit_suivi Coeur ».)_
 
 ## [7.2.3] — 2026-11-17
 

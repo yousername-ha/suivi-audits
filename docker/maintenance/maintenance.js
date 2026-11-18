@@ -181,23 +181,27 @@
         const index = phases.indexOf(phase);
         const current = phases.indexOf(waiting ? 'preparing' : state.phase);
         element.className =
-          phase === 'rollback'
-            ? state.phase === 'rollback' && !termine
-              ? 'current'
-              : franchies.has('rollback')
-                ? 'done'
-                : ''
-            : index < current || (franchies.has(phase) && phase !== state.phase)
-              ? 'done'
-              : index === current
+          // « Retour à l'application » n'est franchi que sur un succès publié, jamais avant la fin des vérifications
+          // (un exécutant antérieur publiait cette étape à la fin du script, avant la vérification finale).
+          phase === 'complete' && state.status !== 'success'
+            ? ''
+            : phase === 'rollback'
+              ? state.phase === 'rollback' && !termine
                 ? 'current'
-                : '';
+                : franchies.has('rollback')
+                  ? 'done'
+                  : ''
+              : index < current || (franchies.has(phase) && phase !== state.phase)
+                ? 'done'
+                : index === current
+                  ? 'current'
+                  : '';
         if (element.className === 'current') element.setAttribute('aria-current', 'step');
         else element.removeAttribute('aria-current');
         if (phase === 'rollback') element.hidden = !franchies.has('rollback');
         const time = element.querySelector('time');
         if (time) {
-          const at = franchies.get(phase);
+          const at = phase === 'complete' && state.status !== 'success' ? undefined : franchies.get(phase);
           time.textContent = at ? `· ${heure(at)}` : '';
           if (at) time.dateTime = at;
           else time.removeAttribute('datetime');
