@@ -18,8 +18,8 @@ import {
 } from '@suivi/shared';
 import { DataTable, NeonAnneau } from '@suivi/ui';
 import { get } from '../api';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
-import { Filtres } from '../components/Filtres';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { useState } from 'react';
@@ -470,17 +470,26 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
                 ))}
               </Group>
               <Group gap="xs" className="objectifs-outils-droite">
-                <Filtres actifs={etat === 'all' ? 0 : 1} onReinitialiser={() => setEtat('all')}>
-                  <Tabs value={etat} onChange={(v) => setEtat(v ?? 'all')} variant="pills">
-                    <Tabs.List>
-                      {FILTRES_ETAT.map(([v, l]) => (
-                        <Tabs.Tab key={v} value={v}>
-                          {l}
-                        </Tabs.Tab>
-                      ))}
-                    </Tabs.List>
-                  </Tabs>
-                </Filtres>
+                {/* Boîte d'outils commune (7.3.0) : l'état se choisit aussi dans les filtres avancés ; les vues restent
+                    des onglets (panneaux associés) et les filtres rapides restent visibles. */}
+                <BoiteOutils
+                  label="Outils des indicateurs"
+                  filtres={{
+                    actifs: etat === 'all' ? 0 : 1,
+                    onReinitialiser: () => setEtat('all'),
+                    contenu: (
+                      <Tabs value={etat} onChange={(v) => setEtat(v ?? 'all')} variant="pills">
+                        <Tabs.List>
+                          {FILTRES_ETAT.map(([v, l]) => (
+                            <Tabs.Tab key={v} value={v}>
+                              {l}
+                            </Tabs.Tab>
+                          ))}
+                        </Tabs.List>
+                      </Tabs>
+                    ),
+                  }}
+                />
                 <Group gap="2xs" role="group" aria-label="Légende des états" className="objectifs-legende-etats">
                   {(Object.keys(LIBELLES_ETAT) as EtatIndicateur[]).map((k) => (
                     <EtatObjectifs key={k} etat={k} />

@@ -1,18 +1,4 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Group,
-  Menu,
-  Modal,
-  Select,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Badge, Box, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, Title } from '@mantine/core';
 import { DataTable, ListeDefilante } from '@suivi/ui';
 import {
   ECART_CLASSIFICATION_LABELS,
@@ -29,8 +15,7 @@ import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
-import { Filtres } from '../components/Filtres';
-import { IconeLoupe, PastillesCriteres, useRaccourciRecherche, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 import { useFiltreUrl } from '../components/filtre-url';
@@ -194,9 +179,8 @@ export function BusinessRegistry({
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
   const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
-  // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur le champ de recherche, pastilles des critères actifs.
-  const champRecherche = useRef<HTMLInputElement>(null);
-  useRaccourciRecherche(champRecherche);
+  // Boîte d'outils commune (7.3.0) : la recherche (raccourci « / ») et les filtres avancés ; État, Responsable et Échéance
+  // se filtrent aussi sur le titre de leur colonne, avec le même état d'adresse. Pastilles des critères actifs dessous.
   const reinitialiserFiltres = () => {
     setFEtat('all');
     setFResp('all');
@@ -435,80 +419,84 @@ export function BusinessRegistry({
           </Button>
         </Group>
       )}
-      <Group justify="space-between" className="barre-registre">
-        <Group align="flex-end" className="barre-registre__outils">
-          <TextInput
-            ref={champRecherche}
-            className="barre-recherche"
-            label="Rechercher"
-            leftSection={<IconeLoupe />}
-            title="Raccourci : touche /"
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-          />
-          <Filtres actifs={filtresActifs} onReinitialiser={reinitialiserFiltres}>
-            <Select
-              label="État"
-              allowDeselect={false}
-              data={[{ value: 'all', label: 'Tous les états' }, ...etats.map((e) => ({ value: e, label: e }))]}
-              value={fEtat}
-              onChange={(v) => setFEtat(v ?? 'all')}
-            />
-            <Select
-              label="Responsable"
-              allowDeselect={false}
-              data={[{ value: 'all', label: 'Tous' }, ...responsables.map((e) => ({ value: e, label: e }))]}
-              value={fResp}
-              onChange={(v) => setFResp(v ?? 'all')}
-            />
-            <Select
-              label="Échéance"
-              allowDeselect={false}
-              data={[
-                { value: 'all', label: 'Toutes' },
-                { value: 'retard', label: 'Dépassée' },
-                { value: 'avenir', label: 'À venir' },
-                { value: 'sans', label: 'Sans échéance' },
-              ]}
-              value={fEcheance}
-              onChange={(v) => setFEcheance(v ?? 'all')}
-            />
-            {kind === 'nonconformity' && (
+      <BoiteOutils
+        label="Outils du registre"
+        recherche={{ label: 'Rechercher', value: search, onChange: setSearch }}
+        filtres={{
+          actifs: filtresActifs,
+          onReinitialiser: reinitialiserFiltres,
+          contenu: (
+            <>
               <Select
-                label="Classification"
+                label="État"
+                allowDeselect={false}
+                data={[{ value: 'all', label: 'Tous les états' }, ...etats.map((e) => ({ value: e, label: e }))]}
+                value={fEtat}
+                onChange={(v) => setFEtat(v ?? 'all')}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Responsable"
+                allowDeselect={false}
+                data={[{ value: 'all', label: 'Tous' }, ...responsables.map((e) => ({ value: e, label: e }))]}
+                value={fResp}
+                onChange={(v) => setFResp(v ?? 'all')}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Échéance"
                 allowDeselect={false}
                 data={[
                   { value: 'all', label: 'Toutes' },
-                  ...Object.entries(ECART_CLASSIFICATION_LABELS).map(([value, label]) => ({ value, label })),
-                  { value: 'non_classe', label: 'Non classé' },
+                  { value: 'retard', label: 'Dépassée' },
+                  { value: 'avenir', label: 'À venir' },
+                  { value: 'sans', label: 'Sans échéance' },
                 ]}
-                value={fClassif}
-                onChange={(v) => setFClassif(v ?? 'all')}
+                value={fEcheance}
+                onChange={(v) => setFEcheance(v ?? 'all')}
+                comboboxProps={{ withinPortal: false }}
               />
-            )}
-            <Select
-              label="Origine"
-              allowDeselect={false}
-              data={[
-                { value: 'all', label: 'Toutes' },
-                { value: 'existant', label: 'Existant (outil de suivi)' },
-                { value: 'natif', label: 'Créé dans le Pilotage' },
-              ]}
-              value={fOrigine}
-              onChange={(v) => setFOrigine(v ?? 'all')}
-            />
-          </Filtres>
-        </Group>
-        {writable && (
-          <Button onClick={() => onCreate(kind)}>
-            {kind === 'nonconformity'
-              ? 'Ajouter un constat'
-              : kind === 'journey'
-                ? 'Démarrer mon parcours'
-                : 'Ajouter ' + GRC_LABELS[kind].toLowerCase()}
-          </Button>
-        )}
-      </Group>
+              {kind === 'nonconformity' && (
+                <Select
+                  label="Classification"
+                  allowDeselect={false}
+                  data={[
+                    { value: 'all', label: 'Toutes' },
+                    ...Object.entries(ECART_CLASSIFICATION_LABELS).map(([value, label]) => ({ value, label })),
+                    { value: 'non_classe', label: 'Non classé' },
+                  ]}
+                  value={fClassif}
+                  onChange={(v) => setFClassif(v ?? 'all')}
+                  comboboxProps={{ withinPortal: false }}
+                />
+              )}
+              <Select
+                label="Origine"
+                allowDeselect={false}
+                data={[
+                  { value: 'all', label: 'Toutes' },
+                  { value: 'existant', label: 'Existant (outil de suivi)' },
+                  { value: 'natif', label: 'Créé dans le Pilotage' },
+                ]}
+                value={fOrigine}
+                onChange={(v) => setFOrigine(v ?? 'all')}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </>
+          ),
+        }}
+        ajout={
+          writable && (
+            <Button onClick={() => onCreate(kind)}>
+              {kind === 'nonconformity'
+                ? 'Ajouter un constat'
+                : kind === 'journey'
+                  ? 'Démarrer mon parcours'
+                  : 'Ajouter ' + GRC_LABELS[kind].toLowerCase()}
+            </Button>
+          )
+        }
+      />
       <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiserFiltres} />
       <ErrorAlert error={native.error ?? historical.error} />
       <Text size="sm">
@@ -540,9 +528,30 @@ export function BusinessRegistry({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Intitulé</Table.Th>
-                <Table.Th>État</Table.Th>
-                <Table.Th>Responsable</Table.Th>
-                <Table.Th>Échéance</Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="État"
+                    valeur={fEtat === 'all' ? null : fEtat}
+                    options={etats.map((e) => ({ value: e, label: e }))}
+                    onChange={(v) => setFEtat(v ?? 'all')}
+                  />
+                </Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="Responsable"
+                    valeur={fResp === 'all' ? null : fResp}
+                    options={responsables.map((e) => ({ value: e, label: e }))}
+                    onChange={(v) => setFResp(v ?? 'all')}
+                  />
+                </Table.Th>
+                <Table.Th>
+                  <FiltreColonne
+                    libelle="Échéance"
+                    valeur={fEcheance === 'all' ? null : fEcheance}
+                    options={Object.entries(ECHEANCES).map(([value, label]) => ({ value, label }))}
+                    onChange={(v) => setFEcheance(v ?? 'all')}
+                  />
+                </Table.Th>
                 <Table.Th>Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>

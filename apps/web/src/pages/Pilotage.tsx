@@ -281,9 +281,18 @@ export function PilotagePage() {
     <Page>
       <PageHeader
         title={PILOTAGE_LABELS[section] ?? 'Pilotage'}
-        description={
-          config?.description ??
-          'Qualité, sécurité et référentiels : pilotez vos travaux à partir des données existantes.'
+        description={config?.description}
+        actions={
+          (scopes.data?.length ?? 0) > 1 && (
+            <Select
+              className="selecteur-perimetre"
+              allowDeselect={false}
+              label="Périmètre affiché"
+              data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
+              value={smsi ?? null}
+              onChange={chooseScope}
+            />
+          )
         }
       />
       <Stack>
@@ -298,16 +307,6 @@ export function PilotagePage() {
           </Anchor>
         )}
         <ErrorAlert error={scopes.error ?? policy.error} />
-        {(scopes.data?.length ?? 0) > 1 && (
-          <Select
-            allowDeselect={false}
-            label="Périmètre affiché"
-            description="Les accès existants sont conservés."
-            data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
-            value={smsi ?? null}
-            onChange={chooseScope}
-          />
-        )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
         {allowed && smsi && smsi !== SOCLE && RUBRIQUES_COMMUNES.has(section) && (
           <Alert color="blue" role="note">
@@ -385,17 +384,17 @@ export function PilotagePage() {
             )}
             {['actions', 'recurrences'].includes(section) && can('ecarts', 'lire') && (
               <>
-                <Group>
-                  {can('ecarts', 'modifier') && (
-                    <>
-                      <Button onClick={() => create('action')}>Ajouter une action</Button>
-                      <Button variant="light" onClick={() => create('task_series')}>
-                        Ajouter une tâche récurrente
-                      </Button>
-                    </>
-                  )}
-                </Group>
                 <Tasks
+                  outils={
+                    can('ecarts', 'modifier') && (
+                      <>
+                        <Button onClick={() => create('action')}>Ajouter une action</Button>
+                        <Button variant="light" onClick={() => create('task_series')}>
+                          Ajouter une tâche récurrente
+                        </Button>
+                      </>
+                    )
+                  }
                   key={smsi + section}
                   smsi={smsi}
                   policy={policy.data.definition}
@@ -419,12 +418,14 @@ export function PilotagePage() {
             {section === 'risques' && can('pilotage', 'lire') && (
               <>
                 <Group>
-                  {can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>}
                   <Anchor component={Link} to="/pilotage/configuration">
                     Choisir ou adapter la méthode d’appréciation
                   </Anchor>
                 </Group>
                 <RegistreRisques
+                  ajout={
+                    can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>
+                  }
                   key={smsi}
                   smsi={smsi}
                   onOpen={open}

@@ -56,20 +56,27 @@ test('Tâches : filtre par registre, conservé après rechargement', async ({ br
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: perimetre, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Liste', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await expect(page.getByRole('button', { name: `Action du plan A ${suffixe}` }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: `Action du plan B ${suffixe}` }).first()).toBeVisible();
 
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Registre', exact: true }).click();
     await page.getByRole('option', { name: planA, exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await expect(page.getByRole('button', { name: `Action du plan B ${suffixe}` })).toHaveCount(0);
     await expect(page.getByRole('button', { name: `Action du plan A ${suffixe}` }).first()).toBeVisible();
     await expect(page).toHaveURL(/treg=/);
 
     // Le filtre est dans l'adresse : il survit au rechargement.
     await page.reload();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await expect(page.getByRole('combobox', { name: 'Registre', exact: true })).toHaveValue(planA);
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await expect(page.getByRole('button', { name: `Action du plan A ${suffixe}` }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: `Action du plan B ${suffixe}` })).toHaveCount(0);
     expect(problems).toEqual([]);

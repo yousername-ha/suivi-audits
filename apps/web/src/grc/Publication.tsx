@@ -1,4 +1,5 @@
 import { Alert, Button, Card, Group, Select, Stack, Textarea, Text } from '@mantine/core';
+import { APropos } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { methodTemplate, type FrameworkDefinition, type GrcObject } from '@suivi/shared';
@@ -112,11 +113,11 @@ export function Publication({ smsi, type }: { smsi: string; type: 'methods' | 'f
   const write = can(type === 'methods' ? 'pilotage' : 'conformite', type === 'methods' ? 'administrer' : 'modifier');
   return (
     <Stack>
-      <Alert>
+      <APropos>
         {type === 'methods'
           ? 'Chaque périmètre conserve ses méthodes et versions. Les modèles sont des propositions organisationnelles à adapter ; aucun calcul unique n’est imposé.'
           : 'Activez les référentiels correspondant au périmètre. Les exigences sont issues de leurs publications ; aucun texte ISO sous licence n’est fourni.'}
-      </Alert>
+      </APropos>
       <Select
         label={type === 'methods' ? 'Méthode publiée' : 'Référentiel publié'}
         data={choices}

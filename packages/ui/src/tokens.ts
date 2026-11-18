@@ -99,9 +99,10 @@ export const SOMBRE: Tuple = [
   '#080E20',
 ];
 
-/** Fonds de page et de surface, par mode. */
+/** Fonds de page et de surface, par mode. En clair, la page est blanche comme les surfaces (décision du RSSI du
+    18/11/2026) ; le gris de marque BRAND.fond reste réservé aux en-têtes de tableau des rapports imprimables. */
 export const FONDS = {
-  clair: { page: BRAND.fond, surface: BRAND.surface, texte: BRAND.encre, secondaire: GRIS[6] },
+  clair: { page: BRAND.surface, surface: BRAND.surface, texte: BRAND.encre, secondaire: GRIS[6] },
   sombre: { page: SOMBRE[8], surface: SOMBRE[7], texte: SOMBRE[0], secondaire: SOMBRE[2] },
 } as const;
 

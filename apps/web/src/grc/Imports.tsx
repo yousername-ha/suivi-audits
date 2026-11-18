@@ -1,4 +1,5 @@
 import { Alert, Button, Card, FileInput, Group, Select, Stack, Text, Textarea } from '@mantine/core';
+import { APropos } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { FrameworkDefinition, GrcObject } from '@suivi/shared';
@@ -49,10 +50,10 @@ export function Imports({ smsi }: { smsi: string }) {
   };
   return (
     <Stack>
-      <Alert>
+      <APropos>
         Les fichiers sont lus localement dans le navigateur, puis validés par le serveur de cette installation. Aucune
         donnée n’est envoyée à un service tiers. Une simulation puis une confirmation humaine sont obligatoires.
-      </Alert>
+      </APropos>
       <Group>
         <Button
           variant="light"

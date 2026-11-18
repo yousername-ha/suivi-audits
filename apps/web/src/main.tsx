@@ -22,6 +22,7 @@ import '@suivi/ui/neon-surface.css';
 import '@suivi/ui/neon-commandement.css';
 import '@suivi/ui/neon-parc.css';
 import '@suivi/ui/neon-fiche.css';
+import '@suivi/ui/neon-ergonomie.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

@@ -655,6 +655,22 @@ barre animée sans chiffre. Un registre privé (`UPDATER_DOCKER_CONFIG` dans `.e
   d'Anthropic (température, plafond de sortie) ; **seul Mistral a été essayé avec un modèle réel**.
   _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
 
+- **Ergonomie sur grand écran : en-tête compact et boîte d'outils commune** (demande du RSSI pour la 7.3.0, modèle validé le
+  16/11/2026 ; relevé : [docs/refonte-neon/RELEVE-ECRAN-1920.md](docs/refonte-neon/RELEVE-ECRAN-1920.md)). Les données
+  arrivent plus haut à l'écran : titre de page compact, d'une seule taille partout, avec la petite liste « Périmètre affiché »
+  sur la même ligne ; la phrase générique de description est retirée et les explications longues sont repliées sous « À
+  propos de cette page » ; marge haute réduite sous la barre du haut. Toutes les listes partagent une même boîte d'outils bleu
+  nuit : vues, recherche (raccourci « / », parcourue par une lueur violette qui fait le tour du champ) et entonnoir « Filtres
+  avancés » ; l'ajout est au bout de la ligne. La bande de champs de filtre pleine largeur disparaît : État, Responsable,
+  Échéance et les autres critères qui ont leur colonne se filtrent en cliquant sur le titre de la colonne, les autres sont
+  dans les filtres avancés, et les pastilles des critères actifs restent sous la barre. Écrans concernés : plan d'actions et
+  tâches récurrentes, registre commun du Pilotage, registres, fournisseurs, critères fournisseurs, processus, parties
+  intéressées, bibliothèque, objectifs, risques, cartographie des risques, couverture et organisation de l'audit, documents et
+  liens, parcours ISO. La lueur n'anime que la rotation, s'arrête avec le mouvement réduit, l'impression, les couleurs
+  forcées et l'onglet masqué (ADR 0099). En mode clair, le fond de page est blanc (il était gris) et la boîte d'outils se fond dans le fond, sans fond ni cadre, le champ de recherche gardant son contour violet et sa lueur. Un champ « Rechercher une page du menu » s'ajoute sous le logo, dans le menu : il trouve une page par son nom ou sa famille (accents ignorés), Ctrl K (ou Cmd K) y place le curseur, les flèches parcourent les pages trouvées et Entrée ouvre la page. Aucune migration, aucune
+  API ; noms accessibles des champs conservés.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 - **Module « Vulnérabilités », lot V6b : réglages des alertes** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
   « lot V6b » ; décisions du RSSI du 18/11/2026, qui remplacent les choix provisoires du lot V6). **Seuil** : l'alerte critique
   reste celle d'une faille présente en P1 ; l'**alerte simple** ne s'ouvre plus que pour une faille en **P2 exploitable**

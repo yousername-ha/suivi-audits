@@ -71,8 +71,11 @@ test('Action : commentaire puis preuve jointe depuis la fiche, restitués dans l
     await page.reload();
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: perimetre, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Timeline', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page
       .getByRole('region', { name: /Timeline des actions/ })
       .getByRole('button', { name: titre })

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FrameworkDefinition } from '@suivi/shared';
 import { ConfirmButton, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { BibliothequeStudio, ExigencesEnLignes } from './BibliothequeStudio';
@@ -75,6 +76,7 @@ export function Bibliotheque({ smsi }: { smsi?: string }) {
     [ouvert, setOuvert] = useState<{ couverture: CouvertureReferentiel; smsi: string } | null>(null),
     [import_, setImport] = useState<{ cible: Referentiel | null } | null>(null),
     [consulte, setConsulte] = useState<{ cible: Referentiel; version: string } | null>(null),
+    [recherche, setRecherche] = useState(''),
     zoneDetail = useRef<HTMLDivElement>(null);
   const liste = useQuery({
     queryKey: ['library', 'frameworks'],
@@ -118,6 +120,20 @@ export function Bibliotheque({ smsi }: { smsi?: string }) {
         onCouverture={(c) => {
           if (smsi) setOuvert({ couverture: c, smsi });
         }}
+        recherche={recherche}
+        onRecherche={setRecherche}
+        barre={
+          // Boîte d'outils commune (7.3.0) : la recherche du catalogue, toujours visible (raccourci « / »).
+          <BoiteOutils
+            label="Outils du catalogue"
+            recherche={{
+              label: 'Rechercher un référentiel',
+              value: recherche,
+              onChange: setRecherche,
+              placeholder: 'Nom ou identifiant…',
+            }}
+          />
+        }
         outils={
           <details className="bb-import-tools" open>
             <summary>Outils d’import et kit d’intégration IA</summary>
