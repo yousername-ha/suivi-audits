@@ -86,7 +86,11 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await page.goto('/vulnerabilites/surface-externe');
     await expect(page.getByRole('heading', { name: 'Surface externe', level: 1 })).toBeVisible();
     await expect(page.getByText(nom, { exact: true })).toBeVisible();
-    await expect(page.getByText('Jamais synchronisé').first()).toBeVisible();
+    // La planification de l'API (toutes les minutes) peut inscrire la synchronisation du jour entre l'activation et cette
+    // lecture : l'état est alors « Synchronisation en cours », ou en échec si un exécutant l'a déjà prise.
+    await expect(
+      page.getByText(/Jamais synchronisé|Synchronisation en cours|Dernière synchronisation en échec/).first(),
+    ).toBeVisible();
     // Lot ALH4 : l'onglet « Carte » s'affiche en premier ; sans données, la carte se dit vide.
     await expect(page.getByRole('tab', { name: 'Carte', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByText(/la carte est vide/)).toBeVisible();
@@ -159,6 +163,22 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     expect(await fluxAlh()).toBe(false);
     expect(problems).toEqual([]);
   } finally {
+    // Un échec en cours de route ne doit pas laisser l'instance active ni le flux ouvert : un nouvel essai partirait d'un
+    // flux déjà validé, sans fenêtre de validation.
+    try {
+      await page.goto('/integrations');
+      const desactiver = page
+        .getByRole('region', { name: nom })
+        .getByRole('button', { name: 'Désactiver', exact: true });
+      if (await desactiver.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await desactiver.click();
+        await expect(
+          page.getByRole('region', { name: nom }).getByRole('button', { name: 'Activer', exact: true }),
+        ).toBeVisible();
+      }
+    } catch {
+      // Le ménage ne masque pas l'échec d'origine.
+    }
     await ctx.close();
   }
 });
