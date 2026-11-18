@@ -23,5 +23,5 @@ auditConfig:
     - GHSA-g3hv-75wg-m249
     # picomatch <= 4.0.7 (déni de service par expression régulière, élevé), tiré par typescript-eslint, Vite et Vitest seuls,
     # outils de développement et de construction absents des dépendances d'exécution (`pnpm audit --prod` : rien). Aucune
-    # version corrigée n'est publiée au 17/11/2026. Réexamen au plus tard le 30/11/2026.
+    # version corrigée n'est publiée au 17/11/2026. Réexamen au plus tard le 25/11/2026.
     - GHSA-fc5q-39xc-vjpf

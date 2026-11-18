@@ -105,4 +105,4 @@ dans `picomatch` ≤ 4.0.7 (gravité élevée), sur des motifs « extglob » ré
 - Aucune version corrigée n'est publiée au 17/11/2026 (la 4.0.7 est la dernière) : il n'y a rien à adopter. Aucun
   remplaçant n'est possible sans changer ces trois outils, eux-mêmes les plus répandus dans leur rôle. L'avis, publié ce
   jour, faisait échouer le job « Qualité ».
-- Réexamen au plus tard le 30/11/2026 ; l'exception est retirée dans la PR qui adopte la version corrigée.
+- Réexamen au plus tard le 25/11/2026 (décision du RSSI du 18/11/2026) ; l'exception est retirée dans la PR qui adopte la version corrigée.

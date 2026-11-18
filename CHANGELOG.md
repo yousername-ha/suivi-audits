@@ -569,7 +569,7 @@ qui suit la mise à jour, si une faille présente est en P1 ou en P2. Aucun appe
 - **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), décision du RSSI du
   17/11/2026) : l'avis GHSA-fc5q-39xc-vjpf (déni de service dans `picomatch` ≤ 4.0.7, gravité élevée, sans version corrigée
   publiée) est ignoré par `pnpm audit`. Le paquet n'est tiré que par des outils de développement et de construction
-  (`typescript-eslint`, Vite, Vitest), absents des dépendances d'exécution. Réexamen au plus tard le 30/11/2026.
+  (`typescript-eslint`, Vite, Vitest), absents des dépendances d'exécution. Réexamen au plus tard le 25/11/2026.
   (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.2.3] — 2026-11-17
