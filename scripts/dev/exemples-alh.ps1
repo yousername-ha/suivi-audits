@@ -18,7 +18,7 @@ $MaxElements = 3
 
 # Champs dont la valeur est gardée telle quelle : vocabulaire technique, jamais un nom, une adresse ou un texte libre.
 $Gardes = 'status', 'type', 'fragment_type', 'version_status', 'severity', 'cve', 'vendor', 'product', 'version',
-  'latest_version', 'cpe', 'technology', 'display_name', 'template_id', 'cwe_id'
+  'latest_version', 'cpe', 'technology', 'display_name', 'template_id', 'cwe_id', 'protocol', 'service_name', 'state'
 $Valeurs = 'typosquatting', 'data_leak', 'exposed_service', 'vulnerable_service', 'config_defect', 'minor', 'important', 'major', 'critical'
 # Champs retirés en entier, quel que soit leur contenu.
 $Retires = 'sensitive_data', 'uploads', 'note', 'comments', 'defects', 'data'
@@ -76,15 +76,26 @@ function Lire([string]$Fichier, [string]$Chemin) {
 [void](Lire '6-technologies.json' '/api/v1/technologies')
 $Alertes = Lire '7-alertes.json' '/api/v1/alerts'
 
-# Détail d'une alerte par type rencontré (cinq au plus) : c'est là que se trouvent les CVE et les constats.
+# Détail d'une alerte par type rencontré (cinq au plus), les alertes encore ouvertes d'abord : c'est dans leur détail que se
+# trouvent les CVE, les ports et les services (fragments). Une alerte terminée a souvent des fragments vides.
+$Ouvertes = @($Alertes | Where-Object { $null -ne $_ -and @('completed', 'abandoned', 'accepted-risk') -notcontains $_.status })
+$Closes = @($Alertes | Where-Object { $null -ne $_ -and @('completed', 'abandoned', 'accepted-risk') -contains $_.status })
 $Vus = @{}
 $Rang = 0
-foreach ($Alerte in @($Alertes)) {
+foreach ($Alerte in ($Ouvertes + $Closes)) {
   if ($null -eq $Alerte -or $Vus.ContainsKey([string]$Alerte.type_id) -or $Rang -ge 5) { continue }
   $Vus[[string]$Alerte.type_id] = $true
   $Rang++
   [void](Lire "8-alerte-detail-$Rang.json" "/api/v1/alerts/$($Alerte.id)")
 }
+# Trois alertes ouvertes de plus, quel que soit leur type, pour voir plusieurs formes de fragments.
+$Plus = 0
+foreach ($Alerte in $Ouvertes) {
+  if ($Plus -ge 3) { break }
+  $Plus++
+  [void](Lire "9-alerte-ouverte-$Plus.json" "/api/v1/alerts/$($Alerte.id)")
+}
+[void]$Resume.Add("alertes ouvertes : $($Ouvertes.Count) ; terminées : $($Closes.Count)")
 
 $Resume | Out-File -FilePath (Join-Path $Dossier '0-resume.txt') -Encoding utf8
 $Cle = $null
