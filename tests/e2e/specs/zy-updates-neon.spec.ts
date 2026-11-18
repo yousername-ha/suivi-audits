@@ -189,3 +189,127 @@ test('maintenance : la coupure annoncée du frontal est affichée, puis reprise 
     await ctx.close();
   }
 });
+
+// Progression réelle du téléchargement (ADR 0104) : octets reçus et total publiés par l'exécutant pendant la préparation.
+const preparation = (changes = {}) =>
+  enCours({
+    phase: 'preparing',
+    message: 'Préparation et vérification de la nouvelle version.',
+    etapes: [{ phase: 'preparing', at: new Date(Date.now() - 95_000).toISOString() }],
+    ...changes,
+  });
+const sansChiffre = /%|\d\s*[MK]o\b/;
+
+test('maintenance : la barre de transfert suit le téléchargement mesuré publié, sans aucun chiffre sinon', async ({
+  browser,
+}) => {
+  const { ctx, page, problems, suivi } = await ouvrir(
+    browser,
+    preparation({ telechargement: { recu: 180_400_000, total: 290_000_000 } }),
+    'no-preference',
+  );
+  const progression = page.locator('#telechargement');
+  const remplissage = page.locator('#transfer-fill');
+  const reflet = page.locator('.transfer-band');
+  try {
+    await expect(page.locator('html')).toHaveAttribute('data-art', 'download');
+    const barre = page.getByRole('progressbar', { name: 'Téléchargement de la nouvelle version' });
+    await expect(barre).toBeVisible();
+    await expect(barre).toHaveAttribute('aria-valuenow', '62');
+    await expect(barre).toHaveAttribute('aria-valuemin', '0');
+    await expect(barre).toHaveAttribute('aria-valuemax', '100');
+    await expect(barre).toHaveAttribute('aria-valuetext', '62 %, 180 Mo sur 290 Mo');
+    await expect(page.locator('#telechargement-valeur')).toHaveText('62 % · 180 / 290 Mo');
+    // Remplissage proportionnel (164 unités pour la barre entière), sans le reflet décoratif ni animation sur la barre.
+    await expect(remplissage).toHaveAttribute('width', '102.02');
+    await expect(remplissage).toBeVisible();
+    await expect(reflet).toBeHidden();
+    expect(
+      await page.evaluate(() =>
+        ['#transfer-fill', '.transfer-band'].map((s) => document.querySelector(s)!.getAnimations().length),
+      ),
+    ).toEqual([0, 0]);
+    // Une seule zone annoncée : le texte de l'étape ; la barre de progression n'en est pas une.
+    await expect(page.getByRole('status')).toHaveText('Préparation et vérification de la nouvelle version.');
+    await expect(progression).not.toHaveAttribute('aria-live');
+    // Avancement : la barre et le texte suivent la donnée publiée ; tailles en Ko sous 1 Mo, une décimale sous 10.
+    suivi.etat = preparation({ telechargement: { recu: 1_500_000, total: 3_200_000 } });
+    await expect(page.locator('#telechargement-valeur')).toHaveText('46 % · 1,5 / 3,2 Mo');
+    suivi.etat = preparation({ telechargement: { recu: 250_000, total: 800_000 } });
+    await expect(page.locator('#telechargement-valeur')).toHaveText('31 % · 250 / 800 Ko');
+    suivi.etat = preparation({ telechargement: { recu: 289_600_000, total: 290_000_000 } });
+    await expect(page.locator('#telechargement-valeur')).toHaveText('99 % · 289 / 290 Mo');
+    suivi.etat = preparation({ telechargement: { recu: 290_000_000, total: 290_000_000 } });
+    await expect(page.locator('#telechargement-valeur')).toHaveText('100 % · 290 / 290 Mo');
+    await expect(remplissage).toHaveAttribute('width', '164');
+    // Téléchargement terminé, donnée retirée : animation décorative d'avant, aucun chiffre.
+    suivi.etat = preparation({ message: 'Vérification des signatures.' });
+    await expect(page.getByRole('status')).toHaveText('Vérification des signatures.');
+    await expect(progression).toBeHidden();
+    await expect(remplissage).toBeHidden();
+    await expect(reflet).toBeVisible();
+    await expect(page.locator('html')).not.toHaveAttribute('data-telechargement');
+    expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('maintenance : une progression de téléchargement invalide ou hors préparation est ignorée', async ({
+  browser,
+}) => {
+  const { ctx, page, problems, suivi } = await ouvrir(browser, preparation(), 'no-preference');
+  const progression = page.locator('#telechargement');
+  try {
+    await expect(page.locator('html')).toHaveAttribute('data-art', 'download');
+    await expect(progression).toBeHidden();
+    expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
+    const invalides: unknown[] = [
+      { recu: 300, total: 290 },
+      { recu: -1, total: 10 },
+      { recu: 1, total: 0 },
+      { recu: '1', total: '2' },
+      { recu: 1.5, total: 3 },
+      { recu: 1 },
+      [1, 2],
+      'x',
+      null,
+    ];
+    for (const [i, telechargement] of invalides.entries()) {
+      suivi.etat = preparation({ message: `Préparation ${i}.`, telechargement });
+      await expect(page.getByRole('status')).toHaveText(`Préparation ${i}.`);
+      await expect(progression).toBeHidden();
+      await expect(page.locator('.transfer-band')).toBeVisible();
+      expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
+    }
+    // Donnée valide mais autre étape (installation) : rien n'est affiché.
+    suivi.etat = enCours({ telechargement: { recu: 1, total: 2 } });
+    await expect(page.locator('html')).toHaveAttribute('data-art', 'building');
+    await expect(progression).toBeHidden();
+    expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('maintenance : progression du téléchargement en mouvement réduit, barre remplie et statique', async ({
+  browser,
+}) => {
+  const { ctx, page, problems } = await ouvrir(
+    browser,
+    preparation({ telechargement: { recu: 145_000_000, total: 290_000_000 } }),
+    'reduce',
+  );
+  try {
+    await expect(page.locator('#telechargement-valeur')).toHaveText('50 % · 145 / 290 Mo');
+    await expect(page.locator('#transfer-fill')).toHaveAttribute('width', '82');
+    await expect(page.locator('#transfer-fill')).toBeVisible();
+    await expect(page.locator('.transfer-band')).toBeHidden();
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});

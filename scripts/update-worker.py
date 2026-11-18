@@ -9,6 +9,7 @@ import datetime as dt
 import fcntl
 import base64
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,7 @@ import tempfile
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -60,6 +62,74 @@ FRONTAL_EMPREINTE = "/etc/suivi-frontal.sha256"
 FRONTAL_IMAGE = f"ghcr.io/{REPOSITORY}-web"
 FRONTAL_DELAI = 120
 UUID_JSON = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$")
+# Progression réelle du téléchargement (ADR 0104) : images tirées par l'API du moteur Docker, sur le socket déjà monté, sans
+# préfixe de version (celle du moteur : un préfixe fixe serait refusé par un moteur trop ancien ou trop récent). Délai par image
+# identique à celui de « docker pull » ; octets reçus publiés au plus une fois par TELECHARGEMENT_PERIODE secondes.
+DOCKER_SOCKET = "/var/run/docker.sock"
+TELECHARGEMENT_DELAI = 900
+TELECHARGEMENT_PERIODE = 1.0
+# Statuts du flux de l'API qui disent une couche entièrement reçue (ou déjà présente sur le serveur). « Extracting » porte la
+# progression de la décompression, jamais des octets reçus : seule sa présence compte.
+COUCHE_RECUE = {"Download complete", "Verifying Checksum", "Extracting", "Pull complete", "Already exists"}
+
+
+class Indisponible(Exception):
+    """L'API du moteur ne peut pas servir le téléchargement et rien n'en a encore été reçu : repli sur « docker pull »."""
+
+
+class MoteurDocker(http.client.HTTPConnection):
+    """Connexion HTTP à l'API du moteur Docker par son socket Unix (bibliothèque standard seule)."""
+
+    def __init__(self, chemin, timeout):
+        super().__init__("localhost", timeout=timeout)
+        self.chemin = chemin
+        # Référence propre au socket : http.client l'oublie quand la réponse annonce la fermeture de la connexion.
+        self.brut = None
+
+    def connect(self):
+        self.sock = self.brut = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
+        self.sock.connect(self.chemin)
+
+
+class Progression:
+    """Octets reçus sur le total à télécharger pour les trois images (ADR 0104). Le total est fixé avant le début : somme des
+    tailles des couches de la plateforme du serveur, lues dans les manifestes du registre, une fois par couche partagée. Une
+    couche déjà présente sur le serveur n'est connue qu'au début de son flux (« Already exists ») : elle compte alors comme
+    reçue, la barre peut donc partir au-dessus de zéro. La valeur ne recule jamais et ne dépasse jamais le total."""
+
+    def __init__(self, couches):
+        # Le flux désigne chaque couche par les 12 premiers caractères hexadécimaux de son empreinte.
+        self.tailles = {digest[7:19]: taille for digest, taille in couches.items()}
+        self.total = sum(self.tailles.values())
+        self.recus = {}
+
+    def evenement(self, evenement):
+        ident = evenement.get("id")
+        if not isinstance(ident, str) or ident not in self.tailles:
+            return
+        taille, statut = self.tailles[ident], evenement.get("status")
+        if statut == "Downloading":
+            detail = evenement.get("progressDetail")
+            courant = detail.get("current") if isinstance(detail, dict) else None
+            if not isinstance(courant, int) or isinstance(courant, bool) or courant < 0:
+                return
+            valeur = min(courant, taille)
+        elif statut in COUCHE_RECUE:
+            valeur = taille
+        else:
+            return
+        self.recus[ident] = max(self.recus.get(ident, 0), valeur)
+
+    def terminer(self, couches):
+        """Image tirée sans erreur : toutes ses couches sont là (une image déjà à jour ne décrit aucune couche dans son flux)."""
+        for digest in couches:
+            ident = digest[7:19]
+            self.recus[ident] = self.tailles[ident]
+
+    @property
+    def recu(self):
+        return min(self.total, sum(self.recus.values()))
 
 
 def now():
@@ -154,11 +224,14 @@ class Worker:
         defaults = dict(installed=installed, available=None, checkedAt=None, notes=None, checking=False,
                         checkError=False, ready=False, maintenance=False, id=None, target=None,
                         status="idle", phase="idle", message="Aucune mise à jour en cours.", startedAt=None, updatedAt=now(),
-                        etapes=[], finishedAt=None, coupure=False)
+                        etapes=[], finishedAt=None, coupure=False, telechargement=None)
         self.state = {**defaults, **self.state, "installed": installed}
         # Coupure du frontal annoncée (ADR 0103) : seulement pendant une opération active.
         if not self.job:
             self.state["coupure"] = False
+        # Progression du téléchargement (ADR 0104) : mesurée par ce processus seul ; celle d'un exécutant arrêté est périmée.
+        self.state["telechargement"] = None
+        self.telechargement_publie_le = None
         # Flux vers l'extérieur (ADR 0097) : dernier état voulu lu (None : illisible à ce passage), dernier rapport accepté
         # par l'application et son horodatage, dernier « up -d » complet des conteneurs ouverts (0 : au démarrage).
         self.flux_voulus = None
@@ -396,7 +469,7 @@ class Worker:
             phase = "idle"
         self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase=phase,
                      maintenance=status == "intervention", ready=status != "intervention", message=message, finishedAt=end,
-                     coupure=False, installed=self.env().get("APP_VERSION", self.state["installed"]))
+                     coupure=False, telechargement=None, installed=self.env().get("APP_VERSION", self.state["installed"]))
         self.receipt(status, message, end)
         if status == "intervention":
             self.job["blocked"] = True
@@ -627,6 +700,172 @@ class Worker:
         except Exception:
             return self.frontal_retablir()
 
+    # ------------------------------------------------------------------ Téléchargement des images (ADR 0104)
+    # Par l'API du moteur Docker, qui rend les octets reçus de chaque couche, quand aucun identifiant de registre n'est
+    # configuré pour l'exécutant ; sinon, ou si l'API ne répond pas avant d'avoir rien servi, « docker pull » comme avant, sans
+    # progression. Une erreur une fois le flux commencé est un échec du téléchargement, sans nouvel essai : la mise à jour
+    # s'arrête avant toute vérification et l'administrateur peut la relancer. Seuls les octets reçus et le total sont publiés.
+
+    def identifiants_docker(self):
+        """Identifiants de registre configurés pour la CLI de l'exécutant (UPDATER_DOCKER_CONFIG monté sur /root/.docker) :
+        l'API du moteur ne les reçoit pas, le téléchargement passe alors par « docker pull ». Un fichier présent mais illisible
+        compte comme configuré (sens sûr : comportement d'avant)."""
+        dossier = os.environ.get("DOCKER_CONFIG") or os.path.join(os.path.expanduser("~"), ".docker")
+        try:
+            config = json.loads(Path(dossier, "config.json").read_text())
+        except FileNotFoundError:
+            return False
+        except (OSError, ValueError):
+            return True
+        return not isinstance(config, dict) or any(config.get(cle) for cle in ("auths", "credsStore", "credHelpers"))
+
+    def moteur(self, methode, chemin, timeout):
+        """Requête à l'API du moteur Docker ; renvoie la connexion et la réponse (en-têtes lus)."""
+        connexion = MoteurDocker(DOCKER_SOCKET, timeout)
+        try:
+            connexion.request(methode, chemin, headers={"Content-Length": "0"} if methode == "POST" else {})
+            return connexion, connexion.getresponse()
+        except BaseException:
+            connexion.close()
+            raise
+
+    def plateforme(self):
+        """Système et architecture du moteur, ceux des images qu'il tire."""
+        try:
+            connexion, reponse = self.moteur("GET", "/version", 30)
+            try:
+                if reponse.status != 200:
+                    raise Indisponible()
+                data = json.loads(reponse.read(65536))
+            finally:
+                connexion.close()
+        except (OSError, ValueError, http.client.HTTPException):
+            raise Indisponible() from None
+        if not isinstance(data, dict) or not all(isinstance(data.get(k), str) and re.fullmatch(r"[\w.-]{1,40}", data[k]) for k in ("Os", "Arch")):
+            raise Indisponible()
+        return data["Os"], data["Arch"]
+
+    def couches(self, image, plateforme):
+        """Couches de l'image pour la plateforme du serveur, {empreinte: taille}, lues dans le manifeste du registre par la CLI
+        (déjà utilisée par l'exécutant et cosign pour joindre le registre). Index multi-plateforme : une seule entrée doit
+        correspondre (les attestations sont « unknown/unknown »)."""
+        try:
+            sortie = json.loads(self.run(["docker", "manifest", "inspect", "-v", image], timeout=60))
+        except (Failure, ValueError):
+            raise Indisponible() from None
+        entrees = sortie if isinstance(sortie, list) else [sortie]
+        if len(entrees) > 1:
+            entrees = [e for e in entrees if isinstance(e, dict) and isinstance(e.get("Descriptor"), dict)
+                       and isinstance(e["Descriptor"].get("platform"), dict)
+                       and (e["Descriptor"]["platform"].get("os"), e["Descriptor"]["platform"].get("architecture")) == plateforme]
+        if len(entrees) != 1 or not isinstance(entrees[0], dict):
+            raise Indisponible()
+        manifeste = entrees[0].get("OCIManifest") or entrees[0].get("SchemaV2Manifest")
+        couches = manifeste.get("layers") if isinstance(manifeste, dict) else None
+        if not isinstance(couches, list) or not couches:
+            raise Indisponible()
+        result = {}
+        for couche in couches:
+            digest, taille = (couche.get("digest"), couche.get("size")) if isinstance(couche, dict) else (None, None)
+            if (not isinstance(digest, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", digest)
+                    or not isinstance(taille, int) or isinstance(taille, bool) or taille < 0):
+                raise Indisponible()
+            result[digest] = taille
+        return result
+
+    def publier_telechargement(self, progression):
+        """{recu, total} publié s'il a changé, au plus une fois par TELECHARGEMENT_PERIODE ; jamais en recul."""
+        actuel = self.state.get("telechargement") or {}
+        recu = max(progression.recu, actuel.get("recu", 0) if actuel.get("total") == progression.total else 0)
+        if actuel == {"recu": recu, "total": progression.total}:
+            return
+        maintenant = time.monotonic()
+        if self.telechargement_publie_le is not None and maintenant - self.telechargement_publie_le < TELECHARGEMENT_PERIODE:
+            return
+        self.telechargement_publie_le = maintenant
+        self.publish(telechargement={"recu": recu, "total": progression.total})
+
+    def tirer(self, depot, tag, couches, progression):
+        """Une image tirée par l'API du moteur, flux lu ligne à ligne. Lève Indisponible si rien n'a été reçu (repli permis),
+        Failure si le téléchargement échoue ou dépasse TELECHARGEMENT_DELAI."""
+        limite = time.monotonic() + TELECHARGEMENT_DELAI
+        chemin = "/images/create?" + urllib.parse.urlencode({"fromImage": depot, "tag": tag})
+        try:
+            connexion, reponse = self.moteur("POST", chemin, TELECHARGEMENT_DELAI)
+        except TimeoutError:
+            raise Failure("Délai dépassé") from None
+        except (OSError, http.client.HTTPException):
+            raise Indisponible() from None
+        # Fermer la connexion interrompt le téléchargement côté moteur (délai dépassé, erreur).
+        try:
+            if reponse.status != 200:
+                raise Indisponible()
+            commence = False
+            while True:
+                reste = limite - time.monotonic()
+                if reste <= 0:
+                    raise Failure("Délai dépassé")
+                connexion.brut.settimeout(reste)
+                try:
+                    ligne = reponse.readline(65536)
+                    evenement = json.loads(ligne) if ligne.strip() else None
+                    if ligne.strip() and not isinstance(evenement, dict):
+                        raise ValueError
+                except TimeoutError:
+                    raise Failure("Délai dépassé") from None
+                except (OSError, ValueError, http.client.HTTPException):
+                    if commence:
+                        raise Failure("Téléchargement interrompu") from None
+                    raise Indisponible() from None
+                if not ligne:
+                    break
+                if evenement is None:
+                    continue
+                commence = True
+                # Message du moteur jamais repris : il peut citer le registre ou des identifiants.
+                if "error" in evenement or "errorDetail" in evenement:
+                    raise Failure("Téléchargement en échec")
+                progression.evenement(evenement)
+                self.publier_telechargement(progression)
+            if not commence:
+                raise Indisponible()
+            progression.terminer(couches)
+            self.publier_telechargement(progression)
+        finally:
+            connexion.close()
+
+    def telecharger(self, target):
+        """Les trois images de la cible : par l'API du moteur avec progression publiée, sinon par « docker pull »."""
+        images = [(f"ghcr.io/{REPOSITORY}-{c}", target) for c in ("api", "web", "updater")]
+        progression = par_image = None
+        if not self.identifiants_docker():
+            try:
+                plateforme = self.plateforme()
+                par_image = [self.couches(f"{depot}:{tag}", plateforme) for depot, tag in images]
+                progression = Progression({d: t for couches in par_image for d, t in couches.items()})
+                if progression.total <= 0:
+                    progression = None
+            except Indisponible:
+                progression = None
+        self.telechargement_publie_le = None
+        try:
+            if progression:
+                self.publier_telechargement(progression)
+            for index, (depot, tag) in enumerate(images):
+                if progression:
+                    try:
+                        self.tirer(depot, tag, par_image[index], progression)
+                        continue
+                    except Indisponible:
+                        # Rien reçu de cette image : elle et les suivantes passent par la CLI, sans progression.
+                        progression = None
+                        self.publish(telechargement=None)
+                self.run(["docker", "pull", f"{depot}:{tag}"], timeout=TELECHARGEMENT_DELAI)
+        finally:
+            if self.state.get("telechargement") is not None:
+                with contextlib.suppress(Exception):
+                    self.publish(telechargement=None)
+
     def signatures(self, target):
         # Le commit des sources doit correspondre à celui des images signées (label inclus dans l'empreinte).
         refspec = f"refs/tags/v{target}:refs/tags/v{target}"
@@ -642,10 +881,11 @@ class Worker:
         # Le canal est lié à la révision signée : une préversion de développement ne s'installe que si le serveur l'a choisi.
         if not self.channel_ok(revision, target):
             raise Failure("Canal de publication non autorisé")
-        # Vérifier les trois artefacts avant d'arrêter l'application, sans possibilité de désactiver la signature.
+        # Téléchargement des trois images (progression publiée, ADR 0104), puis vérification de chacune avant d'arrêter
+        # l'application, sans possibilité de désactiver la signature. Rien de ce qui est téléchargé n'est utilisé avant.
+        self.telecharger(target)
         for component in ("api", "web", "updater"):
             image = f"ghcr.io/{REPOSITORY}-{component}:{target}"
-            self.run(["docker", "pull", image], timeout=900)
             digests = json.loads(self.run(["docker", "inspect", "--format", "{{json .RepoDigests}}", image]))
             prefix = f"ghcr.io/{REPOSITORY}-{component}@sha256:"
             digest = next((d for d in digests if d.startswith(prefix) and re.fullmatch(r"[a-f0-9]{64}", d[len(prefix):])), None)
