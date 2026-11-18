@@ -16,8 +16,13 @@
      1, expositions 2, majoration 4 au plus, faits des sources 3, titres 1 ; corrigées 1 ; machines lisibles 1 ; surface
      lisible 2 ; journal 1 : 18 au plus). Lot S1 : la tuile « En dépassement » reprend les objets suivis du même calcul
      global (aucune requête de plus). Lot S2 : variation sur sept jours, une requête de plus (l'instantané de référence),
-     les nombres du moment étant composés à partir du même calcul global : 19 au plus. */
+     les nombres du moment étant composés à partir du même calcul global : 19 au plus. Lot S3 : précision « sans correctif
+     connu » des failles exploitées et présentes (même calcul, aucune requête de plus) ; fin de support : constats présents
+     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. */
 import {
+  type EtatCorrectifDto,
+  etatCorrectif,
+  etatFinSupport,
   type CaseRadarDto,
   type CibleVueDto,
   comparerCibles,
@@ -50,6 +55,7 @@ import type { Db, Kdb } from '../db/db.js';
 import type { AlertesVulnerabilites, Cumul, PropositionCumul } from './alertes.js';
 import { objetsEnDepassement } from './delais.js';
 import { entreesInstantane, instantaneDeReference } from './tendances.js';
+import { servicesFinDeSupport } from './services-surface.js';
 import { lisible, present } from './sql.js';
 import { close } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
@@ -157,6 +163,15 @@ export class VueEnsembleVulnerabilites {
     // calculés par la même composition que l'instantané (aucune requête de plus).
     const reference = await instantaneDeReference(k, maintenant);
     const actuel = composerInstantane(entreesInstantane(cumuls, sources, objets, reglage, maintenant));
+    // Lot S3 : précision des failles exploitées et présentes selon l'état de leur correctif (sans renommer la marque).
+    const p1 = suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1');
+    const etats = p1.map((s) => correctifDeCumul(s.x, sources).etat);
+    // Lot S3 : fin de support (constats présents selon Tenable, machines et services exposés lus).
+    const fin = objets.filter(
+      (o) => o.nature === 'constat' && etatFinSupport(o.finSupportLe ?? null, maintenant) === 'atteinte',
+    );
+    const machinesFin = await this.machinesLues(user, [...new Set(fin.flatMap((o) => o.machines))]);
+    const servicesFin = await servicesFinDeSupport(k, user);
     return {
       niveau,
       tuiles: {
@@ -169,6 +184,9 @@ export class VueEnsembleVulnerabilites {
         corrigeesCeMois: corrigees,
         // Lot S1 : objets suivis présents en dépassement de délai, sur tous les faits connus (aucune requête de plus).
         enDepassement: objetsEnDepassement(objets, reglage.delais, maintenant).length,
+        exploiteesSansCorrectif: etats.filter((e) => e === 'aucun_connu').length,
+        exploiteesCorrectifNonRenseigne: etats.filter((e) => e === 'non_renseigne').length,
+        finDeSupport: { constats: fin.length, machines: machinesFin, services: servicesFin },
       },
       total: suivies.length,
       parPriorite,
@@ -237,6 +255,15 @@ export class VueEnsembleVulnerabilites {
             : null,
       });
     return out;
+  }
+
+  /** Lot S3 : parmi les machines données (identifiants internes), celles que la personne lit ; drapeau pour les autres. */
+  private async machinesLues(user: SessionUser, ids: readonly string[]): Promise<NombreLisible> {
+    if (!ids.length) return { ...VIDE };
+    const { rows } = await sql<{ lues: number }>`SELECT count(*)::int AS lues FROM vulnerabilites_machines m
+      WHERE m.id = ANY(${[...ids]}::uuid[]) AND ${lisible(user)}`.execute(this.db.k);
+    const lues = rows[0]?.lues ?? 0;
+    return { lisibles: lues, horsLecture: lues < ids.length };
   }
 
   /** Actifs exposés que la personne lit, pour les CVE rendues exposées sur Internet. */
@@ -324,6 +351,15 @@ export async function propositionsEnCours(k: Kdb): Promise<PropositionCumul[]> {
     FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
     WHERE r.statut = 'proposee' ORDER BY r.cve, r.id`.execute(k);
   return rows;
+}
+
+/** Lot S3 : état du correctif d'une faille du calcul global : date de publication du correctif selon Tenable (le plus ancien
+    des contrôles qui la portent) et mention « Un correctif existe » du CERT Santé pour sa CVE. Repris par le rapport. */
+export function correctifDeCumul(x: Cumul, sources: ReadonlyMap<string, SourcesFailleDto>): EtatCorrectifDto {
+  return etatCorrectif({
+    tenablePublieLe: x.correctifTenableLe,
+    certSante: (x.cve ? sources.get(x.cve)?.certSante?.correctif : null) ?? null,
+  });
 }
 
 /** Exploitation avérée d'une faille : au moins une source de l'exploitation rangée avec sa CVE. */

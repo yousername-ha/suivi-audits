@@ -46,6 +46,8 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   exploite: true,
   nonMaintenu: false,
   finSupportLe: null,
+  finDeSupport: false,
+  correctifEtat: { etat: 'non_renseigne', sources: [] },
   nombreCves: 7,
   cves: ['CVE-2026-90005', 'CVE-2026-90004'],
   machines: 3,
@@ -162,6 +164,8 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
       { fait: 'elevees', nombre: 1 },
     ],
   },
+  finDeSupport: false,
+  finsDeSupport: [],
   version: 4,
   ...m,
 });
@@ -226,6 +230,7 @@ describe('adresses et libellés', () => {
           exploite: true,
           exploitable: true,
           nonMaintenu: true,
+          finSupport: true,
           priorite: 'P2',
           etat: '',
           delai: 'en_depassement',
@@ -234,7 +239,7 @@ describe('adresses et libellés', () => {
         2,
       ),
     ).toBe(
-      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&priorite=P2&delai=en_depassement&tri=echeance&page=2',
+      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&finSupport=oui&priorite=P2&delai=en_depassement&tri=echeance&page=2',
     );
     expect(urlConstats({ ...FILTRES_CONSTATS_VIDES, etat: 'a_clore' })).toBe(
       '/api/vulnerabilites/constats?etat=a_clore',

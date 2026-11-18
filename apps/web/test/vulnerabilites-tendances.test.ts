@@ -230,9 +230,14 @@ const rapport = (): RapportVulnerabilitesDto => ({
         presences: ['detectee'],
         depuis: '2026-11-10T08:00:00.000Z',
         enDepassement: true,
+        correctif: {
+          etat: 'disponible',
+          sources: [{ source: 'tenable', valeur: 'disponible', le: '2026-11-02T00:00:00.000Z' }],
+        },
       },
     ],
   },
+  finDeSupport: { total: 0, elements: [] },
   delais: { reglage: DELAIS_CORRECTION_DEFAUT, mesures: mesurerCorrections([]), nonMesurees: 0 },
   depassements: { total: 0, elements: [] },
   exceptions: { compteurs: { en_cours: 0, bientot_echue: 0, echue: 0, sans_echeance: 0 }, elements: [] },
@@ -259,7 +264,10 @@ describe('document du rapport', () => {
     expect(html).toContain('du 01/11/2026 au 18/11/2026');
     expect(html).toContain('Périmètre fictif A');
     expect(html).toContain('Document produit par la plateforme le <span class="horodatage">18/11/2026 10:30</span>');
-    expect(html.match(/<h2 /gi)).toHaveLength(9);
+    // Neuf sections, plus la section « fin de support » du lot S3.
+    expect(html.match(/<h2 /gi)).toHaveLength(10);
+    expect(html).toContain('Contrôles de Tenable en fin de support : 0');
+    expect(html).toContain('<th scope="col">Correctif</th>');
     expect(html).toContain('<th scope="col">CVE</th>');
     expect(html).toContain('<td>CVE-2026-0001</td>');
     expect(html).toContain('Aucune faille en dépassement de délai.');

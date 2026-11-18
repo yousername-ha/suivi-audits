@@ -71,6 +71,8 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   exploite: false,
   nonMaintenu: false,
   finSupportLe: null,
+  finDeSupport: false,
+  correctifEtat: { etat: 'non_renseigne', sources: [] },
   nombreCves: 0,
   cves: [],
   machines: 1,

@@ -160,6 +160,9 @@ export interface SituationMesuree {
   perimetresObjet: (o: ObjetDelai) => Set<string>;
   titres: Map<string, { titre: string | null; produit: string | null }>;
   reglage: ReglagePriorite;
+  /** Lot S3 : ce que disent les sources de chaque CVE (état du correctif) et périmètre (clé) d'une machine. */
+  sources: ReadonlyMap<string, SourcesFailleDto>;
+  perimetreDeMachine: (machine: string) => string;
 }
 
 export class TendancesVulnerabilites {
@@ -212,6 +215,8 @@ export class TendancesVulnerabilites {
       perimetresObjet: (o) => new Set(o.machines.map(cleMachine)),
       titres,
       reglage,
+      sources,
+      perimetreDeMachine: cleMachine,
     };
   }
 

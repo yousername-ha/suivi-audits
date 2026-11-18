@@ -145,6 +145,9 @@ export interface Cumul {
   produitIds: string[];
   /** PC1 : priorité « produit à confirmer » (rapprochement proposé), seulement si des propositions sont remises. */
   aConfirmer: Priorite | null;
+  /** Lot S3 : date de publication du correctif la plus ancienne selon Tenable, parmi les contrôles présents qui portent la
+      faille (traités compris : c'est un fait sur la faille), ou null. */
+  correctifTenableLe: string | null;
 }
 
 /** Objet suivi présent (constat de Tenable présent, faille déclarée rattachée), pour son délai de correction (lot S1) : état
@@ -161,6 +164,8 @@ export interface ObjetDelai {
   machines: string[];
   cves: string[];
   nom: string;
+  /** Lot S3 : date de fin de support du logiciel selon Tenable (constat seulement), ou null. */
+  finSupportLe?: string | null;
 }
 
 interface LigneAlerte {
@@ -419,7 +424,10 @@ export class AlertesVulnerabilites {
       machines: string[];
       premiere: Date;
       repart: Date | null;
+      correctif_publie_le: Date | null;
+      fin_support_le: Date | null;
     }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${close('constat')} AS clos,
+         c.correctif_publie_le, c.fin_support_le,
          (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
          ${premiereConstat} AS premiere,
          (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS repart,
@@ -509,6 +517,7 @@ export class AlertesVulnerabilites {
             familles: [],
             produitIds: [],
             aConfirmer: null,
+            correctifTenableLe: null,
           }),
         );
       return x;
@@ -537,6 +546,7 @@ export class AlertesVulnerabilites {
         machines: c.machines,
         cves: c.cves,
         nom: c.nom,
+        finSupportLe: iso(c.fin_support_le),
       })),
       ...declarees.map((r): ObjetDelai => ({
         nature: 'declaree',
@@ -566,6 +576,8 @@ export class AlertesVulnerabilites {
       for (const { x, s } of cibles) {
         x.objets++;
         x.constats.push(c.nom);
+        const publie = iso(c.correctif_publie_le);
+        if (publie && (!x.correctifTenableLe || publie < x.correctifTenableLe)) x.correctifTenableLe = publie;
         if (c.clos) {
           x.traites++;
           continue;

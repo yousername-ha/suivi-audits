@@ -10,7 +10,9 @@
    (SuiviFaille). Lot V4c : ce que chaque source dit de la faille (SourcesFaille) : exploitation avérée et « exploitable »
    avec la première source et sa date, valeurs par source et celle retenue, mentions du CERT Santé ; gravité retenue (la plus
    sévère) dans la liste des failles déclarées. Lot S1 : colonne « Délai » (état du délai de correction en clair, âge,
-   échéance calculée, délai de la priorité), filtre « Délai » et tri par échéance, repris de l'adresse. */
+   échéance calculée, délai de la priorité), filtre « Délai » et tri par échéance, repris de l'adresse. Lot S3 : vue « Par
+   correctif » (Correctifs.tsx : « n mises à jour à faire pour m failles »), marque et filtre « Fin de support » (date de fin
+   de support de Tenable passée), distincte de « Non maintenu » (constat sans CVE) ; `?vue=correctifs` ouvre la vue. */
 import {
   Alert,
   Anchor,
@@ -75,6 +77,7 @@ import {
 } from './failles';
 import { ETAT_DELAI_PUCE, libelleEtatDelai, lignesDelai, OPTIONS_FILTRE_DELAI, OPTIONS_TRI } from './delais';
 import { nombrePages } from './veille';
+import { CorrectifsVue } from './Correctifs';
 import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
@@ -82,6 +85,20 @@ import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
+/** Boutons de pagination nommés (flèches comprises) : sans nom, l'axe `wcag2a` les refuse dès qu'il y a deux pages. */
+const NOMS_PAGINATION = {
+  getControlProps: (c: 'first' | 'previous' | 'last' | 'next') => ({
+    'aria-label':
+      c === 'previous'
+        ? 'Page précédente'
+        : c === 'next'
+          ? 'Page suivante'
+          : c === 'first'
+            ? 'Première page'
+            : 'Dernière page',
+  }),
+  getItemProps: (n: number) => ({ 'aria-label': `Page ${n}` }),
+};
 
 /** Priorité calculée par la plateforme et faits qui la fondent (sans état). */
 export function PrioriteFaits({ p }: { p: Priorite }) {
@@ -187,9 +204,10 @@ export function ConstatsTable({
                 <Text size="xs" className="veille-code">
                   {resumeCves(c)}
                 </Text>
-                {c.nonMaintenu && c.finSupportLe && (
+                {c.finSupportLe && (
                   <Text size="xs" c="dimmed">
-                    Fin de support : <span className="horodatage">{fmtDate(c.finSupportLe)}</span>
+                    {c.finDeSupport ? 'Fin de support' : 'Fin de support annoncée'} :{' '}
+                    <span className="horodatage">{fmtDate(c.finSupportLe)}</span>
                   </Text>
                 )}
               </Table.Td>
@@ -515,9 +533,11 @@ export function EtatSynchronisations({ etats }: { etats: EtatSynchronisationDto[
 export function FaillesDetecteesPage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
-  const [vue, setVue] = useState<'failles' | 'machines'>('failles');
   // Lot PC1 : les tuiles de la Vue d'ensemble ouvrent cette liste déjà filtrée (priorité, suivi, exploitation).
   const [adresse] = useSearchParams();
+  const [vue, setVue] = useState<'failles' | 'machines' | 'correctifs'>(() =>
+    adresse.get('vue') === 'correctifs' ? 'correctifs' : adresse.get('vue') === 'machines' ? 'machines' : 'failles',
+  );
   const [filtres, setFiltres] = useState<FiltresConstats>(() => filtresDepuisAdresse(adresse));
   const [saisie, setSaisie] = useState(filtres.q);
   const [page, setPage] = useState(1);
@@ -582,7 +602,7 @@ export function FaillesDetecteesPage() {
         <Alert>Vous ne disposez pas du droit de lire les vulnérabilités.</Alert>
       </Page>
     );
-  const donnees = vue === 'failles' ? constats.data : machines.data;
+  const donnees = vue === 'failles' ? constats.data : vue === 'machines' ? machines.data : undefined;
   const pages = donnees ? nombrePages(donnees.total, donnees.parPage) : 1;
   return (
     <Page>
@@ -600,30 +620,34 @@ export function FaillesDetecteesPage() {
         {etat.data && <EtatSynchronisations etats={etat.data} />}
         <SegmentedControl
           value={vue}
-          onChange={(v) => setVue(v as 'failles' | 'machines')}
+          onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}
           data={[
             { value: 'failles', label: 'Par faille' },
             { value: 'machines', label: 'Par machine' },
+            { value: 'correctifs', label: 'Par correctif' },
           ]}
           aria-label="Vue"
         />
-        <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
-            <TextInput
-              label="Rechercher"
-              description={
-                vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
-              }
-              placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
-              maxLength={100}
-              value={saisie}
-              onChange={(e) => setSaisie(e.currentTarget.value)}
-            />
-            <Button type="submit" variant="default">
-              Rechercher
-            </Button>
-          </Group>
-        </form>
+        {vue === 'correctifs' && <CorrectifsVue onOuvrirConstat={setOuvert} />}
+        {vue !== 'correctifs' && (
+          <form onSubmit={chercher} role="search">
+            <Group align="flex-end">
+              <TextInput
+                label="Rechercher"
+                description={
+                  vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
+                }
+                placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
+                maxLength={100}
+                value={saisie}
+                onChange={(e) => setSaisie(e.currentTarget.value)}
+              />
+              <Button type="submit" variant="default">
+                Rechercher
+              </Button>
+            </Group>
+          </form>
+        )}
         {vue === 'failles' && (
           <Group align="flex-end">
             <Select
@@ -685,12 +709,18 @@ export function FaillesDetecteesPage() {
               checked={filtres.nonMaintenu}
               onChange={(e) => changer({ nonMaintenu: e.currentTarget.checked })}
             />
+            <Checkbox
+              label="Fin de support"
+              description="Plus de correctif de sécurité de l’éditeur"
+              checked={filtres.finSupport}
+              onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
+            />
           </Group>
         )}
-        <ErrorAlert error={vue === 'failles' ? constats.error : machines.error} />
+        {vue !== 'correctifs' && <ErrorAlert error={vue === 'failles' ? constats.error : machines.error} />}
         {vue === 'failles' && constats.data && <ConstatsTable constats={constats.data.elements} onOuvrir={setOuvert} />}
         {vue === 'machines' && machines.data && <MachinesTable machines={machines.data.elements} />}
-        {donnees && (
+        {donnees && vue !== 'correctifs' && (
           <Group justify="space-between">
             <Text size="sm" c="dimmed" role="status">
               {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
@@ -701,6 +731,7 @@ export function FaillesDetecteesPage() {
                 value={vue === 'failles' ? page : pageMachines}
                 onChange={vue === 'failles' ? setPage : setPageMachines}
                 aria-label="Pages"
+                {...NOMS_PAGINATION}
               />
             )}
           </Group>
@@ -723,6 +754,7 @@ export function FaillesDetecteesPage() {
                 value={pageDeclarees}
                 onChange={setPageDeclarees}
                 aria-label="Pages des failles déclarées"
+                {...NOMS_PAGINATION}
               />
             )}
           </Stack>

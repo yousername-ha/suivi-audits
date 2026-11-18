@@ -60,6 +60,7 @@ import { PerimetresVulnerabilites } from './vulnerabilites/perimetres.js';
 import { FichesFailles } from './vulnerabilites/fiches.js';
 import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
 import { TendancesVulnerabilites } from './vulnerabilites/tendances.js';
+import { CorrectifsVulnerabilites } from './vulnerabilites/correctifs.js';
 import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
@@ -226,6 +227,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       tendances,
       /** Lot S2 : rapport de pilotage (page imprimable, CSV), production tracée au journal. */
       rapport,
+      /** Lot S3 : vue « Correctifs » (failles regroupées par texte de solution de Tenable), lecture seule. */
+      correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
     },
     modules,
     flux,

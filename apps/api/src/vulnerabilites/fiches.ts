@@ -10,8 +10,17 @@
    - Recommandations par source, telles quelles, bornées : correctif de Tenable, action exigée du catalogue KEV, versions
      touchées selon NVD, mentions du CERT Santé, avis du CERT-FR et du CERT Santé, défauts et résolutions de l'éditeur
      d'AlgoLightHouse (alertes lisibles seulement).
+   Lot S3 : état du correctif (date de publication du correctif de Tenable, mention « Un correctif existe » du CERT Santé),
+   avec la source qui parle, précision de l'exploitation (« exploitée, sans correctif connu »…) et fin de support (date
+   `seolDate` de Tenable pour un constat ; service exposé `version_status = eol` d'AlgoLightHouse pour une alerte). Pour une
+   faille déclarée, une CVE ou une alerte, Tenable parle s'il cite la CVE dans un contrôle qui porte une date de correctif
+   (une lecture de plus, fixe).
    Nombre de lectures fixe (aucune par CVE ni par élément). */
 import {
+  etatCorrectif,
+  etatFinSupport,
+  serviceEnFinDeSupport,
+  situationExploitation,
   calculerPriorite,
   type AvisFicheDto,
   FICHE_FAILLE_BORNES,
@@ -69,6 +78,10 @@ interface Entree {
   /** Lot S1 : délai de correction et exception d'un objet suivi (constat, faille déclarée). */
   delai?: FicheFailleDto['delai'];
   exception?: FicheFailleDto['exception'];
+  /** Lot S3 : date de publication du correctif selon le contrôle de Tenable (constat) ; absent : lue sur les contrôles qui
+      citent les CVE de la faille. */
+  correctifTenableLe?: string | null;
+  finSupport?: FicheFailleDto['finSupport'];
 }
 
 export class FichesFailles {
@@ -117,6 +130,11 @@ export class FichesFailles {
       actifs: null,
       delai: c.delai,
       exception: c.suivi.exceptionStatut ? { statut: c.suivi.exceptionStatut, echeance: c.suivi.revueLe } : null,
+      correctifTenableLe: c.correctifLe,
+      finSupport: (() => {
+        const etat = etatFinSupport(c.finSupportLe, new Date());
+        return etat ? { etat, le: c.finSupportLe, source: 'tenable' as const } : null;
+      })(),
     };
   }
 
@@ -173,6 +191,9 @@ export class FichesFailles {
       alh: a.defauts.length ? [{ alerteId: a.id, titre: a.titre, defauts: a.defauts }] : [],
       // L'actif visé (hôte ou domaine) se lit avec l'alerte ; une alerte sur un service ou un mot-clé n'en a pas.
       actifs: a.cible?.type === 'host' || a.cible?.type === 'domain' ? 1 : 0,
+      finSupport: a.services.some((x) => serviceEnFinDeSupport(x.statutVersion))
+        ? { etat: 'atteinte', le: null, source: 'alh' }
+        : null,
     };
   }
 
@@ -310,6 +331,15 @@ export class FichesFailles {
       : { rows: [] };
     const certSante: { correctif: MentionCertSante | null; contournement: MentionCertSante | null } | null =
       e.sources.certSante;
+    // Lot S3 : date de publication du correctif selon Tenable, pour les CVE de la faille (une lecture, hors constat).
+    let correctifTenableLe = e.correctifTenableLe ?? null;
+    if (e.correctifTenableLe === undefined && cves.length) {
+      const { rows: t } = await sql<{ le: Date | null }>`SELECT min(c.correctif_publie_le) AS le
+        FROM vulnerabilites_constat_cves cc JOIN vulnerabilites_constats c ON c.id = cc.constat_id
+        WHERE cc.cve = ANY(${cves}::text[])`.execute(k);
+      correctifTenableLe = t[0]?.le?.toISOString() ?? null;
+    }
+    const correctif = etatCorrectif({ tenablePublieLe: correctifTenableLe, certSante: certSante?.correctif ?? null });
     return {
       nature: e.nature,
       cves: e.cves.slice(0, B.cvesAffichees),
@@ -326,6 +356,9 @@ export class FichesFailles {
       vecteurs: vecteurs.slice(0, B.vecteurs),
       delai: e.delai ?? null,
       exception: e.exception ?? null,
+      correctif,
+      situationExploitation: situationExploitation(e.sources.exploitation.length > 0, correctif.etat),
+      finSupport: e.finSupport ?? null,
       recommandations: {
         tenable: e.tenable ? { correctif: e.tenable.correctif, publieLe: e.tenable.publieLe } : null,
         kev: kev.slice(0, B.kev),

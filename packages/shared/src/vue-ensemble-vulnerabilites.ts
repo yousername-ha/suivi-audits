@@ -186,6 +186,13 @@ export interface VueEnsembleDto {
     corrigeesCeMois: number;
     /** Lot S1 : objets suivis ouverts et présents dont le délai de correction est dépassé (les mêmes pour tout le monde). */
     enDepassement: number;
+    /** Lot S3 : parmi les failles exploitées et présentes, celles sans correctif connu et celles dont le correctif n'est pas
+        renseigné (les mêmes pour tout le monde) ; « non renseigné » ne vaut pas « sans correctif ». */
+    exploiteesSansCorrectif: number;
+    exploiteesCorrectifNonRenseigne: number;
+    /** Lot S3 : fin de support. Constats de Tenable présents en fin de support (les mêmes pour tout le monde) ; machines et
+        services exposés en fin de support que la personne lit, drapeau sans nombre pour les autres. */
+    finDeSupport: { constats: number; machines: NombreLisible; services: NombreLisible };
   };
   /** Nombre total de failles suivies, par priorité, et par case du radar (cases vides omises). */
   total: number;

@@ -19,6 +19,13 @@ import {
   STATUTS_EXCEPTION,
 } from './delais-vulnerabilites.js';
 import { MOTIF_CLOTURE_ALERTE_LIBELLES, type MotifClotureAlerte } from './alertes-vulnerabilites.js';
+import {
+  type EtatCorrectifDto,
+  ETAT_CORRECTIF_LIBELLES,
+  FIN_SUPPORT_DEFINITION,
+  SOURCE_CORRECTIF_LIBELLES,
+} from './correctifs-vulnerabilites.js';
+import { ETAT_SUIVI_LIBELLES, type EtatSuiviFaille } from './suivi-vulnerabilites.js';
 import type { NiveauPriorite } from './failles-tenable.js';
 import { IdPerimetreVue } from './perimetres-vulnerabilites.js';
 import { PRESENCE_LIBELLES, type Presence } from './priorite-vulnerabilites.js';
@@ -499,6 +506,18 @@ export interface FailleRapportDto {
   /** Première présence connue de ses objets suivis (null : exposée seulement). */
   depuis: string | null;
   enDepassement: boolean;
+  /** Lot S3 : état du correctif et sources qui le disent. */
+  correctif: EtatCorrectifDto;
+}
+
+/** Lot S3 : un contrôle de Tenable présent en fin de support (plus de correctif de sécurité de l'éditeur). Aucun nom de
+    machine : le nom du contrôle (masqué) et le nombre de machines de la portée. */
+export interface FinSupportRapportDto {
+  titre: string;
+  finSupportLe: string;
+  /** Machines touchées dans le périmètre du rapport ; null pour toute la plateforme (aucun total de machines). */
+  machines: number | null;
+  etat: EtatSuiviFaille;
 }
 export interface DepassementRapportDto {
   nature: 'constat' | 'declaree';
@@ -535,6 +554,8 @@ export interface RapportVulnerabilitesDto {
   niveau: SyntheseNiveauDto & { actuel: NiveauAlerteGlobalDto };
   situation: MesuresAffichees;
   critiques: { total: number; p2: number; elements: FailleRapportDto[] };
+  /** Lot S3 : contrôles de Tenable présents en fin de support dans la portée. */
+  finDeSupport: { total: number; elements: FinSupportRapportDto[] };
   delais: { reglage: DelaisCorrection; mesures: MesuresDelaisDto; nonMesurees: number };
   depassements: { total: number; elements: DepassementRapportDto[] };
   exceptions: { compteurs: Record<StatutException, number>; elements: ExceptionDto[] };
@@ -626,7 +647,7 @@ export function tableauxRapport(r: RapportVulnerabilitesDto): TableauRapport[] {
     {
       id: 'critiques',
       titre: `Failles critiques (P1) présentes : ${r.critiques.total} ; failles présentes en P2 : ${r.critiques.p2}`,
-      entetes: ['CVE', 'Faille', 'Produit', 'Présence', 'Depuis', 'Délai'],
+      entetes: ['CVE', 'Faille', 'Produit', 'Présence', 'Depuis', 'Délai', 'Correctif'],
       lignes: r.critiques.elements.map((f) => [
         f.cve ?? 'Sans CVE',
         f.titre,
@@ -634,9 +655,33 @@ export function tableauxRapport(r: RapportVulnerabilitesDto): TableauRapport[] {
         f.presences.map((p) => PRESENCE_LIBELLES[p]).join(', '),
         f.depuis ? fmtHorodatage(f.depuis) : '—',
         f.enDepassement ? 'En dépassement' : 'Dans les délais ou sans objet',
+        correctifEnClair(f.correctif),
       ]),
       vide: 'Aucune faille présente en P1.',
-      note: borne(r.critiques.total, r.critiques.elements.length),
+      note: [
+        borne(r.critiques.total, r.critiques.elements.length),
+        'Correctif : « disponible » selon Tenable (date de publication du correctif) ou le CERT Santé (« Un correctif existe : Oui ») ; « aucun correctif connu » selon le CERT Santé (« Non ») ; « non renseigné » quand aucune source n’en parle, ce qui ne veut pas dire qu’il n’en existe pas.',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    },
+    {
+      id: 'fin-de-support',
+      titre: `Contrôles de Tenable en fin de support : ${r.finDeSupport.total}`,
+      entetes: ['Contrôle de Tenable', 'Fin de support le', 'Machines', 'Suivi'],
+      lignes: r.finDeSupport.elements.map((f) => [
+        f.titre,
+        fmtJour(f.finSupportLe.slice(0, 10)),
+        f.machines === null ? 'Par périmètre seulement' : String(f.machines),
+        ETAT_SUIVI_LIBELLES[f.etat],
+      ]),
+      vide: 'Aucun système ni logiciel en fin de support selon Tenable.',
+      note: [
+        borne(r.finDeSupport.total, r.finDeSupport.elements.length),
+        `${FIN_SUPPORT_DEFINITION} Source : la date de fin de support du logiciel publiée par Tenable (seolDate), passée. Aucune base de dates de fin de vie n’est embarquée.`,
+      ]
+        .filter(Boolean)
+        .join(' '),
     },
     {
       id: 'delais',
@@ -777,6 +822,14 @@ export function tableauxRapport(r: RapportVulnerabilitesDto): TableauRapport[] {
       note: null,
     },
   ];
+}
+
+/** État du correctif en clair, avec la première source qui le dit. */
+function correctifEnClair(c: EtatCorrectifDto): string {
+  const s = c.sources[0];
+  return s
+    ? `${ETAT_CORRECTIF_LIBELLES[c.etat]} (${SOURCE_CORRECTIF_LIBELLES[s.source]})`
+    : ETAT_CORRECTIF_LIBELLES[c.etat];
 }
 
 /** Libellé de la portée d'un rapport ou d'une tendance. */

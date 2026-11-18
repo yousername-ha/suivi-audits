@@ -10,6 +10,7 @@ import type { MachineMarqueeDto } from './parc-machines.js';
 import { type DelaiFailleDto, EtatDelaiFiltre, TriFailles } from './delais-vulnerabilites.js';
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
+import type { EtatCorrectifDto } from './correctifs-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Gravités */
 /** Gravités retenues (identifiants stables : base, filtre de l'instance). La gravité « info » de Tenable n'est jamais lue. */
@@ -276,6 +277,8 @@ export const RechercheConstats = z
     exploite: oui,
     exploitable: oui,
     nonMaintenu: oui,
+    /** Lot S3 : constats en fin de support selon Tenable (date `seolDate` passée). */
+    finSupport: oui,
     priorite: NiveauPriorite.optional(),
     etat: FiltreSuivi.optional(),
     /** Lot S1 : état du délai de correction, et tri par échéance. */
@@ -293,6 +296,8 @@ export const RechercheMachines = z
     q: recherche,
     role: z.enum([...ROLES_MACHINE, 'aucun']).optional(),
     perimetre: z.union([z.uuid(), z.literal('aucun')]).optional(),
+    /** Lot S3 : machines en fin de support (au moins un constat présent dont la fin de support est passée). */
+    finSupport: oui,
     page,
   })
   .strict();
@@ -319,7 +324,12 @@ export interface ConstatResumeDto {
   exploite: boolean;
   /** Constat sans CVE : système ou logiciel qui n'est plus maintenu (V18). */
   nonMaintenu: boolean;
+  /** Date de fin de support du logiciel selon Tenable (`seolDate`), ou null. */
   finSupportLe: string | null;
+  /** Lot S3 : fin de support atteinte (date passée) : plus de correctif de sécurité de l'éditeur. */
+  finDeSupport: boolean;
+  /** Lot S3 : état du correctif (Tenable `patchPubDate`, mention du CERT Santé) et sources qui le disent. */
+  correctifEtat: EtatCorrectifDto;
   /** Nombre de CVE du constat, et les premières (cinq au plus). */
   nombreCves: number;
   cves: string[];
@@ -416,6 +426,11 @@ export interface MachineDto {
   compteurs: CompteursMachine;
   /** Rang parmi les machines que la personne peut lire, et faits qui le fondent (lot V4a). */
   rang: RangMachineDto;
+  /** Lot S3 : la machine porte un constat présent de Tenable dont la fin de support est passée (`seolDate`), quel que soit
+      son état de suivi : le système ou un logiciel ne reçoit plus de correctif de sécurité de l'éditeur. */
+  finDeSupport: boolean;
+  /** Contrôles de Tenable en fin de support présents sur la machine (cinq au plus), avec leur date. */
+  finsDeSupport: { nom: string; le: string }[];
   version: number;
 }
 

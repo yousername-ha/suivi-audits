@@ -9,10 +9,17 @@
      non communiqué », sans schéma ;
    - « Recommandations des sources » : par source, sans mélange, toujours en texte (React échappe tout ; aucun HTML
      interprété) ; rien n'est rédigé par l'assistant ni par la plateforme.
+   Lot S3 : en tête, l'état du correctif (disponible, aucun correctif connu, non renseigné) et la source qui parle ; à côté
+   de la marque zero-day, la précision « exploitée, sans correctif connu » (ou « correctif disponible », « correctif non
+   renseigné ») ; la mention « Fin de support » avec sa source.
    Sous la CSP stricte (ADR 0006) : aucun style en ligne ; classes de packages/ui/src/neon-fiche.css (jetons de la charte,
    clair et sombre), positions du schéma par attributs SVG. */
 import { Anchor, Group, Loader, Stack, Text } from '@mantine/core';
 import {
+  ETAT_CORRECTIF_LIBELLES,
+  libelleEtatCorrectif,
+  SITUATION_EXPLOITATION_LIBELLES,
+  SOURCE_FIN_SUPPORT_LIBELLES,
   conditionsTraduites,
   decoderVecteurCvss,
   DIMENSION_LIBELLES,
@@ -46,6 +53,7 @@ import {
   lignesDelai,
   STATUT_EXCEPTION_PUCE,
 } from './delais';
+import { ETAT_CORRECTIF_PUCE } from './correctifs';
 import { ETAT_PRIORITE, faitsPriorite } from './failles';
 import {
   DETAIL,
@@ -130,6 +138,34 @@ function DelaiFiche({ f }: { f: FicheFailleDto }) {
   );
 }
 
+/* ------------------------------------------------------------------ État du correctif et fin de support (lot S3) */
+function CorrectifFiche({ f }: { f: FicheFailleDto }) {
+  return (
+    <Stack gap="2xs" role="group" aria-label="Correctif et fin de support">
+      <Group gap="xs">
+        <StatusChip etat={ETAT_CORRECTIF_PUCE[f.correctif.etat]}>
+          {ETAT_CORRECTIF_LIBELLES[f.correctif.etat]}
+        </StatusChip>
+        {f.situationExploitation && (
+          <StatusChip etat={f.situationExploitation === 'sans_correctif' ? 'erreur' : 'neutre'}>
+            {SITUATION_EXPLOITATION_LIBELLES[f.situationExploitation]}
+          </StatusChip>
+        )}
+        {f.finSupport && (
+          <span className="parc-mention parc-mention--fds">
+            {f.finSupport.etat === 'atteinte' ? 'Fin de support' : 'Fin de support annoncée'}
+            {f.finSupport.le ? ` le ${fmtJour(f.finSupport.le)}` : ''}
+          </span>
+        )}
+      </Group>
+      <Text size="xs" c="dimmed">
+        {libelleEtatCorrectif(f.correctif, fmtJour)}
+        {f.finSupport ? ` ${SOURCE_FIN_SUPPORT_LIBELLES[f.finSupport.source]}.` : ''}
+      </Text>
+    </Stack>
+  );
+}
+
 /* ------------------------------------------------------------------ En-tête */
 function EnTete({ f }: { f: FicheFailleDto }) {
   const cible = [
@@ -183,6 +219,7 @@ function EnTete({ f }: { f: FicheFailleDto }) {
         )}
       </div>
       <Text size="sm">Présence : {libellePresence(f.presence)}.</Text>
+      <CorrectifFiche f={f} />
       {f.delai && <DelaiFiche f={f} />}
       {f.alerte && (
         <p className={`ff-alerte ff-f--${f.alerte.niveau === 'critique' ? 'fort' : 'moyen'}`} role="status">

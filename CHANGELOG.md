@@ -25,8 +25,25 @@ minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés t
 pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
 vulnérabilités SMSI »)
 
+**Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
+action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
+surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
+- Vulnérabilités, regroupement par correctif (lot S3, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : vue « Par
+  correctif » de « Failles détectées », en tête « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de
+  la solution de Tenable, en anglais, tel quel) avec les failles et CVE qu'il corrige (les mêmes nombres pour tout le monde),
+  les machines lues, la priorité la plus haute, les marques, le délai le plus défavorable et l'état du correctif ; tri par
+  gain ; groupe « Sans correctif indiqué par la source » ; fenêtre du correctif (failles, machines lues). Lecture seule, sans
+  appel réseau ni migration. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, état du correctif et fin de support (lot S3) : état « correctif disponible », « aucun correctif connu » ou
+  « non renseigné » d'après Tenable (date de publication du correctif) et le CERT Santé (« Un correctif existe »), avec la
+  source qui parle, dans la fiche illustrée, la vue par correctif et le rapport ; précision « exploitée, sans correctif
+  connu » à côté de la marque zero-day, sans la renommer ; « Fin de support » (date de fin de support de Tenable passée,
+  version en fin de vie d'un service exposé selon AlgoLightHouse) sur les failles, les machines (liste, parc, fiche) et les
+  services exposés, filtres, tuile de la vue d'ensemble et section du rapport de pilotage. Sans effet sur la priorité ni sur
+  les alertes. (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, tendances (lot S2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : instantané quotidien de la
   situation pris par la plateforme (niveau d'alerte, failles présentes par priorité, exploitées, en dépassement, sous
   exception, corrigées, machines et actifs exposés touchés ; pour toute la plateforme et par périmètre, sans nom) ; onglet
@@ -57,6 +74,8 @@ vulnérabilités SMSI »)
 - Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
   seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
   que les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, « Failles détectées » : les boutons de pagination (flèches et numéros) portent un nom accessible, comme
+  ceux de la vue d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.3.0] — 2026-11-18
 

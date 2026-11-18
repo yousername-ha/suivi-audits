@@ -50,8 +50,13 @@
    Lot S2 : tendances (instantanés quotidiens) avec `lire`, lecture seule, sans journal : toute la plateforme (nombres de
    failles communs à tous), un périmètre lu (404 sinon) ou « sans périmètre » (`administrer`). Rapport de pilotage avec
    `lire` (option prudente, à confirmer) : JSON pour la page imprimable, ou CSV ; sa production est tracée au journal
-   (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse. */
+   (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse.
+   Lot S3 : vue « Correctifs » (groupes par texte de solution de Tenable, et détail d'un groupe) avec `lire`, lecture seule,
+   sans journal : priorité et nombres de failles communs à tous ; machines nommées et comptées selon les droits. Filtre
+   « fin de support » des constats, des machines et du parc. */
 import {
+  CleCorrectif,
+  RechercheCorrectifs,
   RechercheAlertesVulnerabilites,
   RechercheDelais,
   RechercheRapport,
@@ -356,6 +361,26 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     params: id,
     handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/correctifs',
+    summary:
+      'Correctifs (lot S3) : failles détectées par Tenable encore à traiter, regroupées par texte de solution (anglais, tel quel), triées par gain (priorité, puis nombre de failles corrigées) ; priorité, marques, délai, état du correctif et nombres de failles communs à tous, machines lues seulement ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheCorrectifs,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.correctifs.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/correctifs/:cle',
+    summary:
+      'Détail d’un correctif (lot S3) : ses failles (fiche ouverte seulement si une de leurs machines est lue) et les machines concernées que la personne lit ; groupe inconnu : 404 ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: z.object({ cle: CleCorrectif }),
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.correctifs.detail((s as Session).user, params.cle),
   }),
   route({
     method: 'GET',

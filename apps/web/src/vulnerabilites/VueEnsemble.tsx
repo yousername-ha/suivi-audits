@@ -127,11 +127,25 @@ export function NiveauAlerteBloc({ niveau }: { niveau: VueEnsembleDto['niveau'] 
   );
 }
 
+/** Lot S3 : nombre lu, avec la mention des autres sans nombre : « 3 lues (et d'autres) ». */
+function libelleLu(n: { lisibles: number; horsLecture: boolean }, feminin: boolean): string {
+  const lu = feminin ? 'lue' : 'lu';
+  return `${n.lisibles} ${n.lisibles > 1 ? `${lu}s` : lu}${n.horsLecture ? ' (et d’autres)' : ''}`;
+}
+
 export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
   return (
     <nav className="pc-tuiles" aria-label="Chiffres clés : listes filtrées">
       <Link to={LIENS_TUILES.exploitees} className="pc-tuile pc-teinte--rouge">
-        <span className="pc-etiquette">Exploitées et présentes</span>
+        <span className="pc-etiquette">
+          Exploitées et présentes
+          {tuiles.exploiteesPresentes > 0 && (
+            <small>
+              dont {tuiles.exploiteesSansCorrectif} sans correctif connu, {tuiles.exploiteesCorrectifNonRenseigne}{' '}
+              correctif non renseigné
+            </small>
+          )}
+        </span>
         <b>{deuxChiffres(tuiles.exploiteesPresentes)}</b>
       </Link>
       <div className="pc-tuile pc-tuile--double pc-teinte--orange">
@@ -161,6 +175,16 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
           <small>délai de correction dépassé</small>
         </span>
         <b>{deuxChiffres(tuiles.enDepassement)}</b>
+      </Link>
+      <Link to={LIENS_TUILES.finSupport} className="pc-tuile pc-teinte--orange">
+        <span className="pc-etiquette">
+          Fin de support
+          <small>
+            contrôles de Tenable · machines : {libelleLu(tuiles.finDeSupport.machines, true)} · services exposés :{' '}
+            {libelleLu(tuiles.finDeSupport.services, false)}
+          </small>
+        </span>
+        <b>{deuxChiffres(tuiles.finDeSupport.constats)}</b>
       </Link>
       <Link to={LIENS_TUILES.corrigees} className="pc-tuile pc-teinte--vert">
         <span className="pc-etiquette">Corrigées ce mois</span>

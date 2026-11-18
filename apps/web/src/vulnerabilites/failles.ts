@@ -4,10 +4,12 @@
    Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. Lot V4b : filtre
    de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). Lot V4d : origine du périmètre d'une
    machine (hérité du dépôt Tenable ou indiqué à la main). Lot S1 : filtre par état de délai de correction et tri par
-   échéance, repris de l'adresse (lien de la tuile « En dépassement » et de la notification de résumé). */
+   échéance, repris de l'adresse (lien de la tuile « En dépassement » et de la notification de résumé). Lot S3 : marque
+   et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). */
 import {
   type ConstatDto,
   type ConstatResumeDto,
+  FIN_SUPPORT_LIBELLE,
   FILTRES_SUIVI,
   type FiltreSuivi,
   GRAVITE_TENABLE_LIBELLES,
@@ -36,6 +38,8 @@ export interface FiltresConstats {
   exploite: boolean;
   exploitable: boolean;
   nonMaintenu: boolean;
+  /** Lot S3 : fin de support selon Tenable. */
+  finSupport: boolean;
   priorite: NiveauPriorite | '';
   /** Suivi (lot V4b) : vide, les failles encore à traiter. */
   etat: FiltreSuivi | '';
@@ -49,6 +53,7 @@ export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   exploite: false,
   exploitable: false,
   nonMaintenu: false,
+  finSupport: false,
   priorite: '',
   etat: '',
   delai: '',
@@ -68,6 +73,7 @@ export function filtresDepuisAdresse(p: URLSearchParams): FiltresConstats {
     gravite: dans(GRAVITES_TENABLE, p.get('gravite')),
     exploite: p.get('exploite') === 'oui',
     exploitable: p.get('exploitable') === 'oui',
+    finSupport: p.get('finSupport') === 'oui',
     delai: dans(ETATS_DELAI, p.get('delai')),
     tri: dans(TRIS_FAILLES, p.get('tri')),
   };
@@ -81,6 +87,7 @@ export function urlConstats(f: FiltresConstats, page = 1): string {
   if (f.exploite) p.set('exploite', 'oui');
   if (f.exploitable) p.set('exploitable', 'oui');
   if (f.nonMaintenu) p.set('nonMaintenu', 'oui');
+  if (f.finSupport) p.set('finSupport', 'oui');
   if (f.priorite) p.set('priorite', f.priorite);
   if (f.etat) p.set('etat', f.etat);
   if (f.delai) p.set('delai', f.delai);
@@ -126,6 +133,8 @@ export interface FiltresMachines {
   q: string;
   role: RoleMachine | 'aucun' | '';
   perimetre: string;
+  /** Lot S3 : machines en fin de support seulement (facultatif). */
+  finSupport?: boolean;
 }
 export const FILTRES_MACHINES_VIDES: FiltresMachines = { q: '', role: '', perimetre: '' };
 
@@ -135,6 +144,7 @@ export function urlMachines(f: FiltresMachines, page = 1): string {
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.role) p.set('role', f.role);
   if (f.perimetre) p.set('perimetre', f.perimetre);
+  if (f.finSupport) p.set('finSupport', 'oui');
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/machines${s ? `?${s}` : ''}`;
@@ -153,11 +163,15 @@ export const libelleRole = (r: RoleMachine | null) => (r ? ROLE_MACHINE_LIBELLES
 export const libelleMachine = (m: { nom: string | null; adresse: string | null }) =>
   m.nom ?? m.adresse ?? 'Machine sans nom';
 
-/** Marques d'un constat, dans l'ordre d'affichage. */
-export function marquesConstat(c: Pick<ConstatResumeDto, 'exploite' | 'exploitable' | 'nonMaintenu'>) {
+/** Marques d'un constat, dans l'ordre d'affichage. Lot S3 : « Fin de support » (date de fin de support de Tenable passée),
+    distincte de « Non maintenu » (constat sans CVE, V18). */
+export function marquesConstat(
+  c: Pick<ConstatResumeDto, 'exploite' | 'exploitable' | 'nonMaintenu'> & { finDeSupport?: boolean },
+) {
   const out: { libelle: string; etat: Etat }[] = [];
   if (c.exploite) out.push({ libelle: 'Exploitée (KEV)', etat: 'erreur' });
   if (c.exploitable) out.push({ libelle: 'Exploitable', etat: 'attention' });
+  if (c.finDeSupport) out.push({ libelle: FIN_SUPPORT_LIBELLE, etat: 'attention' });
   if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });
   return out;
 }

@@ -383,6 +383,10 @@
 - **Lot S2, tendances et rapport de pilotage** (18/11/2026) : migration `088`, instantané quotidien de la situation (niveau
   d'alerte, nombres de failles, globaux et par périmètre, sans nom), onglet « Tendances », variation sur sept jours de la vue
   d'ensemble, rapport mensuel imprimable (PDF par le navigateur) et CSV. Voir l'addendum « lot S2 » ci-dessous.
+- **Lot S3, regroupement par correctif, fin de support, état du correctif** (18/11/2026) : sans migration, vue « Par
+  correctif » de « Failles détectées » (« n mises à jour à faire pour m failles »), état du correctif à trois valeurs avec sa
+  source, précision « sans correctif connu » à côté de la marque zero-day, fin de support signalée et filtrée. Voir
+  l'addendum « lot S3 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -2036,3 +2040,125 @@ aucun chevauchement, aucun débordement, aucune violation de CSP ni erreur dans 
    machines** : non réalisés (lots suivants).
 6. Confirmer la rétention, la règle de la tendance, les définitions ci-dessus et les droits du rapport.
 
+## Addendum du 18/11/2026 — lot S3 : regroupement par correctif, fin de support, faille sans correctif
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun appel réseau nouveau (liste fermée de Tenable inchangée : `POST /rest/analysis`, `GET /rest/hosts`,
+`GET /rest/hosts/{uuid}`, `GET /rest/system`), **aucune liste blanche élargie**, aucun script de l'exécutant modifié, aucune
+dépendance nouvelle, aucun rôle ni droit nouveau, rien de nouveau chez l'assistant. Lève le point ouvert 2 de l'addendum
+« lot S1 » et, en partie, le point ouvert 5 de l'addendum « lot S2 » ; répond au point ouvert 14 (unité affichée) pour la
+vue par correctif.
+
+### Décision du RSSI (18/11/2026)
+
+Propositions acceptées (« tout m'intéresse ») : **regroupement par correctif** (« 12 mises à jour à faire plutôt que 400
+failles ») ; **fin de support** (signaler les systèmes et produits qui ne reçoivent plus de correctifs ; Tenable et
+AlgoLightHouse le disent déjà) ; **disponibilité d'un correctif** (distinguer « exploitée et corrigible » de « exploitée sans
+correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabilités ; termes techniques exacts exigés.
+
+### Inventaire des données déjà lues et rangées (règle d'or : rien d'inventé)
+
+| Sujet | Source | Champ lu par l'exécutant | Rangé | Utilisé par ce lot |
+| --- | --- | --- | --- | --- |
+| Correctif | Tenable (`vulndetails`) | `solution` | `vulnerabilites_constats.correctif` (anglais, nettoyé, 2 000 caractères) | **Oui** : clé du regroupement |
+| Correctif | Tenable (`vulndetails`) | `patchPubDate` | `correctif_publie_le` | **Oui** : « correctif disponible » à cette date |
+| Correctif | Tenable (`sumremediation`) | — | **Non** : la vue est permise (même appel `POST /rest/analysis`) mais le connecteur ne la demande pas ; seul `scripts/dev/exemples-tenable.ps1` l'a lue le 16/11/2026 | Non (voir « Points ouverts ») |
+| Correctif | CERT Santé (fiche) | mention « Un correctif existe : Oui / Non » | `vulnerabilites_veille_avis.fiche_correctif` (lot V4c) | **Oui** : « disponible » ou « aucun correctif connu » |
+| Correctif | CISA KEV | `requiredAction` | `kev_action` | Non pour l'état : une consigne (« appliquer les mesures de l'éditeur ou cesser l'usage »), pas la preuve d'un correctif ; reste affichée dans la fiche |
+| Correctif | NVD | bornes `versionEndExcluding` / `versionEndIncluding` | `vulnerabilites_veille_cve_produits` | Non pour l'état : une borne haute publiée suggère une version corrigée sans la prouver ; reste affichée dans la fiche (« n'est plus citée comme touchée ») |
+| Correctif | AlgoLightHouse | `latest_version` (fragment `vulnerable_component`) | **Non** : exclu de la liste blanche au lot ALH6 | Non |
+| Fin de support | Tenable (`vulndetails`) | `seolDate` (« -1 » quand elle ne s'applique pas) | `fin_support_le` | **Oui** : critère unique, date passée |
+| Fin de support | Tenable | famille du contrôle (`family`) | `famille` | Non : aucune famille propre aux systèmes non maintenus dans le relevé du RSSI ; aucune liste de noms codée en dur |
+| Fin de support | Tenable | constat sans CVE (V18) | calculé | Non : reste la marque distincte « Non maintenu » |
+| Fin de support | AlgoLightHouse | `version_status` = `eol` / `outdated` (fragment `vulnerable_component`) | `vulnerabilites_alh_services.statut_version` (lot ALH6) | **Oui** : `eol` seulement ; `outdated` reste « version dépassée » |
+| Fin de support | AlgoLightHouse | `version_status` des technologies | **Non** : `/technologies` ne le porte pas dans la liste blanche | Non : la marque porte sur le **service exposé** (produit et version au port), pas sur la technologie |
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/correctifs-vulnerabilites.ts`, testé en table) : `etatCorrectif` (trois valeurs et
+  les sources qui parlent), `situationExploitation`, `etatFinSupport`, `serviceEnFinDeSupport`, `texteCorrectif`,
+  `regrouperParCorrectif`, `comparerCorrectifs`, `enteteCorrectifs`, DTO et paramètres des routes.
+- **État du correctif** : « correctif disponible » dès qu'une source le dit (date de publication de Tenable, « Oui » du CERT
+  Santé) ; « aucun correctif connu » quand le CERT Santé écrit « Non » et qu'aucune source ne dit le contraire ; « non
+  renseigné » sinon, **jamais lu comme « aucun correctif »**. Règle des sources (V26) : une source suffit ; un correctif publié
+  ne disparaît pas, donc « disponible » l'emporte ; les sources sont rendues de la première à la dernière. Pour une CVE (fiche
+  d'une CVE, d'une faille déclarée, d'une alerte, vue d'ensemble, rapport), Tenable parle s'il cite la CVE dans un contrôle qui
+  porte une date de correctif ; pour un constat, sa propre date.
+- **Précision du zero-day** (la marque n'est pas renommée, ni les alertes ni la priorité ne changent) : « exploitée, correctif
+  disponible », « exploitée, sans correctif connu », « exploitée, correctif non renseigné » : fiche illustrée, détail d'un
+  correctif, tuile « Exploitées et présentes » (« dont n sans correctif connu, m correctif non renseigné »), tuile du parc et
+  liste des machines (`exploiteeSansCorrectif` de `MarquesMachineDto`).
+- **Fin de support** : constat dont `seolDate` est passée (`finDeSupport`, marque et filtre `finSupport=oui` de la liste) ;
+  date à venir : « fin de support annoncée », sans marque. Machine : au moins un constat **présent** en fin de support, quel que
+  soit son état de suivi (un fait, pas une décision) : `finDeSupport` et les cinq premiers contrôles en cause
+  (`finsDeSupport`) de `MachineDto`, colonnes ajoutées à la requête existante ; mention sur la tuile du parc (donc aussi dans
+  « Périmètres »), dans la liste, rubrique de la fiche, filtre des machines et du parc. Service exposé `eol` : mention dans
+  l'onglet « Actifs » et les fiches de la surface externe. Vue d'ensemble : tuile « Fin de support » (contrôles, communs à
+  tous ; machines et services exposés lus, drapeau sans nombre pour le reste). Rapport : section « Contrôles de Tenable en fin
+  de support » (nom masqué, date, machines de la portée, aucun total pour toute la plateforme). Fiche illustrée : source et
+  date.
+- **Vue « Par correctif »** (`GET /api/vulnerabilites/correctifs`, `GET …/correctifs/{cle}`, `vulnerabilites:lire`, lecture
+  seule, sans journal ; `apps/api/src/vulnerabilites/correctifs.ts`, `apps/web/src/vulnerabilites/Correctifs.tsx`) : constats
+  de Tenable présents et encore à traiter (comme la liste par défaut), regroupés par texte de solution (empreinte SHA-256
+  tronquée comme clé) ; par groupe : failles, CVE distinctes, machines lues (drapeau pour les autres), priorité la plus haute,
+  exploitées (dont sans correctif connu), exploitables, fin de support, état de délai le plus défavorable, échéance la plus
+  proche, nombre en dépassement, répartition par état du correctif et sources. Tri par gain, le même pour tout le monde :
+  priorité, failles corrigées, exploitées, CVE, texte. Recherche dans le texte, filtre de priorité. Détail : toutes les
+  failles du groupe (bornées à 500) avec leur état du correctif ; la fiche existante ne s'ouvre que si la personne lit une de
+  leurs machines (sinon, le seul contrôle, comme la vue d'ensemble) ; les machines lues (250 au plus), leur fiche au clic.
+  **Requêtes** : liste 7 au plus (réglage 1, constats 1, machines lues 1, CVE 1, faits des sources 3), détail 8 ; aucune par
+  faille ni par correctif (test d'API qui compte). Vue d'ensemble : 2 de plus (machines lues et services en fin de support) ;
+  listes, parc, rapport : 0.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Regroupement par le texte de la solution**, pas par `sumremediation` : la vue n'est pas lue par le connecteur ; elle
+  fusionnerait les libellés (`solutionID`, `remediationList`). Limite dite à l'écran : deux libellés différents pour la même
+  mise à jour ne sont pas fusionnés.
+- **Unité « faille »** de la vue : le constat de Tenable (contrôle), comme « Failles détectées » ; les CVE distinctes sont
+  données à côté.
+- **Failles déclarées et CVE de la surface externe absentes** de la vue : aucune source rangée ne leur donne de correctif ;
+  l'écran le dit.
+- **Nombres de failles communs, noms de contrôles montrés à tous** dans le détail (comme la vue d'ensemble, lot PC1) ; seules
+  les machines suivent les droits.
+- **Fin de support d'une machine** indépendante de l'état de suivi (même un risque accepté la laisse marquée).
+- **Texte de la solution de Tenable non lu comme preuve** d'un correctif ; seule la date de publication compte.
+- **Mention « Fin de support »** distincte de « Non maintenu » (constat sans CVE, inchangé) et de « version dépassée ».
+
+### Questions au RSSI
+
+1. **Mot « zero-day »** (proposition, non appliquée) : le réserver à une faille exploitée **sans correctif connu**, et
+   afficher « exploitation avérée » pour une faille exploitée dont un correctif est disponible ? Tant qu'il n'a pas tranché, la
+   marque reste « Zero-day : exploitation avérée » et la précision est ajoutée à côté ; alertes et priorité inchangées.
+2. **Priorité d'une machine en fin de support** : doit-elle monter d'un cran (ou la faille qu'elle porte) ? Aucun effet dans ce
+   lot.
+3. **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
+   `remediationList`, `pluginID`, en liste blanche) pour fusionner les libellés d'un même correctif ? Demanderait une page
+   d'analyse de plus par synchronisation et une migration (table des correctifs).
+4. **Lire `latest_version`** d'AlgoLightHouse (exclu au lot ALH6) pour faire entrer les CVE exposées dans la vue par correctif
+   (« passer à la version x ») ? Élargissement de liste blanche et migration additive ; ce n'est pas la preuve qu'elle corrige
+   chaque CVE.
+5. **Base de dates de fin de vie** (par exemple endoflife.date) : ce serait une nouvelle source de veille, sur Internet, à
+   décider (flux, liste fermée, conditions d'usage).
+
+### Non vérifié
+
+Aucune donnée réelle : forme réelle de `seolDate` et de `patchPubDate` sur les contrôles de systèmes non supportés de
+l'instance (le relevé du 16/11/2026 nomme les champs, `seolDate` valant « -1 » quand elle ne s'applique pas) ; part des
+contrôles dont la solution est identique d'une machine à l'autre ; forme réelle de `json_data` d'AlgoLightHouse (toujours
+nulle sur les exemples, lot ALH6) : la mention « Fin de support » des services peut ne jamais paraître. Rendu vu sur un **banc
+local** (API réelle sur une base temporaire du PostgreSQL de test, servie par Vite ; 150 machines, 421 failles en 15
+correctifs et un groupe sans correctif, six machines en fin de support, une faille exploitée sans correctif connu ; Chromium,
+clair et sombre, 1 440 et 390 px : vue par correctif et ses deux fenêtres, fiche d'une faille, failles filtrées, machines en
+liste filtrée, fiche, parc, vue d'ensemble, rapport ; axe `wcag2a`/`wcag2aa` sans violation, aucun débordement de page), pas
+dans la pile complète ; la CSP n'a pas été vérifiée sur le banc (serveur de développement), seulement par les tests de
+l'interface. À 390 px, les tables du détail d'un correctif sont serrées (colonnes étroites). Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-correctifs.spec.ts`) et le parcours adapté (`zzz…-vulnerabilites-fiche.spec.ts`) n'ont pas été joués
+(CI seulement). Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les cinq questions ci-dessus.
+2. Criticité métier des machines (point ouvert 3 de l'addendum « lot S1 ») : non réalisée.
+3. Fin de support au niveau de la **technologie** d'AlgoLightHouse : la liste `/technologies` ne porte pas `version_status`
+   dans ce qui est lu.

@@ -20,14 +20,19 @@
    - Journal : `vulnerabilites.rapport.produit` (période, portée, format, sans détail), sans contenu.
    Requêtes, nombre fixe, aucune par faille : bornes de la période 1, périmètre 0 ou 1, mesure de la situation 20 au plus
    (propositions 1, calcul global 17 au plus, périmètres des machines 1 et des actifs 1), instantanés 2, mesure des
-   corrections 1, exceptions 1, alertes 1, masque 4, état de la veille 2, état des connecteurs 2 et 3 par instance, journal 1. */
+   corrections 1, exceptions 1, alertes 1, masque 4, état de la veille 2, état des connecteurs 2 et 3 par instance, journal 1.
+   Lot S3 : état du correctif de chaque faille critique (avec la source qui parle) et contrôles de Tenable en fin de support
+   de la portée (nom du contrôle masqué, date, nombre de machines de la portée ; aucun total de machines pour toute la
+   plateforme), tirés du même calcul global : aucune requête de plus. */
 import {
   type AlerteRapportDto,
   agregerParSemaine,
   csvRapport,
   type DepassementRapportDto,
   type ExceptionDto,
+  etatFinSupport,
   type FailleRapportDto,
+  type FinSupportRapportDto,
   MESURES_VIDES,
   mesurerPrisesEnCompte,
   type MotifClotureAlerte,
@@ -49,6 +54,7 @@ import type { SessionUser } from '../auth.js';
 import type { Db } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { AlertesVulnerabilites } from './alertes.js';
+import { correctifDeCumul } from './vue-ensemble.js';
 import { type DelaisVulnerabilites, objetsEnDepassement } from './delais.js';
 import type { SynchronisationTenable } from './tenable.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
@@ -147,8 +153,27 @@ export class RapportVulnerabilites {
         presences: PRESENCES.filter((x) => p.x.presences.has(x)),
         depuis: premieres[0] ?? null,
         enDepassement: cles.some((c) => enDepassement.has(c)),
+        correctif: correctifDeCumul(p.x, s.sources),
       });
     }
+
+    // Lot S3 : contrôles de Tenable présents en fin de support dans la portée, les plus anciens d'abord.
+    const fins = s.objets
+      .filter(
+        (o) =>
+          o.nature === 'constat' &&
+          etatFinSupport(o.finSupportLe ?? null, maintenant) === 'atteinte' &&
+          (cle === null || s.perimetresObjet(o).has(cle)),
+      )
+      .sort((a, b) => (a.finSupportLe! < b.finSupportLe! ? -1 : a.finSupportLe! > b.finSupportLe! ? 1 : 0));
+    const finDeSupport: FinSupportRapportDto[] = [];
+    for (const o of fins.slice(0, RAPPORT_LISTE_MAX))
+      finDeSupport.push({
+        titre: (await texte(o.nom))!,
+        finSupportLe: o.finSupportLe!,
+        machines: cle === null ? null : o.machines.filter((m) => s.perimetreDeMachine(m) === cle).length,
+        etat: o.etat,
+      });
 
     // Dépassements du moment, les plus anciens d'abord.
     const depassesPortee = depasses
@@ -207,6 +232,7 @@ export class RapportVulnerabilites {
         p2: presentes.filter((p) => p.priorite.niveau === 'P2').length,
         elements: critiques,
       },
+      finDeSupport: { total: fins.length, elements: finDeSupport },
       delais: { reglage: s.reglage.delais, ...mesure },
       depassements: { total: depassesPortee.length, elements: depassements },
       exceptions: { compteurs, elements: exceptions },

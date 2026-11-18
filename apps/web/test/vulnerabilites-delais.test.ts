@@ -116,6 +116,13 @@ describe('rendu', () => {
           aConfirmer: { failles: 0, produits: 0 },
           corrigeesCeMois: 0,
           enDepassement: 7,
+          exploiteesSansCorrectif: 0,
+          exploiteesCorrectifNonRenseigne: 0,
+          finDeSupport: {
+            constats: 0,
+            machines: { lisibles: 0, horsLecture: false },
+            services: { lisibles: 0, horsLecture: false },
+          },
         },
       }),
     );

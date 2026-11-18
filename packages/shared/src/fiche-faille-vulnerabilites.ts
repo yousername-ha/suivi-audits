@@ -11,6 +11,12 @@
      versions touchées selon NVD, mentions du CERT Santé, avis du CERT-FR et du CERT Santé, recommandations de l'éditeur
      d'AlgoLightHouse ; toujours du texte. Rien n'est écrit par l'assistant.
    Fonctions pures, testées en table (packages/shared/test/fiche-faille-vulnerabilites.test.ts). */
+import type {
+  EtatCorrectifDto,
+  EtatFinSupport,
+  SituationExploitation,
+  SourceFinSupport,
+} from './correctifs-vulnerabilites.js';
 import { z } from 'zod';
 import type { NiveauAlerte } from './alertes-vulnerabilites.js';
 import type { DelaiFailleDto, StatutException } from './delais-vulnerabilites.js';
@@ -745,6 +751,11 @@ export interface FicheFailleDto {
       alerte d'AlgoLightHouse (sans suivi). */
   delai: DelaiFailleDto | null;
   exception: { statut: StatutException; echeance: string | null } | null;
+  /** Lot S3 : état du correctif et sources qui le disent ; précision de l'exploitation (sans renommer la marque). */
+  correctif: EtatCorrectifDto;
+  situationExploitation: SituationExploitation | null;
+  /** Lot S3 : fin de support (Tenable : `seolDate` ; AlgoLightHouse : service exposé `version_status = eol`), ou null. */
+  finSupport: { etat: EtatFinSupport; le: string | null; source: SourceFinSupport } | null;
 }
 
 export const NATURES_FICHE_FAILLE = ['constat', 'declaree', 'cve', 'alerte-alh'] as const;

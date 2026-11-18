@@ -308,6 +308,21 @@ const rapport = (r: Partial<RapportVulnerabilitesDto> = {}): RapportVulnerabilit
         presences: ['detectee', 'exposee'],
         depuis: '2026-11-10T08:00:00.000Z',
         enDepassement: true,
+        correctif: {
+          etat: 'aucun_connu',
+          sources: [{ source: 'cert-sante', valeur: 'aucun', le: null }],
+        },
+      },
+    ],
+  },
+  finDeSupport: {
+    total: 2,
+    elements: [
+      {
+        titre: 'Exemple OS Unsupported Version Detection (fictif)',
+        finSupportLe: '2025-10-14T00:00:00.000Z',
+        machines: 3,
+        etat: 'a_traiter',
       },
     ],
   },
@@ -395,6 +410,7 @@ describe('tableaux du rapport', () => {
       'niveau',
       'situation',
       'critiques',
+      'fin-de-support',
       'delais',
       'depassements',
       'exceptions',
@@ -418,7 +434,13 @@ describe('tableaux du rapport', () => {
         'Détectée par Tenable, Exposée sur Internet (AlgoLightHouse)',
         '10/11/2026 09:00',
         'En dépassement',
+        'Aucun correctif connu (CERT Santé (mention « Un correctif existe »))',
       ],
+    ],
+    [
+      'fin-de-support',
+      'Unsupported',
+      ['Exemple OS Unsupported Version Detection (fictif)', '14/10/2025', '3', 'À traiter'],
     ],
     ['delais', 'P1', ['P1', '48 heures', '1', '24 h', '24 h', '1 sur 1', '100 %']],
     ['depassements', 'Linux', ['Exemple Linux : contrôle fictif', 'CVE-2026-0001', 'P1', '12/11/2026 09:00', '2 j']],
@@ -456,16 +478,26 @@ describe('tableaux du rapport', () => {
     expect(tendances.note).toContain('Historique depuis le 17/11/2026.');
     expect(tendances.note).toContain('à confirmer par le RSSI');
     expect(t.find((x) => x.id === 'alertes')!.note).toContain('moyen 2 h');
+    // Lot S3 : « non renseigné » n'est jamais lu comme « aucun correctif » ; la fin de support dit sa source et sa borne.
+    expect(t.find((x) => x.id === 'critiques')!.note).toContain('ce qui ne veut pas dire qu’il n’en existe pas');
+    const fin = t.find((x) => x.id === 'fin-de-support')!;
+    expect(fin.titre).toBe('Contrôles de Tenable en fin de support : 2');
+    expect(fin.note).toContain('1 lignes listées sur 2');
+    expect(fin.note).toContain('seolDate');
   });
 
   it('sans historique ni faille : textes des tables vides', () => {
     const t = tableauxRapport(
       rapport({
         critiques: { total: 0, p2: 0, elements: [] },
+        finDeSupport: { total: 0, elements: [] },
         tendances: { depuis: null, semaines: [], tendance: tendanceSituation([]) },
       }),
     );
     expect(t.find((x) => x.id === 'critiques')!.vide).toBe('Aucune faille présente en P1.');
+    expect(t.find((x) => x.id === 'fin-de-support')!.vide).toBe(
+      'Aucun système ni logiciel en fin de support selon Tenable.',
+    );
     expect(t.find((x) => x.id === 'tendances')!.note).toContain('l’historique commence à l’installation du lot');
   });
 

@@ -22,6 +22,9 @@ export const ficheFaille = (
   nombreCves: 1,
   delai: null,
   exception: null,
+  correctif: { etat: 'non_renseigne', sources: [] },
+  situationExploitation: 'correctif_non_renseigne',
+  finSupport: null,
   composant: 'Produit fictif 8.3',
   priorite: {
     niveau: 'P1',

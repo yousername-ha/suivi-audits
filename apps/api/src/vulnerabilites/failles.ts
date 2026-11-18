@@ -33,8 +33,14 @@
    détection de Tenable, sinon entrée du constat ; date du rapprochement d'une faille déclarée), reprise du délai, délai
    cible de la priorité courante, échéance calculée et état ; filtre par état de délai et tri par échéance, en mémoire comme
    la priorité (aucune requête de plus).
+   Lot S3 : état du correctif de chaque constat (date de publication du correctif de Tenable, mention du CERT Santé de ses
+   CVE ; etatCorrectif du paquet partagé) et fin de support (date `seolDate` de Tenable passée) ; filtre « fin de support »
+   des constats et des machines ; une machine est en fin de support dès qu'un constat présent sur elle l'est, quel que soit
+   son état de suivi (c'est un fait, pas une décision). Colonnes ajoutées aux requêtes existantes : aucune requête de plus.
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
+  etatCorrectif,
+  etatFinSupport,
   calculerDelai,
   comparerEcheances,
   type DelaiFailleDto,
@@ -112,6 +118,8 @@ const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat
 const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
   FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
 const sansCve = sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id)`;
+/** Lot S3 : le constat `c` est en fin de support selon Tenable (date de fin de support du logiciel passée). */
+export const finSupportConstat = sql<boolean>`(c.fin_support_le IS NOT NULL AND c.fin_support_le <= now())`;
 /** Une CVE du constat `c` est citée par une alerte du CERT-FR (veille). */
 const alerteConstat = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   WHERE cc.constat_id = c.id AND ${alerteCertFr('cc.cve')})`;
@@ -180,6 +188,8 @@ interface LigneMachine {
   exploites: number;
   exploitables: number;
   exploitees_avere: number;
+  /** Lot S3 : contrôles présents en fin de support (cinq au plus), en JSON. */
+  fins_support: { nom: string; le: string }[];
 }
 
 /** Priorité d'un constat présent sur une machine lisible : présence « détectée » (« absente » s'il n'est plus rapporté).
@@ -229,6 +239,11 @@ const versResume = (
 ): ConstatResumeDto => {
   const priorite = prioriteConstat(l, sources, reglage);
   return {
+    finDeSupport: etatFinSupport(iso(l.fin_support_le), maintenant) === 'atteinte',
+    correctifEtat: etatCorrectif({
+      tenablePublieLe: iso(l.correctif_publie_le),
+      certSante: sources.certSante?.correctif ?? null,
+    }),
     id: l.id,
     plugin: String(l.plugin_id),
     nom: l.nom,
@@ -338,6 +353,8 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     source: 'tenable',
     integration: { id: l.integration_id, nom: l.integration_nom },
     compteurs,
+    finDeSupport: l.fins_support.length > 0,
+    finsDeSupport: l.fins_support.map((f) => ({ nom: f.nom, le: new Date(f.le).toISOString() })),
     version: l.version,
   };
 };
@@ -363,40 +380,53 @@ export async function faillesDesMachines(
     cvss3_score: string | null;
     epss_score: string | null;
     exploitable: boolean;
-  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable
+    correctif_publie_le: Date | null;
+  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.correctif_publie_le
      FROM vulnerabilites_detections d
      JOIN vulnerabilites_machines m ON m.id = d.machine_id
      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
      JOIN vulnerabilites_constats c ON c.id = d.constat_id
      WHERE d.machine_id = ANY(${ids}::uuid[]) AND ${present} AND NOT ${close('constat')}`.execute(k);
-  const { rows: declarees } = await sql<{ machine_id: string; cve: string }>`
-     SELECT DISTINCT m.id AS machine_id, r.cve
+  // Lot S3 : Tenable parle du correctif d'une CVE déclarée s'il la cite dans un contrôle qui porte une date de correctif.
+  const { rows: declarees } = await sql<{ machine_id: string; cve: string; correctif_tenable: Date | null }>`
+     SELECT DISTINCT m.id AS machine_id, r.cve, (SELECT min(c2.correctif_publie_le) FROM vulnerabilites_constat_cves cc2
+       JOIN vulnerabilites_constats c2 ON c2.id = cc2.constat_id WHERE cc2.cve = r.cve) AS correctif_tenable
      FROM vulnerabilites_produits_machines pm
      JOIN vulnerabilites_machines m ON m.id = pm.machine_id
      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
      JOIN vulnerabilites_rapprochements r ON r.produit_id = pm.produit_id AND r.statut IN ('rattachee', 'confirmee')
      WHERE m.id = ANY(${ids}::uuid[]) AND NOT ${detecteeSurMachine} AND NOT ${close('declaree')}`.execute(k);
-  const ajouter = (machine: string, sources: SourcesFailleDto, presence: 'detectee' | 'declaree') => {
+  const ajouter = (
+    machine: string,
+    sources: SourcesFailleDto,
+    presence: 'detectee' | 'declaree',
+    correctifTenable: Date | null,
+  ) => {
     const faits = faitsDepuisSources(sources);
+    const correctif = etatCorrectif({
+      tenablePublieLe: iso(correctifTenable),
+      certSante: sources.certSante?.correctif ?? null,
+    });
     parMachine.set(machine, [
       ...(parMachine.get(machine) ?? []),
       {
         niveau: calculerPriorite({ ...faits, presence }, reglage).niveau,
         exploitee: faits.exploitation.length > 0,
         exploitable: faits.exploitable.length > 0,
+        sansCorrectif: correctif.etat === 'aucun_connu',
       },
     ]);
   };
   const uniques = [...new Map(constats.map((c) => [c.id, c])).values()];
   const sources = await sourcesDesConstats(k, uniques);
-  for (const c of constats) ajouter(c.machine_id, sources.get(c.id)!, 'detectee');
+  for (const c of constats) ajouter(c.machine_id, sources.get(c.id)!, 'detectee', c.correctif_publie_le);
   const faits = await lireFaitsCve(
     k,
     declarees.map((d) => d.cve),
   );
   for (const d of declarees) {
     const f = faits.get(d.cve);
-    ajouter(d.machine_id, sourcesDe(f ? [f] : []), 'declaree');
+    ajouter(d.machine_id, sourcesDe(f ? [f] : []), 'declaree', d.correctif_tenable);
   }
   return parMachine;
 }
@@ -448,6 +478,7 @@ export class FaillesDetectees {
     if (q.exploite) conditions.push(exploiteeAvere);
     if (q.exploitable) conditions.push(exploitableSources);
     if (q.nonMaintenu) conditions.push(sansCve);
+    if (q.finSupport) conditions.push(finSupportConstat);
     conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
     if (texte) {
@@ -580,7 +611,11 @@ export class FaillesDetectees {
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
-             coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere
+             coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere,
+             -- Lot S3 : contrôles présents en fin de support, quel que soit leur état de suivi (cinq au plus).
+             (SELECT coalesce(json_agg(json_build_object('nom', z.nom, 'le', z.le) ORDER BY z.le, z.nom), '[]'::json)
+              FROM (SELECT DISTINCT c.nom, c.fin_support_le AS le FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
+                    WHERE d.machine_id = m.id AND ${present} AND ${finSupportConstat} ORDER BY le, nom LIMIT 5) z) AS fins_support
       FROM vulnerabilites_machines m
       JOIN integrations i ON i.id = m.integration_id
       LEFT JOIN vulnerabilites_tenable_depots td ON td.id = m.depot_id
@@ -637,7 +672,8 @@ export class FaillesDetectees {
       (m) =>
         (!texte || (m.nom ?? '').includes(texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
-        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre),
+        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
+        (!q.finSupport || m.finDeSupport),
     );
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
     return {
@@ -670,7 +706,8 @@ export class FaillesDetectees {
       (m) =>
         (!texte || (m.nom ?? '').includes(texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
-        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre),
+        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
+        (!q.finSupport || m.finDeSupport),
     );
     // Marques de toutes les machines filtrées (mêmes requêtes, quel que soit leur nombre) : le nombre de machines marquées
     // « zero-day » d'une zone compte aussi celles au-delà de la borne.

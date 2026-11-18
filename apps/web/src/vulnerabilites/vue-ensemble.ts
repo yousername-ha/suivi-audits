@@ -32,6 +32,9 @@ export const LIENS_TUILES = {
   corrigees: '/vulnerabilites/failles?etat=corrigee',
   /** Lot S1 : failles en dépassement de leur délai de correction, la plus en retard d'abord. */
   depassement: '/vulnerabilites/failles?delai=en_depassement&tri=echeance',
+  /** Lot S3 : constats en fin de support, et vue par correctif. */
+  finSupport: '/vulnerabilites/failles?finSupport=oui',
+  correctifs: '/vulnerabilites/failles?vue=correctifs',
   tout: '/vulnerabilites/failles',
 } as const;
 

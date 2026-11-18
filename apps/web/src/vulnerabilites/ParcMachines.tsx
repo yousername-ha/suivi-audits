@@ -8,7 +8,9 @@
    tout le parc reçu, tuiles denses, zones élargies selon leur nombre de tuiles. Chaque tuile est un bouton (clic ou Entrée :
    fiche de la machine) au nom accessible complet. Sous la CSP stricte (ADR 0006) : aucun style en ligne ; couleurs, traits
    et animations par les classes de packages/ui/src/neon-parc.css (jetons de la charte, clair et sombre ; animations coupées
-   par le mouvement réduit et à l'impression). */
+   par le mouvement réduit et à l'impression). Lot S3 : mention « Fin de support » sur la tuile (système ou logiciel qui ne
+   reçoit plus de correctif de sécurité, date de Tenable passée) et précision « sans correctif connu » à côté de la marque
+   zero-day (la marque n'est pas renommée) ; texte et icône, jamais la seule couleur. */
 import { VisuallyHidden } from '@mantine/core';
 import {
   type EchelleParc,
@@ -25,7 +27,11 @@ import { useId, useState } from 'react';
 import { libelleMachine } from './failles';
 import {
   LEGENDE_EXPLOITABLE,
+  LEGENDE_FIN_SUPPORT,
+  LEGENDE_SANS_CORRECTIF,
   LEGENDE_ZERO_DAY,
+  MARQUE_FIN_SUPPORT,
+  PRECISION_SANS_CORRECTIF,
   libellePrioriteMachine,
   MARQUE_EXPLOITABLE,
   MARQUE_ZERO_DAY,
@@ -117,6 +123,31 @@ export function MarqueExploitable() {
   );
 }
 
+/** Lot S3 : sablier barré, icône de la mention « Fin de support ». Décoratif : le texte porte le sens. */
+export function IconeFinSupport() {
+  return (
+    <svg className="parc-icone-internet" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9" />
+      <path d="M4 20 20 4" />
+    </svg>
+  );
+}
+
+/** Lot S3 : mention « Fin de support » (texte et icône) ; `court` : libellé seul, sans la définition. */
+export function MentionFinSupport({ court = false }: { court?: boolean }) {
+  return (
+    <span className="parc-mention parc-mention--fds" title={MARQUE_FIN_SUPPORT}>
+      <IconeFinSupport />
+      {court ? 'Fin de support' : MARQUE_FIN_SUPPORT}
+    </span>
+  );
+}
+
+/** Lot S3 : précision à côté de la marque zero-day : « Exploitée, sans correctif connu ». */
+export function MentionSansCorrectif() {
+  return <span className="parc-mention parc-mention--sc">{PRECISION_SANS_CORRECTIF}</span>;
+}
+
 /** Marques d'une machine (liste et tuile), avec un texte lisible par les lecteurs d'écran quand `texte` est vrai. */
 export function MarquesMachine({ marques, texte = false }: { marques: MachineMarqueeDto['marques']; texte?: boolean }) {
   if (!marques.exploitationAveree && !marques.exploitable) return null;
@@ -146,6 +177,14 @@ export function LegendeMarques({ parc = false }: { parc?: boolean }) {
       <li>
         <MarqueExploitable />
         <span>{LEGENDE_EXPLOITABLE}</span>
+      </li>
+      <li>
+        <MentionSansCorrectif />
+        <span>{LEGENDE_SANS_CORRECTIF}</span>
+      </li>
+      <li>
+        <MentionFinSupport court />
+        <span>{LEGENDE_FIN_SUPPORT}</span>
       </li>
       {parc && (
         <li>
@@ -197,6 +236,17 @@ export function TuileMachine({
         <b className={`parc-g parc-g--m${c.moyenne ? '' : ' parc-g--zero'}`}>{c.moyenne}</b>
         <b className={`parc-g parc-g--f${c.faible ? '' : ' parc-g--zero'}`}>{c.faible}</b>
       </span>
+      {m.marques.exploiteeSansCorrectif && (
+        <span className="parc-mention parc-mention--sc" aria-hidden="true">
+          Sans correctif connu
+        </span>
+      )}
+      {m.finDeSupport && (
+        <span className="parc-mention parc-mention--fds" aria-hidden="true">
+          <IconeFinSupport />
+          Fin de support
+        </span>
+      )}
       {exposition && (
         <span className="parc-tuile__expo" aria-hidden="true">
           <IconeInternet />
