@@ -96,3 +96,13 @@ Première exception (décision du RSSI du 31/10/2026) : **GHSA-g3hv-75wg-m249**,
   la refuse jusqu'au 03/11/2026.
 - Réexamen au plus tard le **30/11/2026**, ou dès qu'ESLint accepte `minimatch` 11 (propositions Dependabot) : monter alors
   les versions et retirer l'exception.
+
+Deuxième exception (décision du RSSI du 18/11/2026) : **GHSA-fc5q-39xc-vjpf**, déni de service par expression régulière dans
+`picomatch` ≤ 4.0.7 (gravité élevée), par des motifs extglob répétés.
+- `picomatch` n'est tiré que par des outils de développement : `tinyglobby` sous `@typescript-eslint/typescript-estree`
+  (ESLint), Vite et Vitest. Il est absent des images publiées (l'image de l'API n'installe que les dépendances de production ;
+  l'interface est livrée construite). Les motifs qu'il évalue viennent de la configuration du dépôt, relue en PR, jamais d'une
+  saisie extérieure.
+- Aucune version corrigée n'est publiée au 18/11/2026 : l'avis fait échouer `pnpm audit` sur toutes les branches.
+- Réexamen au plus tard le **02/12/2026**, ou dès qu'une version corrigée est adoptable : monter alors les versions et retirer
+  l'exception.

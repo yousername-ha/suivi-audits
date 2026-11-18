@@ -29,6 +29,12 @@ _(Session « Projet audit_suivi Coeur ».)_
   le téléchargement sans nouvel essai. Vérifications d'empreinte, de signature, de SBOM et de révision inchangées, après le
   téléchargement des trois images. _(Session « Projet audit_suivi Coeur ».)_
 
+### Sécurité
+
+- **Exception d'audit datée** pour GHSA-fc5q-39xc-vjpf (`picomatch` ≤ 4.0.7, sans correctif publié), tiré seulement par les
+  outils de développement (ESLint, Vite, Vitest), absent des images ; décision du RSSI du 18/11/2026, justifiée dans l'ADR 0063,
+  réexamen au plus tard le 02/12/2026. _(Session « Projet audit_suivi Coeur ».)_
+
 ### Corrigé
 
 - **Frise de la page de maintenance** : l'étape « Retour à l'application » apparaissait terminée avant la vérification finale
