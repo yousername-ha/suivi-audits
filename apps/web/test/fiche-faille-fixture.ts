@@ -20,6 +20,8 @@ export const ficheFaille = (
   nature: 'constat',
   cves: ['CVE-2026-90001'],
   nombreCves: 1,
+  delai: null,
+  exception: null,
   composant: 'Produit fictif 8.3',
   priorite: {
     niveau: 'P1',

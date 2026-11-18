@@ -152,6 +152,13 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
         </span>
         <b>{deuxChiffres(tuiles.aConfirmer.failles)}</b>
       </Link>
+      <Link to={LIENS_TUILES.depassement} className="pc-tuile pc-teinte--rouge">
+        <span className="pc-etiquette">
+          En dépassement
+          <small>délai de correction dépassé</small>
+        </span>
+        <b>{deuxChiffres(tuiles.enDepassement)}</b>
+      </Link>
       <Link to={LIENS_TUILES.corrigees} className="pc-tuile pc-teinte--vert">
         <span className="pc-etiquette">Corrigées ce mois</span>
         <b>{deuxChiffres(tuiles.corrigeesCeMois)}</b>

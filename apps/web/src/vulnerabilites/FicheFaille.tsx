@@ -1,7 +1,8 @@
 /* Fiche illustrée d'une faille (ADR 0100, point 19 et décision V10 ; lot PC4, maquette 02-fiche). Une seule présentation,
    placée en tête des fiches existantes (constat de Tenable, faille déclarée, CVE de la veille, alerte d'AlgoLightHouse) :
    - en-tête : composant et CVE, priorité et faits (les mêmes pour tous), marques « zero-day » et « exploitable » du lot PC2,
-     alerte ouverte de la plateforme, présence lue (nombres lus seulement, drapeau sans nombre pour le reste) ;
+     alerte ouverte de la plateforme, présence lue (nombres lus seulement, drapeau sans nombre pour le reste) ; lot S1 :
+     délai de correction (état, âge, échéance) et exception d'un constat ou d'une faille déclarée ;
    - « Vecteur d'attaque, en clair » : une icône et un libellé par métrique (terme technique exact et traduction), effets sur
      la cible, phrase composée par la plateforme, vecteur brut et sa version, source qui parle ; schéma SVG composé à partir
      du vecteur et de la présence (nom accessible en une phrase, équivalent texte dessous) ; sans vecteur lisible : « vecteur
@@ -10,7 +11,7 @@
      interprété) ; rien n'est rédigé par l'assistant ni par la plateforme.
    Sous la CSP stricte (ADR 0006) : aucun style en ligne ; classes de packages/ui/src/neon-fiche.css (jetons de la charte,
    clair et sombre), positions du schéma par attributs SVG. */
-import { Anchor, Loader, Stack, Text } from '@mantine/core';
+import { Anchor, Group, Loader, Stack, Text } from '@mantine/core';
 import {
   conditionsTraduites,
   decoderVecteurCvss,
@@ -37,6 +38,14 @@ import { useQuery } from '@tanstack/react-query';
 import { type ReactNode, useId } from 'react';
 import { Link } from 'react-router';
 import { get } from '../api';
+import {
+  ETAT_DELAI_PUCE,
+  fmtJourCivil,
+  libelleEtatDelai,
+  libelleStatutException,
+  lignesDelai,
+  STATUT_EXCEPTION_PUCE,
+} from './delais';
 import { ETAT_PRIORITE, faitsPriorite } from './failles';
 import {
   DETAIL,
@@ -95,6 +104,32 @@ function IconeSchema({ icone, x, y, t }: { icone: IconeMetrique; x: number; y: n
   );
 }
 
+/* ------------------------------------------------------------------ Délai et exception (lot S1) */
+function DelaiFiche({ f }: { f: FicheFailleDto }) {
+  const d = f.delai!;
+  const l = lignesDelai(d, new Date());
+  return (
+    <Group gap="xs" role="group" aria-label="Délai de correction">
+      <StatusChip etat={ETAT_DELAI_PUCE[d.etat]}>Délai : {libelleEtatDelai(d.etat)}</StatusChip>
+      <Text size="xs" c="dimmed">
+        {l.age} · {l.regle}
+        {l.echeance ? (
+          <>
+            {' '}
+            · échéance <span className="horodatage">{l.echeance}</span>
+          </>
+        ) : null}
+      </Text>
+      {f.exception && (
+        <StatusChip etat={STATUT_EXCEPTION_PUCE[f.exception.statut]}>
+          Exception : {libelleStatutException(f.exception.statut)}
+          {f.exception.echeance ? ` (échéance ${fmtJourCivil(f.exception.echeance)})` : ''}
+        </StatusChip>
+      )}
+    </Group>
+  );
+}
+
 /* ------------------------------------------------------------------ En-tête */
 function EnTete({ f }: { f: FicheFailleDto }) {
   const cible = [
@@ -148,6 +183,7 @@ function EnTete({ f }: { f: FicheFailleDto }) {
         )}
       </div>
       <Text size="sm">Présence : {libellePresence(f.presence)}.</Text>
+      {f.delai && <DelaiFiche f={f} />}
       {f.alerte && (
         <p className={`ff-alerte ff-f--${f.alerte.niveau === 'critique' ? 'fort' : 'moyen'}`} role="status">
           {NIVEAU_ALERTE_LIBELLES[f.alerte.niveau]} ouverte sur cette faille ({f.alerte.priorite}) :{' '}

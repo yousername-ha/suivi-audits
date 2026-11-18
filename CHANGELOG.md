@@ -2,6 +2,41 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+**Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
+`vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
+`vulnerabilites_depassements`, contrainte de portée de `grc_notifications` recréée avec deux types de plus, quatre index),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Dans l'application : seul le rôle « RSSI » accorde,
+prolonge ou lève une exception (risque accepté) ; le compte d'installation n'a que le rôle « Administrateur » : attribuer le
+rôle « RSSI » à la personne qui décide. Les délais par défaut (P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai) sont à
+confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception déjà enregistrée sans échéance reste valide et
+est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
+première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
+
+### Ajouté
+
+- Vulnérabilités, délais de correction (lot S1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : délai cible par
+  priorité réglé avec les seuils de priorité (administration du module, If-Match, journal), âge, échéance calculée et état
+  du délai (en dépassement, échéance proche, dans les délais, sans délai) dans les listes de failles (colonne « Délai »,
+  filtre, tri par échéance), dans la fiche illustrée et dans la tuile « En dépassement » de la vue d'ensemble ; résumé
+  notifié des failles entrées en dépassement, sans nom ; onglet « Délais et exceptions » avec la mesure des corrections
+  (délai moyen et médian par priorité, part dans les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, exceptions à échéance (lot S1) : un risque accepté exige une justification, une mesure compensatoire et une
+  échéance de douze mois au plus ; seul le rôle « RSSI » l'accorde, le prolonge ou le lève ; rappel quatorze jours avant
+  l'échéance ; à l'échéance, l'exception expire d'elle-même, la faille revient à l'état d'avant (ou « à traiter ») et son
+  délai repart ; tout est historisé et tracé au journal, sans nom de machine. (session « Module surveillance vulnérabilités
+  SMSI »)
+
+### Modifié
+
+- Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
+  seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
+  que les délais). (session « Module surveillance vulnérabilités SMSI »)
+
 ## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour

@@ -9,7 +9,8 @@
    traiter ; « à clore » : corrigées selon la source, à confirmer), fiche d'une faille déclarée, suivi dans chaque fiche
    (SuiviFaille). Lot V4c : ce que chaque source dit de la faille (SourcesFaille) : exploitation avérée et « exploitable »
    avec la première source et sa date, valeurs par source et celle retenue, mentions du CERT Santé ; gravité retenue (la plus
-   sévère) dans la liste des failles déclarées. */
+   sévère) dans la liste des failles déclarées. Lot S1 : colonne « Délai » (état du délai de correction en clair, âge,
+   échéance calculée, délai de la priorité), filtre « Délai » et tri par échéance, repris de l'adresse. */
 import {
   Alert,
   Anchor,
@@ -27,6 +28,9 @@ import {
   Title,
 } from '@mantine/core';
 import {
+  type DelaiFailleDto,
+  type EtatDelai,
+  type TriFailles,
   type ConstatDto,
   type ConstatResumeDto,
   type EtatSynchronisationDto,
@@ -69,6 +73,7 @@ import {
   urlDeclarees,
   urlMachines,
 } from './failles';
+import { ETAT_DELAI_PUCE, libelleEtatDelai, lignesDelai, OPTIONS_FILTRE_DELAI, OPTIONS_TRI } from './delais';
 import { nombrePages } from './veille';
 import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
@@ -90,6 +95,27 @@ export function PrioriteFaits({ p }: { p: Priorite }) {
   );
 }
 
+/** Délai de correction d'une faille (sans état, lot S1) : état en clair, âge, échéance, délai de la priorité. */
+export function DelaiFaille({ d, maintenant = new Date() }: { d: DelaiFailleDto; maintenant?: Date }) {
+  const l = lignesDelai(d, maintenant);
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_DELAI_PUCE[d.etat]}>{libelleEtatDelai(d.etat)}</StatusChip>
+      <Text size="xs" c="dimmed">
+        {l.age}
+      </Text>
+      {l.echeance && (
+        <Text size="xs" c="dimmed">
+          Échéance : <span className="horodatage">{l.echeance}</span>
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        {l.regle}
+      </Text>
+    </Stack>
+  );
+}
+
 /** Liste des constats (sans état) : rendu testable hors navigateur. */
 export function ConstatsTable({
   constats,
@@ -106,6 +132,7 @@ export function ConstatsTable({
             <Table.Th>Priorité</Table.Th>
             <Table.Th>Contrôle de Tenable</Table.Th>
             <Table.Th>Suivi</Table.Th>
+            <Table.Th>Délai</Table.Th>
             <Table.Th>Gravité</Table.Th>
             <Table.Th>CVE</Table.Th>
             <Table.Th>Machines</Table.Th>
@@ -146,6 +173,9 @@ export function ConstatsTable({
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
               </Table.Td>
               <Table.Td>
+                <DelaiFaille d={c.delai} />
+              </Table.Td>
+              <Table.Td>
                 <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
                 {c.cvss3Score !== null && (
                   <Text size="xs" c="dimmed">
@@ -178,7 +208,7 @@ export function ConstatsTable({
           ))}
           {constats.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={7}>
+              <Table.Td colSpan={8}>
                 <Text size="sm" c="dimmed">
                   Aucune faille détectée ne correspond, parmi les machines que vous pouvez lire.
                 </Text>
@@ -207,6 +237,7 @@ export function DeclareesTable({
             <Table.Th>Priorité</Table.Th>
             <Table.Th>CVE</Table.Th>
             <Table.Th>Suivi</Table.Th>
+            <Table.Th>Délai</Table.Th>
             <Table.Th>Produit surveillé</Table.Th>
             <Table.Th>Gravité (la plus sévère)</Table.Th>
             <Table.Th>Machines</Table.Th>
@@ -245,6 +276,9 @@ export function DeclareesTable({
                 <MarquesSuivi s={f.suivi} present={f.present} source="la veille" />
               </Table.Td>
               <Table.Td>
+                <DelaiFaille d={f.delai} />
+              </Table.Td>
+              <Table.Td>
                 <Text size="sm">
                   {f.produit.nom} {f.produit.versionProduit}
                 </Text>
@@ -269,7 +303,7 @@ export function DeclareesTable({
           ))}
           {failles.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={6}>
+              <Table.Td colSpan={7}>
                 <Text size="sm" c="dimmed">
                   Aucune faille déclarée ne correspond : reliez un produit surveillé à ses machines depuis sa fiche.
                 </Text>
@@ -503,7 +537,16 @@ export function FaillesDetecteesPage() {
     enabled: lire && vue === 'failles',
   });
   const declarees = useQuery({
-    queryKey: [...CLE, 'declarees', filtres.q, filtres.priorite, filtres.etat, pageDeclarees],
+    queryKey: [
+      ...CLE,
+      'declarees',
+      filtres.q,
+      filtres.priorite,
+      filtres.etat,
+      filtres.delai,
+      filtres.tri,
+      pageDeclarees,
+    ],
     queryFn: () => get<PageFailles<FailleDeclareeDto>>(urlDeclarees(filtres, pageDeclarees)),
     enabled: lire && vue === 'failles',
   });
@@ -608,6 +651,23 @@ export function FaillesDetecteesPage() {
               value={filtres.gravite || null}
               onChange={(v) => changer({ gravite: (v ?? '') as GraviteTenable | '' })}
               data={GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }))}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Select
+              label="Délai"
+              placeholder="Tous"
+              clearable
+              value={filtres.delai || null}
+              onChange={(v) => changer({ delai: (v ?? '') as EtatDelai | '' })}
+              data={OPTIONS_FILTRE_DELAI}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Select
+              label="Trier par"
+              allowDeselect={false}
+              value={filtres.tri || 'priorite'}
+              onChange={(v) => changer({ tri: v === 'echeance' ? 'echeance' : ('' as TriFailles | '') })}
+              data={OPTIONS_TRI}
               comboboxProps={{ withinPortal: false }}
             />
             <Checkbox

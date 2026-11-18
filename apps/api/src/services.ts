@@ -58,6 +58,7 @@ import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
 import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
 import { PerimetresVulnerabilites } from './vulnerabilites/perimetres.js';
 import { FichesFailles } from './vulnerabilites/fiches.js';
+import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -147,6 +148,16 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
   /* V30 : les machines nommées dans une action suivent le rang des machines. */
   suivi.rangs = (user) => failles.machinesRangees(user);
+  /* Lot S1 : délais de correction et exceptions à échéance (évaluation au tic de l'API, mesure des corrections). */
+  const delais = new DelaisVulnerabilites(
+    db,
+    reglagePriorite,
+    modules,
+    alertesVulnerabilites,
+    suivi,
+    notificationsMetier,
+  );
+  suivi.delaiObjet = (k, nature, id) => delais.delaiObjet(k, nature, id);
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
@@ -190,6 +201,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
       /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
       fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
+      /** Lot S1 : délais de correction (réglés avec les seuils de priorité), exceptions à échéance, mesure des corrections. */
+      delais,
       /** Lot PC3 : onglet « Périmètres » (cartes par périmètre lu, détail par ligne ou au global), lecture seule. */
       perimetres: new PerimetresVulnerabilites(db, failles, reglagePriorite),
     },

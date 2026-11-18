@@ -44,10 +44,19 @@ const suivi = (s: Partial<SuiviResumeDto> = {}): SuiviResumeDto => ({
   proposition: 'aucune',
   revueLe: null,
   revueDepassee: false,
+  exceptionStatut: null,
   nombreActions: 0,
   version: 0,
   ...s,
 });
+const DELAI = {
+  etat: 'dans_les_delais' as const,
+  priorite: 'P2' as const,
+  delai: { duree: 15, unite: 'jours' as const },
+  premiere: '2026-11-10T08:00:00.000Z',
+  depuis: '2026-11-10T08:00:00.000Z',
+  echeance: '2026-11-25T08:00:00.000Z',
+};
 const priorite = { niveau: 'P2' as const, faits: [{ fait: 'presence' as const, presence: 'detectee' as const }] };
 const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   id: '00000000-0000-4000-8000-000000000c01',
@@ -71,6 +80,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   sources: SOURCES_VIDES,
   priorite,
   suivi: suivi({ etat: 'a_traiter', proposition: 'a_confirmer' }),
+  delai: DELAI,
   ...c,
 });
 const declaree: FailleDeclareeDto = {
@@ -92,7 +102,8 @@ const declaree: FailleDeclareeDto = {
   machines: 1,
   present: false,
   priorite,
-  suivi: suivi({ etat: 'risque_accepte', revueLe: '2026-01-01', revueDepassee: true }),
+  suivi: suivi({ etat: 'risque_accepte', revueLe: '2026-01-01', revueDepassee: true, exceptionStatut: 'echue' }),
+  delai: { ...DELAI, etat: 'sous_exception' },
 };
 
 describe('marques et filtre de suivi', () => {
@@ -109,7 +120,13 @@ describe('marques et filtre de suivi', () => {
     ]);
     expect(
       marquesSuivi(
-        suivi({ proposition: 'refusee', etat: 'risque_accepte', revueDepassee: true, nombreActions: 1 }),
+        suivi({
+          proposition: 'refusee',
+          etat: 'risque_accepte',
+          revueDepassee: true,
+          exceptionStatut: 'echue',
+          nombreActions: 1,
+        }),
         false,
         'Tenable',
       ),
@@ -117,7 +134,8 @@ describe('marques et filtre de suivi', () => {
       { libelle: 'Risque accepté', etat: 'neutre' },
       { libelle: 'Plus rapportée par Tenable', etat: 'neutre' },
       { libelle: 'Proposition « corrigée » refusée', etat: 'neutre' },
-      { libelle: 'Date de revue dépassée', etat: 'erreur' },
+      // Lot S1 : la date de revue est l'échéance de l'exception ; passée, l'exception est « échue ».
+      { libelle: 'Exception échue', etat: 'erreur' },
       { libelle: '1 action liée', etat: 'neutre' },
     ]);
     expect(ETAT_SUIVI_PUCE.corrigee).toBe('succes');
@@ -142,16 +160,38 @@ describe('marques et filtre de suivi', () => {
       'non_concernee',
     ]);
     expect(etatsChoisissables('risque_accepte').map((e) => e.value)).toContain('risque_accepte');
+    // Lot S1 : sans le rôle RSSI, ni accorder une exception, ni en sortir.
+    expect(etatsChoisissables('a_traiter', false).map((e) => e.value)).toEqual([
+      'en_cours',
+      'corrigee',
+      'non_concernee',
+    ]);
+    expect(etatsChoisissables('risque_accepte', false)).toEqual([]);
+    expect(
+      marquesSuivi(suivi({ etat: 'risque_accepte', exceptionStatut: 'sans_echeance' }), true, 'Tenable').map(
+        (m) => m.libelle,
+      ),
+    ).toEqual(['Risque accepté', 'Exception sans échéance, à compléter']);
     expect(etatsChoisissables('nouvelle').map((e) => e.value)).not.toContain('nouvelle');
     expect(corpsChangementEtat('non_concernee', '  ', '')).toEqual({
       corps: { etat: 'non_concernee', note: '' },
       erreur: 'Une note est obligatoire pour l’état « Non concernée ».',
     });
-    expect(corpsChangementEtat('risque_accepte', ' Accepté. ', '2099-06-30')).toEqual({
-      corps: { etat: 'risque_accepte', note: 'Accepté.', revueLe: '2099-06-30' },
+    // Lot S1 : justification, mesure compensatoire et échéance obligatoires pour une exception.
+    expect(corpsChangementEtat('risque_accepte', ' Accepté. ', '2099-06-30', ' Flux filtré. ')).toEqual({
+      corps: { etat: 'risque_accepte', note: 'Accepté.', revueLe: '2099-06-30', mesure: 'Flux filtré.' },
       erreur: null,
     });
-    expect(corpsChangementEtat('risque_accepte', 'x', '').corps.revueLe).toBeNull();
+    expect(corpsChangementEtat('risque_accepte', ' Accepté. ', '2099-06-30').erreur).toBe(
+      'Une mesure compensatoire est obligatoire pour accepter un risque.',
+    );
+    expect(corpsChangementEtat('risque_accepte', '', '2099-06-30', 'm').erreur).toBe(
+      'Une justification est obligatoire pour accepter un risque.',
+    );
+    expect(corpsChangementEtat('risque_accepte', 'x', '', 'm')).toMatchObject({
+      corps: { revueLe: null },
+      erreur: 'Une date d’échéance est obligatoire pour accepter un risque.',
+    });
     expect(corpsChangementEtat('en_cours', '', '2099-06-30')).toEqual({
       corps: { etat: 'en_cours', note: '' },
       erreur: null,
@@ -167,6 +207,7 @@ describe('historique et actions liées', () => {
     etatApres: 'a_traiter',
     note: '',
     revueLe: null,
+    mesure: null,
     auteur: 'utilisateur_fictif',
     le: '2026-11-16T10:00:00.000Z',
     ...e,
@@ -232,10 +273,12 @@ describe('listes et fiche d’une faille déclarée', () => {
     expect(html).toContain('vue en dernier');
     expect(rendu(createElement(MarquesSuivi, { s: suivi(), present: true, source: 'Tenable' }))).toContain('Nouvelle');
   });
-  it('failles déclarées : CVE cliquable, revue dépassée, plus rapportée par la veille', () => {
+  it('failles déclarées : CVE cliquable, exception échue, plus rapportée par la veille, délai', () => {
     const html = rendu(createElement(DeclareesTable, { failles: [declaree], onOuvrir: rien }));
-    expect(html).toMatch(/<button[^>]*>CVE-2026-95101<\/button>/);
-    expect(html).toContain('Date de revue dépassée');
+    expect(html).toMatch(/<button[^>]*>CVE-2026-95101<\/button>/i);
+    expect(html).toContain('Exception échue');
+    expect(html).toMatch(/<th[^>]*>Délai<\/th>/i);
+    expect(html).toContain('Sous exception');
     expect(html).toContain('Plus rapportée par la veille');
   });
   it('fiche : description et action KEV telles quelles, machines reliées, détection par Tenable', () => {

@@ -1800,6 +1800,14 @@ export interface VulnerabilitesConstats {
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesDepassements {
+  nature: "constat" | "declaree";
+  objet_id: string;
+  priorite: "P1" | "P2" | "P3" | "P4";
+  echeance: ColumnType<Date, Date | string, Date | string>;
+  signale_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesDetections {
   id: Generated<string>;
   constat_id: string;
@@ -1898,7 +1906,7 @@ export interface VulnerabilitesSuiviHistorique {
   id: Generated<string>;
   nature: "constat" | "declaree";
   objet_id: string;
-  evenement: "changement" | "action" | "proposition" | "refus" | "retrait_proposition" | "reapparition";
+  evenement: "changement" | "action" | "proposition" | "refus" | "retrait_proposition" | "reapparition" | "expiration";
   etat_avant: string | null;
   etat_apres: "nouvelle" | "a_traiter" | "en_cours" | "corrigee" | "risque_accepte" | "non_concernee";
   note: Generated<string>;
@@ -1906,6 +1914,11 @@ export interface VulnerabilitesSuiviHistorique {
   auteur: string;
   auteur_id: string | null;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  mesure: string | null;
+  priorite: string | null;
+  delai_depuis: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesSuivis {
@@ -1920,6 +1933,13 @@ export interface VulnerabilitesSuivis {
   version: Generated<number>;
   maj_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   maj_par: string | null;
+  exception_justification: string | null;
+  exception_mesure: string | null;
+  exception_par: string | null;
+  exception_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  exception_etat_avant: string | null;
+  exception_rappel_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_repart_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesSynchronisations {
@@ -2239,6 +2259,7 @@ export interface DB {
   vulnerabilites_assistant_reperes_externes: VulnerabilitesAssistantReperesExternes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;
   vulnerabilites_constats: VulnerabilitesConstats;
+  vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
   vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;

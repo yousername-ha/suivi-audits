@@ -30,6 +30,8 @@ export const LIENS_TUILES = {
   /** Produits à confirmer : registre des produits surveillés, où se décident les rapprochements proposés. */
   aConfirmer: '/vulnerabilites/produits',
   corrigees: '/vulnerabilites/failles?etat=corrigee',
+  /** Lot S1 : failles en dépassement de leur délai de correction, la plus en retard d'abord. */
+  depassement: '/vulnerabilites/failles?delai=en_depassement&tri=echeance',
   tout: '/vulnerabilites/failles',
 } as const;
 

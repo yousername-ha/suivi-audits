@@ -48,6 +48,7 @@ const INVENTAIRE = [
   'risques|vulnerabilites|vulnerabilites-perimetres|/vulnerabilites/perimetres|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-surface|/vulnerabilites/surface-externe|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-alertes|/vulnerabilites/alertes|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-delais|/vulnerabilites/delais|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-priorite|/vulnerabilites/priorite|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-masque|/vulnerabilites/masque|vulnerabilites|administrer',
   'conformite|referentiels|bibliotheque|/pilotage/bibliotheque|conformite|lire',

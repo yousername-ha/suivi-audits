@@ -48,6 +48,8 @@ import {
   MESSAGE_RESUME_ALERTES,
   type MotifClotureAlerte,
   type NiveauAlerte,
+  type NiveauPriorite,
+  type NatureSuivi,
   niveauAlerte,
   type NombreLisible,
   type PageAlertesVulnerabilites,
@@ -61,7 +63,6 @@ import {
   PRISE_EN_COMPTE_RESERVEE,
   rangPriorite,
   Rights,
-  ROLE_PRISE_EN_COMPTE_ALERTE,
   type SituationFaille,
   type SourcesFailleDto,
   titreNotificationAlerte,
@@ -76,10 +77,11 @@ import { HttpError } from '../http/errors.js';
 import type { Modules } from '../modules.js';
 import { COMPTE_ACTIF, type NotificationEmise, type NotificationsMetier } from '../notifications-metier.js';
 import { loadGrants } from '../rights.js';
+import { tientLeRoleRssi } from './rssi.js';
 import { actifsMenantAUneMachineVulnerable } from './majoration.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { type FaitsTenable, lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, present } from './sql.js';
+import { lisible, premiereConstat, present } from './sql.js';
 import { close } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 
@@ -141,6 +143,17 @@ export interface Cumul {
   produitIds: string[];
   /** PC1 : priorité « produit à confirmer » (rapprochement proposé), seulement si des propositions sont remises. */
   aConfirmer: Priorite | null;
+}
+
+/** Objet suivi présent (constat de Tenable présent, faille déclarée rattachée), pour son délai de correction (lot S1) : état
+    de suivi, priorité courante (sur tous les faits connus), première présence connue et reprise du délai. Aucun nom. */
+export interface ObjetDelai {
+  nature: NatureSuivi;
+  id: string;
+  etat: EtatSuiviFaille;
+  priorite: NiveauPriorite;
+  premiere: string;
+  repart: string | null;
 }
 
 interface LigneAlerte {
@@ -355,12 +368,12 @@ export class AlertesVulnerabilites {
       (présence « produit à confirmer »), titres et produits. Lecture seule, nombre de requêtes fixe (aucune par faille). */
   async situationGlobale(k: Kdb, propositions: readonly PropositionCumul[]) {
     const reglage = await this.reglage.valeurs();
-    const { cumuls, sources } = await this.calculer(k, reglage, propositions);
+    const { cumuls, sources, objets } = await this.calculer(k, reglage, propositions);
     const titres = await this.titres(
       k,
       [...cumuls.values()].flatMap((x) => (x.cve ? [x.cve] : [])),
     );
-    return { cumuls, sources, titres };
+    return { cumuls, sources, titres, objets, reglage };
   }
 
   /** Titre et produit d'une faille (mêmes règles que les alertes). */
@@ -383,7 +396,7 @@ export class AlertesVulnerabilites {
     k: Kdb,
     reglage: ReglagePriorite,
     propositions: readonly PropositionCumul[] = [],
-  ): Promise<{ cumuls: Map<string, Cumul>; sources: Map<string, SourcesFailleDto> }> {
+  ): Promise<{ cumuls: Map<string, Cumul>; sources: Map<string, SourcesFailleDto>; objets: ObjetDelai[] }> {
     // Constats de Tenable présents (au moins une détection vue par la dernière synchronisation complète de l'instance de sa
     // machine), avec leurs CVE, leurs machines et leur état de suivi.
     const { rows: constats } = await sql<{
@@ -397,8 +410,12 @@ export class AlertesVulnerabilites {
       etat: EtatSuiviFaille | null;
       cves: string[];
       machines: string[];
+      premiere: Date;
+      repart: Date | null;
     }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${close('constat')} AS clos,
          (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
+         ${premiereConstat} AS premiere,
+         (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS repart,
          coalesce((SELECT array_agg(cc.cve ORDER BY cc.cve) FROM vulnerabilites_constat_cves cc
                    WHERE cc.constat_id = c.id), '{}') AS cves,
          p.machines
@@ -420,8 +437,12 @@ export class AlertesVulnerabilites {
       clos: boolean;
       etat: EtatSuiviFaille | null;
       machines: string[];
+      premiere: Date;
+      repart: Date | null;
     }>`SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille, ${close('declaree')} AS clos,
          (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id) AS etat,
+         r.cree_le AS premiere,
+         (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id) AS repart,
          coalesce((SELECT array_agg(pm.machine_id) FROM vulnerabilites_produits_machines pm
                    WHERE pm.produit_id = r.produit_id), '{}') AS machines
        FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
@@ -484,6 +505,37 @@ export class AlertesVulnerabilites {
         );
       return x;
     };
+    // Lot S1 : chaque objet suivi présent (constat présent, faille déclarée rattachée), avec la priorité qui fixe son délai
+    // (celle des listes : toutes les CVE du constat et Tenable, présence « détectée » ; la CVE, présence « déclarée »).
+    const objets: ObjetDelai[] = [
+      ...constats.map((c): ObjetDelai => ({
+        nature: 'constat',
+        id: c.id,
+        etat: c.etat ?? 'nouvelle',
+        priorite: priorite(
+          sourcesDe(
+            c.cves.flatMap((cve) => (faits.has(cve) ? [faits.get(cve)!] : [])),
+            {
+              gravite: c.gravite,
+              cvss3: nombre(c.cvss3_score),
+              epss: nombre(c.epss_score),
+              exploitable: c.exploitable,
+            },
+          ),
+          'detectee',
+        ).niveau,
+        premiere: c.premiere.toISOString(),
+        repart: iso(c.repart),
+      })),
+      ...declarees.map((r): ObjetDelai => ({
+        nature: 'declaree',
+        id: r.id,
+        etat: r.etat ?? 'nouvelle',
+        priorite: priorite(sourcesCve(r.cve), 'declaree').niveau,
+        premiere: r.premiere.toISOString(),
+        repart: iso(r.repart),
+      })),
+    ];
     for (const c of constats) {
       const tenable: FaitsTenable = {
         gravite: c.gravite,
@@ -555,7 +607,7 @@ export class AlertesVulnerabilites {
     }
     // Sources de l'exploitation (rangées, avec leur date), gardées avec la CVE.
     for (const x of cumuls.values()) if (x.cve) sourcesCve(x.cve);
-    return { cumuls, sources: cache };
+    return { cumuls, sources: cache, objets };
   }
 
   /** Titre et produit des CVE à alerter, lus dans la veille (catalogue KEV, puis produit de NVD). */
@@ -630,24 +682,15 @@ export class AlertesVulnerabilites {
   }
 
   /** Comptes actifs qui ont le droit de lire le module (rôles directs ou par un groupe). */
-  private async destinataires(c: Client): Promise<string[]> {
-    const comptes = await sql<{
-      id: string;
-    }>`SELECT u.id::text AS id FROM users u WHERE ${COMPTE_ACTIF} ORDER BY u.username`.execute(surConnexion(c));
-    const out: string[] = [];
-    for (const u of comptes.rows)
-      if (new Rights(effectivePermissions(await loadGrants(c, u.id)).keys()).can('vulnerabilites', 'lire'))
-        out.push(u.id);
-    return out;
+  private destinataires(c: Client): Promise<string[]> {
+    return lecteursDuModule(c);
   }
 
   /* ---------------------------------------------------------------- Lecture (vulnerabilites:lire) */
   /** La personne tient le rôle « RSSI » de la plateforme (ROLE_PRISE_EN_COMPTE_ALERTE), directement ou par un groupe,
       sans portée qui écarte le module (décision B du 18/11/2026). Lu à chaque appel : un retrait du rôle vaut aussitôt. */
   async peutPrendreEnCompte(user: SessionUser, c?: Client): Promise<boolean> {
-    return (await loadGrants(c ?? this.db.pool, user.id)).some(
-      (g) => g.roleId === ROLE_PRISE_EN_COMPTE_ALERTE && (g.modules == null || g.modules.includes('vulnerabilites')),
-    );
+    return tientLeRoleRssi(this.db, user, c);
   }
 
   async lister(user: SessionUser, q: RechercheAlertesVulnerabilites): Promise<PageAlertesVulnerabilites> {
@@ -815,4 +858,17 @@ export class AlertesVulnerabilites {
     }, user.username);
     return this.lire(user, id);
   }
+}
+
+/** Comptes actifs qui ont le droit de lire le module Vulnérabilités (rôles directs ou par un groupe) : destinataires des
+    notifications du module (alertes, lot V6 ; délais et exceptions, lot S1). */
+export async function lecteursDuModule(c: Client): Promise<string[]> {
+  const comptes = await sql<{
+    id: string;
+  }>`SELECT u.id::text AS id FROM users u WHERE ${COMPTE_ACTIF} ORDER BY u.username`.execute(surConnexion(c));
+  const out: string[] = [];
+  for (const u of comptes.rows)
+    if (new Rights(effectivePermissions(await loadGrants(c, u.id)).keys()).can('vulnerabilites', 'lire'))
+      out.push(u.id);
+  return out;
 }

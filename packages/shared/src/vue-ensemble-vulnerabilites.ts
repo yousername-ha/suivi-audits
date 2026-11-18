@@ -183,6 +183,8 @@ export interface VueEnsembleDto {
     aConfirmer: { failles: number; produits: number };
     /** Objets suivis (constats, failles déclarées) passés à « Corrigée » depuis le premier jour du mois (Europe/Paris). */
     corrigeesCeMois: number;
+    /** Lot S1 : objets suivis ouverts et présents dont le délai de correction est dépassé (les mêmes pour tout le monde). */
+    enDepassement: number;
   };
   /** Nombre total de failles suivies, par priorité, et par case du radar (cases vides omises). */
   total: number;

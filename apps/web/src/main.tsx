@@ -51,6 +51,7 @@ import { SurfaceExternePage } from './vulnerabilites/SurfaceExterne';
 import { SeuilsPrioritePage } from './vulnerabilites/SeuilsPriorite';
 import { MotsNonMasquesPage } from './vulnerabilites/MotsNonMasques';
 import { AlertesPage } from './vulnerabilites/Alertes';
+import { DelaisExceptionsPage } from './vulnerabilites/DelaisExceptions';
 import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
 import { PerimetresPage } from './vulnerabilites/Perimetres';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
@@ -145,6 +146,7 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/perimetres', element: <PerimetresPage /> },
       { path: '/vulnerabilites/surface-externe', element: <SurfaceExternePage /> },
       { path: '/vulnerabilites/alertes', element: <AlertesPage /> },
+      { path: '/vulnerabilites/delais', element: <DelaisExceptionsPage /> },
       { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },
       { path: '/vulnerabilites/masque', element: <MotsNonMasquesPage /> },
       { path: '/integrations', element: <IntegrationsPage /> },

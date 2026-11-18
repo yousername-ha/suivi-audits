@@ -69,6 +69,7 @@ export * from './mandataire.js';
 export * from './rapprochement-vulnerabilites.js';
 export * from './priorite-vulnerabilites.js';
 export * from './suivi-vulnerabilites.js';
+export * from './delais-vulnerabilites.js';
 export * from './assistant-vulnerabilites.js';
 export * from './masque-vulnerabilites.js';
 export * from './alertes-vulnerabilites.js';

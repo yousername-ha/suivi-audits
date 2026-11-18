@@ -120,6 +120,8 @@ export const FAMILLES: Famille[] = [
         page('vulnerabilites-surface', 'Surface externe', '/vulnerabilites/surface-externe', 'vulnerabilites'),
         // Lot V6 : alertes décidées par la plateforme (critique : P1 ; simple : P2), prise en compte avec `modifier`.
         page('vulnerabilites-alertes', 'Alertes', '/vulnerabilites/alertes', 'vulnerabilites'),
+        // Lot S1 : délais de correction et exceptions à échéance (mesure, exceptions des failles lues).
+        page('vulnerabilites-delais', 'Délais et exceptions', '/vulnerabilites/delais', 'vulnerabilites'),
         page('vulnerabilites-priorite', 'Seuils de priorité', '/vulnerabilites/priorite', 'vulnerabilites'),
         page(
           'vulnerabilites-masque',

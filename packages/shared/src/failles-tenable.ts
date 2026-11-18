@@ -7,6 +7,7 @@
 import { z } from 'zod';
 import type { Priorite, RangMachineDto, SourcesFailleDto } from './priorite-vulnerabilites.js';
 import type { MachineMarqueeDto } from './parc-machines.js';
+import { type DelaiFailleDto, EtatDelaiFiltre, TriFailles } from './delais-vulnerabilites.js';
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
@@ -277,6 +278,9 @@ export const RechercheConstats = z
     nonMaintenu: oui,
     priorite: NiveauPriorite.optional(),
     etat: FiltreSuivi.optional(),
+    /** Lot S1 : état du délai de correction, et tri par échéance. */
+    delai: EtatDelaiFiltre.optional(),
+    tri: TriFailles.optional(),
     page,
   })
   .strict();
@@ -334,6 +338,8 @@ export interface ConstatResumeDto {
   sources: SourcesFailleDto;
   /** Priorité calculée par la plateforme et faits qui la fondent (lot V4a). */
   priorite: Priorite;
+  /** Délai de correction (lot S1) : âge, échéance calculée, état. */
+  delai: DelaiFailleDto;
 }
 
 export interface MachineDetectionDto {

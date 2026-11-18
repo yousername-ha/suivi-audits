@@ -376,6 +376,10 @@
   mention « Exposée sur Internet » des machines reliées par une liaison confirmée. Voir l'addendum « lot PC3 » ci-dessous.
 - **Lot PC4, fiche de faille illustrée** (18/11/2026) : sans migration, présentation commune en tête des fiches existantes,
   vecteur CVSS traduit avec une icône par métrique, schéma, recommandations par source. Voir l'addendum « lot PC4 » ci-dessous.
+- **Lot S1, délais de correction et exceptions à échéance** (18/11/2026) : migration `087`, délai cible par priorité réglé
+  avec les seuils, âge, échéance et état du délai, tuile « En dépassement », exceptions (risque accepté) réservées au rôle
+  RSSI avec justification, mesure compensatoire et échéance, expiration et rappel, onglet « Délais et exceptions ». Voir
+  l'addendum « lot S1 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1760,4 +1764,148 @@ seulement). Docker et Node 26.
 2. **Liens entre machines** (front → back → base) : aucune source ne les fournit (point ouvert 5).
 3. Parcours horodaté de la faille (publiée, exploitée, détectée, action, corrigée), si le RSSI le veut.
 4. Vecteur d'AlgoLightHouse : à ranger seulement si l'éditeur le publie (champ à ajouter à la liste blanche, à valider).
+
+## Addendum du 18/11/2026 — lot S1 : délais de correction et exceptions à échéance
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `087`
+(additive : colonnes facultatives sur `vulnerabilites_suivis` et `vulnerabilites_suivi_historique`, contrainte des
+événements de l'historique recréée avec « expiration », table `vulnerabilites_depassements`, contrainte de portée de
+`grc_notifications` recréée avec deux types, quatre index ; aucune donnée reprise ni modifiée ; numéro libre sur toutes les
+branches distantes le 18/11/2026). Aucun appel réseau, aucun appel au modèle, aucune dépendance nouvelle, aucun rôle ni droit
+nouveau ; l'assistant n'est pas touché (il lit l'état de suivi des failles, inchangé). Remplace, dans
+l'addendum « lot V4b », le choix « date de revue facultative, signal calculé quand elle est passée, sans changement d'état ».
+
+### Décision du RSSI (18/11/2026)
+
+Transformer l'outil de surveillance en outil de pilotage, dans cet ordre : (1) le suivi de la correction dans le temps,
+(3) les exceptions formalisées ; puis un rapport et le regroupement par correctif (lots suivants). Ses mots : « un délai
+cible par priorité (par exemple P1 sous 48 h, P2 sous 15 jours), l'âge de chaque faille, et les dépassements signalés » ;
+« quand une faille ne peut pas être corrigée (équipement biomédical, application d'éditeur), pouvoir enregistrer une
+acceptation du risque avec une justification, une mesure compensatoire et une date d'échéance. L'état "risque accepté"
+existe, mais sans échéance ni rappel ». Contexte : certification ISO/IEC 27001:2022 et HDS, éléments attendus en audit.
+
+### Réalisation
+
+- **Délai cible par priorité** (`packages/shared/src/delais-vulnerabilites.ts`, fonctions pures testées en table) : rangé
+  avec les seuils de priorité (clé `vulnerabilites:priorite` de `settings`, champ `delais`), réglé dans « Seuils de
+  priorité » avec `vulnerabilites:administrer`, If-Match et le journal `vulnerabilites.priorite.reglage_modifie` ; une
+  saisie peut ne porter que le seuil ou que les délais (`SaisieReglagePriorite`), le reste est gardé ; un réglage rangé avant
+  le lot prend les délais par défaut du code. Durée entière d'une heure à un an, en heures ou en jours, ou « aucun délai ».
+- **Âge et point de départ** : dates déjà rangées, aucune inventée. Constat : la première détection de Tenable sur une de
+  ses machines (`min(premiere_detection)` des détections), sinon l'entrée du constat dans la plateforme (`cree_le`) ;
+  faille déclarée : la date du rapprochement (`cree_le`, plus ancienne que sa confirmation éventuelle). L'âge court depuis
+  cette première présence ; le délai, depuis elle ou depuis sa **reprise** (`delai_repart_le`) si elle est plus récente :
+  fin d'une exception (expiration ou levée) et réapparition d'une faille corrigée.
+- **Priorité qui fixe le délai** : la priorité courante, sur tous les faits connus (lot ALH5), celle des listes. Le passage
+  d'une priorité à une autre **n'est pas historisé** (la priorité est recalculée à chaque lecture ; seules les alertes P1 et
+  P2 exposées gardent un niveau) : après une montée P2 → P1, le délai P1 court donc depuis la première présence. Échéance
+  calculée, jamais saisie ; un jour vaut 24 heures.
+- **États** (`calculerDelai`) : « En dépassement » (échéance passée), « Échéance proche » (moins d'un quart du délai
+  restant), « Dans les délais », « Sans délai » (P4 par défaut) ; jamais en dépassement : « Close » (corrigée, non
+  concernée), « Sous exception » (risque accepté), « Plus rapportée par la source » (proposition « corrigée » à confirmer).
+- **Écrans** : colonne « Délai » (état en clair, âge, échéance, délai de la priorité) des listes de « Failles détectées »
+  (constats et failles déclarées), filtre « Délai » et « Trier par : Échéance de correction », repris de l'adresse ; mention
+  dans la fiche illustrée (PC4) ; tuile « En dépassement » de la vue d'ensemble (PC1), vers la liste filtrée et triée ;
+  onglet « Délais et exceptions » (`/vulnerabilites/delais`) : délais cibles, mesure des corrections sur 30 jours, 90 jours
+  ou 12 mois, exceptions.
+- **Dépassements signalés** : évaluation au tic de l'API, au plus une fois par quart d'heure, dans une transaction sous
+  verrou consultatif (`apps/api/src/vulnerabilites/delais.ts`) ; elle reprend le calcul global des alertes
+  (`situationGlobale`, objets suivis présents). Les failles entrées en dépassement depuis l'évaluation précédente (table
+  `vulnerabilites_depassements`, une ligne par faille signalée, recalculée) donnent **un** résumé « n failles en
+  dépassement de délai » (type `vulnerabilites_delais`, lien vers la liste filtrée), aux comptes qui lisent le module, selon
+  leurs réglages ; aucun quand il n'y en a pas ; ni CVE ni nom. Une faille dont l'échéance change (délai reparti) est
+  signalée de nouveau. Journal `vulnerabilites.delais.evalues` (nombres seulement). Module désactivé : rien.
+- **Mesure** (`mesurerCorrections`) : au passage à « corrigée », l'historique relève la priorité, le point de départ, la
+  fin et l'échéance du délai ; la fin est la date de la proposition « corrigée » quand la décision la confirme, sinon la
+  date de la décision. Par priorité et en tout : nombre, délai moyen et médian, corrections avec délai et faites au plus
+  tard à l'échéance, part dans les délais. Les mêmes nombres pour tout le monde, sans nom. Les corrections décidées avant le
+  lot sont comptées à part (« non mesurées »). Fonctions réutilisables pour le rapport d'un lot suivant.
+- **Exceptions** : un risque accepté exige une justification (la note), une mesure compensatoire et une échéance (la date de
+  revue du lot V4b, champ `revueLe`), ni passée ni au-delà de **douze mois**. Accorder, prolonger (même état, nouvelle
+  échéance) ou lever (tout autre état) une exception est réservé au **rôle « RSSI »** de la plateforme (`rssi.ts`, même
+  mécanisme que la prise en compte d'une alerte du lot V6b, direct ou par un groupe), en plus de `vulnerabilites:modifier` et
+  de la lecture de toutes les machines touchées : **403** « Seul le RSSI peut accorder, prolonger ou lever une exception
+  (risque accepté). » sinon, administrateur compris. Rangés sur le suivi : justification, mesure, auteur et date, état d'avant
+  l'exception, date du rappel ; à l'historique : la note, la mesure et l'échéance. Le lien existant avec une action du
+  registre (lot V4b) reste disponible, sans être obligatoire.
+- **Expiration et rappel** (même évaluation) : une exception dont l'échéance est passée (fuseau de l'organisation) expire
+  d'elle-même : la faille revient à l'état d'avant l'exception s'il était « à traiter » ou « en cours », sinon « à
+  traiter » ; son délai repart de l'expiration ; l'événement « expiration » (auteur « système », avec l'échéance) entre à
+  l'historique ; journal `vulnerabilites.exceptions.echues` (identifiants internes) ; puis les alertes sont réévaluées. Un
+  rappel part quatorze jours avant l'échéance, une fois par exception et par échéance (journal
+  `vulnerabilites.exceptions.rappel`). Un seul résumé « n exceptions échues, m à échéance sous 14 jours » par évaluation
+  (type `vulnerabilites_exceptions`, lien vers l'onglet). Exceptions listées dans l'onglet : en cours, bientôt échues, échues
+  depuis 90 jours, sans échéance, des seules failles que la personne lit (au moins une machine touchée lisible, comme les
+  listes), avec qui et quand, justification, mesure compensatoire et échéance ; filtre « Risque accepté » des listes
+  inchangé ; mention dans la fiche illustrée et marque « Exception … » dans la colonne « Suivi ».
+- **Requêtes ajoutées aux routes existantes** : listes des constats et des failles déclarées 0 (colonnes ajoutées aux
+  requêtes existantes, calcul en mémoire) ; vue d'ensemble 0 (objets du calcul global déjà fait) ; fiche illustrée 0 ;
+  fiche du suivi 1 (rôle RSSI) ; changement d'état 1 à 2 (rôle RSSI) et, au passage à « corrigée », 7 environ (délai de
+  l'objet : réglage, objet, CVE et faits des sources, date de la proposition) ; réglage 0. Route nouvelle `GET
+  /api/vulnerabilites/delais` : 4. Évaluation au tic : nombre fixe (verrou, expiration 2 à 4, rappel 1, calcul global des
+  alertes, dépassements 1 à 3), plus la lecture des destinataires (une par compte actif, comme les alertes) quand il y a
+  quelque chose à notifier ; aucune par faille.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Valeurs par défaut** : P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai ; un jour vaut 24 heures (ni jours
+  ouvrés ni jours fériés).
+- **Échéance proche** : moins d'un quart du délai restant (fixe) : P1 12 heures, P2 3 jours et 18 heures, P3 22 jours et
+  12 heures.
+- **Montée de priorité** : délai de la nouvelle priorité compté depuis la première présence (le passage n'est pas historisé).
+- **Reprise du délai** : à la fin d'une exception (expiration ou levée, délai complet de la priorité courante) et à la
+  réapparition d'une faille corrigée ; pas à la réouverture manuelle d'une faille corrigée.
+- **Faille déclarée** : première présence = date du rapprochement, même s'il a été confirmé plus tard.
+- **Faille que la source ne rapporte plus** (proposition « corrigée » à confirmer) : jamais en dépassement ; la mesure prend
+  la date de la proposition comme fin quand la décision la confirme.
+- **Date de revue devenue échéance** : la colonne `revue_le` du lot V4b porte l'échéance, sans colonne nouvelle. Une
+  exception enregistrée avant le lot **avec** une date de revue passée expire à la première évaluation ; **sans** date, elle
+  reste valide, signalée « sans échéance, à compléter » (aucune migration de données).
+- **Durée maximale** : douze mois, même jour du mois (fin du mois s'il n'existe pas).
+- **Qui décide** : seul le rôle « RSSI » accorde, prolonge ou lève, y compris pour passer une faille sous exception à
+  « corrigée » ; les autres personnes ne peuvent que **lire** l'exception : un état « proposée » ne s'insère pas proprement
+  dans le cycle existant (il faudrait un second jeu de champs proposés et une décision d'acceptation ou de refus à côté de la
+  proposition « corrigée ») ; à trancher si le RSSI le veut. **Conséquence déjà connue** : le compte créé à l'installation n'a
+  que le rôle « Administrateur » ; sans compte qui tienne le rôle « RSSI », aucune exception ne peut être accordée (note de
+  mise à jour du CHANGELOG).
+- **Rappel** : quatorze jours avant l'échéance (fixe), aussi seuil de « bientôt échue » ; un résumé par évaluation, aux
+  lecteurs du module (pas seulement au RSSI).
+- **Évaluation** : au tic de l'API, au plus une fois par quart d'heure (expiration dans le quart d'heure qui suit le
+  changement de jour), plutôt qu'à la fin des synchronisations, puisqu'un dépassement et une échéance arrivent avec le
+  temps ; l'intervalle est gardé en mémoire (un redémarrage évalue au premier tic, sans double notification).
+- **Mesure** : une correction par faille et par période (la dernière) ; priorité et échéance relevées à la décision.
+
+### Point à trancher : faille P1 sous exception et alertes critiques
+
+Le code ne change pas la règle des alertes (aucune décision prise). Aujourd'hui, un constat ou une faille déclarée en
+« risque accepté » est **traité** au sens des alertes (`close` de `suivi.ts`, comme « corrigée » et « non concernée ») : sa
+présence détectée ou déclarée ne compte plus. Une faille P1 dont **tous** les objets suivis sont sous exception n'ouvre donc
+plus d'alerte critique, et l'alerte ouverte se clôt avec le motif « traitée » ; **sauf** si la même CVE est aussi exposée
+sur Internet (présence « exposée », que le suivi ne couvre pas) : l'alerte critique reste ouverte et la fenêtre rouge
+s'affiche. À l'expiration de l'exception, la faille compte de nouveau et une nouvelle alerte critique s'ouvre. Le RSSI
+veut-il qu'une faille P1 sous exception garde son alerte critique (ou une alerte d'un autre niveau) ?
+
+### Non vérifié
+
+Aucune donnée réelle (tests sur données fictives). Rendu vu sur un **banc local** (application réelle sous Vite, API
+simulée par Playwright, données fictives ; Chromium, clair et sombre, 1 440 et 390 px ; onglet « Délais et exceptions »,
+« Failles détectées » filtrée et triée, « Seuils de priorité », vue d'ensemble, fiche d'un constat avec le formulaire
+d'exception ; axe `wcag2a`/`wcag2aa` sans violation, aucun débordement de page), pas dans la pile complète ; la CSP n'a pas été
+vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface (aucune prop `style` dans les sources
+du lot). Le parcours Playwright ajouté (`zzz…-vulnerabilites-delais.spec.ts`, pile sans faille) et le parcours adapté
+(`zzz…-vulnerabilites-failles.spec.ts`) n'ont pas été joués (CI seulement). Durée de l'évaluation au tic sur un parc réel
+(150 machines, 10 000 vulnérabilités annoncées : même calcul global que les alertes, environ une seconde mesurée au lot
+PC1) ; envoi réel d'un courriel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Rapport** (PDF) des délais et des exceptions pour l'audit : lot suivant ; les fonctions de mesure sont prêtes.
+2. **Regroupement par correctif** (un correctif, plusieurs failles) : lot suivant.
+3. **Criticité métier des machines** (délai plus court sur une machine critique) : non réalisée.
+4. Nombre de failles en dépassement sur les **cartes de périmètre** (PC3) : non réalisé (une faille touche plusieurs
+   périmètres ; décompte à définir).
+5. **Proposition d'exception** par une personne qui n'est pas RSSI : à trancher (voir ci-dessus).
+6. **Faille P1 sous exception et alertes critiques** : à trancher (voir ci-dessus).
+7. Historiser le **passage de priorité** pour faire courir le délai depuis la montée, si le RSSI le veut.
+8. Confirmer les valeurs par défaut, l'échéance proche, la durée maximale et le rappel.
 

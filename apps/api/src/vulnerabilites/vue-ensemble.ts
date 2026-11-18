@@ -14,7 +14,8 @@
      est toujours rendu.
    - Requêtes : nombre fixe, aucune par faille (propositions 1 ; situation globale : réglage 1, constats 1, failles déclarées
      1, expositions 2, majoration 4 au plus, faits des sources 3, titres 1 ; corrigées 1 ; machines lisibles 1 ; surface
-     lisible 2 ; journal 1 : 18 au plus). */
+     lisible 2 ; journal 1 : 18 au plus). Lot S1 : la tuile « En dépassement » reprend les objets suivis du même calcul
+     global (aucune requête de plus). */
 import {
   type CaseRadarDto,
   type CibleVueDto,
@@ -43,6 +44,7 @@ import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Db } from '../db/db.js';
 import type { AlertesVulnerabilites, Cumul, PropositionCumul } from './alertes.js';
+import { objetsEnDepassement } from './delais.js';
 import { lisible, present } from './sql.js';
 import { close } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
@@ -73,7 +75,7 @@ export class VueEnsembleVulnerabilites {
       SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille
       FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
       WHERE r.statut = 'proposee' ORDER BY r.cve, r.id`.execute(k);
-    const { cumuls, sources, titres } = await this.alertes.situationGlobale(k, propositions);
+    const { cumuls, sources, titres, objets, reglage } = await this.alertes.situationGlobale(k, propositions);
 
     // Failles suivies : au moins une présence non traitée, ou un produit à confirmer.
     const suivies: Suivie[] = [];
@@ -170,6 +172,8 @@ export class VueEnsembleVulnerabilites {
           produits: new Set(propositions.map((p) => p.produit_id)).size,
         },
         corrigeesCeMois: corrigees,
+        // Lot S1 : objets suivis présents en dépassement de délai, sur tous les faits connus (aucune requête de plus).
+        enDepassement: objetsEnDepassement(objets, reglage.delais, new Date()).length,
       },
       total: suivies.length,
       parPriorite,

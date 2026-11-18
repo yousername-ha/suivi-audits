@@ -4,6 +4,7 @@
    la source ne rapporte plus la faille, et remettre « à traiter » une faille corrigée qui réapparaît. Le traitement passe par
    une action du registre existant, liée à la faille. Schémas, libellés et fonctions pures (testés à part). */
 import { z } from 'zod';
+import { MESURE_COMPENSATOIRE_MAX, type StatutException } from './delais-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ États */
 export const ETATS_SUIVI = [
@@ -61,6 +62,7 @@ export const EVENEMENTS_SUIVI = [
   'refus',
   'retrait_proposition',
   'reapparition',
+  'expiration',
 ] as const;
 export type EvenementSuivi = (typeof EVENEMENTS_SUIVI)[number];
 export const EVENEMENT_SUIVI_LIBELLES: Record<EvenementSuivi, string> = {
@@ -70,6 +72,7 @@ export const EVENEMENT_SUIVI_LIBELLES: Record<EvenementSuivi, string> = {
   refus: 'Proposition « corrigée » refusée',
   retrait_proposition: 'Proposition retirée : la faille est de nouveau rapportée',
   reapparition: 'Réapparue',
+  expiration: 'Exception échue : la faille revient à traiter',
 };
 
 /** Changement d'état admis ? Rend le motif du refus, ou null. Une personne ne remet pas une faille à « nouvelle » ; un même
@@ -85,13 +88,20 @@ export function refusChangementSuivi(avant: EtatSuiviFaille, apres: EtatSuiviFai
 export const NOTE_SUIVI_MAX = 1000;
 const note = z.string().trim().max(NOTE_SUIVI_MAX, `Note de ${NOTE_SUIVI_MAX} caractères au plus.`);
 
-/** Changement d'état (If-Match : version du suivi). Note obligatoire pour « risque accepté » et « non concernée » ; date de
-    revue facultative, seulement pour « risque accepté » (sa date passée est refusée par l'API, au fuseau de l'organisation). */
+/** Changement d'état (If-Match : version du suivi). Note obligatoire pour « risque accepté » et « non concernée ». Lot S1 :
+    un risque accepté est une exception ; il exige en plus une mesure compensatoire et une date d'échéance (`revueLe`,
+    nom gardé du lot V4b), bornée par l'API au fuseau de l'organisation (ni passée, ni au-delà de douze mois) ; la note
+    en est la justification. Ces deux champs ne se donnent qu'à un risque accepté. */
 export const ChangementEtatSuivi = z
   .object({
     etat: z.enum(ETATS_SUIVI_CHOISIS),
     note: note.default(''),
     revueLe: z.iso.date().nullable().optional(),
+    mesure: z
+      .string()
+      .trim()
+      .max(MESURE_COMPENSATOIRE_MAX, `Mesure compensatoire de ${MESURE_COMPENSATOIRE_MAX} caractères au plus.`)
+      .optional(),
   })
   .strict()
   .superRefine((v, c) => {
@@ -99,14 +109,38 @@ export const ChangementEtatSuivi = z
       c.addIssue({
         code: 'custom',
         path: ['note'],
-        message: `Une note est obligatoire pour l’état « ${ETAT_SUIVI_LIBELLES[v.etat]} ».`,
+        message:
+          v.etat === 'risque_accepte'
+            ? 'Une justification est obligatoire pour accepter un risque.'
+            : `Une note est obligatoire pour l’état « ${ETAT_SUIVI_LIBELLES[v.etat]} ».`,
       });
-    if (v.revueLe && v.etat !== 'risque_accepte')
-      c.addIssue({
-        code: 'custom',
-        path: ['revueLe'],
-        message: 'Une date de revue ne se donne qu’à un risque accepté.',
-      });
+    if (v.etat === 'risque_accepte') {
+      if (!v.mesure)
+        c.addIssue({
+          code: 'custom',
+          path: ['mesure'],
+          message: 'Une mesure compensatoire est obligatoire pour accepter un risque.',
+        });
+      if (!v.revueLe)
+        c.addIssue({
+          code: 'custom',
+          path: ['revueLe'],
+          message: 'Une date d’échéance est obligatoire pour accepter un risque.',
+        });
+    } else {
+      if (v.revueLe)
+        c.addIssue({
+          code: 'custom',
+          path: ['revueLe'],
+          message: 'Une date d’échéance ne se donne qu’à un risque accepté.',
+        });
+      if (v.mesure)
+        c.addIssue({
+          code: 'custom',
+          path: ['mesure'],
+          message: 'Une mesure compensatoire ne se donne qu’à un risque accepté.',
+        });
+    }
   });
 export type ChangementEtatSuivi = z.infer<typeof ChangementEtatSuivi>;
 
@@ -145,8 +179,11 @@ export interface SuiviResumeDto {
   etat: EtatSuiviFaille;
   proposition: PropositionSuivi;
   revueLe: string | null;
-  /** Risque accepté dont la date de revue est passée : signal calculé, sans changement d'état. */
+  /** Risque accepté dont l'échéance est passée : l'exception expire à la prochaine évaluation de la plateforme (lot S1). */
   revueDepassee: boolean;
+  /** Lot S1 : statut de l'exception d'un risque accepté (« sans échéance, à compléter » pour une exception plus ancienne que
+      le lot) ; null hors risque accepté. */
+  exceptionStatut: StatutException | null;
   nombreActions: number;
   version: number;
 }
@@ -158,8 +195,21 @@ export interface EntreeHistoriqueSuiviDto {
   etatApres: EtatSuiviFaille;
   note: string;
   revueLe: string | null;
+  /** Lot S1 : mesure compensatoire d'une exception accordée ou prolongée. */
+  mesure: string | null;
   auteur: string;
   le: string;
+}
+
+/** Exception en cours (risque accepté) : par qui et quand, justification, mesure compensatoire, échéance. Une exception
+    accordée avant le lot S1 n'a ni mesure ni auteur rangés ici (la justification reste à l'historique). */
+export interface ExceptionSuiviDto {
+  statut: StatutException;
+  echeance: string | null;
+  justification: string | null;
+  mesure: string | null;
+  par: string | null;
+  le: string | null;
 }
 
 /** Action liée. Ses détails ne sont rendus que si la personne peut la lire. */
@@ -189,6 +239,12 @@ export interface SuiviDto extends SuiviResumeDto {
   /** La personne peut décider : droit de modifier le module et toutes les machines touchées lisibles. Sinon, le motif. */
   peutDecider: boolean;
   motifRefus: string | null;
+  /** Lot S1 : la personne tient le rôle RSSI de la plateforme et peut accorder, prolonger ou lever une exception. */
+  peutDeciderException: boolean;
+  exception: ExceptionSuiviDto | null;
+  /** Date du jour au fuseau de l'organisation et échéance la plus lointaine admise pour une exception. */
+  aujourdhui: string;
+  echeanceMax: string;
   /** Préremplissage du formulaire « Créer une action ». */
   preremplissage: { titre: string; description: string };
   /** Actifs touchés (V30) : bloc ajouté par le serveur à la description de toute action créée depuis la faille (noms des

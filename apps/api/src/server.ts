@@ -75,6 +75,17 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
       )
+      // Délais de correction et exceptions à échéance (ADR 0100, lot S1) : au plus une évaluation par quart d'heure ;
+      // expiration et rappel des exceptions, failles entrées en dépassement, résumés notifiés. Rien si le module est
+      // désactivé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.delais.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'délais des vulnérabilités')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

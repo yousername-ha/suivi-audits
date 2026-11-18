@@ -43,9 +43,13 @@
    machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404.
    Lot PC4 : fiche illustrée d'une faille (recommandations par source, vecteur d'attaque traduit, schéma, en-tête) avec
    `lire`, lecture seule, sans journal : constat, faille déclarée et alerte d'AlgoLightHouse lus par leur fiche existante
-   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement. */
+   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement.
+   Lot S1 : délais de correction (avec les seuils de priorité, `administrer`, If-Match) et exceptions ; onglet « Délais et
+   exceptions » avec `lire` (mesure des corrections, exceptions des failles lues), lecture seule, sans journal ; accorder,
+   prolonger ou lever une exception réservé au rôle RSSI par le service du suivi. */
 import {
   RechercheAlertesVulnerabilites,
+  RechercheDelais,
   ApplicationLiaisonMasse,
   DemandeLiaisonMasse,
   AffectationMachine,
@@ -70,7 +74,7 @@ import {
   RechercheTechnologiesAlh,
   RechercheDeclarees,
   ReglageMasque,
-  ReglagePriorite,
+  SaisieReglagePriorite,
   SuggestionsCpeQuery,
   type ProduitSurveilleDto,
   RechercheAvis,
@@ -106,6 +110,16 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.vueEnsemble.lire((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/delais',
+    summary:
+      'Délais de correction et exceptions (lot S1) : délais cibles par priorité, mesure des corrections sur la période (délai moyen et médian par priorité, part dans les délais ; les mêmes nombres pour tous, sans nom), exceptions en cours et échues des failles que la personne lit ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheDelais,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.delais.lire((s as Session).user, query),
   }),
   route({
     method: 'GET',
@@ -592,7 +606,7 @@ export const vulnerabilitesRoutes = [
     method: 'POST',
     url: '/api/vulnerabilites/suivis/:nature/:id/etat',
     summary:
-      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles',
+      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles. Lot S1 : accorder, prolonger ou lever une exception (risque accepté) est réservé au rôle RSSI de la plateforme (403 sinon, administrateur compris) et exige une justification, une mesure compensatoire et une échéance d’au plus douze mois',
     tags,
     access: 'vulnerabilites:modifier',
     params: suivi,
@@ -922,10 +936,11 @@ export const vulnerabilitesRoutes = [
   route({
     method: 'PUT',
     url: '/api/vulnerabilites/priorite/reglage',
-    summary: 'Régler les seuils de la grille de priorité (If-Match : version du réglage)',
+    summary:
+      'Régler les seuils de la grille de priorité et les délais cibles de correction par priorité (lot S1) : seuil, délais, ou les deux, le reste est gardé (If-Match : version du réglage)',
     tags,
     access: 'vulnerabilites:administrer',
-    body: ReglagePriorite,
+    body: SaisieReglagePriorite,
     handler: async ({ svc, s, body, req, ip, reply }) => {
       const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
       await svc.vulnerabilites.alertes.evaluer('seuil-priorite');

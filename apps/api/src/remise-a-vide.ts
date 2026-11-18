@@ -215,6 +215,9 @@ export const TABLES_TRAVAIL = [
   // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
   // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
   'vulnerabilites_alertes',
+  // Failles déjà signalées en dépassement de délai (ADR 0100, lot S1) : recalculées à chaque évaluation à partir des faits et
+  // des suivis ci-dessus, effacées avec eux.
+  'vulnerabilites_depassements',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

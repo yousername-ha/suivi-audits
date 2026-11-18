@@ -3,7 +3,8 @@
    en anglais (V19), comme texte simple. Un lien « voir aussi » n'est rendu que s'il a la forme contrôlée (https).
    Lot V4a : priorité calculée par la plateforme (niveau et faits), failles déclarées, rang des machines. Lot V4b : filtre
    de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). Lot V4d : origine du périmètre d'une
-   machine (hérité du dépôt Tenable ou indiqué à la main). */
+   machine (hérité du dépôt Tenable ou indiqué à la main). Lot S1 : filtre par état de délai de correction et tri par
+   échéance, repris de l'adresse (lien de la tuile « En dépassement » et de la notification de résumé). */
 import {
   type ConstatDto,
   type ConstatResumeDto,
@@ -19,6 +20,10 @@ import {
   type NiveauPriorite,
   type Priorite,
   type RangMachineDto,
+  ETATS_DELAI,
+  type EtatDelai,
+  TRIS_FAILLES,
+  type TriFailles,
   ROLE_MACHINE_LIBELLES,
   type RoleMachine,
   VOIR_AUSSI,
@@ -34,6 +39,9 @@ export interface FiltresConstats {
   priorite: NiveauPriorite | '';
   /** Suivi (lot V4b) : vide, les failles encore à traiter. */
   etat: FiltreSuivi | '';
+  /** Lot S1 : état du délai de correction (vide : tous) et tri (vide : par priorité). */
+  delai: EtatDelai | '';
+  tri: TriFailles | '';
 }
 export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   q: '',
@@ -43,10 +51,12 @@ export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   nonMaintenu: false,
   priorite: '',
   etat: '',
+  delai: '',
+  tri: '',
 };
 
 /** Filtres repris de l'adresse de l'écran (liens des tuiles de la Vue d'ensemble, lot PC1) : `q`, `priorite`, `etat`,
-    `gravite`, `exploite=oui`, `exploitable=oui` ; toute valeur inconnue est ignorée. */
+    `gravite`, `exploite=oui`, `exploitable=oui`, et (lot S1) `delai`, `tri` ; toute valeur inconnue est ignorée. */
 export function filtresDepuisAdresse(p: URLSearchParams): FiltresConstats {
   const dans = <T extends string>(liste: readonly T[], v: string | null): T | '' =>
     v !== null && (liste as readonly string[]).includes(v) ? (v as T) : '';
@@ -58,6 +68,8 @@ export function filtresDepuisAdresse(p: URLSearchParams): FiltresConstats {
     gravite: dans(GRAVITES_TENABLE, p.get('gravite')),
     exploite: p.get('exploite') === 'oui',
     exploitable: p.get('exploitable') === 'oui',
+    delai: dans(ETATS_DELAI, p.get('delai')),
+    tri: dans(TRIS_FAILLES, p.get('tri')),
   };
 }
 
@@ -71,6 +83,8 @@ export function urlConstats(f: FiltresConstats, page = 1): string {
   if (f.nonMaintenu) p.set('nonMaintenu', 'oui');
   if (f.priorite) p.set('priorite', f.priorite);
   if (f.etat) p.set('etat', f.etat);
+  if (f.delai) p.set('delai', f.delai);
+  if (f.tri) p.set('tri', f.tri);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/constats${s ? `?${s}` : ''}`;
@@ -78,13 +92,19 @@ export function urlConstats(f: FiltresConstats, page = 1): string {
 
 /** Adresse des failles déclarées (CVE rattachées à un produit relié à des machines) : recherche, priorité, suivi, page. */
 export function urlDeclarees(
-  f: Pick<FiltresConstats, 'q' | 'priorite'> & { etat?: FiltreSuivi | '' },
+  f: Pick<FiltresConstats, 'q' | 'priorite'> & {
+    etat?: FiltreSuivi | '';
+    delai?: EtatDelai | '';
+    tri?: TriFailles | '';
+  },
   page = 1,
 ): string {
   const p = new URLSearchParams();
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.priorite) p.set('priorite', f.priorite);
   if (f.etat) p.set('etat', f.etat);
+  if (f.delai) p.set('delai', f.delai);
+  if (f.tri) p.set('tri', f.tri);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/declarees${s ? `?${s}` : ''}`;

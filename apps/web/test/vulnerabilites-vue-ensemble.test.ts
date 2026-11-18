@@ -82,6 +82,7 @@ const tuiles: VueEnsembleDto['tuiles'] = {
   aTraiter: { p1: 1, p2: 6 },
   aConfirmer: { failles: 4, produits: 2 },
   corrigeesCeMois: 12,
+  enDepassement: 3,
 };
 
 describe('tuiles : chaque tuile mène à la liste filtrée', () => {

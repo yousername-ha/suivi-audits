@@ -66,6 +66,9 @@ interface Entree {
   alh: RecommandationsFicheDto['alh'] | null;
   /** Actifs exposés lus, s'ils sont déjà connus (alerte d'AlgoLightHouse : son actif). */
   actifs: number | null;
+  /** Lot S1 : délai de correction et exception d'un objet suivi (constat, faille déclarée). */
+  delai?: FicheFailleDto['delai'];
+  exception?: FicheFailleDto['exception'];
 }
 
 export class FichesFailles {
@@ -112,6 +115,8 @@ export class FichesFailles {
       cles: cves.length ? cves : [`constat:${c.id}`],
       alh: null,
       actifs: null,
+      delai: c.delai,
+      exception: c.suivi.exceptionStatut ? { statut: c.suivi.exceptionStatut, echeance: c.suivi.revueLe } : null,
     };
   }
 
@@ -134,6 +139,8 @@ export class FichesFailles {
       cles: [f.cve],
       alh: null,
       actifs: null,
+      delai: f.delai,
+      exception: f.suivi.exceptionStatut ? { statut: f.suivi.exceptionStatut, echeance: f.suivi.revueLe } : null,
     };
   }
 
@@ -317,6 +324,8 @@ export class FichesFailles {
         horsLecture: e.machinesHorsLecture || (e.actifs === null && exposition.horsLecture),
       },
       vecteurs: vecteurs.slice(0, B.vecteurs),
+      delai: e.delai ?? null,
+      exception: e.exception ?? null,
       recommandations: {
         tenable: e.tenable ? { correctif: e.tenable.correctif, publieLe: e.tenable.publieLe } : null,
         kev: kev.slice(0, B.kev),

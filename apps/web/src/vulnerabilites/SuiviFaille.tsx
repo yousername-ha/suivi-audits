@@ -3,10 +3,14 @@
    accepté » et « non concernée ») et date de revue, historique, actions liées (détail des seules actions lisibles),
    « Créer une action » (formulaire prérempli, périmètre où la personne écrit) et « Relier une action » existante. Écran
    sobre avec les composants de la charte (packages/ui), sous la CSP stricte (ADR 0006). Le serveur reste seul juge des
-   droits : un refus s'affiche tel qu'il est rendu. */
+   droits : un refus s'affiche tel qu'il est rendu. Lot S1 : un risque accepté est une exception (justification, mesure
+   compensatoire, échéance de douze mois au plus) que seul le rôle RSSI accorde, prolonge ou lève ; la fiche montre
+   l'exception en cours (par qui, quand, échéance, statut). */
 import { Alert, Button, Group, Select, Stack, Table, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  EXCEPTION_RESERVEE,
+  type ExceptionSuiviDto,
   type ActionLieeDto,
   type EntreeHistoriqueSuiviDto,
   type EtatSuiviFaille,
@@ -22,6 +26,7 @@ import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
+import { fmtJourCivil, libelleStatutException, STATUT_EXCEPTION_PUCE } from './delais';
 import { corpsChangementEtat, etatsChoisissables, libelleHistorique, marquesSuivi, urlSuivi } from './suivi';
 
 /** Marques du suivi (sans état). */
@@ -66,7 +71,12 @@ export function HistoriqueSuivi({ historique }: { historique: EntreeHistoriqueSu
                 {libelleHistorique(h)}
                 {h.revueLe && (
                   <Text size="xs" c="dimmed">
-                    Revue le <span className="horodatage">{fmtDate(h.revueLe)}</span>
+                    Échéance de l’exception : <span className="horodatage">{fmtJourCivil(h.revueLe)}</span>
+                  </Text>
+                )}
+                {h.mesure && (
+                  <Text size="xs" c="dimmed">
+                    Mesure compensatoire : {h.mesure}
                   </Text>
                 )}
               </Table.Td>
@@ -77,6 +87,41 @@ export function HistoriqueSuivi({ historique }: { historique: EntreeHistoriqueSu
         </Table.Tbody>
       </Table>
     </DataTable>
+  );
+}
+
+/** Exception en cours (sans état) : statut, échéance, par qui et quand, justification, mesure compensatoire. */
+export function ExceptionSuivi({ e }: { e: ExceptionSuiviDto }) {
+  return (
+    <Stack gap="2xs" role="group" aria-label="Exception en cours">
+      <Group gap="xs">
+        <StatusChip etat={STATUT_EXCEPTION_PUCE[e.statut]}>Exception : {libelleStatutException(e.statut)}</StatusChip>
+        {e.echeance && (
+          <Text size="sm">
+            Échéance : <span className="horodatage">{fmtJourCivil(e.echeance)}</span>
+          </Text>
+        )}
+      </Group>
+      {e.par && e.le && (
+        <Text size="xs" c="dimmed">
+          Accordée par {e.par} le <span className="horodatage">{fmtDate(e.le)}</span>
+        </Text>
+      )}
+      {e.justification && <Text size="sm">Justification : {e.justification}</Text>}
+      {e.mesure && <Text size="sm">Mesure compensatoire : {e.mesure}</Text>}
+      {e.statut === 'sans_echeance' && (
+        <Text size="sm" c="dimmed">
+          Exception enregistrée sans échéance avant les délais de correction : elle reste valide ; le RSSI la complète
+          en la prolongeant (justification, mesure compensatoire et échéance).
+        </Text>
+      )}
+      {e.statut === 'echue' && (
+        <Text size="sm" c="dimmed">
+          L’échéance est passée : la plateforme rend la faille à traiter à sa prochaine évaluation (au plus un quart
+          d’heure).
+        </Text>
+      )}
+    </Stack>
   );
 }
 
@@ -166,6 +211,7 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
   const [etat, setEtat] = useState<EtatSuiviFaille | null>(null);
   const [note, setNote] = useState('');
   const [revue, setRevue] = useState('');
+  const [mesure, setMesure] = useState('');
   const [noteRefus, setNoteRefus] = useState('');
   const [creation, setCreation] = useState<{
     perimetre: string | null;
@@ -206,6 +252,7 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
       setEtat(null);
       setNote('');
       setRevue('');
+      setMesure('');
       setNoteRefus('');
       setCreation(null);
       setLien(null);
@@ -221,7 +268,8 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
     api('POST', urlSuivi(nature, id, suite), { body, ifMatch: s!.version });
 
   if (!s) return <ErrorAlert error={suivi.error} />;
-  const changement = etat ? corpsChangementEtat(etat, note, revue) : null;
+  const changement = etat ? corpsChangementEtat(etat, note, revue, mesure) : null;
+  const choix = etatsChoisissables(s.etat, s.peutDeciderException);
   const liees = new Set(s.actions.flatMap((a) => (a.lisible ? [a.id] : [])));
   return (
     <Stack gap="sm" role="region" aria-label="Suivi de la faille">
@@ -232,14 +280,9 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
       {s.majLe && (
         <Text size="xs" c="dimmed">
           Dernier changement par {s.majPar} le <span className="horodatage">{fmtDate(s.majLe)}</span>
-          {s.revueLe && (
-            <>
-              {' '}
-              · revue prévue le <span className="horodatage">{fmtDate(s.revueLe)}</span>
-            </>
-          )}
         </Text>
       )}
+      {s.exception && <ExceptionSuivi e={s.exception} />}
       {!decider && s.motifRefus && (
         <Text size="sm" c="dimmed">
           {s.motifRefus}
@@ -286,7 +329,12 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
           </Stack>
         </Alert>
       )}
-      {decider && (
+      {decider && !s.peutDeciderException && (
+        <Text size="sm" c="dimmed">
+          {EXCEPTION_RESERVEE}
+        </Text>
+      )}
+      {decider && choix.length > 0 && (
         <Stack gap="xs" role="group" aria-label="Changer l’état">
           <Group align="flex-end">
             <Select
@@ -295,13 +343,16 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
               placeholder="Choisir"
               value={etat}
               onChange={(v) => setEtat(v as EtatSuiviFaille | null)}
-              data={etatsChoisissables(s.etat)}
+              data={choix}
               comboboxProps={{ withinPortal: false }}
             />
             {etat === 'risque_accepte' && (
               <TextInput
                 type="date"
-                label="Date de revue (facultative)"
+                label="Échéance de l’exception (obligatoire)"
+                description={`Douze mois au plus : le ${fmtJourCivil(s.echeanceMax)} au plus tard.`}
+                min={s.aujourdhui}
+                max={s.echeanceMax}
                 value={revue}
                 onChange={(e) => setRevue(e.currentTarget.value)}
               />
@@ -310,11 +361,31 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
           {etat && (
             <>
               <Textarea
-                label={changement?.erreur ? 'Note (obligatoire)' : 'Note (facultative)'}
+                label={
+                  etat === 'risque_accepte'
+                    ? 'Justification (obligatoire)'
+                    : changement?.erreur
+                      ? 'Note (obligatoire)'
+                      : 'Note (facultative)'
+                }
                 maxLength={1000}
                 value={note}
                 onChange={(e) => setNote(e.currentTarget.value)}
               />
+              {etat === 'risque_accepte' && (
+                <Textarea
+                  label="Mesure compensatoire (obligatoire)"
+                  description="Ce qui réduit le risque tant que la faille n’est pas corrigée (filtrage, isolement, surveillance…)."
+                  maxLength={1000}
+                  value={mesure}
+                  onChange={(e) => setMesure(e.currentTarget.value)}
+                />
+              )}
+              {changement?.erreur && (
+                <Text size="xs" c="dimmed">
+                  {changement.erreur}
+                </Text>
+              )}
               <Group justify="flex-end">
                 <Button variant="default" onClick={() => setEtat(null)}>
                   Annuler

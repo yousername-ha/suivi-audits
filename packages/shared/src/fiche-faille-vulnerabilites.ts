@@ -13,6 +13,7 @@
    Fonctions pures, testées en table (packages/shared/test/fiche-faille-vulnerabilites.test.ts). */
 import { z } from 'zod';
 import type { NiveauAlerte } from './alertes-vulnerabilites.js';
+import type { DelaiFailleDto, StatutException } from './delais-vulnerabilites.js';
 import type { NiveauPriorite } from './failles-tenable.js';
 import type { MentionCertSante, Priorite, SourcesFailleDto } from './priorite-vulnerabilites.js';
 import type { DefautAlh } from './surface-externe.js';
@@ -740,6 +741,10 @@ export interface FicheFailleDto {
   presence: PresenceFicheDto;
   vecteurs: VecteurPublieDto[];
   recommandations: RecommandationsFicheDto;
+  /** Lot S1 : délai de correction et exception d'un constat ou d'une faille déclarée ; null pour une CVE de la veille ou une
+      alerte d'AlgoLightHouse (sans suivi). */
+  delai: DelaiFailleDto | null;
+  exception: { statut: StatutException; echeance: string | null } | null;
 }
 
 export const NATURES_FICHE_FAILLE = ['constat', 'declaree', 'cve', 'alerte-alh'] as const;
