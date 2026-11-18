@@ -504,3 +504,95 @@
     display: none;
   }
 }
+
+/* Processus plus dense (décision du RSSI du 18/11/2026) : plus de bandeau en tête, les chiffres du périmètre tiennent
+   sur une ligne, et les cartes se resserrent pour montrer davantage de processus à l'écran. */
+.app-main .processus-studio .pr-resume {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-lg);
+  margin: var(--mantine-spacing-xs) 0 0;
+  color: var(--compact-muted);
+  font-size: var(--mantine-font-size-sm);
+}
+.app-main .processus-studio .pr-resume b {
+  color: var(--compact-ink);
+  font-weight: 650;
+}
+.app-main .processus-studio .pr-board {
+  gap: var(--mantine-spacing-lg);
+}
+.app-main .processus-studio .pr-lane-header {
+  margin-bottom: var(--mantine-spacing-xs);
+  padding-bottom: var(--mantine-spacing-xs);
+}
+.app-main .processus-studio .pr-lane-description {
+  margin: 0 0.125rem var(--mantine-spacing-xs);
+  min-height: 0;
+}
+.app-main .processus-studio .pr-cards {
+  gap: var(--mantine-spacing-xs);
+}
+.app-main .processus-studio .pr-card-open {
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem 0.5rem;
+}
+.app-main .processus-studio .pr-card-glyph {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+.app-main .processus-studio .pr-card-open > strong {
+  min-height: 0;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+}
+.app-main .processus-studio .pr-counts {
+  gap: 0.25rem;
+  padding-top: 0.375rem;
+}
+.app-main .processus-studio .pr-counts > span {
+  padding: 0.0625rem 0.3125rem;
+}
+.app-main .processus-studio .pr-card-foot {
+  padding: 0 0.5rem 0.25rem;
+}
+.app-main .processus-studio .pr-expand {
+  inline-size: 1.5rem;
+  block-size: 1.25rem;
+  font-size: 1rem;
+}
+
+/* Tailles communes des fenêtres (décision du RSSI du 18/11/2026) : trois largeurs seulement. Petite (dialogues courts,
+   440 px, inchangée), fiche (anciennes tailles lg et xl, 1 024 px) et présentation (Contexte, Parties intéressées,
+   Processus, 1 152 px). */
+.mantine-Modal-root {
+  --modal-size-lg: 64rem;
+  --modal-size-xl: 64rem;
+}
+.mantine-Modal-root.contexte-fenetre {
+  --modal-size-xl: 72rem;
+}
+
+/* Tuile de l'Assistant RSSI (décision du RSSI du 18/11/2026) : réduite à son avatar, son libellé reste lu par les
+   lecteurs d'écran et réapparaît au survol ou au focus ; un espace est réservé en bas de la page pour qu'elle ne masque
+   plus le contenu. */
+.as-launcher:not(:hover, :focus-visible) {
+  gap: 0;
+  padding: 0.4375rem 0.5625rem;
+}
+.as-launcher:not(:hover, :focus-visible) .as-launcher-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+body:has(.as-launcher) .shell-main {
+  padding-bottom: calc(var(--suivi-marge-page) + 4rem);
+}
+@media print {
+  body:has(.as-launcher) .shell-main {
+    padding-bottom: var(--suivi-marge-page);
+  }
+}
