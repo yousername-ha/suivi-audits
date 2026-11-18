@@ -118,6 +118,33 @@ test('maintenance Neon : la phase finale sans succès publié n’affiche aucune
   }
 });
 
+test('maintenance : « Retour à l’application » n’est jamais franchi avant le succès publié', async ({ browser }) => {
+  // Séquence publiée par un exécutant antérieur : fin du script notée « complete », puis vérification finale.
+  const { ctx, page, problems } = await ouvrir(
+    browser,
+    enCours({
+      phase: 'verifying',
+      message: 'Vérification finale du système de mise à jour.',
+      etapes: [
+        ...enCours().etapes,
+        { phase: 'verifying', at: new Date(Date.now() - 10_000).toISOString() },
+        { phase: 'complete', at: new Date(Date.now() - 6_000).toISOString() },
+        { phase: 'verifying', at: new Date(Date.now() - 2_000).toISOString() },
+      ],
+    }),
+    'no-preference',
+  );
+  try {
+    await expect(page.locator('li.current')).toHaveText(/^Vérification/);
+    const retour = page.locator('#steps [data-phase="complete"]');
+    await expect(retour).not.toHaveClass(/done|current/);
+    await expect(retour.locator('time')).toHaveText('');
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
 test('maintenance : la coupure annoncée du frontal est affichée, puis reprise par l’avis de connexion', async ({
   browser,
 }) => {

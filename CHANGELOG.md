@@ -2,6 +2,24 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+**Aucune action sur le serveur, aucune migration.**
+
+- La correction de la frise vient de l'exécutant de la version **installée** et de la page du frontal en service : elle
+  s'applique aux mises à jour lancées depuis une version qui la contient.
+
+_(Session « Projet audit_suivi Coeur ».)_
+
+### Corrigé
+
+- **Frise de la page de maintenance** : l'étape « Retour à l'application » apparaissait terminée avant la vérification finale
+  (fin du script notée « complete », puis « Vérification » de nouveau en cours). La fin du script reste dans « Vérification » ;
+  « Retour à l'application » n'est franchi qu'à la réussite publiée, et la page ne l'affiche jamais terminée ni horodatée
+  avant. _(Session « Projet audit_suivi Coeur ».)_
+
 ## [7.2.3] — 2026-11-17
 
 ### Notes de mise à jour
