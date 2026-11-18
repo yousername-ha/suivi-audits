@@ -61,8 +61,11 @@ test('Responsable : fonction créée en administration, désignée sur une actio
     await page.goto('/pilotage/actions');
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: `Périmètre resp. ${suffixe}`, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Liste', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('button', { name: titre, exact: true }).first().click();
     const fiche = page.getByRole('dialog');
     await fiche.getByRole('combobox', { name: 'Responsable' }).click();

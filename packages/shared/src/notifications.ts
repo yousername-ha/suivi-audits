@@ -50,6 +50,20 @@ export const NOTIFICATION_TYPES = [
     description:
       'Question que l’assistant RSSI pose, pendant une ronde, au responsable d’un élément. La personne y répond depuis ses rappels ; sans réponse, elle est relancée une fois.',
   },
+  // Module Vulnérabilités (ADR 0100, lot V6) : alertes décidées par la plateforme, adressées aux personnes qui lisent le
+  // module. Aucun nom de machine, de domaine, d'adresse ni de périmètre : la CVE, le produit et le niveau seulement.
+  {
+    id: 'vulnerabilites_alerte_critique',
+    label: 'Vulnérabilités : alerte critique',
+    description:
+      'Une faille exploitée est présente chez nous (détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet) : priorité P1. Adressée aux personnes qui lisent le module Vulnérabilités, une fois par alerte.',
+  },
+  {
+    id: 'vulnerabilites_alerte',
+    label: 'Vulnérabilités : alerte',
+    description:
+      'Résumé des alertes simples ouvertes par une même évaluation (failles P2 exploitables, présentes sur des actifs exposés directement sur Internet) : une seule notification par évaluation, avec leur nombre et un lien vers l’onglet « Alertes ». Adressée aux personnes qui lisent le module Vulnérabilités.',
+  },
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]['id'];
 export const NOTIFICATION_TYPE_IDS = NOTIFICATION_TYPES.map((t) => t.id) as [NotificationType, ...NotificationType[]];
@@ -62,7 +76,15 @@ export const NOTIFICATION_LIEN = '/pilotage/rappels';
 /** Rubriques propres à certains types (lien relatif et libellé de la rubrique, repris dans le courriel). */
 export const NOTIFICATION_RUBRIQUES: Partial<Record<NotificationType, { lien: string; rubrique: string }>> = {
   retex_contribution: { lien: '/retex', rubrique: 'Mes contributions RETEX' },
+  vulnerabilites_alerte_critique: { lien: '/vulnerabilites/alertes', rubrique: 'Vulnérabilités, Alertes' },
+  // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré sur les alertes simples ouvertes (LIEN_RESUME_ALERTES).
+  vulnerabilites_alerte: {
+    lien: '/vulnerabilites/alertes?niveau=simple&etat=ouverte',
+    rubrique: 'Vulnérabilités, Alertes',
+  },
 };
+/** Types émis par le module Vulnérabilités (lot V6) : sans périmètre ni objet du socle, lus avec vulnerabilites:lire. */
+export const NOTIFICATION_TYPES_VULNERABILITES = ['vulnerabilites_alerte_critique', 'vulnerabilites_alerte'] as const;
 
 export const PORTEE_KINDS = ['groupe', 'role', 'utilisateur'] as const;
 export type PorteeKind = (typeof PORTEE_KINDS)[number];

@@ -2,6 +2,7 @@
    L'assistant lit avec les droits de la personne qui l'interroge, bornés aux périmètres du profil ; il n'écrit dans aucun
    registre. */
 import { z } from 'zod';
+import type { SegmentTexte } from './assistant-vulnerabilites.js';
 import { FluxConfirme } from './flux-externes.js';
 
 /** Deux profils séparés : un auditeur n'audite pas son propre travail (ADR 0086, point 14). */
@@ -32,6 +33,44 @@ export const AdresseModele = z
       return false;
     }
   }, 'Adresse HTTPS attendue, sans identifiants ni paramètres (exemple : https://api.mistral.ai/v1).');
+
+/** Fournisseurs de modèle préenregistrés de l'écran de réglages. Chacun expose une API « chat completions » compatible
+    OpenAI ; l'adresse et les modèles proposés viennent de la documentation publique du fournisseur (relevé du 15/11/2026).
+    Seul Mistral a été essayé avec l'assistant. Tout autre service se règle par « Personnalisé ». */
+export const FOURNISSEURS_ASSISTANT = [
+  {
+    id: 'mistral',
+    libelle: 'Mistral AI',
+    adresse: 'https://api.mistral.ai/v1',
+    modeles: ['mistral-small-latest', 'mistral-medium-latest', 'mistral-large-latest'],
+  },
+  {
+    id: 'openai',
+    libelle: 'OpenAI',
+    adresse: 'https://api.openai.com/v1',
+    modeles: ['gpt-6-luna', 'gpt-6-astra'],
+  },
+  {
+    id: 'anthropic',
+    libelle: 'Anthropic (Claude)',
+    adresse: 'https://api.anthropic.com/v1',
+    modeles: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
+  },
+] as const;
+export type FournisseurAssistant = (typeof FOURNISSEURS_ASSISTANT)[number];
+export const FOURNISSEUR_PERSONNALISE = 'personnalise';
+
+/** Retire les barres finales sans expression régulière (une suite de barres ne coûte qu'un parcours). */
+const sansBarreFinale = (adresse: string) => {
+  let a = adresse.trim();
+  while (a.endsWith('/')) a = a.slice(0, -1);
+  return a;
+};
+/** Fournisseur préenregistré dont l'adresse est celle-ci, à une barre finale près ; null pour toute autre adresse. */
+export function fournisseurDeAdresse(adresse: string): FournisseurAssistant | null {
+  const a = sansBarreFinale(adresse);
+  return FOURNISSEURS_ASSISTANT.find((f) => f.adresse === a) ?? null;
+}
 
 export const ReglagesAssistantBody = z
   .object({
@@ -175,6 +214,9 @@ export interface MessageAssistantDto {
   outils: { nom: string; elements: number }[];
   erreur: boolean;
   createdAt: string;
+  /** Présent quand le texte cite des repères de machines (ADR 0100, V14) : `contenu` est alors le texte affiché, repères
+      remplacés par les noms des machines que la personne peut lire, et les segments permettent de marquer ces machines. */
+  segments?: SegmentTexte[];
 }
 export interface ConversationAssistantDto {
   id: string;

@@ -1,12 +1,14 @@
 /* Éléments des registres d'un périmètre (R02) : on choisit un périmètre, puis un ou plusieurs registres qui le portent ;
-   la liste réunit leurs éléments sans doublon (chaque élément n'appartient qu'à un registre). */
-import { Group, MultiSelect, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+   la liste réunit leurs éléments sans doublon (chaque élément n'appartient qu'à un registre). Boîte d'outils commune
+   (7.3.0) : recherche, périmètre et registres dans les filtres avancés, pastilles des critères actifs dessous. */
+import { MultiSelect, Select, Stack, Table, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { REGISTRE_LABELS, type GrcObject, type RegistreDto } from '@suivi/shared';
 import { DataTable } from '@suivi/ui';
 import { get } from '../api';
+import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert, fmtDate } from '../components/common';
 
 const ELEMENT_LABELS: Record<string, string> = {
@@ -32,40 +34,73 @@ export function ElementsFiltres() {
     enabled: !!perimetre,
   });
   const nomRegistre = (id?: string | null) => liste.data?.registres.find((r) => r.id === id)?.name ?? '—';
+  const reinitialiser = () => {
+    setPerimetre(null);
+    setChoisis([]);
+  };
+  const criteres: CritereActif[] = [
+    ...(perimetre
+      ? [
+          {
+            cle: 'perimetre',
+            libelle: 'Périmètre',
+            valeur: perimetres.data?.find((p) => p.id === perimetre)?.name ?? 'sélectionné',
+            retirer: reinitialiser,
+          },
+        ]
+      : []),
+    ...choisis.map((id) => ({
+      cle: 'registre-' + id,
+      libelle: 'Registre',
+      valeur: liste.data?.registres.find((r) => r.id === id)?.name ?? 'sélectionné',
+      retirer: () => setChoisis(choisis.filter((c) => c !== id)),
+    })),
+  ];
   return (
     <Stack>
-      <Group align="end">
-        <Select
-          allowDeselect={false}
-          label="Périmètre"
-          placeholder="Choisir un périmètre"
-          searchable
-          data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
-          value={perimetre}
-          onChange={(v) => {
-            setPerimetre(v);
-            setChoisis([]);
-          }}
-        />
-        <MultiSelect
-          label="Registres"
-          placeholder={perimetre ? 'Tous les registres du périmètre' : 'Choisissez d’abord un périmètre'}
-          disabled={!perimetre}
-          searchable
-          data={(liste.data?.registres ?? []).map((r) => ({
-            value: r.id,
-            label: `${r.name} (${REGISTRE_LABELS[r.kind]})`,
-          }))}
-          value={choisis}
-          onChange={setChoisis}
-        />
-        <TextInput
-          label="Rechercher un élément"
-          value={recherche}
-          onChange={(e) => setRecherche(e.currentTarget.value)}
-        />
-      </Group>
+      <BoiteOutils
+        label="Outils des éléments par périmètre"
+        recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
+        filtres={{
+          actifs: [perimetre, choisis.length ? '1' : ''].filter(Boolean).length,
+          onReinitialiser: reinitialiser,
+          contenu: (
+            <>
+              <Select
+                allowDeselect={false}
+                label="Périmètre"
+                placeholder="Choisir un périmètre"
+                searchable
+                data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+                value={perimetre}
+                onChange={(v) => {
+                  setPerimetre(v);
+                  setChoisis([]);
+                }}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <MultiSelect
+                label="Registres"
+                placeholder={perimetre ? 'Tous les registres du périmètre' : 'Choisissez d’abord un périmètre'}
+                disabled={!perimetre}
+                searchable
+                data={(liste.data?.registres ?? []).map((r) => ({
+                  value: r.id,
+                  label: `${r.name} (${REGISTRE_LABELS[r.kind]})`,
+                }))}
+                value={choisis}
+                onChange={setChoisis}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </>
+          ),
+        }}
+      />
+      <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
       <ErrorAlert error={liste.error} />
+      {!perimetre && (
+        <Text size="sm">Choisissez un périmètre dans les filtres avancés pour afficher ses éléments.</Text>
+      )}
       {perimetre && liste.data && (
         <Text size="sm">
           {liste.data.total} élément(s) dans {liste.data.registres.length} registre(s) concerné(s).

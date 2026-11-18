@@ -1,0 +1,769 @@
+/* Module Vulnérabilités (ADR 0100, point 18 ; lot PC1) : « Vue d'ensemble », poste de commandement. Langage visuel de la
+   page de mise à jour (docker/maintenance : étiquettes en capitales espacées, chiffres à chasse fixe, liseré de couleur à
+   gauche, angles dissymétriques, écran cerné de crochets) porté sur les jetons de la charte, en clair et en sombre :
+   couleurs de la cartographie (--carte-*, contrastes vérifiés : textes au moins 4,5:1, formes porteuses de sens au moins
+   3:1), traits et surfaces de l'application (--suivi-*). Aucune longueur en px ni en rem ; dans le radar, unités de la
+   viewBox (attributs SVG). Le texte porte toujours le sens, la teinte le double. Animations (balayage tournant, halo des
+   failles exploitées, cran du niveau atteint) décoratives et continues (ADR 0099), coupées par la préférence de mouvement
+   réduit et à l'impression. Aucun style en ligne (ADR 0006). */
+.poste {
+  --pc-fond: var(--carte-canevas);
+  --pc-boite: var(--carte-boite);
+  --pc-texte: var(--carte-texte);
+  --pc-doux: var(--carte-secondaire);
+  --pc-trait: var(--suivi-trait);
+  --pc-cyan: var(--carte-bleu-accent);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-md);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--pc-trait);
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.4);
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--pc-cyan) 7%, transparent), transparent 60%),
+    var(--pc-fond);
+  color: var(--pc-texte);
+}
+/* Teintes : une variable, reprise par chaque élément (liseré, chiffre, puce). */
+.pc-teinte--rouge,
+.pc-p--P1 {
+  --pc-c: var(--carte-rouge-accent);
+}
+.pc-teinte--orange,
+.pc-p--P2 {
+  --pc-c: var(--carte-orange-accent);
+}
+.pc-teinte--bleu,
+.pc-p--P3 {
+  --pc-c: var(--carte-bleu-accent);
+}
+.pc-teinte--gris,
+.pc-p--P4 {
+  --pc-c: var(--carte-gris-accent);
+}
+.pc-teinte--vert {
+  --pc-c: var(--carte-vert-accent);
+}
+.pc-teinte--violet {
+  --pc-c: var(--carte-violet-accent);
+}
+.pc-etiquette {
+  margin: 0;
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pc-mono {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+.poste__tete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding-block-end: var(--mantine-spacing-xs);
+  border-block-end: var(--suivi-trait-l) solid var(--pc-trait);
+}
+.poste__tete .pc-etiquette:first-child::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.6em;
+  block-size: 0.6em;
+  margin-inline-end: 0.6em;
+  border: calc(var(--suivi-trait-l) * 1.5) solid var(--pc-cyan);
+}
+.poste__note {
+  margin: 0;
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--pc-trait);
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+/* Bandeau d'alerte critique (lot V6). */
+.pc-bandeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--carte-rouge-accent) 50%, var(--pc-trait));
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--carte-rouge-accent);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--carte-rouge-doux);
+}
+.pc-bandeau p {
+  flex: 1 1 20em;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pc-bandeau__icone {
+  inline-size: 1.4em;
+  block-size: 1.4em;
+  flex: none;
+  fill: none;
+  stroke: var(--carte-rouge-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pc-bandeau__lien {
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* Grille : deux colonnes sur grand écran (niveau, tuiles et cible à gauche ; radar, journal et secteurs à droite : le
+   radar a besoin de la largeur pour rester lisible), une seule en dessous. */
+.poste__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.poste__colonne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+  min-inline-size: 0;
+}
+.poste__paire {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+  align-items: start;
+}
+@media (max-width: 75em) {
+  .poste__grille,
+  .poste__paire {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48em) {
+  .poste {
+    padding: var(--mantine-spacing-xs);
+  }
+}
+/* Niveau d'alerte. */
+.pc-niveau,
+.pc-cible {
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--pc-c) 45%, var(--pc-trait));
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--pc-c);
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.25);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--pc-c) 9%, var(--pc-boite)), var(--pc-boite));
+}
+.pc-niveau__gros {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  margin: 0.2em 0 0;
+  line-height: 1;
+}
+.pc-niveau__gros b {
+  color: var(--pc-c);
+  font-size: calc(var(--mantine-font-size-xl) * 2.3);
+  font-weight: 400;
+}
+.pc-niveau__gros span {
+  color: var(--pc-doux);
+}
+.pc-niveau__libelle {
+  margin: 0.2em 0 0;
+  color: var(--pc-c);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pc-niveau__explication {
+  margin: 0.2em 0 0;
+  font-size: var(--mantine-font-size-sm);
+}
+.pc-niveau__regle {
+  margin: var(--mantine-spacing-xs) 0 0;
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-jauge {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3em;
+  margin: var(--mantine-spacing-xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-jauge__cran {
+  display: grid;
+  gap: 0.3em;
+  color: var(--pc-doux);
+  font-size: calc(var(--mantine-font-size-xs) * 0.85);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pc-jauge__cran i {
+  display: block;
+  block-size: 0.45em;
+  border: var(--suivi-trait-l) solid var(--pc-c);
+  border-radius: var(--mantine-radius-xs);
+  background: transparent;
+}
+.pc-jauge__cran--atteint i {
+  background: var(--pc-c);
+}
+.pc-jauge__cran[aria-current='step'] {
+  color: var(--pc-texte);
+  font-weight: 700;
+}
+/* Tuiles : lien vers la liste filtrée. */
+.pc-tuiles {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+}
+.pc-tuile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--pc-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--pc-c);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--pc-boite);
+  color: var(--pc-texte);
+  text-decoration: none;
+}
+a.pc-tuile:hover,
+.pc-tuile__liens a:hover {
+  background: color-mix(in srgb, var(--pc-c) 8%, var(--pc-boite));
+}
+a.pc-tuile:focus-visible,
+.pc-tuile__liens a:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-l);
+}
+.pc-tuile .pc-etiquette small {
+  display: block;
+  margin-block-start: 0.2em;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.pc-tuile b {
+  color: var(--pc-c);
+  font-size: calc(var(--mantine-font-size-xl) * 1.25);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+.pc-tuile__liens {
+  display: flex;
+  gap: var(--mantine-spacing-xs);
+}
+.pc-tuile__liens a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  padding: 0 0.4em;
+  border-radius: var(--mantine-radius-xs);
+  color: var(--pc-texte);
+  font-weight: 600;
+  text-decoration: none;
+}
+/* Panneaux secondaires (secteurs, journal). */
+.pc-panneau {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--pc-trait);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: color-mix(in srgb, var(--pc-fond) 55%, var(--pc-boite));
+}
+.pc-panneau__titre {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  margin-block-end: 0.4em;
+}
+.pc-secteurs {
+  display: grid;
+  gap: 0.35em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-secteurs li {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6em;
+}
+.pc-secteurs__barre {
+  display: block;
+  inline-size: 100%;
+  block-size: 0.45em;
+}
+.pc-secteurs__fond {
+  fill: color-mix(in srgb, var(--pc-cyan) 14%, transparent);
+}
+.pc-secteurs__plein {
+  fill: var(--pc-cyan);
+}
+.pc-journal ol {
+  display: grid;
+  gap: 0.35em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: calc(var(--mantine-font-size-xs) * 0.95);
+  line-height: 1.35;
+}
+.pc-journal li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7em;
+  overflow-wrap: anywhere;
+}
+.pc-journal time {
+  color: var(--pc-doux);
+}
+.pc-journal__etiquette {
+  color: var(--pc-c);
+  font-weight: 650;
+  text-transform: uppercase;
+}
+/* Cible prioritaire. */
+.pc-cible__titre {
+  margin: 0.35em 0 0.2em;
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 600;
+}
+.pc-cible__bouton {
+  color: var(--pc-texte);
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.pc-cible__texte {
+  margin: 0;
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-sm);
+  overflow-wrap: anywhere;
+}
+.pc-mesures {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-xs);
+  margin: var(--mantine-spacing-sm) 0 0;
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--pc-trait);
+}
+.pc-mesures div {
+  display: grid;
+  gap: 0.15em;
+  min-inline-size: 0;
+}
+.pc-mesures dt {
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+.pc-mesures dd {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+/* Écran du radar : crochets aux angles, comme l'écran de la maquette. */
+.pc-ecran {
+  position: relative;
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--pc-trait);
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.4);
+  background: radial-gradient(
+    circle at 50% 46%,
+    color-mix(in srgb, var(--pc-cyan) 7%, var(--pc-boite)),
+    color-mix(in srgb, var(--pc-boite) 70%, var(--pc-fond)) 70%
+  );
+}
+.pc-ecran::before,
+.pc-ecran::after {
+  content: '';
+  position: absolute;
+  inline-size: 1.4em;
+  block-size: 1.4em;
+  border: calc(var(--suivi-trait-l) * 2) solid var(--pc-cyan);
+  pointer-events: none;
+}
+.pc-ecran::before {
+  inset-block-start: calc(var(--suivi-trait-l) * -1);
+  inset-inline-start: calc(var(--suivi-trait-l) * -1);
+  border-inline-end: 0;
+  border-block-end: 0;
+}
+.pc-ecran::after {
+  inset-block-end: calc(var(--suivi-trait-l) * -1);
+  inset-inline-end: calc(var(--suivi-trait-l) * -1);
+  border-inline-start: 0;
+  border-block-start: 0;
+}
+.pc-ecran__tete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0.2em 0.5em;
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pc-ecran__tete b {
+  color: var(--pc-cyan);
+  font-weight: 650;
+}
+.pc-vide {
+  margin: 0;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+  color: var(--pc-doux);
+  text-align: center;
+}
+/* Petit écran : le radar garde une largeur lisible et défile dans son cadre, jamais la page. */
+.pc-radar-cadre {
+  overflow-x: auto;
+}
+.pc-radar {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: calc(var(--suivi-champ-l) * 1.6);
+  aspect-ratio: 800 / 570;
+}
+.pc-r-fond {
+  fill: color-mix(in srgb, var(--pc-fond) 60%, transparent);
+}
+.pc-r-coeur {
+  fill: color-mix(in srgb, var(--carte-rouge-accent) 7%, transparent);
+}
+.pc-r-anneau,
+.pc-r-graduation,
+.pc-r-rayon {
+  fill: none;
+  stroke: var(--carte-gris-trait);
+  stroke-width: 1;
+}
+.pc-r-anneau--bord {
+  stroke: var(--pc-doux);
+  stroke-width: 1.4;
+}
+.pc-r-rayon {
+  stroke-dasharray: 3 5;
+}
+.pc-r-anneau-nom {
+  fill: var(--pc-doux);
+  font-family: var(--mantine-font-family-monospace);
+}
+.pc-r-secteur {
+  fill: var(--pc-cyan);
+  font-family: var(--mantine-font-family);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pc-r-centre {
+  fill: none;
+  stroke: var(--pc-texte);
+  stroke-width: 1.2;
+}
+.pc-r-invisible {
+  fill: none;
+  stroke: none;
+}
+.pc-balayage {
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.pc-balayage__secteur {
+  fill: var(--pc-cyan);
+  fill-opacity: 0.09;
+}
+.pc-balayage__trait {
+  fill: none;
+  stroke: var(--pc-cyan);
+  stroke-width: 1.6;
+}
+/* Points : une faille suivie chacun. Cercle plein (présente), cercle vide (produit à confirmer), halo (exploitation). */
+.pc-noyau {
+  fill: var(--pc-c);
+  stroke: var(--pc-c);
+  stroke-width: 1;
+}
+.pc-noyau--vide {
+  fill: var(--pc-boite);
+  stroke-width: 1.8;
+}
+.pc-zone {
+  fill: transparent;
+  stroke: none;
+}
+.pc-halo,
+.pc-legende__halo {
+  fill: none;
+  stroke: var(--pc-c);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.pc-groupe__fond {
+  fill: var(--pc-boite);
+  stroke: var(--pc-c);
+  stroke-width: 1.2;
+}
+.pc-groupe__texte {
+  fill: var(--pc-texte);
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 650;
+}
+.pc-point {
+  cursor: pointer;
+}
+.pc-point:focus {
+  outline: none;
+}
+.pc-point:hover .pc-noyau,
+.pc-point:hover .pc-groupe__fond {
+  stroke-width: 2.5;
+}
+.pc-point:focus-visible .pc-noyau,
+.pc-point:focus-visible .pc-groupe__fond {
+  stroke: var(--neon-accent);
+  stroke-width: 3;
+}
+.pc-etiquette-point__trait {
+  fill: none;
+  stroke: var(--pc-c);
+  stroke-width: 1;
+}
+.pc-etiquette-point__titre,
+.pc-etiquette-point__detail {
+  font-family: var(--mantine-font-family-monospace);
+  paint-order: stroke;
+  stroke: var(--pc-boite);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.pc-etiquette-point__titre {
+  fill: var(--pc-texte);
+  font-weight: 650;
+}
+.pc-etiquette-point__detail {
+  fill: var(--pc-doux);
+}
+.pc-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.1em;
+  margin: 0;
+  padding: 0.5em 0.5em 0.2em;
+  list-style: none;
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.pc-legende__icone {
+  inline-size: 1.1em;
+  block-size: 1.1em;
+  flex: none;
+}
+/* Tableau « Cibles par priorité ». */
+.pc-section-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding-block-start: var(--mantine-spacing-sm);
+  margin-block-end: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--pc-trait);
+}
+.pc-section-titre h2 {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 650;
+}
+.pc-section-titre span {
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-cibles__zone:focus {
+  outline: none;
+}
+.pc-cibles__zone:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+}
+.pc-cibles__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  margin-block-start: var(--mantine-spacing-xs);
+}
+.pc-case {
+  margin: 0 0 var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--pc-cyan);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--carte-bleu-doux);
+  font-size: var(--mantine-font-size-sm);
+}
+.pc-ligne > td:first-child {
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--pc-c);
+}
+.pc-prio {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.3em;
+  block-size: 2.3em;
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--pc-c) 60%, var(--pc-trait));
+  border-radius: var(--mantine-radius-xs);
+  background: color-mix(in srgb, var(--pc-c) 8%, transparent);
+  color: var(--pc-c);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+}
+.pc-table__nom {
+  font-weight: 600;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.pc-faits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+}
+.pc-puce {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15em 0.6em;
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--pc-c) 45%, var(--pc-trait));
+  border-radius: var(--mantine-radius-xs);
+  background: color-mix(in srgb, var(--pc-c) 7%, var(--pc-boite));
+  color: var(--pc-c);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+/* Capteurs : sources de veille, puis connecteurs (deux listes distinctes). */
+.pc-capteurs h3 {
+  margin: var(--mantine-spacing-xs) 0;
+}
+.pc-capteurs__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-capteur {
+  --pc-c: var(--carte-gris-accent);
+  position: relative;
+  display: grid;
+  gap: 0.3em;
+  align-content: start;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--pc-trait);
+  border-block-start: calc(var(--suivi-trait-l) * 2) solid var(--pc-c);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--pc-boite);
+  overflow-wrap: anywhere;
+}
+.pc-capteur--succes {
+  --pc-c: var(--carte-vert-accent);
+}
+.pc-capteur--attention {
+  --pc-c: var(--carte-orange-accent);
+}
+.pc-capteur--erreur {
+  --pc-c: var(--carte-rouge-accent);
+}
+.pc-capteur--info {
+  --pc-c: var(--carte-violet-accent);
+}
+.pc-capteur small {
+  color: var(--pc-doux);
+}
+.pc-capteur__num {
+  position: absolute;
+  inset-block-start: var(--mantine-spacing-xs);
+  inset-inline-end: var(--mantine-spacing-sm);
+  color: var(--pc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-capteur__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em;
+  font-size: var(--mantine-font-size-xs);
+}
+/* Animations : seulement sans préférence de mouvement réduit. */
+@media (prefers-reduced-motion: no-preference) {
+  .pc-balayage {
+    opacity: 1;
+    animation: pc-tour 9s linear infinite;
+  }
+  .pc-halo {
+    animation: pc-pouls 2s ease-out infinite;
+  }
+  .pc-jauge__cran[aria-current='step'] i {
+    animation: pc-clign 2.4s ease-in-out infinite;
+  }
+}
+@keyframes pc-tour {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pc-pouls {
+  50% {
+    transform: scale(1.6);
+    opacity: 0.3;
+  }
+}
+@keyframes pc-clign {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poste .pc-balayage,
+  .poste .pc-halo,
+  .poste .pc-jauge__cran i {
+    animation: none !important;
+  }
+  .poste .pc-balayage {
+    display: none;
+  }
+}
+@media print {
+  .poste .pc-balayage,
+  .poste .pc-halo,
+  .poste .pc-jauge__cran i {
+    animation: none !important;
+  }
+  .poste .pc-balayage {
+    display: none;
+  }
+}

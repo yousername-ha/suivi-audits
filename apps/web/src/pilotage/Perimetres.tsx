@@ -3,7 +3,6 @@
    une organisation ou un fournisseur (amendement de l'ADR 0039) ; un fournisseur se relie à sa fiche du registre et n'a
    pour enfants que des fournisseurs. La nature (SMSI, SMQ…) n'est plus proposée : elle n'a pas de sens pour un périmètre. */
 import {
-  Alert,
   Button,
   Checkbox,
   Group,
@@ -30,7 +29,7 @@ import {
   type SyntheseCartes,
   type TypePerimetre,
 } from '@suivi/shared';
-import { DataTable, StatusChip } from '@suivi/ui';
+import { APropos, DataTable, StatusChip } from '@suivi/ui';
 import { api, ApiError, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { CartesPerimetres, type FournisseurRattache } from './CartesPerimetres';
@@ -222,11 +221,11 @@ export function Perimetres({ affiche, onChoisir }: { affiche: string; onChoisir:
     });
   return (
     <Stack>
-      <Alert>
+      <APropos>
         Un périmètre est une organisation ou un fournisseur. Une organisation peut avoir pour enfants des organisations
         et des fournisseurs ; un fournisseur, seulement des fournisseurs (ses sous-traitants). Méthode de risque,
         politique métier et référentiels se gèrent dans les rubriques du Pilotage, pour le périmètre affiché.
-      </Alert>
+      </APropos>
       <ErrorAlert error={liste.error} />
       <Group justify="space-between">
         <Text>

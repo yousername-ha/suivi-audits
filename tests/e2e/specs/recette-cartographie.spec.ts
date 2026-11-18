@@ -292,6 +292,8 @@ test('5. déplacer le cadre « Périmètre » : tout son contenu suit (CARTO-07)
   const p = admin.page;
   await p.goto('/cartographie/contexte');
   const avant = (await carte(admin, 'context')).layout.nodes;
+  // La carte s'ouvre sur sa dernière vue ou sur un ajustement fait avant la mesure de la zone : on l'ajuste à l'écran.
+  await p.getByRole('button', { name: 'Ajuster à l’écran' }).click();
   await editer(p);
   const k = await zoom(p);
   await glisser(p, 'scope', 100 * k, 50 * k);
@@ -544,6 +546,8 @@ test('15. filtre HDS désactivé, préréglage « Parties intéressées » : att
   await p.goto('/cartographie/contexte');
   await expect(noeud(p, 'isms')).toHaveCount(1);
   const tous = await p.locator('g.noeud').count();
+  // La carte s'ouvre sur sa dernière vue ou sur un ajustement fait avant la mesure de la zone : on l'ajuste à l'écran.
+  await p.getByRole('button', { name: 'Ajuster à l’écran' }).click();
   const isms = await noeud(p, 'isms').locator('rect').first().boundingBox();
   // Chaque bascule est enregistrée dans les préférences : on attend son effet avant la suivante.
   const basculer = async (nom: string, etat: boolean) => {
@@ -570,6 +574,7 @@ test('15. filtre HDS désactivé, préréglage « Parties intéressées » : att
   await p.reload();
   await expect(p.getByRole('switch', { name: 'HDS' })).toBeChecked();
   await expect(p.getByRole('switch', { name: 'ISO 27001' })).toBeChecked();
+  await p.getByRole('button', { name: 'Ajuster à l’écran' }).click();
   await p.getByRole('button', { name: 'Parties intéressées' }).click();
   await expect(noeud(p, 'process:PRR-001')).toHaveClass(/c-attenue/);
   await expect(noeud(p, 'pi:PI-001')).not.toHaveClass(/c-attenue/);
@@ -1160,7 +1165,9 @@ test('29. sans fournisseurs:modifier : « Fournisseur » absent de la palette, g
     await editer(p);
     await expect(p.locator('[data-palette="stakeholder"]')).toHaveCount(1);
     await expect(p.locator('[data-palette="supplier"]')).toHaveCount(0);
-    const m = await menuSur(p, await pointCanevas(p, 0.1, 0.5));
+    // Carte ajustée à l'écran, clic droit dans le coin haut gauche du canevas, toujours vide après l'ajustement.
+    await p.getByRole('button', { name: 'Ajuster à l’écran' }).click();
+    const m = await menuSur(p, await pointCanevas(p, 0.02, 0.04));
     await expect(m.getByRole('menuitem', { name: /Fournisseur/ })).toBeDisabled();
     await p.keyboard.press('Escape');
     await expect(m).toHaveCount(0);

@@ -68,8 +68,11 @@ test('Registres : liste filtrée par périmètre et registres, puis déplacement
     // Éléments par périmètre : l'action apparaît sous son périmètre, avec son registre.
     await page.reload();
     await page.getByRole('tab', { name: 'Éléments par périmètre' }).click();
+    // Le périmètre se choisit dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Périmètre', exact: true }).click();
     await page.getByRole('option', { name: nomA, exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     const tableau = page.getByRole('region', { name: /Éléments des registres du périmètre/ });
     await expect(tableau.getByRole('row', { name: new RegExp(titre) })).toBeVisible();
     await expect(tableau.getByRole('link', { name: `Plan A ${suffixe}` })).toBeVisible();
@@ -78,8 +81,11 @@ test('Registres : liste filtrée par périmètre et registres, puis déplacement
     await page.goto('/pilotage/actions');
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: nomA, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Liste', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('button', { name: titre, exact: true }).first().click();
     const fiche = page.getByRole('dialog');
     const panneau = fiche.getByRole('group', { name: 'Déplacer vers un autre registre' });

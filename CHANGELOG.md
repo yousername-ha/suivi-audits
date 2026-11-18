@@ -2,6 +2,737 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [7.3.0] — 2026-11-18
+
+### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `072` à `086` (module Vulnérabilités et socle des intégrations), sans
+reprise de données ; aucune commande sur le serveur pour mettre à jour. À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (sa page de maintenance change, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule.
+
+**Après la mise à jour, à faire dans l'application** (seulement pour utiliser le module Vulnérabilités, actif par défaut) :
+
+1. Attribuer le rôle « RSSI » à la personne qui prend en compte les alertes critiques (le compte d'installation n'a que le
+   rôle « Administrateur »).
+2. Saisir les clés de Tenable Security Center et d'AlgoLightHouse, puis ouvrir leurs flux (validation explicite) ; faire
+   autoriser par l'équipe infrastructure les sorties TCP 443 correspondantes, ou la sortie vers le mandataire de l'établissement
+   s'il est réglé ([guide d'installation, étapes 11.10 à 11.12](docs/INSTALLATION.md)).
+3. Ouvrir la veille (« Activer la veille ») si elle est voulue, après lecture des conditions d'usage des sources.
+4. Relier les dépôts Tenable et les périmètres AlgoLightHouse aux périmètres de l'application.
+5. Remplir la liste « Mots à ne pas masquer » (DPI, PACS, etc.), vide au départ.
+
+Les droits du module Vulnérabilités ne vont plus d'office qu'à l'administrateur et au RSSI (détail sous la migration `075`).
+Le détail de chaque migration suit.
+
+**Aucune action sur le serveur.** **Migration automatique `072`** (module Vulnérabilités, lot V1,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (une table `vulnerabilites_produits`, deux index, contrainte des
+modules recréée pour admettre `vulnerabilites`), durée négligeable, sans reprise de données : le registre des produits
+surveillés démarre vide. Le module est actif après la mise à jour ; il se désactive dans Administration > Modules.
+(session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `073`** (module Intégrations, socle des connecteurs réseau,
+[ADR 0076](docs/adr/0076-module-integrations.md)) : additive (tables `integrations` et `integration_executions`, trois index,
+contrainte des modules recréée pour admettre `integrations`), durée négligeable, sans reprise de données : aucun connecteur
+n'est configuré. Le flux « Tenable Security Center » est **fermé** ; il ne s'ouvre qu'à l'activation d'un connecteur, après
+validation explicite par un administrateur. Rien à faire sur le serveur tant qu'aucun connecteur n'est activé ; ensuite, faire
+autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'adresse de Tenable Security Center
+([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `074`** (module Vulnérabilités, veille sur les sources publiques, lots V2 et V3 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_veille_sources`,
+`vulnerabilites_veille_cve`, `vulnerabilites_veille_avis` et `vulnerabilites_veille_collectes`, sept index ; aucune table
+existante modifiée), durée négligeable, sans reprise de données : la veille démarre vide. Le flux « Veille sur les
+vulnérabilités » est **fermé** ; rien ne sort tant qu'un administrateur ne l'a pas ouvert par « Activer la veille »
+(Risques > Vulnérabilités > Veille, ou dernière étape de l'installation), avec validation explicite. Ensuite, faire autoriser par
+l'équipe infrastructure la sortie TCP 443 du serveur vers `www.cisa.gov`, `services.nvd.nist.gov`, `api.first.org`,
+`cert.cyber.gouv.fr` et `cyberveille.esante.gouv.fr` ([guide d'installation, étape 11.11](docs/INSTALLATION.md)). Les conditions
+d'usage des cinq sources n'ont pas été lues à ce jour : à lire avant la mise en service. (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Migration automatique `075`** (module Vulnérabilités, failles et machines de Tenable Security Center, lot V5 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_machines`, `vulnerabilites_constats`,
+`vulnerabilites_constat_cves`, `vulnerabilites_detections`, `vulnerabilites_tenable_etat` et
+`vulnerabilites_synchronisations`, quatre index ; aucune table existante modifiée), durée négligeable, sans reprise de données :
+l'inventaire démarre vide et se remplit à la première synchronisation. Rien à faire sur le serveur : la synchronisation
+quotidienne est inscrite par l'application et passe par l'exécutant d'exploitation et le flux « Tenable Security Center » déjà
+déclarés. **Droits par défaut modifiés** : le module Vulnérabilités n'est plus un module métier ; ses droits ne vont plus
+d'office qu'à l'administrateur et au RSSI (le contributeur, le lecteur et l'auditeur externe prédéfinis les perdent). Pour les
+rendre à d'autres personnes, créer un rôle personnalisé (Administration > Rôles) qui les accorde. **Port de Tenable** : l'adresse
+d'un connecteur Tenable peut désormais porter un port (`https://serveur:port`) ; s'il change, faire évoluer la règle de pare-feu
+de sortie ([guide d'installation, étape 11.10](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
+**Mandataire sortant de l'établissement** ([ADR 0101](docs/adr/0101-mandataire-sortant.md), lot P1) : **aucune migration**
+(réglage rangé dans la table `settings` existante), inactif par défaut : sans réglage, rien ne change. Si le serveur ne sort
+vers Internet que par le mandataire de l'établissement, le régler dans Configuration système > Mandataire sortant ; la veille
+des vulnérabilités passe alors par lui, et l'équipe infrastructure autorise la sortie du serveur vers le mandataire, sur le
+port réglé, au lieu de la sortie TCP 443 vers les cinq sources ([guide d'installation, étape 11.12](docs/INSTALLATION.md)).
+(session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `076`** (module Vulnérabilités, rapprochement par version, lot V4a de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (une contrainte `NOT VALID` de version obligatoire sur
+`vulnerabilites_produits`, une colonne `produits_tronques` sur `vulnerabilites_veille_cve`, tables
+`vulnerabilites_veille_cve_produits`, `vulnerabilites_produits_machines` et `vulnerabilites_rapprochements`, cinq index), durée
+négligeable, sans reprise de données. Rien à faire sur le serveur. **La version d'un produit surveillé devient obligatoire** :
+une fiche enregistrée sans version reste lisible, mais sa prochaine modification demande la version. Les produits touchés et
+leurs plages de versions ne sont rangés qu'à partir des collectes NVD suivant la mise à jour (fenêtre de sept jours au plus) :
+les CVE plus anciennes ne sont pas rapprochées tant que NVD ne les republie pas. Le seuil EPSS de la grille de priorité vaut
+50 % par défaut (Risques > Vulnérabilités > Seuils de priorité). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `077`** (module Vulnérabilités, suivi d'une faille, lot V4b de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_suivis`,
+`vulnerabilites_suivi_historique`, en ajout seul et protégée par déclencheurs, et `vulnerabilites_suivi_actions`, quatre index),
+durée négligeable, sans reprise de données. Rien à faire sur le serveur. Toutes les failles existantes sont « nouvelles ».
+**Les listes de « Failles détectées » ne montrent plus par défaut que les failles encore à traiter** (nouvelles, à traiter, en
+cours) : le filtre « Suivi » montre les autres états et les failles « à clore ». À la première synchronisation complète de
+Tenable qui suit la mise à jour, les constats qui ne sont plus présents nulle part, y compris ceux disparus avant elle, sont
+proposés « corrigés selon Tenable, à confirmer ». (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `078`** (module Vulnérabilités, plusieurs sources et annulation d'une décision, lot V4c de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes du produit cité et des mentions de la fiche sur
+`vulnerabilites_veille_avis`, réservées au CERT Santé ; colonnes de l'annulation sur `vulnerabilites_rapprochements` ; liste des
+motifs de proposition recréée avec `avis_seulement` ; un index), durée négligeable, sans reprise de données. Rien à faire sur le
+serveur : **le pare-feu ne change pas** (même hôte `cyberveille.esante.gouv.fr`, port 443), mais la veille du CERT Santé lit
+désormais aussi la page de ses publications nouvelles ou modifiées, 30 au plus par collecte
+([guide d'installation, étape 11.11](docs/INSTALLATION.md)) ; derrière le mandataire de l'établissement, ces lectures passent par
+lui comme les autres. Les mentions du CERT Santé ne sont connues qu'à partir des collectes suivant la mise à jour. La priorité
+de certaines failles peut monter : l'exploitation avérée vaut désormais aussi par la fiche du CERT Santé, et la gravité retenue
+est la plus sévère des sources. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `079`** (assistant RSSI et module Vulnérabilités, décisions V14, V25, V28, V29 et V30 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_assistant_reperes` et
+`vulnerabilites_assistant_propositions`, deux index ; aucune table existante modifiée), durée négligeable, sans reprise de
+données. Rien à faire sur le serveur. **Les actions créées depuis une faille nomment désormais les machines touchées** que la
+personne peut lire (20 au plus) et les applications touchées (V30) : les personnes qui lisent les actions du périmètre choisi
+liront ces noms. **Masque des machines** : dès que l'inventaire du module contient des machines, tout nom, adresse ou
+identifiant de machine part chez le fournisseur du modèle sous la forme d'un repère ou de « [machine] », y compris dans les
+documents, les actions et le contexte de l'organisation relus par l'assistant, en conversation comme en ronde. (session
+« Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `080`** (module Vulnérabilités, surface externe lue dans AlgoLightHouse, lot ALH1 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_alh_perimetres`,
+`vulnerabilites_alh_actifs`, `vulnerabilites_alh_alertes`, `vulnerabilites_alh_alerte_cves`, `vulnerabilites_alh_technologies`,
+`vulnerabilites_alh_technologie_actifs`, `vulnerabilites_alh_technologie_cves`, `vulnerabilites_alh_etat` et
+`vulnerabilites_alh_synchronisations`, six index ; aucune table existante modifiée), durée négligeable, sans reprise de données.
+Rien à faire sur le serveur tant qu'aucun connecteur AlgoLightHouse n'est activé : son flux « AlgoLightHouse » est **fermé**.
+Ensuite, faire autoriser par l'équipe infrastructure la sortie TCP 443 du serveur vers l'espace `<espace>.algolighthouse.fr`, ou,
+si le mandataire de l'établissement est réglé, la sortie vers le mandataire, qui doit autoriser cet hôte en `CONNECT`
+([guide d'installation, étapes 11.10 et 11.12](docs/INSTALLATION.md)). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `081`** (module Vulnérabilités, surface externe : recommandations, priorité et assistant, lot ALH2 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `defauts` de `vulnerabilites_alh_alertes`, vide par
+défaut ; table `vulnerabilites_assistant_reperes_externes` et un index), durée négligeable, sans reprise de données : les
+recommandations de l'éditeur arrivent à la synchronisation suivante. Aucun appel réseau nouveau, aucune action sur le serveur.
+(session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `082`** (module Vulnérabilités, périmètre des machines Tenable relié par dépôt, lot V4d de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (table `vulnerabilites_tenable_depots` et un index, colonne
+nullable `depot_id` de `vulnerabilites_machines` et un index), durée négligeable, sans reprise de données : les dépôts
+apparaissent à la synchronisation suivante, non reliés ; les machines déjà rattachées à la main gardent leur périmètre. Aucun
+appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `083`** (module Vulnérabilités, actifs exposés reliés aux machines internes, lot ALH3 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (table `vulnerabilites_alh_liaisons_machines` et deux index,
+colonne `liaisons_version` de `vulnerabilites_alh_actifs`, valeur par défaut 1), durée négligeable, sans reprise de données :
+les propositions apparaissent à la synchronisation suivante d'AlgoLightHouse ou de Tenable ; rien n'est relié sans une
+personne. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `084`** (module Vulnérabilités, liaison en masse des actifs exposés aux machines internes, lot ALH5
+de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (la contrainte des origines de
+`vulnerabilites_alh_liaisons_machines` est recréée pour admettre la valeur `masse` ; aucune donnée modifiée), durée
+négligeable, sans reprise de données. Aucun appel réseau nouveau, aucune action sur le serveur. (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Migration automatique `085`** (module Vulnérabilités, services exposés de la surface externe, lot ALH6 de
+l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_alh_services` et
+`vulnerabilites_alh_service_alertes`, deux index ; aucune table existante modifiée), durée négligeable, sans reprise de données :
+les services se remplissent à la synchronisation d'AlgoLightHouse qui suit la mise à jour, pour les alertes dont le détail est
+relu. Aucun appel réseau nouveau (liste fermée inchangée), aucune action sur le serveur. (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Migration automatique `086`** (module Vulnérabilités, alertes, lot V6 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (table `vulnerabilites_alertes`, trois index et son déclencheur de temps réel ; contrainte de portée de
+`grc_notifications` recréée pour admettre les deux types de notification du module, et un index unique partiel ; aucune donnée
+modifiée), durée négligeable, sans reprise de données : les alertes s'ouvrent à la collecte de la veille ou à la synchronisation
+qui suit la mise à jour, si une faille présente est en P1 ou en P2. Aucun appel réseau nouveau, aucune action sur le serveur.
+(session « Module surveillance vulnérabilités SMSI »)
+
+**Alertes du module Vulnérabilités, lot V6b** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot V6b ») : aucune
+migration. **Action manuelle** : seul le rôle prédéfini « RSSI » peut prendre une alerte en compte ; le compte créé à
+l'installation n'a que le rôle « Administrateur ». Attribuer le rôle « RSSI » à la personne concernée (Administration, comptes
+ou groupes) ; sans compte qui le tienne, aucune alerte ne peut être prise en compte. Les alertes simples ouvertes qui ne
+satisfont plus la nouvelle règle se closent d'elles-mêmes à la première évaluation qui suit la mise à jour (motif « sous le
+seuil »). (session « Module surveillance vulnérabilités SMSI »)
+
+La correction de la frise de la page de maintenance vient de l'exécutant de la version **installée** et de la page du
+frontal en service : elle s'applique aux mises à jour lancées depuis une version qui la contient. (session « Projet
+audit_suivi Coeur »)
+
+De même, la progression réelle du téléchargement ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md))
+n'apparaît qu'à partir des mises à jour lancées depuis une version qui la contient ; la mise à jour qui l'introduit garde la
+barre animée sans chiffre. Un registre privé (`UPDATER_DOCKER_CONFIG` dans `.env`) garde le téléchargement par
+`docker pull`, sans progression. (session « Projet audit_suivi Coeur »)
+
+### Ajouté
+
+- **Progression réelle du téléchargement sur la page de maintenance**
+  ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md), modifie l'ADR 0020) : l'exécutant tire les trois images
+  par l'API du moteur Docker (socket déjà monté) et publie dans l'état public les octets reçus sur un total fixé avant le début
+  d'après les manifestes du registre (`telechargement: {recu, total}`, au plus une fois par seconde, retiré à la fin, en échec
+  et au redémarrage). La barre de l'illustration se remplit d'autant, avec le pourcentage et les tailles (« 62 % · 180 / 290
+  Mo »), exposés comme barre de progression aux technologies d'assistance ; sans donnée valide, animation décorative et aucun
+  chiffre. Les couches déjà présentes comptent comme reçues dès leur annonce (la barre peut partir au-dessus de zéro). Repli
+  sur `docker pull` sans progression avec des identifiants de registre ou si l'API ne répond pas ; une erreur du flux arrête
+  le téléchargement sans nouvel essai. Vérifications d'empreinte, de signature, de SBOM et de révision inchangées, après le
+  téléchargement des trois images. _(Session « Projet audit_suivi Coeur ».)_
+
+- **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  [cadrage](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Nouveau module de droits `vulnerabilites`, désactivable, rangé
+  parmi les modules métier : l'administrateur et le RSSI ont tous les droits, le contributeur lit et modifie, le lecteur lit,
+  l'auditeur externe peut recevoir la lecture. Registre des produits surveillés **au niveau de l'organisation** (sans
+  périmètre, comme les fournisseurs) : éditeur, produit, version, identifiant CPE 2.3 facultatif, famille (systèmes, réseau,
+  messagerie, applications métier, postes de travail, web), criticité (faible, moyenne, élevée), responsable facultatif
+  (personne, groupe ou fonction), fournisseur facultatif du registre de l'organisation (vérifié avec les droits de la personne),
+  origine (`saisie` seule produite à ce stade). API `/api/vulnerabilites/produits` (lister avec filtre par famille, lire,
+  créer, modifier et supprimer avec `If-Match`) ; doublon éditeur, produit et version refusé sans tenir compte de la casse ;
+  journal `vulnerabilites.produit.cree`, `.modifie`, `.supprime`. Écran Risques > Vulnérabilités > « Produits surveillés »
+  (liste, filtre par famille, ajout, modification, suppression), visible avec la lecture du module. Ni veille, ni connecteur,
+  ni faille à ce stade (lots V2 et suivants). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Intégrations », socle des connecteurs réseau et connecteur Tenable Security Center (test de connexion)**
+  ([ADR 0076](docs/adr/0076-module-integrations.md), sous-ensemble des lots I1 et I4 ;
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 4 et 6). Nouveau module de droits `integrations`, non métier comme
+  l'import et l'export, désactivable : `lire` (connecteurs, exécutions), `modifier` (lancer), `administrer` (créer, configurer,
+  secrets) ; l'administrateur et le RSSI les reçoivent, les autres rôles prédéfinis non. Catalogue en code
+  (`packages/shared/src/integrations.ts`) : par type, portée (`organisation` ou `smsi`), schéma de configuration, champs secrets,
+  flux et **liste fermée des points d'accès de lecture**. Un seul type livré, `tenable` (portée organisation) : adresse
+  `https://serveur` (port 443, adresses privées admises ; `http`, identifiants, chemins, paramètres et fragments refusés),
+  autorité de certification interne facultative, délai ; clés d'accès et secrète. Secrets **en écriture seule**, scellés par le
+  coffre (`secret:integration:<id>`), jamais renvoyés ni journalisés, supprimés si l'adresse ou l'autorité change ; noms masqués
+  dans les journaux techniques. Activer un connecteur ouvre le flux « Tenable Security Center » (registre de l'ADR 0097) avec la
+  validation explicite d'un administrateur ; désactiver le dernier connecteur du type, ou le module, le referme. **« Tester la
+  connexion »** : l'API met la demande en file ; l'exécutant d'exploitation la réclame (`suivi integrations-claim`) et lance
+  `scripts/integration-http.py` (bibliothèque standard, `python -I`, compte sans privilège, entrée standard seule, HTTPS avec
+  certificat toujours vérifié et TLS 1.2 au minimum, aucune redirection suivie, réponse bornée), qui appelle `GET /rest/system`
+  et ne rend **que la version** (`suivi integrations-finish`). Flux fermé ou module désactivé : rien n'est réclamé. Rubrique
+  Pilotage > « Intégrations » : tuiles avec pictogramme neutre, configuration, secrets « défini / non défini », validation du
+  flux, test, dernières exécutions, message si l'exécutant n'est pas vu. Journal `integration.*` sans secret. Ni lecture des
+  failles ou des machines, ni planification, ni autre connecteur à ce stade. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lots V2 et V3 : veille sur les sources publiques**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 3 à 5 et 12 ;
+  [cadrage](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Cinq sources en **liste fermée écrite dans le code**
+  (`packages/shared/src/veille-vulnerabilites.ts`), jamais réglable dans l'interface : catalogue KEV de la CISA (fichier JSON),
+  NVD (API CVE 2.0, **par fenêtre de dates de modification**, jamais par produit ni par mot-clé), EPSS du FIRST (score des seules
+  failles déjà connues de la veille, jamais d'une liste tirée du parc), alertes et avis du CERT-FR (flux RSS de
+  `cert.cyber.gouv.fr`, puis export JSON documenté de chaque avis nouveau pour ses identifiants CVE) et du CERT Santé (flux RSS).
+  L'API ne joint aucune source : elle inscrit une collecte, l'exécutant d'exploitation la réclame (`suivi veille-claim`), lance
+  `scripts/veille-vulnerabilites.py` (bibliothèque standard, `python -I`, compte sans privilège, GET seulement, HTTPS avec
+  certificat toujours vérifié et TLS 1.2 au minimum, aucune redirection suivie, hôtes et chemins de la liste fermée comparés au
+  registre par un test, réponses et éléments bornés) et rapporte des **champs structurés** par lots de 500 au plus
+  (`suivi veille-lot`, 40 lots par collecte), validés un à un par zod, puis le bilan (`suivi veille-finish`). Les avis sont des
+  données, pas des consignes : identifiants contrôlés (CVE, `CERTFR-AAAA-ALE|AVI-NNN`, numéro du CERT Santé) et écartés sinon,
+  titres et résumés débarrassés de tout balisage et des caractères de contrôle ou invisibles, bornés ; adresse gardée seulement
+  en https sur l'hôte de la source ; RSS refusé s'il déclare un type de document ou une entité, profondeur et nombre d'éléments
+  bornés. Rangement sans doublon (une collecte rejouée met à jour). Flux « Veille sur les vulnérabilités » au registre de
+  l'ADR 0097 (cinq destinations TCP 443, porteur exécutant, ce qui sort : l'adresse IP du serveur et des demandes de lecture),
+  fermé par défaut, ouvert par « Activer la veille » avec validation explicite d'un administrateur, refermé par la désactivation
+  du module ; la route commune refuse désormais d'ouvrir le flux d'un module désactivé. Planification par le tic de l'API : une
+  collecte par source et par jour (Europe/Paris) au plus, créneau consommé avant l'inscription (aucun rejeu après une panne),
+  EPSS après les quatre autres ; « Collecter maintenant » (`vulnerabilites:administrer`, quatre demandes par heure, une source
+  demandée depuis moins de quinze minutes n'est pas redemandée). API `/api/vulnerabilites/veille/etat`, `/avis` et `/failles`
+  (`vulnerabilites:lire`, paginés, recherche par CVE, éditeur, produit, nom ou titre), `/collectes` ; journal
+  `vulnerabilites.veille.collecte.*` sans contenu de source. Écran Risques > Vulnérabilités > « Veille » : état des sources
+  (dernière collecte réussie, erreur, retard au-delà de 36 heures), activation avec destinations et ce qui sort, failles
+  exploitées récentes (action exigée, échéance), alertes et avis récents, recherche ; textes des sources tels quels, en texte
+  simple ; lien d'avis dans un nouvel onglet sans référent. Ni rapprochement avec les produits surveillés, ni priorité, ni
+  alerte à ce stade (lots V4 et suivants). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V5 : failles et machines de Tenable Security Center**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 6, 14 et 15, décisions V13, V15, V18 et V19 ;
+  [cadrage, §5 bis](docs/unification/CADRAGE-MODULE-VULNERABILITES.md)). Opération **« Synchroniser »** du connecteur Tenable :
+  une par jour et par instance active (tic de l'API, créneau consommé avant l'inscription, rien si le module Intégrations, le
+  module Vulnérabilités ou le flux est fermé), plus « Synchroniser maintenant » (`integrations:modifier`, six demandes par heure,
+  pas deux fois en quinze minutes). Le script isolé lit `POST /rest/analysis` (vue `vulndetails`, source cumulative, filtre de
+  gravité réglé sur l'instance, critiques et élevées par défaut) par pages de 200, borné à 100 pages, 20 000 détections et huit
+  minutes, puis l'**inventaire** `GET /rest/hosts` (paramètres `limit` et `offset` seulement ; accès annoncé expérimental : son
+  échec n'empêche pas la synchronisation des failles et s'affiche). Seuls des champs listés sortent du script, jamais
+  `pluginText` ; score EPSS de Tenable (pourcentage) ramené entre 0 et 1 ; textes nettoyés et bornés, lien « voir aussi » en
+  https seulement. L'exécutant rapporte par lots de 500 (`suivi integrations-lot`, 200 lots au plus), validés un à un par zod.
+  Migration `075` : machines (identifiant dans Tenable ou couple adresse et nom, rôle front, back ou base de données, périmètre
+  facultatif, indice d'exposition, criticité de l'actif), constats par contrôle (gravité, CVSS v3, VPR, EPSS, exploit, dates,
+  fin de support, correctif), CVE, détections (port, protocole, atténuée, risque accepté ou requalifié). Rien n'est supprimé :
+  une détection qui n'est plus vue n'est plus comptée qu'après une synchronisation complète ; une synchronisation interrompue,
+  incomplète ou au bilan incohérent ne fait rien disparaître. Constat sans CVE signalé « non maintenu » (V18) ; « exploitée »
+  par jointure avec le catalogue KEV de la veille, « exploitable » d'après Tenable ; aucun calcul de priorité. **Lecture par
+  périmètre** : une machine se lit à travers les droits de son périmètre (pyramide des ADR 0092 et 0095), sans périmètre avec
+  `vulnerabilites:administrer` seulement ; un constat ne compte que les machines lisibles et n'apparaît pas sans elles. Rôle et
+  périmètre : une machine (`If-Match`) ou en masse (200 au plus, version de chaque machine, tout ou rien), avec
+  `vulnerabilites:modifier`, l'écriture sur le périmètre actuel et visé ; retirer le périmètre demande
+  `vulnerabilites:administrer`. API `/api/vulnerabilites/constats`, `/constats/:id`, `/machines`, `/machines/:id`,
+  `/machines/affectation`, `/perimetres`, `/synchronisation` ; `/api/integrations/instances/:id/synchroniser`. Journal
+  `vulnerabilites.synchronisation.terminee`, `vulnerabilites.machine.modifiee`, `vulnerabilites.machines.affectees` : identifiants
+  et nombres seulement, jamais un nom ni une adresse de machine. Écrans Risques > Vulnérabilités > « Failles détectées » (par
+  faille ou par machine, recherche par CVE, numéro ou nom du contrôle, filtres, fiche avec CVE, vecteur CVSS et correctif en
+  anglais tels quels, machines par rôle) et « Machines » (recherche, filtres par rôle et périmètre, constats par gravité,
+  bandeau des machines sans rôle, affectation en masse) ; tuile Tenable : gravités, « Synchroniser maintenant », dernier
+  résultat. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export). **Port de Tenable réglable**
+  (décision du RSSI du 16/11/2026) : adresse `https://serveur:port` admise (1 à 65535, 443 par défaut), le flux et sa
+  validation suivent le port réglé, le changer efface les clés. **Droits par défaut resserrés** (réglage prudent, à confirmer
+  par le RSSI) : `vulnerabilites` sort des modules métier ; administrateur et RSSI seulement, un rôle personnalisé peut
+  l'accorder ; il n'ouvre ni l'accueil, ni les écrans muraux, ni les routes communes « métier ». (session « Module surveillance
+  vulnérabilités SMSI »)
+- **Mandataire sortant (proxy) de l'établissement, lot P1 : réglage et veille des vulnérabilités**
+  ([ADR 0101](docs/adr/0101-mandataire-sortant.md), décisions M1 à M4). Réglage unique de la configuration système, réservé à
+  `administration:administrer`, inactif par défaut : adresse `http://hôte:port` (nom ou adresse IP, IPv6 entre crochets,
+  adresses privées admises, port obligatoire de 1 à 65535 ; identifiant dans l'adresse, chemin, paramètre, fragment et
+  `https://` refusés), identifiant facultatif, mot de passe facultatif, autorité de certification de l'établissement facultative
+  (PEM). Schéma partagé (`packages/shared/src/mandataire.ts`). API `/api/admin/mandataire` (lecture, enregistrement avec
+  `If-Match`) et `/api/admin/mandataire/mot-de-passe` (définir, retirer). Rangé dans la table `settings` (`systeme:mandataire`) ;
+  **mot de passe en écriture seule**, scellé par le coffre (`secret:mandataire`), jamais renvoyé ni journalisé, seulement
+  « défini » ou « non défini » ; **changer l'adresse ou l'identifiant l'efface** (`systeme.mandataire.mot_de_passe_efface`).
+  Journal `systeme.mandataire.*` sans secret ni certificat entier ; `motDePasse` et `Proxy-Authorization` masqués dans les
+  journaux techniques. Les paramètres ne sont remis à l'exécutant qu'avec la réclamation d'une collecte de la veille, et
+  seulement si le mandataire est actif (réglage illisible : collecte close, jamais faite en direct) ; l'exécutant les passe au
+  script par l'entrée standard seule. `scripts/veille-vulnerabilites.py` ouvre alors un **tunnel `CONNECT`** vers l'hôte de la
+  liste fermée, envoie `Proxy-Authorization: Basic` **au mandataire seulement**, puis négocie TLS jusqu'à la source, certificat
+  et nom toujours vérifiés ; l'autorité fournie est ajoutée au magasin du système pour ces seules connexions (mandataire qui
+  inspecte le trafic). Erreurs expliquées sur une ligne : mandataire injoignable, tunnel refusé, authentification refusée
+  (407, authentification simple seulement : ni NTLM ni Kerberos), certificat refusé (avec l'indication de fournir l'autorité).
+  Sans mandataire, comportement inchangé ; liste fermée, GET seul, aucune redirection et bornes inchangés. **Le connecteur
+  interne (Tenable) n'emprunte jamais le mandataire**, par construction : aucun paramètre ne lui est remis, son script n'en lit
+  aucun. Mandataire actif : la validation du flux de la veille, l'écran « Veille » et le résumé des flux disent que les demandes
+  passent par le mandataire (destinations inchangées) et le pare-feu à autoriser devient la sortie vers le mandataire, sur le
+  port réglé. Carte Configuration système > « Mandataire sortant » : flux qui l'utilisent (veille), en accès direct par
+  construction (Tenable, courriel), pas encore pris en charge (assistant, mises à jour, antivirus, ACME) ; avertissement sur
+  l'inspection du trafic ; article d'aide. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4a : rapprochement par version, produits reliés aux machines, priorité et rang**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), points 8, 9 et 16, décisions V20 et V21). **Version obligatoire**
+  d'un produit surveillé (schéma partagé, API, écran ; contrainte de base `NOT VALID`). **Veille NVD étendue** : le script garde,
+  par CVE, les produits touchés tirés du seul champ `configurations` (partie, éditeur et produit du CPE, version exacte, bornes
+  `versionStart…`/`versionEnd…`, drapeau « vulnérable »), vingt au plus, les vulnérables d'abord, avec un drapeau
+  « produits tronqués » ; une borne illisible ou une mise à jour précisée retire la plage (jamais d'exclusion à tort) ; lot de
+  l'exécutant porté à 16 Mo. **Comparaison de versions sûre** (`packages/shared`) : segments numériques séparés par des points,
+  préfixe « v » toléré ; toute autre forme rend « incertain ». **Rapprochement** recalculé après chaque collecte NVD réussie et
+  à chaque création ou modification d'un produit, déterministe : par identifiant CPE (éditeur et produit exacts), **rattachée
+  d'office** si la version déclarée est dans une plage publiée, **écartée** si elle est hors de toutes ; **proposée** sinon (nom
+  seulement, aucune plage publiée, version non comparable, liste des produits touchés incomplète), avec la position de la
+  version. Décision « confirmer » ou « rejeter » avec note (`vulnerabilites:modifier`, `If-Match`) ; un rejet n'est pas reproposé
+  tant que ni le produit ni les données de la CVE n'ont changé ; une confirmation tient jusqu'au changement de version.
+  **Suggestions d'identifiant CPE** tirées des couples éditeur et produit déjà rangés par la veille (aucun appel réseau).
+  **Produit relié à la main aux machines** (V20) : `vulnerabilites:modifier` et machine lisible par son périmètre (une machine
+  non lisible répond comme inconnue), `If-Match` sur la fiche du produit, depuis la fiche du produit ou de la machine ; une CVE
+  rattachée apparaît sur chaque machine reliée avec la mention **« déclaré »**, compte dans ses compteurs et son rang, et n'est
+  comptée qu'une fois, comme détectée, si Tenable la détecte aussi. **Priorité P1 à P4** calculée par une fonction pure
+  (exploitation avérée par le catalogue KEV ou une alerte du CERT-FR, présence détectée, déclarée ou à confirmer, gravité, score
+  EPSS, exploit disponible), avec les faits qui la fondent, appliquée aux constats de Tenable et aux failles déclarées ; seuil
+  EPSS réglable (`vulnerabilites:administrer`, `If-Match`, réglage `vulnerabilites:priorite` de la table `settings`).
+  **Rang d'une machine** (exploitation avérée, puis rôle, puis critiques, puis élevées) calculé sur les seules machines lisibles,
+  avec ses faits ; liste des machines rangée par défaut de la plus critique à la moins critique. API `/produits/:id/fiche`,
+  `/produits/:id/machines`, `/machines/:id/produits`, `/identites-cpe`, `/rapprochements/:id/decision`, `/declarees`,
+  `/priorite/reglage` ; filtre `priorite` sur `/constats`. Journal `vulnerabilites.rapprochement.recalcule`, `.confirme`,
+  `.rejete`, `vulnerabilites.produit.machine_reliee`, `.machine_deliee`, `vulnerabilites.priorite.reglage_modifie`, sans nom ni
+  adresse de machine. Écrans : fiche du produit (machines reliées, CVE rattachées, écartées, propositions à décider), colonne et
+  filtre de priorité et failles déclarées dans « Failles détectées », rang et fiche de machine dans « Machines », écran « Seuils
+  de priorité ». Rien ne part vers l'assistant, aucune notification, aucun export. (session « Module surveillance
+  vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4b : suivi d'une faille, lien avec une action, proposition « corrigée »**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), point 10). **États de suivi** d'un constat de Tenable et d'une faille
+  déclarée : nouvelle (état initial), à traiter, en cours, corrigée, risque accepté, non concernée. Changement d'état par une
+  personne (`vulnerabilites:modifier`, `If-Match` sur la version du suivi) qui **lit toutes les machines touchées** par la faille
+  (sinon refus explicite : la décision vaut pour toute l'organisation) ; **note obligatoire** pour « risque accepté » et « non
+  concernée », **date de revue** facultative d'un risque accepté (jamais passée). **Historique** de chaque changement (ancien et
+  nouvel état, auteur, date, note), en ajout seul, protégé par déclencheurs comme les autres décisions immuables, écrit dans la
+  même transaction que l'état courant. **Lien avec une action du registre existant** : « Créer une action » ouvre un formulaire
+  prérempli (nom du contrôle, ou CVE et produit ; correctif de Tenable ou action exigée du catalogue KEV en anglais, tels quels ;
+  aucun nom de machine), la personne choisit un périmètre où elle écrit ; l'action est créée par le service du registre, **sous
+  son identité et avec ses droits** (droit de modifier les actions, module actif, écriture sur le périmètre ; sinon rien n'est
+  créé), avec la justification « Créée depuis le module Vulnérabilités (…) », sans nom ni adresse de machine. « Relier une
+  action » existante que la personne peut lire, « Délier » ; plusieurs actions possibles ; la fiche n'affiche l'état que des
+  actions lisibles. Créer ou relier une action fait passer une faille « nouvelle » à « à traiter » ; **la clôture d'une action
+  ne change jamais l'état de la faille**. **Proposition « corrigée »** : après une synchronisation **complète** seulement, un
+  constat qui n'est plus présent sur aucune machine est marqué « corrigé selon Tenable, à confirmer » (filtre « À clore ») ;
+  une faille déclarée qui n'est plus rattachée (version du produit changée) aussi. Une personne confirme (« corrigée ») ou
+  refuse avec une note (l'état reste). Une faille corrigée qui réapparaît repasse « à traiter », avec une entrée « réapparue »
+  du système ; rien n'est jamais passé à « corrigée » sans une personne. **Listes** : colonne et filtre « Suivi » dans « Failles
+  détectées » et dans les failles déclarées (par défaut les failles encore à traiter ; un état ; « à clore » ; « tous ») ; une
+  date de revue dépassée est signalée sans changement d'état ; les failles corrigées, au risque accepté ou non concernées sortent
+  des compteurs et du rang des machines, leur priorité reste calculée sur les faits. Fiche d'une faille déclarée (description
+  de NVD, action exigée du catalogue KEV, machines reliées lisibles). API `/declarees/:id`, `/suivis/:nature/:id`,
+  `…/etat`, `…/refus`, `…/actions`, `…/liens`, `…/liens/:actionId` ; filtre `etat` sur `/constats` et `/declarees`. Journal
+  `vulnerabilites.suivi.etat_modifie`, `.proposition_refusee`, `.action_creee`, `.action_reliee`, `.action_deliee`,
+  `.synchronisation`, `.rapprochement` : identifiants et états, sans note, sans nom ni adresse de machine. Rien ne part vers
+  l'assistant, aucune notification, aucun export. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4c : plusieurs sources, la source en avance prime ; mentions du CERT Santé ; valeur la plus
+  sévère ; annulation d'une décision de rapprochement** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), décisions V23,
+  V24, V26 et V27). **Fiches du CERT Santé** : après son flux RSS, le script de veille lit, sur le même hôte et à un chemin à
+  motif strict (`/alertes/<adresse>`, ajouté à la liste fermée du script et du registre partagé), la page de chaque publication
+  nouvelle ou dont le titre a changé (« | modifié le … »), ou lue il y a plus de sept jours, qui cite une CVE : 30 pages au plus
+  par collecte, une seconde entre deux lectures, 512 Kio par page, durée bornée ; `GET` seul, aucune redirection suivie,
+  mandataire de l'établissement emprunté comme pour les autres lectures. La page est analysée par `html.parser` de la
+  bibliothèque standard, sans rien exécuter ni suivre ; seules des mentions structurées en sont tirées (texte exact d'un nœud
+  suivi de sa valeur dans le même bloc, hors commentaires, attributs et scripts ; **aucune recherche de mot-clé**) : faille
+  activement exploitée, correctif, contournement (oui, non), preuve de concept (disponible, indisponible), score CVSS v3.1 ;
+  absente, d'une forme imprévue ou contradictoire, une mention vaut « non renseignée », jamais « non ». Produit cité tiré du
+  titre (« Produit - CVE-… »). **Une faille est suivie dès qu'une source la publie (V26)** : chaque fait reste rangé avec sa
+  source et sa date ; NVD complète sans rien effacer ; la veille montre les sources qui ont publié une CVE, la première d'abord.
+  **Exploitation avérée** dès qu'une source le dit : catalogue KEV, alerte du CERT-FR, ou « activement exploitée : Oui » du CERT
+  Santé (V23) ; **« exploitable »** selon Tenable ou une preuve de concept disponible selon le CERT Santé ; la priorité, le rang
+  des machines et les filtres « exploitation avérée » et « exploitables » les prennent toutes ; les écrans citent les sources
+  avec la date de la première. **Valeur la plus sévère (V27)** : gravité, score CVSS (NVD, Tenable, CERT Santé) et score EPSS
+  (veille, Tenable) gardés par source ; la priorité retient la plus sévère ; la fiche montre les valeurs par source. **CVE
+  publiée par le CERT Santé avant NVD** : rapprochée par le nom (produit cité, normalisé, comparé au nom du produit surveillé ou
+  à « éditeur nom »), toujours **proposée** avec le motif « Publiée par le CERT Santé, pas encore par NVD » ; quand NVD publie les
+  produits touchés, la règle par version s'applique, sans écraser une décision à données égales. **Annuler une décision (V24)** :
+  une confirmation ou un rejet s'annule (`vulnerabilites:modifier`, `If-Match`, note facultative) ; le rapprochement redevient à
+  décider ou prend le statut que la règle lui donne ; l'annulation est affichée (auteur, date, note) ; le suivi réagit comme à
+  tout changement de rattachement (une confirmation rétablie retire aussi la proposition « corrigée »). API
+  `POST /api/vulnerabilites/rapprochements/:id/annulation` ; état de la lecture des fiches dans `/veille/etat`. Journal
+  `vulnerabilites.rapprochement.annule` (décision annulée et son auteur, statut obtenu, note). Écrans : « Ce que disent les
+  sources » dans les fiches, marques dans les listes, bouton « Annuler la décision », mentions du CERT Santé telles quelles et
+  état des fiches dans « Veille ». (session « Module surveillance vulnérabilités SMSI »)
+- **Assistant RSSI branché sur le module Vulnérabilités : évaluer une CVE, actifs à traiter d'abord, plan d'action, avec
+  repères anonymes ; contenu des actions (V30)** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), décisions V5, V14, V25,
+  V28, V29 et V30 ; [ADR 0086](docs/adr/0086-assistant-rssi-integre.md)). **Service de lecture du module pour l'assistant**
+  (`apps/api/src/vulnerabilites/assistant.ts`), appelé avec les droits de la personne, résultats bornés et déjà anonymisés.
+  **Quatre outils**, offerts **en conversation seulement** (pas en ronde autonome dans ce lot), au profil « Mise en œuvre »
+  seulement (constante de code), quand le module est actif et que la personne a `vulnerabilites:lire` ; sinon ils sont absents
+  de la déclaration faite au modèle : `evaluer_cve` (identifiant contrôlé ; connue ou non de la veille ; faits par source avec
+  leurs dates : publication, exploitation avérée, exploitable, gravités, scores CVSS et EPSS, valeurs retenues ; avis et alertes
+  qui la citent, titre borné ; action exigée du catalogue KEV, mentions « correctif » et « contournement » du CERT Santé ;
+  présence : constats de Tenable lisibles qui la portent avec numéro et nom du contrôle, correctif publié par Tenable, nombre de
+  machines et repères des machines lisibles, produits surveillés rattachés, à décider ou écartés avec éditeur, produit, version
+  et motif ; priorité calculée et ses faits ; état de suivi et nombre d'actions liées ; une CVE inconnue de la veille et absente
+  de Tenable rend « inconnue de la plateforme »), `machines_prioritaires` (30 au plus, pour toute la portée lisible, une CVE ou
+  un constat : repère, rang, faits du rang **sans le rôle**, compteurs par gravité, exploitées, exploitables, déclarées),
+  `failles_prioritaires` (25 au plus, par priorité : faits, nombre de machines, état de suivi) et
+  `proposer_action_vulnerabilite`. **Consigne** : réponse en quatre parties courtes (« Sommes-nous touchés », « Quoi faire »,
+  « Actifs à traiter d'abord », « Plan d'action proposé »), en texte simple, sans rien calculer ni inventer, repères recopiés
+  tels quels, aucun accès au web. **Repères** : chaque machine est remise au modèle sous la forme `M-001`, `M-002`…, attribuée
+  par la plateforme pour la conversation, stable d'un tour à l'autre, jamais réattribuée, seulement à une machine que la
+  personne lit (une machine non lisible n'a pas de repère et ne compte pas) ; la table de correspondance reste sur le serveur et
+  disparaît avec la conversation. **Le texte du modèle est gardé avec ses repères** (l'historique repart chez le fournisseur à
+  chaque tour) ; la route d'une conversation les remplace par les noms **à la lecture**, pour la personne qui regarde et selon
+  ses droits ; un repère inconnu (inventé) n'est jamais remplacé et s'affiche « repère non reconnu ». **Masque de sortie** :
+  avant chaque envoi au modèle, toute la demande (consigne, questions, réponses précédentes, résultats et arguments d'outils) est
+  relue ; un nom complet ou un premier libellé de nom de machine, une adresse ou un identifiant de Tenable y devient le repère
+  de la machine (machine lisible, en conversation) ou « [machine] ». **Propositions d'action** : l'assistant dépose une
+  proposition sur une faille (constat ou faille déclarée), avec les repères des machines concernées, tous connus de la
+  conversation (sinon refus) ; rien n'est écrit dans un registre ; 10 par conversation, 5 en attente par conversation, 30 en
+  attente par personne ; une nouvelle proposition sur la même faille remplace celle en attente ; un rejet n'est pas redéposé
+  à l'identique. Décision par la personne de la conversation (`assistant:modifier`, plus `vulnerabilites:modifier`, la lecture
+  de toutes les machines touchées par la faille, le droit de modifier les actions et l'écriture sur le périmètre choisi) : elle
+  choisit le périmètre, corrige au besoin l'intitulé, la description et l'échéance, puis confirme ou rejette. **À la
+  confirmation, sur le serveur, les repères sont remplacés par les noms** (V29 ; jamais l'adresse), l'action est créée par le
+  service du registre sous l'identité de la personne et liée à la faille (suivi du lot V4b) ; rien ne repart vers le modèle.
+  **Contenu d'une action (V30)**, depuis la fiche d'une faille comme depuis une proposition : la description porte, après le
+  texte de la personne, les **actifs touchés** : noms des machines touchées que la personne peut lire, rangées par rang (les 20
+  premières, puis « et N autres » avec le renvoi à la faille ; une machine sans nom est comptée), et applications touchées
+  (produit surveillé avec sa version, sinon nom du contrôle) ; le formulaire « Créer une action » montre ce bloc. Remplace le
+  choix du lot V4b (action sans nom de machine). API `GET /api/assistant/vulnerabilites/propositions`,
+  `POST /api/assistant/vulnerabilites/propositions/:id/decision` ; champ `actifsAction` du suivi, `segments` des messages.
+  Journal `assistant.vulnerabilites.proposition_deposee`, `.proposition_decidee`, origine « assistant » dans
+  `vulnerabilites.suivi.action_creee` ; outils et nombres dans `assistant.message` ; jamais un nom, une adresse ni un repère.
+  Écrans : machines soulignées en pointillés avec leur repère en info-bulle dans le panneau de l'assistant, propositions dans
+  « Pour vous » avec leur décision, bloc des actifs touchés dans le formulaire de la fiche ; aide « Vulnérabilités : demander à
+  l'assistant RSSI ». Non vérifié : aucun modèle réel (faux transport seulement). (session « Module surveillance
+  vulnérabilités SMSI »)
+- **Mots à ne pas masquer par le masque des machines de l'assistant** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision V31). Le masque strict reste la règle : avant tout envoi au fournisseur du modèle, tout nom de machine de
+  l'inventaire, toute adresse et tout identifiant de Tenable devient un repère ou « [machine] ». Quand une machine porte le
+  nom d'une application (« dpi », « pacs », « web »), ce mot était masqué partout ; une **liste de mots à ne pas masquer**,
+  tenue avec le droit `vulnerabilites:administrer`, lève ce contresens mot par mot : un mot de la liste qui apparaît **seul**
+  (mot entier, ni « \\ » devant, ni « $ » derrière, ni point, tiret, tiret bas ou deux-points qui le relie à un autre mot)
+  n'est plus masqué, quelle que soit la casse et quelle que soit la forme du nom qui en faisait une désignation (premier
+  libellé, partie après « \\ », nom sans « $ », nom entier égal au mot). Le nom complet d'une machine
+  (`dpi.exemple.invalid`), tout jeton plus long qui commence par le mot (`dpi:8443`), l'adresse et les identifiants restent
+  toujours masqués. Un mot fait de 2 à 60 caractères, lettres et chiffres de toute écriture et tirets seulement (ni point, ni
+  espace, ni « \\ », ni « : ») ; la forme d'un identifiant de Tenable et celle d'un repère sont refusées ; 200 mots au plus,
+  doublons refusés sans tenir compte de la casse ; le masque ignore en plus tout mot qui serait l'adresse ou l'identifiant
+  d'une machine. Réglage rangé dans `settings` (clé `vulnerabilites:masque`, version pour `If-Match`), **sans migration**,
+  vide par défaut ; **un réglage illisible vaut liste vide** (masque strict). API `GET` et `PUT
+  /api/vulnerabilites/masque/reglage` et `GET /api/vulnerabilites/masque/effet?mot=…`, toutes avec
+  `vulnerabilites:administrer` : pour chaque mot, et pour un mot en cours de saisie, nombre de machines de l'inventaire dont
+  il est le nom court ou le nom entier, avec le nom des seules machines que la personne peut lire (20 au plus ; les autres sont
+  comptées). Journal `vulnerabilites.masque.reglage_modifie` (mots ajoutés et retirés, nombre de mots, version). La liste vaut
+  pour les conversations et pour les rondes. Écran Risques > Vulnérabilités > « Mots à ne pas masquer » (visible avec le droit
+  d'administrer le module) : avertissement, exemple, ajout et retrait, effet de chaque mot en clair ; aide « Vulnérabilités :
+  mots à ne pas masquer par l'assistant ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH1 : surface externe lue dans AlgoLightHouse**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum du 17/11/2026). Nouveau type de connecteur `algolighthouse` du
+  module Intégrations (éditeur AlgoSecure, portée organisation), **en lecture seule** : adresse de l'espace
+  `https://<espace>.algolighthouse.fr` seulement (domaine de l'éditeur écrit dans le code, port 443, pas d'autorité propre),
+  délai, clé d'API en écriture seule (en-tête `X-API-Key`, scellée, masquée dans les journaux). Liste fermée de huit `GET` de la
+  version 1 de l'API (`health`, `version`, `alerts`, `alerts/{uuid}`, `perimeters`, `targets/hosts`, `targets/domains`,
+  `technologies`), sans paramètre de requête ; jamais `POST` ni `PUT` (commentaires, statut), jamais les adresses sans `/v1`,
+  ni `/api/contacts` ni `/api/search` (prouvé par des tests sur un faux service). Flux propre au registre des flux,
+  « AlgoLightHouse », fermé par défaut, ouvert à l'activation du connecteur après validation explicite, sans reprise de l'existant
+  (`FLUX_SANS_REPRISE`) ; **sortie par le mandataire de l'établissement quand il est actif** (tunnel `CONNECT`, certificat de
+  l'éditeur toujours vérifié, autorité de l'établissement ajoutée pour ces seules connexions), contrairement à Tenable, toujours
+  direct : l'API ne joint le mandataire qu'aux types dont le flux l'utilise, l'exécutant ne le passe qu'à eux, et le script le
+  refuse pour tout autre type. Le socle range désormais chaque opération par lots dans le récepteur de **son type**.
+  « Tester la connexion » lit `health` puis `version` et ne garde que la version. « Synchroniser » (une par jour et par instance
+  active, plus « Synchroniser maintenant ») lit périmètres, hôtes, domaines, alertes (les cinq types : service vulnérable,
+  service exposé, défaut de configuration, fuite de données, typosquatting ; détail des 300 alertes les plus récemment modifiées
+  pour le type, la criticité, la cible et les CVE) et technologies (versions, actifs, CVE avec score, EPSS, preuve de concept,
+  exploitation) ; **liste blanche de champs** : description HTML, champ déprécié `data`, défauts, pièces jointes, commentaires
+  et données sensibles des constats ne sont jamais lus. Aucune pagination documentée par l'éditeur : chaque liste est lue en une
+  réponse bornée (16 Mio, 5 000 alertes, 10 000 hôtes, 10 000 domaines, 2 000 technologies, profondeur JSON), huit minutes au
+  plus ; au-delà, synchronisation incomplète qui ne fait rien disparaître. Textes de l'éditeur gardés tels quels, nettoyés et
+  bornés. Migration `080`. **Droits** : chaque élément hérite du périmètre de la plateforme relié à son périmètre AlgoLightHouse ;
+  un périmètre non relié n'est visible qu'avec `vulnerabilites:administrer` ; une technologie se lit par ses actifs. Liaison
+  des périmètres avec `vulnerabilites:administrer`, `If-Match` et l'écriture sur le périmètre actuel et le périmètre visé ;
+  journal `vulnerabilites.surface.*` sans adresse ni domaine. API `/api/vulnerabilites/surface/{etat,alertes,actifs,technologies,perimetres}`.
+  Écran Risques > Vulnérabilités > « Surface externe » (onglets Alertes, Actifs, Technologies et, pour l'administration du
+  module, Périmètres) ; tuile du connecteur à pictogramme neutre ; aide. Ni priorité, ni rapprochement avec les produits
+  surveillés, ni assistant, ni alerte à ce stade. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH2 : recommandations, priorité et assistant pour la surface externe**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH2 » ; décisions A à C du RSSI du 17/11/2026).
+  **Recommandations de l'éditeur** : les défauts et résolutions d'une alerte (`defects` du détail déjà lu, aucun appel nouveau)
+  sont lus en liste blanche (nom, description ; résolutions avec nom, description, facilité et gain), balises retirées et
+  bornés, puis affichés dans la nouvelle **fiche d'une alerte** (`GET /api/vulnerabilites/surface/alertes/{id}`, ouverte par
+  le titre), toujours comme texte, jamais comme HTML. **Priorité** : une CVE portée par un actif exposé est une faille présente
+  chez nous (présence « Exposée sur Internet ») ; AlgoLightHouse devient une source de plus pour la grille commune
+  (`is_exploited` = exploitation avérée, `has_poc` = exploitable, CVSS et EPSS : la valeur la plus sévère), pour ce que la
+  personne peut lire, partout où la règle du « ou » s'applique (constats de Tenable, failles déclarées, veille, assistant,
+  filtres et compteurs). Alertes et technologies affichent leur priorité et se trient par priorité (`?tri=priorite`) ; chaque
+  CVE d'une technologie porte la sienne. **Veille** : « Vue sur la surface externe : n actifs exposés », avec un lien vers
+  l'écran. **Produits surveillés** : chaque technologie est rapprochée des produits par la règle des failles (CPE, sinon nom),
+  version comparée ; affiché sur la technologie et dans la fiche du produit (indication, sans décision). **Assistant** :
+  `evaluer_cve` dit si la CVE est exposée sur Internet, sur combien d'actifs, avec quelles technologies, alertes et
+  recommandations, et en tient compte dans la priorité ; chaque actif exposé n'est qu'un repère « E-001 » (remplacé par le
+  domaine ou l'adresse à l'affichage, selon les droits) ; le masque de sortie couvre désormais les domaines (et leurs
+  sous-domaines), adresses, FAI et numéros d'AS d'AlgoLightHouse, en conversation comme en ronde. Migration `081`. Aide mise
+  à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V4d : périmètre des machines Tenable relié par dépôt**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot V4d » ; décision du RSSI du 17/11/2026 : par groupe
+  entier, comme les périmètres AlgoLightHouse). Le groupe est le **dépôt de Tenable** (choix à confirmer par le RSSI), lu dans
+  les résultats de l'analyse déjà reçus (identifiant et nom seulement, aucun appel nouveau). Onglet « Dépôts Tenable » de
+  l'écran « Machines » (administration du module) pour relier chaque dépôt à un périmètre
+  (`GET /api/vulnerabilites/depots`, `PUT /api/vulnerabilites/depots/{id}` : If-Match, écriture sur le périmètre actuel et
+  visé, journal sans nom). Une machine prend le périmètre de son dépôt relié ; un périmètre indiqué à la main prime, et
+  « Hérité du dépôt » (qui remplace « Retirer le périmètre ») le retire. Les droits de lecture, compteurs, priorité, fiches,
+  assistant et masque suivent le périmètre effectif ; la liste dit « hérité du dépôt » ou « indiqué à la main ». Rôle
+  inchangé, par machine. Migration `082`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH3 : actif exposé relié aux machines internes**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH3 » ; décision du RSSI du 17/11/2026). Premier maillon
+  de la chaîne domaine → sous-domaine → hôte → service → machine interne : AlgoLightHouse ne rangeant pas les services à part,
+  c'est **l'actif** (hôte ou domaine) qui est relié, à une ou plusieurs machines de Tenable (vingt au plus). Deux voies : relier
+  à la main (et délier), ou confirmer une **proposition de la plateforme**, calculée à la fin de chaque synchronisation
+  d'AlgoLightHouse ou de Tenable (même adresse IP, nom complet égal, ou nom court de la machine égal à la première étiquette du
+  domaine) ; rien n'est relié sans une personne, un rejet n'est pas reproposé à données égales (cycle de vie du rapprochement
+  des failles). Une liaison ne se voit qu'en lisant l'actif et la machine ; une machine illisible n'est ni nommée ni comptée
+  (liaison signalée sans nom, proposition invisible) ; écrire exige `vulnerabilites:modifier`, l'écriture sur le périmètre de
+  l'actif et sur le périmètre effectif de la machine, et If-Match ; journal sans nom, domaine, adresse ni note. Écran
+  « Surface externe » : colonne et filtre « Machine interne », fiche d'un actif (confirmer, rejeter, relier avec recherche,
+  délier) ; écran « Machines » : « Exposée sur Internet par … » dans la fiche. Sans effet sur la priorité ; l'assistant n'en
+  reçoit rien. Migration `083`. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH4 : carte « Lignes d'approche » de la surface externe**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH4 » ; carte retenue par le RSSI le 17/11/2026).
+  Nouvel onglet « Carte », affiché en premier dans « Surface externe » : de l'Internet aux branches (par domaine parent ou par
+  périmètre, défaut à confirmer), aux domaines, aux hôtes exposés, aux alertes ouvertes, puis, derrière le rempart, aux
+  machines internes reliées. Route `GET /api/vulnerabilites/surface/carte` (lecture, déjà filtrée par les droits du lot ALH3,
+  bornée, troncature signalée) ; mise en page par fonctions pures côté web. Branches sans alerte repliées en faisceaux chiffrés,
+  « Tout replier », « Tout déplier » borné à 250 lignes ; filtres texte, criticité, « Branches en alerte seulement »,
+  périmètre et type d'alerte ; chemin d'entrée critique (alerte ouverte en P1) en rouge pointillé animé jusqu'aux machines,
+  typosquatting et fuites côté Internet, « à relier » pour qui peut modifier, machine illisible jamais nommée ; glisser,
+  Ctrl + molette, boutons et clavier pour se déplacer et zoomer, vue d'ensemble ; clic sur un nœud : fiche existante de
+  l'alerte, de l'actif ou de la machine. Dessin SVG sans style en ligne, animations coupées par le mouvement réduit. Pas de
+  colonne « services » : AlgoLightHouse ne les range pas à part, l'alerte la plus haute de la ligne en tient lieu. Sans
+  migration ni dépendance. Aide mise à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH5 : une faille exposée qui mène à une machine interne vulnérable monte en priorité**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH5 » ; décision B du RSSI du 17/11/2026). Une alerte
+  ouverte ou une technologie exposée (et ses CVE sur la surface externe) dont l'actif est relié, par une liaison **confirmée**,
+  à une machine interne qui porte une faille présente en P1 ou P2 monte d'un cran (P4 → P3, P3 → P2, P2 → P1 ; P1 reste P1),
+  avec le fait « Mène à une machine interne vulnérable », sans nom de machine. Jamais sur une proposition ; une faille close
+  sur la machine ne compte pas. Règle dans la grille partagée ; la carte trace en chemin critique une alerte en P1 après
+  majoration. Les failles des machines et la priorité d'une CVE dans la veille ou chez l'assistant ne sont pas majorées.
+  (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH5 : « Relier en masse » des actifs exposés aux machines internes**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH5 » ; décision C du RSSI du 17/11/2026, interprétation
+  à confirmer). Onglet « Actifs » de « Surface externe », droit de modifier : motif des actifs (domaine ou adresse) et, en mode
+  « un pour un », motif des machines, avec le seul joker `*` (sans distinction de casse, aucun autre métacaractère ni
+  expression régulière) ; mode « tous vers une machine ». **Aperçu obligatoire** (paires, sans correspondance, correspondances
+  multiples écartées, déjà reliées, au plafond, hors droits d'écriture ; 200 paires au plus, sinon refus avec le nombre) ;
+  l'application ne relie que les paires de l'aperçu validé (empreinte), chacune revérifiée (droits de lecture et d'écriture sur
+  les deux périmètres, version des liaisons de l'actif, vingt machines par actif) ; liaisons confirmées d'origine « en masse » ;
+  une entrée de journal par opération (motifs, mode, nombres). Routes `POST /api/vulnerabilites/surface/liaisons/masse/apercu`
+  et `POST /api/vulnerabilites/surface/liaisons/masse`. Migration `084`. Aide mise à jour.
+  (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH6 : colonne « Service » de la carte et services exposés des actifs**
+  ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot ALH6 » ; décision du RSSI du 17/11/2026). AlgoLightHouse
+  ne publie pas la liste des ports ouverts d'un hôte : **seuls les services portés par une alerte sont connus**, lus dans
+  `json_data` des fragments du détail déjà lu (types `port`, `vulnerable_component` et `subdomain`), en liste blanche (port,
+  protocole, nom du service, produit, version, éditeur, CPE, ports d'un composant, cycle de vie de la version) ; jamais la
+  bannière, l'état brut, le nom d'un sous-domaine, ni les autres types de fragment. Aucun appel réseau nouveau. Protocole non
+  communiqué par l'éditeur : non renseigné, jamais « tcp » par défaut. Rangés par instance, actif, port et protocole et reliés
+  aux alertes qui les portent ; un service n'est montré que tant qu'une alerte ouverte et présente le porte (seule une
+  synchronisation complète le fait disparaître), sous les droits de lecture de l'actif ; aucun effet sur la priorité. Carte :
+  colonne « Service » entre « IP publique » et « Alerte ouverte » (« 443/tcp · HTTPS » puis « nginx 1.18 » ; « port non
+  communiqué » pour un actif en alerte sans port connu ; nombre de services connus dans les faisceaux) ; le filtre cherche aussi
+  le port (« 443 », « 443/tcp ») et le produit. Onglet « Actifs » (colonne « Services connus »), fiche d'un actif (services et
+  alertes lisibles qui les portent) et fiche d'une alerte. Migration `085`. Aide mise à jour.
+  (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot V6 : alertes et fenêtre d'alerte critique** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  point 21 et addendum « lot V6 » ; décision du RSSI du 17/11/2026). Les alertes sont **décidées par la plateforme**, par règle
+  (paquet partagé, fonctions pures), jamais par l'assistant ; aucun appel au modèle ni appel réseau. **Alerte critique** : une
+  faille présente chez nous (détectée par Tenable, déclarée par un produit surveillé, exposée sur Internet) passe en **P1**
+  (exploitation avérée et présence), majoration du lot ALH5 comprise ; **alerte simple** : une faille présente passe en **P2**
+  (seuil à confirmer par le RSSI) ; rien pour P3 et P4. Évaluées à la fin de chaque collecte reçue de la veille, de chaque
+  synchronisation de Tenable ou d'AlgoLightHouse (dans sa transaction, sous un point de sauvegarde : un échec est journalisé et
+  ne fait pas échouer la synchronisation) et après les décisions qui changent les faits (produit, rapprochement, état de suivi,
+  liaison d'un actif, seuil de priorité). Une alerte par faille (CVE, ou constat sans CVE) tant qu'elle n'est pas close : mise à
+  jour sans rejeu, montée d'une alerte simple en critique notifiée une fois, **clôture automatique** avec son motif (plus
+  présente, traitée, sous le seuil). **Fenêtre d'alerte critique** sur toutes les pages pour qui lit le module, tant que
+  l'alerte n'est pas prise en compte : grande fenêtre rouge (maquette 07), bandes diagonales animées et onde du pictogramme,
+  coupées par le mouvement réduit ; `role="alertdialog"`, focus piégé et rendu, Échap sans effet ; plusieurs alertes dans une
+  seule fenêtre, la plus récente en tête. **Prise en compte par alerte**, pour tout le monde, avec `vulnerabilites:modifier`,
+  `If-Match` et journal (`vulnerabilites.alerte.prise_en_compte`) ; « Plus tard », ou « Fermer pour cette session » en lecture
+  seule (la fenêtre réapparaît à la connexion suivante). Onglet « Alertes » (liste, filtres par état et niveau, fiche, prise en
+  compte) et rappel discret en tête des écrans du module. Priorité et existence de l'alerte pour tous ; nombres limités à ce que
+  la personne lit (drapeau sans nombre pour le reste) ; **aucun nom** de machine, domaine, adresse ni périmètre dans l'API des
+  alertes, la notification ou le courriel. **Notifications** par le module existant : types « Vulnérabilités : alerte
+  critique » et « Vulnérabilités : alerte » (réglages par groupe, rôle et personne ; courriel si choisi et configuré : niveau,
+  CVE, produit et lien seulement), aux personnes qui lisent le module ; vingt alertes simples notifiées au plus par évaluation ;
+  listées dans « Mes rappels » avec un lien vers l'alerte. Temps réel : entité `vulnerabilites_alertes`. Module désactivé : rien
+  n'est évalué, affiché ni notifié. Routes `GET /api/vulnerabilites/alertes`, `GET …/alertes/fenetre`, `GET …/alertes/{id}`,
+  `POST …/alertes/{id}/prise-en-compte`. Migration `086`. Aide en ligne : article « Vulnérabilités : alertes et fenêtre
+  d'alerte critique ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC1 : « Vue d'ensemble », poste de commandement** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC1 » ; demande du RSSI du 15/11/2026, chantier décidé le 18/11/2026, maquette `01-vue`). Nouvel écran
+  d'accueil du module (Risques > Vulnérabilités, premier onglet, adresse `/vulnerabilites/vue` ; `/vulnerabilites` y mène
+  désormais), dans le style de la page de mise à jour, en clair et en sombre : **niveau d'alerte de 1 (Veille) à 4 (Maximale)**
+  calculé par la plateforme, le même pour tout le monde, avec sa phrase d'explication (règle proposée, à confirmer par le
+  RSSI) ; **tuiles** menant chacune à la liste filtrée (exploitées et présentes, à traiter en P1 et P2, produits à confirmer,
+  corrigées ce mois) ; **radar « Situation tactique »** en SVG dont chaque point est une faille suivie réelle (distance : la
+  priorité ; secteur : la famille du produit surveillé rapproché, sinon « Non classé » ; taille : machines et actifs que la
+  personne lit ; halo : exploitation avérée ; cercle vide : produit à confirmer), placement fixe, failles en trop d'une case
+  regroupées en pastille chiffrée, étiquettes pour les seuls points les plus prioritaires, balayage tournant, clavier (flèches,
+  Entrée) ; **cible prioritaire**, **journal** des traces existantes (collectes, synchronisations, alertes), tableau **« Cibles
+  par priorité »** (équivalent accessible du radar, filtres « Toutes / Exploitées / Détectées / À confirmer »), **capteurs**
+  (sources de veille et connecteurs, en deux listes) et **bandeau** quand une alerte critique est en cours. Animations coupées
+  par le mouvement réduit et à l'impression. Route de lecture `GET /api/vulnerabilites/vue-ensemble` (`vulnerabilites:lire`),
+  bornée (40 failles par case, totaux toujours rendus), sans écriture ni journal, sans migration ; aucun nom de machine, de
+  domaine, d'adresse ni de périmètre. « Failles détectées » reprend les filtres de l'adresse (`?priorite=`, `?etat=`,
+  `?exploite=oui`) et la veille la recherche (`?q=`). Aide en ligne : article « Vulnérabilités : vue d'ensemble ». (session
+  « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC2 : écran « Machines », présentation « Parc »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC2 » ; demandes du RSSI des 15 et 16/11/2026, maquettes `04-machines` et `04b-machines-grand-ecran`). À côté
+  de la liste existante, une présentation **« Parc »** (bascule « Liste » ou « Parc » mémorisée dans les préférences de la
+  personne) : une **tuile par machine** avec une icône d'ordinateur selon le rôle (poste web, serveur, base de données, point
+  d'interrogation), son nom, son **rang** calculé par la plateforme, ses failles présentes **critiques, élevées, moyennes et
+  faibles** et sa **priorité la plus haute** en couleur et en toutes lettres (P1 à P4) ; quatre **zones** « Front »,
+  « Back applicatif », « Base de données » et « Rôle non indiqué », chacune dans l'ordre du rang, séparées par des **murs à
+  bandes diagonales animées** (rouge entre le front et le back, violet entre le back et les bases ; animation coupée par le
+  mouvement réduit et à l'impression). **Marques** sur les tuiles, dans la liste (nouvelle colonne « Priorité et marques ») et
+  dans la légende : avertissement **« Zero-day : exploitation avérée »** (faille présente dont l'exploitation est avérée,
+  définition du lot V6) et éclair **« Exploitable »** (code d'exploitation disponible, sans exploitation avérée). Échelle
+  **« Réduit »** (les 5 plus prioritaires par zone, 8 sans rôle, tuile « et n autres » qui déplie la zone) ou **« Grand
+  écran »** (tout le parc en tuiles denses). Filtres conservés ; clic ou Entrée sur une tuile : fiche de la machine ; nom
+  accessible complet par tuile. Route de lecture `GET /api/vulnerabilites/machines/parc` (`vulnerabilites:lire`) : machines
+  lisibles seulement, 250 au plus par zone (totaux rendus), nombre de requêtes fixe (12 au plus), sans écriture ni journal ;
+  `GET /api/vulnerabilites/machines` rend aussi les marques de chaque machine. Sans migration. Aide en ligne : article
+  « Vulnérabilités : failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC3 : onglet « Périmètres »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
+  « lot PC3 » ; demande du RSSI du 15/11/2026, maquette `05-perimetre`). Nouvel onglet après « Machines » : une **carte par
+  périmètre** que la personne lit (machines lues, priorité la plus haute en couleur et en toutes lettres, failles présentes
+  critiques, élevées, moyennes et faibles comptées une fois par périmètre, nombre de machines « zero-day » et « exploitables »,
+  actifs exposés sur Internet rattachés par les périmètres AlgoLightHouse reliés), du plus critique au moins critique, plus une
+  carte **« Sans périmètre »** pour qui administre le module. Clic ou Entrée sur une carte : **détail** à une adresse
+  partageable (`?perimetre=`), avec chiffres clés, bandeau quand une machine de première ligne porte une faille à exploitation
+  avérée, et les machines **« Par ligne »** (front, back applicatif, base de données, rôle non indiqué, séparés par les murs du
+  parc) ou en **« Vue globale »** (toutes ensemble dans l'ordre du rang) : mêmes tuiles, mêmes marques et même fiche que
+  l'écran « Machines ». Une machine reliée par une **liaison confirmée** à un actif exposé lisible porte la mention « Exposée
+  sur Internet », avec la liste des actifs ; rien d'un actif illisible. Aucun trait entre machines (le lien front → back →
+  base n'existe pas en données). Dans la liste des machines, le nom du périmètre ouvre son détail. Routes de lecture
+  `GET /api/vulnerabilites/machines/perimetres` et `…/perimetres/{id}` (`vulnerabilites:lire`) : nombre de requêtes fixe
+  (16 et 17 au plus), 250 machines au plus par ligne, périmètre illisible traité comme inconnu (404), sans écriture ni journal.
+  Sans migration ; rien de nouveau chez l'assistant. Aide en ligne : article « Vulnérabilités : vue par périmètre ». (session
+  « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC4 : fiche de faille illustrée** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC4 » ; demande du RSSI du 15/11/2026, maquette `02-fiche`). Une seule présentation, placée en tête des fiches
+  existantes (faille détectée par Tenable, faille déclarée, CVE de la veille, ouverte désormais depuis la veille, alerte
+  d'AlgoLightHouse) : **en-tête** (priorité et faits, les mêmes pour tous, marques « Zero-day : exploitation avérée » et
+  « Exploitable », lien vers l'alerte ouverte, machines et actifs exposés que la personne lit, drapeau sans nombre pour le
+  reste) ; **« Vecteur d'attaque, en clair »** : vecteur CVSS v3.0, v3.1 ou v4.0 traduit par une table fixe, une icône et deux
+  libellés par métrique (terme exact, par exemple « Vecteur d'accès : réseau », et traduction), effets sur la confidentialité,
+  l'intégrité et la disponibilité (et sur les systèmes en aval en v4.0), phrase en clair, vecteur brut et sa version ; quand NVD
+  et Tenable diffèrent, le vecteur au score le plus sévère parle (règle des sources), les autres sont montrés ; **schéma SVG**
+  composé à partir du vecteur et de la présence lue, nommé en une phrase, avec son équivalent texte ; vecteur absent ou mal
+  formé : « vecteur non communiqué », sans traduction ni schéma ; **« Recommandations des sources »**, chaque source à part et
+  en texte tel quel (action exigée du catalogue KEV, correctif de Tenable en anglais, versions touchées selon NVD, mentions du
+  CERT Santé, avis du CERT-FR et du CERT Santé, recommandations de l'éditeur d'AlgoLightHouse pour les alertes lisibles) ; rien
+  n'est rédigé par l'assistant. Route de lecture `GET /api/vulnerabilites/fiches/{nature}/{id}` (`vulnerabilites:lire`, sans
+  écriture ni journal ; constat, faille déclarée et alerte illisibles traités comme inconnus). Vecteurs déjà rangés par la
+  veille et Tenable : **sans migration**, sans appel réseau ni champ nouveau. Aide en ligne : article « Vulnérabilités :
+  failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
+
+### Modifié
+
+- **Assistant RSSI : activation simplifiée** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) : l'écran de réglages tient en quatre gestes (activer, choisir le
+  fournisseur, saisir la clé, choisir le niveau d'habilitation) et un seul bouton « Enregistrer », qui scelle aussi la clé. Trois
+  fournisseurs sont préenregistrés (Mistral AI, OpenAI, Anthropic) avec leur adresse et leurs modèles ; « Personnalisé » garde la
+  saisie libre d'une API compatible. Le niveau d'habilitation s'applique aux deux profils. Budget, profils, périmètres, rondes
+  et autonomie gardent leurs valeurs par défaut sous « Réglages avancés ». La validation de l'ouverture du flux (ADR 0097) est conservée à la première activation. L'appel est adapté aux écarts connus d'OpenAI et
+  d'Anthropic (température, plafond de sortie) ; **seul Mistral a été essayé avec un modèle réel**.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
+- **Ergonomie sur grand écran : en-tête compact et boîte d'outils commune** (demande du RSSI pour la 7.3.0, modèle validé le
+  16/11/2026 ; relevé : [docs/refonte-neon/RELEVE-ECRAN-1920.md](docs/refonte-neon/RELEVE-ECRAN-1920.md)). Les données
+  arrivent plus haut à l'écran : titre de page compact, d'une seule taille partout, avec la petite liste « Périmètre affiché »
+  sur la même ligne ; la phrase générique de description est retirée et les explications longues sont repliées sous « À
+  propos de cette page » ; marge haute réduite sous la barre du haut. Toutes les listes partagent une même boîte d'outils bleu
+  nuit : vues, recherche (raccourci « / », parcourue par une lueur violette qui fait le tour du champ) et entonnoir « Filtres
+  avancés » ; l'ajout est au bout de la ligne. La bande de champs de filtre pleine largeur disparaît : État, Responsable,
+  Échéance et les autres critères qui ont leur colonne se filtrent en cliquant sur le titre de la colonne, les autres sont
+  dans les filtres avancés, et les pastilles des critères actifs restent sous la barre. Écrans concernés : plan d'actions et
+  tâches récurrentes, registre commun du Pilotage, registres, fournisseurs, critères fournisseurs, processus, parties
+  intéressées, bibliothèque, objectifs, risques, cartographie des risques, couverture et organisation de l'audit, documents et
+  liens, parcours ISO. La lueur n'anime que la rotation, s'arrête avec le mouvement réduit, l'impression, les couleurs
+  forcées et l'onglet masqué (ADR 0099). En mode clair, le fond de page est blanc (il était gris) et la boîte d'outils se fond dans le fond, sans fond ni cadre, le champ de recherche gardant son contour violet et sa lueur. Un champ « Rechercher une page du menu » s'ajoute sous le logo, dans le menu : il trouve une page par son nom ou sa famille (accents ignorés), Ctrl K (ou Cmd K) y place le curseur, les flèches parcourent les pages trouvées et Entrée ouvre la page. Aucune migration, aucune
+  API ; noms accessibles des champs conservés.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Module « Vulnérabilités », lot V6b : réglages des alertes** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
+  « lot V6b » ; décisions du RSSI du 18/11/2026, qui remplacent les choix provisoires du lot V6). **Seuil** : l'alerte critique
+  reste celle d'une faille présente en P1 ; l'**alerte simple** ne s'ouvre plus que pour une faille en **P2 exploitable**
+  (une source dit qu'un code d'exploitation ou une preuve de concept existe : Tenable, CERT Santé, AlgoLightHouse) **et
+  exposée directement sur Internet** (présence « exposée » : actif vu par AlgoLightHouse) ; une faille P2 présente seulement
+  sur des machines internes, même reliées à un actif exposé, n'en ouvre plus ; une alerte simple ouverte qui ne satisfait plus
+  la règle se clôt d'elle-même, motif « sous le seuil » (libellé précisé) ; rien pour P3 et P4. **Prise en compte** réservée
+  au **rôle « RSSI »** de la plateforme (directement ou par un groupe) : le serveur répond 403 à tout autre compte, y compris
+  avec le droit de modifier ou d'administrer le module et y compris le rôle Administrateur ; la fenêtre et l'onglet
+  « Alertes » n'offrent « Pris en compte » qu'au RSSI et disent « Seul le RSSI peut prendre en compte une alerte » ; les
+  autres personnes ferment la fenêtre pour leur session. **Notifications** : chaque alerte critique garde la sienne ; les
+  alertes simples ouvertes par une même évaluation donnent **une seule notification de résumé** (« n nouvelles alertes »,
+  type « Vulnérabilités : alerte », lien vers l'onglet « Alertes » filtré sur les alertes simples ouvertes), aucune quand il
+  n'y en a pas ; le plafond de vingt notifications par évaluation disparaît. Toujours aucun nom de machine, de domaine,
+  d'adresse ni de périmètre. L'onglet « Alertes » reprend les filtres de l'adresse (`?niveau=`, `?etat=`). Aide en ligne mise
+  à jour. (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH5 : la priorité est la même pour tout le monde** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot ALH5 » ; décision A du RSSI du 17/11/2026, qui remplace le choix n° 1 du lot ALH2). La priorité d'une CVE,
+  d'une faille, d'une alerte, d'une technologie, le rang d'une machine et les filtres et compteurs « exploitée » et
+  « exploitable » se calculent sur tous les faits connus de la plateforme (AlgoLightHouse compris), sans tenir compte des droits
+  de lecture. Les noms et le détail (domaines, adresses, machines, périmètres, versions détaillées, nombre d'actifs touchés,
+  liens) restent limités à ce que la personne lit : elle peut voir « P1 : exploitée et exposée sur Internet » sans voir sur
+  quel actif ; la veille et l'assistant disent une exposition hors de ses droits sans nom ni nombre. Carte : le regroupement
+  par domaine parent est confirmé (mention « à confirmer » retirée). (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot ALH6 : carte « Lignes d'approche » plus lisible.** Les libellés du typosquatting et des
+  fuites de données, côté Internet, ne sont plus croisés par les traits (ceux-ci descendent vers les branches à droite de la
+  colonne) ni tronqués (trois lignes au plus, coupées après un point, un tiret ou une espace) ; les traits d'une branche vers
+  ses lignes passent sous les noms de domaine ; une adresse IPv6 longue tient sur deux lignes ; en-têtes de colonnes et
+  libellés des alertes ne se chevauchent plus. (session « Module surveillance vulnérabilités SMSI »)
+
+- **Exception d'audit des dépendances** ([ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md), décision du RSSI du
+  17/11/2026) : l'avis GHSA-fc5q-39xc-vjpf (déni de service dans `picomatch` ≤ 4.0.7, gravité élevée, sans version corrigée
+  publiée) est ignoré par `pnpm audit`. Le paquet n'est tiré que par des outils de développement et de construction
+  (`typescript-eslint`, Vite, Vitest), absents des dépendances d'exécution. Réexamen au plus tard le 25/11/2026.
+  (session « Module surveillance vulnérabilités SMSI »)
+
+### Corrigé
+
+- **Frise de la page de maintenance** : l'étape « Retour à l'application » apparaissait terminée avant la vérification finale
+  (fin du script notée « complete », puis « Vérification » de nouveau en cours). La fin du script reste dans « Vérification » ;
+  « Retour à l'application » n'est franchi qu'à la réussite publiée, et la page ne l'affiche jamais terminée ni horodatée
+  avant. _(Session « Projet audit_suivi Coeur ».)_
+
 ## [7.2.3] — 2026-11-17
 
 ### Notes de mise à jour

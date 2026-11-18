@@ -52,8 +52,11 @@ test('Actions : Timeline avec barre datée, puis droit de contributeur attribué
     await page.getByRole('option', { name: perimetre, exact: true }).click();
 
     // Timeline : la barre de l'action est présente, atteignable au clavier et ouvre la fiche.
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Timeline', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     const frise = page.getByRole('region', { name: /Timeline des actions/ });
     await expect(frise).toBeVisible();
     const barre = frise.getByRole('button', { name: titre });

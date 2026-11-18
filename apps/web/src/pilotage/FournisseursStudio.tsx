@@ -1,11 +1,12 @@
 /* Fournisseurs de l'organisation, registre compact « Studio » (refonte Neon, lot 5, ADR 0093) : présentation seule du
    registre réel ; requêtes, droits et écritures restent dans Fournisseurs.tsx. Vue compacte par défaut, détail à la
-   demande, recherche à la loupe, filtres discrets, lignes ouvrables (même fiche que le bouton « Fiche »), états colorés.
+   demande, lignes ouvrables (même fiche que le bouton « Fiche »), états colorés. Boîte d'outils commune (7.3.0) : vues,
+   recherche et filtres avancés (Situation) ; le Type se filtre sur le titre de sa colonne ; l'ajout au bout de la ligne.
    Les couleurs sont portées par des classes (neon-fournisseurs.css), jamais par un style en ligne (CSP stricte). */
-import { ActionIcon, Button, Select, Table, TextInput, Tooltip } from '@mantine/core';
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { DataTable, retenirFocusFiche } from '@suivi/ui';
-import { Filtres } from '../components/Filtres';
+import { ActionIcon, Button, Select, Table, Tooltip } from '@mantine/core';
+import { useState, type MouseEvent, type ReactNode } from 'react';
+import { APropos, DataTable, retenirFocusFiche } from '@suivi/ui';
+import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   attentionFournisseur,
@@ -183,26 +184,36 @@ const TYPES = [
 ];
 
 export function FournisseursStudio(p: FournisseursStudioProps) {
-  const [densite, setDensite] = useState<'compact' | 'detail'>('compact'),
-    [loupe, setLoupe] = useState(false);
-  const champ = useRef<HTMLInputElement>(null),
-    bouton = useRef<HTMLButtonElement>(null);
-  const rechercheVisible = loupe || !!p.recherche;
-  useEffect(() => {
-    if (loupe) champ.current?.focus();
-  }, [loupe]);
-  const actifs = (p.filtre !== 'all' ? 1 : 0) + (p.type !== 'all' ? 1 : 0);
-  const criteres = [
-    p.recherche.trim() && `Recherche : ${p.recherche.trim()}`,
-    p.filtre !== 'all' && p.situations.find((x) => x.value === p.filtre)?.label,
-    p.type !== 'all' && TYPES.find((x) => x.value === p.type)?.label,
-  ].filter(Boolean);
+  const [densite, setDensite] = useState<'compact' | 'detail'>('compact');
+  const criteres: CritereActif[] = [
+    ...(p.recherche.trim()
+      ? [{ cle: 'fq', libelle: 'Recherche', valeur: p.recherche.trim(), retirer: () => p.onRecherche('') }]
+      : []),
+    ...(p.filtre !== 'all'
+      ? [
+          {
+            cle: 'fsit',
+            libelle: 'Situation',
+            valeur: p.situations.find((x) => x.value === p.filtre)?.label ?? p.filtre,
+            retirer: () => p.onFiltre('all'),
+          },
+        ]
+      : []),
+    ...(p.type !== 'all'
+      ? [
+          {
+            cle: 'ftype',
+            libelle: 'Type',
+            valeur: TYPES.find((x) => x.value === p.type)?.label ?? p.type,
+            retirer: () => p.onType('all'),
+          },
+        ]
+      : []),
+  ];
   const effacer = () => {
     p.onRecherche('');
     p.onFiltre('all');
     p.onType('all');
-    setLoupe(false);
-    requestAnimationFrame(() => bouton.current?.focus({ preventScroll: true }));
   };
   const pourcentage = (s: { saas: number; pct: number }) => (p.disponible && s.saas ? `${s.pct} %` : '—');
   const indicateurs = [
@@ -237,12 +248,12 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
   ] as const;
   return (
     <section className="fournisseurs-studio" aria-label="Registre des fournisseurs">
-      <p className="fs-intro">
+      <APropos>
         Les fournisseurs et leurs évaluations appartiennent à l’organisation, pas à un périmètre : un fournisseur évalué
         l’est de la même façon dans tous les périmètres où il est rattaché. Les critères sont définis par vos soins ;
         aucune grille ni aucun seuil n’est fourni. La fiche d’un fournisseur regroupe ses informations de suivi (MFA,
         SSO, criticité, hébergeur HDS), ses certificats et ses contrôles périodiques.
-      </p>
+      </APropos>
       <div className="fs-summary" role="group" aria-label="Indicateurs des services SaaS">
         {indicateurs.map((s) => (
           <div className="fs-stat" data-tone={s.ton} key={s.libelle}>
@@ -254,111 +265,69 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
         ))}
       </div>
       <div className="fs-workspace">
-        <div className="fs-toolbar">
-          <div className="fs-toolbar-start">
-            <div className="fs-views" role="group" aria-label="Densité du registre">
-              {(['compact', 'detail'] as const).map((d) => (
-                <Tooltip key={d} label={d === 'compact' ? 'Vue compacte' : 'Vue détaillée'} withArrow openDelay={300}>
-                  <button
-                    type="button"
-                    className="fs-tool"
-                    aria-label={d === 'compact' ? 'Vue compacte' : 'Vue détaillée'}
-                    aria-pressed={densite === d}
-                    onClick={() => setDensite(d)}
-                  >
-                    <Icone nom={d} />
-                  </button>
-                </Tooltip>
-              ))}
-            </div>
-            <strong>{densite === 'compact' ? 'Registre compact' : 'Registre détaillé'}</strong>
-            <span className="fs-note">Évaluations communes à tous les périmètres</span>
-          </div>
-          <div className="fs-toolbar-end">
-            {rechercheVisible && (
-              <TextInput
-                ref={champ}
-                className="fs-search"
-                size="sm"
-                aria-label="Rechercher un fournisseur"
-                placeholder="Nom du fournisseur…"
-                value={p.recherche}
-                onChange={(e) => p.onRecherche(e.currentTarget.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setLoupe(false);
-                    bouton.current?.focus();
-                  }
-                }}
-              />
-            )}
-            <button
-              type="button"
-              ref={bouton}
-              className="fs-tool"
-              aria-label="Recherche par nom"
-              aria-expanded={rechercheVisible}
-              onClick={() => {
-                if (!rechercheVisible) setLoupe(true);
-                else if (p.recherche) champ.current?.focus();
-                else setLoupe(false);
-              }}
-            >
-              <Icone nom="search" />
-            </button>
-            <Filtres
-              actifs={actifs}
-              onReinitialiser={() => {
-                p.onFiltre('all');
-                p.onType('all');
-              }}
-            >
+        {/* Boîte d'outils commune (7.3.0) : densité, recherche par nom, filtres avancés (Situation, qui couvre plusieurs
+            colonnes) ; le Type se filtre sur le titre de sa colonne. Ajout au bout de la ligne. */}
+        <BoiteOutils
+          label="Outils des fournisseurs"
+          vues={[
+            { value: 'compact', label: 'Vue compacte', icone: <Icone nom="compact" /> },
+            { value: 'detail', label: 'Vue détaillée', icone: <Icone nom="detail" /> },
+          ]}
+          vue={densite}
+          onVue={(v) => setDensite(v === 'detail' ? 'detail' : 'compact')}
+          recherche={{
+            label: 'Rechercher un fournisseur',
+            value: p.recherche,
+            onChange: p.onRecherche,
+            placeholder: 'Nom du fournisseur…',
+          }}
+          filtres={{
+            actifs: p.filtre !== 'all' ? 1 : 0,
+            onReinitialiser: () => p.onFiltre('all'),
+            contenu: (
               <Select
                 label="Situation"
                 allowDeselect={false}
                 data={p.situations}
                 value={p.filtre}
                 onChange={(v) => p.onFiltre(v ?? 'all')}
+                comboboxProps={{ withinPortal: false }}
               />
-              <Select
-                label="Type"
-                allowDeselect={false}
-                data={TYPES}
-                value={p.type}
-                onChange={(v) => p.onType(v ?? 'all')}
-              />
-            </Filtres>
-            {p.modifier && (
+            ),
+          }}
+          ajout={
+            p.modifier && (
               <Button className="fs-ajouter" onClick={p.onCreer}>
                 Ajouter un fournisseur
               </Button>
-            )}
-          </div>
-        </div>
+            )
+          }
+        />
+        <PastillesCriteres criteres={criteres} onToutEffacer={effacer} />
         <p className="fs-caption">
           {p.disponible
             ? `${p.affiches.length} fournisseur${p.affiches.length > 1 ? 's' : ''}`
             : p.chargement
               ? 'Chargement des fournisseurs…'
               : 'Fournisseurs indisponibles'}
-          {' · '}Les critères sont définis par l’organisation ; aucun seuil ni score global n’est ajouté.
+          {' · '}Évaluations communes à tous les périmètres · Les critères sont définis par l’organisation ; aucun seuil
+          ni score global n’est ajouté.
           {p.disponible && ` · ${p.tous.filter((f) => f.mfa !== 'Oui').length} sans MFA confirmée`}
         </p>
-        {criteres.length > 0 && (
-          <div className="fs-criteria">
-            <span>{criteres.join(' · ')}</span>
-            <Button variant="subtle" size="xs" onClick={effacer}>
-              Tout effacer
-            </Button>
-          </div>
-        )}
         <DataTable label="Fournisseurs et applications, défilement horizontal possible">
           <Table className="fs-table" data-density={densite}>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th scope="col">
-                  Fournisseur ou application <span className="fs-th-sub">Type</span>
+                  Fournisseur ou application{' '}
+                  <span className="fs-th-sub">
+                    <FiltreColonne
+                      libelle="Type"
+                      valeur={p.type === 'all' ? null : p.type}
+                      options={TYPES.filter((t) => t.value !== 'all')}
+                      onChange={(v) => p.onType(v ?? 'all')}
+                    />
+                  </span>
                 </Table.Th>
                 <Table.Th scope="col">
                   Accès <span className="fs-th-sub">SSO · MFA</span>

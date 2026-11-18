@@ -61,8 +61,11 @@ test('Jours fériés en fond : bascule séparée, Timeline et Calendrier, action
     await page.goto('/pilotage/actions');
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: 'Périmètre fond ' + suffixe, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Timeline', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     const frise = page.getByRole('region', { name: /Timeline des actions/ });
     await expect(frise).toBeVisible();
     const bandes = frise.locator('[data-fond="feries"]');
@@ -83,9 +86,12 @@ test('Jours fériés en fond : bascule séparée, Timeline et Calendrier, action
     await expect(frise.getByRole('button', { name: new RegExp('Action sur l’année ' + suffixe) })).toBeVisible();
 
     // Calendrier : le jour férié est écrit en toutes lettres dans la case du jour, pas seulement coloré.
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
     await page.getByRole('option', { name: 'Calendrier', exact: true }).click();
     await page.getByLabel('Mois').fill(`${annee}-12`);
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('checkbox', { name: 'Jours fériés en fond' }).click();
     await expect(page.getByRole('checkbox', { name: 'Jours fériés en fond' })).toBeChecked();
     await expect(page.getByText(/Férié : /).first()).toBeVisible();

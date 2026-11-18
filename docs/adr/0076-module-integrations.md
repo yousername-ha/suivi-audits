@@ -176,3 +176,39 @@
   - un tableau de métriques propre au module (doublon du Pilotage) ;
   - un champ « identifiant GLPI » dans le fournisseur (modèle de chaque fournisseur alourdi pour une seule source) ;
   - un second moteur d'import d'écarts à côté de celui de Tenacy.
+
+## Addendum du 16/11/2026 — portée d'une instance : organisation ou SMSI
+
+Accord du RSSI du 16/11/2026, dans la session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`).
+Il modifie la décision R11 (« une instance de connecteur par SMSI ») et le point 2 de la décision.
+
+- **Chaque type de connecteur déclare sa portée dans le catalogue** : `smsi` (une instance appartient à un SMSI, règle
+  d'origine, inchangée pour GLPI, ORADAD et Silène) ou `organisation` (l'instance n'appartient à aucun SMSI).
+- **Motif** : Tenable Security Center, premier connecteur réseau réalisé ([ADR 0100](0100-module-vulnerabilites.md)), couvre
+  tout le parc de l'organisation ; le rattacher à un seul SMSI serait faux.
+- **Conséquences** : le périmètre d'une instance est facultatif en base et contrôlé selon la portée du type. Une instance de
+  portée `organisation` se lit et s'administre avec les seuls droits du module Intégrations ; ce qu'elle rapporte est ensuite
+  lu à travers les droits du module qui l'exploite. La règle R13 (seul un connecteur du périmètre commun alimente des
+  indicateurs) ne change pas.
+- **Ordre de réalisation** : le socle (module, instances, secrets, file d'exécution, appels par l'exécutant) est réalisé avant
+  les lots ORADAD et Silène, pour le connecteur Tenable. Les autres parties du lot I1 (extraction du moteur d'écarts de
+  Tenacy, logos) restent à faire.
+
+## Addendum du 16/11/2026 — socle réalisé pour le connecteur Tenable Security Center
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `073`), sous-ensemble des lots I1 et I4 :
+
+- **Livré** : module `integrations` et ses droits, catalogue en code, instances de connecteur, secrets scellés en écriture
+  seule, file des exécutions, commandes `integrations-claim` et `integrations-finish`, script isolé de l'exécutant
+  (`scripts/integration-http.py`), rubrique « Intégrations ». Un seul type : `tenable`, une seule opération : « Tester la
+  connexion », qui ne rapporte que la version de l'outil.
+- **Flux** : le connecteur a son flux au registre de l'[ADR 0097](0097-flux-sortants-pilotes-par-les-modules.md)
+  (`tenable`), fermé par défaut, ouvert par l'activation d'une instance avec validation explicite, refermé quand la dernière
+  instance active du type est désactivée ou quand le module est désactivé.
+- **Choix de réalisation, à confirmer par le RSSI** : adresse en `https` ; le **port est réglable** (443 par défaut), décision du RSSI du 16/11/2026
+  qui remplace le choix initial « port 443 seulement » : le flux déclare alors le port réglé ; changer l'adresse ou l'autorité de certification efface les clés enregistrées, comme pour le
+  mot de passe du courriel ; droits par défaut d'un module non métier (administrateur et RSSI ; un rôle personnalisé pour
+  toute autre personne).
+- **Non réalisé** : extraction du moteur d'écarts de Tenacy, ORADAD, Silène, GLPI, propositions de fournisseurs, liaisons
+  d'indicateurs, logos, planification.
+- **Non vérifié** : aucun appel vers un vrai Tenable (tests sur un faux service HTTPS local), Docker, Playwright, Node 26.

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { libelleAcceptabilite, libelleModeCalcul, type GrcObject, type RiskMethod } from '@suivi/shared';
 import { computeScene, emptyLayout, type CartoObject, type MapLayout, type ObjectLookup } from '@suivi/shared/carto';
 import { get } from '../api';
+import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { Canevas, fitViewport, type Viewport, type Selection } from '../carto/Canevas';
 import { exporter } from '../carto/exports';
@@ -35,6 +36,14 @@ export interface Projection {
   generatedAt: string;
   basis: 'gross' | 'residual';
 }
+const STRATEGIES = [
+  { value: 'reduce', label: 'Réduction' },
+  { value: 'accept', label: 'Acceptation' },
+  { value: 'transfer', label: 'Transfert' },
+  { value: 'avoid', label: 'Évitement' },
+  { value: 'treated', label: 'Traité' },
+];
+const jourFr = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR');
 export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => void }) {
   const can = useCan(),
     [basis, setBasis] = useState<'gross' | 'residual'>('residual'),
@@ -168,89 +177,155 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
       setError(e);
     }
   };
+  const optionsMethode = (methods.data ?? []).map((m) => ({ value: m.methodId, label: m.definition.name })),
+    optionsObjetLie = (data.data?.nodes ?? [])
+      .filter((n) => n.kind !== 'risk')
+      .map((n) => ({ value: n.ref, label: n.name }));
+  const reinitialiser = () => {
+    setMethodId(null);
+    setDomain('');
+    setScope('');
+    setRelatedRef(null);
+    setEntity('');
+    setStrategy(null);
+    setAt('');
+    setCompareAt('');
+  };
+  const critere = (cle: string, libelle: string, valeur: string, retirer: () => void): CritereActif[] => [
+    { cle, libelle, valeur, retirer },
+  ];
+  const criteres: CritereActif[] = [
+    ...(search ? critere('q', 'Recherche', search, () => setSearch('')) : []),
+    ...(methodId
+      ? critere('methode', 'Méthode', optionsMethode.find((o) => o.value === methodId)?.label ?? 'sélectionnée', () =>
+          setMethodId(null),
+        )
+      : []),
+    ...(domain ? critere('domaine', 'Domaine', domain, () => setDomain('')) : []),
+    ...(scope ? critere('perimetre', 'Périmètre', scope, () => setScope('')) : []),
+    ...(relatedRef
+      ? critere('objet', 'Objet lié', optionsObjetLie.find((o) => o.value === relatedRef)?.label ?? 'sélectionné', () =>
+          setRelatedRef(null),
+        )
+      : []),
+    ...(entity ? critere('entite', 'Entité', entity, () => setEntity('')) : []),
+    ...(strategy
+      ? critere(
+          'strategie',
+          'Stratégie de traitement',
+          STRATEGIES.find((o) => o.value === strategy)?.label ?? strategy,
+          () => setStrategy(null),
+        )
+      : []),
+    ...(at ? critere('date', 'Appréciations au', jourFr(at), () => setAt('')) : []),
+    ...(compareAt ? critere('comparaison', 'Comparer au', jourFr(compareAt), () => setCompareAt('')) : []),
+  ];
   return (
     <Stack>
-      <Group>
-        <Select
-          allowDeselect={false}
-          label="Base d’appréciation"
-          value={basis}
-          onChange={(v) => setBasis(v === 'gross' ? 'gross' : 'residual')}
-          data={[
-            { value: 'gross', label: 'Risque brut' },
-            { value: 'residual', label: 'Risque résiduel' },
-          ]}
-        />
-        <Select
-          label="Méthode"
-          clearable
-          value={methodId}
-          onChange={(id) => {
-            setMethodId(id);
-            const method = methods.data?.find((m) => m.methodId === id);
-            if (method) setBasis(method.definition.display.defaultBasis);
-          }}
-          data={(methods.data ?? []).map((m) => ({ value: m.methodId, label: m.definition.name }))}
-        />
-        <TextInput label="Domaine" value={domain} onChange={(e) => setDomain(e.currentTarget.value)} />
-        <TextInput label="Périmètre" value={scope} onChange={(e) => setScope(e.currentTarget.value)} />
-        <Select
-          label="Objet lié"
-          searchable
-          clearable
-          value={relatedRef}
-          onChange={setRelatedRef}
-          data={(data.data?.nodes ?? []).filter((n) => n.kind !== 'risk').map((n) => ({ value: n.ref, label: n.name }))}
-        />
-        <TextInput label="Entité" value={entity} onChange={(e) => setEntity(e.currentTarget.value)} />
-        <TextInput label="Rechercher un risque" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
-        <Select
-          label="Stratégie de traitement"
-          clearable
-          value={strategy}
-          onChange={setStrategy}
-          data={[
-            { value: 'reduce', label: 'Réduction' },
-            { value: 'accept', label: 'Acceptation' },
-            { value: 'transfer', label: 'Transfert' },
-            { value: 'avoid', label: 'Évitement' },
-            { value: 'treated', label: 'Traité' },
-          ]}
-        />
-        <TextInput label="Appréciations au" type="date" value={at} onChange={(e) => setAt(e.currentTarget.value)} />
-        <TextInput
-          label="Comparer au"
-          type="date"
-          value={compareAt}
-          onChange={(e) => setCompareAt(e.currentTarget.value)}
-        />
-        <Select
-          allowDeselect={false}
-          label="Regroupement"
-          value={grouping}
-          onChange={(v) => setGrouping(v ?? 'method')}
-          data={[
-            { value: 'method', label: 'Méthode' },
-            { value: 'domain', label: 'Domaine' },
-            { value: 'entity', label: 'Entité' },
-            { value: 'scope', label: 'Périmètre' },
-            { value: 'asset', label: 'Actif' },
-            { value: 'process', label: 'Processus' },
-            { value: 'scenario', label: 'Scénario' },
-            { value: 'security_domain', label: 'Domaine de sécurité' },
-          ]}
-        />
-        <Select
-          allowDeselect={false}
-          label="Représentation"
-          value={mode}
-          onChange={(v) => setMode(v ?? 'graph')}
-          data={[
-            { value: 'graph', label: 'Cartographie des liens' },
-            { value: 'matrix', label: 'Matrices et niveaux par méthode' },
-          ]}
-        />
-      </Group>
+      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés. La carte n'a pas de colonnes :
+          tous les critères, la base, le regroupement et la représentation sont dans le panneau des filtres avancés. */}
+      <BoiteOutils
+        label="Outils de la cartographie des risques"
+        recherche={{ label: 'Rechercher un risque', value: search, onChange: setSearch }}
+        filtres={{
+          actifs: [methodId, domain, scope, relatedRef, entity, strategy, at, compareAt].filter(Boolean).length,
+          onReinitialiser: reinitialiser,
+          contenu: (
+            <>
+              <Select
+                allowDeselect={false}
+                label="Base d’appréciation"
+                value={basis}
+                onChange={(v) => setBasis(v === 'gross' ? 'gross' : 'residual')}
+                data={[
+                  { value: 'gross', label: 'Risque brut' },
+                  { value: 'residual', label: 'Risque résiduel' },
+                ]}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                label="Méthode"
+                clearable
+                value={methodId}
+                onChange={(id) => {
+                  setMethodId(id);
+                  const method = methods.data?.find((m) => m.methodId === id);
+                  if (method) setBasis(method.definition.display.defaultBasis);
+                }}
+                data={optionsMethode}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <TextInput label="Domaine" value={domain} onChange={(e) => setDomain(e.currentTarget.value)} />
+              <TextInput label="Périmètre" value={scope} onChange={(e) => setScope(e.currentTarget.value)} />
+              <Select
+                label="Objet lié"
+                searchable
+                clearable
+                value={relatedRef}
+                onChange={setRelatedRef}
+                data={optionsObjetLie}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <TextInput label="Entité" value={entity} onChange={(e) => setEntity(e.currentTarget.value)} />
+              <Select
+                label="Stratégie de traitement"
+                clearable
+                value={strategy}
+                onChange={setStrategy}
+                data={STRATEGIES}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <TextInput
+                label="Appréciations au"
+                type="date"
+                value={at}
+                onChange={(e) => setAt(e.currentTarget.value)}
+              />
+              <TextInput
+                label="Comparer au"
+                type="date"
+                value={compareAt}
+                onChange={(e) => setCompareAt(e.currentTarget.value)}
+              />
+              <Select
+                allowDeselect={false}
+                label="Regroupement"
+                value={grouping}
+                onChange={(v) => setGrouping(v ?? 'method')}
+                data={[
+                  { value: 'method', label: 'Méthode' },
+                  { value: 'domain', label: 'Domaine' },
+                  { value: 'entity', label: 'Entité' },
+                  { value: 'scope', label: 'Périmètre' },
+                  { value: 'asset', label: 'Actif' },
+                  { value: 'process', label: 'Processus' },
+                  { value: 'scenario', label: 'Scénario' },
+                  { value: 'security_domain', label: 'Domaine de sécurité' },
+                ]}
+                comboboxProps={{ withinPortal: false }}
+              />
+              <Select
+                allowDeselect={false}
+                label="Représentation"
+                value={mode}
+                onChange={(v) => setMode(v ?? 'graph')}
+                data={[
+                  { value: 'graph', label: 'Cartographie des liens' },
+                  { value: 'matrix', label: 'Matrices et niveaux par méthode' },
+                ]}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </>
+          ),
+        }}
+      />
+      <PastillesCriteres
+        criteres={criteres}
+        onToutEffacer={() => {
+          setSearch('');
+          reinitialiser();
+        }}
+      />
       <ErrorAlert error={error ?? data.error ?? methods.error} />
       {data.data?.graphTruncated && (
         <Alert>

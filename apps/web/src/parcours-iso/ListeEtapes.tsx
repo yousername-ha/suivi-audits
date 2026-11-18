@@ -1,7 +1,9 @@
-/* Vue Liste : les mêmes étapes, sous-actions et identifiants que l'arbre (une seule source de contenu), avec recherche. */
-import { Badge, Button, Card, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+/* Vue Liste : les mêmes étapes, sous-actions et identifiants que l'arbre (une seule source de contenu), avec recherche
+   dans la boîte d'outils commune (7.3.0). */
+import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { useMemo, useState } from 'react';
 import { BRANCHE_LABELS, BRANCHES_PARCOURS, etapesAffichees, type EtapeParcours } from '@suivi/shared';
+import { BoiteOutils } from '../components/BarreOutils';
 import { SousActionDetail } from './SousActionDetail';
 import { LIBELLE_PRESENCE, presence, type TravauxDuType } from './travaux';
 
@@ -40,11 +42,14 @@ export function ListeEtapes({
     });
   return (
     <Stack>
-      <TextInput
-        label="Rechercher une étape ou une sous-action"
-        placeholder="par exemple : risques, périmètre, audit"
-        value={recherche}
-        onChange={(e) => setRecherche(e.currentTarget.value)}
+      <BoiteOutils
+        label="Outils de la liste des étapes"
+        recherche={{
+          label: 'Rechercher une étape ou une sous-action',
+          placeholder: 'par exemple : risques, périmètre, audit',
+          value: recherche,
+          onChange: setRecherche,
+        }}
       />
       {!etapes.length && <Text c="dimmed">Aucune étape ne correspond à cette recherche.</Text>}
       {BRANCHES_PARCOURS.map((b) => {

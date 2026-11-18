@@ -1,15 +1,24 @@
 /* Couverture du cycle (reprise de « Couverture du cycle ») : ce qui a été audité chaque année, par l'AFNOR et en
-   interne ; une pastille passe de vide à prévue puis auditée. Écarts et pronostic de chaque exigence en regard. */
-import { Button, Group, SegmentedControl, Stack, Switch, Table, Text, TextInput } from '@mantine/core';
+   interne ; une pastille passe de vide à prévue puis auditée. Écarts et pronostic de chaque exigence en regard. Boîte
+   d'outils commune (7.3.0) : recherche et filtres avancés (référentiel et bascules), libellés inchangés ; le référentiel
+   et l'écart ouvert se filtrent aussi sur le titre des colonnes « Mesure » et « Écarts ». */
+import { Button, Group, SegmentedControl, Stack, Switch, Table, Text } from '@mantine/core';
 import { useState } from 'react';
 import { LV, itemCode, nextCoverage } from '@suivi/shared/audit';
 import { DataTable } from '@suivi/ui';
+import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { CycleAudit } from './CycleAudit';
 import { libelleAnnee, useActionAudit, useAudit } from './commun';
 
 const ETIQUETTE = { '': 'non auditée', P: 'prévue', X: 'auditée' } as const;
+const REFERENTIELS = [
+  { value: 'all', label: 'Tout' },
+  { value: 'ISO', label: 'Clauses' },
+  { value: 'A', label: 'Annexe A' },
+  { value: 'HDS', label: 'HDS' },
+];
 
 export function CouvertureCycle() {
   const { q, d, analyses } = useAudit();
@@ -43,6 +52,34 @@ export function CouvertureCycle() {
     .map((g) => ({ g, items: d.items.filter((i) => i.group === g.id && garde(i)) }))
     .filter((x) => x.items.length);
   const affichees = groupes.reduce((n, x) => n + x.items.length, 0);
+  const libNonVues = `Non vues AFNOR ${P}`,
+    libAnglesMorts = `Angles morts ${P}`;
+  const reinitialiser = () => {
+    setRef('all');
+    setNonVues(false);
+    setAnglesMorts(false);
+    setAvecEcart(false);
+  };
+  const criteres: CritereActif[] = [
+    ...(recherche ? [{ cle: 'q', libelle: 'Recherche', valeur: recherche, retirer: () => setRecherche('') }] : []),
+    ...(ref !== 'all'
+      ? [
+          {
+            cle: 'ref',
+            libelle: 'Référentiel',
+            valeur: REFERENTIELS.find((r) => r.value === ref)?.label ?? ref,
+            retirer: () => setRef('all'),
+          },
+        ]
+      : []),
+    ...(nonVues ? [{ cle: 'nonvues', libelle: libNonVues, valeur: 'oui', retirer: () => setNonVues(false) }] : []),
+    ...(anglesMorts
+      ? [{ cle: 'angles', libelle: libAnglesMorts, valeur: 'oui', retirer: () => setAnglesMorts(false) }]
+      : []),
+    ...(avecEcart
+      ? [{ cle: 'ecart', libelle: 'Avec écart ouvert', valeur: 'oui', retirer: () => setAvecEcart(false) }]
+      : []),
+  ];
   const colonnes = (source: 'afnor' | 'interne', it: (typeof d.items)[number]) =>
     d.years.map((y) => {
       const v = it[source][y] ?? '';
@@ -76,45 +113,72 @@ export function CouvertureCycle() {
         </Button>
       </Group>
       <ErrorAlert error={erreur} />
-      <Group align="flex-end">
-        <TextInput
-          label="Rechercher"
-          placeholder="Une mesure ou un numéro"
-          value={recherche}
-          onChange={(e) => setRecherche(e.currentTarget.value)}
-        />
-        <SegmentedControl
-          aria-label="Référentiel"
-          value={ref}
-          onChange={setRef}
-          data={[
-            { value: 'all', label: 'Tout' },
-            { value: 'ISO', label: 'Clauses' },
-            { value: 'A', label: 'Annexe A' },
-            { value: 'HDS', label: 'HDS' },
-          ]}
-        />
-        <Switch label={`Non vues AFNOR ${P}`} checked={nonVues} onChange={(e) => setNonVues(e.currentTarget.checked)} />
-        <Switch
-          label={`Angles morts ${P}`}
-          checked={anglesMorts}
-          onChange={(e) => setAnglesMorts(e.currentTarget.checked)}
-        />
-        <Switch label="Avec écart ouvert" checked={avecEcart} onChange={(e) => setAvecEcart(e.currentTarget.checked)} />
-        <Text size="sm" c="dimmed">
-          {affichees} mesure{affichees > 1 ? 's' : ''} affichée{affichees > 1 ? 's' : ''}
-        </Text>
-      </Group>
+      {/* Boîte d'outils commune (7.3.0) : référentiel et bascules dans les filtres avancés, libellés inchangés ; le
+          référentiel et l'écart ouvert se filtrent aussi sur le titre des colonnes « Mesure » et « Écarts ». Le nombre de
+          mesures affichées reste sous la barre. */}
+      <BoiteOutils
+        label="Outils de la couverture du cycle"
+        recherche={{
+          label: 'Rechercher',
+          placeholder: 'Une mesure ou un numéro',
+          value: recherche,
+          onChange: setRecherche,
+        }}
+        filtres={{
+          actifs: [ref !== 'all', nonVues, anglesMorts, avecEcart].filter(Boolean).length,
+          onReinitialiser: reinitialiser,
+          contenu: (
+            <>
+              <SegmentedControl aria-label="Référentiel" value={ref} onChange={setRef} data={REFERENTIELS} />
+              <Switch label={libNonVues} checked={nonVues} onChange={(e) => setNonVues(e.currentTarget.checked)} />
+              <Switch
+                label={libAnglesMorts}
+                checked={anglesMorts}
+                onChange={(e) => setAnglesMorts(e.currentTarget.checked)}
+              />
+              <Switch
+                label="Avec écart ouvert"
+                checked={avecEcart}
+                onChange={(e) => setAvecEcart(e.currentTarget.checked)}
+              />
+            </>
+          ),
+        }}
+      />
+      <PastillesCriteres
+        criteres={criteres}
+        onToutEffacer={() => {
+          setRecherche('');
+          reinitialiser();
+        }}
+      />
+      <Text size="sm" c="dimmed">
+        {affichees} mesure{affichees > 1 ? 's' : ''} affichée{affichees > 1 ? 's' : ''}
+      </Text>
       {!affichees && <Text size="sm">Aucune mesure ne correspond à ces filtres.</Text>}
       {!!affichees && (
         <DataTable label="Couverture du cycle">
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th rowSpan={2}>Mesure</Table.Th>
+                <Table.Th rowSpan={2}>
+                  <FiltreColonne
+                    libelle="Mesure"
+                    valeur={ref === 'all' ? null : ref}
+                    options={REFERENTIELS.filter((r) => r.value !== 'all')}
+                    onChange={(v) => setRef(v ?? 'all')}
+                  />
+                </Table.Th>
                 <Table.Th colSpan={d.years.length}>AFNOR Certification</Table.Th>
                 <Table.Th colSpan={d.years.length}>Audit interne</Table.Th>
-                <Table.Th rowSpan={2}>Écarts</Table.Th>
+                <Table.Th rowSpan={2}>
+                  <FiltreColonne
+                    libelle="Écarts"
+                    valeur={avecEcart ? 'ouvert' : null}
+                    options={[{ value: 'ouvert', label: 'Avec écart ouvert' }]}
+                    onChange={(v) => setAvecEcart(v === 'ouvert')}
+                  />
+                </Table.Th>
                 <Table.Th rowSpan={2}>Pronostic {d.nextYear}</Table.Th>
               </Table.Tr>
               <Table.Tr>

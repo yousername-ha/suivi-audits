@@ -1,0 +1,971 @@
+/* Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1), veille sur les sources publiques (lots V2 et V3), failles
+   et machines lues dans Tenable Security Center (lot V5). Toute route passe par route() : session complète et double
+   authentification, activation du module « vulnerabilites », droit exigé, CSRF et origine sur les écritures. La veille se
+   lit avec `lire` ; « Collecter maintenant » demande `administrer`. Son flux s'ouvre par la route commune des flux
+   (« Activer la veille », administrateur, validation explicite). Failles et machines : lecture à travers les droits du
+   périmètre de chaque machine (service FaillesDetectees) ; rôle et périmètre avec `modifier` et l'écriture sur le
+   périmètre ; « Synchroniser maintenant » relève du module Intégrations (routes/integrations.ts).
+   Lot V4a : fiche d'un produit (rapprochements, machines reliées lisibles), produit relié à une machine (`modifier`,
+   If-Match sur la fiche du produit, machine lue par son périmètre), décision sur une proposition (`modifier`, If-Match sur
+   le rapprochement), suggestions d'identifiant CPE (`modifier`, données de la veille seulement), failles déclarées (`lire`),
+   seuils de priorité (lecture `lire`, écriture `administrer` avec If-Match).
+   Lot V4b : fiche d'une faille déclarée (`lire`) ; suivi d'un constat ou d'une faille déclarée (lecture `lire` ; état,
+   refus de la proposition « corrigée », création, lien et retrait d'une action avec `modifier` et If-Match sur la version du
+   suivi). Le service exige en plus de lire toutes les machines touchées ; créer une action exige le droit du module des
+   actions et l'écriture sur le périmètre choisi (service du registre).
+   Lot V4c : annulation d'une confirmation ou d'un rejet de rapprochement (`modifier`, If-Match sur le rapprochement, note
+   facultative ; V24).
+   V31 : liste de mots à ne pas masquer par le masque des machines de l'assistant (lecture, effet d'un mot et écriture avec
+   `administrer`, écriture avec If-Match).
+   Lot ALH1 : surface externe lue dans AlgoLightHouse (alertes, actifs, technologies) avec `lire`, à travers les droits du
+   périmètre de la plateforme relié à chaque périmètre ALH (non relié : `administrer`) ; liste et liaison des périmètres ALH
+   avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé.
+   Lot ALH2 : fiche d'une alerte (défauts et résolutions de l'éditeur, CVE avec leur priorité) avec `lire`, mêmes droits que
+   la liste ; tri des alertes et des technologies par priorité.
+   Lot V4d : liste et liaison des dépôts de Tenable à un périmètre (périmètre hérité par les machines du dépôt sans
+   périmètre indiqué à la main) avec `administrer`, If-Match, écriture sur le périmètre actuel et le périmètre visé.
+   Lot ALH3 : actif exposé relié aux machines internes. Fiche des liaisons d'un actif, liste des propositions et actifs
+   reliés à une machine avec `lire` (actif et machine lisibles tous deux) ; confirmer, rejeter, relier à la main et délier
+   avec `modifier`, If-Match sur la version des liaisons de l'actif, écriture sur le périmètre de l'actif et sur le
+   périmètre effectif de la machine (service LiaisonsMachines).
+   Lot ALH5 : liaison en masse par motif à joker, avec `modifier` : aperçu obligatoire (rien n'est écrit), puis application
+   des seules paires de l'aperçu validé (empreinte), chacune revérifiée ; une entrée de journal par opération.
+   Lot V6 : alertes décidées par la plateforme. Liste, fiche et fenêtre d'alerte critique avec `lire` (priorité et faits pour
+   tous, nombres limités à ce que la personne lit, aucun nom) ; prise en compte réservée au rôle « RSSI » de la plateforme
+   (lot V6b, décision B du 18/11/2026 : 403 pour tout autre compte, administrateur compris), If-Match sur la version de
+   l'alerte. Les décisions qui changent les faits (produit, rapprochement, état de suivi, liaison d'un actif, seuil) font
+   réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision.
+   Lot PC1 : vue d'ensemble (poste de commandement) avec `lire`, lecture seule, sans journal : niveau d'alerte, priorités et
+   failles suivies les mêmes pour tous ; nombres de machines et d'actifs limités à ce que la personne lit, aucun nom.
+   Lot PC2 : parc des machines par zone de rôle avec `lire`, lecture seule, sans journal : seules les machines lisibles sont
+   listées ou comptées ; marques et priorité les mêmes pour tous.
+   Lot PC3 : périmètres (cartes et détail d'un périmètre) avec `lire`, lecture seule, sans journal : seuls les périmètres,
+   machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404.
+   Lot PC4 : fiche illustrée d'une faille (recommandations par source, vecteur d'attaque traduit, schéma, en-tête) avec
+   `lire`, lecture seule, sans journal : constat, faille déclarée et alerte d'AlgoLightHouse lus par leur fiche existante
+   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement. */
+import {
+  RechercheAlertesVulnerabilites,
+  ApplicationLiaisonMasse,
+  DemandeLiaisonMasse,
+  AffectationMachine,
+  AnnulationRapprochement,
+  AffectationMachines,
+  CorpsDeliaisonMachine,
+  CorpsLiaisonMachine,
+  DecisionLiaisonMachine,
+  RechercheLiaisonsMachines,
+  ChangementEtatSuivi,
+  CreationActionSuivi,
+  DecisionRapprochement,
+  LienActionSuivi,
+  NatureSuivi,
+  RefusPropositionSuivi,
+  DemandeCollecte,
+  EffetMotQuery,
+  LiaisonDepotTenable,
+  LiaisonPerimetreAlh,
+  RechercheActifsAlh,
+  RechercheAlertesAlh,
+  RechercheTechnologiesAlh,
+  RechercheDeclarees,
+  ReglageMasque,
+  ReglagePriorite,
+  SuggestionsCpeQuery,
+  type ProduitSurveilleDto,
+  RechercheAvis,
+  RechercheFailles,
+  ProduitSurveilleBody,
+  ProduitSurveillePatch,
+  ProduitsSurveillesQuery,
+  RechercheConstats,
+  RechercheMachines,
+  RechercheParc,
+  IdPerimetreVue,
+  ParamsFicheFaille,
+} from '@suivi/shared';
+import { z } from 'zod';
+import type { Session } from '../auth.js';
+import { requireIfMatch, setEtag } from '../http/concurrency.js';
+import { HttpError } from '../http/errors.js';
+import { route } from '../http/route.js';
+
+const tags = ['Vulnérabilités'];
+const id = z.object({ id: z.uuid() });
+const lienMachine = z.object({ id: z.uuid(), machineId: z.uuid() });
+const CorpsLien = z.object({ machineId: z.uuid() }).strict();
+const suivi = z.object({ nature: NatureSuivi, id: z.uuid() });
+const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uuid() });
+
+export const vulnerabilitesRoutes = [
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/vue-ensemble',
+    summary:
+      'Vue d’ensemble du module (poste de commandement) : niveau d’alerte de 1 à 4, tuiles, failles suivies par secteur et priorité (bornées par case, totaux toujours rendus), journal des traces existantes ; priorités et niveau les mêmes pour tous, nombres de machines et d’actifs limités à ce que la personne lit, aucun nom ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.vueEnsemble.lire((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/alertes',
+    summary:
+      'Alertes du module (critiques : P1, faille exploitée présente ; simples : P2 exploitable sur un actif exposé directement sur Internet), filtrées par état et niveau ; nombres limités à ce que la personne lit, aucun nom ; dit si la personne peut prendre une alerte en compte (rôle RSSI)',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAlertesVulnerabilites,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.alertes.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/alertes/fenetre',
+    summary:
+      'Fenêtre d’alerte critique : alertes critiques ouvertes non prises en compte, la plus récente en tête (bornées), et si la personne peut les prendre en compte (rôle RSSI)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.alertes.fenetre((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/alertes/:id',
+    summary: 'Fiche d’une alerte (ETag : version de l’alerte)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const a = await svc.vulnerabilites.alertes.lire((s as Session).user, params.id);
+      setEtag(reply, a.version);
+      return a;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/alertes/:id/prise-en-compte',
+    summary:
+      'Prendre une alerte en compte, pour tout le monde (If-Match : version de l’alerte) ; réservé au rôle RSSI de la plateforme (403 sinon, administrateur compris) ; tracé au journal ; la fenêtre d’alerte critique disparaît',
+    tags,
+    // Lecture du module comme garde de route (module actif, session, CSRF) ; le rôle RSSI est exigé par le service.
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const a = await svc.vulnerabilites.alertes.prendreEnCompte(
+        params.id,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, a.version);
+      return a;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/produits',
+    summary: 'Produits surveillés du registre de l’organisation, éventuellement filtrés par famille',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: ProduitsSurveillesQuery,
+    handler: async ({ svc, query }) => svc.vulnerabilites.produits.lister(query.famille),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/produits/:id',
+    summary: 'Fiche d’un produit surveillé (ETag : version de la fiche)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, params, reply }) => {
+      const p: ProduitSurveilleDto = await svc.vulnerabilites.produits.lire(params.id);
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/produits',
+    summary: 'Ajouter un produit surveillé (origine « saisie ») ; doublon éditeur, produit et version refusé',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: ProduitSurveilleBody,
+    status: 201,
+    handler: async ({ svc, s, body, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.creer(body, (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('produit-cree');
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/produits/:id',
+    summary: 'Modifier un produit surveillé (If-Match : version attendue)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: ProduitSurveillePatch,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.modifier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('produit-modifie');
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/produits/:id',
+    summary: 'Supprimer un produit surveillé (If-Match : version attendue)',
+    tags,
+    access: 'vulnerabilites:supprimer',
+    params: id,
+    handler: async ({ svc, s, params, req, ip }) => {
+      await svc.vulnerabilites.produits.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('produit-supprime');
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/responsables',
+    summary: 'Responsables désignables pour un produit surveillé : personnes actives, groupes et fonctions',
+    tags,
+    access: 'vulnerabilites:modifier',
+    handler: async ({ svc }) => svc.vulnerabilites.produits.responsables(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/etat',
+    summary:
+      'Veille : état du flux, de l’exécutant et de chaque source (dernière collecte réussie, erreur, retard, dernière collecte)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.veille.etat(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/avis',
+    summary:
+      'Veille : alertes et avis du CERT-FR et du CERT Santé, paginés ; recherche par CVE citée, identifiant ou titre',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAvis,
+    handler: async ({ svc, query }) => svc.vulnerabilites.veille.avis(query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/failles',
+    summary:
+      'Veille : failles (CVE) connues, paginées ; `kev=oui` pour le catalogue des failles exploitées ; recherche par CVE, éditeur, produit ou nom',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheFailles,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.veille.failles(query, (s as Session).user),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/veille/collectes',
+    summary:
+      'Collecter maintenant : inscrit une collecte par source (ou pour la source donnée), traitée par l’exécutant ; flux ouvert exigé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: DemandeCollecte,
+    status: 201,
+    handler: async ({ svc, s, body, ip }) => {
+      const sess = s as Session;
+      if (!svc.limits.veilleCollecte(sess.user.id))
+        throw new HttpError(429, 'Trop de demandes de collecte. Réessayez dans une heure.');
+      return svc.vulnerabilites.veille.demander(body.source, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/synchronisation',
+    summary:
+      'Failles détectées : état de la synchronisation de chaque instance Tenable (dernière exécution, dernière complète, inventaire)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.tenable.etat(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/constats',
+    summary:
+      'Failles détectées par Tenable (un constat par contrôle), présentes sur au moins une machine lisible ; recherche par CVE, numéro ou nom du contrôle ; filtres gravité, exploité, exploitable, non maintenu',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheConstats,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.constats((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/constats/:id',
+    summary: 'Fiche d’un constat : CVE (catalogue KEV), correctif, vecteur CVSS, machines lisibles regroupées par rôle',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/fiches/:nature/:id',
+    summary:
+      'Fiche illustrée d’une faille (constat, faille déclarée, CVE de la veille, alerte AlgoLightHouse) : priorité et marques, vecteurs CVSS publiés, recommandations par source, présence lue',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: ParamsFicheFaille,
+    handler: async ({ svc, s, params }) =>
+      svc.vulnerabilites.fiches.fiche((s as Session).user, params.nature, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines',
+    summary:
+      'Machines lisibles (périmètre, ou administration du module pour celles sans périmètre) ; recherche par nom, filtres rôle et périmètre ; constats présents par gravité',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheMachines,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.machines((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/parc',
+    summary:
+      'Parc des machines lisibles par zone de rôle (front, back applicatif, base de données, rôle non indiqué), dans l’ordre du rang, avec leurs marques (priorité la plus haute, zero-day, exploitable) ; mêmes filtres que la liste ; 250 machines au plus par zone, totaux de chaque zone rendus ; aucune machine illisible comptée ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheParc,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.parc((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/perimetres',
+    summary:
+      'Périmètres lus, du plus critique au moins critique : machines lues, priorité la plus haute, failles présentes par gravité, machines zero-day et exploitables, actifs exposés rattachés ; carte « Sans périmètre » pour l’administration du module ; aucun total de ce qui est illisible ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.perimetres.lister((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/perimetres/:id',
+    summary:
+      'Détail d’un périmètre lu (ou « aucun » : machines sans périmètre, administration du module) : sa carte, ses machines par zone de rôle dans l’ordre du rang (250 au plus par zone), actifs exposés lisibles reliés par une liaison confirmée (3 nommés au plus par machine) ; périmètre illisible : 404 ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: z.object({ id: IdPerimetreVue }),
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.perimetres.detail((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id',
+    summary: 'Une machine lisible (ETag : version du rôle et du périmètre)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const m = await svc.vulnerabilites.failles.machine((s as Session).user, params.id);
+      setEtag(reply, m.version);
+      return m;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/perimetres',
+    summary: 'Périmètres où la personne peut écrire : choix admis pour rattacher une machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    handler: async ({ svc, s }) => svc.vulnerabilites.failles.perimetresAffectables((s as Session).user),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/machines/:id',
+    summary:
+      'Rôle et périmètre d’une machine (If-Match) ; écriture exigée sur le périmètre effectif actuel et le périmètre visé ; retirer le périmètre indiqué à la main rend celui du dépôt Tenable relié (sans dépôt relié : administrer)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: AffectationMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const m = await svc.vulnerabilites.failles.affecter(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, m.version);
+      return m;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/depots',
+    summary:
+      'Dépôts de Tenable et leur liaison à un périmètre de la plateforme, hérité par leurs machines sans périmètre indiqué à la main (administration du module)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.depots.lister(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/depots/:id',
+    summary:
+      'Relier (ou délier) un dépôt de Tenable à un périmètre de la plateforme (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonDepotTenable,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.depots.lier(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/machines/affectation',
+    summary:
+      'Rôle ou périmètre de plusieurs machines (200 au plus), tout ou rien ; chaque machine porte sa version attendue',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: AffectationMachines,
+    handler: async ({ svc, s, body, ip }) => svc.vulnerabilites.failles.affecterEnMasse(body, (s as Session).user, ip),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/produits/:id/fiche',
+    summary:
+      'Fiche d’un produit surveillé : identité CPE, machines reliées lisibles, rapprochements avec la veille (sauf retirés) et leur priorité',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const f = await svc.vulnerabilites.produits.fiche((s as Session).user, params.id);
+      setEtag(reply, f.produit.version);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/produits/:id/machines',
+    summary:
+      'Relier le produit à une machine lisible (If-Match : version du produit) ; une machine non lisible répond comme inconnue',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsLien,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.relier(
+        params.id,
+        body.machineId,
+        true,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/produits/:id/machines/:machineId',
+    summary: 'Délier le produit d’une machine lisible (If-Match : version du produit)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: lienMachine,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const p = await svc.vulnerabilites.produits.relier(
+        params.id,
+        params.machineId,
+        false,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, p.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id/produits',
+    summary: 'Produits surveillés reliés à une machine lisible',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.produits.deMachine((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/identites-cpe',
+    summary:
+      'Couples éditeur et produit déjà connus de la veille qui ressemblent au nom saisi (aucun appel réseau), pour l’identifiant CPE d’un produit',
+    tags,
+    access: 'vulnerabilites:modifier',
+    query: SuggestionsCpeQuery,
+    handler: async ({ svc, query }) => svc.vulnerabilites.rapprochements.suggestions(query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/rapprochements/:id/decision',
+    summary: 'Confirmer ou rejeter un rapprochement proposé, avec une note (If-Match : version du rapprochement)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: DecisionRapprochement,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.rapprochements.decider(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('rapprochement-decide');
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/rapprochements/:id/annulation',
+    summary:
+      'Annuler la confirmation ou le rejet d’un rapprochement, note facultative (If-Match : version du rapprochement) ; il est recalculé par la règle',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: AnnulationRapprochement,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.rapprochements.annuler(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('rapprochement-annule');
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/declarees',
+    summary:
+      'Failles déclarées : CVE rattachées à un produit relié à des machines lisibles, hors machines où Tenable les détecte ; priorité calculée',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheDeclarees,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.declarees((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/declarees/:id',
+    summary:
+      'Fiche d’une faille déclarée (rapprochement) : description de NVD, action exigée du catalogue KEV, machines lisibles reliées au produit, priorité et suivi',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.declaree((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/suivis/:nature/:id',
+    summary:
+      'Suivi d’un constat ou d’une faille déclarée : état, proposition « corrigée », historique, actions liées (détail des seules actions lisibles) ; ETag : version du suivi',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: suivi,
+    handler: async ({ svc, s, params, reply }) => {
+      const r = await svc.vulnerabilites.suivi.lire((s as Session).user, params.nature, params.id);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/etat',
+    summary:
+      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: ChangementEtatSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.changerEtat(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('suivi-etat');
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/refus',
+    summary: 'Refuser la proposition « corrigée » avec une note ; l’état ne change pas (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: RefusPropositionSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.refuserProposition(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/actions',
+    summary:
+      'Créer une action du registre existant liée à la faille, sous l’identité et avec les droits de la personne (droit du module des actions, écriture sur le périmètre) ; If-Match : version du suivi',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: CreationActionSuivi,
+    status: 201,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.creerAction(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/suivis/:nature/:id/liens',
+    summary: 'Relier une action existante que la personne peut lire (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: suivi,
+    body: LienActionSuivi,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.relierAction(
+        params.nature,
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/suivis/:nature/:id/liens/:actionId',
+    summary:
+      'Délier une action que la personne peut lire ; l’état de la faille ne change pas (If-Match : version du suivi)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: lienAction,
+    handler: async ({ svc, s, params, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.suivi.delierAction(
+        params.nature,
+        params.id,
+        params.actionId,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/etat',
+    summary:
+      'Surface externe : état de la synchronisation de chaque instance AlgoLightHouse (dernière exécution, dernière complète)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.etat((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/alertes',
+    summary:
+      'Alertes AlgoLightHouse lisibles (périmètre relié, ou administration du module pour un périmètre non relié), avec leur priorité ; recherche par titre, cible ou CVE ; filtres type, criticité, statut ; tri par priorité',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAlertesAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.alertes((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/alertes/:id',
+    summary:
+      'Fiche d’une alerte AlgoLightHouse lisible : CVE avec leur priorité et leurs sources, défauts et résolutions recommandés par l’éditeur (texte simple)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.surfaceExterne.alerte((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/actifs',
+    summary: 'Hôtes et domaines AlgoLightHouse lisibles ; recherche par adresse ou domaine ; filtre par type',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheActifsAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.actifs((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/carte',
+    summary:
+      'Carte « Lignes d’approche » de la surface externe : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles ; bornée, déjà filtrée par les droits',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.carte((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/technologies',
+    summary:
+      'Technologies AlgoLightHouse détectées sur des actifs lisibles, versions et CVE (score, EPSS, preuve, exploitation selon l’éditeur, priorité), produits surveillés rapprochés ; tri par priorité',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheTechnologiesAlh,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.surfaceExterne.technologies((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/perimetres',
+    summary: 'Périmètres AlgoLightHouse et leur liaison à un périmètre de la plateforme (administration du module)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.surfaceExterne.perimetres(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/surface/perimetres/:id',
+    summary:
+      'Relier (ou délier) un périmètre AlgoLightHouse à un périmètre de la plateforme (If-Match) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonPerimetreAlh,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.surfaceExterne.lier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/actifs/:id/machines',
+    summary:
+      'Machines internes reliées à un actif exposé lisible, propositions à décider et rejets (machines lisibles seulement ; ETag : version des liaisons de l’actif)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.fiche((s as Session).user, params.id);
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/actifs/:id/machines',
+    summary:
+      'Relier à la main un actif exposé à une machine interne lisible (If-Match : version des liaisons de l’actif) ; écriture exigée sur le périmètre de l’actif et sur celui de la machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsLiaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.relier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('liaison-manuelle');
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/liaisons',
+    summary:
+      'Liaisons entre actifs exposés et machines internes d’un statut (par défaut : propositions à décider), actif et machine lisibles',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheLiaisonsMachines,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.liaisonsMachines.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/masse/apercu',
+    summary:
+      'Aperçu d’une liaison en masse par motif à joker « * » (actifs lisibles et présents, machines lisibles ; 200 paires au plus, sinon 422 avec le nombre) ; rien n’est écrit',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: DemandeLiaisonMasse,
+    handler: async ({ svc, s, body }) => svc.vulnerabilites.liaisonsMachines.apercuMasse((s as Session).user, body),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/masse',
+    summary:
+      'Relier en masse les paires d’un aperçu validé (empreinte) ; chaque paire est revérifiée (droits, version des liaisons de l’actif, plafond), sinon écartée et comptée',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: ApplicationLiaisonMasse,
+    handler: async ({ svc, s, body, ip }) => {
+      const r = await svc.vulnerabilites.liaisonsMachines.appliquerMasse((s as Session).user, body, ip);
+      await svc.vulnerabilites.alertes.evaluer('liaison-masse');
+      return r;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/:id/decision',
+    summary:
+      'Confirmer ou rejeter une proposition de liaison (If-Match : version des liaisons de l’actif) ; écriture exigée sur le périmètre de l’actif et sur celui de la machine',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: DecisionLiaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.decider(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('liaison-decidee');
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/surface/liaisons/:id/deliaison',
+    summary:
+      'Délier une machine interne d’un actif exposé (If-Match : version des liaisons de l’actif) ; elle n’est pas reproposée à données égales',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: CorpsDeliaisonMachine,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const f = await svc.vulnerabilites.liaisonsMachines.delier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      await svc.vulnerabilites.alertes.evaluer('liaison-deliee');
+      setEtag(reply, f.versionLiaisons);
+      return f;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/:id/surface',
+    summary: 'Actifs exposés sur Internet lisibles reliés à une machine lisible (« exposée sur Internet par … »)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) =>
+      svc.vulnerabilites.liaisonsMachines.deMachine((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/priorite/reglage',
+    summary: 'Seuils de la grille de priorité (ETag : version du réglage)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, reply }) => {
+      const r = await svc.vulnerabilites.priorite.lire();
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/priorite/reglage',
+    summary: 'Régler les seuils de la grille de priorité (If-Match : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ReglagePriorite,
+    handler: async ({ svc, s, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
+      await svc.vulnerabilites.alertes.evaluer('seuil-priorite');
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/masque/reglage',
+    summary:
+      'Mots à ne pas masquer par le masque des machines de l’assistant, avec ce que chaque mot laisse sortir (ETag : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc, s, reply }) => {
+      const r = await svc.vulnerabilites.masque.lire((s as Session).user);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/masque/effet',
+    summary: 'Ce qu’un mot laisserait sortir : machines de l’inventaire dont il est le nom court ou le nom entier',
+    tags,
+    access: 'vulnerabilites:administrer',
+    query: EffetMotQuery,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.masque.effet((s as Session).user, query.mot),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/masque/reglage',
+    summary: 'Régler la liste des mots à ne pas masquer (If-Match : version du réglage)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ReglageMasque,
+    handler: async ({ svc, s, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.masque.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+];

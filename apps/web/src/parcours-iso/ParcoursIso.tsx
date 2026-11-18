@@ -3,7 +3,8 @@
    même identifiant, les mêmes droits et les mêmes versions. Rien n'est écrit ici, sauf des préférences d'affichage (vue,
    compléments HDS, animations). Une étape parcourue, un document présent ou une action close n'établit ni revue, ni
    conformité, ni certification. */
-import { Alert, Anchor, Button, Group, Modal, SegmentedControl, Select, Stack, Switch, Text } from '@mantine/core';
+import { Anchor, Button, Group, Modal, SegmentedControl, Select, Stack, Switch, Text } from '@mantine/core';
+import { APropos } from '@suivi/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ETAPES_PARCOURS,
@@ -117,12 +118,12 @@ export function ParcoursIso({ smsi }: { smsi: string }) {
     return <Text>Vous ne disposez pas du droit de consulter le pilotage, donc ce parcours.</Text>;
   return (
     <Stack>
-      <Alert variant="light" color="gray" title="Une aide pour s’orienter, pas un verdict">
-        Ce parcours regroupe les travaux d’un SMSI ISO/IEC 27001:2022 et, si votre périmètre est concerné, les
-        compléments HDS. Il renvoie vers vos modules et ne crée aucune donnée : l’ordre est une proposition, tout reste
-        consultable. Une étape parcourue, une preuve attachée ou une action close n’établit ni revue, ni conformité, ni
-        certification.
-      </Alert>
+      <APropos>
+        <strong>Une aide pour s’orienter, pas un verdict.</strong> Ce parcours regroupe les travaux d’un SMSI ISO/IEC
+        27001:2022 et, si votre périmètre est concerné, les compléments HDS. Il renvoie vers vos modules et ne crée
+        aucune donnée : l’ordre est une proposition, tout reste consultable. Une étape parcourue, une preuve attachée ou
+        une action close n’établit ni revue, ni conformité, ni certification.
+      </APropos>
       <Group align="flex-end" gap="md">
         <SegmentedControl
           aria-label="Vue du parcours"

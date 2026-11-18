@@ -18,6 +18,8 @@
      site-adresse               adresse du site demandée dans l'application
      backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+     integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
+     veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -31,7 +33,16 @@
   poivre-reinitialiser --confirmer  URGENCE, poivre perdu : nouveau poivre, mots de passe temporaires pour tous les comptes
    Raccourci : docker compose exec app setup-token                                                                */
 import crypto from 'node:crypto';
-import { FluxAppliques, FluxReprise, formaterPoivreGenere, type SettingsValues } from '@suivi/shared';
+import {
+  FluxAppliques,
+  FluxReprise,
+  formaterPoivreGenere,
+  LotSynchronisation,
+  LotVeille,
+  RapportCollecte,
+  RapportExecution,
+  type SettingsValues,
+} from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import { certificateInfo } from './certificates.js';
@@ -61,6 +72,8 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   site-adresse               adresse du site demandée
   backup-secours-realigner | site-adresse-realigner  après une restauration : réaligne l'application sur l'hôte (JSON sur l'entrée standard)
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
+  integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
+  veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   flux-reprise                modules en service jamais décidés enregistrés ouverts (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -175,6 +188,86 @@ async function main() {
         JSON.parse(await readStdin()),
         (await svc.settings.read('courriel')).values as SettingsValues['courriel'],
       );
+      break;
+    }
+    case 'integrations-claim': {
+      // Connecteurs du module Intégrations (ADR 0076) : module désactivé ou flux du type fermé, rien n'est remis. Une
+      // synchronisation dont le module destinataire (Vulnérabilités) est désactivé est close sans appel.
+      const { disabled } = await svc.modules.state(true);
+      const job = await svc.integrations.reclamer(!disabled.includes('integrations'), disabled);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'integrations-lot': {
+      // Lot d'une synchronisation (ADR 0100, lot V5), validé strictement : taille bornée, champ inattendu ou élément mal formé
+      // refusés (code 2, rien n'est écrit) ; exécution close ou sans envoi par lots : code 1.
+      const brut = await readStdin(INTEGRATIONS_LOT_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const p = LotSynchronisation.safeParse(valeur);
+      if (!z.uuid().safeParse(arg).success || !p.success) {
+        console.error('Lot refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      try {
+        console.log(JSON.stringify(await svc.integrations.lot(arg!, p.data.elements)));
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
+      break;
+    }
+    case 'integrations-finish': {
+      // Rapport de l'exécutant, validé strictement : champ inattendu, erreur sur plusieurs lignes ou résultat absent refusés.
+      let brut: unknown;
+      try {
+        brut = JSON.parse(await readStdin());
+      } catch {
+        console.error('Rapport illisible : JSON attendu sur l’entrée standard.');
+        process.exit(2);
+      }
+      const p = RapportExecution.safeParse(brut);
+      if (!z.uuid().safeParse(arg).success || !p.success) {
+        console.error('Rapport refusé : identifiant ou contenu invalide.');
+        process.exit(2);
+      }
+      await svc.integrations.terminer(arg!, p.data);
+      break;
+    }
+    case 'veille-claim': {
+      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : module désactivé ou flux fermé, rien n'est remis.
+      const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
+      const job = await svc.vulnerabilites.veille.reclamer(actif);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'veille-lot':
+    case 'veille-finish': {
+      // Lot ou bilan de l'exécutant, validé strictement (taille bornée, champ inattendu ou élément mal formé refusés).
+      const brut = await readStdin(VEILLE_ENTREE_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const schema = cmd === 'veille-lot' ? LotVeille : RapportCollecte;
+      if (!z.uuid().safeParse(arg).success || valeur === null || !schema.safeParse(valeur).success) {
+        console.error('Envoi refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      try {
+        if (cmd === 'veille-lot') console.log(JSON.stringify(await svc.vulnerabilites.veille.lot(arg!, valeur)));
+        else await svc.vulnerabilites.veille.terminer(arg!, valeur);
+      } catch (e) {
+        // Lot refusé (élément mal formé : 422) : code 2, comme un envoi invalide ; collecte close (409) : code 1.
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
       break;
     }
     case 'flux-souhaites': {
@@ -535,11 +628,25 @@ async function main() {
   await svc.db.end();
 }
 
-const readStdin = async () => {
+/** Lot de la veille : 500 éléments d'au plus quelques kilooctets chacun ; une faille NVD porte depuis le lot V4a jusqu'à
+    vingt produits touchés avec leur plage de versions (au pire une douzaine de kilooctets). */
+const VEILLE_ENTREE_MAX = 16 * 1024 * 1024;
+/** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
+const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
+
+/** Entrée standard entière ; avec une borne, null au-delà (lecture arrêtée). */
+async function readStdin(): Promise<string>;
+async function readStdin(max: number): Promise<string | null>;
+async function readStdin(max?: number) {
   const chunks: Buffer[] = [];
-  for await (const c of process.stdin) chunks.push(c as Buffer);
+  let taille = 0;
+  for await (const c of process.stdin) {
+    taille += (c as Buffer).length;
+    if (max !== undefined && taille > max) return null;
+    chunks.push(c as Buffer);
+  }
   return Buffer.concat(chunks).toString('utf8');
-};
+}
 
 /** Contrôle des données (avant et après une mise à jour, une migration de dossier ou une restauration) :
     nombres d'enregistrements, empreinte de l'état de l'outil historique, relecture de chaque version de document

@@ -2,7 +2,7 @@
    Les secrets (cookies, jetons, mots de passe) sont masqués. */
 import { pino, type Logger } from 'pino';
 
-const REDACT = [
+export const REDACT = [
   'req.headers.cookie',
   'req.headers.authorization',
   'req.headers["x-csrf-token"]',
@@ -17,6 +17,36 @@ const REDACT = [
   '*.secret',
   '*.poivre',
   '*.ancienPoivre',
+  // Secrets des connecteurs du module Intégrations (ADR 0076, point 10) : clés d'API de Tenable Security Center, et noms
+  // prévus par l'ADR pour les connecteurs à venir.
+  'accessKey',
+  'secretKey',
+  'secrets',
+  '*.accessKey',
+  '*.secretKey',
+  '*.appToken',
+  '*.userToken',
+  '*.clientSecret',
+  '*.accessToken',
+  '*.sessionToken',
+  '*.secrets',
+  'req.headers["x-apikey"]',
+  // Clé d'API d'AlgoLightHouse (ADR 0100, lot ALH1) : champ du secret et en-tête X-API-Key.
+  'cleApi',
+  '*.cleApi',
+  'req.headers["x-api-key"]',
+  '*["X-API-Key"]',
+  '*["x-api-key"]',
+  // Mandataire sortant de l'établissement (ADR 0101) : mot de passe (champ de l'API et paramètre remis à l'exécutant) et
+  // en-tête d'authentification auprès d'un mandataire.
+  'motDePasse',
+  '*.motDePasse',
+  'mandataire.motDePasse',
+  '*.mandataire.motDePasse',
+  'req.headers["proxy-authorization"]',
+  '*.headers["proxy-authorization"]',
+  '*["Proxy-Authorization"]',
+  '*["proxy-authorization"]',
 ];
 
 /** Niveaux de la journalisation technique, du plus détaillé au plus sobre. Les erreurs (error, fatal) sont toujours collectées. */

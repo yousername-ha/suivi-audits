@@ -33,6 +33,7 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
+import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
@@ -102,6 +103,25 @@ function ListeRegistres() {
     queryKey: ['registres', kind, archives],
     queryFn: () => get<{ items: RegistreDto[] }>(`/api/registres?archives=${archives}${kind ? `&kind=${kind}` : ''}`),
   });
+  const reinitialiser = () => {
+    setKind(null);
+    setArchives(false);
+  };
+  const criteres: CritereActif[] = [
+    ...(kind
+      ? [
+          {
+            cle: 'famille',
+            libelle: 'Famille',
+            valeur: KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind,
+            retirer: () => setKind(null),
+          },
+        ]
+      : []),
+    ...(archives
+      ? [{ cle: 'archives', libelle: 'Registres archivés', valeur: 'affichés', retirer: () => setArchives(false) }]
+      : []),
+  ];
   return (
     <Page>
       <PageHeader
@@ -122,28 +142,43 @@ function ListeRegistres() {
         )}
         <Tabs.Panel value="registres" pt="md">
           <Stack>
-            <Group align="end">
-              <Select
-                label="Famille"
-                clearable
-                placeholder="Toutes les familles"
-                data={KIND_OPTIONS}
-                value={kind}
-                onChange={setKind}
-              />
-              <Checkbox
-                label="Afficher les registres archivés"
-                checked={archives}
-                onChange={(e) => setArchives(e.currentTarget.checked)}
-              />
-            </Group>
+            {/* Boîte d'outils commune (7.3.0) : critères dans les filtres avancés ; la famille se filtre aussi sur le
+                titre de sa colonne. */}
+            <BoiteOutils
+              label="Outils des registres"
+              filtres={{
+                actifs: [kind, archives ? '1' : ''].filter(Boolean).length,
+                onReinitialiser: reinitialiser,
+                contenu: (
+                  <>
+                    <Select
+                      label="Famille"
+                      clearable
+                      placeholder="Toutes les familles"
+                      data={KIND_OPTIONS}
+                      value={kind}
+                      onChange={setKind}
+                      comboboxProps={{ withinPortal: false }}
+                    />
+                    <Checkbox
+                      label="Afficher les registres archivés"
+                      checked={archives}
+                      onChange={(e) => setArchives(e.currentTarget.checked)}
+                    />
+                  </>
+                ),
+              }}
+            />
+            <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
             <ErrorAlert error={liste.error} />
             <DataTable label="Registres accessibles, défilement horizontal possible">
               <Table>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Registre</Table.Th>
-                    <Table.Th>Famille</Table.Th>
+                    <Table.Th>
+                      <FiltreColonne libelle="Famille" valeur={kind} options={KIND_OPTIONS} onChange={setKind} />
+                    </Table.Th>
                     <Table.Th>Périmètres</Table.Th>
                     <Table.Th>Éléments</Table.Th>
                     <Table.Th>Votre accès</Table.Th>
@@ -381,10 +416,9 @@ function Elements({ r }: { r: RegistreDto }) {
   };
   return (
     <Stack>
-      <TextInput
-        label="Rechercher un élément"
-        value={recherche}
-        onChange={(e) => setRecherche(e.currentTarget.value)}
+      <BoiteOutils
+        label="Outils des éléments du registre"
+        recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
       />
       <ErrorAlert error={liste.error} />
       <ErrorAlert error={erreurOrdre} />

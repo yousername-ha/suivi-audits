@@ -1,10 +1,10 @@
 /* Fournisseurs rattachés au périmètre affiché (ADR 0032, lot M4) : lecture, sans copie. La même évaluation courante
    apparaît dans tous les périmètres où le fournisseur est rattaché ; ces chiffres aident à piloter, ils ne mesurent pas
    une conformité. */
-import { Alert, Card, Group, Stack, Table, Text } from '@mantine/core';
+import { Card, Group, Stack, Table, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { DataTable, StatusChip } from '@suivi/ui';
+import { APropos, DataTable, StatusChip } from '@suivi/ui';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import type { Fournisseur } from './Fournisseurs';
@@ -22,14 +22,14 @@ export function FournisseursPerimetre({ smsi }: { smsi: string }) {
   const s = q.data?.summary;
   return (
     <Stack>
-      <Alert>
+      <APropos>
         Seuls les fournisseurs rattachés à ce périmètre sont listés. Leur évaluation est celle de l’organisation : elle
         est identique dans tous les périmètres. Le rattachement se gère dans{' '}
         <Text component={Link} to="/pilotage/fournisseurs" inherit td="underline">
           les fournisseurs de l’organisation
         </Text>
         .
-      </Alert>
+      </APropos>
       <ErrorAlert error={q.error} />
       {s && (
         <Group>

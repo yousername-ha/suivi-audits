@@ -36,9 +36,20 @@ const INVENTAIRE = [
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
+  'pilotage|integrations|integrations|/integrations|integrations|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
+  'risques|vulnerabilites|vulnerabilites-vue|/vulnerabilites/vue|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-produits|/vulnerabilites/produits|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-veille|/vulnerabilites/veille|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-failles|/vulnerabilites/failles|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-machines|/vulnerabilites/machines|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-perimetres|/vulnerabilites/perimetres|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-surface|/vulnerabilites/surface-externe|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-alertes|/vulnerabilites/alertes|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-priorite|/vulnerabilites/priorite|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-masque|/vulnerabilites/masque|vulnerabilites|administrer',
   'conformite|referentiels|bibliotheque|/pilotage/bibliotheque|conformite|lire',
   'conformite|applicabilite|dda-iso|/pilotage/dda-iso|audit|lire',
   'conformite|applicabilite|dda-annexe-a|/pilotage/dda-annexe-a|audit|lire',
@@ -146,7 +157,14 @@ describe('navigation', () => {
     expect(rappels?.rubriques.map((r) => [r.id, r.to, r.module, r.action])).toEqual([
       ['rappels', '/pilotage/rappels', 'pilotage', 'lire'],
     ]);
-    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues', 'rappels']);
+    expect(pilotage?.destinations.map((d) => d.id)).toEqual([
+      'synthese',
+      'parcours',
+      'objectifs',
+      'revues',
+      'rappels',
+      'integrations',
+    ]);
     expect(rubriques.some((r) => r.id === 'configuration' || r.to === '/pilotage/configuration')).toBe(false);
     expect(localiser('/pilotage/rappels')).toMatchObject({
       famille: { id: 'pilotage' },

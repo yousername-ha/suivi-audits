@@ -281,9 +281,18 @@ export function PilotagePage() {
     <Page>
       <PageHeader
         title={PILOTAGE_LABELS[section] ?? 'Pilotage'}
-        description={
-          config?.description ??
-          'Qualité, sécurité et référentiels : pilotez vos travaux à partir des données existantes.'
+        description={config?.description}
+        actions={
+          (scopes.data?.length ?? 0) > 1 && (
+            <Select
+              className="selecteur-perimetre"
+              allowDeselect={false}
+              label="Périmètre affiché"
+              data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
+              value={smsi ?? null}
+              onChange={chooseScope}
+            />
+          )
         }
       />
       <Stack>
@@ -298,16 +307,6 @@ export function PilotagePage() {
           </Anchor>
         )}
         <ErrorAlert error={scopes.error ?? policy.error} />
-        {(scopes.data?.length ?? 0) > 1 && (
-          <Select
-            allowDeselect={false}
-            label="Périmètre affiché"
-            description="Les accès existants sont conservés."
-            data={scopes.data!.map((s) => ({ value: s.id, label: s.name }))}
-            value={smsi ?? null}
-            onChange={chooseScope}
-          />
-        )}
         {!allowed && <Text>Vous ne disposez pas du droit de consulter cette rubrique.</Text>}
         {allowed && smsi && smsi !== SOCLE && RUBRIQUES_COMMUNES.has(section) && (
           <Alert color="blue" role="note">
@@ -385,17 +384,17 @@ export function PilotagePage() {
             )}
             {['actions', 'recurrences'].includes(section) && can('ecarts', 'lire') && (
               <>
-                <Group>
-                  {can('ecarts', 'modifier') && (
-                    <>
-                      <Button onClick={() => create('action')}>Ajouter une action</Button>
-                      <Button variant="light" onClick={() => create('task_series')}>
-                        Ajouter une tâche récurrente
-                      </Button>
-                    </>
-                  )}
-                </Group>
                 <Tasks
+                  outils={
+                    can('ecarts', 'modifier') && (
+                      <>
+                        <Button onClick={() => create('action')}>Ajouter une action</Button>
+                        <Button variant="light" onClick={() => create('task_series')}>
+                          Ajouter une tâche récurrente
+                        </Button>
+                      </>
+                    )
+                  }
                   key={smsi + section}
                   smsi={smsi}
                   policy={policy.data.definition}
@@ -419,12 +418,14 @@ export function PilotagePage() {
             {section === 'risques' && can('pilotage', 'lire') && (
               <>
                 <Group>
-                  {can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>}
                   <Anchor component={Link} to="/pilotage/configuration">
                     Choisir ou adapter la méthode d’appréciation
                   </Anchor>
                 </Group>
                 <RegistreRisques
+                  ajout={
+                    can('pilotage', 'modifier') && <Button onClick={() => create('risk')}>Ajouter un risque</Button>
+                  }
                   key={smsi}
                   smsi={smsi}
                   onOpen={open}
@@ -704,12 +705,42 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           avis?: 'utile' | 'inutile' | null;
           reponse?: string | null;
           readAt: string | null;
+          /** Alerte du module Vulnérabilités (ADR 0100, lot V6) : sans périmètre, lien vers la fiche de l'alerte. */
+          lien?: string;
         }[]
       >('/api/grc/notifications'),
   });
+  // Alertes du module Vulnérabilités : elles ne relèvent d'aucun périmètre, elles sont listées quel que soit le SMSI choisi.
+  const alertes = q.data?.filter((n) => !n.smsiId && n.lien) ?? [];
   return (
     <Stack>
       <ErrorAlert error={error ?? q.error} />
+      {alertes.map((n) => (
+        <Card key={n.id} withBorder>
+          <Text fw={600}>{n.title}</Text>
+          <Text>{n.message}</Text>
+          <Group>
+            <Button variant="light" component={Link} to={n.lien!}>
+              Ouvrir l’alerte
+            </Button>
+            {!n.readAt && (
+              <Button
+                variant="subtle"
+                onClick={async () => {
+                  try {
+                    await api('PUT', `/api/grc/notifications/${n.id}/read`);
+                    await qc.invalidateQueries({ queryKey: ['grc', 'notifications'] });
+                  } catch (e) {
+                    setError(e);
+                  }
+                }}
+              >
+                Marquer comme lu
+              </Button>
+            )}
+          </Group>
+        </Card>
+      ))}
       {q.data
         ?.filter((n) => n.smsiId === smsi)
         .map((n) => (
@@ -773,7 +804,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
             </Group>
           </Card>
         ))}
-      {q.data && !q.data.some((n) => n.smsiId === smsi) && <Text>Aucun rappel pour le moment.</Text>}
+      {q.data && !alertes.length && !q.data.some((n) => n.smsiId === smsi) && <Text>Aucun rappel pour le moment.</Text>}
     </Stack>
   );
 }

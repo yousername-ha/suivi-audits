@@ -4516,3 +4516,38 @@ tr[data-importe='oui'] {
 .champ-choix {
   min-width: 9em;
 }
+
+/* Produits surveillés (module Vulnérabilités, ADR 0100) : identifiant CPE long, coupé n'importe où. */
+.produit-cpe {
+  font-family: var(--mantine-font-family-monospace);
+  overflow-wrap: anywhere;
+}
+
+/* Intégrations (ADR 0076) : tuiles des connecteurs, pictogramme neutre agrandi (aucun logo de marque). */
+.integrations-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.integration-tuile {
+  min-width: 0;
+}
+.integration-picto {
+  display: inline-flex;
+  flex: none;
+  color: var(--mantine-primary-color-filled);
+}
+.integration-picto .nav-icone {
+  width: 2.25em;
+  height: 2.25em;
+}
+
+/* Veille des vulnérabilités (module Vulnérabilités, ADR 0100) : identifiants et vecteurs en chasse fixe, textes des sources
+   coupés n'importe où (un mot démesuré ne déborde pas). */
+.veille-code {
+  font-family: var(--mantine-font-family-monospace);
+  overflow-wrap: anywhere;
+}
+.veille-texte {
+  overflow-wrap: anywhere;
+}

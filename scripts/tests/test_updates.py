@@ -44,7 +44,16 @@ def fake_run(revision='b'*40, attest=None, fetch_fail_origin=False, fetched=None
     return run
 
 
-class Updates(unittest.TestCase):
+class Isolement:
+    def isoler_moteur(self):
+        """Socket du moteur Docker inexistant et configuration de la CLI vide : rien ne joint le moteur ni le registre réels."""
+        for p in (patch.object(m, 'DOCKER_SOCKET', str(self.root/'moteur-absent.sock')),
+                  patch.dict(os.environ, DOCKER_CONFIG=str(self.root/'config-docker'))):
+            p.start()
+            self.addCleanup(p.stop)
+
+
+class Updates(Isolement, unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -55,6 +64,9 @@ class Updates(unittest.TestCase):
         with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
             self.w = m.Worker()
         self.id = str(uuid.uuid4())
+        # Moteur Docker absent et aucun identifiant de registre (ADR 0104) : le téléchargement passe par « docker pull », simulé
+        # par fake_run ; aucun test de cette classe ne joint le moteur Docker de la machine.
+        self.isoler_moteur()
         # Flux « mises-a-jour » ouvert par l'administrateur (ADR 0097) ; les tests du flux fermé le referment.
         self.ouverts = {'mises-a-jour'}
         self.w.flux_ouvert = lambda module: module in self.ouverts
@@ -338,6 +350,21 @@ class Updates(unittest.TestCase):
         self.w.job={'id':str(uuid.uuid4()),'kind':'check','target':None}
         self.w.publish(phase='checking')
         self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing'])
+
+    def test_retour_a_l_application_seulement_a_la_reussite(self):
+        """Fin du script (phase « termine ») : les vérifications finales restent à faire (santé, relève de l'exécutant, frontal) ;
+        l'étape « Retour à l'application » n'est franchie que par finish('success'), jamais avant la vérification."""
+        self.assertEqual(m.PHASES['termine'],'verifying')
+        self.assertNotIn('complete',m.PHASES.values())
+        self.w.job={'id':self.id,'kind':'install','target':'3.1.0'}
+        self.w.publish(id=self.id,status='running',phase='preparing',etapes=[],startedAt=m.now())
+        for phase in ('backup','installing','verifying',m.PHASES['termine']):
+            self.w.publish(phase=phase)
+        self.w.publish(phase='verifying',message='Vérification finale du système de mise à jour.')
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']],['preparing','backup','installing','verifying'])
+        with patch.object(self.w,'cli',return_value=''), patch.object(self.w,'receipt'):
+            self.w.finish('success','Mise à jour installée et vérifiée.')
+        self.assertEqual([e['phase'] for e in self.w.state['etapes']][-2:],['verifying','complete'])
 
     def test_recu_structure_sans_donnee_sensible(self):
         backup=self.data/'sauvegardes-updates/avant-maj-3.0.0-vers-3.1.0.tar.age'
@@ -716,5 +743,322 @@ class FrontalALaDemande(unittest.TestCase):
         with patch.object(self.w, 'cli', return_value=''):
             self.w.finish('failed', 'Échec fictif.')
         self.assertIs(self.etat_public()['coupure'], False)
+
+
+def couche(c):
+    return 'sha256:' + c * 64
+
+
+def manifeste(couches, plateforme=('linux', 'amd64')):
+    """Sortie de « docker manifest inspect -v » pour un index : image de la plateforme et son attestation (unknown/unknown)."""
+    return json.dumps([
+        {'Ref': 'x', 'Descriptor': {'digest': couche('1'), 'size': 1, 'platform': {'os': plateforme[0], 'architecture': plateforme[1]}},
+         'OCIManifest': {'layers': [{'digest': couche(c), 'size': s} for c, s in couches]}},
+        {'Ref': 'y', 'Descriptor': {'digest': couche('2'), 'size': 1, 'platform': {'os': 'unknown', 'architecture': 'unknown'}},
+         'OCIManifest': {'layers': [{'digest': couche('9'), 'size': 22781}]}},
+    ])
+
+
+class FauxFlux:
+    """Réponse de l'API du moteur : lignes JSON lues une à une, chaque lecture avance l'horloge simulée. Une exception de la liste
+    est levée à sa lecture."""
+
+    def __init__(self, test, status, lignes):
+        self.test, self.status, self.lignes = test, status, list(lignes)
+
+    def read(self, n=-1):
+        return self.lignes.pop(0) if self.lignes else b''
+
+    def readline(self, n=-1):
+        self.test.t[0] += self.test.pas
+        if not self.lignes:
+            return b''
+        ligne = self.lignes.pop(0)
+        if isinstance(ligne, BaseException):
+            raise ligne
+        return ligne if isinstance(ligne, bytes) else (json.dumps(ligne) + '\r\n').encode()
+
+
+class FausseConnexion:
+    def __init__(self):
+        self.brut = self
+        self.fermee = False
+
+    def settimeout(self, valeur):
+        assert valeur > 0
+
+    def close(self):
+        self.fermee = True
+
+
+class Telechargement(Isolement, unittest.TestCase):
+    """Progression réelle du téléchargement (ADR 0104) : images tirées par l'API du moteur Docker (simulée ici), octets reçus sur
+    un total fixé avant le début, publiés au plus une fois par seconde puis retirés ; repli sur « docker pull » ; vérifications
+    de signature inchangées après le téléchargement."""
+    API = f'ghcr.io/{m.REPOSITORY}-api'
+    WEB = f'ghcr.io/{m.REPOSITORY}-web'
+    UPDATER = f'ghcr.io/{m.REPOSITORY}-updater'
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\n')
+        self.data = self.root/'data'
+        (self.data/'etat').mkdir(parents=True)
+        with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
+            self.w = m.Worker()
+        self.isoler_moteur()
+        self.w.job = {'id': str(uuid.uuid4()), 'kind': 'install', 'target': '3.1.0'}
+        # Couches : A partagée par api et web et déjà présente sur le serveur ; l'image updater est déjà à jour.
+        self.manifestes = {self.API: manifeste([('a', 100), ('b', 200)]), self.WEB: manifeste([('a', 100), ('c', 300)]),
+                           self.UPDATER: manifeste([('d', 50)])}
+        self.flux = {
+            self.API: [{'status': 'Pulling from yousername-ha/suivi-audits-api', 'id': '3.1.0'},
+                       {'status': 'Pulling fs layer', 'progressDetail': {}, 'id': 'a' * 12},
+                       {'status': 'Already exists', 'progressDetail': {'hidecounts': True}, 'id': 'a' * 12},
+                       {'status': 'Pulling fs layer', 'progressDetail': {}, 'id': 'b' * 12},
+                       {'status': 'Downloading', 'progressDetail': {'current': 50, 'total': 200}, 'id': 'b' * 12},
+                       {'status': 'Downloading', 'progressDetail': {'current': 120, 'total': 200}, 'id': 'b' * 12},
+                       # Valeur en recul, puis au-delà de la taille, puis décompression (secondes) : ni recul ni dépassement.
+                       {'status': 'Downloading', 'progressDetail': {'current': 80, 'total': 200}, 'id': 'b' * 12},
+                       {'status': 'Downloading', 'progressDetail': {'current': 999, 'total': 200}, 'id': 'b' * 12},
+                       {'status': 'Extracting', 'progressDetail': {'current': 1, 'units': 's'}, 'id': 'b' * 12},
+                       {'status': 'Pull complete', 'progressDetail': {'hidecounts': True}, 'id': 'b' * 12},
+                       # Couche hors manifeste de la plateforme (attestation) : ignorée.
+                       {'status': 'Downloading', 'progressDetail': {'current': 10 ** 9}, 'id': '9' * 12},
+                       {'status': 'Digest: sha256:' + 'e' * 64},
+                       {'status': 'Status: Downloaded newer image for ghcr.io/yousername-ha/suivi-audits-api:3.1.0'}],
+            self.WEB: [{'status': 'Already exists', 'id': 'a' * 12},
+                       {'status': 'Downloading', 'progressDetail': {'current': 100, 'total': 300}, 'id': 'c' * 12},
+                       {'status': 'Download complete', 'id': 'c' * 12},
+                       {'status': 'Pull complete', 'id': 'c' * 12},
+                       {'status': 'Status: Downloaded newer image for ghcr.io/yousername-ha/suivi-audits-web:3.1.0'}],
+            self.UPDATER: [{'status': 'Pulling from yousername-ha/suivi-audits-updater', 'id': '3.1.0'},
+                           {'status': 'Status: Image is up to date for ghcr.io/yousername-ha/suivi-audits-updater:3.1.0'}],
+        }
+        self.statuts = {}
+        self.requetes, self.commandes, self.publications, self.connexions = [], [], [], []
+        self.t, self.pas = [1000.0], 0.3
+        self.moteur_absent = False
+
+    def faux_moteur(self, methode, chemin, timeout):
+        self.requetes.append((methode, chemin))
+        if self.moteur_absent:
+            raise FileNotFoundError(2, 'absent')
+        connexion = FausseConnexion()
+        self.connexions.append(connexion)
+        if chemin == '/version':
+            return connexion, FauxFlux(self, 200, [json.dumps({'Os': 'linux', 'Arch': 'amd64', 'ApiVersion': '1.52'}).encode()])
+        query = m.urllib.parse.parse_qs(m.urllib.parse.urlsplit(chemin).query)
+        depot = query['fromImage'][0]
+        self.assertEqual(query['tag'], ['3.1.0'])
+        return connexion, FauxFlux(self, self.statuts.get(depot, 200), self.flux[depot])
+
+    def faux_run(self, args, **kwargs):
+        self.commandes.append(args)
+        if args[:4] == ['docker', 'manifest', 'inspect', '-v']:
+            sortie = self.manifestes[args[4].rsplit(':', 1)[0]]
+            if isinstance(sortie, Exception): raise sortie
+            return sortie
+        return fake_run()(args, **kwargs)
+
+    def signatures(self, erreur=None):
+        publier = self.w.publish
+        def publication(**changes):
+            if 'telechargement' in changes:
+                self.publications.append((self.t[0], changes['telechargement']))
+            publier(**changes)
+        with patch.object(self.w, 'moteur', side_effect=self.faux_moteur), patch.object(self.w, 'run', side_effect=self.faux_run), \
+                patch.object(self.w, 'publish', side_effect=publication), patch.object(m.time, 'monotonic', lambda: self.t[0]):
+            if erreur:
+                with self.assertRaises(erreur) as contexte: self.w.signatures('3.1.0')
+                return contexte.exception
+            self.w.signatures('3.1.0')
+
+    def tirages(self):
+        return [m.urllib.parse.parse_qs(m.urllib.parse.urlsplit(c).query)['fromImage'][0] for _, c in self.requetes if c.startswith('/images/create')]
+
+    def cli_pull(self):
+        return [a[2] for a in self.commandes if a[:2] == ['docker', 'pull']]
+
+    def verifications(self):
+        return [a for a in self.commandes if a[:2] == ['cosign', 'verify']]
+
+    def test_progression_mesuree_monotone_bornee_puis_retiree_et_signatures_verifiees_apres(self):
+        # Une lecture par seconde : chaque changement est publié.
+        self.pas = 1.0
+        self.signatures()
+        valeurs = [v for _, v in self.publications]
+        # Trois images tirées par l'API, dans l'ordre, sans aucun « docker pull » ; total fixé avant le premier octet.
+        self.assertEqual(self.tirages(), [self.API, self.WEB, self.UPDATER])
+        self.assertEqual(self.requetes[0], ('GET', '/version'))
+        self.assertEqual(self.requetes[1][1], '/images/create?fromImage=ghcr.io%2Fyousername-ha%2Fsuivi-audits-api&tag=3.1.0')
+        self.assertEqual(self.cli_pull(), [])
+        self.assertEqual(valeurs[0], {'recu': 0, 'total': 650})
+        self.assertIsNone(valeurs[-1])
+        mesures = [v for v in valeurs if v is not None]
+        self.assertTrue(all(set(v) == {'recu', 'total'} and v['total'] == 650 and 0 <= v['recu'] <= 650 for v in mesures))
+        # A déjà présente (100), B reçue par morceaux sans recul ni dépassement, C, puis l'image déjà à jour (D, 50) comptée à
+        # la fin de son flux : le total est atteint, jamais dépassé.
+        self.assertEqual([v['recu'] for v in mesures], [0, 100, 150, 220, 300, 400, 600, 650])
+        # Toutes les connexions au moteur sont refermées ; l'état public ne garde rien.
+        self.assertTrue(all(c.fermee for c in self.connexions))
+        self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+        # Vérifications inchangées, après le téléchargement complet.
+        self.assertEqual(len(self.verifications()), 3)
+        premiere = self.commandes.index(self.verifications()[0])
+        self.assertTrue(all(i < premiere for i, a in enumerate(self.commandes) if a[:3] == ['docker', 'manifest', 'inspect']))
+        self.assertEqual(set(self.w.job['images']), {'api', 'web', 'updater'})
+        self.assertEqual(self.w.job['revision'], 'b' * 40)
+
+    def test_compte_des_octets_par_couche(self):
+        p = m.Progression({couche('a'): 100, couche('b'): 200})
+        etapes = [({'status': 'Downloading', 'progressDetail': {'current': 120}, 'id': 'b' * 12}, 120),
+                  ({'status': 'Downloading', 'progressDetail': {'current': 80}, 'id': 'b' * 12}, 120),
+                  ({'status': 'Downloading', 'progressDetail': {'current': True}, 'id': 'b' * 12}, 120),
+                  ({'status': 'Downloading', 'progressDetail': {'current': -5}, 'id': 'b' * 12}, 120),
+                  ({'status': 'Downloading', 'progressDetail': 'x', 'id': 'b' * 12}, 120),
+                  ({'status': 'Extracting', 'progressDetail': {'current': 1, 'units': 's'}, 'id': 'a' * 12}, 220),
+                  ({'status': 'Downloading', 'progressDetail': {'current': 10 ** 6}, 'id': 'b' * 12}, 300),
+                  ({'status': 'Downloading', 'progressDetail': {'current': 10 ** 6}, 'id': 'c' * 12}, 300),
+                  ({'status': 'Already exists', 'id': ['a']}, 300)]
+        for evenement, attendu in etapes:
+            p.evenement(evenement)
+            self.assertEqual(p.recu, attendu, evenement)
+        self.assertEqual(p.total, 300)
+
+    def test_couches_deja_presentes_comptees_recues_des_le_debut_et_une_seule_fois(self):
+        self.pas = 2.0
+        self.signatures()
+        recus = [v['recu'] for _, v in self.publications if v]
+        # A (100 octets) déjà présente : comptée reçue dès son annonce, la barre part au-dessus de zéro ; partagée par web,
+        # elle n'est comptée qu'une fois dans le total.
+        self.assertEqual(recus[:3], [0, 100, 150])
+        self.assertEqual(recus[-1], 650)
+
+    def test_publication_au_plus_une_fois_par_seconde(self):
+        self.pas = 0.05
+        self.flux[self.API][4:6] = [{'status': 'Downloading', 'progressDetail': {'current': n, 'total': 200}, 'id': 'b' * 12}
+                                    for n in range(1, 200)]
+        self.signatures()
+        instants = [t for t, v in self.publications if v is not None]
+        self.assertGreater(len(instants), 3)
+        self.assertTrue(all(b - a >= 1.0 for a, b in zip(instants, instants[1:])), instants)
+
+    def test_erreur_dans_le_flux_echec_sans_repli_ni_verification(self):
+        self.flux[self.WEB][2:2] = [{'errorDetail': {'message': 'refus du registre'}, 'error': 'refus du registre'}]
+        erreur = self.signatures(m.Failure)
+        self.assertEqual(str(erreur), 'Téléchargement en échec')
+        # Ni nouvel essai par la CLI, ni image suivante, ni vérification ; progression retirée de l'état public.
+        self.assertEqual(self.cli_pull(), [])
+        self.assertEqual(self.tirages(), [self.API, self.WEB])
+        self.assertEqual(self.verifications(), [])
+        self.assertIsNone(self.publications[-1][1])
+        self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+        self.assertNotIn('refus du registre', (self.w.public/'status.json').read_text())
+        self.assertNotIn('revision', self.w.job)
+
+    def test_flux_coupe_ou_illisible_apres_le_debut_echec_sans_repli(self):
+        for incident in (ConnectionResetError(104, 'coupé'), b'pas du json\r\n', m.http.client.IncompleteRead(b'')):
+            with self.subTest(incident=repr(incident)):
+                self.setUp()
+                self.flux[self.API][5:5] = [incident]
+                self.assertEqual(str(self.signatures(m.Failure)), 'Téléchargement interrompu')
+                self.assertEqual((self.cli_pull(), self.verifications()), ([], []))
+                self.assertIsNone(self.w.state['telechargement'])
+
+    def test_delai_depasse_par_image(self):
+        self.pas = m.TELECHARGEMENT_DELAI / 4
+        self.assertEqual(str(self.signatures(m.Failure)), 'Délai dépassé')
+        self.assertEqual((self.cli_pull(), self.tirages()), ([], [self.API]))
+        self.assertIsNone(self.w.state['telechargement'])
+
+    def test_identifiants_de_registre_configures_docker_pull_sans_progression(self):
+        dossier = self.root/'config-docker'
+        dossier.mkdir()
+        for config in ({'auths': {'registre.example.test': {}}}, {'credsStore': 'pass'}, {'credHelpers': {'registre.example.test': 'x'}},
+                       'illisible', ['x']):
+            with self.subTest(config=config):
+                (dossier/'config.json').write_text(config if isinstance(config, str) else json.dumps(config))
+                self.requetes, self.commandes, self.publications = [], [], []
+                self.signatures()
+                self.assertEqual(self.requetes, [])
+                self.assertFalse([a for a in self.commandes if a[:2] == ['docker', 'manifest']])
+                self.assertEqual(self.cli_pull(), [f'{d}:3.1.0' for d in (self.API, self.WEB, self.UPDATER)])
+                self.assertEqual(self.publications, [])
+                self.assertEqual(len(self.verifications()), 3)
+        # Configuration sans identifiant (dossier monté par défaut, ou entrées vides) : API du moteur.
+        (dossier/'config.json').write_text(json.dumps({'auths': {}, 'credHelpers': {}}))
+        self.requetes, self.commandes = [], []
+        self.signatures()
+        self.assertEqual((self.tirages(), self.cli_pull()), ([self.API, self.WEB, self.UPDATER], []))
+
+    def test_api_indisponible_avant_tout_octet_repli_sur_docker_pull(self):
+        def moteur_absent(t): t.moteur_absent = True
+        def manifeste_illisible(t): t.manifestes[t.WEB] = m.Failure('Commande interrompue')
+        def plateforme_absente(t): t.manifestes[t.UPDATER] = manifeste([('d', 50)], plateforme=('linux', 'arm64'))
+        def premiere_ligne_illisible(t): t.flux[t.API].insert(0, b'<html>\r\n')
+        def flux_vide(t): t.flux[t.API] = []
+        for preparer in (moteur_absent, manifeste_illisible, plateforme_absente, premiere_ligne_illisible, flux_vide):
+            with self.subTest(preparer.__name__):
+                self.setUp()
+                preparer(self)
+                self.signatures()
+                self.assertEqual(self.cli_pull(), [f'{d}:3.1.0' for d in (self.API, self.WEB, self.UPDATER)])
+                self.assertTrue(all(v is None for _, v in self.publications[1:]))
+                self.assertIsNone(self.w.state['telechargement'])
+                self.assertEqual(len(self.verifications()), 3)
+        # Réponse HTTP en erreur pour la deuxième image, la première étant tirée : elle et la suivante passent par la CLI.
+        self.setUp()
+        self.statuts[self.WEB] = 500
+        self.signatures()
+        self.assertEqual(self.tirages(), [self.API, self.WEB])
+        self.assertEqual(self.cli_pull(), [f'{self.WEB}:3.1.0', f'{self.UPDATER}:3.1.0'])
+        self.assertIsNone(self.publications[-1][1])
+        self.assertEqual(len(self.verifications()), 3)
+
+    def test_progression_jamais_conservee_hors_telechargement(self):
+        # Exécutant redémarré (même pendant une opération) ou opération terminée : aucune progression publiée.
+        self.w.publish(telechargement={'recu': 1, 'total': 2})
+        (self.w.private/'active.json').write_text(json.dumps(self.w.job))
+        with patch.dict(os.environ, REPO=str(self.root), DATA_DIR=str(self.data)):
+            self.assertIsNone(m.Worker().state['telechargement'])
+        self.w.publish(telechargement={'recu': 1, 'total': 2})
+        with patch.object(self.w, 'cli', return_value=''):
+            self.w.finish('failed', 'Échec fictif.')
+        self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+
+    def test_api_du_moteur_par_un_vrai_socket_unix(self):
+        """Connexion http.client sur un socket Unix réel : chemin de l'API sans préfixe de version, flux découpé (chunked)."""
+        chemin = str(self.root/'m.sock')
+        serveur = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        serveur.bind(chemin)
+        self.addCleanup(serveur.close)
+        serveur.listen(4)
+        recues = []
+        def servir():
+            for corps in ([json.dumps({'Os': 'linux', 'Arch': 'amd64'}).encode()],
+                          [(json.dumps(e) + '\r\n').encode() for e in self.flux[self.API]]):
+                brut, _ = serveur.accept()
+                with brut:
+                    requete = b''
+                    while b'\r\n\r\n' not in requete: requete += brut.recv(4096)
+                    recues.append(requete.split(b'\r\n', 1)[0].decode())
+                    brut.sendall(b'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n')
+                    for morceau in corps:
+                        brut.sendall(b'%x\r\n%s\r\n' % (len(morceau), morceau))
+                    brut.sendall(b'0\r\n\r\n')
+        fil = threading.Thread(target=servir, daemon=True)
+        fil.start()
+        progression = m.Progression({couche('a'): 100, couche('b'): 200})
+        with patch.object(m, 'DOCKER_SOCKET', chemin), patch.object(m, 'TELECHARGEMENT_PERIODE', 0):
+            self.assertEqual(self.w.plateforme(), ('linux', 'amd64'))
+            self.w.tirer(self.API, '3.1.0', {couche('a'): 100, couche('b'): 200}, progression)
+        fil.join(5)
+        self.assertEqual(recues, ['GET /version HTTP/1.1',
+                                  'POST /images/create?fromImage=ghcr.io%2Fyousername-ha%2Fsuivi-audits-api&tag=3.1.0 HTTP/1.1'])
+        self.assertEqual(progression.recu, 300)
+        self.assertEqual(self.w.state['telechargement'], {'recu': 300, 'total': 300})
 
 if __name__=='__main__': unittest.main()

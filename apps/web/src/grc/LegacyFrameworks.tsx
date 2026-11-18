@@ -1,7 +1,8 @@
-import { Alert, Anchor, Button, Card, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Stack, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { get } from '../api';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 /** Vue de la source historique existante : aucun référentiel ni exigence recopié. */
@@ -52,12 +53,16 @@ export function LegacyFrameworks({ smsi }: { smsi: string }) {
       {can('audit', 'lire') && (
         <>
           <Text fw={600}>Exigences ISO/HDS et mesures historiques</Text>
-          <TextInput
-            label="Rechercher une exigence historique"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.currentTarget.value);
-              setLimit(50);
+          {/* Boîte d'outils commune (7.3.0) : la recherche seule, libellé inchangé. */}
+          <BoiteOutils
+            label="Outils des exigences historiques"
+            recherche={{
+              label: 'Rechercher une exigence historique',
+              value: search,
+              onChange: (v) => {
+                setSearch(v);
+                setLimit(50);
+              },
             }}
           />
           {items.slice(0, limit).map((i) => (

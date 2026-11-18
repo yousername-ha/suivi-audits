@@ -1,6 +1,6 @@
 {
   "name": "@suivi/ui",
-  "version": "7.2.3",
+  "version": "7.3.0",
   "private": true,
   "type": "module",
   "description": "Charte graphique : jetons, thème Mantine (clair et sombre), styles statiques et composants communs",
@@ -32,7 +32,12 @@
     "./neon-parties.css": "./src/neon-parties.css",
     "./neon-processus.css": "./src/neon-processus.css",
     "./neon-fournisseurs.css": "./src/neon-fournisseurs.css",
-    "./neon-taches.css": "./src/neon-taches.css"
+    "./neon-taches.css": "./src/neon-taches.css",
+    "./neon-surface.css": "./src/neon-surface.css",
+    "./neon-commandement.css": "./src/neon-commandement.css",
+    "./neon-parc.css": "./src/neon-parc.css",
+    "./neon-fiche.css": "./src/neon-fiche.css",
+    "./neon-ergonomie.css": "./src/neon-ergonomie.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

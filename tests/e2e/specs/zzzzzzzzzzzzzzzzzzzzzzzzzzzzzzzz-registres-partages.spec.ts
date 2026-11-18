@@ -67,8 +67,11 @@ test('Registre partagé : actions visibles sous le second périmètre, fiche ave
     await page.goto('/pilotage/actions');
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: nomB, exact: true }).click();
+    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('combobox', { name: 'Vue synchronisée', exact: true }).click();
     await page.getByRole('option', { name: 'Liste', exact: true }).click();
+    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     await page.getByRole('button', { name: nomAction, exact: true }).click();
     const fiche = page.getByRole('dialog');
     const registre = fiche.getByTestId('registre-de-l-element');
