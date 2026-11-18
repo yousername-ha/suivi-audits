@@ -15,6 +15,8 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
    rectangle (« effet à la Apple », sans violet plein à l'intérieur). Validé après vidéo.
 5. **Adaptation des tests de bout en bout** : ouvrir l'entonnoir avant de choisir la vue, le mois, le registre ou le
    périmètre, et nom « Filtres avancés » au lieu de « Filtres ». Validée.
+6. **Fond blanc en clair** (18/11/2026) : en mode clair, le fond de page est blanc et non plus gris (jeton
+   `FONDS.clair.page`) ; les en-têtes de tableau des rapports imprimables gardent le gris de marque.
 
 ## Réalisation
 

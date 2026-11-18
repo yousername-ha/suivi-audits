@@ -1,4 +1,4 @@
-import { FONDS, GRIS } from '@suivi/ui';
+import { BRAND, FONDS, GRIS } from '@suivi/ui';
 import { GRC_LABELS, PILOTAGE_FIELDS, type GrcKind } from '@suivi/shared';
 
 const escape = (v: unknown) =>
@@ -62,7 +62,7 @@ export function pilotageReport(input: unknown) {
       )}</article>`;
     })
     .join('');
-  return `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pilotage — ${escape(GRC_LABELS[kind] ?? 'Registre')}</title><style>body{font-family:system-ui,sans-serif;color:${FONDS.clair.texte};line-height:1.5;max-width:70em;margin:2em auto;padding:1em}table{width:100%;border-collapse:collapse;margin-bottom:1em}th,td{text-align:left;vertical-align:top;border:1px solid ${GRIS[4]};padding:.5em;white-space:pre-wrap;overflow-wrap:anywhere}th{background:${FONDS.clair.page}}article{break-inside:avoid}h2{border-top:1px solid ${GRIS[4]};padding-top:1em}@media print{body{margin:0;max-width:none}article{break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}}</style><body><main><h1>${escape(GRC_LABELS[kind] ?? 'Registre de pilotage')}</h1><p>Généré le ${escape(report.generatedAt)} · ${objects.length} fiches · ${decisions.length} décisions</p><p>${escape(report.note)}</p>${contents}</main></body></html>`;
+  return `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pilotage — ${escape(GRC_LABELS[kind] ?? 'Registre')}</title><style>body{font-family:system-ui,sans-serif;color:${FONDS.clair.texte};line-height:1.5;max-width:70em;margin:2em auto;padding:1em}table{width:100%;border-collapse:collapse;margin-bottom:1em}th,td{text-align:left;vertical-align:top;border:1px solid ${GRIS[4]};padding:.5em;white-space:pre-wrap;overflow-wrap:anywhere}th{background:${BRAND.fond}}article{break-inside:avoid}h2{border-top:1px solid ${GRIS[4]};padding-top:1em}@media print{body{margin:0;max-width:none}article{break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}}</style><body><main><h1>${escape(GRC_LABELS[kind] ?? 'Registre de pilotage')}</h1><p>Généré le ${escape(report.generatedAt)} · ${objects.length} fiches · ${decisions.length} décisions</p><p>${escape(report.note)}</p>${contents}</main></body></html>`;
 }
 function decisionLabel(value: unknown) {
   return (
