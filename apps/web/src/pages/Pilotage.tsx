@@ -704,12 +704,42 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           avis?: 'utile' | 'inutile' | null;
           reponse?: string | null;
           readAt: string | null;
+          /** Alerte du module Vulnérabilités (ADR 0100, lot V6) : sans périmètre, lien vers la fiche de l'alerte. */
+          lien?: string;
         }[]
       >('/api/grc/notifications'),
   });
+  // Alertes du module Vulnérabilités : elles ne relèvent d'aucun périmètre, elles sont listées quel que soit le SMSI choisi.
+  const alertes = q.data?.filter((n) => !n.smsiId && n.lien) ?? [];
   return (
     <Stack>
       <ErrorAlert error={error ?? q.error} />
+      {alertes.map((n) => (
+        <Card key={n.id} withBorder>
+          <Text fw={600}>{n.title}</Text>
+          <Text>{n.message}</Text>
+          <Group>
+            <Button variant="light" component={Link} to={n.lien!}>
+              Ouvrir l’alerte
+            </Button>
+            {!n.readAt && (
+              <Button
+                variant="subtle"
+                onClick={async () => {
+                  try {
+                    await api('PUT', `/api/grc/notifications/${n.id}/read`);
+                    await qc.invalidateQueries({ queryKey: ['grc', 'notifications'] });
+                  } catch (e) {
+                    setError(e);
+                  }
+                }}
+              >
+                Marquer comme lu
+              </Button>
+            )}
+          </Group>
+        </Card>
+      ))}
       {q.data
         ?.filter((n) => n.smsiId === smsi)
         .map((n) => (
@@ -773,7 +803,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
             </Group>
           </Card>
         ))}
-      {q.data && !q.data.some((n) => n.smsiId === smsi) && <Text>Aucun rappel pour le moment.</Text>}
+      {q.data && !alertes.length && !q.data.some((n) => n.smsiId === smsi) && <Text>Aucun rappel pour le moment.</Text>}
     </Stack>
   );
 }

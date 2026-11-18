@@ -2,6 +2,7 @@
    L'assistant lit avec les droits de la personne qui l'interroge, bornés aux périmètres du profil ; il n'écrit dans aucun
    registre. */
 import { z } from 'zod';
+import type { SegmentTexte } from './assistant-vulnerabilites.js';
 import { FluxConfirme } from './flux-externes.js';
 
 /** Deux profils séparés : un auditeur n'audite pas son propre travail (ADR 0086, point 14). */
@@ -213,6 +214,9 @@ export interface MessageAssistantDto {
   outils: { nom: string; elements: number }[];
   erreur: boolean;
   createdAt: string;
+  /** Présent quand le texte cite des repères de machines (ADR 0100, V14) : `contenu` est alors le texte affiché, repères
+      remplacés par les noms des machines que la personne peut lire, et les segments permettent de marquer ces machines. */
+  segments?: SegmentTexte[];
 }
 export interface ConversationAssistantDto {
   id: string;

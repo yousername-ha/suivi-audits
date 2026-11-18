@@ -43,6 +43,38 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
       )
+      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par jour, rien si le module
+      // est désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.veille.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
+      )
+      // Synchronisation de Tenable (ADR 0100, lot V5) : une par jour et par instance active, rien si le module Intégrations
+      // ou le module Vulnérabilités est désactivé, ou si le flux « tenable » est fermé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            const { disabled } = await svc.modules.state();
+            if (disabled.includes('vulnerabilites') || disabled.includes('integrations')) return;
+            await svc.vulnerabilites.tenable.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation de Tenable')),
+      )
+      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par jour et par instance active, rien si le module
+      // Intégrations ou le module Vulnérabilités est désactivé, ou si le flux « algolighthouse » est fermé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            const { disabled } = await svc.modules.state();
+            if (disabled.includes('vulnerabilites') || disabled.includes('integrations')) return;
+            await svc.vulnerabilites.surfaceExterne.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

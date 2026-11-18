@@ -39,6 +39,7 @@ import { repondre } from './agent.js';
 import type { Classification } from './documents.js';
 import type { Assistant } from './index.js';
 import type { TransportModele } from './modele.js';
+import { transportMasque } from './masque.js';
 import { OUTILS, OUTILS_RONDE, type ActionsRonde } from './outils.js';
 
 /** L'heure de la ronde quotidienne se lit dans ce fuseau. */
@@ -378,8 +379,11 @@ export class RondesAssistant {
         .execute();
       const suivi = await this.suiviQuestions(profil, r.delai_relance_jours, compte.faits);
       const limite = Date.now() + RONDE_DUREE_MAX_MS;
+      // Masque des machines (ADR 0100, V14) : en ronde, aucune machine n'a de repère ; tout nom, adresse ou identifiant de
+      // machine qui figurerait dans une demande (description d'une action, document…) part sous la forme « [machine] ».
+      const masque = this.assistant.vulnerabilites ? await this.assistant.vulnerabilites.masque(referent, null) : null;
       const res = await repondre({
-        transport: this.transport,
+        transport: masque ? transportMasque(this.transport, masque) : this.transport,
         adresse: r.adresse,
         cle: await this.assistant.lireCle(),
         modele: r.modele,

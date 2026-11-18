@@ -531,3 +531,58 @@ avec un faux fournisseur (16 points, validation du flux comprise). Essai réel a
 fusion, par un relais de substitution (la sortie de l'environnement d'essai impose un mandataire). **Non vérifié : OpenAI et Anthropic avec un modèle réel** (aucune clé d'essai) ; les noms de
 modèles préenregistrés viennent des documentations publiques relevées le 15/11/2026 et vieilliront.
 
+## Addendum du 16/11/2026 — outils du module Vulnérabilités, masque de sortie
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `079`) par la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`), à la demande du RSSI ([ADR 0100](0100-module-vulnerabilites.md), décisions V25, V28 à
+V30). La session « Assistant RSSI intégré plateforme » en a été informée.
+
+- **Capacité facultative `vulnerabilites`** du contexte des outils, sur le modèle de `documents` : posée seulement si le
+  module est actif, si la personne a `vulnerabilites:lire` et si le profil est « Mise en œuvre » (constante de code, sans
+  écran). Sans elle, les outils sont absents de la déclaration faite au modèle. Conversation seulement, pas de ronde.
+- **Machines sous forme de repères** (« M-001 ») : la table de correspondance est gardée par conversation, sur le serveur.
+  Le texte des messages est gardé avec les repères, puisque l'historique repart chez le fournisseur à chaque tour ; les noms
+  sont remis à l'affichage (champ `segments` des messages).
+- **Masque de sortie sur le transport**, en conversation et en ronde : dernier contrôle avant le relais, il remplace tout
+  nom, adresse ou identifiant de machine de l'inventaire dans la consigne, les messages, les résultats d'outils et les
+  arguments d'appels d'outils. C'est un changement de portée générale pour l'assistant, pas seulement pour ces outils.
+- **Propositions d'action sur une faille** : table propre au module Vulnérabilités, décidée par la personne qui a mené la
+  conversation ; elles ne sont **pas relues par le modèle** (écart avec le point 13, qui fait relire les décisions rendues).
+- La mémoire, les fiches de méthode et le journal d'audit ne reçoivent ni nom ni repère de machine venant de ces outils.
+- Non vérifié : aucun essai avec un modèle réel.
+
+## Addendum du 17/11/2026 — surface externe (AlgoLightHouse) dans `evaluer_cve`, masque étendu
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `081`) par la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`), sur décision du RSSI du 17/11/2026 ([ADR 0100](0100-module-vulnerabilites.md),
+addendum « lot ALH2 », décision C). Aucun outil nouveau ; la déclaration des outils et les réglages de l'assistant ne changent
+pas.
+
+- `evaluer_cve` rend aussi l'**exposition sur Internet** de la CVE vue par AlgoLightHouse, pour ce que la personne lit :
+  nombre d'actifs exposés, repères « E-001 » (table propre par conversation, même règle que « M-001 »), technologies et
+  versions, alertes ouvertes (criticité, type, statut, titre) et recommandations de l'éditeur, bornées. Jamais de domaine,
+  d'adresse, de nom de périmètre, de FAI ni d'AS. La consigne du module cite les repères « E-… » après les machines.
+- **Masque de sortie étendu** (en conversation et en ronde) : domaines, adresses, adresses de résolution, libellés d'actifs et
+  cibles d'alertes d'AlgoLightHouse, sous-domaines d'un domaine connu, FAI et numéros d'AS des hôtes ; ils ne sont pas dans
+  l'inventaire des machines. Toujours protégés, jamais démasqués par la liste de mots (V31). Toute ronde dépend désormais
+  aussi de la lecture de la surface externe : une lecture en échec fait échouer la ronde (sens prudent de la panne).
+- À l'affichage, un repère « E-… » est remplacé par le domaine ou l'adresse pour une personne qui lit l'actif ; sinon il reste
+  affiché. Les propositions d'action ne visent toujours que des machines.
+- Non vérifié : aucun essai avec un modèle réel (faux transport).
+
+## Addendum du 17/11/2026 — priorité commune dans `evaluer_cve` (lot ALH5)
+
+Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `084`, sans effet sur l'assistant) par la session « Module surveillance
+vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`), sur décision du RSSI du 17/11/2026
+([ADR 0100](0100-module-vulnerabilites.md), addendum « lot ALH5 », décision A : « une priorité est la même pour tout le
+monde »). Aucun outil nouveau ; la déclaration des outils, les réglages, le masque et les repères ne changent pas.
+
+- `evaluer_cve` calcule la **présence** (détectée par Tenable, déclarée, exposée sur Internet) et la **priorité** de la CVE sur
+  tous les faits connus de la plateforme, AlgoLightHouse compris, sans tenir compte des droits de la personne : deux personnes
+  obtiennent la même priorité. Une CVE connue seulement par un constat que la personne ne lit pas n'est plus « inconnue ».
+- Le détail reste limité à ce qu'elle lit : constats, machines et repères « M-… », actifs exposés et repères « E-… »,
+  technologies et alertes. Une exposition sur des actifs qu'elle ne lit pas est dite par `aussiHorsDeVosDroits: true` (et
+  `exposeeSurInternet: true`), sans repère, nom ni nombre. La consigne du module le précise en une phrase.
+- La priorité d'une CVE rendue par l'assistant n'est **pas majorée** par la machine interne vulnérable (décision B) : la
+  majoration ne vaut que pour une alerte ou une technologie de la surface externe.
+- Non vérifié : aucun essai avec un modèle réel (faux transport).

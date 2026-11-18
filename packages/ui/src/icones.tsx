@@ -124,3 +124,11 @@ export const IconeResilience = () => (
     <path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9" />
   </Icone>
 );
+/** Pictogramme neutre d'un connecteur (module Intégrations, ADR 0076) : deux fiches reliées. Aucun logo de marque. */
+export const IconeConnecteur = () => (
+  <Icone>
+    <path d="M9 7V3M15 7V3" />
+    <path d="M6 7h12v4a6 6 0 0 1-12 0z" />
+    <path d="M12 17v4" />
+  </Icone>
+);

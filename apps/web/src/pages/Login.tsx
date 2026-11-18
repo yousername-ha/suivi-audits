@@ -129,6 +129,17 @@ export function LoginPage() {
     };
   }, [me.stage, next, nav, administrateur]);
   if (me.stage === 'anon' && setup.data?.needed && !setup.data.adminExists) return <Navigate to="/setup" replace />;
+  // Session complète : le temps de choisir la destination (lecture des questions de l'installation), un panneau d'attente
+  // remplace le formulaire de connexion, qui réapparaissait vide une seconde après la validation du code.
+  if (me.stage === 'ok')
+    return (
+      <AuthCard title="Connexion réussie">
+        <Stack align="center" gap="xs" role="status">
+          <Loader size="sm" aria-hidden="true" />
+          <Text size="sm">Ouverture de votre espace…</Text>
+        </Stack>
+      </AuthCard>
+    );
 
   const run = async (fn: () => Promise<unknown>, o: { rafraichir?: boolean } = {}) => {
     setError(null);
