@@ -42,6 +42,22 @@ import { DocumentsAssistant } from './assistant/documents.js';
 import { RondesAssistant } from './assistant/rondes.js';
 import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
+import { ProduitsSurveilles } from './vulnerabilites/produits.js';
+import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { FaillesDetectees } from './vulnerabilites/failles.js';
+import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { DepotsTenable } from './vulnerabilites/depots.js';
+import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
+import { LiaisonsMachines } from './vulnerabilites/liaisons-machines.js';
+import { MotsNonMasquesVulnerabilites } from './vulnerabilites/mots-non-masques.js';
+import { ReglagePrioriteVulnerabilites } from './vulnerabilites/priorite.js';
+import { Rapprochements } from './vulnerabilites/rapprochements.js';
+import { SuiviFailles } from './vulnerabilites/suivi.js';
+import { AssistantVulnerabilites } from './vulnerabilites/assistant.js';
+import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
+import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
+import { Integrations } from './integrations/index.js';
+import { Mandataire } from './mandataire.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
@@ -82,6 +98,64 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const assistantDocuments = new DocumentsAssistant(db, vault, assistant, log, flux);
   assistant.documents = assistantDocuments;
   assistant.organisation = historique;
+  /* Connecteurs (ADR 0076) ; la synchronisation de Tenable range ses lots dans le module Vulnérabilités (ADR 0100, lot V5). */
+  const integrations = new Integrations(db, vault, flux);
+  const tenable = new SynchronisationTenable(db, flux, integrations);
+  integrations.enLots['tenable:synchroniser'] = tenable;
+  /** Mandataire sortant de l'établissement (ADR 0101, lot P1) : réglage système, mot de passe scellé. Remis aussi à
+      l'exécutant pour les connecteurs sur Internet (AlgoLightHouse, lot ALH1), jamais pour Tenable. */
+  const mandataire = new Mandataire(db, vault);
+  integrations.mandataire = mandataire;
+  /* Vulnérabilités, lot V4a : seuils de priorité, rapprochements recalculés après chaque collecte NVD réussie. */
+  const reglagePriorite = new ReglagePrioriteVulnerabilites(db);
+  /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités ; priorité de ses CVE
+     par la grille commune (lot ALH2). */
+  const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc, reglagePriorite);
+  integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
+  const rapprochements = new Rapprochements(db, reglagePriorite);
+  const veille = new VeilleVulnerabilites(db, flux, mandataire);
+  /* Lot ALH2 : la veille dit sur combien d'actifs exposés lisibles une CVE est vue. */
+  veille.surface = surfaceExterne;
+  veille.apresCollecte = () => rapprochements.recalculerTout();
+  /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
+  const suivi = new SuiviFailles(db, grc);
+  /* Lot ALH3 : actifs exposés reliés aux machines internes ; propositions recalculées à la fin de chaque synchronisation
+     reçue d'AlgoLightHouse ou de Tenable, dans sa transaction. */
+  const liaisonsMachines = new LiaisonsMachines(db, grc);
+  /* Lot V6 : alertes décidées par la plateforme, évaluées à la fin de chaque synchronisation reçue (dans sa transaction, sous
+     un point de sauvegarde), de chaque collecte reçue de la veille et après les décisions qui changent les faits. */
+  const alertesVulnerabilites = new AlertesVulnerabilites(
+    db,
+    reglagePriorite,
+    modules,
+    surfaceExterne,
+    notificationsMetier,
+  );
+  surfaceExterne.apresSynchronisation = async (k, c) => {
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('synchronisation-algolighthouse', { k, c });
+  };
+  tenable.apresSynchronisation = async (k, c, id, complete) => {
+    await suivi.apresSynchronisation(k, c, id, complete);
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('synchronisation-tenable', { k, c });
+  };
+  veille.apresReception = (source) => alertesVulnerabilites.evaluer(`collecte-${source}`);
+  rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
+  const failles = new FaillesDetectees(db, grc, reglagePriorite);
+  /* V30 : les machines nommées dans une action suivent le rang des machines. */
+  suivi.rangs = (user) => failles.machinesRangees(user);
+  /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
+     ne pas masquer (V31). */
+  const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
+  assistant.vulnerabilites = new AssistantVulnerabilites(
+    db,
+    failles,
+    suivi,
+    reglagePriorite,
+    motsNonMasques,
+    surfaceExterne,
+  );
   return {
     cfg,
     log,
@@ -92,8 +166,30 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
+    /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
+        failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
+    vulnerabilites: {
+      produits: new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne),
+      veille,
+      tenable,
+      /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
+      depots: new DepotsTenable(db, grc),
+      surfaceExterne,
+      /** Lot ALH3 : actifs exposés (AlgoLightHouse) reliés aux machines internes (Tenable). */
+      liaisonsMachines,
+      failles,
+      rapprochements,
+      priorite: reglagePriorite,
+      masque: motsNonMasques,
+      suivi,
+      /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
+      alertes: alertesVulnerabilites,
+      /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
+      vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
+    },
     modules,
     flux,
+    mandataire,
     updates: new Updates(cfg, db, settings, alertes, flux),
     remiseAVide: new RemiseAVide(db),
     backups: new Backups(cfg, db, alertes),
@@ -104,6 +200,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     calendriers: new CalendriersPlateforme(db),
     conservation: new Conservation(db),
     courriel: new Courriel(db, vault, flux),
+    /** Module Intégrations (ADR 0076) : connecteurs, secrets scellés, file des exécutions traitée par l'exécutant. */
+    integrations,
     notificationsMetier,
     auth,
     motsDePasse,
@@ -123,6 +221,11 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     limits: {
       global: limiter(cfg.rateLimitPerMinute, 60e3),
       courrielTest: limiter(5, 10 * 60e3),
+      integrationTest: limiter(10, 60e3),
+      /** « Synchroniser maintenant » (Tenable) : six demandes par heure et par personne. */
+      integrationSynchro: limiter(6, 60 * 60e3),
+      /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
+      veilleCollecte: limiter(4, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),

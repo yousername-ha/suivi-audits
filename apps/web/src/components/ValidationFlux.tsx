@@ -4,7 +4,14 @@
    sortent, porteur, pare-feu à faire autoriser, case de validation obligatoire. Réutilisée par l'assistant d'installation
    (« Activer / Plus tard », lot 3). */
 import { Alert, Button, Checkbox, Group, List, Modal, Stack, Text, Title } from '@mantine/core';
-import { fluxExterne, type FluxExterneDefinition, type FluxModule } from '@suivi/shared';
+import {
+  fluxExterne,
+  fluxSelonMandataire,
+  passeParMandataire,
+  PRECISION_MANDATAIRE,
+  type FluxExterneDefinition,
+  type FluxModule,
+} from '@suivi/shared';
 import { useCallback, useState, type ReactNode } from 'react';
 import { peutConfirmer } from '../flux-externes';
 
@@ -28,12 +35,19 @@ export function DetailValidationFlux({
   module,
   valide,
   onValide,
+  precision,
+  mandataire = false,
 }: {
   module: FluxModule;
   valide: boolean;
   onValide: (v: boolean) => void;
+  /** Précision propre à l'instance qui ouvre le flux (port réglé de Tenable…), affichée sous les destinations. */
+  precision?: string;
+  /** Mandataire sortant de l'établissement actif (ADR 0101) : un flux qui l'utilise le dit, et sa ligne de pare-feu devient
+      la sortie vers le mandataire. */
+  mandataire?: boolean;
 }) {
-  const f = fluxExterne(module);
+  const f = fluxSelonMandataire(fluxExterne(module), mandataire);
   return (
     <Stack className="flux-texte">
       <Text size="sm">
@@ -45,6 +59,16 @@ export function DetailValidationFlux({
           Destinations et ports
         </Title>
         <Destinations f={f} />
+        {precision && (
+          <Text size="sm" fw={600}>
+            {precision}
+          </Text>
+        )}
+        {passeParMandataire(module, mandataire) && (
+          <Text size="sm" fw={600}>
+            {PRECISION_MANDATAIRE}
+          </Text>
+        )}
       </Stack>
       <Stack gap="xs">
         <Title order={3} size="h6">
@@ -84,10 +108,14 @@ export function ValidationFlux({
   module,
   onConfirm,
   onCancel,
+  precision,
+  mandataire,
 }: {
   module: FluxModule;
   onConfirm: () => void;
   onCancel: () => void;
+  precision?: string;
+  mandataire?: boolean;
 }) {
   const [valide, setValide] = useState(false);
   const f = fluxExterne(module);
@@ -102,7 +130,13 @@ export function ValidationFlux({
       classNames={{ content: 'fenetre-flux' }}
     >
       <Stack>
-        <DetailValidationFlux module={module} valide={valide} onValide={setValide} />
+        <DetailValidationFlux
+          module={module}
+          valide={valide}
+          onValide={setValide}
+          precision={precision}
+          mandataire={mandataire}
+        />
         <Group justify="flex-end" className="fenetre-flux__actions">
           <Button variant="default" onClick={onCancel}>
             Annuler
@@ -117,11 +151,20 @@ export function ValidationFlux({
 }
 
 /** Geste d'activation : `valider(module)` affiche la fenêtre et rend vrai si l'administrateur a coché et confirmé. Rendre
-    `fenetre` dans la page. */
-export function useValidationFlux(): { valider: (m: FluxModule) => Promise<boolean>; fenetre: ReactNode } {
-  const [demande, setDemande] = useState<{ module: FluxModule; repondre: (ok: boolean) => void } | null>(null);
+    `fenetre` dans la page. `mandataire` : le mandataire sortant de l'établissement est actif (ADR 0101). */
+export function useValidationFlux(): {
+  valider: (m: FluxModule, precision?: string, mandataire?: boolean) => Promise<boolean>;
+  fenetre: ReactNode;
+} {
+  const [demande, setDemande] = useState<{
+    module: FluxModule;
+    precision?: string;
+    mandataire?: boolean;
+    repondre: (ok: boolean) => void;
+  } | null>(null);
   const valider = useCallback(
-    (module: FluxModule) => new Promise<boolean>((repondre) => setDemande({ module, repondre })),
+    (module: FluxModule, precision?: string, mandataire?: boolean) =>
+      new Promise<boolean>((repondre) => setDemande({ module, precision, mandataire, repondre })),
     [],
   );
   const fin = (ok: boolean) => {
@@ -134,6 +177,8 @@ export function useValidationFlux(): { valider: (m: FluxModule) => Promise<boole
       <ValidationFlux
         key={demande.module}
         module={demande.module}
+        precision={demande.precision}
+        mandataire={demande.mandataire}
         onConfirm={() => fin(true)}
         onCancel={() => fin(false)}
       />

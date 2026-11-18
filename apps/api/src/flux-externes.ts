@@ -5,6 +5,7 @@
 import {
   FLUX_MODULES,
   FLUX_REPRISE_ACTEUR,
+  estFluxRepris,
   FLUX_REPRISE_MOTIFS,
   fluxExterne,
   sensDuFlux,
@@ -12,6 +13,7 @@ import {
   type FluxEtatApplique,
   type FluxExterneEtat,
   type FluxModule,
+  type FluxModuleRepris,
   type FluxRepriseMotif,
   type FluxSouhaites,
   type SettingsValues,
@@ -187,13 +189,14 @@ export class FluxExternes {
       l'état appliqué seul a créée) est enregistré ouvert par l'acteur système FLUX_REPRISE_ACTEUR, avec son motif, au journal
       `flux.externe.repris`. Un module déjà décidé, ouvert ou fermé, n'est jamais touché. Rend les modules repris. */
   async reprendre(
-    enService: Partial<{ [M in FluxModule]: FluxRepriseMotif<M> }>,
+    enService: Partial<{ [M in FluxModuleRepris]: FluxRepriseMotif<M> }>,
     origine: string,
   ): Promise<FluxModule[]> {
     const repris: FluxModule[] = [];
     const acteur = { username: FLUX_REPRISE_ACTEUR };
     await this.db.tx(async (c, k) => {
-      for (const m of FLUX_MODULES) {
+      // Les flux nés avec le registre (FLUX_SANS_REPRISE) n'ont rien à reprendre : ils ne sont jamais parcourus ici.
+      for (const m of FLUX_MODULES.filter(estFluxRepris)) {
         const motif = enService[m];
         if (!motif) continue;
         const motifs: Record<string, string> = FLUX_REPRISE_MOTIFS[m];
