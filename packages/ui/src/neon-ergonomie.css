@@ -596,3 +596,68 @@ body:has(.as-launcher) .shell-main {
     padding-bottom: var(--suivi-marge-page);
   }
 }
+
+/* ========================================================================
+   ERGONOMIE, LOT 2 (décisions du RSSI du 18/11/2026)
+   ======================================================================== */
+
+/* Éléments par périmètre : le choix du périmètre, premier geste de la page, reste visible à côté de la boîte d'outils,
+   en petite liste au libellé en ligne (.selecteur-perimetre) ; sur téléphone, la liste prend la largeur de l'écran. */
+.app-main .barre-avec-perimetre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.app-main .barre-avec-perimetre > .barre-boite-ligne {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+}
+@media (max-width: 36em) {
+  .app-main .barre-avec-perimetre .selecteur-perimetre {
+    flex: 1 1 100%;
+  }
+  .app-main .barre-avec-perimetre .selecteur-perimetre .mantine-Input-wrapper {
+    flex: 1 1 auto;
+    inline-size: auto;
+    min-inline-size: 0;
+  }
+}
+
+/* Titre de colonne triable avec son filtre (Documents, catégorie) : le libellé trie, l'entonnoir compact filtre. */
+.entete-filtrable {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.filtre-colonne--icone {
+  justify-content: center;
+  min-inline-size: var(--mantine-spacing-lg);
+  min-block-size: var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-sm);
+}
+.filtre-colonne--icone:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+/* Filtre de colonne à choix multiple (Documents, étiquettes) : résumé des valeurs coupé s'il est long (le nom
+   accessible et les pastilles les donnent toutes) ; liste à cases à cocher bornée en hauteur, qui défile. */
+.filtre-colonne__resume {
+  min-inline-size: 0;
+  max-inline-size: calc(var(--mantine-spacing-xl) * 6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filtre-colonne-multiple {
+  min-inline-size: calc(var(--mantine-spacing-xl) * 7);
+  max-inline-size: calc(var(--mantine-spacing-xl) * 14);
+}
+.filtre-colonne-multiple__liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  max-block-size: calc(var(--mantine-spacing-xl) * 10);
+  padding: var(--mantine-spacing-2xs);
+  overflow-y: auto;
+}
