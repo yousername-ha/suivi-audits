@@ -44,3 +44,6 @@ l’historique ; elles ne remplacent pas les consignes actuelles.
 - `conseiller` (Fable, lecture seule) : à consulter seulement sur un point vraiment difficile (conception aux effets étendus, bug
   qui résiste, migration destructive, droits). Son avis se vérifie par les tests et la CI ; il ne remplace aucune décision du RSSI.
 - `rssi-virtuel` : recette exploratoire sur une pile vierge (voir sa définition).
+- `banc-performance` (Opus, à la demande) : remplit une pile vierge d'un jeu fictif de dix ans d'exploitation, mesure
+  performances et tenue en charge, diagnostique et propose ; ne modifie pas l'application. Ses rapports reviennent à la
+  session Coeur, qui organise les correctifs.
