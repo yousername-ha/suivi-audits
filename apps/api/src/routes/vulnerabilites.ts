@@ -34,7 +34,9 @@
    tous, nombres limités à ce que la personne lit, aucun nom) ; prise en compte réservée au rôle « RSSI » de la plateforme
    (lot V6b, décision B du 18/11/2026 : 403 pour tout autre compte, administrateur compris), If-Match sur la version de
    l'alerte. Les décisions qui changent les faits (produit, rapprochement, état de suivi, liaison d'un actif, seuil) font
-   réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision. */
+   réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision.
+   Lot PC1 : vue d'ensemble (poste de commandement) avec `lire`, lecture seule, sans journal : niveau d'alerte, priorités et
+   failles suivies les mêmes pour tous ; nombres de machines et d'actifs limités à ce que la personne lit, aucun nom. */
 import {
   RechercheAlertesVulnerabilites,
   ApplicationLiaisonMasse,
@@ -86,6 +88,15 @@ const suivi = z.object({ nature: NatureSuivi, id: z.uuid() });
 const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uuid() });
 
 export const vulnerabilitesRoutes = [
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/vue-ensemble',
+    summary:
+      'Vue d’ensemble du module (poste de commandement) : niveau d’alerte de 1 à 4, tuiles, failles suivies par secteur et priorité (bornées par case, totaux toujours rendus), journal des traces existantes ; priorités et niveau les mêmes pour tous, nombres de machines et d’actifs limités à ce que la personne lit, aucun nom ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.vueEnsemble.lire((s as Session).user),
+  }),
   route({
     method: 'GET',
     url: '/api/vulnerabilites/alertes',

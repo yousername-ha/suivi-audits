@@ -347,10 +347,11 @@ export function Layout({ children }: { children: ReactNode }) {
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
           <OngletsRubriques />
-          {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours. */}
-          {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
-            <RappelAlertesCritiques />
-          )}
+          {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours ;
+              la Vue d'ensemble (lot PC1) a son propre bandeau, plus complet. */}
+          {familleDeLaPage &&
+            localiser(loc.pathname)?.destination.id === 'vulnerabilites' &&
+            loc.pathname !== '/vulnerabilites/vue' && <RappelAlertesCritiques />}
           {children}
         </main>
       </div>

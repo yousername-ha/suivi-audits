@@ -367,6 +367,9 @@
 - **Lot V6, alertes et fenêtre d'alerte critique** (17/11/2026) : migration `086`, alertes décidées par la plateforme (critique
   en P1, simple en P2), fenêtre rouge sur toutes les pages, prise en compte par alerte, onglet « Alertes », notifications par le
   module existant. Voir l'addendum « lot V6 » ci-dessous.
+- **Lot PC1, vue d'ensemble du poste de commandement** (18/11/2026) : sans migration, premier onglet et adresse d'accueil du
+  module, niveau d'alerte de 1 à 4 (règle à confirmer), radar dont chaque point est une faille suivie réelle. Voir l'addendum
+  « lot PC1 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1303,3 +1306,124 @@ pas été joué (CI seulement) ; sur une pile vierge, aucune alerte n'existe.
    la liste (lot ALH6). À relever pour lever la limite « seuls les services portés par une alerte sont connus ».
 2. Écrans du poste de commandement (niveau d'alerte 1 à 4, radar) : prochain chantier.
 3. Destinataires des notifications (responsable du produit, point ouvert 2 de l'addendum « lot V6 ») : inchangés.
+
+## Addendum du 18/11/2026 — lot PC1 : « Vue d'ensemble », poste de commandement
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau, aucune dépendance nouvelle. Réalise une partie du point 18 (radar et
+niveau d'alerte) et de V8 et V9 ; lève le point ouvert 1 de l'addendum « lot V6 » et le point ouvert 2 de l'addendum
+« lot V6b » pour l'écran d'accueil.
+
+### Demande du RSSI
+
+« Pour le design du module, je veux qu'il soit dans le même style que la page de maintenance / mise à jour. » ; « Le radar doit
+avoir de vrais points basés sur les vulnérabilités remontées. Ça doit être l'idée d'un centre de commandement de l'armée. Une
+supervision militaire. » (15/11/2026). Chantier décidé le 18/11/2026 (décision D de l'addendum « lot V6b ») ; maquette validée
+`docs/unification/maquettes-vulnerabilites/01-vue.png`.
+
+### Réalisation
+
+- **Écran** `apps/web/src/vulnerabilites/VueEnsemble.tsx`, premier onglet du module (`/vulnerabilites/vue`) ; `/vulnerabilites`
+  et le lien du menu y mènent désormais. Les autres onglets sont inchangés. Langage visuel de la page de mise à jour
+  (`docker/maintenance` : étiquettes en capitales espacées, chiffres à chasse fixe, liseré de couleur, angles dissymétriques,
+  écran cerné de crochets) porté sur les jetons de la charte dans `packages/ui/src/neon-commandement.css`, en clair et en
+  sombre, sans style en ligne ni longueur en px ou rem (ADR 0006).
+- **Niveau d'alerte** (`niveauAlerteGlobal`, `packages/shared/src/vue-ensemble-vulnerabilites.ts`, testé en table) : 4
+  (Maximale), 3 (Alerte), 2 (Vigilance), 1 (Veille), avec une phrase d'explication et la règle écrite sous le niveau.
+- **Tuiles** : exploitées et présentes (vers les alertes critiques), à traiter en P1 et en P2 (vers « Failles détectées »
+  filtrée par priorité), produits à confirmer (vers le registre des produits), corrigées ce mois (vers « Failles détectées »
+  filtrée sur « Corrigée »). « Failles détectées » reprend désormais ses filtres de l'adresse.
+- **Radar « Situation tactique »** (SVG ; mise en page pure `apps/web/src/vulnerabilites/radar.ts`, testée) : chaque point est
+  une faille suivie ; anneau = priorité (P1 au centre, anneaux nommés) ; secteur = famille du produit surveillé rapproché
+  (rattaché, confirmé ou proposé), sinon « Non classé » (sept secteurs égaux, aucune nomenclature nouvelle) ; taille = machines
+  et actifs exposés que la personne lit ; halo = exploitation avérée ; cercle vide = produit à confirmer. Emplacements fixes
+  par case (secteur × anneau), séparés de deux rayons maximaux ; une faille prend l'emplacement désigné par une empreinte de sa
+  clé (sonde linéaire), de la plus prioritaire à la moins prioritaire : même faille, même place tant que sa case ne change pas.
+  Au-delà de la capacité d'une case (5 en P1, 14 en P2, 24 en P3, 20 en P4 par secteur), les plus prioritaires restent des
+  points et les autres forment une **pastille chiffrée** (qui compte aussi les failles non rendues par la route) ; un clic
+  filtre le tableau sur la case. Six étiquettes au plus, en marge du disque, reliées au point, sans chevauchement entre elles
+  ni avec les noms des secteurs. Balayage tournant décoratif. Clavier : un seul arrêt de tabulation, flèches, Début, Fin,
+  Entrée ; chaque point a un nom lisible (priorité, CVE, titre, secteur, faits, nombres lisibles, EPSS).
+- **Clic sur un point ou une ligne** : fiche existante du constat de Tenable ou de la faille déclarée si la personne lit au moins
+  une machine touchée ; sinon la veille, cherchée sur la CVE (`?q=`) ; un constat sans CVE illisible montre un court résumé.
+- **Cible prioritaire** (la première faille dans l'ordre commun), **journal** (dernières collectes de la veille,
+  synchronisations de Tenable et d'AlgoLightHouse, alertes ouvertes et closes, sans texte d'erreur), tableau **« Cibles par
+  priorité »** (mêmes failles que le radar, filtres « Toutes / Exploitées / Détectées / À confirmer », responsable du produit
+  lu dans le registre, « Tout voir »), **capteurs** (sources de veille et connecteurs en deux listes, état et dernière collecte
+  réussie, lus par les routes existantes) et **bandeau** quand une alerte critique est en cours (liste des alertes du lot V6 ;
+  le rappel discret du lot V6 n'est plus affiché sur cet écran).
+- **Route** `GET /api/vulnerabilites/vue-ensemble` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/vue-ensemble.ts`) :
+  lecture seule, aucune entrée de journal. Elle réutilise le calcul de l'évaluation des alertes
+  (`AlertesVulnerabilites.situationGlobale`, faits sur tous les faits connus, majoration du lot ALH5 comprise), complété par
+  les rapprochements proposés, sans effet sur les alertes. **Nombre de requêtes fixe**, aucune par faille : 18 au plus
+  (propositions 1 ; réglage 1, constats 1, failles déclarées 1, expositions 2, majoration 4 au plus, faits des sources 3,
+  titres 1 ; corrigées 1 ; machines lisibles 1 ; actifs lisibles 2 ; journal 1). **Bornes** : 40 failles rendues par case
+  secteur × priorité (1 120 au plus), totaux de chaque case toujours rendus ; 12 entrées de journal.
+- **Mesure** (PostgreSQL de test local, données fictives : 150 machines, 2 000 constats, 10 000 CVE, 16 000 détections) :
+  environ 1,1 s par lecture, 80 à 90 Kio de réponse, pour un administrateur comme pour un lecteur ; l'écran se relit toutes les
+  minutes.
+
+### Règle du niveau d'alerte, à confirmer par le RSSI
+
+4 (Maximale) : au moins une faille au seuil d'alerte critique, c'est-à-dire présente en P1 ; 3 (Alerte) : sinon, au moins une
+faille au seuil d'alerte simple (P2 exploitable sur un actif exposé directement sur Internet, V6b) ; 2 (Vigilance) : sinon, au
+moins une faille présente en P2, ou une faille à exploitation avérée dont le produit reste à confirmer ; 1 (Veille) : sinon.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Niveau calculé sur les faits du moment**, par les mêmes règles que les alertes (`niveauAlerte`), et non sur les alertes
+  rangées : il ne dépend ni d'une évaluation en retard ni d'une prise en compte. Une alerte prise en compte laisse donc le
+  niveau à 4 tant que la faille est présente en P1.
+- **Faille suivie** : une CVE (ou un constat de Tenable sans CVE) qui a au moins une présence non traitée, ou un rapprochement
+  proposé ; une faille dont tous les objets suivis sont corrigés, en risque accepté ou non concernés n'apparaît plus.
+- **Ordre commun** des failles (`comparerCibles`) : priorité, exploitation avérée, présence avant « à confirmer », exploitable,
+  gravité, score EPSS, clé ; aucun nombre lié aux droits n'y entre.
+- **Nombres globaux de failles** (niveau, tuiles, secteurs, cases, « corrigées ce mois ») : les mêmes pour tout le monde,
+  comme la priorité (lot ALH5) ; seuls les nombres de machines et d'actifs sont limités à ce que la personne lit, avec un
+  drapeau sans nombre pour le reste. Les titres des failles suivent la règle des alertes (catalogue KEV, sinon nom du contrôle
+  de Tenable, sinon produit déclaré).
+- **« À traiter (P1 et P2) »** compte les failles présentes et celles à confirmer ; **« Produits à confirmer »** compte les failles
+  dont un rapprochement est proposé, avec le nombre de produits ; **« Corrigées ce mois »** compte les objets suivis passés à
+  « Corrigée » depuis le premier jour du mois (Europe/Paris) et encore dans cet état.
+- **État** d'une faille dans le tableau : le moins avancé de ses objets suivis encore ouverts.
+- **Responsable** : celui du produit surveillé rapproché (le premier par identifiant s'il y en a plusieurs).
+- **Ordre clavier du radar** : par priorité, puis par secteur ; un seul arrêt de tabulation (navigation par flèches).
+
+### Écarts à la maquette
+
+- **Deux colonnes au lieu de trois** sur grand écran : niveau, tuiles et cible prioritaire à gauche ; radar, journal et
+  secteurs à droite. Dans la mise en page de l'application (menu latéral), la colonne centrale de la maquette laissait au radar
+  moins de 500 px : textes illisibles. Une colonne en dessous de 1 200 px environ ; sur téléphone, le radar garde une largeur
+  lisible et défile dans son cadre.
+- **Sept secteurs** au lieu de six : « Non classé » s'ajoute aux six familles. Sur un parc lu surtout par Tenable, la plupart
+  des failles n'ont pas de produit rapproché et tombent dans ce secteur, regroupées en pastilles.
+- **Étiquettes en marge** du disque, reliées par un trait, au lieu d'être posées près du point : près du centre, elles
+  couvraient les autres points ; elles disent « n lisibles · EPSS x » (nombres lisibles seulement).
+- **Pastilles chiffrées** de regroupement : absentes de la maquette (23 failles), nécessaires à 10 000.
+- **Graduations sans chiffres de cap** (030, 060…), décoratives et sans sens ; pas d'heure de la maquette mais « calculée le ».
+- Titre de page « Vue d'ensemble » (onglet) au lieu de « Surveillance des vulnérabilités » ; pas de barre de recherche commune
+  (point 15, non réalisé) ; pas de cran clignotant (la maquette fait clignoter le dernier cran : ici, seul le cran atteint
+  pulse doucement, sans texte clignotant, coupé par le mouvement réduit).
+- Capteurs : sources de veille et connecteurs en **deux listes** (décision du RSSI), libellés des sources ceux de l'écran
+  « Veille ».
+- Journal : pas de prévision « nouvel essai à 07:06 », pas de comptage « 1 ajout » par source (non rangés tels quels).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (Vite, données fictives : 320 failles sur les quatre priorités, 45 % sans
+produit rapproché ; Chromium, clair et sombre, 1440, 1024 et 390 px ; axe `wcag2a`/`wcag2aa` sans violation ; aucun
+chevauchement de texte dans le radar ; aucun débordement de page ; clavier et pastille essayés), pas dans la pile complète ;
+la CSP n'a pas été vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface (aucun attribut
+`style` sur le balisage propre à l'écran) ; le parcours Playwright n'a pas été joué (CI seulement) et ne voit qu'un radar vide
+(aucune faille sur une pile vierge). Durée sur un parc réel et sous l'agent de charge du RSSI ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Confirmer la règle du niveau d'alerte** et les choix ci-dessus.
+2. **Vue « par machine »** avec icônes de PC et frontières de rôles (point 16, maquettes 04 et 04b).
+3. **Vue par périmètre** front / back / base (point 17, maquette 05).
+4. **Fiche de faille illustrée** : vecteur d'attaque traduit avec icônes et schéma (point 19, maquette 02).
+5. **Marques zero-day** sur les machines et les failles (point 16, V16 ; définition du zero-day, point ouvert 11).
+6. Barre de recherche commune au module (point 15).
+7. Durée de la lecture sur un très grand parc : le calcul global est refait à chaque lecture (environ 1 s pour 10 000 CVE) ;
+   le garder en mémoire entre deux évaluations si l'agent de charge le montre nécessaire.

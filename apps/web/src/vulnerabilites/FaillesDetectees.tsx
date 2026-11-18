@@ -46,7 +46,7 @@ import {
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { resumeExecution } from '../integrations/integrations';
@@ -54,8 +54,8 @@ import { useCan } from '../session';
 import {
   ETAT_PRIORITE,
   faitsPriorite,
-  FILTRES_CONSTATS_VIDES,
   FILTRES_MACHINES_VIDES,
+  filtresDepuisAdresse,
   type FiltresConstats,
   GRAVITE_TENABLE_ETAT,
   groupesParRole,
@@ -516,8 +516,10 @@ export function FaillesDetecteesPage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
   const [vue, setVue] = useState<'failles' | 'machines'>('failles');
-  const [saisie, setSaisie] = useState('');
-  const [filtres, setFiltres] = useState<FiltresConstats>(FILTRES_CONSTATS_VIDES);
+  // Lot PC1 : les tuiles de la Vue d'ensemble ouvrent cette liste déjà filtrée (priorité, suivi, exploitation).
+  const [adresse] = useSearchParams();
+  const [filtres, setFiltres] = useState<FiltresConstats>(() => filtresDepuisAdresse(adresse));
+  const [saisie, setSaisie] = useState(filtres.q);
   const [page, setPage] = useState(1);
   const [pageMachines, setPageMachines] = useState(1);
   const [pageDeclarees, setPageDeclarees] = useState(1);

@@ -154,6 +154,7 @@ describe('menu et aide', () => {
     const avec = famillesVisibles(seulement(['vulnerabilites:lire']));
     const d = avec.find((f) => f.famille.id === 'risques')!.destinations.find((x) => x.id === 'vulnerabilites')!;
     expect(d.rubriques.map((p) => p.id)).toEqual([
+      'vulnerabilites-vue',
       'vulnerabilites-produits',
       'vulnerabilites-veille',
       'vulnerabilites-failles',

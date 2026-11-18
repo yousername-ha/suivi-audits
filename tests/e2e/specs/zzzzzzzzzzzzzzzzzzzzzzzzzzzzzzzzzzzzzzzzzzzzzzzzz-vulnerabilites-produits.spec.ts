@@ -22,9 +22,15 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
   try {
     await page.goto('/vulnerabilites/produits');
     await expect(page.getByRole('heading', { name: 'Produits surveillés', level: 1 })).toBeVisible();
-    // Entrée du menu : Risques > Vulnérabilités, dépliée sur la page affichée.
+    // Entrée du menu : Risques > Vulnérabilités, dépliée sur la page affichée ; depuis le lot PC1, elle ouvre la « Vue
+    // d'ensemble », premier onglet du module, et « Produits surveillés » est l'onglet courant de cette page.
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
-    await expect(nav.getByRole('link', { name: 'Vulnérabilités' })).toHaveAttribute('href', '/vulnerabilites/produits');
+    await expect(nav.getByRole('link', { name: 'Vulnérabilités' })).toHaveAttribute('href', '/vulnerabilites/vue');
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Rubriques : Vulnérabilités' })
+        .getByRole('link', { name: 'Produits surveillés' }),
+    ).toHaveAttribute('aria-current', 'page');
 
     await page.getByRole('button', { name: 'Ajouter un produit' }).click();
     const ajout = page.getByRole('dialog', { name: 'Ajouter un produit surveillé' });

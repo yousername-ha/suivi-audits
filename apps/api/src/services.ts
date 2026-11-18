@@ -55,6 +55,7 @@ import { Rapprochements } from './vulnerabilites/rapprochements.js';
 import { SuiviFailles } from './vulnerabilites/suivi.js';
 import { AssistantVulnerabilites } from './vulnerabilites/assistant.js';
 import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
+import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -183,6 +184,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       suivi,
       /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
       alertes: alertesVulnerabilites,
+      /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
+      vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
     },
     modules,
     flux,

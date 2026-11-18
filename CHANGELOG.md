@@ -556,6 +556,24 @@ seuil »). (session « Module surveillance vulnérabilités SMSI »)
   n'est évalué, affiché ni notifié. Routes `GET /api/vulnerabilites/alertes`, `GET …/alertes/fenetre`, `GET …/alertes/{id}`,
   `POST …/alertes/{id}/prise-en-compte`. Migration `086`. Aide en ligne : article « Vulnérabilités : alertes et fenêtre
   d'alerte critique ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC1 : « Vue d'ensemble », poste de commandement** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC1 » ; demande du RSSI du 15/11/2026, chantier décidé le 18/11/2026, maquette `01-vue`). Nouvel écran
+  d'accueil du module (Risques > Vulnérabilités, premier onglet, adresse `/vulnerabilites/vue` ; `/vulnerabilites` y mène
+  désormais), dans le style de la page de mise à jour, en clair et en sombre : **niveau d'alerte de 1 (Veille) à 4 (Maximale)**
+  calculé par la plateforme, le même pour tout le monde, avec sa phrase d'explication (règle proposée, à confirmer par le
+  RSSI) ; **tuiles** menant chacune à la liste filtrée (exploitées et présentes, à traiter en P1 et P2, produits à confirmer,
+  corrigées ce mois) ; **radar « Situation tactique »** en SVG dont chaque point est une faille suivie réelle (distance : la
+  priorité ; secteur : la famille du produit surveillé rapproché, sinon « Non classé » ; taille : machines et actifs que la
+  personne lit ; halo : exploitation avérée ; cercle vide : produit à confirmer), placement fixe, failles en trop d'une case
+  regroupées en pastille chiffrée, étiquettes pour les seuls points les plus prioritaires, balayage tournant, clavier (flèches,
+  Entrée) ; **cible prioritaire**, **journal** des traces existantes (collectes, synchronisations, alertes), tableau **« Cibles
+  par priorité »** (équivalent accessible du radar, filtres « Toutes / Exploitées / Détectées / À confirmer »), **capteurs**
+  (sources de veille et connecteurs, en deux listes) et **bandeau** quand une alerte critique est en cours. Animations coupées
+  par le mouvement réduit et à l'impression. Route de lecture `GET /api/vulnerabilites/vue-ensemble` (`vulnerabilites:lire`),
+  bornée (40 failles par case, totaux toujours rendus), sans écriture ni journal, sans migration ; aucun nom de machine, de
+  domaine, d'adresse ni de périmètre. « Failles détectées » reprend les filtres de l'adresse (`?priorite=`, `?etat=`,
+  `?exploite=oui`) et la veille la recherche (`?q=`). Aide en ligne : article « Vulnérabilités : vue d'ensemble ». (session
+  « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 

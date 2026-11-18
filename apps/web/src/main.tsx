@@ -19,6 +19,7 @@ import '@suivi/ui/neon-processus.css';
 import '@suivi/ui/neon-fournisseurs.css';
 import '@suivi/ui/neon-taches.css';
 import '@suivi/ui/neon-surface.css';
+import '@suivi/ui/neon-commandement.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -47,6 +48,7 @@ import { SurfaceExternePage } from './vulnerabilites/SurfaceExterne';
 import { SeuilsPrioritePage } from './vulnerabilites/SeuilsPriorite';
 import { MotsNonMasquesPage } from './vulnerabilites/MotsNonMasques';
 import { AlertesPage } from './vulnerabilites/Alertes';
+import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
@@ -130,7 +132,8 @@ const router = createBrowserRouter([
       { path: '/grc', element: <Navigate to="/pilotage" replace /> },
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
-      { path: '/vulnerabilites', element: <Navigate to="/vulnerabilites/produits" replace /> },
+      { path: '/vulnerabilites', element: <Navigate to="/vulnerabilites/vue" replace /> },
+      { path: '/vulnerabilites/vue', element: <VueEnsemblePage /> },
       { path: '/vulnerabilites/produits', element: <ProduitsSurveillesPage /> },
       { path: '/vulnerabilites/veille', element: <VeillePage /> },
       { path: '/vulnerabilites/failles', element: <FaillesDetecteesPage /> },

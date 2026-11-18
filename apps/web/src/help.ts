@@ -89,6 +89,22 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-vue',
+    title: 'Vulnérabilités : vue d’ensemble (poste de commandement)',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/vue',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités : le module s’ouvre sur la « Vue d’ensemble », dans l’esprit d’un poste de commandement. Les autres onglets restent les mêmes. L’écran se met à jour toutes les minutes ; il ne modifie rien et n’écrit rien au journal.',
+      'Le niveau d’alerte va de 1 (Veille) à 4 (Maximale). Il est calculé par la plateforme, le même pour tout le monde : 4 si au moins une faille exploitée est présente chez nous (P1) ; 3 si au moins une faille P2 exploitable est exposée directement sur Internet ; 2 si au moins une faille est présente en P2, ou si une faille exploitée vise un produit dont le rapprochement reste à confirmer ; 1 sinon. La phrase sous le chiffre dit quelle règle est remplie. Cette règle est proposée, à confirmer par le RSSI.',
+      'Les tuiles mènent chacune à une liste filtrée : « Exploitées et présentes » (alertes critiques), « À traiter (P1 et P2) » (Failles détectées filtrées par priorité), « Produits à confirmer » (registre des produits surveillés, où se décident les rapprochements proposés), « Corrigées ce mois » (failles passées à « Corrigée » depuis le premier jour du mois).',
+      'Le radar « Situation tactique » : chaque point est une faille suivie réelle, aucun n’est décoratif ; seul le balayage tournant l’est. Distance au centre : la priorité (P1 au centre, P4 au bord, anneaux nommés). Secteur : la famille du produit surveillé rapproché, sinon « Non classé ». Taille : le nombre de machines et d’actifs exposés que vous pouvez lire. Halo : exploitation avérée. Cercle vide : produit à confirmer. Une même faille garde sa place d’un chargement à l’autre.',
+      'Quand une case du radar (un secteur dans un anneau) compte trop de failles, les plus prioritaires restent des points et les autres sont regroupées dans une pastille chiffrée ; cliquer la pastille filtre le tableau « Cibles par priorité » sur cette case. Seuls les points les plus prioritaires portent une étiquette ; tous ont un nom lisible au survol et au clavier (Tab pour entrer dans le radar, flèches pour passer d’un point à l’autre, Entrée pour ouvrir).',
+      'Cliquer un point ou une ligne ouvre la fiche existante de la faille (constat de Tenable ou faille déclarée) si vous lisez au moins une machine touchée ; sinon, la veille s’ouvre sur la CVE. Le tableau « Cibles par priorité » porte les mêmes failles que le radar, avec les filtres « Toutes », « Exploitées », « Détectées » et « À confirmer » ; « Tout voir » ouvre « Failles détectées ».',
+      'La priorité et le niveau sont les mêmes pour tout le monde ; les noms et les nombres détaillés ne portent que sur ce que vous pouvez lire : « 2 machines lisibles, et d’autres hors de vos droits » signale qu’il en existe d’autres, sans les nommer ni les compter. Le journal reprend les dernières collectes de la veille, synchronisations de Tenable et d’AlgoLightHouse et alertes ouvertes ou closes. Les capteurs montrent d’un côté les sources de veille, de l’autre les connecteurs, avec la dernière collecte réussie.',
+      'Quand une alerte critique est en cours, un bandeau rouge en tête de l’écran la rappelle, avec un lien vers sa fiche dans l’onglet « Alertes ».',
+    ],
+  },
+  {
     id: 'vulnerabilites-produits',
     title: 'Vulnérabilités : produits surveillés',
     permission: 'vulnerabilites:lire',

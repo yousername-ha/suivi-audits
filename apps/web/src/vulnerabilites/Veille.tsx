@@ -22,7 +22,7 @@ import {
 import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
@@ -469,8 +469,10 @@ export function VeillePage() {
   const administrer = can('vulnerabilites', 'administrer');
   const admin = can('administration', 'administrer');
   const flux = useValidationFlux();
-  const [saisie, setSaisie] = useState('');
-  const [recherche, setRecherche] = useState('');
+  // Lot PC1 : la Vue d'ensemble ouvre la veille sur une CVE (`?q=`) quand aucune fiche de faille n'est lisible.
+  const [adresse] = useSearchParams();
+  const [saisie, setSaisie] = useState(() => (adresse.get('q') ?? '').trim().slice(0, 100));
+  const [recherche, setRecherche] = useState(saisie);
   const [pageKev, setPageKev] = useState(1);
   const [pageAvis, setPageAvis] = useState(1);
   const [pageFailles, setPageFailles] = useState(1);

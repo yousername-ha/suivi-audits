@@ -108,7 +108,9 @@ export const FAMILLES: Famille[] = [
       // Module Vulnérabilités (ADR 0100) : produits surveillés (lot V1), veille sur les sources publiques (lots V2 et V3),
       // failles détectées par Tenable et machines (lot V5), surface externe lue dans AlgoLightHouse (lot ALH1), seuils de
       // priorité (lot V4a), mots à ne pas masquer par le masque de l'assistant (V31, droit d'administrer le module).
+      // Lot PC1 : « Vue d'ensemble » (poste de commandement), premier onglet et adresse d'accueil du module.
       dest('vulnerabilites', 'Vulnérabilités', [
+        page('vulnerabilites-vue', 'Vue d’ensemble', '/vulnerabilites/vue', 'vulnerabilites'),
         page('vulnerabilites-produits', 'Produits surveillés', '/vulnerabilites/produits', 'vulnerabilites'),
         page('vulnerabilites-veille', 'Veille', '/vulnerabilites/veille', 'vulnerabilites'),
         page('vulnerabilites-failles', 'Failles détectées', '/vulnerabilites/failles', 'vulnerabilites'),

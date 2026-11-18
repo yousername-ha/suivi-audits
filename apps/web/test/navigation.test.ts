@@ -40,6 +40,7 @@ const INVENTAIRE = [
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
+  'risques|vulnerabilites|vulnerabilites-vue|/vulnerabilites/vue|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-produits|/vulnerabilites/produits|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-veille|/vulnerabilites/veille|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-failles|/vulnerabilites/failles|vulnerabilites|lire',

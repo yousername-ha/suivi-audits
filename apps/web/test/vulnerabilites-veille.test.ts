@@ -98,6 +98,7 @@ describe('menu', () => {
     const risques = famillesVisibles(seulement(['vulnerabilites:lire'])).find((f) => f.famille.id === 'risques')!;
     const vuln = risques.destinations.find((d) => d.id === 'vulnerabilites')!;
     expect(vuln.rubriques.map((p) => [p.id, p.to])).toEqual([
+      ['vulnerabilites-vue', '/vulnerabilites/vue'],
       ['vulnerabilites-produits', '/vulnerabilites/produits'],
       ['vulnerabilites-veille', '/vulnerabilites/veille'],
       ['vulnerabilites-failles', '/vulnerabilites/failles'],

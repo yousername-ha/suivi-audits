@@ -48,7 +48,9 @@ describe('menu', () => {
     expect(avec.map((f) => f.famille.id)).toContain('risques');
     const risques = avec.find((f) => f.famille.id === 'risques')!;
     expect(risques.destinations.map((d) => d.id)).toEqual(['vulnerabilites']);
-    expect(risques.destinations[0]!.to).toBe('/vulnerabilites/produits');
+    // Lot PC1 : le module s'ouvre sur la « Vue d'ensemble » ; « Produits surveillés » reste le deuxième onglet.
+    expect(risques.destinations[0]!.to).toBe('/vulnerabilites/vue');
+    expect(risques.destinations[0]!.rubriques.map((r) => r.to)).toContain('/vulnerabilites/produits');
     const sans = famillesVisibles(seulement(['pilotage:lire']));
     expect(sans.find((f) => f.famille.id === 'risques')?.destinations.map((d) => d.id)).toEqual(['risques']);
     expect(localiser('/vulnerabilites/produits')?.destination.id).toBe('vulnerabilites');

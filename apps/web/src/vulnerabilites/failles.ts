@@ -7,12 +7,15 @@
 import {
   type ConstatDto,
   type ConstatResumeDto,
+  FILTRES_SUIVI,
   type FiltreSuivi,
   GRAVITE_TENABLE_LIBELLES,
+  GRAVITES_TENABLE,
   type GraviteTenable,
   libelleFaitPriorite,
   libelleFaitRang,
   type MachineDto,
+  NIVEAUX_PRIORITE,
   type NiveauPriorite,
   type Priorite,
   type RangMachineDto,
@@ -41,6 +44,22 @@ export const FILTRES_CONSTATS_VIDES: FiltresConstats = {
   priorite: '',
   etat: '',
 };
+
+/** Filtres repris de l'adresse de l'écran (liens des tuiles de la Vue d'ensemble, lot PC1) : `q`, `priorite`, `etat`,
+    `gravite`, `exploite=oui`, `exploitable=oui` ; toute valeur inconnue est ignorée. */
+export function filtresDepuisAdresse(p: URLSearchParams): FiltresConstats {
+  const dans = <T extends string>(liste: readonly T[], v: string | null): T | '' =>
+    v !== null && (liste as readonly string[]).includes(v) ? (v as T) : '';
+  return {
+    ...FILTRES_CONSTATS_VIDES,
+    q: (p.get('q') ?? '').trim().slice(0, 100),
+    priorite: dans(NIVEAUX_PRIORITE, p.get('priorite')),
+    etat: dans(FILTRES_SUIVI, p.get('etat')),
+    gravite: dans(GRAVITES_TENABLE, p.get('gravite')),
+    exploite: p.get('exploite') === 'oui',
+    exploitable: p.get('exploitable') === 'oui',
+  };
+}
 
 /** Adresse de la liste des constats (recherche, filtres, page), lue par le serveur. */
 export function urlConstats(f: FiltresConstats, page = 1): string {

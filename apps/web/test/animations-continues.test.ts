@@ -155,3 +155,16 @@ describe('carte de la surface externe (ADR 0100, lot ALH4) : animations seulemen
     expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('.surface-carte .sc-balayage');
   });
 });
+
+describe('vue d’ensemble du module Vulnérabilités (ADR 0100, lot PC1) : animations seulement sans mouvement réduit', () => {
+  it('balayage du radar, halo des failles exploitées et cran du niveau : coupés par le mouvement réduit et à l’impression', () => {
+    const css = lire(path.join(UI, 'neon-commandement.css'));
+    const libre = blocsMedia(css, 'prefers-reduced-motion: no-preference');
+    const total = occurrences(css, /animation: pc-/g);
+    expect(total).toBe(3);
+    expect(occurrences(libre, /animation: pc-/g)).toBe(total);
+    expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('animation: none !important');
+    expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('.poste .pc-balayage');
+    expect(css).toMatch(/@media print \{[^}]*\.poste \.pc-balayage/);
+  });
+});

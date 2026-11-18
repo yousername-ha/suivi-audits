@@ -37,7 +37,9 @@ import {
   effectivePermissions,
   empreinteAlerte,
   type EtatAlerte,
+  type EtatSuiviFaille,
   type FaitsAlerte,
+  type FamilleProduit,
   faitsDepuisSources,
   type FenetreAlertesDto,
   type GraviteTenable,
@@ -57,6 +59,7 @@ import {
   type ReglagePriorite,
   PREFIXE_RESUME_ALERTES,
   PRISE_EN_COMPTE_RESERVEE,
+  rangPriorite,
   Rights,
   ROLE_PRISE_EN_COMPTE_ALERTE,
   type SituationFaille,
@@ -100,8 +103,19 @@ const propre = (v: string | null | undefined, max: number): string | null => {
   return t || null;
 };
 
-/** Ce que l'évaluation retient d'une faille. */
-interface Cumul {
+/** Rapprochement proposé (produit à confirmer), remis par la vue d'ensemble (lot PC1) ; jamais par l'évaluation des alertes. */
+export interface PropositionCumul {
+  id: string;
+  cve: string;
+  produit_id: string;
+  editeur: string;
+  nom: string;
+  famille: FamilleProduit;
+}
+
+/** Ce que l'évaluation retient d'une faille. Les champs marqués « PC1 » servent seulement à la vue d'ensemble : ils ne changent
+    rien aux décisions d'alerte. */
+export interface Cumul {
   cle: string;
   cve: string | null;
   priorites: Priorite[];
@@ -116,6 +130,17 @@ interface Cumul {
   traites: number;
   constats: string[];
   produitsDeclares: { editeur: string; nom: string }[];
+  /** PC1 : gravité et score EPSS les plus sévères des présences non traitées (valeurs retenues par la grille). */
+  gravite: GraviteTenable | null;
+  epss: number | null;
+  /** PC1 : objets suivis encore ouverts (constats présents, failles déclarées), leur état, familles et produits rapprochés. */
+  constatIds: string[];
+  rapprochementIds: string[];
+  etats: EtatSuiviFaille[];
+  familles: FamilleProduit[];
+  produitIds: string[];
+  /** PC1 : priorité « produit à confirmer » (rapprochement proposé), seulement si des propositions sont remises. */
+  aConfirmer: Priorite | null;
 }
 
 interface LigneAlerte {
@@ -326,10 +351,38 @@ export class AlertesVulnerabilites {
     return bilan;
   }
 
-  /** Faits de chaque faille présente, sur tous les faits connus (sans droits). */
+  /** Vue d'ensemble (lot PC1) : faits de chaque faille suivie, sur tous les faits connus (sans droits), propositions comprises
+      (présence « produit à confirmer »), titres et produits. Lecture seule, nombre de requêtes fixe (aucune par faille). */
+  async situationGlobale(k: Kdb, propositions: readonly PropositionCumul[]) {
+    const reglage = await this.reglage.valeurs();
+    const { cumuls, sources } = await this.calculer(k, reglage, propositions);
+    const titres = await this.titres(
+      k,
+      [...cumuls.values()].flatMap((x) => (x.cve ? [x.cve] : [])),
+    );
+    return { cumuls, sources, titres };
+  }
+
+  /** Titre et produit d'une faille (mêmes règles que les alertes). */
+  titreEtProduit(x: Cumul, titres: Map<string, { titre: string | null; produit: string | null }>) {
+    const veille = x.cve ? titres.get(x.cve) : undefined;
+    const constat = [...x.constats].sort()[0];
+    const declare = [...x.produitsDeclares].sort((a, b) => (a.nom < b.nom ? -1 : a.nom > b.nom ? 1 : 0))[0];
+    const titre =
+      propre(veille?.titre, 300) ??
+      propre(constat, 300) ??
+      propre(declare ? `${declare.editeur} ${declare.nom}` : null, 300) ??
+      `Faille ${x.cve ?? 'sans CVE'}`;
+    const produit = propre(veille?.produit, 200) ?? propre(declare?.nom, 200);
+    return { titre, produit };
+  }
+
+  /** Faits de chaque faille présente, sur tous les faits connus (sans droits). `propositions` (vue d'ensemble seulement) :
+      rapprochements proposés, comptés en présence « produit à confirmer » à part, sans effet sur les alertes. */
   private async calculer(
     k: Kdb,
     reglage: ReglagePriorite,
+    propositions: readonly PropositionCumul[] = [],
   ): Promise<{ cumuls: Map<string, Cumul>; sources: Map<string, SourcesFailleDto> }> {
     // Constats de Tenable présents (au moins une détection vue par la dernière synchronisation complète de l'instance de sa
     // machine), avec leurs CVE, leurs machines et leur état de suivi.
@@ -341,9 +394,11 @@ export class AlertesVulnerabilites {
       epss_score: string | null;
       exploitable: boolean;
       clos: boolean;
+      etat: EtatSuiviFaille | null;
       cves: string[];
       machines: string[];
     }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${close('constat')} AS clos,
+         (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
          coalesce((SELECT array_agg(cc.cve ORDER BY cc.cve) FROM vulnerabilites_constat_cves cc
                    WHERE cc.constat_id = c.id), '{}') AS cves,
          p.machines
@@ -356,13 +411,17 @@ export class AlertesVulnerabilites {
     // Failles déclarées : CVE rattachées (d'office ou confirmées) à un produit surveillé ; présentes même sans machine
     // reliée (V22).
     const { rows: declarees } = await sql<{
+      id: string;
       cve: string;
       produit_id: string;
       editeur: string;
       nom: string;
+      famille: FamilleProduit;
       clos: boolean;
+      etat: EtatSuiviFaille | null;
       machines: string[];
-    }>`SELECT r.cve, r.produit_id, p.editeur, p.nom, ${close('declaree')} AS clos,
+    }>`SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille, ${close('declaree')} AS clos,
+         (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id) AS etat,
          coalesce((SELECT array_agg(pm.machine_id) FROM vulnerabilites_produits_machines pm
                    WHERE pm.produit_id = r.produit_id), '{}') AS machines
        FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
@@ -373,6 +432,7 @@ export class AlertesVulnerabilites {
       ...constats.flatMap((x) => x.cves),
       ...declarees.map((x) => x.cve),
       ...expositions.keys(),
+      ...propositions.map((x) => x.cve),
     ]);
     const cache = new Map<string, SourcesFailleDto>();
     const sourcesCve = (cve: string) => {
@@ -385,6 +445,13 @@ export class AlertesVulnerabilites {
     };
     const priorite = (s: SourcesFailleDto, presence: Presence) =>
       calculerPriorite({ ...faitsDepuisSources(s), presence }, reglage);
+    /** PC1 : garde la gravité et le score EPSS les plus sévères d'une présence non traitée. */
+    const RANG: Record<GraviteTenable, number> = { critique: 4, elevee: 3, moyenne: 2, faible: 1 };
+    const retenir = (x: Cumul, s: SourcesFailleDto) => {
+      const f = faitsDepuisSources(s);
+      if (f.gravite && (!x.gravite || RANG[f.gravite] > RANG[x.gravite])) x.gravite = f.gravite;
+      if (f.epss !== null && (x.epss === null || f.epss > x.epss)) x.epss = f.epss;
+    };
 
     const cumuls = new Map<string, Cumul>();
     const cumul = (cle: string, cve: string | null): Cumul => {
@@ -405,6 +472,14 @@ export class AlertesVulnerabilites {
             traites: 0,
             constats: [],
             produitsDeclares: [],
+            gravite: null,
+            epss: null,
+            constatIds: [],
+            rapprochementIds: [],
+            etats: [],
+            familles: [],
+            produitIds: [],
+            aConfirmer: null,
           }),
         );
       return x;
@@ -433,6 +508,9 @@ export class AlertesVulnerabilites {
         x.presences.add('detectee');
         if (s.exploitable.length) x.exploitable = true;
         for (const m of c.machines) x.machines.add(m);
+        retenir(x, s);
+        x.constatIds.push(c.id);
+        x.etats.push(c.etat ?? 'nouvelle');
       }
     }
     for (const r of declarees) {
@@ -448,6 +526,11 @@ export class AlertesVulnerabilites {
       if (sourcesCve(r.cve).exploitable.length) x.exploitable = true;
       x.produits.add(r.produit_id);
       for (const m of r.machines) x.machines.add(m);
+      retenir(x, sourcesCve(r.cve));
+      x.rapprochementIds.push(r.id);
+      x.etats.push(r.etat ?? 'nouvelle');
+      x.familles.push(r.famille);
+      x.produitIds.push(r.produit_id);
     }
     for (const [cve, e] of expositions) {
       if (!e.cles.size && !e.actifs.size) continue;
@@ -457,6 +540,18 @@ export class AlertesVulnerabilites {
       x.presences.add('exposee');
       if (sourcesCve(cve).exploitable.length) x.exploitable = true;
       x.actifs = e.cles.size;
+      retenir(x, sourcesCve(cve));
+    }
+    // Vue d'ensemble seulement : produits à confirmer (rapprochements proposés). Rien n'entre dans `priorites`, `presences`
+    // ni `objets` : l'évaluation des alertes, qui ne remet aucune proposition, n'en est pas changée.
+    for (const r of propositions) {
+      const x = cumul(cleAlerte({ cve: r.cve }), r.cve);
+      const p = priorite(sourcesCve(r.cve), 'a_confirmer');
+      if (!x.aConfirmer || rangPriorite(p) < rangPriorite(x.aConfirmer)) x.aConfirmer = p;
+      x.produitsDeclares.push({ editeur: r.editeur, nom: r.nom });
+      x.familles.push(r.famille);
+      x.produitIds.push(r.produit_id);
+      retenir(x, sourcesCve(r.cve));
     }
     // Sources de l'exploitation (rangées, avec leur date), gardées avec la CVE.
     for (const x of cumuls.values()) if (x.cve) sourcesCve(x.cve);
@@ -485,15 +580,7 @@ export class AlertesVulnerabilites {
     titres: Map<string, { titre: string | null; produit: string | null }>,
     sources: Map<string, SourcesFailleDto>,
   ): FaitsAlerte {
-    const veille = x.cve ? titres.get(x.cve) : undefined;
-    const constat = [...x.constats].sort()[0];
-    const declare = [...x.produitsDeclares].sort((a, b) => (a.nom < b.nom ? -1 : a.nom > b.nom ? 1 : 0))[0];
-    const titre =
-      propre(veille?.titre, 300) ??
-      propre(constat, 300) ??
-      propre(declare ? `${declare.editeur} ${declare.nom}` : null, 300) ??
-      `Faille ${x.cve ?? 'sans CVE'}`;
-    const produit = propre(veille?.produit, 200) ?? propre(declare?.nom, 200);
+    const { titre, produit } = this.titreEtProduit(x, titres);
     return {
       priorite: p,
       presences: PRESENCES.filter((s) => x.presences.has(s)),
