@@ -15,6 +15,8 @@ interface Base {
   onCommit: (v: string) => void;
   /** Valeur vide refusée (le champ revient à la valeur enregistrée). */
   requis?: boolean;
+  /** Classe du cadre du champ (largeur minimale dans un tableau, par exemple). */
+  className?: string;
 }
 
 export function ChampTexte({
@@ -26,12 +28,14 @@ export function ChampTexte({
   onCommit,
   requis,
   type,
+  className,
 }: Base & { type?: string }) {
   return (
     <TextInput
       key={value}
       label={label}
       aria-label={ariaLabel}
+      className={className}
       type={type}
       disabled={disabled}
       placeholder={placeholder}
@@ -58,12 +62,14 @@ export function ChampZone({
   value,
   onCommit,
   lignes = 2,
+  className,
 }: Base & { lignes?: number }) {
   return (
     <Textarea
       key={value}
       label={label}
       aria-label={ariaLabel}
+      className={className}
       disabled={disabled}
       placeholder={placeholder}
       autosize
@@ -85,6 +91,7 @@ export function ChampChoix({
   onCommit,
   effacable,
   placeholder,
+  className,
 }: {
   label?: string;
   ariaLabel?: string;
@@ -94,6 +101,8 @@ export function ChampChoix({
   onCommit: (v: string) => void;
   effacable?: boolean;
   placeholder?: string;
+  /** Classe ajoutée à « champ-choix » (largeur minimale dans un tableau, par exemple). */
+  className?: string;
 }) {
   const donnees = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
   if (value && !donnees.some((o) => o.value === value)) donnees.push({ value, label: value });
@@ -101,7 +110,7 @@ export function ChampChoix({
     <Select
       label={label}
       aria-label={ariaLabel}
-      className="champ-choix"
+      className={className ? `champ-choix ${className}` : 'champ-choix'}
       disabled={disabled}
       allowDeselect={!!effacable}
       clearable={!!effacable}

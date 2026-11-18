@@ -661,3 +661,36 @@ body:has(.as-launcher) .shell-main {
   padding: var(--mantine-spacing-2xs);
   overflow-y: auto;
 }
+
+/* Champs saisis dans un tableau (ergonomie, lot 2, décision du RSSI du 18/11/2026) : chaque colonne garde une largeur
+   minimale qui laisse lire le texte saisi ; le tableau défile horizontalement dans son cadre (.table-wrap) quand la place
+   manque. Petite : un numéro de téléphone, indicatif international compris (environ 17 caractères) ; moyenne : un nom, une
+   organisation, un courriel (environ 28 caractères) ; large : un intitulé de fonction ou une phrase (environ 55
+   caractères). Premiers usages : contacts de crise, étapes des scénarios de crise, participants à l'audit. */
+.champ-tableau-s {
+  min-inline-size: calc(var(--suivi-champ-xs) * 1.25);
+}
+.champ-tableau-m {
+  min-inline-size: calc(var(--suivi-champ-s) * 1.2);
+}
+.champ-tableau-l {
+  min-inline-size: var(--suivi-champ-l);
+}
+/* Colonne du texte long (action d'un scénario) : elle reçoit toute la largeur que les autres colonnes laissent libre. */
+.colonne-extensible {
+  inline-size: 100%;
+}
+
+/* Scénarios de crise : le détail occupe toute la place laissée par la liste des scénarios (au lieu de la moitié de la
+   ligne) et passe sous la liste quand il lui resterait moins d'une fois et demie un champ large. */
+.crise-scenario-detail {
+  flex: 1 1 calc(var(--suivi-champ-l) * 1.5);
+  min-inline-size: 0;
+  max-inline-size: none;
+}
+
+/* Note du plan d'audit : le bloc prend toute la largeur laissée par « État du plan » et passe à la ligne sur un écran
+   étroit. */
+.audit-plan-note {
+  flex: 1 1 var(--suivi-champ-l);
+}

@@ -542,15 +542,17 @@ function DetailCellule({
 }
 
 /* ------------------------------------------------------------------------------------------------- contacts */
+/** Champ, intitulé et largeur minimale de la colonne (décision du RSSI du 18/11/2026 : le texte saisi reste lisible ; le
+    tableau défile horizontalement dans son cadre si l'écran est trop étroit). */
 const CHAMPS_CONTACT = [
-  ['name', 'Nom'],
-  ['org', 'Organisation'],
-  ['role', 'Rôle'],
-  ['phone', 'Téléphone'],
-  ['phone2', 'Téléphone 2'],
-  ['email', 'Courriel'],
-  ['avail', 'Disponibilité'],
-  ['notes', 'Notes'],
+  ['name', 'Nom', 'champ-tableau-m'],
+  ['org', 'Organisation', 'champ-tableau-m'],
+  ['role', 'Rôle', 'champ-tableau-m'],
+  ['phone', 'Téléphone', 'champ-tableau-s'],
+  ['phone2', 'Téléphone 2', 'champ-tableau-s'],
+  ['email', 'Courriel', 'champ-tableau-m'],
+  ['avail', 'Disponibilité', 'champ-tableau-m'],
+  ['notes', 'Notes', 'champ-tableau-l'],
 ] as const;
 
 export function ContactsCrise({ smsi }: { smsi?: string }) {
@@ -603,10 +605,11 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
                       }
                     />
                   </Table.Td>
-                  {CHAMPS_CONTACT.map(([f, l]) => (
+                  {CHAMPS_CONTACT.map(([f, l, largeur]) => (
                     <Table.Td key={f}>
                       <ChampTexte
                         ariaLabel={`${l} du contact ${k + 1}`}
+                        className={largeur}
                         value={x[f]}
                         disabled={!modifiable}
                         onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
@@ -684,7 +687,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
               </Button>
             ))}
           </Stack>
-          <Stack key={sc.id}>
+          <Stack key={sc.id} className="crise-scenario-detail">
             <div className="grille-formulaire">
               <div className="grille-formulaire__champs">
                 <ChampTexte
@@ -712,7 +715,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Phase</Table.Th>
-                    <Table.Th>Action</Table.Th>
+                    <Table.Th className="colonne-extensible">Action</Table.Th>
                     <Table.Th>Responsable</Table.Th>
                     {modifiable && <Table.Th />}
                   </Table.Tr>
@@ -723,6 +726,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampChoix
                           ariaLabel={`Phase de l’action ${k + 1}`}
+                          className="champ-tableau-m"
                           value={x.phase}
                           options={PHASES_CRISE}
                           disabled={!modifiable}
@@ -732,6 +736,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampTexte
                           ariaLabel={`Action ${k + 1}`}
+                          className="champ-tableau-l"
                           value={x.t}
                           disabled={!modifiable}
                           onCommit={(v) => void agir('PATCH', `${base}/actions/${k}`, { t: v })}
@@ -740,6 +745,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampTexte
                           ariaLabel={`Responsable de l’action ${k + 1}`}
+                          className="champ-tableau-m"
                           value={x.owner}
                           disabled={!modifiable}
                           onCommit={(v) => void agir('PATCH', `${base}/actions/${k}`, { owner: v })}
