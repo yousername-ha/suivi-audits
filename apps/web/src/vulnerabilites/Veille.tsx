@@ -8,7 +8,20 @@
    Lot V4c : état de la lecture des fiches du CERT Santé ; produit cité et mentions de chaque fiche, telles quelles ; pour
    une faille connue, sources qui l'ont publiée (la première d'abord), exploitation avérée et « exploitable » avec leur
    première source et sa date. */
-import { Alert, Anchor, Badge, Button, Group, Pagination, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Badge,
+  Button,
+  Group,
+  Modal,
+  Pagination,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   fluxExterne,
@@ -28,6 +41,7 @@ import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
+import { FicheFaille } from './FicheFaille';
 import { resumeFichesCertSante, resumePublications } from './sources';
 import { MarquesSources, MentionsFicheCertSante } from './SourcesFaille';
 import { libelleSurfaceCve, LIEN_SURFACE } from './surface';
@@ -198,8 +212,29 @@ export function ActivationVeille({
   );
 }
 
+/** Identifiant d'une CVE ; avec `onOuvrir`, bouton qui ouvre sa fiche illustrée (lot PC4). */
+function CodeCve({ cve, onOuvrir }: { cve: string; onOuvrir?: (cve: string) => void }) {
+  return onOuvrir ? (
+    <Anchor component="button" type="button" fw={600} className="veille-code" onClick={() => onOuvrir(cve)}>
+      {cve}
+    </Anchor>
+  ) : (
+    <Text fw={600} className="veille-code">
+      {cve}
+    </Text>
+  );
+}
+
 /** Failles du catalogue KEV : action exigée et échéance, textes de la CISA tels quels (anglais). */
-export function KevTable({ failles, aujourdhui }: { failles: FailleVeilleDto[]; aujourdhui: string }) {
+export function KevTable({
+  failles,
+  aujourdhui,
+  onOuvrir,
+}: {
+  failles: FailleVeilleDto[];
+  aujourdhui: string;
+  onOuvrir?: (cve: string) => void;
+}) {
   return (
     <DataTable label="Failles exploitées (catalogue KEV)">
       <Table>
@@ -215,9 +250,7 @@ export function KevTable({ failles, aujourdhui }: { failles: FailleVeilleDto[]; 
           {failles.map((f) => (
             <Table.Tr key={f.cve}>
               <Table.Td>
-                <Text fw={600} className="veille-code">
-                  {f.cve}
-                </Text>
+                <CodeCve cve={f.cve} onOuvrir={onOuvrir} />
                 <Text size="xs" className="veille-texte" lang="en">
                   {f.kev?.nom}
                 </Text>
@@ -344,7 +377,7 @@ export function AvisTable({ avis }: { avis: AvisVeilleDto[] }) {
 }
 
 /** Failles connues (résultat d'une recherche) : gravité CVSS, score EPSS, éditeurs et produits des CPE, présence au KEV. */
-export function FaillesTable({ failles }: { failles: FailleVeilleDto[] }) {
+export function FaillesTable({ failles, onOuvrir }: { failles: FailleVeilleDto[]; onOuvrir?: (cve: string) => void }) {
   return (
     <DataTable label="Failles connues de la veille">
       <Table>
@@ -363,9 +396,7 @@ export function FaillesTable({ failles }: { failles: FailleVeilleDto[] }) {
               <Table.Tr key={f.cve}>
                 <Table.Td>
                   <Group gap="2xs">
-                    <Text fw={600} className="veille-code">
-                      {f.cve}
-                    </Text>
+                    <CodeCve cve={f.cve} onOuvrir={onOuvrir} />
                     {f.kev && <StatusChip etat="erreur">Exploitée (KEV)</StatusChip>}
                   </Group>
                   {f.description && (
@@ -479,6 +510,7 @@ export function VeillePage() {
   const [envoi, setEnvoi] = useState(false);
   const [collecte, setCollecte] = useState(false);
   const [erreur, setErreur] = useState<unknown>(null);
+  const [cveOuverte, setCveOuverte] = useState<string | null>(null);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatVeilleDto>('/api/vulnerabilites/veille/etat'),
@@ -612,7 +644,7 @@ export function VeillePage() {
               Failles connues
             </Title>
             <ErrorAlert error={failles.error} />
-            {failles.data && <FaillesTable failles={failles.data.elements} />}
+            {failles.data && <FaillesTable failles={failles.data.elements} onOuvrir={setCveOuverte} />}
             <Pages donnees={failles.data} page={pageFailles} onPage={setPageFailles} libelle="Pages des failles" />
           </>
         )}
@@ -620,7 +652,7 @@ export function VeillePage() {
           Failles exploitées récentes (catalogue KEV)
         </Title>
         <ErrorAlert error={kev.error} />
-        {kev.data && <KevTable failles={kev.data.elements} aujourdhui={aujourdhui} />}
+        {kev.data && <KevTable failles={kev.data.elements} aujourdhui={aujourdhui} onOuvrir={setCveOuverte} />}
         <Pages donnees={kev.data} page={pageKev} onPage={setPageKev} libelle="Pages du catalogue KEV" />
         <Title order={2} size="h4">
           Alertes et avis récents
@@ -629,6 +661,17 @@ export function VeillePage() {
         {avis.data && <AvisTable avis={avis.data.elements} />}
         <Pages donnees={avis.data} page={pageAvis} onPage={setPageAvis} libelle="Pages des avis" />
       </Stack>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!cveOuverte}
+        onClose={() => setCveOuverte(null)}
+        title={cveOuverte ? `${cveOuverte} (veille)` : 'Faille de la veille'}
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {cveOuverte && <FicheFaille nature="cve" id={cveOuverte} />}
+      </Modal>
     </Page>
   );
 }

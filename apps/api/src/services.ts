@@ -56,6 +56,8 @@ import { SuiviFailles } from './vulnerabilites/suivi.js';
 import { AssistantVulnerabilites } from './vulnerabilites/assistant.js';
 import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
 import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
+import { PerimetresVulnerabilites } from './vulnerabilites/perimetres.js';
+import { FichesFailles } from './vulnerabilites/fiches.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -186,6 +188,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       alertes: alertesVulnerabilites,
       /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
       vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
+      /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
+      fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
+      /** Lot PC3 : onglet « Périmètres » (cartes par périmètre lu, détail par ligne ou au global), lecture seule. */
+      perimetres: new PerimetresVulnerabilites(db, failles, reglagePriorite),
     },
     modules,
     flux,

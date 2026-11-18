@@ -594,6 +594,56 @@ barre animée sans chiffre. Un registre privé (`UPDATER_DOCKER_CONFIG` dans `.e
   domaine, d'adresse ni de périmètre. « Failles détectées » reprend les filtres de l'adresse (`?priorite=`, `?etat=`,
   `?exploite=oui`) et la veille la recherche (`?q=`). Aide en ligne : article « Vulnérabilités : vue d'ensemble ». (session
   « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC2 : écran « Machines », présentation « Parc »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC2 » ; demandes du RSSI des 15 et 16/11/2026, maquettes `04-machines` et `04b-machines-grand-ecran`). À côté
+  de la liste existante, une présentation **« Parc »** (bascule « Liste » ou « Parc » mémorisée dans les préférences de la
+  personne) : une **tuile par machine** avec une icône d'ordinateur selon le rôle (poste web, serveur, base de données, point
+  d'interrogation), son nom, son **rang** calculé par la plateforme, ses failles présentes **critiques, élevées, moyennes et
+  faibles** et sa **priorité la plus haute** en couleur et en toutes lettres (P1 à P4) ; quatre **zones** « Front »,
+  « Back applicatif », « Base de données » et « Rôle non indiqué », chacune dans l'ordre du rang, séparées par des **murs à
+  bandes diagonales animées** (rouge entre le front et le back, violet entre le back et les bases ; animation coupée par le
+  mouvement réduit et à l'impression). **Marques** sur les tuiles, dans la liste (nouvelle colonne « Priorité et marques ») et
+  dans la légende : avertissement **« Zero-day : exploitation avérée »** (faille présente dont l'exploitation est avérée,
+  définition du lot V6) et éclair **« Exploitable »** (code d'exploitation disponible, sans exploitation avérée). Échelle
+  **« Réduit »** (les 5 plus prioritaires par zone, 8 sans rôle, tuile « et n autres » qui déplie la zone) ou **« Grand
+  écran »** (tout le parc en tuiles denses). Filtres conservés ; clic ou Entrée sur une tuile : fiche de la machine ; nom
+  accessible complet par tuile. Route de lecture `GET /api/vulnerabilites/machines/parc` (`vulnerabilites:lire`) : machines
+  lisibles seulement, 250 au plus par zone (totaux rendus), nombre de requêtes fixe (12 au plus), sans écriture ni journal ;
+  `GET /api/vulnerabilites/machines` rend aussi les marques de chaque machine. Sans migration. Aide en ligne : article
+  « Vulnérabilités : failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC3 : onglet « Périmètres »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
+  « lot PC3 » ; demande du RSSI du 15/11/2026, maquette `05-perimetre`). Nouvel onglet après « Machines » : une **carte par
+  périmètre** que la personne lit (machines lues, priorité la plus haute en couleur et en toutes lettres, failles présentes
+  critiques, élevées, moyennes et faibles comptées une fois par périmètre, nombre de machines « zero-day » et « exploitables »,
+  actifs exposés sur Internet rattachés par les périmètres AlgoLightHouse reliés), du plus critique au moins critique, plus une
+  carte **« Sans périmètre »** pour qui administre le module. Clic ou Entrée sur une carte : **détail** à une adresse
+  partageable (`?perimetre=`), avec chiffres clés, bandeau quand une machine de première ligne porte une faille à exploitation
+  avérée, et les machines **« Par ligne »** (front, back applicatif, base de données, rôle non indiqué, séparés par les murs du
+  parc) ou en **« Vue globale »** (toutes ensemble dans l'ordre du rang) : mêmes tuiles, mêmes marques et même fiche que
+  l'écran « Machines ». Une machine reliée par une **liaison confirmée** à un actif exposé lisible porte la mention « Exposée
+  sur Internet », avec la liste des actifs ; rien d'un actif illisible. Aucun trait entre machines (le lien front → back →
+  base n'existe pas en données). Dans la liste des machines, le nom du périmètre ouvre son détail. Routes de lecture
+  `GET /api/vulnerabilites/machines/perimetres` et `…/perimetres/{id}` (`vulnerabilites:lire`) : nombre de requêtes fixe
+  (16 et 17 au plus), 250 machines au plus par ligne, périmètre illisible traité comme inconnu (404), sans écriture ni journal.
+  Sans migration ; rien de nouveau chez l'assistant. Aide en ligne : article « Vulnérabilités : vue par périmètre ». (session
+  « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC4 : fiche de faille illustrée** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC4 » ; demande du RSSI du 15/11/2026, maquette `02-fiche`). Une seule présentation, placée en tête des fiches
+  existantes (faille détectée par Tenable, faille déclarée, CVE de la veille, ouverte désormais depuis la veille, alerte
+  d'AlgoLightHouse) : **en-tête** (priorité et faits, les mêmes pour tous, marques « Zero-day : exploitation avérée » et
+  « Exploitable », lien vers l'alerte ouverte, machines et actifs exposés que la personne lit, drapeau sans nombre pour le
+  reste) ; **« Vecteur d'attaque, en clair »** : vecteur CVSS v3.0, v3.1 ou v4.0 traduit par une table fixe, une icône et deux
+  libellés par métrique (terme exact, par exemple « Vecteur d'accès : réseau », et traduction), effets sur la confidentialité,
+  l'intégrité et la disponibilité (et sur les systèmes en aval en v4.0), phrase en clair, vecteur brut et sa version ; quand NVD
+  et Tenable diffèrent, le vecteur au score le plus sévère parle (règle des sources), les autres sont montrés ; **schéma SVG**
+  composé à partir du vecteur et de la présence lue, nommé en une phrase, avec son équivalent texte ; vecteur absent ou mal
+  formé : « vecteur non communiqué », sans traduction ni schéma ; **« Recommandations des sources »**, chaque source à part et
+  en texte tel quel (action exigée du catalogue KEV, correctif de Tenable en anglais, versions touchées selon NVD, mentions du
+  CERT Santé, avis du CERT-FR et du CERT Santé, recommandations de l'éditeur d'AlgoLightHouse pour les alertes lisibles) ; rien
+  n'est rédigé par l'assistant. Route de lecture `GET /api/vulnerabilites/fiches/{nature}/{id}` (`vulnerabilites:lire`, sans
+  écriture ni journal ; constat, faille déclarée et alerte illisibles traités comme inconnus). Vecteurs déjà rangés par la
+  veille et Tenable : **sans migration**, sans appel réseau ni champ nouveau. Aide en ligne : article « Vulnérabilités :
+  failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 

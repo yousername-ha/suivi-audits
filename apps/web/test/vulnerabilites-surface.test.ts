@@ -41,6 +41,8 @@ import {
   PerimetresAlhTable,
   TechnologiesAlh,
 } from '../src/vulnerabilites/SurfaceExterne';
+import { FicheFailleIllustree } from '../src/vulnerabilites/FicheFaille';
+import { ficheFaille } from './fiche-faille-fixture';
 import {
   FILTRES_ALERTES_VIDES,
   libelleCible,
@@ -172,14 +174,15 @@ const techno: TechnologieAlhDto = {
 
 describe('menu et aide', () => {
   const seulement = (droits: string[]) => (m: Module, a: Action) => droits.includes(`${m}:${a}`);
-  it('« Surface externe » suit « Machines », avec la lecture du module seulement', () => {
+  it('« Surface externe » suit « Machines » et « Périmètres » (lot PC3), avec la lecture du module seulement', () => {
     const rubriques = (droits: string[]) =>
       famillesVisibles(seulement(droits))
         .find((f) => f.famille.id === 'risques')
         ?.destinations.find((d) => d.id === 'vulnerabilites')
         ?.rubriques.map((r) => r.id) ?? [];
     const ids = rubriques(['vulnerabilites:lire']);
-    expect(ids.indexOf('vulnerabilites-surface')).toBe(ids.indexOf('vulnerabilites-machines') + 1);
+    expect(ids.indexOf('vulnerabilites-perimetres')).toBe(ids.indexOf('vulnerabilites-machines') + 1);
+    expect(ids.indexOf('vulnerabilites-surface')).toBe(ids.indexOf('vulnerabilites-perimetres') + 1);
     expect(rubriques(['pilotage:lire'])).not.toContain('vulnerabilites-surface');
     expect(localiser('/vulnerabilites/surface-externe')?.rubrique.id).toBe('vulnerabilites-surface');
   });
@@ -392,7 +395,18 @@ describe('rendu', () => {
         },
       ],
     };
-    const html = rendre(createElement(FicheAlerteAlh, { a: fiche }));
+    // Lot PC4 : les défauts et résolutions de l'éditeur sont rendus par la fiche illustrée commune, placée au-dessus du
+    // détail de l'alerte.
+    const html =
+      rendre(createElement(FicheAlerteAlh, { a: fiche })) +
+      rendre(
+        createElement(FicheFailleIllustree, {
+          f: ficheFaille({
+            nature: 'alerte-alh',
+            recommandations: { alh: [{ alerteId: fiche.id, titre: fiche.titre, defauts: fiche.defauts }] },
+          }),
+        }),
+      );
     for (const x of [
       'Priorité calculée par la plateforme',
       'P3',

@@ -36,6 +36,7 @@ import { fmtDate } from '../components/common';
 import { useCan } from '../session';
 import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
+import { FicheFaille } from './FicheFaille';
 import { ANNEAUX, disposerRadar, libelleEpss, libelleTouches, RAYON, type SceneRadar, VUE } from './radar';
 import { SuiviFaille } from './SuiviFaille';
 import { etatSource } from './veille';
@@ -875,6 +876,7 @@ export function VueEnsemblePage() {
             <ErrorAlert error={fiche.error} />
             {fiche.data && (
               <Stack>
+                <FicheFaille nature="constat" id={fiche.data.id} />
                 <FicheConstat c={fiche.data} />
                 <SuiviFaille nature="constat" id={fiche.data.id} source="Tenable" />
               </Stack>
@@ -886,6 +888,7 @@ export function VueEnsemblePage() {
             <ErrorAlert error={ficheDeclaree.error} />
             {ficheDeclaree.data && (
               <Stack>
+                <FicheFaille nature="declaree" id={ficheDeclaree.data.rapprochementId} />
                 <FicheDeclaree f={ficheDeclaree.data} />
                 <SuiviFaille nature="declaree" id={ficheDeclaree.data.rapprochementId} source="la veille" />
               </Stack>
