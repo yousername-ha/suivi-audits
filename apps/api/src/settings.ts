@@ -3,6 +3,7 @@
    rechargé à chaque modification (y compris par une autre instance, via le temps réel). */
 import {
   FENETRE_MAINTENANCE_DEFAUT,
+  IDENTITE_ETABLISSEMENT_VIDE,
   SETTINGS_SCHEMAS,
   SETTINGS_SECTIONS,
   type SettingsSection,
@@ -25,6 +26,7 @@ const STORED_SECTIONS = [
   'conservation',
   'courriel',
   'securite',
+  'etablissement',
 ] as const;
 type Stored = (typeof STORED_SECTIONS)[number];
 const isStored = (s: SettingsSection): s is Stored => (STORED_SECTIONS as readonly string[]).includes(s);
@@ -72,6 +74,8 @@ function settingsDefaults(cfg: Config): { [K in Stored]: SettingsValues[K] } {
       mfaRequired: true,
       fenetreMaintenance: { ...FENETRE_MAINTENANCE_DEFAUT, jours: [...FENETRE_MAINTENANCE_DEFAUT.jours] },
     },
+    // Identité de l'établissement (ADR 0105) : vide au départ, remplie par l'établissement.
+    etablissement: { ...IDENTITE_ETABLISSEMENT_VIDE },
   };
 }
 

@@ -72,7 +72,7 @@ describe('sauvegardes (BUG-072)', () => {
 });
 
 describe('paramètres', () => {
-  it('dix sections, valeurs par défaut issues de la configuration', async () => {
+  it('onze sections, valeurs par défaut issues de la configuration', async () => {
     const r = await A.get('/api/settings');
     expect(r.statusCode).toBe(200);
     expect(r.json().map((x: { section: string }) => x.section)).toEqual([
@@ -86,6 +86,7 @@ describe('paramètres', () => {
       'conservation',
       'courriel',
       'securite',
+      'etablissement',
     ]);
     const g = await section(A, 'general');
     expect(g.values.appName).toBe('Suivi des audits SMSI');
@@ -169,6 +170,44 @@ describe('paramètres', () => {
     expect((await p.put('/api/settings/cycle', c.values, { 'if-match': c.etag })).statusCode).toBe(403);
     const l = await login(t, await makeUser(t, 'lect', 'lecteur'));
     expect((await l.get('/api/settings')).statusCode).toBe(403);
+  });
+
+  it('identité de l’établissement (ADR 0105) : vide au départ, écriture avec conformite:modifier, FINESS contrôlé', async () => {
+    const e = await section(A, 'etablissement');
+    expect(e.values).toEqual({
+      raisonSociale: '',
+      finessJuridique: '',
+      finessGeographique: '',
+      arsRattachement: '',
+      contactNom: '',
+      contactFonction: '',
+      contactTelephone: '',
+      contactCourriel: '',
+      secteurNis2: '',
+    });
+    expect(e.canWrite).toBe(true);
+    const valeurs = {
+      ...e.values,
+      raisonSociale: 'Centre hospitalier fictif',
+      finessJuridique: '2A0000001',
+      finessGeographique: '990000002',
+      arsRattachement: 'ARS fictive',
+      contactNom: 'Personne fictive',
+      contactCourriel: 'signalement@exemple.example',
+      secteurNis2: 'Santé',
+    };
+    expect(
+      (await A.put('/api/settings/etablissement', { ...valeurs, finessJuridique: '12345' }, { 'if-match': e.etag }))
+        .statusCode,
+    ).toBe(422);
+    const r = await A.put('/api/settings/etablissement', valeurs, { 'if-match': e.etag });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(t.svc.settings.get('etablissement').raisonSociale).toBe('Centre hospitalier fictif');
+    // parametres:modifier ne suffit pas : la rubrique relève aussi du droit conformite (comme la catégorie d'entité NIS 2).
+    const p = await login(t, await makeUser(t, 'param_etab', 'r_param'));
+    const s = await section(p, 'etablissement');
+    expect(s.canWrite).toBe(false);
+    expect((await p.put('/api/settings/etablissement', s.values, { 'if-match': s.etag })).statusCode).toBe(403);
   });
 
   it('cycle d’audit : enregistré dans l’état de l’outil historique', async () => {

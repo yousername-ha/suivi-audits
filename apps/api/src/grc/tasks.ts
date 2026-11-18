@@ -3,6 +3,7 @@ import {
   fenetreOccurrence,
   ICAL_MAX_JOURS,
   LIEN_RESUME_ALERTES,
+  lienDeclarationIncident,
   lireIcs,
   NOTIFICATION_TYPES_VULNERABILITES,
   PREFIXE_RESUME_ALERTES,
@@ -538,15 +539,29 @@ export class GrcTasks {
       .where('user_id', '=', user.id)
       .where('canal_application', '=', true)
       // Les alertes de sécurité (sans SMSI) ont leur propre route : /api/account/alertes-securite (ADR 0074). Les alertes du
-      // module Vulnérabilités (ADR 0100, lot V6), sans SMSI non plus, sont rendues ici à qui lit encore le module.
-      .where((eb) => eb.or([eb('smsi_id', 'is not', null), eb('kind', 'in', [...NOTIFICATION_TYPES_VULNERABILITES])]))
+      // module Vulnérabilités (ADR 0100, lot V6) et les rappels de déclaration d'un incident (ADR 0105), sans SMSI non plus,
+      // sont rendus ici à qui lit encore le module (et, pour une déclaration, le périmètre de l'incident).
+      .where((eb) =>
+        eb.or([
+          eb('smsi_id', 'is not', null),
+          eb('kind', 'in', [...NOTIFICATION_TYPES_VULNERABILITES, 'incident_declaration']),
+        ]),
+      )
       .orderBy('created_at', 'desc')
       .limit(100)
       .execute();
     const visible: ((typeof rows)[number] & { lien?: string })[] = [];
     const vulnerabilites = user.rights.can('vulnerabilites', 'lire');
+    const declarations = await this.liensDeclarations(
+      user,
+      rows.filter((r) => r.kind === 'incident_declaration').map((r) => r.dueKey),
+    );
     for (const r of rows)
-      if ((NOTIFICATION_TYPES_VULNERABILITES as readonly string[]).includes(r.kind)) {
+      if (r.kind === 'incident_declaration') {
+        // Rappel de déclaration (ADR 0105) : fiche de l'incident, si la déclaration existe et reste lisible.
+        const lien = declarations.get(r.dueKey.split(':')[0]!);
+        if (lien) visible.push({ ...r, lien });
+      } else if ((NOTIFICATION_TYPES_VULNERABILITES as readonly string[]).includes(r.kind)) {
         // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré ; sinon, fiche de l'alerte (identifiant interne,
         // avant « : » dans la clé de la notification).
         if (vulnerabilites && r.dueKey)
@@ -572,6 +587,24 @@ export class GrcTasks {
       )
         visible.push(r);
     return visible.map(({ dueKey: _cle, ...r }) => r);
+  }
+  /** Liens des rappels de déclaration d'un incident (ADR 0105) : identifiant de la déclaration (en tête de la clé) → fiche de
+      l'incident, pour les déclarations dont la personne lit les incidents et le périmètre. */
+  private async liensDeclarations(user: SessionUser, cles: readonly string[]): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    const ids = [...new Set(cles.map((k) => k.split(':')[0]!))].filter((x) => /^[0-9a-f-]{36}$/.test(x));
+    if (!ids.length || !user.rights.can('incidents', 'lire')) return out;
+    const lignes = await this.g.db.k
+      .selectFrom('incidents_declarations')
+      .select([sql<string>`id::text`.as('id'), 'incident_id', sql<string>`smsi_id::text`.as('smsi')])
+      .where('id', 'in', ids)
+      .execute();
+    const lisibles = new Map<string, boolean>();
+    for (const l of lignes) {
+      if (!lisibles.has(l.smsi)) lisibles.set(l.smsi, await this.g.visible(user, l.smsi, 'incidents'));
+      if (lisibles.get(l.smsi)) out.set(l.id, lienDeclarationIncident(l.smsi, l.incident_id));
+    }
+    return out;
   }
   async read(id: string, user: SessionUser) {
     await this.g.db.k

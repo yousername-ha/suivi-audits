@@ -130,7 +130,7 @@ describe('notifications métier', () => {
       const g = await lecteur.get('/api/account/notifications');
       expect(g.statusCode).toBe(200);
       expect(g.json().portee.kind).toBe('utilisateur');
-      expect(g.json().reglages).toHaveLength(14);
+      expect(g.json().reglages).toHaveLength(16);
       const r = await lecteur.put(
         '/api/account/notifications',
         { changements: [{ type: 'task_due', canal: 'application', valeur: false }] },

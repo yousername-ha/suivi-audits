@@ -103,6 +103,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     detail: (m) => <SectionLoader section="referentiels" onDirty={m} />,
   },
   {
+    id: 'etablissement',
+    cote: 'plateforme',
+    titre: 'Identité de l’établissement',
+    resume: 'Raison sociale, FINESS, ARS et contact de signalement, repris dans les déclarations des incidents.',
+    icone: 'bouclier',
+    teinte: 'orange',
+    detail: (m) => <SectionLoader section="etablissement" onDirty={m} />,
+  },
+  {
     id: 'echelles',
     cote: 'plateforme',
     titre: 'Échelles et matrices (GRC)',

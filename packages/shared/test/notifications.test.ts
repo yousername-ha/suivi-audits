@@ -24,6 +24,7 @@ describe('types et canaux', () => {
       'assistant_question',
       'vulnerabilites_alerte_critique',
       'vulnerabilites_alerte',
+      'incident_declaration',
     ]);
     expect(NOTIFICATION_CANAUX).toEqual(['application', 'courriel']);
     for (const t of NOTIFICATION_TYPES) {

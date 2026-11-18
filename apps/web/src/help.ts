@@ -331,6 +331,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'declarations-incidents',
+    title: 'Déclarer un incident (santé, NIS 2)',
+    permission: 'incidents:lire',
+    link: '/pilotage/incidents-registre',
+    steps: [
+      'Quand un incident passe pour la première fois à la qualification « Incident de sécurité », la date et l’heure sont enregistrées : elles font partir les délais. L’outil propose les déclarations probables dans le bloc « Déclarations » de l’onglet Fiche : signalement santé (CERT Santé, ARS) si des données de santé ou une activité HDS sont touchées (« oui » ou « je ne sais pas »), et NIS 2 (alerte précoce sous 24 heures, notification sous 72 heures, rapport final un mois après l’envoi de la notification) si l’établissement est entité essentielle ou importante.',
+      'Le RSSI confirme « à déclarer » ou écarte « non requise » avec un motif obligatoire ; il peut ouvrir à la main une déclaration non proposée et corriger la date de qualification (correction tracée, délais recalculés). Ces gestes sont réservés au rôle « RSSI », sans délégation.',
+      'Toute personne qui peut modifier l’incident prépare la déclaration : « Préparer » ouvre la fiche de préparation, rubrique par rubrique, pré-remplie depuis la fiche, la chronologie et l’identité de l’établissement (Plateforme, « Identité de l’établissement »). « Copier » place le texte d’une rubrique dans le presse-papiers pour le recopier dans le formulaire du portail ; « Word » télécharge la fiche.',
+      'Après l’envoi sur le portail, le RSSI clique « Marquer envoyée » et saisit le numéro de dossier ou d’accusé de réception : le texte transmis, la date, l’heure et son nom sont figés, la déclaration n’est plus ni modifiable ni supprimable, et l’incident ne peut plus être supprimé. Un complément se fait par une nouvelle déclaration liée.',
+      'Rappels « Déclaration réglementaire d’un incident » (dans l’application, et par courriel selon les réglages) au responsable de l’incident et aux comptes qui ont le rôle RSSI : à la qualification, puis pour NIS 2 à mi-délai, deux heures avant l’échéance et au dépassement, et pour la santé toutes les quatre heures tant que le signalement n’est ni envoyé ni écarté.',
+      'Les rubriques suivent l’article 23 de la directive NIS 2 et la liste retenue pour la santé ; elles sont à confirmer contre les formulaires réels des portails avant la première utilisation. Aucun envoi automatique : la déclaration reste un geste du RSSI.',
+    ],
+  },
+  {
     id: 'retex-contribution',
     title: 'Contribuer au RETEX d’un incident',
     link: '/retex',

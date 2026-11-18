@@ -1,6 +1,7 @@
 /* Paramètres de l'application, par section (page Paramètres). Chaque section a son schéma, ses valeurs par défaut,
    sa permission d'écriture et son propre enregistrement (version par section, If-Match). */
 import { z } from 'zod';
+import { IdentiteEtablissement } from './declarations-incidents.js';
 import type { Permission } from './permissions.js';
 import { FENETRE_MAINTENANCE_DEFAUT, FenetreMaintenance } from './updates.js';
 
@@ -15,6 +16,8 @@ export const SETTINGS_SECTIONS = [
   'conservation',
   'courriel',
   'securite',
+  // Identité de l'établissement (ADR 0105, décision 7) : en fin de liste, pour ne pas déplacer les sections existantes.
+  'etablissement',
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
@@ -29,6 +32,7 @@ export const SETTINGS_LABELS: Record<SettingsSection, string> = {
   conservation: 'Conservation',
   courriel: 'Courriel',
   securite: 'Sécurité',
+  etablissement: 'Identité de l’établissement',
 };
 
 /** Lire : parametres:lire ; enregistrer : parametres:modifier ; la sécurité exige parametres:administrer. */
@@ -43,6 +47,8 @@ export const SETTINGS_WRITE: Record<SettingsSection, Permission> = {
   conservation: 'parametres:modifier',
   courriel: 'parametres:administrer',
   securite: 'parametres:administrer',
+  // Exige aussi conformite:modifier (comme la catégorie d'entité NIS 2 de la section « Référentiels »).
+  etablissement: 'parametres:modifier',
 };
 
 const txt = (max: number) => z.string().trim().max(max);
@@ -157,6 +163,7 @@ export const SETTINGS_SCHEMAS = {
   conservation: ConservationSettings,
   courriel: CourrielSettings,
   securite: SecuriteSettings,
+  etablissement: IdentiteEtablissement,
 } as const;
 export type SettingsValues = { [K in SettingsSection]: z.infer<(typeof SETTINGS_SCHEMAS)[K]> };
 
