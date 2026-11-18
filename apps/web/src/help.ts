@@ -159,6 +159,21 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-perimetres',
+    title: 'Vulnérabilités : vue par périmètre',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/perimetres',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Périmètres. Chaque carte est un périmètre que vous pouvez lire : nombre de machines que vous lisez, priorité la plus haute de leurs failles présentes (P1 à P4, en couleur et en toutes lettres), failles présentes critiques, élevées, moyennes et faibles (une faille présente sur plusieurs machines du périmètre ne compte qu’une fois), nombre de machines marquées « Zero-day » (exploitation avérée) et « Exploitable », nombre d’actifs exposés sur Internet rattachés au périmètre (périmètres AlgoLightHouse reliés à lui, onglet « Périmètres » de « Surface externe »). Les cartes vont du plus critique au moins critique. L’écran ne modifie rien et n’écrit rien au journal.',
+      'La carte « Sans périmètre » regroupe les machines qui n’ont ni périmètre indiqué à la main, ni dépôt Tenable relié, et les actifs exposés dont le périmètre AlgoLightHouse n’est relié à aucun périmètre : seules les personnes qui administrent le module la voient, comme ces machines.',
+      'Cliquez une carte, ou placez-vous dessus et appuyez sur Entrée : le détail du périmètre s’ouvre, à une adresse que vous pouvez partager (une personne qui ne lit pas ce périmètre obtient « Périmètre introuvable ou non accessible »). Les chiffres clés reprennent la carte ; un bandeau rouge signale les machines de première ligne (front) qui portent une faille dont l’exploitation est avérée.',
+      '« Par ligne » range les machines selon le rôle indiqué : front, back applicatif, base de données, puis rôle non indiqué, séparés par les murs de l’écran « Machines » (rouge entre le front et le back, violet entre le back et les bases). « Vue globale » les montre toutes ensemble, de la plus prioritaire à la moins prioritaire. Ce sont les mêmes tuiles, les mêmes marques et la même fiche que l’écran « Machines » : un clic ou Entrée sur une tuile ouvre la fiche de la machine. Les 5 plus prioritaires de chaque ligne (8 sans rôle, 24 en vue globale) sont montrées d’abord ; « et n autres » déplie le reste ; au-delà de 250 machines par ligne, « voir la liste » ouvre l’écran « Machines » filtré sur le périmètre.',
+      'Une machine reliée par une liaison confirmée à un actif exposé sur Internet que vous pouvez lire porte la mention « Exposée sur Internet » ; la liste sous les machines dit par quels actifs (trois au plus par machine, puis le nombre des autres). Un actif que vous ne pouvez pas lire n’est ni nommé ni compté, et une liaison seulement proposée n’apparaît pas.',
+      'Aucun trait ne relie deux machines : la plateforme ne sait pas quel front s’appuie sur quel back ou quelle base (aucune source ne le fournit). Les murs séparent les rôles indiqués ; ils ne prouvent pas un cloisonnement du réseau.',
+      'La priorité et les marques sont les mêmes pour tout le monde ; deux personnes qui lisent le même périmètre en voient la même carte. Les nombres ne portent que sur les machines et les actifs que vous pouvez lire ; rien n’est compté de ce que vous ne lisez pas. Depuis l’écran « Machines », le nom d’un périmètre dans la liste ouvre son détail ; rien de cet écran n’est remis à l’assistant.',
+    ],
+  },
+  {
     id: 'vulnerabilites-surface',
     title: 'Vulnérabilités : surface externe (AlgoLightHouse)',
     permission: 'vulnerabilites:lire',

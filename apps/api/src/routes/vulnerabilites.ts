@@ -38,7 +38,9 @@
    Lot PC1 : vue d'ensemble (poste de commandement) avec `lire`, lecture seule, sans journal : niveau d'alerte, priorités et
    failles suivies les mêmes pour tous ; nombres de machines et d'actifs limités à ce que la personne lit, aucun nom.
    Lot PC2 : parc des machines par zone de rôle avec `lire`, lecture seule, sans journal : seules les machines lisibles sont
-   listées ou comptées ; marques et priorité les mêmes pour tous. */
+   listées ou comptées ; marques et priorité les mêmes pour tous.
+   Lot PC3 : périmètres (cartes et détail d'un périmètre) avec `lire`, lecture seule, sans journal : seuls les périmètres,
+   machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404. */
 import {
   RechercheAlertesVulnerabilites,
   ApplicationLiaisonMasse,
@@ -76,6 +78,7 @@ import {
   RechercheConstats,
   RechercheMachines,
   RechercheParc,
+  IdPerimetreVue,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -322,6 +325,25 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     query: RechercheParc,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.parc((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/perimetres',
+    summary:
+      'Périmètres lus, du plus critique au moins critique : machines lues, priorité la plus haute, failles présentes par gravité, machines zero-day et exploitables, actifs exposés rattachés ; carte « Sans périmètre » pour l’administration du module ; aucun total de ce qui est illisible ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.perimetres.lister((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/perimetres/:id',
+    summary:
+      'Détail d’un périmètre lu (ou « aucun » : machines sans périmètre, administration du module) : sa carte, ses machines par zone de rôle dans l’ordre du rang (250 au plus par zone), actifs exposés lisibles reliés par une liaison confirmée (3 nommés au plus par machine) ; périmètre illisible : 404 ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: z.object({ id: IdPerimetreVue }),
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.perimetres.detail((s as Session).user, params.id),
   }),
   route({
     method: 'GET',

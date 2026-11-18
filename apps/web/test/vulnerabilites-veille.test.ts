@@ -103,6 +103,7 @@ describe('menu', () => {
       ['vulnerabilites-veille', '/vulnerabilites/veille'],
       ['vulnerabilites-failles', '/vulnerabilites/failles'],
       ['vulnerabilites-machines', '/vulnerabilites/machines'],
+      ['vulnerabilites-perimetres', '/vulnerabilites/perimetres'],
       ['vulnerabilites-surface', '/vulnerabilites/surface-externe'],
       ['vulnerabilites-alertes', '/vulnerabilites/alertes'],
       ['vulnerabilites-priorite', '/vulnerabilites/priorite'],

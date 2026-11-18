@@ -228,7 +228,7 @@ const versResume = (l: LigneConstat, sources: SourcesFailleDto, reglage: Reglage
 });
 
 /** Faille déclarée sur une machine : CVE rattachée à un produit relié, non détectée par Tenable sur cette machine. */
-interface DeclareeMachine {
+export interface DeclareeMachine {
   machine_id: string;
   cve: string;
   cvss31_gravite: string | null;
@@ -236,6 +236,23 @@ interface DeclareeMachine {
   /** Score CVSS v3.1 le plus haut des fiches du CERT Santé qui citent la CVE. */
   cvss_cert_sante: string | null;
   exploitee: boolean;
+}
+
+/** Gravité retenue d'une faille déclarée : la plus sévère entre NVD et la fiche du CERT Santé (V27). Sert aux compteurs des
+    machines et à ceux d'un périmètre (lot PC3). */
+export function graviteDeclaree(
+  x: Pick<DeclareeMachine, 'cvss31_gravite' | 'cvss40_gravite' | 'cvss_cert_sante'>,
+): GraviteTenable | undefined {
+  const nvd = graviteDepuisNvd(x.cvss31_gravite, x.cvss40_gravite);
+  const cs = graviteDepuisScore(nombre(x.cvss_cert_sante));
+  return valeursRetenues({
+    gravites: [
+      ...(nvd ? [{ source: 'nvd' as const, gravite: nvd }] : []),
+      ...(cs ? [{ source: 'cert-sante' as const, gravite: cs }] : []),
+    ],
+    cvss: [],
+    epss: [],
+  }).gravite?.gravite;
 }
 
 const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<MachineDto, 'rang'> => {
@@ -250,17 +267,7 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     exploitationAveree: l.exploitees_avere,
   };
   for (const x of declarees) {
-    // Gravité la plus sévère entre NVD et la fiche du CERT Santé (V27).
-    const nvd = graviteDepuisNvd(x.cvss31_gravite, x.cvss40_gravite);
-    const cs = graviteDepuisScore(nombre(x.cvss_cert_sante));
-    const g = valeursRetenues({
-      gravites: [
-        ...(nvd ? [{ source: 'nvd' as const, gravite: nvd }] : []),
-        ...(cs ? [{ source: 'cert-sante' as const, gravite: cs }] : []),
-      ],
-      cvss: [],
-      epss: [],
-    }).gravite?.gravite;
+    const g = graviteDeclaree(x);
     if (g) compteurs[g]++;
     if (x.exploitee) compteurs.exploitationAveree++;
   }

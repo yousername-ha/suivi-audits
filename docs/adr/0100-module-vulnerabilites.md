@@ -372,6 +372,8 @@
   « lot PC1 » ci-dessous.
 - **Lot PC2, écran « Machines », présentation « Parc »** (18/11/2026) : sans migration, tuiles par machine dans les zones de
   rôle, murs animés, marques zero-day et exploitable, échelle réduite ou grand écran. Voir l'addendum « lot PC2 » ci-dessous.
+- **Lot PC3, onglet « Périmètres »** (18/11/2026) : sans migration, cartes des périmètres lus, détail par ligne ou au global,
+  mention « Exposée sur Internet » des machines reliées par une liaison confirmée. Voir l'addendum « lot PC3 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1553,3 +1555,100 @@ parc réel (12 requêtes, toutes les machines lisibles et leurs failles présent
 6. Marques zero-day et exploitable sur les **failles** elles-mêmes (listes « Failles détectées », radar) : seules les machines
    les portent dans ce lot.
 
+## Addendum du 18/11/2026 — lot PC3 : onglet « Périmètres »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau, aucune dépendance nouvelle, rien de nouveau chez l'assistant. Réalise le
+point 17 et la part « par périmètre » de V12 ; lève le point ouvert 3 de l'addendum « lot PC1 » et le point ouvert 2 de
+l'addendum « lot PC2 ».
+
+### Demande du RSSI (15/11/2026)
+
+« Et par périmètre une vue où sur un périmètre on voit les machines au global ou […] en front reliées, séparées à celles en
+back. » Maquette validée `05-perimetre.png`.
+
+### Réalisation
+
+- **Onglet** « Périmètres » du module, après « Machines » (`/vulnerabilites/perimetres`, `apps/web/src/vulnerabilites/Perimetres.tsx`).
+- **Liste** : une carte par périmètre que la personne lit (bouton, nom accessible complet) : nom, machines lues, priorité la plus
+  haute de leurs failles présentes (couleur et texte P1 à P4, « Aucune »), failles présentes critiques, élevées, moyennes et
+  faibles, machines marquées « zero-day » et « exploitable » (marques du lot PC2, avec leur nombre), actifs exposés sur Internet
+  rattachés (actifs présents dont le périmètre AlgoLightHouse est relié au périmètre). Tri du plus critique au moins critique
+  (`comparerPerimetres`, paquet partagé) : priorité, machines zero-day, failles critiques, machines exploitables, failles
+  élevées, moyennes, faibles, actifs exposés, machines, puis nom. Carte **« Sans périmètre »** pour qui a
+  `vulnerabilites:administrer` seulement (machines sans périmètre effectif, actifs d'un périmètre AlgoLightHouse non relié).
+- **Détail** (clic ou Entrée, adresse partageable `?perimetre=<id>|aucun`, `&presentation=global`) : chiffres clés (machines,
+  failles critiques, machines avec exploitation avérée, machines sans rôle, actifs exposés rattachés), bandeau quand des machines
+  de première ligne portent une faille à exploitation avérée, puis **« Par ligne »** (composant `ParcMachines` du lot PC2 : zones
+  front, back applicatif, base de données, rôle non indiqué, murs animés, mode réduit et « et n autres ») ou **« Vue globale »**
+  (toutes les machines ensemble dans l'ordre du rang, 24 d'abord puis « et n autres »). Mêmes tuiles, marques, fiche au clic.
+- **Exposition** (lot ALH3) : une machine reliée par une liaison **confirmée** à un actif exposé que la personne lit porte la
+  mention « Exposée sur Internet » (texte et globe, détail dans le nom accessible) ; la liste sous le parc donne les actifs (trois
+  au plus par machine, puis le nombre des autres actifs **lisibles**). Rien d'un actif illisible : ni nom, ni nombre, ni drapeau ;
+  une proposition non confirmée n'apparaît pas.
+- **Aucun trait entre machines** : le lien front → back → base de machine à machine n'existe pas en données (point ouvert 5) ;
+  l'écran et l'aide le disent. Les murs séparent les rôles indiqués, comme au lot PC2.
+- **Routes** (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/perimetres.ts`), lecture seule, aucune entrée de journal :
+  `GET /api/vulnerabilites/machines/perimetres` (cartes) et `GET /api/vulnerabilites/machines/perimetres/{id|aucun}` (carte, parc
+  du lot PC2 restreint au périmètre, expositions). `/api/vulnerabilites/perimetres` étant déjà pris (périmètres où l'on peut
+  écrire), les routes sont sœurs de celle du parc. **Nombre de requêtes fixe**, aucune par périmètre ni par machine : liste 16 au
+  plus (périmètres 1, machines lisibles et compteurs 2, réglage 1, marques 9, failles par périmètre 2, actifs 1), détail 17 au
+  plus (périmètre 1, mêmes calculs restreints, liaisons 1) ; mesuré sur PostgreSQL de test : 13 pour la liste, 10 à 14 pour un
+  détail (test d'API qui compte les requêtes). **Bornes** : 250 machines par ligne dans le détail (`PARC_PAR_ZONE`, totaux exacts,
+  « et n autres : voir la liste » vers l'écran « Machines » filtré par l'adresse) ; trois actifs nommés par machine ; liste des
+  périmètres non bornée (taille du référentiel lu).
+- **Droits** : périmètres visibles de la pyramide (`grc_smsi_visible`) ; machines par leur périmètre effectif (lot V4d) ; actifs
+  par leur périmètre AlgoLightHouse relié. Un périmètre illisible est absent de la liste et répond comme un inconnu (404, même
+  message) ; « aucun » sans `administrer` aussi. Qui lit un périmètre lit toutes ses machines : deux personnes qui le lisent en
+  voient la même carte ; priorité et marques sur tous les faits connus (lot ALH5). Aucun total de ce qui est illisible.
+- **Liens croisés** : dans la liste de l'écran « Machines », le nom du périmètre ouvre son détail ; en présentation « Parc »
+  filtrée sur un périmètre, un lien mène à son détail ; l'écran « Machines » lit ses filtres `perimetre` et `role` dans l'adresse.
+  La vue d'ensemble (lot PC1) n'affiche aucun nom de périmètre : rien n'y est ajouté.
+- **Assistant** : rien de branché ; aucun nom de périmètre ne lui est remis.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Failles d'un périmètre** : chaque constat de Tenable compté une fois par périmètre (gravité de Tenable), chaque CVE déclarée
+  une fois (gravité la plus sévère entre NVD et le CERT Santé), mêmes règles de présence et de traitement que les compteurs d'une
+  machine ; une CVE déclarée sur une machine et détectée par un constat sur une autre machine du même périmètre compte deux fois.
+- **Périmètres listés** : ceux de l'organisation que la personne lit, même vides (« 0 machine lue »), et tout autre périmètre lu
+  (entité fournisseur) seulement s'il porte une machine ou un actif exposé. Machines rangées par leur périmètre effectif exact,
+  sans cumul dans un périmètre parent.
+- **Présentation par défaut « Par ligne »** (comme la maquette), non mémorisée dans les préférences : elle est dans l'adresse.
+- **Rang** affiché : celui de la plateforme parmi toutes les machines que la personne lit (comme la liste et le parc), pas un
+  rang propre au périmètre.
+- **Exposition** : aucune trace d'une liaison vers un actif illisible (plus strict que la fiche d'une machine du lot ALH3, qui
+  la signale par un drapeau sans nombre).
+
+### Écarts à la maquette
+
+- **Liste de cartes** en plus de la maquette (qui montre seulement le détail, avec des puces de choix du périmètre en tête) :
+  pas de puces ; un lien « Tous les périmètres » ramène à la liste.
+- **Pas de bloc « Extérieur »** ni de **flèches entre les lignes** : les murs du lot PC2 séparent les lignes ; le mur
+  « Internet → front » reste hors lot.
+- **Bandeau** : « n machines de première ligne portent une faille dont l'exploitation est avérée », sans « reliées à deux
+  serveurs applicatifs » (aucune donnée) ni « Ouvrir la faille » (plusieurs failles possibles ; la fiche de chaque machine les
+  donne).
+- **Tuiles** du parc (icône, rang, quatre gravités, priorité en texte) au lieu des lignes de la maquette ; pas de « PHP exploitée »
+  sous le nom (nom de faille non porté par la tuile).
+- **Cinq chiffres clés** au lieu de quatre (« Actifs exposés rattachés » ajouté) ; zone « Rôle non indiqué » toujours affichée.
+- Pas de barre de recherche commune (point 15, non réalisé).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (application réelle sous Vite, API simulée par Playwright, données
+fictives : 8 périmètres, 150 machines, 10 sans périmètre, actifs exposés reliés à deux machines ; Chromium, clair et sombre,
+1 440 et 390 px ; liste, détail par ligne, vue globale, « Sans périmètre » ; axe `wcag2a`/`wcag2aa` sans violation, aucun
+chevauchement de texte, aucun débordement de page ; Entrée sur une carte et clic sur une tuile essayés), pas dans la pile
+complète ; la CSP n'a pas été vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface (aucun
+attribut `style` sur le balisage propre à l'écran). Le parcours Playwright ajouté n'a pas été joué (CI seulement) et ne voit que
+la carte « Sans périmètre » vide d'une pile vierge. Durée des routes sur un parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Liens entre machines** (front → back → base) : aucune source ne les fournit ; saisie à la main ou autre source, à trancher
+   (point ouvert 5).
+2. **Mur « Internet → front »** devant la première ligne (addendum « lot PC2 », point ouvert 1).
+3. **Fiche de faille illustrée** (point 19, maquette 02).
+4. Confirmer les choix ci-dessus (décompte des failles d'un périmètre, périmètres vides listés, présentation par défaut).
+5. Puces de choix du périmètre dans le détail, si le RSSI les veut.

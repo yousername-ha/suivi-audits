@@ -591,6 +591,22 @@ seuil »). (session « Module surveillance vulnérabilités SMSI »)
   lisibles seulement, 250 au plus par zone (totaux rendus), nombre de requêtes fixe (12 au plus), sans écriture ni journal ;
   `GET /api/vulnerabilites/machines` rend aussi les marques de chaque machine. Sans migration. Aide en ligne : article
   « Vulnérabilités : failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC3 : onglet « Périmètres »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
+  « lot PC3 » ; demande du RSSI du 15/11/2026, maquette `05-perimetre`). Nouvel onglet après « Machines » : une **carte par
+  périmètre** que la personne lit (machines lues, priorité la plus haute en couleur et en toutes lettres, failles présentes
+  critiques, élevées, moyennes et faibles comptées une fois par périmètre, nombre de machines « zero-day » et « exploitables »,
+  actifs exposés sur Internet rattachés par les périmètres AlgoLightHouse reliés), du plus critique au moins critique, plus une
+  carte **« Sans périmètre »** pour qui administre le module. Clic ou Entrée sur une carte : **détail** à une adresse
+  partageable (`?perimetre=`), avec chiffres clés, bandeau quand une machine de première ligne porte une faille à exploitation
+  avérée, et les machines **« Par ligne »** (front, back applicatif, base de données, rôle non indiqué, séparés par les murs du
+  parc) ou en **« Vue globale »** (toutes ensemble dans l'ordre du rang) : mêmes tuiles, mêmes marques et même fiche que
+  l'écran « Machines ». Une machine reliée par une **liaison confirmée** à un actif exposé lisible porte la mention « Exposée
+  sur Internet », avec la liste des actifs ; rien d'un actif illisible. Aucun trait entre machines (le lien front → back →
+  base n'existe pas en données). Dans la liste des machines, le nom du périmètre ouvre son détail. Routes de lecture
+  `GET /api/vulnerabilites/machines/perimetres` et `…/perimetres/{id}` (`vulnerabilites:lire`) : nombre de requêtes fixe
+  (16 et 17 au plus), 250 machines au plus par ligne, périmètre illisible traité comme inconnu (404), sans écriture ni journal.
+  Sans migration ; rien de nouveau chez l'assistant. Aide en ligne : article « Vulnérabilités : vue par périmètre ». (session
+  « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 

@@ -50,6 +50,7 @@ import { SeuilsPrioritePage } from './vulnerabilites/SeuilsPriorite';
 import { MotsNonMasquesPage } from './vulnerabilites/MotsNonMasques';
 import { AlertesPage } from './vulnerabilites/Alertes';
 import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
+import { PerimetresPage } from './vulnerabilites/Perimetres';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
@@ -139,6 +140,7 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/veille', element: <VeillePage /> },
       { path: '/vulnerabilites/failles', element: <FaillesDetecteesPage /> },
       { path: '/vulnerabilites/machines', element: <MachinesPage /> },
+      { path: '/vulnerabilites/perimetres', element: <PerimetresPage /> },
       { path: '/vulnerabilites/surface-externe', element: <SurfaceExternePage /> },
       { path: '/vulnerabilites/alertes', element: <AlertesPage /> },
       { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },

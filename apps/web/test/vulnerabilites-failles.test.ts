@@ -159,6 +159,7 @@ describe('menu et aide', () => {
       'vulnerabilites-veille',
       'vulnerabilites-failles',
       'vulnerabilites-machines',
+      'vulnerabilites-perimetres',
       'vulnerabilites-surface',
       'vulnerabilites-alertes',
       'vulnerabilites-priorite',

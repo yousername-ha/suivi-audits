@@ -53,6 +53,7 @@ import {
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { useCan, usePreferences } from '../session';
 import {
@@ -66,6 +67,7 @@ import {
   urlMachines,
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
+import { adressePerimetre, filtresDepuisAdresse } from './perimetres';
 import { LegendeMarques, MarquesMachine, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { nombrePages } from './veille';
@@ -78,17 +80,19 @@ const OPTIONS_ROLE = [
 
 /** Machines (sans état), dans l'ordre du rang ; avec `selection`, une case par machine pour l'affectation en masse ; avec
     `onOuvrir`, le nom ouvre la fiche de la machine. Lot PC2 : priorité la plus haute et marques (zero-day, exploitable)
-    quand la route les rend. */
+    quand la route les rend. Lot PC3 : avec `onPerimetre`, le nom du périmètre ouvre son détail (onglet « Périmètres »). */
 export function MachinesTable({
   machines,
   selection,
   onSelection,
   onOuvrir,
+  onPerimetre,
 }: {
   machines: (MachineDto & { marques?: MarquesMachineDto })[];
   selection?: ReadonlySet<string>;
   onSelection?: (id: string, choisie: boolean) => void;
   onOuvrir?: (m: MachineDto) => void;
+  onPerimetre?: (perimetreId: string) => void;
 }) {
   const choix = !!selection && !!onSelection;
   return (
@@ -165,7 +169,19 @@ export function MachinesTable({
                 {m.role ? libelleRole(m.role) : <StatusChip etat="attention">{libelleRole(null)}</StatusChip>}
               </Table.Td>
               <Table.Td>
-                <Text size="sm">{m.perimetreNom ?? 'Sans périmètre'}</Text>
+                {onPerimetre && m.perimetreId && m.perimetreNom ? (
+                  <Anchor
+                    component="button"
+                    type="button"
+                    size="sm"
+                    className="veille-texte"
+                    onClick={() => onPerimetre(m.perimetreId!)}
+                  >
+                    {m.perimetreNom}
+                  </Anchor>
+                ) : (
+                  <Text size="sm">{m.perimetreNom ?? 'Sans périmètre'}</Text>
+                )}
                 {originePerimetre(m) && (
                   <Text size="xs" c="dimmed" className="veille-texte">
                     {originePerimetre(m)}
@@ -510,7 +526,13 @@ function OngletMachines() {
   const qc = useQueryClient();
   const modifier = can('vulnerabilites', 'modifier');
   const [saisie, setSaisie] = useState('');
-  const [filtres, setFiltres] = useState<FiltresMachines>(FILTRES_MACHINES_VIDES);
+  const navigate = useNavigate();
+  // Lot PC3 : filtres initiaux lus dans l'adresse (« voir la liste » depuis l'onglet « Périmètres »).
+  const [adresse] = useSearchParams();
+  const [filtres, setFiltres] = useState<FiltresMachines>(() => ({
+    ...FILTRES_MACHINES_VIDES,
+    ...filtresDepuisAdresse(adresse),
+  }));
   const [page, setPage] = useState(1);
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [role, setRole] = useState<RoleMachine | 'aucun' | ''>('');
@@ -646,6 +668,12 @@ function OngletMachines() {
               onChange={(v) => changer({ perimetre: v ?? '' })}
               data={[
                 ...(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.nom })),
+                // Périmètre reçu par l'adresse et absent des choix (lecture seule) : il reste nommé dans le filtre.
+                ...(filtres.perimetre &&
+                filtres.perimetre !== 'aucun' &&
+                !(perimetres.data ?? []).some((p) => p.id === filtres.perimetre)
+                  ? [{ value: filtres.perimetre, label: 'Périmètre choisi dans « Périmètres »' }]
+                  : []),
                 { value: 'aucun', label: 'Sans périmètre' },
               ]}
               comboboxProps={{ withinPortal: false }}
@@ -686,9 +714,16 @@ function OngletMachines() {
         {vue === 'parc' && parc.data && (
           <>
             <ParcMachines parc={parc.data} echelle={echelle} onOuvrir={setOuverte} onVoirListe={voirListe} />
-            <Text size="sm" c="dimmed" role="status">
-              {parc.data.total} machine{parc.data.total > 1 ? 's' : ''}
-            </Text>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed" role="status">
+                {parc.data.total} machine{parc.data.total > 1 ? 's' : ''}
+              </Text>
+              {filtres.perimetre && filtres.perimetre !== 'aucun' && (
+                <Anchor component={Link} to={adressePerimetre(filtres.perimetre)} size="sm">
+                  Voir ce périmètre dans l’onglet « Périmètres »
+                </Anchor>
+              )}
+            </Group>
           </>
         )}
         {vue === 'liste' && machines.data && (
@@ -706,6 +741,7 @@ function OngletMachines() {
                 : undefined
             }
             onOuvrir={setOuverte}
+            onPerimetre={(id) => void navigate(adressePerimetre(id))}
           />
         )}
         {vue === 'liste' && machines.data && (

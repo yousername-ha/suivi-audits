@@ -84,6 +84,16 @@ export function IconeMachine({ zone }: { zone: ZoneParc }) {
   );
 }
 
+/** Globe : mention « Exposée sur Internet » d'une tuile (lot PC3). Décoratif : le texte porte le sens. */
+export function IconeInternet() {
+  return (
+    <svg className="parc-icone-internet" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.6 2.6 2.6 15.4 0 18M12 3c-2.6 2.6-2.6 15.4 0 18" />
+    </svg>
+  );
+}
+
 /** Marque « zero-day » : triangle d'avertissement. L'infobulle porte le libellé exact. */
 export function MarqueZeroDay() {
   return (
@@ -150,14 +160,26 @@ export function LegendeMarques({ parc = false }: { parc?: boolean }) {
 }
 
 /* ------------------------------------------------------------------ Tuile */
-export function TuileMachine({ m, onOuvrir }: { m: MachineMarqueeDto; onOuvrir: (m: MachineMarqueeDto) => void }) {
+/** Tuile d'une machine. Lot PC3 : `exposition` (facultative) dit par quels actifs exposés lisibles la machine est jointe
+    depuis Internet (liaison confirmée, lot ALH3) : mention « Exposée sur Internet » sur la tuile, détail dans le nom
+    accessible et l'infobulle. */
+export function TuileMachine({
+  m,
+  onOuvrir,
+  exposition,
+}: {
+  m: MachineMarqueeDto;
+  onOuvrir: (m: MachineMarqueeDto) => void;
+  exposition?: string;
+}) {
   const p = m.marques.priorite ?? 'aucune';
   const c = m.compteurs;
   return (
     <button
       type="button"
       className={`parc-tuile parc-p--${p}${m.marques.exploitationAveree ? ' parc-tuile--zd' : ''}`}
-      aria-label={nomAccessibleMachine(m)}
+      aria-label={exposition ? `${nomAccessibleMachine(m)}, ${exposition}` : nomAccessibleMachine(m)}
+      title={exposition ? `${libelleMachine(m)} : ${exposition}` : undefined}
       onClick={() => onOuvrir(m)}
     >
       <span className="parc-tuile__rang parc-mono" aria-hidden="true">
@@ -175,6 +197,12 @@ export function TuileMachine({ m, onOuvrir }: { m: MachineMarqueeDto; onOuvrir: 
         <b className={`parc-g parc-g--m${c.moyenne ? '' : ' parc-g--zero'}`}>{c.moyenne}</b>
         <b className={`parc-g parc-g--f${c.faible ? '' : ' parc-g--zero'}`}>{c.faible}</b>
       </span>
+      {exposition && (
+        <span className="parc-tuile__expo" aria-hidden="true">
+          <IconeInternet />
+          Exposée sur Internet
+        </span>
+      )}
     </button>
   );
 }
@@ -195,6 +223,7 @@ export function ZoneMachines({
   onDeplier,
   onOuvrir,
   onVoirListe,
+  expositions,
 }: {
   dto: ZoneParcDto;
   echelle: EchelleParc;
@@ -203,6 +232,7 @@ export function ZoneMachines({
   onDeplier: (z: ZoneParc, deplie: boolean) => void;
   onOuvrir: (m: MachineMarqueeDto) => void;
   onVoirListe: (z: ZoneParc) => void;
+  expositions?: ReadonlyMap<string, string>;
 }) {
   const id = useId();
   const { visibles, autres } = visiblesZone(dto.zone, dto.machines, dto.total, echelle, deplie);
@@ -230,7 +260,7 @@ export function ZoneMachines({
         <ul className="parc-grille">
           {visibles.map((m) => (
             <li key={m.id}>
-              <TuileMachine m={m} onOuvrir={onOuvrir} />
+              <TuileMachine m={m} onOuvrir={onOuvrir} exposition={expositions?.get(m.id)} />
             </li>
           ))}
           {bascule && (
@@ -286,11 +316,14 @@ export function ParcMachines({
   echelle,
   onOuvrir,
   onVoirListe,
+  expositions,
 }: {
   parc: ParcMachinesDto;
   echelle: EchelleParc;
   onOuvrir: (m: MachineMarqueeDto) => void;
   onVoirListe: (z: ZoneParc) => void;
+  /** Lot PC3 : exposition sur Internet de chaque machine (identifiant → libellé), facultative. */
+  expositions?: ReadonlyMap<string, string>;
 }) {
   const [deplies, setDeplies] = useState<ReadonlySet<ZoneParc>>(new Set());
   const deplier = (z: ZoneParc, oui: boolean) => {
@@ -317,6 +350,7 @@ export function ParcMachines({
       onDeplier={deplier}
       onOuvrir={onOuvrir}
       onVoirListe={onVoirListe}
+      expositions={expositions}
     />
   );
   return (

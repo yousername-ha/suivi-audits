@@ -172,14 +172,15 @@ const techno: TechnologieAlhDto = {
 
 describe('menu et aide', () => {
   const seulement = (droits: string[]) => (m: Module, a: Action) => droits.includes(`${m}:${a}`);
-  it('« Surface externe » suit « Machines », avec la lecture du module seulement', () => {
+  it('« Surface externe » suit « Machines » et « Périmètres » (lot PC3), avec la lecture du module seulement', () => {
     const rubriques = (droits: string[]) =>
       famillesVisibles(seulement(droits))
         .find((f) => f.famille.id === 'risques')
         ?.destinations.find((d) => d.id === 'vulnerabilites')
         ?.rubriques.map((r) => r.id) ?? [];
     const ids = rubriques(['vulnerabilites:lire']);
-    expect(ids.indexOf('vulnerabilites-surface')).toBe(ids.indexOf('vulnerabilites-machines') + 1);
+    expect(ids.indexOf('vulnerabilites-perimetres')).toBe(ids.indexOf('vulnerabilites-machines') + 1);
+    expect(ids.indexOf('vulnerabilites-surface')).toBe(ids.indexOf('vulnerabilites-perimetres') + 1);
     expect(rubriques(['pilotage:lire'])).not.toContain('vulnerabilites-surface');
     expect(localiser('/vulnerabilites/surface-externe')?.rubrique.id).toBe('vulnerabilites-surface');
   });

@@ -520,3 +520,144 @@
     box-shadow: none;
   }
 }
+
+/* ------------------------------------------------------------------ Lot PC3 : onglet « Périmètres » (maquette 05-perimetre)
+   Cartes des périmètres (bouton : clic ou Entrée ouvre le détail), mention « Exposée sur Internet » d'une tuile, zone unique
+   de la vue globale, chiffres clés et liste des expositions du détail. Mêmes jetons que le parc : la teinte d'une carte est
+   celle de sa priorité la plus haute, toujours doublée du libellé P1 à P4 ; aucune longueur en px ni en rem. */
+.perim-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17em), 1fr));
+  gap: var(--mantine-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.perim-cartes > li {
+  display: grid;
+  min-inline-size: 0;
+}
+.perim-carte {
+  --parc-boite: var(--carte-boite);
+  --parc-texte: var(--carte-texte);
+  --parc-doux: var(--carte-secondaire);
+  --parc-trait: var(--suivi-trait);
+  display: grid;
+  align-content: start;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--parc-c) 40%, var(--parc-trait));
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--parc-c);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--parc-boite);
+  color: var(--parc-texte);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.perim-carte:hover {
+  background: color-mix(in srgb, var(--parc-c) 7%, var(--parc-boite));
+}
+.perim-carte:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-l);
+}
+.perim-carte--sans {
+  border-style: dashed;
+  border-inline-start-style: solid;
+}
+.perim-carte__tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+}
+.perim-carte__nom {
+  min-inline-size: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.perim-carte__tete .parc-tuile__prio {
+  flex: none;
+}
+.perim-carte__ligne {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  color: var(--parc-doux);
+  font-size: var(--mantine-font-size-sm);
+}
+.perim-carte__chiffre {
+  color: var(--parc-texte);
+  font-size: var(--mantine-font-size-xl);
+}
+.perim-carte__gravites,
+.perim-carte__marques {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em var(--mantine-spacing-sm);
+  color: var(--parc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.perim-g,
+.perim-marque {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+/* Mention « Exposée sur Internet » d'une tuile (liaison confirmée, lot ALH3). */
+.parc-tuile__expo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  max-inline-size: 100%;
+  padding: 0 0.35em;
+  border: var(--suivi-trait-l) solid var(--carte-violet-accent);
+  border-radius: var(--mantine-radius-xs);
+  color: var(--carte-violet-accent);
+  font-size: calc(var(--mantine-font-size-xs) * 0.9);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.parc-icone-internet {
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.parc-zone--global {
+  --parc-z: var(--carte-bleu-accent);
+}
+/* Chiffres clés du détail : tuiles du poste de commandement (neon-commandement.css), sur une ou plusieurs lignes. */
+.perim-bilan {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13em), 1fr));
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.perim-bilan .pc-etiquette {
+  overflow-wrap: anywhere;
+}
+.perim-section {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+}
+.perim-expositions {
+  display: grid;
+  gap: 0.3em;
+  margin: 0;
+  padding-inline-start: 1.2em;
+  font-size: var(--mantine-font-size-sm);
+  overflow-wrap: anywhere;
+}
