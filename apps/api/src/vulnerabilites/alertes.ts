@@ -125,6 +125,8 @@ export interface Cumul {
   machines: Set<string>;
   produits: Set<string>;
   actifs: number;
+  /** Lot S2 : actifs exposés (identifiants internes, rangés seulement) qui portent la faille ; jamais rendus tels quels. */
+  actifIds: string[];
   /** Une source dit qu'un code d'exploitation existe, sur l'une des présences non traitées (lot V6b). */
   exploitable: boolean;
   /** Objets présents qui portent la faille (constats présents, failles déclarées rattachées), et parmi eux les traités. */
@@ -154,6 +156,11 @@ export interface ObjetDelai {
   priorite: NiveauPriorite;
   premiere: string;
   repart: string | null;
+  /** Lot S2 : machines (identifiants internes) de l'objet, CVE, et nom du contrôle de Tenable ou « éditeur produit » d'une
+      faille déclarée ; pour les instantanés et le rapport (jamais un nom de machine). */
+  machines: string[];
+  cves: string[];
+  nom: string;
 }
 
 interface LigneAlerte {
@@ -488,6 +495,7 @@ export class AlertesVulnerabilites {
             machines: new Set(),
             produits: new Set(),
             actifs: 0,
+            actifIds: [],
             exploitable: false,
             objets: 0,
             traites: 0,
@@ -526,6 +534,9 @@ export class AlertesVulnerabilites {
         ).niveau,
         premiere: c.premiere.toISOString(),
         repart: iso(c.repart),
+        machines: c.machines,
+        cves: c.cves,
+        nom: c.nom,
       })),
       ...declarees.map((r): ObjetDelai => ({
         nature: 'declaree',
@@ -534,6 +545,9 @@ export class AlertesVulnerabilites {
         priorite: priorite(sourcesCve(r.cve), 'declaree').niveau,
         premiere: r.premiere.toISOString(),
         repart: iso(r.repart),
+        machines: r.machines,
+        cves: [r.cve],
+        nom: `${r.editeur} ${r.nom}`,
       })),
     ];
     for (const c of constats) {
@@ -592,6 +606,7 @@ export class AlertesVulnerabilites {
       x.presences.add('exposee');
       if (sourcesCve(cve).exploitable.length) x.exploitable = true;
       x.actifs = e.cles.size;
+      x.actifIds = [...e.actifs];
       retenir(x, sourcesCve(cve));
     }
     // Vue d'ensemble seulement : produits à confirmer (rapprochements proposés). Rien n'entre dans `priorites`, `presences`

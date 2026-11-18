@@ -23,6 +23,7 @@ import '@suivi/ui/neon-commandement.css';
 import '@suivi/ui/neon-parc.css';
 import '@suivi/ui/neon-fiche.css';
 import '@suivi/ui/neon-ergonomie.css';
+import '@suivi/ui/neon-tendances.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -54,6 +55,8 @@ import { AlertesPage } from './vulnerabilites/Alertes';
 import { DelaisExceptionsPage } from './vulnerabilites/DelaisExceptions';
 import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
 import { PerimetresPage } from './vulnerabilites/Perimetres';
+import { TendancesPage } from './vulnerabilites/Tendances';
+import { RapportPage } from './vulnerabilites/Rapport';
 import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
@@ -147,6 +150,8 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/surface-externe', element: <SurfaceExternePage /> },
       { path: '/vulnerabilites/alertes', element: <AlertesPage /> },
       { path: '/vulnerabilites/delais', element: <DelaisExceptionsPage /> },
+      { path: '/vulnerabilites/tendances', element: <TendancesPage /> },
+      { path: '/vulnerabilites/rapport', element: <RapportPage /> },
       { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },
       { path: '/vulnerabilites/masque', element: <MotsNonMasquesPage /> },
       { path: '/integrations', element: <IntegrationsPage /> },

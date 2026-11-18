@@ -1823,6 +1823,30 @@ export interface VulnerabilitesDetections {
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesInstantanes {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  debut: ColumnType<Date, Date | string | undefined, Date | string>;
+  fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  etat: Generated<"en_cours" | "pris" | "echec">;
+  niveau: number | null;
+}
+
+export interface VulnerabilitesInstantanesMesures {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  portee: "global" | "perimetre" | "aucun";
+  perimetre_id: string | null;
+  p1: number;
+  p2: number;
+  p3: number;
+  p4: number;
+  exploitees: number;
+  depassements: number;
+  exceptions: number;
+  corrigees_veille: number;
+  machines: number;
+  actifs: number;
+}
+
 export interface VulnerabilitesMachines {
   id: Generated<string>;
   integration_id: string;
@@ -2261,6 +2285,8 @@ export interface DB {
   vulnerabilites_constats: VulnerabilitesConstats;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_instantanes: VulnerabilitesInstantanes;
+  vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
   vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;
   vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;

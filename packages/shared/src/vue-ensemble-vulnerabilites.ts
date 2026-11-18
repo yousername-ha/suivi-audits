@@ -7,6 +7,7 @@ import type { NiveauAlerte, NombreLisible } from './alertes-vulnerabilites.js';
 import { GRAVITES_TENABLE, type GraviteTenable, NIVEAUX_PRIORITE, type NiveauPriorite } from './failles-tenable.js';
 import type { Presence, Priorite } from './priorite-vulnerabilites.js';
 import type { EtatSuiviFaille } from './suivi-vulnerabilites.js';
+import type { VariationSeptJoursDto } from './tendances-vulnerabilites.js';
 import type { SourceVeille } from './veille-vulnerabilites.js';
 import { FAMILLE_PRODUIT_LIBELLES, FAMILLES_PRODUIT, type FamilleProduit } from './vulnerabilites.js';
 
@@ -195,5 +196,8 @@ export interface VueEnsembleDto {
   /** Au moins une case compte plus de failles que de cibles rendues. */
   tronquee: boolean;
   journal: EntreeJournalVueDto[];
+  /** Lot S2 : variation sur sept jours (failles présentes en P1 et P2, exploitées, en dépassement, sous exception, niveau),
+      par rapport à l'instantané quotidien de référence ; null sans instantané assez ancien. */
+  variation: VariationSeptJoursDto | null;
   calculeLe: string;
 }

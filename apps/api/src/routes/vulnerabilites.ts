@@ -46,10 +46,16 @@
    (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement.
    Lot S1 : délais de correction (avec les seuils de priorité, `administrer`, If-Match) et exceptions ; onglet « Délais et
    exceptions » avec `lire` (mesure des corrections, exceptions des failles lues), lecture seule, sans journal ; accorder,
-   prolonger ou lever une exception réservé au rôle RSSI par le service du suivi. */
+   prolonger ou lever une exception réservé au rôle RSSI par le service du suivi.
+   Lot S2 : tendances (instantanés quotidiens) avec `lire`, lecture seule, sans journal : toute la plateforme (nombres de
+   failles communs à tous), un périmètre lu (404 sinon) ou « sans périmètre » (`administrer`). Rapport de pilotage avec
+   `lire` (option prudente, à confirmer) : JSON pour la page imprimable, ou CSV ; sa production est tracée au journal
+   (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse. */
 import {
   RechercheAlertesVulnerabilites,
   RechercheDelais,
+  RechercheRapport,
+  RechercheTendances,
   ApplicationLiaisonMasse,
   DemandeLiaisonMasse,
   AffectationMachine,
@@ -120,6 +126,33 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     query: RechercheDelais,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.delais.lire((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/tendances',
+    summary:
+      'Tendances (lot S2) : instantanés quotidiens de la situation, jour par jour sur 30 jours ou semaine après semaine (13, 26 ou 52 semaines), pour toute la plateforme (nombres de failles communs à tous, ni total de machines ni d’actifs), un périmètre lu ou « sans périmètre » (administration) ; indicateur de tendance ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheTendances,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.tendances.lire((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/rapport',
+    summary:
+      'Rapport de pilotage (lot S2) d’un mois ou d’une période libre, pour toute la plateforme ou un périmètre lu : niveau d’alerte et son évolution, failles critiques, délais de correction, dépassements, exceptions, tendances, alertes critiques, état des sources ; JSON (page imprimable) ou CSV ; aucun nom de machine, de domaine ni d’adresse ; production tracée au journal',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheRapport,
+    handler: async ({ svc, s, query, ip, reply }) => {
+      const { rapport, csv } = await svc.vulnerabilites.rapport.produire((s as Session).user, ip, query);
+      if (csv === null) return rapport;
+      reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="rapport-vulnerabilites-${rapport.du}-${rapport.au}.csv"`);
+      return reply.send(csv);
+    },
   }),
   route({
     method: 'GET',

@@ -218,6 +218,10 @@ export const TABLES_TRAVAIL = [
   // Failles déjà signalées en dépassement de délai (ADR 0100, lot S1) : recalculées à chaque évaluation à partir des faits et
   // des suivis ci-dessus, effacées avec eux.
   'vulnerabilites_depassements',
+  // Instantanés quotidiens de la situation (ADR 0100, lot S2) : nombres calculés à partir des faits et des suivis ci-dessus,
+  // sans nom ; l'historique repart de zéro avec eux.
+  'vulnerabilites_instantanes',
+  'vulnerabilites_instantanes_mesures',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

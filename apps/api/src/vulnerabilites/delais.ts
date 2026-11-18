@@ -24,6 +24,7 @@ import {
   type EtatSuiviFaille,
   type ExceptionDto,
   faitsDepuisSources,
+  type MesuresDelaisDto,
   calculerPriorite,
   MESSAGE_RESUME_DEPASSEMENTS,
   MESSAGE_RESUME_EXCEPTIONS,
@@ -50,7 +51,7 @@ import { sourcesDesConstats } from './failles.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { tientLeRoleRssi } from './rssi.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, premiereConstat, present } from './sql.js';
+import { lisible, perimetreMachine, premiereConstat, present } from './sql.js';
 import { aujourdhui, type DelaiObjet, type SuiviFailles } from './suivi.js';
 
 const SYSTEME = { username: 'système' };
@@ -296,6 +297,44 @@ export class DelaisVulnerabilites {
     const jour = aujourdhui(maintenant);
     const reglage = await this.reglage.valeurs();
     const du = new Date(maintenant.getTime() - q.periode * 86_400_000);
+    const { mesures, nonMesurees } = await this.mesurer(k, du, null, null);
+    const exceptions = await this.exceptions(user, jour);
+    const compteurs = Object.fromEntries(STATUTS_EXCEPTION.map((s) => [s, 0])) as Record<StatutException, number>;
+    for (const e of exceptions) compteurs[e.statut]++;
+    return {
+      delais: reglage.delais,
+      periode: q.periode,
+      du: du.toISOString(),
+      au: maintenant.toISOString(),
+      mesures,
+      nonMesurees,
+      exceptions,
+      compteurs,
+      peutDeciderException: user.rights.can('vulnerabilites', 'modifier') && (await tientLeRoleRssi(this.db, user)),
+      calculeLe: maintenant.toISOString(),
+    };
+  }
+
+  /** Mesure des corrections décidées à partir de `du` (et avant `au` s'il est donné) : une correction par faille et par
+      période (la dernière). Lot S2 : restreinte, pour le rapport d'un périmètre, aux objets dont une machine a ce
+      périmètre effectif (`perimetre` : identifiant, ou null pour « sans périmètre » ; undefined : tout). Une requête ;
+      les mêmes nombres pour tout le monde, sans nom. */
+  async mesurer(
+    k: Kdb,
+    du: Date,
+    au: Date | null,
+    restriction: { perimetre: string | null } | null,
+  ): Promise<{ mesures: MesuresDelaisDto; nonMesurees: number }> {
+    const fin = au ? sql<boolean>`h.cree_le < ${au}` : sql<boolean>`true`;
+    const dansPerimetre = restriction
+      ? sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_machines m
+          WHERE ${perimetreMachine} IS NOT DISTINCT FROM ${restriction.perimetre}::uuid
+            AND (m.id IN (SELECT d.machine_id FROM vulnerabilites_detections d
+                          WHERE h.nature = 'constat' AND d.constat_id = h.objet_id)
+              OR m.id IN (SELECT pm.machine_id FROM vulnerabilites_rapprochements r
+                          JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
+                          WHERE h.nature = 'declaree' AND r.id = h.objet_id)))`
+      : sql<boolean>`true`;
     const { rows: corrections } = await sql<{
       priorite: NiveauPriorite | null;
       delai_depuis: Date | null;
@@ -303,7 +342,8 @@ export class DelaisVulnerabilites {
       delai_echeance: Date | null;
     }>`SELECT DISTINCT ON (h.nature, h.objet_id) h.priorite, h.delai_depuis, h.delai_fin, h.delai_echeance
        FROM vulnerabilites_suivi_historique h
-       WHERE h.evenement = 'changement' AND h.etat_apres = 'corrigee' AND h.cree_le >= ${du}
+       WHERE h.evenement = 'changement' AND h.etat_apres = 'corrigee' AND h.cree_le >= ${du} AND ${fin}
+         AND ${dansPerimetre}
        ORDER BY h.nature, h.objet_id, h.cree_le DESC`.execute(k);
     const mesurables: CorrectionMesuree[] = corrections.flatMap((r) =>
       r.priorite && r.delai_depuis && r.delai_fin
@@ -317,27 +357,25 @@ export class DelaisVulnerabilites {
           ]
         : [],
     );
-    const exceptions = await this.exceptions(user, jour);
-    const compteurs = Object.fromEntries(STATUTS_EXCEPTION.map((s) => [s, 0])) as Record<StatutException, number>;
-    for (const e of exceptions) compteurs[e.statut]++;
-    return {
-      delais: reglage.delais,
-      periode: q.periode,
-      du: du.toISOString(),
-      au: maintenant.toISOString(),
-      mesures: mesurerCorrections(mesurables),
-      nonMesurees: corrections.length - mesurables.length,
-      exceptions,
-      compteurs,
-      peutDeciderException: user.rights.can('vulnerabilites', 'modifier') && (await tientLeRoleRssi(this.db, user)),
-      calculeLe: maintenant.toISOString(),
-    };
+    return { mesures: mesurerCorrections(mesurables), nonMesurees: corrections.length - mesurables.length };
   }
 
   /** Exceptions en cours (risque accepté) et échues depuis EXCEPTIONS_ECHUES_JOURS jours, des failles que la personne lit :
       au moins une machine touchée lisible (constat : où il est présent, à défaut où il a été vu ; faille déclarée : machines
-      reliées au produit), comme les listes. Une requête ; aucun nom de machine. */
-  private async exceptions(user: SessionUser, jour: string): Promise<ExceptionDto[]> {
+      reliées au produit), comme les listes. Une requête ; aucun nom de machine.
+      Lot S2 (rapport) : `options.echues` remplace la fenêtre des exceptions échues (expirées dans [du, au[) ;
+      `options.restriction` ne garde que les failles dont une machine lisible a ce périmètre effectif. */
+  async exceptions(
+    user: SessionUser,
+    jour: string,
+    options: { echues?: { du: Date; au: Date }; restriction?: { perimetre: string | null } } = {},
+  ): Promise<ExceptionDto[]> {
+    const fenetreEchues = options.echues
+      ? sql<boolean>`h.cree_le >= ${options.echues.du} AND h.cree_le < ${options.echues.au}`
+      : sql<boolean>`h.cree_le >= now() - ${EXCEPTIONS_ECHUES_JOURS}::int * interval '1 day'`;
+    const restreint = options.restriction
+      ? sql<boolean>`${perimetreMachine} IS NOT DISTINCT FROM ${options.restriction.perimetre}::uuid`
+      : sql<boolean>`true`;
     const { rows } = await sql<{
       nature: NatureSuivi;
       objet: string;
@@ -369,7 +407,7 @@ export class DelaisVulnerabilites {
           WHERE x.nature = h.nature AND x.objet_id = h.objet_id AND x.evenement = 'changement'
             AND x.etat_apres = 'risque_accepte' AND x.cree_le <= h.cree_le
           ORDER BY x.cree_le DESC, x.id DESC LIMIT 1) d ON true
-        WHERE h.evenement = 'expiration' AND h.cree_le >= now() - ${EXCEPTIONS_ECHUES_JOURS}::int * interval '1 day')
+        WHERE h.evenement = 'expiration' AND ${fenetreEchues})
       SELECT ex.*, c.nom AS constat, r.cve, p.editeur, p.nom AS produit, p.version_produit
       FROM ex
       LEFT JOIN vulnerabilites_constats c ON ex.nature = 'constat' AND c.id = ex.objet
@@ -379,7 +417,7 @@ export class DelaisVulnerabilites {
                SELECT 1 FROM vulnerabilites_detections d
                JOIN vulnerabilites_machines m ON m.id = d.machine_id
                LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-               WHERE d.constat_id = c.id AND ${lisible(user)}
+               WHERE d.constat_id = c.id AND ${lisible(user)} AND ${restreint}
                  AND (${present} OR NOT EXISTS (
                    SELECT 1 FROM vulnerabilites_detections d
                    JOIN vulnerabilites_machines m ON m.id = d.machine_id
@@ -388,7 +426,7 @@ export class DelaisVulnerabilites {
          OR (r.id IS NOT NULL AND EXISTS (
                SELECT 1 FROM vulnerabilites_produits_machines pm
                JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-               WHERE pm.produit_id = r.produit_id AND ${lisible(user)}))
+               WHERE pm.produit_id = r.produit_id AND ${lisible(user)} AND ${restreint}))
       ORDER BY (ex.sorte = 'echue'), ex.echeance NULLS FIRST, ex.expiree_le DESC NULLS LAST, ex.objet
       LIMIT ${EXCEPTIONS_MAX}`.execute(this.db.k);
     return rows.map((r): ExceptionDto => ({

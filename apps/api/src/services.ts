@@ -59,6 +59,8 @@ import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
 import { PerimetresVulnerabilites } from './vulnerabilites/perimetres.js';
 import { FichesFailles } from './vulnerabilites/fiches.js';
 import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
+import { TendancesVulnerabilites } from './vulnerabilites/tendances.js';
+import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -161,13 +163,28 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
-  assistant.vulnerabilites = new AssistantVulnerabilites(
+  const assistantVulnerabilites = new AssistantVulnerabilites(
     db,
     failles,
     suivi,
     reglagePriorite,
     motsNonMasques,
     surfaceExterne,
+  );
+  assistant.vulnerabilites = assistantVulnerabilites;
+  /* Lot S2 : instantanés quotidiens de la situation (tic de l'API), tendances et rapport de pilotage (textes passés au
+     masque des machines en mode strict). */
+  const tendances = new TendancesVulnerabilites(db, alertesVulnerabilites, modules);
+  const rapport = new RapportVulnerabilites(
+    db,
+    cfg.orgName,
+    tendances,
+    alertesVulnerabilites,
+    delais,
+    veille,
+    tenable,
+    surfaceExterne,
+    (user) => assistantVulnerabilites.masque(user, null),
   );
   return {
     cfg,
@@ -205,6 +222,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       delais,
       /** Lot PC3 : onglet « Périmètres » (cartes par périmètre lu, détail par ligne ou au global), lecture seule. */
       perimetres: new PerimetresVulnerabilites(db, failles, reglagePriorite),
+      /** Lot S2 : instantanés quotidiens (tic de l'API) et tendances, lecture seule. */
+      tendances,
+      /** Lot S2 : rapport de pilotage (page imprimable, CSV), production tracée au journal. */
+      rapport,
     },
     modules,
     flux,

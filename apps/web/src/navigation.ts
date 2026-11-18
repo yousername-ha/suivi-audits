@@ -122,6 +122,9 @@ export const FAMILLES: Famille[] = [
         page('vulnerabilites-alertes', 'Alertes', '/vulnerabilites/alertes', 'vulnerabilites'),
         // Lot S1 : délais de correction et exceptions à échéance (mesure, exceptions des failles lues).
         page('vulnerabilites-delais', 'Délais et exceptions', '/vulnerabilites/delais', 'vulnerabilites'),
+        // Lot S2 : tendances (instantanés quotidiens) et rapport de pilotage imprimable (direction, audit).
+        page('vulnerabilites-tendances', 'Tendances', '/vulnerabilites/tendances', 'vulnerabilites'),
+        page('vulnerabilites-rapport', 'Rapport de pilotage', '/vulnerabilites/rapport', 'vulnerabilites'),
         page('vulnerabilites-priorite', 'Seuils de priorité', '/vulnerabilites/priorite', 'vulnerabilites'),
         page(
           'vulnerabilites-masque',

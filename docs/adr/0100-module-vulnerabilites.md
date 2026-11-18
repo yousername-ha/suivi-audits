@@ -380,6 +380,9 @@
   avec les seuils, âge, échéance et état du délai, tuile « En dépassement », exceptions (risque accepté) réservées au rôle
   RSSI avec justification, mesure compensatoire et échéance, expiration et rappel, onglet « Délais et exceptions ». Voir
   l'addendum « lot S1 » ci-dessous.
+- **Lot S2, tendances et rapport de pilotage** (18/11/2026) : migration `088`, instantané quotidien de la situation (niveau
+  d'alerte, nombres de failles, globaux et par périmètre, sans nom), onglet « Tendances », variation sur sept jours de la vue
+  d'ensemble, rapport mensuel imprimable (PDF par le navigateur) et CSV. Voir l'addendum « lot S2 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1908,4 +1911,128 @@ PC1) ; envoi réel d'un courriel ; Docker et Node 26.
 6. **Faille P1 sous exception et alertes critiques** : à trancher (voir ci-dessus).
 7. Historiser le **passage de priorité** pour faire courir le délai depuis la montée, si le RSSI le veut.
 8. Confirmer les valeurs par défaut, l'échéance proche, la durée maximale et le rappel.
+
+## Addendum du 18/11/2026 — lot S2 : tendances et rapport de pilotage
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `088`
+(additive : tables `vulnerabilites_instantanes` et `vulnerabilites_instantanes_mesures`, deux index, sans clé étrangère vers
+`grc_smsis` comme les autres tables du module ; aucune donnée reprise ni reconstruite ; numéro libre sur toutes les branches
+distantes le 18/11/2026). Aucun appel réseau, aucun appel au modèle, aucune dépendance nouvelle, aucun rôle ni droit
+nouveau. Lève le point ouvert 1 (« Rapport ») de l'addendum « lot S1 ».
+
+### Décision du RSSI (18/11/2026)
+
+« Tendances. Une courbe des failles ouvertes et corrigées semaine après semaine, par périmètre. Sans historique, le radar ne
+dit pas si la situation s'améliore. » ; « Rapport pour la direction et l'audit. Un export PDF mensuel : niveau d'alerte,
+failles critiques, délais de correction, exceptions en cours. Vous en aurez besoin pour la revue de direction. » Contexte :
+groupement de santé certifié ISO/IEC 27001:2022 et HDS.
+
+### Réalisation
+
+- **Instantané quotidien** (`apps/api/src/vulnerabilites/tendances.ts`, composition pure `composerInstantane` de
+  `packages/shared/src/tendances-vulnerabilites.ts`, testée en table) : au tic de l'API, au plus un par jour (fuseau
+  Europe/Paris), après l'évaluation des délais. Le créneau du jour est consommé **avant** le calcul (ligne « en_cours », sa
+  propre transaction) ; un calcul en échec laisse « echec » et n'est pas refait le même jour ; un jour sans tic reste sans
+  instantané, rien n'est rattrapé. Module désactivé : rien, et le créneau n'est pas consommé. Le calcul reprend le calcul
+  global des alertes (`situationGlobale`, tous les faits connus, lot ALH5) et les objets suivis du lot S1. Nombres rangés,
+  pour toute la plateforme (« global »), par périmètre (périmètre effectif des machines, périmètre AlgoLightHouse relié des
+  actifs) et « sans périmètre » (« aucun ») : failles présentes par priorité (P1 à P4), failles présentes dont l'exploitation
+  est avérée, objets suivis présents en dépassement de délai et sous exception, objets passés à « Corrigée » au cours du jour
+  civil précédent, machines et actifs exposés touchés ; niveau d'alerte de la plateforme (règle du lot PC1). Une faille compte
+  une fois dans chaque périmètre où elle a une machine ou un actif ; une faille déclarée sans machine reliée ne compte que pour
+  toute la plateforme. Aucun nom de machine, de domaine, d'adresse ni de compte. Journal `vulnerabilites.instantane.pris`
+  (jour, niveau, nombre de périmètres, instantanés purgés). **L'historique commence à l'installation du lot** ; l'écran dit
+  « historique depuis le … ».
+- **Rétention** : trois ans (`RETENTION_INSTANTANES_ANS`), purge au même tic que l'instantané.
+- **Onglet « Tendances »** (`/vulnerabilites/tendances`, `apps/web/src/vulnerabilites/Tendances.tsx`) : période (30 jours
+  jour par jour ; 13, 26 ou 52 semaines semaine après semaine), portée (toute la plateforme, un périmètre lu, « Sans
+  périmètre » avec `administrer`). Courbes : failles présentes par priorité ; exploitées, en dépassement, sous exception et
+  corrigées ; niveau d'alerte ; machines et actifs touchés (par périmètre seulement). Dessin par le composant existant
+  `NeonCourbes` (`packages/ui/src/neon-graphiques.tsx`), étendu sans changer son rendu d'origine : valeurs absentes qui
+  coupent la courbe (aucun zéro inventé), marques de points (une forme par série), trait propre à chaque série, graduations
+  entières, nom accessible. Chaque courbe a sa légende (teinte, trait, forme, libellé) et son tableau aux mêmes valeurs ; « — »
+  : aucun instantané. Semaine après semaine : nombres du dernier instantané de la semaine, niveau le plus haut, somme des
+  corrections connues (les corrections d'un jour sont lues dans l'instantané du lendemain). Indicateur de tendance (règle
+  ci-dessous). Route `GET /api/vulnerabilites/tendances` (`vulnerabilites:lire`), lecture seule, sans journal.
+- **Vue d'ensemble** (lot PC1) : bloc « Sur 7 jours » sous les tuiles (failles présentes en P1 et P2, exploitées, en
+  dépassement, sous exception, niveau), écarts en texte (« +2 (en hausse) »), par rapport au plus récent instantané pris
+  entre J-14 et J-7 ; sans lui, l'écran le dit. Les nombres du moment sont composés par la même fonction que l'instantané,
+  à partir du calcul global déjà fait.
+- **Rapport de pilotage** (`/vulnerabilites/rapport`, `apps/api/src/vulnerabilites/rapport.ts`, tableaux composés par
+  `tableauxRapport` du paquet partagé, les mêmes à l'écran et dans le CSV) : mois choisi ou période libre (366 jours au plus,
+  fin ramenée à aujourd'hui), toute la plateforme ou un périmètre lu. Sections : niveau d'alerte (au moment du rapport, premier
+  et dernier instantané, plus haut, jours par niveau) ; situation du moment ; failles critiques (P1) présentes listées par CVE
+  et produit, avec leur présence, leur première présence et le dépassement, et le nombre de P2 ; délais de correction (mesure du
+  lot S1 sur la période : moyen, médian, part dans les délais, par priorité) ; dépassements du moment ; exceptions en cours,
+  bientôt échues, sans échéance et échues pendant la période (justification, mesure compensatoire, échéance, qui l'a accordée
+  et quand) ; tendances semaine après semaine ; alertes critiques de la période (ouvertes, prises en compte, closes, encore
+  en cours, délai de prise en compte moyen, médian et le plus long) ; état des sources de veille et des connecteurs. Listes
+  bornées à 200 lignes, total toujours dit. Route `GET /api/vulnerabilites/rapport` (`vulnerabilites:lire`, `format=json` ou
+  `csv`).
+- **Confidentialité** : aucun nom de machine, de domaine ni d'adresse ; les textes (titres, produits, justification et mesure
+  compensatoire d'une exception) passent par le masque des machines de l'assistant en mode strict (« [machine] ») ; les
+  connecteurs sont désignés par leur type et un numéro (ni nom d'instance ni adresse) ; état des sources sans texte d'erreur.
+  Le nom de la personne qui a accordé une exception figure (demande du RSSI). Journal `vulnerabilites.rapport.produit` (qui,
+  quand, période, portée, format, `detail: false`), sans contenu.
+- **Droits** : les nombres de failles, le niveau d'alerte et les alertes sont communs à tous (lot ALH5) ; un périmètre illisible
+  répond 404 (même message qu'un inconnu), « sans périmètre » exige `administrer` ; toute la plateforme ne rend aucun total de
+  machines ni d'actifs (comme la vue d'ensemble) ; les exceptions listées sont celles des failles dont la personne lit une
+  machine.
+- **Requêtes** (mesurées par un test d'API qui compte les requêtes, données fictives, une instance de Tenable) : tendances 3 ;
+  rapport 37 (nombre fixe, plus trois environ par instance de connecteur) ; instantané 21 (transaction comprise) ; vue
+  d'ensemble 1 de plus (instantané de référence). Aucune requête par faille.
+
+### Format du rapport, et pourquoi
+
+La plateforme **ne produit aucun PDF côté serveur** : elle produit des documents Office sans dépendance (revue de direction :
+Word, PowerPoint, Excel, `apps/api/src/export/office.ts`) et des rapports HTML autonomes (Pilotage, comité SMSI) ; `pdfjs-dist`
+ne sert qu'à lire des PDF. Un vrai PDF côté serveur demanderait une dépendance nouvelle (moteur de rendu ou bibliothèque PDF),
+donc une ADR : **question posée au RSSI**. Le lot livre une **page imprimable** dans l'application (feuille d'impression de
+`packages/ui/src/neon-tendances.css` : page nommée A4, numéro de page en marge, ni menu, ni en-tête, ni bouton, ni fenêtre,
+noir sur blanc, en-têtes de tableau répétés, lignes non coupées), que le navigateur enregistre en PDF (« Imprimer ou enregistrer
+en PDF »), et l'**export CSV** des mêmes tableaux (règles de l'export CSV existant : « ; », BOM, formules neutralisées).
+
+### Règle de la tendance, à confirmer par le RSSI
+
+On compare le premier et le dernier instantané de la période : d'abord le nombre de failles présentes en P1 ; à égalité,
+celui des failles en P2 ; à égalité encore, celui des failles en dépassement de délai. Moins : la situation s'améliore ;
+plus : elle se dégrade ; tout égal : stable. Moins de deux instantanés : indéterminée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Rétention** de trois ans.
+- **Corrigées** : objets suivis passés à « Corrigée » au cours du jour civil précédent, rangés avec l'instantané du jour et
+  replacés sur leur jour dans les courbes ; un jour sans instantané au lendemain reste sans nombre.
+- **Exploitées et présentes** : failles présentes dont l'exploitation est avérée par une source (au lieu de « présentes en
+  P1 » de la tuile, presque toujours égal) ; **dépassements et exceptions** comptés en objets suivis (comme la tuile du lot S1),
+  les priorités en failles.
+- **Variation sur sept jours** : instantané de J-7, ou le plus récent jusqu'à J-14 ; P2 compté en failles présentes (la tuile
+  « À traiter » compte aussi les produits à confirmer).
+- **Qui produit le rapport** : toute personne qui lit le module, pour ce qu'elle lit (option prudente).
+- **Alertes et niveau dans un rapport de périmètre** : ceux de la plateforme, communs à tous (une alerte n'est rattachée à aucun
+  périmètre).
+- **Pas d'option « avec le détail des machines »** (point ouvert ci-dessous) ; le texte d'une exception est masqué même pour
+  qui lit la machine.
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (API réelle sur une base temporaire du PostgreSQL de test, servie par
+Vite ; historique fictif de 120 jours, 14 machines, 40 constats ; Chromium, clair et sombre, 1440 et 390 px : onglet
+« Tendances » au global et par périmètre sur 13 semaines, vue d'ensemble, rapport ; axe `wcag2a`/`wcag2aa` sans violation,
+aucun chevauchement, aucun débordement, aucune violation de CSP ni erreur dans la console) ; PDF d'essai produit par
+`page.pdf()` en A4 : quatre pages, ni menu ni bouton, aucun nom de machine ni d'adresse. Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-tendances.spec.ts`) n'a pas été joué (CI seulement). Impression par un navigateur autre que Chromium (rendu des marges de page nommée, donc du numéro de page, non vérifié); durée sur un parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **PDF produit par le serveur** : dépendance nouvelle à décider (ADR) ; sinon l'impression du navigateur reste la voie.
+2. **Option « avec le détail des machines »** dans le rapport, réservée à qui les lit : non réalisée.
+3. **Envoi automatique du rapport** par courriel chaque mois : non réalisé.
+4. **Lien avec la revue de direction** (module Pilotage) : la revue prépare ses entrées (ISO/IEC 27001:2022, 9.3.2) à partir
+   des données de la plateforme (`apps/api/src/pilotage/revue.ts`) et s'exporte en Word, PowerPoint ou Excel ; elle ne lit rien
+   du module Vulnérabilités. Il faudrait une entrée « vulnérabilités » (niveau d'alerte, P1, délais, exceptions) tirée des
+   mêmes fonctions que le rapport, selon les droits de la personne qui prépare la revue.
+5. **Regroupement par correctif**, **fin de support**, **vrai zero-day** (sans correctif publié), **criticité métier des
+   machines** : non réalisés (lots suivants).
+6. Confirmer la rétention, la règle de la tendance, les définitions ci-dessus et les droits du rapport.
 

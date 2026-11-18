@@ -17,6 +17,8 @@ import {
   type EtatSynchronisationDto,
   type EtatVeilleDto,
   type FicheDeclareeDto,
+  fmtJour,
+  libelleEcart,
   NIVEAU_ALERTE_GLOBAL_LIBELLES,
   NIVEAUX_ALERTE_GLOBAL,
   NIVEAUX_PRIORITE,
@@ -39,6 +41,7 @@ import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
 import { FicheFaille } from './FicheFaille';
 import { ANNEAUX, disposerRadar, libelleEpss, libelleTouches, RAYON, type SceneRadar, VUE } from './radar';
 import { SuiviFaille } from './SuiviFaille';
+import { ADRESSE_TENDANCES } from './tendances';
 import { etatSource } from './veille';
 import {
   type CaseChoisie,
@@ -164,6 +167,42 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
         <b>{deuxChiffres(tuiles.corrigeesCeMois)}</b>
       </Link>
     </nav>
+  );
+}
+
+/** Lot S2 : variation sur sept jours, par rapport à l'instantané quotidien de référence ; écarts en texte (« +2 (en
+    hausse) »), jamais par la seule couleur. Sans instantané assez ancien, l'écran le dit. */
+export function VariationSeptJours({ variation }: { variation: VueEnsembleDto['variation'] }) {
+  const id = useId();
+  return (
+    <section className="pc-variation" aria-labelledby={id}>
+      <h2 className="pc-etiquette" id={id}>
+        Sur 7 jours
+      </h2>
+      {variation ? (
+        <>
+          <p className="pc-variation__ref">
+            Depuis l’instantané du <span className="horodatage">{fmtJour(variation.reference)}</span> ·{' '}
+            <Link to={ADRESSE_TENDANCES}>Tendances</Link>
+          </p>
+          <ul>
+            <li>
+              Niveau d’alerte : {variation.niveau.avant} → {variation.niveau.apres}
+            </li>
+            {variation.lignes.map((l) => (
+              <li key={l.cle}>
+                {l.libelle} : {l.avant} → {l.apres}, <b>{libelleEcart(l.ecart)}</b>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="pc-variation__ref">
+          Pas encore d’instantané d’il y a sept jours : l’historique commence à l’installation de cette fonction.{' '}
+          <Link to={ADRESSE_TENDANCES}>Tendances</Link>
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -775,6 +814,7 @@ export function VueEnsemblePage() {
             <div className="poste__colonne">
               <NiveauAlerteBloc niveau={v.niveau} />
               <Tuiles tuiles={v.tuiles} />
+              <VariationSeptJours variation={v.variation} />
               <CiblePrioritaire cible={v.cibles[0]} onOuvrir={() => v.cibles[0] && ouvrir(v.cibles[0])} />
             </div>
             <div className="poste__colonne">

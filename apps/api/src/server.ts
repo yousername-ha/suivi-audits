@@ -86,6 +86,17 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'délais des vulnérabilités')),
       )
+      // Instantané quotidien de la situation (ADR 0100, lot S2) : au plus un par jour, créneau consommé avant le calcul,
+      // aucun rattrapage après une panne ; purge des instantanés plus anciens que la rétention. Rien si le module est
+      // désactivé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.tendances.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'instantané des vulnérabilités')),
+      )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {
         working = false;

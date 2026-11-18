@@ -17,7 +17,28 @@ confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception d
 est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
 première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `088`** (module Vulnérabilités, lot S2 : tendances et rapport de pilotage,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_instantanes` et
+`vulnerabilites_instantanes_mesures`, deux index), durée négligeable, sans reprise de données. Aucune action sur le serveur.
+L'historique des tendances commence à la mise à jour : aucun passé n'est reconstruit ; le premier instantané est pris dans la
+minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI). Le rapport de
+pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
+vulnérabilités SMSI »)
+
 ### Ajouté
+
+- Vulnérabilités, tendances (lot S2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : instantané quotidien de la
+  situation pris par la plateforme (niveau d'alerte, failles présentes par priorité, exploitées, en dépassement, sous
+  exception, corrigées, machines et actifs exposés touchés ; pour toute la plateforme et par périmètre, sans nom) ; onglet
+  « Tendances » avec courbes jour par jour ou semaine après semaine, chacune avec sa légende et son tableau, choix du
+  périmètre lu, indicateur « s'améliore / se dégrade / stable » (règle à confirmer) ; variation sur sept jours dans la vue
+  d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, rapport de pilotage (lot S2) : rapport d'un mois ou d'une période libre, pour toute la plateforme ou un
+  périmètre lu, pour la direction et l'audit (niveau d'alerte et son évolution, failles critiques, délais de correction,
+  dépassements, exceptions, tendances, alertes critiques, état des sources et des connecteurs) ; page imprimable en A4,
+  enregistrée en PDF par le navigateur, et export CSV des tableaux ; aucun nom de machine, de domaine ni d'adresse (textes
+  passés au masque des machines) ; chaque production tracée au journal d'audit. (session « Module surveillance
+  vulnérabilités SMSI »)
 
 - Vulnérabilités, délais de correction (lot S1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : délai cible par
   priorité réglé avec les seuils de priorité (administration du module, If-Match, journal), âge, échéance calculée et état

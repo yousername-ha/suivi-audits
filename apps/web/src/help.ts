@@ -247,6 +247,21 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-tendances',
+    title: 'Vulnérabilités : tendances et rapport de pilotage',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/tendances',
+    steps: [
+      'Chaque jour, au premier passage de son automate, la plateforme prend un instantané de la situation : niveau d’alerte, failles présentes par priorité, failles exploitées et présentes, en dépassement de délai, sous exception, corrigées la veille, machines et actifs exposés touchés ; pour toute la plateforme et pour chaque périmètre (périmètre de la machine, périmètre AlgoLightHouse relié de l’actif), « sans périmètre » à part. Des nombres seulement : aucun nom de machine, de domaine ni d’adresse. L’historique commence à l’installation de cette fonction : aucun passé n’est reconstruit. Un jour où la plateforme était arrêtée reste sans instantané ; un instantané en échec n’est pas refait le même jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI).',
+      'Onglet « Tendances » : choisissez la période (30 jours, jour par jour ; 13, 26 ou 52 semaines, semaine après semaine) et le périmètre (toute la plateforme, un périmètre que vous lisez, ou « Sans périmètre » avec le droit d’administrer le module). Chaque courbe a sa légende (teinte, trait et forme de marque) et son tableau, avec les mêmes valeurs ; « — » : aucun instantané ce jour-là. Semaine après semaine : nombres du dernier instantané de la semaine, niveau le plus haut et somme des corrections.',
+      'Les nombres de failles et le niveau d’alerte sont les mêmes pour tout le monde. Les nombres de machines et d’actifs se lisent par périmètre seulement. Une faille déclarée par un produit surveillé sans machine reliée compte pour toute la plateforme, dans aucun périmètre.',
+      'L’indicateur « S’améliore / Se dégrade / Stable » compare le premier et le dernier instantané de la période : d’abord le nombre de failles présentes en P1, puis en P2, puis en dépassement (règle proposée, à confirmer par le RSSI). La vue d’ensemble montre aussi la variation sur sept jours, à côté des chiffres clés.',
+      'Onglet « Rapport de pilotage » : choisissez un mois (ou une période libre d’un an au plus) et la portée, puis « Produire le rapport ». Il donne le niveau d’alerte et son évolution, les failles critiques (P1, par CVE et produit), les délais de correction (moyen, médian, part dans les délais), les dépassements, les exceptions (justification, mesure compensatoire, échéance, qui les a accordées), les tendances, les alertes critiques de la période (ouvertes, prises en compte, closes, délai de prise en compte) et l’état des sources et des connecteurs.',
+      '« Imprimer ou enregistrer en PDF » ouvre l’impression du navigateur : choisissez « Enregistrer au format PDF » ; la page est mise en forme pour une feuille A4, sans menu ni bouton, lisible en noir et blanc, avec la date, la période, l’établissement et le numéro de page. « Télécharger les tableaux (CSV) » donne les mêmes tableaux dans un fichier pour un tableur.',
+      'Le rapport est fait pour sortir de la plateforme : il ne contient aucun nom de machine, de domaine ni d’adresse, et les textes (justifications, mesures compensatoires, titres) passent par le masque des machines, qui remplace un nom ou une adresse par « [machine] ». Les connecteurs y sont désignés par leur type et un numéro. Toute personne qui lit le module peut le produire, pour ce qu’elle lit (règle à confirmer par le RSSI). Chaque production est inscrite au journal d’audit (qui, quand, période, portée, format), sans son contenu.',
+    ],
+  },
+  {
     id: 'vulnerabilites-assistant',
     title: 'Vulnérabilités : demander à l’assistant RSSI',
     permission: 'vulnerabilites:lire',
