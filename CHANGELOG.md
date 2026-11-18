@@ -4,6 +4,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ## [Non publié]
 
+### Notes de mise à jour
+
+**Aucune action sur le serveur, aucune migration.** Changements d'interface seulement ; les données ne changent pas.
+
 ### Modifié
 
 - **Ergonomie, lot 2 : suite du relevé sur grand écran** (décisions du RSSI du 18/11/2026, sur maquettes ;
