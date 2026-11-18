@@ -62,7 +62,7 @@ export const NOTIFICATION_TYPES = [
     id: 'vulnerabilites_alerte',
     label: 'Vulnérabilités : alerte',
     description:
-      'Une faille présente chez nous est passée en priorité P2. Adressée aux personnes qui lisent le module Vulnérabilités, une fois par alerte (vingt au plus par évaluation).',
+      'Résumé des alertes simples ouvertes par une même évaluation (failles P2 exploitables, présentes sur des actifs exposés directement sur Internet) : une seule notification par évaluation, avec leur nombre et un lien vers l’onglet « Alertes ». Adressée aux personnes qui lisent le module Vulnérabilités.',
   },
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]['id'];
@@ -77,7 +77,11 @@ export const NOTIFICATION_LIEN = '/pilotage/rappels';
 export const NOTIFICATION_RUBRIQUES: Partial<Record<NotificationType, { lien: string; rubrique: string }>> = {
   retex_contribution: { lien: '/retex', rubrique: 'Mes contributions RETEX' },
   vulnerabilites_alerte_critique: { lien: '/vulnerabilites/alertes', rubrique: 'Vulnérabilités, Alertes' },
-  vulnerabilites_alerte: { lien: '/vulnerabilites/alertes', rubrique: 'Vulnérabilités, Alertes' },
+  // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré sur les alertes simples ouvertes (LIEN_RESUME_ALERTES).
+  vulnerabilites_alerte: {
+    lien: '/vulnerabilites/alertes?niveau=simple&etat=ouverte',
+    rubrique: 'Vulnérabilités, Alertes',
+  },
 };
 /** Types émis par le module Vulnérabilités (lot V6) : sans périmètre ni objet du socle, lus avec vulnerabilites:lire. */
 export const NOTIFICATION_TYPES_VULNERABILITES = ['vulnerabilites_alerte_critique', 'vulnerabilites_alerte'] as const;

@@ -138,6 +138,13 @@ modifiée), durée négligeable, sans reprise de données : les alertes s'ouvren
 qui suit la mise à jour, si une faille présente est en P1 ou en P2. Aucun appel réseau nouveau, aucune action sur le serveur.
 (session « Module surveillance vulnérabilités SMSI »)
 
+**Alertes du module Vulnérabilités, lot V6b** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum « lot V6b ») : aucune
+migration. **Action manuelle** : seul le rôle prédéfini « RSSI » peut prendre une alerte en compte ; le compte créé à
+l'installation n'a que le rôle « Administrateur ». Attribuer le rôle « RSSI » à la personne concernée (Administration, comptes
+ou groupes) ; sans compte qui le tienne, aucune alerte ne peut être prise en compte. Les alertes simples ouvertes qui ne
+satisfont plus la nouvelle règle se closent d'elles-mêmes à la première évaluation qui suit la mise à jour (motif « sous le
+seuil »). (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
 
 - **Module « Vulnérabilités », lot V1 : produits surveillés** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
@@ -552,6 +559,22 @@ qui suit la mise à jour, si une faille présente est en P1 ou en P2. Aucun appe
 
 ### Modifié
 
+- **Module « Vulnérabilités », lot V6b : réglages des alertes** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
+  « lot V6b » ; décisions du RSSI du 18/11/2026, qui remplacent les choix provisoires du lot V6). **Seuil** : l'alerte critique
+  reste celle d'une faille présente en P1 ; l'**alerte simple** ne s'ouvre plus que pour une faille en **P2 exploitable**
+  (une source dit qu'un code d'exploitation ou une preuve de concept existe : Tenable, CERT Santé, AlgoLightHouse) **et
+  exposée directement sur Internet** (présence « exposée » : actif vu par AlgoLightHouse) ; une faille P2 présente seulement
+  sur des machines internes, même reliées à un actif exposé, n'en ouvre plus ; une alerte simple ouverte qui ne satisfait plus
+  la règle se clôt d'elle-même, motif « sous le seuil » (libellé précisé) ; rien pour P3 et P4. **Prise en compte** réservée
+  au **rôle « RSSI »** de la plateforme (directement ou par un groupe) : le serveur répond 403 à tout autre compte, y compris
+  avec le droit de modifier ou d'administrer le module et y compris le rôle Administrateur ; la fenêtre et l'onglet
+  « Alertes » n'offrent « Pris en compte » qu'au RSSI et disent « Seul le RSSI peut prendre en compte une alerte » ; les
+  autres personnes ferment la fenêtre pour leur session. **Notifications** : chaque alerte critique garde la sienne ; les
+  alertes simples ouvertes par une même évaluation donnent **une seule notification de résumé** (« n nouvelles alertes »,
+  type « Vulnérabilités : alerte », lien vers l'onglet « Alertes » filtré sur les alertes simples ouvertes), aucune quand il
+  n'y en a pas ; le plafond de vingt notifications par évaluation disparaît. Toujours aucun nom de machine, de domaine,
+  d'adresse ni de périmètre. L'onglet « Alertes » reprend les filtres de l'adresse (`?niveau=`, `?etat=`). Aide en ligne mise
+  à jour. (session « Module surveillance vulnérabilités SMSI »)
 - **Module « Vulnérabilités », lot ALH5 : la priorité est la même pour tout le monde** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
   addendum « lot ALH5 » ; décision A du RSSI du 17/11/2026, qui remplace le choix n° 1 du lot ALH2). La priorité d'une CVE,
   d'une faille, d'une alerte, d'une technologie, le rang d'une machine et les filtres et compteurs « exploitée » et

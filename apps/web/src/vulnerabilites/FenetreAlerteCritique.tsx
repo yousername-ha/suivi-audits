@@ -5,14 +5,19 @@
    Accessibilité : role="alertdialog", nom et description accessibles, focus piégé puis rendu à l'élément qui l'avait ;
    Échap ne ferme pas (une décision est attendue). Elle s'affiche au-dessus de la page sans la démonter : une saisie en cours
    garde son état.
-   - Avec vulnerabilites:modifier : « Pris en compte » (pour tout le monde, tracé, If-Match), « Plus tard » et « Ouvrir la
-     fiche » (la fenêtre est écartée pour la session, la fiche s'ouvre).
-   - Lecture seule : « Fermer pour cette session » (elle réapparaît à la connexion suivante tant que l'alerte n'est pas prise
-     en compte) et « Ouvrir la fiche ».
+   - Rôle RSSI de la plateforme (lot V6b, décision B du 18/11/2026 ; le serveur en juge) : « Pris en compte » (pour tout le
+     monde, tracé, If-Match), « Plus tard » et « Ouvrir la fiche » (la fenêtre est écartée pour la session, la fiche s'ouvre).
+   - Toute autre personne, même avec le droit de modifier le module : « Fermer pour cette session » (elle réapparaît à la
+     connexion suivante tant que l'alerte n'est pas prise en compte) et « Ouvrir la fiche ».
    Plusieurs alertes : une seule fenêtre, la plus récente en tête, les autres listées (bornées). Aucun nom de machine, de
    domaine, d'adresse ni de périmètre : des nombres que la personne lit, et un drapeau sans nombre pour le reste. */
 import { Button, FocusTrap, Group, Portal } from '@mantine/core';
-import { type AlerteVulnerabiliteDto, type FenetreAlertesDto, resumeNombreLisible } from '@suivi/shared';
+import {
+  type AlerteVulnerabiliteDto,
+  type FenetreAlertesDto,
+  PRISE_EN_COMPTE_RESERVEE,
+  resumeNombreLisible,
+} from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusReturn } from '@mantine/hooks';
 import { useEffect, useId, useState } from 'react';
@@ -165,8 +170,8 @@ export function FenetreAlerteCritiqueVue({
         <div className="ac-pied">
           <p>
             {peutPrendreEnCompte
-              ? 'Cette fenêtre reste affichée tant que l’alerte n’est pas prise en compte. La prise en compte vaut pour tout le monde et elle est tracée. « Plus tard » la masque jusqu’à votre prochaine connexion.'
-              : 'Seule une personne qui peut modifier le module Vulnérabilités peut prendre cette alerte en compte. Fermée pour cette session, la fenêtre réapparaît à votre prochaine connexion tant que l’alerte n’est pas prise en compte.'}
+              ? `Cette fenêtre reste affichée tant que l’alerte n’est pas prise en compte. ${PRISE_EN_COMPTE_RESERVEE} La prise en compte vaut pour tout le monde et elle est tracée. « Plus tard » la masque jusqu’à votre prochaine connexion.`
+              : `${PRISE_EN_COMPTE_RESERVEE} Fermée pour cette session, la fenêtre réapparaît à votre prochaine connexion tant que l’alerte n’est pas prise en compte.`}
           </p>
           <Group gap="xs">
             {peutPrendreEnCompte ? (

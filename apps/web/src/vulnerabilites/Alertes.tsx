@@ -1,7 +1,9 @@
-/* Module Vulnérabilités (ADR 0100, lot V6) : onglet « Alertes ». Alertes décidées par la plateforme, par règle : critique
-   (P1, faille exploitée présente chez nous), simple (P2). Liste (niveau, faille, priorité et ses faits, présence en nombres
-   que la personne lit, état : ouverte, prise en compte ou close, par qui et quand), filtre par état et par niveau, fiche d'une
-   alerte (ouverte par son titre ou par le lien d'une notification, `?alerte=`), prise en compte avec le droit de modifier.
+/* Module Vulnérabilités (ADR 0100, lots V6 et V6b) : onglet « Alertes ». Alertes décidées par la plateforme, par règle :
+   critique (P1, faille exploitée présente chez nous), simple (P2 exploitable sur un actif exposé directement sur Internet).
+   Liste (niveau, faille, priorité et ses faits, présence en nombres que la personne lit, état : ouverte, prise en compte ou
+   close, par qui et quand), filtre par état et par niveau (repris de l'adresse, `?niveau=` et `?etat=`, lien du résumé des
+   notifications), fiche d'une alerte (ouverte par son titre ou par le lien d'une notification, `?alerte=`), prise en compte
+   réservée au rôle RSSI (le serveur en juge et le dit dans la liste).
    Rappel discret dans l'en-tête du module quand une alerte critique est en cours. Aucun nom de machine, de domaine,
    d'adresse ni de périmètre : ils se lisent dans les écrans du module, selon les droits. Charte et CSP stricte (ADR 0006). */
 import { Alert, Anchor, Button, Group, List, Modal, Pagination, Select, Stack, Table, Text } from '@mantine/core';
@@ -11,6 +13,7 @@ import {
   FILTRE_ETAT_ALERTE_LIBELLES,
   FILTRES_ETAT_ALERTE,
   type FiltreEtatAlerte,
+  PRISE_EN_COMPTE_RESERVEE,
   NIVEAU_ALERTE_LIBELLES,
   NIVEAUX_ALERTE,
   type NiveauAlerte,
@@ -18,7 +21,7 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { api, ApiError, get } from '../api';
 import { useCan } from '../session';
@@ -155,11 +158,6 @@ export function FicheAlerte({
           <List.Item key={l}>{l}</List.Item>
         ))}
       </List>
-      {!a.notifiee && a.etat !== 'close' && (
-        <Text size="xs" c="dimmed">
-          Alerte ouverte sans notification : plafond des alertes simples notifiées par évaluation atteint.
-        </Text>
-      )}
       <Text size="sm">
         Le détail (machines, actifs exposés, produits) se lit dans les écrans du module, selon vos droits :{' '}
         <Anchor component={Link} to="/vulnerabilites/failles">
@@ -182,12 +180,12 @@ export function FicheAlerte({
               Pris en compte
             </Button>
             <Text size="xs" c="dimmed">
-              Pour tout le monde ; tracé au journal.
+              Pour tout le monde ; tracé au journal. {PRISE_EN_COMPTE_RESERVEE}
             </Text>
           </Group>
         ) : (
           <Text size="xs" c="dimmed">
-            Prendre une alerte en compte demande le droit de modifier le module Vulnérabilités.
+            {PRISE_EN_COMPTE_RESERVEE}
           </Text>
         ))}
     </Stack>
@@ -200,16 +198,36 @@ const OPTIONS_NIVEAU = [
   ...NIVEAUX_ALERTE.map((v) => ({ value: v, label: NIVEAU_ALERTE_LIBELLES[v] })),
 ];
 
+/** Filtres demandés par l'adresse (lien du résumé des notifications : `?niveau=simple&etat=ouverte`) ; valeur inconnue :
+    filtre par défaut. */
+export function filtresDepuisAdresse(p: URLSearchParams): {
+  etat: FiltreEtatAlerte | null;
+  niveau: NiveauAlerte | null;
+} {
+  const e = p.get('etat');
+  const n = p.get('niveau');
+  return {
+    etat: (FILTRES_ETAT_ALERTE as readonly string[]).includes(e ?? '') ? (e as FiltreEtatAlerte) : null,
+    niveau: (NIVEAUX_ALERTE as readonly string[]).includes(n ?? '') ? (n as NiveauAlerte) : null,
+  };
+}
+
 export function AlertesPage() {
   const can = useCan();
   const qc = useQueryClient();
   const lire = can('vulnerabilites', 'lire');
-  const modifier = can('vulnerabilites', 'modifier');
   const [params, setParams] = useSearchParams();
   const ouverte = params.get('alerte');
-  const [etat, setEtat] = useState<FiltreEtatAlerte>('actives');
-  const [niveau, setNiveau] = useState<NiveauAlerte | ''>('');
+  const demandes = filtresDepuisAdresse(params);
+  const [etat, setEtat] = useState<FiltreEtatAlerte>(demandes.etat ?? 'actives');
+  const [niveau, setNiveau] = useState<NiveauAlerte | ''>(demandes.niveau ?? '');
   const [page, setPage] = useState(1);
+  // Un lien de notification suivi alors que l'onglet est déjà ouvert : les filtres de l'adresse s'appliquent.
+  useEffect(() => {
+    if (demandes.etat) setEtat(demandes.etat);
+    if (demandes.niveau) setNiveau(demandes.niveau);
+    if (demandes.etat || demandes.niveau) setPage(1);
+  }, [demandes.etat, demandes.niveau]);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<unknown>(null);
   const liste = useQuery({
@@ -250,7 +268,7 @@ export function AlertesPage() {
     <Page>
       <PageHeader
         title="Alertes"
-        description="Alertes décidées par la plateforme, par règle, jamais par l’assistant : critique quand une faille exploitée est présente chez nous (priorité P1 : détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet), simple quand une faille présente passe en P2 (seuil à confirmer par le RSSI). Une alerte par faille ; elle se met à jour sans se rejouer et se clôt d’elle-même quand la faille n’est plus présente, est traitée ou redescend sous le seuil. Les nombres ne comptent que ce que vous pouvez lire."
+        description="Alertes décidées par la plateforme, par règle, jamais par l’assistant : critique quand une faille exploitée est présente chez nous (priorité P1 : détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet) ; simple quand une faille en P2 est exploitable (code d’exploitation ou preuve de concept connus) et exposée directement sur Internet (actif vu par AlgoLightHouse). Une alerte par faille ; elle se met à jour sans se rejouer et se clôt d’elle-même quand la faille n’est plus présente, est traitée ou passe sous le seuil. Seul le RSSI peut prendre en compte une alerte. Les nombres ne comptent que ce que vous pouvez lire."
       />
       <Stack>
         <ErrorAlert error={liste.error} />
@@ -302,7 +320,7 @@ export function AlertesPage() {
         {fiche.data && (
           <FicheAlerte
             a={fiche.data}
-            peutPrendreEnCompte={modifier}
+            peutPrendreEnCompte={liste.data?.peutPrendreEnCompte ?? false}
             envoi={envoi}
             onPrendreEnCompte={() => void prendre(fiche.data!)}
           />

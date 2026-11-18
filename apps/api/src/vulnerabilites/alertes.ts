@@ -9,22 +9,26 @@
      monde), majoration du lot ALH5 comprise pour une CVE exposée sur un actif qui mène à une machine interne vulnérable. Une
      faille est « présente » par un constat de Tenable présent et non traité (présence « détectée »), une faille déclarée
      rattachée et non traitée (« déclarée »), ou une exposition sur Internet (« exposée »).
+   - Seuil (décision du RSSI du 18/11/2026, lot V6b) : critique en P1 ; simple en P2 seulement si la faille est
+     exploitable (une source exploitable sur l'une de ses présences non traitées) et exposée directement sur Internet
+     (présence « exposée ») ; une alerte simple qui ne satisfait plus la règle se clôt « sous le seuil ».
    - Une alerte par faille (CVE, ou constat sans CVE) tant qu'elle n'est pas close ; mise à jour sans rejeu ; clôture
      automatique avec son motif ; montée d'une alerte simple en critique notifiée une fois.
    - Lecture (vulnerabilites:lire) : priorité, faits et existence de l'alerte pour tous ; nombres limités à ce que la personne
      lit (machines par leur périmètre effectif, actifs par leur périmètre ALH relié), avec un drapeau sans nombre pour le
      reste. Aucun nom de machine, de domaine, d'adresse ni de périmètre n'est rendu par ce service.
-   - Prise en compte (vulnerabilites:modifier, If-Match sur la version) : par alerte, pour tout le monde ; journal
+   - Prise en compte (décision B du 18/11/2026 : rôle « RSSI » de la plateforme seulement, direct ou par un groupe ; 403
+     pour tout autre compte, administrateur compris ; If-Match sur la version) : par alerte, pour tout le monde ; journal
      `vulnerabilites.alerte.prise_en_compte`.
-   - Notifications (ADR 0058) : types `vulnerabilites_alerte_critique` et `vulnerabilites_alerte`, aux comptes actifs qui ont
-     vulnerabilites:lire, réglages par personne appliqués par la diffusion existante (application, courriel si choisi et si le
-     courriel est configuré). Titre et courriel : niveau, CVE, produit et lien seulement.
+   - Notifications (ADR 0058), aux comptes actifs qui ont vulnerabilites:lire, réglages par personne appliqués par la
+     diffusion existante (application, courriel si choisi et si le courriel est configuré) : une par alerte critique (type
+     `vulnerabilites_alerte_critique` ; titre : niveau, CVE, produit) ; pour les alertes simples ouvertes par une même
+     évaluation, UN résumé (type `vulnerabilites_alerte`, clé « resume:<évaluation> », titre : leur nombre seulement).
    Journal : `vulnerabilites.alerte.ouverte`, `.niveau`, `.close`, `.prise_en_compte`, `vulnerabilites.alertes.evaluees`
    (identifiants, CVE, niveaux, motifs et nombres ; jamais de nom). */
 import {
   ALERTES_FENETRE_MAX,
   ALERTES_PAR_PAGE,
-  ALERTES_SIMPLES_NOTIFIEES_MAX,
   type AlerteExistante,
   type AlerteVulnerabiliteDto,
   calculerPriorite,
@@ -39,6 +43,7 @@ import {
   type GraviteTenable,
   majorerPriorite,
   MESSAGE_NOTIFICATION_ALERTE,
+  MESSAGE_RESUME_ALERTES,
   type MotifClotureAlerte,
   type NiveauAlerte,
   niveauAlerte,
@@ -50,11 +55,16 @@ import {
   prioriteLaPlusHaute,
   type RechercheAlertesVulnerabilites,
   type ReglagePriorite,
+  PREFIXE_RESUME_ALERTES,
+  PRISE_EN_COMPTE_RESERVEE,
   Rights,
+  ROLE_PRISE_EN_COMPTE_ALERTE,
   type SituationFaille,
   type SourcesFailleDto,
   titreNotificationAlerte,
+  titreResumeAlertes,
 } from '@suivi/shared';
+import { randomUUID } from 'node:crypto';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { surConnexion, type Client, type Db, type Kdb } from '../db/db.js';
@@ -99,6 +109,8 @@ interface Cumul {
   machines: Set<string>;
   produits: Set<string>;
   actifs: number;
+  /** Une source dit qu'un code d'exploitation existe, sur l'une des présences non traitées (lot V6b). */
+  exploitable: boolean;
   /** Objets présents qui portent la faille (constats présents, failles déclarées rattachées), et parmi eux les traités. */
   objets: number;
   traites: number;
@@ -202,7 +214,10 @@ export class AlertesVulnerabilites {
       const x = cumuls.get(cle);
       const ex = existantes.get(cle) ?? null;
       const p = x ? prioriteLaPlusHaute(x.priorites) : null;
-      const niveau = p ? niveauAlerte(p.niveau) : null;
+      const niveau =
+        x && p
+          ? niveauAlerte({ priorite: p.niveau, exploitable: x.exploitable, exposee: x.presences.has('exposee') })
+          : null;
       const faits = x && p && niveau ? this.faits(x, p, titres, sources) : null;
       const situation: SituationFaille = {
         priorite: p?.niveau ?? null,
@@ -385,6 +400,7 @@ export class AlertesVulnerabilites {
             machines: new Set(),
             produits: new Set(),
             actifs: 0,
+            exploitable: false,
             objets: 0,
             traites: 0,
             constats: [],
@@ -415,6 +431,7 @@ export class AlertesVulnerabilites {
         }
         x.priorites.push(priorite(s, 'detectee'));
         x.presences.add('detectee');
+        if (s.exploitable.length) x.exploitable = true;
         for (const m of c.machines) x.machines.add(m);
       }
     }
@@ -428,6 +445,7 @@ export class AlertesVulnerabilites {
       }
       x.priorites.push(priorite(sourcesCve(r.cve), 'declaree'));
       x.presences.add('declaree');
+      if (sourcesCve(r.cve).exploitable.length) x.exploitable = true;
       x.produits.add(r.produit_id);
       for (const m of r.machines) x.machines.add(m);
     }
@@ -437,6 +455,7 @@ export class AlertesVulnerabilites {
       const mene = [...e.actifs].some((a) => menants.has(a));
       x.priorites.push(majorerPriorite(priorite(sourcesCve(cve), 'exposee'), mene));
       x.presences.add('exposee');
+      if (sourcesCve(cve).exploitable.length) x.exploitable = true;
       x.actifs = e.cles.size;
     }
     // Sources de l'exploitation (rangées, avec leur date), gardées avec la CVE.
@@ -485,33 +504,42 @@ export class AlertesVulnerabilites {
     };
   }
 
-  /** Notifications d'alertes (critiques toutes, simples bornées) aux comptes actifs qui lisent le module ; une seule par
-      personne, alerte et niveau. Rend le nombre d'alertes notifiées. */
+  /** Notifications aux comptes actifs qui lisent le module : une par alerte critique (création ou montée), une par personne,
+      alerte et niveau ; pour les alertes simples ouvertes par cette évaluation, un seul résumé par personne (leur nombre et
+      un lien vers l'onglet « Alertes » filtré), aucun quand il n'y en a pas. Rend le nombre d'alertes notifiées. */
   private async notifier(
     k: Kdb,
     c: Client,
     alertes: { id: string; niveau: NiveauAlerte; cve: string | null; produit: string | null }[],
   ): Promise<number> {
     const critiques = alertes.filter((a) => a.niveau === 'critique');
-    const simples = alertes.filter((a) => a.niveau === 'simple').slice(0, ALERTES_SIMPLES_NOTIFIEES_MAX);
-    const retenues = [...critiques, ...simples];
-    if (!retenues.length) return 0;
+    const simples = alertes.filter((a) => a.niveau === 'simple');
+    if (!critiques.length && !simples.length) return 0;
     const destinataires = await this.destinataires(c);
     const emises: NotificationEmise[] = [];
-    for (const a of retenues) {
+    const inserer = async (uid: string, kind: string, cle: string, titre: string, message: string) => {
+      const { rows } = await sql<{ id: string }>`
+        INSERT INTO grc_notifications (smsi_id, object_id, user_id, kind, due_key, title, message)
+        VALUES (NULL, NULL, ${uid}::uuid, ${kind}, ${cle}, ${titre}, ${message})
+        ON CONFLICT (user_id, due_key) WHERE kind IN ('vulnerabilites_alerte_critique', 'vulnerabilites_alerte')
+        DO NOTHING RETURNING id::text AS id`.execute(k);
+      if (rows[0]) emises.push({ id: rows[0].id, userId: uid, kind });
+    };
+    for (const a of critiques) {
       const titre = titreNotificationAlerte(a).slice(0, 180);
-      for (const uid of destinataires) {
-        const { rows } = await sql<{ id: string }>`
-          INSERT INTO grc_notifications (smsi_id, object_id, user_id, kind, due_key, title, message)
-          VALUES (NULL, NULL, ${uid}::uuid, ${KIND[a.niveau]}, ${`${a.id}:${a.niveau}`}, ${titre}, ${MESSAGE_NOTIFICATION_ALERTE})
-          ON CONFLICT (user_id, due_key) WHERE kind IN ('vulnerabilites_alerte_critique', 'vulnerabilites_alerte')
-          DO NOTHING RETURNING id::text AS id`.execute(k);
-        if (rows[0]) emises.push({ id: rows[0].id, userId: uid, kind: KIND[a.niveau] });
-      }
-      await k.updateTable('vulnerabilites_alertes').set({ notifiee: true }).where('id', '=', a.id).execute();
+      for (const uid of destinataires)
+        await inserer(uid, KIND.critique, `${a.id}:critique`, titre, MESSAGE_NOTIFICATION_ALERTE);
     }
+    if (simples.length) {
+      // Clé propre à cette évaluation : un résumé par personne et par évaluation.
+      const cle = `${PREFIXE_RESUME_ALERTES}${randomUUID()}`;
+      const titre = titreResumeAlertes(simples.length);
+      for (const uid of destinataires) await inserer(uid, KIND.simple, cle, titre, MESSAGE_RESUME_ALERTES);
+    }
+    const notifiees = [...critiques, ...simples].map((a) => a.id);
+    await k.updateTable('vulnerabilites_alertes').set({ notifiee: true }).where('id', 'in', notifiees).execute();
     await this.notifications.diffuser(c, emises);
-    return retenues.length;
+    return notifiees.length;
   }
 
   /** Comptes actifs qui ont le droit de lire le module (rôles directs ou par un groupe). */
@@ -527,6 +555,14 @@ export class AlertesVulnerabilites {
   }
 
   /* ---------------------------------------------------------------- Lecture (vulnerabilites:lire) */
+  /** La personne tient le rôle « RSSI » de la plateforme (ROLE_PRISE_EN_COMPTE_ALERTE), directement ou par un groupe,
+      sans portée qui écarte le module (décision B du 18/11/2026). Lu à chaque appel : un retrait du rôle vaut aussitôt. */
+  async peutPrendreEnCompte(user: SessionUser, c?: Client): Promise<boolean> {
+    return (await loadGrants(c ?? this.db.pool, user.id)).some(
+      (g) => g.roleId === ROLE_PRISE_EN_COMPTE_ALERTE && (g.modules == null || g.modules.includes('vulnerabilites')),
+    );
+  }
+
   async lister(user: SessionUser, q: RechercheAlertesVulnerabilites): Promise<PageAlertesVulnerabilites> {
     const conditions = [
       q.etat === 'actives'
@@ -548,6 +584,7 @@ export class AlertesVulnerabilites {
       total: rows[0]?.total ?? 0,
       page: q.page,
       parPage: ALERTES_PAR_PAGE,
+      peutPrendreEnCompte: await this.peutPrendreEnCompte(user),
     };
   }
 
@@ -576,7 +613,7 @@ export class AlertesVulnerabilites {
       alertes: await this.versDto(user, rows),
       total: rows[0]?.total ?? 0,
       enCours,
-      peutPrendreEnCompte: user.rights.can('vulnerabilites', 'modifier'),
+      peutPrendreEnCompte: await this.peutPrendreEnCompte(user),
     };
   }
 
@@ -656,9 +693,10 @@ export class AlertesVulnerabilites {
     return new Map(rows.map((r) => [r.cle, { lisibles: r.lisibles, horsLecture: r.total > r.lisibles }]));
   }
 
-  /* ---------------------------------------------------------------- Prise en compte (vulnerabilites:modifier) */
+  /* ---------------------------------------------------------------- Prise en compte (rôle RSSI seulement) */
   async prendreEnCompte(id: string, attendue: number, user: SessionUser, ip: string): Promise<AlerteVulnerabiliteDto> {
     await this.db.tx(async (c, k) => {
+      if (!(await this.peutPrendreEnCompte(user, c))) throw new HttpError(403, PRISE_EN_COMPTE_RESERVEE);
       await verrou(k);
       const { rows } =
         await sql<LigneAlerte>`SELECT * FROM vulnerabilites_alertes WHERE id = ${id}::uuid FOR UPDATE`.execute(k);

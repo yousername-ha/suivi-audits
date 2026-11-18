@@ -1221,3 +1221,85 @@ joué (CI seulement) : une pile de test n'a aucune faille présente, la fenêtre
 4. Alerte sur une alerte **critique d'AlgoLightHouse sans CVE** (criticité de l'éditeur), si le RSSI le veut.
 5. Synthèse périodique des alertes simples (au lieu du plafond), si le volume réel l'exige.
 6. Visibilité dans « Mes rappels » pour une personne qui ne lit que le module Vulnérabilités (route des rappels).
+
+## Addendum du 18/11/2026 — lot V6b : réglages des alertes
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Aucune migration (le motif
+de clôture `sous_le_seuil` existant est réutilisé, la clé du résumé tient dans `due_key`), aucun appel réseau, aucune dépendance
+nouvelle, aucun rôle ni droit nouveau. Remplace, dans l'addendum « lot V6 », les choix « seuil de l'alerte simple : P2 »,
+« prise en compte réservée à `vulnerabilites:modifier` » et « plafond de vingt alertes simples notifiées », et lève les points
+ouverts 2 (seuil, prise en compte, plafond) et 5 (synthèse des alertes simples) de cet addendum ; les destinataires restent
+inchangés (point ouvert 2, responsable du produit, toujours ouvert).
+
+### Décisions du RSSI (18/11/2026)
+
+| N° | Question | Décision |
+| --- | --- | --- |
+| A | Seuil des alertes | « P1 et P2 exploitable sur les asset qui sont exposé directement sur internet ». Alerte **critique** inchangée (faille présente en P1, fenêtre rouge). Alerte **simple** : seulement une faille en P2 à la fois **exploitable** au sens de la grille et présente sur un actif **exposé directement sur Internet** (présence « exposée » du lot ALH2). Une faille P2 présente seulement sur des machines internes n'ouvre plus d'alerte simple ; les alertes simples ouvertes qui ne satisfont plus la règle se closent d'elles-mêmes, sans migration de données. Rien pour P3 et P4 |
+| B | Qui prend une alerte en compte | La prise en compte reste « une fois pour tous », tracée, mais réservée au **seul rôle « RSSI »** de la plateforme. Toute autre personne, même avec `vulnerabilites:modifier`, ne peut que masquer la fenêtre pour sa session |
+| C | Notifications | Chaque alerte critique garde sa notification individuelle. Les alertes simples ouvertes au cours d'une même évaluation donnent **une seule** notification de résumé (« n nouvelles alertes », lien vers l'onglet « Alertes » filtré) ; le plafond de vingt disparaît ; aucune quand n vaut 0. Aucun nom de machine, de domaine, d'adresse ni de périmètre. Réglages par personne respectés ; le type « Vulnérabilités : alerte » devient celui du résumé |
+| D | Points du lot ALH5 et suite | Liaison en masse : les deux modes (un pour un, tous vers une machine) sont **confirmés** (point ouvert 1 de l'addendum « lot ALH5 », interprétation de la décision C, levé pour les modes). Majoration de priorité : reste **limitée à la surface externe**, confirmé (point ouvert 2 de l'addendum « lot ALH5 » : pas de majoration de la CVE « globale » ni des failles de machine). Exception d'audit `picomatch` : réexamen le 25/11/2026 (consigné à l'ADR 0063, au CHANGELOG et dans `pnpm-workspace.yaml`). Prochain chantier décidé : **écrans du poste de commandement**. Le RSSI indique que l'interface web de l'éditeur AlgoLightHouse montre les ports ouverts : la limite « seuls les services portés par une alerte sont connus » (lot ALH6) tient au descriptif de l'API ; un nouveau relevé est attendu (point ouvert) |
+
+### Réalisation
+
+- **A — seuil** (`packages/shared/src/alertes-vulnerabilites.ts`) : `niveauAlerte` reçoit la priorité de la faille, un booléen
+  `exploitable` et un booléen `exposee` : critique en P1 ; simple en P2 si exploitable **et** exposée ; sinon rien. La notion
+  d'« exploitable » est celle de la grille (`SOURCES_EXPLOITABLE` de `priorite-vulnerabilites.ts` : `exploitAvailable` de
+  Tenable, preuve de concept selon le CERT Santé, `has_poc` d'AlgoLightHouse), sans nouvelle notion. L'évaluation
+  (`apps/api/src/vulnerabilites/alertes.ts`) tient, par faille, si au moins une de ses présences **non traitées** porte une
+  source exploitable, et si elle a la présence « exposée » (version encore détectée d'une technologie ou alerte ouverte et
+  présente de l'éditeur, comme au lot V6). Une alerte simple (ou critique redescendue en P2) qui ne satisfait plus la règle
+  est **close** avec le motif existant `sous_le_seuil`, dont le libellé devient « Sous le seuil d'alerte : ni P1, ni P2
+  exploitable sur un actif exposé directement sur Internet (priorité redescendue, ou faille non exploitable ou non
+  exposée) ». Une clôture ne notifie personne. Un constat de Tenable sans CVE n'est jamais exposé : il n'ouvre plus d'alerte.
+- **B — prise en compte** : rôle prédéfini `rssi` (`SYSTEM_ROLES`, nom « RSSI », `ROLE_PRISE_EN_COMPTE_ALERTE`), tenu
+  directement ou par un groupe (`loadGrants`, lu à chaque appel), sans portée par modules qui écarterait `vulnerabilites`. La
+  route `POST /api/vulnerabilites/alertes/{id}/prise-en-compte` garde `vulnerabilites:lire` comme garde de route (module actif,
+  session, CSRF) ; le service répond **403** « Seul le RSSI peut prendre en compte une alerte. » à tout autre compte, avant
+  toute lecture de l'alerte, y compris avec `vulnerabilites:modifier`, `vulnerabilites:administrer` ou le rôle
+  **Administrateur**. `peutPrendreEnCompte` de la fenêtre et, nouveau, de la liste des alertes est calculé de même par le
+  serveur ; la fenêtre et la fiche de l'onglet « Alertes » n'offrent « Pris en compte » qu'au RSSI ; toute autre personne a
+  « Fermer pour cette session » et « Ouvrir la fiche ». La fenêtre, la fiche, l'en-tête de l'onglet et l'aide disent « Seul le
+  RSSI peut prendre en compte une alerte ».
+- **C — notifications** : une notification par alerte critique (création ou montée), clé `<alerte>:critique`, inchangée. Les
+  alertes simples **créées** par l'évaluation donnent un seul résumé par personne, type `vulnerabilites_alerte`, clé
+  `resume:<identifiant aléatoire de l'évaluation>`, titre « Vulnérabilités : n nouvelles alertes » (« 1 nouvelle alerte »),
+  message sans CVE ni nom ; aucun résumé quand n vaut 0 ; plus aucune notification individuelle d'alerte simple. Chaque
+  alerte du résumé est marquée notifiée. Lien du résumé, dans « Mes rappels » et dans le courriel :
+  `/vulnerabilites/alertes?niveau=simple&etat=ouverte` ; l'onglet « Alertes » reprend ces filtres de l'adresse. Les
+  réglages par groupe, rôle et personne s'appliquent par la diffusion existante. La mention « plafond atteint » de la fiche est
+  retirée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **« Directement »** : seule la présence « exposée » (actif vu par AlgoLightHouse) compte ; une machine interne reliée à un
+  actif exposé (lot ALH3) ne rend pas la faille exposée.
+- **P2 et exploitable jugés sur la faille** (CVE), et non présence par présence : la faille est en P2 (la plus haute de ses
+  présences, majoration du lot ALH5 comprise), elle est exposée, et une source dit qu'elle est exploitable sur l'une de ses
+  présences non traitées. Exemple : un `exploitAvailable` de Tenable sur une machine interne rend exploitable la même CVE
+  exposée sur Internet (le code d'exploitation vise la faille, pas la machine).
+- **Motif de clôture** : `sous_le_seuil` réutilisé (libellé précisé) plutôt qu'un motif nouveau, pour éviter une migration.
+- **Prise en compte des alertes simples** : réservée au RSSI aussi (même règle que les critiques).
+- **Rôle tenu par un groupe** : vaut comme le rôle direct.
+- **Montée d'une alerte simple en critique** : toujours notifiée individuellement (alerte critique) ; une alerte critique
+  redescendue en P2 exploitable exposée reste ouverte en alerte simple, sans notification ni résumé.
+
+### Point à trancher
+
+- **Aucun compte RSSI** : le compte créé à l'installation n'a que le rôle « Administrateur », qui ne permet pas la prise en
+  compte. Sur une plateforme sans compte qui tienne le rôle « RSSI », **aucune alerte ne peut être prise en compte** et la
+  fenêtre rouge réapparaît à chaque connexion pour tous. Rien ne le contourne ; un administrateur attribue le rôle dans
+  l'administration des accès (note de mise à jour du CHANGELOG).
+
+### Non vérifié
+
+Aucune donnée réelle (tests sur données fictives) ; volume réel des alertes simples et des résumés ; envoi réel d'un courriel ;
+Docker et Node 26. Le parcours Playwright adapté (administrateur sans prise en compte, filtres repris du lien du résumé) n'a
+pas été joué (CI seulement) ; sur une pile vierge, aucune alerte n'existe.
+
+### Points ouverts (hors lot)
+
+1. Nouveau relevé de l'API d'AlgoLightHouse : l'interface web de l'éditeur montre les ports ouverts ; l'API n'en documente pas
+   la liste (lot ALH6). À relever pour lever la limite « seuls les services portés par une alerte sont connus ».
+2. Écrans du poste de commandement (niveau d'alerte 1 à 4, radar) : prochain chantier.
+3. Destinataires des notifications (responsable du produit, point ouvert 2 de l'addendum « lot V6 ») : inchangés.

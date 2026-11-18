@@ -1,11 +1,16 @@
-/* Module Vulnérabilités (ADR 0100, lot V6) : règles des alertes décidées par la plateforme. Cas en table : seuils (P1
-   critique, P2 simple, rien pour P3 et P4), création, mise à jour sans rejeu, montée et descente, clôture et son motif, clé
+/* Module Vulnérabilités (ADR 0100, lots V6 et V6b) : règles des alertes décidées par la plateforme. Cas en table : seuils
+   (P1 critique ; P2 simple seulement si exploitable et exposée directement sur Internet, décision du RSSI du 18/11/2026 ;
+   rien pour P3 et P4), création, mise à jour sans rejeu, montée et descente, clôture et son motif, clé
    d'une faille, titre de notification sans nom. Données fictives. */
 import { describe, expect, it } from 'vitest';
 import {
   type AlerteExistante,
   cleAlerte,
   deciderAlerte,
+  type FaitsSeuilAlerte,
+  LIEN_RESUME_ALERTES,
+  MESSAGE_RESUME_ALERTES,
+  MOTIF_CLOTURE_ALERTE_LIBELLES,
   type DecisionAlerte,
   empreinteAlerte,
   type FaitsAlerte,
@@ -14,6 +19,10 @@ import {
   NOTIFICATION_TYPES,
   NOTIFICATION_TYPES_VULNERABILITES,
   niveauAlerte,
+  PREFIXE_RESUME_ALERTES,
+  PRISE_EN_COMPTE_RESERVEE,
+  ROLE_PRISE_EN_COMPTE_ALERTE,
+  SYSTEM_ROLE_DEFS,
   type NiveauAlerte,
   type NiveauPriorite,
   RechercheAlertesVulnerabilites,
@@ -21,6 +30,7 @@ import {
   resumeNombreLisible,
   type SituationFaille,
   titreNotificationAlerte,
+  titreResumeAlertes,
 } from '../src/index.js';
 
 const faits = (extra: Partial<FaitsAlerte> = {}): FaitsAlerte => ({
@@ -42,13 +52,53 @@ const E = empreinteAlerte(faits());
 const presente = (p: NiveauPriorite): SituationFaille => ({ priorite: p, traitee: false });
 const absente: SituationFaille = { priorite: null, traitee: false };
 
-describe('seuils', () => {
-  it.each<[NiveauPriorite, NiveauAlerte | null]>([
-    ['P1', 'critique'],
-    ['P2', 'simple'],
-    ['P3', null],
-    ['P4', null],
-  ])('%s → %s', (p, n) => expect(niveauAlerte(p)).toBe(n));
+describe('seuils (décision du RSSI du 18/11/2026 : « P1 et P2 exploitable sur les asset qui sont exposé directement sur internet »)', () => {
+  const f = (priorite: NiveauPriorite, exploitable: boolean, exposee: boolean): FaitsSeuilAlerte => ({
+    priorite,
+    exploitable,
+    exposee,
+  });
+  it.each<[string, FaitsSeuilAlerte, NiveauAlerte | null]>([
+    ['P1 exposée et exploitable', f('P1', true, true), 'critique'],
+    ['P1 interne seulement, non exploitable', f('P1', false, false), 'critique'],
+    ['P2 exploitable et exposée : alerte simple', f('P2', true, true), 'simple'],
+    ['P2 exposée mais non exploitable : rien', f('P2', false, true), null],
+    ['P2 exploitable mais interne seulement (non exposée) : rien', f('P2', true, false), null],
+    ['P2 ni exploitable ni exposée : rien', f('P2', false, false), null],
+    ['P3 exploitable et exposée : rien', f('P3', true, true), null],
+    ['P4 exploitable et exposée : rien', f('P4', true, true), null],
+  ])('%s', (_cas, faits, n) => expect(niveauAlerte(faits)).toBe(n));
+
+  it('alerte simple devenue hors règle (plus exposée ou plus exploitable) : close « sous le seuil », motif explicite', () => {
+    const ouverte: AlerteExistante = { niveau: 'simple', etat: 'ouverte', empreinte: E };
+    for (const faits of [f('P2', true, false), f('P2', false, true)]) {
+      const niveau = niveauAlerte(faits);
+      expect(niveau).toBeNull();
+      expect(
+        deciderAlerte(ouverte, { niveau, empreinte: null, situation: { priorite: 'P2', traitee: false } }),
+      ).toEqual({ action: 'clore', motif: 'sous_le_seuil' });
+    }
+    expect(MOTIF_CLOTURE_ALERTE_LIBELLES.sous_le_seuil).toContain(
+      'ni P1, ni P2 exploitable sur un actif exposé directement sur Internet',
+    );
+  });
+
+  it('critique qui redescend en P2 hors règle : close ; en P2 exploitable et exposée : reste ouverte, simple', () => {
+    const critique: AlerteExistante = { niveau: 'critique', etat: 'prise_en_compte', empreinte: E };
+    const situation: SituationFaille = { priorite: 'P2', traitee: false };
+    expect(deciderAlerte(critique, { niveau: niveauAlerte(f('P2', true, false)), empreinte: null, situation })).toEqual(
+      {
+        action: 'clore',
+        motif: 'sous_le_seuil',
+      },
+    );
+    expect(deciderAlerte(critique, { niveau: niveauAlerte(f('P2', true, true)), empreinte: E, situation })).toEqual({
+      action: 'mettre_a_jour',
+      niveau: 'simple',
+      notifier: null,
+      reprise: false,
+    });
+  });
 });
 
 describe('décision', () => {
@@ -194,8 +244,26 @@ describe('clé, titre et libellés', () => {
     const ids = NOTIFICATION_TYPES.map((t) => t.id) as string[];
     for (const t of NOTIFICATION_TYPES_VULNERABILITES) {
       expect(ids).toContain(t);
-      expect(NOTIFICATION_RUBRIQUES[t]?.lien).toBe('/vulnerabilites/alertes');
+      expect(NOTIFICATION_RUBRIQUES[t]?.rubrique).toBe('Vulnérabilités, Alertes');
     }
+    expect(NOTIFICATION_RUBRIQUES.vulnerabilites_alerte_critique?.lien).toBe('/vulnerabilites/alertes');
+    // Résumé des alertes simples : onglet filtré sur les alertes simples ouvertes.
+    expect(NOTIFICATION_RUBRIQUES.vulnerabilites_alerte?.lien).toBe(LIEN_RESUME_ALERTES);
+    expect(LIEN_RESUME_ALERTES).toBe('/vulnerabilites/alertes?niveau=simple&etat=ouverte');
+  });
+
+  it('résumé des alertes simples : leur nombre seulement, ni CVE ni nom', () => {
+    expect(titreResumeAlertes(1)).toBe('Vulnérabilités : 1 nouvelle alerte');
+    expect(titreResumeAlertes(37)).toBe('Vulnérabilités : 37 nouvelles alertes');
+    expect(titreResumeAlertes(37)).not.toMatch(/CVE/);
+    expect(MESSAGE_RESUME_ALERTES).not.toMatch(/CVE-|srv-|\.example|192\.0\.2/);
+    expect(PREFIXE_RESUME_ALERTES).toBe('resume:');
+  });
+
+  it('prise en compte : rôle prédéfini « RSSI » seulement', () => {
+    expect(ROLE_PRISE_EN_COMPTE_ALERTE).toBe('rssi');
+    expect(SYSTEM_ROLE_DEFS[ROLE_PRISE_EN_COMPTE_ALERTE].name).toBe('RSSI');
+    expect(PRISE_EN_COMPTE_RESERVEE).toBe('Seul le RSSI peut prendre en compte une alerte.');
   });
 
   it('nombres lisibles : jamais de nombre hors des droits', () => {

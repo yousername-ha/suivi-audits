@@ -31,7 +31,8 @@
    Lot ALH5 : liaison en masse par motif à joker, avec `modifier` : aperçu obligatoire (rien n'est écrit), puis application
    des seules paires de l'aperçu validé (empreinte), chacune revérifiée ; une entrée de journal par opération.
    Lot V6 : alertes décidées par la plateforme. Liste, fiche et fenêtre d'alerte critique avec `lire` (priorité et faits pour
-   tous, nombres limités à ce que la personne lit, aucun nom) ; prise en compte avec `modifier` et If-Match sur la version de
+   tous, nombres limités à ce que la personne lit, aucun nom) ; prise en compte réservée au rôle « RSSI » de la plateforme
+   (lot V6b, décision B du 18/11/2026 : 403 pour tout autre compte, administrateur compris), If-Match sur la version de
    l'alerte. Les décisions qui changent les faits (produit, rapprochement, état de suivi, liaison d'un actif, seuil) font
    réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision. */
 import {
@@ -89,7 +90,7 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/alertes',
     summary:
-      'Alertes du module (critiques : P1, faille exploitée présente ; simples : P2), filtrées par état et niveau ; nombres limités à ce que la personne lit, aucun nom',
+      'Alertes du module (critiques : P1, faille exploitée présente ; simples : P2 exploitable sur un actif exposé directement sur Internet), filtrées par état et niveau ; nombres limités à ce que la personne lit, aucun nom ; dit si la personne peut prendre une alerte en compte (rôle RSSI)',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheAlertesVulnerabilites,
@@ -99,7 +100,7 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/alertes/fenetre',
     summary:
-      'Fenêtre d’alerte critique : alertes critiques ouvertes non prises en compte, la plus récente en tête (bornées), et droit de les prendre en compte',
+      'Fenêtre d’alerte critique : alertes critiques ouvertes non prises en compte, la plus récente en tête (bornées), et si la personne peut les prendre en compte (rôle RSSI)',
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.alertes.fenetre((s as Session).user),
@@ -121,9 +122,10 @@ export const vulnerabilitesRoutes = [
     method: 'POST',
     url: '/api/vulnerabilites/alertes/:id/prise-en-compte',
     summary:
-      'Prendre une alerte en compte, pour tout le monde (If-Match : version de l’alerte) ; tracé au journal ; la fenêtre d’alerte critique disparaît',
+      'Prendre une alerte en compte, pour tout le monde (If-Match : version de l’alerte) ; réservé au rôle RSSI de la plateforme (403 sinon, administrateur compris) ; tracé au journal ; la fenêtre d’alerte critique disparaît',
     tags,
-    access: 'vulnerabilites:modifier',
+    // Lecture du module comme garde de route (module actif, session, CSRF) ; le rôle RSSI est exigé par le service.
+    access: 'vulnerabilites:lire',
     params: id,
     handler: async ({ svc, s, params, req, ip, reply }) => {
       const a = await svc.vulnerabilites.alertes.prendreEnCompte(

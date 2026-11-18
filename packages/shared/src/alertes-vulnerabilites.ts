@@ -4,12 +4,18 @@
    ALH5 comprise ; ce fichier ne dit que quand une alerte s'ouvre, se met à jour, monte, descend ou se clôt.
    - Alerte CRITIQUE : une faille présente chez nous (détectée par Tenable, déclarée par un produit surveillé rattaché, ou
      exposée sur Internet) est en P1, c'est-à-dire exploitation avérée et présence.
-   - Alerte SIMPLE : une faille présente est en P2 (seuil à confirmer par le RSSI ; rien pour P3 et P4).
+   - Alerte SIMPLE (décision du RSSI du 18/11/2026, lot V6b : « P1 et P2 exploitable sur les asset qui sont exposé
+     directement sur internet ») : une faille en P2 qui est à la fois « exploitable » au sens de la grille (une source dit
+     qu'un code d'exploitation existe : Tenable, preuve de concept du CERT Santé ou d'AlgoLightHouse, SOURCES_EXPLOITABLE) et
+     exposée directement sur Internet (présence « exposée » du lot ALH2 : actif vu par AlgoLightHouse). Une faille P2
+     présente seulement sur des machines internes (détectée ou déclarée), même reliées à un actif exposé, n'en ouvre pas.
+     Rien pour P3 et P4.
    - Une seule alerte ouverte par faille (CVE, ou constat de Tenable sans CVE) ; elle se met à jour sans se rejouer.
    - Elle se clôt d'elle-même quand la faille n'est plus présente, est traitée (corrigée, risque accepté, non concernée) ou
      redescend sous le seuil ; la clôture porte son motif. */
 import { z } from 'zod';
 import { type NiveauPriorite } from './failles-tenable.js';
+import type { SystemRole } from './permissions.js';
 import {
   type Presence,
   PRESENCE_LIBELLES,
@@ -27,13 +33,28 @@ export const NIVEAU_ALERTE_LIBELLES: Record<NiveauAlerte, string> = {
   simple: 'Alerte',
 };
 
-/** Niveaux de priorité qui ouvrent une alerte, par niveau d'alerte. P2 pour l'alerte simple : choix prudent de la session, à
-    confirmer par le RSSI (il n'a pas fixé ce seuil) ; rien pour P3 et P4. */
-export const SEUILS_ALERTE: Record<NiveauAlerte, readonly NiveauPriorite[]> = { critique: ['P1'], simple: ['P2'] };
+/** Ce qui décide du niveau d'alerte d'une faille PRÉSENTE (et non traitée), sur tous les faits connus. */
+export interface FaitsSeuilAlerte {
+  /** Priorité de la faille : la plus haute de ses présences (majoration du lot ALH5 comprise). */
+  priorite: NiveauPriorite;
+  /** Au moins une source dit qu'un code d'exploitation existe (SOURCES_EXPLOITABLE : Tenable, preuve de concept du CERT
+      Santé, preuve de concept d'AlgoLightHouse), sur l'une de ses présences non traitées. */
+  exploitable: boolean;
+  /** Présence « exposée » : la faille est portée par un actif vu par AlgoLightHouse (exposé directement sur Internet). Une
+      machine interne reliée à un actif exposé ne la rend pas exposée. */
+  exposee: boolean;
+}
 
-/** Niveau d'alerte d'une faille PRÉSENTE selon sa priorité, ou null sous le seuil. */
-export function niveauAlerte(p: NiveauPriorite): NiveauAlerte | null {
-  return NIVEAUX_ALERTE.find((n) => SEUILS_ALERTE[n].includes(p)) ?? null;
+/** Libellé de la règle, repris par l'écran, l'aide et le motif de clôture. */
+export const REGLE_ALERTE_LIBELLE =
+  'critique : P1 (faille exploitée présente chez nous) ; simple : P2 exploitable sur un actif exposé directement sur Internet';
+
+/** Niveau d'alerte d'une faille présente (décision du RSSI du 18/11/2026) : critique en P1 ; simple en P2 si la faille est
+    exploitable ET exposée directement sur Internet ; sinon null (sous le seuil). */
+export function niveauAlerte(f: FaitsSeuilAlerte): NiveauAlerte | null {
+  if (f.priorite === 'P1') return 'critique';
+  if (f.priorite === 'P2' && f.exploitable && f.exposee) return 'simple';
+  return null;
 }
 
 /* ------------------------------------------------------------------ États et clôture */
@@ -51,7 +72,8 @@ export const MOTIF_CLOTURE_ALERTE_LIBELLES: Record<MotifClotureAlerte, string> =
   plus_presente:
     'La faille n’est plus présente (absente des synchronisations complètes, produit non rattaché, exposition close)',
   traitee: 'Faille traitée (corrigée, risque accepté ou non concernée)',
-  sous_le_seuil: 'Priorité redescendue sous le seuil d’alerte',
+  sous_le_seuil:
+    'Sous le seuil d’alerte : ni P1, ni P2 exploitable sur un actif exposé directement sur Internet (priorité redescendue, ou faille non exploitable ou non exposée)',
 };
 
 /** Ce que la plateforme sait de la faille au moment de l'évaluation, pour choisir le motif d'une clôture. */
@@ -62,7 +84,8 @@ export interface SituationFaille {
   traitee: boolean;
 }
 
-/** Motif de clôture : sous le seuil si la faille est encore présente et non traitée ; traitée si tout ce qui la porte encore
+/** Motif de clôture : sous le seuil si la faille est encore présente et non traitée (priorité redescendue, ou P2 qui n'est plus
+    exploitable et exposée directement sur Internet) ; traitée si tout ce qui la porte encore
     est corrigé, en risque accepté ou non concerné ; sinon, plus présente. */
 export function motifCloture(s: SituationFaille): MotifClotureAlerte {
   if (s.priorite !== null) return 'sous_le_seuil';
@@ -156,7 +179,7 @@ export function cleAlerte(f: { cve: string } | { constatId: string }): string {
   return `constat:${f.constatId}`;
 }
 
-/* ------------------------------------------------------------------ Notification (aucun nom, ni nombre) */
+/* ------------------------------------------------------------------ Notifications (aucun nom) */
 const propre = (v: string, max: number) =>
   v
     .replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, ' ')
@@ -180,12 +203,27 @@ export function titreNotificationAlerte(a: {
 export const MESSAGE_NOTIFICATION_ALERTE =
   'Faille présente chez nous, priorité calculée par la plateforme. Le détail est dans la rubrique Vulnérabilités, Alertes, selon vos droits de lecture.';
 
+/** Résumé des alertes simples ouvertes par une même évaluation (décision C du RSSI du 18/11/2026) : une seule notification
+    par personne et par évaluation, au lieu d'une par alerte. Seul le nombre est donné : ni CVE, ni produit, ni nom. */
+export const PREFIXE_RESUME_ALERTES = 'resume:';
+export function titreResumeAlertes(n: number): string {
+  return n === 1 ? 'Vulnérabilités : 1 nouvelle alerte' : `Vulnérabilités : ${n} nouvelles alertes`;
+}
+export const MESSAGE_RESUME_ALERTES =
+  'Failles P2 exploitables, présentes sur des actifs exposés directement sur Internet. La liste est dans la rubrique Vulnérabilités, Alertes, selon vos droits de lecture.';
+/** Onglet « Alertes » filtré sur les alertes simples ouvertes (lien du résumé). */
+export const LIEN_RESUME_ALERTES = '/vulnerabilites/alertes?niveau=simple&etat=ouverte';
+
+/* ------------------------------------------------------------------ Prise en compte (décision B du 18/11/2026) */
+/** Seul le rôle prédéfini « RSSI » de la plateforme (identifiant `rssi`, direct ou par un groupe) prend une alerte en compte,
+    pour tout le monde. Aucun droit ne s'y substitue : ni vulnerabilites:modifier, ni vulnerabilites:administrer, ni le rôle
+    Administrateur. Les autres personnes ne peuvent que masquer la fenêtre pour leur session. */
+export const ROLE_PRISE_EN_COMPTE_ALERTE: SystemRole = 'rssi';
+export const PRISE_EN_COMPTE_RESERVEE = 'Seul le RSSI peut prendre en compte une alerte.';
+
 /* ------------------------------------------------------------------ Bornes */
 /** Alertes critiques listées dans la fenêtre (la plus récente en tête). */
 export const ALERTES_FENETRE_MAX = 5;
-/** Alertes simples notifiées par évaluation (les critiques le sont toujours) : au-delà, elles sont ouvertes et listées dans
-    l'onglet « Alertes », sans notification, pour ne pas inonder les personnes (choix de la session, à confirmer). */
-export const ALERTES_SIMPLES_NOTIFIEES_MAX = 20;
 export const ALERTES_PAR_PAGE = 50;
 
 /* ------------------------------------------------------------------ Échanges avec l'API */
@@ -232,7 +270,7 @@ export interface AlerteVulnerabiliteDto {
   majLe: string;
   priseEnCompte: { par: string; le: string } | null;
   cloture: { le: string; motif: MotifClotureAlerte } | null;
-  /** La notification de son dernier niveau est partie (false : au-delà du plafond des alertes simples). */
+  /** La notification de son dernier niveau est partie (individuelle pour une critique, dans le résumé pour une simple). */
   notifiee: boolean;
   /** Machines touchées que la personne lit (alerte close : celles du dernier état connu ne sont plus comptées). */
   machines: NombreLisible;
@@ -248,6 +286,8 @@ export interface PageAlertesVulnerabilites {
   total: number;
   page: number;
   parPage: number;
+  /** La personne tient le rôle RSSI (ROLE_PRISE_EN_COMPTE_ALERTE) : elle peut prendre une alerte en compte. */
+  peutPrendreEnCompte: boolean;
 }
 
 /** Fenêtre d'alerte critique : alertes critiques ouvertes, pas encore prises en compte, la plus récente en tête (bornées). */
@@ -257,7 +297,7 @@ export interface FenetreAlertesDto {
   total: number;
   /** Alertes critiques en cours (ouvertes ou prises en compte, non closes) : rappel de l'en-tête du module. */
   enCours: number;
-  /** La personne peut prendre une alerte en compte (vulnerabilites:modifier). */
+  /** La personne tient le rôle RSSI (ROLE_PRISE_EN_COMPTE_ALERTE) : elle peut prendre une alerte en compte. */
   peutPrendreEnCompte: boolean;
 }
 

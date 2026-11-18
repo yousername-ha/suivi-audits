@@ -1,9 +1,14 @@
-/* Module Vulnérabilités (ADR 0100, lot V6) : alertes décidées par la plateforme. Migration 086 sur base vierge.
+/* Module Vulnérabilités (ADR 0100, lots V6 et V6b) : alertes décidées par la plateforme. Migration 086 sur base vierge.
    - Déclenchement à la fin d'une synchronisation de Tenable, d'une collecte de la veille et d'une synchronisation
-     d'AlgoLightHouse : alerte critique (P1, faille exploitée présente), alerte simple (P2), rien pour P3 et P4.
+     d'AlgoLightHouse : alerte critique (P1, faille exploitée présente) ; alerte simple seulement pour une faille P2
+     exploitable ET exposée directement sur Internet (décision du RSSI du 18/11/2026) ; rien pour une P2 interne seulement
+     ou non exploitable, ni pour P3 et P4.
    - Une seule alerte par faille (CVE, ou constat sans CVE), mise à jour sans rejeu, montée notifiée une fois, clôture
-     automatique avec son motif (faille traitée, plus présente).
-   - Prise en compte par alerte : droits (`modifier`), If-Match, journal, fenêtre retirée pour tout le monde.
+     automatique avec son motif (faille traitée, plus présente, sous le seuil : alerte simple devenue hors règle).
+   - Notifications : une par alerte critique ; un seul résumé par évaluation pour les alertes simples, aucun quand il n'y
+     en a pas, aucune notification individuelle d'alerte simple.
+   - Prise en compte par alerte, réservée au rôle « RSSI » (direct ou par un groupe) : 403 pour la lecture, le droit de
+     modifier et l'administrateur ; If-Match, journal, fenêtre retirée pour tout le monde.
    - Lecture seule ; nombres limités à ce que la personne lit ; non-fuite des noms (machines, adresses, périmètres,
      domaines) dans l'API, la notification et le courriel.
    - Module désactivé : rien n'est créé ni affiché ; une évaluation en échec ne fait pas échouer la synchronisation.
@@ -15,7 +20,7 @@ const V = '/api/vulnerabilites';
 const A = `${V}/alertes`;
 const SYSTEME = { username: 'test' };
 let t: TestApp;
-let admin: Agent, lecteurA: Agent, lecteurB: Agent, editeurA: Agent, sansDroit: Agent;
+let admin: Agent, lecteurA: Agent, lecteurB: Agent, editeurA: Agent, sansDroit: Agent, rssi: Agent, rssiGroupe: Agent;
 const ids: Record<string, string> = {};
 let perimA: string, perimB: string, tenable: string, alh: string;
 
@@ -40,7 +45,7 @@ const machine = (n: number) => ({
   exposition: 'internal',
   acr: 4,
 });
-const constat = (plugin: string, cves: string[], gravite: string) => ({
+const constat = (plugin: string, cves: string[], gravite: string, exploitable = false) => ({
   type: 'constat',
   plugin,
   nom: `Produit fictif : contrôle fictif ${plugin}`,
@@ -52,7 +57,7 @@ const constat = (plugin: string, cves: string[], gravite: string) => ({
   cvss3Score: null,
   vpr: null,
   epss: null,
-  exploitable: false,
+  exploitable,
   exploitLibelle: null,
   failleLe: null,
   correctifLe: null,
@@ -87,8 +92,10 @@ const bilanTenable = (el: Record<string, unknown>[]) => {
     inventaire: { ok: true, erreur: null },
   };
 };
-/** Parc : machine 1 (A), 2 (B). 910001 (CVE 91001, KEV) sur 1 et 2 : P1 ; 910002 (CVE 91002, critique) sur 1 : P2 ;
-    910003 (CVE 91003, moyenne) sur 2 : P4 ; 910004 (sans CVE, critique) sur 2 : P2. */
+/** Parc : machine 1 (A), 2 (B). 910001 (CVE 91001, KEV) sur 1 et 2 : P1 ; 910002 (CVE 91002, critique, non exploitable)
+    sur 1 : P2 ; 910003 (CVE 91003, moyenne) sur 2 : P4 ; 910004 (sans CVE, critique) sur 2 : P2 ; 910007 et 910008 (CVE
+    91007 et 91008, critiques, exploitables selon Tenable) sur 1 : P2 exploitables, internes tant qu'AlgoLightHouse ne les
+    expose pas. */
 const parc = (sans: string[] = []): Record<string, unknown>[] =>
   [
     machine(1),
@@ -97,11 +104,15 @@ const parc = (sans: string[] = []): Record<string, unknown>[] =>
     constat('910002', ['CVE-2026-91002'], 'critique'),
     constat('910003', ['CVE-2026-91003'], 'moyenne'),
     constat('910004', [], 'critique'),
+    constat('910007', ['CVE-2026-91007'], 'critique', true),
+    constat('910008', ['CVE-2026-91008'], 'critique', true),
     detection('910001', 1),
     detection('910001', 2),
     detection('910002', 1),
     detection('910003', 2),
     detection('910004', 2),
+    detection('910007', 1),
+    detection('910008', 1),
   ].filter((e) => !sans.includes(String((e as { plugin?: string }).plugin)));
 
 async function synchroniser(instance: string, elements: Record<string, unknown>[], resultat: unknown) {
@@ -225,12 +236,14 @@ const alerteDe = async (cle: string, etat = "etat <> 'close'") =>
   ))!;
 const notifications = async (kind: string, cleDue?: string) =>
   (
-    await t.svc.db.q<{ user_id: string; title: string; message: string }>(
-      `SELECT user_id, title, message FROM grc_notifications WHERE kind = $1 AND ($2::text IS NULL OR due_key = $2)
-       ORDER BY user_id`,
+    await t.svc.db.q<{ user_id: string; title: string; message: string; due_key: string }>(
+      `SELECT user_id, title, message, due_key FROM grc_notifications WHERE kind = $1 AND ($2::text IS NULL OR due_key = $2)
+       ORDER BY created_at, user_id`,
       [kind, cleDue ?? null],
     )
   ).rows;
+/** Comptes actifs qui lisent le module (destinataires des notifications). */
+const lecteursDuModule = () => [ids.admin, ids.lecteurA, ids.lecteurB, ids.editeurA, ids.rssi, ids.rssiGroupe].sort();
 let depuis = 0;
 const audits = async (action: string) =>
   (
@@ -305,7 +318,15 @@ beforeAll(async () => {
     lecteurB: await makeUser(t, 'al_lecteur_b', 'r_al_lire', { rattache: false }),
     editeurA: await makeUser(t, 'al_editeur_a', 'r_al_modif', { rattache: false }),
     sansDroit: await makeUser(t, 'al_sans_droit', 'rw'),
+    // Rôle prédéfini « RSSI » : directement, ou par un groupe (décision B du 18/11/2026).
+    rssi: await makeUser(t, 'al_rssi', 'rssi', { rattache: false }),
+    rssiGroupe: await makeUser(t, 'al_rssi_groupe', null, { rattache: false }),
   };
+  const groupe = (await t.svc.db.one<{ id: string }>(
+    "INSERT INTO groups(name) VALUES ('Groupe fictif RSSI') RETURNING id",
+  ))!.id;
+  await t.svc.db.q("INSERT INTO group_roles(group_id, role_id) VALUES ($1, 'rssi')", [groupe]);
+  await t.svc.db.q('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [u.rssiGroupe.id, groupe]);
   await t.svc.db.q(
     `INSERT INTO grc_members(smsi_id, user_id, can_write) VALUES ($1, $3, false), ($2, $4, false), ($1, $5, true)`,
     [perimA, perimB, u.lecteurA.id, u.lecteurB.id, u.editeurA.id],
@@ -318,6 +339,8 @@ beforeAll(async () => {
   lecteurB = await login(t, u.lecteurB);
   editeurA = await login(t, u.editeurA);
   sansDroit = await login(t, u.sansDroit);
+  rssi = await login(t, u.rssi);
+  rssiGroupe = await login(t, u.rssiGroupe);
   tenable = await creerInstance(
     'tenable',
     'Tenable fictif',
@@ -340,38 +363,31 @@ afterAll(async () => {
   if (t) await t.close();
 });
 
-describe('lot V6 : alertes décidées par la plateforme', () => {
-  it('fin de synchronisation de Tenable : critique pour P1, simple pour P2, rien pour P3 et P4', async () => {
+describe('lots V6 et V6b : alertes décidées par la plateforme', () => {
+  it('fin de synchronisation de Tenable : critique pour P1 ; rien pour une P2 interne seulement, ni pour P3 et P4', async () => {
     await marquer();
     expect(await enBase()).toEqual([]);
     await syncTenable(parc());
-    const lignes = await enBase();
-    const constat4 = (await t.svc.db.one<{ id: string }>(
-      'SELECT id FROM vulnerabilites_constats WHERE plugin_id = 910004',
-    ))!.id;
-    expect(lignes.map((l) => [l.cle, l.niveau, l.etat]).sort()).toEqual(
-      [
-        ['CVE-2026-91001', 'critique', 'ouverte'],
-        ['CVE-2026-91002', 'simple', 'ouverte'],
-        [`constat:${constat4}`, 'simple', 'ouverte'],
-      ].sort(),
-    );
+    // 91002 (P2 non exploitable), 91007 et 91008 (P2 exploitables) et le constat sans CVE (P2) ne sont présents que sur
+    // des machines internes : aucune alerte simple (décision du RSSI du 18/11/2026).
+    expect((await enBase()).map((l) => [l.cle, l.niveau, l.etat])).toEqual([['CVE-2026-91001', 'critique', 'ouverte']]);
     const ouvertes = await audits('vulnerabilites.alerte.ouverte');
-    expect(ouvertes).toHaveLength(3);
+    expect(ouvertes).toHaveLength(1);
     for (const a of ouvertes) {
       expect(a.username).toBe('système');
       expect(a.details.declencheur).toBe('synchronisation-tenable');
       sansNom(JSON.stringify(a));
     }
-    // Notifications : une par personne qui lit le module (admin, lecteurs, éditeur), aucune pour qui ne le lit pas.
+    // Notifications : une par personne qui lit le module, aucune pour qui ne le lit pas.
     const critique = await alerteDe('CVE-2026-91001');
     const notes = await notifications('vulnerabilites_alerte_critique', `${critique.id}:critique`);
-    expect(notes.map((n) => n.user_id).sort()).toEqual([ids.admin, ids.lecteurA, ids.lecteurB, ids.editeurA].sort());
+    expect(notes.map((n) => n.user_id).sort()).toEqual(lecteursDuModule());
     for (const n of notes) {
       expect(n.title).toBe('Alerte critique : CVE-2026-91001 (Produit fictif)');
       sansNom(n.title + n.message);
     }
-    expect(await notifications('vulnerabilites_alerte')).toHaveLength(8);
+    // Aucune alerte simple : aucun résumé (n vaut 0), aucune notification individuelle.
+    expect(await notifications('vulnerabilites_alerte')).toEqual([]);
     expect(
       (await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM grc_notifications WHERE user_id = $1', [
         ids.sansDroit,
@@ -410,11 +426,18 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
     });
     expect((await fenetre(lecteurB)).alertes[0]!.machines).toEqual({ lisibles: 1, horsLecture: true });
     expect((await fenetre(admin)).alertes[0]!.machines).toEqual({ lisibles: 2, horsLecture: false });
-    expect((await fenetre(editeurA)).peutPrendreEnCompte).toBe(true);
-    // Liste : critiques en tête ; filtre par niveau ; fiche avec ETag.
+    // Prise en compte : rôle RSSI seulement (direct ou par un groupe) ; ni le droit de modifier, ni l'administrateur.
+    expect((await fenetre(editeurA)).peutPrendreEnCompte).toBe(false);
+    expect((await fenetre(admin)).peutPrendreEnCompte).toBe(false);
+    expect((await fenetre(rssi)).peutPrendreEnCompte).toBe(true);
+    expect((await fenetre(rssiGroupe)).peutPrendreEnCompte).toBe(true);
+    // Liste : critiques en tête ; filtre par niveau ; fiche avec ETag ; la liste dit aussi qui peut prendre en compte.
     const l = await liste(lecteurA);
-    expect(l.map((x) => x.niveau)).toEqual(['critique', 'simple', 'simple']);
-    expect((await liste(lecteurA, '?niveau=simple')).length).toBe(2);
+    expect(l.map((x) => x.niveau)).toEqual(['critique']);
+    expect((await liste(lecteurA, '?niveau=simple')).length).toBe(0);
+    expect((await lecteurA.get(A)).json().peutPrendreEnCompte).toBe(false);
+    expect((await editeurA.get(A)).json().peutPrendreEnCompte).toBe(false);
+    expect((await rssi.get(A)).json().peutPrendreEnCompte).toBe(true);
     expect((await lecteurA.get(`${A}?etat=inconnu`)).statusCode).toBe(422);
     const f = await lecteurA.get(`${A}/${l[0]!.id}`);
     expect(f.statusCode).toBe(200);
@@ -432,47 +455,101 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
     sansNom(JSON.stringify(rappels));
   });
 
-  it('prise en compte : modifier seulement, If-Match, journal, fenêtre retirée pour tout le monde', async () => {
+  it('prise en compte : rôle RSSI seulement (403 sinon, administrateur compris), If-Match, journal, fenêtre retirée', async () => {
     await marquer();
     const c = await alerteDe('CVE-2026-91001');
     const url = `${A}/${c.id}/prise-en-compte`;
-    expect((await lecteurA.post(url, {}, ifMatch(c.version))).statusCode).toBe(403);
-    expect((await editeurA.post(url, {})).statusCode).toBe(428);
-    expect((await editeurA.post(url, {}, ifMatch(c.version + 5))).statusCode).toBe(412);
-    const r = await editeurA.post(url, {}, ifMatch(c.version));
+    for (const autre of [lecteurA, editeurA, admin]) {
+      const r = await autre.post(url, {}, ifMatch(c.version));
+      expect(r.statusCode, r.body).toBe(403);
+      expect(r.json().error).toBe('Seul le RSSI peut prendre en compte une alerte.');
+    }
+    expect((await sansDroit.post(url, {}, ifMatch(c.version))).statusCode).toBe(403);
+    expect((await alerteDe('CVE-2026-91001')).version).toBe(c.version);
+    expect(await audits('vulnerabilites.alerte.prise_en_compte')).toEqual([]);
+    expect((await rssi.post(url, {})).statusCode).toBe(428);
+    expect((await rssi.post(url, {}, ifMatch(c.version + 5))).statusCode).toBe(412);
+    const r = await rssi.post(url, {}, ifMatch(c.version));
     expect(r.statusCode, r.body).toBe(200);
-    expect(r.json()).toMatchObject({ etat: 'prise_en_compte', priseEnCompte: { par: 'Nom al_editeur_a' } });
+    expect(r.json()).toMatchObject({ etat: 'prise_en_compte', priseEnCompte: { par: 'Nom al_rssi' } });
     expect(r.headers.etag).toBe(`"${c.version + 1}"`);
     const j = await audits('vulnerabilites.alerte.prise_en_compte');
     expect(j).toEqual([
       {
-        username: 'al_editeur_a',
+        username: 'al_rssi',
         target: c.id,
         details: { cle: 'CVE-2026-91001', niveau: 'critique', version: c.version + 1 },
       },
     ]);
-    for (const a of [admin, lecteurA, lecteurB, editeurA]) {
+    for (const a of [admin, lecteurA, lecteurB, editeurA, rssi, rssiGroupe]) {
       const f = await fenetre(a);
       expect(f.alertes).toEqual([]);
       expect(f.total).toBe(0);
       expect(f.enCours).toBe(1);
     }
-    expect((await editeurA.post(url, {}, ifMatch(c.version + 1))).statusCode).toBe(409);
+    // Le RSSI tenu par un groupe : même droit (ici, l'alerte est déjà prise en compte).
+    expect((await rssiGroupe.post(url, {}, ifMatch(c.version + 1))).statusCode).toBe(409);
+    expect((await rssi.post(url, {}, ifMatch(c.version + 1))).statusCode).toBe(409);
     // Une synchronisation identique ne la rouvre pas.
     await syncTenable(parc());
     expect((await alerteDe('CVE-2026-91001')).version).toBe(c.version + 1);
     expect((await fenetre(admin)).alertes).toEqual([]);
   });
 
+  it('exposition directe sur Internet : alerte simple pour une P2 exploitable et exposée ; un seul résumé notifié', async () => {
+    await marquer();
+    // L'actif exposé porte 91002 (P2, non exploitable), 91007 et 91008 (P2, exploitables selon Tenable).
+    const el = surface(['CVE-2026-91002', 'CVE-2026-91007', 'CVE-2026-91008']);
+    await synchroniser(alh, el, bilanAlh(el));
+    const ouvertes = (await enBase()).filter((l) => l.etat !== 'close');
+    expect(ouvertes.map((l) => [l.cle, l.niveau]).sort()).toEqual([
+      ['CVE-2026-91001', 'critique'],
+      ['CVE-2026-91007', 'simple'],
+      ['CVE-2026-91008', 'simple'],
+    ]);
+    const simple = (await liste(lecteurA, '?niveau=simple')).find((x) => x.cve === 'CVE-2026-91007')!;
+    expect(simple).toMatchObject({
+      niveau: 'simple',
+      priorite: { niveau: 'P2' },
+      presences: ['detectee', 'exposee'],
+      notifiee: true,
+    });
+    // Un seul résumé par personne pour cette évaluation, aucune notification individuelle d'alerte simple.
+    const resumes = await notifications('vulnerabilites_alerte');
+    expect(resumes.map((n) => n.user_id).sort()).toEqual(lecteursDuModule());
+    expect(new Set(resumes.map((n) => n.due_key)).size).toBe(1);
+    for (const n of resumes) {
+      expect(n.due_key).toMatch(/^resume:[0-9a-f-]{36}$/);
+      expect(n.title).toBe('Vulnérabilités : 2 nouvelles alertes');
+      expect(n.title + n.message).not.toContain('CVE-');
+      sansNom(n.title + n.message);
+    }
+    expect(
+      (await t.svc.db.one<{ n: number }>(
+        "SELECT count(*)::int AS n FROM grc_notifications WHERE kind LIKE 'vulnerabilites_%' AND due_key LIKE '%:simple'",
+      ))!.n,
+    ).toBe(0);
+    // Rappels : le résumé mène à l'onglet « Alertes » filtré sur les alertes simples ouvertes.
+    const rappels = (await lecteurA.get('/api/grc/notifications')).json() as { kind: string; lien?: string }[];
+    const r = rappels.filter((x) => x.kind === 'vulnerabilites_alerte');
+    expect(r).toHaveLength(1);
+    expect(r[0]!.lien).toBe('/vulnerabilites/alertes?niveau=simple&etat=ouverte');
+    sansNom(JSON.stringify(rappels));
+    // Même synchronisation : ni nouvelle alerte, ni nouveau résumé.
+    await synchroniser(alh, el, bilanAlh(el));
+    expect(await notifications('vulnerabilites_alerte')).toHaveLength(resumes.length);
+  });
+
   it('fin de collecte de la veille : une alerte simple devient critique, notifiée une fois', async () => {
     await marquer();
-    const s = await alerteDe('CVE-2026-91002');
+    const s = await alerteDe('CVE-2026-91007');
+    const resumes = (await notifications('vulnerabilites_alerte')).length;
     await t.svc.db.q(
       "INSERT INTO vulnerabilites_veille_collectes (source, origine, demande_par) VALUES ('cisa-kev', 'manuel', 'test')",
     );
     const job = (await t.svc.vulnerabilites.veille.reclamer(true))!;
     const element = {
-      cve: 'CVE-2026-91002',
+      cve: 'CVE-2026-91007',
       editeur: 'Éditeur fictif',
       produit: 'Produit fictif',
       nom: 'Fictional Product Vulnerability',
@@ -488,16 +565,17 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
       bilan: { elements: 1, ecartes: 0, tronque: false, detailsEchoues: 0 },
       erreur: null,
     });
-    const apres = await alerteDe('CVE-2026-91002');
+    const apres = await alerteDe('CVE-2026-91007');
     expect(apres.id).toBe(s.id);
-    const ligne = (await enBase()).find((l) => l.cle === 'CVE-2026-91002')!;
+    const ligne = (await enBase()).find((l) => l.cle === 'CVE-2026-91007')!;
     expect(ligne).toMatchObject({ niveau: 'critique', etat: 'ouverte' });
     const niveau = await audits('vulnerabilites.alerte.niveau');
     expect(niveau).toHaveLength(1);
     expect(niveau[0]!.details).toMatchObject({ avant: 'simple', apres: 'critique', declencheur: 'collecte-cisa-kev' });
-    expect((await notifications('vulnerabilites_alerte_critique', `${s.id}:critique`)).length).toBe(4);
+    expect((await notifications('vulnerabilites_alerte_critique', `${s.id}:critique`)).length).toBe(6);
+    expect(await notifications('vulnerabilites_alerte')).toHaveLength(resumes);
     const f = await fenetre(lecteurA);
-    expect(f.alertes.map((a) => a.cve)).toEqual(['CVE-2026-91002']);
+    expect(f.alertes.map((a) => a.cve)).toEqual(['CVE-2026-91007']);
     expect(f.enCours).toBe(2);
     // Collecte suivante, mêmes faits : rien de rejoué.
     await t.svc.db.q(
@@ -510,12 +588,13 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
       bilan: { elements: 1, ecartes: 0, tronque: false, detailsEchoues: 0 },
       erreur: null,
     });
-    expect((await notifications('vulnerabilites_alerte_critique', `${s.id}:critique`)).length).toBe(4);
+    expect((await notifications('vulnerabilites_alerte_critique', `${s.id}:critique`)).length).toBe(6);
     expect(await audits('vulnerabilites.alerte.niveau')).toHaveLength(1);
   });
 
-  it('clôture automatique avec son motif : faille traitée, puis faille disparue', async () => {
+  it('clôture automatique avec son motif : faille traitée, alerte simple devenue hors règle, faille disparue', async () => {
     await marquer();
+    const notes = (await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM grc_notifications'))!.n;
     const c1 = (await t.svc.db.one<{ id: string }>('SELECT id FROM vulnerabilites_constats WHERE plugin_id = 910001'))!
       .id;
     const s = await admin.get(`${V}/suivis/constat/${c1}`);
@@ -529,33 +608,50 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
       etat: 'close',
       motif_cloture: 'traitee',
     });
-    // Synchronisation complète sans le constat 910002 : la faille n'est plus présente.
-    await syncTenable(parc(['910002']));
-    expect((await enBase()).find((l) => l.cle === 'CVE-2026-91002')).toMatchObject({
+    // 91008 n'est plus exposée (encore présente en P2 exploitable sur la machine interne) : l'alerte simple se clôt, sous
+    // le seuil (décision du RSSI du 18/11/2026).
+    const sans8 = surface(['CVE-2026-91002', 'CVE-2026-91007']);
+    await synchroniser(alh, sans8, bilanAlh(sans8));
+    expect((await enBase()).find((l) => l.cle === 'CVE-2026-91008')).toMatchObject({
+      niveau: 'simple',
+      etat: 'close',
+      motif_cloture: 'sous_le_seuil',
+    });
+    // 91007 n'est plus exposée ni détectée : la faille n'est plus présente.
+    const vide = surface([]);
+    await synchroniser(alh, vide, bilanAlh(vide));
+    expect((await enBase()).find((l) => l.cle === 'CVE-2026-91007')).toMatchObject({ etat: 'ouverte' });
+    await syncTenable(parc(['910007']));
+    expect((await enBase()).find((l) => l.cle === 'CVE-2026-91007')).toMatchObject({
       etat: 'close',
       motif_cloture: 'plus_presente',
     });
     const closes = await audits('vulnerabilites.alerte.close');
     expect(closes.map((x) => [x.details.cle, x.details.motif])).toEqual([
       ['CVE-2026-91001', 'traitee'],
-      ['CVE-2026-91002', 'plus_presente'],
+      ['CVE-2026-91008', 'sous_le_seuil'],
+      ['CVE-2026-91007', 'plus_presente'],
     ]);
+    // Une clôture ne notifie personne.
+    expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM grc_notifications'))!.n).toBe(notes);
     const l = await liste(lecteurA, '?etat=close');
     expect(l.map((x) => [x.cve, x.cloture?.motif])).toEqual(
       expect.arrayContaining([
         ['CVE-2026-91001', 'traitee'],
-        ['CVE-2026-91002', 'plus_presente'],
+        ['CVE-2026-91008', 'sous_le_seuil'],
+        ['CVE-2026-91007', 'plus_presente'],
       ]),
     );
     // Close : plus rien n'est compté ni prenable en compte.
-    const close = l.find((x) => x.cve === 'CVE-2026-91002')!;
+    const close = l.find((x) => x.cve === 'CVE-2026-91007')!;
     expect(close.machines).toEqual({ lisibles: 0, horsLecture: false });
-    expect((await editeurA.post(`${A}/${close.id}/prise-en-compte`, {}, ifMatch(close.version))).statusCode).toBe(409);
+    expect((await rssi.post(`${A}/${close.id}/prise-en-compte`, {}, ifMatch(close.version))).statusCode).toBe(409);
     expect((await fenetre(admin)).enCours).toBe(0);
-    // La faille revient : une nouvelle alerte, la précédente reste close.
+    // La faille revient : une nouvelle alerte, la précédente reste close. 91008, interne seulement : aucune alerte.
     await syncTenable(parc());
-    const toutes = (await enBase()).filter((x) => x.cle === 'CVE-2026-91002');
+    const toutes = (await enBase()).filter((x) => x.cle === 'CVE-2026-91007');
     expect(toutes.map((x) => x.etat)).toEqual(['close', 'ouverte']);
+    expect((await enBase()).filter((x) => x.cle === 'CVE-2026-91008').map((x) => x.etat)).toEqual(['close']);
   });
 
   it('exposition sur Internet (AlgoLightHouse) : présence exposée, nombres lisibles, aucun domaine ni adresse', async () => {
@@ -581,15 +677,15 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
     );
   });
 
-  it('majoration du lot ALH5 : une faille exposée P2 qui mène à une machine vulnérable devient critique', async () => {
+  it('majoration du lot ALH5 : une faille exposée P2 non exploitable n’alerte pas ; menant à une machine vulnérable, elle devient critique', async () => {
     await marquer();
-    // CVE critique selon NVD, sans exploitation : exposée, P2 (alerte simple).
+    // CVE critique selon NVD, sans exploitation ni code d'exploitation connu : exposée, P2, non exploitable : aucune alerte.
     await t.svc.db.q(
       `INSERT INTO vulnerabilites_veille_cve (cve, cvss31_gravite, cvss31_score, nvd_le) VALUES ('CVE-2026-91006', 'CRITICAL', 9.8, now())`,
     );
     const el = surface(['CVE-2026-91005', 'CVE-2026-91006']);
     await synchroniser(alh, el, bilanAlh(el));
-    expect((await enBase()).find((l) => l.cle === 'CVE-2026-91006')).toMatchObject({ niveau: 'simple' });
+    expect((await enBase()).some((l) => l.cle === 'CVE-2026-91006')).toBe(false);
     // Liaison confirmée de l'hôte exposé vers la machine 1, qui porte une faille présente en P1 : un cran de plus.
     const actif = (await t.svc.db.one<{ id: string }>('SELECT id FROM vulnerabilites_alh_actifs WHERE alh_id = $1', [
       U(11),
@@ -608,13 +704,13 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
     const a = (await liste(admin)).find((x) => x.cve === 'CVE-2026-91006')!;
     expect(a).toMatchObject({ niveau: 'critique', priorite: { niveau: 'P1' }, presences: ['exposee'] });
     expect(JSON.stringify(a)).toContain('machine_interne_vulnerable');
-    const niveau = await audits('vulnerabilites.alerte.niveau');
-    expect(niveau.map((x) => [x.details.cle, x.details.apres, x.details.declencheur])).toEqual([
+    const ouvertes = await audits('vulnerabilites.alerte.ouverte');
+    expect(ouvertes.map((x) => [x.details.cle, x.details.niveau, x.details.declencheur])).toEqual([
       ['CVE-2026-91006', 'critique', 'liaison-manuelle'],
     ]);
   });
 
-  it('courriel : niveau, CVE, produit et lien seulement', async () => {
+  it('courriel : niveau, CVE, produit et lien pour une critique ; nombre et lien filtré pour le résumé', async () => {
     const g = await admin.get('/api/settings/courriel');
     expect(
       (
@@ -629,27 +725,48 @@ describe('lot V6 : alertes décidées par la plateforme', () => {
     const r0 = await admin.get(url);
     const r = await admin.put(
       url,
-      { changements: [{ type: 'vulnerabilites_alerte_critique', canal: 'courriel', valeur: true }] },
+      {
+        changements: [
+          { type: 'vulnerabilites_alerte_critique', canal: 'courriel', valeur: true },
+          { type: 'vulnerabilites_alerte', canal: 'courriel', valeur: true },
+        ],
+      },
       { 'if-match': (r0.headers.etag as string | undefined) ?? '"0"' },
     );
     expect(r.statusCode, r.body).toBe(200);
     await kev('CVE-2026-91003');
     await syncTenable(parc());
     const nouvelle = await alerteDe('CVE-2026-91003');
-    const jobs = (
-      await t.svc.db.q<{ user_id: string; subject: string; body: string }>(
-        `SELECT j.user_id, j.subject, j.body FROM courriel_jobs j JOIN grc_notifications n ON n.id = j.notification_id
-         WHERE n.due_key = $1 ORDER BY j.user_id`,
-        [`${nouvelle.id}:critique`],
-      )
-    ).rows;
-    // Rôle « lecture » : les deux lecteurs ; l'éditeur et l'administrateur n'ont pas choisi le courriel.
+    const courriels = async (cle: string) =>
+      (
+        await t.svc.db.q<{ user_id: string; subject: string; body: string }>(
+          `SELECT j.user_id, j.subject, j.body FROM courriel_jobs j JOIN grc_notifications n ON n.id = j.notification_id
+           WHERE n.due_key = $1 ORDER BY j.user_id`,
+          [cle],
+        )
+      ).rows;
+    const jobs = await courriels(`${nouvelle.id}:critique`);
+    // Rôle « lecture » : les deux lecteurs ; les autres n'ont pas choisi le courriel.
     expect(jobs.map((j) => j.user_id).sort()).toEqual([ids.lecteurA, ids.lecteurB].sort());
     for (const j of jobs) {
       expect(j.subject).toContain('Vulnérabilités : alerte critique');
       expect(j.body).toContain('CVE-2026-91003');
       expect(j.body).toContain('Produit fictif');
       expect(j.body).toContain('https://suivi.test/vulnerabilites/alertes');
+      sansNom(j.subject + j.body);
+    }
+    // 91008 de nouveau exposée (P2, exploitable selon Tenable) : une alerte simple, un résumé, sans CVE ni nom.
+    const el = surface(['CVE-2026-91005', 'CVE-2026-91006', 'CVE-2026-91008']);
+    await synchroniser(alh, el, bilanAlh(el));
+    const resume = (await notifications('vulnerabilites_alerte')).at(-1)!;
+    expect(resume.title).toBe('Vulnérabilités : 1 nouvelle alerte');
+    const jobsResume = await courriels(resume.due_key);
+    expect(jobsResume.map((j) => j.user_id).sort()).toEqual([ids.lecteurA, ids.lecteurB].sort());
+    for (const j of jobsResume) {
+      expect(j.subject).toContain('Vulnérabilités : alerte');
+      expect(j.body).toContain('Vulnérabilités : 1 nouvelle alerte');
+      expect(j.body).toContain('https://suivi.test/vulnerabilites/alertes?niveau=simple&etat=ouverte');
+      expect(j.body).not.toContain('CVE-');
       sansNom(j.subject + j.body);
     }
   });

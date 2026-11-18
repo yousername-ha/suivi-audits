@@ -2,8 +2,10 @@ import {
   CalendrierBody,
   fenetreOccurrence,
   ICAL_MAX_JOURS,
+  LIEN_RESUME_ALERTES,
   lireIcs,
   NOTIFICATION_TYPES_VULNERABILITES,
+  PREFIXE_RESUME_ALERTES,
   recurrenceSlot,
   SeriesData,
   type ApercuCalendrier,
@@ -545,9 +547,15 @@ export class GrcTasks {
     const vulnerabilites = user.rights.can('vulnerabilites', 'lire');
     for (const r of rows)
       if ((NOTIFICATION_TYPES_VULNERABILITES as readonly string[]).includes(r.kind)) {
-        // Lien vers la fiche de l'alerte (identifiant interne, avant « : » dans la clé de la notification).
+        // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré ; sinon, fiche de l'alerte (identifiant interne,
+        // avant « : » dans la clé de la notification).
         if (vulnerabilites && r.dueKey)
-          visible.push({ ...r, lien: `/vulnerabilites/alertes?alerte=${encodeURIComponent(r.dueKey.split(':')[0]!)}` });
+          visible.push({
+            ...r,
+            lien: r.dueKey.startsWith(PREFIXE_RESUME_ALERTES)
+              ? LIEN_RESUME_ALERTES
+              : `/vulnerabilites/alertes?alerte=${encodeURIComponent(r.dueKey.split(':')[0]!)}`,
+          });
       } else if (
         r.smsiId &&
         r.objectId &&

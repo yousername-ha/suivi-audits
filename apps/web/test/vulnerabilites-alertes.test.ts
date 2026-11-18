@@ -10,7 +10,12 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 import { FAMILLES } from '../src/navigation';
-import { AlertesTable, FicheAlerte, RappelAlertesCritiquesVue } from '../src/vulnerabilites/Alertes';
+import {
+  AlertesTable,
+  FicheAlerte,
+  filtresDepuisAdresse,
+  RappelAlertesCritiquesVue,
+} from '../src/vulnerabilites/Alertes';
 import { FenetreAlerteCritiqueVue } from '../src/vulnerabilites/FenetreAlerteCritique';
 import {
   lienFicheAlerte,
@@ -135,13 +140,17 @@ describe('fenêtre d’alerte critique', () => {
     expect(expo).toContain('Actifs exposés0que vous pouvez lire, et d’autres hors de vos droits');
   });
 
-  it('boutons selon les droits : modifier, ou lecture seule', () => {
+  it('boutons selon le rôle RSSI (décision du 18/11/2026) : prise en compte, ou fermeture pour la session', () => {
     expect(boutons(fenetre())).toEqual(['Pris en compte', 'Plus tard', 'Ouvrir la fiche']);
     expect(texte(fenetre())).toContain('La prise en compte vaut pour tout le monde et elle est tracée');
-    const lecture = fenetre({ peutPrendreEnCompte: false });
-    expect(boutons(lecture)).toEqual(['Fermer pour cette session', 'Ouvrir la fiche']);
-    expect(texte(lecture)).toContain('réapparaît à votre prochaine connexion');
-    expect(lecture).not.toMatch(/Pris en compte/);
+    expect(texte(fenetre())).toContain('Seul le RSSI peut prendre en compte une alerte.');
+    // Toute autre personne (droit de modifier compris : le serveur répond peutPrendreEnCompte = false).
+    const autre = fenetre({ peutPrendreEnCompte: false });
+    expect(boutons(autre)).toEqual(['Fermer pour cette session', 'Ouvrir la fiche']);
+    expect(texte(autre)).toContain('Seul le RSSI peut prendre en compte une alerte.');
+    expect(texte(autre)).toContain('réapparaît à votre prochaine connexion');
+    expect(autre).not.toMatch(/Pris en compte/);
+    expect(texte(autre)).not.toContain('droit de modifier');
   });
 
   it('plusieurs alertes : une seule fenêtre, la plus récente en tête, les autres listées et le reste compté', () => {
@@ -215,16 +224,18 @@ describe('onglet « Alertes »', () => {
     );
   });
 
-  it('fiche : « Pris en compte » seulement avec le droit de modifier et sur une alerte ouverte', () => {
+  it('fiche : « Pris en compte » seulement pour le RSSI et sur une alerte ouverte', () => {
     const avec = rendre(
       createElement(FicheAlerte, { a: alerte(), peutPrendreEnCompte: true, onPrendreEnCompte: rien }),
     );
     expect(boutons(avec)).toEqual(['Pris en compte']);
+    expect(texte(avec)).toContain('Seul le RSSI peut prendre en compte une alerte.');
     const sans = rendre(
       createElement(FicheAlerte, { a: alerte(), peutPrendreEnCompte: false, onPrendreEnCompte: rien }),
     );
     expect(boutons(sans)).toEqual([]);
-    expect(texte(sans)).toContain('demande le droit de modifier le module Vulnérabilités');
+    expect(texte(sans)).toContain('Seul le RSSI peut prendre en compte une alerte.');
+    expect(texte(sans)).not.toContain('droit de modifier');
     const prise = rendre(
       createElement(FicheAlerte, {
         a: alerte({
@@ -266,6 +277,15 @@ describe('onglet « Alertes »', () => {
     expect(urlPriseEnCompte('a b')).toBe('/api/vulnerabilites/alertes/a%20b/prise-en-compte');
     expect(lienFicheAlerte('x')).toBe('/vulnerabilites/alertes?alerte=x');
   });
+
+  it('filtres repris de l’adresse (lien du résumé des notifications) ; valeur inconnue ignorée', () => {
+    expect(filtresDepuisAdresse(new URLSearchParams('niveau=simple&etat=ouverte'))).toEqual({
+      etat: 'ouverte',
+      niveau: 'simple',
+    });
+    expect(filtresDepuisAdresse(new URLSearchParams('alerte=x'))).toEqual({ etat: null, niveau: null });
+    expect(filtresDepuisAdresse(new URLSearchParams('niveau=P1&etat=inconnu'))).toEqual({ etat: null, niveau: null });
+  });
 });
 
 describe('mise à l’écart pour la session', () => {
@@ -304,8 +324,21 @@ describe('aide et menu', () => {
     const a = HELP_ARTICLES.find((x) => x.id === 'vulnerabilites-alertes')!;
     expect(a.link).toBe('/vulnerabilites/alertes');
     const t = a.steps.join(' ');
-    for (const mot of ['Pris en compte', 'Plus tard', 'Fermer pour cette session', 'Échap', 'P2', 'courriel'])
+    for (const mot of [
+      'Pris en compte',
+      'Plus tard',
+      'Fermer pour cette session',
+      'Échap',
+      'P2',
+      'courriel',
+      'Seul le RSSI peut prendre en compte une alerte',
+      'exposée directement sur Internet',
+      'exploitable',
+      'une seule notification de résumé',
+    ])
       expect(t).toContain(mot);
+    expect(t).not.toContain('vingt au plus');
+    expect(t).not.toContain('seuil à confirmer');
     const pages = FAMILLES.flatMap((f) => f.destinations).find((d) => d.id === 'vulnerabilites')!.rubriques;
     expect(pages.map((p) => p.to)).toContain('/vulnerabilites/alertes');
   });
