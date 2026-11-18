@@ -10,8 +10,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 - La correction de la frise vient de l'exécutant de la version **installée** et de la page du frontal en service : elle
   s'applique aux mises à jour lancées depuis une version qui la contient.
+- De même, la progression réelle du téléchargement n'apparaît qu'à partir des mises à jour lancées depuis une version qui la
+  contient ; la mise à jour qui l'introduit garde la barre animée sans chiffre.
+- Un registre privé (`UPDATER_DOCKER_CONFIG` dans `.env`) garde le téléchargement par `docker pull`, sans progression.
 
 _(Session « Projet audit_suivi Coeur ».)_
+
+### Ajouté
+
+- **Progression réelle du téléchargement sur la page de maintenance**
+  ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md), modifie l'ADR 0020) : l'exécutant tire les trois images
+  par l'API du moteur Docker (socket déjà monté) et publie dans l'état public les octets reçus sur un total fixé avant le début
+  d'après les manifestes du registre (`telechargement: {recu, total}`, au plus une fois par seconde, retiré à la fin, en échec
+  et au redémarrage). La barre de l'illustration se remplit d'autant, avec le pourcentage et les tailles (« 62 % · 180 / 290
+  Mo »), exposés comme barre de progression aux technologies d'assistance ; sans donnée valide, animation décorative et aucun
+  chiffre. Les couches déjà présentes comptent comme reçues dès leur annonce (la barre peut partir au-dessus de zéro). Repli
+  sur `docker pull` sans progression avec des identifiants de registre ou si l'API ne répond pas ; une erreur du flux arrête
+  le téléchargement sans nouvel essai. Vérifications d'empreinte, de signature, de SBOM et de révision inchangées, après le
+  téléchargement des trois images. _(Session « Projet audit_suivi Coeur ».)_
 
 ### Corrigé
 

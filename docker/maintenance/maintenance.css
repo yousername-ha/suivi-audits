@@ -788,6 +788,19 @@ h1 {
   transform-box: fill-box;
   animation: m-transfert 2.6s ease-in-out infinite;
 }
+/* Remplissage mesuré (ADR 0104) : seulement quand l'exécutant publie les octets reçus ; le reflet décoratif est alors retiré.
+   Largeur posée par maintenance.js, sans animation ni transition. */
+.transfer-fill {
+  display: none;
+  fill: var(--m-accent);
+  stroke: none;
+}
+[data-telechargement='mesure'] .transfer-fill {
+  display: inline;
+}
+[data-telechargement='mesure'] .transfer-band {
+  display: none;
+}
 .transfer-marks {
   stroke: var(--m-accent);
   stroke-width: 1;
@@ -1156,6 +1169,9 @@ h1 {
   display: flex;
   align-items: center;
   gap: var(--mantine-spacing-sm);
+}
+.metric-telechargement {
+  grid-column: 1 / -1;
 }
 .metric .icone {
   inline-size: 1.35em;

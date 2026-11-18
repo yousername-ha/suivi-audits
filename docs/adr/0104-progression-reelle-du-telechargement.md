@@ -3,8 +3,9 @@
 - Statut : **acceptée** par le RSSI le 18/11/2026, dans la session (numéro 0104 annoncé et accepté ; « octets réels » retenu).
 - Date : 2026-11-18
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
-- **Modifie** la règle de la page de maintenance « aucune progression artificielle » (refonte Neon, page de maintenance) :
-  la règle reste, mais une progression **mesurée** est désormais affichée pendant le téléchargement.
+- **Modifie** l'[ADR 0020](0020-mise-a-jour-integree.md) (« Le système n'invente aucun pourcentage ») et la règle de la page de
+  maintenance « aucune progression artificielle » (refonte Neon, `docs/refonte-neon/MAINTENANCE-LOT-1.md`) : la règle reste,
+  mais une progression **mesurée** est désormais affichée pendant le téléchargement.
 
 ## Contexte
 
@@ -40,3 +41,20 @@ de mise à jour avant toute vérification de signature et avant l'arrêt de l'ap
   est fait par l'exécutant de la version **installée**, et la page est celle du frontal en service.
 - Sur une connexion rapide, l'étape ne dure que quelques secondes ; la barre est surtout utile sur une connexion lente.
 - Un code de téléchargement de plus dans l'exécutant, couvert par des tests (flux simulé de l'API, repli, bornes).
+
+## Mise en œuvre (18/11/2026)
+
+- **Total** : tailles des couches de la plateforme du moteur (`GET /version` : système et architecture), lues par
+  `docker manifest inspect -v` (CLI déjà présente dans l'exécutant, qui joint déjà le registre pour cosign), une fois par
+  couche partagée entre les trois images. Index sans entrée unique pour cette plateforme, manifeste illisible : repli.
+- **Couches déjà présentes** : ni l'API du moteur ni le registre ne disent, avant le téléchargement, quelles couches le serveur
+  possède déjà ; le flux le dit au début de chaque image (« Already exists »). Pour garder un total fixe, ces couches restent
+  dans le total et comptent comme reçues dès leur annonce : la barre peut partir au-dessus de zéro (écart au point 1, « ne
+  comptent pas », signalé au RSSI). Une image déjà à jour, dont le flux ne décrit aucune couche, compte entière à sa fin.
+- **API du moteur** : chemins sans préfixe de version (version du moteur en service ; un préfixe fixe serait refusé par un
+  moteur trop ancien ou trop récent). Délai de 900 s par image, comme `docker pull`.
+- **Repli** : `DOCKER_CONFIG/config.json` (par défaut `/root/.docker`, monté par `UPDATER_DOCKER_CONFIG`) avec `auths`,
+  `credsStore` ou `credHelpers` non vides, ou illisible ; ou API sans réponse exploitable avant le premier événement du flux
+  (socket absent, statut HTTP autre que 200, première ligne illisible, flux vide) : `docker pull` pour l'image et les suivantes.
+  Une erreur une fois le flux commencé (`error`, flux coupé ou illisible, délai) est un échec, sans nouvel essai : un repli à ce
+  stade retéléchargerait l'image et pourrait masquer la cause ; l'administrateur relance la mise à jour.

@@ -12,7 +12,8 @@
   <body>
     <!-- Refonte Neon, lot 1 « Maintenance Neon » : SVG repris de la maquette validée (géométrie inchangée, couleurs du
          thème). Le décor et les illustrations sont masqués aux technologies d'assistance ; ils découlent de l'état publié
-         et ne simulent aucune progression. -->
+         et ne simulent aucune progression : la barre de transfert ne se remplit que selon les octets reçus publiés par
+         l'exécutant (ADR 0104), exposés aux technologies d'assistance par #telechargement. -->
     <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <symbol id="i-star" viewBox="0 0 24 24">
         <path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z" />
@@ -44,6 +45,9 @@
       </symbol>
       <symbol id="i-rollback" viewBox="0 0 24 24">
         <path d="M4 9h10a6 6 0 1 1-6 6M4 9l5-5M4 9l5 5" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v12m-5-5 5 5 5-5M4 20h16" />
       </symbol>
       <symbol id="i-file" viewBox="0 0 24 24">
         <path d="M5 3h9l5 5v13H5Zm9 0v6h5M9 13h6m-6 4h6" />
@@ -385,6 +389,8 @@
                   <path class="download-particles" d="M210 237v23m60-23v23" />
                   <rect class="transfer-shell" x="152" y="276" width="176" height="28" rx="14" />
                   <g clip-path="url(#transfer-clip)">
+                    <!-- Remplissage mesuré (ADR 0104) : largeur posée par maintenance.js, de 0 à 164 (zone de la barre). -->
+                    <rect id="transfer-fill" class="transfer-fill" x="158" y="282" width="0" height="16" />
                     <rect class="transfer-band" x="82" y="282" width="77" height="16" rx="8" />
                     <path
                       class="transfer-marks"
@@ -533,6 +539,23 @@
                 Nous préparons le retour de votre espace de travail. Vos données sont conservées.
               </p>
               <div class="operation-metrics">
+                <!-- Progression mesurée du téléchargement (ADR 0104), seulement quand l'exécutant la publie. Barre de
+                     progression sans zone annoncée : #message reste la seule lecture automatique. -->
+                <p
+                  id="telechargement"
+                  class="metric metric-telechargement"
+                  role="progressbar"
+                  aria-label="Téléchargement de la nouvelle version"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  hidden
+                >
+                  <svg class="icone" aria-hidden="true"><use href="#i-download" /></svg
+                  ><span
+                    ><span class="metric-label">Téléchargement</span><span class="visually-hidden"> : </span
+                    ><strong id="telechargement-valeur"></strong
+                  ></span>
+                </p>
                 <p id="elapsed" class="metric" hidden>
                   <svg class="icone" aria-hidden="true"><use href="#i-clock" /></svg
                   ><span
