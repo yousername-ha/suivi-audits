@@ -597,6 +597,14 @@ barre animée sans chiffre. Un registre privé (`UPDATER_DOCKER_CONFIG` dans `.e
 
 ### Modifié
 
+- **Assistant RSSI : activation simplifiée** ([ADR 0086](docs/adr/0086-assistant-rssi-integre.md)) : l'écran de réglages tient en quatre gestes (activer, choisir le
+  fournisseur, saisir la clé, choisir le niveau d'habilitation) et un seul bouton « Enregistrer », qui scelle aussi la clé. Trois
+  fournisseurs sont préenregistrés (Mistral AI, OpenAI, Anthropic) avec leur adresse et leurs modèles ; « Personnalisé » garde la
+  saisie libre d'une API compatible. Le niveau d'habilitation s'applique aux deux profils. Budget, profils, périmètres, rondes
+  et autonomie gardent leurs valeurs par défaut sous « Réglages avancés ». La validation de l'ouverture du flux (ADR 0097) est conservée à la première activation. L'appel est adapté aux écarts connus d'OpenAI et
+  d'Anthropic (température, plafond de sortie) ; **seul Mistral a été essayé avec un modèle réel**.
+  _(Session « Assistant RSSI intégré plateforme » (`session_01EnWdzfTjPHLznQbaTS7Ugc`).)_
+
 - **Module « Vulnérabilités », lot V6b : réglages des alertes** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum
   « lot V6b » ; décisions du RSSI du 18/11/2026, qui remplacent les choix provisoires du lot V6). **Seuil** : l'alerte critique
   reste celle d'une faille présente en P1 ; l'**alerte simple** ne s'ouvre plus que pour une faille en **P2 exploitable**
