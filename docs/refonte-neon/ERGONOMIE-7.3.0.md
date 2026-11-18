@@ -36,8 +36,11 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
   l'audit ; documents et liens ; parcours ISO. Explications repliées : fournisseurs, périmètres, parcours ISO, DdA,
   incidents, imports, fournisseurs du périmètre, publication. L'explication des études EBIOS RM reste visible (un test
   de bout en bout la lit).
-- Cartographie du SMSI : l'ajustement initial de la carte se fait sur la taille réelle du canevas, qui a changé avec
-  l'en-tête compact.
+- Cartographie du SMSI : code de la carte inchangé. Les parcours 5, 15 et 29 de la recette de la carte dépendaient de la
+  vue choisie à l'ouverture (dernière vue enregistrée ou ajustement fait avant la mesure de la zone) et échouaient au
+  hasard ; ils cliquent désormais « Ajuster à l'écran » avant de mesurer, comme les parcours 19 et 30, et le 29 vise le
+  coin haut gauche du canevas. Modification validée par le RSSI le 18/11/2026 ; trois passages de suite dans l'ordre de
+  la CI : 46 tests sur 46.
 - Critères sur les titres de colonnes : État, Responsable, Échéance (registre commun, plan d'actions), Famille (registres),
   Type (fournisseurs), Démarche, Étude, Option, Acceptation (risques), référentiel et écarts (couverture).
 - Non migrés, avec la raison : recherche de la Cartographie du SMSI (recherche sur la carte, pas un filtre de liste),
@@ -51,10 +54,8 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
 3. Documents : Catégorie et Étiquettes sur les titres de colonnes (demande d'étendre le filtre de colonne au choix multiple).
 4. Suite du relevé : taille commune des fenêtres, champs de tableau coupés, tuile de l'assistant, densité de Processus,
    titre en double dans les cartes de Plateforme et de Configuration système.
-5. Cartographie du SMSI : à l'ouverture, la carte s'ajuste à la taille réelle de sa zone quand elle est déjà mesurable,
-   sinon à la taille par défaut. Plusieurs parcours de la carte sont calés sur ce comportement. Un ajustement toujours fait
-   sur la taille réelle, essayé puis retiré, demande d'adapter le parcours 29. Le parcours 15 peut se montrer instable en CI
-   (réussi au second essai).
+5. Cartographie du SMSI : à l'ouverture, la carte s'ajuste encore sur une taille par défaut tant que sa zone n'est pas
+   mesurée ; un ajustement toujours fait sur la taille réelle de la zone reste possible dans un lot suivant.
 
 ## Contrôles
 
@@ -63,4 +64,6 @@ Prettier, ESLint, `tsc` (web, e2e), Vitest web (441 tests, Node 26 et paquet par
 conteneur Playwright officiel, sur pile neuve : 238 tests réussis, 2 instables (accessibilité : contraste du lien « Résumé
 des flux vers l'extérieur », hors de ce lot ; courriel : interrupteur au premier essai), aucun échec. Les 68 captures de
 référence changent avec l'en-tête compact. Elles ont été régénérées dans ce conteneur, présentées au RSSI en avant/après
-et remplacées avec son accord du 17/11/2026.
+et remplacées avec son accord du 17/11/2026. Après le fond blanc, la boîte fondue en clair et la recherche du menu, 60 captures
+ont changé de nouveau (33 en clair, 25 en sombre, 2 du pilotage) : régénérées sur la branche à jour de `claude-suivi-smsi`,
+présentées au RSSI et remplacées avec son accord du 18/11/2026. Vitest web : 635 tests après la mise à jour de la branche.

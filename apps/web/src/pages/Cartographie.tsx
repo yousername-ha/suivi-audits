@@ -274,20 +274,10 @@ function CartographieContenu() {
     },
     [view, pc, save],
   );
-  // Taille réelle de la zone au moment du centrage ou de l'ajustement : la taille mémorisée n'est mise à jour par
-  // l'observateur de redimensionnement qu'à l'image suivante ; juste après l'ouverture de la carte, elle vaut encore
-  // 800 × 500 (CARTO-06, CARTO-07).
-  const canevas = useRef<HTMLDivElement>(null);
-  const tailleReelle = useCallback(() => {
-    const r = canevas.current?.querySelector('.carte-zone')?.getBoundingClientRect();
-    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : taille.current;
-  }, []);
-  // Première ouverture (ou génération) : la vue s'ajuste à la carte, sur la taille réelle de la zone.
+  // Première ouverture (ou génération) : la vue s'ajuste à la carte.
   useEffect(() => {
-    if (!scene || vp || !scene.nodes.length) return;
-    const t = tailleReelle();
-    setVp(fitViewport(scene, t.w, t.h));
-  }, [scene, vp, setVp, tailleReelle]);
+    if (scene && !vp && scene.nodes.length) setVp(fitViewport(scene, taille.current.w, taille.current.h));
+  }, [scene, vp, setVp]);
 
   usePresence(`cartographie/${view}`, editMode ? 'edit' : 'view');
   const editeurs = usePresenceOn(`cartographie/${view}`).filter((p) => p.mode === 'edit');
@@ -336,6 +326,13 @@ function CartographieContenu() {
   const nom = (r: string) => {
     const o = lookup(r);
     return o ? o.name : layout?.nodes[r]?.label || r;
+  };
+  // Taille réelle de la zone au moment du centrage : la taille mémorisée n'est mise à jour par l'observateur de
+  // redimensionnement qu'à l'image suivante ; juste après l'ouverture de la carte, elle vaut encore 800 × 500 (CARTO-06).
+  const canevas = useRef<HTMLDivElement>(null);
+  const tailleReelle = () => {
+    const r = canevas.current?.querySelector('.carte-zone')?.getBoundingClientRect();
+    return r && r.width > 0 && r.height > 0 ? { w: r.width, h: r.height } : taille.current;
   };
   const centrer = (ref: string) => {
     const n = layout?.nodes[ref];
@@ -579,11 +576,7 @@ function CartographieContenu() {
       .then(() => notifications.show({ message: `« ${t} » copié.` }))
       .catch(() => notifications.show({ color: 'red', message: 'Copie impossible dans ce navigateur.' }));
   };
-  const ajuster = () => {
-    if (!scene) return;
-    const t = tailleReelle();
-    setVp(fitViewport(scene, t.w, t.h), true);
-  };
+  const ajuster = () => scene && setVp(fitViewport(scene, taille.current.w, taille.current.h), true);
   const selectionnes = sel?.k === 'm' ? sel.refs : sel?.k === 'n' ? [sel.ref] : [];
   const retirerSelection = () => {
     muter((l) => selectionnes.reduce((acc, r) => removeNode(acc, r), l ?? emptyLayout()));
