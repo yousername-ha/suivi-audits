@@ -2,9 +2,28 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `072` à `086` (module Vulnérabilités et socle des intégrations), sans
+reprise de données ; aucune commande sur le serveur pour mettre à jour. À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (sa page de maintenance change, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule.
+
+**Après la mise à jour, à faire dans l'application** (seulement pour utiliser le module Vulnérabilités, actif par défaut) :
+
+1. Attribuer le rôle « RSSI » à la personne qui prend en compte les alertes critiques (le compte d'installation n'a que le
+   rôle « Administrateur »).
+2. Saisir les clés de Tenable Security Center et d'AlgoLightHouse, puis ouvrir leurs flux (validation explicite) ; faire
+   autoriser par l'équipe infrastructure les sorties TCP 443 correspondantes, ou la sortie vers le mandataire de l'établissement
+   s'il est réglé ([guide d'installation, étapes 11.10 à 11.12](docs/INSTALLATION.md)).
+3. Ouvrir la veille (« Activer la veille ») si elle est voulue, après lecture des conditions d'usage des sources.
+4. Relier les dépôts Tenable et les périmètres AlgoLightHouse aux périmètres de l'application.
+5. Remplir la liste « Mots à ne pas masquer » (DPI, PACS, etc.), vide au départ.
+
+Les droits du module Vulnérabilités ne vont plus d'office qu'à l'administrateur et au RSSI (détail sous la migration `075`).
+Le détail de chaque migration suit.
 
 **Aucune action sur le serveur.** **Migration automatique `072`** (module Vulnérabilités, lot V1,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (une table `vulnerabilites_produits`, deux index, contrainte des
