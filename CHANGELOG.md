@@ -2,6 +2,27 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Modifié
+
+- **Ergonomie, lot 2 : suite du relevé sur grand écran** (décisions du RSSI du 18/11/2026, sur maquettes ;
+  [docs/refonte-neon/ERGONOMIE-LOT2.md](docs/refonte-neon/ERGONOMIE-LOT2.md)). Processus : le bandeau « Périmètre affiché »,
+  qui répétait la liste de l'en-tête, est retiré, les chiffres du périmètre tiennent sur une ligne et les cartes se
+  resserrent pour montrer davantage de processus. Éléments par périmètre : la liste « Périmètre » est visible à côté de la
+  boîte d'outils. Documents : les étiquettes se filtrent sur le titre de leur colonne, avec des cases à cocher, et la
+  catégorie par un entonnoir à côté de son tri. Trois largeurs de fenêtre seulement : dialogues courts, fiches (1 024 px) et
+  présentations (1 152 px). La tuile de l'Assistant RSSI se réduit à son avatar et un espace lui est réservé en bas de page.
+  Champs de tableau lisibles : contacts de crise (les textes longs passent à la ligne, le tableau tient dans l'écran), étapes
+  des scénarios, participants et note du plan d'audit. Les fenêtres des cartes de Plateforme et de Configuration système
+  n'affichent plus leur titre en double. La Cartographie du SMSI remplit sa zone dès l'ouverture. Aucune migration, aucune
+  API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+### Corrigé
+
+- **Cartographie du SMSI : « [object Object] » à la place des enjeux tirés des SWOT** enregistrés au format actuel
+  (`{ text }`) ; la carte affiche leur texte. _(Session « Refonte Neon suivi-audits ».)_
+
 ## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour

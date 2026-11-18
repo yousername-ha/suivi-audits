@@ -542,17 +542,18 @@ function DetailCellule({
 }
 
 /* ------------------------------------------------------------------------------------------------- contacts */
-/** Champ, intitulé et largeur minimale de la colonne (décision du RSSI du 18/11/2026 : le texte saisi reste lisible ; le
-    tableau défile horizontalement dans son cadre si l'écran est trop étroit). */
+/** Champ, intitulé, largeur minimale de la colonne et zone de texte sur plusieurs lignes (décisions du RSSI du 18/11/2026 :
+    le texte saisi reste lisible et le tableau tient dans un écran de 1920 px ; les textes longs passent à la ligne au lieu
+    de faire défiler le tableau, téléphones et courriel restent sur une ligne). */
 const CHAMPS_CONTACT = [
-  ['name', 'Nom', 'champ-tableau-m'],
-  ['org', 'Organisation', 'champ-tableau-m'],
-  ['role', 'Rôle', 'champ-tableau-m'],
-  ['phone', 'Téléphone', 'champ-tableau-s'],
-  ['phone2', 'Téléphone 2', 'champ-tableau-s'],
-  ['email', 'Courriel', 'champ-tableau-m'],
-  ['avail', 'Disponibilité', 'champ-tableau-m'],
-  ['notes', 'Notes', 'champ-tableau-l'],
+  ['name', 'Nom', 'contact-champ-zone', true],
+  ['org', 'Organisation', 'contact-champ-zone', true],
+  ['role', 'Rôle', 'contact-champ-zone', true],
+  ['phone', 'Téléphone', 'contact-champ-telephone', false],
+  ['phone2', 'Téléphone 2', 'contact-champ-telephone', false],
+  ['email', 'Courriel', 'contact-champ-courriel', false],
+  ['avail', 'Disponibilité', 'contact-champ-zone', true],
+  ['notes', 'Notes', 'contact-champ-zone', true],
 ] as const;
 
 export function ContactsCrise({ smsi }: { smsi?: string }) {
@@ -605,17 +606,21 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
                       }
                     />
                   </Table.Td>
-                  {CHAMPS_CONTACT.map(([f, l, largeur]) => (
-                    <Table.Td key={f}>
-                      <ChampTexte
-                        ariaLabel={`${l} du contact ${k + 1}`}
-                        className={largeur}
-                        value={x[f]}
-                        disabled={!modifiable}
-                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
-                      />
-                    </Table.Td>
-                  ))}
+                  {CHAMPS_CONTACT.map(([f, l, largeur, zone]) => {
+                    const Champ = zone ? ChampZone : ChampTexte;
+                    return (
+                      <Table.Td key={f}>
+                        <Champ
+                          ariaLabel={`${l} du contact ${k + 1}`}
+                          className={largeur}
+                          value={x[f]}
+                          disabled={!modifiable}
+                          {...(zone ? { lignes: 1 } : {})}
+                          onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
+                        />
+                      </Table.Td>
+                    );
+                  })}
                   {modifiable && can('incidents', 'supprimer') && (
                     <Table.Td>
                       <ConfirmButton

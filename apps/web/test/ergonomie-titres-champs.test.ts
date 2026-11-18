@@ -132,14 +132,18 @@ describe('champs des tableaux de saisie : largeur minimale', () => {
     const charte = lire('../../../packages/ui/src/neon-ergonomie.css');
     const ecrans = ['../src/incidents/Crise.tsx', '../src/audit/Organisation.tsx'].map(lire).join('\n');
     const utilisees = new Set(
-      ecrans.match(/\b(champ-tableau-[a-z]+|colonne-extensible|crise-scenario-detail|audit-plan-note)\b/g) ?? [],
+      ecrans.match(
+        /\b(champ-tableau-[a-z]+|contact-champ-[a-z]+|colonne-extensible|crise-scenario-detail|audit-plan-note)\b/g,
+      ) ?? [],
     );
     expect([...utilisees].sort()).toEqual([
       'audit-plan-note',
       'champ-tableau-l',
       'champ-tableau-m',
-      'champ-tableau-s',
       'colonne-extensible',
+      'contact-champ-courriel',
+      'contact-champ-telephone',
+      'contact-champ-zone',
       'crise-scenario-detail',
     ]);
     for (const classe of utilisees) expect(charte, classe).toMatch(new RegExp(`\\.${classe}\\s*\\{`));
