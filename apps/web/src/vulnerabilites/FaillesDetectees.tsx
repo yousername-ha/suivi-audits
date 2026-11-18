@@ -70,6 +70,7 @@ import {
   urlMachines,
 } from './failles';
 import { nombrePages } from './veille';
+import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
@@ -281,17 +282,13 @@ export function DeclareesTable({
   );
 }
 
-/** Fiche d'un constat (sans état). Textes de Tenable en anglais, tels quels, en texte simple. */
+/** Fiche d'un constat (sans état). Textes de Tenable en anglais, tels quels, en texte simple. Lot PC4 : la priorité, le
+    vecteur traduit, le schéma et les recommandations (dont le correctif de Tenable) sont dans la fiche illustrée commune
+    (FicheFaille), placée au-dessus ; ici, le détail propre au constat. */
 export function FicheConstat({ c }: { c: ConstatDto }) {
   const lien = lienVoirAussi(c);
   return (
     <Stack>
-      <Stack gap="2xs">
-        <Title order={3} size="h6">
-          Priorité calculée par la plateforme
-        </Title>
-        <PrioriteFaits p={c.priorite} />
-      </Stack>
       <Group gap="xs">
         <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
         {marquesConstat(c).map((m) => (
@@ -311,20 +308,7 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
       <SourcesFaille s={c.sources} />
       <Stack gap="2xs">
         <Title order={3} size="h6">
-          Correctif indiqué par Tenable
-        </Title>
-        <Text size="sm" className="veille-texte" lang="en">
-          {c.correctif ?? 'Aucun correctif indiqué.'}
-        </Text>
-        {c.correctifLe && (
-          <Text size="xs" c="dimmed">
-            Correctif publié le <span className="horodatage">{fmtDate(c.correctifLe)}</span>
-          </Text>
-        )}
-      </Stack>
-      <Stack gap="2xs">
-        <Title order={3} size="h6">
-          Scores
+          Scores de Tenable
         </Title>
         <Text size="sm">
           CVSS 3 : {c.cvss3Score?.toLocaleString('fr-FR') ?? '—'} · VPR : {c.vpr?.toLocaleString('fr-FR') ?? '—'} · EPSS
@@ -418,17 +402,12 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
   );
 }
 
-/** Fiche d'une faille déclarée (sans état) : description de NVD et action exigée du catalogue KEV en anglais, telles
-    quelles ; machines lisibles reliées au produit. */
+/** Fiche d'une faille déclarée (sans état) : description de NVD en anglais, telle quelle ; machines lisibles reliées au
+    produit. Lot PC4 : la priorité, le vecteur traduit, le schéma et les recommandations (dont l'action exigée du catalogue
+    KEV) sont dans la fiche illustrée commune (FicheFaille), placée au-dessus. */
 export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
   return (
     <Stack>
-      <Stack gap="2xs">
-        <Title order={3} size="h6">
-          Priorité calculée par la plateforme
-        </Title>
-        <PrioriteFaits p={f.priorite} />
-      </Stack>
       <Group gap="xs">
         {f.gravite && <StatusChip etat={GRAVITE_TENABLE_ETAT[f.gravite]}>{libelleGravite(f.gravite)}</StatusChip>}
         <StatusChip etat="attention">Déclaré</StatusChip>
@@ -445,19 +424,6 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
         </Text>
       )}
       <SourcesFaille s={f.sources} />
-      <Stack gap="2xs">
-        <Title order={3} size="h6">
-          Action exigée par le catalogue KEV
-        </Title>
-        <Text size="sm" className="veille-texte" lang="en">
-          {f.kevAction ?? 'Aucune : la faille ne figure pas au catalogue KEV.'}
-        </Text>
-        {f.kevEcheance && (
-          <Text size="xs" c="dimmed">
-            Échéance fixée par la CISA : <span className="horodatage">{fmtDate(f.kevEcheance)}</span>
-          </Text>
-        )}
-      </Stack>
       <Title order={3} size="h6">
         Machines reliées au produit ({f.machinesReliees.length})
       </Title>
@@ -714,6 +680,7 @@ export function FaillesDetecteesPage() {
         <ErrorAlert error={fiche.error} />
         {fiche.data && (
           <Stack>
+            <FicheFaille nature="constat" id={fiche.data.id} />
             <FicheConstat c={fiche.data} />
             <SuiviFaille nature="constat" id={fiche.data.id} source="Tenable" />
           </Stack>
@@ -731,6 +698,7 @@ export function FaillesDetecteesPage() {
         <ErrorAlert error={ficheDeclaree.error} />
         {ficheDeclaree.data && (
           <Stack>
+            <FicheFaille nature="declaree" id={ficheDeclaree.data.rapprochementId} />
             <FicheDeclaree f={ficheDeclaree.data} />
             <SuiviFaille nature="declaree" id={ficheDeclaree.data.rapprochementId} source="la veille" />
           </Stack>

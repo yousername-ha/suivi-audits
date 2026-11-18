@@ -40,7 +40,10 @@
    Lot PC2 : parc des machines par zone de rôle avec `lire`, lecture seule, sans journal : seules les machines lisibles sont
    listées ou comptées ; marques et priorité les mêmes pour tous.
    Lot PC3 : périmètres (cartes et détail d'un périmètre) avec `lire`, lecture seule, sans journal : seuls les périmètres,
-   machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404. */
+   machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404.
+   Lot PC4 : fiche illustrée d'une faille (recommandations par source, vecteur d'attaque traduit, schéma, en-tête) avec
+   `lire`, lecture seule, sans journal : constat, faille déclarée et alerte d'AlgoLightHouse lus par leur fiche existante
+   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement. */
 import {
   RechercheAlertesVulnerabilites,
   ApplicationLiaisonMasse,
@@ -79,6 +82,7 @@ import {
   RechercheMachines,
   RechercheParc,
   IdPerimetreVue,
+  ParamsFicheFaille,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -305,6 +309,17 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     params: id,
     handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/fiches/:nature/:id',
+    summary:
+      'Fiche illustrée d’une faille (constat, faille déclarée, CVE de la veille, alerte AlgoLightHouse) : priorité et marques, vecteurs CVSS publiés, recommandations par source, présence lue',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: ParamsFicheFaille,
+    handler: async ({ svc, s, params }) =>
+      svc.vulnerabilites.fiches.fiche((s as Session).user, params.nature, params.id),
   }),
   route({
     method: 'GET',

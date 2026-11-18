@@ -41,6 +41,8 @@ import {
   PerimetresAlhTable,
   TechnologiesAlh,
 } from '../src/vulnerabilites/SurfaceExterne';
+import { FicheFailleIllustree } from '../src/vulnerabilites/FicheFaille';
+import { ficheFaille } from './fiche-faille-fixture';
 import {
   FILTRES_ALERTES_VIDES,
   libelleCible,
@@ -393,7 +395,18 @@ describe('rendu', () => {
         },
       ],
     };
-    const html = rendre(createElement(FicheAlerteAlh, { a: fiche }));
+    // Lot PC4 : les défauts et résolutions de l'éditeur sont rendus par la fiche illustrée commune, placée au-dessus du
+    // détail de l'alerte.
+    const html =
+      rendre(createElement(FicheAlerteAlh, { a: fiche })) +
+      rendre(
+        createElement(FicheFailleIllustree, {
+          f: ficheFaille({
+            nature: 'alerte-alh',
+            recommandations: { alh: [{ alerteId: fiche.id, titre: fiche.titre, defauts: fiche.defauts }] },
+          }),
+        }),
+      );
     for (const x of [
       'Priorité calculée par la plateforme',
       'P3',

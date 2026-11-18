@@ -11,6 +11,8 @@ import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 import { famillesVisibles, localiser } from '../src/navigation';
 import { ConstatsTable, EtatSynchronisations, FicheConstat } from '../src/vulnerabilites/FaillesDetectees';
+import { FicheFailleIllustree } from '../src/vulnerabilites/FicheFaille';
+import { ficheFaille } from './fiche-faille-fixture';
 import { BandeauSansRole, DepotsTenableTable, MachinesTable } from '../src/vulnerabilites/Machines';
 import {
   corpsAffectation,
@@ -281,7 +283,16 @@ describe('rendu', () => {
     expect(rendu(createElement(ConstatsTable, { constats: [], onOuvrir: rien }))).toContain('Aucune faille détectée');
   });
   it('fiche : correctif et vecteur tels quels, CVE du KEV marquées, machines par rôle, lien sans référent', () => {
-    const html = rendu(createElement(FicheConstat, { c: fiche() }));
+    // Lot PC4 : le correctif de Tenable est rendu par la fiche illustrée commune, placée au-dessus du détail du constat.
+    const html =
+      rendu(createElement(FicheConstat, { c: fiche() })) +
+      rendu(
+        createElement(FicheFailleIllustree, {
+          f: ficheFaille({
+            recommandations: { tenable: { correctif: 'Update the affected packages.', publieLe: null } },
+          }),
+        }),
+      );
     expect(html).toContain('Update the affected packages.');
     expect(html).toContain('AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H');
     expect(html).toContain('CVE-2026-90002 (KEV), CVE-2026-90001');

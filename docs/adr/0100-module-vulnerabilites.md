@@ -374,6 +374,8 @@
   rôle, murs animés, marques zero-day et exploitable, échelle réduite ou grand écran. Voir l'addendum « lot PC2 » ci-dessous.
 - **Lot PC3, onglet « Périmètres »** (18/11/2026) : sans migration, cartes des périmètres lus, détail par ligne ou au global,
   mention « Exposée sur Internet » des machines reliées par une liaison confirmée. Voir l'addendum « lot PC3 » ci-dessous.
+- **Lot PC4, fiche de faille illustrée** (18/11/2026) : sans migration, présentation commune en tête des fiches existantes,
+  vecteur CVSS traduit avec une icône par métrique, schéma, recommandations par source. Voir l'addendum « lot PC4 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1652,3 +1654,110 @@ la carte « Sans périmètre » vide d'une pile vierge. Durée des routes sur un
 3. **Fiche de faille illustrée** (point 19, maquette 02).
 4. Confirmer les choix ci-dessus (décompte des failles d'un périmètre, périmètres vides listés, présentation par défaut).
 5. Puces de choix du périmètre dans le détail, si le RSSI les veut.
+
+## Addendum du 18/11/2026 — lot PC4 : fiche de faille illustrée
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau, aucune liste blanche élargie, aucune dépendance nouvelle, aucun appel au
+modèle. Réalise V10 et le point 19 ; lève le point ouvert 4 de l'addendum « lot PC1 », le point ouvert 3 de l'addendum « lot
+PC2 » (fiche illustrée) et le point ouvert 3 de l'addendum « lot PC3 ».
+
+### Demande du RSSI (15/11/2026)
+
+« Possible d'ajouter la recommandation, la traduction du vecteur d'attaque avec des icônes, un schéma qui le représente. »
+Maquette validée `docs/unification/maquettes-vulnerabilites/02-fiche.png`.
+
+### Source du vecteur
+
+Le vecteur CVSS est **déjà rangé** : NVD, v3.1 et v4.0 par CVE (`cvss31_vecteur`, `cvss40_vecteur` de
+`vulnerabilites_veille_cve`, lot V2), et Tenable, vecteur v3 du contrôle (`cvss3_vecteur` de `vulnerabilites_constats`, lot V5,
+souvent sans préfixe « CVSS:3.x/ »). AlgoLightHouse ne range aucun vecteur (score seulement) : il n'en apporte pas ; aucun champ
+n'a été ajouté. Le CERT Santé ne range qu'un score. **Règle des sources** (V27, lot V4c) appliquée au vecteur : parmi les
+vecteurs lisibles, celui dont le score publié est le plus sévère parle ; à score égal (ou sans score), NVD avant Tenable et, chez
+NVD, la v4.0 avant la v3.1. La fiche dit laquelle parle (« Vecteur retenu : NVD (CVE-…), CVSS v3.1, score 9,8 : le plus sévère
+des vecteurs publiés ») et montre les autres en petit.
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/fiche-faille-vulnerabilites.ts`, testé en table) : `decoderVecteurCvss` (v3.0, v3.1,
+  v3 sans préfixe, v4.0 ; toute métrique inconnue, en double, de valeur inconnue, ou métrique de base absente : `null`, jamais
+  une traduction devinée ; métriques temporelles, de menace, environnementales et supplémentaires admises mais non traduites),
+  `conditionsTraduites` et `impactsTraduits` (terme exact en français, traduction, icône et force pour l'attaquant par
+  métrique), `phraseVecteur`, `vecteurRetenu`, `libelleSourceVecteur`, `schemaVecteur` (étapes et nom accessible),
+  `marquesFaille`, `libellePresence`, `libelleVersionsNvd`, DTO `FicheFailleDto` et paramètres de route.
+- **Route** `GET /api/vulnerabilites/fiches/{nature}/{id}` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/fiches.ts`),
+  natures `constat`, `declaree`, `cve`, `alerte-alh` : lecture seule, aucune entrée de journal, nombre de lectures fixe. Le
+  constat, la faille déclarée et l'alerte se lisent par leur fiche existante (404, même message, pour l'illisible et l'inconnu) ;
+  une CVE de la veille avec `lire` (404 si la plateforme ne la connaît pas). Rend : CVE (cinq) et leur nombre, composant
+  (produit du catalogue KEV, sinon de NVD, sinon nom du contrôle de Tenable ou du produit déclaré, ou produit du service de
+  l'alerte), priorité et faits, marques, alerte ouverte de la plateforme (la plus haute), présence lue, vecteurs publiés (six
+  au plus), recommandations par source.
+- **Recommandations**, chaque source à part, telles quelles et bornées : correctif du contrôle de Tenable (anglais, V19) ;
+  action exigée et échéance du catalogue KEV (cinq) ; versions touchées selon NVD (bornes publiées, huit) ; mentions « un
+  correctif existe » et « une mesure de contournement existe » du CERT Santé ; alertes et avis du CERT-FR et du CERT Santé qui
+  citent la faille, avec le lien vers la source (six) ; défauts et résolutions de l'éditeur d'AlgoLightHouse (ceux de l'alerte
+  ouverte, ou ceux des trois alertes ouvertes, présentes et **lisibles** qui citent la faille). Rien de connu : « Aucune
+  recommandation connue […]. La plateforme n'en invente aucune. »
+- **Présence** : machines lisibles touchées (constat : ses machines ; faille déclarée : machines reliées ; CVE : détections
+  présentes et machines reliées à un produit rattaché) et actifs exposés lisibles qui portent la CVE ; drapeau sans nombre
+  `horsLecture` pour le reste (lot ALH5). Alerte d'AlgoLightHouse : l'actif visé, sans machine.
+- **Interface** (`apps/web/src/vulnerabilites/FicheFaille.tsx`, `fiche-faille.ts`) : composant unique `FicheFaille`, placé en tête
+  des fenêtres existantes (« Failles détectées » et « Vue d'ensemble » : constat et faille déclarée ; « Surface externe » :
+  alerte, onglets « Alertes » et « Carte ») et d'une fenêtre nouvelle de l'écran « Veille », ouverte par la CVE (recherche et
+  catalogue KEV). Les blocs que la fiche illustrée reprend sont retirés des fiches existantes pour ne pas les dire deux fois :
+  priorité (constat, faille déclarée), correctif de Tenable, action exigée du catalogue KEV, recommandations de l'éditeur
+  d'AlgoLightHouse ; le vecteur brut reste dans les scores de Tenable. Schéma SVG en deux mises en page (quatre colonnes en
+  large, empilé sous 46 em de conteneur), `role="img"` et nom accessible en une phrase, équivalent texte en liste numérotée
+  dessous ; libellé texte sur chaque étape et chaque rangée, teinte en double. Feuille `packages/ui/src/neon-fiche.css`
+  (jetons de la charte, clair et sombre, ni px ni rem, aucun style en ligne).
+
+### Écarts à la maquette
+
+- **Pas de radar « Position de la cible »** dans la fiche (il est dans la vue d'ensemble, lot PC1), ni de colonne « État,
+  secteur, produit surveillé, responsable, action liée » : l'état de suivi et les actions restent dans la rubrique de suivi
+  existante, sous la fiche.
+- **Pas de bloc « Proposition de l'assistant »** ni de **« parcours de la faille »** horodaté (publiée, exploitation avérée,
+  détectée, action décidée, corrigée) : hors lot (plan d'action de l'assistant) ou données dispersées entre sources et suivi.
+- **Pas de tuiles « Machines touchées » et « Jours depuis l'alerte »** : la présence lue est une phrase de l'en-tête et du
+  schéma ; aucun total global.
+- **« Ce qu'il lui faut »** : les métriques du vecteur seulement (AV, AC, AT en v4.0, PR, UI, S en v3) ; l'exploitation observée
+  et l'EPSS, que la maquette y mettait, sont dans les faits de la priorité de l'en-tête (ils ne sont pas dans le vecteur).
+- **Schéma SVG distinct** des cartes de métriques (la maquette n'a qu'un chemin en HTML) : la consigne demande un schéma
+  composé, nommé et doublé d'un texte ; il porte aussi la présence lue.
+- **Effets sur les systèmes en aval** (v4.0) ajoutés ; termes exacts sous chaque traduction ; vecteur brut et version en tête.
+- Recommandations en grille de largeur libre (une à trois par ligne selon la place) ; titre « Recommandations des sources »
+  et mention « rien n'est rédigé par la plateforme ni par l'assistant ».
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Vecteur de Tenable sans préfixe** lu comme un vecteur CVSS v3, « version mineure non précisée par la source » (les métriques
+  de base de la v3.0 et de la v3.1 sont les mêmes) ; un vecteur v2 est illisible.
+- **Règle du vecteur retenu** ci-dessus (score le plus sévère, puis NVD, puis v4.0) ; pour un constat à plusieurs CVE, les
+  vecteurs de NVD des CVE au score le plus haut, deux cents CVE lues au plus.
+- **Marques** de la fiche : celles du lot PC2 appliquées à la faille : « zero-day » si elle est présente et que son exploitation
+  est avérée, « exploitable » si elle est présente, exploitable et non exploitée ; une CVE de la veille seulement connue n'en a
+  aucune. Présence d'une CVE de la veille sans tenir compte des états de suivi (comme l'assistant).
+- **Versions touchées selon NVD** données comme recommandation (« versions touchées avant 8.3.29 (8.3.29 n'est plus citée
+  comme touchée) ») : c'est une borne publiée, jamais présentée comme « version corrigée ».
+- **Blocs retirés des fiches existantes** (priorité, correctif de Tenable, action du catalogue KEV, recommandations de
+  l'éditeur) au profit de la fiche illustrée placée au-dessus ; les tests de l'interface ont été adaptés en conséquence (mêmes
+  assertions, rendues sur la fiche illustrée).
+- **Composant touché** : produit du catalogue KEV, sinon premier éditeur et produit des CPE de NVD, sinon nom du contrôle.
+
+### Non vérifié
+
+Aucune donnée réelle (tests et rendu sur données fictives). Rendu vu sur un **banc local** (Vite, composant réel dans une
+fenêtre Mantine de taille « xl », quatre failles fictives : réseau sans privilège, local avec privilèges élevés, CVSS v4.0,
+vecteur illisible ; Chromium, clair et sombre, 1 440 et 390 px ; axe `wcag2a`/`wcag2aa` sans violation, aucun chevauchement de
+texte ni texte hors de sa boîte dans le schéma, aucun débordement de page), pas dans la pile complète ; la CSP n'a pas été
+vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface. Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-fiche.spec.ts`, réponses de lecture remplacées par des données fictives) n'a pas été joué (CI
+seulement). Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Plan d'action rédigé par l'assistant** dans la fiche (bloc « Proposition de l'assistant » de la maquette, V25).
+2. **Liens entre machines** (front → back → base) : aucune source ne les fournit (point ouvert 5).
+3. Parcours horodaté de la faille (publiée, exploitée, détectée, action, corrigée), si le RSSI le veut.
+4. Vecteur d'AlgoLightHouse : à ranger seulement si l'éditeur le publie (champ à ajouter à la liste blanche, à valider).
+

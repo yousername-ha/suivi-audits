@@ -607,6 +607,23 @@ seuil »). (session « Module surveillance vulnérabilités SMSI »)
   (16 et 17 au plus), 250 machines au plus par ligne, périmètre illisible traité comme inconnu (404), sans écriture ni journal.
   Sans migration ; rien de nouveau chez l'assistant. Aide en ligne : article « Vulnérabilités : vue par périmètre ». (session
   « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC4 : fiche de faille illustrée** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC4 » ; demande du RSSI du 15/11/2026, maquette `02-fiche`). Une seule présentation, placée en tête des fiches
+  existantes (faille détectée par Tenable, faille déclarée, CVE de la veille, ouverte désormais depuis la veille, alerte
+  d'AlgoLightHouse) : **en-tête** (priorité et faits, les mêmes pour tous, marques « Zero-day : exploitation avérée » et
+  « Exploitable », lien vers l'alerte ouverte, machines et actifs exposés que la personne lit, drapeau sans nombre pour le
+  reste) ; **« Vecteur d'attaque, en clair »** : vecteur CVSS v3.0, v3.1 ou v4.0 traduit par une table fixe, une icône et deux
+  libellés par métrique (terme exact, par exemple « Vecteur d'accès : réseau », et traduction), effets sur la confidentialité,
+  l'intégrité et la disponibilité (et sur les systèmes en aval en v4.0), phrase en clair, vecteur brut et sa version ; quand NVD
+  et Tenable diffèrent, le vecteur au score le plus sévère parle (règle des sources), les autres sont montrés ; **schéma SVG**
+  composé à partir du vecteur et de la présence lue, nommé en une phrase, avec son équivalent texte ; vecteur absent ou mal
+  formé : « vecteur non communiqué », sans traduction ni schéma ; **« Recommandations des sources »**, chaque source à part et
+  en texte tel quel (action exigée du catalogue KEV, correctif de Tenable en anglais, versions touchées selon NVD, mentions du
+  CERT Santé, avis du CERT-FR et du CERT Santé, recommandations de l'éditeur d'AlgoLightHouse pour les alertes lisibles) ; rien
+  n'est rédigé par l'assistant. Route de lecture `GET /api/vulnerabilites/fiches/{nature}/{id}` (`vulnerabilites:lire`, sans
+  écriture ni journal ; constat, faille déclarée et alerte illisibles traités comme inconnus). Vecteurs déjà rangés par la
+  veille et Tenable : **sans migration**, sans appel réseau ni champ nouveau. Aide en ligne : article « Vulnérabilités :
+  failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 

@@ -18,6 +18,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 import { ConstatsTable, DeclareesTable, FicheDeclaree } from '../src/vulnerabilites/FaillesDetectees';
+import { FicheFailleIllustree } from '../src/vulnerabilites/FicheFaille';
+import { ficheFaille } from './fiche-faille-fixture';
 import { ActionsLiees, HistoriqueSuivi, MarquesSuivi } from '../src/vulnerabilites/SuiviFaille';
 import {
   corpsChangementEtat,
@@ -255,7 +257,17 @@ describe('listes et fiche d’une faille déclarée', () => {
         { id: 'm2', nom: null, adresse: '192.0.2.62', role: 'front', perimetreNom: null, detectee: true },
       ],
     };
-    const html = rendu(createElement(FicheDeclaree, { f }));
+    // Lot PC4 : l'action exigée du catalogue KEV est rendue par la fiche illustrée commune, au-dessus du détail.
+    const html =
+      rendu(createElement(FicheDeclaree, { f })) +
+      rendu(
+        createElement(FicheFailleIllustree, {
+          f: ficheFaille({
+            nature: 'declaree',
+            recommandations: { kev: [{ cve: f.cve, action: f.kevAction!, echeance: f.kevEcheance }] },
+          }),
+        }),
+      );
     expect(html).toContain('lang="en"');
     expect(html).toContain('Apply updates.');
     expect(html).toContain('Fictional NVD description.');
