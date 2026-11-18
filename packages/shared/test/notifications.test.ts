@@ -22,6 +22,8 @@ describe('types et canaux', () => {
       'retex_contribution',
       'assistant_rappel',
       'assistant_question',
+      'vulnerabilites_alerte_critique',
+      'vulnerabilites_alerte',
     ]);
     expect(NOTIFICATION_CANAUX).toEqual(['application', 'courriel']);
     for (const t of NOTIFICATION_TYPES) {

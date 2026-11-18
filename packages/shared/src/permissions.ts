@@ -2,7 +2,8 @@
    Liste unique, utilisée par l'API (garde requirePermission, filtrage du temps réel) et par l'interface
    (affichage conditionnel ; le serveur reste seul juge). */
 
-/** Modules métier : chacun recevra ses tables lors de sa reprise (docs/ROADMAP.md). */
+/** Modules métier : chacun recevra ses tables lors de sa reprise (docs/ROADMAP.md). Leurs droits sont donnés par défaut au
+    contributeur et au lecteur, ouvrent l'accueil, les écrans muraux et les routes communes « métier ». */
 export const BUSINESS_MODULES = [
   'audit',
   'ecarts',
@@ -15,12 +16,17 @@ export const BUSINESS_MODULES = [
 ] as const;
 export const MODULES = [
   ...BUSINESS_MODULES,
+  // Vulnérabilités (ADR 0100) : hors des modules métier depuis le lot V5 (failles et machines de Tenable). Comme l'assistant,
+  // ses droits ne vont par défaut qu'à l'administrateur et au RSSI ; un rôle personnalisé peut les accorder. Réglage prudent,
+  // à confirmer par le RSSI (point ouvert 13 de l'ADR 0100).
+  'vulnerabilites',
   'documents',
   'import_export',
   'administration',
   'parametres',
   'tableau_de_bord',
   'assistant',
+  'integrations',
 ] as const;
 export type Module = (typeof MODULES)[number];
 export type BusinessModule = (typeof BUSINESS_MODULES)[number];
@@ -34,12 +40,14 @@ export const MODULE_LABELS: Record<Module, string> = {
   conformite: 'Conformité (ReCyF)',
   incidents: 'Incidents et PCA/PRA',
   cartographie: 'Cartographie du SMSI',
+  vulnerabilites: 'Vulnérabilités',
   documents: 'Documents et liens',
   import_export: 'Import et export',
   administration: 'Administration (comptes, groupes, rôles, sessions, journal)',
   parametres: 'Paramètres',
   tableau_de_bord: 'Tableau de bord de l’accueil (disposition et partage)',
   assistant: 'Assistant RSSI (dialogue, réglages)',
+  integrations: 'Intégrations (connecteurs vers des outils externes)',
 };
 
 export const ACTIONS = ['lire', 'modifier', 'supprimer', 'exporter', 'administrer'] as const;

@@ -46,6 +46,12 @@ export class GrcAnnuaires {
       }
     }
     if (!peutDesigner) throw new HttpError(403, 'Droits insuffisants pour désigner un responsable dans ce périmètre.');
+    return this.annuaire();
+  }
+
+  /** Annuaire des responsables proposables, sans contrôle de droit : à n'appeler qu'après la vérification propre à
+      l'appelant (périmètre ci-dessus, ou droit du module pour un registre de l'organisation sans périmètre). */
+  async annuaire(): Promise<ResponsablesProposables> {
     // Tout compte actif est proposable : « Attribuer à » ouvre l'élément à la personne désignée (ADR 0092, lot 2).
     const utilisateurs = await this.g.db.k
       .selectFrom('users as u')
@@ -75,14 +81,19 @@ export class GrcAnnuaires {
     return { utilisateurs, groupes, fonctions };
   }
 
-  /** Personnes actives que désigne un responsable ; erreur 422 si la cible n'existe pas ou ne compte personne. */
-  async resoudre(smsi: string, ref: ResponsableRef, c: Client): Promise<string[]> {
+  /** Personnes actives que désigne un responsable ; erreur 422 si la cible n'existe pas ou ne compte personne. Sans
+      périmètre (`smsi` nul : registre de l'organisation), une personne doit seulement être un compte actif. */
+  async resoudre(smsi: string | null, ref: ResponsableRef, c: Client): Promise<string[]> {
+    const k = surConnexion(c);
     if (ref.type === 'utilisateur') {
       // Tout compte actif peut être désigné : la désignation lui ouvre l'élément (ADR 0092, lot 2).
-      await this.g.checkOwner(smsi, ref.id, c, true);
+      if (smsi) await this.g.checkOwner(smsi, ref.id, c, true);
+      else if (
+        !(await k.selectFrom('users as u').select('u.id').where('u.id', '=', ref.id).where(actif).executeTakeFirst())
+      )
+        throw new HttpError(422, 'Le responsable doit être un compte actif.');
       return [ref.id];
     }
-    const k = surConnexion(c);
     const rows =
       ref.type === 'groupe'
         ? await k

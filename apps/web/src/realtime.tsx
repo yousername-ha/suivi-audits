@@ -27,6 +27,11 @@ const KEYS: Record<string, string[][]> = {
   groups: [['admin']],
   roles: [['admin']],
   import_batches: [['admin', 'imports']],
+  // Alertes du module Vulnérabilités (ADR 0100, lot V6) : liste, fiche, fenêtre d'alerte critique et rappels.
+  vulnerabilites_alertes: [
+    ['vulnerabilites', 'alertes'],
+    ['grc', 'notifications'],
+  ],
 };
 
 interface Live {

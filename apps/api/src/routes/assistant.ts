@@ -5,6 +5,7 @@ import {
   CleModeleBody,
   DecisionMethodeBody,
   DecisionPropositionBody,
+  DecisionPropositionVulnBody,
   NouvelleMethodeBody,
   LancerRondeBody,
   MessageAssistantBody,
@@ -251,6 +252,30 @@ export const assistantRoutes = [
     body: DecisionPropositionBody,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.assistantRondes.deciderProposition(params.id, body, (s as Session).user, ip),
+  }),
+  /* ---------------------------------------------------------------- Module Vulnérabilités (ADR 0100, V25, V28, V29) */
+  route({
+    method: 'GET',
+    url: '/api/assistant/vulnerabilites/propositions',
+    summary:
+      'Propositions d’action déposées par l’assistant dans les conversations de la personne, au sujet d’une faille ; repères des machines remplacés selon ses droits',
+    tags,
+    access: 'assistant:lire',
+    handler: async ({ svc, s }) => svc.assistant.vulnerabilites?.propositions((s as Session).user) ?? [],
+  }),
+  route({
+    method: 'POST',
+    url: '/api/assistant/vulnerabilites/propositions/:id/decision',
+    summary:
+      'Confirmer (périmètre choisi, texte corrigé au besoin) ou rejeter une proposition d’action sur une faille ; la confirmation crée l’action avec les droits de la personne et la lie à la faille',
+    tags,
+    access: 'assistant:modifier',
+    params: id,
+    body: DecisionPropositionVulnBody,
+    handler: async ({ svc, s, params, body, ip }) => {
+      if (!svc.assistant.vulnerabilites) throw new HttpError(404, 'Proposition introuvable.');
+      return svc.assistant.vulnerabilites.decider(params.id, body, (s as Session).user, ip);
+    },
   }),
   /* ---------------------------------------------------------------- Amélioration avec l'usage */
   route({

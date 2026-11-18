@@ -6,8 +6,10 @@ import {
   FLUX_EXTERNES,
   FLUX_MODULES,
   FLUX_REPRISE_ACTEUR,
+  estFluxRepris,
   FLUX_REPRISE_EXECUTANT,
   FLUX_REPRISE_MOTIFS,
+  FLUX_SANS_REPRISE,
   FluxAppliques,
   FluxChangement,
   FluxConfirme,
@@ -18,8 +20,17 @@ import {
 } from '../src/index.js';
 
 describe('registre des flux vers l’extérieur', () => {
-  it('décrit les cinq modules de l’ADR, dans l’ordre des identifiants stables', () => {
-    expect(FLUX_MODULES).toEqual(['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour']);
+  it('décrit les cinq modules de l’ADR, puis les connecteurs Tenable et AlgoLightHouse et la veille, dans l’ordre des identifiants stables', () => {
+    expect(FLUX_MODULES).toEqual([
+      'assistant',
+      'courriel',
+      'acme',
+      'antivirus',
+      'mises-a-jour',
+      'tenable',
+      'veille-vulnerabilites',
+      'algolighthouse',
+    ]);
     expect(FLUX_EXTERNES.map((f) => f.id)).toEqual([...FLUX_MODULES]);
   });
   it('chaque module a destinations, ports, porteur, données, réglage et pare-feu', () => {
@@ -34,7 +45,9 @@ describe('registre des flux vers l’extérieur', () => {
       expect(f.porteur.services.length, f.id).toBeGreaterThan(0);
       if (f.porteur.type === 'conteneur') expect(f.porteur.profil, f.id).toBeTruthy();
       expect(f.donnees, f.id).not.toBe('');
-      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme|plateforme)\//);
+      // Page de réglage : Configuration système, Plateforme, rubrique Intégrations pour les connecteurs (ADR 0076), ou
+      // écran de la veille du module Vulnérabilités (ADR 0100).
+      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme\/|plateforme\/|integrations$|vulnerabilites\/veille$)/);
       expect(f.pareFeu.length, f.id).toBeGreaterThan(0);
       expect(f.siFerme, f.id).not.toBe('');
     }
@@ -47,12 +60,40 @@ describe('registre des flux vers l’extérieur', () => {
     expect(fluxExterne('courriel').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
     expect(fluxExterne('mises-a-jour').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
     expect(fluxExterne('acme').porteur).toMatchObject({ type: 'passerelle', services: ['gateway'] });
+    expect(fluxExterne('tenable').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
+    expect(fluxExterne('veille-vulnerabilites').porteur).toMatchObject({ type: 'executant', services: ['updater'] });
   });
   it('le certificat ACME sort vers l’autorité et reçoit sur 80 et 443 ; les autres modules ne font que sortir', () => {
     expect(sensDuFlux(fluxExterne('acme'))).toEqual(['sortant', 'entrant']);
     expect(fluxExterne('acme').destinations.find((d) => d.sens === 'entrant')!.ports).toContain('80 et 443');
     for (const m of FLUX_MODULES.filter((x) => x !== 'acme')) expect(sensDuFlux(fluxExterne(m))).toEqual(['sortant']);
     expect(fluxExterne('assistant').destinations[0]!.ports).toContain('443');
+    // Tenable Security Center : adresse et port réglés (443 par défaut) ; ce qui sort : les clés d'API et des requêtes de
+    // lecture.
+    expect(fluxExterne('tenable').pareFeu).toEqual([
+      'Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).',
+    ]);
+    expect(fluxExterne('tenable').destinations).toEqual([
+      expect.objectContaining({
+        sens: 'sortant',
+        ports: 'TCP du port réglé (443 par défaut, HTTPS)',
+        hote: expect.stringMatching(/Adresse réglée/),
+      }),
+    ]);
+    expect(fluxExterne('tenable').donnees).toMatch(/clés d’API.*requêtes de lecture/);
+    // Veille des vulnérabilités : une destination par source de la liste fermée, TCP 443 ; aucune donnée métier ne sort.
+    expect(
+      fluxExterne('veille-vulnerabilites').destinations.map((d) => [d.sens, d.ports, d.hote.split(' ')[0]]),
+    ).toEqual([
+      ['sortant', 'TCP 443 (HTTPS)', 'www.cisa.gov'],
+      ['sortant', 'TCP 443 (HTTPS)', 'services.nvd.nist.gov'],
+      ['sortant', 'TCP 443 (HTTPS)', 'api.first.org'],
+      ['sortant', 'TCP 443 (HTTPS)', 'cert.cyber.gouv.fr'],
+      ['sortant', 'TCP 443 (HTTPS)', 'cyberveille.esante.gouv.fr'],
+    ]);
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/adresse IP du serveur et des demandes de lecture/);
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/Aucune donnée métier/);
+    expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain('cyberveille.esante.gouv.fr');
     expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
       expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),
     );
@@ -60,17 +101,25 @@ describe('registre des flux vers l’extérieur', () => {
 });
 
 describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
-  it('chaque module s’ouvre par son activation ; seuls l’antivirus et les mises à jour ont le flux pour seule activation', () => {
+  it('chaque module s’ouvre par son activation ; l’antivirus, les mises à jour et la veille ont le flux pour seule activation', () => {
     for (const f of FLUX_EXTERNES) expect(f.activation.geste, f.id).not.toBe('');
     expect(FLUX_EXTERNES.filter((f) => f.activation.par === 'flux').map((f) => f.id)).toEqual([
       'antivirus',
       'mises-a-jour',
+      'veille-vulnerabilites',
     ]);
+    expect(fluxExterne('veille-vulnerabilites').activation.geste).toBe('Bouton « Activer la veille »');
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
-    // Activation globale (ADR 0019) : seul l'assistant est un module dont la désactivation referme le flux.
+    // Activation globale (ADR 0019) : l'assistant, le module Intégrations (connecteur Tenable) et le module Vulnérabilités
+    // (veille) sont des modules dont la désactivation referme le flux.
     expect(FLUX_EXTERNES.filter((f) => f.moduleActivation).map((f) => [f.id, f.moduleActivation])).toEqual([
       ['assistant', 'assistant'],
+      ['tenable', 'integrations'],
+      ['veille-vulnerabilites', 'vulnerabilites'],
+      ['algolighthouse', 'integrations'],
     ]);
+    expect(fluxExterne('tenable').activation.par).toBe('module');
+    expect(fluxExterne('algolighthouse').activation.par).toBe('module');
   });
   it('la validation jointe à l’activation est un « vrai » explicite', () => {
     expect(FluxConfirme.safeParse(true).success).toBe(true);
@@ -118,14 +167,21 @@ describe('protocole de l’exécutant', () => {
 describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
   it('un acteur système explicite, des motifs pour chaque module du registre', () => {
     expect(FLUX_REPRISE_ACTEUR).toBe('reprise-mise-a-jour');
-    expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...FLUX_MODULES].sort());
-    for (const m of FLUX_MODULES)
+    // Les flux nés avec le registre (Tenable, AlgoLightHouse, veille des vulnérabilités) n'ont rien à reprendre : ils sont
+    // nommés, pas oubliés.
+    expect([...FLUX_SANS_REPRISE].sort()).toEqual(['algolighthouse', 'tenable', 'veille-vulnerabilites']);
+    const repris = FLUX_MODULES.filter(estFluxRepris);
+    expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...repris].sort());
+    for (const m of repris)
       for (const [code, phrase] of Object.entries(FLUX_REPRISE_MOTIFS[m])) {
         expect(code, m).toMatch(/^[a-z][a-z-]{2,40}$/);
         expect(phrase, `${m}.${code}`).toMatch(/\.$/);
       }
     // Le courriel est constaté par l'API au démarrage, jamais déclaré par un exécutant.
-    expect([...FLUX_REPRISE_EXECUTANT].sort()).toEqual(FLUX_MODULES.filter((m) => m !== 'courriel').sort());
+    expect([...FLUX_REPRISE_EXECUTANT].sort()).toEqual(repris.filter((m) => m !== 'courriel').sort());
+    // Aucune déclaration d'exécutant ne peut ouvrir un flux né avec le registre.
+    for (const m of FLUX_SANS_REPRISE)
+      expect(FluxReprise.safeParse({ enService: { [m]: 'conteneur-present' } }).success).toBe(false);
   });
   it('l’entrée de l’exécutant est validée strictement', () => {
     expect(FluxReprise.safeParse({ enService: {} }).success).toBe(true);

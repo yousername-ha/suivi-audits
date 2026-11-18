@@ -22,6 +22,27 @@ export interface ContexteOutil {
   documents?: LectureDocuments;
   /** Présent pendant une ronde autonome seulement : ce que l'assistant peut émettre seul (rappel, note de mémoire). */
   ronde?: ActionsRonde;
+  /** Module Vulnérabilités (ADR 0100, V25 et V28) : présent seulement en conversation, module actif, droit
+      `vulnerabilites:lire` de la personne et profil « Mise en œuvre » (PROFIL_OUTILS_VULNERABILITES). */
+  vulnerabilites?: LectureVulnerabilites;
+}
+/** Lecture du module Vulnérabilités, fournie par le module (apps/api/src/vulnerabilites/assistant.ts) avec les droits de la
+    personne : résultats déjà bornés, chaque machine réduite à un repère de la conversation. */
+export interface LectureVulnerabilites {
+  evaluerCve(cve: string): Promise<{ donnees: unknown; elements: number }>;
+  machinesPrioritaires(a: { nombre: number; cve?: string; constat?: string }): Promise<{
+    donnees: unknown;
+    elements: number;
+  }>;
+  faillesPrioritaires(a: { nombre: number }): Promise<{ donnees: unknown; elements: number }>;
+  proposerAction(a: {
+    nature: 'constat' | 'declaree';
+    faille: string;
+    titre: string;
+    description: string;
+    echeance?: string;
+    machines: string[];
+  }): Promise<{ enregistre: boolean; detail: string }>;
 }
 /** Lecture des documents, bornée par le droit de la personne et le niveau de classification du profil. */
 export interface LectureDocuments {
@@ -593,6 +614,118 @@ export const OUTILS: readonly Outil[] = [
           ...cites.map((o) => ({ perimetre: a.perimetre, objet: o.id, type: o.type, nom: o.nom })),
         ],
       };
+    },
+  }),
+];
+
+/* ---------------------------------------------------------------- Module Vulnérabilités (ADR 0100, V25 et V28) */
+/** Profil auquel les outils du module sont offerts (réglage retenu à défaut de décision contraire du RSSI : constante de
+    code, pas d'écran). Ils ne sont offerts qu'en conversation, jamais en ronde autonome. */
+export const PROFIL_OUTILS_VULNERABILITES = 'mise_en_oeuvre' as const;
+
+/** Consigne ajoutée quand les outils du module sont offerts. */
+export const CONSIGNE_VULNERABILITES = [
+  'Vulnérabilités (outils evaluer_cve, failles_prioritaires, machines_prioritaires, proposer_action_vulnerabilite) :',
+  '- Quand la personne donne une CVE, appelez evaluer_cve ; puis, seulement si elle est présente chez nous, machines_prioritaires pour cette CVE. Quand elle demande quoi corriger, appelez failles_prioritaires, puis machines_prioritaires.',
+  '- Dans ces deux cas seulement, répondez en quatre parties courtes, chacune annoncée par son intitulé en texte simple : « Sommes-nous touchés », « Quoi faire », « Actifs à traiter d’abord », « Plan d’action proposé ». Pour une question de suivi, répondez simplement.',
+  '- Sommes-nous touchés : la présence rendue par les outils, avec les faits, leurs sources et leurs dates ; dites aussi si la faille est exposée sur Internet (surfaceExterne : exposée ou non, nombre d’actifs exposés que la personne peut lire ; aussiHorsDeVosDroits : exposée aussi ailleurs, sans repère ni nombre).',
+  '- Quoi faire : uniquement le correctif et le contournement publiés par les sources rendues par les outils, et les recommandations de l’éditeur de la surface externe quand elles sont rendues. N’inventez aucun correctif ; sans correctif publié, dites-le.',
+  '- Actifs à traiter d’abord : les repères de machines (M-001, M-002…) recopiés exactement, dans l’ordre du rang rendu par l’outil, puis les repères des actifs exposés sur Internet (E-001, E-002…). Un repère est la seule désignation d’une machine ou d’un actif que vous recevez : n’en inventez aucun et ne cherchez pas à le nommer.',
+  '- Plan d’action proposé : quelques étapes. Vous pouvez déposer une proposition d’action avec proposer_action_vulnerabilite ; la personne la confirmera, la corrigera ou la rejettera. N’écrivez jamais qu’une proposition est déposée sans avoir appelé cet outil et reçu sa confirmation.',
+  '- Ne calculez ni priorité, ni rang, ni nombre : citez ceux des outils. Dites ce que vous ne savez pas. Vous n’avez aucun accès au web : une CVE inconnue de la plateforme reste inconnue.',
+].join('\n');
+
+const cve = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^CVE-\d{4}-\d{4,9}$/, 'Identifiant CVE attendu, par exemple CVE-2024-12345.');
+const repere = z.string().regex(/^M-\d{3}$/, 'Repère attendu, par exemple M-001.');
+function exigerVulnerabilites(ctx: ContexteOutil): LectureVulnerabilites {
+  if (!ctx.vulnerabilites)
+    throw new HttpError(403, 'Les vulnérabilités ne sont pas ouvertes à ce profil ou à cette personne.');
+  return ctx.vulnerabilites;
+}
+
+/** Outils du module Vulnérabilités, offerts en conversation seulement, et seulement avec la capacité `vulnerabilites`. */
+export const OUTILS_VULNERABILITES: readonly Outil[] = [
+  outil({
+    nom: 'evaluer_cve',
+    description:
+      'Évalue une faille désignée par son identifiant CVE, d’après la plateforme seulement : connue ou non de la veille, faits par source avec leurs dates (exploitation avérée, exploitable, gravités, scores, EPSS), avis et alertes qui la citent, correctif et contournement publiés, présence dans l’organisation (constats de Tenable avec les repères des machines touchées, produits surveillés rattachés, à décider ou écartés, exposition sur Internet selon la surface externe avec les repères E-… des actifs exposés, les technologies touchées et les recommandations de l’éditeur), priorité calculée, état de suivi. Une CVE inconnue de la plateforme est rendue comme telle.',
+    parametres: z.object({ cve }).strict(),
+    async executer(ctx, a) {
+      const r = await exigerVulnerabilites(ctx).evaluerCve(a.cve);
+      return { donnees: r.donnees, elements: r.elements, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'machines_prioritaires',
+    description:
+      'Machines à traiter d’abord, rangées par la plateforme : pour tout ce que la personne peut lire, ou seulement celles touchées par une CVE ou par un constat. Chaque machine est un repère (M-001…) avec son rang, les faits du rang et ses compteurs par gravité.',
+    parametres: z
+      .object({
+        nombre: z.number().int().min(1).max(30).optional().describe('Nombre de machines, 10 par défaut, 30 au plus.'),
+        cve: cve.optional().describe('Limiter aux machines touchées par cette CVE.'),
+        constat: z
+          .uuid()
+          .optional()
+          .describe('Limiter aux machines touchées par ce constat (identifiant rendu par un outil).'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      const r = await exigerVulnerabilites(ctx).machinesPrioritaires({
+        nombre: a.nombre ?? 10,
+        ...(a.cve ? { cve: a.cve } : {}),
+        ...(a.constat ? { constat: a.constat } : {}),
+      });
+      return { donnees: r.donnees, elements: r.elements, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'failles_prioritaires',
+    description:
+      'Failles encore à traiter, rangées par la priorité calculée par la plateforme : constats de Tenable et failles déclarées (produits surveillés), avec leurs faits, le nombre de machines touchées et l’état de suivi.',
+    parametres: z
+      .object({
+        nombre: z.number().int().min(1).max(25).optional().describe('Nombre de failles, 10 par défaut, 25 au plus.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      const r = await exigerVulnerabilites(ctx).faillesPrioritaires({ nombre: a.nombre ?? 10 });
+      return { donnees: r.donnees, elements: r.elements, sources: [] };
+    },
+  }),
+  outil({
+    nom: 'proposer_action_vulnerabilite',
+    description:
+      'Propose à la personne une action pour traiter une faille (constat de Tenable ou faille déclarée, identifiant rendu par un outil). Rien n’est créé : la personne choisira le périmètre, corrigera au besoin, puis confirmera ou rejettera. Citez les machines par leurs repères seulement, ceux rendus par les outils. Une nouvelle proposition sur la même faille remplace la précédente en attente.',
+    parametres: z
+      .object({
+        nature: z.enum(['constat', 'declaree']).describe('constat (Tenable) ou declaree (produit surveillé).'),
+        faille: z.uuid().describe('Identifiant de la faille rendu par evaluer_cve ou failles_prioritaires.'),
+        titre: z.string().trim().min(5).max(200).describe('Intitulé de l’action, à l’infinitif.'),
+        description: z
+          .string()
+          .trim()
+          .min(10)
+          .max(2000)
+          .describe('Ce qu’il faut faire, d’après le correctif publié par les sources.'),
+        echeance: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Échéance suggérée, AAAA-MM-JJ.'),
+        machines: z
+          .array(repere)
+          .max(30)
+          .default([])
+          .describe('Repères des machines concernées, dans l’ordre du rang.'),
+      })
+      .strict(),
+    async executer(ctx, a) {
+      const r = await exigerVulnerabilites(ctx).proposerAction(a);
+      return { donnees: r, elements: r.enregistre ? 1 : 0, sources: [] };
     },
   }),
 ];

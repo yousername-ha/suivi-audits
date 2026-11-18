@@ -2,10 +2,17 @@
    - L'assistant lit avec les droits de la personne, bornés aux périmètres du profil ; il n'écrit dans aucun registre.
    - La clé du modèle est scellée par le coffre (settings, « secret:assistant »), écriture seule, jamais renvoyée ni journalisée.
    - Une réponse se prépare en tâche de fond : la requête rend la main tout de suite, l'interface relit le fil.
-   - Chaque message est tracé au journal d'audit, sans contenu : profil, outils appelés, jetons consommés. */
+   - Chaque message est tracé au journal d'audit, sans contenu : profil, outils appelés, jetons consommés.
+   - Module Vulnérabilités (ADR 0100, V14, V25, V28) : outils offerts en conversation seulement (profil « Mise en œuvre »,
+     droit `vulnerabilites:lire`, module actif). Toute demande au modèle passe par le masque des machines (masque.ts) ; le
+     texte du modèle est gardé avec ses repères, remplacés par les noms à l'affichage seulement, pour la personne qui
+     regarde et selon ses droits. */
 import {
+  citeUnRepere,
+  decouperReperes,
   PROFIL_ASSISTANT_LIBELLES,
   PROFILS_ASSISTANT,
+  texteDesSegments,
   type ConversationAssistantDetailDto,
   type ConversationAssistantDto,
   type EtatAssistantDto,
@@ -27,8 +34,10 @@ import type { Historique } from '../historique/index.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 import { consigne, repondre } from './agent.js';
+import { transportMasque } from './masque.js';
 import type { TransportModele } from './modele.js';
-import { OUTILS } from './outils.js';
+import { CONSIGNE_VULNERABILITES, OUTILS, OUTILS_VULNERABILITES, PROFIL_OUTILS_VULNERABILITES } from './outils.js';
+import type { AssistantVulnerabilites } from '../vulnerabilites/assistant.js';
 import type { Classification, DocumentsAssistant } from './documents.js';
 import type { RondesAssistant } from './rondes.js';
 
@@ -57,6 +66,9 @@ export class Assistant {
   organisation?: Historique;
   /** Contenu des documents (lot A4) : branché par les services. */
   documents?: DocumentsAssistant;
+  /** Module Vulnérabilités (ADR 0100, V25 et V28) : service de lecture du module et masque des machines, branchés par les
+      services. */
+  vulnerabilites?: AssistantVulnerabilites;
 
   constructor(
     private readonly db: Db,
@@ -433,17 +445,26 @@ export class Assistant {
       .orderBy('created_at')
       .orderBy('id')
       .execute();
+    // Repères des machines (ADR 0100, V14) : remplacés par les noms à la lecture seulement, pour la personne qui regarde et
+    // selon ses droits ; le texte gardé en base (et renvoyé au modèle) garde ses repères.
+    const reperes = this.vulnerabilites && messages.some((m) => m.role === 'assistant' && citeUnRepere(m.contenu));
+    const resoudre = reperes ? await this.vulnerabilites!.resolveur(user, id) : null;
     return {
       ...this.dto(c),
-      messages: messages.map((m): MessageAssistantDto => ({
-        id: m.id,
-        role: m.role,
-        contenu: m.contenu,
-        sources: m.sources as unknown as SourceAssistant[],
-        outils: m.outils as unknown as { nom: string; elements: number }[],
-        erreur: m.erreur,
-        createdAt: m.created_at.toISOString(),
-      })),
+      messages: messages.map((m): MessageAssistantDto => {
+        const segments =
+          resoudre && m.role === 'assistant' && citeUnRepere(m.contenu) ? decouperReperes(m.contenu, resoudre) : null;
+        return {
+          id: m.id,
+          role: m.role,
+          contenu: segments ? texteDesSegments(segments) : m.contenu,
+          sources: m.sources as unknown as SourceAssistant[],
+          outils: m.outils as unknown as { nom: string; elements: number }[],
+          erreur: m.erreur,
+          createdAt: m.created_at.toISOString(),
+          ...(segments ? { segments } : {}),
+        };
+      }),
     };
   }
 
@@ -516,6 +537,10 @@ export class Assistant {
       perimetres: new Set(await this.perimetresDuProfil(p)),
       documents: p.documents ? (p.classification_max as Classification) : null,
       organisation: p.tous_perimetres,
+      // Outils du module Vulnérabilités : profil retenu, droit de la personne (les droits de la session tiennent compte de
+      // l'activation du module).
+      vulnerabilites:
+        !!this.vulnerabilites && profil === PROFIL_OUTILS_VULNERABILITES && user.rights.can('vulnerabilites', 'lire'),
     }).finally(() => this.taches.delete(id));
     this.taches.set(id, tache);
     return this.detail(id, user);
@@ -538,6 +563,7 @@ export class Assistant {
     perimetres: ReadonlySet<string>;
     documents: Classification | null;
     organisation: boolean;
+    vulnerabilites: boolean;
   }): Promise<void> {
     let contenu: string;
     let erreur = false;
@@ -547,8 +573,11 @@ export class Assistant {
     let jetonsSortie = 0;
     let appels = 0;
     try {
+      // Masque des machines : toute demande au modèle est relue avant de partir (repère ou « [machine] »).
+      const masque = this.vulnerabilites ? await this.vulnerabilites.masque(t.user, t.id) : null;
+      const vuln = t.vulnerabilites && this.vulnerabilites ? this.vulnerabilites.pour(t.user, t.id, t.ip) : null;
       const res = await repondre({
-        transport: this.transport,
+        transport: masque ? transportMasque(this.transport, masque) : this.transport,
         adresse: t.adresse,
         cle: t.cle,
         modele: t.modele,
@@ -556,18 +585,21 @@ export class Assistant {
         // Contexte de l'organisation et fiches de méthode validées : relus aussi en conversation.
         consigne: [
           consigne(t.profil, new Date().toISOString().slice(0, 10)),
+          vuln ? CONSIGNE_VULNERABILITES : '',
           (await this.rondes?.annexes(t.profil)) ?? '',
         ]
           .filter(Boolean)
           .join('\n'),
         fil: t.fil,
-        outils: OUTILS,
+        // Sans la capacité, les outils du module sont absents de la déclaration faite au modèle.
+        outils: vuln ? [...OUTILS, ...OUTILS_VULNERABILITES] : OUTILS,
         ctx: {
           g: this.grc,
           user: t.user,
           perimetres: t.perimetres,
           ...(t.documents && this.documents ? { documents: this.documents.pour(t.user, t.documents) } : {}),
           ...(t.organisation && this.organisation ? { organisation: this.organisation } : {}),
+          ...(vuln ? { vulnerabilites: vuln } : {}),
         },
         log: this.log,
       });

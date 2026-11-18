@@ -45,3 +45,26 @@
   obligatoire, clés matérielles) est documenté à part et attend la décision du RSSI.
 - Pas de fuseau configurable pour la fenêtre (heure de Paris).
 - Pas de transport du reçu vers un outil externe (GED, SIEM) : téléchargement manuel.
+
+## Addendum du 17/11/2026 — exception ponctuelle, décision du RSSI
+
+> **Remplacé par l'[ADR 0103](0103-frontal-mis-a-jour-a-la-demande.md)** (17/11/2026) : l'exception ponctuelle devient la règle
+> générale, le frontal est mis à jour à la demande, d'après son empreinte, et la constante `FRONTAL_AVEC_LA_VERSION` est
+> retirée. Le texte ci-dessous est conservé pour l'historique.
+
+Le frontal stable (`gateway`) n'étant jamais recréé par une mise à jour web, la page de maintenance Neon (7.2.0) n'était pas
+servie aux serveurs mis à jour depuis l'interface. Décision du RSSI : la mise à jour web **vers la 7.2.2, et elle seule**, met
+aussi le frontal à jour ; une coupure de quelques secondes est acceptée ; le comportement antérieur revient ensuite.
+
+- Constante unique `FRONTAL_AVEC_LA_VERSION` dans `scripts/update-worker.py` : pendant une mise à jour web, `mettre-a-jour.sh`
+  est celui de la version installée ; seul l'exécutant de la cible, qui termine l'opération après son remplacement, exécute du
+  code de la 7.2.2.
+- Ordre : santé et contrôle des données de la nouvelle version réussis ; image `web` locale égale à l'image signée et épinglée ;
+  configuration validée dans un conteneur éphémère (`demarrer-gateway --valider`, comme `fermer_acme`) ; certificat servi relevé ;
+  `GATEWAY_VERSION` passée à la cible et frontal recréé, maintenance encore active ; il doit répondre (relais interne, `/healthz`
+  en HTTPS) avec le même certificat ; puis levée de la maintenance. Les réglages TLS ne sont ni transmis ni modifiés : mêmes `.env`
+  et volumes, donc même mode (ACME, fourni, interne).
+- Échec : ancienne `GATEWAY_VERSION` et ancien frontal rétablis ; la mise à jour de l'application reste réussie, avec
+  l'avertissement « Frontal non mis à jour » dans le message de fin, le reçu et le journal privé.
+- Retrait à la version suivante : `scripts/tests/test_updates.py` échoue tant que la constante désigne une version antérieure à
+  celle du dépôt.

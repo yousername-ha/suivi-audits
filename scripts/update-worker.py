@@ -1,6 +1,7 @@
 """Exécutant Compose isolé : pas de serveur HTTP, commandes fermées, état durable non sensible.
 
-Le frontal stable n'est jamais recréé. La dernière étape remplace cet exécutant lui-même ;
+Le frontal stable n'est pas recréé au milieu d'une mise à jour (ADR 0061) ; à la toute fin, il n'est mis à jour que si son
+empreinte diffère de celle de l'image web vérifiée de la cible (ADR 0103). La dernière étape remplace cet exécutant lui-même ;
 son successeur lit le reçu durable et ouvre l'application seulement après santé réelle.
 """
 import contextlib
@@ -8,16 +9,20 @@ import datetime as dt
 import fcntl
 import base64
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
 import re
 import signal
+import socket
+import ssl
 import subprocess
 import tempfile
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -28,12 +33,12 @@ CYCLONEDX = "https://cyclonedx.org/bom"
 SBOM_MAX = 20_000_000
 VERSION = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TERMINAL = {"success", "rolled_back", "failed", "intervention"}
-PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "complete"}
+PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup", "images": "installing", "demarrage": "installing", "sante": "verifying", "termine": "verifying"}
 # Flux vers l'extérieur (ADR 0097) : identifiants du registre partagé (packages/shared/src/flux-externes.ts) et conteneurs de
 # sortie démarrés par leur profil Compose, services dans l'ordre de démarrage (clamav attend les signatures de freshclam).
 # Listes fermées : aucun nom reçu de l'application ne sert d'argument de commande. Leur concordance avec le registre et le
 # compose est vérifiée par apps/api/test/architecture-flux.test.ts (garder chaque constante sur une ligne, en JSON).
-FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour")
+FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour", "tenable", "veille-vulnerabilites", "algolighthouse")
 FLUX_CONTENEURS = {"assistant": {"profil": "assistant", "services": ["assistant-relais"]}, "antivirus": {"profil": "antivirus", "services": ["freshclam", "clamav"]}}
 FLUX_ERREUR_MAX = 300
 # Rapport de l'état appliqué : à chaque changement, et renouvelé à cette période (secondes) pour ne pas inonder la base.
@@ -49,7 +54,82 @@ FLUX_REESSAI = 600
 FLUX_REPRISE_MOTIFS = {"assistant": ["conteneur-present", "env-renseigne"], "antivirus": ["conteneur-present", "env-renseigne"], "mises-a-jour": ["mise-a-jour-installee"]}
 # Réglage de .env qui, renseigné, montre que le module était en service avant la 7.2 (guide d'installation de la 7.1).
 FLUX_REPRISE_ENV = {"assistant": "ASSISTANT_RELAIS_URL", "antivirus": "CLAMAV_HOST"}
+# Frontal stable « gateway » mis à jour à la demande (ADR 0103, qui remplace l'exception ponctuelle de la 7.2.2) : à la fin
+# d'une mise à jour web réussie, l'exécutant de la cible (seul code de la cible qui s'exécute alors : scripts/mettre-a-jour.sh
+# est celui de la version installée) compare l'empreinte du frontal en service à celle de l'image web vérifiée de la cible,
+# calculée à la construction de l'image (docker/web.Dockerfile) et écrite à ce chemin, une ligne de 64 caractères hexadécimaux.
+FRONTAL_EMPREINTE = "/etc/suivi-frontal.sha256"
+FRONTAL_IMAGE = f"ghcr.io/{REPOSITORY}-web"
+FRONTAL_DELAI = 120
 UUID_JSON = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$")
+# Progression réelle du téléchargement (ADR 0104) : images tirées par l'API du moteur Docker, sur le socket déjà monté, sans
+# préfixe de version (celle du moteur : un préfixe fixe serait refusé par un moteur trop ancien ou trop récent). Délai par image
+# identique à celui de « docker pull » ; octets reçus publiés au plus une fois par TELECHARGEMENT_PERIODE secondes.
+DOCKER_SOCKET = "/var/run/docker.sock"
+TELECHARGEMENT_DELAI = 900
+TELECHARGEMENT_PERIODE = 1.0
+# Statuts du flux de l'API qui disent une couche entièrement reçue (ou déjà présente sur le serveur). « Extracting » porte la
+# progression de la décompression, jamais des octets reçus : seule sa présence compte.
+COUCHE_RECUE = {"Download complete", "Verifying Checksum", "Extracting", "Pull complete", "Already exists"}
+
+
+class Indisponible(Exception):
+    """L'API du moteur ne peut pas servir le téléchargement et rien n'en a encore été reçu : repli sur « docker pull »."""
+
+
+class MoteurDocker(http.client.HTTPConnection):
+    """Connexion HTTP à l'API du moteur Docker par son socket Unix (bibliothèque standard seule)."""
+
+    def __init__(self, chemin, timeout):
+        super().__init__("localhost", timeout=timeout)
+        self.chemin = chemin
+        # Référence propre au socket : http.client l'oublie quand la réponse annonce la fermeture de la connexion.
+        self.brut = None
+
+    def connect(self):
+        self.sock = self.brut = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
+        self.sock.connect(self.chemin)
+
+
+class Progression:
+    """Octets reçus sur le total à télécharger pour les trois images (ADR 0104). Le total est fixé avant le début : somme des
+    tailles des couches de la plateforme du serveur, lues dans les manifestes du registre, une fois par couche partagée. Une
+    couche déjà présente sur le serveur n'est connue qu'au début de son flux (« Already exists ») : elle compte alors comme
+    reçue, la barre peut donc partir au-dessus de zéro. La valeur ne recule jamais et ne dépasse jamais le total."""
+
+    def __init__(self, couches):
+        # Le flux désigne chaque couche par les 12 premiers caractères hexadécimaux de son empreinte.
+        self.tailles = {digest[7:19]: taille for digest, taille in couches.items()}
+        self.total = sum(self.tailles.values())
+        self.recus = {}
+
+    def evenement(self, evenement):
+        ident = evenement.get("id")
+        if not isinstance(ident, str) or ident not in self.tailles:
+            return
+        taille, statut = self.tailles[ident], evenement.get("status")
+        if statut == "Downloading":
+            detail = evenement.get("progressDetail")
+            courant = detail.get("current") if isinstance(detail, dict) else None
+            if not isinstance(courant, int) or isinstance(courant, bool) or courant < 0:
+                return
+            valeur = min(courant, taille)
+        elif statut in COUCHE_RECUE:
+            valeur = taille
+        else:
+            return
+        self.recus[ident] = max(self.recus.get(ident, 0), valeur)
+
+    def terminer(self, couches):
+        """Image tirée sans erreur : toutes ses couches sont là (une image déjà à jour ne décrit aucune couche dans son flux)."""
+        for digest in couches:
+            ident = digest[7:19]
+            self.recus[ident] = self.tailles[ident]
+
+    @property
+    def recu(self):
+        return min(self.total, sum(self.recus.values()))
 
 
 def now():
@@ -144,8 +224,14 @@ class Worker:
         defaults = dict(installed=installed, available=None, checkedAt=None, notes=None, checking=False,
                         checkError=False, ready=False, maintenance=False, id=None, target=None,
                         status="idle", phase="idle", message="Aucune mise à jour en cours.", startedAt=None, updatedAt=now(),
-                        etapes=[], finishedAt=None)
+                        etapes=[], finishedAt=None, coupure=False, telechargement=None)
         self.state = {**defaults, **self.state, "installed": installed}
+        # Coupure du frontal annoncée (ADR 0103) : seulement pendant une opération active.
+        if not self.job:
+            self.state["coupure"] = False
+        # Progression du téléchargement (ADR 0104) : mesurée par ce processus seul ; celle d'un exécutant arrêté est périmée.
+        self.state["telechargement"] = None
+        self.telechargement_publie_le = None
         # Flux vers l'extérieur (ADR 0097) : dernier état voulu lu (None : illisible à ce passage), dernier rapport accepté
         # par l'application et son horodatage, dernier « up -d » complet des conteneurs ouverts (0 : au démarrage).
         self.flux_voulus = None
@@ -348,7 +434,8 @@ class Worker:
             backup = {"fichier": path.name[:200], "sha256": digest}
         start = self.state.get("startedAt")
         duration = None
-        with contextlib.suppress(TypeError, ValueError):
+        # Début inconnu (état public perdu) : durée inconnue, le reçu est écrit quand même.
+        with contextlib.suppress(AttributeError, TypeError, ValueError):
             parse = lambda v: dt.datetime.fromisoformat(v.replace("Z", "+00:00"))
             duration = max(0, int((parse(end) - parse(start)).total_seconds()))
         before, after = job.get("before") or {}, job.get("after") or {}
@@ -382,7 +469,7 @@ class Worker:
             phase = "idle"
         self.publish(id=self.job["id"], target=self.job.get("target"), status=status, phase=phase,
                      maintenance=status == "intervention", ready=status != "intervention", message=message, finishedAt=end,
-                     installed=self.env().get("APP_VERSION", self.state["installed"]))
+                     coupure=False, telechargement=None, installed=self.env().get("APP_VERSION", self.state["installed"]))
         self.receipt(status, message, end)
         if status == "intervention":
             self.job["blocked"] = True
@@ -401,8 +488,13 @@ class Worker:
             return
         if self.job.get("handoff"):
             try:
+                # Exécutant interrompu pendant la recréation du frontal : l'ancien est rétabli avant tout contrôle.
+                self.frontal_reprise()
                 self.health(self.job["target"])
-                self.finish("success", "Mise à jour installée et vérifiée. Votre espace est prêt.")
+                message = "Mise à jour installée et vérifiée. Votre espace est prêt."
+                # Après santé et contrôle des données réussis, juste avant la sortie de maintenance ; ne lève jamais.
+                avertissement = self.frontal_a_la_demande()
+                self.finish("success", message + (" " + avertissement if avertissement else ""))
             except Exception:
                 self.finish("intervention", "Le contrôle final a échoué. Les accès restent protégés ; contactez l’administrateur.")
             return
@@ -429,6 +521,351 @@ class Worker:
         except Exception:
             self.finish("intervention", "Le retour sécurisé nécessite une intervention de l’administrateur. Les accès restent protégés.")
 
+    # ------------------------------------------------------------------ Frontal mis à jour à la demande (ADR 0103)
+    # Ordre retenu : rien n'est touché avant que la nouvelle version soit en service, saine et ses données contrôlées
+    # (health) ; le frontal n'est recréé que si son empreinte diffère de celle de l'image web vérifiée de la cible ; la
+    # configuration du nouveau frontal est validée dans un conteneur éphémère avant toute modification ; la recréation, annoncée
+    # sur la page de maintenance (indicateur « coupure » de l'état public), a lieu maintenance encore active, juste avant sa
+    # levée. Les réglages TLS ne sont jamais transmis ni modifiés : le frontal recréé lit les mêmes .env et volumes (mode choisi
+    # dans l'interface, certificats ACME, fourni ou interne), et il doit servir exactement le même certificat qu'avant.
+
+    def ecrire_env(self, cle, valeur):
+        """Réglage de .env remplacé, ou ajouté s'il manque (comme ecrire_env de scripts/lib-commun.sh)."""
+        fichier = self.repo / ".env"
+        texte = fichier.read_text()
+        ligne = f"{cle}={valeur}"
+        motif = re.compile(rf"^{re.escape(cle)}=.*$", re.M)
+        if motif.search(texte):
+            texte = motif.sub(lambda _: ligne, texte)
+        else:
+            texte += ("" if not texte or texte.endswith("\n") else "\n") + ligne + "\n"
+        fichier.write_text(texte)
+
+    def frontal_etat(self, **changes):
+        """Avancement durable de la mise à jour du frontal, dans la demande active : un exécutant relancé sait où il en était."""
+        self.job["frontal"] = {**(self.job.get("frontal") or {}), **changes}
+        atomic(self.private / "active.json", self.job)
+
+    def frontal_journal(self, texte):
+        """Phrase fixe ajoutée au journal privé de l'opération, jamais une sortie de commande."""
+        with contextlib.suppress(Exception):
+            with (self.private / f'{self.job["id"]}.log').open("a") as journal:
+                journal.write(f"{now()} Frontal : {texte}\n")
+
+    def frontal_echec(self, avertissement):
+        with contextlib.suppress(Exception):
+            self.frontal_etat(etape="echec", avertissement=avertissement)
+        self.frontal_journal(avertissement)
+        return avertissement
+
+    def frontal_empreinte_cible(self):
+        """Empreinte du frontal contenue dans l'image web de la cible, lue dans l'image désignée par son empreinte de dépôt
+        vérifiée (signatures) : conteneur éphémère sans réseau ni téléchargement. Lève Failure si elle est illisible ou mal
+        formée."""
+        image = str((self.job.get("images") or {}).get("web", ""))
+        if not re.fullmatch(re.escape(FRONTAL_IMAGE) + r"@sha256:[a-f0-9]{64}", image):
+            raise Failure("Image web non vérifiée")
+        empreinte = self.run(["docker", "run", "--rm", "--pull", "never", "--network", "none", "--cap-drop", "ALL",
+                              "--read-only", "--entrypoint", "cat", image, FRONTAL_EMPREINTE], timeout=60).strip()
+        if not re.fullmatch(r"[a-f0-9]{64}", empreinte):
+            raise Failure("Empreinte du frontal mal formée")
+        return empreinte
+
+    def frontal_empreinte_en_service(self):
+        """Empreinte du frontal en service, ou None : fichier absent (image antérieure à l'ADR 0103) ou toute autre erreur de
+        lecture, ce qui vaut empreinte différente (le contrôle de santé qui précède vient de passer par ce frontal)."""
+        try:
+            empreinte = self.run(["docker", "compose", "exec", "-T", "gateway", "cat", FRONTAL_EMPREINTE], timeout=30).strip()
+        except Exception:
+            return None
+        return empreinte if re.fullmatch(r"[a-f0-9]{64}", empreinte) else None
+
+    def frontal_sonde(self):
+        """Frontal en service : relais interne vers l'interface, puis /healthz en HTTPS local avec le nom du site. Renvoie
+        l'empreinte du certificat servi. Observation seulement : aucun cookie ni aucune donnée n'est envoyé."""
+        relais = self.run(["docker", "compose", "exec", "-T", "gateway", "wget", "-qO-", "http://web:8080/healthz"], timeout=30)
+        if relais.strip() != "ok":
+            raise Failure("Le frontal ne relaie pas l'interface")
+        site = self.env().get("SITE_ADDRESS", "")
+        if not re.fullmatch(r"[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?", site):
+            raise Failure("Adresse du site invalide")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        with socket.create_connection(("gateway", 8443), timeout=5) as brut:
+            with context.wrap_socket(brut, server_hostname=site) as tls:
+                empreinte = hashlib.sha256(tls.getpeercert(binary_form=True)).hexdigest()
+                tls.sendall(f"GET /healthz HTTP/1.1\r\nHost: {site}\r\nConnection: close\r\n\r\n".encode())
+                if not tls.recv(1024).startswith((b"HTTP/1.1 200", b"HTTP/1.0 200")):
+                    raise Failure("Le frontal ne répond pas en HTTPS")
+        return empreinte
+
+    def frontal_attendre(self, certificat=None):
+        """Attend que le frontal recréé réponde (FRONTAL_DELAI au plus). Avec une empreinte, il doit servir exactement ce
+        certificat : un autre (retour à l'autorité interne, par exemple) bloquerait le site par HSTS."""
+        limite = time.monotonic() + FRONTAL_DELAI
+        while True:
+            try:
+                servi = self.frontal_sonde()
+            except (Failure, OSError):
+                servi = None
+            if servi is not None:
+                if certificat and servi != certificat:
+                    raise Failure("Certificat servi différent")
+                return
+            if time.monotonic() >= limite:
+                raise Failure("Le frontal ne répond pas")
+            time.sleep(2)
+
+    def frontal_retablir(self):
+        """Ancienne GATEWAY_VERSION réinscrite et ancien frontal recréé, jusqu'à trois essais : le site ne reste pas sans
+        frontal. L'application, elle, reste mise à jour. La coupure reste annoncée pendant le rétablissement et est retirée
+        ensuite, qu'il réussisse ou non. Ne lève jamais."""
+        avant = (self.job.get("frontal") or {}).get("avant")
+        try:
+            if avant:
+                with contextlib.suppress(Exception):
+                    self.publish(coupure=True)
+            for _ in range(3 if avant else 0):
+                try:
+                    self.ecrire_env("GATEWAY_VERSION", avant)
+                    self.run(["docker", "compose", "up", "-d", "--no-deps", "gateway"], timeout=180)
+                    self.frontal_attendre()
+                    return self.frontal_echec("Frontal non mis à jour : le nouveau frontal n’a pas pu être vérifié ; l’ancien a été rétabli et répond.")
+                except Exception:
+                    continue
+            return self.frontal_echec("Frontal non mis à jour, et l’ancien frontal ne répond pas après son rétablissement : sur le serveur, dans le dossier de l’application, lancer « sudo docker compose up -d gateway » (docs/INSTALLATION.md, section 12).")
+        finally:
+            with contextlib.suppress(Exception):
+                self.publish(coupure=False)
+
+    def frontal_reprise(self):
+        """Exécutant relancé pendant la mise à jour du frontal : recréation entamée, l'ancien frontal est rétabli avant le
+        contrôle de santé (qui passe par lui) ; validation entamée, rien n'avait été modifié. Ne lève jamais."""
+        etape = ((self.job or {}).get("frontal") or {}).get("etape")
+        if etape == "recreation":
+            self.frontal_retablir()
+        elif etape == "validation":
+            self.frontal_echec("Frontal non mis à jour : opération interrompue avant toute modification ; l’ancien frontal reste en service.")
+
+    def frontal_a_la_demande(self):
+        """Frontal mis à jour à la demande (ADR 0103) : à la fin d'une mise à jour réussie, maintenance encore active, le
+        frontal est recréé avec l'image web vérifiée et épinglée de la cible si son empreinte diffère de celle du frontal en
+        service (ou si celui-ci n'en a pas). Empreintes identiques : rien n'est touché, aucune coupure. Empreinte de la cible
+        illisible : frontal non touché, avec un avertissement. Renvoie None (rien à faire, ou frontal mis à jour et vérifié) ou
+        l'avertissement à porter au reçu ; ne lève jamais : l'application reste mise à jour quoi qu'il arrive au frontal."""
+        try:
+            target = self.job.get("target")
+            if self.job.get("frontal"):
+                return self.job["frontal"].get("avertissement")
+            avant = self.env().get("GATEWAY_VERSION", "")
+            if not avant or avant == target:
+                return None
+            if not re.fullmatch(r"[\w.-]{1,40}", avant):
+                raise Failure("GATEWAY_VERSION inattendue")
+            try:
+                cible = self.frontal_empreinte_cible()
+            except Exception:
+                return self.frontal_echec("Frontal non mis à jour : l’empreinte de sa nouvelle image n’a pas pu être lue ; l’ancien frontal reste en service, sans changement.")
+            if self.frontal_empreinte_en_service() == cible:
+                self.frontal_journal(f"inchangé, même empreinte que l’image de la version {target} ; non redémarré.")
+                return None
+            self.frontal_etat(avant=avant, etape="validation")
+            self.publish(phase="verifying", message="Redémarrage du frontal du site. Cette page peut s’interrompre quelques secondes, puis elle reprend toute seule.")
+            # L'étiquette locale, utilisée par Compose pour le frontal, doit désigner l'image web vérifiée (signature,
+            # attestation, révision) de la cible.
+            attendue = str((self.job.get("images") or {}).get("web", ""))
+            empreintes = json.loads(self.run(["docker", "image", "inspect", "--format", "{{json .RepoDigests}}", f"{FRONTAL_IMAGE}:{target}"]))
+            if not attendue.startswith(FRONTAL_IMAGE + "@sha256:") or attendue not in empreintes:
+                raise Failure("Image du frontal non vérifiée")
+            # Même principe que fermer_acme (exploitation-worker.py) : configuration contrôlée avec la nouvelle image, les
+            # réglages et les volumes en service, sans port publié ni recréation.
+            self.run(["docker", "compose", "run", "--rm", "--no-deps", "gateway", "/usr/local/bin/demarrer-gateway", "--valider"],
+                     timeout=120, extra_env={"GATEWAY_VERSION": target})
+            certificat = self.frontal_sonde()
+        except Exception:
+            return self.frontal_echec("Frontal non mis à jour : sa nouvelle image ou sa configuration n’a pas été validée ; l’ancien frontal reste en service, sans changement.")
+        try:
+            self.frontal_etat(etape="recreation")
+            # Coupure annoncée sur la page de maintenance avant la recréation, retirée une fois le frontal vérifié ou rétabli.
+            self.publish(coupure=True)
+            self.ecrire_env("GATEWAY_VERSION", target)
+            self.run(["docker", "compose", "up", "-d", "--no-deps", "gateway"], timeout=180)
+            self.frontal_attendre(certificat)
+            self.frontal_etat(etape="fait")
+            self.publish(coupure=False)
+            self.frontal_journal(f"mis à jour de {avant} à {target} ; configuration validée, même certificat servi, frontal vérifié.")
+            return None
+        except Exception:
+            return self.frontal_retablir()
+
+    # ------------------------------------------------------------------ Téléchargement des images (ADR 0104)
+    # Par l'API du moteur Docker, qui rend les octets reçus de chaque couche, quand aucun identifiant de registre n'est
+    # configuré pour l'exécutant ; sinon, ou si l'API ne répond pas avant d'avoir rien servi, « docker pull » comme avant, sans
+    # progression. Une erreur une fois le flux commencé est un échec du téléchargement, sans nouvel essai : la mise à jour
+    # s'arrête avant toute vérification et l'administrateur peut la relancer. Seuls les octets reçus et le total sont publiés.
+
+    def identifiants_docker(self):
+        """Identifiants de registre configurés pour la CLI de l'exécutant (UPDATER_DOCKER_CONFIG monté sur /root/.docker) :
+        l'API du moteur ne les reçoit pas, le téléchargement passe alors par « docker pull ». Un fichier présent mais illisible
+        compte comme configuré (sens sûr : comportement d'avant)."""
+        dossier = os.environ.get("DOCKER_CONFIG") or os.path.join(os.path.expanduser("~"), ".docker")
+        try:
+            config = json.loads(Path(dossier, "config.json").read_text())
+        except FileNotFoundError:
+            return False
+        except (OSError, ValueError):
+            return True
+        return not isinstance(config, dict) or any(config.get(cle) for cle in ("auths", "credsStore", "credHelpers"))
+
+    def moteur(self, methode, chemin, timeout):
+        """Requête à l'API du moteur Docker ; renvoie la connexion et la réponse (en-têtes lus)."""
+        connexion = MoteurDocker(DOCKER_SOCKET, timeout)
+        try:
+            connexion.request(methode, chemin, headers={"Content-Length": "0"} if methode == "POST" else {})
+            return connexion, connexion.getresponse()
+        except BaseException:
+            connexion.close()
+            raise
+
+    def plateforme(self):
+        """Système et architecture du moteur, ceux des images qu'il tire."""
+        try:
+            connexion, reponse = self.moteur("GET", "/version", 30)
+            try:
+                if reponse.status != 200:
+                    raise Indisponible()
+                data = json.loads(reponse.read(65536))
+            finally:
+                connexion.close()
+        except (OSError, ValueError, http.client.HTTPException):
+            raise Indisponible() from None
+        if not isinstance(data, dict) or not all(isinstance(data.get(k), str) and re.fullmatch(r"[\w.-]{1,40}", data[k]) for k in ("Os", "Arch")):
+            raise Indisponible()
+        return data["Os"], data["Arch"]
+
+    def couches(self, image, plateforme):
+        """Couches de l'image pour la plateforme du serveur, {empreinte: taille}, lues dans le manifeste du registre par la CLI
+        (déjà utilisée par l'exécutant et cosign pour joindre le registre). Index multi-plateforme : une seule entrée doit
+        correspondre (les attestations sont « unknown/unknown »)."""
+        try:
+            sortie = json.loads(self.run(["docker", "manifest", "inspect", "-v", image], timeout=60))
+        except (Failure, ValueError):
+            raise Indisponible() from None
+        entrees = sortie if isinstance(sortie, list) else [sortie]
+        if len(entrees) > 1:
+            entrees = [e for e in entrees if isinstance(e, dict) and isinstance(e.get("Descriptor"), dict)
+                       and isinstance(e["Descriptor"].get("platform"), dict)
+                       and (e["Descriptor"]["platform"].get("os"), e["Descriptor"]["platform"].get("architecture")) == plateforme]
+        if len(entrees) != 1 or not isinstance(entrees[0], dict):
+            raise Indisponible()
+        manifeste = entrees[0].get("OCIManifest") or entrees[0].get("SchemaV2Manifest")
+        couches = manifeste.get("layers") if isinstance(manifeste, dict) else None
+        if not isinstance(couches, list) or not couches:
+            raise Indisponible()
+        result = {}
+        for couche in couches:
+            digest, taille = (couche.get("digest"), couche.get("size")) if isinstance(couche, dict) else (None, None)
+            if (not isinstance(digest, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", digest)
+                    or not isinstance(taille, int) or isinstance(taille, bool) or taille < 0):
+                raise Indisponible()
+            result[digest] = taille
+        return result
+
+    def publier_telechargement(self, progression):
+        """{recu, total} publié s'il a changé, au plus une fois par TELECHARGEMENT_PERIODE ; jamais en recul."""
+        actuel = self.state.get("telechargement") or {}
+        recu = max(progression.recu, actuel.get("recu", 0) if actuel.get("total") == progression.total else 0)
+        if actuel == {"recu": recu, "total": progression.total}:
+            return
+        maintenant = time.monotonic()
+        if self.telechargement_publie_le is not None and maintenant - self.telechargement_publie_le < TELECHARGEMENT_PERIODE:
+            return
+        self.telechargement_publie_le = maintenant
+        self.publish(telechargement={"recu": recu, "total": progression.total})
+
+    def tirer(self, depot, tag, couches, progression):
+        """Une image tirée par l'API du moteur, flux lu ligne à ligne. Lève Indisponible si rien n'a été reçu (repli permis),
+        Failure si le téléchargement échoue ou dépasse TELECHARGEMENT_DELAI."""
+        limite = time.monotonic() + TELECHARGEMENT_DELAI
+        chemin = "/images/create?" + urllib.parse.urlencode({"fromImage": depot, "tag": tag})
+        try:
+            connexion, reponse = self.moteur("POST", chemin, TELECHARGEMENT_DELAI)
+        except TimeoutError:
+            raise Failure("Délai dépassé") from None
+        except (OSError, http.client.HTTPException):
+            raise Indisponible() from None
+        # Fermer la connexion interrompt le téléchargement côté moteur (délai dépassé, erreur).
+        try:
+            if reponse.status != 200:
+                raise Indisponible()
+            commence = False
+            while True:
+                reste = limite - time.monotonic()
+                if reste <= 0:
+                    raise Failure("Délai dépassé")
+                connexion.brut.settimeout(reste)
+                try:
+                    ligne = reponse.readline(65536)
+                    evenement = json.loads(ligne) if ligne.strip() else None
+                    if ligne.strip() and not isinstance(evenement, dict):
+                        raise ValueError
+                except TimeoutError:
+                    raise Failure("Délai dépassé") from None
+                except (OSError, ValueError, http.client.HTTPException):
+                    if commence:
+                        raise Failure("Téléchargement interrompu") from None
+                    raise Indisponible() from None
+                if not ligne:
+                    break
+                if evenement is None:
+                    continue
+                commence = True
+                # Message du moteur jamais repris : il peut citer le registre ou des identifiants.
+                if "error" in evenement or "errorDetail" in evenement:
+                    raise Failure("Téléchargement en échec")
+                progression.evenement(evenement)
+                self.publier_telechargement(progression)
+            if not commence:
+                raise Indisponible()
+            progression.terminer(couches)
+            self.publier_telechargement(progression)
+        finally:
+            connexion.close()
+
+    def telecharger(self, target):
+        """Les trois images de la cible : par l'API du moteur avec progression publiée, sinon par « docker pull »."""
+        images = [(f"ghcr.io/{REPOSITORY}-{c}", target) for c in ("api", "web", "updater")]
+        progression = par_image = None
+        if not self.identifiants_docker():
+            try:
+                plateforme = self.plateforme()
+                par_image = [self.couches(f"{depot}:{tag}", plateforme) for depot, tag in images]
+                progression = Progression({d: t for couches in par_image for d, t in couches.items()})
+                if progression.total <= 0:
+                    progression = None
+            except Indisponible:
+                progression = None
+        self.telechargement_publie_le = None
+        try:
+            if progression:
+                self.publier_telechargement(progression)
+            for index, (depot, tag) in enumerate(images):
+                if progression:
+                    try:
+                        self.tirer(depot, tag, par_image[index], progression)
+                        continue
+                    except Indisponible:
+                        # Rien reçu de cette image : elle et les suivantes passent par la CLI, sans progression.
+                        progression = None
+                        self.publish(telechargement=None)
+                self.run(["docker", "pull", f"{depot}:{tag}"], timeout=TELECHARGEMENT_DELAI)
+        finally:
+            if self.state.get("telechargement") is not None:
+                with contextlib.suppress(Exception):
+                    self.publish(telechargement=None)
+
     def signatures(self, target):
         # Le commit des sources doit correspondre à celui des images signées (label inclus dans l'empreinte).
         refspec = f"refs/tags/v{target}:refs/tags/v{target}"
@@ -444,10 +881,11 @@ class Worker:
         # Le canal est lié à la révision signée : une préversion de développement ne s'installe que si le serveur l'a choisi.
         if not self.channel_ok(revision, target):
             raise Failure("Canal de publication non autorisé")
-        # Vérifier les trois artefacts avant d'arrêter l'application, sans possibilité de désactiver la signature.
+        # Téléchargement des trois images (progression publiée, ADR 0104), puis vérification de chacune avant d'arrêter
+        # l'application, sans possibilité de désactiver la signature. Rien de ce qui est téléchargé n'est utilisé avant.
+        self.telecharger(target)
         for component in ("api", "web", "updater"):
             image = f"ghcr.io/{REPOSITORY}-{component}:{target}"
-            self.run(["docker", "pull", image], timeout=900)
             digests = json.loads(self.run(["docker", "inspect", "--format", "{{json .RepoDigests}}", image]))
             prefix = f"ghcr.io/{REPOSITORY}-{component}@sha256:"
             digest = next((d for d in digests if d.startswith(prefix) and re.fullmatch(r"[a-f0-9]{64}", d[len(prefix):])), None)
@@ -554,7 +992,7 @@ class Worker:
                 phase = PHASES.get(progress.get("phase"), "rollback" if str(progress.get("phase", "")).startswith("retour") else "installing")
                 messages = {"preparing": "Préparation de la version.", "backup": "Sauvegarde de sécurité de vos données.",
                     "installing": "Installation de la nouvelle version.", "verifying": "Vérification du service et de vos données.",
-                    "rollback": "Retour sécurisé à la version précédente.", "complete": "Dernières vérifications."}
+                    "rollback": "Retour sécurisé à la version précédente."}
                 self.publish(phase=phase, message=messages[phase])
             if time.monotonic() - start > 3600:
                 os.killpg(p.pid, signal.SIGTERM)
