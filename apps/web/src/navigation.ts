@@ -115,6 +115,8 @@ export const FAMILLES: Famille[] = [
         page('vulnerabilites-veille', 'Veille', '/vulnerabilites/veille', 'vulnerabilites'),
         page('vulnerabilites-failles', 'Failles détectées', '/vulnerabilites/failles', 'vulnerabilites'),
         page('vulnerabilites-machines', 'Machines', '/vulnerabilites/machines', 'vulnerabilites'),
+        // Lot PC3 : poste de commandement vu par périmètre (cartes, détail par ligne ou au global).
+        page('vulnerabilites-perimetres', 'Périmètres', '/vulnerabilites/perimetres', 'vulnerabilites'),
         page('vulnerabilites-surface', 'Surface externe', '/vulnerabilites/surface-externe', 'vulnerabilites'),
         // Lot V6 : alertes décidées par la plateforme (critique : P1 ; simple : P2), prise en compte avec `modifier`.
         page('vulnerabilites-alertes', 'Alertes', '/vulnerabilites/alertes', 'vulnerabilites'),

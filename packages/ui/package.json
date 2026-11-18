@@ -35,6 +35,8 @@
     "./neon-taches.css": "./src/neon-taches.css",
     "./neon-surface.css": "./src/neon-surface.css",
     "./neon-commandement.css": "./src/neon-commandement.css",
+    "./neon-parc.css": "./src/neon-parc.css",
+    "./neon-fiche.css": "./src/neon-fiche.css",
     "./neon-ergonomie.css": "./src/neon-ergonomie.css"
   },
   "scripts": {

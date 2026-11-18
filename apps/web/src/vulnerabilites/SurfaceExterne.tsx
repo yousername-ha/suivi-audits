@@ -25,7 +25,6 @@ import {
   Button,
   Checkbox,
   Group,
-  List,
   Modal,
   Pagination,
   Select,
@@ -78,6 +77,7 @@ import { CarteSurface } from './CarteSurface';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
 import { FicheMachine } from './Machines';
 import { PrioriteFaits } from './FaillesDetectees';
+import { FicheFaille } from './FicheFaille';
 import { MarquesSources } from './SourcesFaille';
 import {
   alerteOuverte,
@@ -341,8 +341,9 @@ export function ServicesTable({ services, titre }: { services: (ServiceAlhDto | 
   );
 }
 
-/** Fiche d'une alerte (sans état) : CVE avec leur priorité et leurs sources, défauts et résolutions recommandés par
-    l'éditeur. Les textes de l'éditeur sont rendus comme texte (React les échappe) : aucun HTML n'est interprété. */
+/** Fiche d'une alerte (sans état) : CVE avec leur priorité et leurs sources, services portés. Lot PC4 : les défauts et
+    résolutions recommandés par l'éditeur, le vecteur traduit et le schéma sont dans la fiche illustrée commune
+    (FicheFaille), placée au-dessus ; les textes de l'éditeur y sont rendus comme texte (aucun HTML interprété). */
 export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
   return (
     <Stack>
@@ -399,55 +400,11 @@ export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
           Aucune CVE citée par l’éditeur : l’alerte n’a pas de priorité calculée ; sa criticité est celle de l’éditeur.
         </Text>
       )}
-      <Title order={3} size="h6">
-        Recommandations de l’éditeur
-      </Title>
-      {a.defauts.length ? (
-        a.defauts.map((d, i) => (
-          <Stack key={`${i}-${d.nom}`} gap="2xs" role="group" aria-label={`Défaut : ${d.nom}`}>
-            <Text size="sm" fw={600} className="veille-texte">
-              {d.nom}
-            </Text>
-            {d.description && (
-              <Text size="sm" className="veille-texte">
-                {d.description}
-              </Text>
-            )}
-            {d.resolutions.length > 0 && (
-              <List size="sm" spacing="2xs">
-                {d.resolutions.map((r, j) => (
-                  <List.Item key={`${j}-${r.nom}`}>
-                    <Text size="sm" fw={600} span className="veille-texte">
-                      {r.nom}
-                    </Text>
-                    {(r.facilite || r.gain) && (
-                      <Text size="xs" c="dimmed" span>
-                        {` (${[r.facilite ? `facilité : ${r.facilite}` : null, r.gain ? `gain : ${r.gain}` : null]
-                          .filter(Boolean)
-                          .join(' · ')})`}
-                      </Text>
-                    )}
-                    {r.description && (
-                      <Text size="sm" className="veille-texte">
-                        {r.description}
-                      </Text>
-                    )}
-                  </List.Item>
-                ))}
-              </List>
-            )}
-          </Stack>
-        ))
-      ) : (
+      {!a.detail && (
         <Text size="sm" c="dimmed">
-          {a.detail
-            ? 'L’éditeur ne publie aucune recommandation pour cette alerte.'
-            : 'Détail pas encore lu : les recommandations viendront à une prochaine synchronisation.'}
+          Détail pas encore lu : les recommandations de l’éditeur viendront à une prochaine synchronisation.
         </Text>
       )}
-      <Text size="xs" c="dimmed">
-        Textes de l’éditeur tels quels (anglais ou français), sans mise en forme.
-      </Text>
     </Stack>
   );
 }
@@ -1349,7 +1306,12 @@ function OngletAlertes() {
         lockScroll={false}
       >
         <ErrorAlert error={fiche.error} />
-        {fiche.data && <FicheAlerteAlh a={fiche.data} />}
+        {fiche.data && (
+          <Stack>
+            <FicheFaille nature="alerte-alh" id={fiche.data.id} />
+            <FicheAlerteAlh a={fiche.data} />
+          </Stack>
+        )}
       </Modal>
     </Stack>
   );
@@ -1556,7 +1518,12 @@ function OngletCarte() {
         lockScroll={false}
       >
         <ErrorAlert error={ficheAlerte.error} />
-        {ficheAlerte.data && <FicheAlerteAlh a={ficheAlerte.data} />}
+        {ficheAlerte.data && (
+          <Stack>
+            <FicheFaille nature="alerte-alh" id={ficheAlerte.data.id} />
+            <FicheAlerteAlh a={ficheAlerte.data} />
+          </Stack>
+        )}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}

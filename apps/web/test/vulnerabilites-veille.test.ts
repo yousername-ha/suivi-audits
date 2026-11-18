@@ -103,6 +103,7 @@ describe('menu', () => {
       ['vulnerabilites-veille', '/vulnerabilites/veille'],
       ['vulnerabilites-failles', '/vulnerabilites/failles'],
       ['vulnerabilites-machines', '/vulnerabilites/machines'],
+      ['vulnerabilites-perimetres', '/vulnerabilites/perimetres'],
       ['vulnerabilites-surface', '/vulnerabilites/surface-externe'],
       ['vulnerabilites-alertes', '/vulnerabilites/alertes'],
       ['vulnerabilites-priorite', '/vulnerabilites/priorite'],
@@ -227,6 +228,15 @@ describe('rendu', () => {
     expect(html).toContain('Non publiée');
     expect(html).toContain('editeur_fictif');
     expect(html).not.toContain('surface externe');
+  });
+  it('lot PC4 : la CVE ouvre sa fiche illustrée (bouton) quand l’écran le propose ; sinon texte simple', () => {
+    const rien = () => undefined;
+    for (const html of [
+      rendu(createElement(FaillesTable, { failles: [faille()], onOuvrir: rien })),
+      rendu(createElement(KevTable, { failles: [faille()], aujourdhui: '2026-11-16', onOuvrir: rien })),
+    ])
+      expect(html).toMatch(/<button[^>]*type="button"[^>]*>CVE-2026-0001<\/button>/i);
+    expect(rendu(createElement(FaillesTable, { failles: [faille()] }))).not.toMatch(/<button[^>]*>CVE-2026-0001/i);
   });
   it('faille vue sur la surface externe (lot ALH2) : actifs exposés lisibles, lien vers l’écran', () => {
     const html = renderToStaticMarkup(

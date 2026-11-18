@@ -6,6 +6,7 @@
    supposé. Les textes de Tenable sont gardés en anglais, tels quels (V19), nettoyés et bornés comme un texte externe. */
 import { z } from 'zod';
 import type { Priorite, RangMachineDto, SourcesFailleDto } from './priorite-vulnerabilites.js';
+import type { MachineMarqueeDto } from './parc-machines.js';
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 
@@ -412,7 +413,8 @@ export interface MachineDto {
   version: number;
 }
 
-export interface PageMachines extends PageFailles<MachineDto> {
+/** Machines de la page, avec leurs marques (priorité la plus haute, zero-day, exploitable ; lot PC2). */
+export interface PageMachines extends PageFailles<MachineMarqueeDto> {
   /** Machines lisibles sans rôle (bandeau), tous filtres confondus. */
   sansRole: number;
 }

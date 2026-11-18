@@ -1,0 +1,378 @@
+/* Module Vulnérabilités (ADR 0100, point 19 ; lot PC4) : fiche illustrée d'une faille, d'après la maquette 02-fiche. Langage
+   visuel du poste de commandement (neon-commandement.css : étiquettes en capitales espacées, chiffres à chasse fixe, liseré
+   de couleur, angles dissymétriques), sur les jetons de la charte, en clair et en sombre : couleurs de la cartographie
+   (--carte-*, contrastes vérifiés), traits de l'application (--suivi-*). Aucune longueur en px ni en rem ; dans le schéma,
+   unités de la viewBox (attributs SVG). Le texte porte toujours le sens ; la teinte (forte, moyenne, faible pour
+   l'attaquant) le double. Aucun style en ligne (ADR 0006). */
+.ff {
+  --ff-texte: var(--carte-texte);
+  --ff-doux: var(--carte-secondaire);
+  --ff-boite: var(--carte-boite);
+  --ff-trait: var(--suivi-trait);
+  --ff-c: var(--carte-bleu-accent);
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  min-inline-size: 0;
+  container: ff / inline-size;
+  color: var(--ff-texte);
+}
+/* Teinte d'une métrique selon sa force pour l'attaquant. */
+.ff-f--fort {
+  --ff-c: var(--carte-rouge-accent);
+  --ff-fond: var(--carte-rouge-doux);
+}
+.ff-f--moyen {
+  --ff-c: var(--carte-orange-accent);
+  --ff-fond: var(--carte-orange-doux);
+}
+.ff-f--faible {
+  --ff-c: var(--carte-gris-accent);
+  --ff-fond: var(--carte-gris-doux);
+}
+.ff h3 {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 650;
+}
+.ff ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ff-icone {
+  flex: none;
+  inline-size: 1.35em;
+  block-size: 1.35em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- En-tête */
+.ff-tete {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--carte-bleu-accent);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--ff-boite);
+}
+.ff-tete__cible {
+  overflow-wrap: anywhere;
+}
+.ff-tete__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.ff-tete__priorite {
+  display: grid;
+  gap: 0.2em;
+  min-inline-size: 0;
+}
+.ff-tete__marques {
+  display: grid;
+  gap: 0.3em;
+}
+.ff-tete__marques li {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.ff-alerte {
+  margin: 0;
+  padding: 0.5em 0.8em;
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--ff-c);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--ff-boite);
+  font-size: var(--mantine-font-size-sm);
+}
+
+/* ---- Vecteur d'attaque */
+.ff-vecteur {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.25);
+  background: color-mix(in srgb, var(--carte-canevas) 45%, var(--ff-boite));
+}
+.ff-vecteur__tete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.ff-vecteur__brut {
+  display: grid;
+  justify-items: end;
+  min-inline-size: 0;
+  color: var(--ff-doux);
+  font-size: var(--mantine-font-size-xs);
+  text-align: end;
+}
+.ff-vecteur__brut code,
+.ff-autres__brut {
+  overflow-wrap: anywhere;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--ff-doux);
+}
+.ff-chemin {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+  align-items: start;
+}
+.ff-chemin > .ff-impacts:nth-child(3) {
+  grid-column: 2;
+}
+.ff-portes {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) dashed color-mix(in srgb, var(--carte-rouge-accent) 45%, var(--ff-trait));
+  border-radius: var(--mantine-radius-xs);
+}
+.ff-portes > .pc-etiquette,
+.ff-impacts > .pc-etiquette {
+  text-align: center;
+}
+.ff-portes ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs);
+}
+.ff-porte {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.5em 0.7em;
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--ff-c);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--ff-boite);
+}
+.ff-porte .ff-icone,
+.ff-impact .ff-icone {
+  color: var(--ff-c);
+}
+.ff-porte strong,
+.ff-impact strong {
+  display: block;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.ff-porte small,
+.ff-impact small {
+  display: block;
+  color: var(--ff-doux);
+  font-size: var(--mantine-font-size-xs);
+  overflow-wrap: anywhere;
+}
+.ff-impacts {
+  display: grid;
+  gap: 0.35em;
+}
+.ff-impacts ul {
+  display: grid;
+  gap: 0.35em;
+}
+.ff-impact {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.4em 0.7em;
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--ff-boite);
+}
+.ff-impact b {
+  display: grid;
+  justify-items: end;
+  color: var(--ff-c);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ff-impact__code {
+  color: var(--ff-doux);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.ff-en-clair {
+  margin: 0;
+  padding-block-start: var(--mantine-spacing-sm);
+  border-block-start: var(--suivi-trait-l) solid var(--ff-trait);
+  font-size: var(--mantine-font-size-sm);
+}
+.ff-en-clair span {
+  color: var(--ff-doux);
+}
+.ff-autres ul {
+  display: grid;
+  gap: 0.2em;
+}
+
+/* ---- Schéma (SVG, unités de la viewBox) */
+.ff-schema {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  min-inline-size: 0;
+}
+.ff-schema__svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.ff-schema__etroit {
+  display: none;
+}
+.ff-s-boite {
+  fill: var(--ff-boite);
+  stroke: color-mix(in srgb, var(--ff-c) 70%, var(--ff-trait));
+  stroke-width: 1.5;
+}
+.ff-s-rangee {
+  fill: var(--ff-fond, var(--ff-boite));
+  stroke: var(--ff-trait);
+  stroke-width: 1;
+}
+.ff-s-titre {
+  fill: var(--ff-doux);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+.ff-s-libelle {
+  fill: var(--ff-texte);
+  font-weight: 600;
+}
+.ff-s-detail,
+.ff-s-code {
+  fill: var(--ff-doux);
+}
+.ff-s-code {
+  font-family: var(--mantine-font-family-monospace);
+}
+.ff-s-niveau {
+  fill: var(--ff-c);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ff-s-icone {
+  fill: none;
+  stroke: var(--ff-c);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ff-s-fleche {
+  stroke: var(--carte-rouge-accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+}
+.ff-s-pointe {
+  fill: var(--carte-rouge-accent);
+}
+.ff-schema__texte {
+  color: var(--ff-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.ff-schema__texte ol {
+  margin: 0.2em 0 0;
+  padding-inline-start: 1.4em;
+}
+
+/* ---- Recommandations */
+.ff-recos {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+}
+.ff-recos__tete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.ff-recos__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
+  gap: var(--mantine-spacing-xs);
+}
+.ff-reco {
+  display: grid;
+  align-content: start;
+  gap: 0.35em;
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--ff-trait);
+  border-block-start: calc(var(--suivi-trait-l) * 2) solid var(--carte-vert-accent);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--ff-boite);
+  overflow-wrap: anywhere;
+}
+.ff-reco__source {
+  color: var(--carte-vert-accent);
+}
+.ff-reco--urgent {
+  border-block-start-color: var(--carte-rouge-accent);
+}
+.ff-reco--urgent .ff-reco__source {
+  color: var(--carte-rouge-accent);
+}
+.ff-reco__lignes,
+.ff-resolutions {
+  display: grid;
+  gap: 0.3em;
+}
+.ff-resolutions {
+  padding-inline-start: 0.8em;
+  border-inline-start: var(--suivi-trait-l) solid var(--ff-trait);
+}
+
+/* ---- Écran étroit : une colonne, schéma vertical. */
+@container ff (max-width: 46em) {
+  .ff-chemin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ff-chemin > .ff-impacts:nth-child(3) {
+    grid-column: auto;
+  }
+  .ff-schema__large {
+    display: none;
+  }
+  .ff-schema__etroit {
+    display: block;
+  }
+}
+@container ff (max-width: 30em) {
+  .ff-portes ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media print {
+  .ff-schema__etroit {
+    display: none;
+  }
+  .ff-schema__large {
+    display: block;
+  }
+}

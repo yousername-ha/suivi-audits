@@ -370,6 +370,12 @@
 - **Lot PC1, vue d'ensemble du poste de commandement** (18/11/2026) : sans migration, premier onglet et adresse d'accueil du
   module, niveau d'alerte de 1 à 4 (règle à confirmer), radar dont chaque point est une faille suivie réelle. Voir l'addendum
   « lot PC1 » ci-dessous.
+- **Lot PC2, écran « Machines », présentation « Parc »** (18/11/2026) : sans migration, tuiles par machine dans les zones de
+  rôle, murs animés, marques zero-day et exploitable, échelle réduite ou grand écran. Voir l'addendum « lot PC2 » ci-dessous.
+- **Lot PC3, onglet « Périmètres »** (18/11/2026) : sans migration, cartes des périmètres lus, détail par ligne ou au global,
+  mention « Exposée sur Internet » des machines reliées par une liaison confirmée. Voir l'addendum « lot PC3 » ci-dessous.
+- **Lot PC4, fiche de faille illustrée** (18/11/2026) : sans migration, présentation commune en tête des fiches existantes,
+  vecteur CVSS traduit avec une icône par métrique, schéma, recommandations par source. Voir l'addendum « lot PC4 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1427,3 +1433,331 @@ la CSP n'a pas été vérifiée sur le banc (serveur de développement), seuleme
 6. Barre de recherche commune au module (point 15).
 7. Durée de la lecture sur un très grand parc : le calcul global est refait à chaque lecture (environ 1 s pour 10 000 CVE) ;
    le garder en mémoire entre deux évaluations si l'agent de charge le montre nécessaire.
+
+## Addendum du 18/11/2026 — lot PC2 : écran « Machines », présentation « Parc »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun appel réseau nouveau, aucune dépendance nouvelle, rien de nouveau chez l'assistant. Réalise la vue « par machine » du
+point 16 et de V11, la part « front, back, base » de V12 pour l'écran « Machines » et les marques de V16 ; lève les points
+ouverts 2 et 5 de l'addendum « lot PC1 » (sous réserve de la définition du zero-day ci-dessous).
+
+### Demandes du RSSI (15 et 16/11/2026)
+
+« Une vue par machine pour voir le nombre de failles (critique etc). L'assistant classe par machine plus critique. Une vue où
+j'indique les serveurs front, bdd, back applicative. » ; « Pour la vue machine, j'imagine plus des vraies icônes de pc plutôt
+que des lignes et séparation. » ; « Il faut prévoir en grand écran pour en voir plus. En réduit, si trop de machines, pour
+afficher les plus critiques/prioritaires. Il manque aussi cette séparation front du back. » ; « Les barres en diagonale des
+barres de séparation rouge et violet doivent être animées. » ; « Faille zero day : un petit warning sur la machine. Une icône
+spéciale sur les vulnérabilités exploitables aussi. » Maquettes validées `04-machines.png` et `04b-machines-grand-ecran.png`.
+
+### Réalisation
+
+- **Écran « Machines »** (`apps/web/src/vulnerabilites/Machines.tsx`) : bascule « Liste » (l'existant) ou « Parc »
+  (`ParcMachines.tsx`), mémorisée dans les **préférences de la personne** (`Preferences.vulnerabilitesMachines`, déjà rangées
+  en base avec le compte, aucune colonne nouvelle), ainsi que l'échelle du parc. Filtres conservés (nom, rôle, périmètre) ;
+  l'affectation du rôle et du périmètre reste dans la liste (cases à cocher).
+- **Tuile** : bouton, une par machine lisible ; icône d'ordinateur selon le **rôle** (poste avec un globe pour le front,
+  serveur en baie pour le back applicatif, cylindre pour la base de données, poste avec un point d'interrogation sans rôle :
+  seule la donnée de rôle permet de choisir l'icône, Tenable ne dit pas « serveur » ou « poste ») ; nom ; **rang** (numéro) ;
+  failles présentes **critiques, élevées, moyennes, faibles** (compteurs existants) ; **priorité la plus haute** en couleur et
+  en texte (P1 à P4, « Aucune » sans faille présente). Nom accessible complet, par exemple « srv-web-03 : rang 3 sur 150, front,
+  2 critiques, priorité P1, zero-day, exploitation avérée » ; clic ou Entrée : fiche existante de la machine.
+- **Zones** « Front », « Back applicatif », « Base de données » côte à côte, puis « Rôle non indiqué » en dessous ; dans chaque
+  zone, l'ordre du rang (la plus critique d'abord). **Murs** entre les zones, d'après la maquette : rouge entre le front et le
+  back, violet entre le back et les bases ; bandes diagonales qui défilent (une période par seconde, 1,6 s pour le violet),
+  coupées par `prefers-reduced-motion: reduce` et à l'impression ; nom de la frontière lisible. Parc étroit (requête de
+  conteneur) : zones empilées, murs horizontaux.
+- **Marques** (tuiles, colonne « Priorité et marques » de la liste, légende) : triangle **« Zero-day : exploitation avérée »**
+  quand la machine porte une faille **présente** (constat de Tenable présent ou faille déclarée, non traités) **dont
+  l'exploitation est avérée** (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé, AlgoLightHouse) : c'est la définition
+  du lot V6, c'est-à-dire une faille P1 de la grille ; éclair **« Exploitable »** quand elle porte une faille présente pour
+  laquelle une source dit qu'un code d'exploitation existe (`SOURCES_EXPLOITABLE` de la grille : Tenable, preuve de concept du
+  CERT Santé, AlgoLightHouse) **sans exploitation avérée**. La marque zero-day concorde avec le compteur existant
+  `exploitationAveree` (test d'API).
+- **Échelle** : « Réduit » par défaut (les 5 plus prioritaires de chaque zone, 8 pour « Rôle non indiqué », puis une tuile « et
+  n autres : tout montrer » qui déplie la zone et devient « Replier ») ; « Grand écran » : toutes les machines reçues, tuiles
+  denses, zones de rôle élargies selon leur nombre de tuiles (classe de poids 1 à 4, sans style en ligne). Au-delà de la borne
+  de la route, une tuile « et n autres : voir la liste » ouvre la liste filtrée sur ce rôle.
+- **Route** `GET /api/vulnerabilites/machines/parc` (`vulnerabilites:lire`, filtres `q`, `role`, `perimetre`), lecture seule,
+  aucune entrée de journal : quatre zones toujours rendues, chacune avec son total, son nombre de machines « zero-day » et au
+  plus **250 machines** (les plus prioritaires) ; `tronquee` signale une zone bornée. **Nombre de requêtes fixe**, aucune par
+  machine : machines lisibles et leurs compteurs 2, réglage 1, failles présentes des machines 9 (constats 1, failles déclarées
+  1, CVE des constats 1, faits des sources 3 + 3) ; **12 au plus**, quel que soit le parc. Le calcul des failles présentes par
+  machine (`faillesDesMachines`, `apps/api/src/vulnerabilites/failles.ts`) est celui qui servait déjà à la majoration du lot
+  ALH5 (`machinesVulnerables` l'appelle désormais, mêmes requêtes). `GET /api/vulnerabilites/machines` rend aussi les marques
+  des machines de la page (mêmes 9 requêtes, sur 25 machines).
+- **Droits** : seules les machines que la personne lit sont listées ou comptées (périmètre effectif du lot V4d) ; aucun total,
+  nom ni adresse d'une machine illisible, pas même un drapeau ; priorité et marques calculées sur tous les faits connus, les
+  mêmes pour tout le monde (lot ALH5), sans majoration par la surface externe ; rang inchangé (parmi les machines lisibles,
+  comme la liste).
+- **Assistant** : rien de branché. Le rang affiché est celui de la plateforme (point 16), déjà remis à l'assistant par
+  `machines_prioritaires` sous forme de repères.
+- Fonctions pures `repartirParc`, `visiblesZone`, `marquesMachine` (`packages/shared/src/parc-machines.ts`) et `urlParc`,
+  `nomAccessibleMachine`, `poidsZones` (`apps/web/src/vulnerabilites/parc.ts`), testées ; feuille
+  `packages/ui/src/neon-parc.css` (jetons de la charte, clair et sombre, aucune longueur en px ni en rem).
+
+### Définition du marqueur zero-day, à confirmer par le RSSI
+
+Le marqueur dit « exploitation avérée » d'une faille **présente** sur la machine, comme l'alerte critique du lot V6 (point
+ouvert 11, réponse proposée appliquée). Il ne distingue pas les failles **sans correctif publié** : si le RSSI réserve
+« zero-day » à celles-là, il faudra une source qui le dise (mention « Un correctif existe : Non » du CERT Santé, date de
+correctif de Tenable), à trancher.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Présentation par défaut : « Liste »** (l'existant), « Parc » sur choix de la personne, mémorisé ; échelle « Réduit » par
+  défaut.
+- **Nombres du mode réduit** : 5 par zone de rôle, 8 pour « Rôle non indiqué » (comme la maquette) ; **borne de la route** :
+  250 par zone.
+- **Exploitable** : seulement pour une faille sans exploitation avérée (point 16 : « sans exploitation observée ») ; une
+  machine peut porter les deux marques si deux failles différentes les justifient.
+- **Priorité de la machine** : la plus haute de ses failles présentes non traitées (constats et failles déclarées), sans la
+  majoration par la surface externe (lot ALH5 : jamais appliquée aux failles des machines).
+- **Affectation** : seulement en présentation « Liste » ; la tuile ouvre la fiche, sans case à cocher.
+- **Zone « Rôle non indiqué »** : nom demandé par la consigne, au lieu de « Machines sans rôle » de la maquette.
+
+### Écarts à la maquette
+
+- **Murs** : la maquette en compte deux (rouge front · back, violet back · bases) ; ils sont repris tels quels. La consigne
+  du lot parlait d'un mur rouge « entre Internet et le front » et d'un mur violet « entre le front et le back » : la maquette a
+  été suivie, à trancher si un mur de plus est voulu devant le front.
+- **Pas de bandeau de l'assistant** (« Lecture de l'assistant · classement des machines », « Proposer les actions ») : rien
+  n'est branché chez l'assistant dans ce lot.
+- **Pas de bascule « Par faille / Par machine »** dans l'écran (elle reste dans « Failles détectées ») ni de puces « Exploitées
+  seulement », « Avec critique » : les filtres existants (nom, rôle, périmètre) sont conservés tels quels.
+- **Pas de nom d'application** sous le nom de la machine (« Portail patient ») : la donnée n'existe pas ; pas de choix
+  « Front / Back / BDD » sur les tuiles sans rôle (l'affectation se fait dans la liste).
+- **Quatre chiffres de gravité** sur chaque tuile (la maquette n'en montre que deux), le zéro grisé, et un libellé de priorité
+  P1 à P4 (absent de la maquette, exigé : jamais la couleur seule).
+- **Marque zero-day sans clignotement** : une lueur douce, coupée par le mouvement réduit (la maquette fait clignoter le
+  triangle).
+- **« Grand écran »** : tout le parc en tuiles denses sur toute la largeur de la zone de contenu, menu latéral compris ; pas de
+  plein écran du navigateur (la fiche d'une machine, fenêtre posée sur la page, n'y serait plus visible). À 1 440 px avec le
+  menu, trois à quatre tuiles par ligne et par zone, contre neuf dans la maquette `04b` (relevée à 2 560 px sans menu).
+- Titre de zone « 1re ligne · exposée », « 2e ligne », « 3e ligne », « À classer » repris ; en-tête de zone : nombre de
+  machines lisibles et nombre « avec une exploitation avérée » (au lieu de « n critiques »).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (Vite, composants de l'écran avec 150 machines fictives : 38 front, 66
+back, 34 bases, 12 sans rôle ; Chromium, clair et sombre, 1 440 et 390 px, plus 768, 1 024 et 2 560 px ; réduit, grand écran
+et liste ; axe `wcag2a`/`wcag2aa` sans violation ; aucun chevauchement de texte ni débordement de page ; clavier, fiche,
+« et n autres » et animation des murs essayés, animation coupée sous mouvement réduit), pas dans la pile complète ; la CSP n'a
+pas été vérifiée sur le banc, seulement par les tests de l'interface (aucun attribut `style` sur le balisage propre à
+l'écran). Le parcours Playwright adapté n'a pas été joué (CI seulement) et ne voit qu'un parc vide. Durée de la route sur un
+parc réel (12 requêtes, toutes les machines lisibles et leurs failles présentes en mémoire) ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Définition du zero-day** (ci-dessus) et mur supplémentaire devant le front.
+2. **Vue par périmètre** front / back / base (point 17, maquette 05).
+3. **Fiche de faille illustrée** : vecteur d'attaque traduit avec icônes et schéma (point 19, maquette 02).
+4. **Liens front → back → base entre machines** : aucune source ne les fournit (point ouvert 5).
+5. Bandeau de l'assistant sur l'écran (classement commenté et « Proposer les actions »), si le RSSI le veut.
+6. Marques zero-day et exploitable sur les **failles** elles-mêmes (listes « Failles détectées », radar) : seules les machines
+   les portent dans ce lot.
+
+## Addendum du 18/11/2026 — lot PC3 : onglet « Périmètres »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau, aucune dépendance nouvelle, rien de nouveau chez l'assistant. Réalise le
+point 17 et la part « par périmètre » de V12 ; lève le point ouvert 3 de l'addendum « lot PC1 » et le point ouvert 2 de
+l'addendum « lot PC2 ».
+
+### Demande du RSSI (15/11/2026)
+
+« Et par périmètre une vue où sur un périmètre on voit les machines au global ou […] en front reliées, séparées à celles en
+back. » Maquette validée `05-perimetre.png`.
+
+### Réalisation
+
+- **Onglet** « Périmètres » du module, après « Machines » (`/vulnerabilites/perimetres`, `apps/web/src/vulnerabilites/Perimetres.tsx`).
+- **Liste** : une carte par périmètre que la personne lit (bouton, nom accessible complet) : nom, machines lues, priorité la plus
+  haute de leurs failles présentes (couleur et texte P1 à P4, « Aucune »), failles présentes critiques, élevées, moyennes et
+  faibles, machines marquées « zero-day » et « exploitable » (marques du lot PC2, avec leur nombre), actifs exposés sur Internet
+  rattachés (actifs présents dont le périmètre AlgoLightHouse est relié au périmètre). Tri du plus critique au moins critique
+  (`comparerPerimetres`, paquet partagé) : priorité, machines zero-day, failles critiques, machines exploitables, failles
+  élevées, moyennes, faibles, actifs exposés, machines, puis nom. Carte **« Sans périmètre »** pour qui a
+  `vulnerabilites:administrer` seulement (machines sans périmètre effectif, actifs d'un périmètre AlgoLightHouse non relié).
+- **Détail** (clic ou Entrée, adresse partageable `?perimetre=<id>|aucun`, `&presentation=global`) : chiffres clés (machines,
+  failles critiques, machines avec exploitation avérée, machines sans rôle, actifs exposés rattachés), bandeau quand des machines
+  de première ligne portent une faille à exploitation avérée, puis **« Par ligne »** (composant `ParcMachines` du lot PC2 : zones
+  front, back applicatif, base de données, rôle non indiqué, murs animés, mode réduit et « et n autres ») ou **« Vue globale »**
+  (toutes les machines ensemble dans l'ordre du rang, 24 d'abord puis « et n autres »). Mêmes tuiles, marques, fiche au clic.
+- **Exposition** (lot ALH3) : une machine reliée par une liaison **confirmée** à un actif exposé que la personne lit porte la
+  mention « Exposée sur Internet » (texte et globe, détail dans le nom accessible) ; la liste sous le parc donne les actifs (trois
+  au plus par machine, puis le nombre des autres actifs **lisibles**). Rien d'un actif illisible : ni nom, ni nombre, ni drapeau ;
+  une proposition non confirmée n'apparaît pas.
+- **Aucun trait entre machines** : le lien front → back → base de machine à machine n'existe pas en données (point ouvert 5) ;
+  l'écran et l'aide le disent. Les murs séparent les rôles indiqués, comme au lot PC2.
+- **Routes** (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/perimetres.ts`), lecture seule, aucune entrée de journal :
+  `GET /api/vulnerabilites/machines/perimetres` (cartes) et `GET /api/vulnerabilites/machines/perimetres/{id|aucun}` (carte, parc
+  du lot PC2 restreint au périmètre, expositions). `/api/vulnerabilites/perimetres` étant déjà pris (périmètres où l'on peut
+  écrire), les routes sont sœurs de celle du parc. **Nombre de requêtes fixe**, aucune par périmètre ni par machine : liste 16 au
+  plus (périmètres 1, machines lisibles et compteurs 2, réglage 1, marques 9, failles par périmètre 2, actifs 1), détail 17 au
+  plus (périmètre 1, mêmes calculs restreints, liaisons 1) ; mesuré sur PostgreSQL de test : 13 pour la liste, 10 à 14 pour un
+  détail (test d'API qui compte les requêtes). **Bornes** : 250 machines par ligne dans le détail (`PARC_PAR_ZONE`, totaux exacts,
+  « et n autres : voir la liste » vers l'écran « Machines » filtré par l'adresse) ; trois actifs nommés par machine ; liste des
+  périmètres non bornée (taille du référentiel lu).
+- **Droits** : périmètres visibles de la pyramide (`grc_smsi_visible`) ; machines par leur périmètre effectif (lot V4d) ; actifs
+  par leur périmètre AlgoLightHouse relié. Un périmètre illisible est absent de la liste et répond comme un inconnu (404, même
+  message) ; « aucun » sans `administrer` aussi. Qui lit un périmètre lit toutes ses machines : deux personnes qui le lisent en
+  voient la même carte ; priorité et marques sur tous les faits connus (lot ALH5). Aucun total de ce qui est illisible.
+- **Liens croisés** : dans la liste de l'écran « Machines », le nom du périmètre ouvre son détail ; en présentation « Parc »
+  filtrée sur un périmètre, un lien mène à son détail ; l'écran « Machines » lit ses filtres `perimetre` et `role` dans l'adresse.
+  La vue d'ensemble (lot PC1) n'affiche aucun nom de périmètre : rien n'y est ajouté.
+- **Assistant** : rien de branché ; aucun nom de périmètre ne lui est remis.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Failles d'un périmètre** : chaque constat de Tenable compté une fois par périmètre (gravité de Tenable), chaque CVE déclarée
+  une fois (gravité la plus sévère entre NVD et le CERT Santé), mêmes règles de présence et de traitement que les compteurs d'une
+  machine ; une CVE déclarée sur une machine et détectée par un constat sur une autre machine du même périmètre compte deux fois.
+- **Périmètres listés** : ceux de l'organisation que la personne lit, même vides (« 0 machine lue »), et tout autre périmètre lu
+  (entité fournisseur) seulement s'il porte une machine ou un actif exposé. Machines rangées par leur périmètre effectif exact,
+  sans cumul dans un périmètre parent.
+- **Présentation par défaut « Par ligne »** (comme la maquette), non mémorisée dans les préférences : elle est dans l'adresse.
+- **Rang** affiché : celui de la plateforme parmi toutes les machines que la personne lit (comme la liste et le parc), pas un
+  rang propre au périmètre.
+- **Exposition** : aucune trace d'une liaison vers un actif illisible (plus strict que la fiche d'une machine du lot ALH3, qui
+  la signale par un drapeau sans nombre).
+
+### Écarts à la maquette
+
+- **Liste de cartes** en plus de la maquette (qui montre seulement le détail, avec des puces de choix du périmètre en tête) :
+  pas de puces ; un lien « Tous les périmètres » ramène à la liste.
+- **Pas de bloc « Extérieur »** ni de **flèches entre les lignes** : les murs du lot PC2 séparent les lignes ; le mur
+  « Internet → front » reste hors lot.
+- **Bandeau** : « n machines de première ligne portent une faille dont l'exploitation est avérée », sans « reliées à deux
+  serveurs applicatifs » (aucune donnée) ni « Ouvrir la faille » (plusieurs failles possibles ; la fiche de chaque machine les
+  donne).
+- **Tuiles** du parc (icône, rang, quatre gravités, priorité en texte) au lieu des lignes de la maquette ; pas de « PHP exploitée »
+  sous le nom (nom de faille non porté par la tuile).
+- **Cinq chiffres clés** au lieu de quatre (« Actifs exposés rattachés » ajouté) ; zone « Rôle non indiqué » toujours affichée.
+- Pas de barre de recherche commune (point 15, non réalisé).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (application réelle sous Vite, API simulée par Playwright, données
+fictives : 8 périmètres, 150 machines, 10 sans périmètre, actifs exposés reliés à deux machines ; Chromium, clair et sombre,
+1 440 et 390 px ; liste, détail par ligne, vue globale, « Sans périmètre » ; axe `wcag2a`/`wcag2aa` sans violation, aucun
+chevauchement de texte, aucun débordement de page ; Entrée sur une carte et clic sur une tuile essayés), pas dans la pile
+complète ; la CSP n'a pas été vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface (aucun
+attribut `style` sur le balisage propre à l'écran). Le parcours Playwright ajouté n'a pas été joué (CI seulement) et ne voit que
+la carte « Sans périmètre » vide d'une pile vierge. Durée des routes sur un parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Liens entre machines** (front → back → base) : aucune source ne les fournit ; saisie à la main ou autre source, à trancher
+   (point ouvert 5).
+2. **Mur « Internet → front »** devant la première ligne (addendum « lot PC2 », point ouvert 1).
+3. **Fiche de faille illustrée** (point 19, maquette 02).
+4. Confirmer les choix ci-dessus (décompte des failles d'un périmètre, périmètres vides listés, présentation par défaut).
+5. Puces de choix du périmètre dans le détail, si le RSSI les veut.
+
+## Addendum du 18/11/2026 — lot PC4 : fiche de faille illustrée
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, aucun appel réseau nouveau, aucune liste blanche élargie, aucune dépendance nouvelle, aucun appel au
+modèle. Réalise V10 et le point 19 ; lève le point ouvert 4 de l'addendum « lot PC1 », le point ouvert 3 de l'addendum « lot
+PC2 » (fiche illustrée) et le point ouvert 3 de l'addendum « lot PC3 ».
+
+### Demande du RSSI (15/11/2026)
+
+« Possible d'ajouter la recommandation, la traduction du vecteur d'attaque avec des icônes, un schéma qui le représente. »
+Maquette validée `docs/unification/maquettes-vulnerabilites/02-fiche.png`.
+
+### Source du vecteur
+
+Le vecteur CVSS est **déjà rangé** : NVD, v3.1 et v4.0 par CVE (`cvss31_vecteur`, `cvss40_vecteur` de
+`vulnerabilites_veille_cve`, lot V2), et Tenable, vecteur v3 du contrôle (`cvss3_vecteur` de `vulnerabilites_constats`, lot V5,
+souvent sans préfixe « CVSS:3.x/ »). AlgoLightHouse ne range aucun vecteur (score seulement) : il n'en apporte pas ; aucun champ
+n'a été ajouté. Le CERT Santé ne range qu'un score. **Règle des sources** (V27, lot V4c) appliquée au vecteur : parmi les
+vecteurs lisibles, celui dont le score publié est le plus sévère parle ; à score égal (ou sans score), NVD avant Tenable et, chez
+NVD, la v4.0 avant la v3.1. La fiche dit laquelle parle (« Vecteur retenu : NVD (CVE-…), CVSS v3.1, score 9,8 : le plus sévère
+des vecteurs publiés ») et montre les autres en petit.
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/fiche-faille-vulnerabilites.ts`, testé en table) : `decoderVecteurCvss` (v3.0, v3.1,
+  v3 sans préfixe, v4.0 ; toute métrique inconnue, en double, de valeur inconnue, ou métrique de base absente : `null`, jamais
+  une traduction devinée ; métriques temporelles, de menace, environnementales et supplémentaires admises mais non traduites),
+  `conditionsTraduites` et `impactsTraduits` (terme exact en français, traduction, icône et force pour l'attaquant par
+  métrique), `phraseVecteur`, `vecteurRetenu`, `libelleSourceVecteur`, `schemaVecteur` (étapes et nom accessible),
+  `marquesFaille`, `libellePresence`, `libelleVersionsNvd`, DTO `FicheFailleDto` et paramètres de route.
+- **Route** `GET /api/vulnerabilites/fiches/{nature}/{id}` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/fiches.ts`),
+  natures `constat`, `declaree`, `cve`, `alerte-alh` : lecture seule, aucune entrée de journal, nombre de lectures fixe. Le
+  constat, la faille déclarée et l'alerte se lisent par leur fiche existante (404, même message, pour l'illisible et l'inconnu) ;
+  une CVE de la veille avec `lire` (404 si la plateforme ne la connaît pas). Rend : CVE (cinq) et leur nombre, composant
+  (produit du catalogue KEV, sinon de NVD, sinon nom du contrôle de Tenable ou du produit déclaré, ou produit du service de
+  l'alerte), priorité et faits, marques, alerte ouverte de la plateforme (la plus haute), présence lue, vecteurs publiés (six
+  au plus), recommandations par source.
+- **Recommandations**, chaque source à part, telles quelles et bornées : correctif du contrôle de Tenable (anglais, V19) ;
+  action exigée et échéance du catalogue KEV (cinq) ; versions touchées selon NVD (bornes publiées, huit) ; mentions « un
+  correctif existe » et « une mesure de contournement existe » du CERT Santé ; alertes et avis du CERT-FR et du CERT Santé qui
+  citent la faille, avec le lien vers la source (six) ; défauts et résolutions de l'éditeur d'AlgoLightHouse (ceux de l'alerte
+  ouverte, ou ceux des trois alertes ouvertes, présentes et **lisibles** qui citent la faille). Rien de connu : « Aucune
+  recommandation connue […]. La plateforme n'en invente aucune. »
+- **Présence** : machines lisibles touchées (constat : ses machines ; faille déclarée : machines reliées ; CVE : détections
+  présentes et machines reliées à un produit rattaché) et actifs exposés lisibles qui portent la CVE ; drapeau sans nombre
+  `horsLecture` pour le reste (lot ALH5). Alerte d'AlgoLightHouse : l'actif visé, sans machine.
+- **Interface** (`apps/web/src/vulnerabilites/FicheFaille.tsx`, `fiche-faille.ts`) : composant unique `FicheFaille`, placé en tête
+  des fenêtres existantes (« Failles détectées » et « Vue d'ensemble » : constat et faille déclarée ; « Surface externe » :
+  alerte, onglets « Alertes » et « Carte ») et d'une fenêtre nouvelle de l'écran « Veille », ouverte par la CVE (recherche et
+  catalogue KEV). Les blocs que la fiche illustrée reprend sont retirés des fiches existantes pour ne pas les dire deux fois :
+  priorité (constat, faille déclarée), correctif de Tenable, action exigée du catalogue KEV, recommandations de l'éditeur
+  d'AlgoLightHouse ; le vecteur brut reste dans les scores de Tenable. Schéma SVG en deux mises en page (quatre colonnes en
+  large, empilé sous 46 em de conteneur), `role="img"` et nom accessible en une phrase, équivalent texte en liste numérotée
+  dessous ; libellé texte sur chaque étape et chaque rangée, teinte en double. Feuille `packages/ui/src/neon-fiche.css`
+  (jetons de la charte, clair et sombre, ni px ni rem, aucun style en ligne).
+
+### Écarts à la maquette
+
+- **Pas de radar « Position de la cible »** dans la fiche (il est dans la vue d'ensemble, lot PC1), ni de colonne « État,
+  secteur, produit surveillé, responsable, action liée » : l'état de suivi et les actions restent dans la rubrique de suivi
+  existante, sous la fiche.
+- **Pas de bloc « Proposition de l'assistant »** ni de **« parcours de la faille »** horodaté (publiée, exploitation avérée,
+  détectée, action décidée, corrigée) : hors lot (plan d'action de l'assistant) ou données dispersées entre sources et suivi.
+- **Pas de tuiles « Machines touchées » et « Jours depuis l'alerte »** : la présence lue est une phrase de l'en-tête et du
+  schéma ; aucun total global.
+- **« Ce qu'il lui faut »** : les métriques du vecteur seulement (AV, AC, AT en v4.0, PR, UI, S en v3) ; l'exploitation observée
+  et l'EPSS, que la maquette y mettait, sont dans les faits de la priorité de l'en-tête (ils ne sont pas dans le vecteur).
+- **Schéma SVG distinct** des cartes de métriques (la maquette n'a qu'un chemin en HTML) : la consigne demande un schéma
+  composé, nommé et doublé d'un texte ; il porte aussi la présence lue.
+- **Effets sur les systèmes en aval** (v4.0) ajoutés ; termes exacts sous chaque traduction ; vecteur brut et version en tête.
+- Recommandations en grille de largeur libre (une à trois par ligne selon la place) ; titre « Recommandations des sources »
+  et mention « rien n'est rédigé par la plateforme ni par l'assistant ».
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Vecteur de Tenable sans préfixe** lu comme un vecteur CVSS v3, « version mineure non précisée par la source » (les métriques
+  de base de la v3.0 et de la v3.1 sont les mêmes) ; un vecteur v2 est illisible.
+- **Règle du vecteur retenu** ci-dessus (score le plus sévère, puis NVD, puis v4.0) ; pour un constat à plusieurs CVE, les
+  vecteurs de NVD des CVE au score le plus haut, deux cents CVE lues au plus.
+- **Marques** de la fiche : celles du lot PC2 appliquées à la faille : « zero-day » si elle est présente et que son exploitation
+  est avérée, « exploitable » si elle est présente, exploitable et non exploitée ; une CVE de la veille seulement connue n'en a
+  aucune. Présence d'une CVE de la veille sans tenir compte des états de suivi (comme l'assistant).
+- **Versions touchées selon NVD** données comme recommandation (« versions touchées avant 8.3.29 (8.3.29 n'est plus citée
+  comme touchée) ») : c'est une borne publiée, jamais présentée comme « version corrigée ».
+- **Blocs retirés des fiches existantes** (priorité, correctif de Tenable, action du catalogue KEV, recommandations de
+  l'éditeur) au profit de la fiche illustrée placée au-dessus ; les tests de l'interface ont été adaptés en conséquence (mêmes
+  assertions, rendues sur la fiche illustrée).
+- **Composant touché** : produit du catalogue KEV, sinon premier éditeur et produit des CPE de NVD, sinon nom du contrôle.
+
+### Non vérifié
+
+Aucune donnée réelle (tests et rendu sur données fictives). Rendu vu sur un **banc local** (Vite, composant réel dans une
+fenêtre Mantine de taille « xl », quatre failles fictives : réseau sans privilège, local avec privilèges élevés, CVSS v4.0,
+vecteur illisible ; Chromium, clair et sombre, 1 440 et 390 px ; axe `wcag2a`/`wcag2aa` sans violation, aucun chevauchement de
+texte ni texte hors de sa boîte dans le schéma, aucun débordement de page), pas dans la pile complète ; la CSP n'a pas été
+vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface. Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-fiche.spec.ts`, réponses de lecture remplacées par des données fictives) n'a pas été joué (CI
+seulement). Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Plan d'action rédigé par l'assistant** dans la fiche (bloc « Proposition de l'assistant » de la maquette, V25).
+2. **Liens entre machines** (front → back → base) : aucune source ne les fournit (point ouvert 5).
+3. Parcours horodaté de la faille (publiée, exploitée, détectée, action, corrigée), si le RSSI le veut.
+4. Vecteur d'AlgoLightHouse : à ranger seulement si l'éditeur le publie (champ à ajouter à la liste blanche, à valider).
+

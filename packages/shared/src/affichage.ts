@@ -2,6 +2,7 @@
    (calculée à partir de l'état de l'outil historique, déjà filtré selon les droits). */
 import { z } from 'zod';
 import { conformiteParReferentiel, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
+import { ECHELLES_PARC, VUES_MACHINES } from './parc-machines.js';
 import { BUSINESS_MODULES } from './permissions.js';
 
 /* ---------------------------------------------------------------- Préférences */
@@ -52,6 +53,11 @@ export const Preferences = z.object({
   /** Présentation de l'accueil choisie par la personne (refonte Neon, ADR 0093) : tableau personnalisable (défaut, absent)
       ou vue analytique. Affichage seulement : les données restent filtrées par les droits de la personne. */
   accueil: z.enum(['personnalisee', 'analytique']).optional(),
+  /** Écran « Machines » du module Vulnérabilités (ADR 0100, lot PC2) : liste ou parc en tuiles, et échelle du parc (réduit
+      ou grand écran). Affichage seulement : les machines restent filtrées par les droits de la personne. */
+  vulnerabilitesMachines: z
+    .object({ vue: z.enum(VUES_MACHINES).optional(), echelle: z.enum(ECHELLES_PARC).optional() })
+    .optional(),
   /** Ordre du menu choisi par la personne (glisser-déposer ou clavier) : familles, puis destinations de chaque famille.
       Affichage seulement : l'ordre n'ouvre ni ne retire aucun accès ; un identifiant inconnu est ignoré. */
   menu: z

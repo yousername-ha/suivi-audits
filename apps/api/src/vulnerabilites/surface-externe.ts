@@ -1463,6 +1463,51 @@ export class SurfaceExterneAlh implements OperationEnLots {
     );
   }
 
+  /** Pour la fiche d'une faille (lot PC4) : sur combien d'actifs lisibles les CVE sont vues (actifs distincts), si elles le
+      sont aussi ailleurs (`horsLecture`, drapeau sans nombre, lot ALH5), et les recommandations de l'éditeur (défauts et
+      résolutions) des alertes ouvertes, présentes et lisibles qui les citent, les plus graves d'abord (`limite` au plus).
+      Deux lectures de porteurs et une des alertes, quel que soit le nombre de CVE. */
+  async expositionFiche(
+    user: SessionUser,
+    cves: readonly string[],
+    limite: number,
+  ): Promise<{
+    /** Exposée sur Internet, quels que soient les droits (oui ou non, sans nom ni nombre ; lot ALH5). */
+    exposee: boolean;
+    actifs: number;
+    horsLecture: boolean;
+    alertes: { id: string; titre: string; defauts: DefautAlh[] }[];
+    alertesTronquees: boolean;
+  }> {
+    if (!cves.length) return { exposee: false, actifs: 0, horsLecture: false, alertes: [], alertesTronquees: false };
+    const lus = await this.porteurs(user, cves);
+    const tous = await this.porteurs(null, cves);
+    const cle = (r: (typeof lus)[number]) => `${r.nature}|${r.cle}|${r.alerte_id}|${r.technologie_id}`;
+    const vus = new Set(lus.map(cle));
+    const actifs = new Set(lus.flatMap((r) => (r.cle ? [r.cle] : [])));
+    const ids = [...new Set(lus.flatMap((r) => (r.alerte_id ? [r.alerte_id] : [])))];
+    const lignes = ids.length
+      ? (
+          await sql<{ id: string; titre: string; defauts: unknown }>`
+            SELECT a.id, a.titre, a.defauts FROM vulnerabilites_alh_alertes a
+            WHERE a.id = ANY(${ids}::uuid[]) AND jsonb_array_length(a.defauts) > 0
+            ORDER BY CASE a.criticite WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'important' THEN 2
+                     WHEN 'minor' THEN 3 ELSE 4 END, coalesce(a.maj_alh_le, a.cree_alh_le) DESC NULLS LAST, a.id
+            LIMIT ${limite + 1}`.execute(this.db.k)
+        ).rows
+      : [];
+    return {
+      exposee: tous.length > 0,
+      actifs: actifs.size,
+      horsLecture: tous.some((r) => !vus.has(cle(r))),
+      alertes: lignes.slice(0, limite).flatMap((a) => {
+        const d = DefautsAlh.safeParse(a.defauts);
+        return d.success && d.data.length ? [{ id: a.id, titre: a.titre, defauts: d.data as DefautAlh[] }] : [];
+      }),
+      alertesTronquees: lignes.length > limite,
+    };
+  }
+
   /** Pour l'assistant (décision C) : exposition d'une CVE lisible par la personne. Rend les actifs rangés qui la portent
       (identifiants internes seulement : l'appelant les remplace par des repères), le nombre d'actifs sans fiche, les
       technologies touchées (nom, éditeur, produit, versions, ce qu'en dit l'éditeur) et les alertes ouvertes qui la citent

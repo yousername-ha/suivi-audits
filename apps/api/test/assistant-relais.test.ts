@@ -3,7 +3,8 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { lireReponse, RelaisModele } from '../src/assistant/modele.js';
+import { fournisseurDeAdresse } from '@suivi/shared';
+import { adapterDemande, lireReponse, RelaisModele } from '../src/assistant/modele.js';
 import { adressePrivee, cibleAutorisee, creerRelais } from '../src/assistant/relais.js';
 import { HttpError } from '../src/http/errors.js';
 
@@ -150,5 +151,49 @@ describe('relais de modèle', () => {
       'ne répond pas',
     );
     await expect(new RelaisModele('').completer(urlFournisseur, CLE, demande)).rejects.toThrow('pas installé');
+  });
+});
+
+describe('demande adaptée au fournisseur', () => {
+  const demande = {
+    model: 'modele-fictif',
+    messages: [{ role: 'user' as const, content: 'Question fictive.' }],
+    tools: [],
+    tool_choice: 'auto' as const,
+    temperature: 0.2,
+    max_tokens: 1500,
+  };
+
+  it('laisse la demande telle quelle pour Mistral et pour un service personnalisé', () => {
+    expect(adapterDemande('https://api.mistral.ai/v1', demande)).toEqual(demande);
+    expect(adapterDemande('https://modele.example.invalid/v1', demande)).toEqual(demande);
+    expect(adapterDemande('adresse illisible', demande)).toEqual(demande);
+  });
+
+  it('retire la température, renomme le plafond de sortie et coupe le raisonnement pour OpenAI', () => {
+    const a = adapterDemande('https://api.openai.com/v1', demande);
+    expect(a).not.toHaveProperty('temperature');
+    expect(a).not.toHaveProperty('max_tokens');
+    expect(a).toMatchObject({ model: 'modele-fictif', max_completion_tokens: 1500, reasoning_effort: 'none' });
+    expect(a.tool_choice).toBe('auto');
+  });
+
+  it('retire la température et relève le plafond de sortie pour Anthropic', () => {
+    const a = adapterDemande('https://api.anthropic.com/v1/', demande);
+    expect(a).not.toHaveProperty('temperature');
+    expect(a).toMatchObject({ max_tokens: 4096, tool_choice: 'auto' });
+    expect(adapterDemande('https://api.anthropic.com/v1', { ...demande, max_tokens: 8000 }).max_tokens).toBe(8000);
+  });
+
+  it('reconnaît un fournisseur préenregistré à son adresse, barres finales comprises', () => {
+    expect(fournisseurDeAdresse('https://api.mistral.ai/v1')?.id).toBe('mistral');
+    expect(fournisseurDeAdresse(' https://api.anthropic.com/v1/// ')?.id).toBe('anthropic');
+    expect(fournisseurDeAdresse('https://api.openai.com/v2')).toBeNull();
+    expect(fournisseurDeAdresse('')).toBeNull();
+    expect(fournisseurDeAdresse('/'.repeat(200_000))).toBeNull();
+  });
+
+  it('ne se fie qu’à l’hôte exact', () => {
+    expect(adapterDemande('https://api.openai.com.example.invalid/v1', demande)).toEqual(demande);
   });
 });

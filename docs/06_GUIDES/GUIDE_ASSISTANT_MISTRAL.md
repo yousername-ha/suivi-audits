@@ -100,26 +100,27 @@ est déjà ouvert : à l'étape 4, il reste à enregistrer la clé et à vérifi
 
 1. Connectez-vous à la plateforme avec un compte Administrateur (seul un administrateur peut valider l'ouverture du flux).
 2. Dans le menu, ouvrez **Plateforme**, puis la carte **Assistant RSSI**.
-3. Un bandeau « Flux « Assistant RSSI » fermé » est normal tant que l'assistant n'est pas activé : il disparaît au point 6.
-4. Dans **Modèle**, renseignez :
+3. Un bandeau « Flux « Assistant RSSI » fermé » est normal tant que l'assistant n'est pas activé : il disparaît au point 5.
+4. Dans la carte **Assistant RSSI**, quatre gestes suffisent :
 
    | Champ | Valeur |
    |---|---|
-   | Activer l'assistant | coché |
-   | Adresse du service de modèle | `https://api.mistral.ai/v1` |
-   | Nom du modèle | `mistral-small-latest` pour commencer |
-   | Budget quotidien, en jetons | laissez 500 000 |
+   | Activer l'assistant RSSI | coché |
+   | Fournisseur du modèle | **Mistral AI** (l'adresse `https://api.mistral.ai/v1` est préenregistrée) |
+   | Modèle | `mistral-small-latest` pour commencer |
+   | Clé d'API du fournisseur | la clé créée à l'étape 2 |
+   | Niveau d'habilitation de l'assistant | « Confidentiel » lit tous les documents ; un niveau plus bas écarte ceux classés au-dessus |
 
-5. Dans **Profils et périmètres**, rien n'est obligatoire : les deux profils sont cochés et lisent tout par défaut. Pour
-   restreindre un profil, décochez « lit tous les périmètres » et choisissez les périmètres, ou baissez la classification
-   des documents. Chaque option porte son explication à l'écran.
-6. Cliquez sur **Enregistrer les réglages**. La première fois, comme « Activer l'assistant » est coché, une fenêtre
-   « Activer « Assistant RSSI » : ouvrir son flux » indique la destination (le fournisseur du modèle, TCP 443) et ce qui sort
-   du serveur : cochez la case de validation, puis **Confirmer**. L'activation et l'ouverture du flux sont enregistrées
-   ensemble et inscrites au journal d'audit. Le texte à côté du bouton doit dire « Tous les réglages ci-dessus sont
-   enregistrés ». Une erreur s'affiche juste au-dessus du bouton.
-7. Dans **Clé du modèle**, collez la clé de l'étape 2 puis cliquez sur **Enregistrer la clé**. La puce passe à « Clé
-   enregistrée ». La clé n'est plus jamais affichée : c'est normal.
+   La liste propose aussi **OpenAI** et **Anthropic (Claude)**, réglés d'après leur documentation mais non essayés avec
+   l'assistant, et **Personnalisé** pour tout autre service compatible (adresse HTTPS et nom de modèle à saisir).
+5. Cliquez sur **Enregistrer** : les réglages et la clé sont enregistrés ensemble. La première fois, comme « Activer
+   l'assistant RSSI » est coché, une fenêtre « Activer « Assistant RSSI » : ouvrir son flux » indique la destination (le
+   fournisseur du modèle, TCP 443) et ce qui sort du serveur : cochez la case de validation, puis **Confirmer**.
+   L'activation et l'ouverture du flux sont enregistrées ensemble et inscrites au journal d'audit. La mention
+   « Modifications non enregistrées » disparaît ; une erreur s'affiche en haut de la carte.
+6. Rien d'autre n'est obligatoire. Le budget quotidien (500 000 jetons), les profils, les périmètres, les rondes et
+   l'autonomie gardent leurs valeurs par défaut sous **Réglages avancés** ; chaque option y porte son explication.
+7. La puce à côté de « Tester le modèle » passe à « Clé enregistrée ». La clé n'est plus jamais affichée : c'est normal.
 
 **Quel modèle choisir ?** Le modèle doit gérer l'appel d'outils. D'après la documentation de Mistral, c'est le cas de
 `mistral-small-latest` (le moins cher), `mistral-medium-latest` et `mistral-large-latest` (le plus capable). Commencez par

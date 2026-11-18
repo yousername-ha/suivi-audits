@@ -4,20 +4,26 @@
    filtre de priorité, liste des failles déclarées, écran « Seuils de priorité ». Lot V4b : filtre « Suivi » (aucune faille à
    clore sur une pile vierge). Lot V4c : filtre « Exploitation avérée » (toutes les sources). V31 : écran « Mots à ne pas
    masquer » (ajout et retrait d'un mot, effet affiché). Lot V4d : onglet « Dépôts Tenable » de l'écran « Machines »
-   (administration du module ; aucun dépôt sur une pile vierge), choix « Hérité du dépôt » de l'affectation. */
+   (administration du module ; aucun dépôt sur une pile vierge), choix « Hérité du dépôt » de l'affectation. Lot PC2 :
+   présentation « Parc » de l'écran « Machines » (quatre zones vides sur une pile vierge, murs, légende des marques, échelle
+   réduite et grand écran), colonne « Priorité et marques » de la liste ; la présentation est une préférence de la personne,
+   remise à sa valeur d'origine en fin de parcours, même en cas d'échec. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : failles détectées par faille et par machine, écran des machines', async ({ browser }) => {
+  const session = await sessionAdmin(browser);
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
     viewport: { width: 1366, height: 900 },
-    storageState: (await sessionAdmin(browser)).state,
+    storageState: session.state,
   });
   const page = await ctx.newPage(),
     problems = watchPage(page);
+  // Préférences d'origine, remises en fin de parcours (lot PC2 : la présentation de « Machines » y est mémorisée).
+  const preferences = await (await page.request.get('/api/account/preferences')).json();
   try {
     await page.goto('/vulnerabilites/failles');
     await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
@@ -57,6 +63,37 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await page.getByRole('tab', { name: 'Machines', exact: true }).click();
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
 
+    // Lot PC2 : liste avec la colonne « Priorité et marques » et la légende ; présentation « Parc », réduite puis grand écran.
+    await expect(page.locator('th', { hasText: /^Priorité et marques$/ })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('Zero-day');
+    const presentation = page.getByRole('radiogroup', { name: 'Présentation des machines' });
+    await presentation.getByText('Parc', { exact: true }).click();
+    for (const zone of ['Front', 'Back applicatif', 'Base de données', 'Rôle non indiqué'])
+      await expect(page.getByRole('heading', { name: zone, level: 3, exact: true })).toBeVisible();
+    await expect(page.getByText('Frontière front · back', { exact: true })).toBeVisible();
+    await expect(page.getByText('Frontière back · bases', { exact: true })).toBeVisible();
+    await expect(page.getByText('Aucune machine lue avec ce rôle.')).toHaveCount(3);
+    await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toHaveCount(0);
+    // Les filtres restent.
+    await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Rôle', exact: true })).toBeVisible();
+    await page.waitForTimeout(400);
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    await page.getByRole('radiogroup', { name: 'Échelle du parc' }).getByText('Grand écran', { exact: true }).click();
+    await expect(page.locator('.parc--grand')).toBeVisible();
+    await page.waitForTimeout(400);
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+    // Choix mémorisé : il survit au rechargement de la page.
+    await page.reload();
+    await expect(page.locator('.parc--grand')).toBeVisible();
+    await page.getByRole('radiogroup', { name: 'Échelle du parc' }).getByText('Réduit', { exact: true }).click();
+    await expect(page.locator('.parc--reduit')).toBeVisible();
+    await page
+      .getByRole('radiogroup', { name: 'Présentation des machines' })
+      .getByText('Liste', { exact: true })
+      .click();
+    await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
+
     // Seuils de priorité : grille en clair, seuil EPSS à 50 % par défaut, réglable par l'administrateur.
     await page.goto('/vulnerabilites/priorite');
     await expect(page.getByRole('heading', { name: 'Seuils de priorité', level: 1 })).toBeVisible();
@@ -81,6 +118,10 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByText('Aucun mot : le masque est strict.')).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
+    await page.request.put('/api/account/preferences', {
+      data: preferences,
+      headers: { 'x-csrf-token': await csrfOf(page.request) },
+    });
     await ctx.close();
   }
 });
