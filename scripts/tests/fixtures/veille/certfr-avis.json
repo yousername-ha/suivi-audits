@@ -1,0 +1,63 @@
+{
+  "$ref": "https://www.cert.ssi.gouv.fr/openapi.json",
+  "affected_systems": [
+    {
+      "description": "Apache HTTP Server versions antérieures à 2.4.71",
+      "product": {
+        "name": "HTTP Server",
+        "vendor": {
+          "name": "Apache",
+          "scada": false
+        }
+      }
+    }
+  ],
+  "affected_systems_content": "",
+  "content": "## Solutions\n\nSe référer au bulletin de sécurité de l'éditeur pour l'obtention des correctifs (cf. section Documentation).",
+  "cves": [
+    {
+      "name": "CVE-2026-109163",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-109163"
+    },
+    {
+      "name": "CVE-2026-106023",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-106023"
+    },
+    {
+      "name": "CVE-2026-63292",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-63292"
+    },
+    {
+      "name": "CVE-2026-119618",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2026-119618"
+    }
+  ],
+  "links": [],
+  "reference": "CERTFR-2026-AVI-1500",
+  "revisions": [
+    {
+      "description": "Version initiale",
+      "revision_date": "2026-11-12T00:00:00.000000"
+    }
+  ],
+  "risks": [
+    {
+      "description": "Exécution de code arbitraire à distance"
+    },
+    {
+      "description": "Non spécifié par l'éditeur"
+    },
+    {
+      "description": "Déni de service"
+    }
+  ],
+  "summary": "De multiples vulnérabilités ont été découvertes dans Apache HTTP Server. Certaines d'entre elles permettent à un attaquant de provoquer une exécution de code arbitraire à distance, un déni de service et un problème de sécurité non spécifié par l'éditeur.",
+  "title": "Multiples vulnérabilités dans Apache HTTP Server",
+  "vendor_advisories": [
+    {
+      "published_at": "2026-11-11",
+      "title": "Bulletin de sécurité Apache HTTP Server CHANGES_2.4.71",
+      "url": "https://downloads.apache.org/httpd/CHANGES_2.4.71"
+    }
+  ]
+}

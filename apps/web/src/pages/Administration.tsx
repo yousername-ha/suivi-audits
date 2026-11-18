@@ -21,6 +21,7 @@ import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { CleSecoursPanel } from '../components/CleSecours';
 import { FluxExternesPanel } from '../components/FluxExternes';
+import { MandatairePanel } from '../components/Mandataire';
 import { AntivirusPanel } from '../components/Antivirus';
 import { AdresseSitePanel } from '../components/AdresseSite';
 import { CalendriersPanel } from './AdminCalendriers';
@@ -290,6 +291,16 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'reseau',
     teinte: 'orange',
     detail: () => <FluxExternesPanel />,
+  },
+  {
+    id: 'mandataire',
+    cote: 'systeme',
+    titre: 'Mandataire sortant',
+    resume:
+      'Mandataire (proxy) de l’établissement pour sortir vers Internet : adresse, compte, autorité de certification, flux qui l’utilisent.',
+    icone: 'reseau',
+    teinte: 'violet',
+    detail: (m) => <MandatairePanel onDirty={m} />,
   },
   {
     id: 'certificats',

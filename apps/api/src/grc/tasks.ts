@@ -2,7 +2,10 @@ import {
   CalendrierBody,
   fenetreOccurrence,
   ICAL_MAX_JOURS,
+  LIEN_RESUME_ALERTES,
   lireIcs,
+  NOTIFICATION_TYPES_VULNERABILITES,
+  PREFIXE_RESUME_ALERTES,
   recurrenceSlot,
   SeriesData,
   type ApercuCalendrier,
@@ -530,17 +533,30 @@ export class GrcTasks {
             .as('reponse'),
         'read_at as readAt',
         'created_at as createdAt',
+        'due_key as dueKey',
       ])
       .where('user_id', '=', user.id)
       .where('canal_application', '=', true)
-      // Les alertes de sécurité (sans SMSI) ont leur propre route : /api/account/alertes-securite (ADR 0074).
-      .where('smsi_id', 'is not', null)
+      // Les alertes de sécurité (sans SMSI) ont leur propre route : /api/account/alertes-securite (ADR 0074). Les alertes du
+      // module Vulnérabilités (ADR 0100, lot V6), sans SMSI non plus, sont rendues ici à qui lit encore le module.
+      .where((eb) => eb.or([eb('smsi_id', 'is not', null), eb('kind', 'in', [...NOTIFICATION_TYPES_VULNERABILITES])]))
       .orderBy('created_at', 'desc')
       .limit(100)
       .execute();
-    const visible = [];
+    const visible: ((typeof rows)[number] & { lien?: string })[] = [];
+    const vulnerabilites = user.rights.can('vulnerabilites', 'lire');
     for (const r of rows)
-      if (
+      if ((NOTIFICATION_TYPES_VULNERABILITES as readonly string[]).includes(r.kind)) {
+        // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré ; sinon, fiche de l'alerte (identifiant interne,
+        // avant « : » dans la clé de la notification).
+        if (vulnerabilites && r.dueKey)
+          visible.push({
+            ...r,
+            lien: r.dueKey.startsWith(PREFIXE_RESUME_ALERTES)
+              ? LIEN_RESUME_ALERTES
+              : `/vulnerabilites/alertes?alerte=${encodeURIComponent(r.dueKey.split(':')[0]!)}`,
+          });
+      } else if (
         r.smsiId &&
         r.objectId &&
         (await this.g.visible(
@@ -555,7 +571,7 @@ export class GrcTasks {
         ))
       )
         visible.push(r);
-    return visible;
+    return visible.map(({ dueKey: _cle, ...r }) => r);
   }
   async read(id: string, user: SessionUser) {
     await this.g.db.k

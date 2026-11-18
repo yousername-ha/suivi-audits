@@ -16,6 +16,7 @@ import { adresseSiteRoutes } from './routes/adresse-site.js';
 import { remiseAVideRoutes } from './routes/remise-a-vide.js';
 import { updateRoutes } from './routes/updates.js';
 import { fluxExternesRoutes } from './routes/flux-externes.js';
+import { mandataireRoutes } from './routes/mandataire.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
 import { webauthnRoutes } from './routes/webauthn.js';
@@ -39,6 +40,8 @@ import { tableauDeBordRoutes } from './routes/tableau-de-bord.js';
 import { cartoRoutes } from './routes/carto.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { assistantRoutes } from './routes/assistant.js';
+import { vulnerabilitesRoutes } from './routes/vulnerabilites.js';
+import { integrationsRoutes } from './routes/integrations.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
 import { ReadyOut, VersionOut } from '@suivi/shared';
 import { MAX_SCHEMA, MIN_SCHEMA } from '@suivi/shared/legacy';
@@ -122,6 +125,7 @@ export function allRoutes(): RouteDef[] {
     ...operationRoutes,
     ...updateRoutes,
     ...fluxExternesRoutes,
+    ...mandataireRoutes,
     ...remiseAVideRoutes,
     ...poivreRoutes,
     ...cleSecoursRoutes,
@@ -141,6 +145,8 @@ export function allRoutes(): RouteDef[] {
     ...parcoursRoutes,
     ...calendriersPlateformeRoutes,
     ...assistantRoutes,
+    ...vulnerabilitesRoutes,
+    ...integrationsRoutes,
     ...notificationsRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,

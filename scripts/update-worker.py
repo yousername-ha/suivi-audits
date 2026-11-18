@@ -38,7 +38,7 @@ PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup"
 # sortie démarrés par leur profil Compose, services dans l'ordre de démarrage (clamav attend les signatures de freshclam).
 # Listes fermées : aucun nom reçu de l'application ne sert d'argument de commande. Leur concordance avec le registre et le
 # compose est vérifiée par apps/api/test/architecture-flux.test.ts (garder chaque constante sur une ligne, en JSON).
-FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour")
+FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour", "tenable", "veille-vulnerabilites", "algolighthouse")
 FLUX_CONTENEURS = {"assistant": {"profil": "assistant", "services": ["assistant-relais"]}, "antivirus": {"profil": "antivirus", "services": ["freshclam", "clamav"]}}
 FLUX_ERREUR_MAX = 300
 # Rapport de l'état appliqué : à chaque changement, et renouvelé à cette période (secondes) pour ne pas inonder la base.

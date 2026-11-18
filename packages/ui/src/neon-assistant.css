@@ -1587,3 +1587,23 @@
   color: var(--as-muted);
   margin-bottom: 4px;
 }
+/* Machines nommées dans un texte de l'assistant (ADR 0100, V14) : le serveur remplace les repères par les noms pour la
+   personne qui regarde ; un soulignement discret et une info-bulle disent que c'est une machine. Un repère d'une machine
+   non lisible reste affiché atténué ; un repère inconnu (inventé par le modèle) est signalé. */
+.as-machine {
+  text-decoration: underline dotted var(--as-accent);
+  overflow-wrap: anywhere;
+}
+.as-repere {
+  color: var(--as-muted);
+}
+.as-repere-inconnu {
+  color: var(--as-red);
+  background: transparent;
+  text-decoration: underline wavy var(--as-red);
+}
+.as-machines {
+  margin: 0;
+  padding: 0;
+  list-style-position: inside;
+}

@@ -44,6 +44,18 @@ Avant d'aller plus loin :
 2. Lisez les conditions de l'API de Mistral et son accord de traitement des données (liens en fin de guide). C'est à
    votre organisation de décider ce qui peut être envoyé.
 3. Inscrivez ce flux dans votre appréciation des risques.
+4. Module Vulnérabilités : rien d'identifiant sur une machine ne part chez Mistral (ni nom, ni adresse, ni identifiant de
+   Tenable, ni rôle, ni périmètre, ni système). L'assistant ne reçoit que des **repères** (`M-001`, `M-002`…) propres à chaque
+   conversation, et la plateforme relit toute demande avant l'envoi pour remplacer un nom ou une adresse de machine qui s'y
+   trouverait (question tapée, action, document) par un repère ou par « [machine] ». Partent en revanche les identifiants CVE,
+   les faits publiés par les sources, le nom et la version des produits surveillés et le nom des contrôles de Tenable.
+   Ce masque ne connaît que l'inventaire des machines : un nom absent de l'inventaire n'est pas reconnu. Il est strict : quand
+   une machine porte le nom d'une application (`dpi.exemple.invalid`, ou une machine nommée `web`), le mot « dpi » ou « web »
+   est masqué partout, et la réponse peut parler d'un serveur là où vous parliez de l'application. Pour lever ce contresens,
+   une personne qui a le droit d'administrer le module Vulnérabilités tient la liste des **mots à ne pas masquer** (Risques >
+   Vulnérabilités > Mots à ne pas masquer) : un mot de la liste écrit seul part tel quel chez Mistral ; le nom complet de la
+   machine, `dpi:8443`, son adresse et ses identifiants restent masqués. L'écran dit, pour chaque mot, combien de machines il
+   désigne : n'y mettez que des noms d'applications que vous acceptez de voir sortir. La liste est vide par défaut.
 
 ## Étape 2 — Obtenir une clé chez Mistral
 
@@ -131,6 +143,13 @@ faux modèle : ce n'est pas une mesure sur Mistral.
 - Comparez-la à l'écran des actions de la plateforme. Les chiffres doivent être les mêmes.
 - Une réponse marquée « donnée sans lecture de la plateforme » n'est appuyée sur rien : ne vous y fiez pas.
 - L'assistant ne modifie rien. S'il annonce avoir créé ou changé quelque chose, c'est faux.
+
+**Avec le module Vulnérabilités** (profil « Mise en œuvre », droit de lire les vulnérabilités) : posez par exemple
+*« Sommes-nous touchés par CVE-… ? »*. La réponse a quatre parties : sommes-nous touchés, quoi faire, actifs à traiter
+d'abord, plan d'action proposé. Les machines s'affichent par leur nom, soulignées en pointillés (l'info-bulle donne le repère
+transmis au modèle) ; un repère « non reconnu » a été inventé par le modèle. Une proposition d'action déposée par l'assistant
+attend votre décision dans « Pour vous » : choisissez le périmètre, corrigez, confirmez ou rejetez. L'action est alors créée
+sous votre nom, avec les noms des machines ; rien n'est renvoyé à Mistral. Ces outils ne servent pas dans les rondes autonomes.
 
 ## Étape 6 — Laisser l'assistant travailler seul (facultatif)
 
