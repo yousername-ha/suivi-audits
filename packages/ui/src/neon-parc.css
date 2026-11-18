@@ -1,0 +1,522 @@
+/* Module Vulnérabilités (ADR 0100, point 16 ; lot PC2) : écran « Machines », mode « Parc », d'après les maquettes
+   04-machines et 04b-machines-grand-ecran. Langage visuel du poste de commandement (neon-commandement.css) : étiquettes en
+   capitales espacées, chiffres à chasse fixe, angles dissymétriques, liseré de couleur ; couleurs de la cartographie
+   (--carte-*, contrastes vérifiés en clair et en sombre : textes au moins 4,5:1, formes porteuses de sens au moins 3:1).
+   Teinte d'une tuile = priorité la plus haute de la machine, toujours doublée du libellé P1 à P4 ; teinte d'une zone =
+   son rôle (front rouge, back applicatif orange, base de données violet, rôle non indiqué gris en pointillés). Murs entre
+   les zones : bandes diagonales qui défilent (rouge entre le front et le back, violet entre le back et les bases), seule
+   animation avec la lueur de la marque zero-day, toutes deux décoratives et continues (ADR 0099), coupées par la
+   préférence de mouvement réduit et à l'impression. Mise en page selon la largeur du parc (requête de conteneur) :
+   colonnes côte à côte, puis empilées avec des murs horizontaux. Aucune longueur en px ni en rem ; aucun style en ligne
+   (ADR 0006). */
+.parc {
+  --parc-boite: var(--carte-boite);
+  --parc-texte: var(--carte-texte);
+  --parc-doux: var(--carte-secondaire);
+  --parc-trait: var(--suivi-trait);
+  container: parc / inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--parc-trait);
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.4);
+  background: var(--carte-canevas);
+  color: var(--parc-texte);
+}
+.parc-etiquette {
+  margin: 0;
+  color: var(--parc-z, var(--parc-doux));
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.parc-mono {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+.parc__note {
+  margin: 0;
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--parc-trait);
+  color: var(--parc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+
+/* ------------------------------------------------------------------ Lignes : front | mur | back | mur | bases */
+.parc__lignes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  min-inline-size: 0;
+}
+.parc--grand .parc__lignes {
+  display: flex;
+}
+.parc--grand .parc__lignes > .parc-zone {
+  flex: 1 1 0;
+}
+.parc--grand .parc__lignes > .parc-zone--poids-2 {
+  flex-grow: 2;
+}
+.parc--grand .parc__lignes > .parc-zone--poids-3 {
+  flex-grow: 3;
+}
+.parc--grand .parc__lignes > .parc-zone--poids-4 {
+  flex-grow: 4;
+}
+
+/* ------------------------------------------------------------------ Zones */
+.parc-zone--front {
+  --parc-z: var(--carte-rouge-accent);
+}
+.parc-zone--back {
+  --parc-z: var(--carte-orange-accent);
+}
+.parc-zone--bdd {
+  --parc-z: var(--carte-violet-accent);
+}
+.parc-zone--aucun {
+  --parc-z: var(--carte-gris-accent);
+}
+.parc-zone {
+  display: grid;
+  align-content: start;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--parc-z) 40%, var(--parc-trait));
+  border-block-start: calc(var(--suivi-trait-l) * 2) solid var(--parc-z);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: color-mix(in srgb, var(--parc-z) 4%, var(--parc-boite));
+}
+.parc-zone--aucun {
+  border-style: dashed;
+}
+.parc-zone__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.1em var(--mantine-spacing-sm);
+}
+.parc-zone__tete .parc-etiquette {
+  flex: 1 0 100%;
+}
+.parc-zone__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.parc-zone__compte {
+  margin: 0;
+  color: var(--parc-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+.parc-zone__vide {
+  margin: 0;
+  color: var(--parc-doux);
+  font-size: var(--mantine-font-size-sm);
+}
+
+/* ------------------------------------------------------------------ Tuiles */
+.parc-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.4em, 1fr));
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.parc-grille > li {
+  display: grid;
+  min-inline-size: 0;
+}
+.parc-p--P1 {
+  --parc-c: var(--carte-rouge-accent);
+}
+.parc-p--P2 {
+  --parc-c: var(--carte-orange-accent);
+}
+.parc-p--P3 {
+  --parc-c: var(--carte-bleu-accent);
+}
+.parc-p--P4 {
+  --parc-c: var(--carte-gris-accent);
+}
+.parc-p--aucune {
+  --parc-c: var(--carte-secondaire);
+}
+.parc-tuile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.2em;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 1.5em 0.4em 0.5em;
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--parc-c) 45%, var(--parc-trait));
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--parc-boite);
+  color: var(--parc-c);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.parc-tuile:hover {
+  background: color-mix(in srgb, var(--parc-c) 8%, var(--parc-boite));
+}
+.parc-tuile:focus-visible,
+.parc-plus:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--suivi-trait-l);
+}
+.parc-tuile--zd {
+  border-color: color-mix(in srgb, var(--carte-rouge-accent) 70%, var(--parc-trait));
+  background: color-mix(in srgb, var(--carte-rouge-accent) 6%, var(--parc-boite));
+  box-shadow: 0 0 1em color-mix(in srgb, var(--carte-rouge-accent) 18%, transparent);
+}
+.parc-tuile__rang {
+  position: absolute;
+  inset-block-start: 0.35em;
+  inset-inline-start: 0.5em;
+  color: var(--parc-c);
+  font-size: var(--mantine-font-size-xs);
+}
+.parc-appareil {
+  inline-size: 3.4em;
+  block-size: 3.4em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.parc-appareil .parc-appareil__plein {
+  fill: currentColor;
+  stroke: none;
+}
+.parc-appareil .parc-appareil__voile {
+  fill: color-mix(in srgb, currentColor 12%, transparent);
+  stroke: none;
+}
+.parc-tuile__nom {
+  max-inline-size: 100%;
+  color: var(--parc-texte);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.parc-tuile__prio {
+  padding: 0 0.45em;
+  border: var(--suivi-trait-l) solid currentColor;
+  border-radius: var(--mantine-radius-xs);
+  color: var(--parc-c);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.parc-tuile__gravites {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2em;
+}
+.parc-g {
+  min-inline-size: 1.7em;
+  padding: 0 0.25em;
+  border-radius: var(--mantine-radius-xs);
+  color: var(--parc-g);
+  background: color-mix(in srgb, var(--parc-g) 10%, var(--parc-boite));
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+}
+.parc-g--c {
+  --parc-g: var(--carte-rouge-accent);
+}
+.parc-g--e {
+  --parc-g: var(--carte-orange-accent);
+}
+.parc-g--m {
+  --parc-g: var(--carte-bleu-accent);
+}
+.parc-g--f {
+  --parc-g: var(--carte-gris-accent);
+}
+.parc-g--zero {
+  color: var(--parc-doux);
+  background: transparent;
+  font-weight: 400;
+}
+/* « Et n autres » : déplie la zone, ou mène à la liste filtrée. */
+.parc-plus {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.2em;
+  min-block-size: 6em;
+  margin: 0;
+  padding: 0.5em;
+  border: var(--suivi-trait-l) dashed var(--parc-trait);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: transparent;
+  color: var(--parc-doux);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  text-align: center;
+  cursor: pointer;
+}
+.parc-plus b {
+  color: var(--parc-texte);
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 400;
+}
+.parc-plus:hover {
+  border-color: var(--parc-z, var(--parc-doux));
+  color: var(--parc-texte);
+}
+
+/* ------------------------------------------------------------------ Grand écran : tuiles denses */
+.parc--grand .parc-grille {
+  grid-template-columns: repeat(auto-fill, minmax(4.9em, 1fr));
+  gap: calc(var(--mantine-spacing-xs) * 0.5);
+}
+.parc--grand .parc-tuile {
+  gap: 0.1em;
+  padding: 1.25em 0.15em 0.3em;
+}
+.parc--grand .parc-appareil {
+  inline-size: 2.4em;
+  block-size: 2.4em;
+}
+.parc--grand .parc-tuile__nom,
+.parc--grand .parc-tuile__rang,
+.parc--grand .parc-tuile__prio,
+.parc--grand .parc-g {
+  font-size: calc(var(--mantine-font-size-xs) * 0.8);
+}
+.parc--grand .parc-tuile__gravites {
+  gap: 0.1em;
+}
+.parc--grand .parc-g {
+  min-inline-size: 1.2em;
+  padding: 0 0.15em;
+}
+.parc--grand .parc-zone {
+  padding: calc(var(--mantine-spacing-sm) * 0.6);
+}
+.parc--grand .parc-plus {
+  min-block-size: 4.5em;
+}
+
+/* ------------------------------------------------------------------ Marques : zero-day (triangle), exploitable (éclair) */
+.parc-marques {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+}
+.parc-tuile .parc-marques {
+  position: absolute;
+  inset-block-start: 0.3em;
+  inset-inline-end: 0.35em;
+}
+.parc-marque {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 1.45em;
+  block-size: 1.45em;
+  border-radius: var(--mantine-radius-xs);
+}
+.parc-marque svg {
+  inline-size: 1em;
+  block-size: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.parc-marque--zd {
+  border: var(--suivi-trait-l) solid var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+  color: var(--carte-boite);
+}
+.parc-marque--ex {
+  border: var(--suivi-trait-l) solid var(--carte-orange-accent);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.parc-marque--ex svg {
+  fill: currentColor;
+  stroke: none;
+}
+.parc--grand .parc-tuile .parc-marque {
+  inline-size: 1.1em;
+  block-size: 1.1em;
+}
+.parc--grand .parc-tuile .parc-marque svg {
+  inline-size: 0.78em;
+  block-size: 0.78em;
+}
+.parc-legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em var(--mantine-spacing-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.parc-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  max-inline-size: 100%;
+}
+.parc-liste-marques {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em;
+}
+
+/* ------------------------------------------------------------------ Murs (frontières entre les zones) */
+.parc-mur--rouge {
+  --parc-mur: var(--carte-rouge-accent);
+}
+.parc-mur--violet {
+  --parc-mur: var(--carte-violet-accent);
+}
+.parc-mur {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 2.6em;
+  margin-block: 0.2em;
+  color: var(--parc-mur);
+}
+.parc-mur__hachures {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 50%;
+  inline-size: 0.7em;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-inline: calc(var(--suivi-trait-l) * 2) solid currentColor;
+  opacity: 0.85;
+}
+.parc-mur__hachures::before {
+  content: '';
+  position: absolute;
+  inset: -2em 0;
+  background: repeating-linear-gradient(135deg, currentColor 0 0.3em, transparent 0.3em 0.7em);
+}
+.parc-mur__nom {
+  position: relative;
+  z-index: 1;
+  padding: 0.6em 0.15em;
+  border: var(--suivi-trait-l) solid currentColor;
+  border-radius: var(--mantine-radius-xs);
+  background: var(--carte-canevas);
+  font-size: calc(var(--mantine-font-size-xs) * 0.9);
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ------------------------------------------------------------------ Parc étroit : zones empilées, murs horizontaux */
+@container parc (max-width: 52em) {
+  .parc__lignes,
+  .parc--grand .parc__lignes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .parc-mur {
+    inline-size: auto;
+    block-size: 2.4em;
+    margin-block: 0;
+    margin-inline: 0.2em;
+  }
+  .parc-mur__hachures {
+    inset-block: auto;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    inline-size: auto;
+    block-size: 0.7em;
+    transform: translateY(-50%);
+    border-inline: 0;
+    border-block: calc(var(--suivi-trait-l) * 2) solid currentColor;
+  }
+  .parc-mur__hachures::before {
+    inset: 0 -2em;
+  }
+  .parc-mur__nom {
+    padding: 0.15em 0.6em;
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ Animations : seulement sans mouvement réduit */
+@media (prefers-reduced-motion: no-preference) {
+  .parc .parc-mur__hachures::before {
+    animation: parc-defile 1s linear infinite;
+  }
+  .parc .parc-mur--violet .parc-mur__hachures::before {
+    animation: parc-defile 1.6s linear infinite;
+  }
+  .parc .parc-tuile .parc-marque--zd {
+    animation: parc-lueur 1.6s ease-in-out infinite;
+  }
+}
+@container parc (max-width: 52em) {
+  @media (prefers-reduced-motion: no-preference) {
+    .parc .parc-mur__hachures::before,
+    .parc .parc-mur--violet .parc-mur__hachures::before {
+      animation-name: parc-defile-h;
+    }
+  }
+}
+/* Une période des bandes (0,7em perpendiculaires, à 45°) : 0,7em / sin 45° ≈ 0,98995em, défilement sans saut. */
+@keyframes parc-defile {
+  to {
+    transform: translateY(0.98995em);
+  }
+}
+@keyframes parc-defile-h {
+  to {
+    transform: translateX(0.98995em);
+  }
+}
+@keyframes parc-lueur {
+  50% {
+    box-shadow: 0 0 0.7em color-mix(in srgb, var(--carte-rouge-accent) 70%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .parc .parc-mur__hachures::before,
+  .parc .parc-marque--zd {
+    animation: none !important;
+  }
+}
+@media print {
+  .parc .parc-mur__hachures::before,
+  .parc .parc-marque--zd {
+    animation: none !important;
+  }
+  .parc-tuile--zd {
+    box-shadow: none;
+  }
+}

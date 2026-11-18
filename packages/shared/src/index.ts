@@ -73,3 +73,4 @@ export * from './assistant-vulnerabilites.js';
 export * from './masque-vulnerabilites.js';
 export * from './alertes-vulnerabilites.js';
 export * from './vue-ensemble-vulnerabilites.js';
+export * from './parc-machines.js';

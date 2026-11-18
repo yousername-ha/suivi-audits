@@ -370,6 +370,8 @@
 - **Lot PC1, vue d'ensemble du poste de commandement** (18/11/2026) : sans migration, premier onglet et adresse d'accueil du
   module, niveau d'alerte de 1 à 4 (règle à confirmer), radar dont chaque point est une faille suivie réelle. Voir l'addendum
   « lot PC1 » ci-dessous.
+- **Lot PC2, écran « Machines », présentation « Parc »** (18/11/2026) : sans migration, tuiles par machine dans les zones de
+  rôle, murs animés, marques zero-day et exploitable, échelle réduite ou grand écran. Voir l'addendum « lot PC2 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1427,3 +1429,127 @@ la CSP n'a pas été vérifiée sur le banc (serveur de développement), seuleme
 6. Barre de recherche commune au module (point 15).
 7. Durée de la lecture sur un très grand parc : le calcul global est refait à chaque lecture (environ 1 s pour 10 000 CVE) ;
    le garder en mémoire entre deux évaluations si l'agent de charge le montre nécessaire.
+
+## Addendum du 18/11/2026 — lot PC2 : écran « Machines », présentation « Parc »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun appel réseau nouveau, aucune dépendance nouvelle, rien de nouveau chez l'assistant. Réalise la vue « par machine » du
+point 16 et de V11, la part « front, back, base » de V12 pour l'écran « Machines » et les marques de V16 ; lève les points
+ouverts 2 et 5 de l'addendum « lot PC1 » (sous réserve de la définition du zero-day ci-dessous).
+
+### Demandes du RSSI (15 et 16/11/2026)
+
+« Une vue par machine pour voir le nombre de failles (critique etc). L'assistant classe par machine plus critique. Une vue où
+j'indique les serveurs front, bdd, back applicative. » ; « Pour la vue machine, j'imagine plus des vraies icônes de pc plutôt
+que des lignes et séparation. » ; « Il faut prévoir en grand écran pour en voir plus. En réduit, si trop de machines, pour
+afficher les plus critiques/prioritaires. Il manque aussi cette séparation front du back. » ; « Les barres en diagonale des
+barres de séparation rouge et violet doivent être animées. » ; « Faille zero day : un petit warning sur la machine. Une icône
+spéciale sur les vulnérabilités exploitables aussi. » Maquettes validées `04-machines.png` et `04b-machines-grand-ecran.png`.
+
+### Réalisation
+
+- **Écran « Machines »** (`apps/web/src/vulnerabilites/Machines.tsx`) : bascule « Liste » (l'existant) ou « Parc »
+  (`ParcMachines.tsx`), mémorisée dans les **préférences de la personne** (`Preferences.vulnerabilitesMachines`, déjà rangées
+  en base avec le compte, aucune colonne nouvelle), ainsi que l'échelle du parc. Filtres conservés (nom, rôle, périmètre) ;
+  l'affectation du rôle et du périmètre reste dans la liste (cases à cocher).
+- **Tuile** : bouton, une par machine lisible ; icône d'ordinateur selon le **rôle** (poste avec un globe pour le front,
+  serveur en baie pour le back applicatif, cylindre pour la base de données, poste avec un point d'interrogation sans rôle :
+  seule la donnée de rôle permet de choisir l'icône, Tenable ne dit pas « serveur » ou « poste ») ; nom ; **rang** (numéro) ;
+  failles présentes **critiques, élevées, moyennes, faibles** (compteurs existants) ; **priorité la plus haute** en couleur et
+  en texte (P1 à P4, « Aucune » sans faille présente). Nom accessible complet, par exemple « srv-web-03 : rang 3 sur 150, front,
+  2 critiques, priorité P1, zero-day, exploitation avérée » ; clic ou Entrée : fiche existante de la machine.
+- **Zones** « Front », « Back applicatif », « Base de données » côte à côte, puis « Rôle non indiqué » en dessous ; dans chaque
+  zone, l'ordre du rang (la plus critique d'abord). **Murs** entre les zones, d'après la maquette : rouge entre le front et le
+  back, violet entre le back et les bases ; bandes diagonales qui défilent (une période par seconde, 1,6 s pour le violet),
+  coupées par `prefers-reduced-motion: reduce` et à l'impression ; nom de la frontière lisible. Parc étroit (requête de
+  conteneur) : zones empilées, murs horizontaux.
+- **Marques** (tuiles, colonne « Priorité et marques » de la liste, légende) : triangle **« Zero-day : exploitation avérée »**
+  quand la machine porte une faille **présente** (constat de Tenable présent ou faille déclarée, non traités) **dont
+  l'exploitation est avérée** (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé, AlgoLightHouse) : c'est la définition
+  du lot V6, c'est-à-dire une faille P1 de la grille ; éclair **« Exploitable »** quand elle porte une faille présente pour
+  laquelle une source dit qu'un code d'exploitation existe (`SOURCES_EXPLOITABLE` de la grille : Tenable, preuve de concept du
+  CERT Santé, AlgoLightHouse) **sans exploitation avérée**. La marque zero-day concorde avec le compteur existant
+  `exploitationAveree` (test d'API).
+- **Échelle** : « Réduit » par défaut (les 5 plus prioritaires de chaque zone, 8 pour « Rôle non indiqué », puis une tuile « et
+  n autres : tout montrer » qui déplie la zone et devient « Replier ») ; « Grand écran » : toutes les machines reçues, tuiles
+  denses, zones de rôle élargies selon leur nombre de tuiles (classe de poids 1 à 4, sans style en ligne). Au-delà de la borne
+  de la route, une tuile « et n autres : voir la liste » ouvre la liste filtrée sur ce rôle.
+- **Route** `GET /api/vulnerabilites/machines/parc` (`vulnerabilites:lire`, filtres `q`, `role`, `perimetre`), lecture seule,
+  aucune entrée de journal : quatre zones toujours rendues, chacune avec son total, son nombre de machines « zero-day » et au
+  plus **250 machines** (les plus prioritaires) ; `tronquee` signale une zone bornée. **Nombre de requêtes fixe**, aucune par
+  machine : machines lisibles et leurs compteurs 2, réglage 1, failles présentes des machines 9 (constats 1, failles déclarées
+  1, CVE des constats 1, faits des sources 3 + 3) ; **12 au plus**, quel que soit le parc. Le calcul des failles présentes par
+  machine (`faillesDesMachines`, `apps/api/src/vulnerabilites/failles.ts`) est celui qui servait déjà à la majoration du lot
+  ALH5 (`machinesVulnerables` l'appelle désormais, mêmes requêtes). `GET /api/vulnerabilites/machines` rend aussi les marques
+  des machines de la page (mêmes 9 requêtes, sur 25 machines).
+- **Droits** : seules les machines que la personne lit sont listées ou comptées (périmètre effectif du lot V4d) ; aucun total,
+  nom ni adresse d'une machine illisible, pas même un drapeau ; priorité et marques calculées sur tous les faits connus, les
+  mêmes pour tout le monde (lot ALH5), sans majoration par la surface externe ; rang inchangé (parmi les machines lisibles,
+  comme la liste).
+- **Assistant** : rien de branché. Le rang affiché est celui de la plateforme (point 16), déjà remis à l'assistant par
+  `machines_prioritaires` sous forme de repères.
+- Fonctions pures `repartirParc`, `visiblesZone`, `marquesMachine` (`packages/shared/src/parc-machines.ts`) et `urlParc`,
+  `nomAccessibleMachine`, `poidsZones` (`apps/web/src/vulnerabilites/parc.ts`), testées ; feuille
+  `packages/ui/src/neon-parc.css` (jetons de la charte, clair et sombre, aucune longueur en px ni en rem).
+
+### Définition du marqueur zero-day, à confirmer par le RSSI
+
+Le marqueur dit « exploitation avérée » d'une faille **présente** sur la machine, comme l'alerte critique du lot V6 (point
+ouvert 11, réponse proposée appliquée). Il ne distingue pas les failles **sans correctif publié** : si le RSSI réserve
+« zero-day » à celles-là, il faudra une source qui le dise (mention « Un correctif existe : Non » du CERT Santé, date de
+correctif de Tenable), à trancher.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Présentation par défaut : « Liste »** (l'existant), « Parc » sur choix de la personne, mémorisé ; échelle « Réduit » par
+  défaut.
+- **Nombres du mode réduit** : 5 par zone de rôle, 8 pour « Rôle non indiqué » (comme la maquette) ; **borne de la route** :
+  250 par zone.
+- **Exploitable** : seulement pour une faille sans exploitation avérée (point 16 : « sans exploitation observée ») ; une
+  machine peut porter les deux marques si deux failles différentes les justifient.
+- **Priorité de la machine** : la plus haute de ses failles présentes non traitées (constats et failles déclarées), sans la
+  majoration par la surface externe (lot ALH5 : jamais appliquée aux failles des machines).
+- **Affectation** : seulement en présentation « Liste » ; la tuile ouvre la fiche, sans case à cocher.
+- **Zone « Rôle non indiqué »** : nom demandé par la consigne, au lieu de « Machines sans rôle » de la maquette.
+
+### Écarts à la maquette
+
+- **Murs** : la maquette en compte deux (rouge front · back, violet back · bases) ; ils sont repris tels quels. La consigne
+  du lot parlait d'un mur rouge « entre Internet et le front » et d'un mur violet « entre le front et le back » : la maquette a
+  été suivie, à trancher si un mur de plus est voulu devant le front.
+- **Pas de bandeau de l'assistant** (« Lecture de l'assistant · classement des machines », « Proposer les actions ») : rien
+  n'est branché chez l'assistant dans ce lot.
+- **Pas de bascule « Par faille / Par machine »** dans l'écran (elle reste dans « Failles détectées ») ni de puces « Exploitées
+  seulement », « Avec critique » : les filtres existants (nom, rôle, périmètre) sont conservés tels quels.
+- **Pas de nom d'application** sous le nom de la machine (« Portail patient ») : la donnée n'existe pas ; pas de choix
+  « Front / Back / BDD » sur les tuiles sans rôle (l'affectation se fait dans la liste).
+- **Quatre chiffres de gravité** sur chaque tuile (la maquette n'en montre que deux), le zéro grisé, et un libellé de priorité
+  P1 à P4 (absent de la maquette, exigé : jamais la couleur seule).
+- **Marque zero-day sans clignotement** : une lueur douce, coupée par le mouvement réduit (la maquette fait clignoter le
+  triangle).
+- **« Grand écran »** : tout le parc en tuiles denses sur toute la largeur de la zone de contenu, menu latéral compris ; pas de
+  plein écran du navigateur (la fiche d'une machine, fenêtre posée sur la page, n'y serait plus visible). À 1 440 px avec le
+  menu, trois à quatre tuiles par ligne et par zone, contre neuf dans la maquette `04b` (relevée à 2 560 px sans menu).
+- Titre de zone « 1re ligne · exposée », « 2e ligne », « 3e ligne », « À classer » repris ; en-tête de zone : nombre de
+  machines lisibles et nombre « avec une exploitation avérée » (au lieu de « n critiques »).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (Vite, composants de l'écran avec 150 machines fictives : 38 front, 66
+back, 34 bases, 12 sans rôle ; Chromium, clair et sombre, 1 440 et 390 px, plus 768, 1 024 et 2 560 px ; réduit, grand écran
+et liste ; axe `wcag2a`/`wcag2aa` sans violation ; aucun chevauchement de texte ni débordement de page ; clavier, fiche,
+« et n autres » et animation des murs essayés, animation coupée sous mouvement réduit), pas dans la pile complète ; la CSP n'a
+pas été vérifiée sur le banc, seulement par les tests de l'interface (aucun attribut `style` sur le balisage propre à
+l'écran). Le parcours Playwright adapté n'a pas été joué (CI seulement) et ne voit qu'un parc vide. Durée de la route sur un
+parc réel (12 requêtes, toutes les machines lisibles et leurs failles présentes en mémoire) ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Définition du zero-day** (ci-dessus) et mur supplémentaire devant le front.
+2. **Vue par périmètre** front / back / base (point 17, maquette 05).
+3. **Fiche de faille illustrée** : vecteur d'attaque traduit avec icônes et schéma (point 19, maquette 02).
+4. **Liens front → back → base entre machines** : aucune source ne les fournit (point ouvert 5).
+5. Bandeau de l'assistant sur l'écran (classement commenté et « Proposer les actions »), si le RSSI le veut.
+6. Marques zero-day et exploitable sur les **failles** elles-mêmes (listes « Failles détectées », radar) : seules les machines
+   les portent dans ce lot.
+

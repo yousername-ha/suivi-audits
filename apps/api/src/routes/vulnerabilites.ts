@@ -36,7 +36,9 @@
    l'alerte. Les décisions qui changent les faits (produit, rapprochement, état de suivi, liaison d'un actif, seuil) font
    réévaluer les alertes après leur propre transaction ; l'évaluation ne fait jamais échouer la décision.
    Lot PC1 : vue d'ensemble (poste de commandement) avec `lire`, lecture seule, sans journal : niveau d'alerte, priorités et
-   failles suivies les mêmes pour tous ; nombres de machines et d'actifs limités à ce que la personne lit, aucun nom. */
+   failles suivies les mêmes pour tous ; nombres de machines et d'actifs limités à ce que la personne lit, aucun nom.
+   Lot PC2 : parc des machines par zone de rôle avec `lire`, lecture seule, sans journal : seules les machines lisibles sont
+   listées ou comptées ; marques et priorité les mêmes pour tous. */
 import {
   RechercheAlertesVulnerabilites,
   ApplicationLiaisonMasse,
@@ -73,6 +75,7 @@ import {
   ProduitsSurveillesQuery,
   RechercheConstats,
   RechercheMachines,
+  RechercheParc,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -309,6 +312,16 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     query: RechercheMachines,
     handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.machines((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/machines/parc',
+    summary:
+      'Parc des machines lisibles par zone de rôle (front, back applicatif, base de données, rôle non indiqué), dans l’ordre du rang, avec leurs marques (priorité la plus haute, zero-day, exploitable) ; mêmes filtres que la liste ; 250 machines au plus par zone, totaux de chaque zone rendus ; aucune machine illisible comptée ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheParc,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.failles.parc((s as Session).user, query),
   }),
   route({
     method: 'GET',

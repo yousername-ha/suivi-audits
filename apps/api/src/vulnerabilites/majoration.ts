@@ -10,20 +10,10 @@
      résultat est le même pour tout le monde et ne nomme rien (identifiants internes seulement, jamais rendus tels quels).
    - Pas de cycle : la priorité des failles d'une machine n'est jamais majorée ; seules l'alerte, la technologie et ses CVE
      sur la surface externe le sont. */
-import {
-  calculerPriorite,
-  faitsDepuisSources,
-  type GraviteTenable,
-  machineVulnerable,
-  type Priorite,
-  type ReglagePriorite,
-} from '@suivi/shared';
+import { machineVulnerable, type ReglagePriorite } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Kdb } from '../db/db.js';
-import { sourcesDesConstats } from './failles.js';
-import { lireFaitsCve, sourcesDe } from './sources.js';
-import { detecteeSurMachine, present } from './sql.js';
-import { close } from './suivi.js';
+import { faillesDesMachines } from './failles.js';
 
 /** Machines vulnérables parmi celles demandées (identifiants internes). */
 export async function machinesVulnerables(
@@ -31,48 +21,7 @@ export async function machinesVulnerables(
   reglage: ReglagePriorite,
   machines: readonly string[],
 ): Promise<Set<string>> {
-  const ids = [...new Set(machines)];
-  if (!ids.length) return new Set();
-  const { rows: constats } = await sql<{
-    machine_id: string;
-    id: string;
-    gravite: GraviteTenable;
-    cvss3_score: string | null;
-    epss_score: string | null;
-    exploitable: boolean;
-  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable
-     FROM vulnerabilites_detections d
-     JOIN vulnerabilites_machines m ON m.id = d.machine_id
-     LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-     JOIN vulnerabilites_constats c ON c.id = d.constat_id
-     WHERE d.machine_id = ANY(${ids}::uuid[]) AND ${present} AND NOT ${close('constat')}`.execute(k);
-  const { rows: declarees } = await sql<{ machine_id: string; cve: string }>`
-     SELECT DISTINCT m.id AS machine_id, r.cve
-     FROM vulnerabilites_produits_machines pm
-     JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-     LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-     JOIN vulnerabilites_rapprochements r ON r.produit_id = pm.produit_id AND r.statut IN ('rattachee', 'confirmee')
-     WHERE m.id = ANY(${ids}::uuid[]) AND NOT ${detecteeSurMachine} AND NOT ${close('declaree')}`.execute(k);
-  const parMachine = new Map<string, Priorite[]>();
-  const ajouter = (machine: string, p: Priorite) => parMachine.set(machine, [...(parMachine.get(machine) ?? []), p]);
-  const uniques = [...new Map(constats.map((c) => [c.id, c])).values()];
-  const sources = await sourcesDesConstats(k, uniques);
-  for (const c of constats)
-    ajouter(
-      c.machine_id,
-      calculerPriorite({ ...faitsDepuisSources(sources.get(c.id)!), presence: 'detectee' }, reglage),
-    );
-  const faits = await lireFaitsCve(
-    k,
-    declarees.map((d) => d.cve),
-  );
-  for (const d of declarees) {
-    const f = faits.get(d.cve);
-    ajouter(
-      d.machine_id,
-      calculerPriorite({ ...faitsDepuisSources(sourcesDe(f ? [f] : [])), presence: 'declaree' }, reglage),
-    );
-  }
+  const parMachine = await faillesDesMachines(k, reglage, machines);
   return new Set([...parMachine].filter(([, ps]) => machineVulnerable(ps)).map(([id]) => id));
 }
 

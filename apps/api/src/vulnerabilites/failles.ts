@@ -53,7 +53,14 @@ import {
   GRAVITES_TENABLE,
   type GraviteTenable,
   type MachineDetectionDto,
+  type FailleMarquee,
   type MachineDto,
+  type MachineMarqueeDto,
+  marquesMachine,
+  PARC_PAR_ZONE,
+  type ParcMachinesDto,
+  type RechercheParc,
+  repartirParc,
   type PageFailles,
   type PageMachines,
   type PerimetreAffectableDto,
@@ -285,6 +292,65 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     version: l.version,
   };
 };
+
+/** Failles présentes sur chacune des machines demandées (identifiants internes) : constats de Tenable présents et non
+    traités (présence « détectée »), failles déclarées par un produit relié à la machine, non détectées sur elle et non
+    traitées (« déclarée »). Priorité, exploitation avérée et « exploitable » selon toutes les sources, sur tous les faits
+    connus (lot ALH5 : le même résultat pour tout le monde), sans majoration par la surface externe. Nombre de requêtes fixe,
+    quel que soit le nombre de machines : constats 1, failles déclarées 1, CVE des constats 1, faits des sources 3 + 3.
+    Sert au rang de vulnérabilité de la majoration (majoration.ts) et aux marques de l'écran « Machines » (lot PC2). */
+export async function faillesDesMachines(
+  k: Kdb,
+  reglage: ReglagePriorite,
+  machines: readonly string[],
+): Promise<Map<string, FailleMarquee[]>> {
+  const ids = [...new Set(machines)];
+  const parMachine = new Map<string, FailleMarquee[]>();
+  if (!ids.length) return parMachine;
+  const { rows: constats } = await sql<{
+    machine_id: string;
+    id: string;
+    gravite: GraviteTenable;
+    cvss3_score: string | null;
+    epss_score: string | null;
+    exploitable: boolean;
+  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable
+     FROM vulnerabilites_detections d
+     JOIN vulnerabilites_machines m ON m.id = d.machine_id
+     LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+     JOIN vulnerabilites_constats c ON c.id = d.constat_id
+     WHERE d.machine_id = ANY(${ids}::uuid[]) AND ${present} AND NOT ${close('constat')}`.execute(k);
+  const { rows: declarees } = await sql<{ machine_id: string; cve: string }>`
+     SELECT DISTINCT m.id AS machine_id, r.cve
+     FROM vulnerabilites_produits_machines pm
+     JOIN vulnerabilites_machines m ON m.id = pm.machine_id
+     LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+     JOIN vulnerabilites_rapprochements r ON r.produit_id = pm.produit_id AND r.statut IN ('rattachee', 'confirmee')
+     WHERE m.id = ANY(${ids}::uuid[]) AND NOT ${detecteeSurMachine} AND NOT ${close('declaree')}`.execute(k);
+  const ajouter = (machine: string, sources: SourcesFailleDto, presence: 'detectee' | 'declaree') => {
+    const faits = faitsDepuisSources(sources);
+    parMachine.set(machine, [
+      ...(parMachine.get(machine) ?? []),
+      {
+        niveau: calculerPriorite({ ...faits, presence }, reglage).niveau,
+        exploitee: faits.exploitation.length > 0,
+        exploitable: faits.exploitable.length > 0,
+      },
+    ]);
+  };
+  const uniques = [...new Map(constats.map((c) => [c.id, c])).values()];
+  const sources = await sourcesDesConstats(k, uniques);
+  for (const c of constats) ajouter(c.machine_id, sources.get(c.id)!, 'detectee');
+  const faits = await lireFaitsCve(
+    k,
+    declarees.map((d) => d.cve),
+  );
+  for (const d of declarees) {
+    const f = faits.get(d.cve);
+    ajouter(d.machine_id, sourcesDe(f ? [f] : []), 'declaree');
+  }
+  return parMachine;
+}
 
 export class FaillesDetectees {
   constructor(
@@ -526,8 +592,42 @@ export class FaillesDetectees {
       total: filtrees.length,
       page: q.page,
       parPage: FAILLES_PAR_PAGE,
-      elements: filtrees.slice(debut, debut + FAILLES_PAR_PAGE),
+      elements: await this.marquer(filtrees.slice(debut, debut + FAILLES_PAR_PAGE)),
       sansRole: toutes.filter((m) => m.role === null).length,
+    };
+  }
+
+  /** Marques des machines rendues (lot PC2) : priorité la plus haute, zero-day, exploitable. */
+  private async marquer(machines: MachineDto[]): Promise<MachineMarqueeDto[]> {
+    const failles = await faillesDesMachines(
+      this.db.k,
+      await this.reglage.valeurs(),
+      machines.map((m) => m.id),
+    );
+    return machines.map((m) => ({ ...m, marques: marquesMachine(failles.get(m.id) ?? []) }));
+  }
+
+  /** Parc des machines lisibles (lot PC2), par zone de rôle, dans l'ordre du rang : mêmes filtres que la liste, au plus
+      PARC_PAR_ZONE machines par zone (les plus prioritaires), totaux de chaque zone toujours rendus. Seules les machines que
+      la personne lit sont listées ou comptées. Lecture seule. Nombre de requêtes fixe, aucune par machine : machines et
+      leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus. */
+  async parc(user: SessionUser, q: RechercheParc): Promise<ParcMachinesDto> {
+    const toutes = await this.machinesRangees(user);
+    const texte = q.q?.trim().toLowerCase();
+    const filtrees = toutes.filter(
+      (m) =>
+        (!texte || (m.nom ?? '').includes(texte)) &&
+        (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
+        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre),
+    );
+    // Marques de toutes les machines filtrées (mêmes requêtes, quel que soit leur nombre) : le nombre de machines marquées
+    // « zero-day » d'une zone compte aussi celles au-delà de la borne.
+    const zones = repartirParc(await this.marquer(filtrees), PARC_PAR_ZONE);
+    return {
+      zones,
+      total: filtrees.length,
+      parZone: PARC_PAR_ZONE,
+      tronquee: zones.some((z) => z.total > z.machines.length),
     };
   }
 

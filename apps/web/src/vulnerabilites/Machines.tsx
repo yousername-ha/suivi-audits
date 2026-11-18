@@ -10,6 +10,10 @@
    main, et « Hérité du dépôt » retire le périmètre indiqué à la main.
    Lot ALH3 : la fiche d'une machine dit par quels actifs exposés sur Internet (AlgoLightHouse) elle est jointe, pour les
    actifs que la personne peut lire.
+   Lot PC2 : deux présentations, mémorisées dans les préférences de la personne : « Liste » (ci-dessous, avec la priorité la
+   plus haute et les marques zero-day et exploitable de chaque machine) et « Parc » (ParcMachines.tsx : une tuile par
+   machine, zones front, back applicatif, base de données et rôle non indiqué, mode réduit ou grand écran). Mêmes filtres,
+   même fiche.
    Composants de la charte, CSP stricte (ADR 0006). */
 import {
   Alert,
@@ -19,6 +23,7 @@ import {
   Group,
   Modal,
   Pagination,
+  SegmentedControl,
   Select,
   Stack,
   Table,
@@ -30,8 +35,11 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   type DepotTenableDto,
+  type EchelleParc,
   type ExpositionMachineDto,
   type MachineDto,
+  type MarquesMachineDto,
+  type ParcMachinesDto,
   type PageMachines,
   type PerimetreAffectableDto,
   type ProduitRelieDto,
@@ -39,12 +47,14 @@ import {
   ROLES_MACHINE,
   ROLE_MACHINE_LIBELLES,
   type RoleMachine,
+  type VueMachines,
+  type ZoneParc,
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { api, errorMessage, get } from '../api';
-import { useCan } from '../session';
+import { useCan, usePreferences } from '../session';
 import {
   corpsAffectation,
   faitsDuRang,
@@ -55,6 +65,8 @@ import {
   originePerimetre,
   urlMachines,
 } from './failles';
+import { libellePrioriteMachine, urlParc } from './parc';
+import { LegendeMarques, MarquesMachine, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { nombrePages } from './veille';
 
@@ -65,14 +77,15 @@ const OPTIONS_ROLE = [
 ];
 
 /** Machines (sans état), dans l'ordre du rang ; avec `selection`, une case par machine pour l'affectation en masse ; avec
-    `onOuvrir`, le nom ouvre la fiche de la machine. */
+    `onOuvrir`, le nom ouvre la fiche de la machine. Lot PC2 : priorité la plus haute et marques (zero-day, exploitable)
+    quand la route les rend. */
 export function MachinesTable({
   machines,
   selection,
   onSelection,
   onOuvrir,
 }: {
-  machines: MachineDto[];
+  machines: (MachineDto & { marques?: MarquesMachineDto })[];
   selection?: ReadonlySet<string>;
   onSelection?: (id: string, choisie: boolean) => void;
   onOuvrir?: (m: MachineDto) => void;
@@ -85,6 +98,7 @@ export function MachinesTable({
           <Table.Tr>
             {choix && <Table.Th>Choisir</Table.Th>}
             <Table.Th>Rang</Table.Th>
+            <Table.Th>Priorité et marques</Table.Th>
             <Table.Th>Machine</Table.Th>
             <Table.Th>Rôle</Table.Th>
             <Table.Th>Périmètre</Table.Th>
@@ -111,6 +125,20 @@ export function MachinesTable({
                 <Text size="xs" c="dimmed">
                   {faitsDuRang(m.rang).join(' · ')}
                 </Text>
+              </Table.Td>
+              <Table.Td>
+                {m.marques ? (
+                  <span className="parc-liste-marques">
+                    <Text size="sm" fw={600} span>
+                      {libellePrioriteMachine(m.marques.priorite)}
+                    </Text>
+                    <MarquesMachine marques={m.marques} texte />
+                  </span>
+                ) : (
+                  <Text size="sm" c="dimmed">
+                    Non calculée
+                  </Text>
+                )}
               </Table.Td>
               <Table.Td>
                 {onOuvrir ? (
@@ -159,7 +187,7 @@ export function MachinesTable({
           ))}
           {machines.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={choix ? 7 : 6}>
+              <Table.Td colSpan={choix ? 8 : 7}>
                 <Text size="sm" c="dimmed">
                   Aucune machine ne correspond, parmi celles que vous pouvez lire.
                 </Text>
@@ -489,10 +517,31 @@ function OngletMachines() {
   const [perimetre, setPerimetre] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [ouverte, setOuverte] = useState<MachineDto | null>(null);
+  // Présentation mémorisée pour la personne (préférences du compte) : liste par défaut, parc réduit par défaut.
+  const { prefs, save } = usePreferences();
+  const affichage = prefs.vulnerabilitesMachines ?? {};
+  const vue: VueMachines = affichage.vue ?? 'liste';
+  const echelle: EchelleParc = affichage.echelle ?? 'reduit';
+  const regler = (patch: { vue?: VueMachines; echelle?: EchelleParc }) =>
+    void save({ vulnerabilitesMachines: { ...affichage, ...patch } }).catch((e: unknown) =>
+      notifications.show({ color: 'red', message: errorMessage(e) }),
+    );
   const machines = useQuery({
     queryKey: [...CLE, filtres, page],
     queryFn: () => get<PageMachines>(urlMachines(filtres, page)),
+    enabled: vue === 'liste',
   });
+  // Parc : une seule requête pour tout le parc lisible (bornée par zone), aucune par machine.
+  const parc = useQuery({
+    queryKey: [...CLE, 'parc', filtres],
+    queryFn: () => get<ParcMachinesDto>(urlParc(filtres)),
+    enabled: vue === 'parc',
+  });
+  /** « Et n autres : voir la liste » d'une zone tronquée : la liste, filtrée sur la zone. */
+  const voirListe = (z: ZoneParc) => {
+    changer({ role: z });
+    regler({ vue: 'liste' });
+  };
   const perimetres = useQuery({
     queryKey: [...CLE, 'perimetres'],
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
@@ -538,7 +587,36 @@ function OngletMachines() {
   return (
     <>
       <Stack>
-        {machines.data && <BandeauSansRole n={machines.data.sansRole} />}
+        <Group align="center" gap="md">
+          <SegmentedControl
+            value={vue}
+            onChange={(v) => regler({ vue: v as VueMachines })}
+            data={[
+              { value: 'liste', label: 'Liste' },
+              { value: 'parc', label: 'Parc' },
+            ]}
+            aria-label="Présentation des machines"
+          />
+          {vue === 'parc' && (
+            <SegmentedControl
+              value={echelle}
+              onChange={(v) => regler({ echelle: v as EchelleParc })}
+              data={[
+                { value: 'reduit', label: 'Réduit' },
+                { value: 'grand', label: 'Grand écran' },
+              ]}
+              aria-label="Échelle du parc"
+            />
+          )}
+          {vue === 'parc' && (
+            <Text size="sm" c="dimmed">
+              {echelle === 'reduit'
+                ? 'Les plus prioritaires de chaque zone (5, et 8 sans rôle), le reste à déplier.'
+                : 'Tout le parc, de la plus prioritaire à la moins prioritaire, en tuiles denses.'}
+            </Text>
+          )}
+        </Group>
+        {vue === 'liste' && machines.data && <BandeauSansRole n={machines.data.sansRole} />}
         <form onSubmit={chercher} role="search">
           <Group align="flex-end">
             <TextInput
@@ -574,7 +652,7 @@ function OngletMachines() {
             />
           </Group>
         </form>
-        {modifier && (
+        {vue === 'liste' && modifier && (
           <Group align="flex-end" role="group" aria-label="Affectation des machines choisies">
             <Select
               label="Rôle à indiquer"
@@ -603,8 +681,17 @@ function OngletMachines() {
             </Button>
           </Group>
         )}
-        <ErrorAlert error={machines.error ?? perimetres.error} />
-        {machines.data && (
+        <ErrorAlert error={(vue === 'liste' ? machines.error : parc.error) ?? perimetres.error} />
+        <LegendeMarques parc={vue === 'parc'} />
+        {vue === 'parc' && parc.data && (
+          <>
+            <ParcMachines parc={parc.data} echelle={echelle} onOuvrir={setOuverte} onVoirListe={voirListe} />
+            <Text size="sm" c="dimmed" role="status">
+              {parc.data.total} machine{parc.data.total > 1 ? 's' : ''}
+            </Text>
+          </>
+        )}
+        {vue === 'liste' && machines.data && (
           <MachinesTable
             machines={machines.data.elements}
             selection={modifier ? selection : undefined}
@@ -621,7 +708,7 @@ function OngletMachines() {
             onOuvrir={setOuverte}
           />
         )}
-        {machines.data && (
+        {vue === 'liste' && machines.data && (
           <Group justify="space-between">
             <Text size="sm" c="dimmed" role="status">
               {machines.data.total} machine{machines.data.total > 1 ? 's' : ''}

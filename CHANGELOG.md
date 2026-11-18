@@ -574,6 +574,23 @@ seuil »). (session « Module surveillance vulnérabilités SMSI »)
   domaine, d'adresse ni de périmètre. « Failles détectées » reprend les filtres de l'adresse (`?priorite=`, `?etat=`,
   `?exploite=oui`) et la veille la recherche (`?q=`). Aide en ligne : article « Vulnérabilités : vue d'ensemble ». (session
   « Module surveillance vulnérabilités SMSI »)
+- **Module « Vulnérabilités », lot PC2 : écran « Machines », présentation « Parc »** ([ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  addendum « lot PC2 » ; demandes du RSSI des 15 et 16/11/2026, maquettes `04-machines` et `04b-machines-grand-ecran`). À côté
+  de la liste existante, une présentation **« Parc »** (bascule « Liste » ou « Parc » mémorisée dans les préférences de la
+  personne) : une **tuile par machine** avec une icône d'ordinateur selon le rôle (poste web, serveur, base de données, point
+  d'interrogation), son nom, son **rang** calculé par la plateforme, ses failles présentes **critiques, élevées, moyennes et
+  faibles** et sa **priorité la plus haute** en couleur et en toutes lettres (P1 à P4) ; quatre **zones** « Front »,
+  « Back applicatif », « Base de données » et « Rôle non indiqué », chacune dans l'ordre du rang, séparées par des **murs à
+  bandes diagonales animées** (rouge entre le front et le back, violet entre le back et les bases ; animation coupée par le
+  mouvement réduit et à l'impression). **Marques** sur les tuiles, dans la liste (nouvelle colonne « Priorité et marques ») et
+  dans la légende : avertissement **« Zero-day : exploitation avérée »** (faille présente dont l'exploitation est avérée,
+  définition du lot V6) et éclair **« Exploitable »** (code d'exploitation disponible, sans exploitation avérée). Échelle
+  **« Réduit »** (les 5 plus prioritaires par zone, 8 sans rôle, tuile « et n autres » qui déplie la zone) ou **« Grand
+  écran »** (tout le parc en tuiles denses). Filtres conservés ; clic ou Entrée sur une tuile : fiche de la machine ; nom
+  accessible complet par tuile. Route de lecture `GET /api/vulnerabilites/machines/parc` (`vulnerabilites:lire`) : machines
+  lisibles seulement, 250 au plus par zone (totaux rendus), nombre de requêtes fixe (12 au plus), sans écriture ni journal ;
+  `GET /api/vulnerabilites/machines` rend aussi les marques de chaque machine. Sans migration. Aide en ligne : article
+  « Vulnérabilités : failles détectées et machines ». (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
 
