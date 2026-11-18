@@ -1,6 +1,7 @@
 /* Indépendant de React, de l'API et de la base. Pas de progression artificielle : l'illustration, le rang et les libellés
    de présentation découlent de l'état publié ; ils ne font jamais avancer d'étape et ne simulent ni pourcentage, ni débit,
-   ni durée, ni ligne de journal. */
+   ni durée, ni ligne de journal. Seul pourcentage affiché : celui du téléchargement, calculé sur les octets reçus mesurés et
+   publiés par l'exécutant (ADR 0104). */
 (() => {
   // Thème sombre seul, fixé dans la page (décision du RSSI du 15/11/2026).
   const root = document.documentElement;
@@ -43,6 +44,50 @@
       'neutral'
     );
   };
+  // Progression mesurée du téléchargement (ADR 0104) : pendant l'illustration « download » et pour une donnée cohérente
+  // (entiers, total positif, reçu entre zéro et le total) ; sinon, barre décorative et aucun chiffre. Tailles en Mo (10^6
+  // octets), en Ko sous 1 Mo ; une décimale sous 10. Le reçu est arrondi par défaut : il n'atteint le total qu'à la fin.
+  const LARGEUR_BARRE = 164;
+  const nombre = (valeur, arrondi) =>
+    valeur < 10
+      ? (arrondi(valeur * 10) / 10).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+      : arrondi(valeur).toLocaleString('fr-FR');
+  const attribut = (element, nom, valeur) => {
+    if (valeur === null) element.removeAttribute(nom);
+    else if (element.getAttribute(nom) !== valeur) element.setAttribute(nom, valeur);
+  };
+  function telechargement(state, art) {
+    const t = state.telechargement;
+    const barre = get('telechargement');
+    const valide =
+      art === 'download' &&
+      !!t &&
+      typeof t === 'object' &&
+      Number.isSafeInteger(t.recu) &&
+      Number.isSafeInteger(t.total) &&
+      t.total > 0 &&
+      t.recu >= 0 &&
+      t.recu <= t.total;
+    if (!valide) {
+      delete root.dataset.telechargement;
+      barre.hidden = true;
+      attribut(barre, 'aria-valuenow', null);
+      attribut(barre, 'aria-valuetext', null);
+      ecrire('telechargement-valeur', '');
+      attribut(get('transfer-fill'), 'width', '0');
+      return;
+    }
+    const pourcent = Math.floor((t.recu * 100) / t.total);
+    const [unite, octets] = t.total >= 1e6 ? ['Mo', 1e6] : ['Ko', 1e3];
+    const total = nombre(t.total / octets, Math.round);
+    const recu = t.recu === t.total ? total : nombre(t.recu / octets, Math.floor);
+    root.dataset.telechargement = 'mesure';
+    ecrire('telechargement-valeur', `${pourcent} % · ${recu} / ${total} ${unite}`);
+    attribut(barre, 'aria-valuenow', String(pourcent));
+    attribut(barre, 'aria-valuetext', `${pourcent} %, ${recu} ${unite} sur ${total} ${unite}`);
+    barre.hidden = false;
+    attribut(get('transfer-fill'), 'width', String(Math.round((LARGEUR_BARRE * 100 * t.recu) / t.total) / 100));
+  }
   const next = new URLSearchParams(location.search).get('next');
   let destination = '/';
   if (next && next.startsWith('/')) {
@@ -116,6 +161,7 @@
     ecrire('target', cible || '');
     get('target-block').hidden = !cible;
     get('version-connector').hidden = !cible;
+    telechargement(state, art);
   }
   function indiquerRetour(state, waiting, failed) {
     ecrire(
@@ -181,23 +227,27 @@
         const index = phases.indexOf(phase);
         const current = phases.indexOf(waiting ? 'preparing' : state.phase);
         element.className =
-          phase === 'rollback'
-            ? state.phase === 'rollback' && !termine
-              ? 'current'
-              : franchies.has('rollback')
-                ? 'done'
-                : ''
-            : index < current || (franchies.has(phase) && phase !== state.phase)
-              ? 'done'
-              : index === current
+          // « Retour à l'application » n'est franchi que sur un succès publié, jamais avant la fin des vérifications
+          // (un exécutant antérieur publiait cette étape à la fin du script, avant la vérification finale).
+          phase === 'complete' && state.status !== 'success'
+            ? ''
+            : phase === 'rollback'
+              ? state.phase === 'rollback' && !termine
                 ? 'current'
-                : '';
+                : franchies.has('rollback')
+                  ? 'done'
+                  : ''
+              : index < current || (franchies.has(phase) && phase !== state.phase)
+                ? 'done'
+                : index === current
+                  ? 'current'
+                  : '';
         if (element.className === 'current') element.setAttribute('aria-current', 'step');
         else element.removeAttribute('aria-current');
         if (phase === 'rollback') element.hidden = !franchies.has('rollback');
         const time = element.querySelector('time');
         if (time) {
-          const at = franchies.get(phase);
+          const at = phase === 'complete' && state.status !== 'success' ? undefined : franchies.get(phase);
           time.textContent = at ? `· ${heure(at)}` : '';
           if (at) time.dateTime = at;
           else time.removeAttribute('datetime');
