@@ -295,6 +295,20 @@ export interface CfgVersions {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface ContactsCriseComptes {
+  user_id: string;
+  role_crise: Generated<string>;
+  telephone: Generated<string>;
+  telephone2: Generated<string>;
+  disponibilite: Generated<string>;
+  cle: Generated<boolean>;
+  tous_perimetres: Generated<boolean>;
+  perimetres: Generated<string[]>;
+  mis_a_jour: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: Generated<string>;
+  version: Generated<number>;
+}
+
 export interface ContributionsElements {
   id: Generated<string>;
   objet_id: string;
@@ -2126,6 +2140,7 @@ export interface DB {
   cfg_items: CfgItems;
   cfg_usages: CfgUsages;
   cfg_versions: CfgVersions;
+  contacts_crise_comptes: ContactsCriseComptes;
   contributions_elements: ContributionsElements;
   courriel_jobs: CourrielJobs;
   dda_perimetres: DdaPerimetres;

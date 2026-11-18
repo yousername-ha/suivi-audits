@@ -1,7 +1,8 @@
 /* Cellule de crise (reprise de la page de l'outil de suivi) : clé `crisis` de l'état historique (cellules avec main
    courante, contacts de crise, scénarios et check-lists), modifiée sous verrou et sans copie. La clôture d'une
    cellule liée à un exercice planifié marque cet exercice « Réalisé » (droit du pilotage requis, comme dans l'outil
-   historique). L'export Excel de la main courante et l'import des scénarios depuis Excel ne sont pas repris. */
+   historique). L'export Excel de la main courante et l'import des scénarios depuis Excel ne sont pas repris. La lecture
+   ajoute les comptes de la plateforme désignés contacts de crise (ADR 0105, contacts-crise-comptes.ts), jamais écrits ici. */
 import {
   ActionScenarioModification,
   AuteurCrise,
@@ -14,11 +15,13 @@ import {
   ScenarioModification,
   lireEtatCrise,
   syntheseRetex,
+  type ContactCriseCompte,
   type EtatCrise,
 } from '@suivi/shared';
 import { isObject, nextLegacyId, type Json, type JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { contactsComptesVisibles } from '../contacts-crise-comptes.js';
 import { surConnexion } from '../db/db.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
@@ -72,6 +75,9 @@ export interface VueCrise {
   exercices: { id: string; title: string }[];
   /** Fournisseurs critiques ou hébergeurs HDS, proposés comme contacts. */
   fournisseursCritiques: string[];
+  /** Comptes de la plateforme contacts de crise (ADR 0105) : comptes actifs du périmètre affiché, ou qui couvrent au moins un
+      périmètre lisible (ou tous) ; lecture seule, modifiés dans l'administration des comptes. */
+  contactsComptes: ContactCriseCompte[];
 }
 
 export class Crise {
@@ -99,22 +105,25 @@ export class Crise {
         ...entrees(data, 'plans')
           .filter((p) => p.type === 'exo' && p.status !== 'Réalisé')
           .map((p) => ({ id: str(p.id), title: str(p.title) })),
-        ...(
-          await this.r.g.db.k
-            .selectFrom('grc_objects')
-            .select(['id', 'name'])
-            .where('kind', '=', 'continuity_exercise')
-            .where('archived', '=', false)
-            .where('smsi_id', 'in', [...lisibles])
-            .where(sql<string>`COALESCE(data->>'status','planned')`, '<>', 'done')
-            .orderBy('name')
-            .limit(200)
-            .execute()
+        // Sans périmètre lisible (compte sans rattachement, ADR 0095), aucun exercice : une liste vide ferait échouer la requête.
+        ...(lisibles.size
+          ? await this.r.g.db.k
+              .selectFrom('grc_objects')
+              .select(['id', 'name'])
+              .where('kind', '=', 'continuity_exercise')
+              .where('archived', '=', false)
+              .where('smsi_id', 'in', [...lisibles])
+              .where(sql<string>`COALESCE(data->>'status','planned')`, '<>', 'done')
+              .orderBy('name')
+              .limit(200)
+              .execute()
+          : []
         ).map((o) => ({ id: `object:${o.id}`, title: o.name })),
       ],
       fournisseursCritiques: entrees(data, 'suppliers')
         .filter((s) => s.critical === 'Oui' || s.hds === 'Oui')
         .map((s) => str(s.name)),
+      contactsComptes: await contactsComptesVisibles(this.r.g.db.k, lisibles, smsi),
     };
   }
 

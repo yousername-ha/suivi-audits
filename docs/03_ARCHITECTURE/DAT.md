@@ -263,6 +263,15 @@ propre à l’objet sous verrou, sur l’état courant ; les lectures par `lireD
 invitations et relances sont des notifications métier `retex_contribution` sans SMSI ni objet (migration additive `049`,
 qui étend la contrainte posée par la `046`). Le pilote garde le droit `incidents:modifier`.
 
+**Contacts de crise issus des comptes (18/11/2026, [ADR 0105](../adr/0105-contacts-de-crise-issus-des-comptes.md)).**
+Table `contacts_crise_comptes` (migration additive `087`) : une ligne par compte désigné, supprimée avec le compte,
+périmètres en tableau d'identifiants contrôlés à l'écriture, version pour `If-Match`. Écriture de la fiche entière par
+`administration:administrer` (`PUT /api/admin/users/:id/contact-crise`) ; la personne ne modifie que ses téléphones et sa
+disponibilité (`PATCH /api/account/contact-crise`, accès `auth`, schéma strict). Lecture par `GET /api/crise`
+(`contactsComptes`, `incidents:lire`) : comptes actifs (prédicat des annuaires) du périmètre affiché, ou couvrant au moins un
+périmètre lisible ; aucun sans périmètre lisible. Journal `admin.user_crisis_contact` et `account.crisis_contact_update`,
+noms des champs seulement, jamais les numéros. Temps réel : entité `users` (identifiant du compte seulement).
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.

@@ -23,6 +23,7 @@ import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
 import { ConfigGrc } from './config-grc.js';
+import { ContactsCriseComptes } from './contacts-crise-comptes.js';
 import { BusinessPolicies } from './business-policy.js';
 import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
@@ -168,6 +169,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
+    /** Contacts de crise issus des comptes (ADR 0105) : fiche de l'administrateur, mise à jour par la personne. */
+    contactsCrise: new ContactsCriseComptes(db, grc),
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {

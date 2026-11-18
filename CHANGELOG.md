@@ -2,6 +2,37 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+**Aucune action sur le serveur.** **Migration automatique `087`** (contacts de crise issus des comptes,
+[ADR 0105](docs/adr/0105-contacts-de-crise-issus-des-comptes.md)) : additive (une table `contacts_crise_comptes` et son
+déclencheur temps réel ; aucune table existante modifiée), durée négligeable, sans reprise de données : aucun compte n'est
+contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
+suivi-audits »)
+
+### Ajouté
+
+- **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
+  [ADR 0105](docs/adr/0105-contacts-de-crise-issus-des-comptes.md)). Dans Plateforme > Utilisateurs, la fiche d'un compte
+  reçoit une section « Contact de crise » : l'administrateur y désigne le compte, son rôle de crise, ses téléphones, sa
+  disponibilité, la case « Contact clé » (priorité dans la cellule de crise) et ses périmètres (tous par défaut, ou une liste
+  choisie). Dans Mon compte, une personne contact de crise met à jour ses téléphones et sa disponibilité et voit son rôle et
+  ses périmètres sans pouvoir les modifier. La page Contacts de crise montre en tête un bloc en lecture seule « Comptes de la
+  plateforme » (téléphones et courriel cliquables, mention « Modifiable dans Plateforme > Utilisateurs ») ; les contacts
+  saisis à la main restent en dessous, inchangés, et la cellule de crise reprend aussi les comptes, contacts clés en
+  premier. Seuls les comptes actifs apparaissent, et seulement pour qui lit les incidents du périmètre. Le journal d'audit
+  garde qui a modifié quels champs, sans les numéros (`admin.user_crisis_contact`, `account.crisis_contact_update`). L'export
+  Excel des contacts de crise ne reprend pas encore les comptes. _(Session « Refonte Neon suivi-audits »
+  (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+### Corrigé
+
+- **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
+  crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
+  reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+
 ## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour

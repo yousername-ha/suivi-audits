@@ -350,6 +350,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Connectez-vous avec votre identifiant et votre mot de passe, puis saisissez le code de votre application d’authentification.',
       'Lors de la première connexion, activez la double authentification et changez le mot de passe temporaire si cela vous est demandé.',
       'Dans Mon compte, gérez votre mot de passe, votre double authentification et vos sessions.',
+      'Si un administrateur vous a désigné contact de crise, la carte « Contact de crise » de Mon compte vous permet de mettre à jour vos téléphones et votre disponibilité. Votre rôle de crise et vos périmètres sont affichés, seul un administrateur peut les changer. Ces coordonnées et l’adresse courriel de votre compte sont montrées dans la page Contacts de crise (Résilience, Incidents et crise) et dans la cellule de crise, aux personnes qui lisent les incidents de vos périmètres.',
       'Utilisez Déconnexion pour fermer la session. En cas d’erreur réseau ou de refus du serveur, un message vous permet de réessayer : la fermeture n’est pas annoncée comme réussie.',
     ],
   },
@@ -431,6 +432,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     steps: [
       'Dans Administration, attribuez aux comptes les groupes et rôles correspondant à leur besoin réel.',
       'La matrice décrit les permissions par module et action. Les droits effectifs indiquent leur origine.',
+      'Pour désigner un compte contact de crise, ouvrez sa fiche avec Modifier : dans la section « Contact de crise », cochez la case, saisissez le rôle de crise, les téléphones et la disponibilité, cochez « Contact clé » pour le faire passer en premier dans la cellule de crise, puis gardez « Tous les périmètres » ou choisissez les périmètres concernés. Enregistrez avec « Enregistrer le contact de crise ». Seuls les comptes actifs apparaissent dans la page Contacts de crise (Résilience, Incidents et crise), en lecture seule. La personne met à jour elle-même ses téléphones et sa disponibilité dans Mon compte. Le journal d’audit garde qui a modifié quels champs, sans les numéros.',
       'Transmettez un mot de passe temporaire par un canal adapté. Ne le copiez pas dans un ticket ou un journal public.',
       'Une revue des accès peut être exportée. Le contrôle serveur demeure actif même si une entrée du menu est masquée.',
     ],

@@ -46,6 +46,7 @@ export * from './suivi-incidents.js';
 export * from './retex-incidents.js';
 export * from './retex-collecte.js';
 export * from './suivi-crise.js';
+export * from './contacts-crise-comptes.js';
 export * from './suivi-evals-fournisseurs.js';
 export * from './suivi-dda.js';
 export * from './tenacy.js';
