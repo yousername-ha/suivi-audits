@@ -31,7 +31,7 @@ Aucune action.
   tâches récurrentes, registre commun du Pilotage, registres, fournisseurs, critères fournisseurs, processus, parties
   intéressées, bibliothèque, objectifs, risques, cartographie des risques, couverture et organisation de l'audit, documents et
   liens, parcours ISO. La lueur n'anime que la rotation, s'arrête avec le mouvement réduit, l'impression, les couleurs
-  forcées et l'onglet masqué (ADR 0099). En mode clair, le fond de page est blanc (il était gris). Aucune migration, aucune
+  forcées et l'onglet masqué (ADR 0099). En mode clair, le fond de page est blanc (il était gris) et la boîte d'outils se fond dans le fond, sans fond ni cadre, le champ de recherche gardant son contour violet et sa lueur. Un champ « Rechercher une page du menu » s'ajoute sous le logo, dans le menu : il trouve une page par son nom ou sa famille (accents ignorés), Ctrl K (ou Cmd K) y place le curseur, les flèches parcourent les pages trouvées et Entrée ouvre la page. Aucune migration, aucune
   API ; noms accessibles des champs conservés.
   _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 

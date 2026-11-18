@@ -293,3 +293,214 @@
     inline-size: 100%;
   }
 }
+
+/* Mode clair (choix du RSSI du 18/11/2026) : la boîte d'outils se fond dans le fond blanc, sans fond ni cadre ; le champ
+   de recherche garde un contour violet fin, un fondu violet léger à gauche et la même lueur qui fait le tour. */
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(
+    .barre-boite,
+    .fs-views,
+    .pr-views,
+    .pi-views,
+    .fs-toolbar-end,
+    .pr-toolbar-end,
+    .pi-toolbar-end,
+    .bb-toolbar .bb-search
+  ) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--mantine-color-text);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__sep {
+  background: var(--suivi-trait);
+}
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(
+    .barre-boite .mantine-ActionIcon-root,
+    .barre-boite__outil,
+    .fs-tool,
+    .pr-tool,
+    .pi-tool,
+    .bb-toolbar .bb-search
+  ) {
+  color: var(--mantine-color-dimmed);
+}
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(.barre-boite .mantine-ActionIcon-root, .barre-boite__outil, .fs-tool, .pr-tool, .pi-tool):hover {
+  background: var(--neon-doux);
+  color: var(--neon-accent);
+}
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(
+    .barre-boite [aria-pressed='true'],
+    :is(.fs-tool, .pr-tool, .pi-tool):is([aria-pressed='true'], [data-active='true'])
+  ) {
+  border-color: color-mix(in srgb, var(--neon-accent) 45%, transparent);
+  background: var(--neon-doux);
+  color: var(--neon-accent);
+}
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(.fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end)
+  .mantine-Button-root[data-variant='default'] {
+  border-color: var(--mantine-color-default-border);
+  color: var(--mantine-color-text);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-input {
+  border-color: color-mix(in srgb, var(--mantine-color-violet-4) 45%, transparent);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--mantine-color-violet-5) 12%, transparent) 0%,
+      color-mix(in srgb, var(--mantine-color-violet-5) 4%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--suivi-surface);
+  color: var(--mantine-color-text);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-input::placeholder {
+  color: var(--mantine-color-dimmed);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-section {
+  color: var(--neon-accent);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.74turn,
+    color-mix(in srgb, var(--mantine-color-violet-5) 25%, transparent) 0.84turn,
+    var(--mantine-color-violet-5) 0.93turn,
+    var(--mantine-color-violet-3) 0.97turn,
+    transparent 0.995turn
+  );
+}
+
+/* Recherche de pages dans le menu, sous le logo (demande du RSSI du 18/11/2026) : même champ que la boîte d'outils,
+   aux couleurs du menu, avec sa lueur qui fait le tour ; la liste des pages trouvées s'ouvre dessous. */
+.nav-recherche {
+  margin-block: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+}
+.nav-recherche__cadre {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 3px;
+  border-radius: calc(var(--mantine-radius-md) + 3px);
+}
+.nav-recherche__cadre::before {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  inline-size: 300%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.74turn,
+    color-mix(in srgb, var(--mantine-color-violet-5) 30%, transparent) 0.84turn,
+    var(--mantine-color-violet-4) 0.93turn,
+    var(--mantine-color-violet-1) 0.97turn,
+    transparent 0.995turn
+  );
+  content: '';
+  filter: blur(3px);
+  transform: translate(-50%, -50%) rotate(0turn);
+  animation: barre-lueur 4.5s linear infinite;
+}
+.nav-neon[data-mouvement='pause'] .nav-recherche__cadre::before {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
+  .nav-recherche__cadre::before {
+    animation: none;
+  }
+}
+.nav-recherche__champ {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  block-size: 2.25rem;
+  padding-inline: var(--mantine-spacing-sm);
+  border: 1px solid color-mix(in srgb, var(--mantine-color-violet-3) 38%, transparent);
+  border-radius: var(--mantine-radius-md);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--mantine-color-violet-5) 26%, transparent) 0%,
+      color-mix(in srgb, var(--mantine-color-violet-5) 8%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--menu-famille-fond);
+  cursor: text;
+}
+.nav-recherche__champ:focus-within {
+  border-color: var(--mantine-color-violet-3);
+}
+.nav-recherche__champ svg {
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--mantine-color-violet-2);
+}
+.nav-recherche__champ input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--menu-texte);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+}
+.nav-recherche__champ input::placeholder {
+  color: color-mix(in srgb, var(--mantine-color-violet-1) 75%, transparent);
+}
+.nav-recherche__touche {
+  flex: none;
+  padding-inline: 0.35rem;
+  border: 1px solid var(--menu-trait);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--menu-secondaire);
+  font-family: inherit;
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
+}
+.nav-recherche__resultats,
+.nav-recherche__vide {
+  margin: var(--mantine-spacing-2xs) 0 0;
+  padding: var(--mantine-spacing-2xs);
+  border: 1px solid var(--menu-trait);
+  border-radius: var(--menu-rayon);
+  background: var(--menu-famille-fond);
+  color: var(--menu-texte);
+  font-size: var(--mantine-font-size-sm);
+  list-style: none;
+}
+.nav-recherche__vide {
+  color: var(--menu-secondaire);
+}
+.nav-recherche__resultats li {
+  padding: 0.35rem var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+}
+.nav-recherche__resultats li[aria-selected='true'] {
+  background: var(--menu-destination-fond);
+  color: var(--menu-selection);
+}
+.nav-recherche__resultats small {
+  display: block;
+  color: var(--menu-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+/* Téléphone : pas de clavier physique, le rappel du raccourci disparaît. */
+@media (max-width: 36em) {
+  .nav-recherche__touche {
+    display: none;
+  }
+}

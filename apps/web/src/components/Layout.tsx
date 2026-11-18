@@ -42,6 +42,8 @@ import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
 import { MarqueOrganisation } from './MarqueOrganisation';
+import { RechercheMenu } from './RechercheMenu';
+import type { PageMenu } from './recherche-menu';
 import { useOngletVisible } from '../parcours-iso/mouvement';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
@@ -116,6 +118,14 @@ export function Layout({ children }: { children: ReactNode }) {
   const tri = useTriMenu();
   const familles = famillesVisibles(can, tri.ordre);
   const idsFamilles = familles.map((f) => f.famille.id);
+  // Pages proposées par la recherche du menu : les mêmes destinations que le menu, avec les droits de la personne.
+  const pagesMenu: PageMenu[] = [
+    ...accueil.map(([to, label]) => ({ to, label, groupe: 'Espace de travail' })),
+    ...familles.flatMap(({ famille, destinations }) =>
+      destinations.map((d) => ({ to: d.to, label: d.label, groupe: famille.label })),
+    ),
+    ...[...administration, ...outils].map(([to, label]) => ({ to, label, groupe: 'Compte et administration' })),
+  ];
   // Une seule famille dépliée à la fois : ouvrir une famille referme la précédente. La page affichée déplie la sienne.
   const familleDeLaPage = localiser(loc.pathname)?.famille.id;
   const [ouvert, setOuvert] = useState<string | null>(familleDeLaPage ?? null);
@@ -175,6 +185,15 @@ export function Layout({ children }: { children: ReactNode }) {
           <small>Qualité, sécurité et référentiels</small>
         </span>
       </Link>
+      {!tablette && (
+        <RechercheMenu
+          pages={pagesMenu}
+          onAller={(to) => {
+            void nav(to);
+            close();
+          }}
+        />
+      )}
       <Text className="nav-caption nav-annexe">Espace de travail</Text>
       <Stack gap="2xs">
         {navigationItems(accueil)}

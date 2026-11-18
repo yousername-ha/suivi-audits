@@ -17,6 +17,12 @@ Relevé de départ : [RELEVE-ECRAN-1920.md](RELEVE-ECRAN-1920.md).
    périmètre, et nom « Filtres avancés » au lieu de « Filtres ». Validée.
 6. **Fond blanc en clair** (18/11/2026) : en mode clair, le fond de page est blanc et non plus gris (jeton
    `FONDS.clair.page`) ; les en-têtes de tableau des rapports imprimables gardent le gris de marque.
+7. **Boîte d'outils en clair** (18/11/2026, sur maquettes) : version « fondue », sans fond ni cadre ; le champ de recherche
+   est blanc, à contour violet fin, avec un fondu violet léger et la lueur.
+8. **Recherche de pages dans le menu** (18/11/2026, sur maquettes) : champ sous le logo (`RechercheMenu`), aux couleurs du
+   menu avec sa lueur ; il trouve une page du menu par son nom ou sa famille, avec les droits de la personne ; Ctrl K ou
+   Cmd K, flèches, Entrée, Échap. Absent en tablette (menu replié en icônes) ; au téléphone, dans le tiroir, sans le rappel
+   du raccourci.
 
 ## Réalisation
 
