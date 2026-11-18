@@ -21,3 +21,7 @@ auditConfig:
     # minimatch < 11.0.1 (déni de service, modéré), tiré par ESLint seul, outil de développement absent des images. Seule la
     # 11.0.1 est corrigée (27/10/2026), une majeure qu'ESLint n'accepte pas encore (^10). Réexamen au plus tard le 30/11/2026.
     - GHSA-g3hv-75wg-m249
+    # picomatch <= 4.0.7 (déni de service par expression régulière, élevé), tiré par typescript-eslint, Vite et Vitest seuls,
+    # outils de développement et de construction absents des dépendances d'exécution (`pnpm audit --prod` : rien). Aucune
+    # version corrigée n'est publiée au 17/11/2026. Réexamen au plus tard le 25/11/2026.
+    - GHSA-fc5q-39xc-vjpf

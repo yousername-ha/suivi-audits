@@ -1,6 +1,6 @@
 /* Flux vers l'extérieur (ADR 0097) : libellés et règles d'affichage de la page d'administration, sans dépendance à React
    (testés seuls). Le registre (destinations, porteur, données qui sortent) vient de @suivi/shared. */
-import { sensDuFlux, type FluxExterneDefinition, type FluxExterneEtat } from '@suivi/shared';
+import { fluxSelonMandataire, sensDuFlux, type FluxExterneDefinition, type FluxExterneEtat } from '@suivi/shared';
 
 /** Adresse de la carte qui ouvre et ferme les flux. */
 export const LIEN_FLUX_EXTERNES = '/systeme/flux-externes';
@@ -29,13 +29,18 @@ export function etatApplique(e: Pick<FluxExterneEtat, 'ouvert' | 'applique'>): {
 export const peutConfirmer = (ouvrir: boolean, valide: boolean, envoi: boolean): boolean =>
   !envoi && (!ouvrir || valide);
 
-/** Flux à faire autoriser sur le pare-feu de l'hôte et du réseau : ceux des modules voulus ouverts. */
+/** Flux à faire autoriser sur le pare-feu de l'hôte et du réseau : ceux des modules voulus ouverts. Mandataire sortant actif
+    (ADR 0101) : un flux qui passe par lui sort vers le mandataire, sur le port réglé, et non vers ses destinations. */
 export function pareFeuAOuvrir(
   registre: readonly FluxExterneDefinition[],
   etats: readonly Pick<FluxExterneEtat, 'module' | 'ouvert'>[],
+  mandataireActif = false,
 ): { libelle: string; regles: readonly string[] }[] {
   const ouverts = new Set(etats.filter((e) => e.ouvert).map((e) => e.module));
-  return registre.filter((f) => ouverts.has(f.id)).map((f) => ({ libelle: f.libelle, regles: f.pareFeu }));
+  return registre
+    .filter((f) => ouverts.has(f.id))
+    .map((f) => fluxSelonMandataire(f, mandataireActif))
+    .map((f) => ({ libelle: f.libelle, regles: f.pareFeu }));
 }
 
 /* ------------------------------------------------------------------ Garde-fou HSTS (précision du RSSI du 16/11/2026) */

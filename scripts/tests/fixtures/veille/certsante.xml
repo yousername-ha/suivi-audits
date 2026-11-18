@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/" xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" version="2.0" xml:base="https://cyberveille.esante.gouv.fr/">
+  <channel>
+    <title>Flux RSS Alertes et vulnérabilités</title>
+    <link>https://cyberveille.esante.gouv.fr/</link>
+    <description/>
+    <language>fr</language>
+    
+    <item>
+  <title>7-Zip - CVE-2026-125742</title>
+  <link>https://cyberveille.esante.gouv.fr/alertes/7-zip-cve-2026-125742-2026-11-13</link>
+  <description>  &lt;p&gt;Il s’agit d’une vulnérabilité dans le &lt;strong&gt;décodeur LZX&lt;/strong&gt; de &lt;strong&gt;7-Zip&lt;/strong&gt;, utilisé pour extraire les archives &lt;strong&gt;CAB&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;7-Zip est un logiciel d’archivage et de compression de fichiers. Il prend en...&lt;/p&gt;
+
+
+</description>
+  <pubDate>Fri, 13 Nov 2026 02:06:47 +0000</pubDate>
+    <dc:creator>CERT Santé</dc:creator>
+    <guid isPermaLink="false">10351</guid>
+    </item>
+<item>
+  <title>Check Point - CVE-2026-123039</title>
+  <link>https://cyberveille.esante.gouv.fr/alertes/check-point-cve-2026-123039-2026-11-13</link>
+  <description>  &lt;p&gt;Il s’agit d’une vulnérabilité dans le démon &lt;strong&gt;DynamicCLI&lt;/strong&gt; (processus &lt;strong&gt;dynamic_server&lt;/strong&gt;) de &lt;strong&gt;Gaia OS&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Check Point Gaia est le système d’exploitation des passerelles de sécurité et des...&lt;/p&gt;
+
+
+</description>
+  <pubDate>Fri, 13 Nov 2026 02:05:18 +0000</pubDate>
+    <dc:creator>CERT Santé</dc:creator>
+    <guid isPermaLink="false">10350</guid>
+    </item>
+
+  </channel>
+</rss>

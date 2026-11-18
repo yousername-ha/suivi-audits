@@ -90,8 +90,20 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
       'Journaux techniques',
       'Modules',
       'Détails techniques',
+      'Mandataire sortant',
     ])
       await expect(page.getByRole('heading', { name: titre, level: 2 })).toBeVisible();
+
+    // Mandataire sortant de l'établissement (ADR 0101) : inactif par défaut, mot de passe « non défini », flux listés.
+    await page.getByRole('link', { name: /^Mandataire sortant/ }).click();
+    await expect(page).toHaveURL(/\/systeme\/mandataire$/);
+    const mandataire = page.getByRole('dialog', { name: 'Mandataire sortant' });
+    await expect(mandataire.getByLabel('Passer par le mandataire de l’établissement')).not.toBeChecked();
+    await expect(mandataire.getByText('Non défini', { exact: true })).toBeVisible();
+    for (const usage of ['Utilise le mandataire', 'Accès direct, par construction', 'Pas encore pris en charge'])
+      await expect(mandataire.getByText(usage, { exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/systeme$/);
     await page.getByRole('link', { name: /^Journal d’audit/ }).click();
     await expect(page.getByRole('dialog', { name: 'Journal d’audit' })).toBeVisible();
     await page.keyboard.press('Escape');

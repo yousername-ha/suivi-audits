@@ -66,6 +66,17 @@ export const TABLES_CONFIGURATION = [
   'calendriers_plateforme',
   'calendriers_plateforme_journal',
   'calendriers_plateforme_jours',
+  // Module Intégrations (ADR 0076) : connecteurs configurés par l'administrateur (leurs secrets sont dans settings) et
+  // journal de leurs exécutions.
+  'integrations',
+  'integration_executions',
+  // Synchronisations de Tenable (ADR 0100, lot V5) : état par instance (créneau du jour, numéros de synchronisation) et
+  // journal des synchronisations, rattachés aux instances et à leurs exécutions ; effacés avec elles.
+  'vulnerabilites_tenable_etat',
+  'vulnerabilites_synchronisations',
+  // Synchronisations d'AlgoLightHouse (ADR 0100, lot ALH1) : même règle que pour Tenable.
+  'vulnerabilites_alh_etat',
+  'vulnerabilites_alh_synchronisations',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
@@ -151,6 +162,59 @@ export const TABLES_TRAVAIL = [
   'cfg_items',
   'cfg_versions',
   'cfg_usages',
+  // Module Vulnérabilités (ADR 0100) : produits surveillés saisis par les utilisateurs.
+  'vulnerabilites_produits',
+  // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : données publiques recalculables par une nouvelle collecte, état des
+  // sources (créneau, fenêtre NVD) et journal des collectes ; effacés ensemble pour repartir d'une veille vierge.
+  'vulnerabilites_veille_sources',
+  'vulnerabilites_veille_cve',
+  'vulnerabilites_veille_avis',
+  'vulnerabilites_veille_collectes',
+  // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
+  // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
+  'vulnerabilites_machines',
+  // Dépôts de Tenable (ADR 0100, lot V4d) : relus à la synchronisation suivante ; liaison à un périmètre saisie par les
+  // utilisateurs, rattachée à grc_smsis (effacée avec le travail, comme le périmètre des machines).
+  'vulnerabilites_tenable_depots',
+  'vulnerabilites_constats',
+  'vulnerabilites_constat_cves',
+  'vulnerabilites_detections',
+  // Rapprochement par version (ADR 0100, lot V4a) : produits touchés tirés de NVD (recalculables), liens produit-machine et
+  // rapprochements décidés par les utilisateurs, effacés avec les produits, les machines et la veille.
+  'vulnerabilites_veille_cve_produits',
+  'vulnerabilites_produits_machines',
+  'vulnerabilites_rapprochements',
+  // Suivi des failles (ADR 0100, lot V4b) : états décidés par les utilisateurs, historique immuable de ces décisions et liens
+  // vers les actions du registre ; ils portent sur les constats, les rapprochements et les actions, tous effacés avec le
+  // travail. L'historique, en ajout seul, n'est effacé que par ce chemin (déclencheurs suspendus le temps de la transaction).
+  'vulnerabilites_suivis',
+  'vulnerabilites_suivi_historique',
+  'vulnerabilites_suivi_actions',
+  // Assistant et vulnérabilités (ADR 0100, V14 et V29) : repères des machines et propositions d'action, rattachés aux
+  // conversations de l'assistant (travail des utilisateurs, effacées par les deux portées) et effacés avec elles.
+  'vulnerabilites_assistant_reperes',
+  'vulnerabilites_assistant_propositions',
+  // Repères des actifs exposés (AlgoLightHouse) dans une conversation (ADR 0100, lot ALH2), même règle.
+  'vulnerabilites_assistant_reperes_externes',
+  // Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1) : relue à la synchronisation suivante ; liaison des
+  // périmètres saisie par les utilisateurs, rattachée à grc_smsis (effacée avec le travail).
+  'vulnerabilites_alh_perimetres',
+  'vulnerabilites_alh_actifs',
+  'vulnerabilites_alh_alertes',
+  'vulnerabilites_alh_alerte_cves',
+  'vulnerabilites_alh_technologies',
+  'vulnerabilites_alh_technologie_actifs',
+  'vulnerabilites_alh_technologie_cves',
+  // Actifs exposés reliés aux machines internes (ADR 0100, lot ALH3) : propositions recalculées à la synchronisation suivante,
+  // décisions des utilisateurs, effacées avec les actifs et les machines qu'elles relient.
+  'vulnerabilites_alh_liaisons_machines',
+  // Services exposés des actifs et leurs alertes (ADR 0100, lot ALH6) : relus à la synchronisation suivante, effacés avec
+  // les actifs et les alertes qui les portent.
+  'vulnerabilites_alh_services',
+  'vulnerabilites_alh_service_alertes',
+  // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
+  // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
+  'vulnerabilites_alertes',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

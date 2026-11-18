@@ -18,6 +18,8 @@ import '@suivi/ui/neon-parties.css';
 import '@suivi/ui/neon-processus.css';
 import '@suivi/ui/neon-fournisseurs.css';
 import '@suivi/ui/neon-taches.css';
+import '@suivi/ui/neon-surface.css';
+import '@suivi/ui/neon-commandement.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,6 +40,16 @@ const PilotagePage = lazy(() => import('./pages/Pilotage').then((m) => ({ defaul
 import { HomePage } from './pages/Home';
 import { ExportsPage } from './pages/Exports';
 import { RegistresPage } from './registres/Registres';
+import { ProduitsSurveillesPage } from './vulnerabilites/ProduitsSurveilles';
+import { VeillePage } from './vulnerabilites/Veille';
+import { FaillesDetecteesPage } from './vulnerabilites/FaillesDetectees';
+import { MachinesPage } from './vulnerabilites/Machines';
+import { SurfaceExternePage } from './vulnerabilites/SurfaceExterne';
+import { SeuilsPrioritePage } from './vulnerabilites/SeuilsPriorite';
+import { MotsNonMasquesPage } from './vulnerabilites/MotsNonMasques';
+import { AlertesPage } from './vulnerabilites/Alertes';
+import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
+import { IntegrationsPage } from './integrations/IntegrationsPage';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
 import { LoginPage } from './pages/Login';
@@ -120,6 +132,17 @@ const router = createBrowserRouter([
       { path: '/grc', element: <Navigate to="/pilotage" replace /> },
       { path: '/exports', element: <ExportsPage /> },
       { path: '/registres/:id?', element: <RegistresPage /> },
+      { path: '/vulnerabilites', element: <Navigate to="/vulnerabilites/vue" replace /> },
+      { path: '/vulnerabilites/vue', element: <VueEnsemblePage /> },
+      { path: '/vulnerabilites/produits', element: <ProduitsSurveillesPage /> },
+      { path: '/vulnerabilites/veille', element: <VeillePage /> },
+      { path: '/vulnerabilites/failles', element: <FaillesDetecteesPage /> },
+      { path: '/vulnerabilites/machines', element: <MachinesPage /> },
+      { path: '/vulnerabilites/surface-externe', element: <SurfaceExternePage /> },
+      { path: '/vulnerabilites/alertes', element: <AlertesPage /> },
+      { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },
+      { path: '/vulnerabilites/masque', element: <MotsNonMasquesPage /> },
+      { path: '/integrations', element: <IntegrationsPage /> },
       { path: '/aide', element: <HelpPage /> },
       { path: '/assistant/:id?', element: <AssistantPage /> },
       { path: '/retex/:incident?', element: <MesContributionsRetexPage /> },

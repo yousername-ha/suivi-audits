@@ -6,6 +6,7 @@ import { Alert, Anchor, Badge, Button, Card, Group, List, Modal, Stack, Table, T
 import {
   FLUX_EXTERNES,
   fluxExterne,
+  passeParMandataire,
   type FluxExterneDefinition,
   type FluxExterneEtat,
   type FluxExternesOut,
@@ -27,6 +28,7 @@ import {
 import { useCan } from '../session';
 import { ErrorAlert, fmtDate } from './common';
 import { Destinations } from './ValidationFlux';
+import { LIEN_MANDATAIRE } from '../mandataire';
 
 const COULEURS: Record<Ton, string> = { vert: 'green', gris: 'gray', rouge: 'red', orange: 'orange' };
 export const CLE_FLUX_EXTERNES = ['admin', 'flux-externes'] as const;
@@ -111,10 +113,13 @@ export function TableauFlux({
   etats,
   ecriture,
   onFermer,
+  mandataire = false,
 }: {
   etats: ReadonlyMap<FluxModule, FluxExterneEtat>;
   ecriture: boolean;
   onFermer: (f: FluxExterneDefinition) => void;
+  /** Mandataire sortant actif (ADR 0101) : les flux qui l'empruntent le disent sous leurs destinations. */
+  mandataire?: boolean;
 }) {
   return (
     <div
@@ -148,6 +153,11 @@ export function TableauFlux({
                 </Table.Td>
                 <Table.Td data-label="Destinations">
                   <Destinations f={f} />
+                  {passeParMandataire(f.id, mandataire) && (
+                    <Text size="xs" c="dimmed">
+                      Par le mandataire réglé
+                    </Text>
+                  )}
                 </Table.Td>
                 <Table.Td data-label="État">
                   <Stack gap="2xs" align="flex-start">
@@ -214,7 +224,8 @@ export function FluxExternesPanel() {
   });
   const [fermeture, setFermeture] = useState<FluxExterneDefinition | null>(null);
   const etats = new Map<FluxModule, FluxExterneEtat>((q.data?.modules ?? []).map((e) => [e.module, e]));
-  const pareFeu = pareFeuAOuvrir(FLUX_EXTERNES, q.data?.modules ?? []);
+  const mandataire = q.data?.mandataire.actif === true;
+  const pareFeu = pareFeuAOuvrir(FLUX_EXTERNES, q.data?.modules ?? [], mandataire);
   return (
     <Card withBorder className="flux-resume">
       <Stack>
@@ -228,7 +239,15 @@ export function FluxExternesPanel() {
           journal d’audit. L’exécutant d’exploitation applique la décision et rapporte l’état appliqué.
         </Text>
         <ErrorAlert error={q.error} />
-        <TableauFlux etats={etats} ecriture={ecriture} onFermer={setFermeture} />
+        {mandataire && (
+          <Alert color="blue" title="Mandataire sortant de l’établissement actif">
+            La veille des vulnérabilités passe par le mandataire réglé ; les autres flux sortent comme indiqué.{' '}
+            <Anchor component={Link} to={LIEN_MANDATAIRE}>
+              Réglage du mandataire
+            </Anchor>
+          </Alert>
+        )}
+        <TableauFlux etats={etats} ecriture={ecriture} onFermer={setFermeture} mandataire={mandataire} />
         <Alert color="blue" title="Pare-feu de l’hôte et du réseau">
           La plateforme ouvre ou ferme ses propres flux (conteneurs et exécutants). Le pare-feu du serveur et celui du
           réseau restent du ressort de l’équipe infrastructure.

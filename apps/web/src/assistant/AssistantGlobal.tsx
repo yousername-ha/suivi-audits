@@ -11,6 +11,12 @@ import { localiser } from '../navigation';
 import { useCan, useMe } from '../session';
 import { AvatarAssistant, IconeAssistant } from './IdentiteAssistant';
 import {
+  CartePropositionVulnerabilite,
+  DecisionPropositionVulnerabilite,
+  TexteMachines,
+} from './PropositionsVulnerabilites';
+import type { PerimetreAffectableDto, PropositionVulnerabiliteDto } from '@suivi/shared';
+import {
   conversationDuChemin,
   LONGUEURS,
   estNotificationAssistant,
@@ -45,6 +51,7 @@ type Detail =
   | { type: 'historique' }
   | { type: 'source'; source: Source }
   | { type: 'proposition'; proposition: Proposition }
+  | { type: 'propositionVuln'; proposition: PropositionVulnerabiliteDto }
   | { type: 'mission' };
 
 /** Contrôle d’affichage par les permissions du serveur ; le backend reste seul juge à chaque requête.
@@ -82,6 +89,7 @@ export function AssistantGlobal({ onPinned }: { onPinned: (value: boolean) => vo
       canRead={readable}
       canModify={can('assistant', 'modifier') && readable}
       canMission={can('assistant', 'administrer') && readable}
+      canVulnDecider={can('assistant', 'modifier') && can('vulnerabilites', 'modifier') && readable}
       etat={readable ? etat.data : undefined}
       etatError={readable ? etat.error : null}
       notifications={notifications}
@@ -96,6 +104,7 @@ function PanneauAssistant({
   canRead,
   canModify,
   canMission,
+  canVulnDecider,
   etat,
   etatError,
   notifications,
@@ -105,6 +114,8 @@ function PanneauAssistant({
   user: string;
   canRead: boolean;
   canModify: boolean;
+  /** Décider d'une proposition sur une faille : droit de décider (assistant) et de modifier les vulnérabilités. */
+  canVulnDecider: boolean;
   /** Confier un suivi (mission) relève de l’administration de l’assistant sur cette branche. */
   canMission: boolean;
   etat: EtatAssistant | undefined;
@@ -172,6 +183,18 @@ function PanneauAssistant({
     enabled: canRead,
     refetchInterval: 60_000,
   });
+  /* Propositions d'action sur une faille (ADR 0100, V29) : repères remplacés par le serveur pour la personne. */
+  const vulnProposals = useQuery({
+    queryKey: [...root, 'propositions-vulnerabilites'],
+    queryFn: () => get<PropositionVulnerabiliteDto[]>('/api/assistant/vulnerabilites/propositions'),
+    enabled: canRead,
+    refetchInterval: 60_000,
+  });
+  const perimetresVuln = useQuery({
+    queryKey: ['vulnerabilites', 'perimetres'],
+    queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
+    enabled: canVulnDecider && detail?.type === 'propositionVuln',
+  });
   const missions = useQuery({
     queryKey: [...root, 'missions'],
     queryFn: () => get<Mission[]>('/api/assistant/missions'),
@@ -206,7 +229,9 @@ function PanneauAssistant({
       ? errorMessage(etatError)
       : indisponibilite(etat, profil);
   const count =
-    notifications.filter(pointEnAttente).length + (proposals.data ?? []).filter((p) => p.etat === 'en_attente').length;
+    notifications.filter(pointEnAttente).length +
+    (proposals.data ?? []).filter((p) => p.etat === 'en_attente').length +
+    (vulnProposals.data ?? []).filter((p) => p.etat === 'en_attente').length;
   const page: ContextePage = {
     nom:
       loc.pathname === '/'
@@ -703,7 +728,9 @@ function PanneauAssistant({
                     <strong>{m.role === 'utilisateur' ? 'Vous' : 'Assistant RSSI'}</strong>
                     <time dateTime={m.createdAt}>{heure(m.createdAt)}</time>
                   </header>
-                  <div className="as-answer-text">{m.contenu}</div>
+                  <div className="as-answer-text">
+                    {m.segments ? <TexteMachines segments={m.segments} /> : m.contenu}
+                  </div>
                   {m.role === 'assistant' && !m.erreur && (
                     <>
                       {m.sources.length > 0 && (
@@ -827,7 +854,7 @@ function PanneauAssistant({
             <h3>Les points qui vous attendent</h3>
             <p>Questions reçues, rappels et propositions à examiner.</p>
           </header>
-          {errorBox(inboxError ?? proposals.error ?? missions.error)}
+          {errorBox(inboxError ?? proposals.error ?? vulnProposals.error ?? missions.error)}
           {notifications.filter((n) => n.kind === 'assistant_question').map(questionCard)}
           {notifications
             .filter((n) => n.kind === 'assistant_rappel')
@@ -917,6 +944,13 @@ function PanneauAssistant({
                 <p className="as-success">Décision enregistrée{p.decidedBy ? ` par ${p.decidedBy}` : ''}.</p>
               )}
             </article>
+          ))}
+          {(vulnProposals.data ?? []).map((p) => (
+            <CartePropositionVulnerabilite
+              key={p.id}
+              proposition={p}
+              onExaminer={() => showDetail({ type: 'propositionVuln', proposition: p })}
+            />
           ))}
           {(missions.data ?? [])
             .filter((m) => m.etat === 'ouverte')
@@ -1076,6 +1110,38 @@ function PanneauAssistant({
                   );
                 }}
               />
+            )}
+            {detail.type === 'propositionVuln' && (
+              <>
+                {errorBox(perimetresVuln.error)}
+                <DecisionPropositionVulnerabilite
+                  key={detail.proposition.id}
+                  proposition={detail.proposition}
+                  perimetres={perimetresVuln.data ?? []}
+                  peutDecider={canVulnDecider}
+                  busy={busy}
+                  decide={(body) => {
+                    if (!canVulnDecider) return;
+                    void perform(
+                      () =>
+                        api(
+                          'POST',
+                          `/api/assistant/vulnerabilites/propositions/${encodeURIComponent(detail.proposition.id)}/decision`,
+                          { body },
+                        ),
+                      () => {
+                        void qc.invalidateQueries({ queryKey: [...root, 'propositions-vulnerabilites'] });
+                        void qc.invalidateQueries({ queryKey: ['grc'] });
+                        void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+                        setDetail(null);
+                        setTab('inbox');
+                        setNotice('Décision enregistrée par le service.');
+                        setFocusBack(true);
+                      },
+                    );
+                  }}
+                />
+              </>
             )}
             {detail.type === 'mission' && (
               <MissionForm

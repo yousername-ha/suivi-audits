@@ -38,6 +38,8 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'mises-a-jour', cote: 'systeme', peut: administration },
   // Flux vers l'extérieur (ADR 0097) : lecture avec l'administration, ouverture et fermeture avec son droit d'administrer.
   { id: 'flux-externes', cote: 'systeme', peut: administration },
+  // Mandataire sortant de l'établissement (ADR 0101) : lecture et réglage réservés au droit d'administrer.
+  { id: 'mandataire', cote: 'systeme', peut: (can) => can('administration', 'administrer') },
   { id: 'courriel', cote: 'systeme', peut: parametres },
   { id: 'certificats', cote: 'systeme', peut: administration },
   { id: 'securite', cote: 'systeme', peut: parametres },

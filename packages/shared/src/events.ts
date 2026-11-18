@@ -18,6 +18,7 @@ export const ENTITIES = [
   'module_activation',
   'grc',
   'config_grc',
+  'vulnerabilites_alertes',
 ] as const;
 export type Entity = (typeof ENTITIES)[number];
 
@@ -38,6 +39,8 @@ export const ENTITY_PERMISSION: Record<Entity, Permission | 'metier'> = {
   module_activation: 'administration:lire',
   grc: 'metier',
   config_grc: 'metier',
+  // Alertes du module Vulnérabilités (ADR 0100, lot V6) : identifiant et version seulement, rechargés selon les droits.
+  vulnerabilites_alertes: 'vulnerabilites:lire',
 };
 
 export function canReceive(rights: Rights, entity: Entity): boolean {

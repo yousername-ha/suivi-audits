@@ -18,6 +18,10 @@ const optional: Partial<Record<Module, readonly Module[]>> = {
   conformite: ['audit', 'documents'],
   incidents: ['pilotage', 'documents'],
   cartographie: ['audit', 'ecarts', 'pilotage', 'fournisseurs', 'conformite', 'documents'],
+  // Vulnérabilités (ADR 0100, point 1) : dépendances facultatives vers les fournisseurs, les écarts et l'assistant.
+  vulnerabilites: ['fournisseurs', 'ecarts', 'assistant'],
+  // Intégrations (ADR 0076, point 1) : dépendances facultatives vers les cibles des connecteurs.
+  integrations: ['ecarts', 'pilotage', 'fournisseurs', 'vulnerabilites'],
   import_export: [...MODULES.filter((m) => m !== 'import_export' && m !== 'administration' && m !== 'parametres')],
 };
 export const MODULE_REGISTRY: readonly ModuleDefinition[] = MODULES.map((id) => ({

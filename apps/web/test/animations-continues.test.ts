@@ -81,8 +81,9 @@ describe('animations en continu : le mouvement réduit les arrête toujours', ()
     );
     expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('animation: none !important');
   });
-  it('processus, PESTEL, SWOT, objectifs, assistant et flux des périmètres : règle de mouvement réduit présente', () => {
+  it('processus, PESTEL, SWOT, objectifs, assistant, flux des périmètres et carte de la surface externe : règle de mouvement réduit présente', () => {
     for (const f of [
+      path.join(UI, 'neon-surface.css'),
       path.join(UI, 'neon-processus.css'),
       path.join(UI, 'neon-pestel.css'),
       path.join(UI, 'neon-swot.css'),
@@ -141,5 +142,29 @@ describe('graphe des périmètres : flux continu, arrêté par le mouvement réd
     expect(html).toContain('class="graphe-lien"');
     expect(html).not.toContain('graphe-lien--flux');
     expect(html).not.toMatch(/Mettre le flux en pause|Reprendre le flux/);
+  });
+});
+
+describe('carte de la surface externe (ADR 0100, lot ALH4) : animations seulement sans mouvement réduit', () => {
+  it('flux du chemin critique, halo et balayage n’existent que sans préférence de mouvement réduit', () => {
+    const css = lire(path.join(UI, 'neon-surface.css'));
+    const libre = blocsMedia(css, 'prefers-reduced-motion: no-preference');
+    const total = occurrences(css, /animation: sc-/g);
+    expect(total).toBe(3);
+    expect(occurrences(libre, /animation: sc-/g)).toBe(total);
+    expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('.surface-carte .sc-balayage');
+  });
+});
+
+describe('vue d’ensemble du module Vulnérabilités (ADR 0100, lot PC1) : animations seulement sans mouvement réduit', () => {
+  it('balayage du radar, halo des failles exploitées et cran du niveau : coupés par le mouvement réduit et à l’impression', () => {
+    const css = lire(path.join(UI, 'neon-commandement.css'));
+    const libre = blocsMedia(css, 'prefers-reduced-motion: no-preference');
+    const total = occurrences(css, /animation: pc-/g);
+    expect(total).toBe(3);
+    expect(occurrences(libre, /animation: pc-/g)).toBe(total);
+    expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('animation: none !important');
+    expect(blocsMedia(css, 'prefers-reduced-motion: reduce')).toContain('.poste .pc-balayage');
+    expect(css).toMatch(/@media print \{[^}]*\.poste \.pc-balayage/);
   });
 });

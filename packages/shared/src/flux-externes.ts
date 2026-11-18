@@ -5,9 +5,19 @@
    port est porté par un module de ce registre ou figure dans la courte liste du cœur de plateforme. */
 import { z } from 'zod';
 import type { Module } from './permissions.js';
+import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
-export const FLUX_MODULES = ['assistant', 'courriel', 'acme', 'antivirus', 'mises-a-jour'] as const;
+export const FLUX_MODULES = [
+  'assistant',
+  'courriel',
+  'acme',
+  'antivirus',
+  'mises-a-jour',
+  'tenable',
+  'veille-vulnerabilites',
+  'algolighthouse',
+] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
 
@@ -191,6 +201,85 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     ],
     siFerme: 'Aucune vérification ni installation de version : la version installée reste en place.',
   },
+  {
+    // Connecteur Tenable Security Center du module Intégrations (ADR 0076, point 5 ; ADR 0100, points 4 et 6). Le flux ne
+    // quitte pas le réseau interne en général ; il est déclaré quand même, puisqu'il quitte le serveur.
+    id: 'tenable',
+    libelle: 'Tenable Security Center',
+    role: 'Lire Tenable Security Center, en lecture seule, pour le module Intégrations : tester la connexion, lire les failles et les machines pour le module Vulnérabilités.',
+    destinations: [
+      {
+        sens: 'sortant',
+        hote: 'Adresse réglée de Tenable Security Center (réseau interne en général)',
+        ports: 'TCP du port réglé (443 par défaut, HTTPS)',
+      },
+    ],
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines). Aucune donnée de la plateforme n’est envoyée.',
+    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
+    moduleActivation: 'integrations',
+    pareFeu: ['Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).'],
+    siFerme:
+      'Aucune requête ne part vers Tenable Security Center : une demande en file est close sans appel ; la configuration et les clés sont conservées.',
+  },
+  {
+    // Veille du module Vulnérabilités sur cinq sources publiques (ADR 0100, points 3 à 5 ; lots V2 et V3). Les hôtes viennent
+    // de la liste fermée du module (veille-vulnerabilites.ts), recopiée dans le script de l'exécutant.
+    id: 'veille-vulnerabilites',
+    libelle: 'Veille sur les vulnérabilités',
+    role: 'Lire les catalogues et flux publics de vulnérabilités (CISA KEV, NVD, EPSS, CERT-FR, CERT Santé) pour le module Vulnérabilités.',
+    destinations: SOURCES_VEILLE_DEFINITIONS.map((s) => ({
+      sens: 'sortant' as const,
+      hote: `${s.hote} (${s.organisme})`,
+      ports: 'TCP 443 (HTTPS)',
+    })),
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR, le flux RSS du CERT Santé et la page de ses publications nouvelles ou modifiées qui citent une CVE (30 au plus par collecte). Aucune donnée métier : ni produit surveillé, ni machine, ni contenu de la plateforme.',
+    reglage: { libelle: 'Risques > Vulnérabilités > Veille', lien: '/vulnerabilites/veille' },
+    activation: { par: 'flux', geste: 'Bouton « Activer la veille »' },
+    moduleActivation: 'vulnerabilites',
+    pareFeu: [`Sortie TCP 443 du serveur vers ${SOURCES_VEILLE_DEFINITIONS.map((s) => s.hote).join(', ')}.`],
+    siFerme:
+      'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les failles et avis déjà collectés restent consultables.',
+  },
+  {
+    // Connecteur AlgoLightHouse du module Intégrations (ADR 0076 ; ADR 0100, lot ALH1). Service de l'éditeur sur Internet :
+    // la sortie passe par le mandataire de l'établissement quand il est actif (ADR 0101), contrairement à Tenable.
+    id: 'algolighthouse',
+    libelle: 'AlgoLightHouse',
+    role: 'Lire AlgoLightHouse (surveillance de la surface exposée sur Internet), en lecture seule, pour le module Intégrations : tester la connexion, lire les périmètres, hôtes, domaines, alertes et technologies pour le module Vulnérabilités.',
+    destinations: [
+      {
+        sens: 'sortant',
+        hote: 'Espace AlgoLightHouse réglé (espace.algolighthouse.fr, sur Internet)',
+        ports: 'TCP 443 (HTTPS)',
+      },
+    ],
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'La clé d’API de l’espace AlgoLightHouse et des requêtes de lecture (version du service, périmètres, hôtes, domaines, alertes et leur détail, technologies), ainsi que l’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif. Aucune donnée de la plateforme n’est envoyée : ni commentaire, ni changement de statut, ni recherche.',
+    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur AlgoLightHouse' },
+    moduleActivation: 'integrations',
+    pareFeu: ['Sortie TCP 443 du serveur vers l’espace AlgoLightHouse réglé (espace.algolighthouse.fr).'],
+    siFerme:
+      'Aucune requête ne part vers AlgoLightHouse : une demande en file est close sans appel ; la configuration, la clé et les données déjà lues sont conservées.',
+  },
 ];
 
 export const fluxExterne = (id: FluxModule): FluxExterneDefinition => FLUX_EXTERNES.find((f) => f.id === id)!;
@@ -227,7 +316,11 @@ export const FluxExterneEtat = z.object({
 });
 export type FluxExterneEtat = z.infer<typeof FluxExterneEtat>;
 
-export const FluxExternesOut = z.object({ modules: z.array(FluxExterneEtat) });
+export const FluxExternesOut = z.object({
+  modules: z.array(FluxExterneEtat),
+  /** Mandataire sortant de l'établissement (ADR 0101) : seulement s'il est actif ; ni adresse ni compte. */
+  mandataire: z.object({ actif: z.boolean() }),
+});
 export type FluxExternesOut = z.infer<typeof FluxExternesOut>;
 
 /** Ouvrir ou fermer un module par la route commune : la confirmation explicite est obligatoire dans les deux sens.
@@ -269,6 +362,19 @@ export type FluxAppliques = z.infer<typeof FluxAppliques>;
     jamais touché : une fermeture décidée reste une fermeture. */
 export const FLUX_REPRISE_ACTEUR = 'reprise-mise-a-jour';
 
+/** Flux nés avec le registre (connecteurs Tenable et AlgoLightHouse de l'ADR 0076, veille de l'ADR 0100) : ils n'ont jamais
+    pu être en service sans décision enregistrée, puisqu'ils ne s'ouvrent que par leur geste d'activation. Il n'y a donc rien
+    à reprendre pour eux : la reprise ne les concerne pas, et aucune déclaration d'un exécutant ne peut les ouvrir. */
+export const FLUX_SANS_REPRISE = [
+  'tenable',
+  'veille-vulnerabilites',
+  'algolighthouse',
+] as const satisfies readonly FluxModule[];
+/** Modules que la reprise de l'existant peut concerner : ceux qui existaient avant le registre des flux. */
+export type FluxModuleRepris = Exclude<FluxModule, (typeof FLUX_SANS_REPRISE)[number]>;
+export const estFluxRepris = (m: FluxModule): m is FluxModuleRepris =>
+  !(FLUX_SANS_REPRISE as readonly FluxModule[]).includes(m);
+
 /** Motifs de la reprise, par module : codes fermés (journal d'audit, CLI de l'exécutant) et phrase affichée. Les exécutants
     Python recopient ces codes (concordance vérifiée par apps/api/test/architecture-flux.test.ts). */
 export const FLUX_REPRISE_MOTIFS = {
@@ -290,13 +396,14 @@ export const FLUX_REPRISE_MOTIFS = {
   'mises-a-jour': {
     'mise-a-jour-installee': 'Au moins une mise à jour a déjà été installée sur ce serveur.',
   },
-} as const satisfies Record<FluxModule, Record<string, string>>;
-export type FluxRepriseMotif<M extends FluxModule = FluxModule> = keyof (typeof FLUX_REPRISE_MOTIFS)[M] & string;
+} as const satisfies Record<FluxModuleRepris, Record<string, string>>;
+export type FluxRepriseMotif<M extends FluxModuleRepris = FluxModuleRepris> = keyof (typeof FLUX_REPRISE_MOTIFS)[M] &
+  string;
 
 /** Modules dont l'exécutant constate la mise en service ; le courriel est constaté par l'API elle-même, au démarrage. */
 export const FLUX_REPRISE_EXECUTANT = ['assistant', 'acme', 'antivirus', 'mises-a-jour'] as const;
 
-const motifs = <M extends FluxModule>(m: M) =>
+const motifs = <M extends FluxModuleRepris>(m: M) =>
   z.enum(Object.keys(FLUX_REPRISE_MOTIFS[m]) as [FluxRepriseMotif<M>, ...FluxRepriseMotif<M>[]]).optional();
 
 /** Entrée de `suivi flux-reprise` (exécutant) : modules réellement en service et motif constaté. Un module inconnu ou que
