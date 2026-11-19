@@ -211,8 +211,11 @@ test('maintenance : la barre de transfert suit le téléchargement mesuré publi
   const progression = page.locator('#telechargement');
   const remplissage = page.locator('#transfer-fill');
   const reflet = page.locator('.transfer-band');
+  const termine = page.locator('#telechargement-termine');
   try {
     await expect(page.locator('html')).toHaveAttribute('data-art', 'download');
+    await expect(page.locator('html')).toHaveAttribute('data-telechargement', 'mesure');
+    await expect(termine).toBeHidden();
     const barre = page.getByRole('progressbar', { name: 'Téléchargement de la nouvelle version' });
     await expect(barre).toBeVisible();
     await expect(barre).toHaveAttribute('aria-valuenow', '62');
@@ -239,15 +242,50 @@ test('maintenance : la barre de transfert suit le téléchargement mesuré publi
     await expect(page.locator('#telechargement-valeur')).toHaveText('31 % · 250 / 800 Ko');
     suivi.etat = preparation({ telechargement: { recu: 289_600_000, total: 290_000_000 } });
     await expect(page.locator('#telechargement-valeur')).toHaveText('99 % · 289 / 290 Mo');
-    suivi.etat = preparation({ telechargement: { recu: 290_000_000, total: 290_000_000 } });
+    await expect(page.locator('html')).toHaveAttribute('data-telechargement', 'mesure');
+    await expect(termine).toBeHidden();
+    // Téléchargement terminé (addendum du 19/11/2026) : la valeur finale reste publiée pendant la vérification des
+    // signatures ; barre pleine, mention lisible et exposée aux technologies d'assistance, sceau animé, sans reflet.
+    suivi.etat = preparation({
+      message: 'Préparation et vérification de la nouvelle version.',
+      telechargement: { recu: 290_000_000, total: 290_000_000 },
+    });
     await expect(page.locator('#telechargement-valeur')).toHaveText('100 % · 290 / 290 Mo');
+    await expect(page.locator('html')).toHaveAttribute('data-telechargement', 'termine');
     await expect(remplissage).toHaveAttribute('width', '164');
-    // Téléchargement terminé, donnée retirée : animation décorative d'avant, aucun chiffre.
+    await expect(remplissage).toBeVisible();
+    await expect(reflet).toBeHidden();
+    await expect(termine).toBeVisible();
+    await expect(termine).toHaveText('Téléchargement terminé — vérification des signatures');
+    await expect(barre).toHaveAttribute('aria-valuenow', '100');
+    await expect(barre).toHaveAttribute(
+      'aria-valuetext',
+      '100 %, 290 Mo sur 290 Mo, téléchargement terminé, vérification des signatures',
+    );
+    await expect(progression).not.toHaveAttribute('aria-live');
+    await expect(page.getByRole('status')).toHaveText('Préparation et vérification de la nouvelle version.');
+    await expect(page.locator('#phase-title')).toHaveText('Préparation et téléchargement');
+    expect(await page.locator('.sceau').evaluate((e) => e.getAnimations().length)).toBe(1);
+    expect(await page.locator('#transfer-fill').evaluate((e) => e.getAnimations().length)).toBe(0);
+    // Donnée retirée pendant la préparation (repli sur « docker pull », échec) : animation décorative d'avant, aucun
+    // chiffre.
     suivi.etat = preparation({ message: 'Vérification des signatures.' });
     await expect(page.getByRole('status')).toHaveText('Vérification des signatures.');
     await expect(progression).toBeHidden();
+    await expect(termine).toBeHidden();
     await expect(remplissage).toBeHidden();
     await expect(reflet).toBeVisible();
+    await expect(page.locator('html')).not.toHaveAttribute('data-telechargement');
+    expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
+    // Étape suivante (sauvegarde) : une donnée encore présente n'est plus lue, ni mention ni chiffre du téléchargement.
+    suivi.etat = enCours({
+      phase: 'backup',
+      message: 'Sauvegarde de sécurité de vos données.',
+      telechargement: { recu: 290_000_000, total: 290_000_000 },
+    });
+    await expect(page.locator('html')).toHaveAttribute('data-art', 'backup');
+    await expect(progression).toBeHidden();
+    await expect(termine).toBeHidden();
     await expect(page.locator('html')).not.toHaveAttribute('data-telechargement');
     expect(await page.locator('body').innerText()).not.toMatch(sansChiffre);
     expect(problems).toEqual([]);
@@ -297,7 +335,7 @@ test('maintenance : une progression de téléchargement invalide ou hors prépar
 test('maintenance : progression du téléchargement en mouvement réduit, barre remplie et statique', async ({
   browser,
 }) => {
-  const { ctx, page, problems } = await ouvrir(
+  const { ctx, page, problems, suivi } = await ouvrir(
     browser,
     preparation({ telechargement: { recu: 145_000_000, total: 290_000_000 } }),
     'reduce',
@@ -307,6 +345,17 @@ test('maintenance : progression du téléchargement en mouvement réduit, barre 
     await expect(page.locator('#transfer-fill')).toHaveAttribute('width', '82');
     await expect(page.locator('#transfer-fill')).toBeVisible();
     await expect(page.locator('.transfer-band')).toBeHidden();
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+    // Téléchargement terminé : mêmes informations (barre pleine, mention, sceau), sceau immobile.
+    suivi.etat = preparation({ telechargement: { recu: 290_000_000, total: 290_000_000 } });
+    await expect(page.locator('#telechargement-valeur')).toHaveText('100 % · 290 / 290 Mo');
+    await expect(page.locator('html')).toHaveAttribute('data-telechargement', 'termine');
+    await expect(page.locator('#transfer-fill')).toHaveAttribute('width', '164');
+    await expect(page.locator('#telechargement-termine')).toBeVisible();
+    await expect(page.locator('#telechargement-termine')).toHaveText(
+      'Téléchargement terminé — vérification des signatures',
+    );
+    await expect(page.locator('.sceau')).toBeVisible();
     expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
     expect(problems).toEqual([]);
   } finally {

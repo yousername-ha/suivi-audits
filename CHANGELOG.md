@@ -27,6 +27,13 @@ adresse `/integrations` et les signets y redirigent. La rubrique « Intégration
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
 
+**Barre de téléchargement de la page de maintenance** ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md),
+addendum du 19/11/2026) : sans migration, aucune action. La barre pleine pendant la vérification des signatures n'apparaît
+qu'aux mises à jour lancées depuis une version qui contient ce correctif (exécutant de la version installée, page du frontal
+en service). Les fichiers de la page changent : à la fin de la mise à jour vers cette version depuis l'interface, le frontal
+du site est redémarré une fois ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes
+annoncée par la page de suivi, qui reprend seule. (session « Projet audit_suivi Coeur »)
+
 ### Ajouté
 
 - Vulnérabilités et intégrations, **fréquence de synchronisation réglable** par source de veille et par connecteur (lot F1,
@@ -81,6 +88,18 @@ SMSI »)
   (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
   « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
   leur adresse. (session « Module surveillance vulnérabilités SMSI »)
+
+### Corrigé
+
+- Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
+  19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
+  l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la
+  mesure et la page repassait à l'animation décorative sans chiffre, comme si le téléchargement reprenait ; la dernière valeur
+  pouvait aussi être retenue par la limite d'une publication par seconde. L'exécutant publie désormais aussitôt la valeur
+  finale et la garde jusqu'à la sortie de l'étape de préparation (retirée à la sauvegarde, à la reprise, à la clôture, sur
+  échec ou repli sur `docker pull`). La page garde la barre pleine « 100 % · X / X Mo » avec la mention « Téléchargement
+  terminé — vérification des signatures », lue aussi par les technologies d'assistance, et un petit sceau qui pulse (immobile
+  en mouvement réduit), sans pourcentage, débit ni durée de la vérification. (session « Projet audit_suivi Coeur »)
 
 ## [7.4.0] — 2026-11-19
 
