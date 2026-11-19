@@ -979,8 +979,9 @@ class FausseConnexion:
 
 class Telechargement(Isolement, unittest.TestCase):
     """Progression réelle du téléchargement (ADR 0104) : images tirées par l'API du moteur Docker (simulée ici), octets reçus sur
-    un total fixé avant le début, publiés au plus une fois par seconde puis retirés ; repli sur « docker pull » ; vérifications
-    de signature inchangées après le téléchargement."""
+    un total fixé avant le début, publiés au plus une fois par seconde ; valeur finale publiée sans attendre et gardée pendant
+    la vérification des signatures, retirée dès que la phase quitte la préparation (addendum du 19/11/2026) ; repli sur
+    « docker pull » ; vérifications de signature inchangées après le téléchargement."""
     API = f'ghcr.io/{m.REPOSITORY}-api'
     WEB = f'ghcr.io/{m.REPOSITORY}-web'
     UPDATER = f'ghcr.io/{m.REPOSITORY}-updater'
@@ -1071,7 +1072,7 @@ class Telechargement(Isolement, unittest.TestCase):
     def verifications(self):
         return [a for a in self.commandes if a[:2] == ['cosign', 'verify']]
 
-    def test_progression_mesuree_monotone_bornee_puis_retiree_et_signatures_verifiees_apres(self):
+    def test_progression_mesuree_monotone_bornee_gardee_pleine_et_signatures_verifiees_apres(self):
         # Une lecture par seconde : chaque changement est publié.
         self.pas = 1.0
         self.signatures()
@@ -1082,15 +1083,19 @@ class Telechargement(Isolement, unittest.TestCase):
         self.assertEqual(self.requetes[1][1], '/images/create?fromImage=ghcr.io%2Fyousername-ha%2Fsuivi-audits-api&tag=3.1.0')
         self.assertEqual(self.cli_pull(), [])
         self.assertEqual(valeurs[0], {'recu': 0, 'total': 650})
-        self.assertIsNone(valeurs[-1])
+        # Téléchargement réussi : la mesure n'est jamais retirée, la dernière valeur publiée est le total (addendum du
+        # 19/11/2026).
+        self.assertNotIn(None, valeurs)
+        self.assertEqual(valeurs[-1], {'recu': 650, 'total': 650})
         mesures = [v for v in valeurs if v is not None]
         self.assertTrue(all(set(v) == {'recu', 'total'} and v['total'] == 650 and 0 <= v['recu'] <= 650 for v in mesures))
         # A déjà présente (100), B reçue par morceaux sans recul ni dépassement, C, puis l'image déjà à jour (D, 50) comptée à
         # la fin de son flux : le total est atteint, jamais dépassé.
         self.assertEqual([v['recu'] for v in mesures], [0, 100, 150, 220, 300, 400, 600, 650])
-        # Toutes les connexions au moteur sont refermées ; l'état public ne garde rien.
+        # Toutes les connexions au moteur sont refermées ; l'état public garde la barre pleine, et rien d'autre de la mesure,
+        # pendant la vérification des signatures (étape « preparing » toujours en cours).
         self.assertTrue(all(c.fermee for c in self.connexions))
-        self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+        self.assertEqual(json.loads((self.w.public/'status.json').read_text())['telechargement'], {'recu': 650, 'total': 650})
         # Vérifications inchangées, après le téléchargement complet.
         self.assertEqual(len(self.verifications()), 3)
         premiere = self.commandes.index(self.verifications()[0])
@@ -1130,7 +1135,54 @@ class Telechargement(Isolement, unittest.TestCase):
         self.signatures()
         instants = [t for t, v in self.publications if v is not None]
         self.assertGreater(len(instants), 3)
-        self.assertTrue(all(b - a >= 1.0 for a, b in zip(instants, instants[1:])), instants)
+        # Limitation respectée pendant le téléchargement ; seule la valeur finale (le total) peut la devancer.
+        self.assertTrue(all(b - a >= 1.0 for a, b in zip(instants[:-1], instants[1:-1])), instants)
+        self.assertEqual(self.publications[-1][1], {'recu': 650, 'total': 650})
+        self.assertTrue(all(v['recu'] < 650 for _, v in self.publications[:-1]))
+
+    def test_valeur_finale_publiee_sans_attendre_la_periode(self):
+        # Téléchargement entier en moins d'une seconde : la valeur initiale, puis la valeur finale aussitôt, sans attendre.
+        self.pas = 0.01
+        self.signatures()
+        self.assertEqual([v for _, v in self.publications], [{'recu': 0, 'total': 650}, {'recu': 650, 'total': 650}])
+        self.assertLess(self.publications[-1][0] - self.publications[0][0], m.TELECHARGEMENT_PERIODE)
+        self.assertEqual(self.w.state['telechargement'], {'recu': 650, 'total': 650})
+
+    def test_mesure_finale_gardee_pendant_la_preparation_puis_retiree_a_la_sauvegarde(self):
+        self.signatures()
+        plein = {'recu': 650, 'total': 650}
+        # Messages et publications de la même étape (vérification des signatures) : la barre reste pleine.
+        self.w.publish(message='Vérification des signatures.')
+        self.w.publish(phase='preparing', message='Préparation de la version.')
+        self.assertEqual(json.loads((self.w.public/'status.json').read_text())['telechargement'], plein)
+        # Sortie de l'étape de préparation (comme install) : retirée, quelle que soit la phase suivante.
+        self.w.publish(maintenance=True, phase='backup', message='Sauvegarde de sécurité de vos données.')
+        etat = json.loads((self.w.public/'status.json').read_text())
+        self.assertIsNone(etat['telechargement'])
+        self.assertEqual(etat['phase'], 'backup')
+        for phase in ('installing', 'verifying', 'rollback', 'complete', 'idle'):
+            with self.subTest(phase=phase):
+                self.w.publish(telechargement=plein)
+                self.w.publish(phase=phase)
+                self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+
+    def test_mesure_finale_retiree_si_l_operation_echoue_apres_le_telechargement(self):
+        # Vérification de signature refusée après un téléchargement complet : la reprise retire la mesure dès sa première
+        # publication, avant même la clôture.
+        self.signatures()
+        self.assertEqual(self.w.state['telechargement'], {'recu': 650, 'total': 650})
+        with patch.object(self.w, 'finish') as clore:
+            self.w.recover()
+        clore.assert_called_once()
+        self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
+        # Clôture (échec, retour arrière ou succès) : retirée aussi.
+        for statut in ('failed', 'rolled_back', 'success'):
+            with self.subTest(statut=statut):
+                self.w.job = {'id': str(uuid.uuid4()), 'kind': 'install', 'target': '3.1.0'}
+                self.w.publish(phase='preparing', telechargement={'recu': 650, 'total': 650})
+                with patch.object(self.w, 'cli', return_value=''):
+                    self.w.finish(statut, 'Fin fictive.')
+                self.assertIsNone(json.loads((self.w.public/'status.json').read_text())['telechargement'])
 
     def test_erreur_dans_le_flux_echec_sans_repli_ni_verification(self):
         self.flux[self.WEB][2:2] = [{'errorDetail': {'message': 'refus du registre'}, 'error': 'refus du registre'}]

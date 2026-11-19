@@ -161,39 +161,7 @@
   background: var(--neon-doux);
   text-decoration: none;
 }
-/* Les onglets restent identifiables par leur forme et leur état actif, même sans couleur. */
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Tabs-list:not([data-orientation='vertical']) {
-  gap: 0.25rem;
-  padding: 0.3rem;
-  border: 1px solid var(--suivi-trait);
-  border-radius: 0.75rem;
-  background: var(--suivi-surface-douce);
-}
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Tabs-list:not([data-orientation='vertical'])::before {
-  display: none;
-}
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Tabs-tab {
-  padding: 0.7rem 0.95rem;
-  border-radius: 0.6rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Tabs-tab[data-active] {
-  background: var(--suivi-surface);
-  border-color: transparent;
-  color: var(--neon-titre);
-  box-shadow: var(--suivi-ombre);
-  font-weight: 650;
-}
+/* Onglets des fenêtres : forme commune à toute la plateforme (neon-ergonomie.css, demande du RSSI du 19/11/2026). */
 
 /* Fenêtres des flux vers l'extérieur (validation d'une ouverture, fermeture depuis le résumé ; demande du RSSI du
    16/11/2026) : jamais plus larges que l'écran, contenu replié sans débordement ni ellipse ; sur téléphone, les boutons
@@ -247,12 +215,6 @@
   :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
     > :is(.mantine-Modal-body, .mantine-Drawer-body) {
     padding: 1rem;
-  }
-  :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-    > :is(.mantine-Modal-body, .mantine-Drawer-body)
-    .mantine-Tabs-tab {
-    padding: 0.6rem;
-    font-size: 0.75rem;
   }
   .fenetre-actions .mantine-Button-root {
     flex: 1;
@@ -408,31 +370,6 @@
 }
 .contexte-presentation-corps > .mantine-Stack-root > .mantine-Tabs-root {
   padding: 0.2rem;
-}
-.contexte-fenetre
-  .contexte-presentation
-  .contexte-presentation-corps
-  .mantine-Tabs-list:not([data-orientation='vertical']) {
-  gap: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-bottom: 1px solid var(--suivi-trait);
-  border-radius: 0;
-  background: transparent;
-}
-.contexte-fenetre .contexte-presentation .contexte-presentation-corps .mantine-Tabs-tab {
-  padding: 0.8rem 0.1rem 1rem;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--mantine-color-dimmed);
-  font-weight: 500;
-}
-.contexte-fenetre .contexte-presentation .contexte-presentation-corps .mantine-Tabs-tab[data-active] {
-  background: transparent;
-  color: var(--neon-titre);
-  box-shadow: inset 0 -2px var(--neon-accent);
-  font-weight: 600;
 }
 /* Plein écran (« Agrandir ») : toute la hauteur, textes plus grands, lecture centrée. */
 .contexte-fenetre .contexte-presentation[data-full-screen] {
@@ -818,15 +755,6 @@
   }
   .contexte-section h4 {
     font-size: 0.875rem;
-  }
-  .contexte-fenetre
-    .contexte-presentation
-    .contexte-presentation-corps
-    .mantine-Tabs-list:not([data-orientation='vertical']) {
-    gap: 1rem;
-  }
-  .contexte-fenetre .contexte-presentation .contexte-presentation-corps .mantine-Tabs-tab {
-    padding-inline: 0;
   }
   .contexte-actions > .mantine-Group-root {
     flex: 2;

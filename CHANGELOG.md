@@ -42,11 +42,21 @@ adresse `/integrations` et les signets y redirigent. La rubrique « Intégration
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
 
+**Barre de téléchargement de la page de maintenance** ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md),
+addendum du 19/11/2026) : sans migration, aucune action. La barre pleine pendant la vérification des signatures n'apparaît
+qu'aux mises à jour lancées depuis une version qui contient ce correctif (exécutant de la version installée, page du frontal
+en service). Les fichiers de la page changent : à la fin de la mise à jour vers cette version depuis l'interface, le frontal
+du site est redémarré une fois ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes
+annoncée par la page de suivi, qui reprend seule. (session « Projet audit_suivi Coeur »)
+
 **Aucune action sur le serveur.** **Migration automatique `092`** (contacts de crise issus des comptes,
 [ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)) : additive (une table `contacts_crise_comptes` et son
 déclencheur temps réel ; aucune table existante modifiée), durée négligeable, sans reprise de données : aucun compte n'est
 contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
 suivi-audits »)
+
+**Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
+Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
 
 ### Ajouté
 
@@ -127,6 +137,15 @@ suivi-audits »)
   heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
   dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module
   surveillance vulnérabilités SMSI »)
+- **Onglets aux couleurs du menu, une seule forme sur toute la plateforme, à l'essai** (décisions du RSSI du 19/11/2026,
+  sur maquettes ; [docs/refonte-neon/ONGLETS-BLEU-MENU.md](docs/refonte-neon/ONGLETS-BLEU-MENU.md)). Deux formes sont à
+  l'essai : une barre bleu nuit avec l'onglet actif en bleu du menu (par défaut), ou des pastilles avec l'onglet actif en bleu
+  nuit. Chaque personne choisit dans Mon compte > Affichage, « Onglets de page (essai) » (préférence d'affichage
+  `onglets`, facultative, enregistrée sur le serveur). La forme s'applique à tous les onglets horizontaux : rubriques sous le
+  titre des pages, onglets des pages et des fenêtres, sélecteur de vues des objectifs, présentations du contexte, RETEX et
+  Assistant RSSI. Les onglets verticaux ne changent pas. La forme écartée, la préférence et son réglage seront retirés une
+  fois le choix fait. Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
   L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
@@ -145,6 +164,15 @@ suivi-audits »)
 
 ### Corrigé
 
+- Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
+  19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
+  l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la
+  mesure et la page repassait à l'animation décorative sans chiffre, comme si le téléchargement reprenait ; la dernière valeur
+  pouvait aussi être retenue par la limite d'une publication par seconde. L'exécutant publie désormais aussitôt la valeur
+  finale et la garde jusqu'à la sortie de l'étape de préparation (retirée à la sauvegarde, à la reprise, à la clôture, sur
+  échec ou repli sur `docker pull`). La page garde la barre pleine « 100 % · X / X Mo » avec la mention « Téléchargement
+  terminé — vérification des signatures », lue aussi par les technologies d'assistance, et un petit sceau qui pulse (immobile
+  en mouvement réduit), sans pourcentage, débit ni durée de la vérification. (session « Projet audit_suivi Coeur »)
 - **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
   crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
   reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_

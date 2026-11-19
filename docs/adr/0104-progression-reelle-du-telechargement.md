@@ -2,6 +2,8 @@
 
 - Statut : **acceptée** par le RSSI le 18/11/2026, dans la session (numéro 0104 annoncé et accepté ; « octets réels » retenu).
 - Date : 2026-11-18
+- **Addendum du 19/11/2026** (décision du RSSI) : la valeur finale reste publiée, barre pleine, pendant la vérification des
+  signatures qui suit le téléchargement (modifie le point 2 ; voir la dernière section).
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - **Modifie** l'[ADR 0020](0020-mise-a-jour-integree.md) (« Le système n'invente aucun pourcentage ») et la règle de la page de
   maintenance « aucune progression artificielle » (refonte Neon, `docs/refonte-neon/MAINTENANCE-LOT-1.md`) : la règle reste,
@@ -58,3 +60,30 @@ de mise à jour avant toute vérification de signature et avant l'arrêt de l'ap
   (socket absent, statut HTTP autre que 200, première ligne illisible, flux vide) : `docker pull` pour l'image et les suivantes.
   Une erreur une fois le flux commencé (`error`, flux coupé ou illisible, délai) est un échec, sans nouvel essai : un repli à ce
   stade retéléchargerait l'image et pourrait masquer la cause ; l'administrateur relance la mise à jour.
+
+## Addendum du 19/11/2026 — mesure finale gardée pendant la vérification (décision du RSSI)
+
+**Constat** (serveur du RSSI) : la barre se remplissait bien pendant le téléchargement ; mais, une fois les images reçues,
+l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources) et l'exécutant retirait
+`telechargement` de l'état publié : la page repassait à l'animation décorative, sans aucun chiffre, comme si le téléchargement
+reprenait. La dernière valeur pouvait en outre être retenue par la limite d'une publication par seconde.
+
+**Décision** (modifie le point 2, « retiré ensuite ») :
+
+1. **Valeur finale publiée et gardée.** Quand les trois images ont été tirées par l'API du moteur, l'exécutant publie aussitôt,
+   sans attendre la seconde de la limite, la valeur finale `{recu: total, total}`, et la garde jusqu'à la fin de l'étape de
+   préparation. Elle est retirée dès que la phase publiée quitte `preparing` (sauvegarde, ou toute autre phase), à la reprise
+   d'une opération interrompue et à sa clôture (succès, échec, retour arrière) ; elle l'est aussi, comme avant, en cas d'échec du
+   téléchargement ou de repli sur `docker pull`, et par un exécutant redémarré. L'état public ne porte toujours rien d'autre que
+   `{recu, total}`.
+2. **Affichage.** Reçu égal au total pendant la préparation : la page passe en `data-telechargement="termine"` ; la barre
+   reste pleine avec « 100 % · X / X Mo », et une ligne écrite dans la page, masquée sinon, s'affiche : « Téléchargement
+   terminé — vérification des signatures ». Les technologies d'assistance la lisent dans la valeur de la barre
+   (`aria-valuetext` : « 100 %, X Mo sur X Mo, téléchargement terminé, vérification des signatures ») ; la zone annoncée reste
+   le seul texte de l'étape. Un petit sceau, à côté de cette ligne, pulse (échelle et opacité) pendant l'attente ; il est
+   immobile quand le poste demande moins d'animations, et figé si le suivi est interrompu. Il ne mesure rien : ni pourcentage,
+   ni débit, ni durée de la vérification (point 5 inchangé).
+3. **Limite connue, inchangée.** L'effet complet ne vaut que pour les mises à jour lancées depuis une version qui contient ce
+   changement : c'est l'exécutant de la version installée qui télécharge et publie, et la page est celle du frontal en service.
+   Les fichiers de la page changent, donc l'empreinte du frontal aussi : il est recréé une fois, à la fin de la mise à jour vers
+   la version qui contient ce changement (coupure de quelques secondes annoncée, ADR 0103).

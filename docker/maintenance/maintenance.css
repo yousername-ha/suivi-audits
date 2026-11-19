@@ -789,16 +789,17 @@ h1 {
   animation: m-transfert 2.6s ease-in-out infinite;
 }
 /* Remplissage mesuré (ADR 0104) : seulement quand l'exécutant publie les octets reçus ; le reflet décoratif est alors retiré.
-   Largeur posée par maintenance.js, sans animation ni transition. */
+   Largeur posée par maintenance.js, sans animation ni transition. Téléchargement terminé (« termine ») : barre pleine, gardée
+   pendant la vérification des signatures (addendum du 19/11/2026). */
 .transfer-fill {
   display: none;
   fill: var(--m-accent);
   stroke: none;
 }
-[data-telechargement='mesure'] .transfer-fill {
+[data-telechargement] .transfer-fill {
   display: inline;
 }
-[data-telechargement='mesure'] .transfer-band {
+[data-telechargement] .transfer-band {
   display: none;
 }
 .transfer-marks {
@@ -1024,7 +1025,7 @@ h1 {
   display: none;
 }
 /* Suivi interrompu : la dernière illustration connue reste affichée, figée. */
-[data-suivi='interrompu'] :is(.stage-art *, .ring-outer, .ring-inner) {
+[data-suivi='interrompu'] :is(.stage-art *, .ring-outer, .ring-inner, .sceau) {
   animation-play-state: paused;
 }
 
@@ -1201,6 +1202,24 @@ h1 {
 }
 [data-suivi='interrompu'] #tracking::after {
   background: var(--m-amber);
+}
+/* Téléchargement terminé, vérification des signatures en cours (ADR 0104, addendum du 19/11/2026) : mention de la page et
+   sceau qui pulse ; l'animation ne mesure rien (ni pourcentage, ni débit, ni durée). */
+.telechargement-termine {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  margin-top: var(--mantine-spacing-2xs);
+  color: var(--m-muted);
+}
+.telechargement-termine .sceau {
+  inline-size: 1.1em;
+  block-size: 1.1em;
+  color: var(--m-accent);
+}
+/* Sélecteur simple : le suivi interrompu (règle plus précise) fige le sceau comme l'illustration. */
+.sceau {
+  animation: m-sceau 1.8s ease-in-out infinite;
 }
 .return-hint {
   display: flex;
@@ -1529,6 +1548,17 @@ h1 {
   }
   to {
     transform: translateX(325%);
+  }
+}
+@keyframes m-sceau {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
   }
 }
 @keyframes m-copie {
