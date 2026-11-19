@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import io
+import json
 import os
 import pathlib
 import shutil
@@ -71,6 +72,7 @@ if 'pg_dump' in args: sys.stdout.buffer.write(b'PGDMP-dump-fictif')
 if 'psql' in args and '-Atc' not in args:
     with open(os.environ['TEST_EVENTS'], 'a') as log: log.write(sys.stdin.read() + '\\n')
 if 'pg_restore' in args and '--list' in args and os.environ.get('TEST_BAD_DUMP'): sys.exit(7)
+if 'psql' in args and 'ANALYZE' in args and os.environ.get('TEST_ANALYZE_KO'): sys.exit(3)
 if 'pg_isready' in args and os.environ.get('TEST_NO_PG'): sys.exit(1)
 if args[0] == 'inspect': print('unhealthy' if os.environ.get('TEST_NO_HEALTH') else 'healthy')
 if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED']).write_bytes(sys.stdin.buffer.read())
@@ -622,6 +624,75 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
         self.assertIn('DELETE FROM public.sessions', self.events.read_text())
         self.assertTrue((self.root / 'data/etat/sauvegardes/derniere-restauration.json').exists())
         self.assertIn('Restauration terminée.', result.stdout)
+
+    def test_statistics_are_recomputed_after_pg_restore_before_restart(self):
+        """pg_restore ne restaure pas les statistiques du planificateur : ANALYZE de la base suivi, après la restauration
+        réussie et avant la remise en service."""
+        result = self.run_restore(self.archive(), False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        appels = [json.loads(ligne) for ligne in self.events.read_text().splitlines() if ligne.startswith('[')]
+        restauration = next(i for i, a in enumerate(appels) if 'pg_restore' in a and '--list' not in a)
+        analyse = [i for i, a in enumerate(appels) if 'psql' in a and 'ANALYZE' in a]
+        reprise = next(i for i, a in enumerate(appels) if 'up' in a and i > restauration)
+        self.assertEqual(len(analyse), 1, appels)
+        self.assertTrue(restauration < analyse[0] < reprise, appels)
+        self.assertEqual(appels[analyse[0]][appels[analyse[0]].index('-d') + 1], 'suivi')
+        self.assertIn('Restauration terminée.', result.stdout)
+
+    def test_failed_analyze_only_warns_and_restore_succeeds(self):
+        result = self.run_restore(self.archive(), False, env={'TEST_ANALYZE_KO': '1'})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('ATTENTION : statistiques de la base non recalculées (ANALYZE)', result.stderr)
+        self.assertIn('Restauration terminée.', result.stdout)
+        self.assertTrue((self.root / 'data/etat/sauvegardes/derniere-restauration.json').exists())
+        self.assertEqual((self.root / 'restored.dump').read_bytes(), b'PGDMP-dump-fictif')
+
+    def migrer_postgresql(self, env=None):
+        """Migration 17 -> 18 de lib-commun.sh, Docker et contrôles simulés (aucune base réelle)."""
+        (self.root / 'data/postgres/global').mkdir(parents=True)
+        (self.root / 'data/postgres/global/pg_control').write_text('controle-fictif')
+        script = r'''source "$1/scripts/lib-commun.sh"
+install() { mkdir -p "${@: -1}"; }
+octets_libres() { echo 999999999999; }
+postgresql_comptes() { echo 'public.exemple 3'; }
+postgresql_contraintes() { echo 'public.exemple p exemple_pkey PRIMARY KEY (id)'; }
+postgresql_contraintes_non_validees() { echo 0; }
+dc() {
+  printf '%s
+' "$*" >> "$TEST_EVENTS"
+  local expo="$REPO/data/etat/migration-postgresql"
+  case "$*" in
+    *db-pg17*) printf 'dump-fictif' > "$expo/suivi-pg17.dump"; postgresql_comptes > "$expo/comptes-17.txt"
+               postgresql_contraintes > "$expo/contraintes-17.txt" ;;
+    *pg_restore*) cat > /dev/null ;;
+    *ANALYZE*) [ -z "${TEST_ANALYZE_KO:-}" ] || return 3 ;;
+    *) cat > /dev/null ;;
+  esac
+}
+migrer_postgresql 17 18'''
+        return subprocess.run(['bash', '-c', script, 'bash', str(self.root)], input='', capture_output=True, text=True,
+                              env={**self.env, 'REPO': str(self.root), **(env or {})}, timeout=20)
+
+    def test_engine_migration_analyzes_after_pg_restore_and_failure_only_warns(self):
+        """Changement de moteur PostgreSQL (17 -> 18) : même règle qu'à la restauration."""
+        result = self.migrer_postgresql()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        appels = self.events.read_text().splitlines()
+        restauration = next(i for i, a in enumerate(appels) if 'pg_restore' in a)
+        analyse = [i for i, a in enumerate(appels) if 'ANALYZE' in a]
+        self.assertEqual(len(analyse), 1, appels)
+        self.assertGreater(analyse[0], restauration)
+        self.assertIn('-d suivi', appels[analyse[0]])
+        self.assertIn('Base migrée vers PostgreSQL 18', result.stdout)
+        shutil.rmtree(self.root / 'data/postgres')
+        shutil.rmtree(self.root / 'data/postgres18')
+        shutil.rmtree(self.root / 'data/etat/migration-postgresql')
+        self.events.unlink()
+        echec = self.migrer_postgresql({'TEST_ANALYZE_KO': '1'})
+        self.assertEqual(echec.returncode, 0, echec.stderr)
+        self.assertIn('ATTENTION : statistiques de la base non recalculées (ANALYZE)', echec.stderr)
+        self.assertIn('Base migrée vers PostgreSQL 18', echec.stdout)
+        self.assertFalse((self.root / 'data/postgres18/.migration-en-cours').exists())
 
     def test_old_secret_directories_and_links_are_replaced_without_following_links(self):
         outside = self.root / 'external'
