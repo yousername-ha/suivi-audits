@@ -577,6 +577,145 @@
   overflow-wrap: anywhere;
 }
 
+/* Mises à jour et versions (décision du RSSI du 19/11/2026) : composition de la page de maintenance (versions installée
+   et disponible, pastille d'état, opération, reçus), dans le thème de l'application (clair ou sombre) et ses jetons. */
+.maj-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.maj-versions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-lg);
+  padding-block: var(--mantine-spacing-sm);
+  border-block: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.maj-version {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-2xs);
+  min-inline-size: 0;
+  margin: 0;
+}
+.maj-libelle {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.maj-version strong {
+  color: var(--neon-titre);
+  font-size: calc(var(--mantine-font-size-xl) * 1.5);
+  font-weight: 550;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+.maj-version--cible strong,
+.maj-etiquette {
+  color: var(--neon-accent);
+}
+.maj-version--note > span:last-child {
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.6;
+}
+.maj-fleche {
+  position: relative;
+  align-self: center;
+  inline-size: calc(var(--mantine-spacing-2xl) * 1.1);
+  block-size: var(--suivi-trait-focus);
+  background: linear-gradient(90deg, var(--suivi-trait), var(--neon-cyan));
+}
+.maj-fleche::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 50%;
+  inline-size: var(--mantine-spacing-xs);
+  block-size: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-focus) solid var(--neon-cyan);
+  border-inline-end: var(--suivi-trait-focus) solid var(--neon-cyan);
+  transform: translateY(-50%) rotate(45deg);
+}
+.maj-meta {
+  row-gap: var(--mantine-spacing-2xs);
+}
+.maj-operation {
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--neon-accent);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--neon-doux) 45%, var(--suivi-surface));
+}
+.maj-recus {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+}
+.maj-recus__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--suivi-champ-l)), 1fr));
+  gap: var(--mantine-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.maj-recu {
+  display: grid;
+  align-content: start;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface-douce);
+}
+.maj-recu__tete,
+.maj-recu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.maj-recu__tete {
+  justify-content: space-between;
+}
+.maj-recu__versions {
+  color: var(--neon-titre);
+  font-weight: 650;
+}
+.maj-recu__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-lg);
+  margin: 0;
+}
+.maj-recu__details dt {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.maj-recu__details dd {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+}
+.maj-vide {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+@media (forced-colors: active) {
+  .maj-fleche {
+    background: CanvasText;
+  }
+  .maj-fleche::after {
+    border-color: CanvasText;
+  }
+}
+
 /* Pilotage natif SMSI : mêmes jetons Sauge, SVG sans styles inline. */
 .grc-grow {
   flex: 1;

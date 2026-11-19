@@ -133,6 +133,20 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Modifié
 
+- **Fenêtres : coins arrondis, taille automatique, style à l'essai ; fenêtre « Mises à jour et versions » revue**
+  (décisions du RSSI du 19/11/2026, addendum à l'[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)). Le
+  cadre « Biseau » (coins coupés) des fenêtres et panneaux latéraux, présentation « Périmètre et contexte » comprise, est
+  remplacé par des coins arrondis, un trait gris discret et une fine barre d'accent dégradée violet → cyan en haut (style
+  « Barre d'accent », par défaut) ; le style « Liseré dégradé » (liseré sur tout le contour) est à l'essai, choisi pour toute
+  l'instance dans Plateforme > Apparence, « Fenêtres (essai) » (réglage d'apparence `fenetres`, sans migration, même droit
+  que l'apparence, journal d'audit et If-Match), avant d'en garder un seul. Taille automatique : la taille demandée sert de
+  largeur de base, une fenêtre qui contient un tableau s'élargit jusqu'à la largeur de son contenu, jamais plus de 92 % de
+  la largeur ni 90 % de la hauteur de l'écran, pleine largeur sur téléphone ; seul le corps défile, verticalement, titre,
+  fermeture et boutons restant visibles. « Mises à jour et versions » reprend la composition de la page de maintenance dans
+  le thème de l'application (versions installée et disponible, pastille d'état) et ne montre plus que les trois derniers
+  reçus d'installation ; l'historique de l'ancienne interface devient « Instantanés de l'état de suivi », dans la carte
+  « Sauvegardes et restauration » (Télécharger et Restaurer inchangés). Aucune action sur le serveur. (session « Projet
+  audit_suivi Coeur »)
 - Intégrations, **limite des imports de scans Nessus** (lot N2, décision du RSSI du 19/11/2026) : trente fichiers commencés par
   heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
   dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module

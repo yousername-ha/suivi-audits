@@ -25,7 +25,7 @@ const me: MeOut = {
   appName: 'Suivi',
   orgName: 'Test',
   orgSite: '',
-  appearance: { theme: 'auto', densite: 'normale', style: 'sage' },
+  appearance: { theme: 'auto', densite: 'normale', style: 'sage', fenetres: 'barre' },
   version: '3.0.0',
 };
 let qc: QueryClient;

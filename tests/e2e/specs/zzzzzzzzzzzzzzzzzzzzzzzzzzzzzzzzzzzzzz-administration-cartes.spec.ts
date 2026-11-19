@@ -104,6 +104,21 @@ test('Administration : deux pages à cartes, détail en fenêtre centrée, ancie
       await expect(mandataire.getByText(usage, { exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page).toHaveURL(/\/systeme$/);
+    // Instantanés de l'état de suivi (décision du RSSI du 19/11/2026) : dans « Sauvegardes et restauration », plus dans
+    // « Mises à jour et versions ».
+    await page.getByRole('link', { name: /^Sauvegardes et restauration/ }).click();
+    const sauvegardes = page.getByRole('dialog', { name: 'Sauvegardes et restauration' });
+    await expect(sauvegardes.getByRole('heading', { name: 'Instantanés de l’état de suivi', level: 2 })).toBeVisible();
+    await expect(sauvegardes.getByRole('region', { name: 'Instantanés de l’état de suivi' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/systeme$/);
+    await page.getByRole('link', { name: /^Mises à jour et versions/ }).click();
+    const majs = page.getByRole('dialog', { name: 'Mises à jour et versions' });
+    await expect(majs.getByRole('heading', { name: 'Mise à jour de l’application', level: 2 })).toBeVisible();
+    await expect(majs.getByText('Instantanés de l’état de suivi')).toHaveCount(0);
+    await expect(majs.getByText(/ancienne interface/)).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/\/systeme$/);
     await page.getByRole('link', { name: /^Journal d’audit/ }).click();
     await expect(page.getByRole('dialog', { name: 'Journal d’audit' })).toBeVisible();
     await page.keyboard.press('Escape');

@@ -1,7 +1,8 @@
-import { Alert, Anchor, Button, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Card, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UpdateReceiptSummary, UpdateState } from '@suivi/shared';
-import { useEffect, useRef, useState } from 'react';
+import { StatusChip, type Etat } from '@suivi/ui';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api, download, get } from '../api';
 import { ConfirmButton, ErrorAlert } from './common';
@@ -50,76 +51,100 @@ const STATUTS_RECU: Record<UpdateReceiptSummary['statut'], string> = {
   failed: 'Non installée',
   intervention: 'Intervention nécessaire',
 };
+const ETATS_RECU: Record<UpdateReceiptSummary['statut'], Etat> = {
+  success: 'succes',
+  rolled_back: 'attention',
+  failed: 'erreur',
+  intervention: 'erreur',
+};
 const duree = (s: number | null) => (s == null ? '—' : s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${s % 60} s`);
-/** Preuves de changement : reçus structurés écrits par le service de mise à jour, téléchargeables en JSON. */
-function UpdateReceipts() {
+/** Nombre de reçus affichés (décision du RSSI du 19/11/2026) : les plus récents, l'API les renvoyant du plus récent au plus
+    ancien. Les reçus plus anciens restent sur le serveur (dossier d'état). */
+export const RECUS_AFFICHES = 3;
+export const derniersRecus = (recus: readonly UpdateReceiptSummary[]) => recus.slice(0, RECUS_AFFICHES);
+/** Preuves de changement : reçus structurés écrits par le service de mise à jour, téléchargeables en JSON, avec les SBOM
+    vérifiés de chaque composant. Présentés en cartes compactes, du plus récent au plus ancien. */
+export function RecusInstallations() {
   const q = useQuery({
     queryKey: ['updates', 'receipts'],
     queryFn: () => get<UpdateReceiptSummary[]>('/api/admin/updates/receipts'),
   });
+  const titre = useId();
   if (!q.data?.length) return null;
   return (
-    <Stack gap="xs">
-      <Title order={3} size="h5">
+    <section className="maj-recus" aria-labelledby={titre}>
+      <Title order={3} size="h5" id={titre}>
         Reçus des dernières installations
       </Title>
-      <div className="table-wrap" role="region" aria-label="Reçus des dernières installations" tabIndex={0}>
-        <Table striped>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Fin</Table.Th>
-              <Table.Th>Versions</Table.Th>
-              <Table.Th>Résultat</Table.Th>
-              <Table.Th>Durée</Table.Th>
-              <Table.Th>Reçu</Table.Th>
-              <Table.Th>SBOM vérifiés</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {q.data.map((r) => (
-              <Table.Tr key={r.id}>
-                <Table.Td className="horodatage">{new Date(r.fin).toLocaleString('fr-FR')}</Table.Td>
-                <Table.Td>
-                  {r.depuis} → {r.vers}
-                </Table.Td>
-                <Table.Td>{STATUTS_RECU[r.statut]}</Table.Td>
-                <Table.Td>{duree(r.dureeSecondes)}</Table.Td>
-                <Table.Td>
-                  <Button
-                    size="compact-sm"
-                    variant="default"
-                    aria-label={`Télécharger le reçu ${r.depuis} vers ${r.vers}`}
-                    onClick={() => download(`/api/admin/updates/receipts/${r.id}`)}
-                  >
-                    Télécharger
-                  </Button>
-                </Table.Td>
-                <Table.Td>
-                  {r.sbom?.length ? (
-                    <Group gap="xs" wrap="nowrap">
-                      {r.sbom.map((c) => (
-                        <Button
-                          key={c}
-                          size="compact-sm"
-                          variant="subtle"
-                          aria-label={`Télécharger le SBOM ${c} de la version ${r.vers}`}
-                          onClick={() => download(`/api/admin/updates/receipts/${r.id}/sbom/${c}`)}
-                        >
-                          {c}
-                        </Button>
-                      ))}
-                    </Group>
-                  ) : (
-                    '—'
-                  )}
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </div>
-    </Stack>
+      <ol className="maj-recus__liste">
+        {derniersRecus(q.data).map((r) => (
+          <li key={r.id} className="maj-recu">
+            <div className="maj-recu__tete">
+              <span className="maj-recu__versions chiffres">
+                {r.depuis} <span aria-hidden="true">→</span>
+                <span className="sr-only"> vers </span> {r.vers}
+              </span>
+              <StatusChip etat={ETATS_RECU[r.statut]}>{STATUTS_RECU[r.statut]}</StatusChip>
+            </div>
+            <dl className="maj-recu__details">
+              <div>
+                <dt>Fin</dt>
+                <dd className="horodatage">{new Date(r.fin).toLocaleString('fr-FR')}</dd>
+              </div>
+              <div>
+                <dt>Durée</dt>
+                <dd className="chiffres">{duree(r.dureeSecondes)}</dd>
+              </div>
+            </dl>
+            <div className="maj-recu__actions">
+              <Button
+                size="compact-sm"
+                variant="default"
+                aria-label={`Télécharger le reçu ${r.depuis} vers ${r.vers}`}
+                onClick={() => download(`/api/admin/updates/receipts/${r.id}`)}
+              >
+                Télécharger
+              </Button>
+              <span className="maj-libelle">SBOM vérifiés</span>
+              {r.sbom?.length ? (
+                <Group gap="2xs">
+                  {r.sbom.map((c) => (
+                    <Button
+                      key={c}
+                      size="compact-sm"
+                      variant="subtle"
+                      aria-label={`Télécharger le SBOM ${c} de la version ${r.vers}`}
+                      onClick={() => download(`/api/admin/updates/receipts/${r.id}/sbom/${c}`)}
+                    >
+                      {c}
+                    </Button>
+                  ))}
+                </Group>
+              ) : (
+                <span className="maj-vide">aucun</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
+}
+/** Pastille d'état du bloc des versions (composition de la page de maintenance, dans le thème de l'application). */
+export function etatMiseAJour(
+  s: UpdateState | undefined,
+  o: { verification: boolean; fluxFerme: boolean },
+): { etat: Etat; libelle: string } {
+  if (!s) return { etat: 'neutre', libelle: 'Lecture de l’état…' };
+  if (o.verification || s.checking) return { etat: 'info', libelle: 'Vérification en cours' };
+  if (s.maintenance || s.status === 'queued' || s.status === 'running')
+    return { etat: 'info', libelle: 'Installation en cours' };
+  if (o.fluxFerme) return { etat: 'attention', libelle: 'Flux fermé' };
+  if (!s.ready) return { etat: 'attention', libelle: 'Service indisponible' };
+  if (nouvelleVersion(s)) return { etat: 'info', libelle: 'Nouvelle version disponible' };
+  if (s.checkError) return { etat: 'attention', libelle: 'Dernière vérification en échec' };
+  if (s.checkedAt) return { etat: 'succes', libelle: 'À jour' };
+  return { etat: 'neutre', libelle: 'Disponibilité à vérifier' };
 }
 export function UpdatesPanel() {
   const q = useUpdateState();
@@ -222,32 +247,55 @@ export function UpdatesPanel() {
     }
   }
   const codeValide = /^\d{6}$/.test(code);
+  const pastille = etatMiseAJour(s, { verification, fluxFerme });
   return (
-    <Card withBorder id="updates">
+    <Card withBorder id="updates" className="maj">
       <Stack>
-        <Title order={2} size="h4">
-          Mise à jour de l’application
-        </Title>
+        <div className="maj-entete">
+          <Title order={2} size="h4">
+            Mise à jour de l’application
+          </Title>
+          <StatusChip etat={pastille.etat}>{pastille.libelle}</StatusChip>
+        </div>
         <ErrorAlert error={error || q.error} />
-        <Text size="sm">
-          Version installée : {s?.installed ?? '…'}.{' '}
-          {nouvelleVersion(s)
-            ? `Nouvelle version : ${s?.available}.`
-            : s?.checkedAt && !s.checkError
-              ? 'Aucune nouvelle version détectée.'
-              : 'Disponibilité à vérifier.'}
-        </Text>
-        {s?.notes && (
-          <Anchor href={s.notes} target="_blank" rel="noreferrer">
-            Consulter les nouveautés
-          </Anchor>
+        <div className="maj-versions">
+          <p className="maj-version">
+            <span className="maj-libelle">Version installée</span>
+            <strong className="chiffres">{s?.installed ?? '…'}</strong>
+          </p>
+          {nouvelleVersion(s) ? (
+            <>
+              <span className="maj-fleche" aria-hidden="true" />
+              <p className="maj-version maj-version--cible">
+                <span className="maj-libelle">Version disponible</span>
+                <strong className="chiffres">{s?.available}</strong>
+                <span className="maj-libelle maj-etiquette">Nouvelle version</span>
+              </p>
+            </>
+          ) : (
+            <p className="maj-version maj-version--note">
+              <span className="maj-libelle">Version disponible</span>
+              <span>
+                {s?.checkedAt && !s.checkError ? 'Aucune nouvelle version détectée.' : 'Disponibilité à vérifier.'}
+              </span>
+            </p>
+          )}
+        </div>
+        {(s?.notes || s?.checkedAt) && (
+          <Group gap="xs" className="maj-meta">
+            {s?.checkedAt && (
+              <Text size="xs" c="dimmed" className="horodatage">
+                Dernière vérification : {new Date(s.checkedAt).toLocaleString()}.
+              </Text>
+            )}
+            {s?.notes && (
+              <Anchor href={s.notes} target="_blank" rel="noreferrer" size="sm">
+                Consulter les nouveautés
+              </Anchor>
+            )}
+          </Group>
         )}
         {s?.checkError && <Text size="sm">{ECHEC_GITHUB_PERSISTANT}</Text>}
-        {s?.checkedAt && (
-          <Text size="xs" c="dimmed">
-            Dernière vérification : {new Date(s.checkedAt).toLocaleString()}.
-          </Text>
-        )}
         {s?.message && (
           <Text size="sm" role="status">
             {s.message}
@@ -306,49 +354,51 @@ export function UpdatesPanel() {
               </Alert>
             )}
             {nouvelleVersion(s) && (
-              <>
-                <Text size="sm">
-                  Enregistrez vos modifications en cours. Le serveur créera une sauvegarde chiffrée, vérifiera la
-                  publication et le redémarrage. Tous les utilisateurs verront la page de maintenance pendant
-                  l’installation ; un retour sécurisé sera tenté en cas d’échec.
-                </Text>
-                {s?.fenetre?.active && (
-                  <Alert color={fenetreFermee ? 'orange' : 'blue'} role="status" title="Fenêtre de maintenance">
-                    {fenetreFermee
-                      ? `L’installation n’est possible que ${s.fenetre.libelle}. La vérification reste disponible.`
-                      : `Créneau ouvert : ${s.fenetre.libelle}.`}
-                  </Alert>
-                )}
-                <TextInput
-                  label="Taper METTRE À JOUR pour confirmer"
-                  value={confirm}
-                  disabled={busy || fluxFerme || fenetreFermee}
-                  onChange={(e) => setConfirm(e.currentTarget.value)}
-                />
-                <TextInput
-                  label="Code de double authentification"
-                  description="Code à 6 chiffres de votre application d’authentification, demandé à chaque installation."
-                  value={code}
-                  disabled={busy || fluxFerme || fenetreFermee}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  // Pas de maxLength : un code collé avec espace (« 123 456 ») serait tronqué avant le filtrage.
-                  onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
-                />
-                <Group>
-                  <Button
-                    disabled={
-                      busy || fluxFerme || !s?.ready || fenetreFermee || confirm !== 'METTRE À JOUR' || !codeValide
-                    }
-                    loading={pending}
-                    onClick={() => void install()}
-                  >
-                    Installer la version {s?.available}
-                  </Button>
-                </Group>
-              </>
+              <div className="maj-operation">
+                <Stack gap="sm">
+                  <Text size="sm">
+                    Enregistrez vos modifications en cours. Le serveur créera une sauvegarde chiffrée, vérifiera la
+                    publication et le redémarrage. Tous les utilisateurs verront la page de maintenance pendant
+                    l’installation ; un retour sécurisé sera tenté en cas d’échec.
+                  </Text>
+                  {s?.fenetre?.active && (
+                    <Alert color={fenetreFermee ? 'orange' : 'blue'} role="status" title="Fenêtre de maintenance">
+                      {fenetreFermee
+                        ? `L’installation n’est possible que ${s.fenetre.libelle}. La vérification reste disponible.`
+                        : `Créneau ouvert : ${s.fenetre.libelle}.`}
+                    </Alert>
+                  )}
+                  <TextInput
+                    label="Taper METTRE À JOUR pour confirmer"
+                    value={confirm}
+                    disabled={busy || fluxFerme || fenetreFermee}
+                    onChange={(e) => setConfirm(e.currentTarget.value)}
+                  />
+                  <TextInput
+                    label="Code de double authentification"
+                    description="Code à 6 chiffres de votre application d’authentification, demandé à chaque installation."
+                    value={code}
+                    disabled={busy || fluxFerme || fenetreFermee}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    // Pas de maxLength : un code collé avec espace (« 123 456 ») serait tronqué avant le filtrage.
+                    onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
+                  />
+                  <Group>
+                    <Button
+                      disabled={
+                        busy || fluxFerme || !s?.ready || fenetreFermee || confirm !== 'METTRE À JOUR' || !codeValide
+                      }
+                      loading={pending}
+                      onClick={() => void install()}
+                    >
+                      Installer la version {s?.available}
+                    </Button>
+                  </Group>
+                </Stack>
+              </div>
             )}
-            <UpdateReceipts />
+            <RecusInstallations />
           </>
         )}
       </Stack>

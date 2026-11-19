@@ -286,6 +286,25 @@ test('mise à jour : code refusé, fenêtre fermée et reçus téléchargeables'
           fin: '2026-10-20T10:00:00Z',
           dureeSecondes: null,
         },
+        // Reçus plus anciens : seuls les trois plus récents sont affichés.
+        {
+          id: '00000000-0000-4000-8000-0000000000ac',
+          depuis: '2.8.0',
+          vers: '2.9.0',
+          statut: 'success',
+          fin: '2026-10-10T10:00:00Z',
+          dureeSecondes: 300,
+          sbom: ['api', 'web', 'updater'],
+        },
+        {
+          id: '00000000-0000-4000-8000-0000000000ad',
+          depuis: '2.7.0',
+          vers: '2.8.0',
+          statut: 'success',
+          fin: '2026-10-01T10:00:00Z',
+          dureeSecondes: 290,
+          sbom: ['api', 'web', 'updater'],
+        },
       ],
     }),
   );
@@ -297,10 +316,15 @@ test('mise à jour : code refusé, fenêtre fermée et reçus téléchargeables'
     await expect(page.getByText('Code de double authentification incorrect ou déjà utilisé.')).toBeVisible();
     // Un code est à usage unique : le champ est vidé après un refus.
     await expect(page.getByLabel('Code de double authentification')).toHaveValue('');
-    await expect(page.getByRole('cell', { name: '6 min 12 s' })).toBeVisible();
+    // Reçus en cartes compactes (décision du RSSI du 19/11/2026) : trois au plus, les plus récents.
+    const recus = page.getByRole('region', { name: 'Reçus des dernières installations' });
+    await expect(recus.getByRole('listitem')).toHaveCount(3);
+    await expect(recus.getByRole('button', { name: 'Télécharger le reçu 2.8.0 vers 2.9.0' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Télécharger le reçu 2.7.0 vers 2.8.0' })).toHaveCount(0);
+    await expect(recus.getByText('6 min 12 s', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Télécharger le reçu 3.0.0 vers 3.1.0' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Télécharger le SBOM updater de la version 3.1.0' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Annulée, version précédente restaurée' })).toBeVisible();
+    await expect(recus.getByText('Annulée, version précédente restaurée', { exact: true })).toBeVisible();
     current = fermee;
     await page.reload();
     await expect(page.getByText('L’installation n’est possible que samedi de 22:00 à 23:00')).toBeVisible();
