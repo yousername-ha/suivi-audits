@@ -26,7 +26,9 @@
    machine. Une machine rapportée sans dépôt (inventaire, forme inattendue) garde celui qu'elle avait.
    Lot N1 : l'import d'un scan Nessus (import-nessus.ts) range ses machines, constats et détections par ce même chemin
    d'écriture (`rangerPassage`), avec la source « nessus-fichier » et la première détection la plus ancienne connue (un scan
-   ne dit que la date de son passage). */
+   ne dit que la date de son passage).
+   Lot N2 : un constat importé porte en plus `exploiteMalware` (« exploité par un logiciel malveillant » selon Tenable) ;
+   Security Center ne le rapporte pas, ses constats sont rangés à false. */
 import {
   BilanSynchronisation,
   cleMachine,
@@ -51,6 +53,10 @@ import type { Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
+
+/** Constat d'un passage : celui de Security Center, ou celui d'un import Nessus qui dit en plus s'il est exploité par un
+    logiciel malveillant (lot N2 ; absent : false). */
+export type ConstatPassage = ElementConstatTenable & { exploiteMalware?: boolean };
 
 const PLANIFICATION = { username: 'planification' };
 const EXECUTANT = { username: 'exécutant serveur' };
@@ -203,7 +209,7 @@ export class SynchronisationTenable implements OperationEnLots {
     numero: number,
     el: {
       machines: ElementMachineTenable[];
-      constats: ElementConstatTenable[];
+      constats: ConstatPassage[];
       detections: ElementDetectionTenable[];
     },
     source: SourceMachine,
@@ -289,7 +295,7 @@ export class SynchronisationTenable implements OperationEnLots {
       .execute();
   }
 
-  private async rangerConstats(k: Kdb, integration: string, numero: number, el: ElementConstatTenable[]) {
+  private async rangerConstats(k: Kdb, integration: string, numero: number, el: ConstatPassage[]) {
     if (!el.length) return;
     const uniques = dernierParCle(el, (c) => c.plugin);
     const ids = await k
@@ -309,6 +315,7 @@ export class SynchronisationTenable implements OperationEnLots {
           epss_score: c.epss === null ? null : String(c.epss),
           exploitable: c.exploitable,
           exploit_libelle: c.exploitLibelle,
+          exploite_malware: c.exploiteMalware ?? false,
           faille_publiee_le: c.failleLe,
           correctif_publie_le: c.correctifLe,
           fin_support_le: c.finSupportLe,
@@ -330,6 +337,7 @@ export class SynchronisationTenable implements OperationEnLots {
           epss_score: eb.ref('excluded.epss_score'),
           exploitable: eb.ref('excluded.exploitable'),
           exploit_libelle: eb.ref('excluded.exploit_libelle'),
+          exploite_malware: eb.ref('excluded.exploite_malware'),
           faille_publiee_le: eb.ref('excluded.faille_publiee_le'),
           correctif_publie_le: eb.ref('excluded.correctif_publie_le'),
           fin_support_le: eb.ref('excluded.fin_support_le'),

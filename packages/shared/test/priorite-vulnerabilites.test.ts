@@ -12,6 +12,7 @@ import {
   rangerSignalements,
   rangPriorite,
   SOURCES_EXPLOITABLE,
+  SOURCE_EXPLOITATION_LIBELLES,
   SOURCES_EXPLOITATION,
   type SourcesFailleDto,
   valeursRetenues,
@@ -345,6 +346,82 @@ describe('plusieurs sources (V26) : exploitation avérée et « exploitable »',
       { source: 'tenable', le: null },
       { source: 'cert-sante', le: null },
     ]);
+  });
+});
+
+describe('lot N2 : contrôle exploité par un logiciel malveillant (selon Tenable)', () => {
+  it('source d’exploitation avérée, libellé exact, rangée après les sources datées', () => {
+    expect(SOURCES_EXPLOITATION).toEqual(['kev', 'cert-fr', 'cert-sante', 'alh', 'tenable']);
+    expect(SOURCE_EXPLOITATION_LIBELLES.tenable).toBe('Exploitée par un logiciel malveillant (selon Tenable)');
+    expect(calculerPriorite(faits({ exploitation: ['tenable'], gravite: 'moyenne' }))).toEqual({
+      niveau: 'P1',
+      faits: [
+        { fait: 'exploitation', sources: ['tenable'] },
+        { fait: 'presence', presence: 'detectee' },
+      ],
+    });
+    expect(libelleFaitPriorite({ fait: 'exploitation', sources: ['kev', 'tenable'] })).toBe(
+      'Exploitation avérée (catalogue KEV, Exploitée par un logiciel malveillant (selon Tenable))',
+    );
+    expect(
+      rangerSignalements(
+        [
+          { source: 'tenable', le: null },
+          { source: 'kev', le: '2026-11-13T00:00:00.000Z' },
+        ],
+        SOURCES_EXPLOITATION,
+      ),
+    ).toEqual([
+      { source: 'kev', le: '2026-11-13T00:00:00.000Z' },
+      { source: 'tenable', le: null },
+    ]);
+    // Produit à confirmer : P2, comme pour toute autre source ; faille absente : P4 avec le fait.
+    expect(calculerPriorite(faits({ exploitation: ['tenable'], presence: 'a_confirmer' })).niveau).toBe('P2');
+    expect(calculerPriorite(faits({ exploitation: ['tenable'], presence: 'absente' })).niveau).toBe('P4');
+  });
+
+  it('non-régression : sans ce fait, la priorité est exactement celle d’avant pour chaque cas de la grille', () => {
+    const cas: Partial<FaitsFaille>[] = [];
+    for (const presence of ['detectee', 'declaree', 'exposee', 'a_confirmer', 'absente'] as const)
+      for (const gravite of ['critique', 'elevee', 'moyenne', 'faible', null] as const)
+        for (const epss of [null, 0.2, 0.9])
+          for (const exploitable of [[], ['tenable']] as const)
+            for (const exploitation of [[], ['kev'], ['alh', 'cert-fr']] as const)
+              cas.push({ presence, gravite, epss, exploitable: [...exploitable], exploitation: [...exploitation] });
+    for (const c of cas) {
+      const p = calculerPriorite(faits(c));
+      // Résultat attendu, recalculé à la main d'après la grille d'avant le lot N2.
+      const exploitee = (c.exploitation ?? []).length > 0;
+      const presente = ['detectee', 'declaree', 'exposee'].includes(c.presence!);
+      const attendu =
+        exploitee && presente
+          ? 'P1'
+          : (exploitee && c.presence === 'a_confirmer') ||
+              (presente &&
+                (c.gravite === 'critique' ||
+                  (c.epss !== null && c.epss! >= 0.5) ||
+                  (c.gravite === 'elevee' && (c.exploitable ?? []).length > 0)))
+            ? 'P2'
+            : presente && c.gravite === 'elevee'
+              ? 'P3'
+              : 'P4';
+      expect(p.niveau, JSON.stringify(c)).toBe(attendu);
+      for (const f of p.faits) if (f.fait === 'exploitation') expect(f.sources).not.toContain('tenable');
+    }
+  });
+
+  it('faitsDepuisSources : le signalement de Tenable passe dans les faits, sans rien changer d’autre', () => {
+    const s: SourcesFailleDto = {
+      exploitation: [],
+      exploitable: [{ source: 'tenable', le: null }],
+      valeurs: { gravites: [{ source: 'tenable', gravite: 'elevee' }], cvss: [], epss: [] },
+      certSante: null,
+    };
+    const sans = faitsDepuisSources(s);
+    const avec = faitsDepuisSources({ ...s, exploitation: [{ source: 'tenable', le: null }] });
+    expect(avec).toEqual({ ...sans, exploitation: ['tenable'] });
+    expect(calculerPriorite({ ...sans, presence: 'detectee' }).niveau).toBe('P2');
+    expect(calculerPriorite({ ...avec, presence: 'detectee' }).niveau).toBe('P1');
   });
 });
 

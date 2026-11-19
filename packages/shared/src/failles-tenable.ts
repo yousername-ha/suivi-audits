@@ -337,6 +337,9 @@ export interface ConstatResumeDto {
   exploitable: boolean;
   /** Une CVE du constat figure au catalogue KEV rangé par la veille (jointure en lecture). */
   exploite: boolean;
+  /** Lot N2 : contrôle marqué « exploité par un logiciel malveillant » par Tenable (import Nessus seulement : Security
+      Center ne le rapporte pas) ; exploitation avérée selon Tenable. */
+  exploiteMalware: boolean;
   /** Constat sans CVE : système ou logiciel qui n'est plus maintenu (V18). */
   nonMaintenu: boolean;
   /** Date de fin de support du logiciel selon Tenable (`seolDate`), ou null. */

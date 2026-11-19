@@ -7,7 +7,8 @@
    Tout élément hors norme est écarté et compté (jamais tronqué en silence ; un texte raccourci à sa borne porte « … » et
    est compté). Fonctions pures, testées hors navigateur sur une représentation minimale d'un nœud XML (NoeudXml) ; seule
    `lireDocument` touche au DOMParser. Format écrit d'après la connaissance de « NessusClientData_v2 », non vérifié sur un
-   export réel. */
+   export réel.
+   Lot N2 : `exploited_by_malware` est lu en plus (exploitation avérée selon Tenable, décision du RSSI du 19/11/2026). */
 import {
   ADRESSE_IP,
   cleMachine,
@@ -214,6 +215,7 @@ export const CHAMPS_CONTROLE = [
   'vpr_score',
   'exploit_available',
   'exploitability_ease',
+  'exploited_by_malware',
   'vuln_publication_date',
   'patch_publication_date',
   'see_also',
@@ -250,6 +252,15 @@ function lireHote(h: NoeudXml): Record<(typeof ETIQUETTES_HOTE)[number], string 
       if (nom && (ETIQUETTES_HOTE as readonly string[]).includes(nom) && r[nom] === null) r[nom] = tag.texte();
     }
   return r;
+}
+
+/** Lot N2 (décision du RSSI du 19/11/2026) : `exploited_by_malware` vaut exploitation avérée selon Tenable. « true » (casse
+    et espaces ignorés) : oui ; absent, vide ou « false » : non ; toute autre valeur : non, et comptée hors norme. */
+export function exploiteParMalware(brut: string | undefined, ecarts?: Compteur): boolean {
+  const v = brut?.trim().toLowerCase() ?? '';
+  if (v === 'true') return true;
+  if (v !== '' && v !== 'false') ecarts?.compter('valeursInvalides');
+  return false;
 }
 
 /** Description d'un contrôle, lue une fois : seuls les éléments de CHAMPS_CONTROLE sont lus. */
@@ -294,6 +305,7 @@ function lireControle(
     epss: null,
     exploitable: v.exploit_available?.trim().toLowerCase() === 'true',
     exploitLibelle: texteNettoye(v.exploitability_ease ?? null, TENABLE_BORNES.libelleExploit, ecarts),
+    exploiteMalware: exploiteParMalware(v.exploited_by_malware, ecarts),
     failleLe: valeur(v.vuln_publication_date, datePublication(v.vuln_publication_date ?? null)),
     correctifLe: valeur(v.patch_publication_date, datePublication(v.patch_publication_date ?? null)),
     voirAussi: lien,

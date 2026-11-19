@@ -14,6 +14,7 @@ import {
   FILTRES_SUIVI,
   type FiltreSuivi,
   GRAVITE_TENABLE_LIBELLES,
+  SOURCE_EXPLOITATION_LIBELLES,
   GRAVITES_TENABLE,
   type GraviteTenable,
   libelleFaitPriorite,
@@ -167,12 +168,16 @@ export const libelleMachine = (m: { nom: string | null; adresse: string | null }
   m.nom ?? m.adresse ?? 'Machine sans nom';
 
 /** Marques d'un constat, dans l'ordre d'affichage. Lot S3 : « Fin de support » (date de fin de support de Tenable passée),
-    distincte de « Non maintenu » (constat sans CVE, V18). */
+    distincte de « Non maintenu » (constat sans CVE, V18). Lot N2 : « Exploitée par un logiciel malveillant (selon
+    Tenable) », exploitation avérée propre au contrôle (import Nessus). */
 export function marquesConstat(
-  c: Pick<ConstatResumeDto, 'exploite' | 'exploitable' | 'nonMaintenu'> & { finDeSupport?: boolean },
+  c: Pick<ConstatResumeDto, 'exploite' | 'exploiteMalware' | 'exploitable' | 'nonMaintenu'> & {
+    finDeSupport?: boolean;
+  },
 ) {
   const out: { libelle: string; etat: Etat }[] = [];
   if (c.exploite) out.push({ libelle: 'Exploitée (KEV)', etat: 'erreur' });
+  if (c.exploiteMalware) out.push({ libelle: SOURCE_EXPLOITATION_LIBELLES.tenable, etat: 'erreur' });
   if (c.exploitable) out.push({ libelle: 'Exploitable', etat: 'attention' });
   if (c.finDeSupport) out.push({ libelle: FIN_SUPPORT_LIBELLE, etat: 'attention' });
   if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });

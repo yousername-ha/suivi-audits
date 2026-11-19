@@ -69,6 +69,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   epss: null,
   exploitable: false,
   exploite: false,
+  exploiteMalware: false,
   nonMaintenu: false,
   finSupportLe: null,
   finDeSupport: false,

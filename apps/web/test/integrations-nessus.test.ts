@@ -10,6 +10,7 @@ import { MantineProvider } from '@mantine/core';
 import {
   BilanImportNessus,
   catalogueIntegrations,
+  MESSAGE_LIMITE_IMPORTS,
   type IntegrationDto,
   LotImportNessus,
   NESSUS_BORNES,
@@ -17,7 +18,13 @@ import {
 import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ImportNessus, texteProgression } from '../src/integrations/ImportNessus';
+import { ImportNessus, RefusImport, texteProgression } from '../src/integrations/ImportNessus';
+import {
+  ConfirmationSuppression,
+  LIBELLE_SUPPRESSION,
+  lignesSuppression,
+  MOT_SUPPRESSION,
+} from '../src/integrations/SuppressionNessus';
 import { TuileInstance, TuileType } from '../src/integrations/IntegrationsPage';
 import {
   configurationDepuis,
@@ -35,6 +42,7 @@ import {
   ErreurImport,
   erreurTaille,
   erreurTexte,
+  exploiteParMalware,
   extraireNessus,
   instantHote,
   libelleEcartes,
@@ -110,6 +118,8 @@ describe('extraction d’un scan .nessus fictif', () => {
       epss: null,
       exploitable: true,
       exploitLibelle: 'Exploits are available',
+      // Lot N2 : `exploited_by_malware` lu (exploitation avérée selon Tenable).
+      exploiteMalware: true,
       failleLe: '2026-10-01T00:00:00.000Z',
       correctifLe: '2026-10-02T00:00:00.000Z',
       voirAussi: 'https://example.org/avis-fictif-919101',
@@ -232,6 +242,34 @@ describe('extraction d’un scan .nessus fictif', () => {
     expect(x.machines[1]!.machine.systeme!.endsWith('…')).toBe(true);
     // 203.0.113.999 n'est pas une adresse : la machine reste identifiée par le nom du ReportHost, ici une adresse valide.
     expect(x.machines[2]!.machine.adresse).toBe('203.0.113.23');
+  });
+
+  it('lot N2 : « exploité par un logiciel malveillant » lu, « true » seulement, valeur hors norme comptée', () => {
+    expect(exploiteParMalware('true')).toBe(true);
+    expect(exploiteParMalware(' TRUE ')).toBe(true);
+    for (const v of [undefined, '', 'false', 'False']) expect(exploiteParMalware(v), String(v)).toBe(false);
+    const x = extraireNessus(lire(SCAN1), [...DEFAUT]);
+    expect(x.constats.get('919101')!.exploiteMalware).toBe(true);
+    // Contrôles sans le champ : faux, comme avant le lot.
+    expect(x.constats.get('919102')!.exploiteMalware).toBe(false);
+    expect(x.constats.get('919104')!.exploiteMalware).toBe(false);
+    expect(x.ecartes.valeursInvalides).toBe(0);
+    const faux = extraireNessus(
+      lire(
+        SCAN1.replace(
+          '<exploited_by_malware>true</exploited_by_malware>',
+          '<exploited_by_malware>peut-être</exploited_by_malware>',
+        ),
+      ),
+      [...DEFAUT],
+    );
+    expect(faux.constats.get('919101')!.exploiteMalware).toBe(false);
+    expect(faux.ecartes.valeursInvalides).toBe(1);
+    // Seul le booléen part : ni le nom du champ Nessus, ni sa valeur brute.
+    const envoye = JSON.stringify(decouperEnLots(x));
+    expect(envoye).toContain('"exploiteMalware":true');
+    expect(envoye).not.toContain('exploited_by_malware');
+    for (const l of decouperEnLots(x)) expect(LotImportNessus.safeParse(l).success).toBe(true);
   });
 
   it('textes : balises retirées jusqu’au point fixe, casse ignorée, entités décodées, rien qui ressemble à une balise', () => {
@@ -371,6 +409,66 @@ describe('carte « Intégrations » : type sans adresse ni clé', () => {
     ).not.toContain('Importer un scan');
   });
 
+  it('lot N2 : « Supprimer ce connecteur et tout ce qu’il a importé », pour ce type et avec le droit d’administrer seulement', () => {
+    const tuile = (i: IntegrationDto, t: typeof type | undefined, peutAdministrer: boolean) =>
+      rendre(
+        createElement(TuileInstance, {
+          i,
+          t,
+          fluxOuvert: true,
+          peutAdministrer,
+          peutLancer: true,
+          enCours: false,
+          onConfigurer: rien,
+          onActiver: rien,
+          onTester: rien,
+          onImporter: rien,
+          onSupprimer: rien,
+          onExecutions: rien,
+        }),
+      );
+    expect(LIBELLE_SUPPRESSION).toBe('Supprimer ce connecteur et tout ce qu’il a importé');
+    const html = tuile(instance, type, true);
+    expect(html).toContain(`aria-label="${LIBELLE_SUPPRESSION} : Nessus fictif"`);
+    expect(html).toContain(`>${LIBELLE_SUPPRESSION}<`);
+    expect(tuile(instance, type, false)).not.toContain(LIBELLE_SUPPRESSION);
+    // Security Center : jamais cette action.
+    const tenable = catalogueIntegrations().find((t) => t.id === 'tenable')!;
+    expect(
+      tuile({ ...instance, type: 'tenable', configuration: { adresse: 'https://tenable.example.org' } }, tenable, true),
+    ).not.toContain(LIBELLE_SUPPRESSION);
+  });
+
+  it('lot N2 : confirmation explicite, nombres, irréversible, mot à saisir, bouton relié à l’avertissement', () => {
+    const n = { machines: 3, failles: 1, detections: 4, imports: 2 };
+    expect(lignesSuppression(n)).toEqual(['3 machines', '1 faille (4 détections)', '2 imports et leurs exécutions']);
+    const props = {
+      instance,
+      n,
+      onSaisie: rien,
+      occupe: false,
+      erreur: null,
+      onConfirmer: rien,
+      onAnnuler: rien,
+    };
+    const vide = rendre(createElement(ConfirmationSuppression, { ...props, saisie: '' }));
+    expect(vide).toContain('Action irréversible');
+    expect(vide).toContain('Le connecteur « Nessus fictif » et tout ce qu’il a importé disparaîtront définitivement');
+    expect(vide).toContain('3 machines');
+    expect(vide).toContain(`Saisissez ${MOT_SUPPRESSION} pour confirmer`);
+    const bouton = (h: string) => /<button[^>]*>(?:(?!<\/button>).)*Supprimer définitivement/s.exec(h)![0];
+    expect(bouton(vide)).toContain('disabled');
+    const avertissement = /id="([^"]+-avertissement)"/.exec(vide)![1];
+    expect(bouton(vide)).toContain(`aria-describedby="${avertissement}"`);
+    const saisi = rendre(createElement(ConfirmationSuppression, { ...props, saisie: MOT_SUPPRESSION }));
+    expect(bouton(saisi)).not.toContain('disabled');
+    const refus = rendre(
+      createElement(ConfirmationSuppression, { ...props, saisie: MOT_SUPPRESSION, erreur: 'Un import est en cours.' }),
+    );
+    expect(refus).toContain('role="alert"');
+    expect(refus).toContain('Un import est en cours.');
+  });
+
   it('formulaire : ni adresse ni fréquence envoyées, gravités seulement', () => {
     const f = formulaireDepuis(null, type);
     expect(erreursFormulaire(f, type)).toEqual([]);
@@ -399,5 +497,18 @@ describe('carte « Intégrations » : type sans adresse ni clé', () => {
     expect(id).toBeTruthy();
     expect(html).toContain(`id="${id}"`);
     expect(html).toContain(`aria-describedby="${id}-description"`);
+  });
+
+  it('lot N2 : refus d’un import (limite horaire) dit dans une alerte nommée, rien d’importé', () => {
+    expect(MESSAGE_LIMITE_IMPORTS).toBe(
+      'Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.',
+    );
+    const html = rendre(createElement(RefusImport, { id: 'refus-fictif', erreur: MESSAGE_LIMITE_IMPORTS }));
+    expect(html).toContain('role="alert"');
+    // L'identifiant est porté par le texte (message et conséquence), décrit le bouton « Importer ».
+    expect(html).toMatch(/id="refus-fictif"[^>]*>(?:(?!<\/div>).)*Trop d’imports/s);
+    expect(html).toContain('Import refusé');
+    expect(html).toContain('Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.');
+    expect(html).toContain('Aucune machine n’a été importée.');
   });
 });

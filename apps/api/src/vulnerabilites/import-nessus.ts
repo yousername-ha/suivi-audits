@@ -16,14 +16,15 @@
    - Après chaque lot rangé, dans sa transaction : suivi des failles (propositions « corrigée »), liaisons avec la surface
      externe et évaluation des alertes, comme après une synchronisation reçue (`apresImport`, branché par services.ts).
    Journal `integration.import.*` et `vulnerabilites.import.lot` : instance, exécution, nombres et gravités ; jamais un nom
-   de machine, une adresse ni un nom de fichier (le nom du fichier ne quitte pas le navigateur). */
+   de machine, une adresse ni un nom de fichier (le nom du fichier ne quitte pas le navigateur).
+   Lot N2 (décisions du RSSI du 19/11/2026) : chaque contrôle porte `exploiteMalware` (exploitation avérée selon Tenable) ;
+   suppression d'une instance d'import et de tout ce qu'elle a importé (`supprimer`, refus net pour tout autre type). */
 import {
   BilanImportNessus,
   type ConstatImportNessus,
   type DebutImportDto,
   type DebutImportNessus,
   type EcartsImportNessus,
-  type ElementConstatTenable,
   type ElementDetectionTenable,
   type ElementMachineTenable,
   type EtatImportNessusDto,
@@ -34,17 +35,22 @@ import {
   type LotImportNessus,
   NESSUS_BORNES,
   type ResultatLotImportDto,
+  type SuppressionImportDto,
   TYPE_NESSUS_FICHIER,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Actor, Client, Db, Kdb } from '../db/db.js';
+import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, verrouFileIntegrations } from '../integrations/index.js';
-import type { SynchronisationTenable } from './tenable.js';
+import type { ConstatPassage, SynchronisationTenable } from './tenable.js';
 
 const PLANIFICATION = { username: 'planification' };
 const INACTIVITE = sql<Date>`now() - make_interval(mins => ${NESSUS_BORNES.inactiviteMinutes})`;
+
+const SUPPRESSION_REFUSEE =
+  'Seul un connecteur « Nessus, import de fichier » se supprime avec ce qu’il a importé ; ce lot ne crée pas la suppression des autres connecteurs.';
 
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 
@@ -190,7 +196,8 @@ export class ImportNessus {
             acr: null,
             depot: null,
           })),
-          constats: lot.constats.map((x: ConstatImportNessus): ElementConstatTenable => ({
+          // Lot N2 : `exploiteMalware` (revalidé par le schéma partagé) suit le constat jusqu'à sa colonne.
+          constats: lot.constats.map((x: ConstatImportNessus): ConstatPassage => ({
             type: 'constat',
             ...x,
             finSupportLe: null,
@@ -278,6 +285,62 @@ export class ImportNessus {
       );
       return { lots: r.lots, machines: r.machines, detections: r.detections };
     }, user.username);
+  }
+
+  /* ---------------------------------------------------------------- Suppression (lot N2) */
+  /** Ce que la suppression ferait disparaître (fenêtre de confirmation). Autre type de connecteur : 422. */
+  async apercuSuppression(id: string): Promise<SuppressionImportDto> {
+    const i = await this.integrations.lire(id);
+    if (i.type !== TYPE_NESSUS_FICHIER) throw new HttpError(422, SUPPRESSION_REFUSEE);
+    return this.compter(this.db.k, id);
+  }
+
+  /** Supprime une instance « Nessus, import de fichier » et tout ce qu'elle a importé (décision du RSSI du 19/11/2026),
+      If-Match sur la version de l'instance. Refus net pour tout autre type (422) et pendant un import en cours (409).
+      Les clés étrangères de la migration 075 et suivantes effacent en cascade : exécutions et journal des imports,
+      machines, détections, constats (propres à l'instance : jamais partagés avec une autre), leurs CVE, suivis et
+      propositions de l'assistant, liaisons actif ↔ machine, produits reliés aux machines (la liaison seulement), état des
+      passages. Les signalements de dépassement de délai des constats effacés (sans clé étrangère) partent avec eux.
+      Restent, par construction : l'historique du suivi (table immuable, jamais contournée), les instantanés des
+      tendances (historiques, jamais réécrits), le journal d'audit, les alertes (réévaluées ici, dans les règles
+      existantes : une alerte dont la seule présence venait de cet import se clôt, motif « plus présente »), les repères de
+      l'assistant (machine remise à null par la clé de la migration 079). Journal : qui, type et nombres seulement. */
+  async supprimer(id: string, attendue: number, user: SessionUser, ip: string): Promise<SuppressionImportDto> {
+    return this.db.tx(async (c, k) => {
+      await verrouFileIntegrations(k);
+      const avant = await this.integrations.lire(id, k, true);
+      if (avant.type !== TYPE_NESSUS_FICHIER) throw new HttpError(422, SUPPRESSION_REFUSEE);
+      if (avant.version !== attendue) throw conflict({ ...avant, updated_by: avant.updatedBy });
+      await this.clore(k, c, id);
+      const active = await k
+        .selectFrom('integration_executions')
+        .select('id')
+        .where('integration_id', '=', id)
+        .where('etat', 'in', ['en_file', 'en_cours'])
+        .executeTakeFirst();
+      if (active)
+        throw new HttpError(409, 'Un import de ce connecteur est en cours : attendez sa fin pour le supprimer.');
+      const n = await this.compter(k, id);
+      await sql`DELETE FROM vulnerabilites_depassements WHERE nature = 'constat'
+        AND objet_id IN (SELECT id FROM vulnerabilites_constats WHERE integration_id = ${id}::uuid)`.execute(k);
+      await k.deleteFrom('integrations').where('id', '=', id).execute();
+      await this.apresSuppression?.(k, c);
+      await this.db.audit(user, ip, 'integration.supprimee', id, { type: avant.type, ...n }, c);
+      return n;
+    }, user.username);
+  }
+
+  /** Après une suppression, dans sa transaction : liaisons et alertes réévaluées (branché par services.ts). */
+  apresSuppression?: (k: Kdb, c: Client) => Promise<void>;
+
+  private async compter(k: Kdb, id: string): Promise<SuppressionImportDto> {
+    const { rows } = await sql<SuppressionImportDto>`SELECT
+        (SELECT count(*)::int FROM vulnerabilites_machines WHERE integration_id = ${id}::uuid) AS machines,
+        (SELECT count(*)::int FROM vulnerabilites_constats WHERE integration_id = ${id}::uuid) AS failles,
+        (SELECT count(*)::int FROM vulnerabilites_detections d JOIN vulnerabilites_machines m ON m.id = d.machine_id
+           WHERE m.integration_id = ${id}::uuid) AS detections,
+        (SELECT count(*)::int FROM vulnerabilites_imports WHERE integration_id = ${id}::uuid) AS imports`.execute(k);
+    return rows[0]!;
   }
 
   /* ---------------------------------------------------------------- Fin */

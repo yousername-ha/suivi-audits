@@ -3,7 +3,9 @@
    Le fichier est lu sur le poste (nessus.ts) ; seul l'extrait en liste blanche part, par lots de machines entières, avec la
    progression annoncée. Si un lot échoue, l'import s'arrête, l'écran dit quelles machines sont importées et lesquelles ne le
    sont pas, et l'import est clos côté serveur (en échec, les machines importées le restent). Le nom du fichier n'est jamais
-   envoyé. CSP stricte (ADR 0006) : ni style ni script en ligne. */
+   envoyé. CSP stricte (ADR 0006) : ni style ni script en ligne.
+   Lot N2 : un import refusé avant tout envoi (limite horaire des imports commencés, 429, ou autre refus du serveur) est dit
+   dans une alerte « Import refusé », reliée au bouton « Importer » ; la fenêtre reste ouverte et le fichier reste choisi. */
 import { Alert, Button, FileInput, Group, List, Progress, Stack, Text } from '@mantine/core';
 import {
   type BilanImportNessus,
@@ -45,11 +47,25 @@ type Etape =
   | { nom: 'pret'; extrait: ExtraitNessus; lots: LotImportNessus[] }
   | { nom: 'envoi'; extrait: ExtraitNessus; lots: LotImportNessus[]; faits: number; machines: number }
   | { nom: 'fini'; bilan: BilanImportNessus }
+  | { nom: 'refus'; erreur: string; extrait: ExtraitNessus; lots: LotImportNessus[] }
   | { nom: 'arret'; erreur: string; importees: string[]; restantes: string[] };
 
 /** Progression annoncée (texte et valeur) : lot courant, machines importées. */
 export function texteProgression(faits: number, lots: number, machines: number, total: number): string {
   return `Lot ${Math.min(faits + 1, lots)} sur ${lots} : ${machines.toLocaleString('fr-FR')} machine${machines > 1 ? 's' : ''} importée${machines > 1 ? 's' : ''} sur ${total.toLocaleString('fr-FR')}.`;
+}
+
+/** Refus d'un import avant tout envoi (lot N2) : message du serveur tel quel (par exemple la limite horaire des imports
+    commencés), rien n'est importé. `id` relie le texte de l'alerte au bouton « Importer » (description accessible). */
+export function RefusImport({ id, erreur }: { id: string; erreur: string }) {
+  return (
+    <Alert color="red" role="alert" title="Import refusé">
+      <Stack gap="xs" id={id}>
+        <Text size="sm">{erreur}</Text>
+        <Text size="sm">Aucune machine n’a été importée. Le fichier reste choisi : relancez l’import plus tard.</Text>
+      </Stack>
+    </Alert>
+  );
 }
 
 /** Contenu de la fenêtre d'import (l'appelant fournit la fenêtre) ; `onOccupe` empêche la fermeture pendant l'envoi. */
@@ -126,11 +142,15 @@ export function ImportNessus({
       );
       setEtape({ nom: 'fini', bilan });
     } catch (x) {
+      // Refus avant tout envoi (limite horaire, instance occupée…) : rien n'est commencé, la fenêtre le dit.
+      if (!debut) {
+        setEtape({ nom: 'refus', erreur: errorMessage(x), extrait, lots });
+        return;
+      }
       // Arrêt : les lots déjà rangés le restent ; l'import est clos (en échec) pour libérer l'instance.
-      if (debut)
-        await api('POST', `/api/integrations/instances/${instance.id}/imports/${debut.id}/fin`, { body: {} }).catch(
-          () => undefined,
-        );
+      await api('POST', `/api/integrations/instances/${instance.id}/imports/${debut.id}/fin`, { body: {} }).catch(
+        () => undefined,
+      );
       const noms = lots.flatMap((l) => l.machines.map(nomAffiche));
       const n = lots.slice(0, faits).reduce((s, l) => s + l.machines.length, 0);
       setEtape({
@@ -172,7 +192,7 @@ export function ImportNessus({
           Lecture du fichier sur votre poste…
         </Text>
       )}
-      {etape.nom === 'pret' && (
+      {(etape.nom === 'pret' || etape.nom === 'refus') && (
         <Stack gap="xs">
           <Text size="sm" role="status">
             {resumeExtrait(etape.extrait)} Envoi en {etape.lots.length} lot{etape.lots.length > 1 ? 's' : ''}.
@@ -180,8 +200,14 @@ export function ImportNessus({
           <Text size="xs" c="dimmed">
             Écartés sur votre poste : {libelleEcartes(etape.extrait.ecartes)}.
           </Text>
+          {etape.nom === 'refus' && <RefusImport id={`${id}-refus`} erreur={etape.erreur} />}
           <Group justify="flex-end">
-            <Button onClick={() => void envoyer(etape.extrait, etape.lots)}>Importer</Button>
+            <Button
+              onClick={() => void envoyer(etape.extrait, etape.lots)}
+              aria-describedby={etape.nom === 'refus' ? `${id}-refus` : undefined}
+            >
+              Importer
+            </Button>
           </Group>
         </Stack>
       )}

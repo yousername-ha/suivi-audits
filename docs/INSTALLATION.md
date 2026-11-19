@@ -836,7 +836,17 @@ serveur ne joint jamais Nessus.
   absentes du fichier ne changent pas. Les machines importées n'ont pas de dépôt Tenable : sans périmètre indiqué à la main
   (Risques, Vulnérabilités, Machines), elles ne sont visibles qu'avec le droit d'administrer le module. Chaque import figure
   dans « Exécutions » ; un import resté sans lot pendant trente minutes (onglet fermé) est clos comme interrompu, les
-  machines déjà importées le restant. Au plus dix imports commencés par heure et par personne.
+  machines déjà importées le restant. Au plus trente imports de fichiers commencés par heure et par personne (nombre de
+  fichiers, pas de machines) ; au-delà, la fenêtre d'import affiche « Import refusé » et l'explique.
+- **Exploitée par un logiciel malveillant** (lot N2) : un contrôle marqué `exploited_by_malware` dans le fichier compte comme
+  une exploitation avérée (priorité P1 si la faille est présente, alerte critique). Les failles importées avant la mise à
+  jour ne portent pas ce marquage : réimporter le scan.
+- **Supprimer** (lot N2) : « Supprimer ce connecteur et tout ce qu'il a importé » sur l'instance (droit
+  `integrations:administrer`, module Vulnérabilités actif, aucun import en cours). La fenêtre annonce les nombres de machines,
+  failles, détections et imports qui disparaîtront et demande de saisir SUPPRIMER ; l'action est irréversible (seule une
+  restauration de sauvegarde les ramène). Disparaissent aussi le suivi de ces failles et leurs liaisons ; les alertes sont
+  réévaluées. Restent : l'historique du suivi, les instantanés des tendances, le journal d'audit, les alertes closes et les
+  notifications déjà envoyées. Les connecteurs Security Center et AlgoLightHouse n'ont pas cette action.
 
 ### 11.11 Veille du module Vulnérabilités (sources publiques)
 

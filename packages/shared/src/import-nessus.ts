@@ -44,7 +44,13 @@ export const NESSUS_BORNES = {
   lotsParImport: 1000,
   /** Un import resté sans lot pendant ce délai (minutes) est clos comme interrompu au prochain import de l'instance. */
   inactiviteMinutes: 30,
+  /** Imports de fichiers commencés au plus par heure et par personne (nombre de fichiers, pas de machines ; lot N2,
+      décision du RSSI du 19/11/2026 : 30 au lieu de 10). */
+  importsParHeure: 30,
 } as const;
+
+/** Refus d'un import au-delà de la limite horaire (429), dit tel quel dans la fenêtre d'import. */
+export const MESSAGE_LIMITE_IMPORTS = `Trop d’imports de fichiers commencés (${NESSUS_BORNES.importsParHeure} par heure). Réessayez dans une heure.`;
 
 const UUID_MINUSCULES = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const instant = z.iso.datetime().nullable();
@@ -83,8 +89,12 @@ export const DetectionImportNessus = z
 export type DetectionImportNessus = z.infer<typeof DetectionImportNessus>;
 
 /** Contrôle (ReportItem) décrit une fois par lot : mêmes champs et mêmes bornes qu'un constat de Tenable Security Center,
-    sans fin de support (Nessus n'en donne pas la date). */
-export const ConstatImportNessus = ElementConstatTenable.omit({ type: true, finSupportLe: true }).strict();
+    sans fin de support (Nessus n'en donne pas la date). Lot N2 (décision du RSSI du 19/11/2026) : `exploiteMalware`, lu de
+    `exploited_by_malware` (« true »), compte comme une exploitation avérée selon Tenable ; booléen exigé, toute autre forme
+    fait refuser le lot. */
+export const ConstatImportNessus = ElementConstatTenable.omit({ type: true, finSupportLe: true })
+  .extend({ exploiteMalware: z.boolean() })
+  .strict();
 export type ConstatImportNessus = z.infer<typeof ConstatImportNessus>;
 
 const cleDetection = (d: DetectionImportNessus) => `${d.plugin}\u0000${d.port}\u0000${d.protocole}`;
@@ -213,4 +223,14 @@ export interface EtatImportNessusDto {
   } | null;
   /** Dernier lot rangé (chaque lot est un passage complet pour ses machines). */
   derniereCompleteLe: string | null;
+}
+
+/** Lot N2 (décision du RSSI du 19/11/2026) : ce que la suppression d'une instance « Nessus, import de fichier » fait
+    disparaître, montré dans la fenêtre de confirmation et rendu par la suppression : machines, failles (contrôles), détections
+    et imports de l'instance. Nombres seulement. */
+export interface SuppressionImportDto {
+  machines: number;
+  failles: number;
+  detections: number;
+  imports: number;
 }

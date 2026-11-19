@@ -1,4 +1,5 @@
 /* Services partagés par les routes (injectés : chaque test construit les siens avec sa propre base). */
+import { NESSUS_BORNES } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
@@ -156,6 +157,11 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     await liaisonsMachines.recalculer(k, c);
     await alertesVulnerabilites.evaluer('import-nessus', { k, c });
   };
+  // Lot N2 : après la suppression d'une instance d'import, liaisons et alertes réévaluées dans la même transaction.
+  importNessus.apresSuppression = async (k, c) => {
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('suppression-import-nessus', { k, c });
+  };
   veille.apresReception = (source) => alertesVulnerabilites.evaluer(`collecte-${source}`);
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
@@ -282,9 +288,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       integrationTest: limiter(10, 60e3),
       /** « Synchroniser maintenant » (Tenable) : six demandes par heure et par personne. */
       integrationSynchro: limiter(6, 60 * 60e3),
-      /** Lot N1 : imports de scans Nessus commencés (dix par heure et par personne) et lots envoyés (six cents par dix
-          minutes et par personne : un import de dix mille machines tient en cinquante lots au moins). */
-      importNessus: limiter(10, 60 * 60e3),
+      /** Lot N1 : imports de scans Nessus commencés (trente fichiers par heure et par personne depuis le lot N2 :
+          NESSUS_BORNES.importsParHeure) et lots envoyés (six cents par dix minutes et par personne : un import de dix
+          mille machines tient en cinquante lots au moins). */
+      importNessus: limiter(NESSUS_BORNES.importsParHeure, 60 * 60e3),
       importNessusLot: limiter(600, 10 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
       veilleCollecte: limiter(4, 60 * 60e3),

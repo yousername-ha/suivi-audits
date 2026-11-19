@@ -52,7 +52,7 @@ import {
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import type { Db, Kdb } from '../db/db.js';
-import type { AlertesVulnerabilites, Cumul, PropositionCumul } from './alertes.js';
+import { type AlertesVulnerabilites, type Cumul, exploitationDeCumul, type PropositionCumul } from './alertes.js';
 import { objetsEnDepassement } from './delais.js';
 import { entreesInstantane, instantaneDeReference } from './tendances.js';
 import { servicesFinDeSupport } from './services-surface.js';
@@ -362,9 +362,10 @@ export function correctifDeCumul(x: Cumul, sources: ReadonlyMap<string, SourcesF
   });
 }
 
-/** Exploitation avérée d'une faille : au moins une source de l'exploitation rangée avec sa CVE. */
+/** Exploitation avérée d'une faille : au moins une source de l'exploitation rangée avec sa CVE, ou un contrôle présent marqué
+    « exploité par un logiciel malveillant » par Tenable (lot N2, exploitationDeCumul). */
 export const exploiteeSelonSources = (x: Cumul, sources: ReadonlyMap<string, SourcesFailleDto>) =>
-  !!x.cve && (sources.get(x.cve)?.exploitation.length ?? 0) > 0;
+  exploitationDeCumul(x, sources).length > 0;
 
 /** Niveau d'alerte de la plateforme (règle du lot PC1), sur les failles du calcul global : les mêmes pour tout le monde.
     Repris par la vue d'ensemble, les instantanés et le rapport (lot S2). */

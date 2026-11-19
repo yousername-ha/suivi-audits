@@ -61,6 +61,8 @@ interface LigneConstat extends LigneSuivi {
   cvss3_score: string | null;
   epss_score: string | null;
   exploitable: boolean;
+  /** Lot N2 : contrôle « exploité par un logiciel malveillant » selon Tenable. */
+  exploite_malware: boolean;
   correctif_publie_le: Date | null;
   fin_support_le: Date | null;
   premiere: Date;
@@ -174,7 +176,7 @@ export class CorrectifsVulnerabilites {
         WHERE ${present}),
       p AS (SELECT constat_id, bool_or(NOT lu) AS hors_lecture FROM x GROUP BY constat_id)
       SELECT c.id, c.plugin_id, c.nom, c.gravite, c.correctif, c.cvss3_score, c.epss_score, c.exploitable,
-        c.correctif_publie_le, c.fin_support_le, ${premiereConstat} AS premiere, p.hors_lecture, ${colonnesSuivi}
+        c.exploite_malware, c.correctif_publie_le, c.fin_support_le, ${premiereConstat} AS premiere, p.hors_lecture, ${colonnesSuivi}
       FROM vulnerabilites_constats c JOIN p ON p.constat_id = c.id
       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
       WHERE ${filtreSuivi(undefined, sql<boolean>`true`)}`.execute(k);
@@ -208,6 +210,7 @@ export class CorrectifsVulnerabilites {
           cvss3: nombre(l.cvss3_score),
           epss: nombre(l.epss_score),
           exploitable: l.exploitable,
+          malware: l.exploite_malware,
         },
       );
       const f = faitsDepuisSources(sources);

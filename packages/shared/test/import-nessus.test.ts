@@ -39,6 +39,7 @@ const constat = (x: Record<string, unknown> = {}) => ({
   epss: null,
   exploitable: false,
   exploitLibelle: null,
+  exploiteMalware: false,
   failleLe: null,
   correctifLe: null,
   voirAussi: null,
@@ -91,6 +92,17 @@ describe('extrait d’un scan Nessus', () => {
       { epss: 2 },
     ])
       expect(ConstatImportNessus.safeParse(constat(x)).success, JSON.stringify(x)).toBe(false);
+  });
+
+  it('lot N2 : « exploité par un logiciel malveillant » exigé, booléen seulement', () => {
+    expect(ConstatImportNessus.safeParse(constat({ exploiteMalware: true })).success).toBe(true);
+    const sans: Record<string, unknown> = constat();
+    delete sans.exploiteMalware;
+    expect(ConstatImportNessus.safeParse(sans).success).toBe(false);
+    for (const v of ['true', 'oui', 1, null])
+      expect(ConstatImportNessus.safeParse(constat({ exploiteMalware: v })).success, String(v)).toBe(false);
+    // L'ancien nom du champ Nessus n'est pas admis tel quel.
+    expect(ConstatImportNessus.safeParse(constat({ exploited_by_malware: 'true' })).success).toBe(false);
   });
 
   it('lot : machines entières, chaque contrôle décrit une fois et utilisé, bornes', () => {

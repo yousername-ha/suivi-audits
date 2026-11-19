@@ -96,7 +96,7 @@ résultats de l'analyse, liaison par `vulnerabilites:administrer`, `If-Match`, �
 SQL (`perimetreMachine`) porte cette règle pour toutes les lectures. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
 Type sans réseau : « Nessus, import de fichier » (`nessus-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md), lot N1 ;
-migration `092`). Ni adresse, ni clé, ni flux, ni exécutant (`flux: null`, absent du script et de l'exécutant). Le fichier
+migration `093`). Ni adresse, ni clé, ni flux, ni exécutant (`flux: null`, absent du script et de l'exécutant). Le fichier
 `.nessus` est lu dans le navigateur (`DOMParser`, DOCTYPE et entités refusés avant l'analyse,
 `apps/web/src/integrations/nessus.ts`) ; l'API ne lit aucun XML : elle reçoit un extrait JSON en liste blanche, par lots de
 machines entières (`POST /api/integrations/instances/:id/imports`, `…/lots`, `…/fin`, `integrations:administrer`, corps de
@@ -104,7 +104,12 @@ machines entières (`POST /api/integrations/instances/:id/imports`, `…/lots`, 
 chemin d'écriture de Tenable (`SynchronisationTenable.rangerPassage`, mêmes tables, même numéro de passage). Chaque lot est
 un passage complet pour ses machines : les détections présentes des autres machines de l'instance sont reportées au numéro du
 passage, si bien qu'une faille disparaît seulement sur une machine du fichier. Journal des imports : `vulnerabilites_imports`
-(nombres seulement), exécution `importer` de l'instance (`apps/api/src/vulnerabilites/import-nessus.ts`).
+(nombres seulement), exécution `importer` de l'instance (`apps/api/src/vulnerabilites/import-nessus.ts`). Lot N2 (migration
+`094`) : `exploited_by_malware` lu en plus, rangé dans `vulnerabilites_constats.exploite_malware` (source d'exploitation
+avérée `tenable` du paquet partagé, ajoutée à `sourcesDe` et au filtre SQL des constats) ; limite de trente imports
+commencés par heure et par personne ; suppression d'une instance de ce type seulement et de tout ce qu'elle a importé
+(`DELETE /api/integrations/instances/:id`, If-Match, aperçu `GET …/suppression`) par les clés étrangères en cascade, puis
+liaisons et alertes réévaluées dans la même transaction.
 
 Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
 `updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête

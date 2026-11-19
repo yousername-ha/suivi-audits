@@ -4,10 +4,16 @@
    progression puis bilan, import inscrit dans « Exécutions » ; écrans du module : machines et failles marquées de leur
    source ; second fichier où une faille a disparu sur une machine scannée et où une machine est absente (inchangée) ;
    accessibilité en clair (1 366 px) et en sombre (390 px). Fichiers .nessus fictifs écrits à la main (tests/fixtures/nessus).
-   Ce fichier passe en DERNIER (préfixe le plus long) : aucune route ne retire une machine importée, et les parcours
-   précédents vérifient des listes vides sur une pile vierge. Ses assertions ne visent que l'instance qu'il crée (nom
-   unique), ce qui le rend rejouable ; l'instance est désactivée dans `finally`. Les contrôles fictifs ne citent aucune CVE
-   du catalogue KEV : aucune alerte critique ne s'ouvre. */
+   Lot N2 : le contrôle 919101 des deux fichiers porte `exploited_by_malware` : il est marqué « Exploitée par un logiciel
+   malveillant (selon Tenable) », en P1, et sort du filtre « Exploitation avérée » ; il ouvre donc une alerte critique,
+   dont la fenêtre (toutes les pages) est écartée pour la session par « Plus tard » quand elle paraît. Le refus d'un import
+   au-delà de la limite horaire (429) est simulé par une réponse interceptée, sans import de plus (la limite de trente
+   imports par heure s'applique aussi en CI). Enfin la spec supprime l'instance par « Supprimer ce connecteur et tout ce
+   qu'il a importé » (nombres annoncés, mot SUPPRIMER), et la supprime dans `finally` si le parcours a échoué avant : elle
+   nettoie derrière elle. Elle garde son préfixe (passe en DERNIER) : la suppression clôt l'alerte critique ouverte par
+   l'import, mais l'alerte close et les notifications envoyées aux comptes restent (historique), et les parcours
+   précédents vérifient des listes d'alertes vides sur une pile vierge. Ses assertions ne visent que l'instance qu'il crée
+   (nom unique), ce qui le rend rejouable. */
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
@@ -17,9 +23,28 @@ const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
 const SCAN2 = path.join(FIXTURES, 'scan-fictif-2.nessus');
 
+const LIBELLE_SUPPRESSION = 'Supprimer ce connecteur et tout ce qu’il a importé';
+const MALWARE = 'Exploitée par un logiciel malveillant (selon Tenable)';
+const LIMITE = 'Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.';
+
+/** Fenêtre d'alerte critique (lot N2 : ouverte par le contrôle exploité par un logiciel malveillant) : écartée pour la
+    session, sans décision (« Plus tard » pour le rôle RSSI, « Fermer pour cette session » sinon). */
+async function ecarterAlerte(page: Page) {
+  const fenetre = page.getByRole('alertdialog');
+  if (!(await fenetre.isVisible().catch(() => false))) return;
+  // Appelée hors du gestionnaire (axe), ce clic peut lui-même déclencher le gestionnaire, qui écarte la fenêtre avant lui :
+  // le clic est alors sans objet (délai court, erreur ignorée) ; seule compte la fenêtre écartée.
+  await fenetre
+    .getByRole('button', { name: /^(Plus tard|Fermer pour cette session)$/ })
+    .click({ timeout: 5000 })
+    .catch(() => undefined);
+  await expect(fenetre).toBeHidden();
+}
+
 async function axe(page: Page) {
   // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
   await page.waitForTimeout(400);
+  await ecarterAlerte(page);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 }
 
@@ -42,6 +67,24 @@ async function importer(page: Page, nom: string, fichier: string) {
   return fenetre;
 }
 
+/** Supprime l'instance par la carte (lot N2) : nombres annoncés (contrôlés s'ils sont donnés), mot à saisir, tuile
+    disparue. */
+async function supprimer(page: Page, nom: string, machines?: number) {
+  await page.goto('/plateforme/integrations');
+  const tuile = page.getByRole('region', { name: nom, exact: true });
+  await tuile.getByRole('button', { name: `${LIBELLE_SUPPRESSION} : ${nom}`, exact: true }).click();
+  const fenetre = page.getByRole('dialog', { name: `Supprimer : ${nom}`, exact: true });
+  await expect(fenetre).toBeVisible();
+  await expect(fenetre).toContainText('Action irréversible');
+  if (machines !== undefined) await expect(fenetre).toContainText(`${machines} machines`);
+  const bouton = fenetre.getByRole('button', { name: 'Supprimer définitivement', exact: true });
+  await expect(bouton).toBeDisabled();
+  await fenetre.getByRole('textbox', { name: 'Saisissez SUPPRIMER pour confirmer', exact: true }).fill('SUPPRIMER');
+  await bouton.click();
+  await expect(fenetre).toBeHidden();
+  await expect(tuile).toHaveCount(0);
+}
+
 for (const [mode, scheme, largeur] of [
   ['clair', 'light', 1366],
   ['sombre', 'dark', 390],
@@ -59,8 +102,11 @@ for (const [mode, scheme, largeur] of [
     });
     const page = await ctx.newPage(),
       problems = watchPage(page);
+    // La fenêtre d'alerte critique peut paraître à tout moment après le premier import : écartée avant chaque geste.
+    await page.addLocatorHandler(page.getByRole('alertdialog'), () => ecarterAlerte(page));
     const nom = `Nessus fictif ${mode} ${Date.now().toString(36)}`;
     const source = `Source : ${nom} (Nessus, import de fichier)`;
+    let supprimee = false;
     try {
       await page.goto('/plateforme/integrations');
       const carte = page.getByRole('dialog', { name: 'Intégrations', exact: true });
@@ -113,8 +159,18 @@ for (const [mode, scheme, largeur] of [
       await expect(etat).toContainText('3 machines');
       const lignes = page.getByRole('row').filter({ hasText: source });
       await expect(lignes).toHaveCount(3);
-      await expect(lignes.filter({ hasText: 'Fictional Web Server < 9.9 Remote Flaw' })).toContainText('2');
+      const web = lignes.filter({ hasText: 'Fictional Web Server < 9.9 Remote Flaw' });
+      await expect(web).toContainText('2');
+      // Lot N2 : exploitation avérée selon Tenable, marque et priorité ; seule cette faille sort du filtre.
+      await expect(web).toContainText(MALWARE);
+      await expect(web).toContainText('P1');
+      await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(MALWARE);
+      await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).check();
+      await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(1);
+      await expect(page.getByRole('row').filter({ hasText: source })).toContainText(MALWARE);
       await axe(page);
+      await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).uncheck();
+      await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
       await page.goto('/vulnerabilites/machines');
       await expect(page.getByRole('heading', { name: 'Machines', level: 1 })).toBeVisible();
       const machines = page.getByRole('row').filter({ hasText: source });
@@ -138,18 +194,51 @@ for (const [mode, scheme, largeur] of [
         'vue en dernier',
       );
       await axe(page);
+
+      // Lot N2 : refus au-delà de la limite horaire, simulé (aucun import de plus) ; la fenêtre reste ouverte et le dit.
+      await page.goto('/plateforme/integrations');
+      // Début d'un import seulement (POST …/imports), désigné par son chemin.
+      const debutImport = (u: URL) =>
+        u.pathname.startsWith('/api/integrations/instances/') && u.pathname.endsWith('/imports');
+      await page.route(debutImport, (route) =>
+        route.request().method() === 'POST'
+          ? route.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ error: LIMITE }) })
+          : route.fallback(),
+      );
+      await tuile.getByRole('button', { name: `Importer un scan dans ${nom}`, exact: true }).click();
+      const fenetre3 = page.getByRole('dialog', { name: `Importer un scan : ${nom}`, exact: true });
+      await fenetre3.locator('input[type="file"]').setInputFiles(SCAN2);
+      await expect(fenetre3.getByRole('status').filter({ hasText: 'à importer' })).toBeVisible();
+      const importerBouton = fenetre3.getByRole('button', { name: 'Importer', exact: true });
+      await importerBouton.click();
+      const refus = fenetre3.getByRole('alert').filter({ hasText: 'Import refusé' });
+      await expect(refus).toContainText(LIMITE);
+      await expect(refus).toContainText('Aucune machine n’a été importée.');
+      await expect(fenetre3).toBeVisible();
+      await expect(importerBouton).toHaveAccessibleDescription(
+        /^Trop d’imports de fichiers commencés \(30 par heure\)\. Réessayez dans une heure\..*Aucune machine n’a été importée\./,
+      );
+      await axe(page);
+      await page.unrouteAll({ behavior: 'wait' });
+      await fenetre3.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+      await expect(fenetre3).toBeHidden();
+
+      // Lot N2 : suppression de l'instance et de tout ce qu'elle a importé ; ses machines quittent le module.
+      await supprimer(page, nom, 3);
+      supprimee = true;
+      await page.goto('/vulnerabilites/machines');
+      await expect(page.getByRole('heading', { name: 'Machines', level: 1 })).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(0);
       expect(problems).toEqual([]);
     } finally {
-      // L'instance créée ne reste pas active ; ses machines restent (aucune route de retrait).
-      try {
-        await page.goto('/plateforme/integrations');
-        const desactiver = page
-          .getByRole('region', { name: nom, exact: true })
-          .getByRole('button', { name: 'Désactiver', exact: true });
-        if (await desactiver.isVisible({ timeout: 3000 }).catch(() => false)) await desactiver.click();
-      } catch {
-        // Le ménage ne masque pas l'échec d'origine.
-      }
+      // Nettoyage : l'instance créée et tout ce qu'elle a importé sont supprimés si le parcours s'est arrêté avant.
+      if (!supprimee)
+        try {
+          await page.unrouteAll({ behavior: 'ignoreErrors' });
+          await supprimer(page, nom);
+        } catch {
+          // Le ménage ne masque pas l'échec d'origine.
+        }
       await ctx.close();
     }
   });

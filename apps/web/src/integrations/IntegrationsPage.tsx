@@ -8,7 +8,8 @@
    vu. Lot F1 (ADR 0100) : fréquence de la synchronisation automatique de chaque instance, réglée dans « Configurer »,
    avec un avertissement (sans blocage) en dessous de 24 heures. Lot N1 (ADR 0100) : type « Nessus, import de fichier »,
    sans adresse, sans clé, sans flux ni exécutant, avec « Importer un scan » sur l'instance (droit d'administrer les
-   intégrations) ; ses imports figurent dans « Exécutions ». CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons
+   intégrations) ; ses imports figurent dans « Exécutions ». Lot N2 : « Supprimer ce connecteur et tout ce qu’il a
+   importé », pour ce type seulement (même droit, confirmation explicite, If-Match). CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons
    suivent les droits de la session pour l'affichage seulement. */
 import {
   Alert,
@@ -70,6 +71,7 @@ import {
   type FormulaireConfiguration,
 } from './integrations';
 import { ImportNessus } from './ImportNessus';
+import { LIBELLE_SUPPRESSION, SuppressionNessus } from './SuppressionNessus';
 
 const CLE = ['integrations'] as const;
 
@@ -130,6 +132,7 @@ export function TuileInstance({
   onTester,
   onSynchroniser,
   onImporter,
+  onSupprimer,
   onExecutions,
 }: {
   i: IntegrationDto;
@@ -143,6 +146,7 @@ export function TuileInstance({
   onTester: () => void;
   onSynchroniser?: () => void;
   onImporter?: () => void;
+  onSupprimer?: () => void;
   onExecutions: () => void;
 }) {
   const synchronisable = !!t?.operations.includes('synchroniser');
@@ -243,6 +247,17 @@ export function TuileInstance({
               Importer un scan
             </Button>
           )}
+          {peutAdministrer && importable && onSupprimer && (
+            <Button
+              size="compact-sm"
+              variant="light"
+              color="red"
+              onClick={onSupprimer}
+              aria-label={`${LIBELLE_SUPPRESSION} : ${i.nom}`}
+            >
+              {LIBELLE_SUPPRESSION}
+            </Button>
+          )}
         </Group>
         {peutAdministrer && importable && !i.actif && (
           <Text size="xs" c="dimmed">
@@ -308,6 +323,8 @@ export function IntegrationsPanel() {
   const [historique, setHistorique] = useState<IntegrationDto | null>(null);
   const [importation, setImportation] = useState<IntegrationDto | null>(null);
   const [importOccupe, setImportOccupe] = useState(false);
+  const [suppression, setSuppression] = useState<IntegrationDto | null>(null);
+  const [suppressionOccupee, setSuppressionOccupee] = useState(false);
   const [envoi, setEnvoi] = useState<string | null>(null);
   const catalogue = useQuery({
     queryKey: [...CLE, 'catalogue'],
@@ -410,6 +427,7 @@ export function IntegrationsPanel() {
               onTester={() => void tester(i)}
               onSynchroniser={() => void synchroniser(i)}
               onImporter={() => setImportation(i)}
+              onSupprimer={() => setSuppression(i)}
               onExecutions={() => setHistorique(i)}
             />
           ))}
@@ -479,6 +497,38 @@ export function IntegrationsPanel() {
       >
         {importation && (
           <ImportNessus instance={importation} onOccupe={setImportOccupe} onFait={() => void rafraichir()} />
+        )}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!suppression}
+        onClose={() => {
+          if (!suppressionOccupee) setSuppression(null);
+        }}
+        withCloseButton={!suppressionOccupee}
+        closeOnEscape={!suppressionOccupee}
+        closeOnClickOutside={!suppressionOccupee}
+        title={`Supprimer : ${suppression?.nom ?? ''}`}
+        size="lg"
+        centered
+        lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
+      >
+        {suppression && (
+          <SuppressionNessus
+            instance={suppression}
+            onOccupe={setSuppressionOccupee}
+            onAnnuler={() => setSuppression(null)}
+            onFait={(n) => {
+              setSuppression(null);
+              notifications.show({
+                color: 'teal',
+                message: `Connecteur supprimé : ${n.machines} machine(s) et ${n.failles} faille(s) retirées.`,
+              });
+              void rafraichir();
+              void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+            }}
+          />
         )}
       </Modal>
     </>

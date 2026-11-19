@@ -389,9 +389,13 @@
   l'addendum « lot S3 » ci-dessous.
 - **Lot R1, barre de recherche globale** (19/11/2026) : sans migration, une barre en tête de toutes les pages du module, une
   route ; CVE même non détectées sur le parc, machines, actifs exposés, applications. Voir l'addendum « lot R1 » ci-dessous.
-- **Lot N1, import de scans Nessus** (19/11/2026) : migration `092`, connecteur « Nessus, import de fichier » sans adresse,
+- **Lot N1, import de scans Nessus** (19/11/2026) : migration `093`, connecteur « Nessus, import de fichier » sans adresse,
   sans clé, sans flux ni exécutant ; fichier `.nessus` lu dans le navigateur, extrait en liste blanche envoyé par lots de
   machines entières et rangé par le chemin d'écriture de Tenable ; disparition par machine scannée. Voir l'addendum « lot N1 »
+  ci-dessous.
+- **Lot N2, exploitation par un logiciel malveillant, limite des imports, suppression d'un connecteur d'import**
+  (19/11/2026) : migration `094` ; `exploited_by_malware` vaut exploitation avérée selon Tenable ; trente imports par heure ;
+  « Supprimer ce connecteur et tout ce qu'il a importé » pour une instance d'import seulement. Voir l'addendum « lot N2 »
   ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
@@ -2566,7 +2570,7 @@ stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
 ## Addendum du 19/11/2026 — lot N1 : import de scans Nessus (fichier .nessus)
 
 Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
-`092`, trois routes d'écriture et une route de lecture ajoutées, aucune dépendance, **aucun flux sortant**, rien chez
+`093`, trois routes d'écriture et une route de lecture ajoutées, aucune dépendance, **aucun flux sortant**, rien chez
 l'assistant, `scripts/exploitation-worker.py`, `scripts/integration-http.py` et `docker-compose.yml` inchangés.
 
 ### Décisions du RSSI (19/11/2026)
@@ -2630,7 +2634,7 @@ l'assistant, `scripts/exploitation-worker.py`, `scripts/integration-http.py` et 
 - **Journal** : `integration.import.debute`, `vulnerabilites.import.lot`, `integration.import.termine` (instance, exécution,
   nombres, gravités ; ni nom de machine, ni adresse, ni nom de fichier, que l'API ne reçoit pas). Historique : exécution
   `importer` de l'instance (« Exécutions » : date, auteur, état, bilan chiffré ou erreur) et table `vulnerabilites_imports`
-  (migration `092`, qui élargit aussi la contrainte de `vulnerabilites_machines.source`).
+  (migration `093`, qui élargit aussi la contrainte de `vulnerabilites_machines.source`).
 - **Écrans du module** : `GET /api/vulnerabilites/imports/etat` (`vulnerabilites:lire`) ; « Failles détectées » montre
   « Dernier import : date, N machines » et le bilan (composant `EtatIntegration`, nature « import ») ; « Vue d'ensemble »
   compte l'instance parmi ses capteurs ; chaque constat et chaque machine portent « Source : <instance> (<type>) » avec la
@@ -2679,3 +2683,126 @@ Vite, Chromium), à rejouer en CI ; CSP stricte du serveur de production vérifi
 1. Les choix ci-dessus.
 2. Fusion d'une machine vue par Security Center et par un import (exclue de ce lot).
 3. Retrait d'une instance d'import et de ses machines (aucune route de retrait d'instance n'existe).
+
+## Addendum du 19/11/2026 — lot N2 : exploitation par un logiciel malveillant, limite des imports, suppression d'un connecteur d'import
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`094` (la migration du lot N1 est renumérotée `093` avant toute publication, `092` étant prise sur la branche de référence),
+deux routes ajoutées, aucune dépendance, **aucun flux sortant**, `scripts/integration-http.py` et `apps/api/src/assistant/*`
+inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. **« Exploitée par un logiciel malveillant » est une exploitation avérée**, au même titre que le catalogue KEV, l'alerte du
+   CERT-FR et la fiche du CERT Santé. Libellé de la source : « Exploitée par un logiciel malveillant (selon Tenable) » ;
+   pastille de Tenable.
+2. **Limite des imports** : trente fichiers commencés par heure et par personne (au lieu de dix), refus explicite.
+3. **Suppression d'un connecteur d'import** : « Supprimer ce connecteur et tout ce qu'il a importé », pour une instance
+   « Nessus, import de fichier » seulement ; droit d'administrer les intégrations ; confirmation explicite ; If-Match ; journal
+   sans nom de machine ni adresse ; refus net pour tout autre type.
+
+### Règle de priorité : sources d'exploitation avérée
+
+Une seule source suffit (V26) : catalogue KEV, alerte du CERT-FR qui cite la CVE, fiche du CERT Santé (« activement
+exploitée : Oui »), AlgoLightHouse (`is_exploited`), et désormais **Tenable : contrôle marqué `exploited_by_malware`**
+(`SOURCES_EXPLOITATION` = `kev`, `cert-fr`, `cert-sante`, `alh`, `tenable`). Le fait est **propre au contrôle** (constat),
+pas à ses CVE : il reste dans la colonne de sa source (`vulnerabilites_constats.exploite_malware`), sans date (rangé après
+les sources datées). La grille ne change pas : P1 si présente, P2 si produit à confirmer, P4 avec le fait si absente. Une
+faille sans ce fait garde exactement sa priorité (test de non-régression du paquet partagé sur toutes les combinaisons de la
+grille, et test d'API sur un contrôle voisin).
+
+Endroits où l'exploitation avérée est calculée, et ce qui change :
+
+| Endroit | Changement |
+|---|---|
+| `packages/shared/src/priorite-vulnerabilites.ts` (`SOURCES_EXPLOITATION`, libellés, `calculerPriorite`, `libelleFaitPriorite`) | source `tenable` ajoutée en dernier, libellé exact ; fonctions inchangées |
+| `apps/api/src/vulnerabilites/sources.ts` (`sourcesDe`, `FaitsTenable`) | `malware` exigé dans les faits de Tenable, signalement `tenable` sans date |
+| `apps/api/src/vulnerabilites/failles.ts` (`exploiteeAvere` SQL : filtre « Exploitation avérée », compteur et rang des machines ; `sourcesDesConstats` : priorité, liste, fiche, marques `faillesDesMachines`) | `c.exploite_malware OR …` ; colonne lue avec les faits de Tenable |
+| `apps/api/src/vulnerabilites/alertes.ts` (calcul global : priorités par CVE, faits d'une alerte) | faits de Tenable avec `malware` ; `exploitationDeCumul` ajoute Tenable aux sources de la CVE quand un contrôle présent et non traité le porte |
+| `apps/api/src/vulnerabilites/vue-ensemble.ts` (`exploiteeSelonSources`, repris par les tendances, les instantanés et le rapport) | passe par `exploitationDeCumul` |
+| `apps/api/src/vulnerabilites/correctifs.ts`, `delais.ts` | colonne lue avec les faits de Tenable (priorité du regroupement par correctif, délai) |
+| Périmètres, majoration par la machine interne, carte de la surface | inchangés : ils passent par `faillesDesMachines` |
+| Interface (`marquesConstat`, `PICTO_EXPLOITATION`, `SeuilsPriorite`, aide) | marque sur la faille, pastille de Tenable, textes |
+
+Inchangés, et pourquoi : la fiche d'une **CVE de la veille** et la **surface externe** ne lisent que les faits par CVE (comme
+pour « exploitable » de Tenable, déjà absent de ces fiches) ; la marque « Exploitée (KEV) » reste celle du seul catalogue ;
+l'assistant n'est pas touché (le libellé de la source peut lui parvenir par les sources d'un constat, sans nom ni adresse).
+
+### Import et Security Center
+
+- **Import** : `exploited_by_malware` ajouté à la liste blanche (`apps/web/src/integrations/nessus.ts`) : « true » (casse et
+  espaces ignorés) = oui ; absent, vide, « false » = non ; autre valeur = non, comptée « valeur hors norme ». Seul le booléen
+  `exploiteMalware` part ; il est **exigé** par le schéma partagé (`ConstatImportNessus`), toute autre forme fait refuser le
+  lot (422). Un import suivant sans le champ remet le constat à faux.
+- **Security Center** : aucune preuve dans le dépôt d'un champ équivalent dans la réponse de `/rest/analysis` (`vulndetails`).
+  La forme relevée sur l'instance 6.9.1 (fixture de `scripts/tests/test_integration_http.py`) porte `exploitAvailable`,
+  `exploitEase` et `exploitFrameworks`, aucun champ « malware » ; le cadrage (§ 5 bis) n'en cite pas. Le script et ses comptes
+  figés sont inchangés ; les constats de Security Center gardent `exploite_malware` à faux.
+
+### Limite des imports
+
+`NESSUS_BORNES.importsParHeure` = 30 (nombre de fichiers commencés, pas de machines), message partagé
+`MESSAGE_LIMITE_IMPORTS` : « Trop d'imports de fichiers commencés (30 par heure). Réessayez dans une heure. ». La fenêtre
+d'import affiche un refus avant tout envoi dans une alerte « Import refusé » dont le texte décrit le bouton « Importer »
+(`aria-describedby`) ; la fenêtre reste ouverte et le fichier reste choisi.
+
+### Suppression d'un connecteur d'import
+
+`GET /api/integrations/instances/:id/suppression` (aperçu chiffré) et `DELETE /api/integrations/instances/:id` (If-Match),
+`integrations:administrer`, module Vulnérabilités actif, refus (422) pour tout autre type, refus (409) pendant un import en
+cours (un import abandonné depuis trente minutes est d'abord clos). Dans une transaction : signalements de dépassement des
+constats effacés, suppression de l'instance, liaisons recalculées, alertes réévaluées (déclencheur
+`suppression-import-nessus`), journal `integration.supprimee` (cible : identifiant de l'instance ; détails : type et nombres
+de machines, failles, détections, imports ; ni nom de l'instance, ni nom de machine, ni adresse). Interface : bouton sur la
+tuile, fenêtre « Supprimer : <instance> » (nombres, « Action irréversible », mot SUPPRIMER à saisir, bouton relié à
+l'avertissement, `closeButtonProps` nommé, `lockScroll={false}`).
+
+Ce que devient chaque donnée :
+
+| Donnée | Sort | Pourquoi |
+|---|---|---|
+| Instance, exécutions, journal des imports, état des passages | effacés | clés étrangères `ON DELETE CASCADE` (migrations 073, 075, 093) |
+| Machines, détections | effacées | cascade depuis l'instance, puis depuis la machine |
+| Constats (failles), leurs CVE | effacés | un constat appartient à une seule instance (`UNIQUE (integration_id, plugin_id)`) : aucun constat partagé |
+| Suivis des constats, propositions de l'assistant | effacés | cascade depuis le constat (migrations 077, 079) |
+| Liaisons actif exposé ↔ machine, produits reliés aux machines | liaisons effacées, actifs et produits gardés | cascade depuis la machine (migrations 076, 083) |
+| Signalements de dépassement de délai | effacés par la suppression | sans clé étrangère (migration 087) |
+| Repères de l'assistant | gardés, machine remise à vide | `ON DELETE SET NULL` (migration 079) : le texte garde un repère sans nom |
+| Historique du suivi | **gardé** | table immuable (déclencheur), jamais contourné ; identifiants d'objets disparus |
+| Instantanés des tendances | **gardés** | historiques, jamais réécrits |
+| Alertes | gardées, réévaluées | une alerte dont la seule présence venait de l'import se clôt (motif « plus présente ») ; l'alerte close reste |
+| Notifications déjà envoyées | **gardées** | historique des personnes |
+| Journal d'audit | **gardé** | immuable |
+
+### Spec e2e
+
+La spec de l'import supprime son instance par l'interface en fin de parcours, et dans `finally` si le parcours s'est arrêté
+avant. Elle **garde son préfixe** (passe en dernier) : l'alerte critique ouverte par le contrôle exploité est close par la
+suppression, mais l'alerte close et les notifications restent, et des parcours précédents vérifient des listes d'alertes
+vides sur une pile vierge. La fenêtre d'alerte critique est écartée pour la session (« Plus tard ») par un gestionnaire de
+Playwright ; le refus 429 est simulé par une réponse interceptée (aucun import de plus).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- Clé de la source : `tenable` (même clé que « exploitable » selon Tenable) ; libellé exact demandé, d'où « Exploitation
+  avérée (…, Exploitée par un logiciel malveillant (selon Tenable)) » avec des parenthèses imbriquées dans les faits.
+- Le fait du contrôle s'étend à **toutes ses CVE** dans le calcul global par CVE (alertes, vue d'ensemble), comme
+  « exploitable » de Tenable.
+- Valeur hors norme d'`exploited_by_malware` dans le fichier : lue comme « non » et comptée, sans refuser le fichier.
+- Suppression : module Vulnérabilités actif exigé (comme l'import) ; refus pendant un import en cours ; mot SUPPRIMER (convention
+  des confirmations à fortes conséquences) ; l'instance peut être active ou non.
+- Le numéro du contrôle reste dans le journal des lots ; le journal de suppression ne donne que l'identifiant de l'instance.
+
+### Non vérifié
+
+`exploited_by_malware` n'a pas été vu sur un export réel (forme « true » supposée). Parcours Playwright joués sur une pile
+locale sans Docker (API et Vite, Chromium, PostgreSQL 16 local), à rejouer en CI ; CSP stricte du serveur de production vérifiée
+en CI seulement.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Security Center : si un champ équivalent est attesté (export réel, documentation de l'éditeur), l'ajouter au script et à
+   ses comptes figés.
+3. Suppression des connecteurs Security Center et AlgoLightHouse (non créée).
+4. Fusion d'une machine vue par Security Center et par un import (toujours exclue).

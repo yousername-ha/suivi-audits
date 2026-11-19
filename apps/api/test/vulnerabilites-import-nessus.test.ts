@@ -1,10 +1,14 @@
 /* Module Vulnérabilités (ADR 0100, lot N1) : import d'un scan Nessus par le connecteur « nessus-fichier » de la carte
-   « Intégrations ». Migration 092 ; type sans adresse, sans clé, sans flux ; import nominal en trois temps (début, lots de
+   « Intégrations ». Migration 093 ; type sans adresse, sans clé, sans flux ; import nominal en trois temps (début, lots de
    machines entières, fin) ; second import où une faille a disparu sur une machine présente (elle disparaît) et où une
    machine est absente du fichier (inchangée) ; gravité hors configuration refusée côté serveur ; champ en trop refusé ;
    droits (lecteur des intégrations sans administration : 403) ; cloisonnement avec une instance Tenable Security Center ;
    alerte critique ouverte après un import qui apporte une faille exploitée ; import interrompu qui dit ce qui est rangé ;
-   journal sans nom de machine, sans adresse, sans nom de fichier. Données entièrement fictives : noms srv-fictif-…
+   journal sans nom de machine, sans adresse, sans nom de fichier. Lot N2 : contrôle « exploité par un logiciel malveillant »
+   (exploitation avérée selon Tenable : priorité, alerte, filtre « Exploitation avérée », compteurs ; valeur hors norme
+   refusée ; sans le champ, priorité inchangée) ; limite de trente imports commencés par heure ; suppression d'une instance
+   d'import et de tout ce qu'elle a importé (aperçu, If-Match, droits, autre type refusé, alertes closes, journal sans nom,
+   cloisonnement avec Security Center). Données entièrement fictives : noms srv-fictif-…
    .example.org, adresses de 192.0.2.0/24 et 198.51.100.0/24, CVE fictives CVE-2026-9xxxx ; aucun service n'est joint. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
@@ -51,6 +55,7 @@ const constat = (plugin: string, extra: Record<string, unknown> = {}) => ({
   epss: null,
   exploitable: true,
   exploitLibelle: 'Exploits are available',
+  exploiteMalware: false,
   failleLe: '2026-10-01T00:00:00.000Z',
   correctifLe: '2026-10-02T00:00:00.000Z',
   voirAussi: 'https://example.org/fictional-advisory',
@@ -58,6 +63,11 @@ const constat = (plugin: string, extra: Record<string, unknown> = {}) => ({
   cvesTronquees: false,
   ...extra,
 });
+const sansMalware = <T extends { exploiteMalware?: boolean }>(c: T): Omit<T, 'exploiteMalware'> => {
+  const copie = { ...c };
+  delete copie.exploiteMalware;
+  return copie;
+};
 const det = (plugin: string, port = 443) => ({ plugin, port, protocole: 'TCP' });
 /** Lot : machines (numéro -> contrôles) et les contrôles qu'elles portent. */
 const lot = (machines: Record<number, string[]>, constats: Record<string, Record<string, unknown>> = {}) => {
@@ -70,6 +80,10 @@ const lot = (machines: Record<number, string[]>, constats: Record<string, Record
     constats: plugins.map((p) => constat(p, constats[p])),
   };
 };
+/** Identifiant interne d'un constat, par son numéro de contrôle. */
+const constatId = async (plugin: string) =>
+  (await t.svc.db.one<{ id: string }>('SELECT id FROM vulnerabilites_constats WHERE plugin_id = $1', [Number(plugin)]))!
+    .id;
 const audits = async (action: string) =>
   (
     await t.svc.db.q<{ username: string; target: string; details: Record<string, unknown> }>(
@@ -92,19 +106,75 @@ const presences = async (instance: string) =>
   ).rows;
 
 /** Import complet par les routes : début, lots, fin. Rend l'identifiant de l'exécution et le bilan. */
-async function importer(lots: ReturnType<typeof lot>[], ecartes = ECARTS, qui = admin) {
+async function importer(lots: ReturnType<typeof lot>[], ecartes = ECARTS, qui = admin, instance = nessus) {
   const machines = lots.reduce((s, l) => s + l.machines.length, 0);
   const detections = lots.reduce((s, l) => s + l.machines.reduce((x, m) => x + m.detections.length, 0), 0);
-  const d = await qui.post(`${I}/instances/${nessus}/imports`, { machines, detections, ecartes });
+  const d = await qui.post(`${I}/instances/${instance}/imports`, { machines, detections, ecartes });
   expect(d.statusCode, d.body).toBe(201);
   const id = d.json().id as string;
   for (const l of lots) {
-    const r = await qui.post(`${I}/instances/${nessus}/imports/${id}/lots`, l);
+    const r = await qui.post(`${I}/instances/${instance}/imports/${id}/lots`, l);
     expect(r.statusCode, r.body).toBe(200);
   }
-  const f = await qui.post(`${I}/instances/${nessus}/imports/${id}/fin`, {});
+  const f = await qui.post(`${I}/instances/${instance}/imports/${id}/fin`, {});
   expect(f.statusCode, f.body).toBe(200);
   return { id, bilan: f.json() };
+}
+
+/** Synchronisation fictive de Tenable Security Center : la machine 1 (même clé qu'un import) avec un contrôle propre. */
+async function synchroniserTenable() {
+  await t.svc.db.q(
+    "INSERT INTO integration_executions (integration_id, operation, origine, demande_par, etat, debute_le) VALUES ($1, 'synchroniser', 'manuel', 'test', 'en_cours', now()) RETURNING id",
+    [tenable],
+  );
+  const job = (await t.svc.db.one<{ id: string }>('SELECT id FROM integration_executions WHERE integration_id = $1', [
+    tenable,
+  ]))!.id;
+  await t.svc.vulnerabilites.tenable.reclamee(t.svc.db.k, job, tenable);
+  const elements = [
+    {
+      type: 'machine',
+      cle: cle(1),
+      uuid: null,
+      nom: nom(1),
+      adresse: adresse(1),
+      systeme: null,
+      premiere: null,
+      derniere: null,
+      exposition: null,
+      acr: null,
+    },
+    // Un constat de Security Center n'a pas le champ propre à l'import (lot N2).
+    { type: 'constat', ...sansMalware(constat('920001')), finSupportLe: null },
+    {
+      type: 'detection',
+      plugin: '920001',
+      machine: cle(1),
+      port: 22,
+      protocole: 'TCP',
+      premiere: null,
+      derniere: null,
+      attenue: false,
+      risqueAccepte: false,
+      risqueRequalifie: false,
+    },
+  ];
+  await t.svc.integrations.lot(job, elements);
+  await t.svc.integrations.terminer(job, {
+    ok: true,
+    resultat: {
+      elements: 3,
+      pages: 1,
+      constats: 1,
+      detections: 1,
+      machines: 1,
+      hotes: 0,
+      ecartes: 0,
+      tronque: false,
+      inventaire: { ok: true, erreur: null },
+    },
+    erreur: null,
+  });
 }
 
 beforeAll(async () => {
@@ -157,10 +227,10 @@ beforeEach(async () => {
   t.svc.limits.importNessusLot.reset();
 });
 
-describe('migration 092 et catalogue', () => {
+describe('migration 093 et catalogue', () => {
   it('élargit la source des machines, crée le journal des imports ; type sans adresse, sans clé, sans flux', async () => {
     expect(
-      (await t.svc.db.one("SELECT 1 AS ok FROM schema_migrations WHERE name = '092_vulnerabilites_import_nessus.sql'"))
+      (await t.svc.db.one("SELECT 1 AS ok FROM schema_migrations WHERE name = '093_vulnerabilites_import_nessus.sql'"))
         ?.ok,
     ).toBe(1);
     const m = `INSERT INTO vulnerabilites_machines (integration_id, source, identifiant_source, vu_numero) VALUES ($1, $2, 'ip:192.0.2.1', 1)`;
@@ -386,58 +456,7 @@ describe('droits', () => {
 
 describe('cloisonnement avec Security Center', () => {
   it('une machine vue par Tenable et par un import apparaît deux fois ; un import ne fait rien disparaître chez Tenable', async () => {
-    // Synchronisation fictive de Tenable : la même machine (même clé) avec un contrôle propre.
-    await t.svc.db.q(
-      "INSERT INTO integration_executions (integration_id, operation, origine, demande_par, etat, debute_le) VALUES ($1, 'synchroniser', 'manuel', 'test', 'en_cours', now()) RETURNING id",
-      [tenable],
-    );
-    const job = (await t.svc.db.one<{ id: string }>('SELECT id FROM integration_executions WHERE integration_id = $1', [
-      tenable,
-    ]))!.id;
-    await t.svc.vulnerabilites.tenable.reclamee(t.svc.db.k, job, tenable);
-    const elements = [
-      {
-        type: 'machine',
-        cle: cle(1),
-        uuid: null,
-        nom: nom(1),
-        adresse: adresse(1),
-        systeme: null,
-        premiere: null,
-        derniere: null,
-        exposition: null,
-        acr: null,
-      },
-      { type: 'constat', ...constat('920001'), finSupportLe: null },
-      {
-        type: 'detection',
-        plugin: '920001',
-        machine: cle(1),
-        port: 22,
-        protocole: 'TCP',
-        premiere: null,
-        derniere: null,
-        attenue: false,
-        risqueAccepte: false,
-        risqueRequalifie: false,
-      },
-    ];
-    await t.svc.integrations.lot(job, elements);
-    await t.svc.integrations.terminer(job, {
-      ok: true,
-      resultat: {
-        elements: 3,
-        pages: 1,
-        constats: 1,
-        detections: 1,
-        machines: 1,
-        hotes: 0,
-        ecartes: 0,
-        tronque: false,
-        inventaire: { ok: true, erreur: null },
-      },
-      erreur: null,
-    });
+    await synchroniserTenable();
     await importer([lot({ 1: ['910001'] })]);
     await importer([lot({ 1: ['910002'] })]);
     const machines = (await admin.get('/api/vulnerabilites/machines')).json().elements as {
@@ -507,12 +526,257 @@ describe('alertes et journal', () => {
     });
   });
 
-  it('limite de débit : dix imports commencés par heure et par personne, puis 429', async () => {
+  it('limite de débit (lot N2) : trente imports de fichiers commencés par heure et par personne, puis 429 explicite', async () => {
     t.svc.limits.importNessus.reset();
     const corps = { machines: 1, detections: 1, ecartes: ECARTS };
     const codes: number[] = [];
-    for (let i = 0; i < 11; i++) codes.push((await admin.post(`${I}/instances/${nessus}/imports`, corps)).statusCode);
-    // Le premier commence, les neuf suivants butent sur l'import en cours, le onzième sur la limite.
-    expect(codes).toEqual([201, 409, 409, 409, 409, 409, 409, 409, 409, 409, 429]);
+    let dernier = '';
+    for (let i = 0; i < 31; i++) {
+      const r = await admin.post(`${I}/instances/${nessus}/imports`, corps);
+      codes.push(r.statusCode);
+      dernier = r.json().error as string;
+    }
+    // Le premier commence, les vingt-neuf suivants butent sur l'import en cours, le trente et unième sur la limite.
+    expect(codes).toEqual([201, ...Array<number>(29).fill(409), 429]);
+    expect(dernier).toBe('Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.');
+    // La limite est propre à chaque personne.
+    const autre = await login(t, await makeUser(t, 'nessus_admin_limite', 'admin'));
+    expect((await autre.post(`${I}/instances/${nessus}/imports`, corps)).statusCode).toBe(409);
+  });
+});
+
+describe('lot N2 : contrôle exploité par un logiciel malveillant (selon Tenable)', () => {
+  interface Constat {
+    plugin: string;
+    exploiteMalware: boolean;
+    priorite: { niveau: string; faits: unknown[] };
+    sources: { exploitation: { source: string; le: string | null }[] };
+  }
+  const constats = async (q = '') =>
+    ((await admin.get(`/api/vulnerabilites/constats?etat=tous${q}`)).json().elements as Constat[]).sort((a, b) =>
+      a.plugin.localeCompare(b.plugin),
+    );
+
+  it('exploitation avérée : P1, faits et source, filtre « Exploitation avérée », rang et marques de la machine, alerte critique', async () => {
+    await importer([
+      lot({ 1: ['940001', '940002'], 2: ['940002'] }, { '940001': { gravite: 'elevee', exploiteMalware: true } }),
+    ]);
+    const [malware, sans] = await constats();
+    expect(malware).toMatchObject({
+      plugin: '940001',
+      exploiteMalware: true,
+      priorite: {
+        niveau: 'P1',
+        faits: [
+          { fait: 'exploitation', sources: ['tenable'] },
+          { fait: 'presence', presence: 'detectee' },
+        ],
+      },
+      sources: { exploitation: [{ source: 'tenable', le: null }] },
+    });
+    // Sans le champ : la priorité d'avant (critique et présente : P2), aucune exploitation avérée.
+    expect(sans).toMatchObject({
+      plugin: '940002',
+      exploiteMalware: false,
+      priorite: {
+        niveau: 'P2',
+        faits: [
+          { fait: 'presence', presence: 'detectee' },
+          { fait: 'gravite', gravite: 'critique' },
+        ],
+      },
+      sources: { exploitation: [] },
+    });
+    expect((await constats('&exploite=oui')).map((c) => c.plugin)).toEqual(['940001']);
+    expect((await constats('&priorite=P1')).map((c) => c.plugin)).toEqual(['940001']);
+    // Fiche du constat et fiche illustrée : même priorité, marque zero-day.
+    const fiche = (await admin.get(`/api/vulnerabilites/constats/${await constatId('940001')}`)).json();
+    expect(fiche).toMatchObject({ exploiteMalware: true, priorite: { niveau: 'P1' } });
+    // Machines : compteur d'exploitation avérée, rang et marque zero-day ; la machine 2 n'en porte pas.
+    const machines = (await admin.get('/api/vulnerabilites/machines')).json().elements as {
+      nom: string;
+      compteurs: { exploitationAveree: number };
+      marques: { priorite: string; exploitationAveree: boolean };
+      rang: { position: number };
+    }[];
+    const m1 = machines.find((m) => m.nom === nom(1))!;
+    const m2 = machines.find((m) => m.nom === nom(2))!;
+    expect(m1).toMatchObject({
+      compteurs: { exploitationAveree: 1 },
+      marques: { priorite: 'P1', exploitationAveree: true },
+    });
+    expect(m2).toMatchObject({
+      compteurs: { exploitationAveree: 0 },
+      marques: { priorite: 'P2', exploitationAveree: false },
+    });
+    expect(m1.rang.position).toBeLessThan(m2.rang.position);
+    // Alerte critique ouverte pour la CVE du contrôle, avec la source de l'exploitation ; pas d'alerte critique pour l'autre.
+    const alertes = await t.svc.db.q<{ cle: string; niveau: string; etat: string; faits: { exploitation: unknown[] } }>(
+      'SELECT cle, niveau, etat, faits FROM vulnerabilites_alertes ORDER BY cle',
+    );
+    expect(alertes.rows.find((a) => a.cle === 'CVE-2026-90001')).toMatchObject({
+      niveau: 'critique',
+      etat: 'ouverte',
+      faits: { exploitation: [{ source: 'tenable', le: null }] },
+    });
+    expect(alertes.rows.find((a) => a.cle === 'CVE-2026-90002')?.niveau).not.toBe('critique');
+    // Vue d'ensemble : la faille compte comme exploitée.
+    const vue = (await admin.get('/api/vulnerabilites/vue-ensemble')).json() as {
+      cibles: { cve: string | null; exploitee: boolean }[];
+    };
+    expect(vue.cibles.find((c) => c.cve === 'CVE-2026-90001')?.exploitee).toBe(true);
+    expect(vue.cibles.find((c) => c.cve === 'CVE-2026-90002')?.exploitee).toBe(false);
+
+    // Un import suivant sans le champ : le constat redevient ce qu'il était, l'exploitation avérée disparaît.
+    await importer([lot({ 1: ['940001', '940002'], 2: ['940002'] }, { '940001': { gravite: 'elevee' } })]);
+    const [apres] = await constats();
+    expect(apres).toMatchObject({ exploiteMalware: false, sources: { exploitation: [] } });
+    expect(apres!.priorite.niveau).toBe('P2');
+    expect(await constats('&exploite=oui')).toEqual([]);
+  });
+
+  it('valeur hors norme ou champ absent : lot refusé, rien n’est rangé', async () => {
+    const d = await admin.post(`${I}/instances/${nessus}/imports`, { machines: 1, detections: 1, ecartes: ECARTS });
+    expect(d.statusCode, d.body).toBe(201);
+    const url = `${I}/instances/${nessus}/imports/${d.json().id}/lots`;
+    for (const v of ['true', 1, null, 'oui']) {
+      const r = await admin.post(url, lot({ 1: ['940001'] }, { '940001': { exploiteMalware: v } }));
+      expect(r.statusCode, String(v)).toBe(422);
+    }
+    const sans = lot({ 1: ['940001'] });
+    expect((await admin.post(url, { ...sans, constats: [sansMalware(sans.constats[0]!)] })).statusCode).toBe(422);
+    expect(
+      (await admin.post(url, { ...sans, constats: [{ ...sans.constats[0], exploited_by_malware: 'true' }] }))
+        .statusCode,
+    ).toBe(422);
+    expect((await t.svc.db.one<{ n: number }>('SELECT count(*)::int AS n FROM vulnerabilites_constats'))!.n).toBe(0);
+    await admin.post(`${I}/instances/${nessus}/imports/${d.json().id}/fin`, {});
+  });
+
+  it('Security Center : ses constats ne portent jamais le fait (colonne à false), priorité inchangée', async () => {
+    await synchroniserTenable();
+    const c = (await constats()).find((x) => x.plugin === '920001')!;
+    expect(c).toMatchObject({ exploiteMalware: false, sources: { exploitation: [] } });
+    expect(c.priorite.niveau).toBe('P2');
+  });
+});
+
+describe('lot N2 : suppression d’une instance d’import et de tout ce qu’elle a importé', () => {
+  async function creerInstance(n: string) {
+    const r = await admin.post(`${I}/instances`, { type: 'nessus-fichier', nom: n, configuration: {} });
+    expect(r.statusCode, r.body).toBe(201);
+    const a = await admin.put(`${I}/instances/${r.json().id}/activation`, { actif: true }, ifMatch(r.json().version));
+    expect(a.statusCode, a.body).toBe(200);
+    return { id: r.json().id as string, version: a.json().version as number };
+  }
+
+  it('aperçu chiffré, If-Match, effacement en cascade, alertes closes, journal sans nom ; Security Center intact', async () => {
+    await synchroniserTenable();
+    const tenableAvant = await presences(tenable);
+    const x = await creerInstance('Nessus à supprimer');
+    await importer(
+      [
+        lot(
+          { 1: ['950001'], 2: ['950001', '950002'] },
+          { '950001': { exploiteMalware: true, cves: ['CVE-2026-95001'] }, '950002': { cves: ['CVE-2026-95002'] } },
+        ),
+      ],
+      ECARTS,
+      admin,
+      x.id,
+    );
+    const constatIds = (
+      await t.svc.db.q<{ id: string }>('SELECT id FROM vulnerabilites_constats WHERE integration_id = $1', [x.id])
+    ).rows.map((r) => r.id);
+    // Un dépassement de délai signalé (sans clé étrangère) part avec son constat.
+    await t.svc.db.q(
+      "INSERT INTO vulnerabilites_depassements (nature, objet_id, priorite, echeance) VALUES ('constat', $1, 'P1', now())",
+      [constatIds[0]],
+    );
+    const alerte = await t.svc.db.one<{ etat: string }>(
+      "SELECT etat FROM vulnerabilites_alertes WHERE cle = 'CVE-2026-95001'",
+    );
+    expect(alerte?.etat).toBe('ouverte');
+
+    const apercu = await admin.get(`${I}/instances/${x.id}/suppression`);
+    expect(apercu.statusCode, apercu.body).toBe(200);
+    expect(apercu.json()).toEqual({ machines: 2, failles: 2, detections: 3, imports: 1 });
+    // If-Match exigé, version à jour exigée.
+    expect((await admin.del(`${I}/instances/${x.id}`)).statusCode).toBe(428);
+    expect((await admin.del(`${I}/instances/${x.id}`, ifMatch(x.version + 5))).statusCode).toBe(412);
+    const r = await admin.del(`${I}/instances/${x.id}`, ifMatch(x.version));
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json()).toEqual({ machines: 2, failles: 2, detections: 3, imports: 1 });
+
+    expect((await admin.get(`${I}/instances/${x.id}`)).statusCode).toBe(404);
+    for (const [table, colonne] of [
+      ['vulnerabilites_machines', 'integration_id'],
+      ['vulnerabilites_constats', 'integration_id'],
+      ['vulnerabilites_imports', 'integration_id'],
+      ['integration_executions', 'integration_id'],
+      ['vulnerabilites_tenable_etat', 'integration_id'],
+    ] as const)
+      expect(
+        (await t.svc.db.one<{ n: number }>(`SELECT count(*)::int AS n FROM ${table} WHERE ${colonne} = $1`, [x.id]))!.n,
+        table,
+      ).toBe(0);
+    for (const table of ['vulnerabilites_constat_cves', 'vulnerabilites_detections', 'vulnerabilites_suivis'])
+      expect(
+        (await t.svc.db.one<{ n: number }>(
+          `SELECT count(*)::int AS n FROM ${table} WHERE constat_id = ANY($1::uuid[])`,
+          [constatIds],
+        ))!.n,
+        table,
+      ).toBe(0);
+    expect(
+      (await t.svc.db.one<{ n: number }>(
+        'SELECT count(*)::int AS n FROM vulnerabilites_depassements WHERE objet_id = ANY($1::uuid[])',
+        [constatIds],
+      ))!.n,
+    ).toBe(0);
+    // Alerte réévaluée dans la même transaction : close, sa seule présence venait de l'import.
+    expect(
+      await t.svc.db.one<{ etat: string; motif_cloture: string }>(
+        "SELECT etat, motif_cloture FROM vulnerabilites_alertes WHERE cle = 'CVE-2026-95001'",
+      ),
+    ).toEqual({ etat: 'close', motif_cloture: 'plus_presente' });
+    expect((await audits('vulnerabilites.alertes.evaluees')).at(-1)!.details.declencheur).toBe(
+      'suppression-import-nessus',
+    );
+    // Security Center : rien ne disparaît.
+    expect(await presences(tenable)).toEqual(tenableAvant);
+    expect((await admin.get(`${I}/instances/${tenable}`)).statusCode).toBe(200);
+    // Journal : qui, type et nombres ; ni nom de machine, ni adresse, ni nom de l'instance.
+    const journal = (await audits('integration.supprimee')).at(-1)!;
+    expect(journal).toMatchObject({
+      username: 'nessus_admin',
+      target: x.id,
+      details: { type: 'nessus-fichier', machines: 2, failles: 2, detections: 3, imports: 1 },
+    });
+    const texte = JSON.stringify(journal);
+    for (const interdit of [nom(1), nom(2), adresse(1), '192.0.2.', 'example.org', 'Nessus à supprimer'])
+      expect(texte.includes(interdit), interdit).toBe(false);
+  });
+
+  it('droits : lecteur et lanceur sans administration, 403 ; autre type de connecteur : refus net ; import en cours : 409', async () => {
+    const x = await creerInstance('Nessus droits');
+    for (const qui of [lecteurIntegrations, lanceur]) {
+      expect((await qui.get(`${I}/instances/${x.id}/suppression`)).statusCode).toBe(403);
+      expect((await qui.del(`${I}/instances/${x.id}`, ifMatch(x.version))).statusCode).toBe(403);
+    }
+    const tn = (await admin.get(`${I}/instances/${tenable}`)).json();
+    const refus = await admin.del(`${I}/instances/${tenable}`, ifMatch(tn.version));
+    expect(refus.statusCode).toBe(422);
+    expect(refus.json().error).toContain('Seul un connecteur « Nessus, import de fichier » se supprime');
+    expect((await admin.get(`${I}/instances/${tenable}/suppression`)).statusCode).toBe(422);
+    expect((await admin.get(`${I}/instances/${tenable}`)).statusCode).toBe(200);
+    // Import commencé et non terminé : la suppression attend sa fin.
+    const d = await admin.post(`${I}/instances/${x.id}/imports`, { machines: 1, detections: 1, ecartes: ECARTS });
+    expect(d.statusCode).toBe(201);
+    expect((await admin.del(`${I}/instances/${x.id}`, ifMatch(x.version))).statusCode).toBe(409);
+    await admin.post(`${I}/instances/${x.id}/imports/${d.json().id}/fin`, {});
+    expect((await admin.del(`${I}/instances/${x.id}`, ifMatch(x.version))).statusCode).toBe(200);
+    // Instance inconnue : 404.
+    expect((await admin.del(`${I}/instances/${x.id}`, ifMatch(x.version))).statusCode).toBe(404);
   });
 });
