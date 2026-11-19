@@ -704,54 +704,128 @@ body:has(.as-launcher) .shell-main {
   min-inline-size: calc(var(--suivi-champ-xs) * 1.125);
 }
 
-/* Onglets de page (rubriques d'une destination), essai demandé par le RSSI le 19/11/2026 : deux formes aux couleurs du
-   menu, choisies par la personne dans Mon compte > Affichage (préférence « onglets », barre bleu nuit par défaut). Une
-   fois le choix fait, retirer la forme écartée, la préférence et son réglage. */
-html:is([data-onglets='barre'], [data-onglets='pastilles']) .app-main .onglets-rubriques {
+/* Onglets, une seule forme sur toute la plateforme (demandes du RSSI du 19/11/2026) : rubriques sous le titre des pages,
+   onglets Mantine des pages et des fenêtres, onglets du RETEX et de l'Assistant RSSI. Deux formes aux couleurs du menu sont à
+   l'essai, au choix de chaque personne dans Mon compte > Affichage (préférence « onglets », barre bleu nuit par défaut). Une
+   fois le choix fait, retirer la forme écartée, la préférence et son réglage. Les onglets verticaux ne changent pas.
+   Le sélecteur :is() prend la spécificité de son élément le plus précis : la forme commune l'emporte ainsi sur les habillages
+   propres à un écran. */
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
   width: fit-content;
   max-width: 100%;
   gap: 0.25rem;
   padding: 0.3rem;
   border-radius: 0.85rem;
 }
-html:is([data-onglets='barre'], [data-onglets='pastilles']) .app-main .onglets-rubriques a {
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  .mantine-Tabs-list:not([data-orientation='vertical'])::before {
+  display: none;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles']) .as-tabs {
+  min-height: 0;
+  margin: 0.5rem 1rem;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  flex: 0 0 auto;
+  align-self: auto;
+  height: auto;
+  margin: 0;
   padding: 0.55rem 1rem;
   border: 0;
   border-radius: 0.6rem;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--mantine-font-size-sm);
   font-weight: 500;
+  line-height: 1.4;
 }
 /* Barre bleu nuit : onglet actif en bleu du menu et texte bleu nuit, comme l'action principale de la boîte d'outils. */
-html[data-onglets='barre'] .app-main .onglets-rubriques {
+html[data-onglets='barre']
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
   border: 0;
   background: var(--menu-fond);
   box-shadow: var(--suivi-ombre);
 }
-html[data-onglets='barre'] .app-main .onglets-rubriques a {
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
   color: var(--menu-secondaire);
 }
-html[data-onglets='barre'] .app-main .onglets-rubriques a:hover {
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled], [aria-current='page'], [data-active], [aria-selected='true']) {
   background: var(--menu-survol);
   color: var(--menu-texte);
 }
-html[data-onglets='barre'] .app-main .onglets-rubriques a:focus-visible {
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):focus-visible {
   outline: var(--suivi-trait-focus) solid var(--menu-focus);
   outline-offset: 2px;
 }
-html[data-onglets='barre'] .app-main .onglets-rubriques a[aria-current='page'] {
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
   background: var(--menu-teinte-pilotage);
   color: var(--menu-fond-haut);
   font-weight: 650;
 }
 /* Pastilles : cadre clair, onglet actif en bleu nuit du menu, cerné de bleu pour rester visible en sombre. */
-html[data-onglets='pastilles'] .app-main .onglets-rubriques {
+html[data-onglets='pastilles']
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
   border: var(--suivi-trait-l) solid var(--suivi-trait);
   background: var(--suivi-surface-douce);
+  box-shadow: none;
 }
-html[data-onglets='pastilles'] .app-main .onglets-rubriques a:hover {
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  color: var(--mantine-color-dimmed);
+}
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled], [aria-current='page'], [data-active], [aria-selected='true']) {
   background: color-mix(in srgb, var(--menu-teinte-pilotage) 12%, transparent);
   color: var(--mantine-color-text);
 }
-html[data-onglets='pastilles'] .app-main .onglets-rubriques a[aria-current='page'] {
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
   background: var(--menu-fond);
   color: var(--menu-texte);
   font-weight: 600;

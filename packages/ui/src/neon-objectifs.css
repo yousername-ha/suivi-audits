@@ -244,32 +244,7 @@
 }
 
 /* Vues : sélecteur compact, raccourcis de filtre avec leurs compteurs, filtre complet et légende des états. */
-.objectifs-vues > .mantine-Tabs-list {
-  width: fit-content;
-  max-width: 100%;
-  gap: 0.1875rem;
-  padding: 0.25rem;
-  border: 1px solid var(--objectifs-structure);
-  border-radius: var(--mantine-radius-md);
-  background: var(--objectifs-soft);
-}
-.objectifs-vues > .mantine-Tabs-list::before {
-  display: none;
-}
-.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
-  padding: 0.5rem 0.625rem;
-  border: 1px solid transparent;
-  border-radius: var(--mantine-radius-sm);
-  color: var(--objectifs-muted);
-  font-size: 0.6875rem;
-}
-.objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab[data-active] {
-  border-color: var(--objectifs-structure);
-  background: var(--objectifs-panel);
-  color: var(--objectifs-accent);
-  font-weight: 600;
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--neon-violet) 9%, transparent);
-}
+/* Sélecteur de vues : forme commune des onglets (neon-ergonomie.css, demande du RSSI du 19/11/2026). */
 .objectifs-vues > .mantine-Tabs-panel {
   padding-top: 0;
 }
@@ -1127,9 +1102,6 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-  }
-  .objectifs-vues > .mantine-Tabs-list > .mantine-Tabs-tab {
-    padding: 0.4375rem 0.25rem;
   }
   .objectifs-module :is(.objectifs-carte, .objectifs-processus, .objectifs-boite) {
     padding: 0.75rem;
