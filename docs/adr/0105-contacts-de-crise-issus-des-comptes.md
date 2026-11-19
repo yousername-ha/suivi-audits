@@ -43,7 +43,7 @@ numéros à jour, et que la page et la cellule de crise les reprennent.
 5. **Journal.** Qui a modifié quoi, sans les valeurs des numéros : `admin.user_crisis_contact` (administrateur : opération
    création, modification ou retrait, noms des champs modifiés, version) et `account.crisis_contact_update` (la personne :
    noms des champs modifiés, version), comme `admin.user_update` qui ne journalise que les noms de champs.
-6. **Stockage.** Une table dédiée `contacts_crise_comptes` (migration additive `087`, aucune donnée reprise) : une ligne par
+6. **Stockage.** Une table dédiée `contacts_crise_comptes` (migration additive `089`, aucune donnée reprise) : une ligne par
    compte contact de crise, supprimée avec le compte (clé étrangère en cascade), périmètres en tableau d'identifiants
    contrôlés à l'écriture, version pour `If-Match`, mêmes longueurs que les contacts saisis à la main. Remise à vide : avec
    la configuration, comme les comptes. Temps réel : changement publié sur l'entité `users` (identifiant du compte

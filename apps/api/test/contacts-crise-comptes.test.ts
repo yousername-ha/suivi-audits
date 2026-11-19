@@ -1,4 +1,4 @@
-/* Contacts de crise issus des comptes (ADR 0105, migration 087) : l'administrateur marque un compte (rôle de crise,
+/* Contacts de crise issus des comptes (ADR 0105, migration 089) : l'administrateur marque un compte (rôle de crise,
    téléphones, disponibilité, contact clé, périmètres) ; la personne ne modifie que ses téléphones et sa disponibilité ;
    GET /api/crise ne montre que les comptes actifs du périmètre lu ; la suppression du compte supprime sa fiche ; le journal
    nomme les champs modifiés, jamais les numéros. Comptes et numéros fictifs (plage réservée à la fiction). */

@@ -1,14 +1,23 @@
 /* Module Vulnérabilités (ADR 0100, point 9 ; lot V4a) : écran « Seuils de priorité ». La grille est calculée par la
    plateforme (fonction pure du paquet partagé) ; seul le seuil du score EPSS se règle, avec le droit d'administrer le
-   module et If-Match. Lecture avec le droit de lire le module. Composants de la charte, CSP stricte (ADR 0006). */
-import { Alert, Button, Group, List, NumberInput, Stack, Text, Title } from '@mantine/core';
+   module et If-Match. Lecture avec le droit de lire le module. Composants de la charte, CSP stricte (ADR 0006).
+   Lot S1 : délai cible de correction par priorité, réglé ici avec le même droit, la même version (If-Match) et le même
+   journal ; valeurs par défaut à confirmer par le RSSI. */
+import { Alert, Button, Group, List, NumberInput, Select, Stack, Table, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { type ReglagePrioriteOut } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import {
+  DELAIS_CORRECTION_DEFAUT,
+  libelleDelai,
+  NIVEAUX_PRIORITE,
+  type ReglagePrioriteOut,
+  type UniteDelai,
+} from '@suivi/shared';
+import { DataTable, ErrorAlert, Page, PageHeader } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { useCan } from '../session';
+import { depuisSaisie, type SaisieDelais, versSaisie } from './delais';
 
 const CLE = ['vulnerabilites', 'priorite', 'reglage'] as const;
 
@@ -80,6 +89,14 @@ export function SeuilsPrioritePage() {
               reglage={reglage.data}
               administrer={can('vulnerabilites', 'administrer')}
             />
+            <Title order={2} size="h4">
+              Délais de correction
+            </Title>
+            <ReglageDelais
+              key={`delais-${reglage.data.version}`}
+              reglage={reglage.data}
+              administrer={can('vulnerabilites', 'administrer')}
+            />
           </>
         )}
       </Stack>
@@ -136,6 +153,112 @@ function ReglageSeuil({ reglage, administrer }: { reglage: ReglagePrioriteOut; a
       {!administrer && (
         <Text size="sm" c="dimmed">
           Régler le seuil demande le droit d’administrer le module Vulnérabilités.
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+const CHOIX_UNITE = [
+  { value: 'aucun', label: 'Aucun délai' },
+  { value: 'heures', label: 'Heures' },
+  { value: 'jours', label: 'Jours' },
+];
+const DEFAUTS = NIVEAUX_PRIORITE.map((p) => `${p} ${libelleDelai(DELAIS_CORRECTION_DEFAUT[p])}`).join(', ');
+
+/** Délai cible de correction par priorité (lot S1), réinitialisé à chaque nouvelle version du réglage. */
+function ReglageDelais({ reglage, administrer }: { reglage: ReglagePrioriteOut; administrer: boolean }) {
+  const qc = useQueryClient();
+  const [saisie, setSaisie] = useState<SaisieDelais>(() => versSaisie(reglage.values.delais));
+  const [envoi, setEnvoi] = useState(false);
+  const { delais, erreur } = depuisSaisie(saisie);
+  const enregistrer = async () => {
+    if (!delais) return;
+    setEnvoi(true);
+    try {
+      await api('PUT', '/api/vulnerabilites/priorite/reglage', { body: { delais }, ifMatch: reglage.version });
+      notifications.show({ color: 'teal', message: 'Délais de correction enregistrés.' });
+      await qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+    } finally {
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Stack>
+      <Text size="sm">
+        Délai cible pour corriger une faille suivie, selon sa priorité courante. Il court depuis la première présence
+        connue chez nous (première détection de Tenable, ou date du rapprochement d’une faille déclarée), ou depuis la
+        fin d’une exception. L’échéance est calculée par la plateforme ; une faille close, sous exception ou que la
+        source ne rapporte plus n’est jamais en dépassement. Un jour vaut 24 heures. Valeurs par défaut, à confirmer par
+        le RSSI : {DEFAUTS}.
+      </Text>
+      <DataTable label="Délais de correction par priorité">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Priorité</Table.Th>
+              <Table.Th>Unité</Table.Th>
+              <Table.Th>Durée</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {NIVEAUX_PRIORITE.map((p) => {
+              const x = saisie[p];
+              return (
+                <Table.Tr key={p}>
+                  <Table.Td>{p}</Table.Td>
+                  <Table.Td>
+                    <Select
+                      label={`Unité du délai ${p}`}
+                      allowDeselect={false}
+                      value={x.actif ? x.unite : 'aucun'}
+                      onChange={(v) =>
+                        setSaisie({
+                          ...saisie,
+                          [p]:
+                            v === 'aucun' || !v
+                              ? { ...x, actif: false }
+                              : { ...x, actif: true, unite: v as UniteDelai },
+                        })
+                      }
+                      data={CHOIX_UNITE}
+                      disabled={!administrer}
+                      comboboxProps={{ withinPortal: false }}
+                    />
+                  </Table.Td>
+                  <Table.Td>
+                    <NumberInput
+                      label={`Durée du délai ${p}`}
+                      min={1}
+                      max={x.unite === 'jours' ? 365 : 8760}
+                      allowDecimal={false}
+                      value={x.actif ? x.duree : ''}
+                      onChange={(v) => setSaisie({ ...saisie, [p]: { ...x, duree: v } })}
+                      disabled={!administrer || !x.actif}
+                    />
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </DataTable>
+      {erreur && (
+        <Text size="sm" c="red" role="alert">
+          {erreur}
+        </Text>
+      )}
+      {administrer ? (
+        <Group>
+          <Button loading={envoi} disabled={!delais} onClick={() => void enregistrer()}>
+            Enregistrer les délais
+          </Button>
+        </Group>
+      ) : (
+        <Text size="sm" c="dimmed">
+          Régler les délais demande le droit d’administrer le module Vulnérabilités.
         </Text>
       )}
     </Stack>

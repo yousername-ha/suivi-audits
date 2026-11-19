@@ -84,7 +84,12 @@ describe('lot PC2 : zones du parc', () => {
 describe('lot PC2 : marques d’une machine', () => {
   it('sans faille présente : aucune priorité, aucune marque', () => {
     expect(marquesMachine([])).toEqual(MARQUES_VIDES);
-    expect(MARQUES_VIDES).toEqual({ priorite: null, exploitationAveree: false, exploitable: false });
+    expect(MARQUES_VIDES).toEqual({
+      priorite: null,
+      exploitationAveree: false,
+      exploitable: false,
+      exploiteeSansCorrectif: false,
+    });
   });
   it('priorité la plus haute des failles présentes', () => {
     expect(marquesMachine([f('P4'), f('P2'), f('P3')]).priorite).toBe('P2');
@@ -95,6 +100,7 @@ describe('lot PC2 : marques d’une machine', () => {
       priorite: 'P1',
       exploitationAveree: true,
       exploitable: false,
+      exploiteeSansCorrectif: false,
     });
   });
   it('exploitable : seulement pour une faille sans exploitation avérée', () => {
@@ -103,17 +109,20 @@ describe('lot PC2 : marques d’une machine', () => {
       priorite: 'P1',
       exploitationAveree: true,
       exploitable: false,
+      exploiteeSansCorrectif: false,
     });
     expect(marquesMachine([f('P2', false, true)])).toEqual({
       priorite: 'P2',
       exploitationAveree: false,
       exploitable: true,
+      exploiteeSansCorrectif: false,
     });
     // Deux failles différentes : les deux marques.
     expect(marquesMachine([f('P1', true), f('P3', false, true)])).toEqual({
       priorite: 'P1',
       exploitationAveree: true,
       exploitable: true,
+      exploiteeSansCorrectif: false,
     });
   });
 });

@@ -59,6 +59,10 @@ import { AlertesVulnerabilites } from './vulnerabilites/alertes.js';
 import { VueEnsembleVulnerabilites } from './vulnerabilites/vue-ensemble.js';
 import { PerimetresVulnerabilites } from './vulnerabilites/perimetres.js';
 import { FichesFailles } from './vulnerabilites/fiches.js';
+import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
+import { TendancesVulnerabilites } from './vulnerabilites/tendances.js';
+import { CorrectifsVulnerabilites } from './vulnerabilites/correctifs.js';
+import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
 
@@ -148,16 +152,41 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
   /* V30 : les machines nommées dans une action suivent le rang des machines. */
   suivi.rangs = (user) => failles.machinesRangees(user);
+  /* Lot S1 : délais de correction et exceptions à échéance (évaluation au tic de l'API, mesure des corrections). */
+  const delais = new DelaisVulnerabilites(
+    db,
+    reglagePriorite,
+    modules,
+    alertesVulnerabilites,
+    suivi,
+    notificationsMetier,
+  );
+  suivi.delaiObjet = (k, nature, id) => delais.delaiObjet(k, nature, id);
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
-  assistant.vulnerabilites = new AssistantVulnerabilites(
+  const assistantVulnerabilites = new AssistantVulnerabilites(
     db,
     failles,
     suivi,
     reglagePriorite,
     motsNonMasques,
     surfaceExterne,
+  );
+  assistant.vulnerabilites = assistantVulnerabilites;
+  /* Lot S2 : instantanés quotidiens de la situation (tic de l'API), tendances et rapport de pilotage (textes passés au
+     masque des machines en mode strict). */
+  const tendances = new TendancesVulnerabilites(db, alertesVulnerabilites, modules);
+  const rapport = new RapportVulnerabilites(
+    db,
+    cfg.orgName,
+    tendances,
+    alertesVulnerabilites,
+    delais,
+    veille,
+    tenable,
+    surfaceExterne,
+    (user) => assistantVulnerabilites.masque(user, null),
   );
   return {
     cfg,
@@ -193,8 +222,16 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
       /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
       fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
+      /** Lot S1 : délais de correction (réglés avec les seuils de priorité), exceptions à échéance, mesure des corrections. */
+      delais,
       /** Lot PC3 : onglet « Périmètres » (cartes par périmètre lu, détail par ligne ou au global), lecture seule. */
       perimetres: new PerimetresVulnerabilites(db, failles, reglagePriorite),
+      /** Lot S2 : instantanés quotidiens (tic de l'API) et tendances, lecture seule. */
+      tendances,
+      /** Lot S2 : rapport de pilotage (page imprimable, CSV), production tracée au journal. */
+      rapport,
+      /** Lot S3 : vue « Correctifs » (failles regroupées par texte de solution de Tenable), lecture seule. */
+      correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
     },
     modules,
     flux,

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { ContactCrise } from './suivi-crise.js';
 
 const t = (n: number) => z.string().trim().max(n);
-/** Nombre maximal de périmètres choisis pour un contact de crise (contrainte de la migration 087). */
+/** Nombre maximal de périmètres choisis pour un contact de crise (contrainte de la migration 089). */
 export const CONTACT_CRISE_PERIMETRES_MAX = 200;
 
 /** Contact de crise d'un compte, tel que le lit une personne qui lit les incidents du périmètre (`GET /api/crise`,

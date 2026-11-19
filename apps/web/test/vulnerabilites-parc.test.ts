@@ -73,6 +73,8 @@ const machine = (
       ...compteurs,
     },
     rang: { position: n, total: 150, faits: [] },
+    finDeSupport: false,
+    finsDeSupport: [],
     version: 1,
     marques: { ...MARQUES_VIDES, ...marques },
   };

@@ -42,18 +42,43 @@ describe('états de suivi', () => {
   it('changement d’état : note obligatoire (blanche refusée), date de revue réservée au risque accepté', () => {
     expect(ChangementEtatSuivi.safeParse({ etat: 'nouvelle' }).success).toBe(false);
     expect(ChangementEtatSuivi.parse({ etat: 'en_cours' })).toEqual({ etat: 'en_cours', note: '' });
-    for (const etat of ['risque_accepte', 'non_concernee']) {
-      expect(ChangementEtatSuivi.safeParse({ etat }).success).toBe(false);
-      expect(ChangementEtatSuivi.safeParse({ etat, note: '   ' }).success).toBe(false);
-      expect(ChangementEtatSuivi.safeParse({ etat, note: 'Motif fictif.' }).success).toBe(true);
+    // Lot S1 : une exception (risque accepté) exige en plus une mesure compensatoire et une échéance.
+    const exception = { mesure: 'Mesure fictive.', revueLe: '2099-01-01' };
+    for (const [etat, complement] of [
+      ['risque_accepte', exception],
+      ['non_concernee', {}],
+    ] as const) {
+      expect(ChangementEtatSuivi.safeParse({ etat, ...complement }).success).toBe(false);
+      expect(ChangementEtatSuivi.safeParse({ etat, note: '   ', ...complement }).success).toBe(false);
+      expect(ChangementEtatSuivi.safeParse({ etat, note: 'Motif fictif.', ...complement }).success).toBe(true);
     }
-    expect(ChangementEtatSuivi.safeParse({ etat: 'risque_accepte', note: 'x', revueLe: '2099-02-30' }).success).toBe(
+    expect(ChangementEtatSuivi.safeParse({ etat: 'risque_accepte', note: 'x', revueLe: '2099-01-01' }).success).toBe(
       false,
     );
+    expect(ChangementEtatSuivi.safeParse({ etat: 'risque_accepte', note: 'x', mesure: 'm' }).success).toBe(false);
+    expect(
+      ChangementEtatSuivi.safeParse({ etat: 'risque_accepte', note: 'x', mesure: '   ', revueLe: '2099-01-01' })
+        .success,
+    ).toBe(false);
+    expect(
+      ChangementEtatSuivi.safeParse({
+        etat: 'risque_accepte',
+        note: 'x',
+        mesure: 'm'.repeat(1001),
+        revueLe: '2099-01-01',
+      }).success,
+    ).toBe(false);
+    expect(
+      ChangementEtatSuivi.safeParse({ etat: 'risque_accepte', note: 'x', mesure: 'm', revueLe: '2099-02-30' }).success,
+    ).toBe(false);
     expect(ChangementEtatSuivi.safeParse({ etat: 'corrigee', revueLe: '2099-01-01' }).success).toBe(false);
-    expect(ChangementEtatSuivi.parse({ etat: 'risque_accepte', note: ' x ', revueLe: '2099-01-01' })).toEqual({
+    expect(ChangementEtatSuivi.safeParse({ etat: 'corrigee', mesure: 'm' }).success).toBe(false);
+    expect(
+      ChangementEtatSuivi.parse({ etat: 'risque_accepte', note: ' x ', mesure: ' m ', revueLe: '2099-01-01' }),
+    ).toEqual({
       etat: 'risque_accepte',
       note: 'x',
+      mesure: 'm',
       revueLe: '2099-01-01',
     });
     expect(ChangementEtatSuivi.safeParse({ etat: 'en_cours', note: 'x'.repeat(1001) }).success).toBe(false);
