@@ -6,24 +6,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
-[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
-`vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
-`vulnerabilites_depassements`, contrainte de portée de `grc_notifications` recréée avec deux types de plus, quatre index),
-durée négligeable, sans reprise de données. Aucune action sur le serveur. Dans l'application : seul le rôle « RSSI » accorde,
-prolonge ou lève une exception (risque accepté) ; le compte d'installation n'a que le rôle « Administrateur » : attribuer le
-rôle « RSSI » à la personne qui décide. Les délais par défaut (P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai) sont à
-confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception déjà enregistrée sans échéance reste valide et
-est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
-première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
-
-**Migration automatique `088`** (module Vulnérabilités, lot S2 : tendances et rapport de pilotage,
-[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_instantanes` et
-`vulnerabilites_instantanes_mesures`, deux index), durée négligeable, sans reprise de données. Aucune action sur le serveur.
-L'historique des tendances commence à la mise à jour : aucun passé n'est reconstruit ; le premier instantané est pris dans la
-minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI). Le rapport de
-pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
-vulnérabilités SMSI »)
+**Migration automatique `092`** (lot N1 : import de scans Nessus, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (contrainte de la source des machines recréée pour admettre `nessus-fichier`, table `vulnerabilites_imports`, un
+index), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune règle de pare-feu : l'import ne fait
+aucun appel réseau. Le fichier `.nessus` se dépose dans Plateforme, carte « Intégrations », instance « Nessus, import de
+fichier » ; prévoir environ 500 Mo de mémoire libre dans le navigateur pour un fichier de 100 Mo. Les machines importées sont
+sans périmètre (aucun dépôt) : elles ne sont visibles qu'avec le droit d'administrer le module tant qu'un périmètre ne leur
+est pas indiqué. (session « Module surveillance vulnérabilités SMSI »)
 
 **Migration automatique `090`** (lot F1 : fréquence de synchronisation réglable,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes `frequence_heures`, `planifiee_le` et `version` de
@@ -37,70 +26,14 @@ démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période. L
 Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
 par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
 
-**Migration automatique `092`** (lot N1 : import de scans Nessus, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
-additive (contrainte de la source des machines recréée pour admettre `nessus-fichier`, table `vulnerabilites_imports`, un
-index), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune règle de pare-feu : l'import ne fait
-aucun appel réseau. Le fichier `.nessus` se dépose dans Plateforme, carte « Intégrations », instance « Nessus, import de
-fichier » ; prévoir environ 500 Mo de mémoire libre dans le navigateur pour un fichier de 100 Mo. Les machines importées sont
-sans périmètre (aucun dépôt) : elles ne sont visibles qu'avec le droit d'administrer le module tant qu'un périmètre ne leur
-est pas indiqué. (session « Module surveillance vulnérabilités SMSI »)
-
-**Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
-action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
-surveillance vulnérabilités SMSI »)
-
 **Lot R1 du module Vulnérabilités** (barre de recherche globale) : sans migration, aucune action. La recherche ne fait aucun
 appel sortant et n'écrit rien au journal. (session « Module surveillance vulnérabilités SMSI »)
-
-**Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
 
 **Lot I1 (intégrations dans la page Plateforme)** : sans migration, aucune action sur le serveur. L'adresse de l'écran des
 intégrations change : il devient la carte « Intégrations » de la page Plateforme (`/plateforme/integrations`) ; l'ancienne
 adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
-
-**Migration automatique `089`** (déclaration réglementaire des incidents,
-[ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : additive (table `incidents_declarations` et son
-déclencheur d'immutabilité, colonne `qualified_at` de `suivi_incidents`, contrainte de portée des notifications recréée à
-l'identique de la `087` plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
-existants n'ont pas de date de qualification et ne reçoivent aucune proposition de déclaration ; le RSSI peut en ouvrir une à
-la main après avoir renseigné la date de qualification. **Aucune action sur le serveur.**
-
-**Après la mise à jour, à faire dans l'application** (pour utiliser les déclarations) :
-
-1. Remplir l'identité de l'établissement (Plateforme, carte « Identité de l'établissement ») : raison sociale, FINESS
-   juridique et géographique, ARS de rattachement, contact de signalement, secteur d'activité au sens de NIS 2 ; elle est vide
-   au départ. Vérifier la catégorie d'entité NIS 2 (carte « Référentiels »).
-2. Faire confirmer par le RSSI les rubriques des fiches de préparation contre les formulaires réels des portails (signalement
-   santé, ANSSI) avant la première déclaration.
-3. Donner le rôle prédéfini « RSSI » à la personne qui confirme, écarte et marque envoyées les déclarations : sans compte qui
-   le tienne, aucune déclaration ne peut être confirmée ni marquée envoyée. (session « Projet audit_suivi Coeur »)
-
-**Migration automatique `091`** (conservation des sauvegardes, [ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) :
-additive (deux colonnes bornées de `backup_policy`, avec valeur par défaut), durée négligeable, sans reprise de données.
-**Externaliser les sauvegardes AVANT la mise à jour** : avec les nouveaux réglages par défaut, au plus **30 sauvegardes
-régulières** restent dans le dossier des sauvegardes (en plus de la durée de conservation, 90 jours par défaut) ; les plus
-anciennes au-delà de 30 sont supprimées, avec leur fichier `.sha256`, **à la première sauvegarde qui suit la mise à jour**
-(planifiée, demandée dans l'interface ou lancée par cron). Copier d'abord hors du serveur celles à garder, ou relever le nombre
-maximal (jusqu'à 365) dans Configuration système, Sauvegardes et restauration, carte « Planification et conservation » ; pour
-un cron qui appelle `scripts/backup.sh` directement, `BACKUP_GARDER_MAX` dans `.env`. Les **sauvegardes d'avant mise à jour**
-passent de 5 à **3 gardées** (réglables de 1 à 10, ou `UPDATE_SAUVEGARDES_GARDEES` dans `.env` en ligne de commande) : ce
-nombre ne s'applique qu'aux mises à jour lancées depuis une version qui le contient (c'est le script de la version installée
-qui fait la rotation) ; la mise à jour vers cette version garde encore les 5 dernières. Les sauvegardes de sécurité des
-restaurations (`.restauration-securite/`) et les archives d'anciennes versions (`.tar.enc`, `.tar`) ne sont jamais
-supprimées. Une sauvegarde ou une mise à jour qui manquerait de place est désormais refusée avant de commencer (message avec
-la place libre, la place nécessaire et ce qui l'occupe) : voir « Libérer de la place » dans le guide d'installation. Après une
-mise à jour réussie ou une tentative échouée, seules restent les images de l'application de la version en service, de la
-précédente et du frontal en service, y compris les images sans étiquette ; les autres images du serveur ne sont plus
-touchées (plus de `docker image prune`). (session « Projet audit_suivi Coeur »)
-
-**Frontal** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : son empreinte couvre
-désormais l'image de base Caddy et le magasin des autorités racines ; à la première mise à jour depuis l'interface vers une
-version qui contient ce changement, l'empreinte diffère et le frontal est recréé une fois (coupure de quelques secondes
-annoncée sur la page de maintenance, même certificat). Aucune action. (session « Projet audit_suivi Coeur »)
-
-**Écran de connexion aux couleurs du menu** : changement d'interface seulement, aucune action sur le serveur.
 
 ### Ajouté
 
@@ -147,6 +80,120 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   leur nombre total, « tout voir » vers la liste filtrée, chaque résultat ouvre la page existante ; un identifiant CVE inconnu
   de la veille locale est signalé, sans consultation extérieure. Mêmes droits que les listes ; clavier et lecteurs d'écran.
   (session « Module surveillance vulnérabilités SMSI »)
+
+### Modifié
+
+- **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
+  addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
+  L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
+  exécutions) devient la carte « Intégrations » de la page Plateforme, avec le même droit (lecture du module Intégrations) ;
+  la rubrique du menu Pilotage disparaît et `/integrations` redirige vers la carte. « Failles détectées », « Surface
+  externe » et « Vue d'ensemble » ne montrent plus que l'état du connecteur en lecture seule (dernière synchronisation,
+  erreur éventuelle) et un lien « Configurer l'intégration », visible seulement de qui peut administrer les intégrations
+  (décision du RSSI du 19/11/2026, livrée avec le lot F1 : lire sans administrer montre l'état, pas le lien). Après « Collecter
+  maintenant », l'écran « Veille » précise que seules les sources de la veille sont concernées. Échap dans une fenêtre
+  ouverte depuis une carte de la Plateforme ou de la Configuration système ne ferme plus que cette fenêtre. Aucune
+  migration, aucune route d'API. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
+  (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
+  « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
+  leur adresse. (session « Module surveillance vulnérabilités SMSI »)
+
+## [7.4.0] — 2026-11-19
+
+### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `087`, `088`, `089` et `091` (délais et tendances du module Vulnérabilités,
+déclaration réglementaire des incidents, conservation des sauvegardes), sans reprise de données ; aucune commande sur le
+serveur pour mettre à jour. **Avant la mise à jour, externaliser les sauvegardes à garder** : au plus 30 sauvegardes
+régulières restent ensuite sur le serveur (détail sous la migration `091`). À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (son empreinte couvre désormais l'image de base, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule. Les correctifs de la sauvegarde de sécurité (zone
+de travail hors du `/tmp` de 256 Mo) et du contrôle d'espace ne s'appliquent qu'aux mises à jour lancées depuis cette
+version : si la mise à jour vers la 7.4.0 depuis l'interface échoue pendant la sauvegarde, la relancer en ligne de commande
+(`sudo ./scripts/mettre-a-jour.sh`, [guide d'installation](docs/INSTALLATION.md)).
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Vérifier le nombre maximal de sauvegardes et celui des sauvegardes d'avant mise à jour (Configuration système, Sauvegardes
+   et restauration, carte « Planification et conservation »).
+2. Pour les déclarations des incidents : remplir l'identité de l'établissement (Plateforme), faire confirmer les rubriques
+   contre les formulaires réels des portails, donner le rôle « RSSI » à la personne qui déclare (détail sous la migration
+   `089`).
+3. Vérifier les délais de correction du module Vulnérabilités (détail sous la migration `087`).
+
+La veille, les connecteurs et l'envoi du courriel en mode intégré, en échec jusqu'ici (« L'exécutant n'a pas pu abandonner ses
+privilèges »), reprennent seuls après la mise à jour. Le détail de chaque migration suit.
+
+**Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
+`vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
+`vulnerabilites_depassements`, contrainte de portée de `grc_notifications` recréée avec deux types de plus, quatre index),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Dans l'application : seul le rôle « RSSI » accorde,
+prolonge ou lève une exception (risque accepté) ; le compte d'installation n'a que le rôle « Administrateur » : attribuer le
+rôle « RSSI » à la personne qui décide. Les délais par défaut (P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai) sont à
+confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception déjà enregistrée sans échéance reste valide et
+est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
+première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `088`** (module Vulnérabilités, lot S2 : tendances et rapport de pilotage,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_instantanes` et
+`vulnerabilites_instantanes_mesures`, deux index), durée négligeable, sans reprise de données. Aucune action sur le serveur.
+L'historique des tendances commence à la mise à jour : aucun passé n'est reconstruit ; le premier instantané est pris dans la
+minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI). Le rapport de
+pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
+action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
+surveillance vulnérabilités SMSI »)
+
+**Migration automatique `089`** (déclaration réglementaire des incidents,
+[ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : additive (table `incidents_declarations` et son
+déclencheur d'immutabilité, colonne `qualified_at` de `suivi_incidents`, contrainte de portée des notifications recréée à
+l'identique de la `087` plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
+existants n'ont pas de date de qualification et ne reçoivent aucune proposition de déclaration ; le RSSI peut en ouvrir une à
+la main après avoir renseigné la date de qualification. **Aucune action sur le serveur.**
+
+**Après la mise à jour, à faire dans l'application** (pour utiliser les déclarations) :
+
+1. Remplir l'identité de l'établissement (Plateforme, carte « Identité de l'établissement ») : raison sociale, FINESS
+   juridique et géographique, ARS de rattachement, contact de signalement, secteur d'activité au sens de NIS 2 ; elle est vide
+   au départ. Vérifier la catégorie d'entité NIS 2 (carte « Référentiels »).
+2. Faire confirmer par le RSSI les rubriques des fiches de préparation contre les formulaires réels des portails (signalement
+   santé, ANSSI) avant la première déclaration.
+3. Donner le rôle prédéfini « RSSI » à la personne qui confirme, écarte et marque envoyées les déclarations : sans compte qui
+   le tienne, aucune déclaration ne peut être confirmée ni marquée envoyée. (session « Projet audit_suivi Coeur »)
+
+**Migration automatique `091`** (conservation des sauvegardes, [ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) :
+additive (deux colonnes bornées de `backup_policy`, avec valeur par défaut), durée négligeable, sans reprise de données.
+**Externaliser les sauvegardes AVANT la mise à jour** : avec les nouveaux réglages par défaut, au plus **30 sauvegardes
+régulières** restent dans le dossier des sauvegardes (en plus de la durée de conservation, 90 jours par défaut) ; les plus
+anciennes au-delà de 30 sont supprimées, avec leur fichier `.sha256`, **à la première sauvegarde qui suit la mise à jour**
+(planifiée, demandée dans l'interface ou lancée par cron). Copier d'abord hors du serveur celles à garder, ou relever le nombre
+maximal (jusqu'à 365) dans Configuration système, Sauvegardes et restauration, carte « Planification et conservation » ; pour
+un cron qui appelle `scripts/backup.sh` directement, `BACKUP_GARDER_MAX` dans `.env`. Les **sauvegardes d'avant mise à jour**
+passent de 5 à **3 gardées** (réglables de 1 à 10, ou `UPDATE_SAUVEGARDES_GARDEES` dans `.env` en ligne de commande) : ce
+nombre ne s'applique qu'aux mises à jour lancées depuis une version qui le contient (c'est le script de la version installée
+qui fait la rotation) ; la mise à jour vers cette version garde encore les 5 dernières. Les sauvegardes de sécurité des
+restaurations (`.restauration-securite/`) et les archives d'anciennes versions (`.tar.enc`, `.tar`) ne sont jamais
+supprimées. Une sauvegarde ou une mise à jour qui manquerait de place est désormais refusée avant de commencer (message avec
+la place libre, la place nécessaire et ce qui l'occupe) : voir « Libérer de la place » dans le guide d'installation. Après une
+mise à jour réussie ou une tentative échouée, seules restent les images de l'application de la version en service, de la
+précédente et du frontal en service, y compris les images sans étiquette ; les autres images du serveur ne sont plus
+touchées (plus de `docker image prune`). (session « Projet audit_suivi Coeur »)
+
+**Frontal** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : son empreinte couvre
+désormais l'image de base Caddy et le magasin des autorités racines ; à la première mise à jour depuis l'interface vers une
+version qui contient ce changement, l'empreinte diffère et le frontal est recréé une fois (coupure de quelques secondes
+annoncée sur la page de maintenance, même certificat). Aucune action. (session « Projet audit_suivi Coeur »)
+
+**Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
+
+**Écran de connexion aux couleurs du menu** : changement d'interface seulement, aucune action sur le serveur.
+
+### Ajouté
+
 - Sauvegardes, conservation ([ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) : nombre maximal de
   sauvegardes régulières (de 7 à 365, 30 par défaut) en plus de la durée de conservation, et nombre de sauvegardes d'avant
   mise à jour gardées (de 1 à 10, 3 par défaut), réglés dans Configuration système, Sauvegardes et restauration (carte
@@ -218,21 +265,6 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 ### Modifié
 
-- **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
-  addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
-  L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
-  exécutions) devient la carte « Intégrations » de la page Plateforme, avec le même droit (lecture du module Intégrations) ;
-  la rubrique du menu Pilotage disparaît et `/integrations` redirige vers la carte. « Failles détectées », « Surface
-  externe » et « Vue d'ensemble » ne montrent plus que l'état du connecteur en lecture seule (dernière synchronisation,
-  erreur éventuelle) et un lien « Configurer l'intégration », visible seulement de qui peut administrer les intégrations
-  (décision du RSSI du 19/11/2026, livrée avec le lot F1 : lire sans administrer montre l'état, pas le lien). Après « Collecter
-  maintenant », l'écran « Veille » précise que seules les sources de la veille sont concernées. Échap dans une fenêtre
-  ouverte depuis une carte de la Plateforme ou de la Configuration système ne ferme plus que cette fenêtre. Aucune
-  migration, aucune route d'API. (session « Module surveillance vulnérabilités SMSI »)
-- Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
-  (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
-  « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
-  leur adresse. (session « Module surveillance vulnérabilités SMSI »)
 - **Ergonomie, lot 2 : suite du relevé sur grand écran** (décisions du RSSI du 18/11/2026, sur maquettes ;
   [docs/refonte-neon/ERGONOMIE-LOT2.md](docs/refonte-neon/ERGONOMIE-LOT2.md)). Processus : le bandeau « Périmètre affiché »,
   qui répétait la liste de l'en-tête, est retiré, les chiffres du périmètre tiennent sur une ligne et les cartes se
@@ -270,6 +302,11 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 ### Corrigé
 
+- **Sécurité, frontal et exécutant** : Caddy (image `web`) et cosign (image `updater`) sont recompilés avec Go 1.26.11
+  (image `golang:1.26.11-alpine` épinglée par empreinte) : la bibliothèque standard Go 1.26.10 était touchée par la
+  CVE-2026-97054 (HIGH, `MaxBytesReader` des serveurs HTTP/1), relevée par Trivy. Le binaire du frontal change : son
+  redémarrage unique à la fin de la mise à jour depuis l'interface est celui déjà annoncé plus haut. (session « Projet
+  audit_suivi Coeur », signalé par la session « Module surveillance vulnérabilités SMSI »)
 - Mise à jour : le ménage des images oubliait les images téléchargées ou épinglées par leur empreinte (sans étiquette), qui
   s'accumulaient à chaque version, et ne s'appliquait pas après une tentative échouée ; il se fait maintenant par dépôt et par
   empreinte, en gardant la version en service, la précédente et le frontal en service (`GATEWAY_VERSION`) seulement, sans
@@ -279,8 +316,6 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   `DATA_DIR/reprise-updates/tmp` (root, 0700, vidé au début et à la fin de l'opération), sur le disque des données, dont la
   place est contrôlée avant de commencer. Effet seulement pour les mises à jour lancées depuis une version qui contient le
   correctif (c'est l'exécutant de la version installée qui lance le script). (session « Projet audit_suivi Coeur »)
-
-### Corrigé
 
 - **Veille, connecteurs et envoi du courriel en mode intégré** : l'exécutant d'exploitation lance ces tâches sous le compte
   sans privilège `nobody`, mais son conteneur (`updater`) n'avait pas le droit de changer d'identité ; elles échouaient

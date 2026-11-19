@@ -243,7 +243,7 @@ existants est progressif ; seul le module existe à ce stade.
 | TanStack Query / React Router | 5.104.4 / 8.5.0                                                             |
 | Vite / Vitest / Playwright    | 8.3.4 / 5.0.5 / 1.56.1                                                      |
 | PostgreSQL                    | 18, image 18-alpine                                                         |
-| Caddy                         | 2.11.7, recompilé avec Go 1.26.10                                           |
+| Caddy                         | 2.11.7, recompilé avec Go 1.26.11                                           |
 | Trivy                         | 0.75.0, binaire officiel à empreinte vérifiée (ADR 0063)                    |
 
 Versions déclarées/épinglées dans package.json/lockfiles/Dockerfiles ; elles ne
