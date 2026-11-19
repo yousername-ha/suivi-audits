@@ -6,7 +6,10 @@ import {
   ETAT_EXECUTION_LIBELLES,
   erreurAdresse,
   erreurAdresseAlh,
+  FREQUENCE_CONNECTEUR_DEFAUT,
+  FREQUENCES_CONNECTEUR,
   GRAVITES_PAR_DEFAUT,
+  libelleFrequence,
   GRAVITES_TENABLE,
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
@@ -20,7 +23,10 @@ import {
 import type { Etat } from '@suivi/ui';
 import { resumeBilanAlh } from '../vulnerabilites/surface';
 
-export const LIEN_INTEGRATIONS = '/integrations';
+/** Carte « Intégrations » de la page Plateforme (addendum du 19/11/2026 de l'ADR 0076) : seul endroit où les connecteurs se
+    configurent. L'ancienne rubrique du Pilotage (`/integrations`) y redirige. */
+export const LIEN_INTEGRATIONS = '/plateforme/integrations';
+export const ANCIENNE_ADRESSE_INTEGRATIONS = '/integrations';
 
 /** État affiché d'une instance (tuile) : non configurée (secret manquant), inactive, flux fermé, en échec, active. */
 export type EtatTuile = 'non_configuree' | 'inactive' | 'flux_ferme' | 'echec' | 'active';
@@ -114,7 +120,13 @@ export interface FormulaireConfiguration {
   delaiSecondes: number;
   /** Gravités lues par « Synchroniser » (critiques et élevées par défaut). */
   gravites: GraviteTenable[];
+  /** Lot F1 : fréquence de la synchronisation automatique, en heures (liste du type). */
+  frequenceHeures: number;
 }
+
+/** Lot F1 : choix de fréquence d'un type (liste fermée), pour la liste déroulante. */
+export const optionsFrequence = (type: IntegrationDto['type']) =>
+  FREQUENCES_CONNECTEUR[type].map((h) => ({ value: String(h), label: libelleFrequence(h) }));
 
 export const OPTIONS_GRAVITES = GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }));
 const gravitesDe = (v: unknown): GraviteTenable[] =>
@@ -136,6 +148,7 @@ export function formulaireDepuis(i: IntegrationDto | null, t: TypeIntegrationDto
     autoriteCertification: typeof c.autoriteCertification === 'string' ? c.autoriteCertification : '',
     delaiSecondes: typeof c.delaiSecondes === 'number' ? c.delaiSecondes : 30,
     gravites: gravitesDe(c.gravites),
+    frequenceHeures: i?.frequenceHeures ?? FREQUENCE_CONNECTEUR_DEFAUT,
   };
 }
 
@@ -169,12 +182,14 @@ export const corpsCreation = (t: TypeIntegrationDto, f: FormulaireConfiguration)
   type: t.id,
   nom: f.nom.trim(),
   configuration: configurationDepuis(f, t),
+  frequenceHeures: f.frequenceHeures,
 });
 
-/** Modification : seuls le nom et la configuration changés sont envoyés. */
+/** Modification : seuls le nom, la configuration et la fréquence changés sont envoyés. */
 export function corpsModification(i: IntegrationDto, f: FormulaireConfiguration, t?: TypeChamps) {
-  const out: { nom?: string; configuration?: ReturnType<typeof configurationDepuis> } = {};
+  const out: { nom?: string; configuration?: ReturnType<typeof configurationDepuis>; frequenceHeures?: number } = {};
   if (f.nom.trim() !== i.nom) out.nom = f.nom.trim();
+  if (f.frequenceHeures !== (i.frequenceHeures ?? FREQUENCE_CONNECTEUR_DEFAUT)) out.frequenceHeures = f.frequenceHeures;
   const c = configurationDepuis(f, t);
   const avant = formulaireDepuis(i, { libelle: i.nom } as TypeIntegrationDto);
   if (

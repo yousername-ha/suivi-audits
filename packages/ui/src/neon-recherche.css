@@ -1,0 +1,161 @@
+/* Module Vulnérabilités (ADR 0100, lot R1) : barre de recherche globale, en tête des pages du module. Langage visuel du
+   poste de commandement (neon-commandement.css : étiquettes en capitales espacées, chiffres à chasse fixe, liseré de couleur)
+   porté sur les jetons de la charte, en clair et en sombre (--carte-*, --suivi-*). Aucune longueur en px ni en rem, aucun
+   style en ligne (ADR 0006). Le texte porte toujours le sens ; la teinte de l'état d'une CVE le double. */
+.rv {
+  --rv-boite: var(--carte-boite);
+  --rv-texte: var(--carte-texte);
+  --rv-doux: var(--carte-secondaire);
+  --rv-trait: var(--suivi-trait);
+  --rv-accent: var(--carte-bleu-accent);
+  position: relative;
+  z-index: 5;
+  margin-block-end: var(--mantine-spacing-sm);
+  color: var(--rv-texte);
+}
+.rv__champ {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--rv-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--rv-accent);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-md);
+  background: var(--rv-boite);
+}
+.rv__champ:focus-within {
+  outline: var(--suivi-trait-focus) solid var(--rv-accent);
+  outline-offset: calc(var(--suivi-trait-l) * 2);
+}
+.rv__champ svg {
+  flex: none;
+  inline-size: 1.1em;
+  block-size: 1.1em;
+  color: var(--rv-accent);
+}
+.rv__etiquette {
+  flex: none;
+  color: var(--rv-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rv__champ input {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--rv-texte);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+}
+.rv__champ input::placeholder {
+  color: var(--rv-doux);
+}
+.rv__panneau {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 100%;
+  max-block-size: min(70vh, 40em);
+  margin-block-start: var(--mantine-spacing-2xs);
+  padding: var(--mantine-spacing-xs);
+  overflow: auto;
+  border: var(--suivi-trait-l) solid var(--rv-trait);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-md);
+  background: var(--rv-boite);
+  box-shadow: var(--suivi-ombre-haute);
+  font-size: var(--mantine-font-size-sm);
+}
+.rv__groupe + .rv__groupe {
+  margin-block-start: var(--mantine-spacing-xs);
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--rv-trait);
+}
+.rv__titre-groupe {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  padding-inline: var(--mantine-spacing-xs);
+  color: var(--rv-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rv__total {
+  font-family: var(--mantine-font-family-monospace);
+  letter-spacing: 0;
+}
+.rv__option {
+  display: block;
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+}
+.rv__option[aria-selected='true'] {
+  border-inline-start-color: var(--rv-accent);
+  background: color-mix(in srgb, var(--rv-accent) 12%, transparent);
+}
+.rv__option-titre {
+  display: block;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.rv__option--cve .rv__option-titre {
+  font-family: var(--mantine-font-family-monospace);
+}
+.rv__option--tout .rv__option-titre {
+  color: var(--rv-accent);
+}
+.rv__option-detail {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--rv-doux);
+  font-size: var(--mantine-font-size-xs);
+}
+/* État d'une CVE : liseré teinté, en plus du texte qui le dit. */
+.rv__option--presente {
+  border-inline-start-color: var(--carte-rouge-accent);
+}
+.rv__option--hors_lecture {
+  border-inline-start-color: var(--carte-orange-accent);
+}
+.rv__option--non_detectee {
+  border-inline-start-color: var(--carte-gris-accent);
+}
+.rv__message {
+  margin: 0;
+  padding: var(--mantine-spacing-xs);
+  color: var(--rv-doux);
+}
+.rv__inconnue {
+  margin: 0 0 var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--carte-orange-accent);
+  border-radius: var(--mantine-radius-sm);
+  background: color-mix(in srgb, var(--carte-orange-accent) 10%, transparent);
+  color: var(--rv-texte);
+}
+.rv__inconnue strong {
+  font-family: var(--mantine-font-family-monospace);
+}
+@media (max-width: 36em) {
+  .rv__etiquette {
+    display: none;
+  }
+}
+/* Lot L1 : pastilles de source (décoratives, le texte nomme la source) dans le titre d'un groupe et d'une CVE. */
+.rv__titre-libelle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.rv__option-titre .ps-liste {
+  margin-inline-start: var(--mantine-spacing-xs);
+  font-family: var(--mantine-font-family);
+  vertical-align: middle;
+}

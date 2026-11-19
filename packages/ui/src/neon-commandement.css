@@ -710,6 +710,9 @@ a.pc-tuile:focus-visible,
   color: var(--pc-doux);
   font-size: var(--mantine-font-size-xs);
 }
+.pc-capteurs__lien {
+  margin: var(--mantine-spacing-xs) 0 0;
+}
 .pc-capteur__pied {
   display: flex;
   flex-wrap: wrap;

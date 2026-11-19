@@ -387,6 +387,8 @@
   correctif » de « Failles détectées » (« n mises à jour à faire pour m failles »), état du correctif à trois valeurs avec sa
   source, précision « sans correctif connu » à côté de la marque zero-day, fin de support signalée et filtrée. Voir
   l'addendum « lot S3 » ci-dessous.
+- **Lot R1, barre de recherche globale** (19/11/2026) : sans migration, une barre en tête de toutes les pages du module, une
+  route ; CVE même non détectées sur le parc, machines, actifs exposés, applications. Voir l'addendum « lot R1 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -2162,3 +2164,396 @@ l'interface. À 390 px, les tables du détail d'un correctif sont serrées (colo
 2. Criticité métier des machines (point ouvert 3 de l'addendum « lot S1 ») : non réalisée.
 3. Fin de support au niveau de la **technologie** d'AlgoLightHouse : la liste `/technologies` ne porte pas `version_status`
    dans ce qui est lu.
+
+## Addendum du 19/11/2026 — lot R1 : barre de recherche globale
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, **aucun appel sortant**, aucune dépendance ni extension PostgreSQL nouvelle, rien de nouveau chez
+l'assistant (ni outil, ni texte envoyé au modèle). Réalise la barre de recherche du point 15 et de V11 ; lève le point ouvert
+6 de l'addendum « lot PC1 ».
+
+### Demande du RSSI (19/11/2026)
+
+« La possibilité depuis une barre de recherche de trouver une CVE même si non détectée sur le parc. La barre de recherche
+peut trouver n'importe quel asset, par IP, nom, nom d'application. »
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/recherche-vulnerabilites.ts`, testé en table) : schéma de la demande (`q` rogné, 2 à
+  200 caractères, aucun autre paramètre) et de la réponse (six groupes bornés à 8 éléments, nombre total, `cveInconnue`),
+  `estIdentifiantCve`, `ressembleACve`, `motifLitteral` (`\`, `%` et `_` échappés), `machineCorrespond` (règle commune à la
+  barre et à la liste « Machines »), `etatCveRecherche` (état d'une CVE en clair).
+- **Route** `GET /api/vulnerabilites/recherche?q=` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/recherche.ts`) : lecture
+  seule, aucune entrée de journal (comme les listes, le texte cherché n'est pas tracé). Six lectures en parallèle :
+  - **CVE** : par début d'identifiant dans la veille (`vulnerabilites_veille_cve`) et dans ce qui est détecté
+    (`vulnerabilites_constat_cves`, `vulnerabilites_alh_alerte_cves`, `vulnerabilites_alh_technologie_cves`) ; sinon par texte
+    dans la veille (éditeurs et produits de NVD, le tiret bas lu aussi comme une espace ; description ; éditeur, produit et
+    nom du catalogue KEV). Ordre : identifiant exact, puis CVE détectée sur une machine que la personne lit, puis la plus
+    récente ; aucun nombre lié à ce qu'elle ne lit pas n'entre dans l'ordre. Pour chaque CVE rendue : machines lisibles où
+    Tenable la détecte, machines lisibles reliées à un produit rattaché (« déclarée »), actifs exposés lisibles
+    (`surfaceDesCves`), drapeau sans nombre `horsLecture` pour le reste (lot ALH5), gravité et score de NVD, catalogue KEV,
+    `veille` (connue de la veille locale) et `fiche` (la fiche d'une CVE du lot PC4 s'ouvre : connue de la veille, d'un
+    contrôle ou exposée) ;
+  - **identifiant CVE bien formé** que ni la veille ni aucune détection ne cite : `cveInconnue: { cve }`, sans aucun appel
+    sortant. L'objet est prévu pour qu'un lot suivant y ajoute une action (consultation de NVD à la demande, décision du RSSI
+    en attente) ;
+  - **machines internes** : `FaillesDetectees.machinesRangees` (droits du périmètre effectif, liste « Machines »), filtrées par
+    `machineCorrespond` (nom ou système partiels, casse ignorée ; adresse IP par préfixe, l'adresse exacte comprise),
+    correspondance exacte d'abord puis l'ordre du rang ;
+  - **actifs exposés** : `SurfaceExterneAlh.actifs` (liste « Actifs », mêmes droits, même filtre sur le nom de domaine ou
+    l'adresse IP) ;
+  - **applications** : produits surveillés (registre de l'organisation, lu avec `lire` comme sa liste ; éditeur, nom, version
+    ou CPE) et leurs machines reliées lisibles (trois nommées, les autres comptées) ; technologies d'AlgoLightHouse
+    (`SurfaceExterneAlh.technologies` : versions encore détectées sur des actifs lisibles) et leurs actifs ; contrôles de
+    Tenable par leur nom ou leur numéro (`FaillesDetectees.constats`, filtre par défaut de « Failles détectées » : présents sur
+    une machine lisible, encore à traiter). Un début d'identifiant CVE ne cherche pas d'application.
+  Les groupes des machines, actifs, technologies et contrôles appellent les services des listes avec la saisie telle quelle :
+  leur nombre total est celui de la liste ouverte par « tout voir ».
+- **Interface** (`apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx`, `recherche.ts`) : barre placée dans la mise en
+  page commune (`Layout.tsx`), sous les onglets du module, sur **toutes** ses pages, pour qui a `lire`. Champ `combobox` nommé
+  « Rechercher une CVE, une machine, une adresse IP ou une application » ; délai de frappe de 300 ms, appel précédent annulé
+  (signal passé au client d'API) ; panneau de résultats groupés (`listbox`, `group`, `option`, option active désignée par
+  `aria-activedescendant`), zone de statut qui annonce les nombres ; flèches haut et bas, Entrée, Échap (ferme, puis efface).
+  État de chaque CVE dit en texte, la teinte du liseré le double. Feuille `packages/ui/src/neon-recherche.css` (jetons de la
+  charte, clair et sombre, ni px ni rem, aucun style en ligne).
+- **Pages ouvertes** (paramètres d'adresse relus à chaque navigation, la page déjà affichée comprise) : CVE → « Veille »
+  (`?q=&cve=`, fiche illustrée de la CVE) ; CVE sans fiche ouvrable → « Surface externe », onglet « Technologies » cherché sur
+  la CVE ; machine → « Machines » (`?machine=`, fiche lue par la route existante, 404 pour l'illisible) ; actif → « Surface
+  externe », onglet « Actifs » filtré sur sa valeur, fiche ouverte (`?onglet=actifs&q=&actif=`) ; produit → « Produits
+  surveillés » (`?produit=`) ; technologie → onglet « Technologies » cherché sur son nom ; contrôle → « Failles détectées »
+  (`?constat=`). « Tout voir » : « Veille », « Machines », onglets « Actifs » et « Technologies », « Failles détectées »
+  (`?q=`) ; aucun pour les produits surveillés (le registre ne se cherche pas) ni pour une saisie de plus de 100 caractères
+  (borne des listes).
+- **Mesure** (PostgreSQL de test local, données fictives : 10 000 CVE de la veille, 150 machines, 2 000 contrôles, 10 000 CVE
+  de contrôles, 16 000 détections ; administrateur et lecteur d'un périmètre) : 160 à 300 ms par recherche, quelle que soit la
+  saisie (début d'identifiant, texte qui trouve les 10 000 CVE, adresse IP, nom de machine, nom de contrôle, rien) ; réponse
+  de 0,3 à 2,5 Kio. `EXPLAIN ANALYZE` de la recherche par texte dans la veille : balayage séquentiel, 7,5 ms sur 10 000 CVE.
+  Le coût fixe vient des lectures des listes réutilisées (rang des machines, contrôles). **Aucun index ajouté.**
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Emplacement** : une seule barre dans la mise en page commune, sur toutes les pages du module (y compris la vue
+  d'ensemble), sous les onglets ; la recherche de pages du menu (Ctrl K) reste distincte.
+- **« Nom d'application »** couvre trois sources : produits surveillés, technologies d'AlgoLightHouse et **noms des contrôles
+  de Tenable** (« Serveur applicatif 9.0.x < 9.0.99 … »), qui sont souvent le seul endroit où le nom d'une application
+  installée apparaît. Les services exposés d'AlgoLightHouse ne sont pas cherchés à part (ils sont portés par les actifs).
+- **CVE non détectée** : elle s'ouvre dans la fiche illustrée d'une CVE (lot PC4), dans l'écran « Veille ». Une CVE présente
+  seulement chez d'autres (illisible) est trouvée et dite « présente hors des périmètres que vous lisez », sans nombre ni nom,
+  comme la fiche et la veille (lot ALH5).
+- **Machines** : « présente » compte les détections de Tenable et, à part, les machines reliées à un produit rattaché ; une
+  CVE déclarée n'est pas dite « détectée ».
+- **Liste « Machines »** : sa recherche suit désormais la même règle (casse ignorée, adresse IP, système) ; elle ne cherchait
+  que dans le nom, en tenant compte de la casse.
+- **Identifiant bien formé et inconnu** : signalé même quand d'autres CVE commencent par lui (« CVE-2026-1234 » inconnue,
+  « CVE-2026-12345 » connue).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 440 et 390 px) avec
+une réponse remplacée par des données fictives ; parcours Playwright ajouté
+(`zzz…-vulnerabilites-recherche.spec.ts`) joué sur cette pile (axe `wcag2a`/`wcag2aa` sans violation, aucune violation de CSP
+relevée par la console), à rejouer en CI ; la CSP stricte du serveur de production n'a pas été vérifiée hors CI. Durée sur un
+parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Consultation de NVD à la demande** pour une CVE inconnue de la veille locale (décision du RSSI en attente) : ce serait un
+   appel sortant porté par l'exécutant, sur le flux `veille-vulnerabilites`, déclenché par une personne.
+2. Les choix ci-dessus.
+3. Recherche dans les **avis du CERT-FR et du CERT Santé** (identifiant d'avis, titre) depuis la barre : non faite (l'écran
+   « Veille » la fait déjà).
+
+## Addendum du 19/11/2026 — lot L1 : lisibilité des alertes de la veille et pastilles de source
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun changement d'API ni de schéma, aucun appel sortant, aucune dépendance nouvelle, aucune image téléchargée, rien chez
+l'assistant.
+
+### Demande du RSSI (19/11/2026)
+
+« Il faudrait un petit logo sur l'alerte pour savoir si ça vient du NVD ou du CERT etc., et mettre en forme l'alerte car à
+lire c'est compliqué, un visuel de l'alerte sauf si tu l'as déjà fait. »
+
+### Réalisation
+
+- **Pastilles de source** (`apps/web/src/vulnerabilites/pictos-sources.ts`, `PictoSource.tsx`) : un composant unique pour les
+  cinq sources de la veille et les deux connecteurs. Aucun logo officiel ni image de marque : chaque pastille est dessinée en
+  SVG pour la charte, avec un sigle, une forme et une teinte qui lui sont propres, de sorte que la couleur n'est jamais seule
+  à distinguer.
+
+  | Source | Sigle | Forme | Teinte | Nom accessible |
+  |---|---|---|---|---|
+  | `cisa-kev` | KEV | bouclier | rouge | Source : catalogue KEV de la CISA |
+  | `nvd` | NVD | rectangle | marine | Source : NVD (NIST) |
+  | `epss` | EPSS | pilule | orange | Source : EPSS (FIRST) |
+  | `cert-fr` | FR | fanion | bleu | Source : CERT-FR (ANSSI) |
+  | `cert-sante` | CS | octogone | vert | Source : CERT Santé |
+  | `tenable` | TEN | parallélogramme | violet | Source : Tenable |
+  | `algolighthouse` | ALH | hexagone | gris | Source : AlgoLightHouse |
+
+  Sigle dans la teinte « accent » sur le fond « doux » de la même teinte (jetons `--carte-*`, contraste AA en clair et en
+  sombre). Nom complet en info-bulle ; nom accessible `role="img"` « Source : … » là où aucun texte voisin ne nomme la source
+  (cartes des alertes et avis, liste des sources d'une CVE, en-tête de la fiche illustrée, tableau des sources), pastille
+  décorative (`aria-hidden`) là où le texte la nomme déjà (marques d'exploitation, recommandations de la fiche, écran
+  « Alertes », fenêtre d'alerte critique, barre de recherche : sans info-bulle dans la liste de choix).
+- **Alertes et avis** (`AvisVeille.tsx`) : le tableau dense devient une liste de cartes, une par publication : pastille et nom
+  court de la source, nature (« Alerte » ou « Avis », pictogramme et mot), identifiant, date, titre en titre de niveau 3,
+  résumé limité à trois lignes, produit cité et mentions du CERT Santé (liste de définitions), marques, CVE citées en boutons
+  (six, puis « et N autres ») qui ouvrent la fiche illustrée de la CVE (lot PC4), « Ouvrir la fiche » et lien vers l'original
+  (nouvel onglet, `rel="noopener noreferrer"`, `referrerPolicy="no-referrer"`). Recherche, pagination et textes d'état vide
+  inchangés.
+- **Fiche d'une alerte ou d'un avis** : aucune n'existait (la fiche illustrée ne connaît que constat, faille déclarée, CVE et
+  alerte d'AlgoLightHouse) ; une fenêtre de l'écran « Veille » la rend à partir de l'élément déjà lu par la liste, sans appel
+  nouveau : tout le résumé, découpé en paragraphes et listes, mentions, toutes les CVE citées (chacune ouvre sa fiche), lien
+  vers l'original. Le résumé reste du **texte simple** : la veille le range sur une ligne (`texteExterneValide` refuse les
+  caractères de contrôle), la découpe (`blocsTexte`) ne fait que reconnaître les puces intégrées (« - », « – », « • », « * »
+  entre espaces après une ponctuation de fin, deux au moins) et, si un jour il y en a, les retours à la ligne ; React échappe
+  tout, aucun `dangerouslySetInnerHTML`.
+- **Failles connues** (`ListeFailles`, écran « Veille », après une recherche) : une carte par CVE, pastilles des sources qui
+  l'ont publiée (avec EPSS quand un score existe, AlgoLightHouse quand elle est exposée), puis un fait par ligne : gravité CVSS
+  et vecteur, exploitation (marques et première source), EPSS (FIRST), produit touché, exposition. Mêmes données qu'avant.
+- **Fiche illustrée** : ligne « Sources » dans l'en-tête (sources dont la fiche reprend quelque chose : origine, faits de la
+  priorité, vecteurs, correctif, recommandations), pastille sur chaque recommandation ; `referrerPolicy="no-referrer"` ajouté
+  au lien d'un avis cité.
+- Feuille `packages/ui/src/neon-veille.css` (jetons de la charte, clair et sombre, ni px ni rem, aucun style en ligne),
+  exportée par `packages/ui` ; aide de l'écran « Veille » complétée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Alerte qui se détache** : liseré, fond et pastille « Alerte » rouges pour une **alerte du CERT-FR** seulement (règle déjà
+  retenue par les recommandations de la fiche, lot PC4). Le CERT Santé range toutes ses publications comme « alerte » : elles
+  gardent le mot « Alerte », au trait orange, sans le fond rouge, pour qu'une alerte du CERT-FR reste rare et visible.
+- **Marques d'une alerte ou d'un avis**, tirées de ce que la veille range déjà : « Exploitation avérée (alerte du CERT-FR) »
+  pour une alerte du CERT-FR qui cite au moins une CVE (règle V26 de la plateforme), « Exploitée selon le CERT Santé » et
+  « Preuve de concept disponible (CERT Santé) » d'après la fiche lue. « Présente sur le parc » et « exposée sur Internet » ne
+  sont **pas** affichées dans la liste : la réponse de la liste des avis ne les porte pas, et l'API n'a pas été élargie ; elles
+  se lisent dans la fiche de chaque CVE.
+- **Sigles** courts propres à la plateforme (« FR » pour le CERT-FR, « CS » pour le CERT Santé, « TEN », « ALH ») ; le nom
+  complet est toujours donné à côté, au survol ou aux lecteurs d'écran.
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 366 et 390 px)
+avec des réponses remplacées par des données fictives ; parcours Playwright ajouté à
+`zzz…-vulnerabilites-veille.spec.ts` (clair 1 366 px, sombre 390 px : cartes, pastilles nommées, lien sans référent, aucun
+débordement horizontal, fiche ouverte au clavier, CVE citée vers sa fiche, axe `wcag2a`/`wcag2aa` sans violation) joué sur
+cette pile, à rejouer en CI ; CSP stricte du serveur de production vérifiée en CI seulement. Forme réelle des résumés du
+CERT-FR et du CERT Santé (présence de puces) non vérifiée sur des données réelles. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Présente sur le parc » et « exposée sur Internet » dans la liste des alertes et avis : à ajouter à la réponse de la liste
+   (lecture par CVE citée, mêmes règles de lecture que la recherche, lot ALH5) si le RSSI le veut.
+2. Recherche des alertes et avis depuis la barre du module (point ouvert 3 du lot R1).
+3. Les choix ci-dessus.
+
+
+## Addendum du 19/11/2026 — lot I1 : intégrations configurées dans la page Plateforme, état en lecture seule dans les outils
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route d'API ajoutée, retirée ni modifiée, aucun droit changé, aucune dépendance, aucun appel sortant nouveau, rien chez
+l'assistant. Réalise l'addendum du 19/11/2026 de l'[ADR 0076](0076-module-integrations.md).
+
+### Décision du RSSI (19/11/2026)
+
+Les intégrations se configurent dans la configuration de la plateforme, et nulle part ailleurs. Les outils qui exploitent une
+intégration n'affichent qu'un lien « Configurer l'intégration » (visible de qui a le droit de la voir) et l'état en lecture
+seule (date de la dernière synchronisation, erreur éventuelle). La veille (sources publiques sans clé) n'est pas un connecteur
+du module Intégrations : elle reste dans l'écran « Veille », avec « Collecter maintenant » et son activation.
+
+### Réalisation
+
+- **Carte « Intégrations » de la page Plateforme** (`apps/web/src/pages/Administration.tsx`, `administration-droits.ts`) : le
+  panneau `IntegrationsPanel` (ancien écran : connecteurs, catalogue, configuration, clés, activation du flux, « Tester la
+  connexion », « Synchroniser maintenant » pour Tenable **et** AlgoLightHouse, exécutions) s'ouvre dans la fenêtre de carte
+  commune (largeur « fiche », titre non répété). Visible si et seulement si la personne a `integrations:lire`, droit de
+  l'ancienne rubrique. Rangée après « Assistant RSSI », avant « Import et export ».
+- **Menu et adresses** : la destination « Intégrations » du menu Pilotage est retirée (et donc de la recherche de pages
+  Ctrl K, qui reprend le menu) ; `/integrations` redirige vers `/plateforme/integrations` (lien profond qui ouvre la carte) ;
+  le registre des flux (`packages/shared/src/flux-externes.ts`, champ `reglage` des flux `tenable` et `algolighthouse`) et
+  l'aide pointent vers la carte (« Plateforme > Intégrations »).
+- **Composant commun** `apps/web/src/integrations/EtatIntegration.tsx` (règle pure dans `etat-integration.ts`) : par instance,
+  pastille d'état, date de la dernière synchronisation, dernière complète, **erreur** de la dernière synchronisation en lecture
+  (message déjà rendu par l'API, inchangé), complément facultatif (bilan, périmètres non reliés), puis le lien
+  `LienConfigurerIntegration` si l'appelant a calculé `integrations:lire` (depuis le 19/11/2026, lot F1 :
+  `integrations:administrer`, voir ci-dessous). Aucun bouton. Utilisé par « Failles détectées »
+  (Tenable) et « Surface externe » (AlgoLightHouse, avec son état « À jour / incomplète / en échec » d'avant) ; la « Vue
+  d'ensemble » garde ses capteurs (même règle d'état, erreur ajoutée en lecture) et reçoit le lien.
+- **Veille** : après « Collecter maintenant », le message dit « N collectes de veille demandées : l'exécutant les traite à son
+  prochain passage. Les connecteurs (Tenable, AlgoLightHouse) ne sont pas concernés. » ; l'aide et le guide d'installation le
+  précisent.
+- **Correctif de la fenêtre de carte** : Mantine ferme toutes les fenêtres ouvertes sur Échap ; une fenêtre ouverte depuis le
+  panneau d'une carte (configuration d'une instance, exécutions, validation du flux, et de même pour les autres cartes)
+  fermait aussi la carte. La fenêtre de carte ignore désormais sa fermeture tant qu'une autre fenêtre est ouverte au-dessus
+  (`fenetreAuDessus`) ; sans fenêtre au-dessus, Échap la ferme comme avant.
+
+### Frontière des réglages, à valider par le RSSI
+
+| Réglage | Où il est | Motif |
+|---|---|---|
+| Adresse, port, autorité de certification, délai d'une requête (Tenable, AlgoLightHouse) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| Clés d'API (écriture seule) | **Carte « Intégrations »** (déjà là) | Secret du connecteur |
+| Gravités lues par la synchronisation de Tenable | **Carte « Intégrations »** (déjà là) | Filtre de la lecture du connecteur |
+| Activer / désactiver un connecteur (ouverture du flux) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| « Tester la connexion », « Synchroniser maintenant » (Tenable et AlgoLightHouse), exécutions | **Carte « Intégrations »** (déjà là) | Actions du connecteur |
+| Dépôts Tenable ↔ périmètres (« Machines », onglet « Dépôts Tenable ») | Laissé dans le module | Réglage métier (lecture par périmètre) |
+| Périmètres AlgoLightHouse ↔ périmètres (« Surface externe », onglet « Périmètres ») | Laissé dans le module | Réglage métier |
+| Liaisons actif exposé ↔ machine, « Relier en masse » (« Surface externe », onglet « Actifs ») | Laissé dans le module | Réglage métier |
+| Produits surveillés reliés aux machines, rapprochements | Laissé dans le module | Réglage métier |
+| Rôles des machines (front, back, base) | Laissé dans le module | Réglage métier |
+| Seuils de priorité et délais de correction | Laissé dans le module | Réglage métier |
+| Exceptions (risque accepté) | Laissé dans le module | Décision métier |
+| Mots à ne pas masquer | Laissé dans le module | Réglage métier de l'assistant |
+| Activation de la veille, « Collecter maintenant » | Laissé dans le module (« Veille ») | Pas un connecteur (décision du RSSI) |
+
+**Supprimé des écrans du module** : seulement les renvois textuels « Pilotage > Intégrations » (« Failles détectées »,
+« Surface externe », « Vue d'ensemble », listes vides des dépôts Tenable et des périmètres AlgoLightHouse), remplacés par le
+lien ou par « ils apparaissent après une synchronisation du connecteur ». Constat du relevé : **aucun** bouton de test, de
+synchronisation, de connexion, de saisie d'adresse ou de clé, ni aucun appel en écriture à `/api/integrations/...`, n'existait
+dans `apps/web/src/vulnerabilites/` ; « Synchroniser maintenant » d'AlgoLightHouse était déjà dans l'écran des intégrations.
+Un test de l'interface garde cette absence (aucune mention de `/api/integrations`, « Synchroniser maintenant », « Tester la
+connexion » ni `PasswordInput` dans les fichiers du module).
+
+**Routes d'API devenues sans appelant** : aucune. Les routes du module Intégrations sont appelées par la carte, celles de
+l'état (`/api/vulnerabilites/synchronisation`, `/api/vulnerabilites/surface/etat`) par les écrans du module.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Place de la carte** : après « Assistant RSSI », avant « Import et export » ; pictogramme « réseau », teinte bleue.
+- **Lien même sans instance** : avec le droit, « Configurer l'intégration » apparaît aussi quand aucune instance n'est
+  configurée (pour en ajouter une) ; sans le droit, le texte dit qu'un administrateur des intégrations l'ajoute dans la page
+  Plateforme.
+- **Droit du lien** : `integrations:lire` (celui de la carte), même si seul `integrations:administrer` permet de modifier.
+  **Tranché par le RSSI le 19/11/2026** (réalisé avec le lot F1) : le lien n'est visible que de qui peut **administrer** les
+  intégrations (`integrations:administrer`) ; un compte qui lit sans administrer voit l'état, pas le lien. La carte de la
+  Plateforme garde son droit (`integrations:lire`). Règle unique `peutConfigurerIntegration`
+  (`apps/web/src/integrations/etat-integration.ts`), appelée par les trois écrans.
+- **Recherche Ctrl K** : elle ne liste que les pages du menu ; « Intégrations » n'y figure plus (la page « Plateforme » oui).
+  Indexer les cartes de la Plateforme serait un ajout à décider.
+- **Échap dans les fenêtres imbriquées** : correctif appliqué à toutes les cartes de la Plateforme et de la Configuration
+  système (même fenêtre commune).
+
+### Non vérifié
+
+Aucune donnée réelle. Parcours Playwright joués sur une pile locale sans Docker (API et Vite, Chromium) : carte, redirection,
+lien et son droit (compte fictif à `vulnerabilites:lire` seul), absence de réglage dans les trois écrans, Échap, axe
+`wcag2a`/`wcag2aa` sans violation sur la carte ; à rejouer en CI. CSP stricte du serveur de production vérifiée en CI
+seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Indexer les cartes de la Plateforme dans la recherche de pages (Ctrl K).
+
+
+## Addendum du 19/11/2026 — lot F1 : fréquence de synchronisation réglable par connecteur et par source de veille
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`090`, une route d'API ajoutée, un champ ajouté à la création et à la modification d'une instance de connecteur, aucune
+dépendance, aucun flux sortant nouveau (seule la cadence change), rien chez l'assistant, `scripts/exploitation-worker.py` et
+`docker-compose.yml` inchangés.
+
+### Décision du RSSI (19/11/2026)
+
+« Pour la synchro des connecteurs je propose de définir dans chaque connecteur l'occurrence, avec un avertissement si c'est
+trop. Les paquets installés sur une machine changent peu alors qu'une CVE sort très souvent ; donc Tenable une fois par jour
+mais la veille plusieurs fois, et si la veille correspond à un composant alors il y a une alerte si c'est critique. » Un
+réglage par source de veille, selon le tableau validé :
+
+| Source | Choix | Par défaut | Avertissement affiché |
+|---|---|---|---|
+| Veille : CERT-FR, CERT Santé, catalogue KEV (CISA) | 1 h, 2 h, 4 h, 12 h, 24 h | 2 h | aucun |
+| Veille : NVD | 2 h, 4 h, 12 h, 24 h | 2 h | NVD demande de ne pas être lu automatiquement plus d'une fois toutes les deux heures (plancher non contournable, y compris par l'API) |
+| Veille : EPSS | 24 h, fixe (affiché, non modifiable) | 24 h | les scores ne sont publiés qu'une fois par jour |
+| Tenable Security Center | 6 h, 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : charge sur Security Center pour un inventaire qui change peu |
+| AlgoLightHouse | 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : limite d'appels de l'éditeur inconnue |
+
+Ajout du même jour : le lien « Configurer l'intégration » des outils n'est visible que de qui peut **administrer** les
+intégrations (voir l'addendum « lot I1 », point « Droit du lien »).
+
+### Réalisation
+
+- **Modèle** (`packages/shared/src/frequences-synchronisation.ts`) : listes fermées par source et par type, valeurs par défaut,
+  schéma du corps (`FrequenceVeilleBody`, nombre entier d'heures), fonctions pures `prochaineEcheance`, `echeanceAtteinte`,
+  `referenceApresDemande`, `prochaineAffichee`, `avertissementVeille`, `avertissementConnecteur`, `libelleFrequence`.
+- **Migration `090_frequences_synchronisation.sql`** (additive) : `vulnerabilites_veille_sources.frequence_heures`,
+  `.planifiee_le`, `.version` ; `integrations.frequence_heures` ; `vulnerabilites_tenable_etat.planifiee_le` et
+  `vulnerabilites_alh_etat.planifiee_le`. Contraintes CHECK recopiant les listes (NVD 2 h au moins et EPSS 24 h garantis en
+  base) ; NULL = valeur par défaut du code. L'ancien créneau quotidien (`creneau`) n'est plus lu ; il reste en place.
+- **Planification** (tic de l'API, `veille.ts`, `tenable.ts`, `surface-externe.ts`) : « au plus une par jour » devient « au
+  plus une par période réglée », comptée depuis la dernière demande **automatique** (`planifiee_le`).
+- **API** : `GET /api/vulnerabilites/veille/etat` rend par source `frequenceHeures`, `prochaineCollecte` et `version` ;
+  `PUT /api/vulnerabilites/veille/sources/:source/frequence` (`vulnerabilites:administrer`, If-Match sur la version de la
+  source, 422 hors liste, 422 pour EPSS, journal `vulnerabilites.veille.frequence` : source, ancienne et nouvelle fréquence) ;
+  instance de connecteur : champ `frequenceHeures` de `POST /api/integrations/instances` et `PATCH
+  /api/integrations/instances/:id` (`integrations:administrer`, If-Match sur la version de l'instance comme le reste de sa
+  configuration, 422 hors liste du type, journal `integration.frequence` en plus de `integration.modifiee`) ;
+  `IntegrationDto.frequenceHeures` ; `GET /api/vulnerabilites/synchronisation` et `/surface/etat` rendent `frequenceHeures`
+  et `prochaineSynchronisation` (null si l'instance n'est pas prête : inactive, clé manquante ou flux fermé).
+- **Interface** : composant `ChampFrequence` (liste native, avertissement « Attention : … » en description du champ, relié par
+  `aria-describedby`, liseré et teinte de la charte en doublure du mot) ; écran « Veille », colonne « Fréquence » du tableau
+  des sources (liste pour qui administre le module, texte sinon, EPSS « Une fois par jour (fixe) », avertissements de NVD et
+  d'EPSS, prochaine collecte prévue) ; fenêtre « Configurer » / « Ajouter » de la carte « Intégrations » (fréquence de
+  l'instance, avertissement affiché avant l'enregistrement, sans blocage) ; tuiles : « Synchronisation automatique : … » au
+  lieu de « Synchronisation quotidienne » ; `EtatIntegration` (Failles détectées, Surface externe) : fréquence et prochaine
+  synchronisation en lecture seule.
+- **Alertes** : règles inchangées. L'évaluation tourne à la fin de chaque collecte reçue (`apresReception`, après le
+  rapprochement d'une collecte NVD ou CERT Santé) ; un test le prouve désormais pour une collecte **planifiée** : une CVE
+  exploitée (KEV) et critique qui touche un produit surveillé relié à une machine ouvre son alerte critique à la collecte NVD
+  qui l'apporte (déclencheur `collecte-nvd`).
+
+### Rangement, et pourquoi
+
+- **Veille** : dans `vulnerabilites_veille_sources` (ligne par source, qui portait déjà le créneau), comme demandé.
+- **Connecteur** : la fréquence est une colonne de `integrations`, pas des tables d'état du module (`vulnerabilites_tenable_etat`,
+  `vulnerabilites_alh_etat`). C'est un réglage de l'instance : il se modifie par la même route, le même droit et la même
+  version (If-Match) que sa configuration, il est journalisé avec elle, il survit à la remise à vide du travail comme
+  l'instance (les tables d'état sont créées à la volée par le planificateur, sans version, et effacées avec le travail), et
+  une colonne permet la contrainte CHECK par type, que le JSON de configuration n'aurait pas eue simplement. La **référence
+  de planification** (`planifiee_le`), elle, est un état : elle va dans les tables d'état de chaque connecteur.
+
+### Planification, échec et bornes
+
+- **Référence consommée avant l'inscription**, dans la même transaction (comme l'ancien créneau) : une collecte ou une
+  synchronisation perdue, expirée ou en **échec** n'est pas redemandée avant la période suivante ; rien ne repart à chaque tic.
+  « Collecter maintenant » et « Synchroniser maintenant » restent le moyen de relancer tout de suite, avec leurs garde-fous
+  (droit, une demande en file ou en cours à la fois, quinze minutes entre deux demandes manuelles, débit par personne).
+- **Aucune dérive** : tant que le retard est inférieur à une période, la référence rangée est l'échéance théorique, pas
+  l'instant du tic (le tic d'une minute n'accumule pas de décalage) ; au-delà (panne, fréquence raccourcie), elle repart de
+  maintenant : **une seule** demande, jamais de rattrapage en rafale. Une collecte de la source déjà en file ou en cours tient
+  lieu de la demande automatique (pas de double demande). EPSS ne passe que quand la file de la veille est vide.
+- **Fenêtre NVD** : inchangée ; elle part de la fin de la dernière collecte réussie et remonte au plus **sept jours** (borne du
+  code, sous la limite de 120 jours de l'API NVD), un jour pour la première. Toutes les deux heures, la fenêtre ne couvre que
+  deux heures de modifications : moins de pages par collecte qu'avant. Le plancher de deux heures vaut pour les demandes
+  automatiques ; « Collecter maintenant » garde ses garde-fous (point à confirmer ci-dessous).
+- **Exécutant** (`scripts/exploitation-worker.py`, passage chaque minute, `VEILLE_MAX_PAR_PASSAGE = 2`,
+  `VEILLE_BUDGET_SECONDES = 120`, expiration d'une collecte non réclamée à trente minutes) : au pire quatre collectes dues au
+  même tic (sources à une heure), plus EPSS une fois par jour, sont réclamées en deux ou trois passages ; aucun changement
+  nécessaire ni fait.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- Avertissement de NVD et d'EPSS affiché **en permanence** sous leur réglage (il explique la liste) ; ceux des connecteurs
+  seulement sous 24 h.
+- La fréquence d'une source part dès le choix dans la liste (pas de bouton « Enregistrer » dans le tableau) ; celle d'un
+  connecteur avec « Enregistrer la configuration ».
+- Remise à vide du travail : les sources de la veille sont effacées avec lui (règle existante), leur fréquence revient donc à
+  la valeur par défaut ; celle des connecteurs suit l'instance.
+- « En retard » d'une source (`VEILLE_RETARD_HEURES`, 36 h sans réussite) inchangé quelle que soit la fréquence.
+- Journal : chaque collecte demandée, réclamée et terminée garde ses trois entrées ; avec quatre sources toutes les deux heures,
+  environ 150 entrées par jour au lieu d'une quinzaine, et une cinquantaine de lignes par jour dans le journal des collectes,
+  sans purge (aucune n'existait).
+
+### Non vérifié
+
+Aucune donnée réelle, aucune source ni aucun connecteur joint. Planification prouvée par des tests sur PostgreSQL avec horloge
+injectée ; tenue réelle de l'exécutant à cette cadence non mesurée (pile Docker non rejouée ici). Parcours Playwright
+`zzz…-vulnerabilites-frequences.spec.ts` joué sur une pile locale sans Docker (API et Vite, Chromium), à rejouer en CI ; CSP
+stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Collecter maintenant » pour NVD reste possible quinze minutes après la précédente demande manuelle : faut-il lui appliquer
+   aussi le plancher de deux heures ?
+2. Purge du journal des collectes de la veille et des exécutions des connecteurs (volume multiplié par la cadence).
+3. Les choix ci-dessus.

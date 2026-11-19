@@ -69,6 +69,7 @@ import {
   type FailleMarquee,
   type MachineDto,
   type MachineMarqueeDto,
+  machineCorrespond,
   marquesMachine,
   PARC_PAR_ZONE,
   type ParcMachinesDto,
@@ -663,14 +664,15 @@ export class FaillesDetectees {
     }));
   }
 
-  /** Machines lisibles, de la plus critique à la moins critique ; recherche par nom, filtres par rôle et périmètre. Le rang
+  /** Machines lisibles, de la plus critique à la moins critique ; recherche par nom ou système (partiels, casse ignorée) ou
+      par adresse IP (préfixe), règle commune avec la barre de recherche (lot R1) ; filtres par rôle et périmètre. Le rang
       est calculé sur toutes les machines lisibles, avant les filtres. */
   async machines(user: SessionUser, q: RechercheMachines): Promise<PageMachines> {
     const toutes = await this.machinesRangees(user);
-    const texte = q.q?.trim().toLowerCase();
+    const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>
-        (!texte || (m.nom ?? '').includes(texte)) &&
+        (!texte || machineCorrespond(m, texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
         (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
         (!q.finSupport || m.finDeSupport),
@@ -701,10 +703,10 @@ export class FaillesDetectees {
       leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus. */
   async parc(user: SessionUser, q: RechercheParc): Promise<ParcMachinesDto> {
     const toutes = await this.machinesRangees(user);
-    const texte = q.q?.trim().toLowerCase();
+    const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>
-        (!texte || (m.nom ?? '').includes(texte)) &&
+        (!texte || machineCorrespond(m, texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
         (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
         (!q.finSupport || m.finDeSupport),

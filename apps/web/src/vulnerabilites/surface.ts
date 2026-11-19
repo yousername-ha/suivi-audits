@@ -133,13 +133,25 @@ export function resumeBilanAlh(r: Record<string, unknown>): string {
     .join(' ');
 }
 
+/** Périmètres AlgoLightHouse non reliés (administration du module), en clair ; vide sinon. */
+function textePerimetresNonRelies(e: Pick<EtatSurfaceExterneDto, 'perimetresNonRelies'>): string {
+  return e.perimetresNonRelies && e.perimetresNonRelies > 0
+    ? ` ${pluriel(e.perimetresNonRelies, 'périmètre AlgoLightHouse n’est pas relié', 'périmètres AlgoLightHouse ne sont pas reliés')} : son contenu n’est visible que de l’administration du module.`
+    : '';
+}
+
+/** Complément en lecture de l'état d'une instance, sans l'erreur (affichée à part par EtatIntegration) : bilan de la
+    dernière synchronisation reçue, périmètres non reliés. */
+export function detailEtatAlh(e: EtatSurfaceExterneDto): string {
+  const d = e.derniere;
+  const bilan = d?.etat === 'recu' && d.bilan ? resumeBilanAlh(d.bilan as unknown as Record<string, unknown>) : '';
+  return `${bilan}${textePerimetresNonRelies(e)}`.trim();
+}
+
 /** État d'une instance : dernière synchronisation, dernière complète, périmètres non reliés (administration du module). */
 export function resumeEtatAlh(e: EtatSurfaceExterneDto): { libelle: string; etat: Etat; detail: string } {
   const d = e.derniere;
-  const nonRelies =
-    e.perimetresNonRelies && e.perimetresNonRelies > 0
-      ? ` ${pluriel(e.perimetresNonRelies, 'périmètre AlgoLightHouse n’est pas relié', 'périmètres AlgoLightHouse ne sont pas reliés')} : son contenu n’est visible que de l’administration du module.`
-      : '';
+  const nonRelies = textePerimetresNonRelies(e);
   if (!e.actif) return { libelle: 'Connecteur inactif', etat: 'neutre', detail: nonRelies.trim() };
   if (!d) return { libelle: 'Jamais synchronisé', etat: 'neutre', detail: nonRelies.trim() };
   if (d.etat === 'en_file' || d.etat === 'en_cours')

@@ -138,8 +138,9 @@ lien seulement, jamais de nom de machine, de domaine, d'adresse ni de périmètr
 (`vulnerabilites:lire`). Fenêtre d'alerte critique côté interface, montée une fois dans la mise en page.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
-connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant
-l'inscription) dans `vulnerabilites_veille_collectes` (migration `074`) ; `exploitation-worker.py` la réclame
+connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par période réglée (lot F1, migration `090` :
+deux heures par défaut, NVD deux heures au moins, EPSS une fois par jour ; référence de la dernière demande automatique
+consommée avant l'inscription) dans `vulnerabilites_veille_collectes` (migration `074`) ; `exploitation-worker.py` la réclame
 (`suivi veille-claim`) si le flux `veille-vulnerabilites` est ouvert et le module actif, lance `scripts/veille-vulnerabilites.py`
 (`python -I`, uid 65534, environnement minimal, GET seulement, HTTPS vérifié en TLS 1.2 au minimum, aucune redirection, liste
 fermée des cinq hôtes et de leurs chemins comparée au registre partagé par `apps/api/test/veille-architecture.test.ts`, réponses

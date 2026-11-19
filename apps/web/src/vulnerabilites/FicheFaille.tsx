@@ -13,7 +13,8 @@
    de la marque zero-day, la précision « exploitée, sans correctif connu » (ou « correctif disponible », « correctif non
    renseigné ») ; la mention « Fin de support » avec sa source.
    Sous la CSP stricte (ADR 0006) : aucun style en ligne ; classes de packages/ui/src/neon-fiche.css (jetons de la charte,
-   clair et sombre), positions du schéma par attributs SVG. */
+   clair et sombre), positions du schéma par attributs SVG.
+   Lot L1 : pastilles des sources reprises par la fiche dans l'en-tête, pastille de la source sur chaque recommandation. */
 import { Anchor, Group, Loader, Stack, Text } from '@mantine/core';
 import {
   ETAT_CORRECTIF_LIBELLES,
@@ -68,6 +69,8 @@ import {
 } from './fiche-faille';
 import { MARQUE_EXPLOITABLE, MARQUE_ZERO_DAY } from './parc';
 import { MarqueExploitable, MarqueZeroDay } from './ParcMachines';
+import { PictoSource, PictosSources } from './PictoSource';
+import { type SourcePicto, sourcesFiche } from './pictos-sources';
 import { libelleMention } from './sources';
 
 /* ------------------------------------------------------------------ Icônes (24 × 24, trait) */
@@ -181,6 +184,12 @@ function EnTete({ f }: { f: FicheFailleDto }) {
       <p className="pc-etiquette ff-tete__cible">
         Cible · <span className="pc-mono">{cible}</span>
       </p>
+      {sourcesFiche(f).length > 0 && (
+        <div className="ff-tete__sources">
+          <span className="pc-etiquette">Sources</span>
+          <PictosSources sources={sourcesFiche(f)} libelle="Sources reprises par la fiche" />
+        </div>
+      )}
       <div className="ff-tete__ligne">
         <div className="ff-tete__priorite">
           {f.priorite ? (
@@ -526,10 +535,23 @@ export function RecommandationsEditeur({ defauts }: { defauts: DefautAlh[] }) {
   );
 }
 
-function Reco({ etiquette, urgent = false, children }: { etiquette: string; urgent?: boolean; children: ReactNode }) {
+function Reco({
+  etiquette,
+  source,
+  urgent = false,
+  children,
+}: {
+  etiquette: string;
+  source: SourcePicto;
+  urgent?: boolean;
+  children: ReactNode;
+}) {
   return (
     <li className={`ff-reco${urgent ? ' ff-reco--urgent' : ''}`}>
-      <p className="pc-etiquette ff-reco__source">{etiquette}</p>
+      <div className="ff-reco__tete">
+        <PictoSource source={source} decoratif />
+        <p className="pc-etiquette ff-reco__source">{etiquette}</p>
+      </div>
       {children}
     </li>
   );
@@ -558,6 +580,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             <Reco
               key={k.cve}
               etiquette={`Catalogue KEV de la CISA · ${k.echeance ? `échéance ${fmtJour(k.echeance)}` : 'sans échéance'}`}
+              source="cisa-kev"
               urgent
             >
               <Text size="sm" fw={600} lang="en" className="veille-texte">
@@ -569,7 +592,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             </Reco>
           ))}
           {r.tenable && (
-            <Reco etiquette="Tenable · correctif du contrôle">
+            <Reco etiquette="Tenable · correctif du contrôle" source="tenable">
               {r.tenable.correctif ? (
                 <Text size="sm" fw={600} lang="en" className="veille-texte">
                   {r.tenable.correctif}
@@ -584,7 +607,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             </Reco>
           )}
           {r.versionsNvd.length > 0 && (
-            <Reco etiquette="NVD · versions touchées">
+            <Reco etiquette="NVD · versions touchées" source="nvd">
               <ul className="ff-reco__lignes">
                 {r.versionsNvd.map((v) => (
                   <li key={`${v.cve}-${v.editeur}-${v.produit}-${v.debutInclus}-${v.finExclus}-${v.finInclus}`}>
@@ -604,7 +627,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             </Reco>
           )}
           {r.certSante && (
-            <Reco etiquette="CERT Santé · fiche">
+            <Reco etiquette="CERT Santé · fiche" source="cert-sante">
               <Text size="sm">
                 Un correctif existe : {libelleMention(r.certSante.correctif)} · une mesure de contournement existe :{' '}
                 {libelleMention(r.certSante.contournement)}.
@@ -618,6 +641,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             <Reco
               key={`${a.source}-${a.identifiant}`}
               etiquette={`${a.source === 'cert-fr' ? 'CERT-FR' : 'CERT Santé'} · ${a.nature === 'alerte' ? 'alerte' : 'avis'}`}
+              source={a.source}
               urgent={a.source === 'cert-fr' && a.nature === 'alerte'}
             >
               <Text size="sm" fw={600} className="veille-texte">
@@ -627,7 +651,13 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
                 <span className="pc-mono">{a.identifiant}</span> · {fmtJour(a.le)}
                 {a.adresse ? ' · ' : ''}
                 {a.adresse && (
-                  <Anchor href={a.adresse} target="_blank" rel="noopener noreferrer" size="xs">
+                  <Anchor
+                    href={a.adresse}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    referrerPolicy="no-referrer"
+                    size="xs"
+                  >
                     lire l’avis (source externe)
                   </Anchor>
                 )}
@@ -635,7 +665,7 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
             </Reco>
           ))}
           {r.alh.map((a) => (
-            <Reco key={a.alerteId} etiquette="AlgoLightHouse · Recommandations de l’éditeur">
+            <Reco key={a.alerteId} etiquette="AlgoLightHouse · Recommandations de l’éditeur" source="algolighthouse">
               <Text size="xs" c="dimmed" className="veille-texte">
                 Alerte : {a.titre}
               </Text>

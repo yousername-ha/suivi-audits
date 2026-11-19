@@ -37,12 +37,14 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
 import { libelleMachine, libelleRole, urlMachines, FILTRES_MACHINES_VIDES } from './failles';
 import { PrioriteFaits } from './FaillesDetectees';
+import { ouvertureProduit } from './recherche';
 import { MarquesSources } from './SourcesFaille';
 import { libelleTechnologieRapprochee } from './surface';
 import {
@@ -210,11 +212,25 @@ export function ProduitsSurveillesPage() {
   const [edition, setEdition] = useState<{ produit: ProduitSurveilleDto | null } | null>(null);
   const [aSupprimer, setASupprimer] = useState<ProduitSurveilleDto | null>(null);
   const [ouvert, setOuvert] = useState<ProduitSurveilleDto | null>(null);
+  // Lot R1 : la barre de recherche du module ouvre la fiche d'un produit (`?produit=`), toutes familles, à chaque navigation.
+  const loc = useLocation();
+  const [produitVoulu, setProduitVoulu] = useState<string | null>(null);
+  useEffect(() => {
+    const id = ouvertureProduit(new URLSearchParams(loc.search));
+    if (id) setFiltre(TOUTES_FAMILLES);
+    setProduitVoulu(id);
+  }, [loc.key, loc.search]);
   const produits = useQuery({
     queryKey: [...CLE, filtre],
     queryFn: () => get<ProduitSurveilleDto[]>(urlProduits(filtre)),
     enabled: lire,
   });
+  useEffect(() => {
+    if (!produitVoulu || !produits.data || filtre !== TOUTES_FAMILLES) return;
+    const p = produits.data.find((x) => x.id === produitVoulu);
+    if (p) setOuvert(p);
+    setProduitVoulu(null);
+  }, [produitVoulu, produits.data, filtre]);
   // Noms des fournisseurs liés : seulement pour qui lit les fournisseurs (sinon l'identifiant est affiché).
   const fournisseurs = useQuery({
     queryKey: ['suppliers'],

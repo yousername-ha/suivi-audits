@@ -1,9 +1,12 @@
-/* Module Intégrations (ADR 0076), socle des connecteurs réseau : rubrique « Intégrations ». Une tuile par type de connecteur
+/* Module Intégrations (ADR 0076), socle des connecteurs réseau : carte « Intégrations » de la page Plateforme (addendum du
+   19/11/2026 : les intégrations se configurent là et nulle part ailleurs ; l'ancienne adresse /integrations y redirige). Une
+   tuile par type de connecteur
    (catalogue) et par instance, avec un pictogramme neutre de packages/ui (aucun logo de marque dans ce lot). Configuration,
    secrets en écriture seule (« défini » / « non défini »), activation qui ouvre le flux du type après validation explicite
    (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
    le filtre de gravité de l'instance et le dernier résultat, dernières exécutions, message clair si l'exécutant n'est pas
-   vu. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
+   vu. Lot F1 (ADR 0100) : fréquence de la synchronisation automatique de chaque instance, réglée dans « Configurer »,
+   avec un avertissement (sans blocage) en dessous de 24 heures. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
    seulement. */
 import {
   Alert,
@@ -24,18 +27,22 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  avertissementConnecteur,
   DELAI_MAX,
   DELAI_MIN,
+  FREQUENCES_CONNECTEUR,
+  libelleFrequence,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
   type IntegrationDto,
   type TypeIntegrationDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, IconeConnecteur, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, IconeConnecteur, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
+import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
@@ -162,12 +169,14 @@ export function TuileInstance({
         </Group>
         {synchronisable && t?.champs.includes('gravites') && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne des failles : {libelleGravites(i.configuration.gravites)}.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()} ; failles lues :{' '}
+            {libelleGravites(i.configuration.gravites)}.
           </Text>
         )}
         {synchronisable && t && !t.champs.includes('gravites') && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne, rangée dans Risques &gt; Vulnérabilités &gt; Surface externe.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()}, rangée dans Risques &gt;
+            Vulnérabilités &gt; Surface externe.
           </Text>
         )}
         {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
@@ -257,7 +266,9 @@ export function TableExecutions({ executions }: { executions: ExecutionIntegrati
   );
 }
 
-export function IntegrationsPage() {
+/** Contenu de la carte « Intégrations » de la page Plateforme : la fenêtre de la carte porte le titre, le panneau ne le
+    répète pas. */
+export function IntegrationsPanel() {
   const can = useCan();
   const qc = useQueryClient();
   const lire = can('integrations', 'lire');
@@ -326,27 +337,23 @@ export function IntegrationsPage() {
       notifications.show({ color: 'teal', message: 'Synchronisation demandée à l’exécutant d’exploitation.' });
     });
 
-  if (!lire)
-    return (
-      <Page>
-        <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>
-      </Page>
-    );
+  if (!lire) return <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>;
   const avertissement = etat.data ? messageExecutant(etat.data.executant) : null;
   return (
-    <Page>
-      <PageHeader
-        title="Intégrations"
-        description="Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un administrateur."
-      />
+    <>
       <Stack>
+        <Text size="sm" c="dimmed" className="lecture">
+          Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès
+          réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un
+          administrateur. Les outils qui exploitent un connecteur (module Vulnérabilités) n’en montrent que l’état.
+        </Text>
         {avertissement && (
           <Alert color="orange" role="status" title="Exécutant d’exploitation non vu">
             {avertissement}
           </Alert>
         )}
         <ErrorAlert error={catalogue.error ?? instances.error ?? etat.error} />
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Connecteurs configurés
         </Title>
         {instances.data && instances.data.length === 0 && (
@@ -375,7 +382,7 @@ export function IntegrationsPage() {
             />
           ))}
         </div>
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Catalogue
         </Title>
         <div className="integrations-tuiles">
@@ -398,6 +405,7 @@ export function IntegrationsPage() {
         size="lg"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
         {edition && (
           <EditeurInstance
@@ -418,10 +426,11 @@ export function IntegrationsPage() {
         size="xl"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
         {historique && <Historique id={historique.id} />}
       </Modal>
-    </Page>
+    </>
   );
 }
 
@@ -524,7 +533,7 @@ function EditeurInstance({
       {type.champs.includes('gravites') && (
         <Checkbox.Group
           label="Gravités à synchroniser"
-          description="Failles lues chaque jour dans Tenable : critiques et élevées par défaut."
+          description="Failles lues dans Tenable à chaque synchronisation : critiques et élevées par défaut."
           value={f.gravites}
           onChange={(v) => setF({ ...f, gravites: v as FormulaireConfiguration['gravites'] })}
         >
@@ -534,6 +543,15 @@ function EditeurInstance({
             ))}
           </Group>
         </Checkbox.Group>
+      )}
+      {type.operations.includes('synchroniser') && (
+        <ChampFrequence
+          label="Fréquence de la synchronisation automatique"
+          frequences={FREQUENCES_CONNECTEUR[type.id]}
+          valeur={f.frequenceHeures}
+          onChange={(h) => setF({ ...f, frequenceHeures: h })}
+          avertissement={avertissementConnecteur(type.id, f.frequenceHeures)}
+        />
       )}
       {instance && destinationChangee(instance, f) && Object.values(instance.secrets).some(Boolean) && (
         <Alert color="orange" role="status">

@@ -47,6 +47,7 @@ import type { PageMenu } from './recherche-menu';
 import { useOngletVisible } from '../parcours-iso/mouvement';
 import { FenetreAlerteCritique } from '../vulnerabilites/FenetreAlerteCritique';
 import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
+import { RechercheVulnerabilites } from '../vulnerabilites/RechercheVulnerabilites';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -368,6 +369,10 @@ export function Layout({ children }: { children: ReactNode }) {
           <OngletsRubriques />
           {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours ;
               la Vue d'ensemble (lot PC1) a son propre bandeau, plus complet. */}
+          {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module). */}
+          {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
+            <RechercheVulnerabilites />
+          )}
           {familleDeLaPage &&
             localiser(loc.pathname)?.destination.id === 'vulnerabilites' &&
             loc.pathname !== '/vulnerabilites/vue' && <RappelAlertesCritiques />}
