@@ -75,8 +75,10 @@ function useAffichage() {
     html.dataset.taille = prefs.taille;
     html.dataset.densite = densite;
     html.dataset.style = me.appearance.style;
+    // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
+    html.dataset.onglets = prefs.onglets ?? 'barre';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
-  }, [prefs.taille, densite, me.appearance.style, theme, colorScheme, setColorScheme]);
+  }, [prefs.taille, densite, me.appearance.style, prefs.onglets, theme, colorScheme, setColorScheme]);
   return theme;
 }
 

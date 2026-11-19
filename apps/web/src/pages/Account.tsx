@@ -86,6 +86,12 @@ const THEMES = [
   { value: 'sombre', label: 'Sombre' },
 ];
 
+/** Onglets de page à l'essai (demande du RSSI du 19/11/2026) : deux formes, à réduire à une seule une fois le choix fait. */
+const ONGLETS = [
+  { value: 'barre', label: 'Barre bleu nuit' },
+  { value: 'pastilles', label: 'Pastilles' },
+];
+
 /** Préférences d'affichage : enregistrées sur le serveur, appliquées sur tous les appareils de la personne. */
 function AffichageCard() {
   const { prefs, save } = usePreferences();
@@ -134,6 +140,18 @@ function AffichageCard() {
             data={THEMES}
             value={prefs.theme}
             onChange={(v) => set({ theme: v as Preferences['theme'] })}
+          />
+        </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="onglets-label">
+            Onglets de page (essai)
+          </Text>
+          <SegmentedControl
+            aria-labelledby="onglets-label"
+            fullWidth
+            data={ONGLETS}
+            value={prefs.onglets ?? 'barre'}
+            onChange={(v) => set({ onglets: v as NonNullable<Preferences['onglets']> })}
           />
         </div>
         <div>

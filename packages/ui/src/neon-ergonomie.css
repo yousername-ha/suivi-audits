@@ -703,3 +703,59 @@ body:has(.as-launcher) .shell-main {
 .contact-champ-zone {
   min-inline-size: calc(var(--suivi-champ-xs) * 1.125);
 }
+
+/* Onglets de page (rubriques d'une destination), essai demandé par le RSSI le 19/11/2026 : deux formes aux couleurs du
+   menu, choisies par la personne dans Mon compte > Affichage (préférence « onglets », barre bleu nuit par défaut). Une
+   fois le choix fait, retirer la forme écartée, la préférence et son réglage. */
+html:is([data-onglets='barre'], [data-onglets='pastilles']) .app-main .onglets-rubriques {
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles']) .app-main .onglets-rubriques a {
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  font-weight: 500;
+}
+/* Barre bleu nuit : onglet actif en bleu du menu et texte bleu nuit, comme l'action principale de la boîte d'outils. */
+html[data-onglets='barre'] .app-main .onglets-rubriques {
+  border: 0;
+  background: var(--menu-fond);
+  box-shadow: var(--suivi-ombre);
+}
+html[data-onglets='barre'] .app-main .onglets-rubriques a {
+  color: var(--menu-secondaire);
+}
+html[data-onglets='barre'] .app-main .onglets-rubriques a:hover {
+  background: var(--menu-survol);
+  color: var(--menu-texte);
+}
+html[data-onglets='barre'] .app-main .onglets-rubriques a:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: 2px;
+}
+html[data-onglets='barre'] .app-main .onglets-rubriques a[aria-current='page'] {
+  background: var(--menu-teinte-pilotage);
+  color: var(--menu-fond-haut);
+  font-weight: 650;
+}
+/* Pastilles : cadre clair, onglet actif en bleu nuit du menu, cerné de bleu pour rester visible en sombre. */
+html[data-onglets='pastilles'] .app-main .onglets-rubriques {
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  background: var(--suivi-surface-douce);
+}
+html[data-onglets='pastilles'] .app-main .onglets-rubriques a:hover {
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 12%, transparent);
+  color: var(--mantine-color-text);
+}
+html[data-onglets='pastilles'] .app-main .onglets-rubriques a[aria-current='page'] {
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+  font-weight: 600;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent),
+    0 4px 14px color-mix(in srgb, var(--menu-fond-haut) 22%, transparent);
+}
