@@ -535,21 +535,17 @@
   }
 }
 
-/* Densité du prototype sur l'accueil ; les tableaux et formulaires conservent leur densité choisie. */
-.app-main:has(.neon-analytics) {
+/* Densité du prototype sur l'accueil (tableau de bord unique, ADR 0108) ; les tableaux et formulaires conservent leur
+   densité choisie. */
+.app-main:has(.tdb) {
   padding-top: var(--mantine-spacing-md);
 }
-.app-main:has(.neon-analytics) > .page {
+.app-main:has(.tdb) > .page {
   gap: var(--mantine-spacing-sm);
 }
-.app-main:has(.neon-analytics) .page-header h1 {
+.app-main:has(.tdb) .page-header h1 {
   font-size: clamp(1.3rem, 1.5vw, 1.75rem);
 }
-/* Bascule « Vue analytique Neon / Tableau personnalisable » : largeur de son contenu dans les deux présentations. */
-.tdb-presentation.mantine-SegmentedControl-root {
-  align-self: flex-start;
-}
-/* Choix actif : forme commune des sélecteurs segmentés (neon-ergonomie.css, choix du RSSI du 19/11/2026). */
 .neon-analytics {
   --na-hauteur: 17rem;
 }
@@ -573,4 +569,436 @@
 .na-legende li:nth-child(5) .na-puce {
   background: var(--suivi-trait);
   border: var(--suivi-trait-l) solid var(--mantine-color-dimmed);
+}
+
+/* ========================================================================
+   TABLEAU DE BORD UNIQUE (ADR 0108, choix du RSSI du 19/11/2026)
+   Toutes les dalles de l'accueil prennent le cadre et le style graphique des cartes de la vue analytique : surface
+   claire, filet fin, titre court et sous-titre gris, flèche de détail, chiffres en gras sur petit libellé. Aux grands
+   écrans, la grille a des lignes de hauteur minimale : une dalle couvre le nombre de lignes de sa hauteur (classes
+   tdb-h*) et ne descend jamais sous son contenu, qui reste entièrement visible. Quatre lignes font une rangée, la hauteur
+   d'une carte de la vue analytique.
+   ======================================================================== */
+.tdb {
+  --tdb-ligne: 3.5rem;
+}
+.tdb-grille {
+  gap: var(--mantine-spacing-md);
+}
+@media (min-width: 64em) {
+  .tdb-grille {
+    grid-auto-rows: minmax(var(--tdb-ligne), auto);
+  }
+  .tdb-grille > .tdb-h2 {
+    grid-row: span 2;
+  }
+  .tdb-grille > .tdb-h3 {
+    grid-row: span 3;
+  }
+  .tdb-grille > .tdb-h4 {
+    grid-row: span 4;
+  }
+  .tdb-grille > .tdb-h5 {
+    grid-row: span 5;
+  }
+  .tdb-grille > .tdb-h6 {
+    grid-row: span 6;
+  }
+  .tdb-grille > .tdb-h8 {
+    grid-row: span 8;
+  }
+  .tdb-grille > .tdb-h10 {
+    grid-row: span 10;
+  }
+  .tdb-grille > .tdb-h12 {
+    grid-row: span 12;
+  }
+}
+
+/* Cadre de carte de la vue analytique, pour toutes les dalles (le verre et relief de l'ADR 0069 est abandonné). */
+.tdb .tdb-dalle {
+  gap: 0;
+  padding: var(--mantine-spacing-md);
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--suivi-ombre);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: hidden;
+  transition:
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+.tdb .tdb-dalle::before,
+.tdb .tdb-dalle::after,
+.tdb .tdb-dalle.tdb-phare::after {
+  content: none;
+}
+.tdb .tdb-dalle:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--neon-violet) 38%, var(--suivi-trait));
+  box-shadow: 0 6px 25px color-mix(in srgb, var(--neon-violet) 9%, transparent);
+}
+.tdb .tdb-dalle-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+}
+.tdb .tdb-dalle-titres {
+  min-width: 0;
+}
+.tdb .tdb-dalle-titre {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--neon-titre);
+}
+.tdb .tdb-dalle-sous-titre {
+  font-size: 0.67rem;
+  color: var(--neon-secondaire);
+  line-height: 1.45;
+  margin: 0.4em 0 0;
+}
+.tdb .tdb-dalle-corps {
+  gap: var(--mantine-spacing-sm);
+  padding-top: var(--mantine-spacing-sm);
+}
+/* Cartes de la vue analytique : leur propre espacement (pied de statistiques collé en bas). */
+.tdb .tdb-neon > .tdb-dalle-corps {
+  gap: 0;
+}
+.tdb .tdb-dalle-corps:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+  border-radius: var(--mantine-radius-sm);
+}
+.na-detail-contenu .tdb-dalle {
+  box-shadow: none;
+}
+.na-detail-contenu .tdb-dalle-tete {
+  display: none;
+}
+
+/* Bandeau : le titre reste lu par les lecteurs d'écran, le motif occupe la carte. */
+.tdb .tdb-bandeau > .tdb-dalle-tete {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tdb .tdb-bandeau .na-detail {
+  display: none;
+}
+.tdb .tdb-bandeau > .tdb-dalle-corps {
+  padding-top: 0;
+}
+
+/* Carte phare : surface claire, chiffres en gras comme les compteurs de la vue analytique. */
+.tdb .tdb-dalle.tdb-phare {
+  min-height: 0;
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+  border-color: var(--suivi-trait);
+}
+.tdb .tdb-phare-symbole {
+  display: none;
+}
+.tdb .tdb-phare-bloc {
+  gap: 0.2rem;
+}
+.tdb .tdb-phare-titre {
+  margin: 0;
+  color: var(--neon-secondaire);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+.tdb .tdb-phare-valeur {
+  color: var(--neon-titre);
+  font-size: clamp(1.5rem, 1.9vw, 2.1rem);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.tdb .tdb-phare-detail,
+.tdb .tdb-phare-legende {
+  color: var(--neon-secondaire);
+  font-size: 0.7rem;
+}
+.tdb .tdb-phare-legende {
+  font-size: 0.64rem;
+}
+.tdb .tdb-phare-taux {
+  padding-top: var(--mantine-spacing-sm);
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+
+/* Chiffres : en gras, sans gravure, libellé court et gris. */
+.tdb .tdb-chiffre-valeur {
+  font-size: clamp(1.75rem, 2vw, 2.25rem);
+  font-weight: 750;
+  text-shadow: none;
+}
+.tdb .tdb-chiffres .tdb-chiffre-valeur {
+  font-size: 1.5rem;
+}
+.tdb .tdb-chiffre-detail {
+  font-size: 0.7rem;
+  color: var(--neon-secondaire);
+}
+.tdb .tdb-chiffre-legende {
+  font-size: 0.64rem;
+  line-height: 1.5;
+  color: var(--neon-secondaire);
+}
+.tdb .tdb-grille-chiffres {
+  gap: var(--mantine-spacing-md);
+}
+.tdb .tdb-grille-chiffre {
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0 var(--mantine-spacing-xs);
+  border-left: 0;
+  border-bottom: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.tdb .tdb-grille-chiffre-libelle {
+  font-size: 0.62rem;
+  color: var(--neon-secondaire);
+}
+.tdb .tdb-grille-chiffre-valeur {
+  font-size: 1.5rem;
+  font-weight: 750;
+}
+
+/* Barres : rail clair, remplissage plein et arrondi, sans contour ni reflet. */
+.tdb .tdb-barre-ligne,
+.tdb .tdb-empile-ligne {
+  font-size: 0.68rem;
+  color: var(--neon-secondaire);
+}
+.tdb .tdb-barre-valeur {
+  color: var(--neon-titre);
+}
+.tdb .tdb-barre {
+  height: 0.55rem;
+}
+.tdb .tdb-rail {
+  fill: color-mix(in srgb, var(--mantine-color-text) 11%, transparent);
+  stroke: none;
+}
+.tdb .tdb-barre-remplie {
+  stroke: none;
+  filter: none;
+}
+.tdb .tdb-reflet {
+  display: none;
+}
+.tdb .tdb-legende {
+  font-size: 0.62rem;
+  color: var(--neon-secondaire);
+}
+
+/* Jauge : arc plein sur rail clair, sans contour ni ombre. */
+.tdb .tdb-jauge-rail-contour,
+.tdb .tdb-jauge-arc-contour {
+  stroke: transparent;
+  filter: none;
+}
+.tdb .tdb-jauge-rail {
+  stroke: color-mix(in srgb, var(--mantine-color-text) 11%, transparent);
+}
+.tdb .tdb-jauge-curseur {
+  filter: none;
+}
+.tdb .tdb-jauge-valeur {
+  font-weight: 750;
+}
+.tdb .tdb-jauge-detail {
+  font-size: 0.64rem;
+  color: var(--neon-secondaire);
+}
+.tdb .graph-piste {
+  stroke: color-mix(in srgb, var(--mantine-color-text) 11%, transparent);
+}
+
+/* Listes d'échéances et tableaux : densité des cartes. */
+.tdb .tdb-echeance {
+  font-size: 0.72rem;
+  padding-block: 0.4rem;
+}
+.tdb .tdb-echeance-meta {
+  font-size: 0.62rem;
+  color: var(--neon-secondaire);
+}
+.tdb .tdb-tableau {
+  font-size: var(--mantine-font-size-xs);
+}
+
+/* Mode « Modifier la disposition » : outils compacts, bouton de retrait, bords bas et coin de redimensionnement,
+   étiquette de taille pendant le redimensionnement. */
+.tdb-edition-outils {
+  align-items: center;
+}
+.tdb-retirer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: auto;
+  inline-size: var(--mantine-spacing-xl);
+  block-size: var(--mantine-spacing-xl);
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+  color: var(--neon-secondaire);
+  cursor: pointer;
+}
+.tdb-retirer:hover,
+.tdb-retirer:focus-visible {
+  color: var(--mantine-color-red-filled);
+  border-color: currentColor;
+}
+.tdb-redim-bas,
+.tdb-redim-coin {
+  display: none;
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+.tdb-redim-bas {
+  inset-inline: var(--mantine-spacing-lg);
+  inset-block-end: 0;
+  block-size: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-xl);
+  cursor: ns-resize;
+}
+.tdb-redim-bas::after {
+  content: '';
+  position: absolute;
+  inset-inline: 30%;
+  inset-block-start: 50%;
+  block-size: 0.25em;
+  translate: 0 -50%;
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-default-border);
+}
+.tdb-redim-coin {
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  inline-size: var(--mantine-spacing-md);
+  block-size: var(--mantine-spacing-md);
+  cursor: nwse-resize;
+}
+.tdb-redim-coin::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 0.2rem;
+  inset-block-end: 0.2rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-inline-end: 2px solid var(--mantine-color-default-border);
+  border-block-end: 2px solid var(--mantine-color-default-border);
+  border-end-end-radius: 0.2rem;
+}
+.tdb-case:hover > .tdb-redim-bas::after,
+.tdb-redim-bas:focus-visible::after,
+.tdb-case--redim > .tdb-redim-bas::after {
+  background: var(--mantine-color-blue-filled);
+}
+.tdb-case:hover > .tdb-redim-coin::after,
+.tdb-case--redim > .tdb-redim-coin::after {
+  border-color: var(--mantine-color-blue-filled);
+}
+@media (min-width: 64em) {
+  .tdb-redim-bas,
+  .tdb-redim-coin {
+    display: block;
+  }
+}
+.tdb-redim-etiquette {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+  z-index: 3;
+  padding: 0.3em 0.75em;
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-blue-filled);
+  color: var(--mantine-color-white);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Catalogue « Ajouter une dalle » : familles, une ligne par dalle, état et bouton. */
+.tdb-catalogue {
+  display: grid;
+  gap: var(--mantine-spacing-lg);
+}
+.tdb-catalogue-groupe h3 {
+  margin: 0 0 var(--mantine-spacing-xs);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--neon-secondaire);
+}
+.tdb-catalogue-groupe ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+}
+.tdb-catalogue-dalle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+}
+.tdb-catalogue-dalle > div {
+  flex: 1;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.tdb-catalogue-dalle > button {
+  flex: none;
+}
+.tdb-catalogue-dalle b {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.tdb-catalogue-dalle span {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--neon-secondaire);
+}
+.tdb-catalogue-dalle .tdb-catalogue-etat {
+  color: var(--neon-accent);
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tdb .tdb-dalle {
+    transition: none;
+  }
+}
+@media print {
+  .tdb .na-detail,
+  .tdb .na-entete .mantine-Group-root {
+    display: none;
+  }
+  .tdb .tdb-dalle {
+    break-inside: avoid;
+    box-shadow: none;
+  }
 }

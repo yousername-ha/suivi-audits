@@ -46,6 +46,12 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 **Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
 page de maintenance des mises à jour prend aussi Lexend.
 
+**Tableau de bord unique de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md)) : sans migration, aucune
+action sur le serveur. La bascule « Vue analytique Neon / Tableau personnalisable » disparaît : chaque personne retrouve son
+tableau de bord enregistré, auquel s'ajoutent à la fin les onze cartes de la vue analytique (à retirer d'un clic au besoin) ;
+sans tableau enregistré, l'accueil affiche la disposition de la vue analytique. La préférence de présentation du compte
+n'a plus d'effet.
+
 ### Ajouté
 
 - **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
@@ -115,6 +121,17 @@ page de maintenance des mises à jour prend aussi Lexend.
   fenêtres. Les sélecteurs segmentés (« Par faille / Par machine », densité, thème…) perdent leur fond gris : un simple
   contour, et le choix actif en bleu nuit du menu avec un reflet bleu transparent et un liseré, sans lumière animée.
   Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableau de bord unique de l'accueil, au style de la vue analytique** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [ADR 0108](docs/adr/0108-tableau-de-bord-unique.md), [docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md](docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md)).
+  La vue analytique et le tableau personnalisable ne font plus qu'un : par défaut la disposition de la vue analytique,
+  modifiable par « Modifier la disposition ». Toutes les dalles prennent le cadre et les chiffres des cartes Neon, avec la
+  flèche de détail. En modification : « + Ajouter une dalle » ouvre le catalogue de toutes les dalles par famille (Pilotage,
+  Conformité, Écarts et actions, Risques et incidents), une dalle déjà affichée s'ajoute encore en copie ; le bord droit
+  règle la largeur, le bord bas la hauteur, le coin les deux, aimantés avec une étiquette de taille ; listes et flèches du
+  clavier en alternative ; l'aimant comble aussi les creux laissés par une dalle haute. La hauteur est un minimum : le
+  contenu reste toujours visible. Aucune migration (champs facultatifs `cle` et `hauteur` dans la disposition).
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
