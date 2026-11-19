@@ -59,7 +59,7 @@ import { VueEnsemblePage } from './vulnerabilites/VueEnsemble';
 import { PerimetresPage } from './vulnerabilites/Perimetres';
 import { TendancesPage } from './vulnerabilites/Tendances';
 import { RapportPage } from './vulnerabilites/Rapport';
-import { IntegrationsPage } from './integrations/IntegrationsPage';
+import { ANCIENNE_ADRESSE_INTEGRATIONS, LIEN_INTEGRATIONS } from './integrations/integrations';
 import { AssistantPage } from './assistant/AssistantPage';
 import { HelpPage } from './pages/Help';
 import { LoginPage } from './pages/Login';
@@ -156,7 +156,9 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/rapport', element: <RapportPage /> },
       { path: '/vulnerabilites/priorite', element: <SeuilsPrioritePage /> },
       { path: '/vulnerabilites/masque', element: <MotsNonMasquesPage /> },
-      { path: '/integrations', element: <IntegrationsPage /> },
+      // Ancienne rubrique « Intégrations » du Pilotage : devenue une carte de la page Plateforme (ADR 0076, addendum du
+      // 19/11/2026) ; les signets ouvrent la carte.
+      { path: ANCIENNE_ADRESSE_INTEGRATIONS, element: <Navigate to={LIEN_INTEGRATIONS} replace /> },
       { path: '/aide', element: <HelpPage /> },
       { path: '/assistant/:id?', element: <AssistantPage /> },
       { path: '/retex/:incident?', element: <MesContributionsRetexPage /> },

@@ -1,5 +1,5 @@
 /* Administration en deux entrées, chacune une page de cartes (icône, nom, synthèse) : « Plateforme » (organisation,
-   comptes, référentiels, échelles, configuration du pilotage, affichage) et « Configuration système » (exploitation du serveur). Le détail d'une carte
+   comptes, référentiels, échelles, configuration du pilotage, affichage, intégrations) et « Configuration système » (exploitation du serveur). Le détail d'une carte
    s'ouvre dans une fenêtre centrée à bordure visible ; la fermer ramène à la page de cartes. Les anciennes adresses
    /parametres/… et /admin/… restent valables. Aucune API nouvelle : les panneaux sont ceux des écrans historiques. */
 import { Badge, Card, Group, Modal, Stack, Text, Title } from '@mantine/core';
@@ -32,6 +32,7 @@ import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
 import { ReglagesAssistantPanel } from '../assistant/ReglagesAssistant';
+import { IntegrationsPanel } from '../integrations/IntegrationsPage';
 import { NotificationsPanel } from './AdminNotifications';
 import { OperationsPanel } from './AdminOperations';
 import { TypesProcessusPanel } from './AdminTypesProcessus';
@@ -228,6 +229,17 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'bouclier',
     teinte: 'violet',
     detail: (m) => <ReglagesAssistantPanel onDirty={m} titreVisible={false} />,
+  },
+  {
+    // Addendum du 19/11/2026 de l'ADR 0076 : les intégrations se configurent ici et nulle part ailleurs.
+    id: 'integrations',
+    cote: 'plateforme',
+    titre: 'Intégrations',
+    resume:
+      'Connecteurs en lecture seule (Tenable Security Center, AlgoLightHouse) : adresse, clés, test, synchronisation.',
+    icone: 'reseau',
+    teinte: 'bleu',
+    detail: () => <IntegrationsPanel />,
   },
   {
     id: 'import',
@@ -480,6 +492,12 @@ function useSyntheses(actif: boolean): Record<string, ReactNode> {
   };
 }
 
+/** Une fenêtre ouverte depuis le panneau d'une carte (configuration, historique, confirmation) se place au-dessus de la
+    fenêtre de la carte. Mantine ferme toutes les fenêtres ouvertes sur Échap (écouteur global) : tant qu'une autre fenêtre
+    est ouverte, la fenêtre de la carte ignore sa fermeture, et Échap ne ferme que celle du dessus. */
+export const fenetreAuDessus = (doc: Pick<Document, 'querySelectorAll'> = document) =>
+  doc.querySelectorAll('.mantine-Modal-content').length > 1;
+
 export function PageCartes({ cote }: { cote: Cote }) {
   const can = useCan();
   const nav = useNavigate();
@@ -524,7 +542,11 @@ export function PageCartes({ cote }: { cote: Cote }) {
       <Modal
         closeButtonProps={{ 'aria-label': `Fermer ${ouverte?.titre ?? 'la fenêtre'}` }}
         opened={!!ouverte}
-        onClose={() => (modifie ? setQuitter(true) : fermer())}
+        onClose={() => {
+          if (fenetreAuDessus()) return;
+          if (modifie) setQuitter(true);
+          else fermer();
+        }}
         title={ouverte?.titre}
         size="xl"
         centered

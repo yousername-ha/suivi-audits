@@ -2347,3 +2347,95 @@ CERT-FR et du CERT Santé (présence de puces) non vérifiée sur des données r
 2. Recherche des alertes et avis depuis la barre du module (point ouvert 3 du lot R1).
 3. Les choix ci-dessus.
 
+
+## Addendum du 19/11/2026 — lot I1 : intégrations configurées dans la page Plateforme, état en lecture seule dans les outils
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route d'API ajoutée, retirée ni modifiée, aucun droit changé, aucune dépendance, aucun appel sortant nouveau, rien chez
+l'assistant. Réalise l'addendum du 19/11/2026 de l'[ADR 0076](0076-module-integrations.md).
+
+### Décision du RSSI (19/11/2026)
+
+Les intégrations se configurent dans la configuration de la plateforme, et nulle part ailleurs. Les outils qui exploitent une
+intégration n'affichent qu'un lien « Configurer l'intégration » (visible de qui a le droit de la voir) et l'état en lecture
+seule (date de la dernière synchronisation, erreur éventuelle). La veille (sources publiques sans clé) n'est pas un connecteur
+du module Intégrations : elle reste dans l'écran « Veille », avec « Collecter maintenant » et son activation.
+
+### Réalisation
+
+- **Carte « Intégrations » de la page Plateforme** (`apps/web/src/pages/Administration.tsx`, `administration-droits.ts`) : le
+  panneau `IntegrationsPanel` (ancien écran : connecteurs, catalogue, configuration, clés, activation du flux, « Tester la
+  connexion », « Synchroniser maintenant » pour Tenable **et** AlgoLightHouse, exécutions) s'ouvre dans la fenêtre de carte
+  commune (largeur « fiche », titre non répété). Visible si et seulement si la personne a `integrations:lire`, droit de
+  l'ancienne rubrique. Rangée après « Assistant RSSI », avant « Import et export ».
+- **Menu et adresses** : la destination « Intégrations » du menu Pilotage est retirée (et donc de la recherche de pages
+  Ctrl K, qui reprend le menu) ; `/integrations` redirige vers `/plateforme/integrations` (lien profond qui ouvre la carte) ;
+  le registre des flux (`packages/shared/src/flux-externes.ts`, champ `reglage` des flux `tenable` et `algolighthouse`) et
+  l'aide pointent vers la carte (« Plateforme > Intégrations »).
+- **Composant commun** `apps/web/src/integrations/EtatIntegration.tsx` (règle pure dans `etat-integration.ts`) : par instance,
+  pastille d'état, date de la dernière synchronisation, dernière complète, **erreur** de la dernière synchronisation en lecture
+  (message déjà rendu par l'API, inchangé), complément facultatif (bilan, périmètres non reliés), puis le lien
+  `LienConfigurerIntegration` si l'appelant a calculé `integrations:lire`. Aucun bouton. Utilisé par « Failles détectées »
+  (Tenable) et « Surface externe » (AlgoLightHouse, avec son état « À jour / incomplète / en échec » d'avant) ; la « Vue
+  d'ensemble » garde ses capteurs (même règle d'état, erreur ajoutée en lecture) et reçoit le lien.
+- **Veille** : après « Collecter maintenant », le message dit « N collectes de veille demandées : l'exécutant les traite à son
+  prochain passage. Les connecteurs (Tenable, AlgoLightHouse) ne sont pas concernés. » ; l'aide et le guide d'installation le
+  précisent.
+- **Correctif de la fenêtre de carte** : Mantine ferme toutes les fenêtres ouvertes sur Échap ; une fenêtre ouverte depuis le
+  panneau d'une carte (configuration d'une instance, exécutions, validation du flux, et de même pour les autres cartes)
+  fermait aussi la carte. La fenêtre de carte ignore désormais sa fermeture tant qu'une autre fenêtre est ouverte au-dessus
+  (`fenetreAuDessus`) ; sans fenêtre au-dessus, Échap la ferme comme avant.
+
+### Frontière des réglages, à valider par le RSSI
+
+| Réglage | Où il est | Motif |
+|---|---|---|
+| Adresse, port, autorité de certification, délai d'une requête (Tenable, AlgoLightHouse) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| Clés d'API (écriture seule) | **Carte « Intégrations »** (déjà là) | Secret du connecteur |
+| Gravités lues par la synchronisation de Tenable | **Carte « Intégrations »** (déjà là) | Filtre de la lecture du connecteur |
+| Activer / désactiver un connecteur (ouverture du flux) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| « Tester la connexion », « Synchroniser maintenant » (Tenable et AlgoLightHouse), exécutions | **Carte « Intégrations »** (déjà là) | Actions du connecteur |
+| Dépôts Tenable ↔ périmètres (« Machines », onglet « Dépôts Tenable ») | Laissé dans le module | Réglage métier (lecture par périmètre) |
+| Périmètres AlgoLightHouse ↔ périmètres (« Surface externe », onglet « Périmètres ») | Laissé dans le module | Réglage métier |
+| Liaisons actif exposé ↔ machine, « Relier en masse » (« Surface externe », onglet « Actifs ») | Laissé dans le module | Réglage métier |
+| Produits surveillés reliés aux machines, rapprochements | Laissé dans le module | Réglage métier |
+| Rôles des machines (front, back, base) | Laissé dans le module | Réglage métier |
+| Seuils de priorité et délais de correction | Laissé dans le module | Réglage métier |
+| Exceptions (risque accepté) | Laissé dans le module | Décision métier |
+| Mots à ne pas masquer | Laissé dans le module | Réglage métier de l'assistant |
+| Activation de la veille, « Collecter maintenant » | Laissé dans le module (« Veille ») | Pas un connecteur (décision du RSSI) |
+
+**Supprimé des écrans du module** : seulement les renvois textuels « Pilotage > Intégrations » (« Failles détectées »,
+« Surface externe », « Vue d'ensemble », listes vides des dépôts Tenable et des périmètres AlgoLightHouse), remplacés par le
+lien ou par « ils apparaissent après une synchronisation du connecteur ». Constat du relevé : **aucun** bouton de test, de
+synchronisation, de connexion, de saisie d'adresse ou de clé, ni aucun appel en écriture à `/api/integrations/...`, n'existait
+dans `apps/web/src/vulnerabilites/` ; « Synchroniser maintenant » d'AlgoLightHouse était déjà dans l'écran des intégrations.
+Un test de l'interface garde cette absence (aucune mention de `/api/integrations`, « Synchroniser maintenant », « Tester la
+connexion » ni `PasswordInput` dans les fichiers du module).
+
+**Routes d'API devenues sans appelant** : aucune. Les routes du module Intégrations sont appelées par la carte, celles de
+l'état (`/api/vulnerabilites/synchronisation`, `/api/vulnerabilites/surface/etat`) par les écrans du module.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Place de la carte** : après « Assistant RSSI », avant « Import et export » ; pictogramme « réseau », teinte bleue.
+- **Lien même sans instance** : avec le droit, « Configurer l'intégration » apparaît aussi quand aucune instance n'est
+  configurée (pour en ajouter une) ; sans le droit, le texte dit qu'un administrateur des intégrations l'ajoute dans la page
+  Plateforme.
+- **Droit du lien** : `integrations:lire` (celui de la carte), même si seul `integrations:administrer` permet de modifier.
+- **Recherche Ctrl K** : elle ne liste que les pages du menu ; « Intégrations » n'y figure plus (la page « Plateforme » oui).
+  Indexer les cartes de la Plateforme serait un ajout à décider.
+- **Échap dans les fenêtres imbriquées** : correctif appliqué à toutes les cartes de la Plateforme et de la Configuration
+  système (même fenêtre commune).
+
+### Non vérifié
+
+Aucune donnée réelle. Parcours Playwright joués sur une pile locale sans Docker (API et Vite, Chromium) : carte, redirection,
+lien et son droit (compte fictif à `vulnerabilites:lire` seul), absence de réglage dans les trois écrans, Échap, axe
+`wcag2a`/`wcag2aa` sans violation sur la carte ; à rejouer en CI. CSP stricte du serveur de production vérifiée en CI
+seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Indexer les cartes de la Plateforme dans la recherche de pages (Ctrl K).

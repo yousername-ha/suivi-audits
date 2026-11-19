@@ -221,7 +221,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     },
     donnees:
       'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines). Aucune donnée de la plateforme n’est envoyée.',
-    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    reglage: { libelle: 'Plateforme > Intégrations', lien: '/plateforme/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
     moduleActivation: 'integrations',
     pareFeu: ['Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).'],
@@ -273,7 +273,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     },
     donnees:
       'La clé d’API de l’espace AlgoLightHouse et des requêtes de lecture (version du service, périmètres, hôtes, domaines, alertes et leur détail, technologies), ainsi que l’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif. Aucune donnée de la plateforme n’est envoyée : ni commentaire, ni changement de statut, ni recherche.',
-    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    reglage: { libelle: 'Plateforme > Intégrations', lien: '/plateforme/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur AlgoLightHouse' },
     moduleActivation: 'integrations',
     pareFeu: ['Sortie TCP 443 du serveur vers l’espace AlgoLightHouse réglé (espace.algolighthouse.fr).'],

@@ -61,6 +61,7 @@ import {
   identifiantAvis,
   libelleEpss,
   libelleLangue,
+  messageCollectesDemandees,
   nombrePages,
   urlAvis,
   urlFailles,
@@ -518,7 +519,7 @@ export function VeillePage() {
       const r = await api<unknown[]>('POST', '/api/vulnerabilites/veille/collectes', { body: {} });
       notifications.show({
         color: 'teal',
-        message: `${r.length} collecte${r.length > 1 ? 's' : ''} demandée${r.length > 1 ? 's' : ''} : l’exécutant les traite à son prochain passage.`,
+        message: messageCollectesDemandees(r.length),
       });
       await qc.invalidateQueries({ queryKey: [...CLE, 'etat'] });
     } catch (e) {

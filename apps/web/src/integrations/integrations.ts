@@ -20,7 +20,10 @@ import {
 import type { Etat } from '@suivi/ui';
 import { resumeBilanAlh } from '../vulnerabilites/surface';
 
-export const LIEN_INTEGRATIONS = '/integrations';
+/** Carte « Intégrations » de la page Plateforme (addendum du 19/11/2026 de l'ADR 0076) : seul endroit où les connecteurs se
+    configurent. L'ancienne rubrique du Pilotage (`/integrations`) y redirige. */
+export const LIEN_INTEGRATIONS = '/plateforme/integrations';
+export const ANCIENNE_ADRESSE_INTEGRATIONS = '/integrations';
 
 /** État affiché d'une instance (tuile) : non configurée (secret manquant), inactive, flux fermé, en échec, active. */
 export type EtatTuile = 'non_configuree' | 'inactive' | 'flux_ferme' | 'echec' | 'active';

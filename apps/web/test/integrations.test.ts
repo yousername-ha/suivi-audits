@@ -1,4 +1,5 @@
-/* Module Intégrations (ADR 0076), socle des connecteurs réseau : menu conditionné par le droit du module, état des tuiles,
+/* Module Intégrations (ADR 0076), socle des connecteurs réseau : carte de la Plateforme conditionnée par le droit du module
+   (addendum du 19/11/2026, plus de rubrique au menu Pilotage), état des tuiles,
    secrets affichés « défini » / « non défini » sans valeur, message si l'exécutant n'est pas vu, formulaire (adresse
    contrôlée, envoi des seuls champs modifiés), rendu des tuiles et des exécutions, aide. Données fictives. */
 import { MantineProvider } from '@mantine/core';
@@ -24,11 +25,13 @@ import {
   executionEnCours,
   fluxOuvertPour,
   formulaireDepuis,
+  ANCIENNE_ADRESSE_INTEGRATIONS,
   LIEN_INTEGRATIONS,
   messageExecutant,
   precisionPort,
   resumeExecution,
 } from '../src/integrations/integrations';
+import { ALIAS_ADMINISTRATION, cartesVisibles } from '../src/administration-droits';
 import { famillesVisibles, localiser } from '../src/navigation';
 
 const TENABLE = catalogueIntegrations()[0]!;
@@ -71,14 +74,17 @@ const bouton = (html: string, texte: string) =>
 
 describe('menu', () => {
   const seulement = (droits: string[]) => (m: Module, a: Action) => droits.includes(`${m}:${a}`);
-  it('« Intégrations » est une rubrique du Pilotage, visible avec la seule lecture du module', () => {
+  it('« Intégrations » n’est plus une rubrique du Pilotage : carte de la Plateforme, visible avec la seule lecture du module', () => {
+    // Addendum du 19/11/2026 de l'ADR 0076 : la rubrique du menu Pilotage disparaît, la carte la remplace avec le même droit.
     const avec = famillesVisibles(seulement(['integrations:lire']));
-    const pilotage = avec.find((f) => f.famille.id === 'pilotage')!;
-    expect(pilotage.destinations.map((d) => d.id)).toEqual(['integrations']);
-    expect(pilotage.destinations[0]!.to).toBe(LIEN_INTEGRATIONS);
-    const sans = famillesVisibles(seulement(['pilotage:lire']));
-    expect(sans.find((f) => f.famille.id === 'pilotage')?.destinations.map((d) => d.id)).not.toContain('integrations');
-    expect(localiser('/integrations')?.destination.id).toBe('integrations');
+    expect(avec.find((f) => f.famille.id === 'pilotage')).toBeUndefined();
+    expect(famillesVisibles(() => true).flatMap((f) => f.destinations.map((d) => d.id))).not.toContain('integrations');
+    expect(localiser('/integrations')).toBeUndefined();
+    expect(LIEN_INTEGRATIONS).toBe('/plateforme/integrations');
+    expect(ANCIENNE_ADRESSE_INTEGRATIONS).toBe('/integrations');
+    expect(cartesVisibles(seulement(['integrations:lire']), 'plateforme')).toEqual(['integrations']);
+    expect(cartesVisibles(seulement(['integrations:lire']), 'systeme')).toEqual([]);
+    expect(ALIAS_ADMINISTRATION['/plateforme']!.test(LIEN_INTEGRATIONS)).toBe(true);
   });
   it('un article d’aide décrit les secrets, la validation du flux et le test', () => {
     const a = HELP_ARTICLES.find((x) => x.id === 'integrations');

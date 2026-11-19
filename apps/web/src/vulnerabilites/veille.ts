@@ -89,6 +89,13 @@ export const echeanceDepassee = (echeance: string | null, aujourdhui: string) =>
 /** Nombre de pages d'une liste paginée. */
 export const nombrePages = (total: number, parPage: number) => Math.max(1, Math.ceil(total / parPage));
 
+/** Message après « Collecter maintenant » (demande du RSSI du 19/11/2026) : seules les sources de la veille sont relancées ;
+    les connecteurs se synchronisent depuis la carte « Intégrations » de la Plateforme. */
+export function messageCollectesDemandees(n: number): string {
+  const s = n > 1 ? 's' : '';
+  return `${n} collecte${s} de veille demandée${s} : l’exécutant les traite à son prochain passage. Les connecteurs (Tenable, AlgoLightHouse) ne sont pas concernés.`;
+}
+
 /* ------------------------------------------------------------------ Lot L1 : lisibilité des alertes et avis */
 /** Bloc d'un texte de source : paragraphe ou liste à puces. Le texte reste du texte simple (rendu échappé par React). */
 export type BlocTexte = { type: 'paragraphe'; texte: string } | { type: 'liste'; elements: string[] };

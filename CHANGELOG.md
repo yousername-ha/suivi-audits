@@ -34,6 +34,12 @@ appel sortant et n'écrit rien au journal. (session « Module surveillance vuln�
 
 **Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
 
+**Lot I1 (intégrations dans la page Plateforme)** : sans migration, aucune action sur le serveur. L'adresse de l'écran des
+intégrations change : il devient la carte « Intégrations » de la page Plateforme (`/plateforme/integrations`) ; l'ancienne
+adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
+personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
+SMSI »)
+
 ### Ajouté
 
 - Vulnérabilités, lisibilité des alertes de la veille et pastilles de source (lot L1,
@@ -99,6 +105,16 @@ appel sortant et n'écrit rien au journal. (session « Module surveillance vuln�
 
 ### Modifié
 
+- **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
+  addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
+  L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
+  exécutions) devient la carte « Intégrations » de la page Plateforme, avec le même droit (lecture du module Intégrations) ;
+  la rubrique du menu Pilotage disparaît et `/integrations` redirige vers la carte. « Failles détectées », « Surface
+  externe » et « Vue d'ensemble » ne montrent plus que l'état du connecteur en lecture seule (dernière synchronisation,
+  erreur éventuelle) et un lien « Configurer l'intégration », visible seulement avec ce droit. Après « Collecter
+  maintenant », l'écran « Veille » précise que seules les sources de la veille sont concernées. Échap dans une fenêtre
+  ouverte depuis une carte de la Plateforme ou de la Configuration système ne ferme plus que cette fenêtre. Aucune
+  migration, aucune route d'API. (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
   (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
   « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par

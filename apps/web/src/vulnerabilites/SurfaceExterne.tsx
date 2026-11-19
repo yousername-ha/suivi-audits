@@ -70,10 +70,11 @@ import {
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 import { type OngletSurface, ouvertureSurface } from './recherche';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
+import { EtatIntegration } from '../integrations/EtatIntegration';
 import { useCan } from '../session';
 import { CarteSurface } from './CarteSurface';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
@@ -107,6 +108,7 @@ import {
   libelleTypeAlerte,
   pourcentage,
   OPTIONS_LIAISON_ACTIF,
+  detailEtatAlh,
   resumeEtatAlh,
   resumeMachineInterne,
   urlActifsAlh,
@@ -132,42 +134,24 @@ const OPTIONS_STATUT = [
 ];
 const OPTIONS_ACTIF = TYPES_ACTIF_ALH.map((t) => ({ value: t, label: libelleTypeActif(t) }));
 
-/** État de la synchronisation de chaque instance AlgoLightHouse (sans état). */
-export function EtatSurface({ etats }: { etats: EtatSurfaceExterneDto[] }) {
-  if (!etats.length)
-    return (
-      <Alert role="status" title="Aucun connecteur AlgoLightHouse">
-        Aucune instance AlgoLightHouse n’est configurée : un administrateur des intégrations l’ajoute dans{' '}
-        <Link to="/integrations">Pilotage &gt; Intégrations</Link>.
-      </Alert>
-    );
+/** État en lecture seule de chaque instance AlgoLightHouse (sans état) : état, dernière synchronisation, erreur éventuelle,
+    bilan et périmètres non reliés, puis « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076,
+    addendum du 19/11/2026). */
+export function EtatSurface({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatSurfaceExterneDto[];
+  peutConfigurer?: boolean;
+}) {
   return (
-    <Stack gap="xs">
-      {etats.map((e) => {
-        const r = resumeEtatAlh(e);
-        return (
-          <Group key={e.integrationId} gap="sm" wrap="nowrap" align="flex-start">
-            <StatusChip etat={r.etat}>{r.libelle}</StatusChip>
-            <Stack gap="2xs">
-              <Text size="sm" fw={600}>
-                {e.nom}
-              </Text>
-              {r.detail && (
-                <Text size="xs" c="dimmed" role="status">
-                  {r.detail}
-                </Text>
-              )}
-              {e.derniereCompleteLe && (
-                <Text size="xs" c="dimmed">
-                  Dernière synchronisation complète :{' '}
-                  <span className="horodatage">{fmtDate(e.derniereCompleteLe)}</span>
-                </Text>
-              )}
-            </Stack>
-          </Group>
-        );
-      })}
-    </Stack>
+    <EtatIntegration
+      type="AlgoLightHouse"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      qualifier={resumeEtatAlh}
+      detail={detailEtatAlh}
+    />
   );
 }
 
@@ -1002,7 +986,7 @@ export function PerimetresAlhTable({
             <Table.Tr>
               <Table.Td colSpan={3}>
                 <Text size="sm" c="dimmed">
-                  Aucun périmètre AlgoLightHouse : lancez une synchronisation depuis Pilotage &gt; Intégrations.
+                  Aucun périmètre AlgoLightHouse : ils apparaissent après une synchronisation du connecteur.
                 </Text>
               </Table.Td>
             </Table.Tr>
@@ -1669,7 +1653,7 @@ export function SurfaceExternePage() {
       />
       <Stack>
         <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSurface etats={etat.data} />}
+        {etat.data && <EtatSurface etats={etat.data} peutConfigurer={can('integrations', 'lire')} />}
         <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="carte">Carte</Tabs.Tab>

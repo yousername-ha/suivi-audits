@@ -227,3 +227,9 @@ ailleurs. Ce point remplace le placement du point 12 (rubrique « Intégrations 
   - l'**état en lecture seule** : date de la dernière synchronisation, et si elle est en erreur.
   Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation dans les outils.
 - Réalisation confiée à la session « Module surveillance vulnérabilités SMSI », qui modifie ces écrans.
+
+**Réalisé** le 19/11/2026 sur `claude/hopeful-dijkstra-s1b9d2` (lot I1 de l'[ADR 0100](0100-module-vulnerabilites.md), sans
+migration ni changement d'API) : carte « Intégrations » de la page Plateforme (droit `integrations:lire`), rubrique du menu
+Pilotage retirée, `/integrations` redirigé vers `/plateforme/integrations` ; dans « Failles détectées », « Surface externe » et
+« Vue d'ensemble », état en lecture seule et lien « Configurer l'intégration » (composant commun `EtatIntegration`). Détail,
+frontière des réglages et points à valider : addendum « lot I1 » de l'ADR 0100.

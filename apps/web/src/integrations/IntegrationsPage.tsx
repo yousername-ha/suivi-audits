@@ -1,4 +1,6 @@
-/* Module Intégrations (ADR 0076), socle des connecteurs réseau : rubrique « Intégrations ». Une tuile par type de connecteur
+/* Module Intégrations (ADR 0076), socle des connecteurs réseau : carte « Intégrations » de la page Plateforme (addendum du
+   19/11/2026 : les intégrations se configurent là et nulle part ailleurs ; l'ancienne adresse /integrations y redirige). Une
+   tuile par type de connecteur
    (catalogue) et par instance, avec un pictogramme neutre de packages/ui (aucun logo de marque dans ce lot). Configuration,
    secrets en écriture seule (« défini » / « non défini »), activation qui ouvre le flux du type après validation explicite
    (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
@@ -31,7 +33,7 @@ import {
   type IntegrationDto,
   type TypeIntegrationDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, IconeConnecteur, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, IconeConnecteur, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
@@ -257,7 +259,9 @@ export function TableExecutions({ executions }: { executions: ExecutionIntegrati
   );
 }
 
-export function IntegrationsPage() {
+/** Contenu de la carte « Intégrations » de la page Plateforme : la fenêtre de la carte porte le titre, le panneau ne le
+    répète pas. */
+export function IntegrationsPanel() {
   const can = useCan();
   const qc = useQueryClient();
   const lire = can('integrations', 'lire');
@@ -326,27 +330,23 @@ export function IntegrationsPage() {
       notifications.show({ color: 'teal', message: 'Synchronisation demandée à l’exécutant d’exploitation.' });
     });
 
-  if (!lire)
-    return (
-      <Page>
-        <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>
-      </Page>
-    );
+  if (!lire) return <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>;
   const avertissement = etat.data ? messageExecutant(etat.data.executant) : null;
   return (
-    <Page>
-      <PageHeader
-        title="Intégrations"
-        description="Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un administrateur."
-      />
+    <>
       <Stack>
+        <Text size="sm" c="dimmed" className="lecture">
+          Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès
+          réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un
+          administrateur. Les outils qui exploitent un connecteur (module Vulnérabilités) n’en montrent que l’état.
+        </Text>
         {avertissement && (
           <Alert color="orange" role="status" title="Exécutant d’exploitation non vu">
             {avertissement}
           </Alert>
         )}
         <ErrorAlert error={catalogue.error ?? instances.error ?? etat.error} />
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Connecteurs configurés
         </Title>
         {instances.data && instances.data.length === 0 && (
@@ -375,7 +375,7 @@ export function IntegrationsPage() {
             />
           ))}
         </div>
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Catalogue
         </Title>
         <div className="integrations-tuiles">
@@ -398,6 +398,7 @@ export function IntegrationsPage() {
         size="lg"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
         {edition && (
           <EditeurInstance
@@ -418,10 +419,11 @@ export function IntegrationsPage() {
         size="xl"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
         {historique && <Historique id={historique.id} />}
       </Modal>
-    </Page>
+    </>
   );
 }
 

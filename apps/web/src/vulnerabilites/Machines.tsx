@@ -294,7 +294,7 @@ export function DepotsTenableTable({
             <Table.Tr>
               <Table.Td colSpan={3}>
                 <Text size="sm" c="dimmed">
-                  Aucun dépôt Tenable : lancez une synchronisation depuis Pilotage &gt; Intégrations.
+                  Aucun dépôt Tenable : ils apparaissent après une synchronisation du connecteur.
                 </Text>
               </Table.Td>
             </Table.Tr>

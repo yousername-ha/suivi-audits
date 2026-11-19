@@ -12,7 +12,8 @@
    motif refusé par le serveur) ; rien n'est écrit, la pile reste dans son état initial (la liaison elle-même, les droits
    par paire et la majoration sont couverts par les tests de l'API). Lot ALH6 : colonne « Services connus » de l'onglet des
    actifs et limite « seuls les services portés par une alerte sont connus » (sans données ; la colonne « Service » de la
-   carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). */
+   carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). Lot I1 : le connecteur se
+   configure dans la carte « Intégrations » de la page Plateforme ; l'écran n'en montre que l'état et le lien. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -42,8 +43,9 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
   };
   try {
-    await page.goto('/integrations');
-    await expect(page.getByRole('heading', { name: 'Intégrations', level: 1 })).toBeVisible();
+    // Le connecteur se configure dans la carte « Intégrations » de la page Plateforme (ADR 0076, addendum du 19/11/2026).
+    await page.goto('/plateforme/integrations');
+    await expect(page.getByRole('dialog', { name: 'Intégrations', exact: true })).toBeVisible();
     await page
       .getByRole('region', { name: 'AlgoLightHouse', exact: true })
       .getByRole('button', { name: 'Ajouter une instance' })
@@ -86,6 +88,12 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await page.goto('/vulnerabilites/surface-externe');
     await expect(page.getByRole('heading', { name: 'Surface externe', level: 1 })).toBeVisible();
     await expect(page.getByText(nom, { exact: true })).toBeVisible();
+    // Lot I1 : l'écran ne montre que l'état et le lien vers la carte ; aucun bouton de test ni de synchronisation.
+    await expect(page.getByRole('link', { name: 'Configurer l’intégration', exact: true })).toHaveAttribute(
+      'href',
+      '/plateforme/integrations',
+    );
+    await expect(page.getByRole('button', { name: /Synchroniser|Tester la connexion/ })).toHaveCount(0);
     // La planification de l'API (toutes les minutes) peut inscrire la synchronisation du jour entre l'activation et cette
     // lecture : l'état est alors « Synchronisation en cours », ou en échec si un exécutant l'a déjà prise.
     await expect(
@@ -155,7 +163,7 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(page.getByText(/Aucun périmètre AlgoLightHouse/)).toBeVisible();
     await accessible();
 
-    await page.goto('/integrations');
+    await page.goto('/plateforme/integrations');
     await page.getByRole('region', { name: nom }).getByRole('button', { name: 'Désactiver', exact: true }).click();
     await expect(
       page.getByRole('region', { name: nom }).getByRole('button', { name: 'Activer', exact: true }),
@@ -166,7 +174,7 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     // Un échec en cours de route ne doit pas laisser l'instance active ni le flux ouvert : un nouvel essai partirait d'un
     // flux déjà validé, sans fenêtre de validation.
     try {
-      await page.goto('/integrations');
+      await page.goto('/plateforme/integrations');
       const desactiver = page
         .getByRole('region', { name: nom })
         .getByRole('button', { name: 'Désactiver', exact: true });

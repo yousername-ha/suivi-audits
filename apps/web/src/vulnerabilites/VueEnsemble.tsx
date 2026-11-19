@@ -35,6 +35,8 @@ import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { LienConfigurerIntegration } from '../integrations/EtatIntegration';
+import { erreurSynchronisation } from '../integrations/etat-integration';
 import { useCan } from '../session';
 import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
@@ -657,14 +659,18 @@ export function CiblesTable({
 /* ------------------------------------------------------------------ Capteurs */
 const heureCourte = (iso: string | null) => (iso ? fmtDate(iso) : 'jamais');
 
+/** Capteurs : état en lecture seule des sources de veille et des connecteurs (ADR 0076, addendum du 19/11/2026 : aucun
+    réglage ni bouton ici ; « Configurer l'intégration » mène à la carte de la Plateforme, pour qui a le droit de la lire). */
 export function Capteurs({
   veille,
   tenable,
   alh,
+  peutConfigurer = false,
 }: {
   veille: EtatVeilleDto | undefined;
   tenable: EtatSynchronisationDto[] | undefined;
   alh: EtatSurfaceExterneDto[] | undefined;
+  peutConfigurer?: boolean;
 }) {
   const id = useId();
   const sources: EtatSourceVeilleDto[] = veille?.sources ?? [];
@@ -705,11 +711,13 @@ export function Capteurs({
         <ul className="pc-capteurs__liste">
           {connecteurs.map(({ c, type }, i) => {
             const e = etatConnecteur(c);
+            const erreur = erreurSynchronisation(c);
             return (
               <li key={c.integrationId} className={`pc-capteur pc-capteur--${e.etat}`}>
                 <span className="pc-capteur__num pc-mono">{deuxChiffres(i + 1)}</span>
                 <strong>{c.nom}</strong>
                 <small>{type}</small>
+                {erreur && <small>Erreur : {erreur}</small>}
                 <span className="pc-capteur__pied">
                   <StatusChip etat={e.etat}>{e.libelle}</StatusChip>
                   <span className="horodatage">{heureCourte(e.reussie)}</span>
@@ -720,9 +728,14 @@ export function Capteurs({
         </ul>
       ) : (
         <Text size="sm" c="dimmed">
-          Aucun connecteur Tenable Security Center ni AlgoLightHouse : ils se configurent dans Pilotage &gt;
-          Intégrations.
+          Aucun connecteur Tenable Security Center ni AlgoLightHouse : ils se configurent dans la page Plateforme, carte
+          « Intégrations ».
         </Text>
+      )}
+      {peutConfigurer && (
+        <p className="pc-capteurs__lien">
+          <LienConfigurerIntegration visible />
+        </p>
       )}
     </section>
   );
@@ -730,7 +743,8 @@ export function Capteurs({
 
 /* ------------------------------------------------------------------ Page */
 export function VueEnsemblePage() {
-  const lire = useCan()('vulnerabilites', 'lire');
+  const can = useCan();
+  const lire = can('vulnerabilites', 'lire');
   const navigate = useNavigate();
   const [filtre, setFiltre] = useState<FiltreCibles>('toutes');
   const [caseChoisie, setCaseChoisie] = useState<CaseChoisie | null>(null);
@@ -918,7 +932,12 @@ export function VueEnsemblePage() {
               </Anchor>
             </div>
           </section>
-          <Capteurs veille={veille.data} tenable={tenable.data} alh={alh.data} />
+          <Capteurs
+            veille={veille.data}
+            tenable={tenable.data}
+            alh={alh.data}
+            peutConfigurer={can('integrations', 'lire')}
+          />
           <p className="poste__note">
             Chaque point du radar est une faille suivie, placée par la plateforme ; seul le balayage est décoratif. La
             plateforme décide des alertes ; une personne décide du traitement.

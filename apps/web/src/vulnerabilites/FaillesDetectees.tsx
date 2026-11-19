@@ -56,6 +56,7 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { ouvertureConstat } from './recherche';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { EtatIntegration } from '../integrations/EtatIntegration';
 import { resumeExecution } from '../integrations/integrations';
 import { useCan } from '../session';
 import {
@@ -504,30 +505,26 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
   );
 }
 
-/** Dernière synchronisation de chaque instance (sans état). */
-export function EtatSynchronisations({ etats }: { etats: EtatSynchronisationDto[] }) {
-  if (!etats.length)
-    return (
-      <Alert color="gray" role="status">
-        Aucun connecteur Tenable Security Center : il se configure dans Pilotage &gt; Intégrations.
-      </Alert>
-    );
+/** État en lecture seule de chaque instance de Tenable (sans état) : dernière synchronisation, erreur éventuelle, bilan, et
+    lien « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076, addendum du 19/11/2026). */
+export function EtatSynchronisations({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatSynchronisationDto[];
+  peutConfigurer?: boolean;
+}) {
   return (
-    <Stack gap="2xs">
-      {etats.map((e) => (
-        <Text key={e.integrationId} size="sm" role="status">
-          <strong>{e.nom}</strong> :{' '}
-          {e.derniere ? (
-            <>
-              <span className="horodatage">{fmtDate(e.derniere.demandeLe)}</span> ·{' '}
-              {resumeExecution({ etat: e.derniere.etat, resultat: e.derniere.bilan, erreur: e.derniere.erreur })}
-            </>
-          ) : (
-            'jamais synchronisé.'
-          )}
-        </Text>
-      ))}
-    </Stack>
+    <EtatIntegration
+      type="Tenable Security Center"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      detail={(e) =>
+        e.derniere?.etat === 'recu' && e.derniere.bilan
+          ? resumeExecution({ etat: 'recu', resultat: e.derniere.bilan, erreur: null })
+          : null
+      }
+    />
   );
 }
 
@@ -633,7 +630,7 @@ export function FaillesDetecteesPage() {
       />
       <Stack>
         <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSynchronisations etats={etat.data} />}
+        {etat.data && <EtatSynchronisations etats={etat.data} peutConfigurer={can('integrations', 'lire')} />}
         <SegmentedControl
           value={vue}
           onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}

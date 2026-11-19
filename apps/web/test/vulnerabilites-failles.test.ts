@@ -425,7 +425,11 @@ describe('rendu', () => {
     ).toContain('Aucun dépôt Tenable');
   });
   it('état des synchronisations : aucune instance, ou dernier bilan', () => {
-    expect(rendu(createElement(EtatSynchronisations, { etats: [] }))).toContain('Pilotage &gt; Intégrations');
+    // Aucune instance : l'écran le dit et renvoie à la page Plateforme (ADR 0076, addendum du 19/11/2026).
+    const vide = rendu(createElement(EtatSynchronisations, { etats: [] }));
+    expect(vide).toContain('Aucune instance Tenable Security Center n’est configurée.');
+    expect(vide).toContain('page Plateforme');
+    expect(vide).not.toContain('Configurer l’intégration');
     const html = rendu(
       createElement(EtatSynchronisations, {
         etats: [
