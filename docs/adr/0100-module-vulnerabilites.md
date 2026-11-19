@@ -2263,3 +2263,87 @@ parc réel ; Docker et Node 26.
 3. Recherche dans les **avis du CERT-FR et du CERT Santé** (identifiant d'avis, titre) depuis la barre : non faite (l'écran
    « Veille » la fait déjà).
 
+## Addendum du 19/11/2026 — lot L1 : lisibilité des alertes de la veille et pastilles de source
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun changement d'API ni de schéma, aucun appel sortant, aucune dépendance nouvelle, aucune image téléchargée, rien chez
+l'assistant.
+
+### Demande du RSSI (19/11/2026)
+
+« Il faudrait un petit logo sur l'alerte pour savoir si ça vient du NVD ou du CERT etc., et mettre en forme l'alerte car à
+lire c'est compliqué, un visuel de l'alerte sauf si tu l'as déjà fait. »
+
+### Réalisation
+
+- **Pastilles de source** (`apps/web/src/vulnerabilites/pictos-sources.ts`, `PictoSource.tsx`) : un composant unique pour les
+  cinq sources de la veille et les deux connecteurs. Aucun logo officiel ni image de marque : chaque pastille est dessinée en
+  SVG pour la charte, avec un sigle, une forme et une teinte qui lui sont propres, de sorte que la couleur n'est jamais seule
+  à distinguer.
+
+  | Source | Sigle | Forme | Teinte | Nom accessible |
+  |---|---|---|---|---|
+  | `cisa-kev` | KEV | bouclier | rouge | Source : catalogue KEV de la CISA |
+  | `nvd` | NVD | rectangle | marine | Source : NVD (NIST) |
+  | `epss` | EPSS | pilule | orange | Source : EPSS (FIRST) |
+  | `cert-fr` | FR | fanion | bleu | Source : CERT-FR (ANSSI) |
+  | `cert-sante` | CS | octogone | vert | Source : CERT Santé |
+  | `tenable` | TEN | parallélogramme | violet | Source : Tenable |
+  | `algolighthouse` | ALH | hexagone | gris | Source : AlgoLightHouse |
+
+  Sigle dans la teinte « accent » sur le fond « doux » de la même teinte (jetons `--carte-*`, contraste AA en clair et en
+  sombre). Nom complet en info-bulle ; nom accessible `role="img"` « Source : … » là où aucun texte voisin ne nomme la source
+  (cartes des alertes et avis, liste des sources d'une CVE, en-tête de la fiche illustrée, tableau des sources), pastille
+  décorative (`aria-hidden`) là où le texte la nomme déjà (marques d'exploitation, recommandations de la fiche, écran
+  « Alertes », fenêtre d'alerte critique, barre de recherche : sans info-bulle dans la liste de choix).
+- **Alertes et avis** (`AvisVeille.tsx`) : le tableau dense devient une liste de cartes, une par publication : pastille et nom
+  court de la source, nature (« Alerte » ou « Avis », pictogramme et mot), identifiant, date, titre en titre de niveau 3,
+  résumé limité à trois lignes, produit cité et mentions du CERT Santé (liste de définitions), marques, CVE citées en boutons
+  (six, puis « et N autres ») qui ouvrent la fiche illustrée de la CVE (lot PC4), « Ouvrir la fiche » et lien vers l'original
+  (nouvel onglet, `rel="noopener noreferrer"`, `referrerPolicy="no-referrer"`). Recherche, pagination et textes d'état vide
+  inchangés.
+- **Fiche d'une alerte ou d'un avis** : aucune n'existait (la fiche illustrée ne connaît que constat, faille déclarée, CVE et
+  alerte d'AlgoLightHouse) ; une fenêtre de l'écran « Veille » la rend à partir de l'élément déjà lu par la liste, sans appel
+  nouveau : tout le résumé, découpé en paragraphes et listes, mentions, toutes les CVE citées (chacune ouvre sa fiche), lien
+  vers l'original. Le résumé reste du **texte simple** : la veille le range sur une ligne (`texteExterneValide` refuse les
+  caractères de contrôle), la découpe (`blocsTexte`) ne fait que reconnaître les puces intégrées (« - », « – », « • », « * »
+  entre espaces après une ponctuation de fin, deux au moins) et, si un jour il y en a, les retours à la ligne ; React échappe
+  tout, aucun `dangerouslySetInnerHTML`.
+- **Failles connues** (`ListeFailles`, écran « Veille », après une recherche) : une carte par CVE, pastilles des sources qui
+  l'ont publiée (avec EPSS quand un score existe, AlgoLightHouse quand elle est exposée), puis un fait par ligne : gravité CVSS
+  et vecteur, exploitation (marques et première source), EPSS (FIRST), produit touché, exposition. Mêmes données qu'avant.
+- **Fiche illustrée** : ligne « Sources » dans l'en-tête (sources dont la fiche reprend quelque chose : origine, faits de la
+  priorité, vecteurs, correctif, recommandations), pastille sur chaque recommandation ; `referrerPolicy="no-referrer"` ajouté
+  au lien d'un avis cité.
+- Feuille `packages/ui/src/neon-veille.css` (jetons de la charte, clair et sombre, ni px ni rem, aucun style en ligne),
+  exportée par `packages/ui` ; aide de l'écran « Veille » complétée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Alerte qui se détache** : liseré, fond et pastille « Alerte » rouges pour une **alerte du CERT-FR** seulement (règle déjà
+  retenue par les recommandations de la fiche, lot PC4). Le CERT Santé range toutes ses publications comme « alerte » : elles
+  gardent le mot « Alerte », au trait orange, sans le fond rouge, pour qu'une alerte du CERT-FR reste rare et visible.
+- **Marques d'une alerte ou d'un avis**, tirées de ce que la veille range déjà : « Exploitation avérée (alerte du CERT-FR) »
+  pour une alerte du CERT-FR qui cite au moins une CVE (règle V26 de la plateforme), « Exploitée selon le CERT Santé » et
+  « Preuve de concept disponible (CERT Santé) » d'après la fiche lue. « Présente sur le parc » et « exposée sur Internet » ne
+  sont **pas** affichées dans la liste : la réponse de la liste des avis ne les porte pas, et l'API n'a pas été élargie ; elles
+  se lisent dans la fiche de chaque CVE.
+- **Sigles** courts propres à la plateforme (« FR » pour le CERT-FR, « CS » pour le CERT Santé, « TEN », « ALH ») ; le nom
+  complet est toujours donné à côté, au survol ou aux lecteurs d'écran.
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 366 et 390 px)
+avec des réponses remplacées par des données fictives ; parcours Playwright ajouté à
+`zzz…-vulnerabilites-veille.spec.ts` (clair 1 366 px, sombre 390 px : cartes, pastilles nommées, lien sans référent, aucun
+débordement horizontal, fiche ouverte au clavier, CVE citée vers sa fiche, axe `wcag2a`/`wcag2aa` sans violation) joué sur
+cette pile, à rejouer en CI ; CSP stricte du serveur de production vérifiée en CI seulement. Forme réelle des résumés du
+CERT-FR et du CERT Santé (présence de puces) non vérifiée sur des données réelles. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Présente sur le parc » et « exposée sur Internet » dans la liste des alertes et avis : à ajouter à la réponse de la liste
+   (lecture par CVE citée, mêmes règles de lecture que la recherche, lot ALH5) si le RSSI le veut.
+2. Recherche des alertes et avis depuis la barre du module (point ouvert 3 du lot R1).
+3. Les choix ci-dessus.
+

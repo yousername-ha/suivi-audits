@@ -148,3 +148,14 @@
     display: none;
   }
 }
+/* Lot L1 : pastilles de source (décoratives, le texte nomme la source) dans le titre d'un groupe et d'une CVE. */
+.rv__titre-libelle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
+.rv__option-titre .ps-liste {
+  margin-inline-start: var(--mantine-spacing-xs);
+  font-family: var(--mantine-font-family);
+  vertical-align: middle;
+}

@@ -1,0 +1,377 @@
+/* Module Vulnérabilités (ADR 0100, lot L1) : pastilles de source, alertes et avis de la veille, failles connues. Jetons de la
+   charte en clair et en sombre (--carte-*, --suivi-*) ; aucune longueur en px ni en rem, aucun style en ligne (ADR 0006).
+   Une pastille se reconnaît à son monogramme et à sa forme ; la teinte les double, jamais seule. Le monogramme est dessiné
+   dans la teinte « accent » sur le fond « doux » de la même teinte, contraste AA dans les deux thèmes. */
+
+/* ------------------------------------------------------------------ Pastilles de source */
+.ps {
+  --ps-accent: var(--carte-gris-accent);
+  --ps-doux: var(--carte-gris-doux);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  vertical-align: middle;
+  line-height: 1;
+}
+.ps--rouge {
+  --ps-accent: var(--carte-rouge-accent);
+  --ps-doux: var(--carte-rouge-doux);
+}
+.ps--marine {
+  --ps-accent: var(--carte-marine-accent);
+  --ps-doux: var(--carte-marine-doux);
+}
+.ps--orange {
+  --ps-accent: var(--carte-orange-accent);
+  --ps-doux: var(--carte-orange-doux);
+}
+.ps--bleu {
+  --ps-accent: var(--carte-bleu-accent);
+  --ps-doux: var(--carte-bleu-doux);
+}
+.ps--vert {
+  --ps-accent: var(--carte-vert-accent);
+  --ps-doux: var(--carte-vert-doux);
+}
+.ps--violet {
+  --ps-accent: var(--carte-violet-accent);
+  --ps-doux: var(--carte-violet-doux);
+}
+.ps__pastille {
+  inline-size: 3em;
+  block-size: 1.64em;
+  overflow: visible;
+}
+.ps__forme {
+  fill: var(--ps-doux);
+  stroke: var(--ps-accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ps__sigle {
+  fill: var(--ps-accent);
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ps__nom {
+  color: var(--ps-accent);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ps-liste {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ps-liste li {
+  display: inline-flex;
+}
+
+/* ------------------------------------------------------------------ Alertes et avis */
+.va-liste,
+.vf-liste {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.va-item,
+.va-fiche,
+.vf-item {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 4) solid var(--carte-gris-trait);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-md);
+  background: var(--carte-boite);
+  color: var(--carte-texte);
+}
+.va-fiche {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.va-item--alerte {
+  border-inline-start-color: var(--carte-orange-accent);
+}
+/* Alerte du CERT-FR : liseré et fond teintés en rouge, pastille pleine. */
+.va-item--urgente {
+  border-color: var(--carte-rouge-trait);
+  border-inline-start-color: var(--carte-rouge-accent);
+  background: var(--carte-rouge-fond);
+}
+.va-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-xs);
+}
+.va-nature {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+  padding: calc(var(--mantine-spacing-2xs) / 2) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid currentcolor;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.va-nature svg {
+  inline-size: 1.15em;
+  block-size: 1.15em;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.va-nature--alerte {
+  color: var(--carte-orange-accent);
+}
+.va-nature--urgente {
+  border-color: var(--carte-rouge-accent);
+  background: var(--carte-rouge-accent);
+  color: var(--carte-boite);
+}
+.va-id {
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.va-date,
+.vf-date {
+  color: var(--carte-secondaire);
+}
+.va-titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.va-titre--fiche {
+  font-size: var(--mantine-font-size-lg);
+}
+/* Résumé de la liste : trois lignes, la suite dans la fiche. */
+.va-resume {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.va-produit {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  overflow-wrap: anywhere;
+}
+.va-marques,
+.va-cves {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.va-cve {
+  display: inline-block;
+  padding: calc(var(--mantine-spacing-2xs) / 2) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--carte-bleu-trait);
+  border-radius: var(--mantine-radius-xl);
+  background: var(--carte-bleu-doux);
+  color: var(--carte-bleu-accent);
+  font: inherit;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.va-cve:hover {
+  border-color: var(--carte-bleu-accent);
+}
+.va-cve:focus-visible,
+.va-ouvrir:focus-visible,
+.va-lien:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--carte-bleu-accent);
+  outline-offset: calc(var(--suivi-trait-l) * 2);
+}
+.va-cve--texte {
+  cursor: default;
+}
+.va-cves__reste {
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.va-mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  margin: 0;
+  font-size: var(--mantine-font-size-xs);
+}
+.va-mentions div {
+  display: flex;
+  gap: var(--mantine-spacing-2xs);
+}
+.va-mentions dt {
+  color: var(--carte-secondaire);
+}
+.va-mentions dd {
+  margin: 0;
+  font-weight: 600;
+}
+.va-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.va-ouvrir {
+  padding: calc(var(--mantine-spacing-2xs) / 2) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--carte-bleu-accent);
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--carte-bleu-accent);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.va-ouvrir:hover {
+  background: var(--carte-bleu-doux);
+}
+.va-lien {
+  color: var(--carte-bleu-accent);
+  font-size: var(--mantine-font-size-sm);
+  text-decoration: underline;
+}
+.va-lien::after {
+  content: ' ↗';
+}
+.va-section {
+  display: grid;
+  gap: var(--mantine-spacing-2xs);
+}
+.va-etiquette {
+  margin: 0;
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.va-texte {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.va-texte p {
+  margin: 0 0 var(--mantine-spacing-xs);
+}
+.va-texte ul {
+  margin: 0 0 var(--mantine-spacing-xs);
+  padding-inline-start: var(--mantine-spacing-lg);
+}
+.va-texte li + li {
+  margin-block-start: var(--mantine-spacing-2xs);
+}
+
+/* ------------------------------------------------------------------ Failles connues */
+.vf-item--exploitee {
+  border-inline-start-color: var(--carte-rouge-accent);
+}
+.vf-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+}
+.vf-date {
+  font-size: var(--mantine-font-size-xs);
+}
+.vf-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+}
+.vf-description {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+}
+.vf-faits {
+  display: grid;
+  grid-template-columns: minmax(9em, max-content) minmax(0, 1fr);
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+}
+.vf-faits > div {
+  display: contents;
+}
+.vf-faits dt {
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-block-start: calc(var(--mantine-spacing-2xs) / 2);
+}
+.vf-faits dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  margin: 0;
+}
+.vf-vecteur,
+.vf-editeurs {
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.vf-editeurs {
+  flex-basis: 100%;
+}
+.vf-vide {
+  color: var(--carte-secondaire);
+}
+.vf-produits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 36em) {
+  .va-item,
+  .vf-item {
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  }
+  .vf-faits {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vf-faits dd {
+    margin-block-end: var(--mantine-spacing-2xs);
+  }
+}

@@ -12,6 +12,7 @@ import {
   type ResultatCveDto,
 } from '@suivi/shared';
 import { GRAVITE_LIBELLES } from './veille';
+import { sansDoublon, type SourcePicto } from './pictos-sources';
 
 /** Délai de frappe avant l'appel (anti-rebond), en millisecondes. */
 export const DELAI_FRAPPE = 300;
@@ -64,6 +65,11 @@ export const LIBELLES_GROUPES: Record<GroupeRechercheGlobale, string> = {
   technologies: 'Applications : technologies exposées (AlgoLightHouse)',
   controles: 'Applications : contrôles de Tenable',
 };
+/** Lot L1 : source d'un groupe tenu par un connecteur (pastille décorative du titre : le libellé la nomme). */
+export const SOURCE_GROUPE: Partial<Record<GroupeRechercheGlobale, SourcePicto>> = {
+  technologies: 'algolighthouse',
+  controles: 'tenable',
+};
 export const ORDRE_GROUPES: readonly GroupeRechercheGlobale[] = [
   'cves',
   'machines',
@@ -83,6 +89,8 @@ export interface OptionRecherche {
   toutVoir?: boolean;
   /** État d'une CVE (teinte du texte d'état). */
   etat?: ReturnType<typeof etatCveRecherche>['etat'];
+  /** Lot L1 : sources de la réponse (NVD pour la gravité, catalogue KEV de la CISA), en pastilles décoratives. */
+  sources?: SourcePicto[];
 }
 export interface GroupeOptions {
   groupe: GroupeRechercheGlobale;
@@ -121,6 +129,7 @@ export function optionsRecherche(r: RechercheGlobaleDto): GroupeOptions[] {
       detail: detailCve(c),
       to: c.fiche ? lienFicheCve(c.cve) : lienTechnologies(c.cve),
       etat: etatCveRecherche(c).etat,
+      sources: sansDoublon([...(c.gravite ? (['nvd'] as const) : []), ...(c.kev ? (['cisa-kev'] as const) : [])]),
     })),
     machines: r.machines.elements.map((m) => ({
       cle: `machine-${m.id}`,

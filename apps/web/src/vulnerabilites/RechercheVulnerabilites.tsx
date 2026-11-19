@@ -18,8 +18,10 @@ import {
   type OptionRecherche,
   optionsRecherche,
   rechercheValide,
+  SOURCE_GROUPE,
   urlRecherche,
 } from './recherche';
+import { PictoSource, PictosSources } from './PictoSource';
 
 export const NOM_CHAMP_RECHERCHE = 'Rechercher une CVE, une machine, une adresse IP ou une application';
 
@@ -137,7 +139,12 @@ export function RechercheVulnerabilitesVue({
           {groupes.map((g) => (
             <div key={g.groupe} className="rv__groupe" role="group" aria-labelledby={`${id}-g-${g.groupe}`}>
               <div id={`${id}-g-${g.groupe}`} className="rv__titre-groupe" role="presentation">
-                <span>{g.libelle}</span>
+                <span className="rv__titre-libelle">
+                  {SOURCE_GROUPE[g.groupe] && (
+                    <PictoSource source={SOURCE_GROUPE[g.groupe]!} decoratif infobulle={false} />
+                  )}
+                  {g.libelle}
+                </span>
                 <span className="rv__total">{g.total}</span>
               </div>
               {g.options.map((o) => {
@@ -162,7 +169,10 @@ export function RechercheVulnerabilitesVue({
                     onClick={() => onChoisir(o)}
                     onMouseEnter={() => onSurvol(i)}
                   >
-                    <span className="rv__option-titre">{o.titre}</span>
+                    <span className="rv__option-titre">
+                      {o.titre}
+                      {o.sources?.length ? <PictosSources sources={o.sources} decoratif infobulle={false} /> : null}
+                    </span>
                     <span className="rv__option-detail">{o.detail}</span>
                   </div>
                 );

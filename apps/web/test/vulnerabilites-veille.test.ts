@@ -8,7 +8,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { famillesVisibles, localiser } from '../src/navigation';
-import { ActivationVeille, AvisTable, FaillesTable, KevTable, SourcesTable } from '../src/vulnerabilites/Veille';
+import { ListeAvis } from '../src/vulnerabilites/AvisVeille';
+import { ActivationVeille, KevTable, ListeFailles, SourcesTable } from '../src/vulnerabilites/Veille';
 import {
   adresseAvis,
   dateCourte,
@@ -194,7 +195,7 @@ describe('rendu', () => {
   });
   it('avis : texte simple (balisage échappé), lien en nouvel onglet sans référent, ou aucun lien', () => {
     const html = rendu(
-      createElement(AvisTable, {
+      createElement(ListeAvis, {
         avis: [
           avis({ titre: '<img src=x onerror=alert(1)> Titre piégé' }),
           avis({ id: '2', identifiant: 'CERTFR-2026-AVI-0002', adresse: 'https://ailleurs.exemple.test/' }),
@@ -210,7 +211,7 @@ describe('rendu', () => {
     expect(liens[0]).toContain('rel="noopener noreferrer"');
     expect(liens[0]).toMatch(/referrerPolicy="no-referrer"|referrerpolicy="no-referrer"/i);
     expect(html).toContain('CERTFR-2026-AVI-0002');
-    expect(rendu(createElement(AvisTable, { avis: [] }))).toContain('Aucune alerte ni aucun avis');
+    expect(rendu(createElement(ListeAvis, { avis: [] }))).toContain('Aucune alerte ni aucun avis');
   });
   it('KEV : action exigée et échéance (dépassée signalée), textes anglais tels quels', () => {
     const html = rendu(createElement(KevTable, { failles: [faille()], aujourdhui: '2026-11-16' }));
@@ -221,7 +222,7 @@ describe('rendu', () => {
   });
   it('failles connues : gravité, vecteur, EPSS, éditeurs et produits', () => {
     const html = rendu(
-      createElement(FaillesTable, {
+      createElement(ListeFailles, {
         failles: [faille(), faille({ cve: 'CVE-2026-0002', cvss31: null, kev: null, epss: null })],
       }),
     );
@@ -235,11 +236,11 @@ describe('rendu', () => {
   it('lot PC4 : la CVE ouvre sa fiche illustrée (bouton) quand l’écran le propose ; sinon texte simple', () => {
     const rien = () => undefined;
     for (const html of [
-      rendu(createElement(FaillesTable, { failles: [faille()], onOuvrir: rien })),
+      rendu(createElement(ListeFailles, { failles: [faille()], onOuvrir: rien })),
       rendu(createElement(KevTable, { failles: [faille()], aujourdhui: '2026-11-16', onOuvrir: rien })),
     ])
       expect(html).toMatch(/<button[^>]*type="button"[^>]*>CVE-2026-0001<\/button>/i);
-    expect(rendu(createElement(FaillesTable, { failles: [faille()] }))).not.toMatch(/<button[^>]*>CVE-2026-0001/i);
+    expect(rendu(createElement(ListeFailles, { failles: [faille()] }))).not.toMatch(/<button[^>]*>CVE-2026-0001/i);
   });
   it('faille vue sur la surface externe (lot ALH2) : actifs exposés lisibles, lien vers l’écran', () => {
     const html = renderToStaticMarkup(
@@ -249,7 +250,7 @@ describe('rendu', () => {
         createElement(
           MantineProvider,
           null,
-          createElement(FaillesTable, {
+          createElement(ListeFailles, {
             failles: [faille({ surfaceExterne: { actifs: 2, alertes: 1, horsLecture: false } })],
           }),
         ),

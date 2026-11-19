@@ -34,6 +34,19 @@ appel sortant et n'écrit rien au journal. (session « Module surveillance vuln�
 
 ### Ajouté
 
+- Vulnérabilités, lisibilité des alertes de la veille et pastilles de source (lot L1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : chaque source a sa pastille dessinée pour la charte (sigle, forme et
+  teinte propres ; aucun logo officiel) avec son nom complet au survol et pour les lecteurs d'écran : catalogue KEV de la CISA,
+  NVD (NIST), EPSS (FIRST), CERT-FR (ANSSI), CERT Santé, Tenable, AlgoLightHouse ; posée dans l'écran « Veille » (sources,
+  alertes et avis, failles connues), les marques d'exploitation, l'en-tête et les recommandations de la fiche illustrée,
+  l'écran « Alertes », la fenêtre d'alerte critique et la barre de recherche. Les alertes et avis du CERT-FR et du CERT Santé
+  passent d'un tableau dense à des cartes : source, nature (une alerte du CERT-FR se détache d'un avis), identifiant, date,
+  titre, résumé sur trois lignes, marques publiées par la source, CVE citées en boutons qui ouvrent leur fiche, lien vers
+  l'original. « Ouvrir la fiche » montre l'alerte ou l'avis en entier, le résumé découpé en paragraphes et listes quand le
+  texte en porte (texte simple, aucun balisage interprété). Les failles connues de la recherche donnent un fait par ligne
+  (gravité, exploitation, EPSS, produit touché). Aucune migration, aucun changement d'API.
+  (session « Module surveillance vulnérabilités SMSI »)
+
 - Vulnérabilités, barre de recherche globale (lot R1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : en tête de toutes
   les pages du module, une barre trouve une CVE même non détectée sur le parc (veille locale : identifiant, éditeur, produit,
   description ; détections de Tenable et d'AlgoLightHouse), avec son état (« détectée sur N machines », « exposée sur N actifs
