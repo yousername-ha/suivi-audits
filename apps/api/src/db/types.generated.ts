@@ -205,6 +205,8 @@ export interface BackupPolicy {
   days: Generated<number[]>;
   retention_days: Generated<number>;
   version: Generated<number>;
+  max_backups: Generated<number>;
+  pre_update_backups: Generated<number>;
 }
 
 export interface BackupWorker {

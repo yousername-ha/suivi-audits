@@ -29,7 +29,48 @@ vulnérabilités SMSI »)
 action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
 surveillance vulnérabilités SMSI »)
 
+**Migration automatique `091`** (conservation des sauvegardes, [ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) :
+additive (deux colonnes bornées de `backup_policy`, avec valeur par défaut), durée négligeable, sans reprise de données.
+**Externaliser les sauvegardes AVANT la mise à jour** : avec les nouveaux réglages par défaut, au plus **30 sauvegardes
+régulières** restent dans le dossier des sauvegardes (en plus de la durée de conservation, 90 jours par défaut) ; les plus
+anciennes au-delà de 30 sont supprimées, avec leur fichier `.sha256`, **à la première sauvegarde qui suit la mise à jour**
+(planifiée, demandée dans l'interface ou lancée par cron). Copier d'abord hors du serveur celles à garder, ou relever le nombre
+maximal (jusqu'à 365) dans Configuration système, Sauvegardes et restauration, carte « Planification et conservation » ; pour
+un cron qui appelle `scripts/backup.sh` directement, `BACKUP_GARDER_MAX` dans `.env`. Les **sauvegardes d'avant mise à jour**
+passent de 5 à **3 gardées** (réglables de 1 à 10, ou `UPDATE_SAUVEGARDES_GARDEES` dans `.env` en ligne de commande) : ce
+nombre ne s'applique qu'aux mises à jour lancées depuis une version qui le contient (c'est le script de la version installée
+qui fait la rotation) ; la mise à jour vers cette version garde encore les 5 dernières. Les sauvegardes de sécurité des
+restaurations (`.restauration-securite/`) et les archives d'anciennes versions (`.tar.enc`, `.tar`) ne sont jamais
+supprimées. Une sauvegarde ou une mise à jour qui manquerait de place est désormais refusée avant de commencer (message avec
+la place libre, la place nécessaire et ce qui l'occupe) : voir « Libérer de la place » dans le guide d'installation. Après une
+mise à jour réussie ou une tentative échouée, seules restent les images de l'application de la version en service, de la
+précédente et du frontal en service, y compris les images sans étiquette ; les autres images du serveur ne sont plus
+touchées (plus de `docker image prune`). (session « Projet audit_suivi Coeur »)
+
+**Frontal** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : son empreinte couvre
+désormais l'image de base Caddy et le magasin des autorités racines ; à la première mise à jour depuis l'interface vers une
+version qui contient ce changement, l'empreinte diffère et le frontal est recréé une fois (coupure de quelques secondes
+annoncée sur la page de maintenance, même certificat). Aucune action. (session « Projet audit_suivi Coeur »)
+
 ### Ajouté
+
+- Sauvegardes, conservation ([ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) : nombre maximal de
+  sauvegardes régulières (de 7 à 365, 30 par défaut) en plus de la durée de conservation, et nombre de sauvegardes d'avant
+  mise à jour gardées (de 1 à 10, 3 par défaut), réglés dans Configuration système, Sauvegardes et restauration (carte
+  « Planification et conservation », droit d'administrer, If-Match, journal d'audit) et transmis à l'exécutant comme la durée ;
+  `BACKUP_GARDER_MAX` et `UPDATE_SAUVEGARDES_GARDEES` dans `.env` pour les scripts lancés directement, mêmes bornes, une valeur
+  hors bornes fait échouer l'opération sans rien supprimer. Migration `091`. (session « Projet audit_suivi Coeur »)
+- Espace disque, contrôle avant opération (ADR 0106) : avant une sauvegarde (`scripts/backup.sh`, donc toutes les voies) et
+  avant une mise à jour (exécutant de mise à jour, avant tout téléchargement ; `scripts/mettre-a-jour.sh`, avant la
+  sauvegarde), la place nécessaire est estimée (dernière sauvegarde ou taille de la base, images à télécharger d'après les
+  manifestes ou 2 Gio forfaitaires, marge de 1 Gio ou 10 %, zone de travail de la sauvegarde) ; un manque de place refuse
+  l'opération avant de commencer, avec la place libre, la place nécessaire et l'occupation par les sauvegardes et par les
+  images de l'application, sans retour arrière. (session « Projet audit_suivi Coeur »)
+- Espace disque, alerte (ADR 0106) : l'exécutant d'exploitation publie le relevé du disque des données (libre, total,
+  occupation des sauvegardes et des images de l'application, sans chemin) ; sous 15 % d'espace libre, chaque administrateur
+  actif reçoit une alerte dans l'application (bandeau menant aux sauvegardes), une seule fois par franchissement (réarmée à
+  20 %), tracée au journal d'audit ; relevé affiché dans la carte « Planification et conservation ». (session « Projet audit_suivi Coeur »)
+- Images de l'application : `scripts/images-application.py` (taille occupée et ménage). (session « Projet audit_suivi Coeur »)
 
 - Vulnérabilités, regroupement par correctif (lot S3, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : vue « Par
   correctif » de « Failles détectées », en tête « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de
@@ -76,6 +117,26 @@ surveillance vulnérabilités SMSI »)
   que les délais). (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, « Failles détectées » : les boutons de pagination (flèches et numéros) portent un nom accessible, comme
   ceux de la vue d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
+- Sauvegardes : la carte « Planification et rétention » devient « Planification et conservation » et passe de « Certificats et
+  opérations » à « Sauvegardes et restauration » (aussi dans l'écran Système) ; rotation de `scripts/backup.sh` par durée OU
+  nombre ; sauvegardes d'avant mise à jour gardées au nombre réglé (3 par défaut, 5 auparavant). Le motif d'un refus de
+  `backup.sh` (espace insuffisant) est repris dans le message de la demande de sauvegarde. (session « Projet audit_suivi Coeur »)
+- Frontal ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : l'empreinte couvre aussi
+  l'identité épinglée de l'image de base Caddy (`CADDY_IMAGE`) et le magasin des autorités racines
+  (`/etc/ssl/certs/ca-certificates.crt`) ; une nouvelle image de base (correctif de sécurité) met le frontal à jour à la mise à
+  jour suivante. (session « Projet audit_suivi Coeur »)
+
+### Corrigé
+
+- Mise à jour : le ménage des images oubliait les images téléchargées ou épinglées par leur empreinte (sans étiquette), qui
+  s'accumulaient à chaque version, et ne s'appliquait pas après une tentative échouée ; il se fait maintenant par dépôt et par
+  empreinte, en gardant la version en service, la précédente et le frontal en service (`GATEWAY_VERSION`) seulement, sans
+  toucher les autres images du serveur (le `docker image prune` global est retiré). (session « Projet audit_suivi Coeur »)
+- Mise à jour depuis l'interface : la sauvegarde de sécurité travaillait dans le `/tmp` du conteneur `updater` (tmpfs de
+  256 Mo), ce qui faisait échouer la mise à jour au-delà d'environ 115 Mo de sauvegarde ; elle travaille désormais dans
+  `DATA_DIR/reprise-updates/tmp` (root, 0700, vidé au début et à la fin de l'opération), sur le disque des données, dont la
+  place est contrôlée avant de commencer. Effet seulement pour les mises à jour lancées depuis une version qui contient le
+  correctif (c'est l'exécutant de la version installée qui lance le script). (session « Projet audit_suivi Coeur »)
 
 ## [7.3.0] — 2026-11-18
 

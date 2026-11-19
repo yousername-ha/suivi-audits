@@ -21,6 +21,7 @@ import { BackupsPanel } from './AdminBackups';
 import { ModulesPanel } from './AdminModules';
 import { UpdatesPanel } from '../components/Updates';
 import { OperationsPanel } from './AdminOperations';
+import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
 
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
@@ -393,6 +394,7 @@ export function Exploitation() {
   return (
     <Stack>
       <BackupsPanel />
+      <PolitiqueSauvegardesPanel />
       <UpdatesPanel />
       <OperationsPanel />
       {sv.enRetard && (

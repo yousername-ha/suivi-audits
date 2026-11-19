@@ -19,6 +19,7 @@ import { useCan } from '../session';
 import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
+import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
 import { CleSecoursPanel } from '../components/CleSecours';
 import { FluxExternesPanel } from '../components/FluxExternes';
 import { MandatairePanel } from '../components/Mandataire';
@@ -254,6 +255,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
       <Stack gap="xl">
         {can('administration', 'lire') && <CleSecoursPanel />}
         <BackupsPanel />
+        <PolitiqueSauvegardesPanel />
         {can('parametres', 'lire') && <SectionLoader section="sauvegardes" onDirty={m} />}
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
