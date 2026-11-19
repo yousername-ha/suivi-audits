@@ -241,7 +241,9 @@ services:
     read_only: true
     tmpfs: ['/tmp:size=256m', '/root:size=32m']
     cap_drop: [ALL]
-    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE]
+    # SETUID et SETGID servent seulement à abandonner les privilèges : la veille, les connecteurs et l'envoi du courriel
+    # tournent sous le compte nobody (65534), sans groupe supplémentaire (scripts/exploitation-worker.py).
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE, SETUID, SETGID]
     mem_limit: 512m
     pids_limit: 128
     stop_grace_period: 30s

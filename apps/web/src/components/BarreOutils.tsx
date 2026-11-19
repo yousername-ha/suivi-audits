@@ -6,15 +6,18 @@ import {
   ActionIcon,
   Badge,
   Button,
+  Checkbox,
+  Divider,
   Group,
   Menu,
   Popover,
   Stack,
+  Text,
   TextInput,
   Tooltip,
   UnstyledButton,
 } from '@mantine/core';
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useOngletVisible } from '../parcours-iso/mouvement';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
@@ -162,29 +165,40 @@ export function FiltresAvances({
   );
 }
 
-/** Filtre posé sur le titre d'une colonne : un clic sur le mot ouvre les valeurs ; la colonne filtrée est marquée. */
+/** Nom accessible d'un filtre de colonne : « Filtrer par X », suivi des valeurs retenues entre parenthèses. */
+export function nomFiltreColonne(libelle: string, choisies: readonly string[]): string {
+  return choisies.length ? `Filtrer par ${libelle} (filtre : ${choisies.join(', ')})` : `Filtrer par ${libelle}`;
+}
+
+/** Filtre posé sur le titre d'une colonne : un clic sur le mot ouvre les valeurs ; la colonne filtrée est marquée.
+    En variante compacte, le bouton se réduit à l'entonnoir, à côté d'un titre qui garde son propre rôle (le tri). */
 export function FiltreColonne({
   libelle,
   valeur,
   options,
   onChange,
+  compact = false,
 }: {
   libelle: string;
   valeur: string | null;
   options: { value: string; label: string }[];
   onChange: (v: string | null) => void;
+  /** Bouton réduit à l'entonnoir (le nom accessible reste « Filtrer par X »). */
+  compact?: boolean;
 }) {
   const choisie = options.find((o) => o.value === valeur);
+  const nom = nomFiltreColonne(libelle, choisie ? [choisie.label] : []);
   return (
     <Menu position="bottom-start" withArrow shadow="md">
       <Menu.Target>
         <UnstyledButton
-          className="filtre-colonne"
+          className={compact ? 'filtre-colonne filtre-colonne--icone' : 'filtre-colonne'}
           data-actif={choisie ? 'true' : undefined}
-          aria-label={choisie ? `Filtrer par ${libelle} (filtre : ${choisie.label})` : `Filtrer par ${libelle}`}
+          aria-label={nom}
+          title={compact ? nom : undefined}
         >
-          {libelle}
-          {choisie && <span className="filtre-colonne__valeur"> : {choisie.label}</span>}
+          {!compact && libelle}
+          {!compact && choisie && <span className="filtre-colonne__valeur"> : {choisie.label}</span>}
           <IconeFiltre />
         </UnstyledButton>
       </Menu.Target>
@@ -207,6 +221,158 @@ export function FiltreColonne({
   );
 }
 
+const sansAccents = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('fr');
+
+/** Valeurs d'un filtre de colonne dont le libellé contient le texte cherché, sans tenir compte de la casse ni des
+    accents ; un texte vide les garde toutes. */
+export function filtrerOptions<T extends { label: string }>(options: readonly T[], texte: string): T[] {
+  const cherche = sansAccents(texte.trim());
+  return cherche ? options.filter((o) => sansAccents(o.label).includes(cherche)) : [...options];
+}
+
+/** Au-delà de ce nombre de valeurs, un filtre de colonne à choix multiple propose un champ de recherche. */
+export const SEUIL_RECHERCHE_FILTRE = 8;
+
+type OptionFiltre = { value: string; label: string };
+
+/** Options d'un filtre à choix multiple, complétées des valeurs retenues qui n'y figurent pas (liste pas encore
+    chargée, valeur ajoutée depuis une ligne) : elles restent visibles, pour pouvoir les décocher. */
+export function optionsAvecValeurs(options: readonly OptionFiltre[], valeurs: readonly string[]): OptionFiltre[] {
+  return [
+    ...options,
+    ...valeurs.filter((v) => !options.some((o) => o.value === v)).map((v) => ({ value: v, label: v })),
+  ];
+}
+
+/** Liste d'un filtre de colonne à choix multiple : champ de recherche au-delà de huit valeurs, « Tous » qui vide le
+    filtre, puis une case à cocher par valeur. Le texte cherché disparaît avec la liste, à sa fermeture. */
+export function ListeFiltreMultiple({
+  libelle,
+  valeurs,
+  options,
+  onChange,
+  description,
+  onTous,
+}: {
+  libelle: string;
+  valeurs: string[];
+  options: OptionFiltre[];
+  onChange: (v: string[]) => void;
+  description?: string;
+  /** Appelé après « Tous » (par exemple, pour refermer la liste). */
+  onTous?: () => void;
+}) {
+  const [texte, setTexte] = useState('');
+  const idDescription = useId();
+  const visibles = filtrerOptions(options, texte);
+  const basculer = (v: string) => onChange(valeurs.includes(v) ? valeurs.filter((x) => x !== v) : [...valeurs, v]);
+  return (
+    <Stack gap="xs">
+      {options.length > SEUIL_RECHERCHE_FILTRE && (
+        <TextInput
+          size="xs"
+          data-autofocus
+          aria-label={`Chercher dans « ${libelle} »`}
+          placeholder="Chercher…"
+          leftSection={<IconeLoupe />}
+          value={texte}
+          onChange={(e) => setTexte(e.currentTarget.value)}
+        />
+      )}
+      <Button
+        size="compact-sm"
+        variant="subtle"
+        justify="flex-start"
+        fullWidth
+        disabled={!valeurs.length}
+        onClick={() => {
+          onChange([]);
+          onTous?.();
+        }}
+      >
+        Tous
+      </Button>
+      <Divider />
+      {description && (
+        <Text id={idDescription} size="xs" c="dimmed">
+          {description}
+        </Text>
+      )}
+      <div
+        role="group"
+        aria-label={libelle}
+        aria-describedby={description ? idDescription : undefined}
+        className="filtre-colonne-multiple__liste"
+      >
+        {visibles.map((o) => (
+          <Checkbox
+            key={o.value}
+            size="sm"
+            label={o.label}
+            checked={valeurs.includes(o.value)}
+            onChange={() => basculer(o.value)}
+          />
+        ))}
+        {!visibles.length && (
+          <Text size="xs" c="dimmed">
+            Aucune valeur.
+          </Text>
+        )}
+      </div>
+    </Stack>
+  );
+}
+
+/** Filtre à choix multiple posé sur le titre d'une colonne (décision du RSSI du 18/11/2026, Documents) : le même bouton
+    que FiltreColonne ouvre une liste à cases à cocher (ListeFiltreMultiple). « Tous » vide le filtre et referme la
+    liste ; Échap la referme et rend la main au titre ; le clavier circule dans la liste (Tab, Espace). */
+export function FiltreColonneMultiple({
+  libelle,
+  valeurs,
+  options,
+  onChange,
+  description,
+}: {
+  libelle: string;
+  valeurs: string[];
+  options: OptionFiltre[];
+  onChange: (v: string[]) => void;
+  /** Précision affichée en tête de la liste (par exemple, la façon dont les valeurs cochées se combinent). */
+  description?: string;
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const toutes = optionsAvecValeurs(options, valeurs);
+  const choisies = valeurs.map((v) => toutes.find((o) => o.value === v)?.label ?? v);
+  return (
+    <Popover opened={ouvert} onChange={setOuvert} position="bottom-start" withArrow shadow="md" trapFocus returnFocus>
+      <Popover.Target>
+        <UnstyledButton
+          className="filtre-colonne"
+          data-actif={valeurs.length ? 'true' : undefined}
+          aria-label={nomFiltreColonne(libelle, choisies)}
+          onClick={() => setOuvert((o) => !o)}
+        >
+          {libelle}
+          {choisies.length > 0 && (
+            <span className="filtre-colonne__valeur filtre-colonne__resume"> : {choisies.join(', ')}</span>
+          )}
+          <IconeFiltre />
+        </UnstyledButton>
+      </Popover.Target>
+      <Popover.Dropdown className="filtre-colonne-multiple">
+        <ListeFiltreMultiple
+          libelle={libelle}
+          valeurs={valeurs}
+          options={toutes}
+          onChange={onChange}
+          description={description}
+          onTous={() => setOuvert(false)}
+        />
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
+
 export interface VueBoite {
   value: string;
   label: string;
@@ -215,7 +381,7 @@ export interface VueBoite {
 
 /** Boîte d'outils commune aux registres (version 7.3.0, modèle validé par le RSSI le 16/11/2026) : petite boîte bleu
     nuit avec les vues, la recherche (raccourci « / ») et l'entonnoir des filtres avancés ; l'ajout se place au bout de
-    la ligne. Les autres filtres se posent sur le titre des colonnes (FiltreColonne). */
+    la ligne. Les autres filtres se posent sur le titre des colonnes (FiltreColonne, FiltreColonneMultiple). */
 export function BoiteOutils({
   label,
   vues,

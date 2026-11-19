@@ -69,7 +69,8 @@ interface Carte {
   resume: string;
   icone: Icone;
   teinte: Teinte;
-  /** Détail affiché dans la fenêtre centrée. Absent : la carte ouvre une page entière (`lien`). */
+  /** Détail affiché dans la fenêtre centrée. Absent : la carte ouvre une page entière (`lien`). Un cadre du détail dont le
+      titre répète celui de la fenêtre ne l'affiche pas (`titreVisible={false}`, décision du RSSI du 18/11/2026). */
   detail?: (modifie: (m: boolean) => void, can: Peut) => ReactNode;
   lien?: string;
 }
@@ -82,7 +83,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Nom de l’organisation, logo et coordonnées affichés dans l’application.',
     icone: 'reglages',
     teinte: 'vert',
-    detail: (m) => <SectionLoader section="general" onDirty={m} />,
+    detail: (m) => <SectionLoader section="general" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'cycle',
@@ -100,7 +101,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Référentiels chargés et référentiel complémentaire actif.',
     icone: 'livre',
     teinte: 'orange',
-    detail: (m) => <SectionLoader section="referentiels" onDirty={m} />,
+    detail: (m) => <SectionLoader section="referentiels" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'echelles',
@@ -163,7 +164,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Durées de conservation et aperçu de ce qui serait purgé. Aucune suppression automatique.',
     icone: 'horloge',
     teinte: 'orange',
-    detail: (m) => <SectionLoader section="conservation" onDirty={m} />,
+    detail: (m) => <SectionLoader section="conservation" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'calendriers',
@@ -190,7 +191,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Thème, densité et style par défaut pour l’organisation.',
     icone: 'palette',
     teinte: 'orange',
-    detail: (m) => <SectionLoader section="apparence" onDirty={m} />,
+    detail: (m) => <SectionLoader section="apparence" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'notifications',
@@ -199,7 +200,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Délais d’alerte avant une échéance.',
     icone: 'cloche',
     teinte: 'vert',
-    detail: (m) => <SectionLoader section="notifications" onDirty={m} />,
+    detail: (m) => <SectionLoader section="notifications" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'notifications-destinataires',
@@ -226,7 +227,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Fournisseur du modèle, clé, profils et périmètres que l’assistant peut lire.',
     icone: 'bouclier',
     teinte: 'violet',
-    detail: (m) => <ReglagesAssistantPanel onDirty={m} />,
+    detail: (m) => <ReglagesAssistantPanel onDirty={m} titreVisible={false} />,
   },
   {
     id: 'import',
@@ -237,7 +238,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     teinte: 'violet',
     detail: (m, can) => (
       <Stack gap="xl">
-        {can('parametres', 'lire') && <SectionLoader section="import_export" onDirty={m} />}
+        {can('parametres', 'lire') && <SectionLoader section="import_export" onDirty={m} titreVisible={false} />}
         <ImportPanel />
         <ImportTenacyPanel />
       </Stack>
@@ -266,7 +267,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Serveur SMTP/SMTPS, contact technique et message de test.',
     icone: 'cloche',
     teinte: 'bleu',
-    detail: (m) => <SectionLoader section="courriel" onDirty={m} />,
+    detail: (m) => <SectionLoader section="courriel" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'mises-a-jour',
@@ -325,7 +326,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     teinte: 'vert',
     detail: (m, can) => (
       <Stack gap="xl">
-        <SectionLoader section="securite" onDirty={m} />
+        <SectionLoader section="securite" onDirty={m} titreVisible={false} />
         {can('administration', 'administrer') && <PoivrePanel />}
         {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
         {can('administration', 'lire') && <AntivirusPanel />}
@@ -375,7 +376,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Versions logicielles, base de données, migrations, volumétrie.',
     icone: 'terminal',
     teinte: 'gris',
-    detail: () => <DetailsTechniques />,
+    detail: () => <DetailsTechniques titreVisible={false} />,
   },
 ];
 

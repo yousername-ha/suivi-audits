@@ -78,8 +78,10 @@ describe('Processus Studio : repères conservés', () => {
   });
   it('propose la création sous le nom « Nouveau processus » à qui peut modifier', () => {
     expect(html).toMatch(/<span aria-hidden="true">\+.*<\/span>Nouveau processus/);
-    expect(html).toContain('Périmètre affiché');
-    expect(html).toContain('Mon organisation');
+    // Le bandeau « Périmètre affiché » est retiré : la liste de l'en-tête de page donne le périmètre (lot 2, décision du
+    // RSSI du 18/11/2026) ; les chiffres du périmètre tiennent sur une ligne.
+    expect(html).not.toContain('Périmètre affiché');
+    expect(html).toMatch(/class="pr-resume"/);
   });
   it('n’affiche pas la création sans droit de modification', () => {
     const lecture = rendu(
