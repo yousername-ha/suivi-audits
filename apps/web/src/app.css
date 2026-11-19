@@ -595,9 +595,35 @@
   justify-content: center;
   align-items: center;
   gap: var(--mantine-spacing-2xs) var(--mantine-spacing-xl);
-  padding-block: var(--mantine-spacing-md);
-  border-block: var(--suivi-trait-l) solid var(--suivi-trait);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-xl);
+  /* Touche « bleu du menu », effet verre (demande du RSSI du 19/11/2026) : dégradé bleu nuit du menu, légèrement
+     translucide, reflet en haut et flou de l'arrière-plan ; mêmes couleurs en clair et en sombre, comme le menu. */
+  border: var(--suivi-trait-l) solid var(--menu-trait);
+  border-radius: var(--mantine-radius-md);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--menu-texte) 9%, transparent), transparent 55%),
+    linear-gradient(
+      163deg,
+      color-mix(in srgb, var(--menu-fond-haut) 94%, transparent),
+      color-mix(in srgb, var(--menu-fond-bas) 90%, transparent)
+    );
+  backdrop-filter: blur(var(--mantine-spacing-xs)) saturate(1.2);
+  box-shadow: inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--menu-texte) 14%, transparent);
+  color: var(--menu-texte);
   text-align: center;
+}
+.maj-versions .maj-libelle {
+  color: var(--menu-secondaire);
+}
+.maj-versions .maj-version strong {
+  color: var(--menu-texte);
+}
+.maj-versions .maj-version--cible strong,
+.maj-versions .maj-etiquette {
+  color: var(--neon-cyan);
+}
+.maj-versions .maj-version--note > span:last-child {
+  color: var(--menu-texte);
 }
 .maj-version {
   display: grid;
@@ -638,7 +664,7 @@
   align-self: center;
   inline-size: calc(var(--mantine-spacing-2xl) * 1.1);
   block-size: var(--suivi-trait-focus);
-  background: linear-gradient(90deg, var(--suivi-trait), var(--neon-cyan));
+  background: linear-gradient(90deg, var(--menu-secondaire), var(--neon-cyan));
 }
 .maj-fleche::after {
   content: '';
@@ -716,7 +742,17 @@
   color: var(--mantine-color-dimmed);
   font-size: var(--mantine-font-size-sm);
 }
+@media (prefers-reduced-transparency: reduce) {
+  .maj-versions {
+    backdrop-filter: none;
+  }
+}
 @media (forced-colors: active) {
+  .maj-versions {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
   .maj-fleche {
     background: CanvasText;
   }
