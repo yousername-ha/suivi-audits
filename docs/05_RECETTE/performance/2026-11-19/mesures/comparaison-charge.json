@@ -1,0 +1,192 @@
+[
+ {
+  "route": "tasks",
+  "n": 2102,
+  "unP50": 135,
+  "unP95": 181,
+  "chP50": 27,
+  "chP95": 497,
+  "ratioP50": 0.2,
+  "ratioP95": 2.7
+ },
+ {
+  "route": "tasks-window",
+  "n": 395,
+  "unP50": 104,
+  "unP95": 128,
+  "chP50": 24,
+  "chP95": 456,
+  "ratioP50": 0.2,
+  "ratioP95": 3.6
+ },
+ {
+  "route": "tasks-dashboard",
+  "n": 323,
+  "unP50": 141,
+  "unP95": 203,
+  "chP50": 33,
+  "chP95": 313,
+  "ratioP50": 0.2,
+  "ratioP95": 1.5
+ },
+ {
+  "route": "actions",
+  "n": 869,
+  "unP50": 18,
+  "unP95": 26,
+  "chP50": 23,
+  "chP95": 400,
+  "ratioP50": 1.3,
+  "ratioP95": 15.4
+ },
+ {
+  "route": "fiche-action",
+  "n": 607,
+  "unP50": 15,
+  "unP95": 23,
+  "chP50": 18,
+  "chP95": 326,
+  "ratioP50": 1.2,
+  "ratioP95": 14.2
+ },
+ {
+  "route": "risques-registre",
+  "n": 490,
+  "unP50": 26,
+  "unP95": 31,
+  "chP50": 22,
+  "chP95": 346,
+  "ratioP50": 0.8,
+  "ratioP95": 11.2
+ },
+ {
+  "route": "risk-map",
+  "n": 218,
+  "unP50": 28,
+  "unP95": 32,
+  "chP50": 29,
+  "chP95": 159,
+  "ratioP50": 1.0,
+  "ratioP95": 5.0
+ },
+ {
+  "route": "incidents",
+  "n": 410,
+  "unP50": 144,
+  "unP95": 186,
+  "chP50": 181,
+  "chP95": 914,
+  "ratioP50": 1.3,
+  "ratioP95": 4.9
+ },
+ {
+  "route": "documents",
+  "n": 374,
+  "unP50": 26,
+  "unP95": 29,
+  "chP50": 30,
+  "chP95": 136,
+  "ratioP50": 1.2,
+  "ratioP95": 4.7
+ },
+ {
+  "route": "vuln-constats",
+  "n": 20,
+  "unP50": 13010,
+  "unP95": 14563,
+  "chP50": 12081,
+  "chP95": 14746,
+  "ratioP50": 0.9,
+  "ratioP95": 1.0
+ },
+ {
+  "route": "vuln-machines",
+  "n": 28,
+  "unP50": 4634,
+  "unP95": 5124,
+  "chP50": 4987,
+  "chP95": 5655,
+  "ratioP50": 1.1,
+  "ratioP95": 1.1
+ },
+ {
+  "route": "vuln-fiche-machine",
+  "n": 10,
+  "unP50": 4185,
+  "unP95": 4813,
+  "chP50": 4385,
+  "chP95": 4771,
+  "ratioP50": 1.0,
+  "ratioP95": 1.0
+ },
+ {
+  "route": "vuln-fiche-constat",
+  "n": 10,
+  "unP50": 119,
+  "unP95": 160,
+  "chP50": 27,
+  "chP95": 109,
+  "ratioP50": 0.2,
+  "ratioP95": 0.7
+ },
+ {
+  "route": "vuln-vue",
+  "n": 18,
+  "unP50": 1909,
+  "unP95": 2133,
+  "chP50": 2015,
+  "chP95": 2372,
+  "ratioP50": 1.1,
+  "ratioP95": 1.1
+ },
+ {
+  "route": "notifications",
+  "n": 597,
+  "unP50": 242,
+  "unP95": 274,
+  "chP50": 340,
+  "chP95": 1423,
+  "ratioP50": 1.4,
+  "ratioP95": 5.2
+ },
+ {
+  "route": "dashboard",
+  "n": 421,
+  "unP50": 160,
+  "unP95": 210,
+  "chP50": 49,
+  "chP95": 793,
+  "ratioP50": 0.3,
+  "ratioP95": 3.8
+ },
+ {
+  "route": "synthese-perimetres",
+  "n": 214,
+  "unP50": 647,
+  "unP95": 694,
+  "chP50": 862,
+  "chP95": 2564,
+  "ratioP50": 1.3,
+  "ratioP95": 3.7
+ },
+ {
+  "route": "mes-elements",
+  "n": 309,
+  "unP50": 683,
+  "unP95": 732,
+  "chP50": 874,
+  "chP95": 2180,
+  "ratioP50": 1.3,
+  "ratioP95": 3.0
+ },
+ {
+  "route": "me",
+  "n": 250,
+  "unP50": 5,
+  "unP95": 7,
+  "chP50": 9,
+  "chP95": 77,
+  "ratioP50": 1.8,
+  "ratioP95": 11.0
+ }
+]
