@@ -13,7 +13,8 @@
     <!-- Refonte Neon, lot 1 « Maintenance Neon » : SVG repris de la maquette validée (géométrie inchangée, couleurs du
          thème). Le décor et les illustrations sont masqués aux technologies d'assistance ; ils découlent de l'état publié
          et ne simulent aucune progression : la barre de transfert ne se remplit que selon les octets reçus publiés par
-         l'exécutant (ADR 0104), exposés aux technologies d'assistance par #telechargement. -->
+         l'exécutant (ADR 0104), exposés aux technologies d'assistance par #telechargement ; pleine, elle le reste pendant la
+         vérification des signatures qui suit (addendum du 19/11/2026). -->
     <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <symbol id="i-star" viewBox="0 0 24 24">
         <path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z" />
@@ -51,6 +52,12 @@
       </symbol>
       <symbol id="i-file" viewBox="0 0 24 24">
         <path d="M5 3h9l5 5v13H5Zm9 0v6h5M9 13h6m-6 4h6" />
+      </symbol>
+      <symbol id="i-sceau" viewBox="0 0 24 24">
+        <path
+          d="M12 2 14.2 3.9 17 3.3 17.9 6.1 20.7 7 20.1 9.8 22 12 20.1 14.2 20.7 17 17.9 17.9 17 20.7 14.2 20.1 12 22 9.8 20.1 7 20.7 6.1 17.9 3.3 17 3.9 14.2 2 12 3.9 9.8 3.3 7 6.1 6.1 7 3.3 9.8 3.9Z"
+        />
+        <path d="m8.5 12 2.5 2.5 4.5-5" />
       </symbol>
     </svg>
     <div class="ambient" aria-hidden="true">
@@ -540,7 +547,9 @@
               </p>
               <div class="operation-metrics">
                 <!-- Progression mesurée du téléchargement (ADR 0104), seulement quand l'exécutant la publie. Barre de
-                     progression sans zone annoncée : #message reste la seule lecture automatique. -->
+                     progression sans zone annoncée : #message reste la seule lecture automatique. Téléchargement terminé
+                     (reçu égal au total, gardé pendant la vérification des signatures) : #telechargement-termine s'affiche,
+                     et aria-valuetext le reprend. -->
                 <p
                   id="telechargement"
                   class="metric metric-telechargement"
@@ -554,7 +563,11 @@
                   ><span
                     ><span class="metric-label">Téléchargement</span><span class="visually-hidden"> : </span
                     ><strong id="telechargement-valeur"></strong
-                  ></span>
+                    ><span id="telechargement-termine" class="telechargement-termine" hidden
+                      ><svg class="icone sceau" aria-hidden="true"><use href="#i-sceau" /></svg
+                      ><span>Téléchargement terminé — vérification des signatures</span></span
+                    ></span
+                  >
                 </p>
                 <p id="elapsed" class="metric" hidden>
                   <svg class="icone" aria-hidden="true"><use href="#i-clock" /></svg
