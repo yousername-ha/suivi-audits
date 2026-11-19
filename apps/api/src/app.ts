@@ -7,6 +7,7 @@ import { buildOpenApi, registerRoutes, route, type RouteDef } from './http/route
 import { isHttps, setBaseHeaders } from './http/security.js';
 import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
+import { contactsCriseComptesRoutes } from './routes/contacts-crise-comptes.js';
 import { moduleRoutes } from './routes/modules.js';
 import { adminRoutes } from './routes/admin.js';
 import { alertesSecuriteRoutes } from './routes/alertes-securite.js';
@@ -120,6 +121,7 @@ export function allRoutes(): RouteDef[] {
     ...webauthnRoutes,
     ...documentRoutes,
     ...accessRoutes,
+    ...contactsCriseComptesRoutes,
     ...adminRoutes,
     ...moduleRoutes,
     ...operationRoutes,

@@ -1,5 +1,5 @@
 /* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, clés de sécurité (sécurité du compte),
-   sessions ouvertes. */
+   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0107). */
 import {
   Alert,
   Badge,
@@ -21,6 +21,7 @@ import qrcode from 'qrcode-generator';
 import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
 import { ClesSecuriteCard } from '../components/ClesSecurite';
+import { ContactCriseCompteCarte } from '../components/ContactCriseCompte';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
@@ -46,6 +47,7 @@ export function AccountPage() {
         {me.user?.displayName} ({me.user?.username})
       </Text>
       <AffichageCard />
+      <ContactCriseCompteCarte />
       <NotificationsCard />
       <PasswordCard minLen={me.passwordMinLength} />
       <TotpCard />
