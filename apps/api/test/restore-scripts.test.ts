@@ -7,8 +7,9 @@ import { REPO } from './helpers.js';
 
 it('protège la restauration contre les archives piégées et préserve le parcours serveur', async () => {
   const result = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_restoration.py')], {
-    timeout: 30_000,
+    // Rotation par nombre et contrôle d'espace de backup.sh (ADR 0106) : sept sauvegardes réelles de plus.
+    timeout: 60_000,
   });
-  expect(result.stderr).toContain('Ran 38 tests');
+  expect(result.stderr).toContain('Ran 45 tests');
   expect(result.stderr).toMatch(/\nOK\n/);
-}, 35_000);
+}, 65_000);

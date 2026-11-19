@@ -8,6 +8,7 @@ from pathlib import Path
 import socket
 import ssl
 import subprocess
+import sys
 import tempfile
 import threading
 import urllib.error
@@ -200,6 +201,163 @@ class Updates(Isolement, unittest.TestCase):
             (self.root/'.env').write_text('APP_VERSION=3.0.0\nEXPLOITATION_AUTO=0\n')
             self.w.exploitation()
         run.assert_not_called()
+
+    def test_refus_d_espace_termine_la_demande_sans_maintenance_ni_retour_arriere(self):
+        """ADR 0106 : place insuffisante constatée avant le téléchargement ; la demande est close en échec avec le message
+        (place libre, nécessaire, occupation), sans maintenance, sans reprise ni ménage d'images."""
+        job = {'id': self.id, 'kind': 'install', 'target': '3.1.0'}
+        message = 'Mise à jour refusée avant de commencer : espace disque insuffisant : 10 Mo libres, 2000 Mo nécessaires.'
+        def install(j):
+            self.w.job = {**j, 'installed': '3.0.0'}
+            raise m.EspaceInsuffisant(message)
+        with patch.object(self.w, 'install', side_effect=install), patch.object(self.w, 'cli', return_value=''), \
+                patch.object(self.w, 'recover') as reprise, patch.object(self.w, 'menage_images') as menage:
+            self.w.installer(job)
+        reprise.assert_not_called()
+        menage.assert_not_called()
+        self.assertEqual((self.w.state['status'], self.w.state['message']), ('failed', message))
+        self.assertFalse(self.w.state['maintenance'])
+        self.assertIsNone(self.w.job)
+
+    def test_echec_avant_le_script_retire_les_images_telechargees(self):
+        """ADR 0106 : une tentative échouée (téléchargement ou vérification) laisse en place les seules images gardées."""
+        job = {'id': self.id, 'kind': 'install', 'target': '3.1.0'}
+        with patch.object(self.w, 'install', side_effect=m.Failure('signature')), patch.object(self.w, 'cli', return_value=''), \
+                patch.object(self.w, 'menage_images') as menage:
+            self.w.installer(job)
+        self.assertEqual(self.w.state['status'], 'failed')
+        menage.assert_called_once_with('3.0.0')
+        # Intervention requise : rien n'est touché.
+        self.w.state['status'] = 'idle'
+        with patch.object(self.w, 'install', side_effect=lambda j: setattr(self.w, 'job', dict(j)) or (_ for _ in ()).throw(m.Failure('x'))), \
+                patch.object(self.w, 'recover', side_effect=lambda: self.w.publish(status='intervention')), \
+                patch.object(self.w, 'menage_images') as menage:
+            self.w.installer(job)
+        menage.assert_not_called()
+
+    def test_menage_des_images_par_le_script_de_la_version_presente(self):
+        """Le ménage passe par scripts/images-application.py avec les versions gardées et le .env (empreintes épinglées) ; le
+        frontal gardé est celui de GATEWAY_VERSION ; sans script ou avec une version douteuse, rien n'est lancé."""
+        (self.root/'.env').write_text('APP_VERSION=3.1.0\nGATEWAY_VERSION=3.0.0\n')
+        with patch.object(self.w, 'run') as run:
+            self.w.menage_images('3.1.0', '3.0.0')
+        run.assert_not_called()
+        (self.root/'scripts').mkdir()
+        (self.root/'scripts/images-application.py').write_text('')
+        with patch.object(self.w, 'run') as run:
+            self.w.menage_images('3.1.0', '3.0.0')
+            self.w.menage_images('3.1.0;x')
+        run.assert_called_once()
+        self.assertEqual(run.call_args.args[0], ['python3', str(self.root/'scripts/images-application.py'), 'menage', '--en-service', '3.1.0',
+                                                 '--frontal', '3.0.0', '--env', str(self.root/'.env'), '--precedente', '3.0.0'])
+        with patch.object(self.w, 'run', side_effect=m.Failure('moteur')):
+            self.w.menage_images('3.1.0')  # ne lève jamais
+
+    def test_nombre_de_sauvegardes_d_avant_mise_a_jour_lu_comme_la_duree(self):
+        """ADR 0106 : la politique de l'application (« suivi ops-policy ») fournit le nombre transmis au script ; absent ou
+        illisible, le script applique .env (ou 3) ; hors bornes, l'installation échoue avant le script."""
+        for politique, attendu in ((json.dumps({'preUpdateBackups': 5}), 5), (json.dumps({'retentionDays': 90}), None), ('', None),
+                                    ('[1]', None)):
+            with self.subTest(politique=politique), patch.object(self.w, 'cli', return_value=politique):
+                self.assertEqual(self.w.nombre_sauvegardes_avant_maj(), attendu)
+        for valeur in (0, 11, '3', True, 2.5):
+            with self.subTest(valeur=valeur), patch.object(self.w, 'cli', return_value=json.dumps({'preUpdateBackups': valeur})):
+                with self.assertRaises(m.Failure): self.w.nombre_sauvegardes_avant_maj()
+        source = (ROOT/'scripts/update-worker.py').read_text()
+        self.assertIn('{"UPDATE_SAUVEGARDES_GARDEES": str(gardees)} if gardees is not None else {}', source)
+        self.assertLess(source.index('gardees = self.nombre_sauvegardes_avant_maj()'), source.index('scripts/mettre-a-jour.sh"), target'))
+
+    def test_sauvegarde_de_securite_travaille_sur_le_disque_des_donnees_et_sans_chemin_publie(self):
+        """La sauvegarde de sécurité d'une mise à jour web travaillait dans le /tmp du conteneur (tmpfs de 256 Mo) : le script
+        reçoit TMPDIR=DATA_DIR/reprise-updates/tmp, créé en 0700, vidé au début et à la fin ; l'état public n'a aucun chemin."""
+        travail = self.w.private/'tmp'
+        travail.mkdir()
+        (travail/'reste-d-une-operation-interrompue').write_text('x')
+        vu = {}
+        class FauxScript:
+            pid = 0
+            returncode = 1
+            def __init__(self, args, env=None, **kwargs):
+                vu['args'], vu['env'] = args, env
+                kwargs['stdout'].close()
+                dossier = Path(env['TMPDIR'])
+                vu['mode'] = dossier.stat().st_mode & 0o777
+                vu['contenu'] = sorted(f.name for f in dossier.iterdir())
+                (dossier/'suivi.dump').write_bytes(b'PGDMP-fictif')
+            def poll(self): return self.returncode
+        self.w.state['available'] = '3.1.0'
+        job = {'id': self.id, 'kind': 'install', 'target': '3.1.0'}
+        def signatures(target):
+            self.w.job['images'] = {'api': 'a', 'web': 'w', 'updater': 'u'}
+        def cli(*args):
+            return json.dumps({'ok': True}) if args[0] == 'controle-donnees' else ''
+        with patch.object(self.w, 'check'), patch.object(self.w, 'signatures', side_effect=signatures), \
+                patch.object(self.w, 'run', return_value='a' * 40 + '\n'), patch.object(self.w, 'cli', side_effect=cli), \
+                patch.object(self.w, 'health'), patch.object(m.subprocess, 'Popen', FauxScript):
+            self.w.install(job)
+        self.assertTrue(vu['args'][1].endswith('scripts/mettre-a-jour.sh'))
+        self.assertEqual(vu['env']['TMPDIR'], str(travail))
+        self.assertEqual(vu['mode'], 0o700)
+        self.assertEqual(vu['contenu'], [])
+        self.assertFalse(travail.exists())
+        self.assertEqual(self.w.state['status'], 'rolled_back')
+        public = (self.w.public/'status.json').read_text()
+        for chemin in (str(self.data), str(travail), 'reprise-updates'):
+            self.assertNotIn(chemin, public)
+        # Le contrôle d'espace mesure ce même dossier (disque des données), pas le /tmp du conteneur.
+        source = (ROOT/'scripts/update-worker.py').read_text()
+        self.assertIn('travail = self.private\n', source)
+        self.assertNotIn('tempfile.gettempdir()', source)
+
+    def test_retour_securise_restaure_avec_la_zone_de_travail_du_disque_des_donnees(self):
+        """Reprise après interruption (recover) : restore.sh reçoit le même TMPDIR, créé en 0700 et vidé avant, supprimé après."""
+        travail = self.w.private/'tmp'
+        travail.mkdir()
+        (travail/'reste').write_text('x')
+        sauvegarde = self.data/'sauvegardes-updates/avant-mise-a-jour/avant-maj-3.0.0-vers-3.1.0-20260101-000000.tar.age'
+        sauvegarde.parent.mkdir(parents=True)
+        sauvegarde.write_bytes(b'x')
+        m.atomic(self.w.private/'progress.json', {'jobId': self.id, 'phase': 'demarrage', 'backup': str(sauvegarde)})
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': '3.1.0', 'installed': '3.0.0', 'previousRef': 'c' * 40,
+                      'previousEnv': 'APP_VERSION=3.0.0\n', 'handoff': False}
+        vu = {}
+        def run(args, timeout=120, extra_env=None, input_text=None):
+            if args[:2] == ['bash', str(self.root/'scripts/restore.sh')]:
+                dossier = Path(extra_env['TMPDIR'])
+                vu.update(tmpdir=extra_env['TMPDIR'], mode=dossier.stat().st_mode & 0o777,
+                          contenu=sorted(f.name for f in dossier.iterdir()))
+                (dossier/'suivi.dump').write_bytes(b'PGDMP-fictif')
+            return ''
+        with patch.object(self.w, 'run', side_effect=run), patch.object(self.w, 'cli', return_value=''), \
+                patch.object(self.w, 'health'):
+            self.w.recover()
+        self.assertEqual(vu, {'tmpdir': str(travail), 'mode': 0o700, 'contenu': []})
+        self.assertFalse(travail.exists())
+        self.assertEqual(self.w.state['status'], 'rolled_back')
+        self.assertNotIn(str(self.data), (self.w.public/'status.json').read_text())
+        # Restauration en échec : zone supprimée quand même, intervention demandée.
+        self.w.job = {'id': str(uuid.uuid4()), 'kind': 'install', 'target': '3.1.0', 'installed': '3.0.0',
+                      'previousRef': 'c' * 40, 'previousEnv': 'APP_VERSION=3.0.0\n', 'handoff': False}
+        m.atomic(self.w.private/'progress.json', {'jobId': self.w.job['id'], 'phase': 'demarrage', 'backup': str(sauvegarde)})
+        def echec(args, **kwargs):
+            if args[:2] == ['bash', str(self.root/'scripts/restore.sh')]:
+                raise m.Failure('Commande interrompue')
+            return ''
+        with patch.object(self.w, 'run', side_effect=echec), patch.object(self.w, 'cli', return_value=''):
+            self.w.recover()
+        self.assertFalse(travail.exists())
+        self.assertEqual(self.w.state['status'], 'intervention')
+
+    def test_zone_de_travail_remplace_un_lien_sans_le_suivre(self):
+        cible = self.root/'ailleurs'
+        cible.mkdir()
+        (cible/'garde').write_text('x')
+        (self.w.private/'tmp').symlink_to(cible)
+        dossier = self.w.zone_travail()
+        self.assertFalse(dossier.is_symlink())
+        self.assertTrue((cible/'garde').exists())
+        self.w.zone_travail(creer=False)
+        self.assertFalse(dossier.exists())
 
     def test_interruption_avant_remplacement_ne_rejoue_pas_installation(self):
         self.w.job={'id':self.id,'target':'3.1.0','handoff':False}
@@ -545,19 +703,31 @@ class FrontalALaDemande(unittest.TestCase):
         self.assertIn(f'SORTIE={m.FRONTAL_EMPREINTE}\n', script)
         calcul_script = script.index('> "$SORTIE"')
         for fichier in ('/usr/local/bin/caddy', '/usr/local/bin/demarrer-gateway', '/etc/caddy/Caddyfile.gateway',
-                        '/etc/caddy/Caddyfile.internal', '/bin/busybox', '/lib/ld-musl-*.so.1', 'find /maintenance -type f'):
+                        '/etc/caddy/Caddyfile.internal', '/bin/busybox', '/lib/ld-musl-*.so.1', 'find /maintenance -type f',
+                        # ADR 0103, addendum du 19/11/2026 : magasin des autorités racines et identité de l'image de base.
+                        '/etc/ssl/certs/ca-certificates.crt', "printf 'image-de-base %s\\n' \"$IMAGE_DE_BASE\""):
             self.assertIn(fichier, script[:calcul_script])
+        self.assertIn('IMAGE_DE_BASE=${SUIVI_IMAGE_DE_BASE:-}', script)
         self.assertIn('LC_ALL=C sort', script[:calcul_script])
         self.assertIn('set -eu\n', script)
         self.assertIn("grep -Eqx '[a-f0-9]{64}' \"$SORTIE\"", script)
         self.assertIn('chmod 0444 "$SORTIE"', script)
         # Le Dockerfile lance ce script, monté pour cette seule étape (jamais copié dans l'image) ; la recette CI aussi.
-        appel = 'RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh'
+        appel = ('RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh '
+                 'SUIVI_IMAGE_DE_BASE="$CADDY_IMAGE" sh /tmp/empreinte-frontal.sh')
         self.assertFalse([ligne for ligne in dockerfile.splitlines() if 'empreinte-frontal' in ligne and ligne.startswith(('COPY', 'ADD'))])
         calcul = dockerfile.index(appel)
+        # CADDY_IMAGE, globale et épinglée par empreinte, est redéclarée dans l'étape finale (sinon vide dans le calcul).
+        finale = dockerfile.index('FROM ${CADDY_IMAGE}\n')
+        self.assertRegex(dockerfile, r'(?m)^ARG CADDY_IMAGE=caddy:[\w.-]+@sha256:[a-f0-9]{64}$')
+        self.assertTrue(finale < dockerfile.index('\nARG CADDY_IMAGE\n', finale) < calcul)
         recette = (ROOT/'scripts/ci/update-integree.py').read_text()
         self.assertIn("'docker/empreinte-frontal.sh'", recette)
-        self.assertIn('RUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh', recette)
+        # La recette recalcule avec la même image de base (lue dans le Dockerfile) : même empreinte pour la même image.
+        self.assertIn('ARG CADDY_IMAGE\\nRUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh '
+                      'SUIVI_IMAGE_DE_BASE="$CADDY_IMAGE" sh /tmp/empreinte-frontal.sh', recette)
+        self.assertIn("r'^ARG CADDY_IMAGE=(\\S+)$'", recette)
+        self.assertEqual(recette.count("'--build-arg','CADDY_IMAGE='+caddy_image"), 2)
         copies = [ligne for ligne in dockerfile.splitlines() if ligne.startswith('COPY ')
                   and any(c in ligne for c in ('/maintenance', '/etc/caddy', 'demarrer-gateway', '/usr/local/bin/caddy'))]
         self.assertGreaterEqual(len(copies), 6)
@@ -598,6 +768,22 @@ class FrontalALaDemande(unittest.TestCase):
         self.assertFalse(any('page de maintenance' in message for message in self.messages))
         self.assertEqual(self.recu()['message'], 'Mise à jour installée et vérifiée. Votre espace est prêt.')
         self.assertIn('mis à jour de 7.1.0', (self.w.private/f'{self.id}.log').read_text())
+
+    def test_apres_mise_a_jour_du_frontal_seule_son_image_en_service_reste(self):
+        """ADR 0103 (addendum) et 0106 : une fois le frontal recréé et vérifié, le ménage garde la version en service (qui est
+        aussi le frontal en service), la précédente, et retire l'ancienne image du frontal (7.1.0)."""
+        (self.root/'scripts').mkdir()
+        (self.root/'scripts/images-application.py').write_text('')
+        self.reprendre()
+        menage = [c for c in self.journal if 'menage' in c[0]]
+        self.assertEqual(len(menage), 1)
+        args = menage[0][0]
+        self.assertEqual(args[args.index('--en-service') + 1], self.cible)
+        self.assertEqual(args[args.index('--frontal') + 1], self.cible)
+        self.assertEqual(args[args.index('--precedente') + 1], '7.2.2')
+        self.assertNotIn('7.1.0', args)
+        # Après la recréation, jamais avant.
+        self.assertGreater(self.journal.index(menage[0]), next(i for i, c in enumerate(self.journal) if c[0][:3] == ['docker', 'compose', 'up']))
 
     def test_empreintes_differentes_ou_illisibles_en_service_le_frontal_est_mis_a_jour(self):
         for en_service in ('f' * 64, 'pas une empreinte'):
@@ -974,6 +1160,42 @@ class Telechargement(Isolement, unittest.TestCase):
         self.assertEqual((self.cli_pull(), self.tirages()), ([], [self.API]))
         self.assertIsNone(self.w.state['telechargement'])
 
+    def test_place_insuffisante_refus_avant_tout_telechargement(self):
+        """ADR 0106 : besoin = dernière sauvegarde + images à télécharger (total des manifestes) + marge ; refus avant le
+        premier octet, sans vérification, avec la place libre, la place nécessaire et ce qui l'occupe, sans chemin."""
+        dossier = self.data/'sauvegardes-updates/avant-mise-a-jour'
+        dossier.mkdir(parents=True)
+        (dossier/'avant-maj-3.0.0-vers-3.0.1-20260101-000000.tar.age').write_bytes(b'x' * 2048)
+        Disque = __import__('collections').namedtuple('Disque', 'total used free')
+        with patch.object(m.shutil, 'disk_usage', return_value=Disque(10 ** 12, 10 ** 12 - 10 * 1024 ** 2, 10 * 1024 ** 2)), \
+                patch.object(self.w, 'images_octets', return_value=3 * 1024 ** 2):
+            refus = self.signatures(m.EspaceInsuffisant)
+        self.assertEqual(self.tirages(), [])
+        self.assertEqual(self.cli_pull(), [])
+        self.assertEqual(self.verifications(), [])
+        message = str(refus)
+        self.assertTrue(message.startswith('Mise à jour refusée avant de commencer : espace disque insuffisant : 10 Mo libres, '))
+        self.assertIn('(dernière sauvegarde 1 Mo, images à télécharger 1 Mo, marge 1024 Mo', message)
+        self.assertIn('Occupation : sauvegardes 1 Mo, images de l’application 3 Mo.', message)
+        self.assertIn('« Libérer de la place »', message)
+        self.assertLessEqual(len(message), 500)
+        self.assertNotIn(str(self.root), message)
+        self.assertIsInstance(refus, m.Failure)
+
+    def test_place_suffisante_ou_forfait_sans_manifestes(self):
+        Disque = __import__('collections').namedtuple('Disque', 'total used free')
+        # Assez de place : téléchargement normal.
+        with patch.object(m.shutil, 'disk_usage', return_value=Disque(10 ** 12, 0, 50 * 1024 ** 3)):
+            self.signatures()
+        self.assertEqual(self.tirages(), [self.API, self.WEB, self.UPDATER])
+        # Manifestes illisibles : images comptées au forfait (2 Gio), comme scripts/mettre-a-jour.sh.
+        self.manifestes[self.WEB] = m.Failure('Commande interrompue')
+        self.requetes, self.commandes = [], []
+        with patch.object(m.shutil, 'disk_usage', return_value=Disque(10 ** 12, 0, 2 * 1024 ** 3)):
+            refus = self.signatures(m.EspaceInsuffisant)
+        self.assertIn('images à télécharger 2048 Mo', str(refus))
+        self.assertEqual(self.cli_pull(), [])
+
     def test_identifiants_de_registre_configures_docker_pull_sans_progression(self):
         dossier = self.root/'config-docker'
         dossier.mkdir()
@@ -1060,5 +1282,234 @@ class Telechargement(Isolement, unittest.TestCase):
                                   'POST /images/create?fromImage=ghcr.io%2Fyousername-ha%2Fsuivi-audits-api&tag=3.1.0 HTTP/1.1'])
         self.assertEqual(progression.recu, 300)
         self.assertEqual(self.w.state['telechargement'], {'recu': 300, 'total': 300})
+
+
+class EmpreinteFrontal(unittest.TestCase):
+    """Calcul réel de docker/empreinte-frontal.sh sur une arborescence fictive (chemins absolus du script relogés dans un
+    dossier temporaire, propriétaire non modifié) : déterministe, et sensible aux fichiers, au magasin des autorités racines et
+    à l'image de base (ADR 0103, addendum du 19/11/2026)."""
+    BASE = 'caddy:2.11.7-alpine@sha256:' + 'a' * 64
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.racine = Path(self.tmp.name)
+        script = (ROOT/'docker/empreinte-frontal.sh').read_text()
+        for chemin in ('/usr/local/bin/', '/etc/caddy/', '/bin/busybox', '/lib/ld-musl-', '/etc/ssl/certs/', '/maintenance',
+                       '/etc/suivi-frontal.sha256'):
+            script = script.replace(' ' + chemin, ' ' + str(self.racine) + chemin).replace('=' + chemin, '=' + str(self.racine) + chemin)
+        script = script.replace('chown root:root "$SORTIE"\n', '')
+        self.script = self.racine/'empreinte.sh'
+        self.script.write_text(script)
+        for chemin, contenu in (('usr/local/bin/caddy', 'caddy'), ('usr/local/bin/demarrer-gateway', 'gw'),
+                                ('etc/caddy/Caddyfile.gateway', 'a'), ('etc/caddy/Caddyfile.internal', 'b'), ('bin/busybox', 'bb'),
+                                ('lib/ld-musl-x86_64.so.1', 'musl'), ('etc/ssl/certs/ca-certificates.crt', 'racines'),
+                                ('maintenance/index.html', 'page'), ('maintenance/fonts/f.woff2', 'police')):
+            (self.racine/chemin).parent.mkdir(parents=True, exist_ok=True)
+            (self.racine/chemin).write_text(contenu)
+
+    def calculer(self, base=BASE):
+        sortie = self.racine/'etc/suivi-frontal.sha256'
+        if sortie.exists():
+            sortie.chmod(0o644)
+            sortie.unlink()
+        env = {k: v for k, v in os.environ.items() if k != 'SUIVI_IMAGE_DE_BASE'}
+        if base is not None:
+            env['SUIVI_IMAGE_DE_BASE'] = base
+        r = subprocess.run(['sh', str(self.script)], capture_output=True, text=True, env=env)
+        return r.returncode, sortie.read_text().strip() if sortie.exists() else None
+
+    def test_deterministe_et_sensible_a_l_image_de_base_et_aux_racines(self):
+        code, reference = self.calculer()
+        self.assertEqual(code, 0)
+        self.assertRegex(reference, r'^[a-f0-9]{64}$')
+        self.assertEqual(self.calculer(), (0, reference))
+        # Nouvelle image de base (correctif de sécurité de Caddy ou d'Alpine) : autre empreinte.
+        self.assertNotEqual(self.calculer('caddy:2.11.7-alpine@sha256:' + 'b' * 64)[1], reference)
+        # Magasin des autorités racines mis à jour : autre empreinte ; rétabli : même empreinte.
+        (self.racine/'etc/ssl/certs/ca-certificates.crt').write_text('racines mises à jour')
+        self.assertNotEqual(self.calculer()[1], reference)
+        (self.racine/'etc/ssl/certs/ca-certificates.crt').write_text('racines')
+        self.assertEqual(self.calculer()[1], reference)
+        # Fichier de la page de maintenance ajouté (cas de la recette CI) : autre empreinte.
+        (self.racine/'maintenance/recette-frontal.txt').write_text('jeton')
+        self.assertNotEqual(self.calculer()[1], reference)
+
+    def test_image_de_base_absente_ou_non_epinglee_ou_racines_absentes_refusees(self):
+        for base in (None, '', 'caddy:2.11.7-alpine', 'caddy@sha256:court', 'caddy:x@sha256:' + 'a' * 64 + ';id'):
+            with self.subTest(base=base):
+                self.assertEqual(self.calculer(base), (1, None))
+        (self.racine/'etc/ssl/certs/ca-certificates.crt').unlink()
+        self.assertNotEqual(self.calculer()[0], 0)
+        self.assertFalse((self.racine/'etc/suivi-frontal.sha256').exists())
+
+
+FAUX_DOCKER = '''#!/usr/bin/env python3
+import json, os, sys
+a = sys.argv[1:]
+etat = json.load(open(os.environ['FAUX_ETAT']))
+open(os.environ['FAUX_JOURNAL'], 'a').write(json.dumps(a) + '\\n')
+images = etat['images']
+if a[:2] == ['image', 'ls']: print('\\n'.join(i['Id'] for i in images))
+elif a[:2] == ['image', 'inspect']: print(json.dumps([i for i in images if i['Id'] in a[2:]]))
+elif a[:2] == ['ps', '-a']: print('\\n'.join(c['Id'] for c in etat['conteneurs']))
+elif a[:2] == ['container', 'inspect']: print(json.dumps([c for c in etat['conteneurs'] if c['Id'] in a[2:]]))
+elif a[:2] == ['image', 'rm']:
+    ref = a[2]
+    for i in images:
+        if ref in i['RepoTags'] or ref in i['RepoDigests']:
+            if any(c['Image'] == i['Id'] for c in etat['conteneurs']): sys.exit(1)
+            i['RepoTags'] = [t for t in i['RepoTags'] if t != ref]
+            i['RepoDigests'] = [d for d in i['RepoDigests'] if d != ref]
+            # Dernière étiquette retirée : l'image et ses empreintes disparaissent (comportement du moteur).
+            if '@' not in ref and not i['RepoTags']:
+                i['RepoDigests'] = []
+            break
+    else: sys.exit(1)
+    etat['images'] = [i for i in images if i['RepoTags'] or i['RepoDigests'] or i.get('garder')]
+    json.dump(etat, open(os.environ['FAUX_ETAT'], 'w'))
+else: sys.exit(3)
+'''
+
+
+class ImagesApplication(unittest.TestCase):
+    """scripts/images-application.py contre un moteur Docker simulé (ADR 0106, décisions 4 et 5) : seules les images de
+    l'application qui ne sont ni en service, ni la précédente, ni le frontal en service sont retirées, y compris celles sans
+    étiquette (téléchargées ou épinglées par empreinte) ; aucune autre image n'est touchée, aucun « prune », jamais de -f."""
+    DEPOT = 'ghcr.io/yousername-ha/suivi-audits'
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dossier = Path(self.tmp.name)
+        (self.dossier/'bin').mkdir()
+        self.etat = self.dossier/'etat.json'
+        self.journal = self.dossier/'journal'
+        docker = self.dossier/'bin/docker'
+        docker.write_text(FAUX_DOCKER)
+        docker.chmod(0o755)
+        self.env = {**os.environ, 'PATH': str(self.dossier/'bin') + ':' + os.environ['PATH'], 'FAUX_ETAT': str(self.etat),
+                    'FAUX_JOURNAL': str(self.journal)}
+        self.n = 0
+
+    def image(self, tags=(), digests=(), version=None, taille=100, garder=False):
+        self.n += 1
+        return {'Id': 'sha256:%064x' % self.n, 'RepoTags': list(tags), 'RepoDigests': list(digests), 'Size': taille,
+                'Config': {'Labels': {'org.opencontainers.image.version': version} if version else None}, 'garder': garder}
+
+    def empreinte(self, composant, n):
+        return f'{self.DEPOT}-{composant}@sha256:' + ('%x' % n) * 64
+
+    def lancer(self, *args):
+        return subprocess.run(['python3', str(ROOT/'scripts/images-application.py'), *args], capture_output=True, text=True,
+                              env=self.env, timeout=60)
+
+    def references(self):
+        return sorted(r for i in json.loads(self.etat.read_text())['images'] for r in i['RepoTags'] + i['RepoDigests'])
+
+    def identifiants(self):
+        return {i['Id'] for i in json.loads(self.etat.read_text())['images']}
+
+    def commandes(self):
+        return [json.loads(l) for l in self.journal.read_text().splitlines()] if self.journal.exists() else []
+
+    def parc(self):
+        D = self.DEPOT
+        self.pinned_web = self.empreinte('web', 9)
+        images = {
+            'api-service': self.image([f'{D}-api:7.3.0'], [self.empreinte('api', 1)], '7.3.0'),
+            'api-precedente': self.image([f'{D}-api:7.2.3'], [self.empreinte('api', 2)], '7.2.3'),
+            'api-ancienne': self.image([f'{D}-api:7.2.0'], [self.empreinte('api', 3)], '7.2.0'),
+            # Téléchargée par son empreinte (sans étiquette de version) : retirée si elle n'est d'aucune version gardée.
+            'api-empreinte-ancienne': self.image([], [self.empreinte('api', 4)], '7.1.0'),
+            'api-empreinte-service': self.image([], [self.empreinte('api', 5)], '7.3.0'),
+            'web-service': self.image([f'{D}-web:7.3.0'], [self.empreinte('web', 1)], '7.3.0'),
+            'web-precedente': self.image([f'{D}-web:7.2.3'], [self.empreinte('web', 2)], '7.2.3'),
+            # Ancien frontal (GATEWAY_VERSION passée à 7.3.0) : jamais gardé pour lui-même.
+            'web-ancien-frontal': self.image([f'{D}-web:7.1.5'], [self.empreinte('web', 3)], '7.1.5'),
+            # Épinglée dans .env (WEB_IMAGE), sans étiquette ni étiquette OCI : gardée.
+            'web-epinglee': self.image([], [self.pinned_web]),
+            'updater-ancien': self.image([f'{D}-updater:7.0.0', f'{D}-updater:recette'], [self.empreinte('updater', 1)], '7.0.0'),
+            'updater-service': self.image([f'{D}-updater:7.3.0'], [], '7.3.0'),
+            # Images d'autres applications, image mixte, image sans référence, image utilisée par un conteneur : intouchées.
+            'postgres': self.image(['postgres:18-alpine'], ['postgres@sha256:' + 'c' * 64], taille=1000),
+            'autre-depot': self.image(['ghcr.io/yousername-ha/autre-api:1.0.0'], [], '1.0.0', taille=1000),
+            'mixte': self.image([f'{D}-api:6.0.0', 'registre.example.test/copie:1'], [], '6.0.0'),
+            'pendante': self.image([], [], taille=1000, garder=True),
+            'utilisee': self.image([f'{D}-api:6.9.0'], [], '6.9.0'),
+        }
+        etat = {'images': list(images.values()), 'conteneurs': [{'Id': 'c' * 64, 'Image': images['utilisee']['Id']}]}
+        self.etat.write_text(json.dumps(etat))
+        (self.dossier/'.env').write_text(f'APP_VERSION=7.3.0\nWEB_IMAGE={self.pinned_web}\nAPI_IMAGE=autre.example/x@sha256:{"d" * 64}\n')
+        return images
+
+    def test_menage_apres_reussite_retire_les_anciennes_images_y_compris_sans_etiquette(self):
+        images = self.parc()
+        r = self.lancer('menage', '--en-service', '7.3.0', '--precedente', '7.2.3', '--frontal', '7.3.0', '--env', str(self.dossier/'.env'))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        restantes = self.identifiants()
+        for nom in ('api-ancienne', 'api-empreinte-ancienne', 'web-ancien-frontal', 'updater-ancien'):
+            self.assertNotIn(images[nom]['Id'], restantes, nom)
+        for nom in ('api-service', 'api-precedente', 'api-empreinte-service', 'web-service', 'web-precedente', 'web-epinglee',
+                    'updater-service', 'postgres', 'autre-depot', 'mixte', 'pendante', 'utilisee'):
+            self.assertIn(images[nom]['Id'], restantes, nom)
+        # Seules des commandes de lecture et « image rm » d'une référence de l'application, sans forcer ; jamais de prune.
+        D = self.DEPOT
+        for c in self.commandes():
+            self.assertIn(c[:2], (['image', 'ls'], ['image', 'inspect'], ['ps', '-a'], ['container', 'inspect'], ['image', 'rm']))
+            if c[:2] == ['image', 'rm']:
+                self.assertEqual(len(c), 3)
+                self.assertTrue(c[2].startswith((f'{D}-api', f'{D}-web', f'{D}-updater')), c)
+        self.assertFalse([c for c in self.commandes() if 'prune' in c or '-f' in c or '--force' in c])
+        self.assertIn(f'Image retirée : {self.empreinte("api", 4)}', r.stdout)
+
+    def test_frontal_en_service_seule_image_de_frontal_conservee(self):
+        """Frontal resté sur une version plus ancienne (GATEWAY_VERSION=7.1.5) : son image reste, les autres anciennes partent."""
+        images = self.parc()
+        r = self.lancer('menage', '--en-service', '7.3.0', '--precedente', '7.2.3', '--frontal', '7.1.5')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        restantes = self.identifiants()
+        self.assertIn(images['web-ancien-frontal']['Id'], restantes)
+        self.assertNotIn(images['api-ancienne']['Id'], restantes)
+        # Sans --env, l'image épinglée sans étiquette n'est plus protégée par son empreinte.
+        self.assertNotIn(images['web-epinglee']['Id'], restantes)
+
+    def test_apres_une_tentative_echouee_la_cible_part_et_la_precedente_est_calculee(self):
+        """Retour arrière en 7.2.3 : la cible téléchargée (7.3.0) part ; la précédente est la plus récente version antérieure
+        présente (7.2.0) ; le frontal en service (7.2.3) reste."""
+        images = self.parc()
+        r = self.lancer('menage', '--en-service', '7.2.3', '--frontal', '7.2.3')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        restantes = self.identifiants()
+        for nom in ('api-service', 'web-service', 'updater-service', 'api-empreinte-service', 'web-ancien-frontal', 'updater-ancien'):
+            self.assertNotIn(images[nom]['Id'], restantes, nom)
+        for nom in ('api-precedente', 'api-ancienne', 'web-precedente', 'utilisee', 'mixte'):
+            self.assertIn(images[nom]['Id'], restantes, nom)
+
+    def test_simulation_ne_retire_rien_et_taille_ne_compte_que_l_application(self):
+        self.parc()
+        avant = self.references()
+        r = self.lancer('menage', '--en-service', '7.3.0', '--frontal', '7.3.0', '--simulation')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn(f'À retirer : {self.DEPOT}-api:7.2.0', r.stdout)
+        self.assertEqual(self.references(), avant)
+        self.assertFalse([c for c in self.commandes() if c[:2] == ['image', 'rm']])
+        r = self.lancer('taille')
+        # 12 images de l'application (100 octets chacune), hors postgres, autre dépôt, image mixte et image sans référence.
+        self.assertEqual((r.returncode, r.stdout.strip()), (0, '1200'))
+
+    def test_versions_invalides_ou_moteur_injoignable_sans_effet(self):
+        self.parc()
+        avant = self.references()
+        for args in (('--en-service', '7.3.0;rm'), ('--en-service', '7.3.0', '--frontal', '../x'), ('--en-service', '7.3.0', '--precedente', '')):
+            with self.subTest(args=args):
+                self.assertNotEqual(self.lancer('menage', *args).returncode, 0)
+        self.assertEqual(self.references(), avant)
+        self.assertFalse([c for c in self.commandes() if c[:2] == ['image', 'rm']])
+        self.env['PATH'] = str(self.dossier/'vide')
+        r = subprocess.run([sys.executable, str(ROOT/'scripts/images-application.py'), 'taille'], capture_output=True, text=True,
+                           env=self.env, timeout=60)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(r.stdout, '')
 
 if __name__=='__main__': unittest.main()

@@ -77,6 +77,8 @@ const politique = (k: Kdb) =>
       'minute_utc as minuteUtc',
       'days',
       'retention_days as retentionDays',
+      'max_backups as maxBackups',
+      'pre_update_backups as preUpdateBackups',
       'version',
     ])
     .where('id', '=', 1)
@@ -106,6 +108,11 @@ export class Operations {
   // Verrou consultatif transactionnel partagé avec les sauvegardes : appel SQL direct (ADR 0062 §5).
   private lock(c: Client) {
     return c.query('SELECT pg_advisory_xact_lock($1)', [LOCK]);
+  }
+  /** Relevé du disque des données publié par l'exécutant (ADR 0106), seulement s'il est récent. */
+  disqueHote() {
+    const h = readHost(this.cfg);
+    return fresh(h) ? (h!.disque ?? null) : null;
   }
   async policy() {
     return BackupPolicyOut.parse(await politique(this.db.k));
@@ -138,6 +145,8 @@ export class Operations {
           minute_utc: p.minuteUtc,
           days: [...p.days],
           retention_days: p.retentionDays,
+          max_backups: p.maxBackups,
+          pre_update_backups: p.preUpdateBackups,
           version: eb('version', '+', 1),
         }))
         .where('id', '=', 1)

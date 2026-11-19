@@ -322,6 +322,8 @@ async function main() {
     }
     case 'ops-sync': {
       await svc.operations.synchronize(arg || null);
+      // Espace disque (ADR 0106) : alerte aux administrateurs au franchissement du seuil ; ne fait jamais échouer la synchronisation.
+      await svc.alertesSecurite.espaceDisque(svc.operations.disqueHote());
       break;
     }
     case 'ops-claim': {

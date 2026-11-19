@@ -296,6 +296,23 @@ Pendant la préparation, l'exécutant tire les trois images par l'API du moteur 
 d'après les manifestes du registre ; la page de maintenance en remplit sa barre. Repli sur
 `docker pull`, sans progression, avec des identifiants de registre ou si l'API ne répond
 pas (ADR 0104) ; les vérifications de signature qui suivent sont inchangées.
+L’empreinte du frontal couvre aussi l’identité épinglée de son image de base Caddy
+(`CADDY_IMAGE`) et le magasin des autorités racines : un correctif de l’image de base met le
+frontal à jour à la mise à jour suivante (ADR 0103, addendum du 19/11/2026).
+Conservation et espace disque (ADR 0106) : la politique de sauvegarde (`backup_policy`,
+migration `091`) porte, avec la durée, le nombre maximal de sauvegardes régulières (30 par
+défaut) et celui des sauvegardes d’avant mise à jour (3) ; l’exécutant les lit par
+`suivi ops-policy` et les transmet à `backup.sh` et `mettre-a-jour.sh` (`.env` pour les appels
+directs). Avant une sauvegarde ou une mise à jour, la place nécessaire est estimée (dernière
+sauvegarde, images à télécharger, marge) et un manque refuse l’opération avant de commencer.
+L’exécutant d’exploitation publie dans `etat.json` le relevé du disque des données (libre,
+total, sauvegardes, images de l’application ; aucun chemin) ; l’API, à la synchronisation,
+alerte les administrateurs actifs dans l’application (`grc_notifications`, type
+`alerte_securite`, sans nouveau type ni migration) sous 15 % libre, une fois par
+franchissement (état dans `settings`, réarmement à 20 %). Après une mise à jour, un retour
+arrière ou un échec avant l’installation, `scripts/images-application.py` ne garde que les
+images de l’application en service, précédente et du frontal en service (par étiquette,
+version OCI ou empreinte épinglée), sans toucher aux autres images ni « prune » global.
 
 **Dimensionnement retenu (28/10/2026) : une organisation, une quinzaine d’utilisateurs
 simultanés au plus, une seule instance d’API** (limiteurs en mémoire, verrous
