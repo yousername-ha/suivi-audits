@@ -111,6 +111,17 @@ commencés par heure et par personne ; suppression d'une instance de ce type seu
 (`DELETE /api/integrations/instances/:id`, If-Match, aperçu `GET …/suppression`) par les clés étrangères en cascade, puis
 liaisons et alertes réévaluées dans la même transaction.
 
+Second type sans réseau : « Silène, import de fichier » (`silene-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md),
+lot SI1 ; migration `095`). Le rapport JSON de l'ANSSI est lu dans le navigateur (`JSON.parse`, 50 Mo au plus, liste blanche,
+`apps/web/src/integrations/silene.ts`) ; l'API reçoit un extrait JSON (`POST /api/integrations/instances/:id/silene/imports`,
+`…/lots`, `…/fin`, `integrations:administrer`, limites de l'import Nessus partagées), revalidé par `LotImportSilene`
+(`packages/shared/src/import-silene.ts`), rangé dans les tables `vulnerabilites_silene_*` (`apps/api/src/vulnerabilites/
+import-silene.ts`) : un import complet fait foi (numéro de référence, comme une synchronisation complète d'AlgoLightHouse),
+la note de chaque import est gardée. Lecture (`apps/api/src/vulnerabilites/surface-silene.ts`) sous les droits du périmètre
+relié à l'instance (fragment `lisibleAlh`, alias `sp`) ; la liste « Actifs » de la surface externe réunit les deux sources
+par adresse IP ou nom de domaine (`SurfaceExterneAlh.actifs`), la recherche du module l'utilise sans changer de contrat.
+Aucun effet sur les priorités ni les alertes ; rien ne part vers l'assistant.
+
 Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
 `updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête
 `X-API-Key`). Liste fermée de huit `GET` de la version 1 de l'API, sans paramètre ; jamais d'écriture. Le socle range chaque

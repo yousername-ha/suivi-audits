@@ -34,6 +34,8 @@ export const FREQUENCES_CONNECTEUR: Readonly<Record<IntegrationType, readonly nu
   algolighthouse: [12, 24, HEURES_SEMAINE],
   // Lot N1 : import de fichier, aucune synchronisation automatique (la base n'admet que NULL pour ce type, migration 090).
   'nessus-fichier': [],
+  // Lot SI1 : import du rapport Silène, aucune synchronisation automatique (même règle que l'import Nessus).
+  'silene-fichier': [],
 };
 export const FREQUENCE_CONNECTEUR_DEFAUT = 24;
 

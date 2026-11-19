@@ -2806,3 +2806,170 @@ en CI seulement.
    ses comptes figés.
 3. Suppression des connecteurs Security Center et AlgoLightHouse (non créée).
 4. Fusion d'une machine vue par Security Center et par un import (toujours exclue).
+
+## Addendum du 19/11/2026 — lot SI1 : import du rapport Silène (ANSSI), lu à côté d'AlgoLightHouse
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`095`, routes ajoutées (trois d'import, quatre de lecture, deux de liaison), deux routes de suppression étendues au nouveau
+type, aucune dépendance, **aucun flux sortant** ; `apps/api/src/assistant/*`, `apps/web/src/assistant/ReglagesAssistant.tsx`,
+`scripts/exploitation-worker.py`, `scripts/integration-http.py`, `docker-compose.yml`, `docker/*` et la carte « Lignes
+d'approche » (`CarteSurface.tsx`) inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. Silène (service de l'ANSSI qui scanne la surface exposée d'un bénéficiaire) s'importe **par fichier** (export JSON) et se
+   lit **fusionné avec la surface externe d'AlgoLightHouse** : une seule surface externe, deux sources. Silène apporte en
+   particulier les **ports ouverts par hôte**, qu'AlgoLightHouse ne publie pas.
+2. Même principe que Nessus : **connecteur à part** « Silène, import de fichier » dans la carte « Intégrations », sans
+   adresse, clé, flux ni exécutant ; bouton « Importer un rapport » ; fichier lu dans le navigateur, seul un extrait en liste
+   blanche part, revalidé par l'API ; suppression du connecteur et de ce qu'il a importé (comme N2) ; limite d'imports
+   alignée sur N2.
+3. **Jamais gardés ni envoyés** : certificats et clés (`ssl-cert`, `pem`, `pubkey`, empreintes), en-têtes HTTP, sorties
+   brutes des sondes (`scripts[].output`), titres de pages, géolocalisation et système autonome (`infos`), `db_name`,
+   `filter`, le passage précédent (`_prev`), le nom du fichier.
+4. Rien de plus ne part vers l'assistant ; priorité et alertes inchangées (correspondance classe → priorité en attente).
+
+### Réalisation
+
+- **Catalogue** (`packages/shared/src/integrations.ts`) : type `silene-fichier`, portée `organisation`, aucun champ
+  (`ConfigurationSileneFichier` vide et stricte), `secrets: []`, `pointsAcces: []`, `flux: null`, opération `importer`
+  (libellé propre au type : « Importer un rapport », `LIBELLES_IMPORT`) ; fréquence : liste vide (contrainte de la migration
+  `090` inchangée, NULL seul).
+- **Extraction** (`apps/web/src/integrations/silene.ts`, fonctions pures) : JSON seulement (`JSON.parse`), 50 Mo au plus
+  (message avant lecture) ; structure exigée : objet avec `summary`, `modules`, `results` et `hosts` objets, sinon refus
+  « Structure inconnue ». Seuls sont lus les champs de la liste blanche (`CHAMPS_RACINE`, `CHAMPS_HOTE`, `CHAMPS_PORT`,
+  `CHAMPS_CONSTAT`, `CHAMPS_LIGNE`) ; textes sur une ligne, sans caractère de contrôle, bornés à 100 caractères (« … »
+  compté) ; adresses IP et noms de domaine en minuscules contrôlés comme ceux d'AlgoLightHouse ; tout élément hors norme
+  écarté et compté (`ECARTS_SILENE`, quinze compteurs).
+- **Envoi** : `POST /api/integrations/instances/:id/silene/imports` (début : synthèse, périmètre déclaré, hôtes et constats
+  annoncés, écarts ; corps de 2 Mio au plus), `…/:execution/lots` (hôtes puis constats, 500 hôtes ou 200 constats et 8 Mio au
+  plus ; le navigateur vise 3 Mio), `…/:execution/fin`. Droit `integrations:administrer`, module Vulnérabilités actif, CSRF ;
+  limites de l'import Nessus **partagées** (trente fichiers commencés par heure et par personne, tous imports confondus ;
+  six cents lots par dix minutes). Un import à la fois par instance, poursuivi par la personne qui l'a commencé, clos « en
+  échec » après trente minutes sans lot (au début d'un autre import ou au tic de l'API). Lot à champ en trop ou hors norme :
+  422, rien n'est rangé.
+- **Rangement** (`apps/api/src/vulnerabilites/import-silene.ts`) : chaque import reçoit un **numéro** (état
+  `vulnerabilites_silene_etat`) ; hôtes et constats rangés sans doublon (instance et adresse ; instance et identifiant),
+  leurs noms, ports, produits, hôtes concernés et lignes **remplacés** ; à la fin d'un import **complet** (tous les hôtes et
+  constats annoncés reçus), le numéro de référence avance : ce qui n'est plus dans le rapport n'est plus présent (rien n'est
+  supprimé) et les disparus sont comptés. Import incomplet : en échec, la référence ne bouge pas (le rapport précédent fait
+  foi), les éléments rangés restent. La synthèse du rapport et le périmètre déclaré sont gardés avec chaque import
+  (`vulnerabilites_silene_imports`) : la note des imports complets fait la tendance.
+- **Journal** : `integration.import.debute`, `vulnerabilites.silene.lot`, `integration.import.termine`,
+  `integration.supprimee`, `vulnerabilites.silene.perimetre.relie|delie` : instance, exécution, numéro et nombres ; ni
+  adresse, ni nom de domaine, ni nom de contrôle, ni nom de fichier (test d'API).
+- **Lecture** (`apps/api/src/vulnerabilites/surface-silene.ts`, `vulnerabilites:lire`) :
+  `GET /api/vulnerabilites/surface/silene` (note de chaque instance lisible : dernier import complet, précédent, historique
+  de vingt-quatre notes, présents, périmètre déclaré en nombres, dernier import), `…/silene/constats` (par contrôle, 25 par
+  page, recherche par contrôle, identifiant ou adresse), `…/silene/constats/:id` (détail par hôte),
+  `…/silene/actif?type=&valeur=` (fiche Silène d'un actif). Administration du module : `GET …/silene/perimetres`,
+  `PUT …/silene/perimetres/:id` (If-Match, 0 tant que l'instance n'a jamais été reliée).
+- **Liste commune des actifs** (`SurfaceExterneAlh.actifs`, route inchangée `GET /api/vulnerabilites/surface/actifs`) : un
+  actif est identifié par son **adresse IP** (hôte) ou son **nom de domaine** (pour Silène, nom de **résolution directe**,
+  type `A`, d'un hôte : `TYPES_NOM_ACTIF`). Chaque actif lisible d'AlgoLightHouse garde sa ligne et ses champs comme avant et
+  reçoit ce que Silène dit de la même valeur (`silene`, `sources`, `alhId` de `ActifSurfaceDto`) ; un actif vu par Silène
+  seul (aucun actif d'AlgoLightHouse de même type et de même valeur parmi ceux que la personne lit et que les filtres
+  retiennent) s'ajoute une fois, ordonné avec les autres (alertes ouvertes, type, valeur). Le filtre « Machine interne » ne
+  retient que des actifs d'AlgoLightHouse (seuls à se relier). `SurfaceSilene.clesActifs` et `SurfaceSilene.actifs` (clé
+  `type|valeur`) sont faits pour que la carte s'en serve au lot SI2 sans autre lecture.
+- **Recherche du module** (lot R1) : elle appelle la liste « Actifs » ; un actif vu par Silène seul est donc trouvé, avec
+  pour identifiant celui de l'hôte (ou du nom) chez Silène. **Contrat inchangé** (groupes, bornes, droits, schéma
+  `ResultatActif` : identifiant UUID, alertes ouvertes 0).
+- **Interface** : en tête de « Surface externe », l'état d'AlgoLightHouse et la **note Silène** côte à côte, chacun dans son
+  cadre avec sa pastille (`NoteSilene` : note, sous-note réseau, nombres par famille tels que le rapport les nomme, date du
+  rapport, évolution depuis l'import précédent, présents, dernier import) ; onglet « Actifs » : pastilles des sources, colonne
+  « Services connus » réunissant ports ouverts de Silène et services d'AlgoLightHouse (`fusionnerPortsActif` : sans doublon
+  port/protocole, un service sans protocole rejoint le seul port de même numéro), chaque information suivie de sa source
+  (« Silène : … », « AlgoLightHouse : … ») ; fiche d'un actif : machines internes (AlgoLightHouse) et « Vu par Silène » (ports,
+  noms, produits, constats) ; onglet « **Constats Silène** » (contrôle, classe, hôtes concernés, points, fiche par hôte) ;
+  onglet « Périmètres » : section Silène. Pastille **SIL** (trapèze, teinte « sarcelle » tirée des jetons `teal` de la charte
+  Mantine, contraste AA en clair et en sombre), sans logo. Carte « Intégrations » : « Importer un rapport », fenêtre d'import
+  (`ImportSilene`), suppression (fenêtre de N2, nombres d'hôtes, de constats et d'imports).
+
+### Tables (migration `095`)
+
+| Table | Contenu | Remise à vide |
+|---|---|---|
+| `vulnerabilites_silene_etat` | numéros d'import par instance (dernier, dernier complet) | avec les instances |
+| `vulnerabilites_silene_imports` | journal des imports, synthèse du rapport (note, sous-note, familles, dates sans fuseau), périmètre déclaré, nombres, écarts | avec les instances |
+| `vulnerabilites_silene_perimetres` | périmètre de la plateforme relié à une instance, `version` | avec le travail |
+| `vulnerabilites_silene_hotes` | adresse, ports ouverts annoncés, contrôles, présence | avec le travail |
+| `vulnerabilites_silene_noms`, `…_ports`, `…_produits` | noms et types, ports ouverts, produits (CPE) d'un hôte | avec le travail |
+| `vulnerabilites_silene_constats`, `…_constat_hotes`, `…_lignes` | constat (contrôle, classe, points, note), hôtes concernés, lignes de détail | avec le travail |
+
+Bornes et CHECK alignés sur AlgoLightHouse (migrations `080`, `085`) : adresse `^[0-9a-f:.]+$` (45 caractères), noms en
+minuscules (`^[a-z0-9_*:.-]+$`, 253), textes sans caractère de contrôle (100), port de 1 à 65535, protocole `tcp` ou `udp`,
+classe entière de −1000 à 1000, notes et points bornés à un million en valeur absolue (quatre décimales).
+
+### Champs gardés et écartés
+
+- **Gardés** — synthèse : `summary.computation_date.v` (sinon `computation_date.v`), `summary.starttime`, `summary.endtime`,
+  `summary.grade`, `summary.grades.network`, `summary.vulnreco_count`, `warning_count`, `info_count`, `ok_count` ;
+  périmètre déclaré : `perimeter.domains`, `perimeter.ip` ; contrôle d'un constat : nom du module de `$.modules` dont
+  `results` cite l'identifiant ; hôte : `addr` (sinon la clé), `hostnames[].name` et `.type`, `ports[]` ouverts (`port`,
+  `protocol`, `service_name`, `service_product`, `service_tunnel`), `openports.tcp.ports` et `.udp.ports` (port sans service),
+  `openports.count`, `cpes[]` (`type`, `vendor`, `product`, `version`), `categories` ; constat : `id`, `result_class`,
+  `max_points.network`, `grades.network`, `applicable_hosts`, `listing` (par hôte : `addr` sinon la clé, `hostname`,
+  `port`, `protocol`, `service`, `product`, `type`, `expires`).
+- **Écartés, jamais lus** : `db_name`, `filter`, `networks`, `_prev`, `modules.*` hors `results`, `results.*._type`,
+  `listing.*.domain`, `.version`, `.san`, `.subject`, `hosts.*.net`, `source`, `schema_version`, `state`, `state_reason`,
+  `starttime`, `endtime`, `hostnames[].domains`, `cpes[].origins`, `ports[].state_reason`, `state_reason_ttl`,
+  `service_method`, `scripts` (dont certificats, clés, empreintes, en-têtes, titres, sorties), `infos` (géolocalisation,
+  système autonome), et tout champ inconnu. Les fichiers d'exemple fictifs (`tests/fixtures/silene/`) portent ces champs
+  avec des marqueurs « INTERDIT » ; un test de l'interface vérifie qu'aucun n'est dans ce qui part.
+
+### Mesures (fichiers fictifs générés, Chromium de la pile locale)
+
+| Fichier | Hôtes, ports, constats | Lecture dans le navigateur | Tas JavaScript (avant → après la lecture) | Envoi (lots) |
+|---|---|---|---|---|
+| 20 Mo | 850, 5 100, 850 | 0,14 s | 57 → 65 Mo | 1,6 s (7) |
+| 49 Mo | 2 080, 12 480, 2 080 | 0,53 s | 101 → 111 Mo | 2,2 s (16) |
+
+Le gros du fichier est fait des sorties de sondes, analysées par `JSON.parse` mais jamais lues ; la borne de 50 Mo est
+gardée. Tas mesuré par le protocole de débogage de Chromium avant et après la lecture (le pic pendant `JSON.parse` n'est pas
+mesuré). Un seul poste, sans réseau entre le navigateur et l'API.
+
+### Périmètres
+
+Même logique qu'AlgoLightHouse, même fragment SQL (`lisibleAlh`, alias `sp`) : tout ce qu'une instance Silène a importé
+hérite du périmètre de la plateforme relié à l'instance ; non reliée, lisible avec `vulnerabilites:administrer` seulement.
+La liaison se fait dans l'onglet « Périmètres » (droit d'administrer le module, écriture sur le périmètre actuel et sur le
+périmètre visé, If-Match, journal). Aucun mécanisme de droits nouveau.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Actif de type nom de domaine** : seuls les noms de résolution directe (`A`) d'un hôte deviennent des actifs de la liste ;
+  les noms `PTR`, `cert-san-dns` et `cert-subject-cn` restent dans la fiche de l'hôte.
+- **Fusion** : chaque actif d'AlgoLightHouse garde sa ligne (deux instances d'AlgoLightHouse qui voient la même valeur font
+  deux lignes, comme avant) ; Silène s'y rattache par la valeur. Les ports d'un nom de domaine vu par Silène sont ceux de
+  l'hôte, montrés sur la ligne de l'hôte (la ligne du nom dit seulement par quelles adresses il est porté).
+- **Identité d'un constat** : son identifiant (`id`) ; s'il change d'un rapport à l'autre, l'ancien n'est plus présent et le
+  nouveau apparaît. Un constat qu'aucun module ne cite est écarté et compté (aucun contrôle à lui donner).
+- **Hôte au-delà de 1 000 ports** : les 1 000 premiers (par numéro) sont gardés, les autres comptés ; le nombre annoncé par
+  Silène reste affiché.
+- **Limites** partagées avec Nessus (mêmes compteurs) ; activation exigée pour importer.
+- **Dates du rapport** gardées sans fuseau, telles quelles (« AAAA-MM-JJTHH:MM:SS »).
+- **Libellés des familles** : « Vulnérabilités ou recommandations (vulnreco) », « Avertissements (warning) », « Informations
+  (info) », « Conformes (ok) », le nom du champ restant visible.
+
+### Non vérifié
+
+Forme du rapport écrite d'après un relevé des seuls noms de champs, types et nombres d'un export réel : **aucune valeur réelle
+n'est connue**. Non vérifiés : valeurs de `result_class` et leur sens (table `CLASSES_SILENE` vide, « classe N » affichée),
+valeurs de `_type`, format exact des dates de 19 caractères (deux formes admises), échelle de `grade` (bornée seulement),
+sens de `networks` (non lu), forme des clés de `$.results` et de `$.hosts` (adresse supposée pour `$.hosts`, sinon `addr`),
+valeurs de `type` d'une ligne de détail, stabilité de l'identifiant d'un constat d'un rapport à l'autre. Parcours Playwright
+joués sur une pile locale sans Docker (API et Vite, Chromium, PostgreSQL 16), à rejouer en CI ; CSP stricte du serveur de
+production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; correspondance **classe → famille** (à inscrire dans `CLASSES_SILENE`) et **classe → priorité**
+   (décision du RSSI).
+2. Rapprochement des produits vus par Silène (CPE : type, éditeur, produit, version) avec les CVE : il faudrait former un
+   identifiant CPE 2.3 à partir de ces parties, le rapprocher des CPE de NVD de la veille (règle du rapprochement des
+   produits surveillés, `rapprochement-vulnerabilites.ts`) et décider si une CVE ainsi trouvée vaut présence « exposée »
+   (comme une technologie d'AlgoLightHouse) ou seulement une indication à confirmer, avec son effet sur la priorité.
+3. Carte « Lignes d'approche » : regroupement par adresse IP, filtre par nom de domaine et fusion des deux sources (lot SI2).
+4. Masque de l'assistant : les adresses et noms vus par Silène seul ne sont pas dans la liste des actifs à masquer (rien de
+   Silène ne part vers l'assistant à ce jour).

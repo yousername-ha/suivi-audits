@@ -848,6 +848,29 @@ serveur ne joint jamais Nessus.
   réévaluées. Restent : l'historique du suivi, les instantanés des tendances, le journal d'audit, les alertes closes et les
   notifications déjà envoyées. Les connecteurs Security Center et AlgoLightHouse n'ont pas cette action.
 
+**Silène, import de fichier** ([ADR 0100](adr/0100-module-vulnerabilites.md), lot SI1) : le rapport Silène de l'ANSSI
+(surface exposée sur Internet), importé par fichier, sans clé d'API ni flux réseau. Aucune étape d'installation, aucune règle
+de pare-feu, aucun exécutant : le serveur ne joint jamais Silène.
+
+- **Exporter le rapport** depuis Silène au format **JSON**. Un fichier de 50 Mo au plus. Le libellé exact du menu d'export
+  n'a pas été vérifié.
+- **Instance** : dans Plateforme, carte « Intégrations », « Ajouter une instance » du type « Silène, import de fichier » (le
+  nom suffit, aucun réglage), puis « Activer » (aucun flux à valider). Puis, dans Risques, Vulnérabilités, Surface externe,
+  onglet « Périmètres » (droit d'administrer le module) : relier l'instance à un périmètre de la plateforme ; non reliée, elle
+  n'est visible qu'avec le droit d'administrer le module.
+- **Importer** : « Importer un rapport » sur l'instance (droit `integrations:administrer`, module Vulnérabilités actif),
+  choisir le fichier. Il est lu dans le navigateur ; seuls partent vers le serveur, en JSON et par lots, la note et la
+  synthèse du rapport, le périmètre déclaré, les hôtes (adresse IP, noms, ports ouverts, produits, contrôles) et les constats
+  (contrôle, classe, points, hôtes concernés et leur détail). Ne quittent jamais le poste : certificats et clés, en-têtes
+  HTTP, sorties des sondes, titres de pages, géolocalisation et système autonome, nom de la base et filtre, passage
+  précédent, nom du fichier.
+- **Effet** : chaque import complet est l'état de la surface vue par Silène à la date du rapport (un hôte ou un constat qui
+  n'y figure plus n'est plus listé) ; la note de chaque import est gardée (évolution). Un import interrompu ne change pas le
+  rapport qui fait foi. Même limite que l'import Nessus : trente fichiers commencés par heure et par personne, tous imports
+  confondus. Aucune priorité ni alerte ne vient de Silène (les constats n'ont pas de CVE).
+- **Supprimer** : « Supprimer ce connecteur et tout ce qu'il a importé » (mêmes conditions que pour Nessus) : hôtes,
+  constats, imports et notes disparaissent, après saisie de SUPPRIMER ; le journal d'audit reste.
+
 ### 11.11 Veille du module Vulnérabilités (sources publiques)
 
 Aucune étape d'installation supplémentaire : la veille se suit dans l'application, sous **Risques, Vulnérabilités, Veille**, avec le droit `vulnerabilites:lire` ([ADR 0100](adr/0100-module-vulnerabilites.md), lots V2 et V3). Le conteneur de l'API n'a toujours aucun accès réseau sortant : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui lit les sources, par un script isolé (`scripts/veille-vulnerabilites.py`, bibliothèque standard de Python, compte sans privilège, délai borné). Sans exécutant, l'écran le dit et aucune collecte n'est faite.

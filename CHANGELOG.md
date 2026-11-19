@@ -6,6 +6,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `095`** (lot SI1 : import du rapport Silène, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (dix tables `vulnerabilites_silene_*`, index), durée négligeable, sans reprise de données. Aucune action sur le
+serveur, aucune règle de pare-feu : l'import ne fait aucun appel réseau. Le rapport JSON se dépose dans Plateforme, carte
+« Intégrations », instance « Silène, import de fichier » ; relier ensuite l'instance à un périmètre (Surface externe,
+onglet « Périmètres ») pour que ses lecteurs la voient. (session « Module surveillance vulnérabilités SMSI »)
+
 **Migration automatique `094`** (lot N2 : contrôle exploité par un logiciel malveillant, suppression d'un connecteur d'import,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `exploite_malware` des constats, fausse par défaut),
 durée négligeable, sans reprise de données. Aucune action sur le serveur. Les failles déjà importées ne sont pas relues :
@@ -60,6 +66,16 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Ajouté
 
+- Vulnérabilités, **import du rapport Silène de l'ANSSI** (lot SI1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  migration `095`) : connecteur « Silène, import de fichier » de la carte « Intégrations » (ni adresse, ni clé, ni flux),
+  « Importer un rapport » : export JSON lu dans le navigateur (50 Mo au plus), extrait en liste blanche (jamais de
+  certificat, d'en-tête HTTP, de sortie de sonde, de géolocalisation ni de passage précédent), revalidé par l'API, envoyé
+  par lots ; chaque import complet fait foi, la note est gardée d'un import à l'autre. Écran « Surface externe » : note Silène
+  à côté de l'état d'AlgoLightHouse (pastille SIL), liste des actifs commune aux deux sources (un actif par adresse IP ou nom
+  de domaine, ports ouverts de Silène et services d'AlgoLightHouse réunis, source de chaque information visible), onglet
+  « Constats Silène », liaison de chaque instance à un périmètre ; recherche du module étendue sans changer son contrat ;
+  suppression du connecteur et de ce qu'il a importé. Aucune priorité ni alerte tirée de Silène. (session « Module
+  surveillance vulnérabilités SMSI »)
 - Vulnérabilités, **contrôle exploité par un logiciel malveillant** (lot N2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
   décision du RSSI du 19/11/2026) : le champ `exploited_by_malware` d'un scan Nessus est lu (liste blanche, revalidé par
   l'API) et compte comme une **exploitation avérée**, au même titre que le catalogue KEV, une alerte du CERT-FR ou la fiche

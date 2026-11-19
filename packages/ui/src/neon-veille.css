@@ -38,6 +38,12 @@
   --ps-accent: var(--carte-violet-accent);
   --ps-doux: var(--carte-violet-doux);
 }
+/* Lot SI1 : Silène (ANSSI). Huitième teinte, hors des jetons de la cartographie : jetons « teal » de la charte Mantine,
+   contraste AA en clair (teal-light-color sur teal-light) et en sombre. */
+.ps--sarcelle {
+  --ps-accent: var(--mantine-color-teal-light-color);
+  --ps-doux: var(--mantine-color-teal-light);
+}
 .ps__pastille {
   inline-size: 3em;
   block-size: 1.64em;

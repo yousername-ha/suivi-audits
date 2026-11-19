@@ -81,6 +81,10 @@ export const TABLES_CONFIGURATION = [
   'vulnerabilites_alh_synchronisations',
   // Imports de scans Nessus (ADR 0100, lot N1) : journal rattaché aux instances et à leurs exécutions ; même règle.
   'vulnerabilites_imports',
+  // Imports du rapport Silène (ADR 0100, lot SI1) : état des numéros et journal des imports (avec leurs notes, nombres
+  // seulement), rattachés aux instances et à leurs exécutions ; même règle.
+  'vulnerabilites_silene_etat',
+  'vulnerabilites_silene_imports',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
@@ -216,6 +220,16 @@ export const TABLES_TRAVAIL = [
   // les actifs et les alertes qui les portent.
   'vulnerabilites_alh_services',
   'vulnerabilites_alh_service_alertes',
+  // Surface externe importée de Silène (ADR 0100, lot SI1) : relue au prochain import ; liaison de l'instance à un périmètre
+  // saisie par les utilisateurs, rattachée à grc_smsis (effacée avec le travail, comme celle des périmètres ALH).
+  'vulnerabilites_silene_perimetres',
+  'vulnerabilites_silene_hotes',
+  'vulnerabilites_silene_noms',
+  'vulnerabilites_silene_ports',
+  'vulnerabilites_silene_produits',
+  'vulnerabilites_silene_constats',
+  'vulnerabilites_silene_constat_hotes',
+  'vulnerabilites_silene_lignes',
   // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
   // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
   'vulnerabilites_alertes',

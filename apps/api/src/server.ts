@@ -81,15 +81,17 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
       )
-      // Imports de scans Nessus abandonnés (ADR 0100, lot N1) : clos après trente minutes sans lot. Rien si le module est
-      // désactivé.
+      // Imports de scans Nessus et de rapports Silène abandonnés (ADR 0100, lots N1 et SI1) : clos après trente minutes sans
+      // lot. Rien si le module est désactivé.
       .then(() =>
         svc.modules
           .run(true, async () => {
             if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
             await svc.vulnerabilites.importNessus.tic();
+            // Lot SI1 : imports de rapports Silène abandonnés, même règle.
+            await svc.vulnerabilites.importSilene.tic();
           })
-          .catch((e: unknown) => log.warn({ err: String(e) }, 'imports Nessus')),
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'imports de fichiers')),
       )
       // Délais de correction et exceptions à échéance (ADR 0100, lot S1) : au plus une évaluation par quart d'heure ;
       // expiration et rappel des exceptions, failles entrées en dépassement, résumés notifiés. Rien si le module est

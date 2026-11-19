@@ -35,9 +35,12 @@
      vulnérable monte d'un cran (majorerPriorite, majoration.ts), sans nommer la machine.
    Lot ALH6 (décision du RSSI du 17/11/2026) : services exposés (port, protocole, produit) lus dans les fragments du détail
    d'une alerte, rangés sur l'actif visé (services-surface.ts) et rendus avec la carte, la liste et la fiche des actifs et
-   la fiche d'une alerte, sous les droits de lecture de l'actif ; aucun effet sur la priorité. */
+   la fiche d'une alerte, sous les droits de lecture de l'actif ; aucun effet sur la priorité.
+   Lot SI1 : la liste « Actifs » est commune à AlgoLightHouse et à Silène (surface-silene.ts) : un actif est identifié par
+   son adresse IP ou son nom de domaine ; vu par les deux sources, il n'apparaît qu'une fois, avec ce que chacune en dit. */
 import {
-  type ActifAlhDto,
+  type ActifSileneDto,
+  type ActifSurfaceDto,
   type AlerteAlhDto,
   type AlerteCarteDto,
   BilanSynchronisationAlh,
@@ -108,6 +111,7 @@ import { actifsMenantAUneMachineVulnerable } from './majoration.js';
 import { rangerServicesAlertes, sansAlertes, servicesDeLAlerte, servicesDesActifs } from './services-surface.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
 import { cvesAlh, lisibleAlh } from './sql.js';
+import { cleActif, type SurfaceSilene } from './surface-silene.js';
 
 const TYPE = 'algolighthouse';
 const PLANIFICATION = { username: 'planification' };
@@ -133,6 +137,9 @@ export class SurfaceExterneAlh implements OperationEnLots {
   /** Lot ALH3 : propositions de liaison entre actifs exposés et machines internes, recalculées dans la transaction de la fin
       d'une synchronisation reçue. */
   apresSynchronisation?: (k: Kdb, c: Client) => Promise<void>;
+  /** Lot SI1 : surface externe importée de Silène, réunie avec AlgoLightHouse dans la liste « Actifs » (branchée par
+      services.ts). */
+  silene?: SurfaceSilene;
 
   constructor(
     private readonly db: Db,
@@ -883,7 +890,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
     };
   }
 
-  async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifAlhDto>> {
+  /** Liste « Actifs » (lot SI1 : commune à AlgoLightHouse et à Silène). Un actif est identifié par son adresse IP (hôte) ou
+      son nom de domaine. Chaque actif lisible d'AlgoLightHouse garde sa ligne et ses champs, comme avant, et reçoit ce que
+      Silène dit de la même valeur ; un actif vu par Silène seul (aucun actif d'AlgoLightHouse de même type et de même
+      valeur parmi ceux que la personne lit et que les filtres retiennent) s'y ajoute une fois. Ordre : alertes ouvertes,
+      type, valeur. Le filtre « Machine interne » ne retient que des actifs d'AlgoLightHouse (seuls à se relier). */
+  async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifSurfaceDto>> {
     const conditions: RawBuilder<boolean>[] = [lisible(user), present('x')];
     if (q.type) conditions.push(sql<boolean>`x.type = ${q.type}`);
     if (q.liaison) conditions.push(filtreLiaison(user, q.liaison));
@@ -892,98 +904,163 @@ export class SurfaceExterneAlh implements OperationEnLots {
       const motif = `%${litteral(texte.toLowerCase())}%`;
       conditions.push(sql<boolean>`(x.valeur LIKE ${motif} OR x.adresse LIKE ${motif})`);
     }
-    const { rows } = await sql<{
-      id: string;
-      type: TypeActifAlh;
-      valeur: string;
-      statut: StatutActifAlh | null;
-      adresse: string | null;
-      fai: string | null;
-      asn: string | null;
-      pays: string | null;
-      cdn: boolean | null;
-      mutualise: boolean | null;
-      joignable: boolean | null;
-      joignable_le: Date | null;
-      niveau: number | null;
-      cree_alh_le: Date | null;
-      maj_alh_le: Date | null;
-      integration_id: string;
-      integration_nom: string;
-      perimetre_alh_nom: string | null;
-      perimetre_nom: string | null;
-      alertes_ouvertes: number;
-      technologies: number;
-      liaisons_version: number;
-      total: number;
-    }>`
-      SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
-        x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
-        x.liaisons_version,
-        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
-        (SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
+    const alertesOuvertes = sql<number>`(SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
            LEFT JOIN vulnerabilites_alh_perimetres lp2 ON lp2.integration_id = a2.integration_id
              AND lp2.alh_id = a2.perimetre_alh
            WHERE a2.integration_id = x.integration_id AND a2.statut = ANY(${OUVERTS}::text[]) AND ${present('a2')}
              AND ${lisible(user, 'lp2')}
-             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id))
-        ) AS alertes_ouvertes,
+             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id)))`;
+    const silene = this.silene && !q.liaison ? this.silene.clesActifs(user, { type: q.type, q: texte }) : null;
+    const { rows: cles } = await sql<{ id: string; type: TypeActifAlh; valeur: string; alh: boolean; total: number }>`
+      WITH alh AS (
+        SELECT x.id, x.type, x.valeur, ${alertesOuvertes} AS alertes_ouvertes
+        FROM vulnerabilites_alh_actifs x
+        LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+        LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+        WHERE ${sql.join(conditions, sql` AND `)}
+      ),
+      tous AS (
+        SELECT id, type, valeur, alertes_ouvertes, true AS alh FROM alh
+        ${
+          silene
+            ? sql`UNION ALL SELECT s.id, s.type, s.valeur, 0, false FROM (${silene}) s
+                WHERE NOT EXISTS (SELECT 1 FROM alh WHERE alh.type = s.type AND alh.valeur = s.valeur)`
+            : sql``
+        }
+      )
+      SELECT id, type, valeur, alh, count(*) OVER ()::int AS total FROM tous
+      ORDER BY alertes_ouvertes DESC, type, valeur, id
+      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    const idsAlh = cles.filter((c) => c.alh).map((c) => c.id);
+    const { rows } = idsAlh.length
+      ? await sql<{
+          id: string;
+          type: TypeActifAlh;
+          valeur: string;
+          statut: StatutActifAlh | null;
+          adresse: string | null;
+          fai: string | null;
+          asn: string | null;
+          pays: string | null;
+          cdn: boolean | null;
+          mutualise: boolean | null;
+          joignable: boolean | null;
+          joignable_le: Date | null;
+          niveau: number | null;
+          cree_alh_le: Date | null;
+          maj_alh_le: Date | null;
+          integration_id: string;
+          integration_nom: string;
+          perimetre_alh_nom: string | null;
+          perimetre_nom: string | null;
+          alertes_ouvertes: number;
+          technologies: number;
+          liaisons_version: number;
+        }>`
+      SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
+        x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
+        x.liaisons_version,
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
+        ${alertesOuvertes} AS alertes_ouvertes,
         (SELECT count(DISTINCT ta.technologie_id)::int FROM vulnerabilites_alh_technologie_actifs ta
            JOIN vulnerabilites_alh_technologies t2 ON t2.id = ta.technologie_id
            WHERE t2.integration_id = x.integration_id AND ta.actif_type = x.type AND ta.actif_alh = x.alh_id AND ta.actuel
              AND t2.vu_numero >= coalesce(e.numero_complet, 0)
-        ) AS technologies,
-        count(*) OVER ()::int AS total
+        ) AS technologies
       FROM vulnerabilites_alh_actifs x
       JOIN integrations i ON i.id = x.integration_id
       LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
       LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
       LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
-      WHERE ${sql.join(conditions, sql` AND `)}
-      ORDER BY alertes_ouvertes DESC, x.type, x.valeur, x.id
-      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+      WHERE x.id = ANY(${idsAlh}::uuid[])`.execute(this.db.k)
+      : { rows: [] };
+    const parId = new Map(rows.map((x) => [x.id, x]));
     // Lot ALH3 : machines internes reliées ou proposées, limitées à celles que la personne peut lire.
-    const liaisons = await resumesLiaisons(
-      this.db.k,
-      user,
-      rows.map((x) => x.id),
-    );
+    const liaisons = await resumesLiaisons(this.db.k, user, idsAlh);
     // Lot ALH6 : services connus de chaque actif (portés par une alerte ouverte et présente).
-    const services = await servicesDesActifs(
-      this.db.k,
-      user,
-      rows.map((x) => x.id),
-    );
+    const services = await servicesDesActifs(this.db.k, user, idsAlh);
+    // Lot SI1 : ce que Silène dit de chaque actif de la page (même adresse IP ou même nom de domaine).
+    const sil = this.silene
+      ? await this.silene.actifs(
+          this.db.k,
+          user,
+          cles.map((c) => ({ type: c.type, valeur: c.valeur })),
+          SERVICES_PAR_ACTIF_MAX,
+        )
+      : new Map<string, ActifSileneDto & { constatIds: string[] }>();
+    const sansIds = (a: (ActifSileneDto & { constatIds?: string[] }) | undefined): ActifSileneDto | null => {
+      if (!a) return null;
+      const { constatIds: _ignore, ...dto } = a;
+      void _ignore;
+      return dto;
+    };
     return {
-      total: rows[0]?.total ?? 0,
+      total: cles[0]?.total ?? 0,
       page: q.page,
       parPage: SURFACE_PAR_PAGE,
-      elements: rows.map((x) => ({
-        id: x.id,
-        type: x.type,
-        valeur: x.valeur,
-        statut: x.statut,
-        adresse: x.adresse,
-        fai: x.fai,
-        asn: x.asn,
-        pays: x.pays,
-        cdn: x.cdn,
-        mutualise: x.mutualise,
-        joignable: x.joignable,
-        joignableLe: iso(x.joignable_le),
-        niveau: x.niveau,
-        alertesOuvertes: x.alertes_ouvertes,
-        technologies: x.technologies,
-        creeLe: iso(x.cree_alh_le),
-        majLe: iso(x.maj_alh_le),
-        perimetreAlh: x.perimetre_alh_nom,
-        perimetreNom: x.perimetre_nom,
-        integration: { id: x.integration_id, nom: x.integration_nom },
-        machinesInternes: liaisons.get(x.id)!,
-        versionLiaisons: x.liaisons_version,
-        services: sansAlertes(services.get(x.id)!.slice(0, SERVICES_PAR_ACTIF_MAX)),
-        nombreServices: services.get(x.id)!.length,
-      })),
+      elements: cles.map((c): ActifSurfaceDto => {
+        const s = sansIds(sil.get(cleActif(c.type, c.valeur)));
+        const x = parId.get(c.id);
+        if (!c.alh || !x)
+          return {
+            id: c.id,
+            type: c.type,
+            valeur: c.valeur,
+            statut: null,
+            adresse: c.type === 'domaine' ? (s?.adresses[0] ?? null) : null,
+            fai: null,
+            asn: null,
+            pays: null,
+            cdn: null,
+            mutualise: null,
+            joignable: null,
+            joignableLe: null,
+            niveau: null,
+            alertesOuvertes: 0,
+            technologies: 0,
+            creeLe: null,
+            majLe: null,
+            perimetreAlh: null,
+            perimetreNom: s?.perimetreNom ?? null,
+            integration: s?.instances[0] ?? { id: c.id, nom: 'Silène' },
+            machinesInternes: { reliees: [], nombreReliees: 0, propositions: 0, autresMachines: false },
+            versionLiaisons: 0,
+            services: [],
+            nombreServices: 0,
+            sources: ['silene'],
+            alhId: null,
+            silene: s,
+          };
+        return {
+          id: x.id,
+          type: x.type,
+          valeur: x.valeur,
+          statut: x.statut,
+          adresse: x.adresse,
+          fai: x.fai,
+          asn: x.asn,
+          pays: x.pays,
+          cdn: x.cdn,
+          mutualise: x.mutualise,
+          joignable: x.joignable,
+          joignableLe: iso(x.joignable_le),
+          niveau: x.niveau,
+          alertesOuvertes: x.alertes_ouvertes,
+          technologies: x.technologies,
+          creeLe: iso(x.cree_alh_le),
+          majLe: iso(x.maj_alh_le),
+          perimetreAlh: x.perimetre_alh_nom,
+          perimetreNom: x.perimetre_nom,
+          integration: { id: x.integration_id, nom: x.integration_nom },
+          machinesInternes: liaisons.get(x.id)!,
+          versionLiaisons: x.liaisons_version,
+          services: sansAlertes(services.get(x.id)!.slice(0, SERVICES_PAR_ACTIF_MAX)),
+          nombreServices: services.get(x.id)!.length,
+          sources: s ? ['alh', 'silene'] : ['alh'],
+          alhId: x.id,
+          silene: s,
+        };
+      }),
     };
   }
 

@@ -638,3 +638,19 @@
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ Lot SI1 : deux sources de la surface externe */
+/* En tête de l'écran « Surface externe » : l'état d'AlgoLightHouse et la note Silène côte à côte, chacun dans son cadre
+   avec sa pastille ; l'un sous l'autre sur un écran étroit. */
+.ss-sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--suivi-champ-l) * 1.5)), 1fr));
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.ss-source {
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+}

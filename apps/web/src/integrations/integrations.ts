@@ -7,6 +7,7 @@ import {
   erreurAdresse,
   erreurAdresseAlh,
   BilanImportNessus,
+  BilanImportSilene,
   FREQUENCE_CONNECTEUR_DEFAUT,
   FREQUENCES_CONNECTEUR,
   frequenceConnecteurReglable,
@@ -15,6 +16,7 @@ import {
   GRAVITES_TENABLE,
   GRAVITE_TENABLE_LIBELLES,
   type GraviteTenable,
+  libelleOperationType,
   OPERATION_LIBELLES,
   portAdresse,
   type EtatIntegrationsDto,
@@ -25,6 +27,7 @@ import {
 import type { Etat } from '@suivi/ui';
 import { resumeBilanAlh } from '../vulnerabilites/surface';
 import { resumeBilanImport } from './nessus';
+import { resumeBilanSilene } from './silene';
 
 /** Carte « Intégrations » de la page Plateforme (addendum du 19/11/2026 de l'ADR 0076) : seul endroit où les connecteurs se
     configurent. L'ancienne rubrique du Pilotage (`/integrations`) y redirige. */
@@ -61,7 +64,9 @@ export const ETAT_EXECUTION: Record<ExecutionIntegrationDto['etat'], Etat> = {
   expire: 'attention',
 };
 export const libelleEtatExecution = (e: ExecutionIntegrationDto['etat']) => ETAT_EXECUTION_LIBELLES[e];
-export const libelleOperation = (o: ExecutionIntegrationDto['operation']) => OPERATION_LIBELLES[o];
+/** Libellé d'une opération ; lot SI1 : celui de l'import propre au type (« Importer un rapport » pour Silène). */
+export const libelleOperation = (o: ExecutionIntegrationDto['operation'], type?: IntegrationDto['type']) =>
+  type ? libelleOperationType(type, o) : OPERATION_LIBELLES[o];
 /** Exécution en file ou en cours, que la carte suit de près. Un import (lot N1) est suivi par sa propre fenêtre, pas par la
     carte : un import abandonné par le navigateur est clos par le serveur après trente minutes. */
 export const executionEnCours = (
@@ -99,6 +104,9 @@ export function resumeExecution(
     // Lot N1 : bilan d'un import (avant celui d'une synchronisation, qui compte aussi des constats).
     const b = e.resultat ? BilanImportNessus.safeParse(e.resultat) : null;
     if (b?.success) return resumeBilanImport(b.data);
+    // Lot SI1 : bilan d'un import de rapport Silène.
+    const bs = e.resultat ? BilanImportSilene.safeParse(e.resultat) : null;
+    if (bs?.success) return resumeBilanSilene(bs.data);
     if (e.resultat && typeof e.resultat.constats === 'number') return resumeSynchronisation(e.resultat);
     if (e.resultat && typeof e.resultat.alertes === 'number') return resumeBilanAlh(e.resultat);
     return 'Résultat reçu.';
