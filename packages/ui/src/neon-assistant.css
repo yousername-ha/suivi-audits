@@ -233,10 +233,7 @@
   margin: 0;
 }
 .as-profile-label select {
-  font:
-    600 11px/1.4 Inter,
-    system-ui,
-    sans-serif;
+  font: 600 11px/1.4 var(--mantine-font-family);
   background: var(--as-blue-bg);
   color: var(--as-blue);
   border: 1px solid color-mix(in srgb, var(--as-blue) 35%, var(--as-edge));
@@ -491,10 +488,7 @@
   overflow-wrap: anywhere;
 }
 .as-small-button {
-  font:
-    600 11px/1.4 Inter,
-    system-ui,
-    sans-serif;
+  font: 600 11px/1.4 var(--mantine-font-family);
   color: var(--as-accent);
   border: 1px solid color-mix(in srgb, var(--as-accent) 40%, var(--as-edge));
   background: var(--as-accent-bg);
@@ -535,10 +529,7 @@
 .as-editor textarea,
 .as-editor input {
   width: 100%;
-  font:
-    13px/1.6 Inter,
-    system-ui,
-    sans-serif;
+  font: 13px/1.6 var(--mantine-font-family);
   border: 1px solid var(--as-edge);
   background: var(--as-paper);
   color: var(--as-ink);
@@ -597,10 +588,7 @@
   background: transparent;
   width: 100%;
   display: block;
-  font:
-    13px/1.6 Inter,
-    system-ui,
-    sans-serif;
+  font: 13px/1.6 var(--mantine-font-family);
   min-height: 45px;
   max-height: 116px;
   padding: 3px 4px 7px;
