@@ -263,10 +263,28 @@ propre à l’objet sous verrou, sur l’état courant ; les lectures par `lireD
 invitations et relances sont des notifications métier `retex_contribution` sans SMSI ni objet (migration additive `049`,
 qui étend la contrainte posée par la `046`). Le pilote garde le droit `incidents:modifier`.
 
+**Déclarations réglementaires des incidents (18/11/2026, [ADR 0105](../adr/0105-declaration-reglementaire-des-incidents.md)).**
+Les déclarations santé (CERT Santé, ARS) et NIS 2 (ANSSI) d’un incident sont rangées hors de l’état historique, dans la table
+`incidents_declarations` (migration additive `089`), repérées par l’identifiant et le périmètre de l’incident, sans clé
+étrangère (les lignes de `suivi_incidents` sont réécrites à chaque enregistrement). La date de qualification de l’incident
+(`qualifiedAt`, colonne `suivi_incidents.qualified_at`, alignée avec `historique/tables/collections.ts`) est posée au premier
+passage à « Incident de sécurité », dans la transaction de l’incident, qui propose aussi les déclarations probables.
+Service `apps/api/src/historique/declarations.ts` : chaque geste prend le verrou de l’état historique, contrôle le périmètre
+(404), If-Match sur la version de la déclaration, journal d’audit ; préparer demande `incidents:modifier`, confirmer, écarter,
+marquer envoyée, ouvrir, compléter et corriger la date de qualification demandent le rôle prédéfini `rssi` (lu à chaque appel,
+comme la prise en compte des alertes du module Vulnérabilités). Un déclencheur refuse toute modification ou suppression d’une
+ligne `envoyee` ou `non_requise` (et toute troncature) ; seule la remise à vide le suspend. Règles pures (délais, propositions,
+rubriques et leur source, pré-remplissage, jalons de rappel) dans `packages/shared/src/declarations-incidents.ts`. Identité de
+l’établissement : section de paramètres `etablissement` (table `settings`), droits `parametres` et `conformite`.
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.
 L’automate de tâches utilise transactions et unicité ; fuseaux des périmètres.
+Rappels des déclarations d’incident (ADR 0105) : passage en tête de l’automate (60 s), indépendant du module des écarts,
+arrêté avec le module incidents ; notifications `incident_declaration` sans SMSI ni objet (contrainte recréée par la `089`),
+une par personne et par jalon (index unique sur `user_id, due_key`), au responsable de l’incident s’il correspond à un compte
+et aux comptes au rôle RSSI qui voient le périmètre ; titre sans régime ni contenu, repris seul dans le courriel.
 Worker externe à l’API : file exploitation/sauvegarde/restauration/TLS et
 mise à jour, verrous hôte, receipts privés et état public minimal. Les
 notifications métier sont internes ; aucun transport email livré.

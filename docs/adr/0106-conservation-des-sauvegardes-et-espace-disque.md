@@ -53,6 +53,10 @@ le disque du serveur (retour arrière automatique, aucune donnée touchée). La 
   (mécanisme des notifications métier), une fois par franchissement de seuil.
 - Aucune suppression ne touche les sauvegardes de sécurité des restaurations (`.restauration-securite/`), ni les archives des
   anciennes versions (`.tar.enc`, `.tar`), comme aujourd'hui.
+- **Valeurs du contrôle d'espace, validées par le RSSI le 19/11/2026** : marge de 1 Gio, ou 10 % de la place nécessaire si
+  c'est plus ; zone de travail d'une sauvegarde estimée à deux fois la dernière sauvegarde plus 10 % ; 2 Gio forfaitaires pour
+  le téléchargement quand la taille des images ne peut pas être lue dans les manifestes ; alerte sous 15 % d'espace libre,
+  réarmée à 20 %.
 
 ## Conséquences
 

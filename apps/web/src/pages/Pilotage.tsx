@@ -705,12 +705,14 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           avis?: 'utile' | 'inutile' | null;
           reponse?: string | null;
           readAt: string | null;
-          /** Alerte du module Vulnérabilités (ADR 0100, lot V6) : sans périmètre, lien vers la fiche de l'alerte. */
+          /** Alerte du module Vulnérabilités (ADR 0100, lot V6) ou rappel de déclaration (ADR 0105) : sans périmètre, lien
+              vers la fiche de l'alerte ou de l'incident. */
           lien?: string;
         }[]
       >('/api/grc/notifications'),
   });
-  // Alertes du module Vulnérabilités : elles ne relèvent d'aucun périmètre, elles sont listées quel que soit le SMSI choisi.
+  // Alertes du module Vulnérabilités et rappels de déclaration d'un incident (ADR 0105) : sans périmètre du socle, listés quel
+  // que soit le SMSI choisi, avec leur lien.
   const alertes = q.data?.filter((n) => !n.smsiId && n.lien) ?? [];
   return (
     <Stack>
@@ -721,7 +723,7 @@ function Reminders({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => v
           <Text>{n.message}</Text>
           <Group>
             <Button variant="light" component={Link} to={n.lien!}>
-              Ouvrir l’alerte
+              {n.kind === 'incident_declaration' ? 'Ouvrir l’incident' : 'Ouvrir l’alerte'}
             </Button>
             {!n.readAt && (
               <Button

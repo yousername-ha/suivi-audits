@@ -29,6 +29,23 @@ vulnérabilités SMSI »)
 action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
 surveillance vulnérabilités SMSI »)
 
+**Migration automatique `089`** (déclaration réglementaire des incidents,
+[ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : additive (table `incidents_declarations` et son
+déclencheur d'immutabilité, colonne `qualified_at` de `suivi_incidents`, contrainte de portée des notifications recréée à
+l'identique de la `087` plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
+existants n'ont pas de date de qualification et ne reçoivent aucune proposition de déclaration ; le RSSI peut en ouvrir une à
+la main après avoir renseigné la date de qualification. **Aucune action sur le serveur.**
+
+**Après la mise à jour, à faire dans l'application** (pour utiliser les déclarations) :
+
+1. Remplir l'identité de l'établissement (Plateforme, carte « Identité de l'établissement ») : raison sociale, FINESS
+   juridique et géographique, ARS de rattachement, contact de signalement, secteur d'activité au sens de NIS 2 ; elle est vide
+   au départ. Vérifier la catégorie d'entité NIS 2 (carte « Référentiels »).
+2. Faire confirmer par le RSSI les rubriques des fiches de préparation contre les formulaires réels des portails (signalement
+   santé, ANSSI) avant la première déclaration.
+3. Donner le rôle prédéfini « RSSI » à la personne qui confirme, écarte et marque envoyées les déclarations : sans compte qui
+   le tienne, aucune déclaration ne peut être confirmée ni marquée envoyée. (session « Projet audit_suivi Coeur »)
+
 **Migration automatique `091`** (conservation des sauvegardes, [ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) :
 additive (deux colonnes bornées de `backup_policy`, avec valeur par défaut), durée négligeable, sans reprise de données.
 **Externaliser les sauvegardes AVANT la mise à jour** : avec les nouveaux réglages par défaut, au plus **30 sauvegardes
@@ -113,6 +130,19 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   l'échéance ; à l'échéance, l'exception expire d'elle-même, la faille revient à l'état d'avant (ou « à traiter ») et son
   délai repart ; tout est historisé et tracé au journal, sans nom de machine. (session « Module surveillance vulnérabilités
   SMSI »)
+- Déclaration réglementaire des incidents, santé (CERT Santé, ARS) et NIS 2 (ANSSI)
+  ([ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : qualification horodatée au premier passage à
+  « Incident de sécurité », corrigeable par le RSSI (correction tracée, échéances non envoyées recalculées) ; déclarations
+  proposées selon la qualification guidée et la catégorie d'entité NIS 2 ; bloc « Déclarations » dans l'onglet Fiche de
+  l'incident (régime, étape, statut, compte à rebours) ; fiche de préparation rubrique par rubrique, pré-remplie depuis la
+  fiche, la chronologie et l'identité de l'établissement, avec un bouton « Copier » par rubrique et un téléchargement Word ;
+  confirmer, écarter « non requise » (motif obligatoire), marquer « envoyée » (référence obligatoire, texte figé), ouvrir une
+  déclaration ou un complément réservés au rôle « RSSI » ; déclaration envoyée ou écartée figée en base, incident déclaré non
+  supprimable ; rappels « Déclaration réglementaire d'un incident » (application et courriel) au responsable de l'incident et
+  aux comptes RSSI, à la qualification, puis à mi-délai, deux heures avant et au dépassement (NIS 2) ou toutes les quatre
+  heures (santé), indépendants du module des écarts ; rubrique « Identité de l'établissement » de la Configuration. La liste
+  « Obligations à vérifier » reste identique ; ses lignes santé et NIS 2 renvoient au bloc. (session « Projet audit_suivi
+  Coeur »)
 
 ### Modifié
 

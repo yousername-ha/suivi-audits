@@ -1,6 +1,7 @@
 /* Registre des incidents (reprise des pages « Incidents » de l'outil de suivi) et fiche d'un incident à onglets
    (ADR 0091) : « Fiche », « Qualification guidée » (questionnaire oui / non / je ne sais pas, qualification proposée,
-   obligations) et « Chronologie et RETEX ». Priorité ITIL impact × urgence, action du registre des écarts.
+   obligations) et « Chronologie et RETEX ». Priorité ITIL impact × urgence, action du registre des écarts. Bloc
+   « Déclarations » de l'onglet Fiche : déclarations réglementaires santé et NIS 2 (ADR 0105).
    Données lues et écrites dans l'état historique (clé `incidents`), sous verrou. */
 import {
   Anchor,
@@ -36,6 +37,7 @@ import { ficheCliquable } from '../fiche-cliquable';
 import { ChampChoix, ChampTexte, ChampZone, useModule } from '../historique/champs';
 import { Chiffres } from '../historique/graphiques';
 import { useCan } from '../session';
+import { BlocDeclarations } from './Declarations';
 import type { Agir, Donnees } from './donnees';
 import { FILTRES_RETEX, etatRetexIncident, type CleEtatRetex } from './etat-retex';
 import { ETAT_QUALIFICATION } from './qualification';
@@ -44,6 +46,8 @@ import { RetexIncident } from './Retex';
 
 type Onglet = 'fiche' | 'qualification' | 'retex';
 const ONGLETS: Onglet[] = ['fiche', 'qualification', 'retex'];
+/** Lignes des obligations suivies par le bloc « Déclarations » (ADR 0105) : la liste reste identique, ces lignes y renvoient. */
+const SUIVIES_PAR_DECLARATIONS = new Set(['Santé et HDS', 'NIS 2']);
 const dateFr = (t: string) => (t ? `${t.slice(0, 10).split('-').reverse().join('/')} ${t.slice(11, 16)}` : '');
 const Qualification = ({ k }: { k: string }) => <StatusChip etat={ETAT_QUALIFICATION[k] ?? 'neutre'}>{k}</StatusChip>;
 
@@ -379,6 +383,12 @@ function ContenuFiche({ i, d, modifiable, agir }: { i: Incident; d: Donnees; mod
                 <span>
                   <b>{titre}</b> : {detail}
                   {i.notified[String(k)] ? ` (traité le ${dateFr(i.notified[String(k)]!)})` : ''}
+                  {SUIVIES_PAR_DECLARATIONS.has(titre) && (
+                    <Text span size="sm" c="dimmed">
+                      {' '}
+                      Déclaration suivie dans le bloc « Déclarations » ci-dessous.
+                    </Text>
+                  )}
                 </span>
               }
               onChange={(ev) =>
@@ -390,6 +400,7 @@ function ContenuFiche({ i, d, modifiable, agir }: { i: Incident; d: Donnees; mod
           ))}
         </Stack>
       )}
+      <BlocDeclarations i={i} />
       {i.findingId ? (
         <Text size="sm">
           Action {i.findingId} ({(d.ecarts[i.findingId] ?? '').toLowerCase() || 'registre des écarts'})
