@@ -40,6 +40,9 @@ déclencheur temps réel ; aucune table existante modifiée), durée négligeabl
 contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
 suivi-audits »)
 
+**Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
+Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
+
 ### Ajouté
 
 - **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
@@ -91,6 +94,15 @@ suivi-audits »)
   (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
+
+- **Onglets aux couleurs du menu, une seule forme sur toute la plateforme, à l'essai** (décisions du RSSI du 19/11/2026,
+  sur maquettes ; [docs/refonte-neon/ONGLETS-BLEU-MENU.md](docs/refonte-neon/ONGLETS-BLEU-MENU.md)). Deux formes sont à
+  l'essai : une barre bleu nuit avec l'onglet actif en bleu du menu (par défaut), ou des pastilles avec l'onglet actif en bleu
+  nuit. Chaque personne choisit dans Mon compte > Affichage, « Onglets de page (essai) » (préférence d'affichage
+  `onglets`, facultative, enregistrée sur le serveur). La forme s'applique à tous les onglets horizontaux : rubriques sous le
+  titre des pages, onglets des pages et des fenêtres, sélecteur de vues des objectifs, présentations du contexte, RETEX et
+  Assistant RSSI. Les onglets verticaux ne changent pas. La forme écartée, la préférence et son réglage seront retirés une
+  fois le choix fait. Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
