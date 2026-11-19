@@ -676,7 +676,7 @@ sudo ./scripts/restore.sh /srv/sauvegardes/suivi-audits/<fichier>.tar.age
 ```
 Sur un autre serveur (perte de la clé du serveur), indiquer le fichier de la clé de secours téléchargé à l'étape 8 : `sudo BACKUP_KEY_FILE=/chemin/cle-secours-sauvegardes-<date>.txt ./scripts/restore.sh <fichier>.tar.age`.
 
-Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**.
+Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER` (en majuscules) suivi d'**Entrée**. Après la restauration de la base, il recalcule ses statistiques (`ANALYZE`, quelques secondes) avant de remettre l'application en service ; un échec de ce calcul n'est qu'un avertissement (« ATTENTION : statistiques de la base non recalculées »), PostgreSQL les recalculera de lui-même dans les minutes qui suivent.
 **Résultat attendu** : la dernière ligne est `Restauration terminée.` Attendez une minute et vérifiez les états (étape 7.1), puis connectez-vous : vos comptes et vos données sont présents.
 
 <!-- ci: exec: "$GITHUB_WORKSPACE/scripts/ci/guide-attendre.sh" -->

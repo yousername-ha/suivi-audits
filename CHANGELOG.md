@@ -192,6 +192,16 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 - **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
   crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
   reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+- **Statistiques de PostgreSQL recalculées après une restauration et après une synchronisation de vulnérabilités**
+  (décision du RSSI du 19/11/2026) : `pg_restore` ne restaure pas les statistiques du planificateur, et une synchronisation
+  de Tenable Security Center ou d'AlgoLightHouse réécrit chaque ligne de ses tables ; jusqu'au passage de l'autovacuum,
+  PostgreSQL pouvait choisir de mauvais plans (pages lentes dans les premières minutes). `scripts/restore.sh` et la migration
+  du moteur PostgreSQL 17 vers 18 lancent un `ANALYZE` de la base après la restauration réussie, avant la remise en service
+  (quelques secondes de plus) ; la fin reçue d'une synchronisation qui a rangé au moins un élément lance, après la validation,
+  un `ANALYZE` des seules tables réécrites par ses lots, par le rôle applicatif propriétaire des tables. Un `ANALYZE` en échec
+  n'est qu'un avertissement (journal technique, sans donnée) : la restauration ou la synchronisation reste réussie. Les
+  actifs exposés d'une CVE (repères « E-… » de l'assistant) sont aussi rangés dans un ordre stable, qui dépendait du plan
+  choisi par PostgreSQL. Sans migration, aucune action. (session « Projet audit_suivi Coeur »)
 
 
 ## [7.4.0] — 2026-11-19

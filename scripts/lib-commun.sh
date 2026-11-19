@@ -172,6 +172,16 @@ ALTER SCHEMA public OWNER TO suivi_app;
 EOSQL
 }
 
+# Statistiques du planificateur recalculées après une restauration (pg_restore ne les restaure pas) : sans elles, PostgreSQL
+# choisit de mauvais plans jusqu'au passage de l'autovacuum. Un échec ne remet pas en cause une restauration réussie :
+# avertissement seulement, la fonction réussit toujours.
+postgresql_analyser() {
+  info "Calcul des statistiques de la base restaurée (ANALYZE)."
+  dc exec -T -u postgres db psql -v ON_ERROR_STOP=1 -d suivi -c 'ANALYZE' < /dev/null > /dev/null && return 0
+  avertir "statistiques de la base non recalculées (ANALYZE) : l'autovacuum s'en chargera ; pour les recalculer tout de suite : sudo docker compose exec -T -u postgres db psql -d suivi -c 'ANALYZE'"
+  return 0
+}
+
 # Migration de la base PostgreSQL 17 vers 18 : export avec le moteur 17 (conteneur éphémère, sans réseau), nouvelle base 18
 # vierge, restauration, contrôle des comptes par table. L'ancien dossier de données n'est jamais modifié : en cas d'échec,
 # seule la nouvelle base (postgres18/18) est supprimée et la version précédente redémarre sur l'ancienne, intacte.
@@ -235,6 +245,8 @@ migrer_postgresql() { # ancienne nouvelle
     return 1
   fi
   [ "$(postgresql_contraintes_non_validees | tr -d '[:space:]')" = 0 ] || { erreur "des contraintes de la base restaurée ne sont pas validées."; abandonner_migration_postgresql "$neuf" "$expo"; return 1; }
+  # 5. Statistiques du planificateur (non exportées par pg_dump) : un échec n'est qu'un avertissement.
+  postgresql_analyser
   rm -f "$expo/suivi-pg17.dump" "$expo/differences.txt" "$expo/differences-contraintes.txt"
   printf '%s\n' "$empreinte" > "$data/postgres$nouv/.migre-depuis-postgres"
   printf '{"date":"%s","de":%s,"vers":%s,"tables":%s,"ancienneBase":%s}\n' "$(horodatage)" "$anc" "$nouv" "$(wc -l < "$expo/comptes-$nouv.txt")" \
