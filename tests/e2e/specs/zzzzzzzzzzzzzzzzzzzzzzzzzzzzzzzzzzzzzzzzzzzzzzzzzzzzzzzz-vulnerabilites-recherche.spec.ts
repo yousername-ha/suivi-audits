@@ -121,7 +121,7 @@ for (const [mode, scheme] of [
       for (const g of ['CVE', 'Machines internes', 'Actifs exposés'])
         await expect(liste.getByRole('group', { name: new RegExp(`^${g}`) })).toBeVisible();
       await expect(liste.getByRole('option', { name: /CVE-2026-90001.*Non détectée sur le parc/ })).toBeVisible();
-      await expect(liste.getByRole('option', { name: /srv-exemple-1\.example\.org/ })).toBeVisible();
+      await expect(liste.getByRole('option', { name: 'srv-exemple-1.example.org' })).toBeVisible();
       await expect(liste.getByRole('option', { name: /Tout voir \(3\)/ })).toBeVisible();
       await axe();
 
