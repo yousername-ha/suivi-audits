@@ -77,6 +77,16 @@ surveillance vulnérabilités SMSI »)
 - Vulnérabilités, « Failles détectées » : les boutons de pagination (flèches et numéros) portent un nom accessible, comme
   ceux de la vue d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
 
+### Corrigé
+
+- **Veille, connecteurs et envoi du courriel en mode intégré** : l'exécutant d'exploitation lance ces tâches sous le compte
+  sans privilège `nobody`, mais son conteneur (`updater`) n'avait pas le droit de changer d'identité ; elles échouaient
+  (« L'exécutant n'a pas pu abandonner ses privilèges »), jamais collectées ni envoyées. Le conteneur reçoit les seules
+  capacités `SETUID` et `SETGID` (abandon des privilèges ; il tient déjà le socket Docker), et le compte sans privilège ne
+  garde aucun groupe supplémentaire. Le mode hôte (cron root) n'était pas touché. Aucune action sur le serveur : la mise à
+  jour recrée le conteneur avec ses nouvelles capacités. _(Session « Projet audit_suivi Coeur », signalé par la session
+  « Module surveillance vulnérabilités SMSI ».)_
+
 ## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour
