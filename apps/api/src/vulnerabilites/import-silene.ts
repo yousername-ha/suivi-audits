@@ -29,6 +29,7 @@ import {
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { analyserTables } from '../db/analyser.js';
 import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
@@ -315,6 +316,24 @@ export class ImportSilene {
   /* ---------------------------------------------------------------- Fin */
   /** Fin d'un import : reçu et faisant foi si tous les hôtes et constats annoncés sont rangés, sinon en échec (les éléments
       rangés le restent, la référence de présence ne bouge pas). */
+  /** Après la fin d'un import, hors transaction : statistiques des tables réécrites par les lots (comme après une
+      synchronisation reçue de Security Center ou d'AlgoLightHouse). Ne lève jamais. */
+  async apresValidation(): Promise<void> {
+    await analyserTables(
+      this.db.k,
+      [
+        'vulnerabilites_silene_hotes',
+        'vulnerabilites_silene_noms',
+        'vulnerabilites_silene_ports',
+        'vulnerabilites_silene_produits',
+        'vulnerabilites_silene_constats',
+        'vulnerabilites_silene_constat_hotes',
+        'vulnerabilites_silene_lignes',
+      ],
+      this.db.log,
+    );
+  }
+
   async terminer(id: string, executionId: string, user: SessionUser, ip: string): Promise<BilanImportSilene> {
     return this.db.tx(async (c, k) => {
       const imp = await this.importEnCours(k, id, executionId, user);

@@ -149,6 +149,9 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Modifié
 
+- Vulnérabilités, imports de fichiers (Nessus, Silène) : les statistiques des tables réécrites sont recalculées à la fin d'un
+  import, comme après une synchronisation reçue de Security Center ou d'AlgoLightHouse, sans jamais faire échouer l'import.
+  (session « Module surveillance vulnérabilités SMSI »)
 - Intégrations, **limite des imports de scans Nessus** (lot N2, décision du RSSI du 19/11/2026) : trente fichiers commencés par
   heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
   dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module

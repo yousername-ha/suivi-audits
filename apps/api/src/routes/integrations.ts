@@ -227,7 +227,15 @@ export const integrationsRoutes = [
     body: FinImportNessus,
     handler: async ({ svc, s, params, ip }) => {
       await svc.modules.assert('vulnerabilites');
-      return svc.vulnerabilites.importNessus.terminer(params.id, params.execution, (s as Session).user, ip);
+      const bilan = await svc.vulnerabilites.importNessus.terminer(
+        params.id,
+        params.execution,
+        (s as Session).user,
+        ip,
+      );
+      // Transaction validée : statistiques des tables réécrites, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.importNessus.apresValidation();
+      return bilan;
     },
   }),
   route({
@@ -278,7 +286,15 @@ export const integrationsRoutes = [
     body: FinImportSilene,
     handler: async ({ svc, s, params, ip }) => {
       await svc.modules.assert('vulnerabilites');
-      return svc.vulnerabilites.importSilene.terminer(params.id, params.execution, (s as Session).user, ip);
+      const bilan = await svc.vulnerabilites.importSilene.terminer(
+        params.id,
+        params.execution,
+        (s as Session).user,
+        ip,
+      );
+      // Transaction validée : statistiques des tables réécrites, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.importSilene.apresValidation();
+      return bilan;
     },
   }),
   route({
