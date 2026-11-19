@@ -222,6 +222,9 @@ export const TABLES_TRAVAIL = [
   // sans nom ; l'historique repart de zéro avec eux.
   'vulnerabilites_instantanes',
   'vulnerabilites_instantanes_mesures',
+  // Déclarations réglementaires des incidents (ADR 0105) : rattachées aux incidents, effacées avec le travail. Une déclaration
+  // envoyée ou écartée n'est effacée que par ce chemin (déclencheurs suspendus le temps de la transaction).
+  'incidents_declarations',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

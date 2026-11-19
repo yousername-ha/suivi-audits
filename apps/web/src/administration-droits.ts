@@ -17,6 +17,8 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'general', cote: 'plateforme', peut: parametres },
   { id: 'cycle', cote: 'plateforme', peut: (can) => parametres(can) && can('audit', 'lire') },
   { id: 'referentiels', cote: 'plateforme', peut: (can) => parametres(can) && can('conformite', 'lire') },
+  // Identité de l'établissement (ADR 0105) : droit conformite, comme la catégorie d'entité NIS 2.
+  { id: 'etablissement', cote: 'plateforme', peut: (can) => parametres(can) && can('conformite', 'lire') },
   { id: 'echelles', cote: 'plateforme', peut: parametres },
   // Droit de l'ancienne rubrique du Pilotage « Configuration du pilotage » : lecture du Pilotage, rien de plus.
   { id: 'configuration-pilotage', cote: 'plateforme', peut: (can) => can('pilotage', 'lire') },

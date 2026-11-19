@@ -21,6 +21,7 @@ import { isObject, type Json, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
 import { DEFAULT_SMSI } from '../grc/core.js';
 import { HttpError } from '../http/errors.js';
+import type { DeclarationsIncidents } from './declarations.js';
 import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
@@ -70,8 +71,14 @@ export const ajouterIncident = (data: JsonObject, brut: JsonObject) => {
   data.incidents = [...(Array.isArray(data.incidents) ? data.incidents : []), brut];
 };
 
+/** Qualification qui fait partir les délais de déclaration (ADR 0105). */
+const SECURITE = 'Incident de sécurité';
+
 export class Incidents {
-  constructor(private readonly r: RegistreHistorique) {}
+  constructor(
+    private readonly r: RegistreHistorique,
+    private readonly declarations: DeclarationsIncidents,
+  ) {}
 
   /** Registre des incidents lisibles par l'utilisateur : ceux des périmètres qu'il ouvre (BUG-044) ; `smsi` restreint la
       vue à un seul périmètre, qui doit alors être accessible. */
@@ -100,7 +107,7 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.created', reference: (x) => `legacy:incidents:${x.id}` },
-      async (data) => {
+      async (data, c) => {
         // Un incident relève d'un périmètre (BUG-044) : celui qui est affiché, sinon le périmètre commun.
         const smsi = body.smsi ?? DEFAULT_SMSI;
         await this.r.exigerPerimetre(user, { smsi }, true, 'Périmètre introuvable ou non accessible.');
@@ -110,8 +117,11 @@ export class Incidents {
           title: body.title ?? '',
           reporter: body.reporter ?? '',
           ...(q ? { kind: q.kind, status: 'Qualifié', answers: body.answers as JsonObject } : {}),
+          // Qualification horodatée (ADR 0105, décision 2) : départ des délais de déclaration.
+          ...(q?.kind === SECURITE ? { qualifiedAt: new Date().toISOString() } : {}),
         });
         ajouterIncident(data, brut);
+        if (q?.kind === SECURITE) await this.declarations.proposer(c, data, brut, user, ip);
         return lireIncident(brut)!;
       },
     );
@@ -123,13 +133,18 @@ export class Incidents {
       user,
       ip,
       { module: 'incidents', action: 'incident.updated', reference: (x) => `legacy:incidents:${x.id}` },
-      async (data) => {
+      async (data, c) => {
         const i = await this.trouver(data, id, user);
         const { answers, ...champs } = body;
         const suivant: JsonObject = { ...i, ...champs, ...(answers ? { answers: answers as JsonObject } : {}) };
         if (body.status && ['Résolu', 'Clos'].includes(body.status) && !str(suivant.resolvedAt))
           suivant.resolvedAt = maintenant16();
+        // Premier passage à « Incident de sécurité » (ADR 0105, décisions 2 et 8) : date et heure enregistrées, déclarations
+        // probables proposées. Un incident déjà qualifié ainsi avant cette version ne reçoit rien (pas de reprise).
+        const qualifie = str(i.kind) !== SECURITE && str(suivant.kind) === SECURITE && !str(i.qualifiedAt);
+        if (qualifie) suivant.qualifiedAt = new Date().toISOString();
         remplacerEntree(data, 'incidents', id, suivant);
+        if (qualifie) await this.declarations.proposer(c, data, suivant, user, ip);
         return lireIncident(suivant)!;
       },
     );
@@ -145,8 +160,10 @@ export class Incidents {
         action: 'incident.deleted',
         reference: (x) => `legacy:incidents:${x.id}`,
       },
-      async (data) => {
+      async (data, c) => {
         await this.trouver(data, id, user);
+        // Refusée si l'incident porte une déclaration envoyée ou écartée (ADR 0105) ; ses déclarations ouvertes partent avec lui.
+        await this.declarations.avantSuppression(c, id);
         remplacerEntree(data, 'incidents', id, null);
         return { id };
       },

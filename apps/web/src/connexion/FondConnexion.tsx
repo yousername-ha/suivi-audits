@@ -1,6 +1,7 @@
 /* Fond animé de l'écran de connexion, derrière le panneau (décoratif, aria-hidden). Géométrie : fond-geometrie.ts.
-   Teintes lues sur les variables de la charte ; 30 images/s au plus, image fixe si moins de mouvement est demandé,
-   rien sous un automate de test (captures stables) ni à l'impression. */
+   Teintes lues sur les variables de la charte, prises sur la toile elle-même : l'écran de connexion les redéfinit aux
+   couleurs du menu (neon-ergonomie.css) sans toucher au reste de l'application. 30 images/s au plus, image fixe si moins
+   de mouvement est demandé, rien sous un automate de test (captures stables) ni à l'impression. */
 import { useComputedColorScheme } from '@mantine/core';
 import { transparence } from '@suivi/ui';
 import { useEffect, useRef } from 'react';
@@ -31,7 +32,7 @@ export function FondConnexion() {
     if (!cv || !ctx || typeof window.matchMedia !== 'function') return;
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)');
     const impression = window.matchMedia('print');
-    const styles = getComputedStyle(document.documentElement);
+    const styles = getComputedStyle(cv);
     const lues = new Map<string, string>();
     const lire = (v: string) => {
       if (!lues.has(v)) lues.set(v, styles.getPropertyValue(v).trim());
@@ -112,7 +113,7 @@ export function FondConnexion() {
       tracer(p);
       ctx.stroke();
 
-      ctx.font = `600 10px ${lire('--mantine-font-family') || 'sans-serif'}`;
+      ctx.font = `600 11px ${lire('--mantine-font-family') || 'sans-serif'}`;
       for (const n of noeuds(t, p)) {
         if (!n.cercle) {
           ctx.fillStyle = coul(palette.point);

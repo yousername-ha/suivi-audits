@@ -1,6 +1,6 @@
 /* Registre des incidents et cellule de crise repris de l'outil de suivi : nouvel incident, qualification guidée dans la
-   fiche (ADR 0091), obligations, action du registre des écarts, ouverture d'une cellule, main courante, check-list, contacts et
-   scénarios. Données fictives posées par l'API. */
+   fiche (ADR 0091), obligations, action du registre des écarts, déclarations proposées et fiche de préparation (ADR 0105),
+   ouverture d'une cellule, main courante, check-list, contacts et scénarios. Données fictives posées par l'API. */
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage, ecrireEtat } from '../helpers';
 
@@ -70,6 +70,25 @@ test('Incidents et cellule de crise : qualification guidée, fiche, cellule, mai
     await expect(fiche.getByText(/traité le/)).toBeVisible();
     await fiche.getByRole('button', { name: 'Créer une action dans le registre des écarts' }).click();
     await expect(fiche.getByText(/Action INC-AC-01/)).toBeVisible();
+
+    // Déclarations (ADR 0105) : NIS 2 proposée à la qualification (entité importante), compte à rebours ; l'administrateur
+    // prépare la fiche (rubriques et « Copier »), confirmer et marquer envoyée restent au rôle RSSI.
+    const declarations = fiche.getByRole('region', { name: 'Déclarations de l’incident' });
+    const alerte = declarations.getByRole('row', { name: /Alerte précoce/ });
+    await expect(alerte).toContainText('Proposée');
+    await expect(alerte).toContainText(/Reste \d+ h/);
+    await expect(fiche.getByText('réservés au rôle RSSI', { exact: false })).toBeVisible();
+    await expect(alerte.getByRole('button', { name: 'Marquer envoyée' })).toHaveCount(0);
+    await alerte.getByRole('button', { name: 'Préparer' }).click();
+    const preparation = page.getByRole('dialog', { name: /Fiche de préparation/ });
+    await expect(preparation.getByText('Caractère illicite ou malveillant soupçonné')).toBeVisible();
+    await expect(preparation.getByRole('button', { name: /^Copier : / }).first()).toBeVisible();
+    await preparation
+      .getByRole('textbox', { name: 'Effet transfrontière possible' })
+      .fill('Aucun effet transfrontière connu (fictif).');
+    await preparation.getByRole('textbox', { name: 'Effet transfrontière possible' }).blur();
+    await expect(preparation.getByRole('button', { name: 'Revenir à la valeur de la fiche' })).toBeVisible();
+    await preparation.getByRole('button', { name: 'Fermer la fiche de préparation' }).click();
 
     // Retour au registre : la ligne indique l'état du RETEX (aucun RETEX n'est ouvert).
     await page.getByRole('button', { name: '← Registre des incidents' }).click();

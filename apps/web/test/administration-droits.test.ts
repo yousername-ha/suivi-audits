@@ -75,6 +75,11 @@ describe('cartes de l’Administration : droits', () => {
     expect(cartesVisibles(avec(['parametres', 'lire'], ['conformite', 'lire']), 'plateforme')).toContain(
       'referentiels',
     );
+    // Identité de l'établissement (ADR 0105) : droit conformite, comme la catégorie d'entité NIS 2.
+    expect(cartesVisibles(base, 'plateforme')).not.toContain('etablissement');
+    expect(cartesVisibles(avec(['parametres', 'lire'], ['conformite', 'lire']), 'plateforme')).toContain(
+      'etablissement',
+    );
     expect(cartesVisibles(avec(['import_export', 'lire']), 'plateforme')).toEqual(['import']);
   });
   it('chaque section de paramètres et chaque onglet d’administration a sa carte', () => {
@@ -90,6 +95,7 @@ describe('cartes de l’Administration : droits', () => {
       conservation: 'conservation',
       courriel: 'courriel',
       securite: 'securite',
+      etablissement: 'etablissement',
     };
     for (const s of SETTINGS_SECTIONS) expect(ids.has(sections[s]!), s).toBe(true);
     for (const onglet of [

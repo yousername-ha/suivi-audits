@@ -54,6 +54,7 @@ describe('fenêtres des cartes : pas de titre en double', () => {
       'conservation:masqué',
       'courriel:masqué',
       'cycle:affiché',
+      'etablissement:masqué',
       'general:masqué',
       'import_export:masqué',
       'notifications:masqué',

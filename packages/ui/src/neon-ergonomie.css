@@ -704,6 +704,106 @@ body:has(.as-launcher) .shell-main {
   min-inline-size: calc(var(--suivi-champ-xs) * 1.125);
 }
 
+/* Écran de connexion aux couleurs du menu (demande du RSSI du 19/11/2026) : le violet laisse la place au bleu du menu.
+   Panneau blanc, repères en bleu ardoise lisible sur le blanc. Les cartes Identifiant et Mot de passe et le bouton
+   prennent le bleu nuit du menu (libellés en bleu du menu éclairci). Le fond animé lit ses teintes sur sa toile : ligne, ronds, lueur et ondes en bleu du menu, libellés
+   des référentiels en bleu ardoise du menu. Le reste de l'application garde ses couleurs. */
+.auth-connexion > .auth-fond {
+  --suivi-nav-fond: var(--menu-teinte-pilotage);
+  --suivi-nav-active: var(--menu-trait);
+  --suivi-turquoise: var(--menu-teinte-pilotage);
+  --suivi-turquoise-nav: var(--menu-teinte-pilotage);
+}
+.auth-connexion > .auth-panneau {
+  --suivi-nav-repere: color-mix(in srgb, var(--menu-teinte-pilotage) 50%, var(--menu-fond-haut));
+  --suivi-nav-survol: color-mix(in srgb, var(--menu-fond-haut) 6%, var(--suivi-nav-fond));
+  --suivi-nav-active: color-mix(in srgb, var(--menu-fond-haut) 14%, var(--suivi-nav-fond));
+}
+[data-mantine-color-scheme='dark'] .auth-connexion > .auth-panneau {
+  --suivi-nav-repere: var(--menu-teinte-pilotage);
+  --suivi-nav-survol: var(--menu-survol);
+  --suivi-nav-active: var(--menu-selection-trait);
+}
+.auth-connexion :is(.auth-carte--identifiant, .auth-carte--mot-de-passe) {
+  --suivi-nav-fond: var(--menu-fond-haut);
+  --suivi-nav-texte: var(--menu-texte);
+  --suivi-nav-secondaire: var(--menu-secondaire);
+  /* Bleu du menu éclairci : libellés lisibles sur les deux cartes (contraste de 4,5 au moins). */
+  --suivi-nav-repere: color-mix(in srgb, var(--menu-teinte-pilotage) 70%, var(--menu-texte));
+  --suivi-nav-active: var(--menu-trait);
+  --suivi-nav-survol: var(--menu-trait);
+  color: var(--menu-texte);
+}
+.auth-connexion .auth-carte--identifiant {
+  background: var(--menu-fond);
+}
+.auth-connexion .auth-carte--mot-de-passe {
+  background: var(--menu-survol);
+}
+.auth-connexion
+  .auth-panneau
+  .mantine-Button-root:is([data-variant='filled'], :not([data-variant])):not(:disabled, [data-disabled]) {
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+}
+/* Bouton « Se connecter » (choix du RSSI du 19/11/2026) : bleu nuit du menu, effet verre de la recherche du menu, avec
+   sa lueur bleue qui fait le tour (rotation seule) et un reflet bleu transparent de gauche à droite. Lueur arrêtée par le
+   mouvement réduit, l'impression et les couleurs forcées. */
+.auth-connexion .auth-carte--valider {
+  isolation: isolate;
+  overflow: hidden;
+  border-color: transparent;
+  background: var(--menu-fond-haut);
+  color: var(--menu-texte);
+}
+.auth-connexion .auth-carte--valider::before,
+.auth-connexion .auth-carte--valider::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+}
+.auth-connexion .auth-carte--valider::before {
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  inline-size: 150%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.74turn,
+    color-mix(in srgb, var(--menu-teinte-pilotage) 30%, transparent) 0.84turn,
+    var(--menu-teinte-pilotage) 0.93turn,
+    var(--menu-focus) 0.97turn,
+    transparent 0.995turn
+  );
+  filter: blur(3px);
+  transform: translate(-50%, -50%) rotate(0turn);
+  animation: barre-lueur 4.5s linear infinite;
+}
+.auth-connexion .auth-carte--valider::after {
+  z-index: -1;
+  inset: 2px;
+  border-radius: calc(0.75rem - 2px);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 24%, transparent) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 7%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--menu-fond);
+}
+.auth-connexion .auth-carte--valider svg {
+  color: var(--menu-teinte-pilotage);
+}
+.auth-connexion .auth-carte--valider .auth-attente {
+  --loader-color: var(--menu-teinte-pilotage);
+}
+@media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
+  .auth-connexion .auth-carte--valider::before {
+    animation: none;
+  }
+
 /* Onglets, une seule forme sur toute la plateforme (demandes du RSSI du 19/11/2026) : rubriques sous le titre des pages,
    onglets Mantine des pages et des fenêtres, onglets du RETEX et de l'Assistant RSSI. Deux formes aux couleurs du menu sont à
    l'essai, au choix de chaque personne dans Mon compte > Affichage (préférence « onglets », barre bleu nuit par défaut). Une

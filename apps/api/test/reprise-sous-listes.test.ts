@@ -160,6 +160,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '086_vulnerabilites_alertes.sql',
         '087_vulnerabilites_delais_exceptions.sql',
         '088_vulnerabilites_instantanes.sql',
+        '089_declarations_incidents.sql',
         '091_conservation_sauvegardes.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
