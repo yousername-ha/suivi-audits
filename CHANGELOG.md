@@ -6,6 +6,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `094`** (lot N2 : contrôle exploité par un logiciel malveillant, suppression d'un connecteur d'import,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `exploite_malware` des constats, fausse par défaut),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Les failles déjà importées ne sont pas relues :
+réimporter un scan pour que le marquage « exploitée par un logiciel malveillant » soit pris en compte ; une faille qui le
+porte passe en P1 et peut ouvrir une alerte critique. La limite des imports passe à trente fichiers commencés par heure et
+par personne. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `093`** (lot N1 : import de scans Nessus, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (contrainte de la source des machines recréée pour admettre `nessus-fichier`, table `vulnerabilites_imports`, un
+index), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune règle de pare-feu : l'import ne fait
+aucun appel réseau. Le fichier `.nessus` se dépose dans Plateforme, carte « Intégrations », instance « Nessus, import de
+fichier » ; prévoir environ 500 Mo de mémoire libre dans le navigateur pour un fichier de 100 Mo. Les machines importées sont
+sans périmètre (aucun dépôt) : elles ne sont visibles qu'avec le droit d'administrer le module tant qu'un périmètre ne leur
+est pas indiqué. (session « Module surveillance vulnérabilités SMSI »)
+
 **Migration automatique `090`** (lot F1 : fréquence de synchronisation réglable,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes `frequence_heures`, `planifiee_le` et `version` de
 `vulnerabilites_veille_sources`, `frequence_heures` de `integrations`, `planifiee_le` des états de Tenable et
@@ -54,6 +69,29 @@ n'a plus d'effet.
 
 ### Ajouté
 
+- Vulnérabilités, **contrôle exploité par un logiciel malveillant** (lot N2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision du RSSI du 19/11/2026) : le champ `exploited_by_malware` d'un scan Nessus est lu (liste blanche, revalidé par
+  l'API) et compte comme une **exploitation avérée**, au même titre que le catalogue KEV, une alerte du CERT-FR ou la fiche
+  du CERT Santé : priorité (P1 si la faille est présente), alertes, filtre « Exploitation avérée », compteurs et rang des
+  machines, marques zero-day, vue d'ensemble et tendances. Source « Exploitée par un logiciel malveillant (selon Tenable) »,
+  pastille de Tenable, marque sur la faille. Une faille sans ce champ garde exactement sa priorité. Security Center inchangé
+  (aucun champ équivalent attesté dans ce qu'il rend). Migration `094`. (session « Module surveillance vulnérabilités SMSI »)
+- Intégrations, **« Supprimer ce connecteur et tout ce qu'il a importé »** pour une instance « Nessus, import de fichier »
+  seulement (lot N2, décision du RSSI du 19/11/2026) : droit d'administrer les intégrations, fenêtre de confirmation (nombres
+  de machines, failles, détections et imports qui disparaîtront, action irréversible, mot SUPPRIMER à saisir), If-Match ;
+  machines, détections, failles, suivis, liaisons, imports et exécutions effacés ; alertes réévaluées (celles dont la seule
+  présence venait de l'import se closent) ; journal `integration.supprimee` (qui, type, nombres). Tout autre type est refusé.
+  Routes `GET /api/integrations/instances/:id/suppression` et `DELETE /api/integrations/instances/:id`. (session « Module
+  surveillance vulnérabilités SMSI »)
+- Vulnérabilités et intégrations, **import de scans Nessus** (lot N1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision du RSSI du 19/11/2026) : connecteur « Nessus, import de fichier » dans la carte « Intégrations », sans adresse, sans
+  clé, sans flux ni exécutant, avec « Importer un scan ». Le fichier `.nessus` est lu dans le navigateur ; seul un extrait en
+  liste blanche part vers l'API, en JSON, par lots de machines entières, revalidé champ par champ ; rangement dans les tables
+  de Tenable Security Center. Pour chaque machine du fichier, une faille absente est disparue ; les machines absentes du
+  fichier ne changent pas. Machines et failles marquées de leur source dans le module ; imports dans « Exécutions ». Migration
+  `093` ; routes `POST /api/integrations/instances/:id/imports`, `…/imports/:execution/lots`, `…/imports/:execution/fin`,
+  `GET /api/vulnerabilites/imports/etat`. Format écrit sans export réel, non vérifié. (session « Module surveillance
+  vulnérabilités SMSI »)
 - **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
   [ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)). Dans Plateforme > Utilisateurs, la fiche d'un compte
   reçoit une section « Contact de crise » : l'administrateur y désigne le compte, son rôle de crise, ses téléphones, sa
@@ -104,6 +142,10 @@ n'a plus d'effet.
 
 ### Modifié
 
+- Intégrations, **limite des imports de scans Nessus** (lot N2, décision du RSSI du 19/11/2026) : trente fichiers commencés par
+  heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
+  dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module
+  surveillance vulnérabilités SMSI »)
 - **Onglets aux couleurs du menu, une seule forme sur toute la plateforme, à l'essai** (décisions du RSSI du 19/11/2026,
   sur maquettes ; [docs/refonte-neon/ONGLETS-BLEU-MENU.md](docs/refonte-neon/ONGLETS-BLEU-MENU.md)). Deux formes sont à
   l'essai : une barre bleu nuit avec l'onglet actif en bleu du menu (par défaut), ou des pastilles avec l'onglet actif en bleu
@@ -163,6 +205,16 @@ n'a plus d'effet.
 - **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
   crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
   reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+- **Statistiques de PostgreSQL recalculées après une restauration et après une synchronisation de vulnérabilités**
+  (décision du RSSI du 19/11/2026) : `pg_restore` ne restaure pas les statistiques du planificateur, et une synchronisation
+  de Tenable Security Center ou d'AlgoLightHouse réécrit chaque ligne de ses tables ; jusqu'au passage de l'autovacuum,
+  PostgreSQL pouvait choisir de mauvais plans (pages lentes dans les premières minutes). `scripts/restore.sh` et la migration
+  du moteur PostgreSQL 17 vers 18 lancent un `ANALYZE` de la base après la restauration réussie, avant la remise en service
+  (quelques secondes de plus) ; la fin reçue d'une synchronisation qui a rangé au moins un élément lance, après la validation,
+  un `ANALYZE` des seules tables réécrites par ses lots, par le rôle applicatif propriétaire des tables. Un `ANALYZE` en échec
+  n'est qu'un avertissement (journal technique, sans donnée) : la restauration ou la synchronisation reste réussie. Les
+  actifs exposés d'une CVE (repères « E-… » de l'assistant) sont aussi rangés dans un ordre stable, qui dépendait du plan
+  choisi par PostgreSQL. Sans migration, aucune action. (session « Projet audit_suivi Coeur »)
 
 
 ## [7.4.0] — 2026-11-19

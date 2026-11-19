@@ -39,6 +39,17 @@ export function etatConnecteur(c: ConnecteurLu): { libelle: string; etat: Etat; 
   return { libelle: 'En échec', etat: 'erreur', reussie };
 }
 
+/** Lot N1 : état d'un connecteur alimenté par import de fichier (mêmes règles, libellés de l'import). */
+export function etatImport(c: ConnecteurLu): { libelle: string; etat: Etat; reussie: string | null } {
+  const d = c.derniere;
+  const reussie = d?.etat === 'recu' ? d.termineLe : c.derniereCompleteLe;
+  if (!c.actif) return { libelle: 'Désactivé', etat: 'neutre', reussie };
+  if (!d) return { libelle: 'Aucun import', etat: 'attention', reussie };
+  if (d.etat === 'en_file' || d.etat === 'en_cours') return { libelle: 'Import en cours', etat: 'info', reussie };
+  if (d.etat === 'recu') return { libelle: 'Importé', etat: 'succes', reussie };
+  return { libelle: 'En échec', etat: 'erreur', reussie };
+}
+
 /** Date de la dernière synchronisation (fin, sinon demande), ou null si aucune. */
 export const dateDerniereSynchronisation = (c: ConnecteurLu): string | null =>
   c.derniere ? (c.derniere.termineLe ?? c.derniere.demandeLe) : null;

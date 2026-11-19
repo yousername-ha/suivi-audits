@@ -6,8 +6,11 @@
    (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
    le filtre de gravité de l'instance et le dernier résultat, dernières exécutions, message clair si l'exécutant n'est pas
    vu. Lot F1 (ADR 0100) : fréquence de la synchronisation automatique de chaque instance, réglée dans « Configurer »,
-   avec un avertissement (sans blocage) en dessous de 24 heures. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
-   seulement. */
+   avec un avertissement (sans blocage) en dessous de 24 heures. Lot N1 (ADR 0100) : type « Nessus, import de fichier »,
+   sans adresse, sans clé, sans flux ni exécutant, avec « Importer un scan » sur l'instance (droit d'administrer les
+   intégrations) ; ses imports figurent dans « Exécutions ». Lot N2 : « Supprimer ce connecteur et tout ce qu’il a
+   importé », pour ce type seulement (même droit, confirmation explicite, If-Match). CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons
+   suivent les droits de la session pour l'affichage seulement. */
 import {
   Alert,
   Badge,
@@ -55,7 +58,7 @@ import {
   erreursFormulaire,
   etatTuile,
   executionEnCours,
-  fluxOuvertPour,
+  fluxOuvertInstance,
   formulaireDepuis,
   libelleEtatExecution,
   libelleGravites,
@@ -67,6 +70,8 @@ import {
   resumeExecution,
   type FormulaireConfiguration,
 } from './integrations';
+import { ImportNessus } from './ImportNessus';
+import { LIBELLE_SUPPRESSION, SuppressionNessus } from './SuppressionNessus';
 
 const CLE = ['integrations'] as const;
 
@@ -96,7 +101,8 @@ export function TuileType({
           <Stack gap="2xs">
             <Text fw={700}>{t.libelle}</Text>
             <Text size="xs" c="dimmed">
-              {t.portee === 'organisation' ? 'Toute l’organisation' : 'Un périmètre'} · lecture seule
+              {t.portee === 'organisation' ? 'Toute l’organisation' : 'Un périmètre'} ·{' '}
+              {t.flux === null ? 'import de fichier, sans réseau' : 'lecture seule'}
             </Text>
           </Stack>
         </Group>
@@ -125,6 +131,8 @@ export function TuileInstance({
   onActiver,
   onTester,
   onSynchroniser,
+  onImporter,
+  onSupprimer,
   onExecutions,
 }: {
   i: IntegrationDto;
@@ -137,9 +145,13 @@ export function TuileInstance({
   onActiver: (actif: boolean) => void;
   onTester: () => void;
   onSynchroniser?: () => void;
+  onImporter?: () => void;
+  onSupprimer?: () => void;
   onExecutions: () => void;
 }) {
   const synchronisable = !!t?.operations.includes('synchroniser');
+  const testable = !!t?.operations.includes('tester');
+  const importable = !!t?.operations.includes('importer');
   const pret = i.actif && fluxOuvert && Object.values(i.secrets).every(Boolean);
   const e = ETAT_TUILE[etatTuile(i, fluxOuvert)];
   const derniere = i.derniereExecution;
@@ -167,19 +179,25 @@ export function TuileInstance({
             </Badge>
           ))}
         </Group>
-        {synchronisable && t?.champs.includes('gravites') && (
+        {synchronisable && t?.champs.includes('gravites') && i.frequenceHeures !== null && (
           <Text size="xs" c="dimmed">
             Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()} ; failles lues :{' '}
             {libelleGravites(i.configuration.gravites)}.
           </Text>
         )}
-        {synchronisable && t && !t.champs.includes('gravites') && (
+        {synchronisable && t && !t.champs.includes('gravites') && i.frequenceHeures !== null && (
           <Text size="xs" c="dimmed">
             Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()}, rangée dans Risques &gt;
             Vulnérabilités &gt; Surface externe.
           </Text>
         )}
-        {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
+        {importable && (
+          <Text size="xs" c="dimmed">
+            Import de fichier, sans synchronisation automatique ; gravités retenues :{' '}
+            {libelleGravites(i.configuration.gravites)} ; rangé dans Risques &gt; Vulnérabilités.
+          </Text>
+        )}
+        {i.actif && !fluxOuvert && t?.flux && <FluxFermeAlerte module={t.flux} />}
         <Text size="sm" c={derniere ? undefined : 'dimmed'} role="status">
           {derniere ? (
             <>
@@ -209,7 +227,7 @@ export function TuileInstance({
               {i.actif && fluxOuvert ? 'Désactiver' : 'Activer'}
             </Button>
           )}
-          {peutLancer && (
+          {peutLancer && testable && (
             <Button size="compact-sm" variant="default" loading={enCours} disabled={!pret} onClick={onTester}>
               Tester la connexion
             </Button>
@@ -219,7 +237,33 @@ export function TuileInstance({
               Synchroniser maintenant
             </Button>
           )}
+          {peutAdministrer && importable && onImporter && (
+            <Button
+              size="compact-sm"
+              disabled={!i.actif}
+              onClick={onImporter}
+              aria-label={`Importer un scan dans ${i.nom}`}
+            >
+              Importer un scan
+            </Button>
+          )}
+          {peutAdministrer && importable && onSupprimer && (
+            <Button
+              size="compact-sm"
+              variant="light"
+              color="red"
+              onClick={onSupprimer}
+              aria-label={`${LIBELLE_SUPPRESSION} : ${i.nom}`}
+            >
+              {LIBELLE_SUPPRESSION}
+            </Button>
+          )}
         </Group>
+        {peutAdministrer && importable && !i.actif && (
+          <Text size="xs" c="dimmed">
+            Activez le connecteur pour importer un scan.
+          </Text>
+        )}
       </Stack>
     </Paper>
   );
@@ -277,6 +321,10 @@ export function IntegrationsPanel() {
   const flux = useValidationFlux();
   const [edition, setEdition] = useState<{ type: TypeIntegrationDto; instance: IntegrationDto | null } | null>(null);
   const [historique, setHistorique] = useState<IntegrationDto | null>(null);
+  const [importation, setImportation] = useState<IntegrationDto | null>(null);
+  const [importOccupe, setImportOccupe] = useState(false);
+  const [suppression, setSuppression] = useState<IntegrationDto | null>(null);
+  const [suppressionOccupee, setSuppressionOccupee] = useState(false);
   const [envoi, setEnvoi] = useState<string | null>(null);
   const catalogue = useQuery({
     queryKey: [...CLE, 'catalogue'],
@@ -315,10 +363,10 @@ export function IntegrationsPanel() {
   const activer = (i: IntegrationDto, actif: boolean) =>
     agir(i.id, async () => {
       const t = types.get(i.type);
-      const ouvert = fluxOuvertPour(etat.data, i.type);
+      const ouvert = fluxOuvertInstance(etat.data, i.type, t);
       // Activer ouvre le flux du type, après validation explicite (une fois, tant qu'il est fermé) ; le port réglé de
-      // l'instance est rappelé.
-      if (actif && !ouvert && t && !(await flux.valider(t.flux, precisionPort(i)))) return;
+      // l'instance est rappelé. Un type sans réseau (import de fichier) n'a aucun flux.
+      if (actif && !ouvert && t?.flux && !(await flux.valider(t.flux, precisionPort(i)))) return;
       await api('PUT', `/api/integrations/instances/${i.id}/activation`, {
         body: actif && !ouvert ? { actif, fluxConfirme: true } : { actif },
         ifMatch: i.version,
@@ -367,7 +415,7 @@ export function IntegrationsPanel() {
               key={i.id}
               i={i}
               t={types.get(i.type)}
-              fluxOuvert={fluxOuvertPour(etat.data, i.type)}
+              fluxOuvert={fluxOuvertInstance(etat.data, i.type, types.get(i.type))}
               peutAdministrer={administrer}
               peutLancer={lancer}
               enCours={envoi === i.id || executionEnCours(i.derniereExecution)}
@@ -378,6 +426,8 @@ export function IntegrationsPanel() {
               onActiver={(actif) => void activer(i, actif)}
               onTester={() => void tester(i)}
               onSynchroniser={() => void synchroniser(i)}
+              onImporter={() => setImportation(i)}
+              onSupprimer={() => setSuppression(i)}
               onExecutions={() => setHistorique(i)}
             />
           ))}
@@ -429,6 +479,57 @@ export function IntegrationsPanel() {
         classNames={{ content: 'fenetre-admin' }}
       >
         {historique && <Historique id={historique.id} />}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!importation}
+        onClose={() => {
+          if (!importOccupe) setImportation(null);
+        }}
+        withCloseButton={!importOccupe}
+        closeOnEscape={!importOccupe}
+        closeOnClickOutside={!importOccupe}
+        title={`Importer un scan : ${importation?.nom ?? ''}`}
+        size="lg"
+        centered
+        lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
+      >
+        {importation && (
+          <ImportNessus instance={importation} onOccupe={setImportOccupe} onFait={() => void rafraichir()} />
+        )}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!suppression}
+        onClose={() => {
+          if (!suppressionOccupee) setSuppression(null);
+        }}
+        withCloseButton={!suppressionOccupee}
+        closeOnEscape={!suppressionOccupee}
+        closeOnClickOutside={!suppressionOccupee}
+        title={`Supprimer : ${suppression?.nom ?? ''}`}
+        size="lg"
+        centered
+        lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
+      >
+        {suppression && (
+          <SuppressionNessus
+            instance={suppression}
+            onOccupe={setSuppressionOccupee}
+            onAnnuler={() => setSuppression(null)}
+            onFait={(n) => {
+              setSuppression(null);
+              notifications.show({
+                color: 'teal',
+                message: `Connecteur supprimé : ${n.machines} machine(s) et ${n.failles} faille(s) retirées.`,
+              });
+              void rafraichir();
+              void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+            }}
+          />
+        )}
       </Modal>
     </>
   );
@@ -502,14 +603,16 @@ function EditeurInstance({
         value={f.nom}
         onChange={(e) => setF({ ...f, nom: e.currentTarget.value })}
       />
-      <TextInput
-        label="Adresse du service"
-        description={type.aideAdresse}
-        required
-        value={f.adresse}
-        onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
-        spellCheck={false}
-      />
+      {type.champs.includes('adresse') && (
+        <TextInput
+          label="Adresse du service"
+          description={type.aideAdresse}
+          required
+          value={f.adresse}
+          onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
+          spellCheck={false}
+        />
+      )}
       {type.champs.includes('autoriteCertification') && (
         <Textarea
           label="Autorité de certification (facultatif)"
@@ -522,18 +625,24 @@ function EditeurInstance({
           spellCheck={false}
         />
       )}
-      <NumberInput
-        label="Délai d’une requête (secondes)"
-        min={DELAI_MIN}
-        max={DELAI_MAX}
-        allowDecimal={false}
-        value={f.delaiSecondes}
-        onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
-      />
+      {type.champs.includes('delaiSecondes') && (
+        <NumberInput
+          label="Délai d’une requête (secondes)"
+          min={DELAI_MIN}
+          max={DELAI_MAX}
+          allowDecimal={false}
+          value={f.delaiSecondes}
+          onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
+        />
+      )}
       {type.champs.includes('gravites') && (
         <Checkbox.Group
-          label="Gravités à synchroniser"
-          description="Failles lues dans Tenable à chaque synchronisation : critiques et élevées par défaut."
+          label={type.flux === null ? 'Gravités à importer' : 'Gravités à synchroniser'}
+          description={
+            type.flux === null
+              ? 'Failles retenues à chaque import (les contrôles informatifs ne sont jamais rangés) : critiques et élevées par défaut. Le navigateur filtre, le serveur revérifie.'
+              : 'Failles lues dans Tenable à chaque synchronisation : critiques et élevées par défaut.'
+          }
           value={f.gravites}
           onChange={(v) => setF({ ...f, gravites: v as FormulaireConfiguration['gravites'] })}
         >
@@ -564,13 +673,14 @@ function EditeurInstance({
           {instance ? 'Enregistrer la configuration' : 'Créer l’instance'}
         </Button>
       </Group>
-      {instance ? (
-        <Secrets type={type} instance={instance} onFait={() => onFait(null)} />
-      ) : (
-        <Text size="sm" c="dimmed">
-          Les clés se saisissent une fois l’instance créée. Elles sont scellées et ne sont jamais réaffichées.
-        </Text>
-      )}
+      {type.secrets.length > 0 &&
+        (instance ? (
+          <Secrets type={type} instance={instance} onFait={() => onFait(null)} />
+        ) : (
+          <Text size="sm" c="dimmed">
+            Les clés se saisissent une fois l’instance créée. Elles sont scellées et ne sont jamais réaffichées.
+          </Text>
+        ))}
     </Stack>
   );
 }

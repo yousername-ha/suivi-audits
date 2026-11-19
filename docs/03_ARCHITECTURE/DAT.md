@@ -95,6 +95,22 @@ main sur la machine, sinon celui de son dépôt de Tenable (`vulnerabilites_tena
 résultats de l'analyse, liaison par `vulnerabilites:administrer`, `If-Match`, écriture sur les périmètres) ; un seul fragment
 SQL (`perimetreMachine`) porte cette règle pour toutes les lectures. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
+Type sans réseau : « Nessus, import de fichier » (`nessus-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md), lot N1 ;
+migration `093`). Ni adresse, ni clé, ni flux, ni exécutant (`flux: null`, absent du script et de l'exécutant). Le fichier
+`.nessus` est lu dans le navigateur (`DOMParser`, DOCTYPE et entités refusés avant l'analyse,
+`apps/web/src/integrations/nessus.ts`) ; l'API ne lit aucun XML : elle reçoit un extrait JSON en liste blanche, par lots de
+machines entières (`POST /api/integrations/instances/:id/imports`, `…/lots`, `…/fin`, `integrations:administrer`, corps de
+8 Mio au plus, limites de débit), revalidé par `LotImportNessus` (`packages/shared/src/import-nessus.ts`), et le range par le
+chemin d'écriture de Tenable (`SynchronisationTenable.rangerPassage`, mêmes tables, même numéro de passage). Chaque lot est
+un passage complet pour ses machines : les détections présentes des autres machines de l'instance sont reportées au numéro du
+passage, si bien qu'une faille disparaît seulement sur une machine du fichier. Journal des imports : `vulnerabilites_imports`
+(nombres seulement), exécution `importer` de l'instance (`apps/api/src/vulnerabilites/import-nessus.ts`). Lot N2 (migration
+`094`) : `exploited_by_malware` lu en plus, rangé dans `vulnerabilites_constats.exploite_malware` (source d'exploitation
+avérée `tenable` du paquet partagé, ajoutée à `sourcesDe` et au filtre SQL des constats) ; limite de trente imports
+commencés par heure et par personne ; suppression d'une instance de ce type seulement et de tout ce qu'elle a importé
+(`DELETE /api/integrations/instances/:id`, If-Match, aperçu `GET …/suppression`) par les clés étrangères en cascade, puis
+liaisons et alertes réévaluées dans la même transaction.
+
 Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
 `updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête
 `X-API-Key`). Liste fermée de huit `GET` de la version 1 de l'API, sans paramètre ; jamais d'écriture. Le socle range chaque
@@ -341,6 +357,11 @@ consultatifs, un seul exécutant d’exploitation). Le pool PostgreSQL garde ses
 connexions. Une transaction annulée par deadlock ou échec de sérialisation (codes
 40P01 et 40001) est rejouée entière, au plus deux fois, après 50 à 200 ms, chaque
 relance journalisée ; une transaction restée inactive est coupée après une minute.
+Statistiques du planificateur (décision du RSSI du 19/11/2026) : l’autovacuum de PostgreSQL 18 suffit en régime courant,
+sans tâche d’optimisation planifiée ; `scripts/restore.sh` et la migration du moteur PostgreSQL lancent un `ANALYZE` de la
+base après `pg_restore`, et la fin reçue d’une synchronisation Tenable ou AlgoLightHouse qui a rangé des éléments un
+`ANALYZE` des seules tables réécrites, après la validation (`apps/api/src/db/analyser.ts`, rôle applicatif propriétaire,
+sous le délai de 30 s par requête) ; un échec n’est qu’un avertissement.
 L’analyse antivirale est limitée à 15 s ; si elle échoue, le dépôt est refusé quand
 elle est obligatoire et le contact technique reçoit au plus une alerte par heure.
 Sondes Docker : `app` prête quand la base répond et que les migrations sont

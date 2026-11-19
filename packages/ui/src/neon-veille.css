@@ -73,6 +73,13 @@
 .ps-liste li {
   display: inline-flex;
 }
+/* Lot N1 : source d'une machine ou d'un constat (pastille Tenable, puis l'instance et son type). */
+.ps-source-connecteur {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs);
+}
 
 /* ------------------------------------------------------------------ Alertes et avis */
 .va-liste,

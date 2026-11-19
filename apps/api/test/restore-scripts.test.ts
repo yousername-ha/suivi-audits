@@ -10,6 +10,6 @@ it('protège la restauration contre les archives piégées et préserve le parco
     // Rotation par nombre et contrôle d'espace de backup.sh (ADR 0106) : sept sauvegardes réelles de plus.
     timeout: 60_000,
   });
-  expect(result.stderr).toContain('Ran 45 tests');
+  expect(result.stderr).toContain('Ran 48 tests');
   expect(result.stderr).toMatch(/\nOK\n/);
 }, 65_000);

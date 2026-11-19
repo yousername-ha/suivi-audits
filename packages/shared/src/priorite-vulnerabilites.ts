@@ -58,14 +58,17 @@ export const presenceAveree = (p: Presence): boolean => p === 'detectee' || p ==
 
 /** Sources d'une exploitation avérée (V26 : une seule suffit, « ou » logique) : catalogue KEV de la CISA, alerte du CERT-FR
     qui cite la CVE, mention « La faille est activement exploitée : Oui » de la fiche du CERT Santé (V23), champ
-    `is_exploited` d'une CVE de technologie selon AlgoLightHouse (lot ALH2, décision B du 17/11/2026). */
-export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante', 'alh'] as const;
+    `is_exploited` d'une CVE de technologie selon AlgoLightHouse (lot ALH2, décision B du 17/11/2026), contrôle de Tenable
+    marqué « exploité par un logiciel malveillant » (`exploited_by_malware` d'un fichier .nessus, lot N2, décision du RSSI
+    du 19/11/2026 ; un fait du contrôle, sans date : rangé après les sources datées). */
+export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante', 'alh', 'tenable'] as const;
 export type SourceExploitation = (typeof SOURCES_EXPLOITATION)[number];
 export const SOURCE_EXPLOITATION_LIBELLES: Record<SourceExploitation, string> = {
   kev: 'catalogue KEV',
   'cert-fr': 'alerte du CERT-FR',
   'cert-sante': 'fiche du CERT Santé',
   alh: 'AlgoLightHouse',
+  tenable: 'Exploitée par un logiciel malveillant (selon Tenable)',
 };
 
 /** Sources de « exploitable » (un code d'exploitation existe, sans exploitation observée ; V26) : champ `exploitAvailable`

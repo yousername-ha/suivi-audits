@@ -240,7 +240,7 @@ describe('fin de support et précision du zero-day sur les machines', () => {
     premiere: null,
     derniere: null,
     source: 'tenable',
-    integration: { id: '00000000-0000-4000-8000-0000000000b1', nom: 'Tenable fictif' },
+    integration: { id: '00000000-0000-4000-8000-0000000000b1', nom: 'Tenable fictif', type: 'tenable' },
     compteurs: {
       critique: 1,
       elevee: 0,
@@ -280,7 +280,15 @@ describe('fin de support et précision du zero-day sur les machines', () => {
     expect(filtresDepuisAdresse(new URLSearchParams('finSupport=non')).finSupport).toBe(false);
   });
   it('marques d’un constat : « Fin de support » distincte de « Non maintenu »', () => {
-    expect(marquesConstat({ exploite: false, exploitable: false, nonMaintenu: true, finDeSupport: true })).toEqual([
+    expect(
+      marquesConstat({
+        exploite: false,
+        exploiteMalware: false,
+        exploitable: false,
+        nonMaintenu: true,
+        finDeSupport: true,
+      }),
+    ).toEqual([
       { libelle: 'Fin de support', etat: 'attention' },
       { libelle: 'Non maintenu', etat: 'neutre' },
     ]);
