@@ -60,7 +60,7 @@ const machine = (
     premiere: null,
     derniere: null,
     source: 'tenable',
-    integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+    integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
     compteurs: {
       critique: 0,
       elevee: 0,

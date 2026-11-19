@@ -8,12 +8,15 @@
      directement ;
    - « algolighthouse » (AlgoLightHouse, éditeur AlgoSecure, lot ALH1) : surface externe (périmètres, hôtes, domaines,
      alertes, technologies) ; service sur Internet, joint par le mandataire de l'établissement quand il est actif
-     (ADR 0101). */
+     (ADR 0101).
+   Lot N1 (ADR 0100) : un type sans réseau, « nessus-fichier » (Nessus, import de fichier) : ni adresse, ni clé, ni flux,
+   ni exécutant ; une seule opération, « Importer un scan », lancée depuis la carte « Intégrations » (import-nessus.ts). */
 import { z } from 'zod';
 import { FiltreGravites, GRAVITES_PAR_DEFAUT, BilanSynchronisation } from './failles-tenable.js';
 import { AdresseAlh, BilanSynchronisationAlh, CLE_API_ALH, ResultatTestAlh } from './surface-externe.js';
 import type { FluxModule } from './flux-externes.js';
 import { FrequenceHeures } from './frequences-synchronisation.js';
+import { BilanImportNessus } from './import-nessus.js';
 import type { Module } from './permissions.js';
 
 /* ------------------------------------------------------------------ Champs communs */
@@ -116,8 +119,16 @@ export const ConfigurationAlh = z
   .strict();
 export type ConfigurationAlh = z.infer<typeof ConfigurationAlh>;
 
+/* ------------------------------------------------------------------ Nessus, import de fichier (lot N1) */
+/** Aucune adresse, aucune clé : seulement les gravités retenues à l'import (critiques et élevées par défaut, comme Security
+    Center). Le navigateur filtre, l'API revérifie d'après cette configuration. */
+export const ConfigurationNessusFichier = z
+  .object({ gravites: FiltreGravites.default([...GRAVITES_PAR_DEFAUT]) })
+  .strict();
+export type ConfigurationNessusFichier = z.infer<typeof ConfigurationNessusFichier>;
+
 /* ------------------------------------------------------------------ Catalogue */
-export const INTEGRATION_TYPES = ['tenable', 'algolighthouse'] as const;
+export const INTEGRATION_TYPES = ['tenable', 'algolighthouse', 'nessus-fichier'] as const;
 export const IntegrationType = z.enum(INTEGRATION_TYPES);
 export type IntegrationType = z.infer<typeof IntegrationType>;
 
@@ -127,13 +138,15 @@ export const PORTEES_INTEGRATION = ['organisation', 'smsi'] as const;
 export type PorteeIntegration = (typeof PORTEES_INTEGRATION)[number];
 
 /** Opérations d'un type : « tester » (lecture de la version du service) et « synchroniser » (lecture des failles et des
-    machines, rapportée par lots). */
-export const OPERATIONS_INTEGRATION = ['tester', 'synchroniser'] as const;
+    machines, rapportée par lots), par l'exécutant ; « importer » (lot N1) : fichier lu dans le navigateur, extrait envoyé à
+    l'API par la personne qui importe, jamais par l'exécutant. */
+export const OPERATIONS_INTEGRATION = ['tester', 'synchroniser', 'importer'] as const;
 export const OperationIntegration = z.enum(OPERATIONS_INTEGRATION);
 export type OperationIntegration = z.infer<typeof OperationIntegration>;
 export const OPERATION_LIBELLES: Record<OperationIntegration, string> = {
   tester: 'Tester la connexion',
   synchroniser: 'Synchroniser',
+  importer: 'Importer un scan',
 };
 /** Opérations rapportées par lots (`suivi integrations-lot`) avant leur fin, et module qui doit être actif pour qu'elles
     soient inscrites ou réclamées (ce module range les données reçues). */
@@ -169,8 +182,9 @@ export interface TypeIntegrationDefinition {
   aideAdresse: string;
   configuration: z.ZodType<Record<string, unknown>, unknown>;
   secrets: readonly SecretIntegration[];
-  /** Flux vers l'extérieur emprunté (registre de l'ADR 0097) : fermé, rien n'est réclamé ni émis pour ce type. */
-  flux: FluxModule;
+  /** Flux vers l'extérieur emprunté (registre de l'ADR 0097) : fermé, rien n'est réclamé ni émis pour ce type. `null` : type
+      sans réseau (import de fichier, lot N1), inconnu de l'exécutant, sans entrée au registre des flux. */
+  flux: FluxModule | null;
   /** Liste fermée des points d'accès que le script peut appeler, tous en lecture. */
   pointsAcces: readonly PointAcces[];
   operations: readonly OperationIntegration[];
@@ -247,7 +261,28 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     ],
     operations: ['tester', 'synchroniser'],
   },
+  {
+    // Lot N1 (ADR 0100, décision du RSSI du 19/11/2026) : connecteur à part, sans adresse, sans clé, sans flux sortant, sans
+    // exécutant. Le fichier .nessus est lu dans le navigateur ; seul un extrait en liste blanche part vers l'API.
+    id: 'nessus-fichier',
+    libelle: 'Nessus, import de fichier',
+    description:
+      'Import d’un scan exporté de Nessus au format .nessus, lu dans votre navigateur : seuls les champs utiles des machines et des failles partent vers le serveur, qui les range dans le module Vulnérabilités comme pour Tenable Security Center. Ni adresse, ni clé, ni flux réseau. Pour chaque machine du fichier, une faille qui n’y figure plus est considérée comme disparue ; les machines absentes du fichier ne changent pas.',
+    portee: 'organisation',
+    champs: ['gravites'],
+    aideAdresse: '',
+    configuration: ConfigurationNessusFichier as unknown as z.ZodType<Record<string, unknown>, unknown>,
+    secrets: [],
+    flux: null,
+    pointsAcces: [],
+    operations: ['importer'],
+  },
 ];
+
+/** Types qui joignent un outil par le réseau, par l'exécutant d'exploitation (ceux que le script et l'exécutant connaissent). */
+export const TYPES_INTEGRATION_RESEAU: readonly TypeIntegrationDefinition[] = TYPES_INTEGRATION.filter(
+  (t) => t.flux !== null,
+);
 
 export const typeIntegration = (id: IntegrationType): TypeIntegrationDefinition =>
   TYPES_INTEGRATION.find((t) => t.id === id)!;
@@ -281,7 +316,7 @@ export interface TypeIntegrationDto {
   champs: ChampConfiguration[];
   aideAdresse: string;
   secrets: { id: string; libelle: string; aide: string }[];
-  flux: FluxModule;
+  flux: FluxModule | null;
   pointsAcces: PointAcces[];
   operations: OperationIntegration[];
 }
@@ -390,8 +425,9 @@ export interface IntegrationDto {
   actif: boolean;
   /** Chaque secret du type : défini ou non. La valeur n'est jamais renvoyée. */
   secrets: Record<string, boolean>;
-  /** Lot F1 : fréquence de la synchronisation automatique, en heures (réglée, sinon la valeur par défaut). */
-  frequenceHeures: number;
+  /** Lot F1 : fréquence de la synchronisation automatique, en heures (réglée, sinon la valeur par défaut) ; null pour un type
+      sans synchronisation automatique (import de fichier, lot N1). */
+  frequenceHeures: number | null;
   version: number;
   createdBy: string;
   createdAt: string;
@@ -403,6 +439,7 @@ export interface IntegrationDto {
 /** État de l'exécutant d'exploitation (signal de vie de moins de deux minutes, comme pour le courriel) et des flux. */
 export interface EtatIntegrationsDto {
   executant: { disponible: boolean; vuLe: string | null };
+  /** Un flux par type qui joint un outil par le réseau (les types sans réseau n'y figurent pas). */
   flux: { type: IntegrationType; flux: FluxModule; ouvert: boolean }[];
 }
 
@@ -416,10 +453,12 @@ export const ErreurExecution = z
   // eslint-disable-next-line no-control-regex
   .regex(/^[^\u0000-\u001f\u007f]+$/, 'Erreur sur une seule ligne, sans caractère de contrôle.');
 
-/** Résultat admis par opération : borné et typé ; tout champ inattendu est refusé. */
-export const RESULTATS_OPERATION: Record<IntegrationType, Record<OperationIntegration, z.ZodType>> = {
+/** Résultat admis par opération du type : borné et typé ; tout champ inattendu est refusé. Le résultat d'un import (lot N1)
+    est compté par l'API, jamais reçu de l'exécutant. */
+export const RESULTATS_OPERATION: Record<IntegrationType, Partial<Record<OperationIntegration, z.ZodType>>> = {
   tenable: { tester: ResultatTestTenable, synchroniser: BilanSynchronisation },
   algolighthouse: { tester: ResultatTestAlh, synchroniser: BilanSynchronisationAlh },
+  'nessus-fichier': { importer: BilanImportNessus },
 };
 
 /** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */

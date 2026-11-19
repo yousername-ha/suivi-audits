@@ -17,6 +17,10 @@
      flux l'utilise (USAGE_MANDATAIRE : AlgoLightHouse, service sur Internet) et seulement s'il est actif ; jamais pour un
      connecteur interne (Tenable), qui reste en accès direct par construction. Réglage illisible : la demande est close sans
      appel, jamais faite en direct.
+   - Type sans réseau (lot N1 de l'ADR 0100 : « nessus-fichier », import de fichier) : aucun flux, aucun secret, aucune
+     opération pour l'exécutant ; l'activer ou le désactiver ne touche aucun flux. Son opération « importer » est inscrite
+     directement « en cours » par le service d'import (vulnerabilites/import-nessus.ts), hors de la file : le ménage de la
+     file ne la touche pas et l'exécutant ne la réclame jamais.
    Droits contrôlés par route() ; ce service est seul juge du reste (portée, version, secrets, file). Audit `integration.*`
    sans secret. Accès aux données en Kysely (ADR 0062). */
 import {
@@ -24,6 +28,7 @@ import {
   FREQUENCES_CONNECTEUR,
   frequenceConnecteur,
   frequenceConnecteurAdmise,
+  frequenceConnecteurReglable,
   type EtatExecution,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
@@ -37,7 +42,7 @@ import {
   type OrigineExecution,
   RapportExecution,
   RESULTATS_OPERATION,
-  TYPES_INTEGRATION,
+  TYPES_INTEGRATION_RESEAU,
   typeIntegration,
   INTEGRATION_TYPES,
   USAGE_MANDATAIRE,
@@ -70,6 +75,9 @@ const ABANDON_EN_COURS_LONG = sql<Date>`now() - interval '30 minutes'`;
 /** « Synchroniser maintenant » : une instance déjà synchronisée à la main depuis moins de ce délai ne l'est pas à nouveau. */
 const INTERVALLE_MANUEL = sql<Date>`now() - interval '15 minutes'`;
 const OPERATIONS_LONGUES = Object.keys(OPERATIONS_EN_LOTS) as OperationIntegration[];
+/** Opération hors de la file (lot N1) : un import est inscrit « en cours » par la personne qui importe ; son abandon est
+    traité par le service d'import, jamais par le ménage de la file. */
+export const OPERATION_HORS_FILE: OperationIntegration = 'importer';
 
 /** Module destinataire d'une opération rapportée par lots (synchronisation de Tenable : module Vulnérabilités). */
 export interface OperationEnLots {
@@ -114,6 +122,8 @@ const resume = (i: IntegrationDto) => ({
 /** Lot F1 : fréquence admise pour le type (liste fermée), sinon 422. */
 function frequenceControlee(type: IntegrationType, heures: number | undefined): number | undefined {
   if (heures === undefined) return undefined;
+  if (!frequenceConnecteurReglable(type))
+    throw new HttpError(422, `« ${typeIntegration(type).libelle} » n’a pas de synchronisation automatique.`);
   if (!frequenceConnecteurAdmise(type, heures))
     throw new HttpError(
       422,
@@ -192,7 +202,11 @@ export class Integrations {
     return {
       executant: { disponible: await this.executantDisponible(), vuLe: w?.seen_at.toISOString() ?? null },
       flux: await Promise.all(
-        TYPES_INTEGRATION.map(async (t) => ({ type: t.id, flux: t.flux, ouvert: await this.flux.ouvert(t.flux) })),
+        TYPES_INTEGRATION_RESEAU.map(async (t) => ({
+          type: t.id,
+          flux: t.flux!,
+          ouvert: await this.flux.ouvert(t.flux!),
+        })),
       ),
     };
   }
@@ -301,7 +315,8 @@ export class Integrations {
       const avant = await this.lire(id, k, true);
       if (avant.version !== attendue) throw conflict({ ...avant, updated_by: avant.updatedBy });
       const t = typeIntegration(avant.type);
-      if (body.actif) {
+      // Type sans réseau (import de fichier) : aucun flux à ouvrir ni à refermer.
+      if (body.actif && t.flux) {
         await this.flux.activer(c, k, t.flux, {
           confirme: body.fluxConfirme,
           administrateur: user.rights.can('administration', 'administrer'),
@@ -321,7 +336,7 @@ export class Integrations {
           }))
           .where('id', '=', id)
           .execute();
-      if (!body.actif) {
+      if (!body.actif && t.flux) {
         // Verrou des instances du type : deux désactivations simultanées voient bien la dernière instance active.
         const autres = await k
           .selectFrom('integrations')
@@ -415,7 +430,7 @@ export class Integrations {
   ): Promise<ExecutionIntegrationDto> {
     const i = await this.lire(id);
     const t = typeIntegration(i.type);
-    if (!t.operations.includes(operation))
+    if (!t.operations.includes(operation) || !t.flux || operation === OPERATION_HORS_FILE)
       throw new HttpError(422, `Le connecteur « ${t.libelle} » ne connaît pas cette opération.`);
     if (!i.actif) throw new HttpError(409, 'Activez d’abord ce connecteur.');
     const manquants = t.secrets.filter((s) => !i.secrets[s.id]).map((s) => s.libelle);
@@ -494,6 +509,7 @@ export class Integrations {
         erreur: 'Demande expirée : l’exécutant ne l’a pas prise en charge à temps.',
       })
       .where('etat', '=', 'en_file')
+      .where('operation', '<>', OPERATION_HORS_FILE)
       .where((eb) =>
         eb.or([
           eb.and([eb('operation', 'not in', OPERATIONS_LONGUES), eb('demande_le', '<', EXPIRATION_FILE)]),
@@ -506,6 +522,7 @@ export class Integrations {
       .updateTable('integration_executions')
       .set({ etat: 'echec', termine_le: sql<Date>`now()`, erreur: 'Exécutant interrompu : aucun résultat reçu.' })
       .where('etat', '=', 'en_cours')
+      .where('operation', '<>', OPERATION_HORS_FILE)
       .where((eb) =>
         eb.or([
           eb.and([eb('operation', 'not in', OPERATIONS_LONGUES), eb('debute_le', '<', ABANDON_EN_COURS)]),
@@ -531,7 +548,7 @@ export class Integrations {
     modulesInactifs: readonly string[] = [],
   ): Promise<Record<string, unknown> | null> {
     const ouverts: string[] = [];
-    if (moduleActif) for (const t of TYPES_INTEGRATION) if (await this.flux.ouvert(t.flux)) ouverts.push(t.id);
+    if (moduleActif) for (const t of TYPES_INTEGRATION_RESEAU) if (await this.flux.ouvert(t.flux!)) ouverts.push(t.id);
     const operationsFermees = Object.entries(OPERATIONS_EN_LOTS)
       .filter(([, m]) => modulesInactifs.includes(m))
       .map(([o]) => o);
@@ -627,7 +644,7 @@ export class Integrations {
     }
     // Mandataire (ADR 0101) : seulement pour un flux qui l'utilise (service sur Internet), et seulement s'il est actif.
     let mandataire: Awaited<ReturnType<Mandataire['pourExecutant']>> = null;
-    if (USAGE_MANDATAIRE[t.flux] === 'utilise' && this.mandataire) {
+    if (t.flux && USAGE_MANDATAIRE[t.flux] === 'utilise' && this.mandataire) {
       mandataire = await this.mandataire.pourExecutant();
       if (mandataire === 'illisible') {
         await this.terminer(r.id, {
@@ -771,7 +788,8 @@ export class Integrations {
       secrets: Object.fromEntries(
         (typeConnu(type) ? typeIntegration(type).secrets : []).map((s) => [s.id, s.id in scelles]),
       ),
-      frequenceHeures: frequenceConnecteur(r.frequence_heures),
+      frequenceHeures:
+        typeConnu(type) && frequenceConnecteurReglable(type) ? frequenceConnecteur(r.frequence_heures) : null,
       version: r.version,
       createdBy: r.created_by,
       createdAt: r.created_at.toISOString(),

@@ -67,12 +67,14 @@ export const TRACES_FORMES: Record<FormePicto, string> = {
 /** Nom accessible d'une pastille. */
 export const nomPicto = (s: SourcePicto) => `Source : ${PICTOS_SOURCES[s].nom}`;
 
-/** Source d'une exploitation avérée (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé, AlgoLightHouse). */
+/** Source d'une exploitation avérée (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé, AlgoLightHouse, Tenable :
+    contrôle exploité par un logiciel malveillant, lot N2). */
 export const PICTO_EXPLOITATION: Record<SourceExploitation, SourcePicto> = {
   kev: 'cisa-kev',
   'cert-fr': 'cert-fr',
   'cert-sante': 'cert-sante',
   alh: 'algolighthouse',
+  tenable: 'tenable',
 };
 /** Source de « exploitable » (Tenable, CERT Santé, AlgoLightHouse). */
 export const PICTO_EXPLOITABLE: Record<SourceExploitable, SourcePicto> = {

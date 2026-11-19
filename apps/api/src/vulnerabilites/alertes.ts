@@ -62,7 +62,11 @@ import {
   PREFIXE_RESUME_ALERTES,
   PRISE_EN_COMPTE_RESERVEE,
   rangPriorite,
+  rangerSignalements,
   Rights,
+  type Signalement,
+  type SourceExploitation,
+  SOURCES_EXPLOITATION,
   type SituationFaille,
   type SourcesFailleDto,
   titreNotificationAlerte,
@@ -104,6 +108,18 @@ const propre = (v: string | null | undefined, max: number): string | null => {
     .trim();
   return t || null;
 };
+
+/** Sources de l'exploitation avérée d'une faille du calcul global : celles rangées avec sa CVE, et Tenable quand un contrôle
+    présent et non traité qui la porte est marqué « exploité par un logiciel malveillant » (lot N2). Une faille sans ce
+    marquage garde exactement les sources de sa CVE. Reprise par les faits d'une alerte, la vue d'ensemble, les tendances
+    et le rapport (exploiteeSelonSources). */
+export function exploitationDeCumul(
+  x: Pick<Cumul, 'cve' | 'malware'>,
+  sources: ReadonlyMap<string, SourcesFailleDto>,
+): Signalement<SourceExploitation>[] {
+  const cve = x.cve ? (sources.get(x.cve)?.exploitation ?? []) : [];
+  return x.malware ? rangerSignalements([...cve, { source: 'tenable', le: null }], SOURCES_EXPLOITATION) : cve;
+}
 
 /** Rapprochement proposé (produit à confirmer), remis par la vue d'ensemble (lot PC1) ; jamais par l'évaluation des alertes. */
 export interface PropositionCumul {
@@ -148,6 +164,9 @@ export interface Cumul {
   /** Lot S3 : date de publication du correctif la plus ancienne selon Tenable, parmi les contrôles présents qui portent la
       faille (traités compris : c'est un fait sur la faille), ou null. */
   correctifTenableLe: string | null;
+  /** Lot N2 : un contrôle présent et non traité qui porte la faille est marqué « exploité par un logiciel malveillant »
+      par Tenable (exploitation avérée propre au contrôle, absente des sources de la CVE). */
+  malware: boolean;
 }
 
 /** Objet suivi présent (constat de Tenable présent, faille déclarée rattachée), pour son délai de correction (lot S1) : état
@@ -418,6 +437,7 @@ export class AlertesVulnerabilites {
       cvss3_score: string | null;
       epss_score: string | null;
       exploitable: boolean;
+      exploite_malware: boolean;
       clos: boolean;
       etat: EtatSuiviFaille | null;
       cves: string[];
@@ -426,7 +446,8 @@ export class AlertesVulnerabilites {
       repart: Date | null;
       correctif_publie_le: Date | null;
       fin_support_le: Date | null;
-    }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${close('constat')} AS clos,
+    }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware,
+         ${close('constat')} AS clos,
          c.correctif_publie_le, c.fin_support_le,
          (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
          ${premiereConstat} AS premiere,
@@ -518,6 +539,7 @@ export class AlertesVulnerabilites {
             produitIds: [],
             aConfirmer: null,
             correctifTenableLe: null,
+            malware: false,
           }),
         );
       return x;
@@ -537,6 +559,7 @@ export class AlertesVulnerabilites {
               cvss3: nombre(c.cvss3_score),
               epss: nombre(c.epss_score),
               exploitable: c.exploitable,
+              malware: c.exploite_malware,
             },
           ),
           'detectee',
@@ -566,6 +589,7 @@ export class AlertesVulnerabilites {
         cvss3: nombre(c.cvss3_score),
         epss: nombre(c.epss_score),
         exploitable: c.exploitable,
+        malware: c.exploite_malware,
       };
       const cibles = c.cves.length
         ? c.cves.map((cve) => ({
@@ -585,6 +609,8 @@ export class AlertesVulnerabilites {
         x.priorites.push(priorite(s, 'detectee'));
         x.presences.add('detectee');
         if (s.exploitable.length) x.exploitable = true;
+        // Lot N2 : exploitation avérée selon Tenable (contrôle présent, non traité), gardée avec la faille.
+        if (c.exploite_malware) x.malware = true;
         for (const m of c.machines) x.machines.add(m);
         retenir(x, s);
         x.constatIds.push(c.id);
@@ -663,7 +689,7 @@ export class AlertesVulnerabilites {
     return {
       priorite: p,
       presences: PRESENCES.filter((s) => x.presences.has(s)),
-      exploitation: x.cve ? (sources.get(x.cve)?.exploitation ?? []) : [],
+      exploitation: exploitationDeCumul(x, sources),
       nombres: { machines: x.machines.size, produits: x.produits.size, actifs: x.actifs },
       titre,
       produit,

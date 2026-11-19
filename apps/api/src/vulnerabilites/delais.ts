@@ -119,9 +119,11 @@ export class DelaisVulnerabilites {
         cvss3_score: string | null;
         epss_score: string | null;
         exploitable: boolean;
+        exploite_malware: boolean;
         premiere: Date;
         repart: Date | null;
-      }>`SELECT c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${premiereConstat} AS premiere,
+      }>`SELECT c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware,
+           ${premiereConstat} AS premiere,
            (SELECT s.delai_repart_le FROM vulnerabilites_suivis s WHERE s.constat_id = c.id) AS repart
          FROM vulnerabilites_constats c WHERE c.id = ${id}::uuid`.execute(k);
       const c = rows[0];

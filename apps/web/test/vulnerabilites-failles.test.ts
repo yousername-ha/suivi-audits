@@ -44,6 +44,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   epss: 0.0056,
   exploitable: true,
   exploite: true,
+  exploiteMalware: false,
   nonMaintenu: false,
   finSupportLe: null,
   finDeSupport: false,
@@ -88,6 +89,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
     depuis: '2026-11-10T08:00:00.000Z',
     echeance: '2026-11-25T08:00:00.000Z',
   },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -125,7 +127,7 @@ const fiche = (c: Partial<ConstatDto> = {}): ConstatDto => ({
     bdd: [machineDetection('bdd-01.exemple.invalid', 'bdd')],
     aucun: [machineDetection(null, null)],
   },
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
@@ -143,7 +145,7 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   premiere: null,
   derniere: null,
   source: 'tenable',
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   compteurs: {
     critique: 2,
     elevee: 1,
@@ -307,6 +309,43 @@ describe('rendu', () => {
     expect(html).toContain('&lt;img src=x');
     expect(html).not.toContain('<img');
     expect(rendu(createElement(ConstatsTable, { constats: [], onOuvrir: rien }))).toContain('Aucune faille détectée');
+  });
+  it('lot N2 : contrôle exploité par un logiciel malveillant, marque, faits de la priorité et pastille de Tenable', () => {
+    const malware = resume({
+      exploite: false,
+      exploiteMalware: true,
+      sources: {
+        exploitation: [{ source: 'tenable', le: null }],
+        exploitable: [],
+        valeurs: { gravites: [{ source: 'tenable', gravite: 'moyenne' }], cvss: [], epss: [] },
+        certSante: null,
+      },
+      priorite: {
+        niveau: 'P1',
+        faits: [
+          { fait: 'exploitation', sources: ['tenable'] },
+          { fait: 'presence', presence: 'detectee' },
+        ],
+      },
+    });
+    expect(marquesConstat(malware).map((m) => m.libelle)).toEqual([
+      'Exploitée par un logiciel malveillant (selon Tenable)',
+      'Exploitable',
+    ]);
+    expect(marquesConstat(malware)[0]!.etat).toBe('erreur');
+    const html = rendu(createElement(ConstatsTable, { constats: [malware], onOuvrir: rien }));
+    expect(html).toContain('>P1<');
+    expect(html).toContain('Exploitée par un logiciel malveillant (selon Tenable)');
+    expect(html).toContain(
+      'Exploitation avérée (Exploitée par un logiciel malveillant (selon Tenable)) · Détectée par Tenable',
+    );
+    expect(html).toContain('Exploitation avérée (1 source)');
+    expect(html).toContain('d’abord Exploitée par un logiciel malveillant (selon Tenable)');
+    // Pastille de la source : celle de Tenable (décorative, le texte la nomme).
+    expect(html).toMatch(/<span class="ps ps--violet ps--parallelogramme" data-source="tenable" aria-hidden="true">/);
+    expect(html).not.toContain('Exploitée (KEV)');
+    // Sans le fait : aucune marque nouvelle.
+    expect(marquesConstat(resume()).map((m) => m.libelle)).toEqual(['Exploitée (KEV)', 'Exploitable']);
   });
   it('fiche : correctif et vecteur tels quels, CVE du KEV marquées, machines par rôle, lien sans référent', () => {
     // Lot PC4 : le correctif de Tenable est rendu par la fiche illustrée commune, placée au-dessus du détail du constat.

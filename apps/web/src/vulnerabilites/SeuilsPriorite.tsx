@@ -36,7 +36,8 @@ export function GrillePriorite({ seuilEpss }: { seuilEpss: number }) {
   return (
     <List size="sm" spacing="2xs">
       <List.Item>
-        <strong>P1</strong> : exploitation avérée (catalogue KEV ou alerte du CERT-FR) et faille présente, détectée par
+        <strong>P1</strong> : exploitation avérée (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé,
+        AlgoLightHouse, ou contrôle exploité par un logiciel malveillant selon Tenable) et faille présente, détectée par
         Tenable ou déclarée par un produit surveillé.
       </List.Item>
       <List.Item>

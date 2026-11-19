@@ -814,6 +814,40 @@ Aucune étape d'installation supplémentaire : les connecteurs se règlent dans 
 - **Ce qui est appelé** : seuls `GET /api/v1/health`, `/api/v1/version`, `/api/v1/alerts`, `/api/v1/alerts/{uuid}`, `/api/v1/perimeters`, `/api/v1/targets/hosts`, `/api/v1/targets/domains` et `/api/v1/technologies`, sans paramètre de requête. Jamais d'écriture (ni commentaire, ni changement de statut), jamais les adresses sans `/v1`, ni `/api/contacts` ni `/api/search`. Ne sont jamais lus : la description détaillée des alertes, les pièces jointes, les commentaires, les données sensibles des constats.
 - **Synchronisation** (module Vulnérabilités actif) : une par période et par connecteur actif (fenêtre « Configurer » : toutes les 12 heures, une fois par jour par défaut, ou une fois par semaine ; avertissement en dessous de 24 heures, la limite d'appels de l'éditeur n'étant pas connue), plus « Synchroniser maintenant ». L'éditeur ne documente pas de pagination : chaque liste est lue en une réponse, bornée (16 Mio, 5 000 alertes, 10 000 hôtes et 10 000 domaines, 2 000 technologies) ; le détail des 300 alertes les plus récemment modifiées est lu à chaque passage ; huit minutes de lecture au plus. Au-delà, la synchronisation est incomplète et ne fait rien disparaître. Les données sont rangées dans Risques, Vulnérabilités, Surface externe ; un administrateur du module y relie chaque périmètre de l'éditeur à un périmètre de la plateforme (onglet « Périmètres »).
 
+**Nessus, import de fichier** ([ADR 0100](adr/0100-module-vulnerabilites.md), lot N1) : pour un Nessus qui n'est pas rattaché
+à Security Center, sans clé d'API ni flux réseau. Aucune étape d'installation, aucune règle de pare-feu, aucun exécutant : le
+serveur ne joint jamais Nessus.
+
+- **Exporter le scan dans Nessus** : ouvrir le scan terminé, menu « Exporter » (« Export »), format **Nessus** (fichier
+  `.nessus`, XML « NessusClientData_v2 »). Un fichier de 100 Mo au plus ; au-delà, exporter un scan plus restreint (moins de
+  machines) et l'importer en plusieurs fois. Le libellé exact du menu dépend de la version de Nessus : il n'a pas été vérifié
+  sur une version précise.
+- **Instance** : dans Plateforme, carte « Intégrations », « Ajouter une instance » du type « Nessus, import de fichier » (le
+  nom suffit), puis « Configurer » pour les gravités retenues (critiques et élevées par défaut ; les contrôles informatifs ne
+  sont jamais rangés), puis « Activer » (aucun flux à valider).
+- **Importer** : « Importer un scan » sur l'instance (droit `integrations:administrer`, module Vulnérabilités actif), choisir
+  le fichier. Il est lu dans le navigateur ; seuls partent vers le serveur, en JSON et par lots de machines entières, les
+  champs utiles des machines (nom, adresse, système, dates du scan) et des failles (contrôle, gravité, port, protocole, CVE,
+  CVSS 3, VPR, code d'exploitation, correctif, synopsis, lien https, dates de publication). Ne quittent jamais le poste : la
+  sortie brute des contrôles, leur description longue, la politique du scan et ses comptes, le nom du fichier. Un fichier
+  qui contient une déclaration `DOCTYPE` ou `ENTITY` est refusé. Le navigateur doit disposer d'environ 500 Mo de mémoire libre
+  pour un fichier de 100 Mo (mesure sur Chromium, fichier fictif : lecture en 5 secondes environ).
+- **Effet** : pour chaque machine du fichier, une faille qui n'y figure plus est considérée comme disparue ; les machines
+  absentes du fichier ne changent pas. Les machines importées n'ont pas de dépôt Tenable : sans périmètre indiqué à la main
+  (Risques, Vulnérabilités, Machines), elles ne sont visibles qu'avec le droit d'administrer le module. Chaque import figure
+  dans « Exécutions » ; un import resté sans lot pendant trente minutes (onglet fermé) est clos comme interrompu, les
+  machines déjà importées le restant. Au plus trente imports de fichiers commencés par heure et par personne (nombre de
+  fichiers, pas de machines) ; au-delà, la fenêtre d'import affiche « Import refusé » et l'explique.
+- **Exploitée par un logiciel malveillant** (lot N2) : un contrôle marqué `exploited_by_malware` dans le fichier compte comme
+  une exploitation avérée (priorité P1 si la faille est présente, alerte critique). Les failles importées avant la mise à
+  jour ne portent pas ce marquage : réimporter le scan.
+- **Supprimer** (lot N2) : « Supprimer ce connecteur et tout ce qu'il a importé » sur l'instance (droit
+  `integrations:administrer`, module Vulnérabilités actif, aucun import en cours). La fenêtre annonce les nombres de machines,
+  failles, détections et imports qui disparaîtront et demande de saisir SUPPRIMER ; l'action est irréversible (seule une
+  restauration de sauvegarde les ramène). Disparaissent aussi le suivi de ces failles et leurs liaisons ; les alertes sont
+  réévaluées. Restent : l'historique du suivi, les instantanés des tendances, le journal d'audit, les alertes closes et les
+  notifications déjà envoyées. Les connecteurs Security Center et AlgoLightHouse n'ont pas cette action.
+
 ### 11.11 Veille du module Vulnérabilités (sources publiques)
 
 Aucune étape d'installation supplémentaire : la veille se suit dans l'application, sous **Risques, Vulnérabilités, Veille**, avec le droit `vulnerabilites:lire` ([ADR 0100](adr/0100-module-vulnerabilites.md), lots V2 et V3). Le conteneur de l'API n'a toujours aucun accès réseau sortant : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui lit les sources, par un script isolé (`scripts/veille-vulnerabilites.py`, bibliothèque standard de Python, compte sans privilège, délai borné). Sans exécutant, l'écran le dit et aucune collecte n'est faite.

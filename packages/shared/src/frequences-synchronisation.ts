@@ -32,6 +32,8 @@ export const FREQUENCE_VEILLE_DEFAUT: Readonly<Record<SourceVeille, number>> = {
 export const FREQUENCES_CONNECTEUR: Readonly<Record<IntegrationType, readonly number[]>> = {
   tenable: [6, 12, 24, HEURES_SEMAINE],
   algolighthouse: [12, 24, HEURES_SEMAINE],
+  // Lot N1 : import de fichier, aucune synchronisation automatique (la base n'admet que NULL pour ce type, migration 090).
+  'nessus-fichier': [],
 };
 export const FREQUENCE_CONNECTEUR_DEFAUT = 24;
 
@@ -46,6 +48,8 @@ export const frequenceConnecteurAdmise = (type: IntegrationType, heures: number)
 export const frequenceVeille = (source: SourceVeille, reglee: number | null | undefined) =>
   reglee ?? FREQUENCE_VEILLE_DEFAUT[source];
 export const frequenceConnecteur = (reglee: number | null | undefined) => reglee ?? FREQUENCE_CONNECTEUR_DEFAUT;
+/** Le type a-t-il une synchronisation automatique (liste de fréquences non vide) ? L'import de fichier n'en a pas. */
+export const frequenceConnecteurReglable = (type: IntegrationType) => FREQUENCES_CONNECTEUR[type].length > 0;
 
 /** Corps du réglage (route de la veille, et champ de la modification d'une instance) : un nombre entier d'heures ; la liste
     de la source ou du type est contrôlée par le serveur (422 hors liste). */
