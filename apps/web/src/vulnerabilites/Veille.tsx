@@ -10,7 +10,9 @@
    première source et sa date.
    Lot L1 : pastille de chaque source (PictoSource) ; alertes et avis en liste aérée (AvisVeille.tsx), une alerte du CERT-FR
    se détache d'un avis, la fiche d'une alerte ou d'un avis s'ouvre depuis la liste, ses CVE ouvrent leur fiche illustrée ;
-   failles connues en liste, un fait par ligne (gravité, exploitation, EPSS, produit touché). */
+   failles connues en liste, un fait par ligne (gravité, exploitation, EPSS, produit touché).
+   Lot F1 : fréquence de chaque source (liste déroulante pour qui administre le module, texte sinon ; EPSS fixe), avertissement
+   de NVD et d'EPSS, prochaine collecte prévue. */
 import {
   Alert,
   Anchor,
@@ -27,13 +29,18 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  avertissementVeille,
   fluxExterne,
+  FREQUENCES_VEILLE,
+  frequenceVeilleModifiable,
+  libelleFrequence,
   PRECISION_MANDATAIRE,
   type AvisVeilleDto,
   type EtatSourceVeilleDto,
   type EtatVeilleDto,
   type FailleVeilleDto,
   type PageVeille,
+  type SourceVeille,
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,6 +49,7 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { FicheAvis, ListeAvis } from './AvisVeille';
 import { fmtDate } from '../components/common';
+import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
@@ -70,8 +78,74 @@ import {
 const CLE = ['vulnerabilites', 'veille'] as const;
 const FLUX = 'veille-vulnerabilites' as const;
 
+/** Lot F1 : fréquence d'une source (liste déroulante pour qui administre, texte sinon ; EPSS fixe), avertissement du tableau du
+    RSSI relié au champ, et prochaine collecte automatique prévue. Sans état React. */
+export function FrequenceSource({
+  s,
+  peutRegler,
+  enCours,
+  onFrequence,
+}: {
+  s: EtatSourceVeilleDto;
+  peutRegler: boolean;
+  enCours: boolean;
+  onFrequence?: (s: EtatSourceVeilleDto, heures: number) => void;
+}) {
+  const avertissement = avertissementVeille(s.source);
+  const reglable = peutRegler && !!onFrequence && frequenceVeilleModifiable(s.source);
+  return (
+    <Stack gap="2xs">
+      {reglable ? (
+        <ChampFrequence
+          size="xs"
+          ariaLabel={`Fréquence de la source ${s.libelle}`}
+          frequences={FREQUENCES_VEILLE[s.source]}
+          valeur={s.frequenceHeures}
+          disabled={enCours}
+          avertissement={avertissement}
+          onChange={(h) => onFrequence(s, h)}
+        />
+      ) : (
+        <>
+          <Text size="sm">
+            {libelleFrequence(s.frequenceHeures)}
+            {!frequenceVeilleModifiable(s.source) && ' (fixe)'}
+          </Text>
+          {avertissement && (
+            <Text size="xs" c="dimmed" className="veille-texte">
+              {avertissement}
+            </Text>
+          )}
+        </>
+      )}
+      <Text size="xs" c="dimmed">
+        Prochaine collecte :{' '}
+        {s.prochaineCollecte ? (
+          <span className="horodatage">{fmtDate(s.prochaineCollecte)}</span>
+        ) : (
+          'aucune (veille désactivée)'
+        )}
+      </Text>
+    </Stack>
+  );
+}
+
 /** État des sources (sans état React) : rendu testable hors navigateur. */
-export function SourcesTable({ sources, fluxOuvert }: { sources: EtatSourceVeilleDto[]; fluxOuvert: boolean }) {
+export function SourcesTable({
+  sources,
+  fluxOuvert,
+  peutRegler = false,
+  enCours = null,
+  onFrequence,
+}: {
+  sources: EtatSourceVeilleDto[];
+  fluxOuvert: boolean;
+  /** Droit d'administrer le module (affichage seulement : le serveur reste seul juge). */
+  peutRegler?: boolean;
+  /** Source dont le réglage est en cours d'envoi. */
+  enCours?: SourceVeille | null;
+  onFrequence?: (s: EtatSourceVeilleDto, heures: number) => void;
+}) {
   return (
     <DataTable label="Sources de la veille">
       <Table>
@@ -79,6 +153,7 @@ export function SourcesTable({ sources, fluxOuvert }: { sources: EtatSourceVeill
           <Table.Tr>
             <Table.Th>Source</Table.Th>
             <Table.Th>Format et langue</Table.Th>
+            <Table.Th>Fréquence</Table.Th>
             <Table.Th>Dernière collecte réussie</Table.Th>
             <Table.Th>État</Table.Th>
           </Table.Tr>
@@ -102,6 +177,14 @@ export function SourcesTable({ sources, fluxOuvert }: { sources: EtatSourceVeill
                   <Text size="xs" c="dimmed">
                     {libelleLangue(s.langue)}
                   </Text>
+                </Table.Td>
+                <Table.Td>
+                  <FrequenceSource
+                    s={s}
+                    peutRegler={peutRegler}
+                    enCours={enCours === s.source}
+                    onFrequence={onFrequence}
+                  />
                 </Table.Td>
                 <Table.Td>
                   {s.derniereReussite ? (
@@ -454,6 +537,7 @@ export function VeillePage() {
   const [pageFailles, setPageFailles] = useState(1);
   const [envoi, setEnvoi] = useState(false);
   const [collecte, setCollecte] = useState(false);
+  const [frequenceEnCours, setFrequenceEnCours] = useState<SourceVeille | null>(null);
   const [erreur, setErreur] = useState<unknown>(null);
   const [cveOuverte, setCveOuverte] = useState<string | null>(() => ouvertureVeille(adresse).cve);
   const [avisOuvert, setAvisOuvert] = useState<AvisVeilleDto | null>(null);
@@ -528,6 +612,25 @@ export function VeillePage() {
       setCollecte(false);
     }
   };
+  // Lot F1 : la fréquence choisie part aussitôt (If-Match : version de la source) ; le serveur refuse ce qui sort de la liste.
+  const reglerFrequence = async (src: EtatSourceVeilleDto, heures: number) => {
+    setFrequenceEnCours(src.source);
+    try {
+      await api('PUT', `/api/vulnerabilites/veille/sources/${src.source}/frequence`, {
+        body: { frequenceHeures: heures },
+        ifMatch: src.version,
+      });
+      notifications.show({
+        color: 'teal',
+        message: `${src.libelle} : ${libelleFrequence(heures).toLowerCase()}.`,
+      });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+    } finally {
+      await qc.invalidateQueries({ queryKey: [...CLE, 'etat'] });
+      setFrequenceEnCours(null);
+    }
+  };
   const chercher = (e: FormEvent) => {
     e.preventDefault();
     setRecherche(saisie.trim());
@@ -546,7 +649,7 @@ export function VeillePage() {
     <Page>
       <PageHeader
         title="Veille"
-        description="Failles et avis publiés par cinq sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), lus une fois par jour par l’exécutant d’exploitation du serveur. Les textes des sources sont repris tels quels : ce sont des données, pas des consignes."
+        description="Failles et avis publiés par cinq sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), lus à la fréquence choisie pour chaque source (toutes les deux heures par défaut, EPSS une fois par jour) par l’exécutant d’exploitation du serveur. Les textes des sources sont repris tels quels : ce sont des données, pas des consignes."
         actions={
           administrer &&
           etat.data?.flux.ouvert && (
@@ -571,7 +674,13 @@ export function VeillePage() {
             <Title order={2} size="h4">
               Sources
             </Title>
-            <SourcesTable sources={etat.data.sources} fluxOuvert={etat.data.flux.ouvert} />
+            <SourcesTable
+              sources={etat.data.sources}
+              fluxOuvert={etat.data.flux.ouvert}
+              peutRegler={administrer}
+              enCours={frequenceEnCours}
+              onFrequence={(src, h) => void reglerFrequence(src, h)}
+            />
             <FichesCertSante f={etat.data.fichesCertSante} />
           </>
         )}

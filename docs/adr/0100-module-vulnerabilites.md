@@ -2375,7 +2375,8 @@ du module Intégrations : elle reste dans l'écran « Veille », avec « Collect
 - **Composant commun** `apps/web/src/integrations/EtatIntegration.tsx` (règle pure dans `etat-integration.ts`) : par instance,
   pastille d'état, date de la dernière synchronisation, dernière complète, **erreur** de la dernière synchronisation en lecture
   (message déjà rendu par l'API, inchangé), complément facultatif (bilan, périmètres non reliés), puis le lien
-  `LienConfigurerIntegration` si l'appelant a calculé `integrations:lire`. Aucun bouton. Utilisé par « Failles détectées »
+  `LienConfigurerIntegration` si l'appelant a calculé `integrations:lire` (depuis le 19/11/2026, lot F1 :
+  `integrations:administrer`, voir ci-dessous). Aucun bouton. Utilisé par « Failles détectées »
   (Tenable) et « Surface externe » (AlgoLightHouse, avec son état « À jour / incomplète / en échec » d'avant) ; la « Vue
   d'ensemble » garde ses capteurs (même règle d'état, erreur ajoutée en lecture) et reçoit le lien.
 - **Veille** : après « Collecter maintenant », le message dit « N collectes de veille demandées : l'exécutant les traite à son
@@ -2423,6 +2424,10 @@ l'état (`/api/vulnerabilites/synchronisation`, `/api/vulnerabilites/surface/eta
   configurée (pour en ajouter une) ; sans le droit, le texte dit qu'un administrateur des intégrations l'ajoute dans la page
   Plateforme.
 - **Droit du lien** : `integrations:lire` (celui de la carte), même si seul `integrations:administrer` permet de modifier.
+  **Tranché par le RSSI le 19/11/2026** (réalisé avec le lot F1) : le lien n'est visible que de qui peut **administrer** les
+  intégrations (`integrations:administrer`) ; un compte qui lit sans administrer voit l'état, pas le lien. La carte de la
+  Plateforme garde son droit (`integrations:lire`). Règle unique `peutConfigurerIntegration`
+  (`apps/web/src/integrations/etat-integration.ts`), appelée par les trois écrans.
 - **Recherche Ctrl K** : elle ne liste que les pages du menu ; « Intégrations » n'y figure plus (la page « Plateforme » oui).
   Indexer les cartes de la Plateforme serait un ajout à décider.
 - **Échap dans les fenêtres imbriquées** : correctif appliqué à toutes les cartes de la Plateforme et de la Configuration
@@ -2439,3 +2444,116 @@ seulement. Docker et Node 26.
 
 1. Les choix ci-dessus.
 2. Indexer les cartes de la Plateforme dans la recherche de pages (Ctrl K).
+
+
+## Addendum du 19/11/2026 — lot F1 : fréquence de synchronisation réglable par connecteur et par source de veille
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`090`, une route d'API ajoutée, un champ ajouté à la création et à la modification d'une instance de connecteur, aucune
+dépendance, aucun flux sortant nouveau (seule la cadence change), rien chez l'assistant, `scripts/exploitation-worker.py` et
+`docker-compose.yml` inchangés.
+
+### Décision du RSSI (19/11/2026)
+
+« Pour la synchro des connecteurs je propose de définir dans chaque connecteur l'occurrence, avec un avertissement si c'est
+trop. Les paquets installés sur une machine changent peu alors qu'une CVE sort très souvent ; donc Tenable une fois par jour
+mais la veille plusieurs fois, et si la veille correspond à un composant alors il y a une alerte si c'est critique. » Un
+réglage par source de veille, selon le tableau validé :
+
+| Source | Choix | Par défaut | Avertissement affiché |
+|---|---|---|---|
+| Veille : CERT-FR, CERT Santé, catalogue KEV (CISA) | 1 h, 2 h, 4 h, 12 h, 24 h | 2 h | aucun |
+| Veille : NVD | 2 h, 4 h, 12 h, 24 h | 2 h | NVD demande de ne pas être lu automatiquement plus d'une fois toutes les deux heures (plancher non contournable, y compris par l'API) |
+| Veille : EPSS | 24 h, fixe (affiché, non modifiable) | 24 h | les scores ne sont publiés qu'une fois par jour |
+| Tenable Security Center | 6 h, 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : charge sur Security Center pour un inventaire qui change peu |
+| AlgoLightHouse | 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : limite d'appels de l'éditeur inconnue |
+
+Ajout du même jour : le lien « Configurer l'intégration » des outils n'est visible que de qui peut **administrer** les
+intégrations (voir l'addendum « lot I1 », point « Droit du lien »).
+
+### Réalisation
+
+- **Modèle** (`packages/shared/src/frequences-synchronisation.ts`) : listes fermées par source et par type, valeurs par défaut,
+  schéma du corps (`FrequenceVeilleBody`, nombre entier d'heures), fonctions pures `prochaineEcheance`, `echeanceAtteinte`,
+  `referenceApresDemande`, `prochaineAffichee`, `avertissementVeille`, `avertissementConnecteur`, `libelleFrequence`.
+- **Migration `090_frequences_synchronisation.sql`** (additive) : `vulnerabilites_veille_sources.frequence_heures`,
+  `.planifiee_le`, `.version` ; `integrations.frequence_heures` ; `vulnerabilites_tenable_etat.planifiee_le` et
+  `vulnerabilites_alh_etat.planifiee_le`. Contraintes CHECK recopiant les listes (NVD 2 h au moins et EPSS 24 h garantis en
+  base) ; NULL = valeur par défaut du code. L'ancien créneau quotidien (`creneau`) n'est plus lu ; il reste en place.
+- **Planification** (tic de l'API, `veille.ts`, `tenable.ts`, `surface-externe.ts`) : « au plus une par jour » devient « au
+  plus une par période réglée », comptée depuis la dernière demande **automatique** (`planifiee_le`).
+- **API** : `GET /api/vulnerabilites/veille/etat` rend par source `frequenceHeures`, `prochaineCollecte` et `version` ;
+  `PUT /api/vulnerabilites/veille/sources/:source/frequence` (`vulnerabilites:administrer`, If-Match sur la version de la
+  source, 422 hors liste, 422 pour EPSS, journal `vulnerabilites.veille.frequence` : source, ancienne et nouvelle fréquence) ;
+  instance de connecteur : champ `frequenceHeures` de `POST /api/integrations/instances` et `PATCH
+  /api/integrations/instances/:id` (`integrations:administrer`, If-Match sur la version de l'instance comme le reste de sa
+  configuration, 422 hors liste du type, journal `integration.frequence` en plus de `integration.modifiee`) ;
+  `IntegrationDto.frequenceHeures` ; `GET /api/vulnerabilites/synchronisation` et `/surface/etat` rendent `frequenceHeures`
+  et `prochaineSynchronisation` (null si l'instance n'est pas prête : inactive, clé manquante ou flux fermé).
+- **Interface** : composant `ChampFrequence` (liste native, avertissement « Attention : … » en description du champ, relié par
+  `aria-describedby`, liseré et teinte de la charte en doublure du mot) ; écran « Veille », colonne « Fréquence » du tableau
+  des sources (liste pour qui administre le module, texte sinon, EPSS « Une fois par jour (fixe) », avertissements de NVD et
+  d'EPSS, prochaine collecte prévue) ; fenêtre « Configurer » / « Ajouter » de la carte « Intégrations » (fréquence de
+  l'instance, avertissement affiché avant l'enregistrement, sans blocage) ; tuiles : « Synchronisation automatique : … » au
+  lieu de « Synchronisation quotidienne » ; `EtatIntegration` (Failles détectées, Surface externe) : fréquence et prochaine
+  synchronisation en lecture seule.
+- **Alertes** : règles inchangées. L'évaluation tourne à la fin de chaque collecte reçue (`apresReception`, après le
+  rapprochement d'une collecte NVD ou CERT Santé) ; un test le prouve désormais pour une collecte **planifiée** : une CVE
+  exploitée (KEV) et critique qui touche un produit surveillé relié à une machine ouvre son alerte critique à la collecte NVD
+  qui l'apporte (déclencheur `collecte-nvd`).
+
+### Rangement, et pourquoi
+
+- **Veille** : dans `vulnerabilites_veille_sources` (ligne par source, qui portait déjà le créneau), comme demandé.
+- **Connecteur** : la fréquence est une colonne de `integrations`, pas des tables d'état du module (`vulnerabilites_tenable_etat`,
+  `vulnerabilites_alh_etat`). C'est un réglage de l'instance : il se modifie par la même route, le même droit et la même
+  version (If-Match) que sa configuration, il est journalisé avec elle, il survit à la remise à vide du travail comme
+  l'instance (les tables d'état sont créées à la volée par le planificateur, sans version, et effacées avec le travail), et
+  une colonne permet la contrainte CHECK par type, que le JSON de configuration n'aurait pas eue simplement. La **référence
+  de planification** (`planifiee_le`), elle, est un état : elle va dans les tables d'état de chaque connecteur.
+
+### Planification, échec et bornes
+
+- **Référence consommée avant l'inscription**, dans la même transaction (comme l'ancien créneau) : une collecte ou une
+  synchronisation perdue, expirée ou en **échec** n'est pas redemandée avant la période suivante ; rien ne repart à chaque tic.
+  « Collecter maintenant » et « Synchroniser maintenant » restent le moyen de relancer tout de suite, avec leurs garde-fous
+  (droit, une demande en file ou en cours à la fois, quinze minutes entre deux demandes manuelles, débit par personne).
+- **Aucune dérive** : tant que le retard est inférieur à une période, la référence rangée est l'échéance théorique, pas
+  l'instant du tic (le tic d'une minute n'accumule pas de décalage) ; au-delà (panne, fréquence raccourcie), elle repart de
+  maintenant : **une seule** demande, jamais de rattrapage en rafale. Une collecte de la source déjà en file ou en cours tient
+  lieu de la demande automatique (pas de double demande). EPSS ne passe que quand la file de la veille est vide.
+- **Fenêtre NVD** : inchangée ; elle part de la fin de la dernière collecte réussie et remonte au plus **sept jours** (borne du
+  code, sous la limite de 120 jours de l'API NVD), un jour pour la première. Toutes les deux heures, la fenêtre ne couvre que
+  deux heures de modifications : moins de pages par collecte qu'avant. Le plancher de deux heures vaut pour les demandes
+  automatiques ; « Collecter maintenant » garde ses garde-fous (point à confirmer ci-dessous).
+- **Exécutant** (`scripts/exploitation-worker.py`, passage chaque minute, `VEILLE_MAX_PAR_PASSAGE = 2`,
+  `VEILLE_BUDGET_SECONDES = 120`, expiration d'une collecte non réclamée à trente minutes) : au pire quatre collectes dues au
+  même tic (sources à une heure), plus EPSS une fois par jour, sont réclamées en deux ou trois passages ; aucun changement
+  nécessaire ni fait.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- Avertissement de NVD et d'EPSS affiché **en permanence** sous leur réglage (il explique la liste) ; ceux des connecteurs
+  seulement sous 24 h.
+- La fréquence d'une source part dès le choix dans la liste (pas de bouton « Enregistrer » dans le tableau) ; celle d'un
+  connecteur avec « Enregistrer la configuration ».
+- Remise à vide du travail : les sources de la veille sont effacées avec lui (règle existante), leur fréquence revient donc à
+  la valeur par défaut ; celle des connecteurs suit l'instance.
+- « En retard » d'une source (`VEILLE_RETARD_HEURES`, 36 h sans réussite) inchangé quelle que soit la fréquence.
+- Journal : chaque collecte demandée, réclamée et terminée garde ses trois entrées ; avec quatre sources toutes les deux heures,
+  environ 150 entrées par jour au lieu d'une quinzaine, et une cinquantaine de lignes par jour dans le journal des collectes,
+  sans purge (aucune n'existait).
+
+### Non vérifié
+
+Aucune donnée réelle, aucune source ni aucun connecteur joint. Planification prouvée par des tests sur PostgreSQL avec horloge
+injectée ; tenue réelle de l'exécutant à cette cadence non mesurée (pile Docker non rejouée ici). Parcours Playwright
+`zzz…-vulnerabilites-frequences.spec.ts` joué sur une pile locale sans Docker (API et Vite, Chromium), à rejouer en CI ; CSP
+stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Collecter maintenant » pour NVD reste possible quinze minutes après la précédente demande manuelle : faut-il lui appliquer
+   aussi le plancher de deux heures ?
+2. Purge du journal des collectes de la veille et des exécutions des connecteurs (volume multiplié par la cadence).
+3. Les choix ci-dessus.

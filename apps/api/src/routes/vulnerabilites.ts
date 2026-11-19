@@ -57,7 +57,10 @@
    Lot R1 : barre de recherche globale (CVE de la veille et détectées, machines, actifs exposés, applications) avec `lire`,
    lecture seule, sans journal, aucun appel sortant ; machines et actifs lus par les droits de leurs listes ; nombres de
    machines et d'actifs limités à ce que la personne lit ; la recherche des machines de la liste couvre aussi l'adresse IP
-   (préfixe) et le système. */
+   (préfixe) et le système.
+   Lot F1 : fréquence des collectes automatiques de chaque source de la veille (`administrer`, If-Match sur la version de la
+   source, liste fermée de la source, 422 hors liste, EPSS fixe, journal `vulnerabilites.veille.frequence`) ; celle d'un
+   connecteur se règle par la modification de l'instance (module Intégrations, `integrations:administrer`). */
 import {
   RechercheGlobaleReponse,
   RechercheGlobaleVulnerabilites,
@@ -83,6 +86,8 @@ import {
   NatureSuivi,
   RefusPropositionSuivi,
   DemandeCollecte,
+  FrequenceVeilleBody,
+  SourceVeille,
   EffetMotQuery,
   LiaisonDepotTenable,
   LiaisonPerimetreAlh,
@@ -349,6 +354,27 @@ export const vulnerabilitesRoutes = [
       if (!svc.limits.veilleCollecte(sess.user.id))
         throw new HttpError(429, 'Trop de demandes de collecte. Réessayez dans une heure.');
       return svc.vulnerabilites.veille.demander(body.source, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/veille/sources/:source/frequence',
+    summary:
+      'Veille (lot F1) : régler la fréquence des collectes automatiques d’une source, en heures, dans la liste fermée de la source (NVD : deux heures au moins ; EPSS : fixe) ; If-Match : version de la source ; 422 hors liste',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: z.object({ source: SourceVeille }),
+    body: FrequenceVeilleBody,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.veille.reglerFrequence(
+        params.source,
+        body.frequenceHeures,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
     },
   }),
   route({

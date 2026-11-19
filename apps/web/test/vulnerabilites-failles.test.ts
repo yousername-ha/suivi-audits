@@ -459,11 +459,17 @@ describe('rendu', () => {
             },
             derniereCompleteLe: '2026-11-16T03:05:00.000Z',
             inventaire: { ok: true, erreur: null, le: '2026-11-16T03:05:00.000Z' },
+            frequenceHeures: 6,
+            prochaineSynchronisation: '2026-11-16T09:00:00.000Z',
           },
         ],
       }),
     );
     expect(html).toContain('Tenable fictif');
+    // Lot F1 : fréquence et prochaine synchronisation, en lecture seule.
+    expect(html).toContain('Synchronisation automatique : toutes les 6 heures');
+    expect(html).toContain('prochaine prévue');
+    expect(html).not.toMatch(/<select/);
     expect(html).toContain('1 faille sur 1 machine (1 détection)');
     expect(html).toContain('3 machines lues');
   });

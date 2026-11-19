@@ -12,8 +12,10 @@
      synchronisation interrompue ou incomplète ne fait donc rien disparaître.
    - L'inventaire des machines (`GET /rest/hosts`, annoncé expérimental) complète les machines connues ou en ajoute ; son
      échec est consigné sans faire échouer la synchronisation des failles.
-   - Planification : une synchronisation par jour (Europe/Paris) et par instance active et complète ; le créneau est consommé
-     avant l'inscription (aucun rejeu après une panne). Rien si le flux « tenable » est fermé ; le tic vérifie les modules.
+   - Planification (lot F1) : une synchronisation par période réglée sur l'instance (vingt-quatre heures par défaut ; 6 h,
+     12 h, 24 h ou 7 jours) et par instance active et complète, comptée depuis la dernière demande automatique ; cette
+     référence est consommée avant l'inscription (aucun rejeu après une panne ni redemande après un échec avant la période
+     suivante). Rien si le flux « tenable » est fermé ; le tic vérifie les modules.
    Journal `vulnerabilites.synchronisation.*` : identifiants internes et nombres seulement, jamais un nom ni une adresse de
    machine. Accès aux données en Kysely (ADR 0062).
    Lot V4b : à la fin d'une synchronisation reçue, le suivi des failles retire les propositions « corrigée » des constats
@@ -30,10 +32,13 @@ import {
   type ElementHoteTenable,
   type ElementMachineTenable,
   ElementSynchronisation,
+  echeanceAtteinte,
   type EtatSynchronisationDto,
   GRAVITES_PAR_DEFAUT,
   type GraviteTenable,
   LotSynchronisation,
+  prochaineAffichee,
+  referenceApresDemande,
   TENABLE_BORNES,
 } from '@suivi/shared';
 import { sql } from 'kysely';
@@ -42,10 +47,8 @@ import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
 
-const FUSEAU = 'Europe/Paris';
 const PLANIFICATION = { username: 'planification' };
 const EXECUTANT = { username: 'exécutant serveur' };
-const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 /** Dernier élément de chaque clé (un même identifiant ne peut pas être mis à jour deux fois par la même requête). */
 function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
@@ -411,11 +414,10 @@ export class SynchronisationTenable implements OperationEnLots {
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
-  /** Inscrit au plus une synchronisation par jour et par instance Tenable active dont les clés sont enregistrées. Les modules
+  /** Inscrit au plus une synchronisation par période réglée et par instance Tenable active dont les clés sont enregistrées. Les modules
       Intégrations et Vulnérabilités sont contrôlés par l'appelant ; flux « tenable » fermé : rien. */
   async planifier(maintenant = new Date()): Promise<string[]> {
     if (!(await this.flux.ouvert('tenable'))) return [];
-    const jour = jourDe(maintenant);
     const instances = (await this.integrations.lister()).filter(
       (i) => i.type === 'tenable' && i.actif && Object.values(i.secrets).every(Boolean),
     );
@@ -431,15 +433,18 @@ export class SynchronisationTenable implements OperationEnLots {
           .execute();
         const e = await k
           .selectFrom('vulnerabilites_tenable_etat')
-          .select(sql<string | null>`creneau::text`.as('creneau'))
+          .select('planifiee_le')
           .where('integration_id', '=', i.id)
           .forUpdate()
           .executeTakeFirstOrThrow();
-        if (e.creneau === jour) return;
-        // Créneau consommé d'abord : une synchronisation inscrite puis perdue n'est pas réinscrite le même jour.
+        // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
+        // dernière demande automatique.
+        if (!echeanceAtteinte(e.planifiee_le, i.frequenceHeures, maintenant)) return;
+        // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
+        // avant la période suivante.
         await k
           .updateTable('vulnerabilites_tenable_etat')
-          .set({ creneau: jour })
+          .set({ planifiee_le: referenceApresDemande(e.planifiee_le, i.frequenceHeures, maintenant) })
           .where('integration_id', '=', i.id)
           .execute();
         // Une exécution déjà en file ou en cours (demandée à la main, ou un test) tient lieu de celle du jour.
@@ -458,6 +463,8 @@ export class SynchronisationTenable implements OperationEnLots {
   /* ---------------------------------------------------------------- État (vulnerabilites:lire) */
   async etat(): Promise<EtatSynchronisationDto[]> {
     const instances = (await this.integrations.lister()).filter((i) => i.type === 'tenable');
+    const fluxOuvert = await this.flux.ouvert('tenable');
+    const maintenant = new Date();
     const out: EtatSynchronisationDto[] = [];
     for (const i of instances) {
       const e = await this.db.k
@@ -498,6 +505,12 @@ export class SynchronisationTenable implements OperationEnLots {
         inventaire:
           e && e.inventaire_ok !== null && e.inventaire_le
             ? { ok: e.inventaire_ok, erreur: e.inventaire_erreur, le: e.inventaire_le.toISOString() }
+            : null,
+        frequenceHeures: i.frequenceHeures,
+        // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
+        prochaineSynchronisation:
+          fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
+            ? prochaineAffichee(e?.planifiee_le ?? null, i.frequenceHeures, maintenant).toISOString()
             : null,
       });
     }

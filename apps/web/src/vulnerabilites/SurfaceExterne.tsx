@@ -75,6 +75,7 @@ import { type OngletSurface, ouvertureSurface } from './recherche';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
+import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
 import { CarteSurface } from './CarteSurface';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
@@ -1653,7 +1654,7 @@ export function SurfaceExternePage() {
       />
       <Stack>
         <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSurface etats={etat.data} peutConfigurer={can('integrations', 'lire')} />}
+        {etat.data && <EtatSurface etats={etat.data} peutConfigurer={peutConfigurerIntegration(can)} />}
         <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="carte">Carte</Tabs.Tab>

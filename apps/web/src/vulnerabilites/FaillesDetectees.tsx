@@ -57,6 +57,7 @@ import { ouvertureConstat } from './recherche';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
+import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { resumeExecution } from '../integrations/integrations';
 import { useCan } from '../session';
 import {
@@ -630,7 +631,7 @@ export function FaillesDetecteesPage() {
       />
       <Stack>
         <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSynchronisations etats={etat.data} peutConfigurer={can('integrations', 'lire')} />}
+        {etat.data && <EtatSynchronisations etats={etat.data} peutConfigurer={peutConfigurerIntegration(can)} />}
         <SegmentedControl
           value={vue}
           onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}

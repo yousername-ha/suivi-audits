@@ -516,4 +516,8 @@ export interface EtatSynchronisationDto {
   /** Dernière synchronisation complète (sans borne atteinte) : seule celle-ci fait foi pour les détections disparues. */
   derniereCompleteLe: string | null;
   inventaire: { ok: boolean; erreur: string | null; le: string } | null;
+  /** Lot F1 : fréquence de la synchronisation automatique (heures) et prochaine prévue (null si l'instance n'est pas prête :
+      inactive, clé manquante ou flux fermé). Lecture seule : le réglage vit dans la carte « Intégrations ». */
+  frequenceHeures: number;
+  prochaineSynchronisation: string | null;
 }

@@ -43,7 +43,7 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
       )
-      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par jour, rien si le module
+      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par période réglée (lot F1), rien si le module
       // est désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
       .then(() =>
         svc.modules
@@ -53,7 +53,7 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
       )
-      // Synchronisation de Tenable (ADR 0100, lot V5) : une par jour et par instance active, rien si le module Intégrations
+      // Synchronisation de Tenable (ADR 0100, lot V5) : une par période réglée (lot F1) et par instance active, rien si le module Intégrations
       // ou le module Vulnérabilités est désactivé, ou si le flux « tenable » est fermé.
       .then(() =>
         svc.modules
@@ -64,7 +64,7 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation de Tenable')),
       )
-      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par jour et par instance active, rien si le module
+      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par période réglée (lot F1) et par instance active, rien si le module
       // Intégrations ou le module Vulnérabilités est désactivé, ou si le flux « algolighthouse » est fermé.
       .then(() =>
         svc.modules

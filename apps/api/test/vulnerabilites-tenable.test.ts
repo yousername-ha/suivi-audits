@@ -646,7 +646,7 @@ describe('lecture par périmètre et affectation', () => {
 });
 
 describe('planification et « Synchroniser maintenant »', () => {
-  it('une synchronisation par jour et par instance ; créneau consommé, pas de rejeu après panne', async () => {
+  it('une synchronisation par période (24 h par défaut) et par instance ; référence consommée, pas de rejeu après panne', async () => {
     const jour = new Date('2026-11-16T09:00:00Z');
     expect(await t.svc.vulnerabilites.tenable.planifier(jour)).toHaveLength(1);
     expect(await t.svc.vulnerabilites.tenable.planifier(jour)).toEqual([]);
@@ -654,12 +654,14 @@ describe('planification et « Synchroniser maintenant »', () => {
       'SELECT origine, demande_par, operation FROM integration_executions',
     ))!;
     expect(e).toEqual({ origine: 'planifie', demande_par: 'planification', operation: 'synchroniser' });
-    // Exécutant absent : la demande expire ; le même jour, rien n'est réinscrit.
+    // Exécutant absent : la demande expire ; avant la fin de la période, rien n'est réinscrit (pas même après minuit).
     await t.svc.db.q("UPDATE integration_executions SET demande_le = now() - interval '61 minutes'");
     expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-16T22:00:00Z'))).toEqual([]);
     expect(await n('integration_executions', "etat = 'expire'")).toBe(1);
-    // Le lendemain (heure de Paris), une nouvelle.
-    expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-16T23:30:00Z'))).toHaveLength(1);
+    expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-16T23:30:00Z'))).toEqual([]);
+    expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-17T08:59:00Z'))).toEqual([]);
+    // Vingt-quatre heures après la précédente demande automatique, une nouvelle.
+    expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-17T09:00:30Z'))).toHaveLength(1);
     // Instance désactivée ou sans clés : rien.
     await t.svc.db.q('UPDATE integrations SET actif = false');
     expect(await t.svc.vulnerabilites.tenable.planifier(new Date('2026-11-18T09:00:00Z'))).toEqual([]);

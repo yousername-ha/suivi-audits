@@ -21,6 +21,9 @@
    sans secret. Accès aux données en Kysely (ADR 0062). */
 import {
   configurationValide,
+  FREQUENCES_CONNECTEUR,
+  frequenceConnecteur,
+  frequenceConnecteurAdmise,
   type EtatExecution,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
@@ -100,7 +103,24 @@ const versExecution = (r: LigneExecution): ExecutionIntegrationDto => ({
 });
 
 /** Données d'audit d'une instance : jamais de secret (la configuration n'en contient pas). */
-const resume = (i: IntegrationDto) => ({ type: i.type, nom: i.nom, smsiId: i.smsiId, configuration: i.configuration });
+const resume = (i: IntegrationDto) => ({
+  type: i.type,
+  nom: i.nom,
+  smsiId: i.smsiId,
+  configuration: i.configuration,
+  frequenceHeures: i.frequenceHeures,
+});
+
+/** Lot F1 : fréquence admise pour le type (liste fermée), sinon 422. */
+function frequenceControlee(type: IntegrationType, heures: number | undefined): number | undefined {
+  if (heures === undefined) return undefined;
+  if (!frequenceConnecteurAdmise(type, heures))
+    throw new HttpError(
+      422,
+      `Fréquence refusée pour ${typeIntegration(type).libelle} : ${FREQUENCES_CONNECTEUR[type].join(', ')} heures seulement.`,
+    );
+  return heures;
+}
 
 const nomEnBase = (e: unknown): never => {
   if ((e as { code?: string }).code === '23505') throw new HttpError(409, NOM_EXISTANT);
@@ -180,6 +200,7 @@ export class Integrations {
   /* ---------------------------------------------------------------- Configuration (integrations:administrer) */
   async creer(body: IntegrationCreation, user: SessionUser, ip: string): Promise<IntegrationDto> {
     const configuration = configurationValide(body.type, body.configuration);
+    const frequence = frequenceControlee(body.type, body.frequenceHeures);
     await this.verifierPortee(body.type, body.smsiId);
     return this.db
       .tx(async (c, k) => {
@@ -190,6 +211,7 @@ export class Integrations {
             nom: body.nom,
             smsi_id: body.smsiId,
             configuration: JSON.stringify(configuration),
+            frequence_heures: frequence ?? null,
             actif: false,
             created_by: user.username,
             updated_by: user.username,
@@ -219,11 +241,13 @@ export class Integrations {
             ? configurationValide(avant.type, patch.configuration)
             : avant.configuration;
         const nom = patch.nom ?? avant.nom;
+        const frequence = frequenceControlee(avant.type, patch.frequenceHeures);
         await k
           .updateTable('integrations')
           .set((eb) => ({
             nom,
             configuration: JSON.stringify(configuration),
+            ...(frequence !== undefined ? { frequence_heures: frequence } : {}),
             version: eb('version', '+', 1),
             updated_by: user.username,
             updated_at: sql<Date>`now()`,
@@ -248,6 +272,16 @@ export class Integrations {
           { avant: resume(avant), apres: resume(apres), version: apres.version },
           c,
         );
+        // Lot F1 : changement de fréquence journalisé à part (qui, connecteur, ancienne et nouvelle fréquence).
+        if (apres.frequenceHeures !== avant.frequenceHeures)
+          await this.db.audit(
+            user,
+            ip,
+            'integration.frequence',
+            id,
+            { type: avant.type, nom, avant: avant.frequenceHeures, apres: apres.frequenceHeures },
+            c,
+          );
         return apres;
       }, user.username)
       .catch(nomEnBase);
@@ -737,6 +771,7 @@ export class Integrations {
       secrets: Object.fromEntries(
         (typeConnu(type) ? typeIntegration(type).secrets : []).map((s) => [s.id, s.id in scelles]),
       ),
+      frequenceHeures: frequenceConnecteur(r.frequence_heures),
       version: r.version,
       createdBy: r.created_by,
       createdAt: r.created_at.toISOString(),

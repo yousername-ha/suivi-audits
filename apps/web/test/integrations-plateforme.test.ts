@@ -1,6 +1,7 @@
 /* Lot I1 (ADR 0076, addendum du 19/11/2026) : les intégrations se configurent dans la page Plateforme et nulle part ailleurs.
    Carte « Intégrations » visible avec le seul droit de lire le module ; dans les outils du module Vulnérabilités, l'état en
-   lecture seule et un lien « Configurer l'intégration » visible seulement avec ce droit ; aucun réglage, aucune clé, aucun
+   lecture seule (fréquence et prochaine synchronisation comprises, lot F1) et un lien « Configurer l'intégration » visible
+   seulement avec le droit d'administrer les intégrations (décision du RSSI du 19/11/2026) ; aucun réglage, aucune clé, aucun
    bouton de test ni de synchronisation dans les écrans du module. Données fictives. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -14,7 +15,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { cartesVisibles } from '../src/administration-droits';
 import { EtatIntegration, LienConfigurerIntegration } from '../src/integrations/EtatIntegration';
-import { erreurSynchronisation, etatConnecteur } from '../src/integrations/etat-integration';
+import { erreurSynchronisation, etatConnecteur, peutConfigurerIntegration } from '../src/integrations/etat-integration';
 import { IntegrationsPanel } from '../src/integrations/IntegrationsPage';
 import { cartesDuCote, fenetreAuDessus } from '../src/pages/Administration';
 import { EtatSynchronisations } from '../src/vulnerabilites/FaillesDetectees';
@@ -47,6 +48,8 @@ const tenable = (x: Partial<EtatSynchronisationDto> = {}): EtatSynchronisationDt
   },
   derniereCompleteLe: '2026-11-15T03:05:00.000Z',
   inventaire: null,
+  frequenceHeures: 24,
+  prochaineSynchronisation: '2026-11-17T03:00:00.000Z',
   ...x,
 });
 const alh = (x: Partial<EtatSurfaceExterneDto> = {}): EtatSurfaceExterneDto => ({
@@ -74,6 +77,8 @@ const alh = (x: Partial<EtatSurfaceExterneDto> = {}): EtatSurfaceExterneDto => (
   },
   derniereCompleteLe: '2026-11-17T08:10:00.000Z',
   perimetresNonRelies: null,
+  frequenceHeures: 168,
+  prochaineSynchronisation: null,
   ...x,
 });
 
@@ -114,7 +119,32 @@ describe('état d’une intégration dans un outil : lecture seule', () => {
     expect(erreurSynchronisation(alh())).toBeNull();
     expect(erreurSynchronisation(tenable({ derniere: null }))).toBeNull();
   });
-  it('le lien « Configurer l’intégration » n’apparaît qu’avec le droit de lire la carte', () => {
+  it('le lien « Configurer l’intégration » n’apparaît qu’avec le droit d’administrer les intégrations (décision du 19/11/2026)', () => {
+    expect(peutConfigurerIntegration(avec(['integrations', 'administrer']))).toBe(true);
+    // Lire (ou lancer) sans administrer : l'état se lit, le lien n'apparaît pas.
+    expect(peutConfigurerIntegration(avec(['integrations', 'lire']))).toBe(false);
+    expect(peutConfigurerIntegration(avec(['integrations', 'lire'], ['integrations', 'modifier']))).toBe(false);
+    expect(peutConfigurerIntegration(avec(['vulnerabilites', 'administrer']))).toBe(false);
+    const lecture = rendre(
+      createElement(EtatIntegration, {
+        type: 'Outil fictif',
+        connecteurs: [tenable()],
+        peutConfigurer: peutConfigurerIntegration(avec(['integrations', 'lire'])),
+      }),
+    );
+    expect(lecture).toContain('Tenable fictif');
+    expect(lecture).toContain('Dernière synchronisation');
+    expect(lecture).not.toMatch(LIEN);
+    // Les écrans du module calculent le droit par cette seule règle.
+    for (const f of ['FaillesDetectees.tsx', 'SurfaceExterne.tsx', 'VueEnsemble.tsx']) {
+      const texte = readFileSync(
+        path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/vulnerabilites', f),
+        'utf8',
+      );
+      expect([f, /peutConfigurer=\{peutConfigurerIntegration\(can\)\}/.test(texte)]).toEqual([f, true]);
+      expect([f, texte.includes("can('integrations', 'lire')")]).toEqual([f, false]);
+    }
+
     expect(rendre(createElement(LienConfigurerIntegration, { visible: true }))).toMatch(LIEN);
     const sans = rendre(createElement(LienConfigurerIntegration, { visible: false }));
     expect(sans).not.toContain('<a');
@@ -125,6 +155,17 @@ describe('état d’une intégration dans un outil : lecture seule', () => {
       );
       expect(LIEN.test(html)).toBe(peutConfigurer);
     }
+  });
+  it('fréquence et prochaine synchronisation en lecture seule (lot F1), sans aucune liste de choix', () => {
+    const html = rendre(
+      createElement(EtatIntegration, { type: 'Outil fictif', connecteurs: [tenable()], peutConfigurer: false }),
+    );
+    expect(html).toContain('Synchronisation automatique : une fois par jour');
+    expect(html).toContain('prochaine prévue');
+    expect(html).not.toContain('<select');
+    const inactif = rendre(createElement(EtatSurface, { etats: [alh()] }));
+    expect(inactif).toContain('Synchronisation automatique : une fois par semaine');
+    expect(inactif).toContain('aucune prévue');
   });
   it('Failles détectées : date, erreur et lien, sans aucun bouton', () => {
     const html = rendre(createElement(EtatSynchronisations, { etats: [tenable()], peutConfigurer: true }));

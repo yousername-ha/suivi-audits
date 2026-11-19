@@ -1,6 +1,7 @@
 /* Ce qu'un outil montre d'une intégration qu'il exploite (ADR 0076, addendum du 19/11/2026) : l'état en lecture seule
    (dernière synchronisation, erreur éventuelle) et un lien « Configurer l'intégration » vers la carte de la page Plateforme,
-   visible seulement de qui a le droit de la lire. Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation :
+   visible seulement de qui peut administrer les intégrations (décision du RSSI du 19/11/2026, lot F1). Lot F1 : fréquence
+   de la synchronisation automatique et prochaine synchronisation prévue, en lecture. Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation :
    tout cela vit dans la carte. Composants sans état (droit passé par l'appelant), réutilisables par un futur outil. */
 import { Anchor, Group, Stack, Text } from '@mantine/core';
 import { StatusChip, type Etat } from '@suivi/ui';
@@ -11,10 +12,13 @@ import {
   erreurSynchronisation,
   etatConnecteur,
   type ConnecteurLu,
+  texteFrequence,
+  texteProchaine,
 } from './etat-integration';
 import { LIEN_INTEGRATIONS } from './integrations';
 
-/** Lien vers la carte « Intégrations » de la Plateforme ; rien sans le droit de la lire (`integrations:lire`). */
+/** Lien vers la carte « Intégrations » de la Plateforme ; rien sans le droit de les administrer
+    (`integrations:administrer`, décision du RSSI du 19/11/2026). */
 export function LienConfigurerIntegration({ visible, size = 'sm' }: { visible: boolean; size?: 'xs' | 'sm' }) {
   if (!visible) return null;
   return (
@@ -36,7 +40,7 @@ export function EtatIntegration<C extends ConnecteurLu>({
   /** Nom de l'outil (« Tenable Security Center », « AlgoLightHouse »). */
   type: string;
   connecteurs: readonly C[];
-  /** Droit de lire la carte « Intégrations » (`integrations:lire`), calculé par l'appelant. */
+  /** Droit d'administrer les intégrations (`integrations:administrer`), calculé par l'appelant : seul il montre le lien. */
   peutConfigurer: boolean;
   qualifier?: (c: C) => { libelle: string; etat: Etat };
   detail?: (c: C) => string | null | undefined;
@@ -71,6 +75,14 @@ export function EtatIntegration<C extends ConnecteurLu>({
                     </>
                   )}
                 </Text>
+                {c.frequenceHeures !== undefined && (
+                  <Text size="xs" c="dimmed">
+                    {texteFrequence(c.frequenceHeures)} · {texteProchaine(c.prochaineSynchronisation ?? null)}
+                    {c.prochaineSynchronisation && (
+                      <span className="horodatage">{fmtDate(c.prochaineSynchronisation)}</span>
+                    )}
+                  </Text>
+                )}
                 {erreur && (
                   <Text size="xs" role="status">
                     <strong>Erreur de la dernière synchronisation :</strong> {erreur}

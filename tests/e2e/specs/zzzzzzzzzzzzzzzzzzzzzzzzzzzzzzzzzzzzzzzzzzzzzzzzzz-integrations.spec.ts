@@ -3,11 +3,12 @@
    de référence (aucune n'est approuvée sans relecture) : instance Tenable créée, clés en écriture seule (« défini »),
    activation qui ouvre le flux après validation explicite (ADR 0097), désactivation qui le referme, accessibilité, CSP. Lot
    I1 : dans les écrans du module Vulnérabilités, l'état en lecture seule et le lien « Configurer l'intégration », visible
-   seulement avec le droit de lire les intégrations ; aucun bouton de test ni de synchronisation. Aucun appel n'est lancé vers
+   seulement avec le droit d'administrer les intégrations (décision du RSSI du 19/11/2026, lot F1 : un compte qui lit sans
+   administrer voit l'état et la carte, pas le lien) ; aucun bouton de test ni de synchronisation. Aucun appel n'est lancé vers
    un outil : l'adresse et les clés sont fictives. Aucune assertion ne dépend de l'état d'une synchronisation (le tic de l'API
    en inscrit chaque jour). */
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 import { preparerCompte, sessionAdmin, sessionCompte, watchPage } from '../helpers';
 
 /** Écrans du module Vulnérabilités qui exploitent une intégration. */
@@ -157,13 +158,17 @@ test('Intégrations, lot I1 : les outils du module Vulnérabilités montrent l�
   }
 });
 
-test('Intégrations, lot I1 : sans le droit de lire les intégrations, ni carte ni lien', async ({ browser }) => {
+/** Compte fictif créé par l'administrateur, avec un rôle personnalisé aux droits donnés (rôle réutilisé s'il existe). */
+async function compteAvecDroits(
+  browser: Browser,
+  nomRole: string,
+  prefixe: string,
+  permissions: string[],
+): Promise<{ username: string; secret: string }> {
   const admin = await sessionAdmin(browser);
   const adm = await browser.newContext({ ignoreHTTPSErrors: true, storageState: admin.state });
   const rq = adm.request;
-  const nomRole = 'Lecture des vulnérabilités sans intégrations (e2e)';
-  const username = `vuln-sans-integ-${Date.now().toString(36)}`;
-  let secret: string;
+  const username = `${prefixe}-${Date.now().toString(36)}`;
   try {
     const roles = (await (await rq.get('/api/admin/roles')).json()) as { id: string; name: string }[];
     let roleId = roles.find((x) => x.name === nomRole)?.id;
@@ -175,7 +180,7 @@ test('Intégrations, lot I1 : sans le droit de lire les intégrations, ni carte 
       expect(role.status(), await role.text()).toBe(201);
       const r = await role.json();
       const patch = await rq.patch(`/api/admin/roles/${r.id}`, {
-        data: { permissions: ['vulnerabilites:lire'] },
+        data: { permissions },
         headers: { 'x-csrf-token': admin.csrf, 'if-match': `"${r.version}"` },
       });
       expect(patch.status(), await patch.text()).toBe(200);
@@ -188,11 +193,21 @@ test('Intégrations, lot I1 : sans le droit de lire les intégrations, ni carte 
     expect(u.status(), await u.text()).toBe(201);
     const temp = (await u.json()).temporaryPassword as string;
     const c = await browser.newContext({ ignoreHTTPSErrors: true });
-    secret = (await preparerCompte(c, username, temp)).secret;
+    const secret = (await preparerCompte(c, username, temp)).secret;
     await c.close();
+    return { username, secret };
   } finally {
     await adm.close();
   }
+}
+
+test('Intégrations, lot I1 : sans le droit de lire les intégrations, ni carte ni lien', async ({ browser }) => {
+  const { username, secret } = await compteAvecDroits(
+    browser,
+    'Lecture des vulnérabilités sans intégrations (e2e)',
+    'vuln-sans-integ',
+    ['vulnerabilites:lire'],
+  );
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
@@ -217,6 +232,44 @@ test('Intégrations, lot I1 : sans le droit de lire les intégrations, ni carte 
       await expect(page).not.toHaveURL(/\/plateforme/);
       await expect(page.getByRole('dialog', { name: 'Intégrations', exact: true })).toHaveCount(0);
     }
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('Intégrations, lot F1 : lire les intégrations sans les administrer montre l’état et la carte, pas le lien', async ({
+  browser,
+}) => {
+  const { username, secret } = await compteAvecDroits(
+    browser,
+    'Lecture des vulnérabilités et des intégrations (e2e)',
+    'vuln-integ-lecture',
+    ['vulnerabilites:lire', 'integrations:lire'],
+  );
+  const ctx = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    locale: 'fr-FR',
+    viewport: { width: 1366, height: 900 },
+    storageState: (await sessionCompte(browser, username, secret)).state,
+  });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    for (const o of OUTILS.filter((x) => x.url !== '/vulnerabilites/vue')) {
+      await page.goto(o.url);
+      await expect(page.getByRole('heading', { name: o.titre, level: 1 })).toBeVisible();
+      // L'état se lit (section en lecture seule), le lien n'apparaît pas.
+      await expect(page.getByRole('region', { name: /^État de l’intégration / })).toBeVisible();
+      await expect(page.getByRole('link', { name: LIEN, exact: true })).toHaveCount(0);
+      await sansReglage(page);
+    }
+    await page.goto('/vulnerabilites/vue');
+    await expect(page.getByRole('heading', { name: 'Vue d’ensemble', level: 1 })).toBeVisible();
+    await expect(page.getByRole('link', { name: LIEN, exact: true })).toHaveCount(0);
+    // La carte de la Plateforme garde son droit de lecture.
+    await page.goto('/plateforme/integrations');
+    await expect(page.getByRole('dialog', { name: 'Intégrations', exact: true })).toBeVisible();
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

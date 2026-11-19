@@ -223,7 +223,8 @@ ailleurs. Ce point remplace le placement du point 12 (rubrique « Intégrations 
   la rubrique « Intégrations » du menu Pilotage disparaît, et son ancienne adresse redirige vers la nouvelle.
 - Les outils qui exploitent une intégration (module Vulnérabilités : failles détectées, surface externe, vue d'ensemble, et
   tout outil à venir) n'affichent plus que :
-  - un **lien** « Configurer l'intégration » vers la carte de la plateforme, visible de qui a le droit de la voir ;
+  - un **lien** « Configurer l'intégration » vers la carte de la plateforme, visible de qui a le droit de la voir (précisé
+    par le RSSI le 19/11/2026 : de qui peut administrer les intégrations, `integrations:administrer`) ;
   - l'**état en lecture seule** : date de la dernière synchronisation, et si elle est en erreur.
   Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation dans les outils.
 - Réalisation confiée à la session « Module surveillance vulnérabilités SMSI », qui modifie ces écrans.
@@ -233,3 +234,11 @@ migration ni changement d'API) : carte « Intégrations » de la page Plateforme
 Pilotage retirée, `/integrations` redirigé vers `/plateforme/integrations` ; dans « Failles détectées », « Surface externe » et
 « Vue d'ensemble », état en lecture seule et lien « Configurer l'intégration » (composant commun `EtatIntegration`). Détail,
 frontière des réglages et points à valider : addendum « lot I1 » de l'ADR 0100.
+
+**Lot F1** (19/11/2026, décision du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot F1 ») : chaque instance de
+connecteur porte sa **fréquence de synchronisation automatique**, réglée dans la fenêtre « Configurer » de la carte
+« Intégrations » (même droit `integrations:administrer`, même If-Match sur la version de l'instance, colonne
+`integrations.frequence_heures` de la migration `090`, liste fermée par type contrôlée en base) : Tenable Security Center 6 h,
+12 h, 24 h ou 7 jours, AlgoLightHouse 12 h, 24 h ou 7 jours, 24 h par défaut ; avertissement affiché sous 24 h, sans blocage.
+Les outils n'en montrent que la valeur et la prochaine synchronisation prévue, en lecture seule. Le lien « Configurer
+l'intégration » des outils n'est plus visible que de qui peut administrer les intégrations.

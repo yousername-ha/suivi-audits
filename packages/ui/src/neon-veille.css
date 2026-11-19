@@ -375,3 +375,17 @@
     margin-block-end: var(--mantine-spacing-2xs);
   }
 }
+
+/* ------------------------------------------------------------------ Fréquence de synchronisation (lot F1) */
+/* Avertissement sous la liste des fréquences (veille et carte « Intégrations ») : texte « Attention : … », liseré et teinte
+   orange de la charte en doublure, jamais la couleur seule. */
+.champ-frequence-avertissement {
+  display: block;
+  padding-inline-start: var(--mantine-spacing-xs);
+  border-inline-start: calc(var(--suivi-trait-l) * 4) solid var(--carte-orange-accent);
+  color: var(--mantine-color-text);
+  white-space: normal;
+}
+.champ-frequence-avertissement strong {
+  color: var(--carte-orange-accent);
+}

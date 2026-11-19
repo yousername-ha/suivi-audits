@@ -5,7 +5,8 @@
    secrets en écriture seule (« défini » / « non défini »), activation qui ouvre le flux du type après validation explicite
    (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
    le filtre de gravité de l'instance et le dernier résultat, dernières exécutions, message clair si l'exécutant n'est pas
-   vu. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
+   vu. Lot F1 (ADR 0100) : fréquence de la synchronisation automatique de chaque instance, réglée dans « Configurer »,
+   avec un avertissement (sans blocage) en dessous de 24 heures. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
    seulement. */
 import {
   Alert,
@@ -26,8 +27,11 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  avertissementConnecteur,
   DELAI_MAX,
   DELAI_MIN,
+  FREQUENCES_CONNECTEUR,
+  libelleFrequence,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
   type IntegrationDto,
@@ -38,6 +42,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
+import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
@@ -164,12 +169,14 @@ export function TuileInstance({
         </Group>
         {synchronisable && t?.champs.includes('gravites') && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne des failles : {libelleGravites(i.configuration.gravites)}.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()} ; failles lues :{' '}
+            {libelleGravites(i.configuration.gravites)}.
           </Text>
         )}
         {synchronisable && t && !t.champs.includes('gravites') && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne, rangée dans Risques &gt; Vulnérabilités &gt; Surface externe.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()}, rangée dans Risques &gt;
+            Vulnérabilités &gt; Surface externe.
           </Text>
         )}
         {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
@@ -526,7 +533,7 @@ function EditeurInstance({
       {type.champs.includes('gravites') && (
         <Checkbox.Group
           label="Gravités à synchroniser"
-          description="Failles lues chaque jour dans Tenable : critiques et élevées par défaut."
+          description="Failles lues dans Tenable à chaque synchronisation : critiques et élevées par défaut."
           value={f.gravites}
           onChange={(v) => setF({ ...f, gravites: v as FormulaireConfiguration['gravites'] })}
         >
@@ -536,6 +543,15 @@ function EditeurInstance({
             ))}
           </Group>
         </Checkbox.Group>
+      )}
+      {type.operations.includes('synchroniser') && (
+        <ChampFrequence
+          label="Fréquence de la synchronisation automatique"
+          frequences={FREQUENCES_CONNECTEUR[type.id]}
+          valeur={f.frequenceHeures}
+          onChange={(h) => setF({ ...f, frequenceHeures: h })}
+          avertissement={avertissementConnecteur(type.id, f.frequenceHeures)}
+        />
       )}
       {instance && destinationChangee(instance, f) && Object.values(instance.secrets).some(Boolean) && (
         <Alert color="orange" role="status">

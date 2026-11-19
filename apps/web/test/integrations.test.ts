@@ -4,6 +4,7 @@
    contrôlée, envoi des seuls champs modifiés), rendu des tuiles et des exécutions, aide. Données fictives. */
 import { MantineProvider } from '@mantine/core';
 import {
+  avertissementConnecteur,
   catalogueIntegrations,
   type Action,
   type ExecutionIntegrationDto,
@@ -15,6 +16,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
+import { ChampFrequence } from '../src/components/ChampFrequence';
 import { TableExecutions, TuileInstance, TuileType } from '../src/integrations/IntegrationsPage';
 import {
   corpsCreation,
@@ -28,6 +30,7 @@ import {
   ANCIENNE_ADRESSE_INTEGRATIONS,
   LIEN_INTEGRATIONS,
   messageExecutant,
+  optionsFrequence,
   precisionPort,
   resumeExecution,
 } from '../src/integrations/integrations';
@@ -57,6 +60,7 @@ const instance = (i: Partial<IntegrationDto> = {}): IntegrationDto => ({
   configuration: { adresse: 'https://tenable.exemple.test', autoriteCertification: '', delaiSecondes: 30 },
   actif: true,
   secrets: { accessKey: true, secretKey: true },
+  frequenceHeures: 24,
   version: 3,
   createdBy: 'admin-fictif',
   createdAt: '2026-11-16T09:00:00.000Z',
@@ -149,6 +153,7 @@ describe('formulaire', () => {
         delaiSecondes: 30,
         gravites: ['critique', 'elevee'],
       },
+      frequenceHeures: 24,
     });
     const i = instance();
     expect(corpsModification(i, formulaireDepuis(i, TENABLE))).toEqual({});
@@ -178,6 +183,61 @@ describe('formulaire', () => {
         gravites: ['critique', 'faible'],
       },
     });
+  });
+
+  it('fréquence (lot F1) : liste du type, envoyée seulement si elle change ; avertissement sous 24 h, sans blocage', () => {
+    expect(optionsFrequence('tenable').map((o) => o.value)).toEqual(['6', '12', '24', '168']);
+    expect(optionsFrequence('algolighthouse').map((o) => o.label)).toEqual([
+      'Toutes les 12 heures',
+      'Une fois par jour',
+      'Une fois par semaine',
+    ]);
+    const i = instance({ frequenceHeures: 24 });
+    expect(formulaireDepuis(i, TENABLE).frequenceHeures).toBe(24);
+    expect(corpsModification(i, { ...formulaireDepuis(i, TENABLE), frequenceHeures: 6 })).toEqual({
+      frequenceHeures: 6,
+    });
+    expect(corpsModification(i, formulaireDepuis(i, TENABLE))).toEqual({});
+    expect(erreursFormulaire({ ...formulaireDepuis(i, TENABLE), frequenceHeures: 6 })).toEqual([]);
+    expect(avertissementConnecteur('tenable', 24)).toBeNull();
+    expect(avertissementConnecteur('tenable', 168)).toBeNull();
+    expect(avertissementConnecteur('tenable', 6)).toMatch(/charge supplémentaire sur Security Center/);
+    expect(avertissementConnecteur('algolighthouse', 12)).toMatch(/limite d’appels de l’éditeur/);
+    const champ = (h: number) =>
+      rendre(
+        createElement(ChampFrequence, {
+          label: 'Fréquence de la synchronisation automatique',
+          frequences: [6, 12, 24, 168],
+          valeur: h,
+          onChange: () => undefined,
+          avertissement: avertissementConnecteur('tenable', h),
+        }),
+      );
+    const avec = champ(6);
+    const select = /<select[^>]*>/.exec(avec)![0];
+    const decrit = /aria-describedby="([^"]+)"/.exec(select)![1]!;
+    expect(avec).toMatch(new RegExp(`id="${decrit}"[^>]*>.*Attention :`));
+    expect(avec).toContain('<label');
+    expect(avec).not.toContain('disabled');
+    expect(/aria-describedby/.test(/<select[^>]*>/.exec(champ(24))![0])).toBe(false);
+    expect(champ(24)).not.toContain('Attention');
+    // La tuile dit la fréquence réglée, plus « quotidienne » en dur.
+    const tuile = rendre(
+      createElement(TuileInstance, {
+        i: instance({ frequenceHeures: 12 }),
+        t: TENABLE,
+        fluxOuvert: true,
+        peutAdministrer: false,
+        peutLancer: false,
+        enCours: false,
+        onConfigurer: rien,
+        onActiver: rien,
+        onTester: rien,
+        onExecutions: rien,
+      }),
+    );
+    expect(tuile).toContain('Synchronisation automatique : toutes les 12 heures');
+    expect(tuile).not.toContain('quotidienne');
   });
 
   it('validation du flux : le port réglé de l’instance est rappelé', () => {

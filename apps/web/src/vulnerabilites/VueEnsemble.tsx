@@ -36,7 +36,7 @@ import { Link, useNavigate } from 'react-router';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { LienConfigurerIntegration } from '../integrations/EtatIntegration';
-import { erreurSynchronisation } from '../integrations/etat-integration';
+import { erreurSynchronisation, peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
 import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
@@ -936,7 +936,7 @@ export function VueEnsemblePage() {
             veille={veille.data}
             tenable={tenable.data}
             alh={alh.data}
-            peutConfigurer={can('integrations', 'lire')}
+            peutConfigurer={peutConfigurerIntegration(can)}
           />
           <p className="poste__note">
             Chaque point du radar est une faille suivie, placée par la plateforme ; seul le balayage est décoratif. La

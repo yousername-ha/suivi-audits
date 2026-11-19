@@ -1,6 +1,7 @@
 /* État en lecture seule d'un connecteur, vu depuis un outil qui l'exploite (ADR 0076, addendum du 19/11/2026) : les outils
    ne montrent que la dernière synchronisation, son erreur éventuelle et un lien vers la carte de la Plateforme. Sans état ni
    appel réseau (testé à part). */
+import { type Action, libelleFrequence, type Module } from '@suivi/shared';
 import type { Etat } from '@suivi/ui';
 
 /** Ce que l'outil lit d'un connecteur : forme commune aux états de Tenable et d'AlgoLightHouse (routes du module qui
@@ -17,6 +18,9 @@ export interface ConnecteurLu {
   } | null;
   /** Dernière synchronisation complète (sans borne atteinte). */
   derniereCompleteLe: string | null;
+  /** Lot F1 : fréquence de la synchronisation automatique (heures) et prochaine prévue (null : instance non prête). */
+  frequenceHeures?: number;
+  prochaineSynchronisation?: string | null;
 }
 
 /** État d'un connecteur et date de la dernière synchronisation réussie. */
@@ -45,3 +49,15 @@ export function erreurSynchronisation(c: ConnecteurLu): string | null {
   if (!d || (d.etat !== 'echec' && d.etat !== 'expire')) return null;
   return d.erreur ?? 'Échec sans détail.';
 }
+
+/** Lot F1 : fréquence en lecture (« Synchronisation automatique : une fois par jour »). */
+export const texteFrequence = (heures: number) =>
+  `Synchronisation automatique : ${libelleFrequence(heures).toLowerCase()}`;
+
+/** Lot F1 : début du texte de la prochaine synchronisation ; la date suit quand elle est connue. */
+export const texteProchaine = (prochaine: string | null) =>
+  prochaine ? 'prochaine prévue : ' : 'aucune prévue (connecteur inactif, clé manquante ou flux fermé)';
+
+/** Droit qui montre le lien « Configurer l'intégration » dans un outil : administrer les intégrations (décision du RSSI du
+    19/11/2026, lot F1) ; lire seulement la carte ne suffit plus. Affichage seulement : le serveur reste seul juge. */
+export const peutConfigurerIntegration = (can: (m: Module, a: Action) => boolean) => can('integrations', 'administrer');
