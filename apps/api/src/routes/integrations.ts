@@ -1,9 +1,19 @@
 /* Module Intégrations (ADR 0076), socle des connecteurs réseau. Toute route passe par route() : session complète et double
    authentification, activation du module « integrations », droit exigé, CSRF et origine sur les écritures. Lire :
    catalogue, instances, exécutions, état de l'exécutant ; administrer : créer, configurer, activer, secrets ; modifier :
-   lancer « Tester la connexion ». Aucune route ne renvoie un secret : seul « défini / non défini » sort. */
+   lancer « Tester la connexion ». Aucune route ne renvoie un secret : seul « défini / non défini » sort.
+   Lot N1 (ADR 0100) : import d'un scan Nessus (connecteur « nessus-fichier ») en trois temps, début, lots de machines
+   entières, fin, avec le droit d'administrer les intégrations ; le module Vulnérabilités, qui range les données, doit être
+   actif. Le corps d'un lot est un extrait en JSON, revalidé champ par champ ; aucune route ne reçoit de XML.
+   Lot N2 : suppression d'une instance « Nessus, import de fichier » et de tout ce qu'elle a importé (If-Match, même droit),
+   avec son aperçu chiffré ; refus net pour tout autre type (aucune suppression de Security Center ni d'AlgoLightHouse). */
 import {
   catalogueIntegrations,
+  DebutImportNessus,
+  FinImportNessus,
+  LotImportNessus,
+  MESSAGE_LIMITE_IMPORTS,
+  NESSUS_BORNES,
   IntegrationActivation,
   IntegrationCreation,
   IntegrationModification,
@@ -17,6 +27,7 @@ import { route } from '../http/route.js';
 
 const tags = ['Intégrations'];
 const id = z.object({ id: z.uuid() });
+const importId = z.object({ id: z.uuid(), execution: z.uuid() });
 
 export const integrationsRoutes = [
   route({
@@ -160,6 +171,82 @@ export const integrationsRoutes = [
       if (!svc.limits.integrationSynchro(sess.user.id))
         throw new HttpError(429, 'Trop de demandes de synchronisation. Réessayez dans une heure.');
       return svc.integrations.demander(params.id, 'synchroniser', sess.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/imports',
+    summary:
+      'Nessus, import de fichier : commencer un import (machines et détections annoncées, éléments écartés comptés par le navigateur) ; gravités retenues fixées d’après la configuration de l’instance ; module Vulnérabilités actif exigé',
+    tags,
+    access: 'integrations:administrer',
+    params: id,
+    body: DebutImportNessus,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) => {
+      const sess = s as Session;
+      await svc.modules.assert('vulnerabilites');
+      if (!svc.limits.importNessus(sess.user.id)) throw new HttpError(429, MESSAGE_LIMITE_IMPORTS);
+      return svc.vulnerabilites.importNessus.debuter(params.id, body, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/imports/:execution/lots',
+    summary:
+      'Nessus, import de fichier : un lot de machines entières et des contrôles qu’elles portent (JSON revalidé champ par champ) ; chaque lot est un passage complet pour ses machines',
+    tags,
+    access: 'integrations:administrer',
+    params: importId,
+    body: LotImportNessus,
+    bodyLimit: NESSUS_BORNES.corpsLot,
+    handler: async ({ svc, s, params, body, ip }) => {
+      const sess = s as Session;
+      await svc.modules.assert('vulnerabilites');
+      if (!svc.limits.importNessusLot(sess.user.id))
+        throw new HttpError(429, 'Trop de lots envoyés. Réessayez dans quelques minutes.');
+      return svc.vulnerabilites.importNessus.lot(params.id, params.execution, body, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/imports/:execution/fin',
+    summary:
+      'Nessus, import de fichier : terminer l’import (reçu si toutes les machines annoncées sont rangées, sinon en échec ; les machines rangées le restent)',
+    tags,
+    access: 'integrations:administrer',
+    params: importId,
+    body: FinImportNessus,
+    handler: async ({ svc, s, params, ip }) => {
+      await svc.modules.assert('vulnerabilites');
+      return svc.vulnerabilites.importNessus.terminer(params.id, params.execution, (s as Session).user, ip);
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/integrations/instances/:id/suppression',
+    summary:
+      'Nessus, import de fichier : ce que la suppression de l’instance ferait disparaître (machines, failles, détections, imports) ; autre type refusé',
+    tags,
+    access: 'integrations:administrer',
+    params: id,
+    handler: async ({ svc, params }) => {
+      await svc.modules.assert('vulnerabilites');
+      return svc.vulnerabilites.importNessus.apercuSuppression(params.id);
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/integrations/instances/:id',
+    summary:
+      'Nessus, import de fichier seulement : supprimer l’instance et tout ce qu’elle a importé (If-Match) ; alertes réévaluées ; tout autre type est refusé (422)',
+    tags,
+    access: 'integrations:administrer',
+    params: id,
+    handler: async ({ svc, s, params, req, ip }) => {
+      const attendue = requireIfMatch(req);
+      await svc.modules.assert('vulnerabilites');
+      return svc.vulnerabilites.importNessus.supprimer(params.id, attendue, (s as Session).user, ip);
     },
   }),
   route({

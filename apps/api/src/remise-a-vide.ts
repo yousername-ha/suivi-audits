@@ -79,6 +79,8 @@ export const TABLES_CONFIGURATION = [
   // Synchronisations d'AlgoLightHouse (ADR 0100, lot ALH1) : même règle que pour Tenable.
   'vulnerabilites_alh_etat',
   'vulnerabilites_alh_synchronisations',
+  // Imports de scans Nessus (ADR 0100, lot N1) : journal rattaché aux instances et à leurs exécutions ; même règle.
+  'vulnerabilites_imports',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */

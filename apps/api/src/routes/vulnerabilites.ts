@@ -388,6 +388,15 @@ export const vulnerabilitesRoutes = [
   }),
   route({
     method: 'GET',
+    url: '/api/vulnerabilites/imports/etat',
+    summary:
+      'Failles détectées : état des imports de scans Nessus de chaque instance « Nessus, import de fichier » (dernier import et son bilan chiffré)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.importNessus.etat(),
+  }),
+  route({
+    method: 'GET',
     url: '/api/vulnerabilites/constats',
     summary:
       'Failles détectées par Tenable (un constat par contrôle), présentes sur au moins une machine lisible ; recherche par CVE, numéro ou nom du contrôle ; filtres gravité, exploité, exploitable, non maintenu',

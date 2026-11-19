@@ -1,4 +1,5 @@
 /* Services partagés par les routes (injectés : chaque test construit les siens avec sa propre base). */
+import { NESSUS_BORNES } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
@@ -47,6 +48,7 @@ import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { ImportNessus } from './vulnerabilites/import-nessus.js';
 import { DepotsTenable } from './vulnerabilites/depots.js';
 import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
 import { LiaisonsMachines } from './vulnerabilites/liaisons-machines.js';
@@ -148,6 +150,19 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     await liaisonsMachines.recalculer(k, c);
     await alertesVulnerabilites.evaluer('synchronisation-tenable', { k, c });
   };
+  /* Lot N1 : import d'un scan Nessus, rangé par le chemin d'écriture de Tenable ; chaque lot est un passage complet pour ses
+     machines, suivi des mêmes traitements qu'une synchronisation reçue. */
+  const importNessus = new ImportNessus(db, integrations, tenable);
+  importNessus.apresImport = async (k, c, id) => {
+    await suivi.apresSynchronisation(k, c, id, true);
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('import-nessus', { k, c });
+  };
+  // Lot N2 : après la suppression d'une instance d'import, liaisons et alertes réévaluées dans la même transaction.
+  importNessus.apresSuppression = async (k, c) => {
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('suppression-import-nessus', { k, c });
+  };
   veille.apresReception = (source) => alertesVulnerabilites.evaluer(`collecte-${source}`);
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
@@ -208,6 +223,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       produits: produitsSurveilles,
       veille,
       tenable,
+      /** Lot N1 : import de scans Nessus (connecteur « nessus-fichier »), lancé depuis la carte « Intégrations ». */
+      importNessus,
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
       depots: new DepotsTenable(db, grc),
       surfaceExterne,
@@ -274,6 +291,11 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       integrationTest: limiter(10, 60e3),
       /** « Synchroniser maintenant » (Tenable) : six demandes par heure et par personne. */
       integrationSynchro: limiter(6, 60 * 60e3),
+      /** Lot N1 : imports de scans Nessus commencés (trente fichiers par heure et par personne depuis le lot N2 :
+          NESSUS_BORNES.importsParHeure) et lots envoyés (six cents par dix minutes et par personne : un import de dix
+          mille machines tient en cinquante lots au moins). */
+      importNessus: limiter(NESSUS_BORNES.importsParHeure, 60 * 60e3),
+      importNessusLot: limiter(600, 10 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
       veilleCollecte: limiter(4, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),

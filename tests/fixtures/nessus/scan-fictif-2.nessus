@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+<!-- Scan Nessus FICTIF écrit à la main pour les tests (ADR 0100, lot N1) : noms, adresses, CVE et textes inventés.
+     Forme écrite d'après la connaissance du format NessusClientData_v2, non vérifiée sur un export réel. -->
+<NessusClientData_v2>
+  <Policy>
+    <policyName>Politique fictive</policyName>
+    <Preferences>
+      <ServerPreferences>
+        <preference><name>TARGET</name><value>192.0.2.0/24</value></preference>
+      </ServerPreferences>
+      <PluginsPreferences>
+        <item>
+          <pluginName>SSH settings</pluginName>
+          <preferenceName>SSH user name :</preferenceName>
+          <selectedValue>COMPTE-DE-SCAN-FICTIF</selectedValue>
+        </item>
+      </PluginsPreferences>
+    </Preferences>
+  </Policy>
+  <Report name="Scan fictif de recette, second passage" xmlns:cm="http://www.nessus.org/cm">
+    <ReportHost name="192.0.2.21">
+      <HostProperties>
+        <tag name="HOST_END_TIMESTAMP">1795075800</tag>
+        <tag name="HOST_END">Thu Nov 19 08:10:00 2026</tag>
+        <tag name="operating-system">Fictional Linux 9
+Fictional Linux 9.1</tag>
+        <tag name="host-fqdn">SRV-FICTIF-01.example.org</tag>
+        <tag name="host-ip">192.0.2.21</tag>
+        <tag name="mac-address">00:00:5e:00:53:01</tag>
+        <tag name="HOST_START_TIMESTAMP">1795075200</tag>
+        <tag name="HOST_START">Thu Nov 19 08:00:00 2026</tag>
+      </HostProperties>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="919001" pluginName="Fictional host information" pluginFamily="General">
+        <description>Invented informational check.</description>
+        <plugin_output>SORTIE-BRUTE-NE-DOIT-PAS-PARTIR</plugin_output>
+      </ReportItem>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="919101" pluginName="Fictional Web Server &lt; 9.9 Remote Flaw" pluginFamily="Web Servers">
+        <cvss3_base_score>9.8</cvss3_base_score>
+        <cvss3_vector>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</cvss3_vector>
+        <cvss4_base_score>9.3</cvss4_base_score>
+        <cvss4_vector>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N</cvss4_vector>
+        <cve>CVE-2026-91101</cve>
+        <cve>CVE-2026-91102</cve>
+        <cve>CVE-FAUX-0001</cve>
+        <description>DESCRIPTION-LONGUE-NE-DOIT-PAS-PARTIR : an invented long description of a fictional flaw.</description>
+        <exploit_available>true</exploit_available>
+        <exploitability_ease>Exploits are available</exploitability_ease>
+        <exploited_by_malware>true</exploited_by_malware>
+        <in_the_news>true</in_the_news>
+        <patch_publication_date>2026/10/02</patch_publication_date>
+        <plugin_publication_date>2026/10/03</plugin_publication_date>
+        <plugin_output>SORTIE-BRUTE-NE-DOIT-PAS-PARTIR : Installed version : 9.1 (invented)</plugin_output>
+        <risk_factor>Critical</risk_factor>
+        <see_also>http://example.org/non-chiffre
+https://example.org/avis-fictif-919101</see_also>
+        <solution>Upgrade the fictional web server to version 9.9 or later.</solution>
+        <synopsis>The remote fictional web server is affected by an invented flaw.</synopsis>
+        <vpr_score>8.4</vpr_score>
+        <epss_score>0.9123</epss_score>
+        <vuln_publication_date>2026/10/01</vuln_publication_date>
+      </ReportItem>
+      <ReportItem port="8080" svc_name="www" protocol="tcp" severity="2" pluginID="919103" pluginName="Fictional Medium Issue" pluginFamily="Misc.">
+        <synopsis>An invented medium issue.</synopsis>
+        <solution>n/a</solution>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="srv-fictif-02.example.org">
+      <HostProperties>
+        <tag name="HOST_START">Thu Nov 19 08:01:00 2026</tag>
+        <tag name="HOST_END">Thu Nov 19 08:12:00 2026</tag>
+        <tag name="netbios-name">FICTIF\SRV-FICTIF-02</tag>
+        <tag name="host-ip">198.51.100.22</tag>
+        <tag name="operating-system">Fictional Windows Server 2026</tag>
+      </HostProperties>
+      <ReportItem port="443" svc_name="www" protocol="tcp" severity="4" pluginID="919101" pluginName="Fictional Web Server &lt; 9.9 Remote Flaw" pluginFamily="Web Servers">
+        <cve>CVE-2026-91101</cve>
+        <exploit_available>true</exploit_available>
+        <plugin_output>SORTIE-BRUTE-NE-DOIT-PAS-PARTIR</plugin_output>
+        <solution>Upgrade the fictional web server to version 9.9 or later.</solution>
+        <synopsis>The remote fictional web server is affected by an invented flaw.</synopsis>
+      </ReportItem>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="0" pluginID="919001" pluginName="Fictional host information" pluginFamily="General">
+        <plugin_output>SORTIE-BRUTE-NE-DOIT-PAS-PARTIR</plugin_output>
+      </ReportItem>
+    </ReportHost>
+    <ReportHost name="cible-sans-adresse">
+      <HostProperties>
+        <tag name="operating-system">Unknown</tag>
+      </HostProperties>
+      <ReportItem port="0" svc_name="general" protocol="tcp" severity="4" pluginID="919105" pluginName="Fictional Unreachable Issue" pluginFamily="General">
+        <synopsis>An invented issue on a target without address.</synopsis>
+      </ReportItem>
+    </ReportHost>
+  </Report>
+</NessusClientData_v2>

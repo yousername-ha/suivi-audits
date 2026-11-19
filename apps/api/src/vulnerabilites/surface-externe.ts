@@ -71,6 +71,7 @@ import {
   type ElementTechnologieAlh,
   type ElementTechnologieCveAlh,
   echeanceAtteinte,
+  frequenceConnecteur,
   type EtatSurfaceExterneDto,
   prochaineAffichee,
   referenceApresDemande,
@@ -639,12 +640,14 @@ export class SurfaceExterneAlh implements OperationEnLots {
           .executeTakeFirstOrThrow();
         // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
         // dernière demande automatique.
-        if (!echeanceAtteinte(e.planifiee_le, i.frequenceHeures, maintenant)) return;
+        if (!echeanceAtteinte(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant)) return;
         // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
         // avant la période suivante.
         await k
           .updateTable('vulnerabilites_alh_etat')
-          .set({ planifiee_le: referenceApresDemande(e.planifiee_le, i.frequenceHeures, maintenant) })
+          .set({
+            planifiee_le: referenceApresDemande(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant),
+          })
           .where('integration_id', '=', i.id)
           .execute();
         const occupee = await k
@@ -709,11 +712,15 @@ export class SurfaceExterneAlh implements OperationEnLots {
           : null,
         derniereCompleteLe: e?.complete_le?.toISOString() ?? null,
         perimetresNonRelies: nonRelies,
-        frequenceHeures: i.frequenceHeures,
+        frequenceHeures: frequenceConnecteur(i.frequenceHeures),
         // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
         prochaineSynchronisation:
           fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
-            ? prochaineAffichee(e?.planifiee_le ?? null, i.frequenceHeures, maintenant).toISOString()
+            ? prochaineAffichee(
+                e?.planifiee_le ?? null,
+                frequenceConnecteur(i.frequenceHeures),
+                maintenant,
+              ).toISOString()
             : null,
       });
     }

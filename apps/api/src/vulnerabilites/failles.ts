@@ -9,6 +9,8 @@
      exige vulnerabilites:administrer. Choix le plus restrictif, à confirmer par le RSSI.
    « Présent » : détection vue par la dernière synchronisation complète de son instance, ou plus récemment (tenable.ts).
    « Exploité » : une CVE du constat figure au catalogue KEV rangé par la veille (jointure en lecture, aucun appel).
+   Lot N2 : « exploitation avérée » d'un constat compte aussi le contrôle marqué « exploité par un logiciel malveillant »
+   par Tenable (import Nessus) : priorité, filtre « Exploitation avérée », compteurs et rang des machines, marques.
    « Non maintenu » : constat sans CVE (V18).
    Lot V4a : priorité de chaque constat (présence « détectée ») et de chaque faille déclarée (CVE rattachée à un produit
    relié à des machines lisibles, hors machines où Tenable détecte déjà la CVE), calculée par la fonction pure du paquet
@@ -51,6 +53,7 @@ import {
   type CompteursMachine,
   faitsDepuisSources,
   graviteDepuisScore,
+  type SourceMachine,
   type SourcesFailleDto,
   valeursRetenues,
   type FailleDeclareeDto,
@@ -111,10 +114,11 @@ const iso = (d: Date | null) => d?.toISOString() ?? null;
 /** Le constat `c` cite une CVE du catalogue KEV (veille). */
 const exploite = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE cc.constat_id = c.id AND v.kev_ajout IS NOT NULL)`;
-/** Une CVE du constat `c` a une exploitation avérée selon une source (KEV, alerte du CERT-FR, fiche du CERT Santé,
-    AlgoLightHouse sur une technologie encore détectée) ; le même résultat pour tout le monde (lot ALH5). */
-const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
-  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve')})`;
+/** Le constat `c` a une exploitation avérée selon une source : Tenable lui-même (contrôle « exploité par un logiciel
+    malveillant », lot N2), ou une de ses CVE (KEV, alerte du CERT-FR, fiche du CERT Santé, AlgoLightHouse sur une
+    technologie encore détectée) ; le même résultat pour tout le monde (lot ALH5). Même règle que sourcesDe. */
+const exploiteeAvere = sql<boolean>`(c.exploite_malware OR EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+  WHERE cc.constat_id = c.id AND ${exploiteeCve('cc.cve')}))`;
 /** Le constat `c` est exploitable selon Tenable, ou selon la fiche du CERT Santé ou AlgoLightHouse pour une de ses CVE. */
 const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
   FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
@@ -143,12 +147,17 @@ interface LigneConstat extends LigneSuivi {
   epss_score: string | null;
   exploitable: boolean;
   exploit_libelle: string | null;
+  /** Lot N2 : contrôle « exploité par un logiciel malveillant » selon Tenable (import Nessus). */
+  exploite_malware: boolean;
   faille_publiee_le: Date | null;
   correctif_publie_le: Date | null;
   fin_support_le: Date | null;
   voir_aussi: string | null;
   cves_tronquees: boolean;
   integration_id: string;
+  /** Lot N1 : instance qui a rapporté le constat (nom et type). */
+  integration_nom: string;
+  integration_type: SourceMachine;
   exploite: boolean;
   non_maintenu: boolean;
   nombre_cves: number;
@@ -181,6 +190,8 @@ interface LigneMachine {
   derniere_detection: Date | null;
   integration_id: string;
   integration_nom: string;
+  /** Lot N1 : source de la machine (type de son instance). */
+  source: SourceMachine;
   version: number;
   critique: number;
   elevee: number;
@@ -204,7 +215,7 @@ const prioriteConstat = (l: LigneConstat, sources: SourcesFailleDto, reglage: Re
     lui-même. */
 export async function sourcesDesConstats(
   k: Kdb,
-  lignes: Pick<LigneConstat, 'id' | 'gravite' | 'cvss3_score' | 'epss_score' | 'exploitable'>[],
+  lignes: Pick<LigneConstat, 'id' | 'gravite' | 'cvss3_score' | 'epss_score' | 'exploitable' | 'exploite_malware'>[],
 ): Promise<Map<string, SourcesFailleDto>> {
   const ids = lignes.map((l) => l.id);
   // Tableau en un seul paramètre : aucune limite au nombre de constats d'une liste.
@@ -225,7 +236,13 @@ export async function sourcesDesConstats(
       l.id,
       sourcesDe(
         (parConstat.get(l.id) ?? []).flatMap((cve) => (faits.has(cve) ? [faits.get(cve)!] : [])),
-        { gravite: l.gravite, cvss3: nombre(l.cvss3_score), epss: nombre(l.epss_score), exploitable: l.exploitable },
+        {
+          gravite: l.gravite,
+          cvss3: nombre(l.cvss3_score),
+          epss: nombre(l.epss_score),
+          exploitable: l.exploitable,
+          malware: l.exploite_malware,
+        },
       ),
     ]),
   );
@@ -255,6 +272,7 @@ const versResume = (
     epss: nombre(l.epss_score),
     exploitable: l.exploitable,
     exploite: l.exploite,
+    exploiteMalware: l.exploite_malware,
     nonMaintenu: l.non_maintenu,
     finSupportLe: iso(l.fin_support_le),
     nombreCves: l.nombre_cves,
@@ -265,6 +283,7 @@ const versResume = (
     alerteCertFr: l.alerte_certfr,
     sources,
     priorite,
+    integration: { id: l.integration_id, nom: l.integration_nom, type: l.integration_type },
     suivi: versSuiviResume(l, jour),
     delai: calculerDelai({
       priorite: priorite.niveau,
@@ -351,8 +370,8 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     acr: nombre(l.acr),
     premiere: iso(l.premiere_detection),
     derniere: iso(l.derniere_detection),
-    source: 'tenable',
-    integration: { id: l.integration_id, nom: l.integration_nom },
+    source: l.source,
+    integration: { id: l.integration_id, nom: l.integration_nom, type: l.source },
     compteurs,
     finDeSupport: l.fins_support.length > 0,
     finsDeSupport: l.fins_support.map((f) => ({ nom: f.nom, le: new Date(f.le).toISOString() })),
@@ -381,8 +400,10 @@ export async function faillesDesMachines(
     cvss3_score: string | null;
     epss_score: string | null;
     exploitable: boolean;
+    exploite_malware: boolean;
     correctif_publie_le: Date | null;
-  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.correctif_publie_le
+  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware,
+            c.correctif_publie_le
      FROM vulnerabilites_detections d
      JOIN vulnerabilites_machines m ON m.id = d.machine_id
      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
@@ -461,7 +482,8 @@ export class FaillesDetectees {
         WHERE x.present OR NOT pc.present
         GROUP BY x.constat_id, pc.present
         HAVING bool_or(x.lisible))
-      SELECT c.*, p.machines, p.derniere, p.present, ${exploite} AS exploite, ${sansCve} AS non_maintenu,
+      SELECT c.*, i.nom AS integration_nom, i.type AS integration_type, p.machines, p.derniere, p.present,
+        ${exploite} AS exploite, ${sansCve} AS non_maintenu,
         ${premiereConstat} AS premiere,
         ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
         (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
@@ -469,6 +491,7 @@ export class FaillesDetectees {
           AS cves,
         ${colonnesSuivi}
       FROM vulnerabilites_constats c JOIN par_constat p ON p.constat_id = c.id
+      JOIN integrations i ON i.id = c.integration_id
       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
       WHERE ${ou}`;
   }
@@ -524,9 +547,8 @@ export class FaillesDetectees {
   /** Fiche d'un constat : ses CVE (avec leur présence au catalogue KEV) et les machines lisibles où il est présent (à
       défaut, où il a été vu en dernier), par rôle. Un constat sans machine lisible répond comme un constat inconnu. */
   async constat(user: SessionUser, id: string): Promise<ConstatDto> {
-    const { rows } = await sql<LigneConstat & { integration_nom: string }>`
-      SELECT x.*, i.nom AS integration_nom FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x
-      JOIN integrations i ON i.id = x.integration_id`.execute(this.db.k);
+    const { rows } = await sql<LigneConstat>`
+      SELECT x.* FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x`.execute(this.db.k);
     const l = rows[0];
     if (!l) throw new HttpError(404, 'Faille introuvable ou non accessible.');
     const cves = await this.db.k
@@ -590,7 +612,6 @@ export class FaillesDetectees {
       cvesTronquees: l.cves_tronquees,
       cvesDetail: cves.map((x) => ({ cve: x.cve, kev: x.kev })),
       parRole,
-      integration: { id: l.integration_id, nom: l.integration_nom },
     };
   }
 
@@ -609,7 +630,7 @@ export class FaillesDetectees {
              CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN td.perimetre_id END AS depot_perimetre_id,
              CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN sd.name END AS depot_perimetre_nom,
              m.exposition, m.acr,
-             m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,
+             m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.source, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
              coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere,

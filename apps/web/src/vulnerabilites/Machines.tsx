@@ -1,4 +1,5 @@
-/* Module Vulnérabilités (ADR 0100, lot V5) : écran « Machines ». Machines lues dans Tenable Security Center, visibles à
+/* Module Vulnérabilités (ADR 0100, lot V5) : écran « Machines ». Machines lues dans Tenable Security Center (ou importées
+   d'un scan Nessus, lot N1 : marquées de leur source, une machine vue par les deux apparaît deux fois), visibles à
    travers les droits du périmètre de chacune (une machine sans périmètre n'est visible qu'avec le droit d'administrer le
    module). Recherche par nom, filtres par rôle et par périmètre, constats présents par gravité, bandeau des machines sans
    rôle ; rôle et périmètre indiqués une machine à la fois ou en masse (sélection multiple), avec le droit de modifier le
@@ -73,6 +74,7 @@ import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { ouvertureMachines } from './recherche';
 import { nombrePages } from './veille';
+import { SourceConnecteur } from './SourceConnecteur';
 
 const CLE = ['vulnerabilites', 'machines'] as const;
 const OPTIONS_ROLE = [
@@ -168,6 +170,7 @@ export function MachinesTable({
                   </Text>
                 )}
                 {m.finDeSupport && <MentionFinSupport court />}
+                <SourceConnecteur origine={m.integration} />
               </Table.Td>
               <Table.Td>
                 {m.role ? libelleRole(m.role) : <StatusChip etat="attention">{libelleRole(null)}</StatusChip>}
@@ -846,7 +849,7 @@ export function MachinesPage() {
     <Page>
       <PageHeader
         title="Machines"
-        description="Machines lues dans Tenable Security Center, de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
+        description="Machines lues dans Tenable Security Center ou importées d’un scan Nessus, chacune marquée de sa source (une machine vue par les deux apparaît deux fois), de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime ; une machine importée d’un scan Nessus n’a pas de dépôt : son périmètre s’indique ici. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
       />
       <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
         <Tabs.List>
