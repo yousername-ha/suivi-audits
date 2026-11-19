@@ -625,6 +625,57 @@
 .maj-versions .maj-version--note > span:last-child {
   color: var(--menu-texte);
 }
+/* Thème clair (remarque du RSSI du 19/11/2026 : « gros bloc au milieu ») : plus de bloc bleu nuit plein. La fenêtre
+   reçoit un léger dégradé du bleu du menu et un effet verre (fond à peine translucide, arrière-plan flouté) ; le bloc
+   des versions devient une vitre teintée, textes aux couleurs du thème. Le thème sombre garde le bloc bleu nuit. */
+[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) {
+  background:
+    linear-gradient(
+      172deg,
+      color-mix(in srgb, var(--menu-fond-haut) 9%, transparent) 0%,
+      color-mix(in srgb, var(--neon-cyan) 4%, transparent) 38%,
+      transparent 70%
+    ),
+    color-mix(in srgb, var(--suivi-surface) 86%, transparent);
+  backdrop-filter: blur(var(--mantine-spacing-md)) saturate(1.3);
+}
+[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Modal-header {
+  background: transparent;
+}
+[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Card-root {
+  background: color-mix(in srgb, var(--suivi-surface) 72%, transparent);
+  backdrop-filter: blur(var(--mantine-spacing-xs));
+}
+[data-mantine-color-scheme='light'] .maj-versions {
+  border-color: color-mix(in srgb, var(--menu-fond-haut) 16%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--suivi-surface) 70%, transparent), transparent 60%),
+    linear-gradient(
+      163deg,
+      color-mix(in srgb, var(--menu-fond-haut) 10%, transparent),
+      color-mix(in srgb, var(--neon-cyan) 8%, transparent)
+    );
+  box-shadow: inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 80%, transparent);
+  color: var(--mantine-color-text);
+}
+[data-mantine-color-scheme='light'] .maj-versions .maj-libelle {
+  color: var(--mantine-color-dimmed);
+}
+[data-mantine-color-scheme='light'] .maj-versions .maj-version strong,
+[data-mantine-color-scheme='light'] .maj-versions .maj-version--note > span:last-child {
+  color: var(--neon-titre);
+}
+[data-mantine-color-scheme='light'] .maj-versions .maj-version--cible strong,
+[data-mantine-color-scheme='light'] .maj-versions .maj-etiquette {
+  color: var(--neon-accent);
+}
+@media (prefers-reduced-transparency: reduce) {
+  [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions),
+  [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Card-root {
+    background: var(--suivi-surface);
+    backdrop-filter: none;
+  }
+}
 .maj-version {
   display: grid;
   grid-row: 1 / span 3;
