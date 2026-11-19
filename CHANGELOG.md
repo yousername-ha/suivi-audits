@@ -2,9 +2,31 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.4.0] — 2026-11-19
 
 ### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `087`, `088`, `089` et `091` (délais et tendances du module Vulnérabilités,
+déclaration réglementaire des incidents, conservation des sauvegardes), sans reprise de données ; aucune commande sur le
+serveur pour mettre à jour. **Avant la mise à jour, externaliser les sauvegardes à garder** : au plus 30 sauvegardes
+régulières restent ensuite sur le serveur (détail sous la migration `091`). À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (son empreinte couvre désormais l'image de base, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule. Les correctifs de la sauvegarde de sécurité (zone
+de travail hors du `/tmp` de 256 Mo) et du contrôle d'espace ne s'appliquent qu'aux mises à jour lancées depuis cette
+version : si la mise à jour vers la 7.4.0 depuis l'interface échoue pendant la sauvegarde, la relancer en ligne de commande
+(`sudo ./scripts/mettre-a-jour.sh`, [guide d'installation](docs/INSTALLATION.md)).
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Vérifier le nombre maximal de sauvegardes et celui des sauvegardes d'avant mise à jour (Configuration système, Sauvegardes
+   et restauration, carte « Planification et conservation »).
+2. Pour les déclarations des incidents : remplir l'identité de l'établissement (Plateforme), faire confirmer les rubriques
+   contre les formulaires réels des portails, donner le rôle « RSSI » à la personne qui déclare (détail sous la migration
+   `089`).
+3. Vérifier les délais de correction du module Vulnérabilités (détail sous la migration `087`).
+
+La veille, les connecteurs et l'envoi du courriel en mode intégré, en échec jusqu'ici (« L'exécutant n'a pas pu abandonner ses
+privilèges »), reprennent seuls après la mise à jour. Le détail de chaque migration suit.
 
 **Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
@@ -192,8 +214,6 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   `DATA_DIR/reprise-updates/tmp` (root, 0700, vidé au début et à la fin de l'opération), sur le disque des données, dont la
   place est contrôlée avant de commencer. Effet seulement pour les mises à jour lancées depuis une version qui contient le
   correctif (c'est l'exécutant de la version installée qui lance le script). (session « Projet audit_suivi Coeur »)
-
-### Corrigé
 
 - **Veille, connecteurs et envoi du courriel en mode intégré** : l'exécutant d'exploitation lance ces tâches sous le compte
   sans privilège `nobody`, mais son conteneur (`updater`) n'avait pas le droit de changer d'identité ; elles échouaient
