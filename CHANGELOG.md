@@ -205,6 +205,11 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 ### Corrigé
 
+- **Sécurité, frontal et exécutant** : Caddy (image `web`) et cosign (image `updater`) sont recompilés avec Go 1.26.11
+  (image `golang:1.26.11-alpine` épinglée par empreinte) : la bibliothèque standard Go 1.26.10 était touchée par la
+  CVE-2026-97054 (HIGH, `MaxBytesReader` des serveurs HTTP/1), relevée par Trivy. Le binaire du frontal change : son
+  redémarrage unique à la fin de la mise à jour depuis l'interface est celui déjà annoncé plus haut. (session « Projet
+  audit_suivi Coeur », signalé par la session « Module surveillance vulnérabilités SMSI »)
 - Mise à jour : le ménage des images oubliait les images téléchargées ou épinglées par leur empreinte (sans étiquette), qui
   s'accumulaient à chaque version, et ne s'appliquait pas après une tentative échouée ; il se fait maintenant par dépôt et par
   empreinte, en gardant la version en service, la précédente et le frontal en service (`GATEWAY_VERSION`) seulement, sans
