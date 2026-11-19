@@ -60,6 +60,8 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 **Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
 
+**Écran de connexion aux couleurs du menu** : changement d'interface seulement, aucune action sur le serveur.
+
 ### Ajouté
 
 - **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
@@ -144,6 +146,15 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   des scénarios, participants et note du plan d'audit. Les fenêtres des cartes de Plateforme et de Configuration système
   n'affichent plus leur titre en double. La Cartographie du SMSI remplit sa zone dès l'ouverture. Aucune migration, aucune
   API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Écran de connexion aux couleurs du menu** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [docs/refonte-neon/CONNEXION-BLEU-MENU.md](docs/refonte-neon/CONNEXION-BLEU-MENU.md)). Le violet laisse la place au bleu
+  du menu. Le panneau reste blanc. Les cartes Identifiant et Mot de passe prennent le bleu nuit du menu, comme le bouton
+  « Se connecter », qui reçoit l'effet verre de la recherche du menu avec sa lueur bleue qui fait le tour (arrêtée par le
+  mouvement réduit). La ligne du fond et ses ronds passent en bleu, et les ronds portent des référentiels de cybersécurité
+  lisibles : ISO 27001, HDS, ISO 27005, NIS 2, CRA, ISO 27035, EBIOS RM et ISO 27002 (RGPD et ISO 9001 retirés). Le reste
+  de l'application garde ses couleurs. Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits »
+  (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
   seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
