@@ -212,3 +212,18 @@ Réalisé sur `claude/hopeful-dijkstra-s1b9d2` (migration `073`), sous-ensemble 
 - **Non réalisé** : extraction du moteur d'écarts de Tenacy, ORADAD, Silène, GLPI, propositions de fournisseurs, liaisons
   d'indicateurs, logos, planification.
 - **Non vérifié** : aucun appel vers un vrai Tenable (tests sur un faux service HTTPS local), Docker, Playwright, Node 26.
+
+## Addendum du 19/11/2026 — intégrations dans la configuration de la plateforme (décision du RSSI)
+
+Décision du RSSI du 19/11/2026 : les intégrations se configurent **dans la configuration de la plateforme**, et nulle part
+ailleurs. Ce point remplace le placement du point 12 (rubrique « Intégrations » du Pilotage).
+
+- L'écran des intégrations (connecteurs, clés, test de connexion, synchronisation, exécutions) devient une carte de la page
+  **Plateforme** ([ADR 0081](0081-configuration-du-pilotage-dans-la-plateforme.md)), avec le même droit (module `integrations`) ;
+  la rubrique « Intégrations » du menu Pilotage disparaît, et son ancienne adresse redirige vers la nouvelle.
+- Les outils qui exploitent une intégration (module Vulnérabilités : failles détectées, surface externe, vue d'ensemble, et
+  tout outil à venir) n'affichent plus que :
+  - un **lien** « Configurer l'intégration » vers la carte de la plateforme, visible de qui a le droit de la voir ;
+  - l'**état en lecture seule** : date de la dernière synchronisation, et si elle est en erreur.
+  Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation dans les outils.
+- Réalisation confiée à la session « Module surveillance vulnérabilités SMSI », qui modifie ces écrans.
