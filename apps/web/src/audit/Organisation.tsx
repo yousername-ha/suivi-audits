@@ -97,7 +97,7 @@ export function Organisation({ vue }: { vue: VueOrganisation }) {
     <Stack>
       <ErrorAlert error={erreur} />
       <Group justify="space-between" align="flex-end">
-        <div>
+        <div className="audit-plan-note">
           <Text fw={600}>Organisation de l’audit {d.nextYear}</Text>
           <TextInput
             label="Note"
@@ -512,6 +512,7 @@ function Participants({
                   <Table.Td>
                     <TextInput
                       aria-label="Nom"
+                      className="champ-tableau-m"
                       disabled={!modifiable}
                       defaultValue={p.name}
                       onBlur={(e) => {
@@ -523,6 +524,7 @@ function Participants({
                   <Table.Td>
                     <TextInput
                       aria-label="Fonction"
+                      className="champ-tableau-l"
                       placeholder="Fonction, périmètre"
                       disabled={!modifiable}
                       defaultValue={p.role}

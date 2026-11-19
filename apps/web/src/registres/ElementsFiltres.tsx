@@ -1,6 +1,7 @@
 /* Éléments des registres d'un périmètre (R02) : on choisit un périmètre, puis un ou plusieurs registres qui le portent ;
    la liste réunit leurs éléments sans doublon (chaque élément n'appartient qu'à un registre). Boîte d'outils commune
-   (7.3.0) : recherche, périmètre et registres dans les filtres avancés, pastilles des critères actifs dessous. */
+   (7.3.0) : le choix du périmètre, premier geste de la page, reste visible à côté de la boîte (décision du RSSI du
+   18/11/2026) ; recherche dans la boîte, registres dans les filtres avancés, pastilles des registres choisis dessous. */
 import { MultiSelect, Select, Stack, Table, Text } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -34,51 +35,37 @@ export function ElementsFiltres() {
     enabled: !!perimetre,
   });
   const nomRegistre = (id?: string | null) => liste.data?.registres.find((r) => r.id === id)?.name ?? '—';
-  const reinitialiser = () => {
-    setPerimetre(null);
-    setChoisis([]);
-  };
-  const criteres: CritereActif[] = [
-    ...(perimetre
-      ? [
-          {
-            cle: 'perimetre',
-            libelle: 'Périmètre',
-            valeur: perimetres.data?.find((p) => p.id === perimetre)?.name ?? 'sélectionné',
-            retirer: reinitialiser,
-          },
-        ]
-      : []),
-    ...choisis.map((id) => ({
-      cle: 'registre-' + id,
-      libelle: 'Registre',
-      valeur: liste.data?.registres.find((r) => r.id === id)?.name ?? 'sélectionné',
-      retirer: () => setChoisis(choisis.filter((c) => c !== id)),
-    })),
-  ];
+  // Les filtres avancés ne portent plus que les registres : les réinitialiser garde le périmètre choisi.
+  const reinitialiser = () => setChoisis([]);
+  const criteres: CritereActif[] = choisis.map((id) => ({
+    cle: 'registre-' + id,
+    libelle: 'Registre',
+    valeur: liste.data?.registres.find((r) => r.id === id)?.name ?? 'sélectionné',
+    retirer: () => setChoisis(choisis.filter((c) => c !== id)),
+  }));
   return (
     <Stack>
-      <BoiteOutils
-        label="Outils des éléments par périmètre"
-        recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
-        filtres={{
-          actifs: [perimetre, choisis.length ? '1' : ''].filter(Boolean).length,
-          onReinitialiser: reinitialiser,
-          contenu: (
-            <>
-              <Select
-                allowDeselect={false}
-                label="Périmètre"
-                placeholder="Choisir un périmètre"
-                searchable
-                data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
-                value={perimetre}
-                onChange={(v) => {
-                  setPerimetre(v);
-                  setChoisis([]);
-                }}
-                comboboxProps={{ withinPortal: false }}
-              />
+      <div className="barre-avec-perimetre">
+        <Select
+          className="selecteur-perimetre"
+          allowDeselect={false}
+          label="Périmètre"
+          placeholder="Choisir un périmètre"
+          searchable
+          data={(perimetres.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+          value={perimetre}
+          onChange={(v) => {
+            setPerimetre(v);
+            setChoisis([]);
+          }}
+        />
+        <BoiteOutils
+          label="Outils des éléments par périmètre"
+          recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
+          filtres={{
+            actifs: choisis.length ? 1 : 0,
+            onReinitialiser: reinitialiser,
+            contenu: (
               <MultiSelect
                 label="Registres"
                 placeholder={perimetre ? 'Tous les registres du périmètre' : 'Choisissez d’abord un périmètre'}
@@ -92,15 +79,13 @@ export function ElementsFiltres() {
                 onChange={setChoisis}
                 comboboxProps={{ withinPortal: false }}
               />
-            </>
-          ),
-        }}
-      />
+            ),
+          }}
+        />
+      </div>
       <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
       <ErrorAlert error={liste.error} />
-      {!perimetre && (
-        <Text size="sm">Choisissez un périmètre dans les filtres avancés pour afficher ses éléments.</Text>
-      )}
+      {!perimetre && <Text size="sm">Choisissez un périmètre pour afficher ses éléments.</Text>}
       {perimetre && liste.data && (
         <Text size="sm">
           {liste.data.total} élément(s) dans {liste.data.registres.length} registre(s) concerné(s).
