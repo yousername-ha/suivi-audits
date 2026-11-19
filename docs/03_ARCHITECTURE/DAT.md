@@ -312,7 +312,9 @@ fin, il est mis à jour seulement si l’empreinte de ce qu’il exécute et ser
 coupure de quelques secondes annoncée sur la page de maintenance (ADR 0103).
 Pendant la préparation, l'exécutant tire les trois images par l'API du moteur Docker
 (socket Unix déjà monté) et publie dans l'état public les octets reçus sur un total fixé
-d'après les manifestes du registre ; la page de maintenance en remplit sa barre. Repli sur
+d'après les manifestes du registre ; la page de maintenance en remplit sa barre. La valeur
+finale reste publiée pendant la vérification des signatures, jusqu'à la sortie de l'étape de
+préparation (barre pleine, addendum du 19/11/2026). Repli sur
 `docker pull`, sans progression, avec des identifiants de registre ou si l'API ne répond
 pas (ADR 0104) ; les vérifications de signature qui suivent sont inchangées.
 L’empreinte du frontal couvre aussi l’identité épinglée de son image de base Caddy
