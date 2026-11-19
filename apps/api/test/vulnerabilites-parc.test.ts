@@ -237,12 +237,42 @@ describe('lot PC2 : parc des machines par zone de rôle', () => {
 
   it('marques : priorité la plus haute, zero-day (exploitation avérée), exploitable sans exploitation avérée', async () => {
     const p = await lire(admin);
-    expect(tuile(p, 1)?.marques).toEqual({ priorite: 'P1', exploitationAveree: true, exploitable: true });
-    expect(tuile(p, 2)?.marques).toEqual({ priorite: 'P2', exploitationAveree: false, exploitable: true });
-    expect(tuile(p, 3)?.marques).toEqual({ priorite: 'P4', exploitationAveree: false, exploitable: false });
-    expect(tuile(p, 4)?.marques).toEqual({ priorite: null, exploitationAveree: false, exploitable: false });
-    expect(tuile(p, 5)?.marques).toEqual({ priorite: 'P1', exploitationAveree: true, exploitable: false });
-    expect(tuile(p, 6)?.marques).toEqual({ priorite: 'P2', exploitationAveree: false, exploitable: true });
+    expect(tuile(p, 1)?.marques).toEqual({
+      priorite: 'P1',
+      exploitationAveree: true,
+      exploitable: true,
+      exploiteeSansCorrectif: false,
+    });
+    expect(tuile(p, 2)?.marques).toEqual({
+      priorite: 'P2',
+      exploitationAveree: false,
+      exploitable: true,
+      exploiteeSansCorrectif: false,
+    });
+    expect(tuile(p, 3)?.marques).toEqual({
+      priorite: 'P4',
+      exploitationAveree: false,
+      exploitable: false,
+      exploiteeSansCorrectif: false,
+    });
+    expect(tuile(p, 4)?.marques).toEqual({
+      priorite: null,
+      exploitationAveree: false,
+      exploitable: false,
+      exploiteeSansCorrectif: false,
+    });
+    expect(tuile(p, 5)?.marques).toEqual({
+      priorite: 'P1',
+      exploitationAveree: true,
+      exploitable: false,
+      exploiteeSansCorrectif: false,
+    });
+    expect(tuile(p, 6)?.marques).toEqual({
+      priorite: 'P2',
+      exploitationAveree: false,
+      exploitable: true,
+      exploiteeSansCorrectif: false,
+    });
     // La marque zero-day suit le compteur d'exploitation avérée existant (définition du lot V6).
     for (const m of p.zones.flatMap((z) => z.machines))
       expect(m.marques.exploitationAveree).toBe(m.compteurs.exploitationAveree > 0);
@@ -326,7 +356,7 @@ describe('lot PC2 : parc des machines par zone de rôle', () => {
     expect(r.statusCode, r.body).toBe(200);
     const page = r.json() as { elements: Tuile[] };
     expect(page.elements.map((m) => [m.nom, m.marques])).toEqual([
-      [nomMachine(1), { priorite: 'P1', exploitationAveree: true, exploitable: true }],
+      [nomMachine(1), { priorite: 'P1', exploitationAveree: true, exploitable: true, exploiteeSansCorrectif: false }],
     ]);
   });
 

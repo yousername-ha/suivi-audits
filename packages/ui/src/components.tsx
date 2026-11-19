@@ -75,6 +75,7 @@ export function StatusChip({ etat, children }: { etat: Etat; children: ReactNode
 /** Section de formulaire avec son propre bouton Enregistrer et l'indication des modifications non enregistrées. */
 export function FormSection({
   title,
+  titreVisible = true,
   description,
   children,
   dirty,
@@ -86,6 +87,9 @@ export function FormSection({
   readOnlyReason,
 }: {
   title: ReactNode;
+  /** Faux : le titre n'est pas affiché, par exemple dans une fenêtre qui porte déjà le même titre. La section garde son
+      nom accessible (`title`), sa description et son bouton Enregistrer. */
+  titreVisible?: boolean;
   description?: ReactNode;
   children: ReactNode;
   dirty: boolean;
@@ -99,16 +103,20 @@ export function FormSection({
   return (
     <Card component="section" aria-label={typeof title === 'string' ? title : undefined}>
       <Stack>
-        <div>
-          <Title order={2} size="h3">
-            {title}
-          </Title>
-          {description && (
-            <Text c="dimmed" size="sm" className="lecture">
-              {description}
-            </Text>
-          )}
-        </div>
+        {(titreVisible || description) && (
+          <div>
+            {titreVisible && (
+              <Title order={2} size="h3">
+                {title}
+              </Title>
+            )}
+            {description && (
+              <Text c="dimmed" size="sm" className="lecture">
+                {description}
+              </Text>
+            )}
+          </div>
+        )}
         {error && (
           <Alert color="red" role="alert">
             {error}

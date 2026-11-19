@@ -167,7 +167,11 @@ const cible = (v: Vue, cle: string) => {
 /** Ce qui doit être identique pour tout le monde : tout, sauf les nombres lisibles et la fiche. */
 const commun = (v: Vue) => ({
   niveau: v.niveau,
-  tuiles: v.tuiles,
+  // Lot S3 : machines et services en fin de support comptés selon les droits ; le nombre de constats est commun.
+  tuiles: {
+    ...v.tuiles,
+    finDeSupport: { constats: (v.tuiles.finDeSupport as { constats: number }).constats },
+  },
   total: v.total,
   parPriorite: v.parPriorite,
   cases: v.cases,
@@ -239,6 +243,14 @@ describe('lot PC1 : vue d’ensemble du module Vulnérabilités', () => {
       aTraiter: { p1: 0, p2: 0 },
       aConfirmer: { failles: 0, produits: 0 },
       corrigeesCeMois: 0,
+      enDepassement: 0,
+      exploiteesSansCorrectif: 0,
+      exploiteesCorrectifNonRenseigne: 0,
+      finDeSupport: {
+        constats: 0,
+        machines: { lisibles: 0, horsLecture: false },
+        services: { lisibles: 0, horsLecture: false },
+      },
     });
   });
 
@@ -294,6 +306,16 @@ describe('lot PC1 : vue d’ensemble du module Vulnérabilités', () => {
       aTraiter: { p1: 1, p2: 3 },
       aConfirmer: { failles: 1, produits: 1 },
       corrigeesCeMois: 0,
+      // Lot S1 : objets suivis présents en P1 et P2, détectés depuis juillet : délai dépassé.
+      enDepassement: 3,
+      // Lot S3 : aucune source ne dit si un correctif existe pour la faille exploitée ; aucune fin de support.
+      exploiteesSansCorrectif: 0,
+      exploiteesCorrectifNonRenseigne: 1,
+      finDeSupport: {
+        constats: 0,
+        machines: { lisibles: 0, horsLecture: false },
+        services: { lisibles: 0, horsLecture: false },
+      },
     });
     // Ordre : P1 d'abord, puis la P2 exploitée à confirmer, puis les P2 critiques.
     expect(a.cibles.slice(0, 2).map((c) => c.cle)).toEqual(['CVE-2026-92001', 'CVE-2026-92005']);

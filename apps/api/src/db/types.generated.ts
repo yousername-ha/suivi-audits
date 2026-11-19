@@ -205,6 +205,8 @@ export interface BackupPolicy {
   days: Generated<number[]>;
   retention_days: Generated<number>;
   version: Generated<number>;
+  max_backups: Generated<number>;
+  pre_update_backups: Generated<number>;
 }
 
 export interface BackupWorker {
@@ -643,6 +645,32 @@ export interface ImportBatches {
   undone_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   undone_by: string | null;
   version: Generated<number>;
+}
+
+export interface IncidentsDeclarations {
+  id: Generated<string>;
+  incident_id: string;
+  smsi_id: string;
+  regime: "sante" | "nis2";
+  etape: "signalement" | "alerte_precoce" | "notification" | "rapport_final" | "complement";
+  liee_a: string | null;
+  origine: "proposition" | "manuelle" | "complement";
+  statut: "proposee" | "a_declarer" | "non_requise" | "envoyee";
+  depart: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  rubriques: ColumnType<JsonValue, string | undefined, string>;
+  reference: Generated<string>;
+  motif: string | null;
+  decide_par: string | null;
+  decide_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  envoyee_par: string | null;
+  envoyee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  contenu: ColumnType<JsonValue | null, string | null, string | null>;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  cree_par: string;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string;
 }
 
 export interface IntegrationExecutions {
@@ -1153,6 +1181,7 @@ export interface SuiviIncidents {
   finding_id: string | null;
   created_iso: string | null;
   extra: ColumnType<JsonValue, string | undefined, string>;
+  qualified_at: string | null;
 }
 
 export interface SuiviIndicateurs {
@@ -1800,6 +1829,14 @@ export interface VulnerabilitesConstats {
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesDepassements {
+  nature: "constat" | "declaree";
+  objet_id: string;
+  priorite: "P1" | "P2" | "P3" | "P4";
+  echeance: ColumnType<Date, Date | string, Date | string>;
+  signale_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesDetections {
   id: Generated<string>;
   constat_id: string;
@@ -1813,6 +1850,30 @@ export interface VulnerabilitesDetections {
   risque_requalifie: Generated<boolean>;
   vu_numero: number;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesInstantanes {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  debut: ColumnType<Date, Date | string | undefined, Date | string>;
+  fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  etat: Generated<"en_cours" | "pris" | "echec">;
+  niveau: number | null;
+}
+
+export interface VulnerabilitesInstantanesMesures {
+  jour: ColumnType<Date, Date | string, Date | string>;
+  portee: "global" | "perimetre" | "aucun";
+  perimetre_id: string | null;
+  p1: number;
+  p2: number;
+  p3: number;
+  p4: number;
+  exploitees: number;
+  depassements: number;
+  exceptions: number;
+  corrigees_veille: number;
+  machines: number;
+  actifs: number;
 }
 
 export interface VulnerabilitesMachines {
@@ -1898,7 +1959,7 @@ export interface VulnerabilitesSuiviHistorique {
   id: Generated<string>;
   nature: "constat" | "declaree";
   objet_id: string;
-  evenement: "changement" | "action" | "proposition" | "refus" | "retrait_proposition" | "reapparition";
+  evenement: "changement" | "action" | "proposition" | "refus" | "retrait_proposition" | "reapparition" | "expiration";
   etat_avant: string | null;
   etat_apres: "nouvelle" | "a_traiter" | "en_cours" | "corrigee" | "risque_accepte" | "non_concernee";
   note: Generated<string>;
@@ -1906,6 +1967,11 @@ export interface VulnerabilitesSuiviHistorique {
   auteur: string;
   auteur_id: string | null;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  mesure: string | null;
+  priorite: string | null;
+  delai_depuis: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesSuivis {
@@ -1920,6 +1986,13 @@ export interface VulnerabilitesSuivis {
   version: Generated<number>;
   maj_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   maj_par: string | null;
+  exception_justification: string | null;
+  exception_mesure: string | null;
+  exception_par: string | null;
+  exception_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  exception_etat_avant: string | null;
+  exception_rappel_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  delai_repart_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesSynchronisations {
@@ -2153,6 +2226,7 @@ export interface DB {
   group_roles: GroupRoles;
   groups: Groups;
   import_batches: ImportBatches;
+  incidents_declarations: IncidentsDeclarations;
   integration_executions: IntegrationExecutions;
   integrations: Integrations;
   journal_technique_config: JournalTechniqueConfig;
@@ -2239,7 +2313,10 @@ export interface DB {
   vulnerabilites_assistant_reperes_externes: VulnerabilitesAssistantReperesExternes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;
   vulnerabilites_constats: VulnerabilitesConstats;
+  vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_instantanes: VulnerabilitesInstantanes;
+  vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
   vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;
   vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;

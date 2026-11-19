@@ -36,10 +36,16 @@ import {
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMediaQuery } from '@mantine/hooks';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
-import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import {
+  BoiteOutils,
+  FiltreColonne,
+  FiltreColonneMultiple,
+  PastillesCriteres,
+  type CritereActif,
+} from '../components/BarreOutils';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
@@ -105,19 +111,22 @@ interface OrdreTri {
 }
 const TRI_DEFAUT: OrdreTri = { tri: 'modifie', ordre: 'desc' };
 
-/** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. */
+/** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. Un filtre de colonne
+    compact (entonnoir) peut se placer à côté du libellé, qui garde le tri. */
 function EnteteTri({
   cle,
   libelle,
   courant,
   onChange,
   className,
+  filtre,
 }: {
   cle: CleTri;
   libelle: string;
   courant: OrdreTri;
   onChange: (o: OrdreTri) => void;
   className?: string;
+  filtre?: ReactNode;
 }) {
   const actif = courant.tri === cle;
   const suivant = actif
@@ -127,12 +136,22 @@ function EnteteTri({
     : cle === 'modifie' || cle === 'taille'
       ? 'desc'
       : 'asc';
+  const tri = (
+    <UnstyledButton type="button" className="entete-tri" onClick={() => onChange({ tri: cle, ordre: suivant })}>
+      {libelle}
+      {actif ? (courant.ordre === 'asc' ? ' ▲' : ' ▼') : ''}
+    </UnstyledButton>
+  );
   return (
     <Table.Th className={className} aria-sort={actif ? (courant.ordre === 'asc' ? 'ascending' : 'descending') : 'none'}>
-      <UnstyledButton type="button" className="entete-tri" onClick={() => onChange({ tri: cle, ordre: suivant })}>
-        {libelle}
-        {actif ? (courant.ordre === 'asc' ? ' ▲' : ' ▼') : ''}
-      </UnstyledButton>
+      {filtre ? (
+        <span className="entete-filtrable">
+          {tri}
+          {filtre}
+        </span>
+      ) : (
+        tri
+      )}
     </Table.Th>
   );
 }
@@ -299,7 +318,8 @@ function DocumentList({
     }
   };
 
-  const reinitialiser = () => {
+  const toutEffacer = () => {
+    setQ('');
     setCategory(null);
     setTags([]);
     setTrash('0');
@@ -317,51 +337,31 @@ function DocumentList({
 
   return (
     <Stack>
-      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés. La catégorie (dont le titre de
-          colonne porte déjà le tri), les étiquettes (choix multiple) et la corbeille passent dans les filtres avancés ;
-          le choix des colonnes et le dépôt se placent au bout de la ligne. */}
+      {/* Boîte d'outils commune (7.3.0) : recherche et, selon les droits, la corbeille dans les filtres avancés. La
+          catégorie (entonnoir à côté du titre triable) et les étiquettes (cases à cocher) se filtrent sur le titre de leur
+          colonne (décision du RSSI du 18/11/2026) ; le choix des colonnes et le dépôt se placent au bout de la ligne. */}
       <BoiteOutils
         label="Outils des documents"
         recherche={{ label: 'Rechercher', placeholder: 'Titre, fichier, rattachement…', value: q, onChange: setQ }}
-        filtres={{
-          actifs: [category, tags.length ? '1' : '', trash === '1' ? '1' : ''].filter(Boolean).length,
-          onReinitialiser: reinitialiser,
-          contenu: (
-            <>
-              <Select
-                label="Catégorie"
-                data={cats.data ?? []}
-                value={category}
-                onChange={setCategory}
-                clearable
-                comboboxProps={{ withinPortal: false }}
-              />
-              <MultiSelect
-                label="Étiquettes"
-                description="Toutes les étiquettes choisies"
-                placeholder={tags.length ? undefined : 'Toutes'}
-                data={optionsEtiquettes(etiquettes.data)}
-                value={tags}
-                onChange={setTags}
-                searchable
-                clearable
-                nothingFoundMessage="Aucune étiquette"
-                comboboxProps={{ withinPortal: false }}
-              />
-              {canDelete && (
-                <SegmentedControl
-                  value={trash}
-                  onChange={setTrash}
-                  data={[
-                    { value: '0', label: 'Documents' },
-                    { value: '1', label: 'Corbeille' },
-                  ]}
-                  aria-label="Afficher"
-                />
-              )}
-            </>
-          ),
-        }}
+        filtres={
+          canDelete
+            ? {
+                actifs: trash === '1' ? 1 : 0,
+                onReinitialiser: () => setTrash('0'),
+                contenu: (
+                  <SegmentedControl
+                    value={trash}
+                    onChange={setTrash}
+                    data={[
+                      { value: '0', label: 'Documents' },
+                      { value: '1', label: 'Corbeille' },
+                    ]}
+                    aria-label="Afficher"
+                  />
+                ),
+              }
+            : undefined
+        }
         ajout={
           <Group gap="xs">
             {selecteur}
@@ -377,13 +377,7 @@ function DocumentList({
           </Group>
         }
       />
-      <PastillesCriteres
-        criteres={criteres}
-        onToutEffacer={() => {
-          setQ('');
-          reinitialiser();
-        }}
-      />
+      <PastillesCriteres criteres={criteres} onToutEffacer={toutEffacer} />
       <ErrorAlert error={list.error} />
       <DataTable label="Documents">
         <Table highlightOnHover>
@@ -391,7 +385,15 @@ function DocumentList({
             <Table.Tr>
               <EnteteTri cle="titre" libelle="Titre" courant={ordre} onChange={setOrdre} />
               <Table.Th className={cls('rattachements')}>Rattachements</Table.Th>
-              <Table.Th className={cls('etiquettes')}>Étiquettes</Table.Th>
+              <Table.Th className={cls('etiquettes')}>
+                <FiltreColonneMultiple
+                  libelle="Étiquettes"
+                  description="Toutes les étiquettes cochées sont exigées."
+                  valeurs={tags}
+                  options={optionsEtiquettes(etiquettes.data)}
+                  onChange={setTags}
+                />
+              </Table.Th>
               <EnteteTri
                 cle="classification"
                 libelle="Classification"
@@ -405,6 +407,15 @@ function DocumentList({
                 courant={ordre}
                 onChange={setOrdre}
                 className={cls('categorie')}
+                filtre={
+                  <FiltreColonne
+                    compact
+                    libelle="Catégorie"
+                    valeur={category}
+                    options={(cats.data ?? []).map((c) => ({ value: c, label: c }))}
+                    onChange={setCategory}
+                  />
+                }
               />
               <EnteteTri cle="taille" libelle="Taille" courant={ordre} onChange={setOrdre} className={cls('taille')} />
               <EnteteTri

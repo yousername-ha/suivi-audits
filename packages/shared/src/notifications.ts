@@ -64,6 +64,27 @@ export const NOTIFICATION_TYPES = [
     description:
       'Résumé des alertes simples ouvertes par une même évaluation (failles P2 exploitables, présentes sur des actifs exposés directement sur Internet) : une seule notification par évaluation, avec leur nombre et un lien vers l’onglet « Alertes ». Adressée aux personnes qui lisent le module Vulnérabilités.',
   },
+  // Lot S1 (ADR 0100) : délais de correction et exceptions à échéance ; résumés seulement, sans CVE ni nom.
+  {
+    id: 'vulnerabilites_delais',
+    label: 'Vulnérabilités : délais dépassés',
+    description:
+      'Résumé des failles suivies entrées en dépassement de leur délai de correction depuis l’évaluation précédente (délai cible par priorité) : une seule notification par évaluation, avec leur nombre et un lien vers « Failles détectées » filtrée. Adressée aux personnes qui lisent le module Vulnérabilités.',
+  },
+  {
+    id: 'vulnerabilites_exceptions',
+    label: 'Vulnérabilités : exceptions à échéance',
+    description:
+      'Résumé des exceptions (risques acceptés) échues, qui rendent la faille à traiter, et de celles qui arrivent à échéance sous quatorze jours : une seule notification par évaluation, avec leur nombre et un lien vers l’onglet « Délais et exceptions ». Adressée aux personnes qui lisent le module Vulnérabilités.',
+  },
+  // Déclaration réglementaire des incidents (ADR 0105) : rappels au responsable de l'incident et aux comptes qui ont le rôle
+  // « RSSI ». Le titre ne porte que l'identifiant de l'incident et le jalon : ni régime, ni contenu.
+  {
+    id: 'incident_declaration',
+    label: 'Déclaration réglementaire d’un incident',
+    description:
+      'Rappel d’une déclaration à faire (santé, NIS 2) : à la qualification de l’incident, puis à mi-délai, deux heures avant l’échéance et au dépassement (NIS 2), ou toutes les quatre heures tant que le signalement santé n’est ni envoyé ni écarté. Adressé au responsable de l’incident et aux personnes qui ont le rôle RSSI.',
+  },
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]['id'];
 export const NOTIFICATION_TYPE_IDS = NOTIFICATION_TYPES.map((t) => t.id) as [NotificationType, ...NotificationType[]];
@@ -82,9 +103,21 @@ export const NOTIFICATION_RUBRIQUES: Partial<Record<NotificationType, { lien: st
     lien: '/vulnerabilites/alertes?niveau=simple&etat=ouverte',
     rubrique: 'Vulnérabilités, Alertes',
   },
+  // Lot S1 : failles en dépassement (Failles détectées filtrée) ; exceptions (onglet « Délais et exceptions »).
+  vulnerabilites_delais: {
+    lien: '/vulnerabilites/failles?delai=en_depassement',
+    rubrique: 'Vulnérabilités, Failles détectées',
+  },
+  vulnerabilites_exceptions: { lien: '/vulnerabilites/delais', rubrique: 'Vulnérabilités, Délais et exceptions' },
+  incident_declaration: { lien: '/pilotage/incidents-registre', rubrique: 'Résilience, Incidents et crise' },
 };
-/** Types émis par le module Vulnérabilités (lot V6) : sans périmètre ni objet du socle, lus avec vulnerabilites:lire. */
-export const NOTIFICATION_TYPES_VULNERABILITES = ['vulnerabilites_alerte_critique', 'vulnerabilites_alerte'] as const;
+/** Types émis par le module Vulnérabilités (lots V6 et S1) : sans périmètre ni objet du socle, lus avec vulnerabilites:lire. */
+export const NOTIFICATION_TYPES_VULNERABILITES = [
+  'vulnerabilites_alerte_critique',
+  'vulnerabilites_alerte',
+  'vulnerabilites_delais',
+  'vulnerabilites_exceptions',
+] as const;
 
 export const PORTEE_KINDS = ['groupe', 'role', 'utilisateur'] as const;
 export type PorteeKind = (typeof PORTEE_KINDS)[number];

@@ -1,5 +1,7 @@
 /** Agrégations d'affichage sur les réponses déjà autorisées ; aucune règle métier ni aucun score nouveau. */
 import type { SerieNeon } from '@suivi/ui';
+/** Série de comptes (toujours mesurés : aucune valeur absente). */
+type SerieComptee = SerieNeon & { valeurs: number[] };
 export interface EvenementNeon {
   ts: string;
   action: string;
@@ -8,7 +10,7 @@ export function journalNeon(lignes: readonly EvenementNeon[], cases = 12) {
   const dates = lignes.map((l) => ({ ...l, t: Date.parse(l.ts) })).filter((l) => Number.isFinite(l.t));
   const debut = Math.min(...dates.map((l) => l.t)),
     fin = Math.max(...dates.map((l) => l.t));
-  if (!dates.length) return { series: [] as SerieNeon[], debut: '—', fin: '—' };
+  if (!dates.length) return { series: [] as SerieComptee[], debut: '—', fin: '—' };
   const compte = new Map<string, number>();
   for (const l of dates) {
     const k = l.action.split('.')[0] || 'Autres';

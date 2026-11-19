@@ -28,6 +28,11 @@ export const detecteeSurMachine = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabili
   JOIN vulnerabilites_constat_cves cc ON cc.constat_id = d.constat_id
   WHERE d.machine_id = m.id AND cc.cve = r.cve AND ${present})`;
 
+/** Première présence connue du constat `c` chez nous (lot S1) : la première détection de Tenable sur une de ses machines,
+    sinon son entrée dans la plateforme (aucune date inventée). Sert à l'âge et au délai de correction. */
+export const premiereConstat = sql<Date>`coalesce((SELECT min(dp.premiere_detection) FROM vulnerabilites_detections dp
+  WHERE dp.constat_id = c.id), c.cree_le)`;
+
 /** Gravité NVD retenue pour une CVE `v` : CVSS 3.1 d'abord, sinon 4.0 (comme graviteDepuisNvd), avec son score. */
 export const scoreNvd = sql<
   string | null

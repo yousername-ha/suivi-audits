@@ -91,7 +91,7 @@ beforeEach(async () => {
   await t.svc.db.q('DELETE FROM operation_jobs');
   await t.svc.db.q('DELETE FROM backup_jobs');
   await t.svc.db.q(
-    'UPDATE backup_policy SET enabled=false,hour_utc=2,minute_utc=15,days=ARRAY[1,2,3,4,5,6,7],retention_days=90,version=1',
+    'UPDATE backup_policy SET enabled=false,hour_utc=2,minute_utc=15,days=ARRAY[1,2,3,4,5,6,7],retention_days=90,max_backups=30,pre_update_backups=3,version=1',
   );
   publish();
 });
@@ -269,7 +269,15 @@ describe('Lot A : pilotage opérationnel', () => {
     expect((await t.svc.db.one<{ status: string }>('SELECT status FROM operation_jobs'))!.status).toBe('echec');
   });
   it('politique bornée, versionnée et auditée ; configuration indépendante de la disponibilité', async () => {
-    const p = { enabled: true, hourUtc: 23, minuteUtc: 59, days: [1, 7], retentionDays: 36500 };
+    const p = {
+      enabled: true,
+      hourUtc: 23,
+      minuteUtc: 59,
+      days: [1, 7],
+      retentionDays: 36500,
+      maxBackups: 365,
+      preUpdateBackups: 10,
+    };
     expect((await a.put('/api/admin/exploitation/politique', p)).statusCode).toBe(428);
     expect(
       (await a.put('/api/admin/exploitation/politique', { ...p, days: [1, 1] }, { 'if-match': '"1"' })).statusCode,
@@ -282,6 +290,58 @@ describe('Lot A : pilotage opérationnel', () => {
     expect(r.json().version).toBe(2);
     expect((await a.put('/api/admin/exploitation/politique', p, { 'if-match': '"1"' })).statusCode).toBe(412);
     expect((await reader.put('/api/admin/exploitation/politique', p, { 'if-match': '"2"' })).statusCode).toBe(403);
+  });
+  it('conservation (ADR 0106) : nombre maximal et sauvegardes d’avant mise à jour bornés, lus par l’exécutant, audités', async () => {
+    // Valeurs par défaut de la migration 091 : 30 et 3.
+    expect((await a.get('/api/admin/exploitation')).json().policy).toMatchObject({
+      maxBackups: 30,
+      preUpdateBackups: 3,
+    });
+    const p = {
+      enabled: false,
+      hourUtc: 2,
+      minuteUtc: 15,
+      days: [1],
+      retentionDays: 90,
+      maxBackups: 7,
+      preUpdateBackups: 1,
+    };
+    for (const bad of [
+      { maxBackups: 6 },
+      { maxBackups: 366 },
+      { maxBackups: 30.5 },
+      { maxBackups: '30' },
+      { preUpdateBackups: 0 },
+      { preUpdateBackups: 11 },
+      { maxBackups: undefined },
+      { preUpdateBackups: undefined },
+    ])
+      expect(
+        (await a.put('/api/admin/exploitation/politique', { ...p, ...bad }, { 'if-match': '"1"' })).statusCode,
+      ).toBe(422);
+    // Bornes acceptées, aux deux extrémités.
+    let r = await a.put('/api/admin/exploitation/politique', p, { 'if-match': '"1"' });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toMatchObject({ maxBackups: 7, preUpdateBackups: 1, version: 2 });
+    r = await a.put(
+      '/api/admin/exploitation/politique',
+      { ...p, maxBackups: 365, preUpdateBackups: 10 },
+      { 'if-match': '"2"' },
+    );
+    expect(r.json()).toMatchObject({ maxBackups: 365, preUpdateBackups: 10, version: 3 });
+    // Même chemin que la durée : « suivi ops-policy » rend la politique enregistrée à l'exécutant.
+    expect(await t.svc.operations.policy()).toMatchObject({ retentionDays: 90, maxBackups: 365, preUpdateBackups: 10 });
+    const audit = await t.svc.db.one<{ details: Record<string, unknown> }>(
+      "SELECT details FROM audit_log WHERE action='backup.policy' ORDER BY id DESC LIMIT 1",
+    );
+    expect(audit!.details).toMatchObject({ maxBackups: 365, preUpdateBackups: 10 });
+    // Lecture seule : ni écriture, ni contournement des bornes par la base (contraintes de la migration 091).
+    expect(
+      (await reader.put('/api/admin/exploitation/politique', { ...p, maxBackups: 8 }, { 'if-match': '"3"' }))
+        .statusCode,
+    ).toBe(403);
+    await expect(t.svc.db.q('UPDATE backup_policy SET max_backups=6')).rejects.toThrow();
+    await expect(t.svc.db.q('UPDATE backup_policy SET pre_update_backups=11')).rejects.toThrow();
   });
   it('TLS absent/externe interdit les changements', async () => {
     publish({ tlsManaged: false });

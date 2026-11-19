@@ -58,7 +58,14 @@ const hote = (adresse: string) => {
   }
 };
 
-export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolean) => void }) {
+/** `titreVisible` faux : le titre n'est pas répété dans la fenêtre de la carte « Assistant RSSI », qui le porte déjà. */
+export function ReglagesAssistantPanel({
+  onDirty,
+  titreVisible,
+}: {
+  onDirty?: (modifie: boolean) => void;
+  titreVisible?: boolean;
+}) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: CLE_REGLAGES, queryFn: () => get<ReglagesAssistantDto>('/api/assistant/reglages') });
   const perimetres = useQuery({
@@ -183,6 +190,7 @@ export function ReglagesAssistantPanel({ onDirty }: { onDirty?: (modifie: boolea
 
       <FormSection
         title="Assistant RSSI"
+        titreVisible={titreVisible}
         description={`Pour répondre, l’assistant envoie au fournisseur du modèle la question posée et les extraits qu’il a lus (intitulés d’écarts, descriptions de risques, noms d’éléments). Il ne lit jamais plus que la personne qui l’interroge. Par défaut, il lit tous les périmètres et tous les documents : restreignez-le dans les réglages avancés si une partie ne doit pas être confiée à ce fournisseur.${fournisseur ? ` Fournisseur réglé : ${fournisseur}.` : ''}`}
         dirty={aEnregistrer}
         saving={envoi}

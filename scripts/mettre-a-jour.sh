@@ -14,7 +14,13 @@
 #                       ni vérification de signature
 # Variables : BACKUP_KEY_FILE (défaut DATA_DIR/cles-sauvegarde/serveur.key) et BACKUP_RECIPIENTS_FILE (défaut DATA_DIR/cles-sauvegarde/secours.pub),
 #             préparés par scripts/generer-cles-sauvegarde.sh ;
+#             UPDATE_SAUVEGARDES_GARDEES : nombre de sauvegardes « avant mise à jour » gardées (de 1 à 10 ; lu dans
+#             l'environnement, sinon dans .env, sinon 3 ; l'exécutant de la mise à jour web transmet celui de l'application) ;
 #             SUIVI_TEST_ECHEC_SANTE=1 : simule un échec du contrôle de santé (tests du retour arrière uniquement).
+# Avant la sauvegarde, la place est contrôlée (ADR 0106) : dernière sauvegarde (ou base), images à télécharger, marge ; un
+# manque de place arrête la mise à jour avant toute modification, avec la place libre, la place nécessaire et ce qui l'occupe.
+# Images : après une mise à jour réussie ou un retour arrière, seules restent celles de la version en service, de la
+# précédente et du frontal en service (GATEWAY_VERSION), étiquetées ou non (scripts/images-application.py, ADR 0106).
 # Étapes : contrôles → notes de mise à jour → sauvegarde chiffrée → version du dépôt → images (signature) →
 # migrations (au démarrage de app, sous verrou, une transaction chacune) → santé → rapport et journal d'audit.
 # Échec après la sauvegarde → retour arrière automatique (ancienne version ; restauration de la sauvegarde si la base
@@ -64,7 +70,7 @@ while [ $# -gt 0 ]; do
     --images-locales) LOCALES=1 ;;
     --delai) DELAI="${2:?durée attendue}"; shift ;;
     --sauvegardes) SAUV="${2:?dossier attendu}"; shift ;;
-    -h | --help) sed -n '2,25p' "$SUIVI_MAJ_COPIE"; exit 0 ;;
+    -h | --help) sed -n '2,27p' "$SUIVI_MAJ_COPIE"; exit 0 ;;
     -*) arret "option inconnue : $1" ;;
     *) CIBLE="${1#v}" ;;
   esac
@@ -91,6 +97,7 @@ VOLS=''
 REF_AVANT=$(git rev-parse HEAD)
 ACTUELLE=$(valeur_env APP_VERSION)
 DATA_DIR=$(dossier_donnees)
+GARDEES="${UPDATE_SAUVEGARDES_GARDEES:-$(valeur_env UPDATE_SAUVEGARDES_GARDEES 3)}"
 
 semver() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
 plus_recente() { [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n 1)" = "$1" ] && [ "$1" != "$2" ]; }
@@ -162,6 +169,8 @@ retour_arriere() { # raison
   fi
   if attendre_sante "$DELAI"; then
     info "Retour arrière terminé : la version $ACTUELLE est en service."
+    # Images téléchargées par la tentative (ADR 0106) : retirées, sauf en recette sur des images locales, réutilisées ensuite.
+    [ "$LOCALES" = 1 ] || menage_images "$ACTUELLE" '' "$REPO/.env"
     rapport retour-arriere "$raison"
   else
     erreur "l'ancienne version ne redémarre pas : voir docs/INSTALLATION.md, section 13 (sauvegarde : $SAUVEGARDE)."
@@ -177,6 +186,20 @@ ecarter_copie_donnees() {
   mv "$d/$MARQUEUR" "$sous/" 2> /dev/null || true
   mv "$d/.migration-en-cours" "$sous/" 2> /dev/null || true
   info "Copie des données mise de côté : $sous"
+}
+
+# Images de l'application (ADR 0106) : seules restent celles de la version en service, de la précédente et du frontal en
+# service, désignées par étiquette, étiquette OCI de version ou empreinte épinglée dans les .env donnés. Script de la version
+# présente dans le dépôt à ce moment ; absent (version antérieure), rien n'est retiré. N'échoue jamais.
+menage_images() { # en_service [précédente] -- fichiers .env
+  local en_service="$1" precedente="${2:-}" frontal args=()
+  shift 2 || shift $#
+  [ -f "$REPO/scripts/images-application.py" ] || return 0
+  frontal=$(valeur_env GATEWAY_VERSION "$(valeur_env APP_VERSION "$en_service")")
+  args=(menage --en-service "$en_service" --frontal "$frontal")
+  [ -z "$precedente" ] || args+=(--precedente "$precedente")
+  for f in "$@"; do args+=(--env "$f"); done
+  python3 "$REPO/scripts/images-application.py" "${args[@]}" || avertir "ménage des images incomplet (sans effet sur la mise à jour)."
 }
 
 echec() {
@@ -200,6 +223,8 @@ command -v docker > /dev/null || arret "Docker est introuvable."
 docker compose version > /dev/null 2>&1 || arret "docker compose est introuvable."
 [ -f "$REPO/.env" ] || arret "fichier .env absent dans $REPO."
 [ -n "$ACTUELLE" ] || arret "APP_VERSION absent de .env."
+[[ "$GARDEES" =~ ^[0-9]{1,2}$ ]] && [ "$GARDEES" -ge 1 ] && [ "$GARDEES" -le 10 ] \
+  || arret "UPDATE_SAUVEGARDES_GARDEES doit être compris entre 1 et 10."
 verifier_chemin_donnees "$DATA_DIR"
 { exec 7> /run/lock/suivi-audits-mise-a-jour.lock; } 2> /dev/null || exec 7> /tmp/suivi-audits-mise-a-jour.lock
 flock -n 7 || arret "une autre mise à jour est en cours."
@@ -266,6 +291,44 @@ if [ "$VERIFIER" != 1 ]; then
     || arret "version installée ($ACTUELLE) antérieure à la 6.0.0 : mise à jour non prise en charge, installer un serveur neuf (ADR 0077)."
   controler_cles_sauvegarde "$CLE" "$SECOURS"
 fi
+# Place pour la sauvegarde de sécurité et les images (ADR 0106), avant toute modification. Estimation : dernière sauvegarde
+# « avant mise à jour » (sinon dernier rapport de sauvegarde réussi, sinon taille de la base), images à télécharger (2 Gio
+# forfaitaires en ligne de commande ; déjà téléchargées et vérifiées par l'exécutant pour une mise à jour web) et marge de
+# 1 Gio ou 10 %. La zone de travail de la sauvegarde (TMPDIR) doit contenir deux fois la sauvegarde, plus 10 % ; sur le même
+# disque, les besoins s'ajoutent. Les images sont comptées sur le disque des sauvegardes (cas courant d'un disque unique).
+mo() { printf '%s Mo' "$((($1 + 1048575) / 1048576))"; }
+derniere=$(find "$SAUV/avant-mise-a-jour" -maxdepth 1 -type f -name '*.tar.age' -printf '%T@ %s\n' 2> /dev/null | sort -rn | head -n 1 | cut -d' ' -f2 || true)
+[ -n "$derniere" ] || derniere=$(sed -n 's/.*"tailleOctets":\([0-9][0-9]*\).*/\1/p' "$DATA_DIR/etat/sauvegardes/derniere-reussie.json" 2> /dev/null | head -n 1 || true)
+[ -n "$derniere" ] || derniere=${taille_base:-0}
+[[ "$derniere" =~ ^[0-9]{1,15}$ ]] || derniere=0
+if [ "$LOCALES" = 1 ] || [ "${SUIVI_MAJ_WEB:-}" = 1 ]; then images_a_telecharger=0; else images_a_telecharger=$((2 * 1024 * 1024 * 1024)); fi
+marge=$(((derniere + images_a_telecharger) / 10 > 1073741824 ? (derniere + images_a_telecharger) / 10 : 1073741824))
+besoin_sauv=$((derniere + images_a_telecharger + marge))
+travail="${TMPDIR:-/tmp}"
+besoin_travail=$((2 * derniere + derniere / 10))
+libre_sauv=$(octets_libres "$SAUV/avant-mise-a-jour")
+libre_travail=$(octets_libres "$travail")
+existant=$SAUV
+while [ ! -e "$existant" ]; do existant=$(dirname "$existant"); done
+if [ "$(stat -c %d "$existant")" = "$(stat -c %d "$travail")" ]; then
+  besoin_sauv=$((besoin_sauv + besoin_travail))
+  besoin_travail=0
+fi
+info "Espace pour la sauvegarde et les images : $(mo "$libre_sauv") libres (nécessaire : $(mo "$besoin_sauv"))"
+if [ "$libre_sauv" -lt "$besoin_sauv" ] || [ "$libre_travail" -lt "$besoin_travail" ]; then
+  occupation=$(du -sb "$SAUV" 2> /dev/null | cut -f1 || true)
+  images=$(python3 "$REPO/scripts/images-application.py" taille 2> /dev/null || true)
+  if [[ "$images" =~ ^[0-9]+$ ]]; then images=$(mo "$images"); else images='non mesurées'; fi
+  if [ "$libre_sauv" -lt "$besoin_sauv" ]; then
+    motif="espace disque insuffisant pour la mise à jour : $(mo "$libre_sauv") libres pour les sauvegardes, $(mo "$besoin_sauv") nécessaires"
+    motif+=" (dernière sauvegarde $(mo "$derniere"), images à télécharger $(mo "$images_a_telecharger"), marge $(mo "$marge")$([ "$besoin_travail" = 0 ] && printf ', zone de travail sur le même disque'))."
+  else
+    motif="espace de travail insuffisant pour la sauvegarde de sécurité : $(mo "$libre_travail") libres dans la zone temporaire, $(mo "$besoin_travail") nécessaires (deux fois la dernière sauvegarde, plus 10 %)."
+  fi
+  motif+=" Occupation : sauvegardes $(mo "${occupation:-0}"), images de l'application $images. Rien n'a été modifié : libérer de la place (docs/INSTALLATION.md, « Libérer de la place »), puis relancer."
+  [ "$VERIFIER" = 1 ] || rapport abandon "$motif"
+  arret "$motif"
+fi
 
 # ---------------------------------------------------------------- 2. Notes de mise à jour
 PHASE=notes
@@ -307,7 +370,7 @@ PHASE=sauvegarde
 if declare -F progression > /dev/null; then progression; fi
 etape "Sauvegarde chiffrée"
 mkdir -p "$SAUV/avant-mise-a-jour"
-sortie=$(RETENTION_DAYS=36500 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_KEY_FILE="$CLE" BACKUP_RECIPIENTS_FILE="$SECOURS" \
+sortie=$(RETENTION_DAYS=36500 BACKUP_GARDER_MAX=365 BACKUP_PREFIXE="avant-maj-$ACTUELLE-vers-$CIBLE" BACKUP_KEY_FILE="$CLE" BACKUP_RECIPIENTS_FILE="$SECOURS" \
   "$REPO/scripts/backup.sh" "$SAUV/avant-mise-a-jour" 2>&1) || { printf '%s\n' "$sortie" >&2; arret "échec de la sauvegarde : mise à jour annulée."; }
 printf '%s\n' "$sortie"
 SAUVEGARDE=$(printf '%s\n' "$sortie" | sed -n 's/^Sauvegarde : //p' | tail -n 1)
@@ -317,9 +380,17 @@ if [ -f "$SAUVEGARDE.sha256" ]; then
 else
   sha256sum "$SAUVEGARDE" > "$SAUVEGARDE.sha256"
 fi
-# Les 5 dernières sauvegardes « avant mise à jour » sont gardées, hors rotation.
-find "$SAUV/avant-mise-a-jour" -maxdepth 1 -name '*.tar.age' -printf '%T@ %p\n' | sort -rn | tail -n +6 \
-  | cut -d' ' -f2- | while read -r f; do rm -f "$f" "$f.sha256"; done
+# Les UPDATE_SAUVEGARDES_GARDEES dernières sauvegardes « avant mise à jour » sont gardées (3 par défaut, ADR 0106), celle-ci
+# comprise, chacune avec son fichier .sha256. Seules tournent les archives ordinaires « avant-maj-*.tar.age » du dossier :
+# ni lien, ni sous-dossier, ni archive d'une ancienne version (.tar.enc, .tar).
+rang=0
+while IFS= read -r -d '' ligne; do
+  rang=$((rang + 1))
+  [ "$rang" -gt "$GARDEES" ] || continue
+  archive=${ligne#*$'\t'}
+  rm -f -- "$archive"
+  if [ -L "$archive.sha256" ] || [ ! -d "$archive.sha256" ]; then rm -f -- "$archive.sha256"; fi
+done < <(find "$SAUV/avant-mise-a-jour" -maxdepth 1 -type f -name 'avant-maj-*.tar.age' -printf '%T@\t%p\0' | LC_ALL=C sort -z -t $'\t' -k1,1nr -k2,2r)
 MIGRATIONS_AVANT=$(migrations_appliquees)
 CONTROLE_AVANT=$(dc exec -T app suivi controle-donnees 2> /dev/null || true)
 # Références logiques entre objets (JSON, état historique) avant : la version précédente peut ne pas connaître la commande.
@@ -443,15 +514,9 @@ if declare -F progression > /dev/null; then progression; fi
 etape "Mise à jour terminée : $ACTUELLE → $CIBLE"
 [ -n "$MIGRATIONS" ] && info "Migrations appliquées : $MIGRATIONS"
 rapport reussie ''
+# Images (ADR 0106) : la version en service, la précédente (retour rapide) et le frontal en service, étiquetées ou désignées
+# par leur empreinte (épinglées dans .env, avant comme après) ; aucune autre image du serveur, et plus de « prune » global.
+menage_images "$CIBLE" "$ACTUELLE" "$REPO/.env" "$REPO/.env.avant-mise-a-jour"
 rm -f "$REPO/.env.avant-mise-a-jour"
-# Images : on garde la version en service et la précédente (retour rapide).
-for i in $COMPOSANTS; do
-  garder="$CIBLE|$ACTUELLE"
-  # Le frontal stable peut être plus ancien que la version applicative précédente.
-  if [ "$i" = web ]; then garder+="|$(valeur_env GATEWAY_VERSION "$CIBLE")"; fi
-  docker image ls --format '{{.Repository}}:{{.Tag}}' "$DEPOT_IMAGES-$i" \
-    | grep -vE ":($garder)$" | xargs -r docker image rm > /dev/null 2>&1 || true
-done
-docker image prune -f > /dev/null 2>&1 || true
 [ "$MIGRATION_DOSSIER" = 1 ] && info "Anciens volumes Docker conservés : après vérification, sudo ./scripts/migrer-donnees-vers-dossier.sh --supprimer-anciens-volumes"
 info "Sauvegarde faite avant la mise à jour : $SAUVEGARDE"

@@ -130,7 +130,8 @@ describe('notifications métier', () => {
       const g = await lecteur.get('/api/account/notifications');
       expect(g.statusCode).toBe(200);
       expect(g.json().portee.kind).toBe('utilisateur');
-      expect(g.json().reglages).toHaveLength(14);
+      // 10 types × 2 canaux (lot S1 : délais dépassés et exceptions à échéance ; ADR 0105 : déclaration d'un incident).
+      expect(g.json().reglages).toHaveLength(20);
       const r = await lecteur.put(
         '/api/account/notifications',
         { changements: [{ type: 'task_due', canal: 'application', valeur: false }] },

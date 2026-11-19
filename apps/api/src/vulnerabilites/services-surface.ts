@@ -201,3 +201,25 @@ export async function servicesDeLAlerte(k: Kdb, user: SessionUser, alerteId: str
     ORDER BY s.port, s.protocole NULLS LAST`.execute(k);
   return fusionnerServices(sansAlertes(rows.map((r) => versService({ ...r, alertes: [] }))));
 }
+
+/** Lot S3 : services exposés en fin de support selon AlgoLightHouse (`version_status = eol`), visibles (actif présent, porté
+    par au moins une alerte ouverte et présente) : nombre de ceux dont la personne lit l'actif, drapeau sans nombre pour les
+    autres. Une requête. */
+export async function servicesFinDeSupport(
+  k: Kdb,
+  user: SessionUser,
+): Promise<{ lisibles: number; horsLecture: boolean }> {
+  const { rows } = await sql<{ lisibles: number; total: number }>`
+    SELECT count(*) FILTER (WHERE z.lu)::int AS lisibles, count(*)::int AS total FROM (
+      SELECT DISTINCT s.id, ${lisibleAlh(user)} AS lu
+      FROM vulnerabilites_alh_services s
+      JOIN vulnerabilites_alh_actifs x ON x.id = s.actif_id
+      LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+      LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+      JOIN vulnerabilites_alh_service_alertes sa ON sa.service_id = s.id
+      JOIN vulnerabilites_alh_alertes a2 ON a2.id = sa.alerte_id
+      WHERE s.statut_version = 'eol' AND x.vu_numero >= coalesce(e.numero_complet, 0)
+        AND a2.statut = ANY(${OUVERTS}::text[]) AND a2.vu_numero >= coalesce(e.numero_complet, 0)) z`.execute(k);
+  const r = rows[0] ?? { lisibles: 0, total: 0 };
+  return { lisibles: r.lisibles, horsLecture: r.total > r.lisibles };
+}

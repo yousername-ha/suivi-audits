@@ -9,7 +9,10 @@
    traiter ; « à clore » : corrigées selon la source, à confirmer), fiche d'une faille déclarée, suivi dans chaque fiche
    (SuiviFaille). Lot V4c : ce que chaque source dit de la faille (SourcesFaille) : exploitation avérée et « exploitable »
    avec la première source et sa date, valeurs par source et celle retenue, mentions du CERT Santé ; gravité retenue (la plus
-   sévère) dans la liste des failles déclarées. */
+   sévère) dans la liste des failles déclarées. Lot S1 : colonne « Délai » (état du délai de correction en clair, âge,
+   échéance calculée, délai de la priorité), filtre « Délai » et tri par échéance, repris de l'adresse. Lot S3 : vue « Par
+   correctif » (Correctifs.tsx : « n mises à jour à faire pour m failles »), marque et filtre « Fin de support » (date de fin
+   de support de Tenable passée), distincte de « Non maintenu » (constat sans CVE) ; `?vue=correctifs` ouvre la vue. */
 import {
   Alert,
   Anchor,
@@ -27,6 +30,9 @@ import {
   Title,
 } from '@mantine/core';
 import {
+  type DelaiFailleDto,
+  type EtatDelai,
+  type TriFailles,
   type ConstatDto,
   type ConstatResumeDto,
   type EtatSynchronisationDto,
@@ -69,7 +75,9 @@ import {
   urlDeclarees,
   urlMachines,
 } from './failles';
+import { ETAT_DELAI_PUCE, libelleEtatDelai, lignesDelai, OPTIONS_FILTRE_DELAI, OPTIONS_TRI } from './delais';
 import { nombrePages } from './veille';
+import { CorrectifsVue } from './Correctifs';
 import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
@@ -77,6 +85,20 @@ import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
+/** Boutons de pagination nommés (flèches comprises) : sans nom, l'axe `wcag2a` les refuse dès qu'il y a deux pages. */
+const NOMS_PAGINATION = {
+  getControlProps: (c: 'first' | 'previous' | 'last' | 'next') => ({
+    'aria-label':
+      c === 'previous'
+        ? 'Page précédente'
+        : c === 'next'
+          ? 'Page suivante'
+          : c === 'first'
+            ? 'Première page'
+            : 'Dernière page',
+  }),
+  getItemProps: (n: number) => ({ 'aria-label': `Page ${n}` }),
+};
 
 /** Priorité calculée par la plateforme et faits qui la fondent (sans état). */
 export function PrioriteFaits({ p }: { p: Priorite }) {
@@ -85,6 +107,27 @@ export function PrioriteFaits({ p }: { p: Priorite }) {
       <StatusChip etat={ETAT_PRIORITE[p.niveau]}>{p.niveau}</StatusChip>
       <Text size="xs" c="dimmed">
         {faitsPriorite(p).join(' · ')}
+      </Text>
+    </Stack>
+  );
+}
+
+/** Délai de correction d'une faille (sans état, lot S1) : état en clair, âge, échéance, délai de la priorité. */
+export function DelaiFaille({ d, maintenant = new Date() }: { d: DelaiFailleDto; maintenant?: Date }) {
+  const l = lignesDelai(d, maintenant);
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_DELAI_PUCE[d.etat]}>{libelleEtatDelai(d.etat)}</StatusChip>
+      <Text size="xs" c="dimmed">
+        {l.age}
+      </Text>
+      {l.echeance && (
+        <Text size="xs" c="dimmed">
+          Échéance : <span className="horodatage">{l.echeance}</span>
+        </Text>
+      )}
+      <Text size="xs" c="dimmed">
+        {l.regle}
       </Text>
     </Stack>
   );
@@ -106,6 +149,7 @@ export function ConstatsTable({
             <Table.Th>Priorité</Table.Th>
             <Table.Th>Contrôle de Tenable</Table.Th>
             <Table.Th>Suivi</Table.Th>
+            <Table.Th>Délai</Table.Th>
             <Table.Th>Gravité</Table.Th>
             <Table.Th>CVE</Table.Th>
             <Table.Th>Machines</Table.Th>
@@ -146,6 +190,9 @@ export function ConstatsTable({
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
               </Table.Td>
               <Table.Td>
+                <DelaiFaille d={c.delai} />
+              </Table.Td>
+              <Table.Td>
                 <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
                 {c.cvss3Score !== null && (
                   <Text size="xs" c="dimmed">
@@ -157,9 +204,10 @@ export function ConstatsTable({
                 <Text size="xs" className="veille-code">
                   {resumeCves(c)}
                 </Text>
-                {c.nonMaintenu && c.finSupportLe && (
+                {c.finSupportLe && (
                   <Text size="xs" c="dimmed">
-                    Fin de support : <span className="horodatage">{fmtDate(c.finSupportLe)}</span>
+                    {c.finDeSupport ? 'Fin de support' : 'Fin de support annoncée'} :{' '}
+                    <span className="horodatage">{fmtDate(c.finSupportLe)}</span>
                   </Text>
                 )}
               </Table.Td>
@@ -178,7 +226,7 @@ export function ConstatsTable({
           ))}
           {constats.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={7}>
+              <Table.Td colSpan={8}>
                 <Text size="sm" c="dimmed">
                   Aucune faille détectée ne correspond, parmi les machines que vous pouvez lire.
                 </Text>
@@ -207,6 +255,7 @@ export function DeclareesTable({
             <Table.Th>Priorité</Table.Th>
             <Table.Th>CVE</Table.Th>
             <Table.Th>Suivi</Table.Th>
+            <Table.Th>Délai</Table.Th>
             <Table.Th>Produit surveillé</Table.Th>
             <Table.Th>Gravité (la plus sévère)</Table.Th>
             <Table.Th>Machines</Table.Th>
@@ -245,6 +294,9 @@ export function DeclareesTable({
                 <MarquesSuivi s={f.suivi} present={f.present} source="la veille" />
               </Table.Td>
               <Table.Td>
+                <DelaiFaille d={f.delai} />
+              </Table.Td>
+              <Table.Td>
                 <Text size="sm">
                   {f.produit.nom} {f.produit.versionProduit}
                 </Text>
@@ -269,7 +321,7 @@ export function DeclareesTable({
           ))}
           {failles.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={6}>
+              <Table.Td colSpan={7}>
                 <Text size="sm" c="dimmed">
                   Aucune faille déclarée ne correspond : reliez un produit surveillé à ses machines depuis sa fiche.
                 </Text>
@@ -481,9 +533,11 @@ export function EtatSynchronisations({ etats }: { etats: EtatSynchronisationDto[
 export function FaillesDetecteesPage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
-  const [vue, setVue] = useState<'failles' | 'machines'>('failles');
   // Lot PC1 : les tuiles de la Vue d'ensemble ouvrent cette liste déjà filtrée (priorité, suivi, exploitation).
   const [adresse] = useSearchParams();
+  const [vue, setVue] = useState<'failles' | 'machines' | 'correctifs'>(() =>
+    adresse.get('vue') === 'correctifs' ? 'correctifs' : adresse.get('vue') === 'machines' ? 'machines' : 'failles',
+  );
   const [filtres, setFiltres] = useState<FiltresConstats>(() => filtresDepuisAdresse(adresse));
   const [saisie, setSaisie] = useState(filtres.q);
   const [page, setPage] = useState(1);
@@ -503,7 +557,16 @@ export function FaillesDetecteesPage() {
     enabled: lire && vue === 'failles',
   });
   const declarees = useQuery({
-    queryKey: [...CLE, 'declarees', filtres.q, filtres.priorite, filtres.etat, pageDeclarees],
+    queryKey: [
+      ...CLE,
+      'declarees',
+      filtres.q,
+      filtres.priorite,
+      filtres.etat,
+      filtres.delai,
+      filtres.tri,
+      pageDeclarees,
+    ],
     queryFn: () => get<PageFailles<FailleDeclareeDto>>(urlDeclarees(filtres, pageDeclarees)),
     enabled: lire && vue === 'failles',
   });
@@ -539,7 +602,7 @@ export function FaillesDetecteesPage() {
         <Alert>Vous ne disposez pas du droit de lire les vulnérabilités.</Alert>
       </Page>
     );
-  const donnees = vue === 'failles' ? constats.data : machines.data;
+  const donnees = vue === 'failles' ? constats.data : vue === 'machines' ? machines.data : undefined;
   const pages = donnees ? nombrePages(donnees.total, donnees.parPage) : 1;
   return (
     <Page>
@@ -557,30 +620,34 @@ export function FaillesDetecteesPage() {
         {etat.data && <EtatSynchronisations etats={etat.data} />}
         <SegmentedControl
           value={vue}
-          onChange={(v) => setVue(v as 'failles' | 'machines')}
+          onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}
           data={[
             { value: 'failles', label: 'Par faille' },
             { value: 'machines', label: 'Par machine' },
+            { value: 'correctifs', label: 'Par correctif' },
           ]}
           aria-label="Vue"
         />
-        <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
-            <TextInput
-              label="Rechercher"
-              description={
-                vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
-              }
-              placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
-              maxLength={100}
-              value={saisie}
-              onChange={(e) => setSaisie(e.currentTarget.value)}
-            />
-            <Button type="submit" variant="default">
-              Rechercher
-            </Button>
-          </Group>
-        </form>
+        {vue === 'correctifs' && <CorrectifsVue onOuvrirConstat={setOuvert} />}
+        {vue !== 'correctifs' && (
+          <form onSubmit={chercher} role="search">
+            <Group align="flex-end">
+              <TextInput
+                label="Rechercher"
+                description={
+                  vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
+                }
+                placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
+                maxLength={100}
+                value={saisie}
+                onChange={(e) => setSaisie(e.currentTarget.value)}
+              />
+              <Button type="submit" variant="default">
+                Rechercher
+              </Button>
+            </Group>
+          </form>
+        )}
         {vue === 'failles' && (
           <Group align="flex-end">
             <Select
@@ -610,6 +677,23 @@ export function FaillesDetecteesPage() {
               data={GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }))}
               comboboxProps={{ withinPortal: false }}
             />
+            <Select
+              label="Délai"
+              placeholder="Tous"
+              clearable
+              value={filtres.delai || null}
+              onChange={(v) => changer({ delai: (v ?? '') as EtatDelai | '' })}
+              data={OPTIONS_FILTRE_DELAI}
+              comboboxProps={{ withinPortal: false }}
+            />
+            <Select
+              label="Trier par"
+              allowDeselect={false}
+              value={filtres.tri || 'priorite'}
+              onChange={(v) => changer({ tri: v === 'echeance' ? 'echeance' : ('' as TriFailles | '') })}
+              data={OPTIONS_TRI}
+              comboboxProps={{ withinPortal: false }}
+            />
             <Checkbox
               label="Exploitation avérée"
               checked={filtres.exploite}
@@ -625,12 +709,18 @@ export function FaillesDetecteesPage() {
               checked={filtres.nonMaintenu}
               onChange={(e) => changer({ nonMaintenu: e.currentTarget.checked })}
             />
+            <Checkbox
+              label="Fin de support"
+              description="Plus de correctif de sécurité de l’éditeur"
+              checked={filtres.finSupport}
+              onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
+            />
           </Group>
         )}
-        <ErrorAlert error={vue === 'failles' ? constats.error : machines.error} />
+        {vue !== 'correctifs' && <ErrorAlert error={vue === 'failles' ? constats.error : machines.error} />}
         {vue === 'failles' && constats.data && <ConstatsTable constats={constats.data.elements} onOuvrir={setOuvert} />}
         {vue === 'machines' && machines.data && <MachinesTable machines={machines.data.elements} />}
-        {donnees && (
+        {donnees && vue !== 'correctifs' && (
           <Group justify="space-between">
             <Text size="sm" c="dimmed" role="status">
               {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
@@ -641,6 +731,7 @@ export function FaillesDetecteesPage() {
                 value={vue === 'failles' ? page : pageMachines}
                 onChange={vue === 'failles' ? setPage : setPageMachines}
                 aria-label="Pages"
+                {...NOMS_PAGINATION}
               />
             )}
           </Group>
@@ -663,6 +754,7 @@ export function FaillesDetecteesPage() {
                 value={pageDeclarees}
                 onChange={setPageDeclarees}
                 aria-label="Pages des failles déclarées"
+                {...NOMS_PAGINATION}
               />
             )}
           </Stack>

@@ -21,6 +21,9 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => !!v && typeof v === 'object' && !Array.isArray(v);
 const arr = (v: unknown): Rec[] => (Array.isArray(v) ? v.filter(isRec) : []);
 const strs = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+/** Élément d'un quadrant SWOT : texte simple (ancien format) ou objet `{ text }` (format actuel). */
+const texteSwot = (t: unknown): unknown =>
+  t && typeof t === 'object' && 'text' in t ? (t as { text: unknown }).text : t;
 /** Équivalent de `x || ''` (JavaScript) pour un champ texte. */
 const str = (v: unknown): string => (v == null || v === false || v === 0 || v === '' ? '' : String(v));
 
@@ -341,7 +344,7 @@ export function buildObjects(state: unknown, opts: BuildOptions): Map<string, Ca
     for (const [q, kind, l] of QUADRANTS)
       for (const t of strs(s[q]))
         addIssue(
-          t,
+          texteSwot(t),
           l + ' — SWOT ' + String(p.id),
           kind,
           {

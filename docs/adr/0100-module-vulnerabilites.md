@@ -376,6 +376,17 @@
   mention « Exposée sur Internet » des machines reliées par une liaison confirmée. Voir l'addendum « lot PC3 » ci-dessous.
 - **Lot PC4, fiche de faille illustrée** (18/11/2026) : sans migration, présentation commune en tête des fiches existantes,
   vecteur CVSS traduit avec une icône par métrique, schéma, recommandations par source. Voir l'addendum « lot PC4 » ci-dessous.
+- **Lot S1, délais de correction et exceptions à échéance** (18/11/2026) : migration `087`, délai cible par priorité réglé
+  avec les seuils, âge, échéance et état du délai, tuile « En dépassement », exceptions (risque accepté) réservées au rôle
+  RSSI avec justification, mesure compensatoire et échéance, expiration et rappel, onglet « Délais et exceptions ». Voir
+  l'addendum « lot S1 » ci-dessous.
+- **Lot S2, tendances et rapport de pilotage** (18/11/2026) : migration `088`, instantané quotidien de la situation (niveau
+  d'alerte, nombres de failles, globaux et par périmètre, sans nom), onglet « Tendances », variation sur sept jours de la vue
+  d'ensemble, rapport mensuel imprimable (PDF par le navigateur) et CSV. Voir l'addendum « lot S2 » ci-dessous.
+- **Lot S3, regroupement par correctif, fin de support, état du correctif** (18/11/2026) : sans migration, vue « Par
+  correctif » de « Failles détectées » (« n mises à jour à faire pour m failles »), état du correctif à trois valeurs avec sa
+  source, précision « sans correctif connu » à côté de la marque zero-day, fin de support signalée et filtrée. Voir
+  l'addendum « lot S3 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -1761,3 +1772,393 @@ seulement). Docker et Node 26.
 3. Parcours horodaté de la faille (publiée, exploitée, détectée, action, corrigée), si le RSSI le veut.
 4. Vecteur d'AlgoLightHouse : à ranger seulement si l'éditeur le publie (champ à ajouter à la liste blanche, à valider).
 
+## Addendum du 18/11/2026 — lot S1 : délais de correction et exceptions à échéance
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `087`
+(additive : colonnes facultatives sur `vulnerabilites_suivis` et `vulnerabilites_suivi_historique`, contrainte des
+événements de l'historique recréée avec « expiration », table `vulnerabilites_depassements`, contrainte de portée de
+`grc_notifications` recréée avec deux types, quatre index ; aucune donnée reprise ni modifiée ; numéro libre sur toutes les
+branches distantes le 18/11/2026). Aucun appel réseau, aucun appel au modèle, aucune dépendance nouvelle, aucun rôle ni droit
+nouveau ; l'assistant n'est pas touché (il lit l'état de suivi des failles, inchangé). Remplace, dans
+l'addendum « lot V4b », le choix « date de revue facultative, signal calculé quand elle est passée, sans changement d'état ».
+
+### Décision du RSSI (18/11/2026)
+
+Transformer l'outil de surveillance en outil de pilotage, dans cet ordre : (1) le suivi de la correction dans le temps,
+(3) les exceptions formalisées ; puis un rapport et le regroupement par correctif (lots suivants). Ses mots : « un délai
+cible par priorité (par exemple P1 sous 48 h, P2 sous 15 jours), l'âge de chaque faille, et les dépassements signalés » ;
+« quand une faille ne peut pas être corrigée (équipement biomédical, application d'éditeur), pouvoir enregistrer une
+acceptation du risque avec une justification, une mesure compensatoire et une date d'échéance. L'état "risque accepté"
+existe, mais sans échéance ni rappel ». Contexte : certification ISO/IEC 27001:2022 et HDS, éléments attendus en audit.
+
+### Réalisation
+
+- **Délai cible par priorité** (`packages/shared/src/delais-vulnerabilites.ts`, fonctions pures testées en table) : rangé
+  avec les seuils de priorité (clé `vulnerabilites:priorite` de `settings`, champ `delais`), réglé dans « Seuils de
+  priorité » avec `vulnerabilites:administrer`, If-Match et le journal `vulnerabilites.priorite.reglage_modifie` ; une
+  saisie peut ne porter que le seuil ou que les délais (`SaisieReglagePriorite`), le reste est gardé ; un réglage rangé avant
+  le lot prend les délais par défaut du code. Durée entière d'une heure à un an, en heures ou en jours, ou « aucun délai ».
+- **Âge et point de départ** : dates déjà rangées, aucune inventée. Constat : la première détection de Tenable sur une de
+  ses machines (`min(premiere_detection)` des détections), sinon l'entrée du constat dans la plateforme (`cree_le`) ;
+  faille déclarée : la date du rapprochement (`cree_le`, plus ancienne que sa confirmation éventuelle). L'âge court depuis
+  cette première présence ; le délai, depuis elle ou depuis sa **reprise** (`delai_repart_le`) si elle est plus récente :
+  fin d'une exception (expiration ou levée) et réapparition d'une faille corrigée.
+- **Priorité qui fixe le délai** : la priorité courante, sur tous les faits connus (lot ALH5), celle des listes. Le passage
+  d'une priorité à une autre **n'est pas historisé** (la priorité est recalculée à chaque lecture ; seules les alertes P1 et
+  P2 exposées gardent un niveau) : après une montée P2 → P1, le délai P1 court donc depuis la première présence. Échéance
+  calculée, jamais saisie ; un jour vaut 24 heures.
+- **États** (`calculerDelai`) : « En dépassement » (échéance passée), « Échéance proche » (moins d'un quart du délai
+  restant), « Dans les délais », « Sans délai » (P4 par défaut) ; jamais en dépassement : « Close » (corrigée, non
+  concernée), « Sous exception » (risque accepté), « Plus rapportée par la source » (proposition « corrigée » à confirmer).
+- **Écrans** : colonne « Délai » (état en clair, âge, échéance, délai de la priorité) des listes de « Failles détectées »
+  (constats et failles déclarées), filtre « Délai » et « Trier par : Échéance de correction », repris de l'adresse ; mention
+  dans la fiche illustrée (PC4) ; tuile « En dépassement » de la vue d'ensemble (PC1), vers la liste filtrée et triée ;
+  onglet « Délais et exceptions » (`/vulnerabilites/delais`) : délais cibles, mesure des corrections sur 30 jours, 90 jours
+  ou 12 mois, exceptions.
+- **Dépassements signalés** : évaluation au tic de l'API, au plus une fois par quart d'heure, dans une transaction sous
+  verrou consultatif (`apps/api/src/vulnerabilites/delais.ts`) ; elle reprend le calcul global des alertes
+  (`situationGlobale`, objets suivis présents). Les failles entrées en dépassement depuis l'évaluation précédente (table
+  `vulnerabilites_depassements`, une ligne par faille signalée, recalculée) donnent **un** résumé « n failles en
+  dépassement de délai » (type `vulnerabilites_delais`, lien vers la liste filtrée), aux comptes qui lisent le module, selon
+  leurs réglages ; aucun quand il n'y en a pas ; ni CVE ni nom. Une faille dont l'échéance change (délai reparti) est
+  signalée de nouveau. Journal `vulnerabilites.delais.evalues` (nombres seulement). Module désactivé : rien.
+- **Mesure** (`mesurerCorrections`) : au passage à « corrigée », l'historique relève la priorité, le point de départ, la
+  fin et l'échéance du délai ; la fin est la date de la proposition « corrigée » quand la décision la confirme, sinon la
+  date de la décision. Par priorité et en tout : nombre, délai moyen et médian, corrections avec délai et faites au plus
+  tard à l'échéance, part dans les délais. Les mêmes nombres pour tout le monde, sans nom. Les corrections décidées avant le
+  lot sont comptées à part (« non mesurées »). Fonctions réutilisables pour le rapport d'un lot suivant.
+- **Exceptions** : un risque accepté exige une justification (la note), une mesure compensatoire et une échéance (la date de
+  revue du lot V4b, champ `revueLe`), ni passée ni au-delà de **douze mois**. Accorder, prolonger (même état, nouvelle
+  échéance) ou lever (tout autre état) une exception est réservé au **rôle « RSSI »** de la plateforme (`rssi.ts`, même
+  mécanisme que la prise en compte d'une alerte du lot V6b, direct ou par un groupe), en plus de `vulnerabilites:modifier` et
+  de la lecture de toutes les machines touchées : **403** « Seul le RSSI peut accorder, prolonger ou lever une exception
+  (risque accepté). » sinon, administrateur compris. Rangés sur le suivi : justification, mesure, auteur et date, état d'avant
+  l'exception, date du rappel ; à l'historique : la note, la mesure et l'échéance. Le lien existant avec une action du
+  registre (lot V4b) reste disponible, sans être obligatoire.
+- **Expiration et rappel** (même évaluation) : une exception dont l'échéance est passée (fuseau de l'organisation) expire
+  d'elle-même : la faille revient à l'état d'avant l'exception s'il était « à traiter » ou « en cours », sinon « à
+  traiter » ; son délai repart de l'expiration ; l'événement « expiration » (auteur « système », avec l'échéance) entre à
+  l'historique ; journal `vulnerabilites.exceptions.echues` (identifiants internes) ; puis les alertes sont réévaluées. Un
+  rappel part quatorze jours avant l'échéance, une fois par exception et par échéance (journal
+  `vulnerabilites.exceptions.rappel`). Un seul résumé « n exceptions échues, m à échéance sous 14 jours » par évaluation
+  (type `vulnerabilites_exceptions`, lien vers l'onglet). Exceptions listées dans l'onglet : en cours, bientôt échues, échues
+  depuis 90 jours, sans échéance, des seules failles que la personne lit (au moins une machine touchée lisible, comme les
+  listes), avec qui et quand, justification, mesure compensatoire et échéance ; filtre « Risque accepté » des listes
+  inchangé ; mention dans la fiche illustrée et marque « Exception … » dans la colonne « Suivi ».
+- **Requêtes ajoutées aux routes existantes** : listes des constats et des failles déclarées 0 (colonnes ajoutées aux
+  requêtes existantes, calcul en mémoire) ; vue d'ensemble 0 (objets du calcul global déjà fait) ; fiche illustrée 0 ;
+  fiche du suivi 1 (rôle RSSI) ; changement d'état 1 à 2 (rôle RSSI) et, au passage à « corrigée », 7 environ (délai de
+  l'objet : réglage, objet, CVE et faits des sources, date de la proposition) ; réglage 0. Route nouvelle `GET
+  /api/vulnerabilites/delais` : 4. Évaluation au tic : nombre fixe (verrou, expiration 2 à 4, rappel 1, calcul global des
+  alertes, dépassements 1 à 3), plus la lecture des destinataires (une par compte actif, comme les alertes) quand il y a
+  quelque chose à notifier ; aucune par faille.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Valeurs par défaut** : P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai ; un jour vaut 24 heures (ni jours
+  ouvrés ni jours fériés).
+- **Échéance proche** : moins d'un quart du délai restant (fixe) : P1 12 heures, P2 3 jours et 18 heures, P3 22 jours et
+  12 heures.
+- **Montée de priorité** : délai de la nouvelle priorité compté depuis la première présence (le passage n'est pas historisé).
+- **Reprise du délai** : à la fin d'une exception (expiration ou levée, délai complet de la priorité courante) et à la
+  réapparition d'une faille corrigée ; pas à la réouverture manuelle d'une faille corrigée.
+- **Faille déclarée** : première présence = date du rapprochement, même s'il a été confirmé plus tard.
+- **Faille que la source ne rapporte plus** (proposition « corrigée » à confirmer) : jamais en dépassement ; la mesure prend
+  la date de la proposition comme fin quand la décision la confirme.
+- **Date de revue devenue échéance** : la colonne `revue_le` du lot V4b porte l'échéance, sans colonne nouvelle. Une
+  exception enregistrée avant le lot **avec** une date de revue passée expire à la première évaluation ; **sans** date, elle
+  reste valide, signalée « sans échéance, à compléter » (aucune migration de données).
+- **Durée maximale** : douze mois, même jour du mois (fin du mois s'il n'existe pas).
+- **Qui décide** : seul le rôle « RSSI » accorde, prolonge ou lève, y compris pour passer une faille sous exception à
+  « corrigée » ; les autres personnes ne peuvent que **lire** l'exception : un état « proposée » ne s'insère pas proprement
+  dans le cycle existant (il faudrait un second jeu de champs proposés et une décision d'acceptation ou de refus à côté de la
+  proposition « corrigée ») ; à trancher si le RSSI le veut. **Conséquence déjà connue** : le compte créé à l'installation n'a
+  que le rôle « Administrateur » ; sans compte qui tienne le rôle « RSSI », aucune exception ne peut être accordée (note de
+  mise à jour du CHANGELOG).
+- **Rappel** : quatorze jours avant l'échéance (fixe), aussi seuil de « bientôt échue » ; un résumé par évaluation, aux
+  lecteurs du module (pas seulement au RSSI).
+- **Évaluation** : au tic de l'API, au plus une fois par quart d'heure (expiration dans le quart d'heure qui suit le
+  changement de jour), plutôt qu'à la fin des synchronisations, puisqu'un dépassement et une échéance arrivent avec le
+  temps ; l'intervalle est gardé en mémoire (un redémarrage évalue au premier tic, sans double notification).
+- **Mesure** : une correction par faille et par période (la dernière) ; priorité et échéance relevées à la décision.
+
+### Point à trancher : faille P1 sous exception et alertes critiques
+
+Le code ne change pas la règle des alertes (aucune décision prise). Aujourd'hui, un constat ou une faille déclarée en
+« risque accepté » est **traité** au sens des alertes (`close` de `suivi.ts`, comme « corrigée » et « non concernée ») : sa
+présence détectée ou déclarée ne compte plus. Une faille P1 dont **tous** les objets suivis sont sous exception n'ouvre donc
+plus d'alerte critique, et l'alerte ouverte se clôt avec le motif « traitée » ; **sauf** si la même CVE est aussi exposée
+sur Internet (présence « exposée », que le suivi ne couvre pas) : l'alerte critique reste ouverte et la fenêtre rouge
+s'affiche. À l'expiration de l'exception, la faille compte de nouveau et une nouvelle alerte critique s'ouvre. Le RSSI
+veut-il qu'une faille P1 sous exception garde son alerte critique (ou une alerte d'un autre niveau) ?
+
+### Non vérifié
+
+Aucune donnée réelle (tests sur données fictives). Rendu vu sur un **banc local** (application réelle sous Vite, API
+simulée par Playwright, données fictives ; Chromium, clair et sombre, 1 440 et 390 px ; onglet « Délais et exceptions »,
+« Failles détectées » filtrée et triée, « Seuils de priorité », vue d'ensemble, fiche d'un constat avec le formulaire
+d'exception ; axe `wcag2a`/`wcag2aa` sans violation, aucun débordement de page), pas dans la pile complète ; la CSP n'a pas été
+vérifiée sur le banc (serveur de développement), seulement par les tests de l'interface (aucune prop `style` dans les sources
+du lot). Le parcours Playwright ajouté (`zzz…-vulnerabilites-delais.spec.ts`, pile sans faille) et le parcours adapté
+(`zzz…-vulnerabilites-failles.spec.ts`) n'ont pas été joués (CI seulement). Durée de l'évaluation au tic sur un parc réel
+(150 machines, 10 000 vulnérabilités annoncées : même calcul global que les alertes, environ une seconde mesurée au lot
+PC1) ; envoi réel d'un courriel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Rapport** (PDF) des délais et des exceptions pour l'audit : lot suivant ; les fonctions de mesure sont prêtes.
+2. **Regroupement par correctif** (un correctif, plusieurs failles) : lot suivant.
+3. **Criticité métier des machines** (délai plus court sur une machine critique) : non réalisée.
+4. Nombre de failles en dépassement sur les **cartes de périmètre** (PC3) : non réalisé (une faille touche plusieurs
+   périmètres ; décompte à définir).
+5. **Proposition d'exception** par une personne qui n'est pas RSSI : à trancher (voir ci-dessus).
+6. **Faille P1 sous exception et alertes critiques** : à trancher (voir ci-dessus).
+7. Historiser le **passage de priorité** pour faire courir le délai depuis la montée, si le RSSI le veut.
+8. Confirmer les valeurs par défaut, l'échéance proche, la durée maximale et le rappel.
+
+## Addendum du 18/11/2026 — lot S2 : tendances et rapport de pilotage
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration `088`
+(additive : tables `vulnerabilites_instantanes` et `vulnerabilites_instantanes_mesures`, deux index, sans clé étrangère vers
+`grc_smsis` comme les autres tables du module ; aucune donnée reprise ni reconstruite ; numéro libre sur toutes les branches
+distantes le 18/11/2026). Aucun appel réseau, aucun appel au modèle, aucune dépendance nouvelle, aucun rôle ni droit
+nouveau. Lève le point ouvert 1 (« Rapport ») de l'addendum « lot S1 ».
+
+### Décision du RSSI (18/11/2026)
+
+« Tendances. Une courbe des failles ouvertes et corrigées semaine après semaine, par périmètre. Sans historique, le radar ne
+dit pas si la situation s'améliore. » ; « Rapport pour la direction et l'audit. Un export PDF mensuel : niveau d'alerte,
+failles critiques, délais de correction, exceptions en cours. Vous en aurez besoin pour la revue de direction. » Contexte :
+groupement de santé certifié ISO/IEC 27001:2022 et HDS.
+
+### Réalisation
+
+- **Instantané quotidien** (`apps/api/src/vulnerabilites/tendances.ts`, composition pure `composerInstantane` de
+  `packages/shared/src/tendances-vulnerabilites.ts`, testée en table) : au tic de l'API, au plus un par jour (fuseau
+  Europe/Paris), après l'évaluation des délais. Le créneau du jour est consommé **avant** le calcul (ligne « en_cours », sa
+  propre transaction) ; un calcul en échec laisse « echec » et n'est pas refait le même jour ; un jour sans tic reste sans
+  instantané, rien n'est rattrapé. Module désactivé : rien, et le créneau n'est pas consommé. Le calcul reprend le calcul
+  global des alertes (`situationGlobale`, tous les faits connus, lot ALH5) et les objets suivis du lot S1. Nombres rangés,
+  pour toute la plateforme (« global »), par périmètre (périmètre effectif des machines, périmètre AlgoLightHouse relié des
+  actifs) et « sans périmètre » (« aucun ») : failles présentes par priorité (P1 à P4), failles présentes dont l'exploitation
+  est avérée, objets suivis présents en dépassement de délai et sous exception, objets passés à « Corrigée » au cours du jour
+  civil précédent, machines et actifs exposés touchés ; niveau d'alerte de la plateforme (règle du lot PC1). Une faille compte
+  une fois dans chaque périmètre où elle a une machine ou un actif ; une faille déclarée sans machine reliée ne compte que pour
+  toute la plateforme. Aucun nom de machine, de domaine, d'adresse ni de compte. Journal `vulnerabilites.instantane.pris`
+  (jour, niveau, nombre de périmètres, instantanés purgés). **L'historique commence à l'installation du lot** ; l'écran dit
+  « historique depuis le … ».
+- **Rétention** : trois ans (`RETENTION_INSTANTANES_ANS`), purge au même tic que l'instantané.
+- **Onglet « Tendances »** (`/vulnerabilites/tendances`, `apps/web/src/vulnerabilites/Tendances.tsx`) : période (30 jours
+  jour par jour ; 13, 26 ou 52 semaines semaine après semaine), portée (toute la plateforme, un périmètre lu, « Sans
+  périmètre » avec `administrer`). Courbes : failles présentes par priorité ; exploitées, en dépassement, sous exception et
+  corrigées ; niveau d'alerte ; machines et actifs touchés (par périmètre seulement). Dessin par le composant existant
+  `NeonCourbes` (`packages/ui/src/neon-graphiques.tsx`), étendu sans changer son rendu d'origine : valeurs absentes qui
+  coupent la courbe (aucun zéro inventé), marques de points (une forme par série), trait propre à chaque série, graduations
+  entières, nom accessible. Chaque courbe a sa légende (teinte, trait, forme, libellé) et son tableau aux mêmes valeurs ; « — »
+  : aucun instantané. Semaine après semaine : nombres du dernier instantané de la semaine, niveau le plus haut, somme des
+  corrections connues (les corrections d'un jour sont lues dans l'instantané du lendemain). Indicateur de tendance (règle
+  ci-dessous). Route `GET /api/vulnerabilites/tendances` (`vulnerabilites:lire`), lecture seule, sans journal.
+- **Vue d'ensemble** (lot PC1) : bloc « Sur 7 jours » sous les tuiles (failles présentes en P1 et P2, exploitées, en
+  dépassement, sous exception, niveau), écarts en texte (« +2 (en hausse) »), par rapport au plus récent instantané pris
+  entre J-14 et J-7 ; sans lui, l'écran le dit. Les nombres du moment sont composés par la même fonction que l'instantané,
+  à partir du calcul global déjà fait.
+- **Rapport de pilotage** (`/vulnerabilites/rapport`, `apps/api/src/vulnerabilites/rapport.ts`, tableaux composés par
+  `tableauxRapport` du paquet partagé, les mêmes à l'écran et dans le CSV) : mois choisi ou période libre (366 jours au plus,
+  fin ramenée à aujourd'hui), toute la plateforme ou un périmètre lu. Sections : niveau d'alerte (au moment du rapport, premier
+  et dernier instantané, plus haut, jours par niveau) ; situation du moment ; failles critiques (P1) présentes listées par CVE
+  et produit, avec leur présence, leur première présence et le dépassement, et le nombre de P2 ; délais de correction (mesure du
+  lot S1 sur la période : moyen, médian, part dans les délais, par priorité) ; dépassements du moment ; exceptions en cours,
+  bientôt échues, sans échéance et échues pendant la période (justification, mesure compensatoire, échéance, qui l'a accordée
+  et quand) ; tendances semaine après semaine ; alertes critiques de la période (ouvertes, prises en compte, closes, encore
+  en cours, délai de prise en compte moyen, médian et le plus long) ; état des sources de veille et des connecteurs. Listes
+  bornées à 200 lignes, total toujours dit. Route `GET /api/vulnerabilites/rapport` (`vulnerabilites:lire`, `format=json` ou
+  `csv`).
+- **Confidentialité** : aucun nom de machine, de domaine ni d'adresse ; les textes (titres, produits, justification et mesure
+  compensatoire d'une exception) passent par le masque des machines de l'assistant en mode strict (« [machine] ») ; les
+  connecteurs sont désignés par leur type et un numéro (ni nom d'instance ni adresse) ; état des sources sans texte d'erreur.
+  Le nom de la personne qui a accordé une exception figure (demande du RSSI). Journal `vulnerabilites.rapport.produit` (qui,
+  quand, période, portée, format, `detail: false`), sans contenu.
+- **Droits** : les nombres de failles, le niveau d'alerte et les alertes sont communs à tous (lot ALH5) ; un périmètre illisible
+  répond 404 (même message qu'un inconnu), « sans périmètre » exige `administrer` ; toute la plateforme ne rend aucun total de
+  machines ni d'actifs (comme la vue d'ensemble) ; les exceptions listées sont celles des failles dont la personne lit une
+  machine.
+- **Requêtes** (mesurées par un test d'API qui compte les requêtes, données fictives, une instance de Tenable) : tendances 3 ;
+  rapport 37 (nombre fixe, plus trois environ par instance de connecteur) ; instantané 21 (transaction comprise) ; vue
+  d'ensemble 1 de plus (instantané de référence). Aucune requête par faille.
+
+### Format du rapport, et pourquoi
+
+La plateforme **ne produit aucun PDF côté serveur** : elle produit des documents Office sans dépendance (revue de direction :
+Word, PowerPoint, Excel, `apps/api/src/export/office.ts`) et des rapports HTML autonomes (Pilotage, comité SMSI) ; `pdfjs-dist`
+ne sert qu'à lire des PDF. Un vrai PDF côté serveur demanderait une dépendance nouvelle (moteur de rendu ou bibliothèque PDF),
+donc une ADR : **question posée au RSSI**. Le lot livre une **page imprimable** dans l'application (feuille d'impression de
+`packages/ui/src/neon-tendances.css` : page nommée A4, numéro de page en marge, ni menu, ni en-tête, ni bouton, ni fenêtre,
+noir sur blanc, en-têtes de tableau répétés, lignes non coupées), que le navigateur enregistre en PDF (« Imprimer ou enregistrer
+en PDF »), et l'**export CSV** des mêmes tableaux (règles de l'export CSV existant : « ; », BOM, formules neutralisées).
+
+### Règle de la tendance, à confirmer par le RSSI
+
+On compare le premier et le dernier instantané de la période : d'abord le nombre de failles présentes en P1 ; à égalité,
+celui des failles en P2 ; à égalité encore, celui des failles en dépassement de délai. Moins : la situation s'améliore ;
+plus : elle se dégrade ; tout égal : stable. Moins de deux instantanés : indéterminée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Rétention** de trois ans.
+- **Corrigées** : objets suivis passés à « Corrigée » au cours du jour civil précédent, rangés avec l'instantané du jour et
+  replacés sur leur jour dans les courbes ; un jour sans instantané au lendemain reste sans nombre.
+- **Exploitées et présentes** : failles présentes dont l'exploitation est avérée par une source (au lieu de « présentes en
+  P1 » de la tuile, presque toujours égal) ; **dépassements et exceptions** comptés en objets suivis (comme la tuile du lot S1),
+  les priorités en failles.
+- **Variation sur sept jours** : instantané de J-7, ou le plus récent jusqu'à J-14 ; P2 compté en failles présentes (la tuile
+  « À traiter » compte aussi les produits à confirmer).
+- **Qui produit le rapport** : toute personne qui lit le module, pour ce qu'elle lit (option prudente).
+- **Alertes et niveau dans un rapport de périmètre** : ceux de la plateforme, communs à tous (une alerte n'est rattachée à aucun
+  périmètre).
+- **Pas d'option « avec le détail des machines »** (point ouvert ci-dessous) ; le texte d'une exception est masqué même pour
+  qui lit la machine.
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur un **banc local** (API réelle sur une base temporaire du PostgreSQL de test, servie par
+Vite ; historique fictif de 120 jours, 14 machines, 40 constats ; Chromium, clair et sombre, 1440 et 390 px : onglet
+« Tendances » au global et par périmètre sur 13 semaines, vue d'ensemble, rapport ; axe `wcag2a`/`wcag2aa` sans violation,
+aucun chevauchement, aucun débordement, aucune violation de CSP ni erreur dans la console) ; PDF d'essai produit par
+`page.pdf()` en A4 : quatre pages, ni menu ni bouton, aucun nom de machine ni d'adresse. Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-tendances.spec.ts`) n'a pas été joué (CI seulement). Impression par un navigateur autre que Chromium (rendu des marges de page nommée, donc du numéro de page, non vérifié); durée sur un parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **PDF produit par le serveur** : dépendance nouvelle à décider (ADR) ; sinon l'impression du navigateur reste la voie.
+2. **Option « avec le détail des machines »** dans le rapport, réservée à qui les lit : non réalisée.
+3. **Envoi automatique du rapport** par courriel chaque mois : non réalisé.
+4. **Lien avec la revue de direction** (module Pilotage) : la revue prépare ses entrées (ISO/IEC 27001:2022, 9.3.2) à partir
+   des données de la plateforme (`apps/api/src/pilotage/revue.ts`) et s'exporte en Word, PowerPoint ou Excel ; elle ne lit rien
+   du module Vulnérabilités. Il faudrait une entrée « vulnérabilités » (niveau d'alerte, P1, délais, exceptions) tirée des
+   mêmes fonctions que le rapport, selon les droits de la personne qui prépare la revue.
+5. **Regroupement par correctif**, **fin de support**, **vrai zero-day** (sans correctif publié), **criticité métier des
+   machines** : non réalisés (lots suivants).
+6. Confirmer la rétention, la règle de la tendance, les définitions ci-dessus et les droits du rapport.
+
+## Addendum du 18/11/2026 — lot S3 : regroupement par correctif, fin de support, faille sans correctif
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun appel réseau nouveau (liste fermée de Tenable inchangée : `POST /rest/analysis`, `GET /rest/hosts`,
+`GET /rest/hosts/{uuid}`, `GET /rest/system`), **aucune liste blanche élargie**, aucun script de l'exécutant modifié, aucune
+dépendance nouvelle, aucun rôle ni droit nouveau, rien de nouveau chez l'assistant. Lève le point ouvert 2 de l'addendum
+« lot S1 » et, en partie, le point ouvert 5 de l'addendum « lot S2 » ; répond au point ouvert 14 (unité affichée) pour la
+vue par correctif.
+
+### Décision du RSSI (18/11/2026)
+
+Propositions acceptées (« tout m'intéresse ») : **regroupement par correctif** (« 12 mises à jour à faire plutôt que 400
+failles ») ; **fin de support** (signaler les systèmes et produits qui ne reçoivent plus de correctifs ; Tenable et
+AlgoLightHouse le disent déjà) ; **disponibilité d'un correctif** (distinguer « exploitée et corrigible » de « exploitée sans
+correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabilités ; termes techniques exacts exigés.
+
+### Inventaire des données déjà lues et rangées (règle d'or : rien d'inventé)
+
+| Sujet | Source | Champ lu par l'exécutant | Rangé | Utilisé par ce lot |
+| --- | --- | --- | --- | --- |
+| Correctif | Tenable (`vulndetails`) | `solution` | `vulnerabilites_constats.correctif` (anglais, nettoyé, 2 000 caractères) | **Oui** : clé du regroupement |
+| Correctif | Tenable (`vulndetails`) | `patchPubDate` | `correctif_publie_le` | **Oui** : « correctif disponible » à cette date |
+| Correctif | Tenable (`sumremediation`) | — | **Non** : la vue est permise (même appel `POST /rest/analysis`) mais le connecteur ne la demande pas ; seul `scripts/dev/exemples-tenable.ps1` l'a lue le 16/11/2026 | Non (voir « Points ouverts ») |
+| Correctif | CERT Santé (fiche) | mention « Un correctif existe : Oui / Non » | `vulnerabilites_veille_avis.fiche_correctif` (lot V4c) | **Oui** : « disponible » ou « aucun correctif connu » |
+| Correctif | CISA KEV | `requiredAction` | `kev_action` | Non pour l'état : une consigne (« appliquer les mesures de l'éditeur ou cesser l'usage »), pas la preuve d'un correctif ; reste affichée dans la fiche |
+| Correctif | NVD | bornes `versionEndExcluding` / `versionEndIncluding` | `vulnerabilites_veille_cve_produits` | Non pour l'état : une borne haute publiée suggère une version corrigée sans la prouver ; reste affichée dans la fiche (« n'est plus citée comme touchée ») |
+| Correctif | AlgoLightHouse | `latest_version` (fragment `vulnerable_component`) | **Non** : exclu de la liste blanche au lot ALH6 | Non |
+| Fin de support | Tenable (`vulndetails`) | `seolDate` (« -1 » quand elle ne s'applique pas) | `fin_support_le` | **Oui** : critère unique, date passée |
+| Fin de support | Tenable | famille du contrôle (`family`) | `famille` | Non : aucune famille propre aux systèmes non maintenus dans le relevé du RSSI ; aucune liste de noms codée en dur |
+| Fin de support | Tenable | constat sans CVE (V18) | calculé | Non : reste la marque distincte « Non maintenu » |
+| Fin de support | AlgoLightHouse | `version_status` = `eol` / `outdated` (fragment `vulnerable_component`) | `vulnerabilites_alh_services.statut_version` (lot ALH6) | **Oui** : `eol` seulement ; `outdated` reste « version dépassée » |
+| Fin de support | AlgoLightHouse | `version_status` des technologies | **Non** : `/technologies` ne le porte pas dans la liste blanche | Non : la marque porte sur le **service exposé** (produit et version au port), pas sur la technologie |
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/correctifs-vulnerabilites.ts`, testé en table) : `etatCorrectif` (trois valeurs et
+  les sources qui parlent), `situationExploitation`, `etatFinSupport`, `serviceEnFinDeSupport`, `texteCorrectif`,
+  `regrouperParCorrectif`, `comparerCorrectifs`, `enteteCorrectifs`, DTO et paramètres des routes.
+- **État du correctif** : « correctif disponible » dès qu'une source le dit (date de publication de Tenable, « Oui » du CERT
+  Santé) ; « aucun correctif connu » quand le CERT Santé écrit « Non » et qu'aucune source ne dit le contraire ; « non
+  renseigné » sinon, **jamais lu comme « aucun correctif »**. Règle des sources (V26) : une source suffit ; un correctif publié
+  ne disparaît pas, donc « disponible » l'emporte ; les sources sont rendues de la première à la dernière. Pour une CVE (fiche
+  d'une CVE, d'une faille déclarée, d'une alerte, vue d'ensemble, rapport), Tenable parle s'il cite la CVE dans un contrôle qui
+  porte une date de correctif ; pour un constat, sa propre date.
+- **Précision du zero-day** (la marque n'est pas renommée, ni les alertes ni la priorité ne changent) : « exploitée, correctif
+  disponible », « exploitée, sans correctif connu », « exploitée, correctif non renseigné » : fiche illustrée, détail d'un
+  correctif, tuile « Exploitées et présentes » (« dont n sans correctif connu, m correctif non renseigné »), tuile du parc et
+  liste des machines (`exploiteeSansCorrectif` de `MarquesMachineDto`).
+- **Fin de support** : constat dont `seolDate` est passée (`finDeSupport`, marque et filtre `finSupport=oui` de la liste) ;
+  date à venir : « fin de support annoncée », sans marque. Machine : au moins un constat **présent** en fin de support, quel que
+  soit son état de suivi (un fait, pas une décision) : `finDeSupport` et les cinq premiers contrôles en cause
+  (`finsDeSupport`) de `MachineDto`, colonnes ajoutées à la requête existante ; mention sur la tuile du parc (donc aussi dans
+  « Périmètres »), dans la liste, rubrique de la fiche, filtre des machines et du parc. Service exposé `eol` : mention dans
+  l'onglet « Actifs » et les fiches de la surface externe. Vue d'ensemble : tuile « Fin de support » (contrôles, communs à
+  tous ; machines et services exposés lus, drapeau sans nombre pour le reste). Rapport : section « Contrôles de Tenable en fin
+  de support » (nom masqué, date, machines de la portée, aucun total pour toute la plateforme). Fiche illustrée : source et
+  date.
+- **Vue « Par correctif »** (`GET /api/vulnerabilites/correctifs`, `GET …/correctifs/{cle}`, `vulnerabilites:lire`, lecture
+  seule, sans journal ; `apps/api/src/vulnerabilites/correctifs.ts`, `apps/web/src/vulnerabilites/Correctifs.tsx`) : constats
+  de Tenable présents et encore à traiter (comme la liste par défaut), regroupés par texte de solution (empreinte SHA-256
+  tronquée comme clé) ; par groupe : failles, CVE distinctes, machines lues (drapeau pour les autres), priorité la plus haute,
+  exploitées (dont sans correctif connu), exploitables, fin de support, état de délai le plus défavorable, échéance la plus
+  proche, nombre en dépassement, répartition par état du correctif et sources. Tri par gain, le même pour tout le monde :
+  priorité, failles corrigées, exploitées, CVE, texte. Recherche dans le texte, filtre de priorité. Détail : toutes les
+  failles du groupe (bornées à 500) avec leur état du correctif ; la fiche existante ne s'ouvre que si la personne lit une de
+  leurs machines (sinon, le seul contrôle, comme la vue d'ensemble) ; les machines lues (250 au plus), leur fiche au clic.
+  **Requêtes** : liste 7 au plus (réglage 1, constats 1, machines lues 1, CVE 1, faits des sources 3), détail 8 ; aucune par
+  faille ni par correctif (test d'API qui compte). Vue d'ensemble : 2 de plus (machines lues et services en fin de support) ;
+  listes, parc, rapport : 0.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Regroupement par le texte de la solution**, pas par `sumremediation` : la vue n'est pas lue par le connecteur ; elle
+  fusionnerait les libellés (`solutionID`, `remediationList`). Limite dite à l'écran : deux libellés différents pour la même
+  mise à jour ne sont pas fusionnés.
+- **Unité « faille »** de la vue : le constat de Tenable (contrôle), comme « Failles détectées » ; les CVE distinctes sont
+  données à côté.
+- **Failles déclarées et CVE de la surface externe absentes** de la vue : aucune source rangée ne leur donne de correctif ;
+  l'écran le dit.
+- **Nombres de failles communs, noms de contrôles montrés à tous** dans le détail (comme la vue d'ensemble, lot PC1) ; seules
+  les machines suivent les droits.
+- **Fin de support d'une machine** indépendante de l'état de suivi (même un risque accepté la laisse marquée).
+- **Texte de la solution de Tenable non lu comme preuve** d'un correctif ; seule la date de publication compte.
+- **Mention « Fin de support »** distincte de « Non maintenu » (constat sans CVE, inchangé) et de « version dépassée ».
+
+### Questions au RSSI
+
+1. **Mot « zero-day »** (proposition, non appliquée) : le réserver à une faille exploitée **sans correctif connu**, et
+   afficher « exploitation avérée » pour une faille exploitée dont un correctif est disponible ? Tant qu'il n'a pas tranché, la
+   marque reste « Zero-day : exploitation avérée » et la précision est ajoutée à côté ; alertes et priorité inchangées.
+2. **Priorité d'une machine en fin de support** : doit-elle monter d'un cran (ou la faille qu'elle porte) ? Aucun effet dans ce
+   lot.
+3. **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
+   `remediationList`, `pluginID`, en liste blanche) pour fusionner les libellés d'un même correctif ? Demanderait une page
+   d'analyse de plus par synchronisation et une migration (table des correctifs).
+4. **Lire `latest_version`** d'AlgoLightHouse (exclu au lot ALH6) pour faire entrer les CVE exposées dans la vue par correctif
+   (« passer à la version x ») ? Élargissement de liste blanche et migration additive ; ce n'est pas la preuve qu'elle corrige
+   chaque CVE.
+5. **Base de dates de fin de vie** (par exemple endoflife.date) : ce serait une nouvelle source de veille, sur Internet, à
+   décider (flux, liste fermée, conditions d'usage).
+
+### Non vérifié
+
+Aucune donnée réelle : forme réelle de `seolDate` et de `patchPubDate` sur les contrôles de systèmes non supportés de
+l'instance (le relevé du 16/11/2026 nomme les champs, `seolDate` valant « -1 » quand elle ne s'applique pas) ; part des
+contrôles dont la solution est identique d'une machine à l'autre ; forme réelle de `json_data` d'AlgoLightHouse (toujours
+nulle sur les exemples, lot ALH6) : la mention « Fin de support » des services peut ne jamais paraître. Rendu vu sur un **banc
+local** (API réelle sur une base temporaire du PostgreSQL de test, servie par Vite ; 150 machines, 421 failles en 15
+correctifs et un groupe sans correctif, six machines en fin de support, une faille exploitée sans correctif connu ; Chromium,
+clair et sombre, 1 440 et 390 px : vue par correctif et ses deux fenêtres, fiche d'une faille, failles filtrées, machines en
+liste filtrée, fiche, parc, vue d'ensemble, rapport ; axe `wcag2a`/`wcag2aa` sans violation, aucun débordement de page), pas
+dans la pile complète ; la CSP n'a pas été vérifiée sur le banc (serveur de développement), seulement par les tests de
+l'interface. À 390 px, les tables du détail d'un correctif sont serrées (colonnes étroites). Le parcours Playwright ajouté
+(`zzz…-vulnerabilites-correctifs.spec.ts`) et le parcours adapté (`zzz…-vulnerabilites-fiche.spec.ts`) n'ont pas été joués
+(CI seulement). Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les cinq questions ci-dessus.
+2. Criticité métier des machines (point ouvert 3 de l'addendum « lot S1 ») : non réalisée.
+3. Fin de support au niveau de la **technologie** d'AlgoLightHouse : la liste `/technologies` ne porte pas `version_status`
+   dans ce qui est lu.

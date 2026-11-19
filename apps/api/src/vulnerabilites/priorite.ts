@@ -2,8 +2,15 @@
    la table `settings` comme les autres réglages à valeur unique (clé `vulnerabilites:priorite`, { values, version,
    updatedBy }), sans migration. Lecture avec `vulnerabilites:lire` (les écrans affichent la grille), écriture avec
    `vulnerabilites:administrer` et If-Match ; journal `vulnerabilites.priorite.reglage_modifie`. Le calcul lui-même est une
-   fonction pure du paquet partagé (calculerPriorite). */
-import { REGLAGE_PRIORITE_DEFAUT, ReglagePriorite, type ReglagePrioriteOut } from '@suivi/shared';
+   fonction pure du paquet partagé (calculerPriorite). Lot S1 : les délais cibles de correction par priorité sont rangés
+   dans ce même réglage ; une saisie peut ne porter que le seuil ou que les délais, le reste est gardé. Un réglage rangé
+   avant le lot (sans délais) prend les délais par défaut du code. */
+import {
+  REGLAGE_PRIORITE_DEFAUT,
+  ReglagePriorite,
+  type ReglagePrioriteOut,
+  SaisieReglagePriorite,
+} from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Actor, Db } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
@@ -37,11 +44,11 @@ export class ReglagePrioriteVulnerabilites {
 
   /** Enregistrement (If-Match : `attendue`) ; 412 si la version a changé, 422 si le réglage est invalide. */
   async ecrire(saisie: unknown, attendue: number, user: Actor, ip: string): Promise<ReglagePrioriteOut> {
-    const p = ReglagePriorite.safeParse(saisie);
-    if (!p.success)
+    const e = SaisieReglagePriorite.safeParse(saisie);
+    if (!e.success)
       throw new HttpError(
         422,
-        p.error.issues.map((i) => `${i.path.join('.') || 'réglage'} : ${i.message}`).join(' ; '),
+        e.error.issues.map((i) => `${i.path.join('.') || 'réglage'} : ${i.message}`).join(' ; '),
       );
     return this.db.tx(async (c, k) => {
       await k
@@ -53,6 +60,8 @@ export class ReglagePrioriteVulnerabilites {
         await k.selectFrom('settings').select('value').where('key', '=', CLE).forUpdate().executeTakeFirstOrThrow()
       ).value as unknown as Ligne;
       const avant = lu(cur);
+      const p = ReglagePriorite.safeParse({ ...avant, ...e.data });
+      if (!p.success) throw new HttpError(422, 'Réglage invalide.');
       const courante = cur.version ?? 0;
       if (courante !== attendue)
         throw new HttpError(412, 'Les seuils de priorité ont été modifiés par ailleurs. Rechargez-les.', {

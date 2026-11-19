@@ -2,6 +2,234 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [7.4.0] — 2026-11-19
+
+### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `087`, `088`, `089` et `091` (délais et tendances du module Vulnérabilités,
+déclaration réglementaire des incidents, conservation des sauvegardes), sans reprise de données ; aucune commande sur le
+serveur pour mettre à jour. **Avant la mise à jour, externaliser les sauvegardes à garder** : au plus 30 sauvegardes
+régulières restent ensuite sur le serveur (détail sous la migration `091`). À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (son empreinte couvre désormais l'image de base, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule. Les correctifs de la sauvegarde de sécurité (zone
+de travail hors du `/tmp` de 256 Mo) et du contrôle d'espace ne s'appliquent qu'aux mises à jour lancées depuis cette
+version : si la mise à jour vers la 7.4.0 depuis l'interface échoue pendant la sauvegarde, la relancer en ligne de commande
+(`sudo ./scripts/mettre-a-jour.sh`, [guide d'installation](docs/INSTALLATION.md)).
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Vérifier le nombre maximal de sauvegardes et celui des sauvegardes d'avant mise à jour (Configuration système, Sauvegardes
+   et restauration, carte « Planification et conservation »).
+2. Pour les déclarations des incidents : remplir l'identité de l'établissement (Plateforme), faire confirmer les rubriques
+   contre les formulaires réels des portails, donner le rôle « RSSI » à la personne qui déclare (détail sous la migration
+   `089`).
+3. Vérifier les délais de correction du module Vulnérabilités (détail sous la migration `087`).
+
+La veille, les connecteurs et l'envoi du courriel en mode intégré, en échec jusqu'ici (« L'exécutant n'a pas pu abandonner ses
+privilèges »), reprennent seuls après la mise à jour. Le détail de chaque migration suit.
+
+**Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
+`vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
+`vulnerabilites_depassements`, contrainte de portée de `grc_notifications` recréée avec deux types de plus, quatre index),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Dans l'application : seul le rôle « RSSI » accorde,
+prolonge ou lève une exception (risque accepté) ; le compte d'installation n'a que le rôle « Administrateur » : attribuer le
+rôle « RSSI » à la personne qui décide. Les délais par défaut (P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai) sont à
+confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception déjà enregistrée sans échéance reste valide et
+est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
+première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `088`** (module Vulnérabilités, lot S2 : tendances et rapport de pilotage,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_instantanes` et
+`vulnerabilites_instantanes_mesures`, deux index), durée négligeable, sans reprise de données. Aucune action sur le serveur.
+L'historique des tendances commence à la mise à jour : aucun passé n'est reconstruit ; le premier instantané est pris dans la
+minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI). Le rapport de
+pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
+action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
+surveillance vulnérabilités SMSI »)
+
+**Migration automatique `089`** (déclaration réglementaire des incidents,
+[ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : additive (table `incidents_declarations` et son
+déclencheur d'immutabilité, colonne `qualified_at` de `suivi_incidents`, contrainte de portée des notifications recréée à
+l'identique de la `087` plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
+existants n'ont pas de date de qualification et ne reçoivent aucune proposition de déclaration ; le RSSI peut en ouvrir une à
+la main après avoir renseigné la date de qualification. **Aucune action sur le serveur.**
+
+**Après la mise à jour, à faire dans l'application** (pour utiliser les déclarations) :
+
+1. Remplir l'identité de l'établissement (Plateforme, carte « Identité de l'établissement ») : raison sociale, FINESS
+   juridique et géographique, ARS de rattachement, contact de signalement, secteur d'activité au sens de NIS 2 ; elle est vide
+   au départ. Vérifier la catégorie d'entité NIS 2 (carte « Référentiels »).
+2. Faire confirmer par le RSSI les rubriques des fiches de préparation contre les formulaires réels des portails (signalement
+   santé, ANSSI) avant la première déclaration.
+3. Donner le rôle prédéfini « RSSI » à la personne qui confirme, écarte et marque envoyées les déclarations : sans compte qui
+   le tienne, aucune déclaration ne peut être confirmée ni marquée envoyée. (session « Projet audit_suivi Coeur »)
+
+**Migration automatique `091`** (conservation des sauvegardes, [ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) :
+additive (deux colonnes bornées de `backup_policy`, avec valeur par défaut), durée négligeable, sans reprise de données.
+**Externaliser les sauvegardes AVANT la mise à jour** : avec les nouveaux réglages par défaut, au plus **30 sauvegardes
+régulières** restent dans le dossier des sauvegardes (en plus de la durée de conservation, 90 jours par défaut) ; les plus
+anciennes au-delà de 30 sont supprimées, avec leur fichier `.sha256`, **à la première sauvegarde qui suit la mise à jour**
+(planifiée, demandée dans l'interface ou lancée par cron). Copier d'abord hors du serveur celles à garder, ou relever le nombre
+maximal (jusqu'à 365) dans Configuration système, Sauvegardes et restauration, carte « Planification et conservation » ; pour
+un cron qui appelle `scripts/backup.sh` directement, `BACKUP_GARDER_MAX` dans `.env`. Les **sauvegardes d'avant mise à jour**
+passent de 5 à **3 gardées** (réglables de 1 à 10, ou `UPDATE_SAUVEGARDES_GARDEES` dans `.env` en ligne de commande) : ce
+nombre ne s'applique qu'aux mises à jour lancées depuis une version qui le contient (c'est le script de la version installée
+qui fait la rotation) ; la mise à jour vers cette version garde encore les 5 dernières. Les sauvegardes de sécurité des
+restaurations (`.restauration-securite/`) et les archives d'anciennes versions (`.tar.enc`, `.tar`) ne sont jamais
+supprimées. Une sauvegarde ou une mise à jour qui manquerait de place est désormais refusée avant de commencer (message avec
+la place libre, la place nécessaire et ce qui l'occupe) : voir « Libérer de la place » dans le guide d'installation. Après une
+mise à jour réussie ou une tentative échouée, seules restent les images de l'application de la version en service, de la
+précédente et du frontal en service, y compris les images sans étiquette ; les autres images du serveur ne sont plus
+touchées (plus de `docker image prune`). (session « Projet audit_suivi Coeur »)
+
+**Frontal** ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : son empreinte couvre
+désormais l'image de base Caddy et le magasin des autorités racines ; à la première mise à jour depuis l'interface vers une
+version qui contient ce changement, l'empreinte diffère et le frontal est recréé une fois (coupure de quelques secondes
+annoncée sur la page de maintenance, même certificat). Aucune action. (session « Projet audit_suivi Coeur »)
+
+**Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
+
+**Écran de connexion aux couleurs du menu** : changement d'interface seulement, aucune action sur le serveur.
+
+### Ajouté
+
+- Sauvegardes, conservation ([ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) : nombre maximal de
+  sauvegardes régulières (de 7 à 365, 30 par défaut) en plus de la durée de conservation, et nombre de sauvegardes d'avant
+  mise à jour gardées (de 1 à 10, 3 par défaut), réglés dans Configuration système, Sauvegardes et restauration (carte
+  « Planification et conservation », droit d'administrer, If-Match, journal d'audit) et transmis à l'exécutant comme la durée ;
+  `BACKUP_GARDER_MAX` et `UPDATE_SAUVEGARDES_GARDEES` dans `.env` pour les scripts lancés directement, mêmes bornes, une valeur
+  hors bornes fait échouer l'opération sans rien supprimer. Migration `091`. (session « Projet audit_suivi Coeur »)
+- Espace disque, contrôle avant opération (ADR 0106) : avant une sauvegarde (`scripts/backup.sh`, donc toutes les voies) et
+  avant une mise à jour (exécutant de mise à jour, avant tout téléchargement ; `scripts/mettre-a-jour.sh`, avant la
+  sauvegarde), la place nécessaire est estimée (dernière sauvegarde ou taille de la base, images à télécharger d'après les
+  manifestes ou 2 Gio forfaitaires, marge de 1 Gio ou 10 %, zone de travail de la sauvegarde) ; un manque de place refuse
+  l'opération avant de commencer, avec la place libre, la place nécessaire et l'occupation par les sauvegardes et par les
+  images de l'application, sans retour arrière. (session « Projet audit_suivi Coeur »)
+- Espace disque, alerte (ADR 0106) : l'exécutant d'exploitation publie le relevé du disque des données (libre, total,
+  occupation des sauvegardes et des images de l'application, sans chemin) ; sous 15 % d'espace libre, chaque administrateur
+  actif reçoit une alerte dans l'application (bandeau menant aux sauvegardes), une seule fois par franchissement (réarmée à
+  20 %), tracée au journal d'audit ; relevé affiché dans la carte « Planification et conservation ». (session « Projet audit_suivi Coeur »)
+- Images de l'application : `scripts/images-application.py` (taille occupée et ménage). (session « Projet audit_suivi Coeur »)
+
+- Vulnérabilités, regroupement par correctif (lot S3, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : vue « Par
+  correctif » de « Failles détectées », en tête « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de
+  la solution de Tenable, en anglais, tel quel) avec les failles et CVE qu'il corrige (les mêmes nombres pour tout le monde),
+  les machines lues, la priorité la plus haute, les marques, le délai le plus défavorable et l'état du correctif ; tri par
+  gain ; groupe « Sans correctif indiqué par la source » ; fenêtre du correctif (failles, machines lues). Lecture seule, sans
+  appel réseau ni migration. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, état du correctif et fin de support (lot S3) : état « correctif disponible », « aucun correctif connu » ou
+  « non renseigné » d'après Tenable (date de publication du correctif) et le CERT Santé (« Un correctif existe »), avec la
+  source qui parle, dans la fiche illustrée, la vue par correctif et le rapport ; précision « exploitée, sans correctif
+  connu » à côté de la marque zero-day, sans la renommer ; « Fin de support » (date de fin de support de Tenable passée,
+  version en fin de vie d'un service exposé selon AlgoLightHouse) sur les failles, les machines (liste, parc, fiche) et les
+  services exposés, filtres, tuile de la vue d'ensemble et section du rapport de pilotage. Sans effet sur la priorité ni sur
+  les alertes. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, tendances (lot S2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : instantané quotidien de la
+  situation pris par la plateforme (niveau d'alerte, failles présentes par priorité, exploitées, en dépassement, sous
+  exception, corrigées, machines et actifs exposés touchés ; pour toute la plateforme et par périmètre, sans nom) ; onglet
+  « Tendances » avec courbes jour par jour ou semaine après semaine, chacune avec sa légende et son tableau, choix du
+  périmètre lu, indicateur « s'améliore / se dégrade / stable » (règle à confirmer) ; variation sur sept jours dans la vue
+  d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, rapport de pilotage (lot S2) : rapport d'un mois ou d'une période libre, pour toute la plateforme ou un
+  périmètre lu, pour la direction et l'audit (niveau d'alerte et son évolution, failles critiques, délais de correction,
+  dépassements, exceptions, tendances, alertes critiques, état des sources et des connecteurs) ; page imprimable en A4,
+  enregistrée en PDF par le navigateur, et export CSV des tableaux ; aucun nom de machine, de domaine ni d'adresse (textes
+  passés au masque des machines) ; chaque production tracée au journal d'audit. (session « Module surveillance
+  vulnérabilités SMSI »)
+
+- Vulnérabilités, délais de correction (lot S1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : délai cible par
+  priorité réglé avec les seuils de priorité (administration du module, If-Match, journal), âge, échéance calculée et état
+  du délai (en dépassement, échéance proche, dans les délais, sans délai) dans les listes de failles (colonne « Délai »,
+  filtre, tri par échéance), dans la fiche illustrée et dans la tuile « En dépassement » de la vue d'ensemble ; résumé
+  notifié des failles entrées en dépassement, sans nom ; onglet « Délais et exceptions » avec la mesure des corrections
+  (délai moyen et médian par priorité, part dans les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, exceptions à échéance (lot S1) : un risque accepté exige une justification, une mesure compensatoire et une
+  échéance de douze mois au plus ; seul le rôle « RSSI » l'accorde, le prolonge ou le lève ; rappel quatorze jours avant
+  l'échéance ; à l'échéance, l'exception expire d'elle-même, la faille revient à l'état d'avant (ou « à traiter ») et son
+  délai repart ; tout est historisé et tracé au journal, sans nom de machine. (session « Module surveillance vulnérabilités
+  SMSI »)
+- Déclaration réglementaire des incidents, santé (CERT Santé, ARS) et NIS 2 (ANSSI)
+  ([ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : qualification horodatée au premier passage à
+  « Incident de sécurité », corrigeable par le RSSI (correction tracée, échéances non envoyées recalculées) ; déclarations
+  proposées selon la qualification guidée et la catégorie d'entité NIS 2 ; bloc « Déclarations » dans l'onglet Fiche de
+  l'incident (régime, étape, statut, compte à rebours) ; fiche de préparation rubrique par rubrique, pré-remplie depuis la
+  fiche, la chronologie et l'identité de l'établissement, avec un bouton « Copier » par rubrique et un téléchargement Word ;
+  confirmer, écarter « non requise » (motif obligatoire), marquer « envoyée » (référence obligatoire, texte figé), ouvrir une
+  déclaration ou un complément réservés au rôle « RSSI » ; déclaration envoyée ou écartée figée en base, incident déclaré non
+  supprimable ; rappels « Déclaration réglementaire d'un incident » (application et courriel) au responsable de l'incident et
+  aux comptes RSSI, à la qualification, puis à mi-délai, deux heures avant et au dépassement (NIS 2) ou toutes les quatre
+  heures (santé), indépendants du module des écarts ; rubrique « Identité de l'établissement » de la Configuration. La liste
+  « Obligations à vérifier » reste identique ; ses lignes santé et NIS 2 renvoient au bloc. (session « Projet audit_suivi
+  Coeur »)
+
+### Modifié
+
+- **Ergonomie, lot 2 : suite du relevé sur grand écran** (décisions du RSSI du 18/11/2026, sur maquettes ;
+  [docs/refonte-neon/ERGONOMIE-LOT2.md](docs/refonte-neon/ERGONOMIE-LOT2.md)). Processus : le bandeau « Périmètre affiché »,
+  qui répétait la liste de l'en-tête, est retiré, les chiffres du périmètre tiennent sur une ligne et les cartes se
+  resserrent pour montrer davantage de processus. Éléments par périmètre : la liste « Périmètre » est visible à côté de la
+  boîte d'outils. Documents : les étiquettes se filtrent sur le titre de leur colonne, avec des cases à cocher, et la
+  catégorie par un entonnoir à côté de son tri. Trois largeurs de fenêtre seulement : dialogues courts, fiches (1 024 px) et
+  présentations (1 152 px). La tuile de l'Assistant RSSI se réduit à son avatar et un espace lui est réservé en bas de page.
+  Champs de tableau lisibles : contacts de crise (les textes longs passent à la ligne, le tableau tient dans l'écran), étapes
+  des scénarios, participants et note du plan d'audit. Les fenêtres des cartes de Plateforme et de Configuration système
+  n'affichent plus leur titre en double. La Cartographie du SMSI remplit sa zone dès l'ouverture. Aucune migration, aucune
+  API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Écran de connexion aux couleurs du menu** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [docs/refonte-neon/CONNEXION-BLEU-MENU.md](docs/refonte-neon/CONNEXION-BLEU-MENU.md)). Le violet laisse la place au bleu
+  du menu. Le panneau reste blanc. Les cartes Identifiant et Mot de passe prennent le bleu nuit du menu, comme le bouton
+  « Se connecter », qui reçoit l'effet verre de la recherche du menu avec sa lueur bleue qui fait le tour (arrêtée par le
+  mouvement réduit). La ligne du fond et ses ronds passent en bleu, et les ronds portent des référentiels de cybersécurité
+  lisibles : ISO 27001, HDS, ISO 27005, NIS 2, CRA, ISO 27035, EBIOS RM et ISO 27002 (RGPD et ISO 9001 retirés). Le reste
+  de l'application garde ses couleurs. Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits »
+  (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
+  seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
+  que les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, « Failles détectées » : les boutons de pagination (flèches et numéros) portent un nom accessible, comme
+  ceux de la vue d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
+- Sauvegardes : la carte « Planification et rétention » devient « Planification et conservation » et passe de « Certificats et
+  opérations » à « Sauvegardes et restauration » (aussi dans l'écran Système) ; rotation de `scripts/backup.sh` par durée OU
+  nombre ; sauvegardes d'avant mise à jour gardées au nombre réglé (3 par défaut, 5 auparavant). Le motif d'un refus de
+  `backup.sh` (espace insuffisant) est repris dans le message de la demande de sauvegarde. (session « Projet audit_suivi Coeur »)
+- Frontal ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md), addendum du 19/11/2026) : l'empreinte couvre aussi
+  l'identité épinglée de l'image de base Caddy (`CADDY_IMAGE`) et le magasin des autorités racines
+  (`/etc/ssl/certs/ca-certificates.crt`) ; une nouvelle image de base (correctif de sécurité) met le frontal à jour à la mise à
+  jour suivante. (session « Projet audit_suivi Coeur »)
+
+### Corrigé
+
+- **Sécurité, frontal et exécutant** : Caddy (image `web`) et cosign (image `updater`) sont recompilés avec Go 1.26.11
+  (image `golang:1.26.11-alpine` épinglée par empreinte) : la bibliothèque standard Go 1.26.10 était touchée par la
+  CVE-2026-97054 (HIGH, `MaxBytesReader` des serveurs HTTP/1), relevée par Trivy. Le binaire du frontal change : son
+  redémarrage unique à la fin de la mise à jour depuis l'interface est celui déjà annoncé plus haut. (session « Projet
+  audit_suivi Coeur », signalé par la session « Module surveillance vulnérabilités SMSI »)
+- Mise à jour : le ménage des images oubliait les images téléchargées ou épinglées par leur empreinte (sans étiquette), qui
+  s'accumulaient à chaque version, et ne s'appliquait pas après une tentative échouée ; il se fait maintenant par dépôt et par
+  empreinte, en gardant la version en service, la précédente et le frontal en service (`GATEWAY_VERSION`) seulement, sans
+  toucher les autres images du serveur (le `docker image prune` global est retiré). (session « Projet audit_suivi Coeur »)
+- Mise à jour depuis l'interface : la sauvegarde de sécurité travaillait dans le `/tmp` du conteneur `updater` (tmpfs de
+  256 Mo), ce qui faisait échouer la mise à jour au-delà d'environ 115 Mo de sauvegarde ; elle travaille désormais dans
+  `DATA_DIR/reprise-updates/tmp` (root, 0700, vidé au début et à la fin de l'opération), sur le disque des données, dont la
+  place est contrôlée avant de commencer. Effet seulement pour les mises à jour lancées depuis une version qui contient le
+  correctif (c'est l'exécutant de la version installée qui lance le script). (session « Projet audit_suivi Coeur »)
+
+- **Veille, connecteurs et envoi du courriel en mode intégré** : l'exécutant d'exploitation lance ces tâches sous le compte
+  sans privilège `nobody`, mais son conteneur (`updater`) n'avait pas le droit de changer d'identité ; elles échouaient
+  (« L'exécutant n'a pas pu abandonner ses privilèges »), jamais collectées ni envoyées. Le conteneur reçoit les seules
+  capacités `SETUID` et `SETGID` (abandon des privilèges ; il tient déjà le socket Docker), et le compte sans privilège ne
+  garde aucun groupe supplémentaire. Le mode hôte (cron root) n'était pas touché. Aucune action sur le serveur : la mise à
+  jour recrée le conteneur avec ses nouvelles capacités. _(Session « Projet audit_suivi Coeur », signalé par la session
+  « Module surveillance vulnérabilités SMSI ».)_
+- **Cartographie du SMSI : « [object Object] » à la place des enjeux tirés des SWOT** enregistrés au format actuel
+  (`{ text }`) ; la carte affiche leur texte. _(Session « Refonte Neon suivi-audits ».)_
+
 ## [7.3.0] — 2026-11-18
 
 ### Notes de mise à jour

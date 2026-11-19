@@ -14,9 +14,11 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import signal
 import socket
 import ssl
+import stat
 import subprocess
 import tempfile
 import threading
@@ -71,6 +73,39 @@ TELECHARGEMENT_PERIODE = 1.0
 # Statuts du flux de l'API qui disent une couche entièrement reçue (ou déjà présente sur le serveur). « Extracting » porte la
 # progression de la décompression, jamais des octets reçus : seule sa présence compte.
 COUCHE_RECUE = {"Download complete", "Verifying Checksum", "Extracting", "Pull complete", "Already exists"}
+# Contrôle de la place avant le téléchargement (ADR 0106) : dernière sauvegarde d'avant mise à jour (sinon dernier rapport de
+# sauvegarde réussi, sinon dossiers de la base), images à télécharger (somme des couches des manifestes, ADR 0104 ; à défaut,
+# forfait IMAGES_FORFAIT comme scripts/mettre-a-jour.sh) et marge de ESPACE_MARGE ou 10 %. La zone de travail de la
+# sauvegarde (DATA_DIR/reprise-updates/tmp, passé en TMPDIR à scripts/mettre-a-jour.sh) doit contenir deux fois la sauvegarde
+# plus 10 % ; sur le même disque, les besoins s'ajoutent. Les images sont comptées sur le disque des données (cas courant).
+ESPACE_MARGE = 1024 ** 3
+IMAGES_FORFAIT = 2 * 1024 ** 3
+OCCUPATION_FICHIERS_MAX = 100000
+# Nombre de sauvegardes d'avant mise à jour (ADR 0106), recopié de CONSERVATION_SAUVEGARDES (packages/shared/src/exploitation.ts).
+AVANT_MAJ_BORNES = (1, 10)
+
+
+def occupation(dossier, budget=None):
+    """Octets des fichiers ordinaires sous ce dossier, sans suivre de lien, au plus OCCUPATION_FICHIERS_MAX fichiers."""
+    budget = [OCCUPATION_FICHIERS_MAX] if budget is None else budget
+    total = 0
+    dossier = Path(dossier)
+    if dossier.is_symlink() or not dossier.is_dir():
+        return 0
+    for racine, _, fichiers in os.walk(dossier, followlinks=False):
+        for nom in fichiers:
+            if budget[0] <= 0:
+                return total
+            budget[0] -= 1
+            with contextlib.suppress(OSError):
+                st = os.lstat(os.path.join(racine, nom))
+                if stat.S_ISREG(st.st_mode):
+                    total += st.st_size
+    return total
+
+
+def mo(octets):
+    return f"{(octets + 1048575) // 1048576} Mo"
 
 
 class Indisponible(Exception):
@@ -183,6 +218,11 @@ def release(payload):
 
 class Failure(Exception):
     pass
+
+
+class EspaceInsuffisant(Failure):
+    """Place insuffisante pour la mise à jour, constatée avant tout téléchargement ou toute modification (ADR 0106) : le
+    message (sans chemin) est celui de l'opération."""
 
 
 def flux_souhaites(raw):
@@ -513,9 +553,14 @@ class Worker:
                 raise Failure("Sauvegarde absente")
             self.run(["git", "checkout", "--detach", ref])
             (self.repo / ".env").write_text(self.job["previousEnv"])
-            self.run(["bash", str(self.repo / "scripts/restore.sh"), str(backup)], timeout=1800,
-                     extra_env={"RESTAURER_SANS_CONFIRMATION": "1", **self.crypto_env(),
-                                "RESTORE_WORKER_LOCK_HELD": "1", "RESTORE_SAUVEGARDE_LOCK_HELD": "1"})
+            # Même zone de travail que la sauvegarde (disque des données, jamais le /tmp du conteneur), supprimée après.
+            try:
+                self.run(["bash", str(self.repo / "scripts/restore.sh"), str(backup)], timeout=1800,
+                         extra_env={"RESTAURER_SANS_CONFIRMATION": "1", **self.crypto_env(),
+                                    "RESTORE_WORKER_LOCK_HELD": "1", "RESTORE_SAUVEGARDE_LOCK_HELD": "1",
+                                    "TMPDIR": str(self.zone_travail())})
+            finally:
+                self.zone_travail(creer=False)
             self.health(self.job["installed"])
             self.finish("rolled_back", "La mise à jour a été interrompue. La version précédente a été restaurée et vérifiée.")
         except Exception:
@@ -696,6 +741,9 @@ class Worker:
             self.frontal_etat(etape="fait")
             self.publish(coupure=False)
             self.frontal_journal(f"mis à jour de {avant} à {target} ; configuration validée, même certificat servi, frontal vérifié.")
+            # Seule l'image du frontal en service est gardée (ADR 0103, addendum ; ADR 0106) : l'ancienne part, sauf si elle
+            # est celle de la version précédente.
+            self.menage_images(target, self.job.get("installed"))
             return None
         except Exception:
             return self.frontal_retablir()
@@ -848,6 +896,8 @@ class Worker:
             except Indisponible:
                 progression = None
         self.telechargement_publie_le = None
+        # Place vérifiée avant le premier octet téléchargé (ADR 0106) : total des manifestes s'il est connu, sinon forfait.
+        self.controler_espace(progression.total if progression else IMAGES_FORFAIT)
         try:
             if progression:
                 self.publier_telechargement(progression)
@@ -865,6 +915,98 @@ class Worker:
             if self.state.get("telechargement") is not None:
                 with contextlib.suppress(Exception):
                     self.publish(telechargement=None)
+
+    # ------------------------------------------------------------------ Espace disque et images (ADR 0106)
+
+    def taille_derniere_sauvegarde(self):
+        dossier = self.data / "sauvegardes-updates/avant-mise-a-jour"
+        candidats = []
+        with contextlib.suppress(OSError):
+            for p in dossier.iterdir():
+                if p.name.endswith(".tar.age") and not p.is_symlink() and p.is_file():
+                    st = p.stat()
+                    candidats.append((st.st_mtime, st.st_size))
+        if candidats:
+            return max(candidats)[1]
+        rapport = read(self.data / "etat/sauvegardes/derniere-reussie.json", {})
+        taille = rapport.get("tailleOctets") if isinstance(rapport, dict) else None
+        if isinstance(taille, int) and not isinstance(taille, bool) and taille >= 0:
+            return taille
+        budget = [OCCUPATION_FICHIERS_MAX]
+        return sum(occupation(self.data / d, budget) for d in ("postgres", "postgres18"))
+
+    def images_octets(self):
+        """Place occupée par les images de l'application (scripts/images-application.py) ; None si elle n'a pas été mesurée."""
+        script = self.repo / "scripts/images-application.py"
+        if not script.is_file():
+            return None
+        try:
+            valeur = self.run(["python3", str(script), "taille"], timeout=120).strip()
+        except Failure:
+            return None
+        return int(valeur) if re.fullmatch(r"[0-9]{1,20}", valeur) else None
+
+    def controler_espace(self, images):
+        """Lève EspaceInsuffisant, avec la place libre, la place nécessaire et ce qui l'occupe, si la sauvegarde de sécurité et
+        les images ne tiennent pas. Rien n'a encore été téléchargé ni modifié."""
+        taille = self.taille_derniere_sauvegarde()
+        marge = max(ESPACE_MARGE, (taille + images) // 10)
+        besoin = taille + images + marge
+        besoin_travail = 2 * taille + taille // 10
+        sauvegardes = self.data / "sauvegardes-updates"
+        existant = sauvegardes
+        while not existant.exists() and existant != existant.parent:
+            existant = existant.parent
+        # Zone de travail de la sauvegarde : TMPDIR passé au script (dossier privé de reprise, disque des données).
+        travail = self.private
+        libre, libre_travail = shutil.disk_usage(existant).free, shutil.disk_usage(travail).free
+        meme_disque = os.stat(existant).st_dev == os.stat(travail).st_dev
+        if meme_disque:
+            besoin, besoin_travail = besoin + besoin_travail, 0
+        if libre >= besoin and libre_travail >= besoin_travail:
+            return
+        config = self.env()
+        budget = [OCCUPATION_FICHIERS_MAX]
+        occupe = occupation(sauvegardes, budget) + occupation(Path(config.get("BACKUP_DEST") or self.data / "sauvegardes"), budget)
+        images_app = self.images_octets()
+        if libre < besoin:
+            detail = (f"espace disque insuffisant : {mo(libre)} libres, {mo(besoin)} nécessaires (dernière sauvegarde {mo(taille)}, "
+                      f"images à télécharger {mo(images)}, marge {mo(marge)}{', zone de travail comprise' if meme_disque else ''})")
+        else:
+            detail = (f"espace de travail insuffisant pour la sauvegarde de sécurité : {mo(libre_travail)} libres, "
+                      f"{mo(besoin_travail)} nécessaires (deux fois la dernière sauvegarde, plus 10 %)")
+        message = (f"Mise à jour refusée avant de commencer : {detail}. Occupation : sauvegardes {mo(occupe)}, images de "
+                   f"l’application {mo(images_app) if images_app is not None else 'non mesurées'}. Rien n’a été téléchargé ni "
+                   "modifié. Libérez de la place (guide d’installation, « Libérer de la place »), puis relancez.")
+        raise EspaceInsuffisant(message[:490])
+
+    def nombre_sauvegardes_avant_maj(self):
+        """Nombre de sauvegardes d'avant mise à jour de la politique de l'application (« suivi ops-policy », même chemin que la
+        durée de conservation des sauvegardes) ; None si absent ou illisible (le script applique .env, ou 3). Hors bornes : échec."""
+        try:
+            valeur = json.loads(self.cli("ops-policy")).get("preUpdateBackups")
+        except (Failure, ValueError, TypeError, AttributeError):
+            return None
+        if valeur is None:
+            return None
+        if not isinstance(valeur, int) or isinstance(valeur, bool) or not AVANT_MAJ_BORNES[0] <= valeur <= AVANT_MAJ_BORNES[1]:
+            raise Failure("Nombre de sauvegardes d'avant mise à jour hors bornes")
+        return valeur
+
+    def menage_images(self, en_service, precedente=None):
+        """Images de l'application ni en service, ni précédente, ni du frontal en service retirées (scripts/images-application.py
+        de la version présente dans le dépôt). Ne lève jamais : le résultat de la mise à jour n'en dépend pas."""
+        with contextlib.suppress(Exception):
+            script = self.repo / "scripts/images-application.py"
+            config = self.env()
+            frontal = config.get("GATEWAY_VERSION") or config.get("APP_VERSION") or en_service
+            versions = [v for v in (en_service, precedente, frontal) if v]
+            if not script.is_file() or not all(re.fullmatch(r"[\w.-]{1,40}", v) for v in versions):
+                return
+            args = ["python3", str(script), "menage", "--en-service", en_service, "--frontal", frontal, "--env", str(self.repo / ".env")]
+            if precedente:
+                args += ["--precedente", precedente]
+            self.run(args, timeout=600)
 
     def signatures(self, target):
         # Le commit des sources doit correspondre à celui des images signées (label inclus dans l'empreinte).
@@ -978,32 +1120,27 @@ class Worker:
             raise Failure("Contrôle préalable des données en échec")
         atomic(self.private / "active.json", self.job)
         log = self.private / f'{job["id"]}.log'
-        env = {**self.crypto_env(), "SUIVI_UPDATE_PROGRESS": str(self.private / "progress.json"),
+        gardees = self.nombre_sauvegardes_avant_maj()
+        # Zone de travail de la sauvegarde de sécurité et d'un éventuel retour arrière (dump, archive en clair, contrôle) sur le
+        # disque des données, comme pour l'exécutant d'exploitation : le /tmp du conteneur (tmpfs de 256 Mo) ne la contient pas.
+        travail = self.zone_travail()
+        env = {**self.crypto_env(), **({"UPDATE_SAUVEGARDES_GARDEES": str(gardees)} if gardees is not None else {}),
+               "TMPDIR": str(travail),
+               "SUIVI_UPDATE_PROGRESS": str(self.private / "progress.json"),
                "SUIVI_UPDATE_JOB": job["id"], "SUIVI_UPDATE_IMAGES": json.dumps(self.job["images"]),
                "UPDATE_SAUVEGARDE_LOCK_HELD": "1", "RESTORE_WORKER_LOCK_HELD": "1", "RESTORE_SAUVEGARDE_LOCK_HELD": "1"}
         # Le script établi garde sauvegarde, migrations et rollback. Aucun argument contrôlé librement.
         p = subprocess.Popen(["bash", str(self.repo / "scripts/mettre-a-jour.sh"), target, "--auto", "--sauvegardes", str(self.data / "sauvegardes-updates")],
                              cwd=self.repo, env={**os.environ, **env, "SUIVI_MAJ_WEB": "1", "PWD": str(self.repo), "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "safe.directory", "GIT_CONFIG_VALUE_0": str(self.repo)},
                              stdout=log.open("w"), stderr=subprocess.STDOUT, pass_fds=(8, 9), start_new_session=True)
-        start = time.monotonic()
-        while p.poll() is None:
-            progress = read(self.private / "progress.json", {})
-            if progress.get("jobId") == job["id"]:
-                phase = PHASES.get(progress.get("phase"), "rollback" if str(progress.get("phase", "")).startswith("retour") else "installing")
-                messages = {"preparing": "Préparation de la version.", "backup": "Sauvegarde de sécurité de vos données.",
-                    "installing": "Installation de la nouvelle version.", "verifying": "Vérification du service et de vos données.",
-                    "rollback": "Retour sécurisé à la version précédente."}
-                self.publish(phase=phase, message=messages[phase])
-            if time.monotonic() - start > 3600:
-                os.killpg(p.pid, signal.SIGTERM)
-                try:
-                    p.wait(timeout=20)
-                except subprocess.TimeoutExpired:
-                    os.killpg(p.pid, signal.SIGKILL)
-                    p.wait()
-                self.recover()
-                return
-            time.sleep(2)
+        try:
+            interrompu = self.suivre_script(p, job)
+        finally:
+            # Rien ne reste de la sauvegarde en clair une fois le script terminé ou arrêté.
+            self.zone_travail(creer=False)
+        if interrompu:
+            self.recover()
+            return
         if p.returncode:
             # Le script a déjà tenté le rollback ; valider réellement l'ancienne version.
             try:
@@ -1025,6 +1162,60 @@ class Worker:
                   "docker", "compose", "up", "-d", "--no-deps", "updater"])
         # Le successeur finalise le reçu ; ne pas relancer une demande dans l'ancienne instance.
         self.stop.set()
+
+    def zone_travail(self, creer=True):
+        """Dossier temporaire de scripts/mettre-a-jour.sh (TMPDIR), dans le dossier privé de reprise (root, 0700) : vidé au
+        début et à la fin de l'opération ; jamais publié."""
+        dossier = self.private / "tmp"
+        if dossier.is_symlink() or (dossier.exists() and not dossier.is_dir()):
+            dossier.unlink()
+        elif dossier.exists():
+            shutil.rmtree(dossier)
+        if creer:
+            dossier.mkdir(mode=0o700)
+            os.chmod(dossier, 0o700)
+        return dossier
+
+    def suivre_script(self, p, job):
+        """Publie la phase du script jusqu'à sa fin ; au-delà d'une heure, l'arrête et renvoie True (reprise à faire)."""
+        start = time.monotonic()
+        while p.poll() is None:
+            progress = read(self.private / "progress.json", {})
+            if progress.get("jobId") == job["id"]:
+                phase = PHASES.get(progress.get("phase"), "rollback" if str(progress.get("phase", "")).startswith("retour") else "installing")
+                messages = {"preparing": "Préparation de la version.", "backup": "Sauvegarde de sécurité de vos données.",
+                    "installing": "Installation de la nouvelle version.", "verifying": "Vérification du service et de vos données.",
+                    "rollback": "Retour sécurisé à la version précédente."}
+                self.publish(phase=phase, message=messages[phase])
+            if time.monotonic() - start > 3600:
+                os.killpg(p.pid, signal.SIGTERM)
+                try:
+                    p.wait(timeout=20)
+                except subprocess.TimeoutExpired:
+                    os.killpg(p.pid, signal.SIGKILL)
+                    p.wait()
+                return True
+            time.sleep(2)
+        return False
+
+    def installer(self, job):
+        """Demande d'installation prise en charge par la boucle : installation sous verrou, puis clôture de tout échec."""
+        try:
+            self.locked_operation(lambda: self.install(job))
+        except EspaceInsuffisant as refus:
+            # Refus avant tout téléchargement et toute modification (ADR 0106) : ni maintenance, ni retour arrière ; le
+            # message donne la place libre, la place nécessaire et ce qui l'occupe.
+            self.job = self.job or job
+            self.finish("failed", str(refus))
+        except Exception:
+            if self.job:
+                self.locked_operation(self.recover)
+            else:
+                self.job = job
+                self.finish("failed", "Une opération serveur ou une vérification empêche l’installation. Réessayez plus tard.")
+            # Tentative échouée avant le script : les images déjà téléchargées de la cible sont retirées (ADR 0106).
+            if self.state["status"] in ("failed", "rolled_back"):
+                self.menage_images(self.env().get("APP_VERSION", ""))
 
     def locked_operation(self, callback):
         handles = []
@@ -1266,14 +1457,7 @@ class Worker:
                                 self.finish("failed", "Le serveur n’a pas pu joindre GitHub (pare-feu de l’hôte ou du réseau, ou GitHub indisponible). La dernière version connue est conservée.")
                             last_check = time.monotonic()
                         elif job["kind"] == "install" and self.state["status"] != "intervention":
-                            try:
-                                self.locked_operation(lambda: self.install(job))
-                            except Exception:
-                                if self.job:
-                                    self.locked_operation(self.recover)
-                                else:
-                                    self.job = job
-                                    self.finish("failed", "Une opération serveur ou une vérification empêche l’installation. Réessayez plus tard.")
+                            self.installer(job)
                         else:
                             raise Failure("Commande inconnue")
                     elif time.monotonic() - last_check > 21600 and self.flux_voulus and "mises-a-jour" in self.flux_voulus:

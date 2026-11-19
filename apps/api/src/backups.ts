@@ -217,6 +217,25 @@ export class Backups {
       throw new HttpError(422, 'Identifiant de demande invalide.');
     z.number().int().min(0).max(255).parse(code);
     let report: BackupJobOut['report'] = null;
+    // Motif d'un refus explicite de scripts/backup.sh (espace disque insuffisant, ADR 0106) : repris dans le message de la
+    // demande, sans chemin (le script n'en met pas), ligne unique et bornée. « code de sortie N » n'apprend rien de plus.
+    let motif = '';
+    if (code !== 0) {
+      try {
+        const raw = JSON.parse(
+          readFileSync(path.join(this.cfg.etatDir, 'sauvegardes', 'jobs', `${id}.json`), 'utf8'),
+        ) as Record<string, unknown>;
+        if (raw.jobId === id && raw.resultat === 'echec' && typeof raw.message === 'string')
+          motif = raw.message
+            .replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 400);
+        if (/^code de sortie \d+$/.test(motif)) motif = '';
+      } catch {
+        motif = '';
+      }
+    }
     if (code === 0) {
       try {
         const raw = JSON.parse(
@@ -248,7 +267,7 @@ export class Backups {
           message: report
             ? ''
             : code
-              ? `Exécutant en échec (code ${code}).`
+              ? `Exécutant en échec (code ${code}).${motif ? ' ' + motif : ''}`
               : 'Rapport absent, incohérent ou contrôle d’intégrité incomplet.',
         }))
         .where('id', '=', id)

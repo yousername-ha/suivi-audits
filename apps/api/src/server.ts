@@ -1,5 +1,6 @@
 /* Suivi des audits SMSI ISO 27001 / HDS — serveur d'API. */
 import { buildApp } from './app.js';
+import { rappelsDeclarationsIncidents } from './automate-declarations.js';
 import { loadConfig } from './config.js';
 import { log } from './log.js';
 import { createServices } from './services.js';
@@ -28,11 +29,16 @@ async function main() {
   const schedule = setInterval(() => {
     if (working || svc.updates.state().maintenance) return;
     working = true;
-    void svc.modules
-      .run(true, async () => {
-        await svc.modules.assert('ecarts');
-        await svc.grc.tasks.tick();
-      })
+    // Rappels des déclarations réglementaires des incidents (ADR 0105) : en premier et à part, pour ne pas dépendre du module
+    // des écarts (dont l'absence arrête la suite de l'automate).
+    void rappelsDeclarationsIncidents(svc)
+      .catch((e: unknown) => log.warn({ err: String(e) }, 'rappels des déclarations d’incident'))
+      .then(() =>
+        svc.modules.run(true, async () => {
+          await svc.modules.assert('ecarts');
+          await svc.grc.tasks.tick();
+        }),
+      )
       // Rondes de l'assistant (ADR 0086) : après l'automate, qui n'en dépend pas. La ronde tourne en tâche de fond.
       .then(() =>
         svc.modules
@@ -74,6 +80,28 @@ async function main() {
             await svc.vulnerabilites.surfaceExterne.planifier();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
+      )
+      // Délais de correction et exceptions à échéance (ADR 0100, lot S1) : au plus une évaluation par quart d'heure ;
+      // expiration et rappel des exceptions, failles entrées en dépassement, résumés notifiés. Rien si le module est
+      // désactivé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.delais.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'délais des vulnérabilités')),
+      )
+      // Instantané quotidien de la situation (ADR 0100, lot S2) : au plus un par jour, créneau consommé avant le calcul,
+      // aucun rattrapage après une panne ; purge des instantanés plus anciens que la rétention. Rien si le module est
+      // désactivé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.tendances.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'instantané des vulnérabilités')),
       )
       .catch((e: unknown) => log.warn({ err: String(e) }, 'task scheduler'))
       .finally(() => {

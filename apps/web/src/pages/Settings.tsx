@@ -63,12 +63,14 @@ const DESCRIPTIONS: Record<SettingsSection, string> = {
   conservation:
     'Durées de conservation par catégorie. Aucune suppression n’est automatique : les durées servent à l’aperçu de ce qui serait candidat à une purge.',
   securite: 'Politique de mots de passe, durée des sessions et double authentification.',
+  etablissement:
+    'Identité reprise dans les déclarations réglementaires des incidents (santé, NIS 2). Vide au départ : à remplir par l’établissement. La catégorie d’entité NIS 2 se règle dans « Référentiels ».',
 };
 
 export function SettingsPage() {
   const can = useCan();
   const visible = SETTINGS_SECTIONS.filter((s) => s !== 'cycle' || can('audit', 'lire'))
-    .filter((s) => s !== 'referentiels' || can('conformite', 'lire'))
+    .filter((s) => (s !== 'referentiels' && s !== 'etablissement') || can('conformite', 'lire'))
     .filter((s) => s !== 'import_export' || can('import_export', 'lire'));
   const params = useParams();
   const nav = useNavigate();
@@ -137,17 +139,35 @@ export function SettingsPage() {
 }
 
 /* ---------------------------------------------------------------- Chargement et enregistrement d'une section */
-export function SectionLoader({ section, onDirty }: { section: SettingsSection; onDirty: (d: boolean) => void }) {
+/** `titreVisible` faux : le titre de la section n'est pas répété dans une fenêtre qui porte déjà le même titre (cartes de
+    Plateforme et de Configuration système). Par défaut, il est affiché (page Paramètres). */
+export function SectionLoader({
+  section,
+  onDirty,
+  titreVisible,
+}: {
+  section: SettingsSection;
+  onDirty: (d: boolean) => void;
+  titreVisible?: boolean;
+}) {
   const q = useQuery({
     queryKey: ['settings', section],
     queryFn: () => get<SettingsSectionOut>(`/api/settings/${section}`),
   });
   if (q.error) return <ErrorAlert error={q.error} />;
   if (!q.data) return null;
-  return <SectionForm key={q.data.version} data={q.data} onDirty={onDirty} />;
+  return <SectionForm key={q.data.version} data={q.data} onDirty={onDirty} titreVisible={titreVisible} />;
 }
 
-function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d: boolean) => void }) {
+function SectionForm({
+  data,
+  onDirty,
+  titreVisible,
+}: {
+  data: SettingsSectionOut;
+  onDirty: (d: boolean) => void;
+  titreVisible?: boolean;
+}) {
   const qc = useQueryClient();
   const [values, setValues] = useState<Record<string, unknown>>(data.values);
   const [saving, setSaving] = useState(false);
@@ -194,6 +214,7 @@ function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d:
   return (
     <FormSection
       title={SETTINGS_LABELS[data.section]}
+      titreVisible={titreVisible}
       description={DESCRIPTIONS[data.section]}
       dirty={dirty || fluxAOuvrir}
       saving={saving}
@@ -604,6 +625,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
   general: (p) => <General p={p} />,
   cycle: (p) => <Cycle p={p} />,
   referentiels: (p) => <Referentiels p={p} />,
+  etablissement: (p) => <Etablissement p={p} />,
   apparence: (p) => (
     <Stack>
       <Stack gap="2xs">
@@ -966,6 +988,35 @@ function Referentiels({ p }: { p: P }) {
           disabled={p.ro}
           allowDeselect={false}
         />
+      </div>
+    </Stack>
+  );
+}
+
+/** Identité de l'établissement (ADR 0105, décision 7) : reprise dans les fiches de préparation des déclarations. */
+function Etablissement({ p }: { p: P }) {
+  return (
+    <Stack>
+      <div className="grille-formulaire__champs">
+        <Text2 p={p} k="raisonSociale" label="Raison sociale" />
+        <Text2 p={p} k="finessJuridique" label="FINESS juridique" description="Neuf caractères." />
+        <Text2 p={p} k="finessGeographique" label="FINESS géographique" description="Neuf caractères." />
+        <Text2 p={p} k="arsRattachement" label="ARS de rattachement" />
+        <Text2
+          p={p}
+          k="secteurNis2"
+          label="Secteur d’activité (NIS 2)"
+          description="Au sens des annexes I et II de la directive (par exemple : Santé)."
+        />
+      </div>
+      <Text fw={600} size="sm">
+        Contact de signalement
+      </Text>
+      <div className="grille-formulaire__champs">
+        <Text2 p={p} k="contactNom" label="Nom" />
+        <Text2 p={p} k="contactFonction" label="Fonction" />
+        <Text2 p={p} k="contactTelephone" label="Téléphone" type="tel" />
+        <Text2 p={p} k="contactCourriel" label="Courriel" type="email" />
       </div>
     </Stack>
   );

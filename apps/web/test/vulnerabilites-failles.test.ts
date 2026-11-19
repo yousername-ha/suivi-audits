@@ -46,6 +46,8 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   exploite: true,
   nonMaintenu: false,
   finSupportLe: null,
+  finDeSupport: false,
+  correctifEtat: { etat: 'non_renseigne', sources: [] },
   nombreCves: 7,
   cves: ['CVE-2026-90005', 'CVE-2026-90004'],
   machines: 3,
@@ -69,7 +71,23 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
       { fait: 'presence', presence: 'detectee' },
     ],
   },
-  suivi: { etat: 'nouvelle', proposition: 'aucune', revueLe: null, revueDepassee: false, nombreActions: 0, version: 0 },
+  suivi: {
+    etat: 'nouvelle',
+    proposition: 'aucune',
+    revueLe: null,
+    revueDepassee: false,
+    exceptionStatut: null,
+    nombreActions: 0,
+    version: 0,
+  },
+  delai: {
+    etat: 'dans_les_delais' as const,
+    priorite: 'P2' as const,
+    delai: { duree: 15, unite: 'jours' as const },
+    premiere: '2026-11-10T08:00:00.000Z',
+    depuis: '2026-11-10T08:00:00.000Z',
+    echeance: '2026-11-25T08:00:00.000Z',
+  },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -146,6 +164,8 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
       { fait: 'elevees', nombre: 1 },
     ],
   },
+  finDeSupport: false,
+  finsDeSupport: [],
   version: 4,
   ...m,
 });
@@ -164,6 +184,9 @@ describe('menu et aide', () => {
       'vulnerabilites-perimetres',
       'vulnerabilites-surface',
       'vulnerabilites-alertes',
+      'vulnerabilites-delais',
+      'vulnerabilites-tendances',
+      'vulnerabilites-rapport',
       'vulnerabilites-priorite',
     ]);
     expect(localiser('/vulnerabilites/failles')?.rubrique.id).toBe('vulnerabilites-failles');
@@ -207,13 +230,16 @@ describe('adresses et libellés', () => {
           exploite: true,
           exploitable: true,
           nonMaintenu: true,
+          finSupport: true,
           priorite: 'P2',
           etat: '',
+          delai: 'en_depassement',
+          tri: 'echeance',
         },
         2,
       ),
     ).toBe(
-      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&priorite=P2&page=2',
+      '/api/vulnerabilites/constats?q=CVE-2026&gravite=critique&exploite=oui&exploitable=oui&nonMaintenu=oui&finSupport=oui&priorite=P2&delai=en_depassement&tri=echeance&page=2',
     );
     expect(urlConstats({ ...FILTRES_CONSTATS_VIDES, etat: 'a_clore' })).toBe(
       '/api/vulnerabilites/constats?etat=a_clore',
