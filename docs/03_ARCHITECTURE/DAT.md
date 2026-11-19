@@ -278,6 +278,15 @@ ligne `envoyee` ou `non_requise` (et toute troncature) ; seule la remise à vide
 rubriques et leur source, pré-remplissage, jalons de rappel) dans `packages/shared/src/declarations-incidents.ts`. Identité de
 l’établissement : section de paramètres `etablissement` (table `settings`), droits `parametres` et `conformite`.
 
+**Contacts de crise issus des comptes (18/11/2026, [ADR 0107](../adr/0107-contacts-de-crise-issus-des-comptes.md)).**
+Table `contacts_crise_comptes` (migration additive `092`) : une ligne par compte désigné, supprimée avec le compte,
+périmètres en tableau d'identifiants contrôlés à l'écriture, version pour `If-Match`. Écriture de la fiche entière par
+`administration:administrer` (`PUT /api/admin/users/:id/contact-crise`) ; la personne ne modifie que ses téléphones et sa
+disponibilité (`PATCH /api/account/contact-crise`, accès `auth`, schéma strict). Lecture par `GET /api/crise`
+(`contactsComptes`, `incidents:lire`) : comptes actifs (prédicat des annuaires) du périmètre affiché, ou couvrant au moins un
+périmètre lisible ; aucun sans périmètre lisible. Journal `admin.user_crisis_contact` et `account.crisis_contact_update`,
+noms des champs seulement, jamais les numéros. Temps réel : entité `users` (identifiant du compte seulement).
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.

@@ -132,6 +132,7 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         '089_declarations_incidents.sql',
         '090_frequences_synchronisation.sql',
         '091_conservation_sauvegardes.sql',
+        '092_contacts_crise_comptes.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

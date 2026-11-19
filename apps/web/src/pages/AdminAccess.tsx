@@ -37,6 +37,7 @@ import { useState } from 'react';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { ConfirmButton, ErrorAlert, fmtDate, SecretModal } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
+import { ContactCriseCompteEditeur } from '../components/ContactCriseCompte';
 import { FacteursCompte } from '../components/FacteursCompte';
 import { EditeurReglages } from '../notifications/Reglages';
 import { useCan, useMe } from '../session';
@@ -496,6 +497,8 @@ function UserEditor({
       <Group justify="flex-end">
         <Button onClick={() => void save()}>{user ? 'Enregistrer' : 'Créer'}</Button>
       </Group>
+      {/* Contact de crise (ADR 0107) : enregistré à part, par sa propre route, sans toucher au compte. */}
+      {user && <ContactCriseCompteEditeur userId={user.id} />}
     </Stack>
   );
 }
