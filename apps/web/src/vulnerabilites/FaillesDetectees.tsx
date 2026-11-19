@@ -35,6 +35,7 @@ import {
   type TriFailles,
   type ConstatDto,
   type ConstatResumeDto,
+  type EtatImportNessusDto,
   type EtatSynchronisationDto,
   type FailleDeclareeDto,
   type FicheDeclareeDto,
@@ -59,6 +60,7 @@ import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
 import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { resumeExecution } from '../integrations/integrations';
+import { machinesImportees, resumeBilanImport } from '../integrations/nessus';
 import { useCan } from '../session';
 import {
   ETAT_PRIORITE,
@@ -85,6 +87,7 @@ import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
+import { SourceConnecteur } from './SourceConnecteur';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
@@ -188,6 +191,7 @@ export function ConstatsTable({
                   ))}
                 </Group>
                 <MarquesSources s={c.sources} />
+                <SourceConnecteur origine={c.integration} />
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
@@ -506,6 +510,27 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
   );
 }
 
+/** Lot N1 : état en lecture seule de chaque instance « Nessus, import de fichier » (sans état) : date du dernier import et
+    nombre de machines, erreur éventuelle, bilan ; aucun bouton (l'import se fait dans la carte « Intégrations »). */
+export function EtatImports({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatImportNessusDto[];
+  peutConfigurer?: boolean;
+}) {
+  return (
+    <EtatIntegration
+      type="Nessus (import de fichier)"
+      nature="import"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      apresDate={(e) => (e.derniere?.bilan ? machinesImportees(e.derniere.bilan) : null)}
+      detail={(e) => (e.derniere?.etat === 'recu' && e.derniere.bilan ? resumeBilanImport(e.derniere.bilan) : null)}
+    />
+  );
+}
+
 /** État en lecture seule de chaque instance de Tenable (sans état) : dernière synchronisation, erreur éventuelle, bilan, et
     lien « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076, addendum du 19/11/2026). */
 export function EtatSynchronisations({
@@ -562,6 +587,12 @@ export function FaillesDetecteesPage() {
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatSynchronisationDto[]>('/api/vulnerabilites/synchronisation'),
+    enabled: lire,
+    refetchInterval: 60_000,
+  });
+  const imports = useQuery({
+    queryKey: [...CLE, 'imports'],
+    queryFn: () => get<EtatImportNessusDto[]>('/api/vulnerabilites/imports/etat'),
     enabled: lire,
     refetchInterval: 60_000,
   });
@@ -622,7 +653,7 @@ export function FaillesDetecteesPage() {
     <Page>
       <PageHeader
         title="Failles détectées"
-        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
+        description="Failles rapportées par Tenable Security Center, ou importées d’un scan Nessus (carte « Intégrations » de la page Plateforme), sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
         actions={
           <Button component={Link} to="/vulnerabilites/machines" variant="default">
             Machines
@@ -630,8 +661,15 @@ export function FaillesDetecteesPage() {
         }
       />
       <Stack>
-        <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSynchronisations etats={etat.data} peutConfigurer={peutConfigurerIntegration(can)} />}
+        <ErrorAlert error={etat.error ?? imports.error} />
+        {/* Lot N1 : sans instance Security Center, seul l'état des imports est montré quand il y en a. */}
+        {etat.data && (etat.data.length > 0 || !imports.data?.length) && (
+          <EtatSynchronisations
+            etats={etat.data}
+            peutConfigurer={peutConfigurerIntegration(can) && !imports.data?.length}
+          />
+        )}
+        {!!imports.data?.length && <EtatImports etats={imports.data} peutConfigurer={peutConfigurerIntegration(can)} />}
         <SegmentedControl
           value={vue}
           onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}

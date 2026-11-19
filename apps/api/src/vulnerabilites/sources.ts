@@ -14,7 +14,10 @@
    leur source (gravité déduite du score, comme pour le CERT Santé). Les CVE des alertes ne portent aucun fait : elles ne
    disent que la présence. Lot ALH5 (décision A du RSSI du 17/11/2026) : « une priorité est la même pour tout le monde » ;
    ces faits sont lus sur toutes les technologies, sans tenir compte des droits de lecture de la personne (ils ne nomment
-   aucun actif ; le choix n° 1 du lot ALH2 est remplacé). */
+   aucun actif ; le choix n° 1 du lot ALH2 est remplacé).
+   Lot N2 (décision du RSSI du 19/11/2026) : un contrôle de Tenable marqué « exploité par un logiciel malveillant » (colonne
+   `exploite_malware` du constat, import Nessus) est une source de plus de l'exploitation avérée, propre au constat (pas à
+   ses CVE) : sourcesDe la reçoit avec les faits de Tenable ; les filtres SQL l'ajoutent à exploiteeCve (failles.ts). */
 import {
   type GraviteSource,
   type GraviteTenable,
@@ -159,12 +162,14 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
   return out;
 }
 
-/** Ce que dit Tenable d'un constat (valeurs de la source « tenable »). */
+/** Ce que dit Tenable d'un constat (valeurs de la source « tenable »). Lot N2 : `malware`, contrôle marqué « exploité par un
+    logiciel malveillant » (import Nessus ; toujours faux pour Security Center), vaut exploitation avérée. */
 export interface FaitsTenable {
   gravite: GraviteTenable;
   cvss3: number | null;
   epss: number | null;
   exploitable: boolean;
+  malware: boolean;
 }
 
 /** Une valeur par source : la plus sévère de la source quand plusieurs CVE en portent une (constat de Tenable). */
@@ -223,6 +228,8 @@ export function sourcesDe(faits: readonly FaitsCve[], tenable?: FaitsTenable): S
     if (tenable.cvss3 !== null) cvss.push({ source: 'tenable', score: tenable.cvss3 });
     if (tenable.epss !== null) epss.push({ source: 'tenable', score: tenable.epss });
     if (tenable.exploitable) exploitable.push({ source: 'tenable', le: null });
+    // Lot N2 : fait du contrôle, sans date (rangé après les sources datées, V26).
+    if (tenable.malware) exploitation.push({ source: 'tenable', le: null });
   }
   return {
     exploitation: rangerSignalements(exploitation, SOURCES_EXPLOITATION),

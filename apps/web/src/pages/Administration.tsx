@@ -246,7 +246,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     cote: 'plateforme',
     titre: 'Intégrations',
     resume:
-      'Connecteurs en lecture seule (Tenable Security Center, AlgoLightHouse) : adresse, clés, test, synchronisation.',
+      'Connecteurs en lecture seule (Tenable Security Center, AlgoLightHouse) : adresse, clés, test, synchronisation ; import de scans Nessus.',
     icone: 'reseau',
     teinte: 'bleu',
     detail: () => <IntegrationsPanel />,

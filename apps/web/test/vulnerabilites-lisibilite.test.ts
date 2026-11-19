@@ -104,7 +104,10 @@ describe('pastilles de source', () => {
       'cert-fr': 'cert-fr',
       'cert-sante': 'cert-sante',
       alh: 'algolighthouse',
+      // Lot N2 : contrôle « exploité par un logiciel malveillant » selon Tenable, pastille de Tenable.
+      tenable: 'tenable',
     });
+    expect(pictosExploitation([{ source: 'tenable' }, { source: 'kev' }])).toEqual(['cisa-kev', 'tenable']);
     expect(PICTO_EXPLOITABLE.alh).toBe('algolighthouse');
     expect(PICTO_VALEUR.first).toBe('epss');
     expect(pictosExploitation([{ source: 'cert-fr' }, { source: 'kev' }, { source: 'cert-fr' }])).toEqual([

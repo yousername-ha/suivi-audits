@@ -6,7 +6,8 @@
 
 $Source = (Read-Host 'Chemin du fichier JSON à anonymiser').Trim('"')
 if (-not (Test-Path -LiteralPath $Source)) { Write-Host "Fichier introuvable : $Source"; Read-Host 'Entrée pour fermer' | Out-Null; exit 1 }
-$Sortie = Join-Path (Split-Path -Parent (Resolve-Path -LiteralPath $Source)) ('forme-' + [IO.Path]::GetFileNameWithoutExtension($Source) + '.json')
+# Le nom du fichier d'origine n'est pas repris : il porte souvent un nom de domaine ou d'établissement.
+$Sortie = Join-Path (Split-Path -Parent (Resolve-Path -LiteralPath $Source)) ('forme-anonyme-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.json')
 $MaxElements = 3
 $Texte = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $Source), [Text.Encoding]::UTF8)
 

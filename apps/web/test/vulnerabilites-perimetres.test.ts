@@ -85,7 +85,7 @@ const machine = (
     premiere: null,
     derniere: null,
     source: 'tenable',
-    integration: { id: '00000000-0000-4000-8000-0000000000b1', nom: 'Tenable fictif' },
+    integration: { id: '00000000-0000-4000-8000-0000000000b1', nom: 'Tenable fictif', type: 'tenable' },
     compteurs: {
       critique: marques.priorite === 'P1' ? 1 : 0,
       elevee: 0,

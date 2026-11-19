@@ -71,6 +71,7 @@ import {
   type ElementTechnologieAlh,
   type ElementTechnologieCveAlh,
   echeanceAtteinte,
+  frequenceConnecteur,
   type EtatSurfaceExterneDto,
   prochaineAffichee,
   referenceApresDemande,
@@ -95,6 +96,7 @@ import {
 } from '@suivi/shared';
 import { sql, type RawBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { analyserTables } from '../db/analyser.js';
 import type { Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import type { Grc } from '../grc/core.js';
@@ -261,6 +263,31 @@ export class SurfaceExterneAlh implements OperationEnLots {
     );
     if (bilan && !refus) await this.apresSynchronisation?.(k, c);
     return refus;
+  }
+
+  /** Après la validation d'une fin reçue, hors transaction : statistiques des tables réécrites par les lots, s'il y en a eu. */
+  async apresValidation(executionId: string): Promise<void> {
+    const s = await this.db.k
+      .selectFrom('vulnerabilites_alh_synchronisations')
+      .select('elements')
+      .where('execution_id', '=', executionId)
+      .executeTakeFirst();
+    if (s?.elements)
+      await analyserTables(
+        this.db.k,
+        [
+          'vulnerabilites_alh_perimetres',
+          'vulnerabilites_alh_actifs',
+          'vulnerabilites_alh_alertes',
+          'vulnerabilites_alh_alerte_cves',
+          'vulnerabilites_alh_services',
+          'vulnerabilites_alh_service_alertes',
+          'vulnerabilites_alh_technologies',
+          'vulnerabilites_alh_technologie_actifs',
+          'vulnerabilites_alh_technologie_cves',
+        ],
+        this.db.log,
+      );
   }
 
   /* ---------------------------------------------------------------- Rangement (sans doublon) */
@@ -613,12 +640,14 @@ export class SurfaceExterneAlh implements OperationEnLots {
           .executeTakeFirstOrThrow();
         // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
         // dernière demande automatique.
-        if (!echeanceAtteinte(e.planifiee_le, i.frequenceHeures, maintenant)) return;
+        if (!echeanceAtteinte(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant)) return;
         // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
         // avant la période suivante.
         await k
           .updateTable('vulnerabilites_alh_etat')
-          .set({ planifiee_le: referenceApresDemande(e.planifiee_le, i.frequenceHeures, maintenant) })
+          .set({
+            planifiee_le: referenceApresDemande(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant),
+          })
           .where('integration_id', '=', i.id)
           .execute();
         const occupee = await k
@@ -683,11 +712,15 @@ export class SurfaceExterneAlh implements OperationEnLots {
           : null,
         derniereCompleteLe: e?.complete_le?.toISOString() ?? null,
         perimetresNonRelies: nonRelies,
-        frequenceHeures: i.frequenceHeures,
+        frequenceHeures: frequenceConnecteur(i.frequenceHeures),
         // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
         prochaineSynchronisation:
           fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
-            ? prochaineAffichee(e?.planifiee_le ?? null, i.frequenceHeures, maintenant).toISOString()
+            ? prochaineAffichee(
+                e?.planifiee_le ?? null,
+                frequenceConnecteur(i.frequenceHeures),
+                maintenant,
+              ).toISOString()
             : null,
       });
     }
@@ -1531,7 +1564,11 @@ export class SurfaceExterneAlh implements OperationEnLots {
     const toutes = await this.porteurs(null, [cve]);
     const lues = new Set(lignes.map((r) => `${r.nature}|${r.cle}|${r.alerte_id}|${r.technologie_id}`));
     const actifs = new Map<string, string | null>();
-    for (const r of lignes) if (r.cle && !actifs.has(r.cle)) actifs.set(r.cle, r.actif_id);
+    // Ordre stable des actifs (repères de l'assistant), quel que soit le plan choisi par PostgreSQL pour `porteurs`.
+    const parCle = [...lignes].sort((a, b) =>
+      (a.cle ?? '') < (b.cle ?? '') ? -1 : (a.cle ?? '') > (b.cle ?? '') ? 1 : 0,
+    );
+    for (const r of parCle) if (r.cle && !actifs.has(r.cle)) actifs.set(r.cle, r.actif_id);
     const techIds = [...new Set(lignes.flatMap((r) => (r.technologie_id ? [r.technologie_id] : [])))];
     const alerteIds = [...new Set(lignes.flatMap((r) => (r.alerte_id ? [r.alerte_id] : [])))];
     const technologies = techIds.length
