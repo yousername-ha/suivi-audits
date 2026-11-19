@@ -34,7 +34,26 @@ en service). Les fichiers de la page changent : à la fin de la mise à jour ver
 du site est redémarré une fois ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes
 annoncée par la page de suivi, qui reprend seule. (session « Projet audit_suivi Coeur »)
 
+**Aucune action sur le serveur.** **Migration automatique `092`** (contacts de crise issus des comptes,
+[ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)) : additive (une table `contacts_crise_comptes` et son
+déclencheur temps réel ; aucune table existante modifiée), durée négligeable, sans reprise de données : aucun compte n'est
+contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
+suivi-audits »)
+
 ### Ajouté
+
+- **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
+  [ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)). Dans Plateforme > Utilisateurs, la fiche d'un compte
+  reçoit une section « Contact de crise » : l'administrateur y désigne le compte, son rôle de crise, ses téléphones, sa
+  disponibilité, la case « Contact clé » (priorité dans la cellule de crise) et ses périmètres (tous par défaut, ou une liste
+  choisie). Dans Mon compte, une personne contact de crise met à jour ses téléphones et sa disponibilité et voit son rôle et
+  ses périmètres sans pouvoir les modifier. La page Contacts de crise montre en tête un bloc en lecture seule « Comptes de la
+  plateforme » (téléphones et courriel cliquables, mention « Modifiable dans Plateforme > Utilisateurs ») ; les contacts
+  saisis à la main restent en dessous, inchangés, et la cellule de crise reprend aussi les comptes, contacts clés en
+  premier. Seuls les comptes actifs apparaissent, et seulement pour qui lit les incidents du périmètre. Le journal d'audit
+  garde qui a modifié quels champs, sans les numéros (`admin.user_crisis_contact`, `account.crisis_contact_update`). L'export
+  Excel des contacts de crise ne reprend pas encore les comptes. _(Session « Refonte Neon suivi-audits »
+  (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - Vulnérabilités et intégrations, **fréquence de synchronisation réglable** par source de veille et par connecteur (lot F1,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md), décision du RSSI du 19/11/2026) : catalogue KEV, CERT-FR et CERT Santé
@@ -100,6 +119,10 @@ annoncée par la page de suivi, qui reprend seule. (session « Projet audit_suiv
   échec ou repli sur `docker pull`). La page garde la barre pleine « 100 % · X / X Mo » avec la mention « Téléchargement
   terminé — vérification des signatures », lue aussi par les technologies d'assistance, et un petit sceau qui pulse (immobile
   en mouvement réduit), sans pourcentage, débit ni durée de la vérification. (session « Projet audit_suivi Coeur »)
+- **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
+  crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
+  reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+
 
 ## [7.4.0] — 2026-11-19
 

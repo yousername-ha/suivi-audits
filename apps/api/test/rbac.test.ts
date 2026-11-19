@@ -83,6 +83,10 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     // Notifications : chaque compte lit et modifie les siens (jamais ceux d'un autre) ; testé dans notifications-metier.test.ts.
     'GET /api/account/notifications',
     'PUT /api/account/notifications',
+    // Contact de crise (ADR 0107) : chaque compte lit sa propre fiche et ne modifie que ses téléphones et sa disponibilité ;
+    // testé dans contacts-crise-comptes.test.ts.
+    'GET /api/account/contact-crise',
+    'PATCH /api/account/contact-crise',
     'POST /api/mur/activer',
   ]);
 
