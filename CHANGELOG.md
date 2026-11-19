@@ -35,6 +35,8 @@ déclencheur temps réel ; aucune table existante modifiée), durée négligeabl
 contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
 suivi-audits »)
 
+**Ergonomie, lot 2** : changements d'interface seulement, aucune action sur le serveur.
+
 ### Ajouté
 
 - **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
@@ -90,6 +92,18 @@ suivi-audits »)
 
 ### Modifié
 
+- **Ergonomie, lot 2 : suite du relevé sur grand écran** (décisions du RSSI du 18/11/2026, sur maquettes ;
+  [docs/refonte-neon/ERGONOMIE-LOT2.md](docs/refonte-neon/ERGONOMIE-LOT2.md)). Processus : le bandeau « Périmètre affiché »,
+  qui répétait la liste de l'en-tête, est retiré, les chiffres du périmètre tiennent sur une ligne et les cartes se
+  resserrent pour montrer davantage de processus. Éléments par périmètre : la liste « Périmètre » est visible à côté de la
+  boîte d'outils. Documents : les étiquettes se filtrent sur le titre de leur colonne, avec des cases à cocher, et la
+  catégorie par un entonnoir à côté de son tri. Trois largeurs de fenêtre seulement : dialogues courts, fiches (1 024 px) et
+  présentations (1 152 px). La tuile de l'Assistant RSSI se réduit à son avatar et un espace lui est réservé en bas de page.
+  Champs de tableau lisibles : contacts de crise (les textes longs passent à la ligne, le tableau tient dans l'écran), étapes
+  des scénarios, participants et note du plan d'audit. Les fenêtres des cartes de Plateforme et de Configuration système
+  n'affichent plus leur titre en double. La Cartographie du SMSI remplit sa zone dès l'ouverture. Aucune migration, aucune
+  API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 - Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
   seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
   que les délais). (session « Module surveillance vulnérabilités SMSI »)
@@ -101,6 +115,8 @@ suivi-audits »)
 - **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
   crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
   reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+- **Cartographie du SMSI : « [object Object] » à la place des enjeux tirés des SWOT** enregistrés au format actuel
+  (`{ text }`) ; la carte affiche leur texte. _(Session « Refonte Neon suivi-audits ».)_
 
 
 ## [7.3.0] — 2026-11-18

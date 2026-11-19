@@ -552,15 +552,18 @@ function DetailCellule({
 }
 
 /* ------------------------------------------------------------------------------------------------- contacts */
+/** Champ, intitulé, largeur minimale de la colonne et zone de texte sur plusieurs lignes (décisions du RSSI du 18/11/2026 :
+    le texte saisi reste lisible et le tableau tient dans un écran de 1920 px ; les textes longs passent à la ligne au lieu
+    de faire défiler le tableau, téléphones et courriel restent sur une ligne). */
 const CHAMPS_CONTACT = [
-  ['name', 'Nom'],
-  ['org', 'Organisation'],
-  ['role', 'Rôle'],
-  ['phone', 'Téléphone'],
-  ['phone2', 'Téléphone 2'],
-  ['email', 'Courriel'],
-  ['avail', 'Disponibilité'],
-  ['notes', 'Notes'],
+  ['name', 'Nom', 'contact-champ-zone', true],
+  ['org', 'Organisation', 'contact-champ-zone', true],
+  ['role', 'Rôle', 'contact-champ-zone', true],
+  ['phone', 'Téléphone', 'contact-champ-telephone', false],
+  ['phone2', 'Téléphone 2', 'contact-champ-telephone', false],
+  ['email', 'Courriel', 'contact-champ-courriel', false],
+  ['avail', 'Disponibilité', 'contact-champ-zone', true],
+  ['notes', 'Notes', 'contact-champ-zone', true],
 ] as const;
 
 export function ContactsCrise({ smsi }: { smsi?: string }) {
@@ -614,16 +617,21 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
                       }
                     />
                   </Table.Td>
-                  {CHAMPS_CONTACT.map(([f, l]) => (
-                    <Table.Td key={f}>
-                      <ChampTexte
-                        ariaLabel={`${l} du contact ${k + 1}`}
-                        value={x[f]}
-                        disabled={!modifiable}
-                        onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
-                      />
-                    </Table.Td>
-                  ))}
+                  {CHAMPS_CONTACT.map(([f, l, largeur, zone]) => {
+                    const Champ = zone ? ChampZone : ChampTexte;
+                    return (
+                      <Table.Td key={f}>
+                        <Champ
+                          ariaLabel={`${l} du contact ${k + 1}`}
+                          className={largeur}
+                          value={x[f]}
+                          disabled={!modifiable}
+                          {...(zone ? { lignes: 1 } : {})}
+                          onCommit={(v) => void agir('PATCH', `/api/crise/contacts/${x.rang}`, { [f]: v })}
+                        />
+                      </Table.Td>
+                    );
+                  })}
                   {modifiable && can('incidents', 'supprimer') && (
                     <Table.Td>
                       <ConfirmButton
@@ -758,7 +766,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
               </Button>
             ))}
           </Stack>
-          <Stack key={sc.id}>
+          <Stack key={sc.id} className="crise-scenario-detail">
             <div className="grille-formulaire">
               <div className="grille-formulaire__champs">
                 <ChampTexte
@@ -786,7 +794,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Phase</Table.Th>
-                    <Table.Th>Action</Table.Th>
+                    <Table.Th className="colonne-extensible">Action</Table.Th>
                     <Table.Th>Responsable</Table.Th>
                     {modifiable && <Table.Th />}
                   </Table.Tr>
@@ -797,6 +805,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampChoix
                           ariaLabel={`Phase de l’action ${k + 1}`}
+                          className="champ-tableau-m"
                           value={x.phase}
                           options={PHASES_CRISE}
                           disabled={!modifiable}
@@ -806,6 +815,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampTexte
                           ariaLabel={`Action ${k + 1}`}
+                          className="champ-tableau-l"
                           value={x.t}
                           disabled={!modifiable}
                           onCommit={(v) => void agir('PATCH', `${base}/actions/${k}`, { t: v })}
@@ -814,6 +824,7 @@ export function ScenariosCrise({ smsi }: { smsi?: string }) {
                       <Table.Td>
                         <ChampTexte
                           ariaLabel={`Responsable de l’action ${k + 1}`}
+                          className="champ-tableau-m"
                           value={x.owner}
                           disabled={!modifiable}
                           onCommit={(v) => void agir('PATCH', `${base}/actions/${k}`, { owner: v })}

@@ -68,11 +68,9 @@ test('Registres : liste filtrée par périmètre et registres, puis déplacement
     // Éléments par périmètre : l'action apparaît sous son périmètre, avec son registre.
     await page.reload();
     await page.getByRole('tab', { name: 'Éléments par périmètre' }).click();
-    // Le périmètre se choisit dans les filtres avancés (boîte d'outils commune, 7.3.0).
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
+    // Le périmètre se choisit dans la liste visible à côté de la boîte d'outils (ergonomie, lot 2).
     await page.getByRole('combobox', { name: 'Périmètre', exact: true }).click();
     await page.getByRole('option', { name: nomA, exact: true }).click();
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
     const tableau = page.getByRole('region', { name: /Éléments des registres du périmètre/ });
     await expect(tableau.getByRole('row', { name: new RegExp(titre) })).toBeVisible();
     await expect(tableau.getByRole('link', { name: `Plan A ${suffixe}` })).toBeVisible();
