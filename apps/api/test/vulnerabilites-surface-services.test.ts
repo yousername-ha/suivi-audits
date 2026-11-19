@@ -326,7 +326,8 @@ describe('services exposés : lecture sous les droits de l’actif', () => {
     // L'hôte 11 (A) se lit : son service porté par l'alerte 37 (B, illisible) est rendu, sans l'alerte.
     expect(ports(a.get(11)!.services)).toEqual(['80/tcp']);
     const texte = JSON.stringify(await lire<CarteSurfaceDto>(lecteurA, `${S}/carte`));
-    expect(texte).not.toMatch(/3389|OpenSSH|"22|Alerte fictive 37|198\.51\.100/);
+    // Ports ancrés sur leur champ : « 22 » ou « 3389 » en texte brut peuvent se trouver dans un identifiant tiré au hasard.
+    expect(texte).not.toMatch(/"port":(22|3389)\b|OpenSSH|Alerte fictive 37|198\.51\.100/);
   });
 
   it('liste et fiche d’un actif : services, et seules les alertes lisibles qui les portent', async () => {
