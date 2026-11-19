@@ -73,6 +73,9 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 **Écran de connexion aux couleurs du menu** : changement d'interface seulement, aucune action sur le serveur.
 
+**Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
+Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
+
 ### Ajouté
 
 - Sauvegardes, conservation ([ADR 0106](docs/adr/0106-conservation-des-sauvegardes-et-espace-disque.md)) : nombre maximal de
@@ -166,6 +169,15 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
   lisibles : ISO 27001, HDS, ISO 27005, NIS 2, CRA, ISO 27035, EBIOS RM et ISO 27002 (RGPD et ISO 9001 retirés). Le reste
   de l'application garde ses couleurs. Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits »
   (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Onglets aux couleurs du menu, une seule forme sur toute la plateforme, à l'essai** (décisions du RSSI du 19/11/2026,
+  sur maquettes ; [docs/refonte-neon/ONGLETS-BLEU-MENU.md](docs/refonte-neon/ONGLETS-BLEU-MENU.md)). Deux formes sont à
+  l'essai : une barre bleu nuit avec l'onglet actif en bleu du menu (par défaut), ou des pastilles avec l'onglet actif en bleu
+  nuit. Chaque personne choisit dans Mon compte > Affichage, « Onglets de page (essai) » (préférence d'affichage
+  `onglets`, facultative, enregistrée sur le serveur). La forme s'applique à tous les onglets horizontaux : rubriques sous le
+  titre des pages, onglets des pages et des fenêtres, sélecteur de vues des objectifs, présentations du contexte, RETEX et
+  Assistant RSSI. Les onglets verticaux ne changent pas. La forme écartée, la préférence et son réglage seront retirés une
+  fois le choix fait. Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
   seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
