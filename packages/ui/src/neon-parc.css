@@ -624,6 +624,27 @@
   font-weight: 600;
   line-height: 1.3;
 }
+/* Lot S3 : mentions « Fin de support » et « Exploitée, sans correctif connu » (texte et bordure, jamais la seule couleur). */
+.parc-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  max-inline-size: 100%;
+  padding: 0 0.35em;
+  border: var(--suivi-trait-l) solid var(--carte-gris-accent);
+  border-radius: var(--mantine-radius-xs);
+  color: var(--carte-texte);
+  font-size: calc(var(--mantine-font-size-xs) * 0.9);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.parc-mention--fds {
+  border-color: var(--carte-orange-accent);
+  border-style: dashed;
+}
+.parc-mention--sc {
+  border-color: var(--carte-rouge-accent);
+}
 .parc-icone-internet {
   flex: none;
   inline-size: 1em;

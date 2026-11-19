@@ -238,34 +238,119 @@ export function NeonEcheances({ lignes }: { lignes: readonly { libelle: string; 
 }
 export interface SerieNeon {
   libelle: string;
-  valeurs: readonly number[];
+  /** Une valeur par intervalle ; null : aucune mesure (la courbe s'interrompt, aucun zéro n'est inventé). */
+  valeurs: readonly (number | null)[];
+  /** Classe de teinte de la série (sinon la teinte Neon de son rang). */
+  classe?: string;
 }
-export function NeonCourbes({ series, debut, fin }: { series: readonly SerieNeon[]; debut: string; fin: string }) {
-  const max = Math.max(1, ...series.flatMap((s) => s.valeurs.map(nombreNeon)));
+/** Formes des marques de points, une par série : la série se reconnaît sans la couleur (avec le trait et la légende). */
+export const FORMES_MARQUES = ['rond', 'carre', 'triangle', 'losange'] as const;
+export type FormeMarque = (typeof FORMES_MARQUES)[number];
+export const formeMarque = (rang: number): FormeMarque => FORMES_MARQUES[rang % FORMES_MARQUES.length]!;
+/** Chemin SVG d'une marque centrée sur (x, y), de demi-taille r. */
+export function cheminMarque(forme: FormeMarque, x: number, y: number, r = 3): string {
+  switch (forme) {
+    case 'carre':
+      return `M${x - r} ${y - r}h${2 * r}v${2 * r}h${-2 * r}Z`;
+    case 'triangle':
+      return `M${x} ${y - r * 1.2}L${x + r * 1.15} ${y + r * 0.9}H${x - r * 1.15}Z`;
+    case 'losange':
+      return `M${x} ${y - r * 1.3}L${x + r * 1.3} ${y}L${x} ${y + r * 1.3}L${x - r * 1.3} ${y}Z`;
+    default:
+      return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+  }
+}
+/** Graduations de l'axe : quatre intervalles arrondis (présentation d'origine), ou des entiers ronds (pas entier, le haut de
+    l'axe en multiple de quatre fois le pas) avec `entieres`. */
+export function graduationsCourbes(max: number, entieres: boolean): { haut: number; valeurs: number[] } {
+  if (!entieres) return { haut: max, valeurs: [0, 1, 2, 3].map((i) => Math.round((max * i) / 3)) };
+  const pas = Math.max(1, Math.ceil(max / 4));
+  return { haut: pas * 4, valeurs: [0, 1, 2, 3, 4].map((i) => i * pas) };
+}
+/** Points des segments continus d'une série (les valeurs nulles coupent la courbe). */
+export function segmentsCourbe(
+  valeurs: readonly (number | null)[],
+  haut: number,
+): { x: number; y: number; k: number }[][] {
+  const out: { x: number; y: number; k: number }[][] = [];
+  let courant: { x: number; y: number; k: number }[] = [];
+  valeurs.forEach((v, k) => {
+    if (v === null) {
+      if (courant.length) out.push(courant);
+      courant = [];
+      return;
+    }
+    courant.push({
+      x: 25 + (k / Math.max(1, valeurs.length - 1)) * 320,
+      y: 145 - (nombreNeon(v) / Math.max(1, haut)) * 126,
+      k,
+    });
+  });
+  if (courant.length) out.push(courant);
+  return out;
+}
+export function NeonCourbes({
+  series,
+  debut,
+  fin,
+  titre,
+  marques = false,
+  entieres = false,
+  etiquettes,
+}: {
+  series: readonly SerieNeon[];
+  debut: string;
+  fin: string;
+  /** Nom accessible du graphique (par défaut : événements par intervalle). */
+  titre?: string;
+  /** Marques de points (une forme par série) et trait propre à chaque série. */
+  marques?: boolean;
+  /** Graduations entières (nombres de failles, niveaux). */
+  entieres?: boolean;
+  /** Libellé de chaque intervalle (bulle des marques). */
+  etiquettes?: readonly string[];
+}) {
+  const max = Math.max(1, ...series.flatMap((s) => s.valeurs.flatMap((v) => (v === null ? [] : [nombreNeon(v)]))));
+  const axe = graduationsCourbes(max, entieres);
+  const y = (v: number) => 145 - (v / Math.max(1, axe.haut)) * 126;
   return (
     <figure className="neon-courbes">
-      <svg viewBox="0 0 360 180" role="img" aria-label={`Événements par intervalle, de ${debut} à ${fin}`}>
-        {[0, 1, 2, 3].map((i) => (
-          <g key={i}>
-            <line x1="25" x2="345" y1={145 - i * 42} y2={145 - i * 42} className="neon-grille" />
-            <text x="21" y={149 - i * 42} textAnchor="end" className="neon-axe">
-              {Math.round((max * i) / 3)}
-            </text>
-          </g>
-        ))}
-        {series.map((s, i) => (
-          <polyline
-            key={s.libelle}
-            className={`neon-courbe neon-serie-${i % 6}`}
-            points={s.valeurs
-              .map(
-                (v, k) => `${25 + (k / Math.max(1, s.valeurs.length - 1)) * 320},${145 - (nombreNeon(v) / max) * 126}`,
-              )
-              .join(' ')}
-          >
-            <title>{s.libelle}</title>
-          </polyline>
-        ))}
+      <svg viewBox="0 0 360 180" role="img" aria-label={titre ?? `Événements par intervalle, de ${debut} à ${fin}`}>
+        {axe.valeurs.map((v, i) => {
+          // Présentation d'origine : quatre lignes régulières ; graduations entières : à la hauteur de leur valeur.
+          const yy = entieres ? y(v) : 145 - i * 42;
+          return (
+            <g key={i}>
+              <line x1="25" x2="345" y1={yy} y2={yy} className="neon-grille" />
+              <text x="21" y={yy + 4} textAnchor="end" className="neon-axe">
+                {v}
+              </text>
+            </g>
+          );
+        })}
+        {series.map((s, i) => {
+          const teinte = s.classe ?? `neon-serie-${i % 6}`;
+          const segments = segmentsCourbe(s.valeurs, axe.haut);
+          return (
+            <g key={s.libelle} className={teinte}>
+              {segments.map((seg) => (
+                <polyline
+                  key={seg[0]!.k}
+                  className={`neon-courbe${marques ? ` neon-trait-${i % FORMES_MARQUES.length}` : ''}`}
+                  points={seg.map((p) => `${p.x},${p.y}`).join(' ')}
+                >
+                  <title>{s.libelle}</title>
+                </polyline>
+              ))}
+              {marques &&
+                segments.flat().map((p) => (
+                  <path key={p.k} className="neon-marque" d={cheminMarque(formeMarque(i), p.x, p.y)}>
+                    <title>{`${s.libelle}${etiquettes?.[p.k] ? `, ${etiquettes[p.k]}` : ''} : ${s.valeurs[p.k]}`}</title>
+                  </path>
+                ))}
+            </g>
+          );
+        })}
         <text x="25" y="170" className="neon-axe">
           {debut}
         </text>
@@ -274,7 +359,9 @@ export function NeonCourbes({ series, debut, fin }: { series: readonly SerieNeon
         </text>
       </svg>
       <Alternative>
-        {series.map((s) => `${s.libelle} : ${s.valeurs.join(', ')}`).join(' ; ') || 'Aucun événement'}
+        {series
+          .map((s) => `${s.libelle} : ${s.valeurs.map((v) => (v === null ? 'aucune mesure' : v)).join(', ')}`)
+          .join(' ; ') || 'Aucun événement'}
       </Alternative>
     </figure>
   );

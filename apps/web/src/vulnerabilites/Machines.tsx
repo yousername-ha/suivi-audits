@@ -55,6 +55,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
+import { fmtDate } from '../components/common';
 import { useCan, usePreferences } from '../session';
 import {
   corpsAffectation,
@@ -68,7 +69,7 @@ import {
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
 import { adressePerimetre, filtresDepuisAdresse } from './perimetres';
-import { LegendeMarques, MarquesMachine, ParcMachines } from './ParcMachines';
+import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { nombrePages } from './veille';
 
@@ -137,6 +138,7 @@ export function MachinesTable({
                       {libellePrioriteMachine(m.marques.priorite)}
                     </Text>
                     <MarquesMachine marques={m.marques} texte />
+                    {m.marques.exploiteeSansCorrectif && <MentionSansCorrectif />}
                   </span>
                 ) : (
                   <Text size="sm" c="dimmed">
@@ -164,6 +166,7 @@ export function MachinesTable({
                     {m.systeme}
                   </Text>
                 )}
+                {m.finDeSupport && <MentionFinSupport court />}
               </Table.Td>
               <Table.Td>
                 {m.role ? libelleRole(m.role) : <StatusChip etat="attention">{libelleRole(null)}</StatusChip>}
@@ -475,6 +478,29 @@ export function FicheMachine({ machine, modifier }: { machine: MachineDto; modif
         </Title>
         <Text size="sm">{faitsDuRang(machine.rang).join(' · ')}</Text>
       </Stack>
+      {machine.finDeSupport && (
+        <Stack gap="2xs">
+          <Title order={3} size="h6">
+            Fin de support
+          </Title>
+          <MentionFinSupport />
+          <Text size="sm">
+            Selon Tenable (date de fin de support du logiciel, passée), ces contrôles présents sur la machine visent un
+            système ou un logiciel qui ne reçoit plus de correctif de sécurité de l’éditeur (textes de Tenable, en
+            anglais) :
+          </Text>
+          <Stack gap="2xs" role="list" aria-label="Contrôles de Tenable en fin de support">
+            {machine.finsDeSupport.map((f) => (
+              <Text key={`${f.nom}-${f.le}`} size="sm" role="listitem">
+                <span lang="en" className="veille-texte">
+                  {f.nom}
+                </span>{' '}
+                · fin de support le <span className="horodatage">{fmtDate(f.le)}</span>
+              </Text>
+            ))}
+          </Stack>
+        </Stack>
+      )}
       <Title order={3} size="h6">
         Exposition sur Internet
       </Title>
@@ -677,6 +703,12 @@ function OngletMachines() {
                 { value: 'aucun', label: 'Sans périmètre' },
               ]}
               comboboxProps={{ withinPortal: false }}
+            />
+            <Checkbox
+              label="Fin de support"
+              description="Plus de correctif de sécurité de l’éditeur"
+              checked={!!filtres.finSupport}
+              onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
             />
           </Group>
         </form>

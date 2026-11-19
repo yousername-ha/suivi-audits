@@ -98,7 +98,8 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await page.goto('/vulnerabilites/priorite');
     await expect(page.getByRole('heading', { name: 'Seuils de priorité', level: 1 })).toBeVisible();
     await expect(page.getByLabel('Seuil EPSS (en %)')).toHaveValue('50');
-    await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeEnabled();
+    // Lot S1 : l'écran porte aussi « Enregistrer les délais » ; le bouton du seuil se cherche par son nom exact.
+    await expect(page.getByRole('button', { name: 'Enregistrer', exact: true })).toBeEnabled();
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);

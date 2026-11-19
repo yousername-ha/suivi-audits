@@ -244,8 +244,19 @@ describe('clé, titre et libellés', () => {
     const ids = NOTIFICATION_TYPES.map((t) => t.id) as string[];
     for (const t of NOTIFICATION_TYPES_VULNERABILITES) {
       expect(ids).toContain(t);
-      expect(NOTIFICATION_RUBRIQUES[t]?.rubrique).toBe('Vulnérabilités, Alertes');
+      expect(NOTIFICATION_RUBRIQUES[t]?.rubrique).toMatch(/^Vulnérabilités, /);
     }
+    for (const t of ['vulnerabilites_alerte_critique', 'vulnerabilites_alerte'] as const)
+      expect(NOTIFICATION_RUBRIQUES[t]?.rubrique).toBe('Vulnérabilités, Alertes');
+    // Lot S1 : délais dépassés (Failles détectées filtrée) et exceptions à échéance (onglet « Délais et exceptions »).
+    expect(NOTIFICATION_RUBRIQUES.vulnerabilites_delais).toEqual({
+      lien: '/vulnerabilites/failles?delai=en_depassement',
+      rubrique: 'Vulnérabilités, Failles détectées',
+    });
+    expect(NOTIFICATION_RUBRIQUES.vulnerabilites_exceptions).toEqual({
+      lien: '/vulnerabilites/delais',
+      rubrique: 'Vulnérabilités, Délais et exceptions',
+    });
     expect(NOTIFICATION_RUBRIQUES.vulnerabilites_alerte_critique?.lien).toBe('/vulnerabilites/alertes');
     // Résumé des alertes simples : onglet filtré sur les alertes simples ouvertes.
     expect(NOTIFICATION_RUBRIQUES.vulnerabilites_alerte?.lien).toBe(LIEN_RESUME_ALERTES);

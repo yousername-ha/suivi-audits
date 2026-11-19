@@ -43,6 +43,10 @@ const FICHE = {
   marques: { zeroDay: false, exploitable: false },
   alerte: null,
   presence: { machines: 0, actifs: 0, horsLecture: false },
+  // Lot S3 : état du correctif (aucune source n'en parle) et fin de support (aucune).
+  correctif: { etat: 'non_renseigne', sources: [] },
+  situationExploitation: null,
+  finSupport: null,
   vecteurs: [{ source: 'nvd', cve: CVE, brut: FAILLE.cvss31.vecteur, score: 9.8 }],
   recommandations: {
     tenable: null,
@@ -114,6 +118,7 @@ for (const [mode, scheme] of [
       const fenetre = page.getByRole('dialog', { name: `${CVE} (veille)` });
       await expect(fenetre).toBeVisible();
       await expect(fenetre.getByText('Priorité 3 (P3)', { exact: true })).toBeVisible();
+      await expect(fenetre.getByText('Correctif non renseigné', { exact: true })).toBeVisible();
       await expect(fenetre.getByRole('heading', { name: 'Vecteur d’attaque, en clair', level: 3 })).toBeVisible();
       await expect(fenetre.getByText('Vecteur d’accès : réseau', { exact: false }).first()).toBeVisible();
       await expect(fenetre.getByText('Aucun compte nécessaire', { exact: true })).toBeVisible();
