@@ -282,7 +282,7 @@ export function UpdatesPanel() {
           )}
         </div>
         {(s?.notes || s?.checkedAt) && (
-          <Group gap="xs" className="maj-meta">
+          <Group gap="xs" justify="center" className="maj-meta">
             {s?.checkedAt && (
               <Text size="xs" c="dimmed" className="horodatage">
                 Dernière vérification : {new Date(s.checkedAt).toLocaleString()}.

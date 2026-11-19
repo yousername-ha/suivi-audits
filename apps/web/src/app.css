@@ -586,18 +586,25 @@
   justify-content: space-between;
   gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
 }
+/* Bloc centré ; grille à trois rangées partagées (libellé, numéro, étiquette) : les deux numéros et la flèche sont sur
+   la même ligne, quel que soit le nombre de lignes de chaque version. */
 .maj-versions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--mantine-spacing-xs) var(--mantine-spacing-lg);
-  padding-block: var(--mantine-spacing-sm);
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: auto auto auto;
+  justify-content: center;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-xl);
+  padding-block: var(--mantine-spacing-md);
   border-block: var(--suivi-trait-l) solid var(--suivi-trait);
+  text-align: center;
 }
 .maj-version {
-  display: flex;
-  flex-direction: column;
-  gap: var(--mantine-spacing-2xs);
+  display: grid;
+  grid-row: 1 / span 3;
+  grid-template-rows: subgrid;
+  justify-items: center;
+  row-gap: var(--mantine-spacing-2xs);
   min-inline-size: 0;
   margin: 0;
 }
@@ -627,6 +634,7 @@
 }
 .maj-fleche {
   position: relative;
+  grid-row: 2;
   align-self: center;
   inline-size: calc(var(--mantine-spacing-2xl) * 1.1);
   block-size: var(--suivi-trait-focus);
@@ -645,6 +653,7 @@
 }
 .maj-meta {
   row-gap: var(--mantine-spacing-2xs);
+  text-align: center;
 }
 .maj-operation {
   padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
