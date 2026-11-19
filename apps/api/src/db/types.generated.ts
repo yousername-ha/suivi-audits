@@ -205,6 +205,8 @@ export interface BackupPolicy {
   days: Generated<number[]>;
   retention_days: Generated<number>;
   version: Generated<number>;
+  max_backups: Generated<number>;
+  pre_update_backups: Generated<number>;
 }
 
 export interface BackupWorker {
@@ -643,6 +645,32 @@ export interface ImportBatches {
   undone_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
   undone_by: string | null;
   version: Generated<number>;
+}
+
+export interface IncidentsDeclarations {
+  id: Generated<string>;
+  incident_id: string;
+  smsi_id: string;
+  regime: "sante" | "nis2";
+  etape: "signalement" | "alerte_precoce" | "notification" | "rapport_final" | "complement";
+  liee_a: string | null;
+  origine: "proposition" | "manuelle" | "complement";
+  statut: "proposee" | "a_declarer" | "non_requise" | "envoyee";
+  depart: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  echeance: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  rubriques: ColumnType<JsonValue, string | undefined, string>;
+  reference: Generated<string>;
+  motif: string | null;
+  decide_par: string | null;
+  decide_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  envoyee_par: string | null;
+  envoyee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  contenu: ColumnType<JsonValue | null, string | null, string | null>;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  cree_par: string;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string;
 }
 
 export interface IntegrationExecutions {
@@ -1154,6 +1182,7 @@ export interface SuiviIncidents {
   finding_id: string | null;
   created_iso: string | null;
   extra: ColumnType<JsonValue, string | undefined, string>;
+  qualified_at: string | null;
 }
 
 export interface SuiviIndicateurs {
@@ -2203,6 +2232,7 @@ export interface DB {
   group_roles: GroupRoles;
   groups: Groups;
   import_batches: ImportBatches;
+  incidents_declarations: IncidentsDeclarations;
   integration_executions: IntegrationExecutions;
   integrations: Integrations;
   journal_technique_config: JournalTechniqueConfig;

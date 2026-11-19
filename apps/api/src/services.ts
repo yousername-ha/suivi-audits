@@ -89,7 +89,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   grc.methodBindings = configGrc;
   const notificationsMetier = new NotificationsMetier(db, settings, cfg.publicUrl);
   grc.notificationsMetier = notificationsMetier;
-  const historique = new Historique(grc);
+  const historique = new Historique(grc, settings);
   const alertes = new AlertesExploitation(settings, cfg.publicUrl);
   const alertesSecurite = new AlertesSecurite(db, settings, cfg.publicUrl);
   const motsDePasse = new MotsDePasse(db, vault);

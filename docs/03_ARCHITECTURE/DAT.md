@@ -264,10 +264,28 @@ propre à l’objet sous verrou, sur l’état courant ; les lectures par `lireD
 invitations et relances sont des notifications métier `retex_contribution` sans SMSI ni objet (migration additive `049`,
 qui étend la contrainte posée par la `046`). Le pilote garde le droit `incidents:modifier`.
 
+**Déclarations réglementaires des incidents (18/11/2026, [ADR 0105](../adr/0105-declaration-reglementaire-des-incidents.md)).**
+Les déclarations santé (CERT Santé, ARS) et NIS 2 (ANSSI) d’un incident sont rangées hors de l’état historique, dans la table
+`incidents_declarations` (migration additive `089`), repérées par l’identifiant et le périmètre de l’incident, sans clé
+étrangère (les lignes de `suivi_incidents` sont réécrites à chaque enregistrement). La date de qualification de l’incident
+(`qualifiedAt`, colonne `suivi_incidents.qualified_at`, alignée avec `historique/tables/collections.ts`) est posée au premier
+passage à « Incident de sécurité », dans la transaction de l’incident, qui propose aussi les déclarations probables.
+Service `apps/api/src/historique/declarations.ts` : chaque geste prend le verrou de l’état historique, contrôle le périmètre
+(404), If-Match sur la version de la déclaration, journal d’audit ; préparer demande `incidents:modifier`, confirmer, écarter,
+marquer envoyée, ouvrir, compléter et corriger la date de qualification demandent le rôle prédéfini `rssi` (lu à chaque appel,
+comme la prise en compte des alertes du module Vulnérabilités). Un déclencheur refuse toute modification ou suppression d’une
+ligne `envoyee` ou `non_requise` (et toute troncature) ; seule la remise à vide le suspend. Règles pures (délais, propositions,
+rubriques et leur source, pré-remplissage, jalons de rappel) dans `packages/shared/src/declarations-incidents.ts`. Identité de
+l’établissement : section de paramètres `etablissement` (table `settings`), droits `parametres` et `conformite`.
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.
 L’automate de tâches utilise transactions et unicité ; fuseaux des périmètres.
+Rappels des déclarations d’incident (ADR 0105) : passage en tête de l’automate (60 s), indépendant du module des écarts,
+arrêté avec le module incidents ; notifications `incident_declaration` sans SMSI ni objet (contrainte recréée par la `089`),
+une par personne et par jalon (index unique sur `user_id, due_key`), au responsable de l’incident s’il correspond à un compte
+et aux comptes au rôle RSSI qui voient le périmètre ; titre sans régime ni contenu, repris seul dans le courriel.
 Worker externe à l’API : file exploitation/sauvegarde/restauration/TLS et
 mise à jour, verrous hôte, receipts privés et état public minimal. Les
 notifications métier sont internes ; aucun transport email livré.
@@ -288,6 +306,23 @@ Pendant la préparation, l'exécutant tire les trois images par l'API du moteur 
 d'après les manifestes du registre ; la page de maintenance en remplit sa barre. Repli sur
 `docker pull`, sans progression, avec des identifiants de registre ou si l'API ne répond
 pas (ADR 0104) ; les vérifications de signature qui suivent sont inchangées.
+L’empreinte du frontal couvre aussi l’identité épinglée de son image de base Caddy
+(`CADDY_IMAGE`) et le magasin des autorités racines : un correctif de l’image de base met le
+frontal à jour à la mise à jour suivante (ADR 0103, addendum du 19/11/2026).
+Conservation et espace disque (ADR 0106) : la politique de sauvegarde (`backup_policy`,
+migration `091`) porte, avec la durée, le nombre maximal de sauvegardes régulières (30 par
+défaut) et celui des sauvegardes d’avant mise à jour (3) ; l’exécutant les lit par
+`suivi ops-policy` et les transmet à `backup.sh` et `mettre-a-jour.sh` (`.env` pour les appels
+directs). Avant une sauvegarde ou une mise à jour, la place nécessaire est estimée (dernière
+sauvegarde, images à télécharger, marge) et un manque refuse l’opération avant de commencer.
+L’exécutant d’exploitation publie dans `etat.json` le relevé du disque des données (libre,
+total, sauvegardes, images de l’application ; aucun chemin) ; l’API, à la synchronisation,
+alerte les administrateurs actifs dans l’application (`grc_notifications`, type
+`alerte_securite`, sans nouveau type ni migration) sous 15 % libre, une fois par
+franchissement (état dans `settings`, réarmement à 20 %). Après une mise à jour, un retour
+arrière ou un échec avant l’installation, `scripts/images-application.py` ne garde que les
+images de l’application en service, précédente et du frontal en service (par étiquette,
+version OCI ou empreinte épinglée), sans toucher aux autres images ni « prune » global.
 
 **Dimensionnement retenu (28/10/2026) : une organisation, une quinzaine d’utilisateurs
 simultanés au plus, une seule instance d’API** (limiteurs en mémoire, verrous

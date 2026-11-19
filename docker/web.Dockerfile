@@ -39,6 +39,8 @@ COPY apps/web apps/web
 RUN pnpm --filter @suivi/web build
 
 FROM ${CADDY_IMAGE}
+# Redéclarée pour l'étape finale : son identité épinglée entre dans l'empreinte du frontal (ADR 0103, addendum du 19/11/2026).
+ARG CADDY_IMAGE
 COPY --from=caddy-build /go/bin/caddy /usr/local/bin/caddy
 LABEL org.opencontainers.image.title="suivi-audits-web" \
       org.opencontainers.image.description="Suivi des audits SMSI ISO 27001 / HDS — frontal HTTPS et interface web" \
@@ -63,9 +65,10 @@ COPY --from=build /src/apps/web/dist /srv
 RUN chown -R root:root /srv /etc/caddy /maintenance && chmod -R a-w,a+rX /srv /etc/caddy /maintenance \
  && chmod 0555 /usr/local/bin/demarrer-web /usr/local/bin/demarrer-gateway
 # Empreinte du frontal « gateway » (ADR 0103), comparée par l'exécutant de mise à jour à celle du frontal en service, écrite
-# dans /etc/suivi-frontal.sha256 après la dernière copie des fichiers du frontal. Calcul et liste des fichiers dans le script
-# partagé avec la recette CI ; monté pour cette seule étape, il n'est pas copié dans l'image.
-RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh
+# dans /etc/suivi-frontal.sha256 après la dernière copie des fichiers du frontal (et la mise à jour des paquets de l'image de
+# base, certificats racines compris). Calcul et liste des fichiers dans le script partagé avec la recette CI ; monté pour cette
+# seule étape, il n'est pas copié dans l'image. L'identité de l'image de base (CADDY_IMAGE) entre dans le calcul.
+RUN --mount=type=bind,source=docker/empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh SUIVI_IMAGE_DE_BASE="$CADDY_IMAGE" sh /tmp/empreinte-frontal.sh
 USER caddy
 EXPOSE 8080 8443
 CMD ["/usr/local/bin/demarrer-web"]

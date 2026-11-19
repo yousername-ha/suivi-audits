@@ -1,25 +1,8 @@
 /* Lot A : catalogue et opérations du serveur, composants et tokens Sauge existants. */
-import {
-  Alert,
-  Button,
-  Card,
-  FileInput,
-  Group,
-  Modal,
-  MultiSelect,
-  NumberInput,
-  Stack,
-  Switch,
-  Table,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Alert, Button, Card, FileInput, Group, Modal, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   ACME_PAR_DEFAUT,
-  nextBackupAt,
-  type BackupPolicyOut,
   type BackupsOut,
   type ExploitationOut,
   type OperationIn,
@@ -68,10 +51,6 @@ const MODES_TLS: Record<string, string> = {
   acme: 'ACME',
   external: 'infrastructure externe',
 };
-const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map((label, i) => ({
-  value: String(i + 1),
-  label,
-}));
 
 interface ApercuCertificat {
   ok: boolean;
@@ -102,7 +81,6 @@ export function OperationsPanel() {
   const admin = can('administration', 'administrer');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const [draft, setDraft] = useState<BackupPolicyOut | null>(null);
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState('');
@@ -184,7 +162,6 @@ export function OperationsPanel() {
       });
     });
   const host = q.data?.host;
-  const policy = draft ?? q.data?.policy;
   const active =
     q.data?.jobs.some((j) => ['en_attente', 'en_cours', 'intervention'].includes(j.status)) ||
     backups.data?.jobs.some((j) => ['en_attente', 'en_cours'].includes(j.status));
@@ -197,8 +174,6 @@ export function OperationsPanel() {
   const archive = host?.archives.find((a) => a.id === selected);
   const verified = (id: string, sha: string) =>
     host?.jobs.some((j) => j.kind === 'verify' && j.status === 'reussie' && j.archiveId === id && j.sha256 === sha);
-  const setPolicy = (patch: Partial<BackupPolicyOut>) => policy && setDraft({ ...policy, ...patch });
-  const next = policy ? nextBackupAt(policy) : null;
   const cert = host?.certificate;
   const remaining = cert ? Math.ceil((Date.parse(cert.validTo) - Date.now()) / 86400000) : null;
   return (
@@ -215,102 +190,6 @@ export function OperationsPanel() {
           {host.message} Dernier contact : {fmtDate(host.seenAt)}
         </Text>
       )}
-      <Card withBorder>
-        <Stack>
-          <Title order={2} size="h4">
-            Planification et rétention
-          </Title>
-          <Text size="sm">
-            La destination et la clé de chiffrement restent configurées sur le serveur. La politique ci-dessous
-            s’applique aux sauvegardes exécutées par le pilotage web.
-          </Text>
-          {host?.destination && <Text size="sm">Destination configurée : {host.destination}</Text>}
-          {policy && (
-            <>
-              <Switch
-                label="Activer la sauvegarde planifiée"
-                checked={policy.enabled}
-                disabled={!admin || pending}
-                onChange={(e) => setPolicy({ enabled: e.currentTarget.checked })}
-              />
-              <MultiSelect
-                label="Jours de sauvegarde"
-                data={DAYS}
-                value={policy.days.map(String)}
-                disabled={!admin || pending}
-                onChange={(v) => setPolicy({ days: v.map(Number) })}
-              />
-              <Group grow>
-                <NumberInput
-                  label="Heure UTC"
-                  min={0}
-                  max={23}
-                  allowDecimal={false}
-                  value={policy.hourUtc}
-                  disabled={!admin || pending}
-                  onChange={(v) => setPolicy({ hourUtc: Number(v) })}
-                />
-                <NumberInput
-                  label="Minute UTC"
-                  min={0}
-                  max={59}
-                  allowDecimal={false}
-                  value={policy.minuteUtc}
-                  disabled={!admin || pending}
-                  onChange={(v) => setPolicy({ minuteUtc: Number(v) })}
-                />
-              </Group>
-              <NumberInput
-                label="Rétention (jours)"
-                min={1}
-                max={36500}
-                allowDecimal={false}
-                value={policy.retentionDays}
-                disabled={!admin || pending}
-                onChange={(v) => setPolicy({ retentionDays: Number(v) })}
-              />
-              <Text size="sm">
-                {next
-                  ? `Prochain créneau prévu : ${fmtDate(next)} (heure locale affichée ; programmation UTC).`
-                  : 'Planification désactivée.'}
-              </Text>
-              <Text size="sm" c="dimmed">
-                Une baisse de rétention peut supprimer les anciennes archives du préfixe standard lors de la prochaine
-                sauvegarde. Les sauvegardes de sécurité de restauration restent conservées séparément. Le guide explique
-                comment éviter un doublon avec un cron existant.
-              </Text>
-              {admin && (
-                <Group>
-                  <ConfirmButton
-                    disabled={pending || !policy.days.length}
-                    message="Enregistrer cette planification et cette rétention ? Les prochaines sauvegardes appliqueront cette politique."
-                    onConfirm={() =>
-                      void update(async () => {
-                        const { version, ...body } = policy;
-                        await api('PUT', '/api/admin/exploitation/politique', { body, ifMatch: version });
-                        setDraft(null);
-                        notifications.show({ message: 'Politique enregistrée.', color: 'teal' });
-                      })
-                    }
-                  >
-                    Enregistrer la politique
-                  </ConfirmButton>
-                  <Button
-                    variant="default"
-                    disabled={pending}
-                    onClick={() => {
-                      setDraft(null);
-                      void q.refetch();
-                    }}
-                  >
-                    Recharger la politique
-                  </Button>
-                </Group>
-              )}
-            </>
-          )}
-        </Stack>
-      </Card>
       <Card withBorder>
         <Stack>
           <Title order={2} size="h4">

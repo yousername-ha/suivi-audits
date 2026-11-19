@@ -168,8 +168,17 @@ describe('fond de connexion : nœuds cerclés et ondes', () => {
     expect(b.onde!.r).toBeGreaterThan(a.onde!.r);
     expect(b.onde!.opacite).toBeLessThan(a.onde!.opacite);
   });
-  it('libellés : ISO 27001, HDS, NIS 2, RGPD, ISO 9001, EBIOS RM', () => {
-    expect([...LIBELLES]).toEqual(['ISO 27001', 'HDS', 'NIS 2', 'RGPD', 'ISO 9001', 'EBIOS RM']);
+  it('libellés : référentiels de cybersécurité', () => {
+    expect([...LIBELLES]).toEqual([
+      'ISO 27001',
+      'HDS',
+      'ISO 27005',
+      'NIS 2',
+      'CRA',
+      'ISO 27035',
+      'EBIOS RM',
+      'ISO 27002',
+    ]);
   });
 });
 

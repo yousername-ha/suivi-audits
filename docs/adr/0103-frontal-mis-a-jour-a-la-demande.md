@@ -55,3 +55,20 @@ revenir au frontal figé, le RSSI retient une mise à jour du frontal **à la de
 - Vérification : la recette CI de la mise à jour intégrée (`scripts/ci/update-integree.py`) rejoue sur une pile réelle les deux
   cas, empreintes identiques (frontal intact, sans coupure) et différentes (frontal recréé, même certificat, coupure annoncée
   puis retirée), avec l'exécutant de production. Le calcul de l'empreinte est un script unique (`docker/empreinte-frontal.sh`).
+
+## Addendum du 19/11/2026 — correctifs et mises à jour de sécurité du frontal (décision du RSSI)
+
+Décision du RSSI : le frontal **peut être mis à jour et redémarré chaque fois que c'est nécessaire**, pour corriger un défaut ou
+appliquer une mise à jour de sécurité, pas seulement quand la page de maintenance change.
+
+- L'empreinte du frontal couvre aussi **l'image de base** sur laquelle il est construit (identité épinglée de l'image Caddy,
+  `CADDY_IMAGE`) et le magasin des autorités de certification racines qu'utilise Caddy pour ACME. Une nouvelle image de base
+  (correctif de sécurité de Caddy, de la bibliothèque C, d'OpenSSL ou des certificats racines) change donc l'empreinte, et le
+  frontal est mis à jour à la mise à jour suivante, avec la même procédure (validation, même certificat, rétablissement sinon)
+  et la coupure annoncée.
+- Une version publiée **seulement pour un correctif du frontal** suit le circuit normal : version corrective, CI, signature,
+  mise à jour depuis l'interface ; le frontal est alors le seul composant redémarré au-delà de l'application.
+- Conséquence pour le nettoyage des images ([ADR 0106](0106-conservation-des-sauvegardes-et-espace-disque.md)) : seule
+  l'image du frontal **en service** (`GATEWAY_VERSION`) est gardée ; une ancienne image de frontal n'est jamais conservée pour
+  elle-même.
+

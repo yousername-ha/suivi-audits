@@ -19,6 +19,7 @@ import { useCan } from '../session';
 import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
+import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
 import { CleSecoursPanel } from '../components/CleSecours';
 import { FluxExternesPanel } from '../components/FluxExternes';
 import { MandatairePanel } from '../components/Mandataire';
@@ -103,6 +104,15 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'livre',
     teinte: 'orange',
     detail: (m) => <SectionLoader section="referentiels" onDirty={m} titreVisible={false} />,
+  },
+  {
+    id: 'etablissement',
+    cote: 'plateforme',
+    titre: 'Identité de l’établissement',
+    resume: 'Raison sociale, FINESS, ARS et contact de signalement, repris dans les déclarations des incidents.',
+    icone: 'bouclier',
+    teinte: 'orange',
+    detail: (m) => <SectionLoader section="etablissement" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'echelles',
@@ -267,6 +277,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
       <Stack gap="xl">
         {can('administration', 'lire') && <CleSecoursPanel />}
         <BackupsPanel />
+        <PolitiqueSauvegardesPanel />
         {can('parametres', 'lire') && <SectionLoader section="sauvegardes" onDirty={m} />}
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>

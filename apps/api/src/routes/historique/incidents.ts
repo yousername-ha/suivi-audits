@@ -13,10 +13,24 @@ import {
   ReglageCollecte,
   TraitementProposition,
   IncidentCreation,
+  CorrectionQualification,
+  EnvoiDeclaration,
+  MiseAlEcartDeclaration,
+  OuvertureDeclaration,
+  PreparationDeclaration,
 } from '@suivi/shared';
 import { z } from 'zod';
+import { docx } from '../../export/office.js';
+import { requireIfMatch, setEtag } from '../../http/concurrency.js';
 import { route } from '../../http/route.js';
 import { tags, user, idElement, idIndice, idEvenement, idProposition, idContributeur } from './commun.js';
+
+/** Déclaration d'un incident (ADR 0105). */
+const idDeclaration = z.object({ id: z.string().trim().min(1).max(64), did: z.uuid() });
+const reponseDeclaration = <T extends { version: number }>(reply: Parameters<typeof setEtag>[0], d: T) => {
+  setEtag(reply, d.version);
+  return d;
+};
 
 export const incidentsRoutes = [
   route({
@@ -67,6 +81,126 @@ export const incidentsRoutes = [
     body: ObligationTraitee,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.historique.incidents.obligation(params.id, params.k, body, user(s), ip),
+  }),
+  /* Déclaration réglementaire (ADR 0105). Préparer : incidents:modifier sur le périmètre. Ouvrir, compléter, confirmer, écarter,
+     marquer envoyée et corriger la date de qualification : rôle « RSSI » exigé par le service (403 pour tout autre compte,
+     administrateur compris) ; la route garde incidents:modifier (module actif, session, CSRF). Périmètre fermé : 404. */
+  route({
+    method: 'GET',
+    url: '/api/incidents/:id/declarations',
+    summary: 'Déclarations réglementaires d’un incident (santé, NIS 2), avec leurs rubriques et leurs délais',
+    tags,
+    access: 'incidents:lire' as const,
+    params: idElement,
+    handler: async ({ svc, s, params }) => svc.historique.declarations.vue(user(s), params.id),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/declarations',
+    summary: 'Ouvrir à la main une déclaration non proposée (rôle RSSI)',
+    tags,
+    access: 'incidents:modifier' as const,
+    status: 201,
+    params: idElement,
+    body: OuvertureDeclaration,
+    handler: async ({ svc, s, params, body, ip, reply }) =>
+      reponseDeclaration(reply, await svc.historique.declarations.ouvrir(params.id, body, user(s), ip)),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/incidents/:id/declarations/:did',
+    summary:
+      'Préparer une déclaration : rubriques et numéro de dossier pressenti (If-Match : version de la déclaration)',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idDeclaration,
+    body: PreparationDeclaration,
+    handler: async ({ svc, s, params, body, ip, req, reply }) =>
+      reponseDeclaration(
+        reply,
+        await svc.historique.declarations.preparer(params.id, params.did, requireIfMatch(req), body, user(s), ip),
+      ),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/declarations/:did/confirmation',
+    summary: 'Confirmer « à déclarer » une déclaration proposée (rôle RSSI, If-Match)',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idDeclaration,
+    handler: async ({ svc, s, params, ip, req, reply }) =>
+      reponseDeclaration(
+        reply,
+        await svc.historique.declarations.confirmer(params.id, params.did, requireIfMatch(req), user(s), ip),
+      ),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/declarations/:did/mise-a-l-ecart',
+    summary: 'Écarter une déclaration « non requise », avec un motif obligatoire, figé (rôle RSSI, If-Match)',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idDeclaration,
+    body: MiseAlEcartDeclaration,
+    handler: async ({ svc, s, params, body, ip, req, reply }) =>
+      reponseDeclaration(
+        reply,
+        await svc.historique.declarations.ecarter(params.id, params.did, requireIfMatch(req), body, user(s), ip),
+      ),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/declarations/:did/envoi',
+    summary:
+      'Marquer une déclaration comme envoyée : texte, date, personne et référence figés (rôle RSSI, If-Match, référence obligatoire)',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idDeclaration,
+    body: EnvoiDeclaration,
+    handler: async ({ svc, s, params, body, ip, req, reply }) =>
+      reponseDeclaration(
+        reply,
+        await svc.historique.declarations.envoyer(params.id, params.did, requireIfMatch(req), body, user(s), ip),
+      ),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/incidents/:id/declarations/:did/complement',
+    summary: 'Ajouter un complément lié à une déclaration envoyée (rôle RSSI)',
+    tags,
+    access: 'incidents:modifier' as const,
+    status: 201,
+    params: idDeclaration,
+    handler: async ({ svc, s, params, ip, reply }) =>
+      reponseDeclaration(reply, await svc.historique.declarations.completer(params.id, params.did, user(s), ip)),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/incidents/:id/declarations/:did/export',
+    summary: 'Télécharger une déclaration au format Word (fiche de préparation, ou texte transmis si elle est envoyée)',
+    tags,
+    access: 'incidents:exporter' as const,
+    params: idDeclaration,
+    handler: async ({ svc, s, params, ip, reply }) => {
+      const { modele, nom } = await svc.historique.declarations.exporter(params.id, params.did, user(s), ip);
+      return reply
+        .header('Cache-Control', 'no-store')
+        .header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        .header('Content-Disposition', `attachment; filename="${nom.replace(/[^A-Za-z0-9_.-]/g, '_')}.docx"`)
+        .send(docx(modele));
+    },
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/incidents/:id/qualification',
+    summary:
+      'Corriger la date et l’heure de qualification (rôle RSSI) : correction tracée, échéances non envoyées recalculées',
+    tags,
+    access: 'incidents:modifier' as const,
+    params: idElement,
+    body: CorrectionQualification,
+    handler: async ({ svc, s, params, body, ip }) =>
+      svc.historique.declarations.corrigerQualification(params.id, body, user(s), ip),
   }),
   route({
     method: 'POST',

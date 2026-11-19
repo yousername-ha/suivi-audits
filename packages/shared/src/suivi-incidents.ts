@@ -137,6 +137,9 @@ export interface Incident {
   answers: Reponses;
   notified: Record<string, string>;
   findingId: string;
+  /** Date et heure (ISO) du premier passage à « Incident de sécurité », départ des délais de déclaration (ADR 0105) ; vide pour
+      un incident jamais qualifié ainsi, ou qualifié avant que la date soit enregistrée. */
+  qualifiedAt: string;
   /** Chronologie du RETEX, triée (voir `retex-incidents.ts`). */
   timeline: EvenementRetex[];
   /** Collecte du RETEX, champ `retexCollecte` (null tant que le RETEX n'est pas ouvert, voir `retex-collecte.ts`). */
@@ -178,6 +181,7 @@ export function lireIncident(brut: unknown): Incident | null {
     answers: rep(o.answers),
     notified: traite,
     findingId: str(o.findingId),
+    qualifiedAt: str(o.qualifiedAt),
     timeline: lireEvenementsRetex(o.timeline),
     collecte: lireCollecteRetex(o.retexCollecte),
   };

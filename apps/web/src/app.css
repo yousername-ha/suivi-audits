@@ -4551,3 +4551,13 @@ tr[data-importe='oui'] {
 .veille-texte {
   overflow-wrap: anywhere;
 }
+
+/* Déclarations réglementaires d'un incident (ADR 0105) : texte figé d'une rubrique, retours à la ligne conservés. */
+.declaration-texte {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.declaration-rubrique {
+  padding-block: var(--mantine-spacing-xs);
+  border-top: var(--suivi-trait-l) solid var(--suivi-trait);
+}

@@ -451,6 +451,113 @@ if 'pg_restore' in args and '--list' not in args: Path(os.environ['TEST_RESTORED
                 self.assertIn('BACKUP_GARDER_MIN', resultat.stderr + resultat.stdout)
                 self.assertEqual(list(destination.glob('*.tar.age')), [])
 
+    # Nombre maximal (ADR 0106) : une archive part dès qu'elle dépasse la durée OU le nombre maximal ; les BACKUP_GARDER_MIN
+    # plus récentes restent toujours ; jamais un lien, un sous-dossier, une sauvegarde de sécurité ou une ancienne archive.
+    def test_rotation_by_count_keeps_the_newest_with_their_checksums(self):
+        destination, resultat = self.sauvegarde_avec_anciennes(40, {'RETENTION_DAYS': '36500'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        restantes = sorted(destination.glob('suivi-audits-*.tar.age'), key=lambda f: f.stat().st_mtime, reverse=True)
+        # 30 par défaut, la nouvelle comprise : les 29 plus récentes des 40 anciennes restent.
+        self.assertEqual(len(restantes), 30)
+        self.assertEqual(sorted(f.name for f in destination.glob('*.sha256')), sorted(f.name + '.sha256' for f in restantes))
+        self.assertNotIn(destination / 'suivi-audits-20260101-000000.tar.age', restantes)
+
+    def test_rotation_by_count_uses_the_environment_then_the_env_file(self):
+        with open(self.root / '.env', 'a') as env_file:
+            env_file.write('BACKUP_GARDER_MAX=8\n')
+        destination, resultat = self.sauvegarde_avec_anciennes(12, {'RETENTION_DAYS': '36500'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 8)
+        # Les huit restantes sont la nouvelle et les sept anciennes les plus récentes.
+        for i in range(5, 12):
+            self.assertTrue((destination / f'suivi-audits-202601{i + 1:02d}-000000.tar.age').exists(), i)
+        # L'environnement l'emporte sur .env (seconde suivante : le nom horodaté de la nouvelle archive diffère).
+        __import__('time').sleep(1.1)
+        destination, resultat = self.sauvegarde_avec_anciennes(0, {'RETENTION_DAYS': '36500', 'BACKUP_GARDER_MAX': '7'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 7)
+
+    def test_rotation_minimum_wins_over_the_maximum_and_age_still_applies(self):
+        destination, resultat = self.sauvegarde_avec_anciennes(15, {'RETENTION_DAYS': '36500', 'BACKUP_GARDER_MAX': '7',
+                                                                    'BACKUP_GARDER_MIN': '10'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 10)
+        # Durée : au-delà des 3 plus récentes, plus vieilles que 5 jours supprimées même sous le nombre maximal.
+        for f in destination.glob('*'):
+            f.unlink()
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '5', 'BACKUP_GARDER_MIN': '3',
+                                                                    'BACKUP_GARDER_MAX': '365'}, age_min=1)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 5)
+
+    def test_rotation_by_count_never_touches_links_subfolders_safety_backups_or_old_formats(self):
+        destination = self.root / 'archives'
+        securite = destination / '.restauration-securite' / '00000000-0000-4000-8000-000000000001'
+        securite.mkdir(parents=True)
+        (destination / 'avant-mise-a-jour').mkdir()
+        cible_lien = self.root / 'hors-destination.tar.age'
+        cible_lien.write_bytes(b'x')
+        gardes = [securite / 'suivi-audits-20200101-000000.tar.age',
+                  destination / 'avant-mise-a-jour/avant-maj-1.0.0-vers-1.1.0-20200101-000000.tar.age',
+                  destination / 'suivi-audits-20200101-000000.tar.enc', destination / 'suivi-audits-20200102-000000.tar']
+        for fichier in gardes:
+            fichier.write_bytes(b'x')
+            os.utime(fichier, (1, 1))
+        lien = destination / 'suivi-audits-20200103-000000.tar.age'
+        lien.symlink_to(cible_lien)
+        destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '36500', 'BACKUP_GARDER_MAX': '7'})
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len([f for f in destination.glob('suivi-audits-*.tar.age') if not f.is_symlink()]), 7)
+        for fichier in gardes + [cible_lien]:
+            self.assertTrue(fichier.exists(), fichier)
+        self.assertTrue(lien.is_symlink())
+
+    def test_maximum_count_is_validated_and_nothing_is_deleted(self):
+        for valeur in ('6', '366', '0', 'x', '-1', '30; echo'):
+            with self.subTest(valeur=valeur):
+                destination, resultat = self.sauvegarde_avec_anciennes(10, {'RETENTION_DAYS': '1', 'BACKUP_GARDER_MAX': valeur})
+                self.assertNotEqual(resultat.returncode, 0)
+                self.assertIn('BACKUP_GARDER_MAX doit être compris entre 7 et 365', resultat.stderr + resultat.stdout)
+                self.assertEqual(len(list(destination.glob('*.tar.age'))), 10)
+                for f in destination.glob('*'):
+                    f.unlink()
+
+    def faux_df(self, libres):
+        """df simulé : « libres » octets disponibles partout (le contrôle d'espace lit df -PB1)."""
+        df = self.root / 'bin/df'
+        df.write_text('#!/usr/bin/env bash\necho "Filesystem 1B-blocks Used Available Capacity Mounted"\n'
+                      f'echo "/dev/fictif 100000000000 1 {libres} 1% /"\n')
+        df.chmod(0o700)
+
+    def test_backup_refused_before_starting_when_space_is_short(self):
+        self.faux_df(500 * 1024 * 1024)
+        (self.root / 'data/etat/sauvegardes').mkdir(parents=True)
+        destination, resultat = self.sauvegarde_avec_anciennes(3, {'BACKUP_JOB_ID': '00000000-0000-4000-8000-0000000000aa'})
+        self.assertNotEqual(resultat.returncode, 0)
+        sortie = resultat.stderr + resultat.stdout
+        self.assertIn('Espace disque insuffisant pour la sauvegarde : 500 Mo libres dans le dossier des sauvegardes', sortie)
+        # Rien n'a commencé : ni dump, ni archive nouvelle, ni rotation.
+        evenements = self.events.read_text() if self.events.exists() else ''
+        self.assertNotIn('pg_dump', evenements)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 3)
+        self.assertEqual(list(destination.glob('.suivi-backup.*')), [])
+        import json
+        rapport = json.loads((self.root / 'data/etat/sauvegardes/jobs/00000000-0000-4000-8000-0000000000aa.json').read_text())
+        self.assertEqual(rapport['resultat'], 'echec')
+        self.assertIn('nécessaires', rapport['message'])
+        self.assertIn('Occupation : sauvegardes de ce dossier', rapport['message'])
+        self.assertIn('« Libérer de la place »', rapport['message'])
+        # Aucun chemin du serveur dans le motif, affiché dans l'application.
+        self.assertNotIn(str(self.root), rapport['message'])
+        derniere = json.loads((self.root / 'data/etat/sauvegardes/derniere.json').read_text())
+        self.assertEqual(derniere['message'], rapport['message'])
+
+    def test_backup_runs_when_space_is_enough(self):
+        self.faux_df(5 * 1024 ** 3)
+        destination, resultat = self.sauvegarde_avec_anciennes(3)
+        self.assertEqual(resultat.returncode, 0, resultat.stderr)
+        self.assertEqual(len(list(destination.glob('*.tar.age'))), 4)
+
     def generer(self, *args, env=None):
         return subprocess.run(['bash', str(self.root / 'scripts/generer-cles-sauvegarde.sh'), *args], input='', text=True,
                               capture_output=True, env={**self.env, **(env or {})}, timeout=20)

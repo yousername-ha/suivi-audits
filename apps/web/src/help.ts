@@ -382,6 +382,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'declarations-incidents',
+    title: 'Déclarer un incident (santé, NIS 2)',
+    permission: 'incidents:lire',
+    link: '/pilotage/incidents-registre',
+    steps: [
+      'Quand un incident passe pour la première fois à la qualification « Incident de sécurité », la date et l’heure sont enregistrées : elles font partir les délais. L’outil propose les déclarations probables dans le bloc « Déclarations » de l’onglet Fiche : signalement santé (CERT Santé, ARS) si des données de santé ou une activité HDS sont touchées (« oui » ou « je ne sais pas »), et NIS 2 (alerte précoce sous 24 heures, notification sous 72 heures, rapport final un mois après l’envoi de la notification) si l’établissement est entité essentielle ou importante.',
+      'Le RSSI confirme « à déclarer » ou écarte « non requise » avec un motif obligatoire ; il peut ouvrir à la main une déclaration non proposée et corriger la date de qualification (correction tracée, délais recalculés). Ces gestes sont réservés au rôle « RSSI », sans délégation.',
+      'Toute personne qui peut modifier l’incident prépare la déclaration : « Préparer » ouvre la fiche de préparation, rubrique par rubrique, pré-remplie depuis la fiche, la chronologie et l’identité de l’établissement (Plateforme, « Identité de l’établissement »). « Copier » place le texte d’une rubrique dans le presse-papiers pour le recopier dans le formulaire du portail ; « Word » télécharge la fiche.',
+      'Après l’envoi sur le portail, le RSSI clique « Marquer envoyée » et saisit le numéro de dossier ou d’accusé de réception : le texte transmis, la date, l’heure et son nom sont figés, la déclaration n’est plus ni modifiable ni supprimable, et l’incident ne peut plus être supprimé. Un complément se fait par une nouvelle déclaration liée.',
+      'Rappels « Déclaration réglementaire d’un incident » (dans l’application, et par courriel selon les réglages) au responsable de l’incident et aux comptes qui ont le rôle RSSI : à la qualification, puis pour NIS 2 à mi-délai, deux heures avant l’échéance et au dépassement, et pour la santé toutes les quatre heures tant que le signalement n’est ni envoyé ni écarté.',
+      'Les rubriques suivent l’article 23 de la directive NIS 2 et la liste retenue pour la santé ; elles sont à confirmer contre les formulaires réels des portails avant la première utilisation. Aucun envoi automatique : la déclaration reste un geste du RSSI.',
+    ],
+  },
+  {
     id: 'retex-contribution',
     title: 'Contribuer au RETEX d’un incident',
     link: '/retex',
@@ -526,7 +540,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Dans Certificats TLS, consultez sujet, émetteur, validité et empreinte. Le mode se choisit dans l’application, sans fichier à modifier : autorité interne du serveur (autosigné, avec téléchargement du certificat racine à installer sur les postes), ACME (certificat publiquement fiable, renouvelé seul, nom public et ports 80/443 joignables) ou certificat fourni (certificat/chaîne et clé, dont le contenu reste masqué). Un échec rétablit la configuration antérieure ; Revenir au réglage de départ rend la main à CADDY_TLS dans .env. Une terminaison TLS externe reste en lecture seule.',
       'Dans Système, un administrateur peut confirmer une demande de sauvegarde chiffrée et suivre son état. Le service de sauvegarde démarre avec l’installation normale ; une demande en attente peut être annulée. Les comptes en lecture seule consultent les résultats.',
       'Dans Archives disponibles, vérifiez l’archive avant de choisir Restaurer. Confirmez le périmètre et tapez RESTAURER. Le serveur crée une sauvegarde de sécurité, applique l’archive et contrôle la santé ; un échec déclenche un retour arrière. Les sessions sont fermées : reconnectez-vous puis consultez le journal des opérations.',
-      'Configurez les jours, l’heure UTC et la rétention dans Planification et rétention. La destination et la clé restent privées sur le serveur. L’exploitant doit activer le poller et gérer la transition du cron existant. Une vérification de structure ne remplace pas un test de restauration isolé.',
+      'Dans Sauvegardes et restauration, carte Planification et conservation, configurez les jours, l’heure UTC, la rétention, le nombre maximal de sauvegardes (30 par défaut) et le nombre de sauvegardes d’avant mise à jour gardées (3 par défaut). Une sauvegarde au-delà de la rétention ou du nombre maximal est supprimée à la sauvegarde suivante : externalisez d’abord celles à garder. La destination et la clé restent privées sur le serveur. L’exploitant doit activer le poller et gérer la transition du cron existant. Une vérification de structure ne remplace pas un test de restauration isolé.',
+      'Espace disque : une sauvegarde ou une mise à jour qui manquerait de place est refusée avant de commencer, avec la place libre, la place nécessaire et ce qui l’occupe. Sous 15 % d’espace libre sur le disque des données, les administrateurs reçoivent une alerte dans l’application (une fois par franchissement).',
     ],
   },
 ];
