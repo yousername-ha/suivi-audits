@@ -73,3 +73,14 @@ test("le relais de l'assistant est facultatif, seul à sortir, durci, sans base 
   for (const nom of ['db', 'web', 'gateway', 'updater', 'clamav', 'freshclam'])
     assert.doesNotMatch(service(nom), /assistant/, nom);
 });
+
+test("l'exécutant peut abandonner ses privilèges, sans autre capacité (veille, connecteurs, courriel)", () => {
+  const updater = service('updater');
+  assert.match(updater, /cap_drop: \[ALL\]/);
+  // SETUID et SETGID : passage au compte nobody (65534) sans groupe supplémentaire ; rien d'autre que le strict nécessaire.
+  assert.match(updater, /cap_add: \[CHOWN, FOWNER, DAC_OVERRIDE, SETUID, SETGID\]/);
+  const worker = readFileSync(new URL('../exploitation-worker.py', import.meta.url), 'utf8');
+  const appels = worker.match(/user=65534[^\n]*/g) ?? [];
+  assert.ok(appels.length >= 3, 'appels sous le compte nobody');
+  for (const appel of appels) assert.match(appel, /group=65534, extra_groups=\[\]/, appel);
+});
