@@ -79,3 +79,4 @@ export * from './parc-machines.js';
 export * from './perimetres-vulnerabilites.js';
 export * from './fiche-faille-vulnerabilites.js';
 export * from './tendances-vulnerabilites.js';
+export * from './recherche-vulnerabilites.js';

@@ -387,6 +387,8 @@
   correctif » de « Failles détectées » (« n mises à jour à faire pour m failles »), état du correctif à trois valeurs avec sa
   source, précision « sans correctif connu » à côté de la marque zero-day, fin de support signalée et filtrée. Voir
   l'addendum « lot S3 » ci-dessous.
+- **Lot R1, barre de recherche globale** (19/11/2026) : sans migration, une barre en tête de toutes les pages du module, une
+  route ; CVE même non détectées sur le parc, machines, actifs exposés, applications. Voir l'addendum « lot R1 » ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -2162,3 +2164,102 @@ l'interface. À 390 px, les tables du détail d'un correctif sont serrées (colo
 2. Criticité métier des machines (point ouvert 3 de l'addendum « lot S1 ») : non réalisée.
 3. Fin de support au niveau de la **technologie** d'AlgoLightHouse : la liste `/technologies` ne porte pas `version_status`
    dans ce qui est lu.
+
+## Addendum du 19/11/2026 — lot R1 : barre de recherche globale
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, **aucun appel sortant**, aucune dépendance ni extension PostgreSQL nouvelle, rien de nouveau chez
+l'assistant (ni outil, ni texte envoyé au modèle). Réalise la barre de recherche du point 15 et de V11 ; lève le point ouvert
+6 de l'addendum « lot PC1 ».
+
+### Demande du RSSI (19/11/2026)
+
+« La possibilité depuis une barre de recherche de trouver une CVE même si non détectée sur le parc. La barre de recherche
+peut trouver n'importe quel asset, par IP, nom, nom d'application. »
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/recherche-vulnerabilites.ts`, testé en table) : schéma de la demande (`q` rogné, 2 à
+  200 caractères, aucun autre paramètre) et de la réponse (six groupes bornés à 8 éléments, nombre total, `cveInconnue`),
+  `estIdentifiantCve`, `ressembleACve`, `motifLitteral` (`\`, `%` et `_` échappés), `machineCorrespond` (règle commune à la
+  barre et à la liste « Machines »), `etatCveRecherche` (état d'une CVE en clair).
+- **Route** `GET /api/vulnerabilites/recherche?q=` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/recherche.ts`) : lecture
+  seule, aucune entrée de journal (comme les listes, le texte cherché n'est pas tracé). Six lectures en parallèle :
+  - **CVE** : par début d'identifiant dans la veille (`vulnerabilites_veille_cve`) et dans ce qui est détecté
+    (`vulnerabilites_constat_cves`, `vulnerabilites_alh_alerte_cves`, `vulnerabilites_alh_technologie_cves`) ; sinon par texte
+    dans la veille (éditeurs et produits de NVD, le tiret bas lu aussi comme une espace ; description ; éditeur, produit et
+    nom du catalogue KEV). Ordre : identifiant exact, puis CVE détectée sur une machine que la personne lit, puis la plus
+    récente ; aucun nombre lié à ce qu'elle ne lit pas n'entre dans l'ordre. Pour chaque CVE rendue : machines lisibles où
+    Tenable la détecte, machines lisibles reliées à un produit rattaché (« déclarée »), actifs exposés lisibles
+    (`surfaceDesCves`), drapeau sans nombre `horsLecture` pour le reste (lot ALH5), gravité et score de NVD, catalogue KEV,
+    `veille` (connue de la veille locale) et `fiche` (la fiche d'une CVE du lot PC4 s'ouvre : connue de la veille, d'un
+    contrôle ou exposée) ;
+  - **identifiant CVE bien formé** que ni la veille ni aucune détection ne cite : `cveInconnue: { cve }`, sans aucun appel
+    sortant. L'objet est prévu pour qu'un lot suivant y ajoute une action (consultation de NVD à la demande, décision du RSSI
+    en attente) ;
+  - **machines internes** : `FaillesDetectees.machinesRangees` (droits du périmètre effectif, liste « Machines »), filtrées par
+    `machineCorrespond` (nom ou système partiels, casse ignorée ; adresse IP par préfixe, l'adresse exacte comprise),
+    correspondance exacte d'abord puis l'ordre du rang ;
+  - **actifs exposés** : `SurfaceExterneAlh.actifs` (liste « Actifs », mêmes droits, même filtre sur le nom de domaine ou
+    l'adresse IP) ;
+  - **applications** : produits surveillés (registre de l'organisation, lu avec `lire` comme sa liste ; éditeur, nom, version
+    ou CPE) et leurs machines reliées lisibles (trois nommées, les autres comptées) ; technologies d'AlgoLightHouse
+    (`SurfaceExterneAlh.technologies` : versions encore détectées sur des actifs lisibles) et leurs actifs ; contrôles de
+    Tenable par leur nom ou leur numéro (`FaillesDetectees.constats`, filtre par défaut de « Failles détectées » : présents sur
+    une machine lisible, encore à traiter). Un début d'identifiant CVE ne cherche pas d'application.
+  Les groupes des machines, actifs, technologies et contrôles appellent les services des listes avec la saisie telle quelle :
+  leur nombre total est celui de la liste ouverte par « tout voir ».
+- **Interface** (`apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx`, `recherche.ts`) : barre placée dans la mise en
+  page commune (`Layout.tsx`), sous les onglets du module, sur **toutes** ses pages, pour qui a `lire`. Champ `combobox` nommé
+  « Rechercher une CVE, une machine, une adresse IP ou une application » ; délai de frappe de 300 ms, appel précédent annulé
+  (signal passé au client d'API) ; panneau de résultats groupés (`listbox`, `group`, `option`, option active désignée par
+  `aria-activedescendant`), zone de statut qui annonce les nombres ; flèches haut et bas, Entrée, Échap (ferme, puis efface).
+  État de chaque CVE dit en texte, la teinte du liseré le double. Feuille `packages/ui/src/neon-recherche.css` (jetons de la
+  charte, clair et sombre, ni px ni rem, aucun style en ligne).
+- **Pages ouvertes** (paramètres d'adresse relus à chaque navigation, la page déjà affichée comprise) : CVE → « Veille »
+  (`?q=&cve=`, fiche illustrée de la CVE) ; CVE sans fiche ouvrable → « Surface externe », onglet « Technologies » cherché sur
+  la CVE ; machine → « Machines » (`?machine=`, fiche lue par la route existante, 404 pour l'illisible) ; actif → « Surface
+  externe », onglet « Actifs » filtré sur sa valeur, fiche ouverte (`?onglet=actifs&q=&actif=`) ; produit → « Produits
+  surveillés » (`?produit=`) ; technologie → onglet « Technologies » cherché sur son nom ; contrôle → « Failles détectées »
+  (`?constat=`). « Tout voir » : « Veille », « Machines », onglets « Actifs » et « Technologies », « Failles détectées »
+  (`?q=`) ; aucun pour les produits surveillés (le registre ne se cherche pas) ni pour une saisie de plus de 100 caractères
+  (borne des listes).
+- **Mesure** (PostgreSQL de test local, données fictives : 10 000 CVE de la veille, 150 machines, 2 000 contrôles, 10 000 CVE
+  de contrôles, 16 000 détections ; administrateur et lecteur d'un périmètre) : 160 à 300 ms par recherche, quelle que soit la
+  saisie (début d'identifiant, texte qui trouve les 10 000 CVE, adresse IP, nom de machine, nom de contrôle, rien) ; réponse
+  de 0,3 à 2,5 Kio. `EXPLAIN ANALYZE` de la recherche par texte dans la veille : balayage séquentiel, 7,5 ms sur 10 000 CVE.
+  Le coût fixe vient des lectures des listes réutilisées (rang des machines, contrôles). **Aucun index ajouté.**
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Emplacement** : une seule barre dans la mise en page commune, sur toutes les pages du module (y compris la vue
+  d'ensemble), sous les onglets ; la recherche de pages du menu (Ctrl K) reste distincte.
+- **« Nom d'application »** couvre trois sources : produits surveillés, technologies d'AlgoLightHouse et **noms des contrôles
+  de Tenable** (« Serveur applicatif 9.0.x < 9.0.99 … »), qui sont souvent le seul endroit où le nom d'une application
+  installée apparaît. Les services exposés d'AlgoLightHouse ne sont pas cherchés à part (ils sont portés par les actifs).
+- **CVE non détectée** : elle s'ouvre dans la fiche illustrée d'une CVE (lot PC4), dans l'écran « Veille ». Une CVE présente
+  seulement chez d'autres (illisible) est trouvée et dite « présente hors des périmètres que vous lisez », sans nombre ni nom,
+  comme la fiche et la veille (lot ALH5).
+- **Machines** : « présente » compte les détections de Tenable et, à part, les machines reliées à un produit rattaché ; une
+  CVE déclarée n'est pas dite « détectée ».
+- **Liste « Machines »** : sa recherche suit désormais la même règle (casse ignorée, adresse IP, système) ; elle ne cherchait
+  que dans le nom, en tenant compte de la casse.
+- **Identifiant bien formé et inconnu** : signalé même quand d'autres CVE commencent par lui (« CVE-2026-1234 » inconnue,
+  « CVE-2026-12345 » connue).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 440 et 390 px) avec
+une réponse remplacée par des données fictives ; parcours Playwright ajouté
+(`zzz…-vulnerabilites-recherche.spec.ts`) joué sur cette pile (axe `wcag2a`/`wcag2aa` sans violation, aucune violation de CSP
+relevée par la console), à rejouer en CI ; la CSP stricte du serveur de production n'a pas été vérifiée hors CI. Durée sur un
+parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Consultation de NVD à la demande** pour une CVE inconnue de la veille locale (décision du RSSI en attente) : ce serait un
+   appel sortant porté par l'exécutant, sur le flux `veille-vulnerabilites`, déclenché par une personne.
+2. Les choix ci-dessus.
+3. Recherche dans les **avis du CERT-FR et du CERT Santé** (identifiant d'avis, titre) depuis la barre : non faite (l'écran
+   « Veille » la fait déjà).
+

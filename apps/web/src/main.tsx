@@ -22,6 +22,7 @@ import '@suivi/ui/neon-surface.css';
 import '@suivi/ui/neon-commandement.css';
 import '@suivi/ui/neon-parc.css';
 import '@suivi/ui/neon-fiche.css';
+import '@suivi/ui/neon-recherche.css';
 import '@suivi/ui/neon-ergonomie.css';
 import '@suivi/ui/neon-tendances.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';

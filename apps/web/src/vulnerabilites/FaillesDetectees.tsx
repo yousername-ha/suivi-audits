@@ -51,8 +51,9 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router';
+import { ouvertureConstat } from './recherche';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { resumeExecution } from '../integrations/integrations';
@@ -543,7 +544,22 @@ export function FaillesDetecteesPage() {
   const [page, setPage] = useState(1);
   const [pageMachines, setPageMachines] = useState(1);
   const [pageDeclarees, setPageDeclarees] = useState(1);
-  const [ouvert, setOuvert] = useState<string | null>(null);
+  const [ouvert, setOuvert] = useState<string | null>(() => ouvertureConstat(adresse));
+  // Lot R1 : la barre de recherche du module ouvre cette liste filtrée (`?q=`) ou la fiche d'un contrôle (`?constat=`), y
+  // compris quand la page est déjà affichée (chaque navigation a sa clé) ; la fiche répond 404 pour l'illisible.
+  const loc = useLocation();
+  useEffect(() => {
+    const p = new URLSearchParams(loc.search);
+    if (p.has('q')) {
+      const f = filtresDepuisAdresse(p);
+      setVue('failles');
+      setFiltres(f);
+      setSaisie(f.q);
+      setPage(1);
+    }
+    const c = ouvertureConstat(p);
+    if (c) setOuvert(c);
+  }, [loc.key, loc.search]);
   const [declareeOuverte, setDeclareeOuverte] = useState<string | null>(null);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],

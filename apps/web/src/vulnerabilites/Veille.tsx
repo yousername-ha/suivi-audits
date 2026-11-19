@@ -34,14 +34,15 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
 import { FicheFaille } from './FicheFaille';
+import { ouvertureVeille } from './recherche';
 import { resumeFichesCertSante, resumePublications } from './sources';
 import { MarquesSources, MentionsFicheCertSante } from './SourcesFaille';
 import { libelleSurfaceCve, LIEN_SURFACE } from './surface';
@@ -510,7 +511,21 @@ export function VeillePage() {
   const [envoi, setEnvoi] = useState(false);
   const [collecte, setCollecte] = useState(false);
   const [erreur, setErreur] = useState<unknown>(null);
-  const [cveOuverte, setCveOuverte] = useState<string | null>(null);
+  const [cveOuverte, setCveOuverte] = useState<string | null>(() => ouvertureVeille(adresse).cve);
+  // Lot R1 : la barre de recherche du module ouvre la veille sur une recherche (`?q=`) ou sur la fiche d'une CVE (`?cve=`),
+  // y compris quand la page est déjà affichée (chaque navigation a sa clé).
+  const loc = useLocation();
+  useEffect(() => {
+    const o = ouvertureVeille(new URLSearchParams(loc.search));
+    if (o.q !== null) {
+      setSaisie(o.q);
+      setRecherche(o.q);
+      setPageKev(1);
+      setPageAvis(1);
+      setPageFailles(1);
+    }
+    if (o.cve) setCveOuverte(o.cve);
+  }, [loc.key, loc.search]);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatVeilleDto>('/api/vulnerabilites/veille/etat'),

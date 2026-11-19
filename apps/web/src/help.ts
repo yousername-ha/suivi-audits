@@ -105,6 +105,19 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-recherche',
+    title: 'Vulnérabilités : barre de recherche',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/vue',
+    steps: [
+      'La barre « Rechercher une CVE, une machine, une adresse IP ou une application » est en tête de toutes les pages du module Vulnérabilités. Tapez au moins deux caractères : la recherche part après une courte pause de frappe et ne modifie rien ; elle n’écrit rien au journal et n’appelle aucun service extérieur.',
+      'Résultats par groupe, huit au plus chacun avec leur nombre total : CVE ; machines internes (nom, début ou totalité de l’adresse IP, système) ; actifs exposés (nom de domaine, adresse IP) ; applications : produits surveillés avec leurs machines reliées, technologies vues par AlgoLightHouse avec leurs actifs exposés, contrôles de Tenable par leur nom. « Tout voir » ouvre la liste existante filtrée sur la saisie, quand elle accepte une recherche.',
+      'Une CVE est trouvée même si elle n’est détectée nulle part : par son identifiant (ou son début, « CVE-2026-12 »), par l’éditeur, le produit ou la description publiés par la veille. Chaque CVE dit son état : détectée sur N machines, déclarée sur N machines (produit relié), exposée sur N actifs exposés, présente hors des périmètres que vous lisez (sans nombre ni nom), ou « Non détectée sur le parc ». Elle ouvre sa fiche de faille dans l’écran « Veille ».',
+      'Un identifiant CVE complet que ni la veille ni aucune détection ne cite est signalé « CVE inconnue de la veille locale ». La plateforme ne le cherche pas sur Internet depuis la barre.',
+      'Vous ne voyez que les machines et les actifs de vos périmètres ; les nombres ne comptent que ce que vous lisez. Clavier : flèches haut et bas pour parcourir, Entrée pour ouvrir, Échap pour fermer la liste (une seconde fois pour effacer la saisie).',
+    ],
+  },
+  {
     id: 'vulnerabilites-produits',
     title: 'Vulnérabilités : produits surveillés',
     permission: 'vulnerabilites:lire',

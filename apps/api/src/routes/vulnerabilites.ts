@@ -53,8 +53,14 @@
    (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse.
    Lot S3 : vue « Correctifs » (groupes par texte de solution de Tenable, et détail d'un groupe) avec `lire`, lecture seule,
    sans journal : priorité et nombres de failles communs à tous ; machines nommées et comptées selon les droits. Filtre
-   « fin de support » des constats, des machines et du parc. */
+   « fin de support » des constats, des machines et du parc.
+   Lot R1 : barre de recherche globale (CVE de la veille et détectées, machines, actifs exposés, applications) avec `lire`,
+   lecture seule, sans journal, aucun appel sortant ; machines et actifs lus par les droits de leurs listes ; nombres de
+   machines et d'actifs limités à ce que la personne lit ; la recherche des machines de la liste couvre aussi l'adresse IP
+   (préfixe) et le système. */
 import {
+  RechercheGlobaleReponse,
+  RechercheGlobaleVulnerabilites,
   CleCorrectif,
   RechercheCorrectifs,
   RechercheAlertesVulnerabilites,
@@ -113,6 +119,17 @@ const suivi = z.object({ nature: NatureSuivi, id: z.uuid() });
 const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uuid() });
 
 export const vulnerabilitesRoutes = [
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/recherche',
+    summary:
+      'Recherche globale du module (lot R1), saisie de 2 à 200 caractères : CVE de la veille locale ou détectées (état : détectée, déclarée, exposée sur ce que la personne lit, présente hors de sa lecture sans nombre, ou non détectée sur le parc ; identifiant bien formé inconnu signalé, sans appel sortant), machines internes (nom, adresse IP, système), actifs exposés (nom de domaine, adresse IP), applications (produits surveillés, technologies d’AlgoLightHouse, contrôles de Tenable) ; 8 résultats au plus par groupe et nombre total ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheGlobaleVulnerabilites,
+    response: RechercheGlobaleReponse,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.recherche.chercher((s as Session).user, query.q),
+  }),
   route({
     method: 'GET',
     url: '/api/vulnerabilites/vue-ensemble',

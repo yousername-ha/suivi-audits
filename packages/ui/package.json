@@ -37,6 +37,7 @@
     "./neon-commandement.css": "./src/neon-commandement.css",
     "./neon-parc.css": "./src/neon-parc.css",
     "./neon-fiche.css": "./src/neon-fiche.css",
+    "./neon-recherche.css": "./src/neon-recherche.css",
     "./neon-ergonomie.css": "./src/neon-ergonomie.css",
     "./neon-tendances.css": "./src/neon-tendances.css"
   },

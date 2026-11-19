@@ -29,7 +29,20 @@ vulnérabilités SMSI »)
 action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
 surveillance vulnérabilités SMSI »)
 
+**Lot R1 du module Vulnérabilités** (barre de recherche globale) : sans migration, aucune action. La recherche ne fait aucun
+appel sortant et n'écrit rien au journal. (session « Module surveillance vulnérabilités SMSI »)
+
 ### Ajouté
+
+- Vulnérabilités, barre de recherche globale (lot R1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : en tête de toutes
+  les pages du module, une barre trouve une CVE même non détectée sur le parc (veille locale : identifiant, éditeur, produit,
+  description ; détections de Tenable et d'AlgoLightHouse), avec son état (« détectée sur N machines », « exposée sur N actifs
+  exposés », présente hors des périmètres lus, ou « Non détectée sur le parc ») ; une machine interne par nom, adresse IP ou
+  système ; un actif exposé par nom de domaine ou adresse IP ; une application (produit surveillé, technologie
+  d'AlgoLightHouse, contrôle de Tenable) avec les machines ou actifs qui la portent. Huit résultats au plus par groupe avec
+  leur nombre total, « tout voir » vers la liste filtrée, chaque résultat ouvre la page existante ; un identifiant CVE inconnu
+  de la veille locale est signalé, sans consultation extérieure. Mêmes droits que les listes ; clavier et lecteurs d'écran.
+  (session « Module surveillance vulnérabilités SMSI »)
 
 - Vulnérabilités, regroupement par correctif (lot S3, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : vue « Par
   correctif » de « Failles détectées », en tête « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de
@@ -71,6 +84,10 @@ surveillance vulnérabilités SMSI »)
 
 ### Modifié
 
+- Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
+  (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
+  « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
+  leur adresse. (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
   seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
   que les délais). (session « Module surveillance vulnérabilités SMSI »)

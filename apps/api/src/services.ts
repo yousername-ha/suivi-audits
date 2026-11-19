@@ -61,6 +61,7 @@ import { FichesFailles } from './vulnerabilites/fiches.js';
 import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
 import { TendancesVulnerabilites } from './vulnerabilites/tendances.js';
 import { CorrectifsVulnerabilites } from './vulnerabilites/correctifs.js';
+import { RechercheVulnerabilites } from './vulnerabilites/recherche.js';
 import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
@@ -187,6 +188,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     surfaceExterne,
     (user) => assistantVulnerabilites.masque(user, null),
   );
+  const produitsSurveilles = new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne);
   return {
     cfg,
     log,
@@ -200,7 +202,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {
-      produits: new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne),
+      produits: produitsSurveilles,
       veille,
       tenable,
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
@@ -229,6 +231,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       rapport,
       /** Lot S3 : vue « Correctifs » (failles regroupées par texte de solution de Tenable), lecture seule. */
       correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
+      /** Lot R1 : barre de recherche globale du module (CVE, machines, actifs exposés, applications), lecture seule. */
+      recherche: new RechercheVulnerabilites(db, failles, surfaceExterne, produitsSurveilles),
     },
     modules,
     flux,

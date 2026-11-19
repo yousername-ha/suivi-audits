@@ -69,8 +69,9 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, useLocation } from 'react-router';
+import { type OngletSurface, ouvertureSurface } from './recherche';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -1331,10 +1332,32 @@ function OngletActifs() {
   const [page, setPage] = useState(1);
   const [ouvert, setOuvert] = useState<ActifAlhDto | null>(null);
   const [masse, setMasse] = useState(false);
+  // Lot R1 : la barre de recherche du module ouvre cet onglet filtré (`?onglet=actifs&q=`) et, le cas échéant, la fiche
+  // d'un actif de la liste filtrée (`&actif=`), y compris quand l'onglet est déjà affiché.
+  const loc = useLocation();
+  const [actifVoulu, setActifVoulu] = useState<string | null>(null);
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search));
+    if (o.onglet !== 'actifs') return;
+    if (o.q !== null) {
+      setSaisie(o.q);
+      setRecherche(o.q);
+      setType('');
+      setLiaison('');
+      setPage(1);
+    }
+    setActifVoulu(o.actif);
+  }, [loc.key, loc.search]);
   const q = useQuery({
     queryKey: [...CLE, 'actifs', recherche, type, liaison, page],
     queryFn: () => get<PageSurface<ActifAlhDto>>(urlActifsAlh(recherche, type, page, liaison)),
   });
+  useEffect(() => {
+    if (!actifVoulu || !q.data) return;
+    const x = q.data.elements.find((e) => e.id === actifVoulu);
+    if (x) setOuvert(x);
+    setActifVoulu(null);
+  }, [actifVoulu, q.data]);
   return (
     <Stack>
       <form
@@ -1427,6 +1450,16 @@ function OngletTechnologies() {
   const [exploitee, setExploitee] = useState(false);
   const [tri, setTri] = useState<ReturnType<typeof triDepuis>>('');
   const [page, setPage] = useState(1);
+  // Lot R1 : la barre de recherche du module ouvre cet onglet filtré (`?onglet=technologies&q=`).
+  const loc = useLocation();
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search));
+    if (o.onglet !== 'technologies' || o.q === null) return;
+    setSaisie(o.q);
+    setRecherche(o.q);
+    setExploitee(false);
+    setPage(1);
+  }, [loc.key, loc.search]);
   const q = useQuery({
     queryKey: [...CLE, 'technologies', recherche, exploitee, tri, page],
     queryFn: () => get<PageSurface<TechnologieAlhDto>>(urlTechnologiesAlh(recherche, exploitee, page, tri)),
@@ -1605,7 +1638,18 @@ export function SurfaceExternePage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
   const administrer = can('vulnerabilites', 'administrer');
-  const [onglet, setOnglet] = useState<string | null>('carte');
+  // Lot R1 : onglet choisi par l'adresse (`?onglet=`, barre de recherche du module), au premier affichage et à chaque
+  // navigation.
+  const loc = useLocation();
+  const ongletAdresse = (search: string): OngletSurface | null => {
+    const o = ouvertureSurface(new URLSearchParams(search)).onglet;
+    return o && (o !== 'perimetres' || administrer) ? o : null;
+  };
+  const [onglet, setOnglet] = useState<string | null>(() => ongletAdresse(loc.search) ?? 'carte');
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search)).onglet;
+    if (o && (o !== 'perimetres' || administrer)) setOnglet(o);
+  }, [loc.key, loc.search, administrer]);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatSurfaceExterneDto[]>('/api/vulnerabilites/surface/etat'),
