@@ -632,39 +632,48 @@
 [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) {
   background:
     radial-gradient(
+      ellipse 70% 50% at 0% 0%,
+      color-mix(in srgb, var(--neon-violet) 14%, transparent) 0%,
+      transparent 75%
+    ),
+    radial-gradient(
       ellipse 90% 55% at 100% 0%,
-      color-mix(in srgb, var(--neon-cyan) 10%, transparent) 0%,
+      color-mix(in srgb, var(--neon-cyan) 14%, transparent) 0%,
       transparent 70%
     ),
     linear-gradient(
       172deg,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 18%, var(--suivi-surface)) 0%,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 6%, var(--suivi-surface)) 45%,
-      var(--suivi-surface) 80%
+      color-mix(in srgb, var(--menu-teinte-pilotage) 32%, var(--suivi-surface)) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 14%, var(--suivi-surface)) 40%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 5%, var(--suivi-surface)) 85%
     );
 }
 [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Modal-header {
   background: transparent;
 }
 [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Card-root {
-  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 32%, transparent);
-  background: color-mix(in srgb, var(--suivi-surface) 64%, transparent);
-  backdrop-filter: blur(var(--mantine-spacing-sm)) saturate(1.4);
-  box-shadow: inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 90%, transparent);
+  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+  background: color-mix(in srgb, var(--suivi-surface) 58%, transparent);
+  backdrop-filter: blur(var(--mantine-spacing-sm)) saturate(1.5);
+  box-shadow:
+    inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 90%, transparent),
+    0 var(--mantine-spacing-sm) var(--mantine-spacing-xl) calc(var(--mantine-spacing-md) * -1)
+      color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
 }
 [data-mantine-color-scheme='light'] .maj-versions {
-  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--menu-fond-haut) 10%);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--suivi-surface) 55%, transparent), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--suivi-surface) 42%, transparent), transparent 50%),
     linear-gradient(
       163deg,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 26%, transparent),
-      color-mix(in srgb, var(--neon-cyan) 14%, transparent)
+      color-mix(in srgb, var(--neon-violet) 20%, transparent) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 42%, transparent) 45%,
+      color-mix(in srgb, var(--neon-cyan) 24%, transparent) 100%
     );
   box-shadow:
     inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 85%, transparent),
-    0 var(--mantine-spacing-xs) var(--mantine-spacing-lg) calc(var(--mantine-spacing-sm) * -1)
-      color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+    0 var(--mantine-spacing-sm) var(--mantine-spacing-xl) calc(var(--mantine-spacing-sm) * -1)
+      color-mix(in srgb, var(--menu-fond-haut) 40%, transparent);
   color: var(--menu-fond-haut);
 }
 [data-mantine-color-scheme='light'] .maj-versions .maj-libelle {
@@ -676,7 +685,7 @@
 }
 [data-mantine-color-scheme='light'] .maj-versions .maj-version--cible strong,
 [data-mantine-color-scheme='light'] .maj-versions .maj-etiquette {
-  color: color-mix(in srgb, var(--menu-teinte-pilotage) 55%, var(--menu-fond-haut));
+  color: color-mix(in srgb, var(--menu-teinte-pilotage) 45%, var(--menu-fond-haut));
 }
 [data-mantine-color-scheme='light'] .maj-versions .maj-fleche {
   background: linear-gradient(90deg, var(--menu-teinte-pilotage), var(--neon-cyan));
