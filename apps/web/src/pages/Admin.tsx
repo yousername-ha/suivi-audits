@@ -21,6 +21,7 @@ import { BackupsPanel } from './AdminBackups';
 import { ModulesPanel } from './AdminModules';
 import { UpdatesPanel } from '../components/Updates';
 import { OperationsPanel } from './AdminOperations';
+import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
 
 const TABS = [
   ['users', 'Utilisateurs', 'administration'],
@@ -393,6 +394,7 @@ export function Exploitation() {
   return (
     <Stack>
       <BackupsPanel />
+      <PolitiqueSauvegardesPanel />
       <UpdatesPanel />
       <OperationsPanel />
       {sv.enRetard && (
@@ -535,8 +537,9 @@ export function System() {
   );
 }
 
-/** Détails techniques du serveur (lecture seule), repris par l'écran Système et par la carte du même nom. */
-export function DetailsTechniques() {
+/** Détails techniques du serveur (lecture seule), repris par l'écran Système et par la carte du même nom. `titreVisible`
+    faux : le titre n'est pas répété dans la fenêtre de la carte, qui porte déjà le même titre. */
+export function DetailsTechniques({ titreVisible = true }: { titreVisible?: boolean }) {
   const q = useQuery({ queryKey: ['admin', 'info'], queryFn: () => get<Record<string, unknown>>('/api/admin/info') });
   const d = q.data;
   const rows: [string, unknown][] = d
@@ -560,9 +563,11 @@ export function DetailsTechniques() {
     : [];
   return (
     <Card withBorder>
-      <Title order={2} size="h4" mb="xs">
-        Détails techniques
-      </Title>
+      {titreVisible && (
+        <Title order={2} size="h4" mb="xs">
+          Détails techniques
+        </Title>
+      )}
       <ErrorAlert error={q.error} />
       <div className="table-wrap" role="region" aria-label="Détails techniques" tabIndex={0}>
         <Table>

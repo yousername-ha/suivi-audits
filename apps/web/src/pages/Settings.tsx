@@ -139,17 +139,35 @@ export function SettingsPage() {
 }
 
 /* ---------------------------------------------------------------- Chargement et enregistrement d'une section */
-export function SectionLoader({ section, onDirty }: { section: SettingsSection; onDirty: (d: boolean) => void }) {
+/** `titreVisible` faux : le titre de la section n'est pas répété dans une fenêtre qui porte déjà le même titre (cartes de
+    Plateforme et de Configuration système). Par défaut, il est affiché (page Paramètres). */
+export function SectionLoader({
+  section,
+  onDirty,
+  titreVisible,
+}: {
+  section: SettingsSection;
+  onDirty: (d: boolean) => void;
+  titreVisible?: boolean;
+}) {
   const q = useQuery({
     queryKey: ['settings', section],
     queryFn: () => get<SettingsSectionOut>(`/api/settings/${section}`),
   });
   if (q.error) return <ErrorAlert error={q.error} />;
   if (!q.data) return null;
-  return <SectionForm key={q.data.version} data={q.data} onDirty={onDirty} />;
+  return <SectionForm key={q.data.version} data={q.data} onDirty={onDirty} titreVisible={titreVisible} />;
 }
 
-function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d: boolean) => void }) {
+function SectionForm({
+  data,
+  onDirty,
+  titreVisible,
+}: {
+  data: SettingsSectionOut;
+  onDirty: (d: boolean) => void;
+  titreVisible?: boolean;
+}) {
   const qc = useQueryClient();
   const [values, setValues] = useState<Record<string, unknown>>(data.values);
   const [saving, setSaving] = useState(false);
@@ -196,6 +214,7 @@ function SectionForm({ data, onDirty }: { data: SettingsSectionOut; onDirty: (d:
   return (
     <FormSection
       title={SETTINGS_LABELS[data.section]}
+      titreVisible={titreVisible}
       description={DESCRIPTIONS[data.section]}
       dirty={dirty || fluxAOuvrir}
       saving={saving}

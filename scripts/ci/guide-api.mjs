@@ -385,7 +385,15 @@ switch (cmd) {
       fail('poller/configuration indisponible');
     }
     await call('PUT', '/api/admin/exploitation/politique', {
-      json: { enabled: false, hourUtc: 23, minuteUtc: 47, days: [1, 3, 5], retentionDays: 91 },
+      json: {
+        enabled: false,
+        hourUtc: 23,
+        minuteUtc: 47,
+        days: [1, 3, 5],
+        retentionDays: 91,
+        maxBackups: 30,
+        preUpdateBackups: 3,
+      },
       headers: { 'if-match': `"${e.policy.version}"` },
     });
     const before = JSON.stringify(await legacyState());
@@ -454,6 +462,8 @@ switch (cmd) {
         minuteUtc: scheduleTime.getUTCMinutes(),
         days: [1, 2, 3, 4, 5, 6, 7],
         retentionDays: 91,
+        maxBackups: 30,
+        preUpdateBackups: 3,
       },
       headers: { 'if-match': `"${e.policy.version}"` },
     });
@@ -464,7 +474,15 @@ switch (cmd) {
       fail('planification réelle : créneau perdu ou doublon');
     e = await call('GET', '/api/admin/exploitation');
     await call('PUT', '/api/admin/exploitation/politique', {
-      json: { enabled: false, hourUtc: 23, minuteUtc: 47, days: [1, 3, 5], retentionDays: 91 },
+      json: {
+        enabled: false,
+        hourUtc: 23,
+        minuteUtc: 47,
+        days: [1, 3, 5],
+        retentionDays: 91,
+        maxBackups: 30,
+        preUpdateBackups: 3,
+      },
       headers: { 'if-match': `"${e.policy.version}"` },
     });
     console.log('Lot A : créneau UTC réellement exécuté une fois, sans doublon au deuxième passage.');

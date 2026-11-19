@@ -56,13 +56,13 @@ const FILTRES_VIDES: FiltresProcessus = { recherche: '', type: '', pilote: '', r
 
 export function ProcessusStudio({
   donnees,
-  scopeName,
   modifiable,
   onOpen,
   onCreate,
 }: {
   donnees: ProcessusCartes;
-  scopeName: string;
+  /** Nom du périmètre : affiché par la liste « Périmètre affiché » de l'en-tête de page, plus dans le studio. */
+  scopeName?: string;
   modifiable: boolean;
   onOpen: (id: string) => void;
   onCreate: () => void;
@@ -192,29 +192,6 @@ export function ProcessusStudio({
       data-motion={anime ? 'on' : 'off'}
       aria-label="Processus du périmètre"
     >
-      <header className="pr-overview">
-        <div className="pr-overview-identity">
-          <span className="pr-scope-icon">
-            <Icone name="tree" />
-          </span>
-          <div>
-            <span className="pr-kicker">Périmètre affiché</span>
-            <strong>{scopeName}</strong>
-          </div>
-        </div>
-        <div className="pr-summary">
-          <span>
-            <b>{donnees.processus.length}</b> processus
-          </span>
-          <span>
-            <b>{new Set(donnees.processus.map((p) => p.family).filter(Boolean)).size}</b> types utilisés
-          </span>
-          <span>
-            <b>{donnees.processus.filter((p) => p.owner).length}</b> pilotes renseignés
-          </span>
-        </div>
-        <span className="pr-overview-orbit" aria-hidden="true" />
-      </header>
       <div className="pr-workspace">
         {/* Boîte d'outils commune (7.3.0) : vues, recherche et filtres avancés ; création au bout de la ligne. */}
         <BoiteOutils
@@ -291,6 +268,19 @@ export function ProcessusStudio({
             )
           }
         />
+        {/* Chiffres du périmètre en une ligne : le bandeau « Périmètre affiché », qui répétait la liste de l'en-tête de
+            page, est retiré (décision du RSSI du 18/11/2026). */}
+        <p className="pr-resume">
+          <span>
+            <b>{donnees.processus.length}</b> processus
+          </span>
+          <span>
+            <b>{new Set(donnees.processus.map((p) => p.family).filter(Boolean)).size}</b> types utilisés
+          </span>
+          <span>
+            <b>{donnees.processus.filter((p) => p.owner).length}</b> pilotes renseignés
+          </span>
+        </p>
         <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
         <div className="pr-content" role="region" tabIndex={0} aria-label="Processus affichés">
           {!visibles.length ? (

@@ -134,6 +134,26 @@ describe('A1a sauvegardes', () => {
     await t.svc.backups.claim();
     expect((await t.svc.backups.finish(next.id, 0)).status).toBe('echec');
   });
+  it('reprend le motif d’un refus explicite du script (espace disque, ADR 0106), sur une ligne et borné', async () => {
+    const job = await prepare();
+    await t.svc.backups.claim();
+    const motif =
+      'Espace disque insuffisant pour la sauvegarde : 500 Mo libres dans le dossier des sauvegardes, 1100 Mo nécessaires.';
+    report(job.id, { resultat: 'echec', fichier: null, message: motif + '\nligne\u0007 suivante' });
+    const fini = await t.svc.backups.finish(job.id, 1);
+    expect(fini.status).toBe('echec');
+    expect(fini.message).toBe(`Exécutant en échec (code 1). ${motif} ligne suivante`);
+    // « code de sortie N » n'apprend rien : message habituel ; rapport d'une autre demande : ignoré.
+    for (const [changes, code] of [
+      [{ resultat: 'echec', message: 'code de sortie 3' }, 3],
+      [{ resultat: 'echec', message: motif, jobId: randomUUID() }, 4],
+    ] as const) {
+      const autre = await prepare();
+      await t.svc.backups.claim();
+      report(autre.id, changes);
+      expect((await t.svc.backups.finish(autre.id, code)).message).toBe(`Exécutant en échec (code ${code}).`);
+    }
+  });
   it('l’échec d’écriture de l’audit annule la demande dans la même transaction', async () => {
     await t.svc.backups.heartbeat(true);
     const fail = vi.spyOn(t.svc.db, 'audit').mockRejectedValueOnce(new Error('Audit indisponible'));

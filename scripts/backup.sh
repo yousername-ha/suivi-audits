@@ -12,7 +12,11 @@
 #             BACKUP_RECIPIENTS_FILE (clés publiques de secours, défaut DATA_DIR/cles-sauvegarde/secours.pub),
 #             RETENTION_DAYS (90 par défaut, sauvegardes du dossier de destination uniquement, sous-dossiers exclus),
 #             BACKUP_GARDER_MIN (nombre de sauvegardes les plus récentes toujours conservées, 7 par défaut, de 1 à 365),
+#             BACKUP_GARDER_MAX (nombre maximal de sauvegardes du dossier de destination, de 7 à 365 ; lu dans
+#             l'environnement, sinon dans .env, sinon 30 ; l'exécutant d'exploitation transmet celui de l'application),
 #             BACKUP_PREFIXE (début du nom de fichier, « suivi-audits » par défaut).
+# Avant de commencer, la place est contrôlée (ADR 0106) : sans assez d'espace pour la nouvelle archive (taille de la
+# dernière, ou de la base) et sa marge, la sauvegarde est refusée, avec la place libre, la place nécessaire et ce qui l'occupe.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 . "$REPO/scripts/lib-commun.sh"
@@ -21,6 +25,7 @@ cd "$REPO"
 DEST="${1:-./backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-90}"
 GARDER_MIN="${BACKUP_GARDER_MIN:-7}"
+GARDER_MAX="${BACKUP_GARDER_MAX:-$(valeur_env BACKUP_GARDER_MAX 30)}"
 PREFIXE="${BACKUP_PREFIXE:-suivi-audits}"
 CLE="$(cle_sauvegarde_serveur)"
 SECOURS="$(cles_sauvegarde_secours)"
@@ -37,6 +42,8 @@ OUT=''
 TEMP_OUT=''
 SHA=''
 VERIFIEE=false
+# Motif d'un refus explicite, repris dans le rapport (sans chemin : il est affiché dans l'application).
+MOTIF=''
 
 rapport() { # resultat message
   local taille=null chiffree=false
@@ -51,7 +58,7 @@ fin() {
   [ -z "$TEMP_OUT" ] || rm -f "$TEMP_OUT"
   if [ -d "$DATA_DIR/etat" ] && [ -w "$DATA_DIR/etat" ]; then
     if [ -n "$JOB_ID" ]; then
-      if [ "$code" = 0 ]; then rapport reussie ''; else rapport echec "code de sortie $code"; fi | ecrire_etat "$RAPPORTS/jobs/$JOB_ID.json"
+      if [ "$code" = 0 ]; then rapport reussie ''; else rapport echec "${MOTIF:-code de sortie $code}"; fi | ecrire_etat "$RAPPORTS/jobs/$JOB_ID.json"
     fi
     if [ "$code" = 0 ]; then
       local r
@@ -59,7 +66,7 @@ fin() {
       printf '%s\n' "$r" | ecrire_etat "$RAPPORTS/derniere-reussie.json"
       printf '%s\n' "$r" | ecrire_etat "$RAPPORTS/derniere.json"
     else
-      rapport echec "code de sortie $code" | ecrire_etat "$RAPPORTS/derniere.json"
+      rapport echec "${MOTIF:-code de sortie $code}" | ecrire_etat "$RAPPORTS/derniere.json"
     fi
   fi
 }
@@ -67,6 +74,7 @@ trap fin EXIT
 umask 077
 [[ "$RETENTION_DAYS" =~ ^[0-9]{1,5}$ ]] && [ "$RETENTION_DAYS" -ge 1 ] && [ "$RETENTION_DAYS" -le 36500 ] || arret "RETENTION_DAYS doit être compris entre 1 et 36500."
 [[ "$GARDER_MIN" =~ ^[0-9]{1,3}$ ]] && [ "$GARDER_MIN" -ge 1 ] && [ "$GARDER_MIN" -le 365 ] || arret "BACKUP_GARDER_MIN doit être compris entre 1 et 365."
+[[ "$GARDER_MAX" =~ ^[0-9]{1,3}$ ]] && [ "$GARDER_MAX" -ge 7 ] && [ "$GARDER_MAX" -le 365 ] || arret "BACKUP_GARDER_MAX doit être compris entre 7 et 365."
 [[ "$PREFIXE" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,60}$ ]] || arret "Préfixe de sauvegarde invalide."
 controler_cles_sauvegarde "$CLE" "$SECOURS"
 PUBLIQUE=$(age-keygen -y "$CLE")
@@ -76,6 +84,44 @@ if [ "${BACKUP_SAUVEGARDE_LOCK_HELD:-}" != 1 ]; then
 fi
 flock -n 9 || arret "Une sauvegarde est déjà en cours."
 mkdir -p "$DEST"
+
+# ---------------------------------------------------------------- Place disponible (ADR 0106)
+# Estimation : taille de la dernière sauvegarde du dossier (ou du dernier rapport réussi, ou de la base), plus une marge de
+# 1 Gio ou 10 % si c'est plus. La zone de travail (TMPDIR) reçoit le dump puis l'archive en clair et sa copie de contrôle :
+# deux fois la taille, plus 10 %. Si elle est sur le même disque que la destination, les deux besoins s'ajoutent.
+taille_reference() {
+  local t
+  t=$(find "$DEST" -maxdepth 1 -type f -name '*.tar.age' -printf '%T@ %s\n' 2> /dev/null | sort -rn | head -n 1 | cut -d' ' -f2)
+  [ -n "$t" ] || t=$(sed -n 's/.*"tailleOctets":\([0-9][0-9]*\).*/\1/p' "$RAPPORTS/derniere-reussie.json" 2> /dev/null | head -n 1)
+  [ -n "$t" ] || t=$(docker compose exec -T -u postgres db psql -d suivi -Atc "SELECT pg_database_size('suivi')" 2> /dev/null | tr -dc '0-9' || true)
+  printf '%s\n' "${t:-0}"
+}
+mo() { printf '%s Mo' "$((($1 + 1048575) / 1048576))"; }
+TAILLE=$(taille_reference)
+[[ "$TAILLE" =~ ^[0-9]{1,15}$ ]] || TAILLE=0
+MARGE=$((TAILLE / 10 > 1073741824 ? TAILLE / 10 : 1073741824))
+BESOIN_DEST=$((TAILLE + MARGE))
+BESOIN_TRAVAIL=$((2 * TAILLE + TAILLE / 10))
+LIBRE_DEST=$(octets_libres "$DEST")
+LIBRE_TRAVAIL=$(octets_libres "$WORK")
+if [ "$(stat -c %d "$DEST")" = "$(stat -c %d "$WORK")" ]; then
+  BESOIN_DEST=$((BESOIN_DEST + BESOIN_TRAVAIL))
+  BESOIN_TRAVAIL=0
+fi
+if [ "$LIBRE_DEST" -lt "$BESOIN_DEST" ] || [ "$LIBRE_TRAVAIL" -lt "$BESOIN_TRAVAIL" ]; then
+  occupation=$(du -sb "$DEST" 2> /dev/null | cut -f1 || true)
+  images=$(python3 "$REPO/scripts/images-application.py" taille 2> /dev/null || true)
+  if [[ "$images" =~ ^[0-9]+$ ]]; then images=$(mo "$images"); else images='non mesurées'; fi
+  if [ "$LIBRE_DEST" -lt "$BESOIN_DEST" ]; then
+    MOTIF="Espace disque insuffisant pour la sauvegarde : $(mo "$LIBRE_DEST") libres dans le dossier des sauvegardes, $(mo "$BESOIN_DEST") nécessaires"
+    MOTIF+=" (dernière sauvegarde $(mo "$TAILLE"), marge $(mo "$MARGE")$([ "$BESOIN_TRAVAIL" = 0 ] && printf ', zone de travail sur le même disque'))."
+  else
+    MOTIF="Espace de travail insuffisant pour la sauvegarde : $(mo "$LIBRE_TRAVAIL") libres dans la zone temporaire, $(mo "$BESOIN_TRAVAIL") nécessaires (deux fois la dernière sauvegarde, $(mo "$TAILLE"), plus 10 %)."
+  fi
+  MOTIF+=" Occupation : sauvegardes de ce dossier $(mo "${occupation:-0}"), images de l'application $images. Rien n'a été modifié :"
+  MOTIF+=" externaliser puis supprimer d'anciennes sauvegardes, ou réduire leur nombre (guide d'installation, « Libérer de la place »)."
+  arret "$MOTIF"
+fi
 
 [ -d "$DATA_DIR/secrets" ] || arret "secrets introuvables dans $DATA_DIR/secrets (DATA_DIR de .env)."
 docker compose exec -T -u postgres db pg_dump -d suivi -Fc --no-owner > "$WORK/suivi.dump"
@@ -126,9 +172,10 @@ SHA=$(sha256sum "$OUT")
 SHA=${SHA%% *}
 VERIFIEE=true
 echo "Sauvegarde : $OUT"
-# Rotation dans le dossier de destination seulement : les sauvegardes « avant mise à jour » (sous-dossier) sont gardées.
-# Les BACKUP_GARDER_MIN archives les plus récentes sont toujours conservées, quelle que soit leur ancienneté ; au-delà,
-# une archive disparaît (avec son fichier .sha256) seulement si elle a plus de RETENTION_DAYS jours. Seules les archives .tar.age
+# Rotation dans le dossier de destination seulement : les sous-dossiers (sauvegardes « avant mise à jour », sauvegardes de
+# sécurité des restaurations dans .restauration-securite) ne sont jamais parcourus, ni les liens. Les BACKUP_GARDER_MIN archives
+# les plus récentes sont toujours conservées ; au-delà, une archive disparaît (avec son fichier .sha256) dès qu'elle a plus de
+# RETENTION_DAYS jours OU qu'elle n'est pas parmi les BACKUP_GARDER_MAX plus récentes (ADR 0106). Seules les archives .tar.age
 # que ce script produit tournent : celles d'anciennes versions (.tar.enc de la 5.x, .tar en clair), que cette version ne sait ni
 # lire ni vérifier (ADR 0077), sont laissées à l'exploitant.
 rang=0
@@ -136,6 +183,8 @@ while IFS= read -r -d '' ligne; do
   rang=$((rang + 1))
   [ "$rang" -gt "$GARDER_MIN" ] || continue
   archive=${ligne#*$'\t'}
-  [ -n "$(find "$archive" -maxdepth 0 -mtime +"$RETENTION_DAYS")" ] || continue
-  rm -f -- "$archive" "$archive.sha256"
+  if [ "$rang" -le "$GARDER_MAX" ] && [ -z "$(find "$archive" -maxdepth 0 -mtime +"$RETENTION_DAYS")" ]; then continue; fi
+  rm -f -- "$archive"
+  # Un dossier portant ce nom n'est pas une empreinte : laissé en place (rm échouerait et ferait échouer la sauvegarde).
+  if [ -L "$archive.sha256" ] || [ ! -d "$archive.sha256" ]; then rm -f -- "$archive.sha256"; fi
 done < <(find "$DEST" -maxdepth 1 -type f \( -name "$PREFIXE-*.tar.age" \) -printf '%T@\t%p\0' | LC_ALL=C sort -z -t $'\t' -k1,1nr -k2,2r)
