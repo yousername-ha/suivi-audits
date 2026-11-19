@@ -803,6 +803,7 @@ body:has(.as-launcher) .shell-main {
   .auth-connexion .auth-carte--valider::before {
     animation: none;
   }
+}
 
 /* Onglets, une seule forme sur toute la plateforme (demandes du RSSI du 19/11/2026) : rubriques sous le titre des pages,
    onglets Mantine des pages et des fenêtres, onglets du RETEX et de l'Assistant RSSI. Deux formes aux couleurs du menu sont à
