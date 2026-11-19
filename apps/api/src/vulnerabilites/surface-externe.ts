@@ -70,7 +70,10 @@ import {
   type ElementTechnologieActifAlh,
   type ElementTechnologieAlh,
   type ElementTechnologieCveAlh,
+  echeanceAtteinte,
   type EtatSurfaceExterneDto,
+  prochaineAffichee,
+  referenceApresDemande,
   LiaisonPerimetreAlh,
   LotSynchronisation,
   ALH_BORNES,
@@ -106,10 +109,8 @@ import { lireFaitsCve, sourcesDe } from './sources.js';
 import { cvesAlh, lisibleAlh } from './sql.js';
 
 const TYPE = 'algolighthouse';
-const FUSEAU = 'Europe/Paris';
 const PLANIFICATION = { username: 'planification' };
 const EXECUTANT = { username: 'exécutant serveur' };
-const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 const iso = (d: Date | null) => d?.toISOString() ?? null;
 const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
@@ -586,11 +587,11 @@ export class SurfaceExterneAlh implements OperationEnLots {
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
-  /** Inscrit au plus une synchronisation par jour et par instance AlgoLightHouse active dont la clé est enregistrée. Les
+  /** Lot F1 : inscrit au plus une synchronisation par période réglée (vingt-quatre heures par défaut ; 12 h, 24 h ou 7 jours)
+      et par instance AlgoLightHouse active dont la clé est enregistrée. Les
       modules Intégrations et Vulnérabilités sont contrôlés par l'appelant ; flux « algolighthouse » fermé : rien. */
   async planifier(maintenant = new Date()): Promise<string[]> {
     if (!(await this.flux.ouvert('algolighthouse'))) return [];
-    const jour = jourDe(maintenant);
     const instances = (await this.integrations.lister()).filter(
       (i) => i.type === TYPE && i.actif && Object.values(i.secrets).every(Boolean),
     );
@@ -606,15 +607,18 @@ export class SurfaceExterneAlh implements OperationEnLots {
           .execute();
         const e = await k
           .selectFrom('vulnerabilites_alh_etat')
-          .select(sql<string | null>`creneau::text`.as('creneau'))
+          .select('planifiee_le')
           .where('integration_id', '=', i.id)
           .forUpdate()
           .executeTakeFirstOrThrow();
-        if (e.creneau === jour) return;
-        // Créneau consommé d'abord : une synchronisation inscrite puis perdue n'est pas réinscrite le même jour.
+        // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
+        // dernière demande automatique.
+        if (!echeanceAtteinte(e.planifiee_le, i.frequenceHeures, maintenant)) return;
+        // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
+        // avant la période suivante.
         await k
           .updateTable('vulnerabilites_alh_etat')
-          .set({ creneau: jour })
+          .set({ planifiee_le: referenceApresDemande(e.planifiee_le, i.frequenceHeures, maintenant) })
           .where('integration_id', '=', i.id)
           .execute();
         const occupee = await k
@@ -633,6 +637,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
   async etat(user: SessionUser): Promise<EtatSurfaceExterneDto[]> {
     const instances = (await this.integrations.lister()).filter((i) => i.type === TYPE);
     const administrer = user.rights.can('vulnerabilites', 'administrer');
+    const fluxOuvert = await this.flux.ouvert('algolighthouse');
+    const maintenant = new Date();
     const out: EtatSurfaceExterneDto[] = [];
     for (const i of instances) {
       const e = await this.db.k
@@ -677,6 +683,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
           : null,
         derniereCompleteLe: e?.complete_le?.toISOString() ?? null,
         perimetresNonRelies: nonRelies,
+        frequenceHeures: i.frequenceHeures,
+        // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
+        prochaineSynchronisation:
+          fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
+            ? prochaineAffichee(e?.planifiee_le ?? null, i.frequenceHeures, maintenant).toISOString()
+            : null,
       });
     }
     return out;

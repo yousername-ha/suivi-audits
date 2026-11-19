@@ -13,7 +13,7 @@ import {
   SECTEUR_RADAR_LIBELLES,
   type SecteurRadar,
 } from '@suivi/shared';
-import type { Etat } from '@suivi/ui';
+import { etatConnecteur as etatConnecteurCommun } from '../integrations/etat-integration';
 import { libelleSource } from './veille';
 
 export const CLE_VUE = ['vulnerabilites', 'vue-ensemble'] as const;
@@ -167,25 +167,9 @@ export function ligneJournal(e: EntreeJournalVueDto): {
 }
 
 /* ------------------------------------------------------------------ Capteurs : connecteurs */
-/** État d'un connecteur (Tenable, AlgoLightHouse) et heure de la dernière synchronisation réussie. */
-export function etatConnecteur(c: EtatSynchronisationDto | EtatSurfaceExterneDto): {
-  libelle: string;
-  etat: Etat;
-  reussie: string | null;
-} {
-  const d = c.derniere;
-  const reussie = d?.etat === 'recu' ? d.termineLe : c.derniereCompleteLe;
-  if (!c.actif) return { libelle: 'Désactivé', etat: 'neutre', reussie };
-  if (!d) return { libelle: 'Jamais synchronisé', etat: 'attention', reussie };
-  if (d.etat === 'en_file' || d.etat === 'en_cours')
-    return {
-      libelle: d.etat === 'en_file' ? 'Synchronisation demandée' : 'Synchronisation en cours',
-      etat: 'info',
-      reussie,
-    };
-  if (d.etat === 'recu') return { libelle: 'Synchronisé', etat: 'succes', reussie };
-  return { libelle: 'En échec', etat: 'erreur', reussie };
-}
+/** État d'un connecteur (Tenable, AlgoLightHouse) et heure de la dernière synchronisation réussie : règle commune aux outils
+    qui exploitent une intégration (integrations/etat-integration.ts). */
+export const etatConnecteur = (c: EtatSynchronisationDto | EtatSurfaceExterneDto) => etatConnecteurCommun(c);
 
 /** Totaux par secteur, dans l'ordre du radar. */
 export function totauxSecteurs(

@@ -51,10 +51,13 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router';
+import { ouvertureConstat } from './recherche';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { EtatIntegration } from '../integrations/EtatIntegration';
+import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { resumeExecution } from '../integrations/integrations';
 import { useCan } from '../session';
 import {
@@ -503,30 +506,26 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
   );
 }
 
-/** Dernière synchronisation de chaque instance (sans état). */
-export function EtatSynchronisations({ etats }: { etats: EtatSynchronisationDto[] }) {
-  if (!etats.length)
-    return (
-      <Alert color="gray" role="status">
-        Aucun connecteur Tenable Security Center : il se configure dans Pilotage &gt; Intégrations.
-      </Alert>
-    );
+/** État en lecture seule de chaque instance de Tenable (sans état) : dernière synchronisation, erreur éventuelle, bilan, et
+    lien « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076, addendum du 19/11/2026). */
+export function EtatSynchronisations({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatSynchronisationDto[];
+  peutConfigurer?: boolean;
+}) {
   return (
-    <Stack gap="2xs">
-      {etats.map((e) => (
-        <Text key={e.integrationId} size="sm" role="status">
-          <strong>{e.nom}</strong> :{' '}
-          {e.derniere ? (
-            <>
-              <span className="horodatage">{fmtDate(e.derniere.demandeLe)}</span> ·{' '}
-              {resumeExecution({ etat: e.derniere.etat, resultat: e.derniere.bilan, erreur: e.derniere.erreur })}
-            </>
-          ) : (
-            'jamais synchronisé.'
-          )}
-        </Text>
-      ))}
-    </Stack>
+    <EtatIntegration
+      type="Tenable Security Center"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      detail={(e) =>
+        e.derniere?.etat === 'recu' && e.derniere.bilan
+          ? resumeExecution({ etat: 'recu', resultat: e.derniere.bilan, erreur: null })
+          : null
+      }
+    />
   );
 }
 
@@ -543,7 +542,22 @@ export function FaillesDetecteesPage() {
   const [page, setPage] = useState(1);
   const [pageMachines, setPageMachines] = useState(1);
   const [pageDeclarees, setPageDeclarees] = useState(1);
-  const [ouvert, setOuvert] = useState<string | null>(null);
+  const [ouvert, setOuvert] = useState<string | null>(() => ouvertureConstat(adresse));
+  // Lot R1 : la barre de recherche du module ouvre cette liste filtrée (`?q=`) ou la fiche d'un contrôle (`?constat=`), y
+  // compris quand la page est déjà affichée (chaque navigation a sa clé) ; la fiche répond 404 pour l'illisible.
+  const loc = useLocation();
+  useEffect(() => {
+    const p = new URLSearchParams(loc.search);
+    if (p.has('q')) {
+      const f = filtresDepuisAdresse(p);
+      setVue('failles');
+      setFiltres(f);
+      setSaisie(f.q);
+      setPage(1);
+    }
+    const c = ouvertureConstat(p);
+    if (c) setOuvert(c);
+  }, [loc.key, loc.search]);
   const [declareeOuverte, setDeclareeOuverte] = useState<string | null>(null);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
@@ -617,7 +631,7 @@ export function FaillesDetecteesPage() {
       />
       <Stack>
         <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSynchronisations etats={etat.data} />}
+        {etat.data && <EtatSynchronisations etats={etat.data} peutConfigurer={peutConfigurerIntegration(can)} />}
         <SegmentedControl
           value={vue}
           onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}

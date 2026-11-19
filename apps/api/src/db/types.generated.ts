@@ -699,6 +699,7 @@ export interface Integrations {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  frequence_heures: number | null;
 }
 
 export interface JournalTechniqueConfig {
@@ -1671,6 +1672,7 @@ export interface VulnerabilitesAlhEtat {
   numero: Generated<number>;
   numero_complet: Generated<number>;
   complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesAlhLiaisonsMachines {
@@ -2026,6 +2028,7 @@ export interface VulnerabilitesTenableEtat {
   inventaire_ok: boolean | null;
   inventaire_erreur: string | null;
   inventaire_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesVeilleAvis {
@@ -2128,6 +2131,9 @@ export interface VulnerabilitesVeilleSources {
   erreur: string | null;
   creneau: ColumnType<Date | null, Date | string | null, Date | string | null>;
   fenetre_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  frequence_heures: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  version: Generated<number>;
 }
 
 export interface WallScreens {

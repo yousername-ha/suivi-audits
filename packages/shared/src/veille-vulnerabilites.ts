@@ -365,6 +365,12 @@ export interface EtatSourceVeilleDto {
   erreur: string | null;
   enRetard: boolean;
   derniereCollecte: CollecteVeilleDto | null;
+  /** Lot F1 : fréquence des collectes automatiques, en heures (réglée, sinon la valeur par défaut). */
+  frequenceHeures: number;
+  /** Prochaine collecte automatique prévue (au plus tôt maintenant) ; null si la veille est fermée. */
+  prochaineCollecte: string | null;
+  /** Version du réglage de la source (If-Match de la route de la fréquence). */
+  version: number;
 }
 
 export interface EtatVeilleDto {

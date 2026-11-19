@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { FiltreGravites, GRAVITES_PAR_DEFAUT, BilanSynchronisation } from './failles-tenable.js';
 import { AdresseAlh, BilanSynchronisationAlh, CLE_API_ALH, ResultatTestAlh } from './surface-externe.js';
 import type { FluxModule } from './flux-externes.js';
+import { FrequenceHeures } from './frequences-synchronisation.js';
 import type { Module } from './permissions.js';
 
 /* ------------------------------------------------------------------ Champs communs */
@@ -182,7 +183,7 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     id: 'tenable',
     libelle: 'Tenable Security Center',
     description:
-      'Lecture seule de Tenable Security Center par clés d’API : test de connexion (version du service) et synchronisation quotidienne des failles détectées et des machines, rangées dans le module Vulnérabilités.',
+      'Lecture seule de Tenable Security Center par clés d’API : test de connexion (version du service) et synchronisation périodique (une fois par jour par défaut, réglable) des failles détectées et des machines, rangées dans le module Vulnérabilités.',
     portee: 'organisation',
     champs: ['adresse', 'autoriteCertification', 'delaiSecondes', 'gravites'],
     aideAdresse:
@@ -219,7 +220,7 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     id: 'algolighthouse',
     libelle: 'AlgoLightHouse',
     description:
-      'Lecture seule d’AlgoLightHouse (surveillance de la surface exposée sur Internet, éditeur AlgoSecure) par clé d’API : test de connexion (version du service) et synchronisation quotidienne des périmètres, hôtes, domaines, alertes et technologies, rangés dans le module Vulnérabilités (onglet « Surface externe »).',
+      'Lecture seule d’AlgoLightHouse (surveillance de la surface exposée sur Internet, éditeur AlgoSecure) par clé d’API : test de connexion (version du service) et synchronisation périodique (une fois par jour par défaut, réglable) des périmètres, hôtes, domaines, alertes et technologies, rangés dans le module Vulnérabilités (onglet « Surface externe »).',
     portee: 'organisation',
     champs: ['adresse', 'delaiSecondes'],
     aideAdresse:
@@ -314,13 +315,21 @@ export const IntegrationCreation = z
     nom: NomIntegration,
     smsiId: z.uuid().nullable().default(null),
     configuration: z.record(z.string(), z.unknown()),
+    /** Lot F1 : fréquence de la synchronisation automatique, en heures (liste du type contrôlée par le serveur ; absente :
+        valeur par défaut). */
+    frequenceHeures: FrequenceHeures.optional(),
   })
   .strict();
 export type IntegrationCreation = z.infer<typeof IntegrationCreation>;
 
-/** Modification : nom et configuration ; la version attendue passe par If-Match. */
+/** Modification : nom, configuration et fréquence de la synchronisation automatique (lot F1, liste du type contrôlée par le
+    serveur) ; la version attendue passe par If-Match. */
 export const IntegrationModification = z
-  .object({ nom: NomIntegration, configuration: z.record(z.string(), z.unknown()) })
+  .object({
+    nom: NomIntegration,
+    configuration: z.record(z.string(), z.unknown()),
+    frequenceHeures: FrequenceHeures,
+  })
   .partial()
   .strict()
   .refine((p) => Object.keys(p).length > 0, 'Aucune modification.');
@@ -381,6 +390,8 @@ export interface IntegrationDto {
   actif: boolean;
   /** Chaque secret du type : défini ou non. La valeur n'est jamais renvoyée. */
   secrets: Record<string, boolean>;
+  /** Lot F1 : fréquence de la synchronisation automatique, en heures (réglée, sinon la valeur par défaut). */
+  frequenceHeures: number;
   version: number;
   createdBy: string;
   createdAt: string;

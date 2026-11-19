@@ -6,6 +6,108 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `090`** (lot F1 : fréquence de synchronisation réglable,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes `frequence_heures`, `planifiee_le` et `version` de
+`vulnerabilites_veille_sources`, `frequence_heures` de `integrations`, `planifiee_le` des états de Tenable et
+d'AlgoLightHouse, contraintes des listes de fréquences), durée négligeable, sans reprise de données. Aucune action sur le
+serveur. **Changement de cadence voulu dès la mise à jour** : une installation existante passe d'une collecte de veille par
+jour à **une toutes les deux heures** pour le CERT-FR, le CERT Santé, le catalogue KEV et NVD (EPSS reste une fois par jour ;
+Tenable et AlgoLightHouse restent une fois par jour). La première collecte de chaque source part dans la minute qui suit le
+démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période. La fréquence se règle par source dans l'écran
+« Veille » (droit d'administrer le module) et par connecteur dans la fenêtre « Configurer » de la carte « Intégrations ».
+Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
+par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
+
+**Lot R1 du module Vulnérabilités** (barre de recherche globale) : sans migration, aucune action. La recherche ne fait aucun
+appel sortant et n'écrit rien au journal. (session « Module surveillance vulnérabilités SMSI »)
+
+**Lot I1 (intégrations dans la page Plateforme)** : sans migration, aucune action sur le serveur. L'adresse de l'écran des
+intégrations change : il devient la carte « Intégrations » de la page Plateforme (`/plateforme/integrations`) ; l'ancienne
+adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
+personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
+SMSI »)
+
+### Ajouté
+
+- Vulnérabilités et intégrations, **fréquence de synchronisation réglable** par source de veille et par connecteur (lot F1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), décision du RSSI du 19/11/2026) : catalogue KEV, CERT-FR et CERT Santé
+  de toutes les heures à une fois par jour, NVD jamais plus d'une fois toutes les deux heures (plancher garanti en base et par
+  l'API), EPSS une fois par jour (fixe), deux heures par défaut ; Tenable Security Center toutes les 6 ou 12 heures, une fois
+  par jour (par défaut) ou une fois par semaine ; AlgoLightHouse toutes les 12 heures, une fois par jour (par défaut) ou une
+  fois par semaine. Écran « Veille » : colonne « Fréquence » (liste pour qui administre le module, avertissements de NVD et
+  d'EPSS, prochaine collecte prévue) ; fenêtre « Configurer » de la carte « Intégrations » : fréquence de l'instance, avec un
+  avertissement en dessous de 24 heures affiché avant d'enregistrer (sans blocage) ; « Failles détectées » et « Surface
+  externe » : fréquence et prochaine synchronisation en lecture seule. Une demande automatique en échec n'est pas redemandée
+  avant la période suivante ; « Collecter maintenant » et « Synchroniser maintenant » restent possibles. Les alertes, dont les
+  règles ne changent pas, sont évaluées à la fin de chaque collecte reçue : une CVE critique qui touche un produit surveillé
+  ouvre son alerte dès la collecte qui l'apporte. Migration `090` ; route `PUT /api/vulnerabilites/veille/sources/:source/frequence`.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, lisibilité des alertes de la veille et pastilles de source (lot L1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : chaque source a sa pastille dessinée pour la charte (sigle, forme et
+  teinte propres ; aucun logo officiel) avec son nom complet au survol et pour les lecteurs d'écran : catalogue KEV de la CISA,
+  NVD (NIST), EPSS (FIRST), CERT-FR (ANSSI), CERT Santé, Tenable, AlgoLightHouse ; posée dans l'écran « Veille » (sources,
+  alertes et avis, failles connues), les marques d'exploitation, l'en-tête et les recommandations de la fiche illustrée,
+  l'écran « Alertes », la fenêtre d'alerte critique et la barre de recherche. Les alertes et avis du CERT-FR et du CERT Santé
+  passent d'un tableau dense à des cartes : source, nature (une alerte du CERT-FR se détache d'un avis), identifiant, date,
+  titre, résumé sur trois lignes, marques publiées par la source, CVE citées en boutons qui ouvrent leur fiche, lien vers
+  l'original. « Ouvrir la fiche » montre l'alerte ou l'avis en entier, le résumé découpé en paragraphes et listes quand le
+  texte en porte (texte simple, aucun balisage interprété). Les failles connues de la recherche donnent un fait par ligne
+  (gravité, exploitation, EPSS, produit touché). Aucune migration, aucun changement d'API.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, barre de recherche globale (lot R1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : en tête de toutes
+  les pages du module, une barre trouve une CVE même non détectée sur le parc (veille locale : identifiant, éditeur, produit,
+  description ; détections de Tenable et d'AlgoLightHouse), avec son état (« détectée sur N machines », « exposée sur N actifs
+  exposés », présente hors des périmètres lus, ou « Non détectée sur le parc ») ; une machine interne par nom, adresse IP ou
+  système ; un actif exposé par nom de domaine ou adresse IP ; une application (produit surveillé, technologie
+  d'AlgoLightHouse, contrôle de Tenable) avec les machines ou actifs qui la portent. Huit résultats au plus par groupe avec
+  leur nombre total, « tout voir » vers la liste filtrée, chaque résultat ouvre la page existante ; un identifiant CVE inconnu
+  de la veille locale est signalé, sans consultation extérieure. Mêmes droits que les listes ; clavier et lecteurs d'écran.
+  (session « Module surveillance vulnérabilités SMSI »)
+
+### Modifié
+
+- **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
+  addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
+  L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
+  exécutions) devient la carte « Intégrations » de la page Plateforme, avec le même droit (lecture du module Intégrations) ;
+  la rubrique du menu Pilotage disparaît et `/integrations` redirige vers la carte. « Failles détectées », « Surface
+  externe » et « Vue d'ensemble » ne montrent plus que l'état du connecteur en lecture seule (dernière synchronisation,
+  erreur éventuelle) et un lien « Configurer l'intégration », visible seulement de qui peut administrer les intégrations
+  (décision du RSSI du 19/11/2026, livrée avec le lot F1 : lire sans administrer montre l'état, pas le lien). Après « Collecter
+  maintenant », l'écran « Veille » précise que seules les sources de la veille sont concernées. Échap dans une fenêtre
+  ouverte depuis une carte de la Plateforme ou de la Configuration système ne ferme plus que cette fenêtre. Aucune
+  migration, aucune route d'API. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
+  (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
+  « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
+  leur adresse. (session « Module surveillance vulnérabilités SMSI »)
+
+## [7.4.0] — 2026-11-19
+
+### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `087`, `088`, `089` et `091` (délais et tendances du module Vulnérabilités,
+déclaration réglementaire des incidents, conservation des sauvegardes), sans reprise de données ; aucune commande sur le
+serveur pour mettre à jour. **Avant la mise à jour, externaliser les sauvegardes à garder** : au plus 30 sauvegardes
+régulières restent ensuite sur le serveur (détail sous la migration `091`). À la fin de la mise à jour depuis l'interface, le
+frontal du site est redémarré une fois (son empreinte couvre désormais l'image de base, [ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)) :
+la page de suivi annonce la coupure de quelques secondes et reprend seule. Les correctifs de la sauvegarde de sécurité (zone
+de travail hors du `/tmp` de 256 Mo) et du contrôle d'espace ne s'appliquent qu'aux mises à jour lancées depuis cette
+version : si la mise à jour vers la 7.4.0 depuis l'interface échoue pendant la sauvegarde, la relancer en ligne de commande
+(`sudo ./scripts/mettre-a-jour.sh`, [guide d'installation](docs/INSTALLATION.md)).
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Vérifier le nombre maximal de sauvegardes et celui des sauvegardes d'avant mise à jour (Configuration système, Sauvegardes
+   et restauration, carte « Planification et conservation »).
+2. Pour les déclarations des incidents : remplir l'identité de l'établissement (Plateforme), faire confirmer les rubriques
+   contre les formulaires réels des portails, donner le rôle « RSSI » à la personne qui déclare (détail sous la migration
+   `089`).
+3. Vérifier les délais de correction du module Vulnérabilités (détail sous la migration `087`).
+
+La veille, les connecteurs et l'envoi du courriel en mode intégré, en échec jusqu'ici (« L'exécutant n'a pas pu abandonner ses
+privilèges »), reprennent seuls après la mise à jour. Le détail de chaque migration suit.
+
 **Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
 `vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
@@ -195,6 +297,11 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Corrigé
 
+- **Sécurité, frontal et exécutant** : Caddy (image `web`) et cosign (image `updater`) sont recompilés avec Go 1.26.11
+  (image `golang:1.26.11-alpine` épinglée par empreinte) : la bibliothèque standard Go 1.26.10 était touchée par la
+  CVE-2026-97054 (HIGH, `MaxBytesReader` des serveurs HTTP/1), relevée par Trivy. Le binaire du frontal change : son
+  redémarrage unique à la fin de la mise à jour depuis l'interface est celui déjà annoncé plus haut. (session « Projet
+  audit_suivi Coeur », signalé par la session « Module surveillance vulnérabilités SMSI »)
 - Mise à jour : le ménage des images oubliait les images téléchargées ou épinglées par leur empreinte (sans étiquette), qui
   s'accumulaient à chaque version, et ne s'appliquait pas après une tentative échouée ; il se fait maintenant par dépôt et par
   empreinte, en gardant la version en service, la précédente et le frontal en service (`GATEWAY_VERSION`) seulement, sans
@@ -204,8 +311,6 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
   `DATA_DIR/reprise-updates/tmp` (root, 0700, vidé au début et à la fin de l'opération), sur le disque des données, dont la
   place est contrôlée avant de commencer. Effet seulement pour les mises à jour lancées depuis une version qui contient le
   correctif (c'est l'exécutant de la version installée qui lance le script). (session « Projet audit_suivi Coeur »)
-
-### Corrigé
 
 - **Veille, connecteurs et envoi du courriel en mode intégré** : l'exécutant d'exploitation lance ces tâches sous le compte
   sans privilège `nobody`, mais son conteneur (`updater`) n'avait pas le droit de changer d'identité ; elles échouaient

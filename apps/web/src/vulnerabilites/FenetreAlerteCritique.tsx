@@ -38,6 +38,8 @@ import {
   urlFenetre,
   urlPriseEnCompte,
 } from './alertes';
+import { PictosSources } from './PictoSource';
+import { pictosExploitation } from './pictos-sources';
 
 /** Fait principal de la présence, en nombre que la personne lit. */
 function presence(a: AlerteVulnerabiliteDto): { libelle: string; valeur: string; detail: string } {
@@ -135,7 +137,9 @@ export function FenetreAlerteCritiqueVue({
             <dt>Exploitation</dt>
             <dd>
               <strong>Avérée</strong>
-              <small>{libelleExploitation(a)}</small>
+              <small>
+                <PictosSources sources={pictosExploitation(a.exploitation)} decoratif /> {libelleExploitation(a)}
+              </small>
             </dd>
           </div>
           <div>

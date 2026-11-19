@@ -52,8 +52,8 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan, usePreferences } from '../session';
@@ -71,6 +71,7 @@ import { libellePrioriteMachine, urlParc } from './parc';
 import { adressePerimetre, filtresDepuisAdresse } from './perimetres';
 import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
+import { ouvertureMachines } from './recherche';
 import { nombrePages } from './veille';
 
 const CLE = ['vulnerabilites', 'machines'] as const;
@@ -293,7 +294,7 @@ export function DepotsTenableTable({
             <Table.Tr>
               <Table.Td colSpan={3}>
                 <Text size="sm" c="dimmed">
-                  Aucun dépôt Tenable : lancez une synchronisation depuis Pilotage &gt; Intégrations.
+                  Aucun dépôt Tenable : ils apparaissent après une synchronisation du connecteur.
                 </Text>
               </Table.Td>
             </Table.Tr>
@@ -551,20 +552,50 @@ function OngletMachines() {
   const can = useCan();
   const qc = useQueryClient();
   const modifier = can('vulnerabilites', 'modifier');
-  const [saisie, setSaisie] = useState('');
   const navigate = useNavigate();
   // Lot PC3 : filtres initiaux lus dans l'adresse (« voir la liste » depuis l'onglet « Périmètres »).
   const [adresse] = useSearchParams();
   const [filtres, setFiltres] = useState<FiltresMachines>(() => ({
     ...FILTRES_MACHINES_VIDES,
     ...filtresDepuisAdresse(adresse),
+    q: ouvertureMachines(adresse).q ?? '',
   }));
+  const [saisie, setSaisie] = useState(filtres.q);
   const [page, setPage] = useState(1);
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [role, setRole] = useState<RoleMachine | 'aucun' | ''>('');
   const [perimetre, setPerimetre] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [ouverte, setOuverte] = useState<MachineDto | null>(null);
+  // Lot R1 : la barre de recherche du module ouvre la liste filtrée (`?q=`) ou la fiche d'une machine (`?machine=`), lue par
+  // la route existante (404 pour une machine illisible ou inconnue), y compris quand la page est déjà affichée.
+  const loc = useLocation();
+  const [machineVoulue, setMachineVoulue] = useState<string | null>(null);
+  useEffect(() => {
+    const o = ouvertureMachines(new URLSearchParams(loc.search));
+    if (o.q !== null) {
+      setSaisie(o.q);
+      setFiltres((f) => ({ ...f, q: o.q! }));
+      setPage(1);
+    }
+    setMachineVoulue(o.machine);
+  }, [loc.key, loc.search]);
+  const ficheVoulue = useQuery({
+    queryKey: ['vulnerabilites', 'machines', 'fiche', machineVoulue],
+    queryFn: () => get<MachineDto>(`/api/vulnerabilites/machines/${machineVoulue}`),
+    enabled: !!machineVoulue,
+    retry: false,
+  });
+  useEffect(() => {
+    if (!machineVoulue) return;
+    if (ficheVoulue.data) {
+      setOuverte(ficheVoulue.data);
+      setMachineVoulue(null);
+    } else if (ficheVoulue.error) {
+      notifications.show({ color: 'red', message: errorMessage(ficheVoulue.error) });
+      setMachineVoulue(null);
+    }
+  }, [machineVoulue, ficheVoulue.data, ficheVoulue.error]);
   // Présentation mémorisée pour la personne (préférences du compte) : liste par défaut, parc réduit par défaut.
   const { prefs, save } = usePreferences();
   const affichage = prefs.vulnerabilitesMachines ?? {};
@@ -669,7 +700,7 @@ function OngletMachines() {
           <Group align="flex-end">
             <TextInput
               label="Rechercher"
-              description="Nom de la machine."
+              description="Nom, adresse IP (début ou adresse exacte) ou système."
               maxLength={100}
               value={saisie}
               onChange={(e) => setSaisie(e.currentTarget.value)}
