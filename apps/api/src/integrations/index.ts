@@ -80,6 +80,9 @@ export interface OperationEnLots {
   /** Fin de l'exécution : `resultat` validé (succès) ou null (échec). Rend une erreur qui change le succès en échec (bilan
       incohérent), ou null. */
   terminee(k: Kdb, c: Client, executionId: string, resultat: Record<string, unknown> | null): Promise<string | null>;
+  /** Facultatif : après la validation (COMMIT) d'une fin reçue, hors transaction (statistiques des tables réécrites). Son
+      échec est journalisé et ne change pas l'issue de l'exécution. */
+  apresValidation?(executionId: string): Promise<void>;
 }
 const NOM_EXISTANT = 'Une intégration porte déjà ce nom.';
 const EXECUTANT = { username: 'exécutant serveur' };
@@ -671,6 +674,7 @@ export class Integrations {
   async terminer(id: string, rapport: unknown): Promise<ExecutionIntegrationDto> {
     z.uuid().parse(id);
     const p = RapportExecution.parse(rapport);
+    let type = '';
     const r = await this.db.tx(async (c, k) => {
       const cur = await k
         .selectFrom('integration_executions as e')
@@ -681,6 +685,7 @@ export class Integrations {
         .forUpdate()
         .executeTakeFirst();
       if (!cur) return undefined;
+      type = cur.type;
       let resultat: Record<string, unknown> | null = null;
       let erreur = p.erreur;
       if (p.ok) {
@@ -728,6 +733,13 @@ export class Integrations {
       return fin;
     });
     if (!r) throw new HttpError(409, 'Exécution absente ou déjà terminée.');
+    const apres = r.etat === 'recu' ? this.recepteur(type, r.operation) : undefined;
+    if (apres?.apresValidation)
+      await apres
+        .apresValidation(id)
+        .catch((e: { code?: string }) =>
+          this.db.log.warn({ execution: id, code: e.code ?? null }, 'traitement après la fin reçue en échec'),
+        );
     return versExecution(r);
   }
 

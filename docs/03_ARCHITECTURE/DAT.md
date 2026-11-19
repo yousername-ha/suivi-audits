@@ -341,6 +341,11 @@ consultatifs, un seul exécutant d’exploitation). Le pool PostgreSQL garde ses
 connexions. Une transaction annulée par deadlock ou échec de sérialisation (codes
 40P01 et 40001) est rejouée entière, au plus deux fois, après 50 à 200 ms, chaque
 relance journalisée ; une transaction restée inactive est coupée après une minute.
+Statistiques du planificateur (décision du RSSI du 19/11/2026) : l’autovacuum de PostgreSQL 18 suffit en régime courant,
+sans tâche d’optimisation planifiée ; `scripts/restore.sh` et la migration du moteur PostgreSQL lancent un `ANALYZE` de la
+base après `pg_restore`, et la fin reçue d’une synchronisation Tenable ou AlgoLightHouse qui a rangé des éléments un
+`ANALYZE` des seules tables réécrites, après la validation (`apps/api/src/db/analyser.ts`, rôle applicatif propriétaire,
+sous le délai de 30 s par requête) ; un échec n’est qu’un avertissement.
 L’analyse antivirale est limitée à 15 s ; si elle échoue, le dépôt est refusé quand
 elle est obligatoire et le contact technique reçoit au plus une alerte par heure.
 Sondes Docker : `app` prête quand la base répond et que les migrations sont

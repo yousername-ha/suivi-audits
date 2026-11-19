@@ -42,6 +42,7 @@ import {
   TENABLE_BORNES,
 } from '@suivi/shared';
 import { sql } from 'kysely';
+import { analyserTables } from '../db/analyser.js';
 import type { Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
@@ -187,6 +188,27 @@ export class SynchronisationTenable implements OperationEnLots {
       c,
     );
     return refus;
+  }
+
+  /** Après la validation d'une fin reçue, hors transaction : statistiques des tables réécrites par les lots, s'il y en a eu. */
+  async apresValidation(executionId: string): Promise<void> {
+    const s = await this.db.k
+      .selectFrom('vulnerabilites_synchronisations')
+      .select('elements')
+      .where('execution_id', '=', executionId)
+      .executeTakeFirst();
+    if (s?.elements)
+      await analyserTables(
+        this.db.k,
+        [
+          'vulnerabilites_tenable_depots',
+          'vulnerabilites_machines',
+          'vulnerabilites_constats',
+          'vulnerabilites_constat_cves',
+          'vulnerabilites_detections',
+        ],
+        this.db.log,
+      );
   }
 
   /* ---------------------------------------------------------------- Rangement (sans doublon) */
