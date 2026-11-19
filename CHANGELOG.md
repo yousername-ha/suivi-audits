@@ -27,7 +27,7 @@ adresse `/integrations` et les signets y redirigent. La rubrique « Intégration
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
 
-**Police Lexend et liens redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
+**Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
 page de maintenance des mises à jour prend aussi Lexend.
 
 ### Ajouté
@@ -69,12 +69,14 @@ page de maintenance des mises à jour prend aussi Lexend.
 
 ### Modifié
 
-- **Police Lexend et liens redessinés sur toute la plateforme** (décisions du RSSI du 19/11/2026, sur maquettes ;
+- **Police Lexend, liens et sélecteurs redessinés sur toute la plateforme** (décisions du RSSI du 19/11/2026, sur maquettes ;
   [docs/refonte-neon/TYPOGRAPHIE-LEXEND.md](docs/refonte-neon/TYPOGRAPHIE-LEXEND.md)). Lexend remplace Inter, hébergée par
   la plateforme (SIL OFL), y compris dans l'Assistant RSSI et la page de maintenance des mises à jour. Texte courant sans
   resserrement, titres moins gras (600) et graisse intermédiaire à 500. Les liens prennent le bleu du menu, avec un
   soulignement fin et pâle qui fonce au survol ou au focus, au lieu du bleu souligné du navigateur ou des pastilles des
-  fenêtres. Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+  fenêtres. Les sélecteurs segmentés (« Par faille / Par machine », densité, thème…) perdent leur fond gris : un simple
+  contour, et le choix actif en bleu nuit du menu avec un reflet bleu transparent et un liseré, sans lumière animée.
+  Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).

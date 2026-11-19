@@ -804,3 +804,40 @@ body:has(.as-launcher) .shell-main {
     animation: none;
   }
 }
+
+/* Sélecteurs segmentés (« Par faille / Par machine », densité, thème…), choix du RSSI du 19/11/2026 : plus de fond gris,
+   un simple contour ; le choix actif prend le bleu nuit du menu avec l'effet verre du bouton « Se connecter » (reflet bleu
+   transparent de gauche à droite, liseré bleu), sans lumière animée. */
+.mantine-SegmentedControl-root {
+  padding: 0.25rem;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: 0.85rem;
+  background: transparent;
+}
+.mantine-SegmentedControl-control::before {
+  display: none;
+}
+.mantine-SegmentedControl-indicator {
+  border-radius: 0.6rem;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 24%, transparent) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 7%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--menu-fond);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+}
+.mantine-SegmentedControl-label {
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+.mantine-SegmentedControl-label:hover:not([data-active], [data-disabled]) {
+  color: var(--mantine-color-text);
+}
+.mantine-SegmentedControl-label[data-active],
+.mantine-SegmentedControl-label[data-active]:hover {
+  color: var(--menu-texte);
+  font-weight: 600;
+}
