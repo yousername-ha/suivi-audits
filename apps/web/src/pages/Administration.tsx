@@ -111,7 +111,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     resume: 'Raison sociale, FINESS, ARS et contact de signalement, repris dans les déclarations des incidents.',
     icone: 'bouclier',
     teinte: 'orange',
-    detail: (m) => <SectionLoader section="etablissement" onDirty={m} />,
+    detail: (m) => <SectionLoader section="etablissement" onDirty={m} titreVisible={false} />,
   },
   {
     id: 'echelles',

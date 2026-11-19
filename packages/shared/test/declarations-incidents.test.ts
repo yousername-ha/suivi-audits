@@ -109,7 +109,12 @@ describe('rubriques', () => {
   it('NIS 2 : article 23 de la directive ; santé : la liste de l’ADR', () => {
     const cles = (r: 'sante' | 'nis2', e: Parameters<typeof rubriquesDeclaration>[1]) =>
       rubriquesDeclaration(r, e).map((x) => x.cle);
-    expect(cles('nis2', 'alerte_precoce')).toEqual(['identite', 'malveillance', 'transfrontiere']);
+    expect(cles('nis2', 'alerte_precoce')).toEqual([
+      'identite',
+      'description_sommaire',
+      'malveillance',
+      'transfrontiere',
+    ]);
     expect(cles('nis2', 'notification')).toEqual([
       'identite',
       'evaluation_initiale',
@@ -131,7 +136,8 @@ describe('rubriques', () => {
       'consequences_patients',
       'mesures',
     ]);
-    expect(rubriquesDeclaration('nis2', 'alerte_precoce')[1]!.source).toMatch(/article 23, paragraphe 4, point a\)/);
+    expect(rubriquesDeclaration('nis2', 'alerte_precoce')[1]!.source).toMatch(/Au-delà du minimum.*ADR 0105/);
+    expect(rubriquesDeclaration('nis2', 'alerte_precoce')[2]!.source).toMatch(/article 23, paragraphe 4, point a\)/);
     expect(rubriquesDeclaration('nis2', 'rapport_final')[2]!.source).toMatch(/point d\) ii\)/);
     expect(rubriquesDeclaration('sante', 'signalement')[1]!.source).toMatch(/L\. 1111-8-2/);
   });
@@ -195,6 +201,9 @@ describe('pré-remplissage', () => {
     expect(preremplissage('nis2', 'alerte_precoce', ctx).identite).toContain('Catégorie (NIS 2) : entité essentielle');
     expect(preremplissage('nis2', 'alerte_precoce', ctx).identite).not.toContain('ARS');
     expect(preremplissage('nis2', 'alerte_precoce', ctx).malveillance).toBe('');
+    expect(preremplissage('nis2', 'alerte_precoce', ctx).description_sommaire).toBe(
+      preremplissage('sante', 'signalement', ctx).description,
+    );
     expect(preremplissage('nis2', 'notification', ctx).gravite).toBe(
       'Priorité : P2 Haute\nImpact : Élevé\nUrgence : Moyen',
     );

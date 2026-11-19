@@ -152,6 +152,8 @@ const SOURCE_IDENTITE =
 const SOURCE_SANTE =
   'Article L. 1111-8-2 du code de la santé publique ; liste retenue par l’ADR 0105, à confirmer contre le formulaire du portail de signalement';
 const NIS2 = 'Directive (UE) 2022/2555 (NIS 2), article 23, paragraphe 4';
+const SOURCE_DESCRIPTION_SOMMAIRE =
+  'Au-delà du minimum de l’article 23, paragraphe 4, point a) de NIS 2 : quelques lignes demandées en pratique par les portails de déclaration ; ajout décidé par le RSSI (ADR 0105)';
 const r = (cle: string, libelle: string, source: string, aide: string): RubriqueDeclaration => ({
   cle,
   libelle,
@@ -191,6 +193,12 @@ const RUBRIQUES: Record<RegimeDeclaration, Record<EtapeDeclaration, readonly Rub
     signalement: [],
     alerte_precoce: [
       IDENTITE,
+      r(
+        'description_sommaire',
+        'Description sommaire',
+        SOURCE_DESCRIPTION_SOMMAIRE,
+        'Quelques lignes sur ce qui se passe : systèmes touchés, effets constatés, premières mesures.',
+      ),
       r(
         'malveillance',
         'Caractère illicite ou malveillant soupçonné',
@@ -347,6 +355,7 @@ export function preremplissage(
   const valeurs: Record<string, string> = {
     identite,
     description,
+    description_sommaire: description,
     date_detection: dateFiche(i.detectedAt),
     consequences_patients: '',
     mesures: i.actions,

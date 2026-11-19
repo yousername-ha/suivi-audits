@@ -4,7 +4,8 @@
   décisions 1 à 8 ci-dessous prises une à une).
 - Renumérotée 089 le 19/11/2026 (collision avec 087 du module Vulnérabilités) : le fichier devient
   `089_declarations_incidents.sql` et sa contrainte de portée des notifications reprend aussi les types `vulnerabilites_delais`
-  et `vulnerabilites_exceptions` de la 087 (numéro à faire accepter par le RSSI).
+  et `vulnerabilites_exceptions` de la 087 ; numéro 089 accepté par le RSSI le 19/11/2026, avec les décisions 9 à 11
+  ci-dessous.
 - Date : 2026-11-18
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - **Complète** l'[ADR 0091](0091-simplification-du-menu-resilience-incidents.md) (fiche de l'incident à onglets) et s'appuie sur
@@ -53,6 +54,16 @@ avec l'incident.
    Le compte à rebours démarre aussitôt. Le RSSI confirme « à déclarer » ou écarte « non requise » avec un **motif
    obligatoire**, figé. Il peut aussi ouvrir à la main une déclaration non proposée.
 
+## Décisions complémentaires du RSSI (19/11/2026)
+
+9. **Ouverture à la main et compléments** : réservés au rôle prédéfini « RSSI », comme confirmer, écarter et marquer
+   « envoyée ». La préparation (rubriques, numéro de dossier pressenti) reste ouverte au droit `incidents:modifier`.
+10. **Envoi direct** : une déclaration « proposée » peut être marquée « envoyée » sans confirmation préalable (déclaration déjà
+    faite sur le portail dans l'urgence) ; ce geste vaut confirmation, et le journal garde le statut d'avant l'envoi.
+11. **Alerte précoce NIS 2** : une rubrique « Description sommaire » s'ajoute aux rubriques du point a) de l'article 23,
+    préremplie avec le titre et la description de l'incident. Elle dépasse le minimum de la directive, ce que sa source
+    indique.
+
 ## Mise en œuvre
 
 - **Migration `087`, renumérotée `089`** (additive) :
@@ -67,12 +78,12 @@ avec l'incident.
 - **Échéances**, calculées par le serveur depuis la date de qualification : santé « dès que possible » (pas d'échéance chiffrée,
   rappels toutes les 4 heures) ; alerte précoce + 24 h ; notification + 72 h ; rapport final un mois après l'envoi de la
   notification (sans notification envoyée, pas d'échéance chiffrée).
-- **Rubriques** : celles de l'article 23 de NIS 2 pour chaque étape (alerte précoce : caractère malveillant ou illicite
-  soupçonné, effet transfrontière ; notification : évaluation initiale, gravité, impact, indicateurs de compromission ; rapport
-  final : description détaillée, type de menace ou cause, mesures appliquées, effet transfrontière) ; pour la santé, l'identité
-  de l'établissement, la description, la date de détection, les conséquences sur la prise en charge des patients et les
-  mesures prises. Elles sont définies dans le paquet partagé, avec leur source ; **à confirmer par le RSSI contre les
-  formulaires réels des portails** avant la première utilisation.
+- **Rubriques** : celles de l'article 23 de NIS 2 pour chaque étape (alerte précoce : description sommaire, décision 11,
+  caractère malveillant ou illicite soupçonné, effet transfrontière ; notification : évaluation initiale, gravité, impact,
+  indicateurs de compromission ; rapport final : description détaillée, type de menace ou cause, mesures appliquées, effet
+  transfrontière) ; pour la santé, l'identité de l'établissement, la description, la date de détection, les conséquences sur la
+  prise en charge des patients et les mesures prises. Elles sont définies dans le paquet partagé, avec leur source ; **à
+  confirmer par le RSSI contre les formulaires réels des portails** avant la première utilisation.
 - **Fiche de l'incident** : un bloc « Déclarations » dans l'onglet Fiche, avec pour chaque déclaration son régime, son étape,
   son statut et un compte à rebours ; la fiche de préparation s'ouvre depuis le bloc. La liste « Obligations à vérifier » reste
   identique (rangs inchangés), ses lignes santé et NIS 2 renvoient au bloc.
