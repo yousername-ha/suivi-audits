@@ -281,15 +281,18 @@ try:
     jeton='recette-frontal-'+uuid.uuid4().hex
     (frontal/'recette-frontal.txt').write_text(jeton+'\n')
     shutil.copy(ROOT/'docker/empreinte-frontal.sh',frontal/'empreinte-frontal.sh')
-    calcul='RUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh sh /tmp/empreinte-frontal.sh\n'
-    # Mêmes fichiers recalculés : même empreinte que l'image construite par la CI (calcul reproductible, sans date).
+    # Même image de base que docker/web.Dockerfile (CADDY_IMAGE, ADR 0103 addendum), passée au calcul comme dans l'image web.
+    caddy_image=re.search(r'^ARG CADDY_IMAGE=(\S+)$',(ROOT/'docker/web.Dockerfile').read_text(),re.M).group(1)
+    calcul='ARG CADDY_IMAGE\nRUN --mount=type=bind,source=empreinte-frontal.sh,target=/tmp/empreinte-frontal.sh SUIVI_IMAGE_DE_BASE="$CADDY_IMAGE" sh /tmp/empreinte-frontal.sh\n'
+    # Mêmes fichiers et même image de base recalculés : même empreinte que l'image construite par la CI (calcul reproductible,
+    # sans date).
     (frontal/'Dockerfile.identique').write_text('FROM '+IMAGE+'web:ci\nUSER root\n'+calcul+'USER caddy\n')
-    run(['docker','build','-f',str(frontal/'Dockerfile.identique'),'-t','suivi-recette/frontal-identique:local',str(frontal)])
+    run(['docker','build','--build-arg','CADDY_IMAGE='+caddy_image,'-f',str(frontal/'Dockerfile.identique'),'-t','suivi-recette/frontal-identique:local',str(frontal)])
     empreinte_ci=empreinte_frontal(IMAGE+'web:ci')
     assert empreinte_frontal('suivi-recette/frontal-identique:local')==empreinte_ci
     run(['docker','image','rm','suivi-recette/frontal-identique:local'])
     (frontal/'Dockerfile').write_text('FROM '+IMAGE+'web:ci\nUSER root\nCOPY --chmod=0444 recette-frontal.txt /maintenance/recette-frontal.txt\n'+calcul+'USER caddy\n')
-    run(['docker','build','-t',IMAGE+'web:99.0.0',str(frontal)])
+    run(['docker','build','--build-arg','CADDY_IMAGE='+caddy_image,'-t',IMAGE+'web:99.0.0',str(frontal)])
     empreinte_cible=empreinte_frontal(IMAGE+'web:99.0.0')
     assert re.fullmatch(r'[a-f0-9]{64}',empreinte_cible) and empreinte_cible!=empreinte_ci
     def fichier_ajoute():

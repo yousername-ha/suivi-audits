@@ -5,9 +5,12 @@
    Le corps ne contient jamais d'adresse IP (elle reste au journal d'audit) ni de code saisi. Plafond : ALERTES_PAR_HEURE alertes
    détaillées par heure, puis une seule synthèse horaire ; les événements restent tous au journal.
    Notification dans l'application (ADR 0074) : les mêmes évènements, aux mêmes administrateurs actifs, dans `grc_notifications`
-   (type `alerte_securite`, sans SMSI ni objet) ; elle existe même quand le courriel n'est pas configuré. */
+   (type `alerte_securite`, sans SMSI ni objet) ; elle existe même quand le courriel n'est pas configuré.
+   Espace disque bas (ADR 0106) : même notification dans l'application, aux mêmes administrateurs actifs, quand l'espace libre
+   du disque des données relevé par l'exécutant d'exploitation passe sous SEUIL_ESPACE_LIBRE_POURCENT ; une seule fois par
+   franchissement (réarmée quand l'espace libre remonte à SEUIL_ESPACE_REARMEMENT_POURCENT), sans courriel. */
 import { sql } from 'kysely';
-import type { SettingsValues } from '@suivi/shared';
+import { SEUIL_ESPACE_LIBRE_POURCENT, type HostState, type SettingsValues } from '@suivi/shared';
 import type { VerrouillageEvt } from './auth.js';
 import type { AlerteCleEvt } from './webauthn.js';
 import { DEMANDEUR_ALERTE } from './alertes-exploitation.js';
@@ -16,6 +19,24 @@ import { COMPTE_ACTIF, adresseUtilisable, porteLeRole } from './notifications-me
 import type { Settings } from './settings.js';
 
 export const ALERTES_PAR_HEURE = 10;
+/** Réarmement de l'alerte d'espace disque : seuil + 5 points, pour qu'une oscillation autour du seuil (une archive créée,
+    une autre supprimée) ne produise pas une alerte à chaque sauvegarde. */
+export const SEUIL_ESPACE_REARMEMENT_POURCENT = SEUIL_ESPACE_LIBRE_POURCENT + 5;
+/** État de l'alerte d'espace disque (table settings) : basse tant qu'elle n'est pas réarmée. */
+const CLE_ESPACE_DISQUE = 'exploitation:espace-disque';
+const VERROU_ESPACE_DISQUE = 'alerte-espace-disque';
+type DisqueHote = NonNullable<HostState['disque']>;
+/** Taille lisible, en unités binaires comme l'interface (Go = 1024³ octets). */
+export const tailleLisible = (n: number) => {
+  const unites: [number, string][] = [
+    [1024 ** 4, 'To'],
+    [1024 ** 3, 'Go'],
+    [1024 ** 2, 'Mo'],
+  ];
+  for (const [u, nom] of unites)
+    if (n >= u) return `${(n / u).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ${nom}`;
+  return `${Math.round(n / 1024).toLocaleString('fr-FR')} Ko`;
+};
 
 /** Évènement sur le poivre des mots de passe (ADR 0072). Jamais le poivre : seulement les identifiants de clé. */
 export interface PoivreEvt {
@@ -37,6 +58,9 @@ export interface AlerteApplication {
   title: string;
   message: string;
   createdAt: string;
+  /** Écran à consulter (lien relatif de l'application) et son libellé. */
+  lien: string;
+  libelleLien: string;
 }
 
 const MOTIFS = {
@@ -70,7 +94,7 @@ export class AlertesSecurite {
   async nonLues(userId: string): Promise<AlerteApplication[]> {
     const lignes = await this.db.k
       .selectFrom('grc_notifications')
-      .select(['id', 'title', 'message', 'created_at'])
+      .select(['id', 'title', 'message', 'created_at', 'due_key'])
       .where('user_id', '=', userId)
       .where('kind', '=', KIND_ALERTE_SECURITE)
       .where('read_at', 'is', null)
@@ -83,6 +107,9 @@ export class AlertesSecurite {
       title: l.title,
       message: l.message,
       createdAt: new Date(l.created_at).toISOString(),
+      ...(l.due_key.startsWith('disque:')
+        ? { lien: '/systeme/sauvegardes', libelleLien: 'Sauvegardes et restauration' }
+        : { lien: '/admin/audit', libelleLien: 'Journal d’audit' }),
     }));
   }
 
@@ -289,6 +316,78 @@ export class AlertesSecurite {
       });
     } catch (err) {
       this.db.log.error({ err: (err as Error).message }, 'alerte de clé de sécurité non émise');
+    }
+  }
+
+  /** Relevé du disque des données publié par l'exécutant d'exploitation (sans chemin) : alerte les administrateurs actifs dans
+      l'application quand l'espace libre passe sous le seuil, une fois par franchissement. Ne lève jamais : la synchronisation
+      de l'exécutant n'en dépend pas. Renvoie l'état après le relevé (« bas », « normal »), ou null sans relevé exploitable. */
+  async espaceDisque(disque: DisqueHote | null | undefined): Promise<'bas' | 'normal' | null> {
+    try {
+      if (!disque || !(disque.totalOctets > 0) || disque.libreOctets > disque.totalOctets) return null;
+      const pourcent = (100 * disque.libreOctets) / disque.totalOctets;
+      return await this.db.tx(async (c, k) => {
+        await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', [VERROU_ESPACE_DISQUE]);
+        const r = await k
+          .selectFrom('settings')
+          .select('value')
+          .where('key', '=', CLE_ESPACE_DISQUE)
+          .executeTakeFirst();
+        const bas =
+          !!r && typeof r.value === 'object' && r.value !== null && (r.value as { bas?: unknown }).bas === true;
+        const ecrire = (valeur: { bas: boolean; depuis: string }) =>
+          k
+            .insertInto('settings')
+            .values({ key: CLE_ESPACE_DISQUE, value: JSON.stringify(valeur) })
+            .onConflict((oc) =>
+              oc.column('key').doUpdateSet({ value: JSON.stringify(valeur), updated_at: sql<Date>`now()` }),
+            )
+            .execute();
+        const mesures = {
+          librePourcent: Math.floor(pourcent * 10) / 10,
+          libreOctets: disque.libreOctets,
+          totalOctets: disque.totalOctets,
+          sauvegardesOctets: disque.sauvegardesOctets,
+          imagesOctets: disque.imagesOctets,
+        };
+        if (bas) {
+          if (pourcent < SEUIL_ESPACE_REARMEMENT_POURCENT) return 'bas';
+          await ecrire({ bas: false, depuis: new Date().toISOString() });
+          await this.db.audit(null, null, 'exploitation.espace_disque_retabli', '', mesures, c);
+          return 'normal';
+        }
+        if (pourcent >= SEUIL_ESPACE_LIBRE_POURCENT) return 'normal';
+        await ecrire({ bas: true, depuis: new Date().toISOString() });
+        await this.db.audit(null, null, 'exploitation.espace_disque_bas', '', mesures, c);
+        const arrondi = Math.floor(pourcent);
+        const titre = `Espace disque bas sur le serveur : ${arrondi} % libre`;
+        const message = [
+          `Le disque des données n’a plus que ${tailleLisible(disque.libreOctets)} libres sur ${tailleLisible(disque.totalOctets)}`,
+          `(${arrondi} %, seuil d’alerte ${SEUIL_ESPACE_LIBRE_POURCENT} %). Occupation : sauvegardes ${tailleLisible(disque.sauvegardesOctets)},`,
+          `images de l’application ${disque.imagesOctets === null ? 'non mesurées' : tailleLisible(disque.imagesOctets)}.`,
+          'Une sauvegarde ou une mise à jour peut être refusée faute de place. Externalisez les sauvegardes, puis réduisez leur',
+          'nombre (Configuration système, Sauvegardes et restauration) ou libérez de la place comme l’indique le guide',
+          'd’installation (« Libérer de la place »).',
+        ].join(' ');
+        for (const id of await this.administrateurs())
+          await k
+            .insertInto('grc_notifications')
+            .values({
+              smsi_id: null,
+              object_id: null,
+              user_id: id,
+              kind: KIND_ALERTE_SECURITE,
+              due_key: `disque:bas:${Date.now()}`,
+              title: titre.slice(0, 180),
+              message,
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute();
+        return 'bas';
+      });
+    } catch (err) {
+      this.db.log.error({ err: (err as Error).message }, 'alerte d’espace disque non émise');
+      return null;
     }
   }
 

@@ -1,5 +1,6 @@
-/* Alertes de sécurité adressées aux administrateurs (verrouillage de compte, ADR 0074) : bandeau tant que l'alerte n'est pas
-   marquée comme lue. Le courriel part en parallèle ; ce bandeau existe aussi quand le courriel n'est pas configuré. */
+/* Alertes de sécurité adressées aux administrateurs (verrouillage de compte, ADR 0074 ; espace disque bas, ADR 0106) : bandeau
+   tant que l'alerte n'est pas marquée comme lue. Le courriel part en parallèle quand il existe ; ce bandeau existe aussi quand
+   le courriel n'est pas configuré. Le lien mène à l'écran indiqué par le serveur (journal d'audit par défaut). */
 import { Anchor, Button } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -11,6 +12,9 @@ export interface AlerteSecurite {
   title: string;
   message: string;
   createdAt: string;
+  /** Absents d'un serveur antérieur à l'ADR 0106 : journal d'audit. */
+  lien?: string;
+  libelleLien?: string;
 }
 export const CLE_ALERTES_SECURITE = ['alertes-securite'] as const;
 
@@ -31,8 +35,8 @@ export function AlerteSecuriteNotice() {
           <span>
             <b>{a.title}</b> — {a.message}
           </span>
-          <Anchor size="xs" component={Link} to="/admin/audit">
-            Journal d’audit
+          <Anchor size="xs" component={Link} to={a.lien ?? '/admin/audit'}>
+            {a.libelleLien ?? 'Journal d’audit'}
           </Anchor>
           <Button
             size="compact-xs"
