@@ -5,9 +5,11 @@
    foi) ; champ en trop et classe hors borne refusés ; droits (lecteur des intégrations : 403) et cloisonnement par périmètre
    (instance non reliée : administration seulement ; reliée : lecteurs du périmètre seulement) ; fusion avec un actif
    d'AlgoLightHouse de même adresse IP et de même nom de domaine (une seule ligne, deux sources) ; actif vu par Silène seul
-   trouvé par la recherche du module (contrat inchangé) ; suppression du connecteur et de ce qu'il a importé ; journal sans
-   adresse ni nom. Données entièrement fictives : adresses de 192.0.2.0/24, 198.51.100.0/24 et 203.0.113.0/24, noms
+   trouvé par la recherche du module (contrat inchangé) ; lot SI2 : carte « Lignes d'approche » à deux sources (nœud
+   unique, actif de Silène seul, ports et constats joints, cloisonnement, bornes) ; suppression du connecteur et de ce
+   qu'il a importé ; journal sans adresse ni nom. Données entièrement fictives : adresses de 192.0.2.0/24, 198.51.100.0/24 et 203.0.113.0/24, noms
    en example.org ; aucun service n'est joint. */
+import { CARTE_SURFACE_BORNES } from '@suivi/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
@@ -420,6 +422,130 @@ describe('fusion avec AlgoLightHouse et recherche', () => {
         },
       ],
     });
+  });
+});
+
+describe('carte « Lignes d’approche » à deux sources (lot SI2)', () => {
+  interface ActifCarte {
+    id: string;
+    type: string;
+    valeur: string;
+    adresse: string | null;
+    sources: string[];
+    alhId: string | null;
+    perimetreNom: string | null;
+    silene: {
+      adresses: string[];
+      ports: { port: number }[];
+      nombrePorts: number;
+      constats: { id: string; ports: { port: number; protocole: string | null }[] }[];
+      nombreConstats: number;
+    } | null;
+  }
+  const carte = async (a: Agent) => {
+    const r = await a.get(`${S}/carte`);
+    expect(r.statusCode, r.body).toBe(200);
+    return r.json() as {
+      actifs: ActifCarte[];
+      constatsSilene: { id: string; identifiant: string; controle: string; classe: number }[];
+      tronquee: boolean;
+      totaux: { actifs: number; alertes: number };
+    };
+  };
+  const parCle = (actifs: ActifCarte[]) => new Map(actifs.map((x) => [`${x.type}|${x.valeur}`, x]));
+
+  it('actif vu par les deux : un nœud, deux sources ; actif de Silène seul rendu ; constats et ports joints', async () => {
+    await surfaceAlh();
+    await importer([{ hotes: ACTIFS_PREMIER, constats: CONSTATS_PREMIER }]);
+    const c = await carte(admin);
+    const x = parCle(c.actifs);
+    // Une seule fois chaque clé type|valeur ; trois actifs d'AlgoLightHouse, trois de Silène seul.
+    expect(c.actifs).toHaveLength(6);
+    expect(new Set(c.actifs.map((a) => `${a.type}|${a.valeur}`)).size).toBe(6);
+    expect(c).toMatchObject({ tronquee: false, totaux: { actifs: 6, alertes: 0 } });
+    const deux = x.get('hote|192.0.2.10')!;
+    expect(deux).toMatchObject({ sources: ['alh', 'silene'] });
+    expect(deux.alhId).toBe(deux.id);
+    expect(deux.silene!.ports.map((p) => p.port)).toEqual([22, 443]);
+    expect(deux.silene!.nombreConstats).toBe(1);
+    const openPort = c.constatsSilene.find((k) => k.controle === 'OpenPort')!;
+    expect(openPort).toMatchObject({ identifiant: 'res-fictif-0001', classe: 2 });
+    expect(deux.silene!.constats).toEqual([{ id: openPort.id, ports: [{ port: 443, protocole: 'tcp' }] }]);
+    // Nom vu par les deux : deux sources, ni port ni constat (ils sont sur l'hôte).
+    expect(x.get('domaine|www-10.example.org')).toMatchObject({
+      sources: ['alh', 'silene'],
+      adresse: '192.0.2.10',
+      silene: { adresses: ['192.0.2.10'], ports: [], constats: [], nombreConstats: 0 },
+    });
+    expect(x.get('hote|192.0.2.99')).toMatchObject({ sources: ['alh'], silene: null });
+    // Vus par Silène seul : hôtes et nom de résolution directe, sans liaison possible.
+    expect(x.get('hote|203.0.113.30')).toMatchObject({ sources: ['silene'], alhId: null });
+    expect(x.get('hote|203.0.113.30')!.silene!.constats.map((k) => k.id)).toEqual([
+      c.constatsSilene.find((k) => k.controle === 'SelfSignedCertificate')!.id,
+    ]);
+    expect(x.get('domaine|www-20.example.org')).toMatchObject({
+      sources: ['silene'],
+      alhId: null,
+      adresse: '198.51.100.20',
+    });
+    // Les constats ne portent ni priorité ni alerte.
+    expect(JSON.stringify(c.constatsSilene)).not.toMatch(/priorite|P[1-4]/);
+  });
+
+  it('cloisonnement : instance non reliée invisible du lecteur ; reliée, lue par les lecteurs du périmètre seulement', async () => {
+    await surfaceAlh();
+    await importer([{ hotes: ACTIFS_PREMIER, constats: CONSTATS_PREMIER }]);
+    // Non reliée : le lecteur de A ne voit que les actifs d'AlgoLightHouse (périmètre A), sans rien de Silène.
+    const avant = await carte(lecteurA);
+    expect(avant.actifs.map((a) => a.valeur).sort()).toEqual(['192.0.2.10', '192.0.2.99', 'www-10.example.org']);
+    expect(avant.actifs.every((a) => a.silene === null && a.sources.join() === 'alh')).toBe(true);
+    expect(avant.constatsSilene).toEqual([]);
+    expect(avant.totaux.actifs).toBe(3);
+    expect((await carte(lecteurB)).actifs).toEqual([]);
+    const l = await admin.put(`${S}/silene/perimetres/${silene}`, { perimetreId: perimB }, ifMatch(0));
+    expect(l.statusCode, l.body).toBe(200);
+    // Reliée à B : le lecteur de B voit les actifs de Silène (seuls, puisqu'il ne lit pas AlgoLightHouse) ; celui de A non.
+    const b = await carte(lecteurB);
+    expect(b.actifs.map((a) => `${a.type}|${a.valeur}`).sort()).toEqual([
+      'domaine|www-10.example.org',
+      'domaine|www-20.example.org',
+      'hote|192.0.2.10',
+      'hote|198.51.100.20',
+      'hote|203.0.113.30',
+    ]);
+    expect(b.actifs.every((a) => a.alhId === null && a.perimetreNom === 'Périmètre fictif B')).toBe(true);
+    expect(b.constatsSilene).toHaveLength(2);
+    const a = await carte(lecteurA);
+    expect(a.actifs.every((x) => x.silene === null)).toBe(true);
+    expect(JSON.stringify(a)).not.toMatch(/203\.113|198\.51\.100|www-20|res-fictif/);
+  });
+
+  it('bornée, toutes sources confondues : AlgoLightHouse d’abord, Silène seul dans le reste, troncature signalée', async () => {
+    await surfaceAlh();
+    await importer([{ hotes: ACTIFS_PREMIER, constats: CONSTATS_PREMIER }]);
+    const bornes = CARTE_SURFACE_BORNES as { actifs: number; constatsParActif: number };
+    const avant = { ...bornes };
+    try {
+      bornes.actifs = 4;
+      let c = await carte(admin);
+      expect(c.actifs).toHaveLength(4);
+      expect(c.actifs.slice(0, 3).every((a) => a.sources.includes('alh'))).toBe(true);
+      // Silène seul : les hôtes d'abord.
+      expect(c.actifs[3]).toMatchObject({ type: 'hote', sources: ['silene'] });
+      expect(c).toMatchObject({ tronquee: true, totaux: { actifs: 6 } });
+      bornes.actifs = 3;
+      c = await carte(admin);
+      expect(c.actifs.every((a) => a.sources.includes('alh'))).toBe(true);
+      expect(c).toMatchObject({ tronquee: true, totaux: { actifs: 6 } });
+      bornes.actifs = avant.actifs;
+      bornes.constatsParActif = 0;
+      c = await carte(admin);
+      const h = parCle(c.actifs).get('hote|192.0.2.10')!;
+      expect(h.silene!.constats).toEqual([]);
+      expect(h.silene!.nombreConstats).toBe(1);
+    } finally {
+      Object.assign(bornes, avant);
+    }
   });
 });
 

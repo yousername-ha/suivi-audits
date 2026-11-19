@@ -6,8 +6,8 @@
    - présence : vu par le dernier import complet de l'instance (alias `se`), ou plus récemment ;
    - actifs : un actif est identifié par son adresse IP (hôte) ou son nom de domaine (nom de résolution directe d'un hôte,
      TYPES_NOM_ACTIF). `clesActifs` rend les actifs lisibles vus par Silène, `actifs` ce que Silène dit d'une liste de clés
-     (type, valeur) : la liste « Actifs » de SurfaceExterneAlh les réunit avec AlgoLightHouse, et la carte pourra s'en servir
-     (lot SI2) sans autre lecture ;
+     (type, valeur) : la liste « Actifs » et la carte « Lignes d'approche » (lot SI2, `actifsSeuls`, `constatsCarte`) de
+     SurfaceExterneAlh les réunissent avec AlgoLightHouse ;
    - note, constats et fiche d'un actif : lectures propres, bornées.
    Aucune priorité P1-P4 ni alerte : un constat Silène n'a pas de CVE (correspondance classe → priorité en attente). Les
    produits vus (CPE) ne sont pas rapprochés des CVE. Accès aux données en Kysely (ADR 0062). */
@@ -222,6 +222,54 @@ export class SurfaceSilene {
       a.constats = a.constatIds.length;
     }
     return out;
+  }
+
+  /** Carte « Lignes d'approche » (lot SI2) : actifs lisibles vus par Silène seul, c'est-à-dire sans actif lisible et présent
+      d'AlgoLightHouse de même type et de même valeur (`alhVoit` : condition SQL sur l'alias `s`), les `limite` premiers par
+      type puis valeur, et leur nombre total. */
+  async actifsSeuls(
+    k: Kdb,
+    user: SessionUser,
+    alhVoit: RawBuilder<boolean>,
+    limite: number,
+  ): Promise<{ total: number; elements: { id: string; type: TypeActifAlh; valeur: string }[] }> {
+    const { rows } = await sql<{ total: number; elements: { id: string; type: TypeActifAlh; valeur: string }[] }>`
+      WITH seuls AS (SELECT s.id, s.type, s.valeur FROM (${this.clesActifs(user, {})}) s WHERE NOT ${alhVoit})
+      SELECT (SELECT count(*)::int FROM seuls) AS total,
+        coalesce((SELECT json_agg(t) FROM (SELECT id, type, valeur FROM seuls ORDER BY type DESC, valeur, id
+                  LIMIT ${Math.max(0, limite)}) t), '[]'::json) AS elements`.execute(k);
+    return rows[0] ?? { total: 0, elements: [] };
+  }
+
+  /** Constats de la carte (lot SI2) : contrôle et classe des constats cités, et pour chaque paire (constat, adresse d'hôte)
+      les ports que ses lignes de détail citent. Les identifiants viennent de `actifs` (constats lisibles et présents). */
+  async constatsCarte(
+    k: Kdb,
+    paires: readonly { constat: string; adresse: string }[],
+  ): Promise<{
+    constats: { id: string; identifiant: string; controle: string; classe: number }[];
+    ports: Map<string, { port: number; protocole: 'tcp' | 'udp' | null }[]>;
+  }> {
+    const ids = [...new Set(paires.map((p) => p.constat))];
+    const ports = new Map<string, { port: number; protocole: 'tcp' | 'udp' | null }[]>();
+    if (!ids.length) return { constats: [], ports };
+    const constats = await k
+      .selectFrom('vulnerabilites_silene_constats')
+      .select(['id', 'identifiant', 'controle', 'classe'])
+      .where('id', 'in', ids)
+      .orderBy('controle')
+      .orderBy('identifiant')
+      .execute();
+    const adresses = [...new Set(paires.map((p) => p.adresse))];
+    const { rows } = await sql<{ constat_id: string; adresse: string; port: number; protocole: 'tcp' | 'udp' | null }>`
+      SELECT DISTINCT l.constat_id, l.adresse, l.port, l.protocole FROM vulnerabilites_silene_lignes l
+      WHERE l.constat_id = ANY(${ids}::uuid[]) AND l.adresse = ANY(${adresses}::text[]) AND l.port IS NOT NULL
+      ORDER BY l.port, l.protocole`.execute(k);
+    for (const r of rows) {
+      const cle = `${r.constat_id}|${r.adresse}`;
+      ports.set(cle, [...(ports.get(cle) ?? []), { port: r.port, protocole: r.protocole }]);
+    }
+    return { constats, ports };
   }
 
   /** Fiche Silène d'un actif lisible : tous ses ports, noms, produits et la liste de ses constats présents. */

@@ -13,7 +13,9 @@
    par paire et la majoration sont couverts par les tests de l'API). Lot ALH6 : colonne « Services connus » de l'onglet des
    actifs et limite « seuls les services portés par une alerte sont connus » (sans données ; la colonne « Service » de la
    carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). Lot I1 : le connecteur se
-   configure dans la carte « Intégrations » de la page Plateforme ; l'écran n'en montre que l'état et le lien. */
+   configure dans la carte « Intégrations » de la page Plateforme ; l'écran n'en montre que l'état et le lien. Lot SI2 :
+   la carte vide dit qu'elle se remplit aussi par un import Silène ; le parcours de la carte à deux sources (regroupement
+   par adresse IP, filtre par nom, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
@@ -102,6 +104,7 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     // Lot ALH4 : l'onglet « Carte » s'affiche en premier ; sans données, la carte se dit vide.
     await expect(page.getByRole('tab', { name: 'Carte', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByText(/la carte est vide/)).toBeVisible();
+    await expect(page.getByText(/la carte est vide/)).toContainText('ou un import de rapport Silène');
     await accessible();
     await page.getByRole('tab', { name: 'Alertes', exact: true }).click();
     await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();

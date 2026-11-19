@@ -66,6 +66,19 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Ajouté
 
+- Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
+  en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
+  réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
+  seul est rendu ; ports ouverts de Silène et services d'AlgoLightHouse réunis sans doublon, source de chacun ; constats
+  Silène marqués « n SIL » sur l'adresse et sur le port, liste et fiche du constat, sans priorité), mêmes droits que la liste
+  des actifs, bornes communes. Les noms d'une branche qui résolvent vers une même adresse rejoignent un seul nœud ; une
+  adresse déjà tracée ailleurs devient un renvoi qui y mène. « Regrouper par » : nom de domaine, adresse IP publique (la
+  branche est l'adresse, dépliée sur ses noms, ses services, la limite du SI et les machines) ou périmètre. Filtre « Nom de
+  domaine ou adresse IP » (partie du nom, casse ignorée, ou début d'adresse ; nombre annoncé ; effacement). Décision du
+  RSSI : la carte est la page elle-même (plus de cadre, de zoom, de déplacement à la souris ni de vue d'ensemble ; défilement
+  de la page, barre de regroupement et titres des colonnes collants ; présentation empilée sur écran étroit) ; tout déplié
+  jusqu'à 30 lignes, au-delà branches en alerte seules dépliées (douze au plus) ; vue gardée en changeant d'onglet.
+  (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, **import du rapport Silène de l'ANSSI** (lot SI1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
   migration `095`) : connecteur « Silène, import de fichier » de la carte « Intégrations » (ni adresse, ni clé, ni flux),
   « Importer un rapport » : export JSON lu dans le navigateur (50 Mo au plus), extrait en liste blanche (jamais de

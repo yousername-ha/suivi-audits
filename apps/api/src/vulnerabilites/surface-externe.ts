@@ -39,6 +39,7 @@
    Lot SI1 : la liste « Actifs » est commune à AlgoLightHouse et à Silène (surface-silene.ts) : un actif est identifié par
    son adresse IP ou son nom de domaine ; vu par les deux sources, il n'apparaît qu'une fois, avec ce que chacune en dit. */
 import {
+  type ActifCarteDto,
   type ActifSileneDto,
   type ActifSurfaceDto,
   type AlerteAlhDto,
@@ -87,6 +88,7 @@ import {
   type RechercheAlertesAlh,
   type RechercheTechnologiesAlh,
   SERVICES_PAR_ACTIF_MAX,
+  type SileneCarteDto,
   STATUTS_ALERTE_ALH_OUVERTS,
   type StatutActifAlh,
   type StatutAlerteAlh,
@@ -1309,8 +1311,10 @@ export class SurfaceExterneAlh implements OperationEnLots {
   /** Graphe de la surface externe pour la carte, déjà filtré par les droits de la personne : actifs lisibles et présents
       (ceux qui portent une alerte ouverte lisible d'abord), leur domaine parent s'il est lui aussi rendu, leurs machines
       internes reliées lisibles (lot ALH3), et les alertes ouvertes lisibles et présentes avec leur priorité (la plus haute
-      de leurs CVE, présence « exposée », majorée si l'actif visé mène à une machine interne vulnérable : lot ALH5). Borné
-      (CARTE_SURFACE_BORNES) ; rien n'est écrit. */
+      de leurs CVE, présence « exposée », majorée si l'actif visé mène à une machine interne vulnérable : lot ALH5). Lot SI2 :
+      deux sources ; un actif d'AlgoLightHouse reçoit ce que Silène dit de la même valeur (ports ouverts et constats de
+      l'hôte), un actif vu par Silène seul s'ajoute après eux (mêmes règles de lecture que la liste « Actifs » du lot SI1).
+      Borné (CARTE_SURFACE_BORNES, toutes sources confondues) ; rien n'est écrit. */
   async carte(user: SessionUser): Promise<CarteSurfaceDto> {
     const { rows: actifs } = await sql<{
       id: string;
@@ -1382,30 +1386,103 @@ export class SurfaceExterneAlh implements OperationEnLots {
       actifs.map((x) => x.id),
     );
     const { priorite, menants } = await this.evaluateur(alertes.flatMap((a) => a.cves));
+    // Lot SI2 : actifs vus par Silène seul (aucun actif lisible et présent d'AlgoLightHouse de même type et de même
+    // valeur), dans la borne restante ; puis ce que Silène dit de chaque actif rendu, et ses constats.
+    const silene = this.silene;
+    const alhVoit = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_alh_actifs x
+        LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+        LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+        WHERE x.type = s.type AND x.valeur = s.valeur AND ${lisible(user)} AND ${present('x')})`;
+    const seuls = silene
+      ? await silene.actifsSeuls(this.db.k, user, alhVoit, CARTE_SURFACE_BORNES.actifs - actifs.length)
+      : { total: 0, elements: [] };
+    const sil = silene
+      ? await silene.actifs(
+          this.db.k,
+          user,
+          [...actifs, ...seuls.elements].map((x) => ({ type: x.type, valeur: x.valeur })),
+          SERVICES_PAR_ACTIF_MAX,
+        )
+      : new Map<string, ActifSileneDto & { constatIds: string[] }>();
+    const paires = [...actifs, ...seuls.elements].flatMap((x) =>
+      x.type === 'hote'
+        ? (sil.get(cleActif(x.type, x.valeur))?.constatIds ?? [])
+            .slice(0, CARTE_SURFACE_BORNES.constatsParActif)
+            .map((constat) => ({ constat, adresse: x.valeur }))
+        : [],
+    );
+    const constats = silene ? await silene.constatsCarte(this.db.k, paires) : { constats: [], ports: new Map() };
+    /** Ce que Silène dit d'un actif rendu : ports et constats sur l'hôte seulement (un nom n'en porte pas). */
+    const sileneDe = (type: TypeActifAlh, valeur: string): SileneCarteDto | null => {
+      const s = sil.get(cleActif(type, valeur));
+      if (!s) return null;
+      const hote = type === 'hote';
+      return {
+        adresses: s.adresses,
+        ports: hote ? s.ports : [],
+        nombrePorts: hote ? s.nombrePorts : 0,
+        portsOuverts: hote ? s.portsOuverts : null,
+        constats: hote
+          ? s.constatIds.slice(0, CARTE_SURFACE_BORNES.constatsParActif).map((id) => ({
+              id,
+              ports: constats.ports.get(`${id}|${valeur}`) ?? [],
+            }))
+          : [],
+        nombreConstats: hote ? s.constatIds.length : 0,
+      };
+    };
     return {
-      actifs: actifs.map((x) => {
-        const l = liaisons.get(x.id)!;
-        const sv = services.get(x.id)!;
-        return {
-          id: x.id,
-          type: x.type,
-          valeur: x.valeur,
-          adresse: x.adresse,
-          niveau: x.niveau,
-          parentId:
-            x.type === 'domaine' && x.parent_alh
-              ? (rendus.get(cle(x.integration_id, 'domaine', x.parent_alh)) ?? null)
-              : null,
-          perimetreNom: x.perimetre_nom,
-          perimetreAlh: x.perimetre_alh_nom,
-          machines: l.machines,
-          propositions: l.propositions,
-          autresMachines: l.autresMachines,
-          versionLiaisons: x.liaisons_version,
-          services: sansAlertes(sv.slice(0, SERVICES_PAR_ACTIF_MAX)),
-          nombreServices: sv.length,
-        };
-      }),
+      actifs: [
+        ...actifs.map((x): ActifCarteDto => {
+          const l = liaisons.get(x.id)!;
+          const sv = services.get(x.id)!;
+          const s = sileneDe(x.type, x.valeur);
+          return {
+            id: x.id,
+            type: x.type,
+            valeur: x.valeur,
+            adresse: x.adresse,
+            niveau: x.niveau,
+            parentId:
+              x.type === 'domaine' && x.parent_alh
+                ? (rendus.get(cle(x.integration_id, 'domaine', x.parent_alh)) ?? null)
+                : null,
+            perimetreNom: x.perimetre_nom,
+            perimetreAlh: x.perimetre_alh_nom,
+            machines: l.machines,
+            propositions: l.propositions,
+            autresMachines: l.autresMachines,
+            versionLiaisons: x.liaisons_version,
+            services: sansAlertes(sv.slice(0, SERVICES_PAR_ACTIF_MAX)),
+            nombreServices: sv.length,
+            sources: s ? ['alh', 'silene'] : ['alh'],
+            alhId: x.id,
+            silene: s,
+          };
+        }),
+        ...seuls.elements.map((x): ActifCarteDto => {
+          const s = sileneDe(x.type, x.valeur)!;
+          return {
+            id: x.id,
+            type: x.type,
+            valeur: x.valeur,
+            adresse: x.type === 'domaine' ? (s.adresses[0] ?? null) : null,
+            niveau: null,
+            parentId: null,
+            perimetreNom: sil.get(cleActif(x.type, x.valeur))?.perimetreNom ?? null,
+            perimetreAlh: null,
+            machines: [],
+            propositions: 0,
+            autresMachines: false,
+            versionLiaisons: 0,
+            services: [],
+            nombreServices: 0,
+            sources: ['silene'],
+            alhId: null,
+            silene: s,
+          };
+        }),
+      ],
       alertes: alertes.map((a): AlerteCarteDto => ({
         id: a.id,
         type: a.type,
@@ -1422,8 +1499,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
           (a.cible_domaine ? rendus.get(cle(a.integration_id, 'domaine', a.cible_domaine)) : undefined) ??
           null,
       })),
-      tronquee: (actifs[0]?.total ?? 0) > actifs.length || (alertes[0]?.total ?? 0) > alertes.length,
-      totaux: { actifs: actifs[0]?.total ?? 0, alertes: alertes[0]?.total ?? 0 },
+      constatsSilene: constats.constats,
+      tronquee:
+        (actifs[0]?.total ?? 0) > actifs.length ||
+        seuls.total > seuls.elements.length ||
+        (alertes[0]?.total ?? 0) > alertes.length,
+      totaux: { actifs: (actifs[0]?.total ?? 0) + seuls.total, alertes: alertes[0]?.total ?? 0 },
     };
   }
 

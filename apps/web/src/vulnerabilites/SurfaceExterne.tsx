@@ -30,6 +30,7 @@ import {
   Button,
   Checkbox,
   Group,
+  List,
   Modal,
   Pagination,
   Select,
@@ -44,6 +45,9 @@ import { notifications } from '@mantine/notifications';
 import {
   serviceEnFinDeSupport,
   type ActifAlhDto,
+  type ActifCarteDto,
+  type FicheConstatSileneDto,
+  libelleClasseSilene,
   type ActifSurfaceDto,
   type NoteSileneDto,
   type AlerteAlhDto,
@@ -84,10 +88,12 @@ import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
 import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
-import { CarteSurface } from './CarteSurface';
+import { CarteSurface, VUE_CARTE_INITIALE, type VueCarte } from './CarteSurface';
+import { constatsDeLaCarte } from './carte-surface';
 import { PictoSource } from './PictoSource';
 import {
   FicheActifSileneLue,
+  FicheConstatSilene,
   NoteSilene,
   OngletConstatsSilene,
   PerimetresSilene,
@@ -95,7 +101,7 @@ import {
   SILENE_SEUL,
   SourcesActif,
 } from './SurfaceSilene';
-import { URL_NOTES_SILENE } from './surface-silene';
+import { URL_NOTES_SILENE, urlFicheConstatSilene } from './surface-silene';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
 import { FicheMachine } from './Machines';
 import { MentionFinSupport } from './ParcMachines';
@@ -1547,13 +1553,19 @@ function OngletTechnologies() {
 }
 
 /** Onglet « Carte » (lot ALH4) : graphe lu une fois, filtré par les droits côté serveur ; un nœud ouvre la fiche
-    existante de l'alerte, de l'actif ou de la machine. */
-function OngletCarte() {
+    existante de l'alerte, de l'actif (et, lot SI2, ce qu'en dit Silène) ou de la machine, ou les constats Silène d'un hôte.
+    La vue (regroupement, filtres, replis) est tenue par l'écran : elle survit au changement d'onglet. */
+function OngletCarte({ vue, onVue }: { vue: VueCarte; onVue: (v: VueCarte) => void }) {
   const can = useCan();
   const modifier = can('vulnerabilites', 'modifier');
   const [alerte, setAlerte] = useState<string | null>(null);
-  const [actif, setActif] = useState<ActifOuvert | null>(null);
+  const [actif, setActif] = useState<ActifCarteDto | null>(null);
   const [machine, setMachine] = useState<string | null>(null);
+  const [constats, setConstats] = useState<{
+    hote: ActifCarteDto;
+    port: { port: number; protocole: 'tcp' | 'udp' | null } | null;
+  } | null>(null);
+  const [constat, setConstat] = useState<string | null>(null);
   const carte = useQuery({
     queryKey: [...CLE, 'carte'],
     queryFn: () => get<CarteSurfaceDto>(URL_CARTE_SURFACE),
@@ -1568,6 +1580,12 @@ function OngletCarte() {
     queryFn: () => get<MachineDto>(`/api/vulnerabilites/machines/${encodeURIComponent(machine!)}`),
     enabled: !!machine,
   });
+  const ficheConstat = useQuery({
+    queryKey: [...CLE, 'silene', 'constat', constat],
+    queryFn: () => get<FicheConstatSileneDto>(urlFicheConstatSilene(constat!)),
+    enabled: !!constat,
+  });
+  const listeConstats = constats && carte.data ? constatsDeLaCarte(carte.data, constats.hote, constats.port) : [];
   return (
     <Stack>
       <ErrorAlert error={carte.error} />
@@ -1575,7 +1593,14 @@ function OngletCarte() {
         <CarteSurface
           carte={carte.data}
           peutModifier={modifier}
-          actions={{ onAlerte: setAlerte, onActif: setActif, onMachine: setMachine }}
+          vue={vue}
+          onVue={onVue}
+          actions={{
+            onAlerte: setAlerte,
+            onActif: setActif,
+            onMachine: setMachine,
+            onConstats: (hote, port) => setConstats({ hote, port }),
+          }}
         />
       )}
       <Modal
@@ -1599,12 +1624,64 @@ function OngletCarte() {
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!actif}
         onClose={() => setActif(null)}
-        title={actif ? `Machines internes de ${actif.valeur}` : 'Actif exposé'}
+        title={
+          actif
+            ? actif.alhId
+              ? `Machines internes de ${actif.valeur}`
+              : `Actif exposé : ${actif.valeur}`
+            : 'Actif exposé'
+        }
         size="xl"
         centered
         lockScroll={false}
       >
-        {actif && <FicheActif actif={actif} modifier={modifier} />}
+        {actif && (
+          <Stack>
+            {actif.alhId && <FicheActif actif={{ ...actif, id: actif.alhId }} modifier={modifier} />}
+            {actif.silene && <FicheActifSileneLue type={actif.type} valeur={actif.valeur} />}
+          </Stack>
+        )}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!constats}
+        onClose={() => {
+          setConstats(null);
+          setConstat(null);
+        }}
+        title={
+          constats
+            ? `Constats Silène de ${constats.hote.valeur}${constats.port ? `, port ${constats.port.port}${constats.port.protocole ? `/${constats.port.protocole}` : ''}` : ''}`
+            : 'Constats Silène'
+        }
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {constats && (
+          <Stack>
+            <Text size="sm" c="dimmed">
+              Sans priorité : un constat Silène n’a pas de CVE ; sa classe est celle du rapport (sens à confirmer).
+            </Text>
+            <List size="sm">
+              {listeConstats.map((c) => (
+                <List.Item key={c.id}>
+                  <Anchor component="button" type="button" onClick={() => setConstat(c.id)}>
+                    {c.controle}
+                  </Anchor>{' '}
+                  ({libelleClasseSilene(c.classe)}, {c.identifiant})
+                </List.Item>
+              ))}
+            </List>
+            {constats.hote.silene && listeConstats.length < constats.hote.silene.nombreConstats && !constats.port && (
+              <Text size="xs" c="dimmed">
+                Les autres sont dans la fiche de l’actif et dans l’onglet « Constats Silène ».
+              </Text>
+            )}
+            <ErrorAlert error={ficheConstat.error} />
+            {ficheConstat.data && <FicheConstatSilene c={ficheConstat.data} />}
+          </Stack>
+        )}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
@@ -1680,6 +1757,8 @@ export function SurfaceExternePage() {
     return o && (o !== 'perimetres' || administrer) ? o : null;
   };
   const [onglet, setOnglet] = useState<string | null>(() => ongletAdresse(loc.search) ?? 'carte');
+  // Lot SI2 : vue de la carte (regroupement, filtres, replis) gardée pendant la navigation dans la page.
+  const [vueCarte, setVueCarte] = useState<VueCarte>(VUE_CARTE_INITIALE);
   useEffect(() => {
     const o = ouvertureSurface(new URLSearchParams(loc.search)).onglet;
     if (o && (o !== 'perimetres' || administrer)) setOnglet(o);
@@ -1731,7 +1810,7 @@ export function SurfaceExternePage() {
             {administrer && <Tabs.Tab value="perimetres">Périmètres</Tabs.Tab>}
           </Tabs.List>
           <Tabs.Panel value="carte" pt="md">
-            <OngletCarte />
+            <OngletCarte vue={vueCarte} onVue={setVueCarte} />
           </Tabs.Panel>
           <Tabs.Panel value="alertes" pt="md">
             <OngletAlertes />

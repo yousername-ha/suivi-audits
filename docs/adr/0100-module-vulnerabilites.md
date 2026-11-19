@@ -2973,3 +2973,139 @@ production vérifiée en CI seulement. Docker et Node 26.
 3. Carte « Lignes d'approche » : regroupement par adresse IP, filtre par nom de domaine et fusion des deux sources (lot SI2).
 4. Masque de l'assistant : les adresses et noms vus par Silène seul ne sont pas dans la liste des actifs à masquer (rien de
    Silène ne part vers l'assistant à ce jour).
+
+## Addendum du 19/11/2026 — lot SI2 : carte à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte en page entière
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route nouvelle (la route de la carte rend plus), aucune dépendance, **aucun flux sortant** ;
+`apps/api/src/assistant/*`, `apps/web/src/assistant/ReglagesAssistant.tsx`, `scripts/exploitation-worker.py`,
+`docker-compose.yml` et `docker/*` inchangés. Lève le point ouvert 3 de l'addendum « lot SI1 ». Remplace, pour la carte, le
+déplacement et le zoom par la `viewBox`, la vue d'ensemble et le cadre décrits dans l'addendum « lot ALH4 ».
+
+### Demandes et décision du RSSI (19/11/2026)
+
+1. « Silène : fusionner avec ALH. »
+2. « Pour l'EASM il faut essayer de réunir par IP aussi pour déployer la branche et filtrer aussi par nom de domaine. »
+3. Décision en cours de lot : **la carte de la surface externe est la page elle-même**, pas un cadre dans lequel on se
+   déplace : toute la largeur utile, sa hauteur naturelle, le défilement normal de la page ; les repères utiles (titres des
+   colonnes, barre de regroupement et de filtre) restent visibles pendant le défilement ; avec 150 noms de domaine, ce sont
+   le repli par défaut, le regroupement et le filtre qui gardent la page lisible ; pas de débordement horizontal à 390 px.
+
+Restent vraies : environ 150 domaines ; chaîne « domaine parent → nom de domaine → adresse IP publique → service → limite
+du SI → machine interne » ; termes techniques précis ; priorité et alertes inchangées ; constats Silène sans priorité.
+
+### Réalisation
+
+- **Route** `GET /api/vulnerabilites/surface/carte` (`SurfaceExterneAlh.carte`, droits inchangés : `vulnerabilites:lire`) :
+  chaque actif d'AlgoLightHouse rendu reçoit ce que Silène dit de la même clé `type|valeur` (lot SI1 :
+  `SurfaceSilene.actifs`) ; les actifs lisibles vus par **Silène seul** (`SurfaceSilene.actifsSeuls` : aucun actif lisible et
+  présent d'AlgoLightHouse de même type et de même valeur) s'ajoutent dans la borne restante, hôtes d'abord. Nouveaux champs
+  de `ActifCarteDto` : `sources`, `alhId` (null : Silène seul, aucune liaison possible), `silene` (`SileneCarteDto` : adresses
+  qui portent le nom ; pour un hôte seulement, ports ouverts — `SERVICES_PAR_ACTIF_MAX` au plus —, nombre annoncé, constats
+  présents qui le concernent et ports que leurs lignes de détail citent). `CarteSurfaceDto.constatsSilene` : contrôle,
+  identifiant et classe des constats cités. Lecture seule, aucune entrée de journal ; mêmes règles de lecture que la liste des
+  actifs (périmètre relié à l'instance, sinon `administrer`).
+- **Bornes** (`CARTE_SURFACE_BORNES`) : 3 000 actifs **toutes sources confondues** (AlgoLightHouse d'abord, actifs en alerte
+  en tête comme avant, puis Silène seul) ; `totaux.actifs` les compte tous ; nouvelle borne `constatsParActif` (20,
+  `nombreConstats` donne le total). Pas de borne propre aux constats de la carte : ils sont au plus 20 par hôte rendu, et un
+  import en compte 5 000 au plus.
+- **Modèle** (`apps/web/src/vulnerabilites/carte-surface.ts`, fonctions pures) : une **ligne est une adresse IP publique**.
+  Dans une branche, les noms qui résolvent vers une même adresse sont empilés et convergent vers **un seul nœud
+  d'adresse** ; services, alertes de l'hôte, constats et machines n'y sont qu'une fois. Une adresse déjà tracée dans une
+  autre branche (ordre d'affichage) devient un **renvoi** : la ligne garde ses noms et ce qu'ils portent eux-mêmes, le nœud
+  d'adresse est en pointillé, « ↑ voir … », et un clic (ou Entrée) déplie la branche qui porte l'adresse et y met le focus.
+  Services d'une ligne : `fusionnerPortsActif` (ports de Silène de l'hôte et services d'AlgoLightHouse des actifs de la
+  ligne), sans doublon port/protocole, trois empilés au plus (« et n autres services »), chacun avec la pastille de sa ou ses
+  sources et, si un constat le cite, une marque. Noms : huit au plus par ligne (« et n autres noms »).
+- **Regroupement** : « Nom de domaine » (branche : domaine parent ; par défaut, inchangé), « **Adresse IP publique** » (la branche est
+  l'adresse ; une seule ligne, dépliée sur ses noms — un nom de Silène porté par plusieurs hôtes paraît sous chacun —, ses
+  services, la limite du SI et les machines ; noms sans adresse connue dans une branche à part), « Périmètre ». Le titre de
+  la colonne de branche suit le regroupement. **Domaine parent d'un nom dont le parent n'est pas rendu** (Silène ne le
+  donne pas ; chez AlgoLightHouse, absent ou illisible) : déduit du nom (`parentDeduit` : le plus proche nom de la carte dont
+  il est un sous-domaine, sinon les deux derniers niveaux).
+- **Filtre par nom** (`filtreNom`), champ « Nom de domaine ou adresse IP » de la barre collante : partie d'un nom, casse
+  ignorée, ou début d'adresse ; comparaison **littérale** (`includes`, `startsWith`), aucune expression régulière construite
+  depuis la saisie. Seuls les noms qui correspondent restent sur la ligne (les autres comptés), sauf si c'est l'adresse qui
+  correspond. S'ajoute aux autres filtres, dans les trois regroupements ; nombre de noms et d'adresses retenus annoncé
+  (`role="status"`, `aria-live="polite"`) ; bouton « Effacer le filtre par nom ». Pas dans l'adresse de la page : les autres
+  filtres de la carte n'y sont pas.
+- **Repli par défaut** (`replisParDefaut`, `SEUIL_DEPLIE`) : jusqu'à 30 lignes, tout est déplié ; au-delà, seules les
+  branches qui portent une alerte retenue (douze au plus, les plus graves d'abord), leurs lignes sans alerte en faisceau.
+  « Tout déplier » reste borné à 250 lignes (`LIGNES_MAX`). La vue (regroupement, filtres, replis par regroupement) est tenue
+  par l'écran : elle survit au changement d'onglet.
+- **Page entière** (décision 3) : le SVG a pour `viewBox` la scène entière, `inline-size: 100%`, hauteur selon le rapport ;
+  la page défile. **Retirés** : caméra (`viewBox` mobile), glisser à la souris, Ctrl + molette, boutons « Rapprocher »,
+  « Éloigner », « Recadrer », flèches et + / − / 0 au clavier, vue d'ensemble miniature, cadre à défilement propre. Les
+  nœuds restent atteignables par Tab (le navigateur fait défiler jusqu'au nœud qui reçoit le focus). **Collants**
+  (`.sc-collant`, `position: sticky` sous l'en-tête de l'application) : regroupement, filtre par nom et son annonce, « Tout
+  replier », « Tout déplier », et les titres des colonnes, dessinés dans un second SVG de même largeur de scène. Les autres
+  filtres (texte, périmètre, type, criticité, « Branches en alerte seulement ») restent au-dessus, non collants.
+- **Écran étroit** (moins de 62 em) : la chaîne à huit colonnes réduite à la largeur d'un téléphone donnerait un texte de
+  quelques pixels ; la même scène (mêmes branches, mêmes replis, mêmes noms accessibles) est **présentée empilée** : une
+  branche par bloc (bouton `aria-expanded`), chaque ligne en étapes « Nom de domaine », « IP publique », « Service »,
+  « Alerte ouverte », « Machine interne (derrière la limite du SI) ». Sous 48 em, la barre n'est plus collante (elle
+  occuperait l'écran). Aucun débordement horizontal mesuré à 390 px.
+- **Constats Silène** : marque sarcelle « n SIL » (jetons `teal` de la charte, comme la pastille SIL), jamais un rond
+  d'alerte, sur l'adresse (tous les constats de l'hôte) et sur le service dont le port est cité ; un clic ouvre la liste
+  (contrôle, classe, identifiant) puis la fiche du constat (`FicheConstatSilene`). Ni priorité, ni alerte, ni chemin
+  critique.
+- **Accessibilité** : chaque nœud a un nom complet (« IP publique 192.0.2.10, vu par AlgoLightHouse et Silène (ANSSI),
+  2 services connus : ouvrir sa fiche » ; « Service 443/tcp · HTTPS, …, 1 constat Silène sur ce port » ; « Adresse IP …,
+  déjà tracée sous la branche … : y aller ») ; pastilles décoratives dans le dessin (le nom les dit) ; légende complétée
+  (pastilles, marque des constats, renvoi). Aucun style en ligne : positions par attributs SVG, pastilles par `transform`
+  (attribut), couleurs par classes.
+- **Fiches** : un nœud d'AlgoLightHouse ouvre la fiche existante (machines internes) et ce qu'en dit Silène ; un nœud de
+  Silène seul ouvre la fiche Silène de l'actif.
+
+### Mesures (jeu fictif généré, pile locale)
+
+Jeu fictif généré pour l'essai (non commité ; la fabrique `grandeEchelle` du test de l'interface en est l'équivalent) :
+8 domaines parents, 150 noms de domaine, 60 adresses (40 vues par AlgoLightHouse, 40 par Silène, 20 par les deux),
+150 ports ouverts de Silène et 40 services d'AlgoLightHouse portés par 30 alertes ouvertes (environ 190 services
+distincts), 14 constats Silène. Chromium de la pile locale (API et Vite de développement, sans Docker), facteur d'échelle 2,
+mouvement réduit.
+
+| Mesure | 1 366 px | 390 px |
+|---|---|---|
+| Ouverture de l'écran jusqu'à la carte dessinée (navigation et lectures comprises) | 1,9 s | 1,7 à 2,0 s |
+| « Tout déplier » sur les 150 noms (clic et 200 ms d'attente compris) | 0,75 à 0,82 s | 0,65 à 0,73 s |
+| Passage au regroupement par adresse IP (choix dans la liste et 200 ms compris) | 0,63 à 0,69 s | 0,6 à 0,7 s |
+| Défilement continu de la page (120 images) : médiane, 95e centile | 16,7 ms, 17,4 ms au plus | 16,7 ms, 16,9 ms |
+| Débordement horizontal de la page | 0 | 0 |
+
+Calcul pur (modèle, filtre, repli, mise en page) sur la fabrique de test : moins de 500 ms exigés par le test, dans les deux
+regroupements. Repli par défaut : par nom de domaine, les 8 branches (toutes en alerte) dépliées, leurs lignes sans alerte
+en faisceaux ; par adresse IP, douze des trente branches en alerte dépliées (les plus graves d'abord), les autres repliées. Filtre « portail-01 » : 10 noms et
+4 adresses annoncés. Ces durées sont celles d'un poste de développement et de Vite en mode développement, pas de l'image de
+production.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Domaine parent déduit** d'un nom sans parent rendu (deux derniers niveaux à défaut de mieux : faux pour un suffixe
+  public à deux niveaux comme `gouv.fr`) ; le périmètre déclaré du rapport Silène (`perimeter.domains`) pourrait servir de
+  liste des domaines parents.
+- **Libellés du regroupement** : « Nom de domaine » (branche : domaine parent), « Adresse IP publique », « Périmètre » (gardé).
+- **Renvoi** plutôt que nœud d'adresse dupliqué entre deux branches ; la ligne qui porte l'adresse est la première dans
+  l'ordre d'affichage (branches critiques et en alerte d'abord).
+- **Seuils** : tout déplié jusqu'à 30 lignes, douze branches en alerte au plus au-delà ; trois services, huit noms et trois
+  machines dessinés par ligne.
+- **Filtre « Branches en alerte seulement »** : une ligne de renvoi vers une adresse en alerte reste affichée.
+- **Écran étroit** : présentation empilée sous 62 em (et non la chaîne à huit colonnes), barre non collante sous 48 em.
+- **Retraits de la page entière** (zoom, déplacement à la souris, vue d'ensemble, raccourcis + / − / 0 et flèches) : à
+  valider sur les captures.
+
+### Non vérifié
+
+Aucune donnée réelle. Parcours Playwright joués sur une pile locale sans Docker (API et Vite, Chromium, PostgreSQL 16), à
+rejouer en CI ; sur une pile vierge, AlgoLightHouse n'a aucune donnée : le nœud à deux sources n'est vu qu'en tests de
+l'API et de l'interface et sur les captures (jeu fictif inséré en base locale). CSP stricte du serveur de production
+vérifiée en CI seulement. Docker et Node 26. Les maquettes `docs/unification/maquettes-vulnerabilites/08*.png` ne montrent
+ni cadre fixe ni regroupement par adresse : elles ne correspondent plus au dessin (non régénérées).
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; filtre et regroupement dans l'adresse de la page (avec les autres filtres de la carte), si voulu.
+2. Correspondance classe → priorité des constats Silène (toujours en attente) ; rapprochement des produits vus par Silène
+   avec les CVE (point 2 du lot SI1).
+3. Liaison d'un actif vu par Silène seul à une machine interne (aujourd'hui : seuls les actifs d'AlgoLightHouse se
+   relient).

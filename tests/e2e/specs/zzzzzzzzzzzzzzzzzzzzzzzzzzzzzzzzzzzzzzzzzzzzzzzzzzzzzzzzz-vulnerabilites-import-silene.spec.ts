@@ -4,7 +4,10 @@
    le navigateur, envoyé par lots), bilan, import inscrit dans « Exécutions » ; écran « Surface externe » : note Silène avec
    sa pastille, actif de la liste commune avec ses ports ouverts et leur source, fiche Silène de l'actif, onglet « Constats
    Silène » et fiche d'un constat ; second rapport où un hôte et un constat ont disparu (évolution de la note, disparus
-   comptés) ; suppression de l'instance par « Supprimer ce connecteur et tout ce qu'il a importé », et dans `finally` si le
+   comptés) ; lot SI2 : carte « Lignes d'approche » (nœuds de Silène, constats d'un hôte et fiche d'un constat,
+   regroupement par adresse IP, branche repliée puis dépliée, filtre par nom de domaine annoncé puis effacé, vue gardée en
+   changeant d'onglet, barre collante à 1 366 px, présentation empilée et aucun débordement à 390 px) ; suppression de
+   l'instance par « Supprimer ce connecteur et tout ce qu'il a importé », et dans `finally` si le
    parcours s'est arrêté avant. Accessibilité en clair (1 366 px) et en sombre (390 px). Rapports JSON fictifs écrits à la
    main (tests/fixtures/silene), dont les champs interdits portent des marqueurs « INTERDIT » qui ne doivent jamais paraître.
    Sur une pile vierge, AlgoLightHouse n'a aucune donnée : la fusion d'un actif vu par les deux sources est couverte par les
@@ -158,6 +161,71 @@ for (const [mode, scheme, largeur] of [
       await axe(page);
       await ficheConstat.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
       await expect(ficheConstat).toBeHidden();
+
+      // Lot SI2 : carte « Lignes d'approche » à deux sources, page entière. À 1 366 px, le dessin et ses repères
+      // collants ; à 390 px, la présentation empilée (mêmes noms accessibles), barre non collante.
+      await page.getByRole('tab', { name: 'Carte', exact: true }).click();
+      const collant = page.locator('.sc-collant');
+      expect(await collant.evaluate((e) => getComputedStyle(e).position)).toBe(largeur > 800 ? 'sticky' : 'static');
+      // Aucun débordement horizontal de la page.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      const www = page.getByRole('button', {
+        name: 'Nom de domaine www.example.org, résout vers 192.0.2.10, vu par Silène (ANSSI) : ouvrir sa fiche',
+        exact: true,
+      });
+      await expect(www).toBeVisible();
+      await expect(
+        page.getByRole('button', {
+          name: 'IP publique 192.0.2.10, vu par Silène (ANSSI), 3 services connus : ouvrir sa fiche',
+          exact: true,
+        }),
+      ).toBeVisible();
+      await axe(page);
+      // Constats Silène de l'hôte : liste, puis fiche d'un constat ; sans priorité.
+      await page
+        .getByRole('button', { name: '2 constats Silène sur 192.0.2.10, sans priorité : les voir', exact: true })
+        .click();
+      const constatsHote = page.getByRole('dialog', { name: 'Constats Silène de 192.0.2.10', exact: true });
+      await expect(constatsHote).toContainText('ExpiredCertificate');
+      await expect(constatsHote).toContainText('Sans priorité');
+      await constatsHote.getByRole('button', { name: 'OpenPort', exact: true }).click();
+      await expect(constatsHote).toContainText('22/tcp');
+      await expect(constatsHote).not.toContainText('INTERDIT');
+      await axe(page);
+      await constatsHote.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+      await expect(constatsHote).toBeHidden();
+      // Regroupement par adresse IP : tout replier, puis déplier la branche 192.0.2.10 jusqu'à ses noms.
+      const regrouper = page.getByRole('combobox', { name: 'Regrouper par', exact: true });
+      await regrouper.click();
+      await page.getByRole('option', { name: 'Adresse IP publique', exact: true }).click();
+      await expect(regrouper).toHaveValue('Adresse IP publique');
+      await page.getByRole('button', { name: 'Tout replier', exact: true }).click();
+      await expect(www).toHaveCount(0);
+      await page.getByRole('button', { name: /^Déplier la branche 192\.0\.2\.10 : / }).click();
+      await expect(www).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Replier la branche 192\.0\.2\.10 : / })).toBeVisible();
+      await axe(page);
+      // Filtre par nom de domaine (casse ignorée) : résultat annoncé, autres noms retirés, effacement.
+      await page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP', exact: true }).fill('RDP');
+      await expect(page.getByRole('status').filter({ hasText: 'correspondent à « RDP »' })).toHaveText(
+        '1 nom de domaine et 1 adresse IP correspondent à « RDP ».',
+      );
+      await expect(www).toHaveCount(0);
+      await expect(
+        page.getByRole('button', {
+          name: 'Nom de domaine rdp.example.org, résout vers 198.51.100.20, vu par Silène (ANSSI) : ouvrir sa fiche',
+          exact: true,
+        }),
+      ).toBeVisible();
+      await axe(page);
+      await page.getByRole('button', { name: 'Effacer le filtre par nom', exact: true }).click();
+      await expect(page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP', exact: true })).toHaveValue('');
+      // La vue (regroupement) est gardée pendant la navigation dans la page.
+      await page.getByRole('tab', { name: 'Actifs', exact: true }).click();
+      await page.getByRole('tab', { name: 'Carte', exact: true }).click();
+      await expect(page.getByRole('combobox', { name: 'Regrouper par', exact: true })).toHaveValue(
+        'Adresse IP publique',
+      );
 
       // Second rapport : 198.51.100.20 et RES-FICTIF-0003 ont disparu ; la note progresse.
       await page.goto('/plateforme/integrations');

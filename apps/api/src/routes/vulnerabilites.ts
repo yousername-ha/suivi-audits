@@ -928,7 +928,7 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/surface/carte',
     summary:
-      'Carte « Lignes d’approche » de la surface externe : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles ; bornée, déjà filtrée par les droits',
+      'Carte « Lignes d’approche » de la surface externe, deux sources (AlgoLightHouse, Silène) : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles, ports ouverts et constats Silène des hôtes ; bornée, déjà filtrée par les droits',
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.carte((s as Session).user),
