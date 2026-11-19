@@ -11,7 +11,17 @@ export const IMAGES_PAR_SECONDE = 30;
 /** Instant dessiné en image fixe (moins de mouvement demandé). */
 export const INSTANT_FIXE = 12;
 export const NB_HALOS = 14;
-export const LIBELLES = ['ISO 27001', 'HDS', 'NIS 2', 'RGPD', 'ISO 9001', 'EBIOS RM'] as const;
+/** Référentiels de cybersécurité portés par les ronds de la ligne (choix du RSSI du 19/11/2026). */
+export const LIBELLES = [
+  'ISO 27001',
+  'HDS',
+  'ISO 27005',
+  'NIS 2',
+  'CRA',
+  'ISO 27035',
+  'EBIOS RM',
+  'ISO 27002',
+] as const;
 
 /** Pseudo-aléatoire déterministe dans [0, 1[. */
 export function hasard(n: number): number {
