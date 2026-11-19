@@ -17,10 +17,14 @@ const CLE_ACCES = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
 const CLE_SECRETE = 'f0e1d2c3b4a5968778695a4b3c2d1e0f';
 const CPE = 'cpe:2.3:a:editeur_suivi:produit_suivi:*:*:*:*:*:*:*:*';
 let t: TestApp;
-let admin: Agent, editeurA: Agent, lecteurA: Agent, sansActions: Agent, editeurAB: Agent;
+let admin: Agent, editeurA: Agent, lecteurA: Agent, sansActions: Agent, editeurAB: Agent, rssi: Agent;
 let perimA: string, perimB: string, perimC: string, instance: string;
 
 const ifMatch = (v: number) => ({ 'if-match': `"${v}"` });
+/** Date du jour décalée de n jours, au fuseau de l'organisation (échéance d'une exception, lot S1 : douze mois au plus). */
+const dansJours = (n: number) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date(Date.now() + n * 86_400_000));
+const MESURE = 'Mesure compensatoire fictive : flux filtré.';
 const uuidMachine = (n: number) => `00000000-0000-4000-8000-0000000005${(0xa0 + n).toString(16)}`;
 const nomMachine = (n: number) => `srv-suivi-${String(n).padStart(2, '0')}.exemple.invalid`;
 const adresse = (n: number) => `192.0.2.${60 + n}`;
@@ -185,11 +189,14 @@ beforeAll(async () => {
   const uLecteurA = await makeUser(t, 'suivi_lecteur_a', 'r_sv_lire', { rattache: false });
   const uSans = await makeUser(t, 'suivi_sans_actions', 'r_sv_seul', { rattache: false });
   const uEditeurAB = await makeUser(t, 'suivi_editeur_ab', 'r_sv_modif', { rattache: false });
+  // Lot S1 : seul le rôle RSSI de la plateforme accorde, prolonge ou lève une exception (risque accepté).
+  const uRssi = await makeUser(t, 'suivi_rssi', 'rssi', { rattache: false });
   await t.svc.db.q(
     `INSERT INTO grc_members(smsi_id, user_id, can_write) VALUES ($1, $3, true), ($1, $4, false), ($1, $5, true),
-       ($1, $6, true), ($2, $6, false)`,
-    [perimA, perimB, uEditeurA.id, uLecteurA.id, uSans.id, uEditeurAB.id],
+       ($1, $6, true), ($2, $6, false), ($1, $7, true), ($2, $7, true)`,
+    [perimA, perimB, uEditeurA.id, uLecteurA.id, uSans.id, uEditeurAB.id, uRssi.id],
   );
+  rssi = await login(t, uRssi);
   editeurA = await login(t, uEditeurA);
   lecteurA = await login(t, uLecteurA);
   sansActions = await login(t, uSans);
@@ -283,47 +290,75 @@ describe('états, transitions et notes', () => {
     // Note obligatoire : risque accepté, non concernée (une note blanche ne compte pas).
     expect((await etat(editeurA, 'constat', id, { etat: 'risque_accepte' }, 1)).statusCode).toBe(422);
     expect((await etat(editeurA, 'constat', id, { etat: 'non_concernee', note: '   ' }, 1)).statusCode).toBe(422);
-    // Date de revue : seulement pour un risque accepté, jamais passée.
-    expect((await etat(editeurA, 'constat', id, { etat: 'en_cours', revueLe: '2099-01-01' }, 1)).statusCode).toBe(422);
+    // Date d'échéance : seulement pour un risque accepté, jamais passée (lot S1 : obligatoire, douze mois au plus).
+    expect((await etat(editeurA, 'constat', id, { etat: 'en_cours', revueLe: dansJours(30) }, 1)).statusCode).toBe(422);
     expect(
-      (await etat(editeurA, 'constat', id, { etat: 'risque_accepte', note: 'Accepté.', revueLe: '2020-01-01' }, 1))
-        .statusCode,
+      (
+        await etat(
+          rssi,
+          'constat',
+          id,
+          { etat: 'risque_accepte', note: 'Accepté.', mesure: MESURE, revueLe: '2020-01-01' },
+          1,
+        )
+      ).statusCode,
     ).toBe(422);
-    const r2 = await etat(
+    // Lot S1 : accorder une exception est réservé au rôle RSSI, même avec le droit de modifier.
+    const refuse = await etat(
       editeurA,
       'constat',
       id,
-      { etat: 'risque_accepte', note: 'Risque accepté par le comité fictif.', revueLe: '2099-06-30' },
+      { etat: 'risque_accepte', note: 'Accepté.', mesure: MESURE, revueLe: dansJours(30) },
+      1,
+    );
+    expect(refuse.statusCode).toBe(403);
+    expect(refuse.json().error).toContain('Seul le RSSI');
+    const echeance = dansJours(180);
+    const r2 = await etat(
+      rssi,
+      'constat',
+      id,
+      { etat: 'risque_accepte', note: 'Risque accepté par le comité fictif.', mesure: MESURE, revueLe: echeance },
       1,
     );
     expect(r2.statusCode, r2.body).toBe(200);
     expect(r2.json()).toMatchObject({
       etat: 'risque_accepte',
-      revueLe: '2099-06-30',
+      revueLe: echeance,
       revueDepassee: false,
       version: 2,
     });
-    // Renouveler l'acceptation (même état) est admis ; quitter le risque accepté efface la date de revue.
+    // Renouveler l'acceptation (même état) est admis, au RSSI seulement ; quitter le risque accepté (lever l'exception)
+    // aussi, et efface l'échéance.
     expect(
-      (await etat(editeurA, 'constat', id, { etat: 'risque_accepte', note: 'Renouvelé.', revueLe: '2099-12-31' }, 2))
-        .statusCode,
+      (
+        await etat(
+          rssi,
+          'constat',
+          id,
+          { etat: 'risque_accepte', note: 'Renouvelé.', mesure: MESURE, revueLe: dansJours(300) },
+          2,
+        )
+      ).statusCode,
     ).toBe(200);
-    const r3 = await etat(editeurA, 'constat', id, { etat: 'en_cours' }, 3);
+    expect((await etat(editeurA, 'constat', id, { etat: 'en_cours' }, 3)).statusCode).toBe(403);
+    const r3 = await etat(rssi, 'constat', id, { etat: 'en_cours' }, 3);
     expect(r3.json()).toMatchObject({ etat: 'en_cours', revueLe: null, version: 4 });
     const s = await suivi(admin, 'constat', id);
     expect(s.historique.map((h) => [h.evenement, h.etatAvant, h.etatApres, h.auteur])).toEqual([
-      ['changement', 'risque_accepte', 'en_cours', 'suivi_editeur_a'],
-      ['changement', 'risque_accepte', 'risque_accepte', 'suivi_editeur_a'],
-      ['changement', 'a_traiter', 'risque_accepte', 'suivi_editeur_a'],
+      ['changement', 'risque_accepte', 'en_cours', 'suivi_rssi'],
+      ['changement', 'risque_accepte', 'risque_accepte', 'suivi_rssi'],
+      ['changement', 'a_traiter', 'risque_accepte', 'suivi_rssi'],
       ['changement', 'nouvelle', 'a_traiter', 'suivi_editeur_a'],
     ]);
     expect(s.historique[2]!.note).toBe('Risque accepté par le comité fictif.');
-    // Journal : identifiants et états seulement, ni note ni machine.
+    // Journal : identifiants et états seulement, ni note, ni mesure compensatoire, ni machine.
     const j = await audits('vulnerabilites.suivi.etat_modifie');
     expect(j).toHaveLength(4);
     expect(j[0]).toMatchObject({ username: 'suivi_editeur_a', details: { nature: 'constat', objet: id } });
     for (const x of j) {
       expect(JSON.stringify(x)).not.toContain('comité');
+      expect(JSON.stringify(x)).not.toContain('flux filtré');
       sansMachine(JSON.stringify(x));
     }
     await etat(editeurA, 'constat', id, { etat: 'a_traiter' }, 4);
@@ -650,12 +685,13 @@ describe('compteurs, rang et date de revue', () => {
     }[];
     expect(nc.find((c) => c.plugin === '950001')?.priorite.niveau).toBe('P2');
     expect((await admin.get(`${V}/constats?etat=tous`)).json().total).toBe(3);
-    // Risque accepté avec une date de revue passée (écrite en base, l'API refusant une date passée) : signal calculé.
+    // Risque accepté avec une date de revue passée (écrite en base, l'API refusant une date passée) : signal calculé (lot
+    // S1 : l'exception expirera à la prochaine évaluation de la plateforme). Accorder l'exception revient au RSSI.
     const r2 = await etat(
-      admin,
+      rssi,
       'constat',
       id,
-      { etat: 'risque_accepte', note: 'Accepté.', revueLe: '2099-01-01' },
+      { etat: 'risque_accepte', note: 'Accepté.', mesure: MESURE, revueLe: dansJours(60) },
       v + 1,
     );
     expect(r2.statusCode, r2.body).toBe(200);

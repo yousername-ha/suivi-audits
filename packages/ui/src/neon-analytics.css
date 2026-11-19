@@ -416,6 +416,21 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* Courbes à marques (tendances du module Vulnérabilités, lot S2) : un trait et une forme par série, en plus de la teinte. */
+.neon-trait-1 {
+  stroke-dasharray: 6 3;
+}
+.neon-trait-2 {
+  stroke-dasharray: 1.5 2.5;
+}
+.neon-trait-3 {
+  stroke-dasharray: 8 2.5 2 2.5;
+}
+.neon-marque {
+  fill: var(--serie);
+  stroke: var(--mantine-color-body);
+  stroke-width: 0.8;
+}
 .neon-motif {
   width: 100%;
   height: 11rem;

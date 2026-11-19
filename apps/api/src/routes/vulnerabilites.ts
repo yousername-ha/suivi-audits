@@ -43,9 +43,24 @@
    machines et actifs lus ; carte « Sans périmètre » pour l'administration du module ; un périmètre illisible répond 404.
    Lot PC4 : fiche illustrée d'une faille (recommandations par source, vecteur d'attaque traduit, schéma, en-tête) avec
    `lire`, lecture seule, sans journal : constat, faille déclarée et alerte d'AlgoLightHouse lus par leur fiche existante
-   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement. */
+   (404 pour l'illisible ou l'inconnu) ; CVE de la veille ; priorité et marques les mêmes pour tous, nombres lus seulement.
+   Lot S1 : délais de correction (avec les seuils de priorité, `administrer`, If-Match) et exceptions ; onglet « Délais et
+   exceptions » avec `lire` (mesure des corrections, exceptions des failles lues), lecture seule, sans journal ; accorder,
+   prolonger ou lever une exception réservé au rôle RSSI par le service du suivi.
+   Lot S2 : tendances (instantanés quotidiens) avec `lire`, lecture seule, sans journal : toute la plateforme (nombres de
+   failles communs à tous), un périmètre lu (404 sinon) ou « sans périmètre » (`administrer`). Rapport de pilotage avec
+   `lire` (option prudente, à confirmer) : JSON pour la page imprimable, ou CSV ; sa production est tracée au journal
+   (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse.
+   Lot S3 : vue « Correctifs » (groupes par texte de solution de Tenable, et détail d'un groupe) avec `lire`, lecture seule,
+   sans journal : priorité et nombres de failles communs à tous ; machines nommées et comptées selon les droits. Filtre
+   « fin de support » des constats, des machines et du parc. */
 import {
+  CleCorrectif,
+  RechercheCorrectifs,
   RechercheAlertesVulnerabilites,
+  RechercheDelais,
+  RechercheRapport,
+  RechercheTendances,
   ApplicationLiaisonMasse,
   DemandeLiaisonMasse,
   AffectationMachine,
@@ -70,7 +85,7 @@ import {
   RechercheTechnologiesAlh,
   RechercheDeclarees,
   ReglageMasque,
-  ReglagePriorite,
+  SaisieReglagePriorite,
   SuggestionsCpeQuery,
   type ProduitSurveilleDto,
   RechercheAvis,
@@ -106,6 +121,43 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.vueEnsemble.lire((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/delais',
+    summary:
+      'Délais de correction et exceptions (lot S1) : délais cibles par priorité, mesure des corrections sur la période (délai moyen et médian par priorité, part dans les délais ; les mêmes nombres pour tous, sans nom), exceptions en cours et échues des failles que la personne lit ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheDelais,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.delais.lire((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/tendances',
+    summary:
+      'Tendances (lot S2) : instantanés quotidiens de la situation, jour par jour sur 30 jours ou semaine après semaine (13, 26 ou 52 semaines), pour toute la plateforme (nombres de failles communs à tous, ni total de machines ni d’actifs), un périmètre lu ou « sans périmètre » (administration) ; indicateur de tendance ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheTendances,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.tendances.lire((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/rapport',
+    summary:
+      'Rapport de pilotage (lot S2) d’un mois ou d’une période libre, pour toute la plateforme ou un périmètre lu : niveau d’alerte et son évolution, failles critiques, délais de correction, dépassements, exceptions, tendances, alertes critiques, état des sources ; JSON (page imprimable) ou CSV ; aucun nom de machine, de domaine ni d’adresse ; production tracée au journal',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheRapport,
+    handler: async ({ svc, s, query, ip, reply }) => {
+      const { rapport, csv } = await svc.vulnerabilites.rapport.produire((s as Session).user, ip, query);
+      if (csv === null) return rapport;
+      reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="rapport-vulnerabilites-${rapport.du}-${rapport.au}.csv"`);
+      return reply.send(csv);
+    },
   }),
   route({
     method: 'GET',
@@ -309,6 +361,26 @@ export const vulnerabilitesRoutes = [
     access: 'vulnerabilites:lire',
     params: id,
     handler: async ({ svc, s, params }) => svc.vulnerabilites.failles.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/correctifs',
+    summary:
+      'Correctifs (lot S3) : failles détectées par Tenable encore à traiter, regroupées par texte de solution (anglais, tel quel), triées par gain (priorité, puis nombre de failles corrigées) ; priorité, marques, délai, état du correctif et nombres de failles communs à tous, machines lues seulement ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheCorrectifs,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.correctifs.lister((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/correctifs/:cle',
+    summary:
+      'Détail d’un correctif (lot S3) : ses failles (fiche ouverte seulement si une de leurs machines est lue) et les machines concernées que la personne lit ; groupe inconnu : 404 ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: z.object({ cle: CleCorrectif }),
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.correctifs.detail((s as Session).user, params.cle),
   }),
   route({
     method: 'GET',
@@ -592,7 +664,7 @@ export const vulnerabilitesRoutes = [
     method: 'POST',
     url: '/api/vulnerabilites/suivis/:nature/:id/etat',
     summary:
-      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles',
+      'Changer l’état d’une faille (If-Match : version du suivi) ; note obligatoire pour « risque accepté » et « non concernée » ; toutes les machines touchées doivent être lisibles. Lot S1 : accorder, prolonger ou lever une exception (risque accepté) est réservé au rôle RSSI de la plateforme (403 sinon, administrateur compris) et exige une justification, une mesure compensatoire et une échéance d’au plus douze mois',
     tags,
     access: 'vulnerabilites:modifier',
     params: suivi,
@@ -922,10 +994,11 @@ export const vulnerabilitesRoutes = [
   route({
     method: 'PUT',
     url: '/api/vulnerabilites/priorite/reglage',
-    summary: 'Régler les seuils de la grille de priorité (If-Match : version du réglage)',
+    summary:
+      'Régler les seuils de la grille de priorité et les délais cibles de correction par priorité (lot S1) : seuil, délais, ou les deux, le reste est gardé (If-Match : version du réglage)',
     tags,
     access: 'vulnerabilites:administrer',
-    body: ReglagePriorite,
+    body: SaisieReglagePriorite,
     handler: async ({ svc, s, body, req, ip, reply }) => {
       const r = await svc.vulnerabilites.priorite.ecrire(body, requireIfMatch(req), (s as Session).user, ip);
       await svc.vulnerabilites.alertes.evaluer('seuil-priorite');

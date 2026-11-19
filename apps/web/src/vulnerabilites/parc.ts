@@ -20,6 +20,7 @@ export function urlParc(f: FiltresMachines): string {
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.role) p.set('role', f.role);
   if (f.perimetre) p.set('perimetre', f.perimetre);
+  if (f.finSupport) p.set('finSupport', 'oui');
   const s = p.toString();
   return `/api/vulnerabilites/machines/parc${s ? `?${s}` : ''}`;
 }
@@ -32,6 +33,14 @@ export const LEGENDE_ZERO_DAY =
   'Zero-day : une faille présente dont l’exploitation est avérée (catalogue KEV, CERT-FR, CERT Santé ou AlgoLightHouse)';
 export const LEGENDE_EXPLOITABLE =
   'Exploitable : une faille présente pour laquelle un code d’exploitation existe (Tenable, preuve de concept), sans exploitation avérée';
+
+/** Lot S3 : précision ajoutée à côté de la marque « zero-day » (la marque n'est pas renommée) et marque « Fin de support ». */
+export const PRECISION_SANS_CORRECTIF = 'Exploitée, sans correctif connu';
+export const MARQUE_FIN_SUPPORT = 'Fin de support : plus de correctif de sécurité de l’éditeur';
+export const LEGENDE_FIN_SUPPORT =
+  'Fin de support : un système ou un logiciel présent sur la machine ne reçoit plus de correctif de sécurité de l’éditeur (date de fin de support publiée par Tenable, passée)';
+export const LEGENDE_SANS_CORRECTIF =
+  'Sans correctif connu : précision ajoutée à la marque zero-day quand une source dit qu’aucun correctif n’existe (CERT Santé) ; un correctif non renseigné n’est pas un correctif absent';
 
 export const libellePrioriteMachine = (p: NiveauPriorite | null) => (p ? p : 'Aucune');
 
@@ -56,7 +65,9 @@ export function nomAccessibleMachine(m: MachineMarqueeDto): string {
     libelleGravites(m.compteurs),
     m.marques.priorite ? `priorité ${m.marques.priorite}` : 'aucune priorité',
     ...(m.marques.exploitationAveree ? ['zero-day, exploitation avérée'] : []),
+    ...(m.marques.exploiteeSansCorrectif ? ['exploitée, sans correctif connu'] : []),
     ...(m.marques.exploitable ? ['exploitable, code d’exploitation disponible'] : []),
+    ...(m.finDeSupport ? ['fin de support'] : []),
   ];
   return `${libelleMachine(m)} : ${parts.join(', ')}`;
 }

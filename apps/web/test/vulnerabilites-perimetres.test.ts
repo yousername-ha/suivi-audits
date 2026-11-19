@@ -97,6 +97,8 @@ const machine = (
       exploitationAveree: marques.exploitationAveree ? 1 : 0,
     },
     rang: { position: position ?? n, total: 60, faits: [] },
+    finDeSupport: false,
+    finsDeSupport: [],
     version: 1,
     marques: { ...MARQUES_VIDES, ...marques },
   };

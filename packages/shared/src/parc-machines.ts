@@ -49,6 +49,8 @@ export interface FailleMarquee {
   niveau: NiveauPriorite;
   exploitee: boolean;
   exploitable: boolean;
+  /** Lot S3 : aucun correctif connu selon les sources (jamais déduit d'une absence d'information). */
+  sansCorrectif?: boolean;
 }
 export interface MarquesMachineDto {
   /** Priorité la plus haute des failles présentes, ou null sans faille présente. */
@@ -57,20 +59,31 @@ export interface MarquesMachineDto {
   exploitationAveree: boolean;
   /** Marque « exploitable » : au moins une faille présente dite exploitable par une source, sans exploitation avérée. */
   exploitable: boolean;
+  /** Lot S3, précision à côté de la marque « zero-day » : au moins une faille présente à exploitation avérée pour laquelle
+      une source dit qu'aucun correctif n'existe (« exploitée, sans correctif connu »). */
+  exploiteeSansCorrectif: boolean;
 }
-export const MARQUES_VIDES: MarquesMachineDto = { priorite: null, exploitationAveree: false, exploitable: false };
+export const MARQUES_VIDES: MarquesMachineDto = {
+  priorite: null,
+  exploitationAveree: false,
+  exploitable: false,
+  exploiteeSansCorrectif: false,
+};
 
 export function marquesMachine(failles: readonly FailleMarquee[]): MarquesMachineDto {
   let rang: number = NIVEAUX_PRIORITE.length;
   let exploitationAveree = false;
   let exploitable = false;
+  let exploiteeSansCorrectif = false;
   for (const f of failles) {
     rang = Math.min(rang, NIVEAUX_PRIORITE.indexOf(f.niveau));
-    if (f.exploitee) exploitationAveree = true;
-    else if (f.exploitable) exploitable = true;
+    if (f.exploitee) {
+      exploitationAveree = true;
+      if (f.sansCorrectif) exploiteeSansCorrectif = true;
+    } else if (f.exploitable) exploitable = true;
   }
   const priorite: NiveauPriorite | null = rang < NIVEAUX_PRIORITE.length ? NIVEAUX_PRIORITE[rang]! : null;
-  return { priorite, exploitationAveree, exploitable };
+  return { priorite, exploitationAveree, exploitable, exploiteeSansCorrectif };
 }
 
 /** Machine lisible avec ses marques (liste et parc de l'écran « Machines »). */
@@ -85,6 +98,8 @@ export const RechercheParc = z
     q: z.string().trim().max(100).optional(),
     role: z.enum([...ROLES_MACHINE, 'aucun']).optional(),
     perimetre: z.union([z.uuid(), z.literal('aucun')]).optional(),
+    /** Lot S3 : machines en fin de support seulement. */
+    finSupport: z.enum(['oui']).optional(),
   })
   .strict();
 export type RechercheParc = z.infer<typeof RechercheParc>;

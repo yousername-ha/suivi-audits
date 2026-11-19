@@ -7,6 +7,7 @@ import type { NiveauAlerte, NombreLisible } from './alertes-vulnerabilites.js';
 import { GRAVITES_TENABLE, type GraviteTenable, NIVEAUX_PRIORITE, type NiveauPriorite } from './failles-tenable.js';
 import type { Presence, Priorite } from './priorite-vulnerabilites.js';
 import type { EtatSuiviFaille } from './suivi-vulnerabilites.js';
+import type { VariationSeptJoursDto } from './tendances-vulnerabilites.js';
 import type { SourceVeille } from './veille-vulnerabilites.js';
 import { FAMILLE_PRODUIT_LIBELLES, FAMILLES_PRODUIT, type FamilleProduit } from './vulnerabilites.js';
 
@@ -183,6 +184,15 @@ export interface VueEnsembleDto {
     aConfirmer: { failles: number; produits: number };
     /** Objets suivis (constats, failles déclarées) passés à « Corrigée » depuis le premier jour du mois (Europe/Paris). */
     corrigeesCeMois: number;
+    /** Lot S1 : objets suivis ouverts et présents dont le délai de correction est dépassé (les mêmes pour tout le monde). */
+    enDepassement: number;
+    /** Lot S3 : parmi les failles exploitées et présentes, celles sans correctif connu et celles dont le correctif n'est pas
+        renseigné (les mêmes pour tout le monde) ; « non renseigné » ne vaut pas « sans correctif ». */
+    exploiteesSansCorrectif: number;
+    exploiteesCorrectifNonRenseigne: number;
+    /** Lot S3 : fin de support. Constats de Tenable présents en fin de support (les mêmes pour tout le monde) ; machines et
+        services exposés en fin de support que la personne lit, drapeau sans nombre pour les autres. */
+    finDeSupport: { constats: number; machines: NombreLisible; services: NombreLisible };
   };
   /** Nombre total de failles suivies, par priorité, et par case du radar (cases vides omises). */
   total: number;
@@ -193,5 +203,8 @@ export interface VueEnsembleDto {
   /** Au moins une case compte plus de failles que de cibles rendues. */
   tronquee: boolean;
   journal: EntreeJournalVueDto[];
+  /** Lot S2 : variation sur sept jours (failles présentes en P1 et P2, exploitées, en dépassement, sous exception, niveau),
+      par rapport à l'instantané quotidien de référence ; null sans instantané assez ancien. */
+  variation: VariationSeptJoursDto | null;
   calculeLe: string;
 }

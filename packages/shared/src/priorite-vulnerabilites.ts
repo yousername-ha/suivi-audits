@@ -11,16 +11,29 @@ import {
   type RoleMachine,
 } from './failles-tenable.js';
 import type { StatutRapprochement } from './rapprochement-vulnerabilites.js';
+import {
+  DELAIS_CORRECTION_DEFAUT,
+  DelaisCorrection,
+  type DelaiFailleDto,
+  EtatDelaiFiltre,
+  TriFailles,
+} from './delais-vulnerabilites.js';
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Réglage (vulnerabilites:administrer) */
 /** Seuil du score EPSS (probabilité entre 0 et 1) à partir duquel une faille présente passe en P2. Seul seuil réglable de la
-    grille de départ ; les gravités de la grille sont fixes. */
-export const ReglagePriorite = z
-  .object({ seuilEpss: z.number().min(0.01, 'Seuil EPSS entre 0,01 et 1.').max(1, 'Seuil EPSS entre 0,01 et 1.') })
-  .strict();
+    grille de départ ; les gravités de la grille sont fixes. Lot S1 : délai cible de correction par priorité, réglé avec
+    les seuils (même droit, même If-Match, même journal ; valeurs par défaut à confirmer par le RSSI). */
+const seuilEpss = z.number().min(0.01, 'Seuil EPSS entre 0,01 et 1.').max(1, 'Seuil EPSS entre 0,01 et 1.');
+export const ReglagePriorite = z.object({ seuilEpss, delais: DelaisCorrection }).strict();
 export type ReglagePriorite = z.infer<typeof ReglagePriorite>;
-export const REGLAGE_PRIORITE_DEFAUT: ReglagePriorite = { seuilEpss: 0.5 };
+export const REGLAGE_PRIORITE_DEFAUT: ReglagePriorite = { seuilEpss: 0.5, delais: DELAIS_CORRECTION_DEFAUT };
+/** Saisie d'un réglage (PUT) : le seuil, les délais, ou les deux ; ce qui n'est pas cité reste inchangé. */
+export const SaisieReglagePriorite = z
+  .object({ seuilEpss: seuilEpss.optional(), delais: DelaisCorrection.optional() })
+  .strict()
+  .refine((v) => v.seuilEpss !== undefined || v.delais !== undefined, 'Aucune modification.');
+export type SaisieReglagePriorite = z.infer<typeof SaisieReglagePriorite>;
 
 export interface ReglagePrioriteOut {
   values: ReglagePriorite;
@@ -222,7 +235,10 @@ export interface Priorite {
     - P4 : le reste.
     Les faits rendus sont ceux des règles remplies au niveau retenu (dans l'ordre de la grille, sans doublon) ; au niveau
     P4, la présence, la gravité et, le cas échéant, l'exploitation. */
-export function calculerPriorite(f: FaitsFaille, reglage: ReglagePriorite = REGLAGE_PRIORITE_DEFAUT): Priorite {
+export function calculerPriorite(
+  f: FaitsFaille,
+  reglage: Pick<ReglagePriorite, 'seuilEpss'> = REGLAGE_PRIORITE_DEFAUT,
+): Priorite {
   const sources = SOURCES_EXPLOITATION.filter((s) => f.exploitation.includes(s));
   const exploitables = SOURCES_EXPLOITABLE.filter((s) => f.exploitable.includes(s));
   const exploitee = sources.length > 0;
@@ -393,6 +409,9 @@ export const RechercheDeclarees = z
     q: z.string().trim().max(100).optional(),
     priorite: NiveauPriorite.optional(),
     etat: FiltreSuivi.optional(),
+    /** Lot S1 : état du délai de correction, et tri par échéance. */
+    delai: EtatDelaiFiltre.optional(),
+    tri: TriFailles.optional(),
     page: z.coerce.number().int().min(1).max(1000).default(1),
   })
   .strict();
@@ -417,6 +436,8 @@ export interface FailleDeclareeDto {
   present: boolean;
   priorite: Priorite;
   suivi: SuiviResumeDto;
+  /** Délai de correction (lot S1) : âge, échéance calculée, état. */
+  delai: DelaiFailleDto;
 }
 
 /** Machine lisible reliée au produit d'une faille déclarée ; `detectee` : Tenable y détecte aussi la CVE. */
