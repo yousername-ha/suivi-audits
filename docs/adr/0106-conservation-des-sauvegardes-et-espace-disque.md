@@ -1,7 +1,7 @@
 # ADR 0106 — Conservation des sauvegardes et espace disque
 
 - Statut : **acceptée** par le RSSI le 19/11/2026, dans la session (numéros 0106 et migration `091` si nécessaire annoncés et
-  acceptés ; décisions 1 à 4 ci-dessous prises une à une).
+  acceptés ; décisions 1 à 5 ci-dessous prises une à une).
 - Date : 2026-11-19
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - **Complète** l'[ADR 0071](0071-sauvegardes-chiffrees-avec-age.md) (sauvegardes chiffrées) et l'[ADR 0061](0061-mise-a-jour-web-renforcee.md)
@@ -34,7 +34,11 @@ le disque du serveur (retour arrière automatique, aucune donnée touchée). La 
    - **alerte** dans l'application, pour les administrateurs, quand l'espace libre du disque des données passe sous **15 %**,
      avec l'occupation par les sauvegardes et par les images de l'application.
 4. **Images** : nettoyage automatique des images de l'application qui ne sont ni la version en service, ni la précédente, ni
-   celle du frontal (`GATEWAY_VERSION`), y compris après une tentative échouée ; aucune autre image du serveur n'est touchée.
+   celle du frontal en service (`GATEWAY_VERSION`), y compris après une tentative échouée et y compris les images téléchargées
+   par leur empreinte (sans étiquette de version) ; aucune autre image du serveur n'est touchée.
+5. **Frontal** (19/11/2026) : le frontal n'est pas figé ; il est mis à jour et redémarré chaque fois que c'est nécessaire
+   (correctif, mise à jour de sécurité de son image de base), selon l'[ADR 0103](0103-frontal-mis-a-jour-a-la-demande.md),
+   addendum du 19/11/2026. Seule son image en service est gardée par le nettoyage.
 
 ## Mise en œuvre
 
