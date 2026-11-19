@@ -8,7 +8,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { famillesVisibles, localiser } from '../src/navigation';
-import { ActivationVeille, AvisTable, FaillesTable, KevTable, SourcesTable } from '../src/vulnerabilites/Veille';
+import { ListeAvis } from '../src/vulnerabilites/AvisVeille';
+import { ActivationVeille, KevTable, ListeFailles, SourcesTable } from '../src/vulnerabilites/Veille';
 import {
   adresseAvis,
   dateCourte,
@@ -36,6 +37,9 @@ const source = (s: Partial<EtatSourceVeilleDto> = {}): EtatSourceVeilleDto => ({
   erreur: null,
   enRetard: false,
   derniereCollecte: null,
+  frequenceHeures: 2,
+  prochaineCollecte: '2026-11-16T07:00:00.000Z',
+  version: 1,
   ...s,
 });
 const avis = (a: Partial<AvisVeilleDto> = {}): AvisVeilleDto => ({
@@ -192,9 +196,43 @@ describe('rendu', () => {
     expect(html).toContain('En erreur');
     expect(html).toContain('Délai dépassé : la source ne répond pas.');
   });
+  it('fréquence (lot F1) : liste déroulante pour qui administre, texte sinon ; EPSS fixe ; avertissement NVD relié au champ', () => {
+    const sources = [
+      source(),
+      source({ source: 'nvd', libelle: 'Base nationale des vulnérabilités (NVD)', frequenceHeures: 4 }),
+      source({ source: 'epss', libelle: 'Probabilité d’exploitation (EPSS)', frequenceHeures: 24 }),
+    ];
+    const admin = rendu(
+      createElement(SourcesTable, { sources, fluxOuvert: true, peutRegler: true, onFrequence: () => undefined }),
+    );
+    // Deux listes (KEV, NVD), aucune pour EPSS.
+    const selects = [...admin.matchAll(/<select[^>]*>/g)].map((m) => m[0]);
+    expect(selects).toHaveLength(2);
+    expect(selects[0]).toContain('aria-label="Fréquence de la source Catalogue des failles exploitées (KEV)"');
+    expect(selects[0]).not.toContain('aria-describedby');
+    // NVD : choix 2, 4, 12, 24 h seulement (jamais 1 h), avertissement relié par aria-describedby.
+    const nvd = admin.slice(admin.indexOf('Fréquence de la source Base nationale'));
+    const liste = nvd.slice(0, nvd.indexOf('</select>'));
+    expect([...liste.matchAll(/<option[^>]*value="(\d+)"/g)].map((m) => m[1])).toEqual(['2', '4', '12', '24']);
+    const decrit = /aria-describedby="([^"]+)"/.exec(selects[1]!)![1]!;
+    expect(admin).toContain(`id="${decrit}"`);
+    expect(admin).toMatch(/Attention :<\/strong> NVD demande de ne pas être lu automatiquement plus d’une fois toutes/);
+    expect(admin).toContain('Une fois par jour (fixe)');
+    expect(admin).toContain('Les scores EPSS ne sont publiés qu’une fois par jour');
+    expect(admin).toContain('Prochaine collecte');
+    // Sans le droit : du texte, aucune liste.
+    const lecture = rendu(createElement(SourcesTable, { sources, fluxOuvert: true }));
+    expect(lecture).not.toContain('<select');
+    expect(lecture).toContain('Toutes les 2 heures');
+    expect(lecture).toContain('Toutes les 4 heures');
+    // Veille fermée : aucune échéance.
+    expect(
+      rendu(createElement(SourcesTable, { sources: [source({ prochaineCollecte: null })], fluxOuvert: false })),
+    ).toContain('aucune (veille désactivée)');
+  });
   it('avis : texte simple (balisage échappé), lien en nouvel onglet sans référent, ou aucun lien', () => {
     const html = rendu(
-      createElement(AvisTable, {
+      createElement(ListeAvis, {
         avis: [
           avis({ titre: '<img src=x onerror=alert(1)> Titre piégé' }),
           avis({ id: '2', identifiant: 'CERTFR-2026-AVI-0002', adresse: 'https://ailleurs.exemple.test/' }),
@@ -210,7 +248,7 @@ describe('rendu', () => {
     expect(liens[0]).toContain('rel="noopener noreferrer"');
     expect(liens[0]).toMatch(/referrerPolicy="no-referrer"|referrerpolicy="no-referrer"/i);
     expect(html).toContain('CERTFR-2026-AVI-0002');
-    expect(rendu(createElement(AvisTable, { avis: [] }))).toContain('Aucune alerte ni aucun avis');
+    expect(rendu(createElement(ListeAvis, { avis: [] }))).toContain('Aucune alerte ni aucun avis');
   });
   it('KEV : action exigée et échéance (dépassée signalée), textes anglais tels quels', () => {
     const html = rendu(createElement(KevTable, { failles: [faille()], aujourdhui: '2026-11-16' }));
@@ -221,7 +259,7 @@ describe('rendu', () => {
   });
   it('failles connues : gravité, vecteur, EPSS, éditeurs et produits', () => {
     const html = rendu(
-      createElement(FaillesTable, {
+      createElement(ListeFailles, {
         failles: [faille(), faille({ cve: 'CVE-2026-0002', cvss31: null, kev: null, epss: null })],
       }),
     );
@@ -235,11 +273,11 @@ describe('rendu', () => {
   it('lot PC4 : la CVE ouvre sa fiche illustrée (bouton) quand l’écran le propose ; sinon texte simple', () => {
     const rien = () => undefined;
     for (const html of [
-      rendu(createElement(FaillesTable, { failles: [faille()], onOuvrir: rien })),
+      rendu(createElement(ListeFailles, { failles: [faille()], onOuvrir: rien })),
       rendu(createElement(KevTable, { failles: [faille()], aujourdhui: '2026-11-16', onOuvrir: rien })),
     ])
       expect(html).toMatch(/<button[^>]*type="button"[^>]*>CVE-2026-0001<\/button>/i);
-    expect(rendu(createElement(FaillesTable, { failles: [faille()] }))).not.toMatch(/<button[^>]*>CVE-2026-0001/i);
+    expect(rendu(createElement(ListeFailles, { failles: [faille()] }))).not.toMatch(/<button[^>]*>CVE-2026-0001/i);
   });
   it('faille vue sur la surface externe (lot ALH2) : actifs exposés lisibles, lien vers l’écran', () => {
     const html = renderToStaticMarkup(
@@ -249,7 +287,7 @@ describe('rendu', () => {
         createElement(
           MantineProvider,
           null,
-          createElement(FaillesTable, {
+          createElement(ListeFailles, {
             failles: [faille({ surfaceExterne: { actifs: 2, alertes: 1, horsLecture: false } })],
           }),
         ),

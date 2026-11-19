@@ -1,8 +1,10 @@
-/* Module Intégrations (ADR 0076), socle des connecteurs réseau : menu conditionné par le droit du module, état des tuiles,
+/* Module Intégrations (ADR 0076), socle des connecteurs réseau : carte de la Plateforme conditionnée par le droit du module
+   (addendum du 19/11/2026, plus de rubrique au menu Pilotage), état des tuiles,
    secrets affichés « défini » / « non défini » sans valeur, message si l'exécutant n'est pas vu, formulaire (adresse
    contrôlée, envoi des seuls champs modifiés), rendu des tuiles et des exécutions, aide. Données fictives. */
 import { MantineProvider } from '@mantine/core';
 import {
+  avertissementConnecteur,
   catalogueIntegrations,
   type Action,
   type ExecutionIntegrationDto,
@@ -14,6 +16,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
+import { ChampFrequence } from '../src/components/ChampFrequence';
 import { TableExecutions, TuileInstance, TuileType } from '../src/integrations/IntegrationsPage';
 import {
   corpsCreation,
@@ -24,11 +27,14 @@ import {
   executionEnCours,
   fluxOuvertPour,
   formulaireDepuis,
+  ANCIENNE_ADRESSE_INTEGRATIONS,
   LIEN_INTEGRATIONS,
   messageExecutant,
+  optionsFrequence,
   precisionPort,
   resumeExecution,
 } from '../src/integrations/integrations';
+import { ALIAS_ADMINISTRATION, cartesVisibles } from '../src/administration-droits';
 import { famillesVisibles, localiser } from '../src/navigation';
 
 const TENABLE = catalogueIntegrations()[0]!;
@@ -54,6 +60,7 @@ const instance = (i: Partial<IntegrationDto> = {}): IntegrationDto => ({
   configuration: { adresse: 'https://tenable.exemple.test', autoriteCertification: '', delaiSecondes: 30 },
   actif: true,
   secrets: { accessKey: true, secretKey: true },
+  frequenceHeures: 24,
   version: 3,
   createdBy: 'admin-fictif',
   createdAt: '2026-11-16T09:00:00.000Z',
@@ -71,14 +78,17 @@ const bouton = (html: string, texte: string) =>
 
 describe('menu', () => {
   const seulement = (droits: string[]) => (m: Module, a: Action) => droits.includes(`${m}:${a}`);
-  it('« Intégrations » est une rubrique du Pilotage, visible avec la seule lecture du module', () => {
+  it('« Intégrations » n’est plus une rubrique du Pilotage : carte de la Plateforme, visible avec la seule lecture du module', () => {
+    // Addendum du 19/11/2026 de l'ADR 0076 : la rubrique du menu Pilotage disparaît, la carte la remplace avec le même droit.
     const avec = famillesVisibles(seulement(['integrations:lire']));
-    const pilotage = avec.find((f) => f.famille.id === 'pilotage')!;
-    expect(pilotage.destinations.map((d) => d.id)).toEqual(['integrations']);
-    expect(pilotage.destinations[0]!.to).toBe(LIEN_INTEGRATIONS);
-    const sans = famillesVisibles(seulement(['pilotage:lire']));
-    expect(sans.find((f) => f.famille.id === 'pilotage')?.destinations.map((d) => d.id)).not.toContain('integrations');
-    expect(localiser('/integrations')?.destination.id).toBe('integrations');
+    expect(avec.find((f) => f.famille.id === 'pilotage')).toBeUndefined();
+    expect(famillesVisibles(() => true).flatMap((f) => f.destinations.map((d) => d.id))).not.toContain('integrations');
+    expect(localiser('/integrations')).toBeUndefined();
+    expect(LIEN_INTEGRATIONS).toBe('/plateforme/integrations');
+    expect(ANCIENNE_ADRESSE_INTEGRATIONS).toBe('/integrations');
+    expect(cartesVisibles(seulement(['integrations:lire']), 'plateforme')).toEqual(['integrations']);
+    expect(cartesVisibles(seulement(['integrations:lire']), 'systeme')).toEqual([]);
+    expect(ALIAS_ADMINISTRATION['/plateforme']!.test(LIEN_INTEGRATIONS)).toBe(true);
   });
   it('un article d’aide décrit les secrets, la validation du flux et le test', () => {
     const a = HELP_ARTICLES.find((x) => x.id === 'integrations');
@@ -143,6 +153,7 @@ describe('formulaire', () => {
         delaiSecondes: 30,
         gravites: ['critique', 'elevee'],
       },
+      frequenceHeures: 24,
     });
     const i = instance();
     expect(corpsModification(i, formulaireDepuis(i, TENABLE))).toEqual({});
@@ -172,6 +183,61 @@ describe('formulaire', () => {
         gravites: ['critique', 'faible'],
       },
     });
+  });
+
+  it('fréquence (lot F1) : liste du type, envoyée seulement si elle change ; avertissement sous 24 h, sans blocage', () => {
+    expect(optionsFrequence('tenable').map((o) => o.value)).toEqual(['6', '12', '24', '168']);
+    expect(optionsFrequence('algolighthouse').map((o) => o.label)).toEqual([
+      'Toutes les 12 heures',
+      'Une fois par jour',
+      'Une fois par semaine',
+    ]);
+    const i = instance({ frequenceHeures: 24 });
+    expect(formulaireDepuis(i, TENABLE).frequenceHeures).toBe(24);
+    expect(corpsModification(i, { ...formulaireDepuis(i, TENABLE), frequenceHeures: 6 })).toEqual({
+      frequenceHeures: 6,
+    });
+    expect(corpsModification(i, formulaireDepuis(i, TENABLE))).toEqual({});
+    expect(erreursFormulaire({ ...formulaireDepuis(i, TENABLE), frequenceHeures: 6 })).toEqual([]);
+    expect(avertissementConnecteur('tenable', 24)).toBeNull();
+    expect(avertissementConnecteur('tenable', 168)).toBeNull();
+    expect(avertissementConnecteur('tenable', 6)).toMatch(/charge supplémentaire sur Security Center/);
+    expect(avertissementConnecteur('algolighthouse', 12)).toMatch(/limite d’appels de l’éditeur/);
+    const champ = (h: number) =>
+      rendre(
+        createElement(ChampFrequence, {
+          label: 'Fréquence de la synchronisation automatique',
+          frequences: [6, 12, 24, 168],
+          valeur: h,
+          onChange: () => undefined,
+          avertissement: avertissementConnecteur('tenable', h),
+        }),
+      );
+    const avec = champ(6);
+    const select = /<select[^>]*>/.exec(avec)![0];
+    const decrit = /aria-describedby="([^"]+)"/.exec(select)![1]!;
+    expect(avec).toMatch(new RegExp(`id="${decrit}"[^>]*>.*Attention :`));
+    expect(avec).toContain('<label');
+    expect(avec).not.toContain('disabled');
+    expect(/aria-describedby/.test(/<select[^>]*>/.exec(champ(24))![0])).toBe(false);
+    expect(champ(24)).not.toContain('Attention');
+    // La tuile dit la fréquence réglée, plus « quotidienne » en dur.
+    const tuile = rendre(
+      createElement(TuileInstance, {
+        i: instance({ frequenceHeures: 12 }),
+        t: TENABLE,
+        fluxOuvert: true,
+        peutAdministrer: false,
+        peutLancer: false,
+        enCours: false,
+        onConfigurer: rien,
+        onActiver: rien,
+        onTester: rien,
+        onExecutions: rien,
+      }),
+    );
+    expect(tuile).toContain('Synchronisation automatique : toutes les 12 heures');
+    expect(tuile).not.toContain('quotidienne');
   });
 
   it('validation du flux : le port réglé de l’instance est rappelé', () => {

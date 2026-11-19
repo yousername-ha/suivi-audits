@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Exécutant sans serveur HTTP ; les demandes viennent exclusivement de la CLI locale authentifiée.
-ARG GO_IMAGE=golang:1.26.10-alpine@sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b1dd80b4e6ee4338db547050308
+ARG GO_IMAGE=golang:1.26.11-alpine@sha256:ecb67f987aa1a57794c91d19ade7ae0209f2f0f5496aaef9e6ae85ddf92d02ab
 # Les échecs réseau passagers (proxy ou base de sommes de Go) sont réessayés ; la vérification des modules reste active.
 FROM ${GO_IMAGE} AS cosign
 RUN --mount=type=secret,id=build_ca --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \

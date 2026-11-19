@@ -161,6 +161,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '087_vulnerabilites_delais_exceptions.sql',
         '088_vulnerabilites_instantanes.sql',
         '089_declarations_incidents.sql',
+        '090_frequences_synchronisation.sql',
         '091_conservation_sauvegardes.sql',
         '092_contacts_crise_comptes.sql',
       ]);

@@ -6,7 +6,9 @@ import type { Action, Module } from '@suivi/shared';
 export type Cote = 'plateforme' | 'systeme';
 
 /** Rubriques de la page Pilotage rangées dans l'Administration (ADR 0081) : elles n'ont plus d'entrée dans le menu
-    Pilotage, leur carte est dans « Plateforme ». Adresse (/pilotage/<id>) et droit d'origine inchangés. */
+    Pilotage, leur carte est dans « Plateforme ». Adresse (/pilotage/<id>) et droit d'origine inchangés. La rubrique
+   « Intégrations » (hors Pilotage, ADR 0076) est aussi devenue une carte de « Plateforme » : son ancienne adresse
+   /integrations redirige vers /plateforme/integrations. */
 export const PILOTAGE_DANS_ADMINISTRATION = ['configuration'] as const;
 export type Peut = (m: Module, a: Action) => boolean;
 
@@ -35,6 +37,8 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'murs', cote: 'plateforme', peut: administration },
   // Assistant RSSI (ADR 0086) : droit dédié, indépendant de l'administration et des paramètres.
   { id: 'assistant', cote: 'plateforme', peut: (can) => can('assistant', 'administrer') },
+  // Intégrations (ADR 0076, addendum du 19/11/2026) : droit de l'ancienne rubrique du Pilotage, lecture du module.
+  { id: 'integrations', cote: 'plateforme', peut: (can) => can('integrations', 'lire') },
   { id: 'import', cote: 'plateforme', peut: (can) => can('import_export', 'lire') },
   { id: 'sauvegardes', cote: 'systeme', peut: administration },
   { id: 'mises-a-jour', cote: 'systeme', peut: administration },

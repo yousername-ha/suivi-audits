@@ -425,7 +425,11 @@ describe('rendu', () => {
     ).toContain('Aucun dépôt Tenable');
   });
   it('état des synchronisations : aucune instance, ou dernier bilan', () => {
-    expect(rendu(createElement(EtatSynchronisations, { etats: [] }))).toContain('Pilotage &gt; Intégrations');
+    // Aucune instance : l'écran le dit et renvoie à la page Plateforme (ADR 0076, addendum du 19/11/2026).
+    const vide = rendu(createElement(EtatSynchronisations, { etats: [] }));
+    expect(vide).toContain('Aucune instance Tenable Security Center n’est configurée.');
+    expect(vide).toContain('page Plateforme');
+    expect(vide).not.toContain('Configurer l’intégration');
     const html = rendu(
       createElement(EtatSynchronisations, {
         etats: [
@@ -455,11 +459,17 @@ describe('rendu', () => {
             },
             derniereCompleteLe: '2026-11-16T03:05:00.000Z',
             inventaire: { ok: true, erreur: null, le: '2026-11-16T03:05:00.000Z' },
+            frequenceHeures: 6,
+            prochaineSynchronisation: '2026-11-16T09:00:00.000Z',
           },
         ],
       }),
     );
     expect(html).toContain('Tenable fictif');
+    // Lot F1 : fréquence et prochaine synchronisation, en lecture seule.
+    expect(html).toContain('Synchronisation automatique : toutes les 6 heures');
+    expect(html).toContain('prochaine prévue');
+    expect(html).not.toMatch(/<select/);
     expect(html).toContain('1 faille sur 1 machine (1 détection)');
     expect(html).toContain('3 machines lues');
   });

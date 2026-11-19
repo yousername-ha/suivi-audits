@@ -705,6 +705,10 @@ export interface EtatSurfaceExterneDto {
   /** Périmètres ALH présents sans liaison : leur contenu n'est visible que de l'administration du module ; ce nombre aussi
       (null sans le droit d'administrer). */
   perimetresNonRelies: number | null;
+  /** Lot F1 : fréquence de la synchronisation automatique (heures) et prochaine prévue (null si l'instance n'est pas prête :
+      inactive, clé manquante ou flux fermé). Lecture seule : le réglage vit dans la carte « Intégrations ». */
+  frequenceHeures: number;
+  prochaineSynchronisation: string | null;
 }
 
 export type PageSurface<T> = PageFailles<T>;

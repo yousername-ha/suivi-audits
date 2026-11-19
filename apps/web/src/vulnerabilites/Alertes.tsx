@@ -42,6 +42,8 @@ import {
   urlPriseEnCompte,
 } from './alertes';
 import { PrioriteFaits } from './FaillesDetectees';
+import { PictosSources } from './PictoSource';
+import { pictosExploitation } from './pictos-sources';
 import { nombrePages } from './veille';
 
 /** Liste des alertes (sans état) : rendu testable hors navigateur. */
@@ -143,7 +145,8 @@ export function FicheAlerte({
       {a.produit && <Text size="sm">Produit : {a.produit}</Text>}
       <PrioriteFaits p={a.priorite} />
       <Text size="sm">
-        <strong>Exploitation avérée :</strong> {libelleExploitation(a)}
+        <strong>Exploitation avérée :</strong> <PictosSources sources={pictosExploitation(a.exploitation)} decoratif />{' '}
+        {libelleExploitation(a)}
       </Text>
       <Text size="sm">
         <strong>Présence :</strong> {libellePresences(a) || 'aucune'}

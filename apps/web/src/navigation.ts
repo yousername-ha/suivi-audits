@@ -3,7 +3,8 @@
    et n'ouvre aucun accès. Les rubriques du Pilotage sont décrites dans pilotage-navigation.ts (libellé et module) ;
    ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée.
    Exception : la « Configuration du pilotage » (`/pilotage/configuration`) n'est plus une rubrique du menu Pilotage mais une
-   carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. */
+   carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. De
+   même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige. */
 import type { Action, Module, OrdreMenu } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
 
@@ -96,8 +97,8 @@ export const FAMILLES: Famille[] = [
       dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
       dest('revues', 'Revues de direction', [p('revues')]),
       dest('rappels', 'Mes rappels', [p('rappels')]),
-      // Module Intégrations (ADR 0076, point 12) : connecteurs vers des outils externes, rubrique du Pilotage.
-      dest('integrations', 'Intégrations', [page('integrations', 'Intégrations', '/integrations', 'integrations')]),
+      // Module Intégrations (ADR 0076) : plus de rubrique du Pilotage depuis l'addendum du 19/11/2026 ; les connecteurs se
+      // configurent dans la carte « Intégrations » de la page Plateforme (administration-droits.ts).
     ],
   },
   {

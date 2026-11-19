@@ -267,6 +267,8 @@ describe('adresses et libellés', () => {
       derniere: null,
       derniereCompleteLe: null,
       perimetresNonRelies: null,
+      frequenceHeures: 24,
+      prochaineSynchronisation: null,
       ...x,
     });
     expect(resumeEtatAlh(e({})).libelle).toBe('Jamais synchronisé');
@@ -478,6 +480,7 @@ describe('formulaire du connecteur AlgoLightHouse', () => {
       type: 'algolighthouse',
       nom: 'AlgoLightHouse',
       configuration: { adresse: 'https://espace-fictif.algolighthouse.fr', delaiSecondes: 30 },
+      frequenceHeures: 24,
     });
     const i: IntegrationDto = {
       id: integration.id,
@@ -487,6 +490,7 @@ describe('formulaire du connecteur AlgoLightHouse', () => {
       configuration: { adresse: 'https://espace-fictif.algolighthouse.fr', delaiSecondes: 30 },
       actif: true,
       secrets: { cleApi: true },
+      frequenceHeures: 24,
       version: 2,
       createdBy: 'admin-fictif',
       createdAt: '2026-11-17T08:00:00.000Z',
