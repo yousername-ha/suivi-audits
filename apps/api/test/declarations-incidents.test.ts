@@ -2,7 +2,7 @@
    au rôle « RSSI », envoi figé (déclencheur en base), complément, suppression refusée, correction de la date de qualification,
    périmètre (404), export Word et rappels (idempotents, indépendants du module des écarts). Données fictives. */
 import zlib from 'node:zlib';
-import { plusUnMois } from '@suivi/shared';
+import { NOTIFICATION_TYPES_VULNERABILITES, plusUnMois } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { rappelsDeclarationsIncidents } from '../src/automate-declarations.js';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
@@ -457,5 +457,30 @@ describe('rappels', () => {
     expect(m.objet).toBe('Suivi fictif : Déclaration réglementaire d’un incident');
     expect(m.corps).toContain('/pilotage/incidents-registre');
     expect(m.corps).not.toMatch(/santé|NIS 2|ANSSI|échéance le/i);
+  });
+});
+
+describe('contrainte de portée des notifications (migration 089)', () => {
+  it('admet sans SMSI ni objet les types des modules, Vulnérabilités (086, 087) compris, et refuse les autres', async () => {
+    const types = [
+      'alerte_securite',
+      'retex_contribution',
+      ...NOTIFICATION_TYPES_VULNERABILITES,
+      'incident_declaration',
+    ];
+    const inserer = (kind: string) =>
+      t.svc.db.q(
+        "INSERT INTO grc_notifications(smsi_id, object_id, user_id, kind, due_key, title, message) VALUES (NULL, NULL, $1, $2, $3, 't', 'm')",
+        [rssiId, kind, `portee-fictive:${kind}`],
+      );
+    try {
+      for (const kind of types) await inserer(kind);
+      expect(
+        (await t.svc.db.q("SELECT 1 FROM grc_notifications WHERE due_key LIKE 'portee-fictive:%'")).rows,
+      ).toHaveLength(types.length);
+      await expect(inserer('task_due')).rejects.toThrow(/grc_notifications_portee/);
+    } finally {
+      await t.svc.db.q("DELETE FROM grc_notifications WHERE due_key LIKE 'portee-fictive:%'");
+    }
   });
 });

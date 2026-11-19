@@ -14,8 +14,15 @@
      est toujours rendu.
    - Requêtes : nombre fixe, aucune par faille (propositions 1 ; situation globale : réglage 1, constats 1, failles déclarées
      1, expositions 2, majoration 4 au plus, faits des sources 3, titres 1 ; corrigées 1 ; machines lisibles 1 ; surface
-     lisible 2 ; journal 1 : 18 au plus). */
+     lisible 2 ; journal 1 : 18 au plus). Lot S1 : la tuile « En dépassement » reprend les objets suivis du même calcul
+     global (aucune requête de plus). Lot S2 : variation sur sept jours, une requête de plus (l'instantané de référence),
+     les nombres du moment étant composés à partir du même calcul global : 19 au plus. Lot S3 : précision « sans correctif
+     connu » des failles exploitées et présentes (même calcul, aucune requête de plus) ; fin de support : constats présents
+     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. */
 import {
+  type EtatCorrectifDto,
+  etatCorrectif,
+  etatFinSupport,
   type CaseRadarDto,
   type CibleVueDto,
   comparerCibles,
@@ -36,13 +43,19 @@ import {
   secteurDe,
   type SecteurRadar,
   type SourceVeille,
+  type SourcesFailleDto,
+  composerInstantane,
+  variationSeptJours,
   VUE_ENSEMBLE_BORNES,
   type VueEnsembleDto,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import type { Db } from '../db/db.js';
+import type { Db, Kdb } from '../db/db.js';
 import type { AlertesVulnerabilites, Cumul, PropositionCumul } from './alertes.js';
+import { objetsEnDepassement } from './delais.js';
+import { entreesInstantane, instantaneDeReference } from './tendances.js';
+import { servicesFinDeSupport } from './services-surface.js';
 import { lisible, present } from './sql.js';
 import { close } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
@@ -68,32 +81,17 @@ export class VueEnsembleVulnerabilites {
 
   async lire(user: SessionUser): Promise<VueEnsembleDto> {
     const k = this.db.k;
-    // Rapprochements proposés (produit à confirmer), avec la famille du produit : secteur du radar.
-    const { rows: propositions } = await sql<PropositionCumul>`
-      SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille
-      FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
-      WHERE r.statut = 'proposee' ORDER BY r.cve, r.id`.execute(k);
-    const { cumuls, sources, titres } = await this.alertes.situationGlobale(k, propositions);
+    const propositions = await propositionsEnCours(k);
+    const { cumuls, sources, titres, objets, reglage } = await this.alertes.situationGlobale(k, propositions);
+    const maintenant = new Date();
 
     // Failles suivies : au moins une présence non traitée, ou un produit à confirmer.
     const suivies: Suivie[] = [];
-    const faits = { critiques: 0, simples: 0, p2Presentes: 0, exploiteesAConfirmer: 0 };
     for (const x of cumuls.values()) {
       const presente = prioriteLaPlusHaute(x.priorites);
       const p = prioriteLaPlusHaute([...x.priorites, ...(x.aConfirmer ? [x.aConfirmer] : [])]);
       if (!p) continue;
-      const exploitee = !!x.cve && (sources.get(x.cve)?.exploitation.length ?? 0) > 0;
-      if (presente) {
-        const n = niveauAlerte({
-          priorite: presente.niveau,
-          exploitable: x.exploitable,
-          exposee: x.presences.has('exposee'),
-        });
-        if (n === 'critique') faits.critiques++;
-        else if (n === 'simple') faits.simples++;
-        if (presente.niveau === 'P2') faits.p2Presentes++;
-      }
-      if (x.aConfirmer && exploitee && !presente) faits.exploiteesAConfirmer++;
+      const exploitee = exploiteeSelonSources(x, sources);
       suivies.push({
         x,
         priorite: p,
@@ -160,8 +158,22 @@ export class VueEnsembleVulnerabilites {
         fiche: m?.fiche ?? null,
       };
     });
+    const niveau = niveauDesFailles(cumuls, sources);
+    // Lot S2 : variation sur sept jours, par rapport à l'instantané de référence (une requête), avec les nombres du moment
+    // calculés par la même composition que l'instantané (aucune requête de plus).
+    const reference = await instantaneDeReference(k, maintenant);
+    const actuel = composerInstantane(entreesInstantane(cumuls, sources, objets, reglage, maintenant));
+    // Lot S3 : précision des failles exploitées et présentes selon l'état de leur correctif (sans renommer la marque).
+    const p1 = suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1');
+    const etats = p1.map((s) => correctifDeCumul(s.x, sources).etat);
+    // Lot S3 : fin de support (constats présents selon Tenable, machines et services exposés lus).
+    const fin = objets.filter(
+      (o) => o.nature === 'constat' && etatFinSupport(o.finSupportLe ?? null, maintenant) === 'atteinte',
+    );
+    const machinesFin = await this.machinesLues(user, [...new Set(fin.flatMap((o) => o.machines))]);
+    const servicesFin = await servicesFinDeSupport(k, user);
     return {
-      niveau: niveauAlerteGlobal(faits),
+      niveau,
       tuiles: {
         exploiteesPresentes: suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1').length,
         aTraiter: { p1: parPriorite.P1, p2: parPriorite.P2 },
@@ -170,6 +182,11 @@ export class VueEnsembleVulnerabilites {
           produits: new Set(propositions.map((p) => p.produit_id)).size,
         },
         corrigeesCeMois: corrigees,
+        // Lot S1 : objets suivis présents en dépassement de délai, sur tous les faits connus (aucune requête de plus).
+        enDepassement: objetsEnDepassement(objets, reglage.delais, maintenant).length,
+        exploiteesSansCorrectif: etats.filter((e) => e === 'aucun_connu').length,
+        exploiteesCorrectifNonRenseigne: etats.filter((e) => e === 'non_renseigne').length,
+        finDeSupport: { constats: fin.length, machines: machinesFin, services: servicesFin },
       },
       total: suivies.length,
       parPriorite,
@@ -177,7 +194,13 @@ export class VueEnsembleVulnerabilites {
       cibles,
       tronquee: [...totaux.values()].some((c) => c.total > VUE_ENSEMBLE_BORNES.ciblesParCase),
       journal,
-      calculeLe: new Date().toISOString(),
+      variation: reference
+        ? variationSeptJours(reference, {
+            niveau: niveau.niveau,
+            mesures: { ...actuel.global, machines: null, actifs: null },
+          })
+        : null,
+      calculeLe: maintenant.toISOString(),
     };
   }
 
@@ -232,6 +255,15 @@ export class VueEnsembleVulnerabilites {
             : null,
       });
     return out;
+  }
+
+  /** Lot S3 : parmi les machines données (identifiants internes), celles que la personne lit ; drapeau pour les autres. */
+  private async machinesLues(user: SessionUser, ids: readonly string[]): Promise<NombreLisible> {
+    if (!ids.length) return { ...VIDE };
+    const { rows } = await sql<{ lues: number }>`SELECT count(*)::int AS lues FROM vulnerabilites_machines m
+      WHERE m.id = ANY(${[...ids]}::uuid[]) AND ${lisible(user)}`.execute(this.db.k);
+    const lues = rows[0]?.lues ?? 0;
+    return { lisibles: lues, horsLecture: lues < ids.length };
   }
 
   /** Actifs exposés que la personne lit, pour les CVE rendues exposées sur Internet. */
@@ -309,6 +341,49 @@ export class VueEnsembleVulnerabilites {
       }
     });
   }
+}
+
+/** Rapprochements proposés (produit à confirmer), avec la famille du produit : secteur du radar et niveau d'alerte. Une
+    requête. Reprise par les instantanés et le rapport du lot S2. */
+export async function propositionsEnCours(k: Kdb): Promise<PropositionCumul[]> {
+  const { rows } = await sql<PropositionCumul>`
+    SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille
+    FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
+    WHERE r.statut = 'proposee' ORDER BY r.cve, r.id`.execute(k);
+  return rows;
+}
+
+/** Lot S3 : état du correctif d'une faille du calcul global : date de publication du correctif selon Tenable (le plus ancien
+    des contrôles qui la portent) et mention « Un correctif existe » du CERT Santé pour sa CVE. Repris par le rapport. */
+export function correctifDeCumul(x: Cumul, sources: ReadonlyMap<string, SourcesFailleDto>): EtatCorrectifDto {
+  return etatCorrectif({
+    tenablePublieLe: x.correctifTenableLe,
+    certSante: (x.cve ? sources.get(x.cve)?.certSante?.correctif : null) ?? null,
+  });
+}
+
+/** Exploitation avérée d'une faille : au moins une source de l'exploitation rangée avec sa CVE. */
+export const exploiteeSelonSources = (x: Cumul, sources: ReadonlyMap<string, SourcesFailleDto>) =>
+  !!x.cve && (sources.get(x.cve)?.exploitation.length ?? 0) > 0;
+
+/** Niveau d'alerte de la plateforme (règle du lot PC1), sur les failles du calcul global : les mêmes pour tout le monde.
+    Repris par la vue d'ensemble, les instantanés et le rapport (lot S2). */
+export function niveauDesFailles(cumuls: ReadonlyMap<string, Cumul>, sources: ReadonlyMap<string, SourcesFailleDto>) {
+  const faits = { critiques: 0, simples: 0, p2Presentes: 0, exploiteesAConfirmer: 0 };
+  for (const x of cumuls.values()) {
+    const presente = prioriteLaPlusHaute(x.priorites);
+    if (presente) {
+      const n = niveauAlerte({
+        priorite: presente.niveau,
+        exploitable: x.exploitable,
+        exposee: x.presences.has('exposee'),
+      });
+      if (n === 'critique') faits.critiques++;
+      else if (n === 'simple') faits.simples++;
+      if (presente.niveau === 'P2') faits.p2Presentes++;
+    } else if (x.aConfirmer && exploiteeSelonSources(x, sources)) faits.exploiteesAConfirmer++;
+  }
+  return niveauAlerteGlobal(faits);
 }
 
 /** État le moins avancé des objets suivis encore ouverts (ordre de ETATS_SUIVI : nouvelle, à traiter, en cours…). */

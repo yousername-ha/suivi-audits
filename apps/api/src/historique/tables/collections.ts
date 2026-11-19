@@ -1,6 +1,6 @@
 /* Collections de l'outil de suivi reprises en tables (ADR 0040, lot H2b). Généré à partir des mêmes colonnes que la
    migration 024 et le schéma Drizzle ; ne pas modifier sans les modifier tous les trois. Colonnes ajoutées depuis : date de
-   qualification d'un incident (`qualifiedAt`, migration 087, ADR 0105). */
+   qualification d'un incident (`qualifiedAt`, migration 089, ADR 0105). */
 import type { CollectionSpec } from './collection.js';
 
 export const COLLECTIONS: readonly CollectionSpec[] = [

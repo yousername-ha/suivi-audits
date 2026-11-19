@@ -1,5 +1,5 @@
 /* Déclaration réglementaire des incidents (ADR 0105, décisions du RSSI du 18/11/2026) : déclarations santé (CERT Santé, ARS)
-   et NIS 2 (ANSSI) d'un incident du registre historique, rangées dans la table `incidents_declarations` (migration 087).
+   et NIS 2 (ANSSI) d'un incident du registre historique, rangées dans la table `incidents_declarations` (migration 089).
    - Propositions : au premier passage de l'incident à « Incident de sécurité » (appel de `Incidents`, dans la même
      transaction), selon la qualification guidée et la catégorie d'entité NIS 2 ; le compte à rebours démarre aussitôt.
    - Préparer (rubriques, numéro de dossier pressenti) : incidents:modifier sur le périmètre de l'incident.

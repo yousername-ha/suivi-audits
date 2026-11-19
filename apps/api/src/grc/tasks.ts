@@ -5,6 +5,7 @@ import {
   LIEN_RESUME_ALERTES,
   lienDeclarationIncident,
   lireIcs,
+  NOTIFICATION_RUBRIQUES,
   NOTIFICATION_TYPES_VULNERABILITES,
   PREFIXE_RESUME_ALERTES,
   recurrenceSlot,
@@ -564,12 +565,16 @@ export class GrcTasks {
       } else if ((NOTIFICATION_TYPES_VULNERABILITES as readonly string[]).includes(r.kind)) {
         // Résumé des alertes simples (lot V6b) : onglet « Alertes » filtré ; sinon, fiche de l'alerte (identifiant interne,
         // avant « : » dans la clé de la notification).
+        // Lot S1 : résumés des délais dépassés et des exceptions, vers leur rubrique.
         if (vulnerabilites && r.dueKey)
           visible.push({
             ...r,
-            lien: r.dueKey.startsWith(PREFIXE_RESUME_ALERTES)
-              ? LIEN_RESUME_ALERTES
-              : `/vulnerabilites/alertes?alerte=${encodeURIComponent(r.dueKey.split(':')[0]!)}`,
+            lien:
+              r.kind === 'vulnerabilites_delais' || r.kind === 'vulnerabilites_exceptions'
+                ? NOTIFICATION_RUBRIQUES[r.kind]!.lien
+                : r.dueKey.startsWith(PREFIXE_RESUME_ALERTES)
+                  ? LIEN_RESUME_ALERTES
+                  : `/vulnerabilites/alertes?alerte=${encodeURIComponent(r.dueKey.split(':')[0]!)}`,
           });
       } else if (
         r.smsiId &&

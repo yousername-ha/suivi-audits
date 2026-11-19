@@ -6,10 +6,33 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-**Migration automatique `087`** (déclaration réglementaire des incidents,
+**Migration automatique `087`** (module Vulnérabilités, lot S1 : délais de correction et exceptions à échéance,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes facultatives sur `vulnerabilites_suivis` et
+`vulnerabilites_suivi_historique`, contrainte des événements de l'historique recréée avec « expiration », table
+`vulnerabilites_depassements`, contrainte de portée de `grc_notifications` recréée avec deux types de plus, quatre index),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Dans l'application : seul le rôle « RSSI » accorde,
+prolonge ou lève une exception (risque accepté) ; le compte d'installation n'a que le rôle « Administrateur » : attribuer le
+rôle « RSSI » à la personne qui décide. Les délais par défaut (P1 48 heures, P2 15 jours, P3 90 jours, P4 aucun délai) sont à
+confirmer dans Risques > Vulnérabilités > Seuils de priorité. Une exception déjà enregistrée sans échéance reste valide et
+est signalée « sans échéance, à compléter » ; une exception déjà enregistrée avec une date de revue passée expire à la
+première évaluation (la faille revient à traiter). (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `088`** (module Vulnérabilités, lot S2 : tendances et rapport de pilotage,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (tables `vulnerabilites_instantanes` et
+`vulnerabilites_instantanes_mesures`, deux index), durée négligeable, sans reprise de données. Aucune action sur le serveur.
+L'historique des tendances commence à la mise à jour : aucun passé n'est reconstruit ; le premier instantané est pris dans la
+minute qui suit le démarrage, puis un par jour. Les instantanés sont gardés trois ans (à confirmer par le RSSI). Le rapport de
+pilotage s'enregistre en PDF par l'impression du navigateur (aucun PDF produit par le serveur). (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
+action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
+surveillance vulnérabilités SMSI »)
+
+**Migration automatique `089`** (déclaration réglementaire des incidents,
 [ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : additive (table `incidents_declarations` et son
 déclencheur d'immutabilité, colonne `qualified_at` de `suivi_incidents`, contrainte de portée des notifications recréée à
-l'identique plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
+l'identique de la `087` plus le type `incident_declaration`, un index unique), durée négligeable, sans reprise de données : les incidents
 existants n'ont pas de date de qualification et ne reçoivent aucune proposition de déclaration ; le RSSI peut en ouvrir une à
 la main après avoir renseigné la date de qualification. **Aucune action sur le serveur.**
 
@@ -25,6 +48,43 @@ la main après avoir renseigné la date de qualification. **Aucune action sur le
 
 ### Ajouté
 
+- Vulnérabilités, regroupement par correctif (lot S3, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : vue « Par
+  correctif » de « Failles détectées », en tête « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de
+  la solution de Tenable, en anglais, tel quel) avec les failles et CVE qu'il corrige (les mêmes nombres pour tout le monde),
+  les machines lues, la priorité la plus haute, les marques, le délai le plus défavorable et l'état du correctif ; tri par
+  gain ; groupe « Sans correctif indiqué par la source » ; fenêtre du correctif (failles, machines lues). Lecture seule, sans
+  appel réseau ni migration. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, état du correctif et fin de support (lot S3) : état « correctif disponible », « aucun correctif connu » ou
+  « non renseigné » d'après Tenable (date de publication du correctif) et le CERT Santé (« Un correctif existe »), avec la
+  source qui parle, dans la fiche illustrée, la vue par correctif et le rapport ; précision « exploitée, sans correctif
+  connu » à côté de la marque zero-day, sans la renommer ; « Fin de support » (date de fin de support de Tenable passée,
+  version en fin de vie d'un service exposé selon AlgoLightHouse) sur les failles, les machines (liste, parc, fiche) et les
+  services exposés, filtres, tuile de la vue d'ensemble et section du rapport de pilotage. Sans effet sur la priorité ni sur
+  les alertes. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, tendances (lot S2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : instantané quotidien de la
+  situation pris par la plateforme (niveau d'alerte, failles présentes par priorité, exploitées, en dépassement, sous
+  exception, corrigées, machines et actifs exposés touchés ; pour toute la plateforme et par périmètre, sans nom) ; onglet
+  « Tendances » avec courbes jour par jour ou semaine après semaine, chacune avec sa légende et son tableau, choix du
+  périmètre lu, indicateur « s'améliore / se dégrade / stable » (règle à confirmer) ; variation sur sept jours dans la vue
+  d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, rapport de pilotage (lot S2) : rapport d'un mois ou d'une période libre, pour toute la plateforme ou un
+  périmètre lu, pour la direction et l'audit (niveau d'alerte et son évolution, failles critiques, délais de correction,
+  dépassements, exceptions, tendances, alertes critiques, état des sources et des connecteurs) ; page imprimable en A4,
+  enregistrée en PDF par le navigateur, et export CSV des tableaux ; aucun nom de machine, de domaine ni d'adresse (textes
+  passés au masque des machines) ; chaque production tracée au journal d'audit. (session « Module surveillance
+  vulnérabilités SMSI »)
+
+- Vulnérabilités, délais de correction (lot S1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : délai cible par
+  priorité réglé avec les seuils de priorité (administration du module, If-Match, journal), âge, échéance calculée et état
+  du délai (en dépassement, échéance proche, dans les délais, sans délai) dans les listes de failles (colonne « Délai »,
+  filtre, tri par échéance), dans la fiche illustrée et dans la tuile « En dépassement » de la vue d'ensemble ; résumé
+  notifié des failles entrées en dépassement, sans nom ; onglet « Délais et exceptions » avec la mesure des corrections
+  (délai moyen et médian par priorité, part dans les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, exceptions à échéance (lot S1) : un risque accepté exige une justification, une mesure compensatoire et une
+  échéance de douze mois au plus ; seul le rôle « RSSI » l'accorde, le prolonge ou le lève ; rappel quatorze jours avant
+  l'échéance ; à l'échéance, l'exception expire d'elle-même, la faille revient à l'état d'avant (ou « à traiter ») et son
+  délai repart ; tout est historisé et tracé au journal, sans nom de machine. (session « Module surveillance vulnérabilités
+  SMSI »)
 - Déclaration réglementaire des incidents, santé (CERT Santé, ARS) et NIS 2 (ANSSI)
   ([ADR 0105](docs/adr/0105-declaration-reglementaire-des-incidents.md)) : qualification horodatée au premier passage à
   « Incident de sécurité », corrigeable par le RSSI (correction tracée, échéances non envoyées recalculées) ; déclarations
@@ -38,6 +98,14 @@ la main après avoir renseigné la date de qualification. **Aucune action sur le
   heures (santé), indépendants du module des écarts ; rubrique « Identité de l'établissement » de la Configuration. La liste
   « Obligations à vérifier » reste identique ; ses lignes santé et NIS 2 renvoient au bloc. (session « Projet audit_suivi
   Coeur »)
+
+### Modifié
+
+- Vulnérabilités : la date de revue d'un risque accepté devient l'échéance de l'exception (elle expire au lieu d'être
+  seulement signalée) ; le réglage « Seuils de priorité » porte aussi les délais (une saisie peut ne porter que le seuil ou
+  que les délais). (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, « Failles détectées » : les boutons de pagination (flèches et numéros) portent un nom accessible, comme
+  ceux de la vue d'ensemble. (session « Module surveillance vulnérabilités SMSI »)
 
 ## [7.3.0] — 2026-11-18
 

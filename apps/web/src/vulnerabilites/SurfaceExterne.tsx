@@ -37,6 +37,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  serviceEnFinDeSupport,
   type ActifAlhDto,
   type AlerteAlhDto,
   type ApercuLiaisonMasseDto,
@@ -76,6 +77,7 @@ import { useCan } from '../session';
 import { CarteSurface } from './CarteSurface';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
 import { FicheMachine } from './Machines';
+import { MentionFinSupport } from './ParcMachines';
 import { PrioriteFaits } from './FaillesDetectees';
 import { FicheFaille } from './FicheFaille';
 import { MarquesSources } from './SourcesFaille';
@@ -323,6 +325,7 @@ export function ServicesTable({ services, titre }: { services: (ServiceAlhDto | 
                     {s.cpe}
                   </Text>
                 )}
+                {serviceEnFinDeSupport(s.statutVersion) && <MentionFinSupport court />}
               </Table.Td>
               {avecAlertes && (
                 <Table.Td>
@@ -481,6 +484,7 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
                               {libelleProduitService(sv)}
                             </Text>
                           )}
+                          {serviceEnFinDeSupport(sv.statutVersion) && <MentionFinSupport court />}
                         </div>
                       ))}
                       {x.nombreServices > 3 && (

@@ -70,13 +70,14 @@ CREATE TRIGGER incidents_declarations_no_truncate BEFORE TRUNCATE ON incidents_d
   FOR EACH STATEMENT EXECUTE FUNCTION audit_log_immutable();
 
 -- Rappels de déclaration (type incident_declaration) : ni SMSI ni objet du socle, comme les alertes de sécurité (046), les
--- contributions RETEX (049) et les alertes du module Vulnérabilités (086) ; la contrainte de portée est recréée pour
--- l'admettre (rien d'autre ne change). Une seule notification par personne et par jalon (clé « <déclaration>:<jalon>:<départ> »).
+-- contributions RETEX (049), les alertes (086) et les résumés de délais et d'exceptions (087) du module Vulnérabilités ; la
+-- contrainte de portée est recréée à l'identique de 087 plus ce type (rien d'autre ne change). Une seule notification par
+-- personne et par jalon (clé « <déclaration>:<jalon>:<départ> »).
 ALTER TABLE grc_notifications DROP CONSTRAINT IF EXISTS grc_notifications_portee;
 ALTER TABLE grc_notifications
   ADD CONSTRAINT grc_notifications_portee
   CHECK (kind IN ('alerte_securite', 'retex_contribution', 'vulnerabilites_alerte_critique', 'vulnerabilites_alerte',
-                  'incident_declaration')
+                  'vulnerabilites_delais', 'vulnerabilites_exceptions', 'incident_declaration')
          OR (smsi_id IS NOT NULL AND object_id IS NOT NULL));
 CREATE UNIQUE INDEX IF NOT EXISTS grc_notifications_incident_declaration
   ON grc_notifications (user_id, due_key) WHERE kind = 'incident_declaration';

@@ -29,8 +29,21 @@
    l'affichage. Retirer le périmètre indiqué à la main fait revenir la machine au périmètre de son dépôt : écriture exigée
    sur ce périmètre ; sans dépôt relié, la machine ne serait plus lisible que par l'administration du module, d'où
    administrer, comme avant.
+   Lot S1 : délai de correction de chaque faille (calculerDelai du paquet partagé) : première présence connue (première
+   détection de Tenable, sinon entrée du constat ; date du rapprochement d'une faille déclarée), reprise du délai, délai
+   cible de la priorité courante, échéance calculée et état ; filtre par état de délai et tri par échéance, en mémoire comme
+   la priorité (aucune requête de plus).
+   Lot S3 : état du correctif de chaque constat (date de publication du correctif de Tenable, mention du CERT Santé de ses
+   CVE ; etatCorrectif du paquet partagé) et fin de support (date `seolDate` de Tenable passée) ; filtre « fin de support »
+   des constats et des machines ; une machine est en fin de support dès qu'un constat présent sur elle l'est, quel que soit
+   son état de suivi (c'est un fait, pas une décision). Colonnes ajoutées aux requêtes existantes : aucune requête de plus.
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
+  etatCorrectif,
+  etatFinSupport,
+  calculerDelai,
+  comparerEcheances,
+  type DelaiFailleDto,
   AffectationMachine,
   AffectationMachines,
   type OriginePerimetreMachine,
@@ -77,8 +90,16 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, exploiteeCve, preuveCertSante, sourcesDe } from './sources.js';
-import { alerteCertFr, detecteeSurMachine, lisible, perimetreMachine, present, scoreNvd } from './sql.js';
-import { close, colonnesSuivi, filtreSuivi, type LigneSuivi, versSuiviResume } from './suivi.js';
+import {
+  alerteCertFr,
+  detecteeSurMachine,
+  lisible,
+  perimetreMachine,
+  premiereConstat,
+  present,
+  scoreNvd,
+} from './sql.js';
+import { aujourdhui, close, colonnesSuivi, filtreSuivi, type LigneSuivi, versSuiviResume } from './suivi.js';
 
 const INTROUVABLE = 'Machine introuvable ou non accessible.';
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
@@ -97,6 +118,8 @@ const exploiteeAvere = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat
 const exploitableSources = sql<boolean>`(c.exploitable OR EXISTS (SELECT 1
   FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id AND ${preuveCertSante('cc.cve')}))`;
 const sansCve = sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id)`;
+/** Lot S3 : le constat `c` est en fin de support selon Tenable (date de fin de support du logiciel passée). */
+export const finSupportConstat = sql<boolean>`(c.fin_support_le IS NOT NULL AND c.fin_support_le <= now())`;
 /** Une CVE du constat `c` est citée par une alerte du CERT-FR (veille). */
 const alerteConstat = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
   WHERE cc.constat_id = c.id AND ${alerteCertFr('cc.cve')})`;
@@ -134,6 +157,8 @@ interface LigneConstat extends LigneSuivi {
   present: boolean;
   alerte_certfr: boolean;
   epss_veille: string | null;
+  /** Lot S1 : première présence connue chez nous. */
+  premiere: Date;
 }
 
 interface LigneMachine {
@@ -163,6 +188,8 @@ interface LigneMachine {
   exploites: number;
   exploitables: number;
   exploitees_avere: number;
+  /** Lot S3 : contrôles présents en fin de support (cinq au plus), en JSON. */
+  fins_support: { nom: string; le: string }[];
 }
 
 /** Priorité d'un constat présent sur une machine lisible : présence « détectée » (« absente » s'il n'est plus rapporté).
@@ -203,29 +230,59 @@ export async function sourcesDesConstats(
   );
 }
 
-const versResume = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite): ConstatResumeDto => ({
-  id: l.id,
-  plugin: String(l.plugin_id),
-  nom: l.nom,
-  gravite: l.gravite,
-  famille: l.famille,
-  cvss3Score: nombre(l.cvss3_score),
-  vpr: nombre(l.vpr_score),
-  epss: nombre(l.epss_score),
-  exploitable: l.exploitable,
-  exploite: l.exploite,
-  nonMaintenu: l.non_maintenu,
-  finSupportLe: iso(l.fin_support_le),
-  nombreCves: l.nombre_cves,
-  cves: l.cves,
-  machines: l.machines,
-  derniereDetection: iso(l.derniere),
-  present: l.present,
-  alerteCertFr: l.alerte_certfr,
-  sources,
-  priorite: prioriteConstat(l, sources, reglage),
-  suivi: versSuiviResume(l),
-});
+const versResume = (
+  l: LigneConstat,
+  sources: SourcesFailleDto,
+  reglage: ReglagePriorite,
+  maintenant = new Date(),
+  jour = aujourdhui(maintenant),
+): ConstatResumeDto => {
+  const priorite = prioriteConstat(l, sources, reglage);
+  return {
+    finDeSupport: etatFinSupport(iso(l.fin_support_le), maintenant) === 'atteinte',
+    correctifEtat: etatCorrectif({
+      tenablePublieLe: iso(l.correctif_publie_le),
+      certSante: sources.certSante?.correctif ?? null,
+    }),
+    id: l.id,
+    plugin: String(l.plugin_id),
+    nom: l.nom,
+    gravite: l.gravite,
+    famille: l.famille,
+    cvss3Score: nombre(l.cvss3_score),
+    vpr: nombre(l.vpr_score),
+    epss: nombre(l.epss_score),
+    exploitable: l.exploitable,
+    exploite: l.exploite,
+    nonMaintenu: l.non_maintenu,
+    finSupportLe: iso(l.fin_support_le),
+    nombreCves: l.nombre_cves,
+    cves: l.cves,
+    machines: l.machines,
+    derniereDetection: iso(l.derniere),
+    present: l.present,
+    alerteCertFr: l.alerte_certfr,
+    sources,
+    priorite,
+    suivi: versSuiviResume(l, jour),
+    delai: calculerDelai({
+      priorite: priorite.niveau,
+      etatSuivi: l.suivi_etat,
+      present: l.present,
+      premiere: l.premiere.toISOString(),
+      repartLe: iso(l.suivi_repart),
+      delais: reglage.delais,
+      maintenant,
+    }),
+  };
+};
+
+/** Filtre par état de délai et ordre « par échéance » (lot S1), sur les éléments déjà rangés par priorité. */
+function delaiFiltreTrie<T>(liste: T[], delai: (x: T) => DelaiFailleDto, q: { delai?: string; tri?: string }): T[] {
+  const filtres = q.delai ? liste.filter((x) => delai(x).etat === q.delai) : liste;
+  // Tri stable : à échéance égale (ou sans échéance), l'ordre par priorité est gardé.
+  return q.tri === 'echeance' ? [...filtres].sort((a, b) => comparerEcheances(delai(a), delai(b))) : filtres;
+}
 
 /** Faille déclarée sur une machine : CVE rattachée à un produit relié, non détectée par Tenable sur cette machine. */
 export interface DeclareeMachine {
@@ -296,6 +353,8 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     source: 'tenable',
     integration: { id: l.integration_id, nom: l.integration_nom },
     compteurs,
+    finDeSupport: l.fins_support.length > 0,
+    finsDeSupport: l.fins_support.map((f) => ({ nom: f.nom, le: new Date(f.le).toISOString() })),
     version: l.version,
   };
 };
@@ -321,40 +380,53 @@ export async function faillesDesMachines(
     cvss3_score: string | null;
     epss_score: string | null;
     exploitable: boolean;
-  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable
+    correctif_publie_le: Date | null;
+  }>`SELECT DISTINCT d.machine_id, c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.correctif_publie_le
      FROM vulnerabilites_detections d
      JOIN vulnerabilites_machines m ON m.id = d.machine_id
      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
      JOIN vulnerabilites_constats c ON c.id = d.constat_id
      WHERE d.machine_id = ANY(${ids}::uuid[]) AND ${present} AND NOT ${close('constat')}`.execute(k);
-  const { rows: declarees } = await sql<{ machine_id: string; cve: string }>`
-     SELECT DISTINCT m.id AS machine_id, r.cve
+  // Lot S3 : Tenable parle du correctif d'une CVE déclarée s'il la cite dans un contrôle qui porte une date de correctif.
+  const { rows: declarees } = await sql<{ machine_id: string; cve: string; correctif_tenable: Date | null }>`
+     SELECT DISTINCT m.id AS machine_id, r.cve, (SELECT min(c2.correctif_publie_le) FROM vulnerabilites_constat_cves cc2
+       JOIN vulnerabilites_constats c2 ON c2.id = cc2.constat_id WHERE cc2.cve = r.cve) AS correctif_tenable
      FROM vulnerabilites_produits_machines pm
      JOIN vulnerabilites_machines m ON m.id = pm.machine_id
      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
      JOIN vulnerabilites_rapprochements r ON r.produit_id = pm.produit_id AND r.statut IN ('rattachee', 'confirmee')
      WHERE m.id = ANY(${ids}::uuid[]) AND NOT ${detecteeSurMachine} AND NOT ${close('declaree')}`.execute(k);
-  const ajouter = (machine: string, sources: SourcesFailleDto, presence: 'detectee' | 'declaree') => {
+  const ajouter = (
+    machine: string,
+    sources: SourcesFailleDto,
+    presence: 'detectee' | 'declaree',
+    correctifTenable: Date | null,
+  ) => {
     const faits = faitsDepuisSources(sources);
+    const correctif = etatCorrectif({
+      tenablePublieLe: iso(correctifTenable),
+      certSante: sources.certSante?.correctif ?? null,
+    });
     parMachine.set(machine, [
       ...(parMachine.get(machine) ?? []),
       {
         niveau: calculerPriorite({ ...faits, presence }, reglage).niveau,
         exploitee: faits.exploitation.length > 0,
         exploitable: faits.exploitable.length > 0,
+        sansCorrectif: correctif.etat === 'aucun_connu',
       },
     ]);
   };
   const uniques = [...new Map(constats.map((c) => [c.id, c])).values()];
   const sources = await sourcesDesConstats(k, uniques);
-  for (const c of constats) ajouter(c.machine_id, sources.get(c.id)!, 'detectee');
+  for (const c of constats) ajouter(c.machine_id, sources.get(c.id)!, 'detectee', c.correctif_publie_le);
   const faits = await lireFaitsCve(
     k,
     declarees.map((d) => d.cve),
   );
   for (const d of declarees) {
     const f = faits.get(d.cve);
-    ajouter(d.machine_id, sourcesDe(f ? [f] : []), 'declaree');
+    ajouter(d.machine_id, sourcesDe(f ? [f] : []), 'declaree', d.correctif_tenable);
   }
   return parMachine;
 }
@@ -389,6 +461,7 @@ export class FaillesDetectees {
         GROUP BY x.constat_id, pc.present
         HAVING bool_or(x.lisible))
       SELECT c.*, p.machines, p.derniere, p.present, ${exploite} AS exploite, ${sansCve} AS non_maintenu,
+        ${premiereConstat} AS premiere,
         ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
         (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
         ARRAY(SELECT cc.cve FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id ORDER BY cc.cve DESC LIMIT 5)
@@ -405,6 +478,7 @@ export class FaillesDetectees {
     if (q.exploite) conditions.push(exploiteeAvere);
     if (q.exploitable) conditions.push(exploitableSources);
     if (q.nonMaintenu) conditions.push(sansCve);
+    if (q.finSupport) conditions.push(finSupportConstat);
     conditions.push(filtreSuivi(q.etat, sql<boolean>`p.present`));
     const texte = q.q?.trim();
     if (texte) {
@@ -423,9 +497,10 @@ export class FaillesDetectees {
       this.db.k,
     );
     const sources = await sourcesDesConstats(this.db.k, rows);
+    const maintenant = new Date();
     // Priorité calculée par la fonction partagée, puis filtre et ordre : priorité, gravité, exploitée, machines, contrôle.
-    const tous = rows
-      .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage) }))
+    const ranges = rows
+      .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage, maintenant) }))
       .filter((x) => !q.priorite || x.r.priorite.niveau === q.priorite)
       .sort(
         (a, b) =>
@@ -435,6 +510,7 @@ export class FaillesDetectees {
           b.l.machines - a.l.machines ||
           a.l.plugin_id - b.l.plugin_id,
       );
+    const tous = delaiFiltreTrie(ranges, (x) => x.r.delai, q);
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
     return {
       total: tous.length,
@@ -535,7 +611,11 @@ export class FaillesDetectees {
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
-             coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere
+             coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere,
+             -- Lot S3 : contrôles présents en fin de support, quel que soit leur état de suivi (cinq au plus).
+             (SELECT coalesce(json_agg(json_build_object('nom', z.nom, 'le', z.le) ORDER BY z.le, z.nom), '[]'::json)
+              FROM (SELECT DISTINCT c.nom, c.fin_support_le AS le FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
+                    WHERE d.machine_id = m.id AND ${present} AND ${finSupportConstat} ORDER BY le, nom LIMIT 5) z) AS fins_support
       FROM vulnerabilites_machines m
       JOIN integrations i ON i.id = m.integration_id
       LEFT JOIN vulnerabilites_tenable_depots td ON td.id = m.depot_id
@@ -592,7 +672,8 @@ export class FaillesDetectees {
       (m) =>
         (!texte || (m.nom ?? '').includes(texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
-        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre),
+        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
+        (!q.finSupport || m.finDeSupport),
     );
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
     return {
@@ -625,7 +706,8 @@ export class FaillesDetectees {
       (m) =>
         (!texte || (m.nom ?? '').includes(texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
-        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre),
+        (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
+        (!q.finSupport || m.finDeSupport),
     );
     // Marques de toutes les machines filtrées (mêmes requêtes, quel que soit leur nombre) : le nombre de machines marquées
     // « zero-day » d'une zone compte aussi celles au-delà de la borne.
@@ -670,9 +752,11 @@ export class FaillesDetectees {
         kev: boolean;
         alerte: boolean;
         machines: number;
+        premiere: Date;
       }
     >`
-      SELECT r.id, r.cve, r.statut, p.id AS produit_id, p.editeur, p.nom, p.version_produit, v.cvss31_gravite,
+      SELECT r.id, r.cve, r.statut, r.cree_le AS premiere, p.id AS produit_id, p.editeur, p.nom, p.version_produit,
+             v.cvss31_gravite,
              v.cvss40_gravite, ${scoreNvd} AS score, v.epss_score, v.kev_ajout IS NOT NULL AS kev,
              ${alerteCertFr('v.cve')} AS alerte,
              count(DISTINCT m.id) FILTER (WHERE NOT ${detecteeSurMachine})::int AS machines,
@@ -694,11 +778,20 @@ export class FaillesDetectees {
       this.db.k,
       rows.map((l) => l.cve),
     );
+    const maintenant = new Date();
+    const jour = aujourdhui(maintenant);
     return rows.map((l): FailleDeclareeDto => {
       const f = faits.get(l.cve);
       const sources = sourcesDe(f ? [f] : []);
       const retenues = valeursRetenues(sources.valeurs);
       const rattachee = l.statut === 'rattachee' || l.statut === 'confirmee';
+      const priorite = calculerPriorite(
+        {
+          ...faitsDepuisSources(sources),
+          presence: rattachee ? 'declaree' : l.statut === 'proposee' ? 'a_confirmer' : 'absente',
+        },
+        reglage,
+      );
       return {
         rapprochementId: l.id,
         cve: l.cve,
@@ -712,14 +805,17 @@ export class FaillesDetectees {
         sources,
         machines: l.machines,
         present: rattachee,
-        priorite: calculerPriorite(
-          {
-            ...faitsDepuisSources(sources),
-            presence: rattachee ? 'declaree' : l.statut === 'proposee' ? 'a_confirmer' : 'absente',
-          },
-          reglage,
-        ),
-        suivi: versSuiviResume(l),
+        priorite,
+        suivi: versSuiviResume(l, jour),
+        delai: calculerDelai({
+          priorite: priorite.niveau,
+          etatSuivi: l.suivi_etat,
+          present: rattachee,
+          premiere: l.premiere.toISOString(),
+          repartLe: iso(l.suivi_repart),
+          delais: reglage.delais,
+          maintenant,
+        }),
       };
     });
   }
@@ -740,7 +836,7 @@ export class FaillesDetectees {
           : sql<boolean>`(p.nom ILIKE ${`%${motif}%`} OR p.editeur ILIKE ${`%${motif}%`})`,
       );
     }
-    const tous = (await this.lignesDeclarees(user, conditions))
+    const ranges = (await this.lignesDeclarees(user, conditions))
       .filter((x) => !q.priorite || x.priorite.niveau === q.priorite)
       .sort(
         (a, b) =>
@@ -749,6 +845,7 @@ export class FaillesDetectees {
           (a.cve < b.cve ? 1 : a.cve > b.cve ? -1 : 0) ||
           (a.produit.id < b.produit.id ? -1 : a.produit.id > b.produit.id ? 1 : 0),
       );
+    const tous = delaiFiltreTrie(ranges, (x) => x.delai, q);
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
     return {
       total: tous.length,

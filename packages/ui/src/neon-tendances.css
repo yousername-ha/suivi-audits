@@ -1,0 +1,278 @@
+/* Module Vulnérabilités (ADR 0100, lot S2) : onglets « Tendances » et « Rapport de pilotage ». Jetons de la charte, en
+   clair et en sombre : teintes de la cartographie (--carte-*-accent, formes porteuses de sens au moins 3:1), traits et
+   surfaces de l'application (--suivi-*). Aucune longueur en px ni en rem ; dans les courbes, unités de la viewBox (attributs
+   SVG). Chaque série porte sa teinte, son trait (neon-trait-*) et sa forme de marque, et le texte porte toujours le sens.
+   Aucun style en ligne (ADR 0006). Le rapport s'imprime en A4 (page nommée « rapport ») : ni menu, ni en-tête de
+   l'application, ni bouton, ni fenêtre ; noir sur blanc, lisible sans couleur. */
+
+/* ------------------------------------------------------------------ Teintes des séries */
+.vt-serie--p1,
+.vt-serie--depassements {
+  --serie: var(--carte-rouge-accent);
+}
+.vt-serie--p2,
+.vt-serie--exceptions {
+  --serie: var(--carte-orange-accent);
+}
+.vt-serie--p3,
+.vt-serie--machines {
+  --serie: var(--carte-bleu-accent);
+}
+.vt-serie--p4 {
+  --serie: var(--carte-gris-accent);
+}
+.vt-serie--exploitees,
+.vt-serie--actifs {
+  --serie: var(--carte-violet-accent);
+}
+.vt-serie--corrigees {
+  --serie: var(--carte-vert-accent);
+}
+.vt-serie--niveau {
+  --serie: var(--carte-marine-accent);
+}
+
+/* ------------------------------------------------------------------ Tendances */
+.vt-bloc {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+}
+.vt-indicateur {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+}
+.vt-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-sm);
+}
+.vt-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.vt-legende svg {
+  inline-size: 2.4em;
+  block-size: 1em;
+  overflow: visible;
+}
+.vt-graphique {
+  max-inline-size: 60em;
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+}
+.vt-graphique .neon-courbes svg {
+  block-size: auto;
+  aspect-ratio: 2 / 1;
+}
+.vt-graphique .neon-axe {
+  fill: var(--mantine-color-dimmed);
+}
+
+/* ------------------------------------------------------------------ Vue d'ensemble : variation sur sept jours */
+.pc-variation {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--pc-trait, var(--suivi-trait));
+  border-inline-start-width: calc(var(--suivi-trait-l) * 3);
+  background: var(--pc-boite, var(--suivi-surface));
+}
+.pc-variation ul {
+  display: grid;
+  gap: calc(var(--mantine-spacing-xs) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--mantine-font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.pc-variation__ref {
+  margin: 0;
+  color: var(--pc-doux, var(--mantine-color-dimmed));
+  font-size: var(--mantine-font-size-xs);
+}
+.pc-variation a {
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------ Rapport (écran) */
+.rapport-doc {
+  display: grid;
+  gap: var(--mantine-spacing-lg);
+  margin-block-start: var(--mantine-spacing-lg);
+  padding: var(--mantine-spacing-lg);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+  min-inline-size: 0;
+}
+.rapport-doc h1 {
+  margin: 0;
+  font-size: var(--mantine-h2-font-size);
+}
+.rapport-doc h2 {
+  margin: 0 0 var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-md);
+}
+.rp-entete {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  padding-block-end: var(--mantine-spacing-md);
+  border-block-end: calc(var(--suivi-trait-l) * 2) solid var(--suivi-trait);
+}
+.rp-surtitre {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rp-identite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-xl);
+  margin: 0;
+}
+.rp-identite div {
+  display: flex;
+  gap: var(--mantine-spacing-xs);
+}
+.rp-identite dt {
+  font-weight: 650;
+}
+.rp-identite dt::after {
+  content: ' :';
+}
+.rp-identite dd {
+  margin: 0;
+}
+.rp-section {
+  min-inline-size: 0;
+}
+.rp-defile {
+  overflow-x: auto;
+}
+.rp-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--mantine-font-size-sm);
+}
+.rp-table th,
+.rp-table td {
+  padding: calc(var(--mantine-spacing-xs) / 2) var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.rp-table th {
+  font-weight: 650;
+  background: color-mix(in srgb, var(--mantine-color-text) 6%, transparent);
+}
+.rp-note {
+  margin: var(--mantine-spacing-xs) 0 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.rp-pied {
+  padding-block-start: var(--mantine-spacing-sm);
+  border-block-start: var(--suivi-trait-l) solid var(--suivi-trait);
+  font-size: var(--mantine-font-size-xs);
+}
+.rp-pied p {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ Rapport (impression A4) */
+@page rapport {
+  size: A4 portrait;
+  margin: 14mm 12mm 16mm;
+  @bottom-right {
+    content: 'Page ' counter(page) ' sur ' counter(pages);
+    font-size: 8pt;
+  }
+  @bottom-left {
+    content: 'Rapport de pilotage des vulnérabilités';
+    font-size: 8pt;
+  }
+}
+@media print {
+  .shell:has(.rapport-doc) > :not(.shell-body),
+  .shell:has(.rapport-doc) .shell-nav,
+  .shell:has(.rapport-doc) .shell-main > :not(.page),
+  .rapport-ecran,
+  body:has(.rapport-doc) .alerte-critique,
+  body:has(.rapport-doc) .mantine-Notifications-root {
+    display: none !important;
+  }
+  /* Les ancêtres du rapport portent la même page nommée : sinon le changement de nom de page ajoute une page vide. */
+  html:has(.rapport-doc),
+  body:has(.rapport-doc) {
+    page: rapport;
+  }
+  .shell:has(.rapport-doc),
+  .shell:has(.rapport-doc) .shell-body,
+  .shell:has(.rapport-doc) .shell-main,
+  .shell:has(.rapport-doc) .shell-main > .page {
+    page: rapport;
+    display: block;
+    min-block-size: 0;
+    block-size: auto;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+  .rapport-doc {
+    --mantine-color-text: black;
+    --mantine-color-dimmed: black;
+    --suivi-trait: black;
+    page: rapport;
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: white;
+    color: black;
+    font-size: 10pt;
+  }
+  .rapport-doc > * + * {
+    margin-block-start: 5mm;
+  }
+  .rp-defile {
+    overflow: visible;
+  }
+  .rp-table {
+    font-size: 8.5pt;
+  }
+  .rp-table th {
+    background: none;
+    border-block-end-width: calc(var(--suivi-trait-l) * 2);
+  }
+  .rp-table thead {
+    display: table-header-group;
+  }
+  .rp-table tr,
+  .rp-identite,
+  .rp-pied {
+    break-inside: avoid;
+  }
+  .rapport-doc h2 {
+    break-after: avoid;
+  }
+  .rp-note {
+    color: black;
+  }
+}

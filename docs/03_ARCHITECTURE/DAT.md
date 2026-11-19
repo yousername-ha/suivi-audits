@@ -265,7 +265,7 @@ qui étend la contrainte posée par la `046`). Le pilote garde le droit `inciden
 
 **Déclarations réglementaires des incidents (18/11/2026, [ADR 0105](../adr/0105-declaration-reglementaire-des-incidents.md)).**
 Les déclarations santé (CERT Santé, ARS) et NIS 2 (ANSSI) d’un incident sont rangées hors de l’état historique, dans la table
-`incidents_declarations` (migration additive `087`), repérées par l’identifiant et le périmètre de l’incident, sans clé
+`incidents_declarations` (migration additive `089`), repérées par l’identifiant et le périmètre de l’incident, sans clé
 étrangère (les lignes de `suivi_incidents` sont réécrites à chaque enregistrement). La date de qualification de l’incident
 (`qualifiedAt`, colonne `suivi_incidents.qualified_at`, alignée avec `historique/tables/collections.ts`) est posée au premier
 passage à « Incident de sécurité », dans la transaction de l’incident, qui propose aussi les déclarations probables.
@@ -282,7 +282,7 @@ l’établissement : section de paramètres `etablissement` (table `settings`), 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.
 L’automate de tâches utilise transactions et unicité ; fuseaux des périmètres.
 Rappels des déclarations d’incident (ADR 0105) : passage en tête de l’automate (60 s), indépendant du module des écarts,
-arrêté avec le module incidents ; notifications `incident_declaration` sans SMSI ni objet (contrainte recréée par la `087`),
+arrêté avec le module incidents ; notifications `incident_declaration` sans SMSI ni objet (contrainte recréée par la `089`),
 une par personne et par jalon (index unique sur `user_id, due_key`), au responsable de l’incident s’il correspond à un compte
 et aux comptes au rôle RSSI qui voient le périmètre ; titre sans régime ni contenu, repris seul dans le courriel.
 Worker externe à l’API : file exploitation/sauvegarde/restauration/TLS et

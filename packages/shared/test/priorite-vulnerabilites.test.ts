@@ -30,6 +30,8 @@ import {
   ReglagePriorite,
   RechercheConstats,
   RechercheDeclarees,
+  DELAIS_CORRECTION_DEFAUT,
+  SaisieReglagePriorite,
 } from '../src/index.js';
 
 const faits = (f: Partial<FaitsFaille> = {}): FaitsFaille => ({
@@ -156,11 +158,19 @@ describe('priorité d’une faille (grille de départ)', () => {
       ],
     });
     expect(calculerPriorite(faits({ epss: 0.25 })).niveau).toBe('P4');
-    expect(REGLAGE_PRIORITE_DEFAUT).toEqual({ seuilEpss: 0.5 });
-    expect(ReglagePriorite.safeParse({ seuilEpss: 0 }).success).toBe(false);
-    expect(ReglagePriorite.safeParse({ seuilEpss: 1.01 }).success).toBe(false);
-    expect(ReglagePriorite.safeParse({ seuilEpss: 1 }).success).toBe(true);
-    expect(ReglagePriorite.safeParse({ seuilEpss: 0.5, autre: 1 }).success).toBe(false);
+    // Lot S1 : les délais de correction sont rangés avec le seuil (valeurs par défaut du code).
+    expect(REGLAGE_PRIORITE_DEFAUT).toEqual({ seuilEpss: 0.5, delais: DELAIS_CORRECTION_DEFAUT });
+    const delais = DELAIS_CORRECTION_DEFAUT;
+    expect(ReglagePriorite.safeParse({ seuilEpss: 0, delais }).success).toBe(false);
+    expect(ReglagePriorite.safeParse({ seuilEpss: 1.01, delais }).success).toBe(false);
+    expect(ReglagePriorite.safeParse({ seuilEpss: 1, delais }).success).toBe(true);
+    expect(ReglagePriorite.safeParse({ seuilEpss: 1 }).success).toBe(false);
+    expect(ReglagePriorite.safeParse({ seuilEpss: 0.5, delais, autre: 1 }).success).toBe(false);
+    // Saisie (PUT) : le seuil, les délais, ou les deux ; jamais rien.
+    expect(SaisieReglagePriorite.safeParse({ seuilEpss: 0.3 }).success).toBe(true);
+    expect(SaisieReglagePriorite.safeParse({ delais }).success).toBe(true);
+    expect(SaisieReglagePriorite.safeParse({}).success).toBe(false);
+    expect(SaisieReglagePriorite.safeParse({ seuilEpss: 0.3, autre: 1 }).success).toBe(false);
   });
 
   it('rejouable : mêmes faits, même résultat, sans dépendre de l’ordre des sources', () => {

@@ -20,10 +20,28 @@
      plus présent nulle part est « corrigé selon Tenable, à confirmer » ; un rapprochement qui n'est plus rattaché aussi. Une
      personne confirme (état « corrigée ») ou refuse avec une note. Une faille « corrigée » qui réapparaît repasse « à
      traiter », avec une entrée « réapparue » dont l'auteur est le système.
+   Lot S1 (décision du RSSI du 18/11/2026) : un risque accepté est une EXCEPTION. L'accorder, la prolonger (même état,
+   nouvelle échéance) ou la lever (tout autre état) est réservé au rôle « RSSI » de la plateforme (rssi.ts ; 403 sinon,
+   administrateur compris), en plus du droit de modifier et de la lecture de toutes les machines touchées. Elle exige une
+   justification (la note), une mesure compensatoire et une échéance (la date de revue du lot V4b) d'au plus douze mois. À
+   l'échéance passée, la plateforme l'expire (expirerExceptions, au tic de l'API) : la faille revient à l'état d'avant
+   l'exception (« à traiter » ou « en cours »), sinon « à traiter », son délai de correction repart de l'expiration, et
+   l'événement « expiration » entre à l'historique. Lever une exception fait aussi repartir le délai ; une faille corrigée
+   qui réapparaît aussi. Au passage à « corrigée », la priorité, le point de départ, la fin et l'échéance du délai sont
+   relevés à l'historique (mesure des délais) ; la fin est la date de la proposition « corrigée » quand la décision la
+   confirme (la source ne voyait plus la faille), sinon la date de la décision.
    Journal `vulnerabilites.suivi.*` : identifiants internes et états seulement ; ni nom ni adresse de machine, ni la note
-   (texte libre, gardé à l'historique), ni la description de l'action. */
+   (texte libre, gardé à l'historique), ni la mesure compensatoire, ni la description de l'action. */
 import {
   type ActifsTouches,
+  type DelaiFailleDto,
+  echeanceMaxException,
+  etatApresExpiration,
+  EXCEPTION_RESERVEE,
+  type ExceptionSuiviDto,
+  refusEcheanceException,
+  RAPPEL_EXCEPTION_JOURS,
+  statutException,
   ACTIFS_MACHINES_MAX,
   type ActionLieeDto,
   blocActifsTouches,
@@ -53,6 +71,7 @@ import type { Client, Db, Kdb } from '../db/db.js';
 import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
+import { tientLeRoleRssi } from './rssi.js';
 import { lisible, present } from './sql.js';
 
 const SYSTEME = { username: 'système' };
@@ -62,13 +81,13 @@ const MACHINES_NON_LISIBLES =
   'Cette faille touche des machines que vous ne pouvez pas lire : la décision vaut pour toute l’organisation et revient à une personne qui les voit toutes.';
 const ACTION_INTROUVABLE = 'Action introuvable ou non accessible.';
 const HISTORIQUE_MAX = 200;
-const aujourdhui = () => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(new Date());
+export const aujourdhui = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 /* ---------------------------------------------------------------- Fragments communs aux listes (failles.ts) */
 /** Colonnes du suivi résumé, sur l'alias `s` (vulnerabilites_suivis, en jointure externe). */
 export const colonnesSuivi = sql`coalesce(s.etat, 'nouvelle') AS suivi_etat,
   coalesce(s.proposition, 'aucune') AS suivi_proposition, s.revue_le::text AS suivi_revue,
-  coalesce(s.version, 0) AS suivi_version,
+  coalesce(s.version, 0) AS suivi_version, s.delai_repart_le AS suivi_repart,
   coalesce(s.etat = 'risque_accepte' AND s.revue_le < (now() AT TIME ZONE ${FUSEAU})::date, false) AS suivi_revue_depassee,
   (SELECT count(*)::int FROM vulnerabilites_suivi_actions sa WHERE sa.suivi_id = s.id) AS suivi_actions`;
 
@@ -79,13 +98,16 @@ export interface LigneSuivi {
   suivi_version: number;
   suivi_revue_depassee: boolean;
   suivi_actions: number;
+  /** Lot S1 : reprise du délai de correction (fin d'une exception, réapparition). */
+  suivi_repart: Date | null;
 }
 
-export const versSuiviResume = (l: LigneSuivi): SuiviResumeDto => ({
+export const versSuiviResume = (l: LigneSuivi, jour = aujourdhui()): SuiviResumeDto => ({
   etat: l.suivi_etat,
   proposition: l.suivi_proposition,
   revueLe: l.suivi_revue,
   revueDepassee: l.suivi_revue_depassee,
+  exceptionStatut: l.suivi_etat === 'risque_accepte' ? statutException(l.suivi_revue, jour) : null,
   nombreActions: l.suivi_actions,
   version: l.suivi_version,
 });
@@ -130,7 +152,15 @@ interface LigneEtat {
   version: number;
   maj_le: Date | null;
   maj_par: string | null;
+  exception_justification: string | null;
+  exception_mesure: string | null;
+  exception_par: string | null;
+  exception_le: Date | null;
+  exception_etat_avant: EtatSuiviFaille | null;
 }
+
+/** Délai relevé au passage à « corrigée » (mesure des délais, lot S1). */
+export type DelaiObjet = Pick<DelaiFailleDto, 'priorite' | 'depuis' | 'echeance'>;
 
 const colonne = (nature: NatureSuivi) => (nature === 'constat' ? 'constat_id' : 'rapprochement_id');
 
@@ -138,6 +168,9 @@ export class SuiviFailles {
   /** Machines lisibles rangées par rang (FaillesDetectees.machinesRangees), branché par les services : ordre des machines
       nommées dans une action (V30). Absent, l'ordre est celui des noms. */
   rangs?: (user: SessionUser) => Promise<MachineDto[]>;
+  /** Délai de correction d'un objet (priorité courante, point de départ, échéance), branché par les services (délais.ts) :
+      relevé à l'historique au passage à « corrigée ». Absent, rien n'est relevé. */
+  delaiObjet?: (k: Kdb, nature: NatureSuivi, id: string) => Promise<DelaiObjet | null>;
 
   constructor(
     private readonly db: Db,
@@ -315,6 +348,11 @@ export class SuiviFailles {
         'version',
         'maj_le',
         'maj_par',
+        'exception_justification',
+        'exception_mesure',
+        'exception_par',
+        'exception_le',
+        sql<EtatSuiviFaille | null>`exception_etat_avant`.as('exception_etat_avant'),
       ])
       .where(colonne(nature), '=', id);
     if (verrou) q = q.forUpdate();
@@ -331,6 +369,8 @@ export class SuiviFailles {
       apres: EtatSuiviFaille;
       note?: string;
       revueLe?: string | null;
+      mesure?: string | null;
+      delai?: (DelaiObjet & { fin: string }) | null;
       auteur: { id?: string; username: string };
     },
   ) {
@@ -344,6 +384,11 @@ export class SuiviFailles {
         etat_apres: e.apres,
         note: e.note ?? '',
         revue_le: e.revueLe ?? null,
+        mesure: e.mesure || null,
+        priorite: e.delai?.priorite ?? null,
+        delai_depuis: e.delai?.depuis ?? null,
+        delai_fin: e.delai?.fin ?? null,
+        delai_echeance: e.delai?.echeance ?? null,
         auteur: e.auteur.username,
         auteur_id: e.auteur.id ?? null,
       })
@@ -364,6 +409,7 @@ export class SuiviFailles {
         sql<EtatSuiviFaille>`etat_apres`.as('etat_apres'),
         'note',
         sql<string | null>`revue_le::text`.as('revue_le'),
+        'mesure',
         'auteur',
         'cree_le',
       ])
@@ -375,6 +421,18 @@ export class SuiviFailles {
       .execute();
     const actions = s ? await this.actionsLiees(user, s.id) : [];
     const modifier = user.rights.can('vulnerabilites', 'modifier');
+    const jour = aujourdhui();
+    const exception: ExceptionSuiviDto | null =
+      s?.etat === 'risque_accepte'
+        ? {
+            statut: statutException(s.revue_le, jour),
+            echeance: s.revue_le,
+            justification: s.exception_justification,
+            mesure: s.exception_mesure,
+            par: s.exception_par,
+            le: s.exception_le?.toISOString() ?? null,
+          }
+        : null;
     return {
       nature,
       objetId: id,
@@ -382,7 +440,12 @@ export class SuiviFailles {
       etat: s?.etat ?? 'nouvelle',
       proposition: s?.proposition ?? 'aucune',
       revueLe: s?.revue_le ?? null,
-      revueDepassee: s?.etat === 'risque_accepte' && !!s.revue_le && s.revue_le < aujourdhui(),
+      revueDepassee: s?.etat === 'risque_accepte' && !!s.revue_le && s.revue_le < jour,
+      exceptionStatut: exception?.statut ?? null,
+      exception,
+      peutDeciderException: modifier && o.toutes && (await tientLeRoleRssi(this.db, user)),
+      aujourdhui: jour,
+      echeanceMax: echeanceMaxException(jour),
       nombreActions: actions.length,
       version: s?.version ?? 0,
       majLe: s?.maj_le?.toISOString() ?? null,
@@ -394,6 +457,7 @@ export class SuiviFailles {
         etatApres: h.etat_apres,
         note: h.note,
         revueLe: h.revue_le,
+        mesure: h.mesure,
         auteur: h.auteur,
         le: h.cree_le.toISOString(),
       })),
@@ -455,15 +519,43 @@ export class SuiviFailles {
     ip: string,
   ): Promise<SuiviDto> {
     const b = ChangementEtatSuivi.parse(corps);
+    // Accorder ou prolonger une exception : rôle RSSI, vérifié avant toute lecture (lot S1).
+    if (b.etat === 'risque_accepte' && !(await tientLeRoleRssi(this.db, user)))
+      throw new HttpError(403, EXCEPTION_RESERVEE);
     await this.db.tx(async (c, k) => {
       await this.decidable(k, user, nature, id);
       const s = await this.verrouiller(k, nature, id);
       if (s.version !== attendue) throw conflict({ version: s.version, updated_by: s.maj_par ?? '' });
+      // Lever une exception (quitter le risque accepté) : rôle RSSI aussi.
+      if (s.etat === 'risque_accepte' && b.etat !== 'risque_accepte' && !(await tientLeRoleRssi(this.db, user, c)))
+        throw new HttpError(403, EXCEPTION_RESERVEE);
       const refus = refusChangementSuivi(s.etat, b.etat);
       if (refus) throw new HttpError(409, refus);
-      const revue = b.etat === 'risque_accepte' ? (b.revueLe ?? null) : null;
-      if (revue && revue < aujourdhui()) throw new HttpError(422, 'La date de revue ne peut pas être passée.');
+      const exception = b.etat === 'risque_accepte';
+      const revue = exception ? (b.revueLe ?? null) : null;
+      if (exception) {
+        const motif = refusEcheanceException(revue, aujourdhui());
+        if (motif) throw new HttpError(422, motif);
+      }
       const confirme = b.etat === 'corrigee' && s.proposition === 'a_confirmer';
+      // Mesure des délais : délai relevé avant la décision ; fin à la proposition « corrigée » qu'elle confirme.
+      let delai: (DelaiObjet & { fin: string }) | null = null;
+      if (b.etat === 'corrigee' && this.delaiObjet) {
+        const d = await this.delaiObjet(k, nature, id);
+        const proposee = confirme
+          ? (
+              await k
+                .selectFrom('vulnerabilites_suivi_historique')
+                .select((eb) => eb.fn.max('cree_le').as('le'))
+                .where('nature', '=', nature)
+                .where('objet_id', '=', id)
+                .where('evenement', '=', 'proposition')
+                .executeTakeFirst()
+            )?.le
+          : null;
+        if (d?.depuis) delai = { ...d, fin: (proposee ? new Date(proposee) : new Date()).toISOString() };
+      }
+      const leve = s.etat === 'risque_accepte' && !exception;
       await k
         .updateTable('vulnerabilites_suivis')
         .set({
@@ -471,6 +563,26 @@ export class SuiviFailles {
           revue_le: revue,
           // Confirmer « corrigée » clôt la proposition ; un autre état la laisse telle quelle.
           proposition: b.etat === 'corrigee' ? 'aucune' : s.proposition,
+          ...(exception
+            ? {
+                exception_justification: b.note,
+                exception_mesure: b.mesure ?? null,
+                exception_par: user.displayName || user.username,
+                exception_le: sql<Date>`now()`,
+                // Une prolongation garde l'état d'avant l'exception d'origine.
+                exception_etat_avant: s.etat === 'risque_accepte' ? s.exception_etat_avant : s.etat,
+                exception_rappel_le: null,
+              }
+            : {
+                exception_justification: null,
+                exception_mesure: null,
+                exception_par: null,
+                exception_le: null,
+                exception_etat_avant: null,
+                exception_rappel_le: null,
+              }),
+          // Lever une exception fait repartir le délai de correction.
+          ...(leve ? { delai_repart_le: sql<Date>`now()` } : {}),
           version: s.version + 1,
           maj_le: sql<Date>`now()`,
           maj_par: user.username,
@@ -483,6 +595,8 @@ export class SuiviFailles {
         apres: b.etat,
         note: b.note,
         revueLe: revue,
+        mesure: exception ? b.mesure : null,
+        delai,
         auteur: user,
       });
       await this.db.audit(
@@ -490,7 +604,17 @@ export class SuiviFailles {
         ip,
         'vulnerabilites.suivi.etat_modifie',
         s.id,
-        { nature, objet: id, avant: s.etat, apres: b.etat, revueLe: revue, propositionConfirmee: confirme },
+        {
+          nature,
+          objet: id,
+          avant: s.etat,
+          apres: b.etat,
+          revueLe: revue,
+          propositionConfirmee: confirme,
+          ...(exception ? { exception: s.etat === 'risque_accepte' ? 'prolongee' : 'accordee' } : {}),
+          ...(leve ? { exception: 'levee' } : {}),
+          ...(delai ? { priorite: delai.priorite } : {}),
+        },
         c,
       );
     }, user.username);
@@ -775,6 +899,8 @@ export class SuiviFailles {
           etat: apres,
           proposition: 'aucune',
           absente: false,
+          // Lot S1 : une faille corrigée qui réapparaît voit son délai de correction repartir.
+          ...(reapparue ? { delai_repart_le: sql<Date>`now()` } : {}),
           ...(visible ? { version: s.version + 1, maj_le: sql<Date>`now()`, maj_par: SYSTEME.username } : {}),
         })
         .where('id', '=', s.id)
@@ -797,6 +923,78 @@ export class SuiviFailles {
     if (!proposer) return null;
     await this.historiser(k, nature, id, { evenement: 'proposition', avant: s.etat, apres: s.etat, auteur: SYSTEME });
     return 'proposition';
+  }
+
+  /* ---------------------------------------------------------------- Exceptions à échéance (lot S1, tic de l'API) */
+  /** Expire les exceptions dont l'échéance est passée (au fuseau de l'organisation) : la faille revient à l'état d'avant
+      l'exception (« à traiter » ou « en cours »), sinon « à traiter » ; son délai de correction repart de l'expiration ;
+      l'événement « expiration » entre à l'historique, avec l'échéance. Ensemble, en un nombre fixe de requêtes. Rend les
+      exceptions expirées (identifiants internes seulement). */
+  async expirerExceptions(
+    k: Kdb,
+    jour = aujourdhui(),
+  ): Promise<{ suivi: string; nature: NatureSuivi; objet: string }[]> {
+    const { rows } = await sql<{
+      id: string;
+      nature: NatureSuivi;
+      objet: string;
+      revue_le: string;
+      avant: EtatSuiviFaille | null;
+    }>`SELECT s.id, s.nature, coalesce(s.constat_id, s.rapprochement_id) AS objet, s.revue_le::text AS revue_le,
+         s.exception_etat_avant AS avant
+       FROM vulnerabilites_suivis s
+       WHERE s.etat = 'risque_accepte' AND s.revue_le IS NOT NULL AND s.revue_le < ${jour}::date
+       ORDER BY s.id FOR UPDATE`.execute(k);
+    if (!rows.length) return [];
+    for (const etat of ['a_traiter', 'en_cours'] as const) {
+      const ids = rows.filter((r) => etatApresExpiration(r.avant) === etat).map((r) => r.id);
+      if (!ids.length) continue;
+      await k
+        .updateTable('vulnerabilites_suivis')
+        .set((eb) => ({
+          etat,
+          revue_le: null,
+          exception_justification: null,
+          exception_mesure: null,
+          exception_par: null,
+          exception_le: null,
+          exception_etat_avant: null,
+          exception_rappel_le: null,
+          delai_repart_le: sql<Date>`now()`,
+          version: eb('version', '+', 1),
+          maj_le: sql<Date>`now()`,
+          maj_par: SYSTEME.username,
+        }))
+        .where('id', 'in', ids)
+        .execute();
+    }
+    await k
+      .insertInto('vulnerabilites_suivi_historique')
+      .values(
+        rows.map((r) => ({
+          nature: r.nature,
+          objet_id: r.objet,
+          evenement: 'expiration' as const,
+          etat_avant: 'risque_accepte',
+          etat_apres: etatApresExpiration(r.avant),
+          note: '',
+          revue_le: r.revue_le,
+          auteur: SYSTEME.username,
+        })),
+      )
+      .execute();
+    return rows.map((r) => ({ suivi: r.id, nature: r.nature, objet: r.objet }));
+  }
+
+  /** Exceptions qui arrivent à échéance sous RAPPEL_EXCEPTION_JOURS jours et n'ont pas encore eu de rappel : marquées (un
+      rappel par exception et par échéance ; une prolongation le réarme). Rend leurs identifiants internes. */
+  async rappelerExceptions(k: Kdb, jour = aujourdhui()): Promise<string[]> {
+    const { rows } = await sql<{ id: string }>`
+      UPDATE vulnerabilites_suivis SET exception_rappel_le = now()
+      WHERE etat = 'risque_accepte' AND exception_rappel_le IS NULL AND revue_le IS NOT NULL
+        AND revue_le >= ${jour}::date AND revue_le <= ${jour}::date + ${RAPPEL_EXCEPTION_JOURS}::int
+      RETURNING id`.execute(k);
+    return rows.map((r) => r.id).sort();
   }
 
   /** Après une synchronisation reçue de Tenable (dans sa transaction, numéro de référence déjà avancé si elle est complète).

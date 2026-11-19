@@ -262,8 +262,17 @@ describe('failles déclarées, priorité, machines', () => {
       proposition: 'aucune',
       revueLe: null,
       revueDepassee: false,
+      exceptionStatut: null,
       nombreActions: 1,
       version: 2,
+    },
+    delai: {
+      etat: 'en_depassement',
+      priorite: 'P1',
+      delai: { duree: 48, unite: 'heures' },
+      premiere: '2026-11-10T08:00:00.000Z',
+      depuis: '2026-11-10T08:00:00.000Z',
+      echeance: '2026-11-12T08:00:00.000Z',
     },
   };
   it('liste des failles déclarées : mention « déclaré », produit et version, priorité et faits', () => {

@@ -10,6 +10,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Agent, createTestApp, login, makeUser, type TestApp } from './helpers.js';
 
+/** Délais de correction par défaut (lot S1), rangés avec le seuil EPSS. */
+const DELAIS = {
+  P1: { duree: 48, unite: 'heures' },
+  P2: { duree: 15, unite: 'jours' },
+  P3: { duree: 90, unite: 'jours' },
+  P4: null,
+};
+
 const V = '/api/vulnerabilites';
 const SYSTEME = { username: 'test' };
 const CPE_GF = 'cpe:2.3:a:editeur_fictif:gestionnaire_fictif:*:*:*:*:*:*:*:*';
@@ -596,18 +604,20 @@ describe('mention « déclaré », priorité et rang', () => {
     const url = `${V}/priorite/reglage`;
     const lu = await lecteurA.get(url);
     expect(lu.statusCode).toBe(200);
-    expect(lu.json()).toEqual({ values: { seuilEpss: 0.5 }, version: 0 });
+    // Lot S1 : les délais cibles de correction sont rangés avec le seuil (valeurs par défaut du code).
+    expect(lu.json()).toEqual({ values: { seuilEpss: 0.5, delais: DELAIS }, version: 0 });
     expect((await editeurA.put(url, { seuilEpss: 0.25 }, ifMatch(0))).statusCode).toBe(403);
     expect((await rssi.put(url, { seuilEpss: 0.25 })).statusCode).toBe(428);
     expect((await rssi.put(url, { seuilEpss: 0 }, ifMatch(0))).statusCode).toBe(422);
     expect((await rssi.put(url, { seuilEpss: 0.25, autre: 1 }, ifMatch(0))).statusCode).toBe(422);
     const ok = await rssi.put(url, { seuilEpss: 0.25 }, ifMatch(0));
     expect(ok.statusCode, ok.body).toBe(200);
-    expect(ok.json()).toEqual({ values: { seuilEpss: 0.25 }, version: 1 });
+    // Une saisie du seul seuil garde les délais.
+    expect(ok.json()).toEqual({ values: { seuilEpss: 0.25, delais: DELAIS }, version: 1 });
     expect((await rssi.put(url, { seuilEpss: 0.3 }, ifMatch(0))).statusCode).toBe(412);
     expect((await audits('vulnerabilites.priorite.reglage_modifie')).at(-1)).toMatchObject({
       username: 'rapp_rssi',
-      details: { avant: { seuilEpss: 0.5 }, apres: { seuilEpss: 0.25 }, version: 1 },
+      details: { avant: { seuilEpss: 0.5, delais: DELAIS }, apres: { seuilEpss: 0.25, delais: DELAIS }, version: 1 },
     });
     const c = (await admin.get(`${V}/constats?q=910002`)).json().elements[0];
     expect(c.priorite).toEqual({

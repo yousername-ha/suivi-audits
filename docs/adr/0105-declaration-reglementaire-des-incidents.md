@@ -2,6 +2,9 @@
 
 - Statut : **acceptée** par le RSSI le 18/11/2026, dans la session (numéros 0105 et migration `087` annoncés et acceptés ;
   décisions 1 à 8 ci-dessous prises une à une).
+- Renumérotée 089 le 19/11/2026 (collision avec 087 du module Vulnérabilités) : le fichier devient
+  `089_declarations_incidents.sql` et sa contrainte de portée des notifications reprend aussi les types `vulnerabilites_delais`
+  et `vulnerabilites_exceptions` de la 087 (numéro à faire accepter par le RSSI).
 - Date : 2026-11-18
 - Rédaction : session « Projet audit_suivi Coeur » (`session_01ES6jrfuR1tD6Az1XDgAnS3`)
 - **Complète** l'[ADR 0091](0091-simplification-du-menu-resilience-incidents.md) (fiche de l'incident à onglets) et s'appuie sur
@@ -52,7 +55,7 @@ avec l'incident.
 
 ## Mise en œuvre
 
-- **Migration `087`** (additive) :
+- **Migration `087`, renumérotée `089`** (additive) :
   - table des déclarations d'incident : incident, périmètre, régime (`sante`, `nis2`), étape (`signalement`,
     `alerte_precoce`, `notification`, `rapport_final`, `complement`), déclaration liée (complément), statut (`proposee`,
     `a_declarer`, `non_requise`, `envoyee`), échéance, rubriques du brouillon, motif, envoi (date, auteur, référence, contenu

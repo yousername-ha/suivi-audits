@@ -49,7 +49,7 @@ export const STATUT_DECLARATION_LIBELLES: Record<StatutDeclaration, string> = {
   non_requise: 'Non requise',
   envoyee: 'Envoyée',
 };
-/** Une déclaration envoyée ou écartée est figée : ni modifiable ni supprimable (déclencheur en base, migration 087). */
+/** Une déclaration envoyée ou écartée est figée : ni modifiable ni supprimable (déclencheur en base, migration 089). */
 export const STATUTS_FIGES: readonly StatutDeclaration[] = ['non_requise', 'envoyee'];
 export const declarationFigee = (s: StatutDeclaration) => STATUTS_FIGES.includes(s);
 export const declarationOuverte = (s: StatutDeclaration) => s === 'proposee' || s === 'a_declarer';
