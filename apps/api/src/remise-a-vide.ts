@@ -46,7 +46,7 @@ export const TABLES_SYSTEME = [
 /** Effacé seulement par la portée « tout » : comptes, groupes, fonctions, réglages et configuration de la plateforme. */
 export const TABLES_CONFIGURATION = [
   'users',
-  // Contacts de crise issus des comptes (ADR 0105) : fiche qui complète le compte, effacée avec lui.
+  // Contacts de crise issus des comptes (ADR 0107) : fiche qui complète le compte, effacée avec lui.
   'contacts_crise_comptes',
   'sessions',
   'webauthn_credentials',
@@ -224,6 +224,9 @@ export const TABLES_TRAVAIL = [
   // sans nom ; l'historique repart de zéro avec eux.
   'vulnerabilites_instantanes',
   'vulnerabilites_instantanes_mesures',
+  // Déclarations réglementaires des incidents (ADR 0105) : rattachées aux incidents, effacées avec le travail. Une déclaration
+  // envoyée ou écartée n'est effacée que par ce chemin (déclencheurs suspendus le temps de la transaction).
+  'incidents_declarations',
 ] as const;
 
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */

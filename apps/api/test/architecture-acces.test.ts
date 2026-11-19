@@ -59,6 +59,11 @@ const LISTE_BLANCHE: Record<string, Entree> = {
     raison:
       'Mappeur natif des écarts du registre historique : projette les objets dans l’état brut, rédigé en aval par la porte.',
   },
+  'historique/declarations.ts': {
+    categorie: 'ecriture',
+    raison:
+      'Déclarations des incidents (ADR 0105) : gestes sous le verrou de l’état, après contrôle du droit et du périmètre de l’incident ; rappels de l’automate (système), sans rien rendre à un lecteur.',
+  },
   'historique/registre.ts': {
     categorie: 'ecriture',
     raison:

@@ -2,7 +2,7 @@
    courante, contacts de crise, scénarios et check-lists), modifiée sous verrou et sans copie. La clôture d'une
    cellule liée à un exercice planifié marque cet exercice « Réalisé » (droit du pilotage requis, comme dans l'outil
    historique). L'export Excel de la main courante et l'import des scénarios depuis Excel ne sont pas repris. La lecture
-   ajoute les comptes de la plateforme désignés contacts de crise (ADR 0105, contacts-crise-comptes.ts), jamais écrits ici. */
+   ajoute les comptes de la plateforme désignés contacts de crise (ADR 0107, contacts-crise-comptes.ts), jamais écrits ici. */
 import {
   ActionScenarioModification,
   AuteurCrise,
@@ -75,7 +75,7 @@ export interface VueCrise {
   exercices: { id: string; title: string }[];
   /** Fournisseurs critiques ou hébergeurs HDS, proposés comme contacts. */
   fournisseursCritiques: string[];
-  /** Comptes de la plateforme contacts de crise (ADR 0105) : comptes actifs du périmètre affiché, ou qui couvrent au moins un
+  /** Comptes de la plateforme contacts de crise (ADR 0107) : comptes actifs du périmètre affiché, ou qui couvrent au moins un
       périmètre lisible (ou tous) ; lecture seule, modifiés dans l'administration des comptes. */
   contactsComptes: ContactCriseCompte[];
 }

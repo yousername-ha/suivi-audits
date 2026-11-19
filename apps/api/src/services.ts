@@ -89,7 +89,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   grc.methodBindings = configGrc;
   const notificationsMetier = new NotificationsMetier(db, settings, cfg.publicUrl);
   grc.notificationsMetier = notificationsMetier;
-  const historique = new Historique(grc);
+  const historique = new Historique(grc, settings);
   const alertes = new AlertesExploitation(settings, cfg.publicUrl);
   const alertesSecurite = new AlertesSecurite(db, settings, cfg.publicUrl);
   const motsDePasse = new MotsDePasse(db, vault);
@@ -198,7 +198,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
-    /** Contacts de crise issus des comptes (ADR 0105) : fiche de l'administrateur, mise à jour par la personne. */
+    /** Contacts de crise issus des comptes (ADR 0107) : fiche de l'administrateur, mise à jour par la personne. */
     contactsCrise: new ContactsCriseComptes(db, grc),
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */

@@ -450,8 +450,9 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '086_vulnerabilites_alertes.sql',
         '087_vulnerabilites_delais_exceptions.sql',
         '088_vulnerabilites_instantanes.sql',
-        '089_contacts_crise_comptes.sql',
+        '089_declarations_incidents.sql',
         '091_conservation_sauvegardes.sql',
+        '092_contacts_crise_comptes.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

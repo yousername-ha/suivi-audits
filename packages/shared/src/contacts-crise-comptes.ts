@@ -1,4 +1,4 @@
-/* Contacts de crise issus des comptes de la plateforme (ADR 0105, décision du RSSI du 18/11/2026) : l'administrateur marque
+/* Contacts de crise issus des comptes de la plateforme (ADR 0107, décision du RSSI du 18/11/2026) : l'administrateur marque
    un compte comme contact de crise (rôle de crise, téléphones, disponibilité, contact clé, périmètres) ; la personne met à
    jour ses téléphones et sa disponibilité dans Mon compte ; la page des contacts de crise et la cellule de crise les
    reprennent en lecture seule, pour qui lit les incidents du périmètre. Longueurs : celles des contacts saisis à la main
@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { ContactCrise } from './suivi-crise.js';
 
 const t = (n: number) => z.string().trim().max(n);
-/** Nombre maximal de périmètres choisis pour un contact de crise (contrainte de la migration 089). */
+/** Nombre maximal de périmètres choisis pour un contact de crise (contrainte de la migration 092). */
 export const CONTACT_CRISE_PERIMETRES_MAX = 200;
 
 /** Contact de crise d'un compte, tel que le lit une personne qui lit les incidents du périmètre (`GET /api/crise`,

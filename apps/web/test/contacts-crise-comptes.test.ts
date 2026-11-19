@@ -1,4 +1,4 @@
-/* Contacts de crise issus des comptes (ADR 0105), côté interface : bloc « Comptes de la plateforme » en lecture seule de la
+/* Contacts de crise issus des comptes (ADR 0107), côté interface : bloc « Comptes de la plateforme » en lecture seule de la
    page des contacts de crise (liens tel: et mailto:, lien vers Plateforme > Utilisateurs seulement pour qui lit
    l'administration), section de la fiche d'un compte (administrateur) et carte de Mon compte (la personne ne saisit que ses
    téléphones et sa disponibilité). Rendu statique, données fictives. */

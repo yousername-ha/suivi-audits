@@ -1,5 +1,5 @@
 /* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, clés de sécurité (sécurité du compte),
-   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0105). */
+   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0107). */
 import {
   Alert,
   Badge,

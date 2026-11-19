@@ -1,4 +1,4 @@
--- Contacts de crise issus des comptes de la plateforme (ADR 0105 ; décision du RSSI du 18/11/2026) : un administrateur
+-- Contacts de crise issus des comptes de la plateforme (ADR 0107 ; décision du RSSI du 18/11/2026) : un administrateur
 -- (administration:administrer) marque un compte comme contact de crise, avec son rôle de crise, deux téléphones, sa
 -- disponibilité, la case « contact clé » (priorité dans la cellule de crise) et les périmètres couverts (tous, ou une liste
 -- choisie) ; la personne met à jour elle-même ses téléphones et sa disponibilité (Mon compte), rien d'autre. Une ligne par

@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications';
    main courante horodatée, temps écoulé et échéances, check-list du scénario, contacts de crise et scénarios.
    Données lues et écrites dans l'état historique (clé `crisis`), sous verrou. L'export Excel de la main courante et
    l'import des scénarios depuis Excel ne sont pas repris. Les comptes de la plateforme désignés contacts de crise
-   (ADR 0105) sont montrés en lecture seule, ils se modifient dans Plateforme > Utilisateurs et dans Mon compte. */
+   (ADR 0107) sont montrés en lecture seule, ils se modifient dans Plateforme > Utilisateurs et dans Mon compte. */
 import {
   Anchor,
   Button,
@@ -48,7 +48,7 @@ interface Donnees {
   etat: EtatCrise;
   exercices: { id: string; title: string }[];
   fournisseursCritiques: string[];
-  /** Comptes de la plateforme contacts de crise (ADR 0105), en lecture seule. */
+  /** Comptes de la plateforme contacts de crise (ADR 0107), en lecture seule. */
   contactsComptes?: ContactCriseCompte[];
 }
 type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
@@ -281,7 +281,7 @@ function DetailCellule({
     if (!texte.trim()) return;
     if (await agir('POST', `${base}/entrees`, { type, author: auteur, text: texte.trim() })) setTexte('');
   };
-  // Comptes de la plateforme et contacts saisis à la main, contacts clés en premier (ADR 0105).
+  // Comptes de la plateforme et contacts saisis à la main, contacts clés en premier (ADR 0107).
   const contacts = contactsCellule(etat.contacts, comptes);
   return (
     <>
@@ -658,7 +658,7 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
   );
 }
 
-/** Comptes de la plateforme contacts de crise (ADR 0105) : lecture seule, réservée à qui lit les incidents du périmètre ;
+/** Comptes de la plateforme contacts de crise (ADR 0107) : lecture seule, réservée à qui lit les incidents du périmètre ;
     ils se modifient dans Plateforme > Utilisateurs (lien pour qui lit l'administration). */
 export function ComptesPlateformeCrise({
   comptes,

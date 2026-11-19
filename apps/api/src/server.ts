@@ -1,5 +1,6 @@
 /* Suivi des audits SMSI ISO 27001 / HDS — serveur d'API. */
 import { buildApp } from './app.js';
+import { rappelsDeclarationsIncidents } from './automate-declarations.js';
 import { loadConfig } from './config.js';
 import { log } from './log.js';
 import { createServices } from './services.js';
@@ -28,11 +29,16 @@ async function main() {
   const schedule = setInterval(() => {
     if (working || svc.updates.state().maintenance) return;
     working = true;
-    void svc.modules
-      .run(true, async () => {
-        await svc.modules.assert('ecarts');
-        await svc.grc.tasks.tick();
-      })
+    // Rappels des déclarations réglementaires des incidents (ADR 0105) : en premier et à part, pour ne pas dépendre du module
+    // des écarts (dont l'absence arrête la suite de l'automate).
+    void rappelsDeclarationsIncidents(svc)
+      .catch((e: unknown) => log.warn({ err: String(e) }, 'rappels des déclarations d’incident'))
+      .then(() =>
+        svc.modules.run(true, async () => {
+          await svc.modules.assert('ecarts');
+          await svc.grc.tasks.tick();
+        }),
+      )
       // Rondes de l'assistant (ADR 0086) : après l'automate, qui n'en dépend pas. La ronde tourne en tâche de fond.
       .then(() =>
         svc.modules

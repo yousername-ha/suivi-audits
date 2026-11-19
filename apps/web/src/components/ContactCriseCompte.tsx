@@ -1,4 +1,4 @@
-/* Contact de crise d'un compte (ADR 0105) : section de la fiche d'un compte dans Plateforme > Utilisateurs (l'administrateur
+/* Contact de crise d'un compte (ADR 0107) : section de la fiche d'un compte dans Plateforme > Utilisateurs (l'administrateur
    marque le compte, choisit le rôle de crise, la case clé et les périmètres) et carte de Mon compte (la personne ne met à
    jour que ses téléphones et sa disponibilité). Enregistrements séparés de ceux du compte, avec la version lue (If-Match).
    L'affichage suit les droits de la session ; le serveur reste seul juge. */

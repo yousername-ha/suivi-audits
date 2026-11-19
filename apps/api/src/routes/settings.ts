@@ -19,13 +19,20 @@ import type { Services } from '../services.js';
 
 const SectionParams = z.object({ section: z.enum(SETTINGS_SECTIONS) });
 
-/** Droits d'écriture d'une section : sa permission, plus le module métier pour les sections tirées de l'outil historique. */
+/** Droits d'écriture d'une section : sa permission, plus le module métier pour les sections tirées de l'outil historique et
+    pour l'identité de l'établissement (droit `conformite`, comme la catégorie d'entité NIS 2 ; ADR 0105). */
 function writePermissions(s: SettingsSection) {
   return [
     SETTINGS_WRITE[s],
-    ...(s === 'cycle' ? (['audit:modifier'] as const) : s === 'referentiels' ? (['conformite:modifier'] as const) : []),
+    ...(s === 'cycle'
+      ? (['audit:modifier'] as const)
+      : s === 'referentiels' || s === 'etablissement'
+        ? (['conformite:modifier'] as const)
+        : []),
   ];
 }
+/** Sections rattachées au module Conformité : masquées et refusées quand il est désactivé. */
+const sectionConformite = (s: SettingsSection) => s === 'referentiels' || s === 'etablissement';
 const canWrite = (rights: Rights, s: SettingsSection) => writePermissions(s).every((p) => rights.has(p));
 
 async function info(svc: Services, s: SettingsSection, values: Record<string, unknown>) {
@@ -82,9 +89,7 @@ async function info(svc: Services, s: SettingsSection, values: Record<string, un
 
 async function sectionOut(svc: Services, s: SettingsSection, rights: Rights): Promise<SettingsSectionOut> {
   if (s === 'cycle') await svc.modules.assert('audit');
-  if (s === 'referentiels') {
-    await svc.modules.assert('conformite');
-  }
+  if (sectionConformite(s)) await svc.modules.assert('conformite');
   if (s === 'import_export') await svc.modules.assert('import_export');
   const { values, version } = await svc.settings.read(s);
   return { section: s, values, version, canWrite: canWrite(rights, s), info: await info(svc, s, values) };
@@ -115,7 +120,7 @@ export const settingsRoutes = [
     handler: async ({ svc, s }) => {
       const disabled = (await svc.modules.state()).disabled;
       const visible = SETTINGS_SECTIONS.filter((x) => x !== 'cycle' || !disabled.includes('audit'))
-        .filter((x) => x !== 'referentiels' || !disabled.includes('conformite'))
+        .filter((x) => !sectionConformite(x) || !disabled.includes('conformite'))
         .filter((x) => x !== 'import_export' || !disabled.includes('import_export'));
       return Promise.all(visible.map((x) => sectionOut(svc, x, (s as Session).user.rights)));
     },
@@ -210,9 +215,7 @@ export const settingsRoutes = [
     handler: async ({ svc, s, ip, req, reply, params, body }) => {
       const sess = s as Session;
       if (params.section === 'cycle') await svc.modules.assert('audit');
-      if (params.section === 'referentiels') {
-        await svc.modules.assert('conformite');
-      }
+      if (sectionConformite(params.section)) await svc.modules.assert('conformite');
       if (params.section === 'import_export') await svc.modules.assert('import_export');
       for (const p of writePermissions(params.section)) svc.auth.requirePermission(sess, p);
       const expected = requireIfMatch(req);

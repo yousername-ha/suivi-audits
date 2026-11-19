@@ -497,7 +497,7 @@ function UserEditor({
       <Group justify="flex-end">
         <Button onClick={() => void save()}>{user ? 'Enregistrer' : 'Créer'}</Button>
       </Group>
-      {/* Contact de crise (ADR 0105) : enregistré à part, par sa propre route, sans toucher au compte. */}
+      {/* Contact de crise (ADR 0107) : enregistré à part, par sa propre route, sans toucher au compte. */}
       {user && <ContactCriseCompteEditeur userId={user.id} />}
     </Stack>
   );

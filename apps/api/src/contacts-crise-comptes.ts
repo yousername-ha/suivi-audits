@@ -1,4 +1,4 @@
-/* Contacts de crise issus des comptes de la plateforme (ADR 0105, migration 089). L'administrateur
+/* Contacts de crise issus des comptes de la plateforme (ADR 0107, migration 092). L'administrateur
    (administration:administrer) marque un compte, choisit son rôle de crise, la case « contact clé » et les périmètres ; la
    personne met à jour ses seuls téléphones et sa disponibilité. Lecture par la page des contacts de crise et la cellule de
    crise (`GET /api/crise`, incidents:lire) : comptes actifs seulement, du périmètre affiché, ou couvrant au moins un
