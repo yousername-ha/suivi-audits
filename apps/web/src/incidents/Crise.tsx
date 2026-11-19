@@ -2,7 +2,8 @@ import { notifications } from '@mantine/notifications';
 /* Cellule de crise (reprise des pages « Cellule de crise », « Contacts » et « Scénarios » de l'outil de suivi) :
    main courante horodatée, temps écoulé et échéances, check-list du scénario, contacts de crise et scénarios.
    Données lues et écrites dans l'état historique (clé `crisis`), sous verrou. L'export Excel de la main courante et
-   l'import des scénarios depuis Excel ne sont pas repris. */
+   l'import des scénarios depuis Excel ne sont pas repris. Les comptes de la plateforme désignés contacts de crise
+   (ADR 0107) sont montrés en lecture seule, ils se modifient dans Plateforme > Utilisateurs et dans Mon compte. */
 import {
   Anchor,
   Button,
@@ -18,17 +19,20 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import {
   ECHEANCES_RAPIDES,
   PHASES_CRISE,
   TYPES_ENTREE_CRISE,
   avancementChecklist,
   celluleActive,
+  contactsCellule,
   ecartMainCourante,
   formaterDateHeure,
   formaterDureeCrise,
   resteEcheance,
   type CelluleCrise,
+  type ContactCriseCompte,
   type EtatCrise,
   type ScenarioCrise,
 } from '@suivi/shared';
@@ -44,6 +48,8 @@ interface Donnees {
   etat: EtatCrise;
   exercices: { id: string; title: string }[];
   fournisseursCritiques: string[];
+  /** Comptes de la plateforme contacts de crise (ADR 0107), en lecture seule. */
+  contactsComptes?: ContactCriseCompte[];
 }
 type Agir = <R = unknown>(m: string, c: string, b?: unknown) => Promise<R | undefined>;
 /** Données de la crise du périmètre affiché (cellules, contacts et scénarios d'un périmètre, BUG-044). */
@@ -91,6 +97,7 @@ export function CelluleCriseVue({ smsi }: { smsi?: string }) {
         <DetailCellule
           cellule={cellule}
           etat={etat}
+          comptes={d.contactsComptes ?? []}
           agir={agir}
           modifiable={modifiable}
           onListe={() => setSel('__liste')}
@@ -244,6 +251,7 @@ function OuvertureCellule({
 function DetailCellule({
   cellule: c,
   etat,
+  comptes,
   agir,
   modifiable,
   onListe,
@@ -251,6 +259,7 @@ function DetailCellule({
 }: {
   cellule: CelluleCrise;
   etat: EtatCrise;
+  comptes: readonly ContactCriseCompte[];
   agir: Agir;
   modifiable: boolean;
   onListe: () => void;
@@ -272,7 +281,8 @@ function DetailCellule({
     if (!texte.trim()) return;
     if (await agir('POST', `${base}/entrees`, { type, author: auteur, text: texte.trim() })) setTexte('');
   };
-  const contacts = [...etat.contacts.filter((x) => x.key), ...etat.contacts.filter((x) => !x.key)].slice(0, 12);
+  // Comptes de la plateforme et contacts saisis à la main, contacts clés en premier (ADR 0107).
+  const contacts = contactsCellule(etat.contacts, comptes);
   return (
     <>
       <Group justify="space-between" align="flex-start">
@@ -564,6 +574,7 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
   return (
     <Stack>
       <ErrorAlert error={erreur} />
+      {d && <ComptesPlateformeCrise comptes={d.contactsComptes ?? []} lienAdmin={can('administration', 'lire')} />}
       <Group justify="space-between" align="flex-end">
         <div>
           <Text fw={600}>Contacts de crise</Text>
@@ -643,6 +654,69 @@ export function ContactsCrise({ smsi }: { smsi?: string }) {
           </Table>
         </DataTable>
       )}
+    </Stack>
+  );
+}
+
+/** Comptes de la plateforme contacts de crise (ADR 0107) : lecture seule, réservée à qui lit les incidents du périmètre ;
+    ils se modifient dans Plateforme > Utilisateurs (lien pour qui lit l'administration). */
+export function ComptesPlateformeCrise({
+  comptes,
+  lienAdmin,
+}: {
+  comptes: readonly ContactCriseCompte[];
+  lienAdmin: boolean;
+}) {
+  const tel = (n: string) => (n ? <a href={`tel:${n.replace(/\s/g, '')}`}>{n}</a> : null);
+  return (
+    <Stack gap="xs">
+      <div>
+        <Text fw={600}>Comptes de la plateforme</Text>
+        <Text size="sm" c="dimmed">
+          Comptes de la plateforme désignés contacts de crise, en lecture seule.{' '}
+          {lienAdmin ? (
+            <Anchor component={Link} to="/plateforme/utilisateurs">
+              Modifiable dans Plateforme &gt; Utilisateurs
+            </Anchor>
+          ) : (
+            'Modifiable dans Plateforme > Utilisateurs'
+          )}
+          .
+        </Text>
+      </div>
+      <DataTable label="Comptes de la plateforme">
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Clé</Table.Th>
+              <Table.Th>Nom</Table.Th>
+              <Table.Th>Rôle de crise</Table.Th>
+              <Table.Th>Téléphone</Table.Th>
+              <Table.Th>Téléphone 2</Table.Th>
+              <Table.Th>Courriel</Table.Th>
+              <Table.Th>Disponibilité</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {comptes.map((x) => (
+              <Table.Tr key={x.userId}>
+                <Table.Td>{x.key && <StatusChip etat="info">Clé</StatusChip>}</Table.Td>
+                <Table.Td>{x.nom}</Table.Td>
+                <Table.Td>{x.role}</Table.Td>
+                <Table.Td className="nowrap">{tel(x.phone)}</Table.Td>
+                <Table.Td className="nowrap">{tel(x.phone2)}</Table.Td>
+                <Table.Td>{x.courriel && <a href={`mailto:${x.courriel}`}>{x.courriel}</a>}</Table.Td>
+                <Table.Td>{x.avail}</Table.Td>
+              </Table.Tr>
+            ))}
+            {!comptes.length && (
+              <Table.Tr>
+                <Table.Td colSpan={7}>Aucun compte de la plateforme n’est contact de crise pour ce périmètre.</Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </DataTable>
     </Stack>
   );
 }

@@ -46,6 +46,8 @@ export const TABLES_SYSTEME = [
 /** Effacé seulement par la portée « tout » : comptes, groupes, fonctions, réglages et configuration de la plateforme. */
 export const TABLES_CONFIGURATION = [
   'users',
+  // Contacts de crise issus des comptes (ADR 0107) : fiche qui complète le compte, effacée avec lui.
+  'contacts_crise_comptes',
   'sessions',
   'webauthn_credentials',
   'webauthn_challenges',

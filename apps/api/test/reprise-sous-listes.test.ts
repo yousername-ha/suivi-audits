@@ -163,6 +163,7 @@ describe('sous-listes en tables liées (migration 028)', () => {
         '089_declarations_incidents.sql',
         '090_frequences_synchronisation.sql',
         '091_conservation_sauvegardes.sql',
+        '092_contacts_crise_comptes.sql',
       ]);
       for (const table of ['suivi_ecarts', 'suivi_ecarts_taches'])
         expect((await t.svc.db.one(`SELECT to_regclass('${table}') AS r`))!.r).toBeNull();

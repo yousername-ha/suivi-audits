@@ -17,9 +17,11 @@ import { surConnexion, type Client, type Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { Grc } from './core.js';
 
-/** Compte actif : ni désactivé ni expiré (alias « u » de la table users ; fragment constant, sans valeur). */
-const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
-const nomAffiche = sql<string>`coalesce(nullif(u.display_name, ''), u.username)`;
+/** Compte actif : ni désactivé ni expiré (alias « u » de la table users ; fragment constant, sans valeur). Repris par les
+    contacts de crise issus des comptes (ADR 0107). */
+export const actif = sql<boolean>`(NOT u.disabled AND (u.expires_at IS NULL OR u.expires_at > now()))`;
+/** Nom affiché du compte, à défaut son identifiant (alias « u »). */
+export const nomAffiche = sql<string>`coalesce(nullif(u.display_name, ''), u.username)`;
 const memeNom = (nom: string) => sql<boolean>`lower(name) = lower(${nom})`;
 
 export class GrcAnnuaires {
