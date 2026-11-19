@@ -453,6 +453,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '089_declarations_incidents.sql',
         '090_frequences_synchronisation.sql',
         '091_conservation_sauvegardes.sql',
+        '092_contacts_crise_comptes.sql',
         '093_vulnerabilites_import_nessus.sql',
         '094_vulnerabilites_exploite_malware.sql',
       ]);

@@ -230,6 +230,7 @@ describe('migration d’une base v2 existante, sans perte', () => {
       '089_declarations_incidents.sql',
       '090_frequences_synchronisation.sql',
       '091_conservation_sauvegardes.sql',
+      '092_contacts_crise_comptes.sql',
       '093_vulnerabilites_import_nessus.sql',
       '094_vulnerabilites_exploite_malware.sql',
     ]);
