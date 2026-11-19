@@ -51,6 +51,7 @@ import {
   type CompteursMachine,
   faitsDepuisSources,
   graviteDepuisScore,
+  type SourceMachine,
   type SourcesFailleDto,
   valeursRetenues,
   type FailleDeclareeDto,
@@ -149,6 +150,9 @@ interface LigneConstat extends LigneSuivi {
   voir_aussi: string | null;
   cves_tronquees: boolean;
   integration_id: string;
+  /** Lot N1 : instance qui a rapporté le constat (nom et type). */
+  integration_nom: string;
+  integration_type: SourceMachine;
   exploite: boolean;
   non_maintenu: boolean;
   nombre_cves: number;
@@ -181,6 +185,8 @@ interface LigneMachine {
   derniere_detection: Date | null;
   integration_id: string;
   integration_nom: string;
+  /** Lot N1 : source de la machine (type de son instance). */
+  source: SourceMachine;
   version: number;
   critique: number;
   elevee: number;
@@ -265,6 +271,7 @@ const versResume = (
     alerteCertFr: l.alerte_certfr,
     sources,
     priorite,
+    integration: { id: l.integration_id, nom: l.integration_nom, type: l.integration_type },
     suivi: versSuiviResume(l, jour),
     delai: calculerDelai({
       priorite: priorite.niveau,
@@ -351,8 +358,8 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
     acr: nombre(l.acr),
     premiere: iso(l.premiere_detection),
     derniere: iso(l.derniere_detection),
-    source: 'tenable',
-    integration: { id: l.integration_id, nom: l.integration_nom },
+    source: l.source,
+    integration: { id: l.integration_id, nom: l.integration_nom, type: l.source },
     compteurs,
     finDeSupport: l.fins_support.length > 0,
     finsDeSupport: l.fins_support.map((f) => ({ nom: f.nom, le: new Date(f.le).toISOString() })),
@@ -461,7 +468,8 @@ export class FaillesDetectees {
         WHERE x.present OR NOT pc.present
         GROUP BY x.constat_id, pc.present
         HAVING bool_or(x.lisible))
-      SELECT c.*, p.machines, p.derniere, p.present, ${exploite} AS exploite, ${sansCve} AS non_maintenu,
+      SELECT c.*, i.nom AS integration_nom, i.type AS integration_type, p.machines, p.derniere, p.present,
+        ${exploite} AS exploite, ${sansCve} AS non_maintenu,
         ${premiereConstat} AS premiere,
         ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
         (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
@@ -469,6 +477,7 @@ export class FaillesDetectees {
           AS cves,
         ${colonnesSuivi}
       FROM vulnerabilites_constats c JOIN par_constat p ON p.constat_id = c.id
+      JOIN integrations i ON i.id = c.integration_id
       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
       WHERE ${ou}`;
   }
@@ -524,9 +533,8 @@ export class FaillesDetectees {
   /** Fiche d'un constat : ses CVE (avec leur présence au catalogue KEV) et les machines lisibles où il est présent (à
       défaut, où il a été vu en dernier), par rôle. Un constat sans machine lisible répond comme un constat inconnu. */
   async constat(user: SessionUser, id: string): Promise<ConstatDto> {
-    const { rows } = await sql<LigneConstat & { integration_nom: string }>`
-      SELECT x.*, i.nom AS integration_nom FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x
-      JOIN integrations i ON i.id = x.integration_id`.execute(this.db.k);
+    const { rows } = await sql<LigneConstat>`
+      SELECT x.* FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x`.execute(this.db.k);
     const l = rows[0];
     if (!l) throw new HttpError(404, 'Faille introuvable ou non accessible.');
     const cves = await this.db.k
@@ -590,7 +598,6 @@ export class FaillesDetectees {
       cvesTronquees: l.cves_tronquees,
       cvesDetail: cves.map((x) => ({ cve: x.cve, kev: x.kev })),
       parRole,
-      integration: { id: l.integration_id, nom: l.integration_nom },
     };
   }
 
@@ -609,7 +616,7 @@ export class FaillesDetectees {
              CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN td.perimetre_id END AS depot_perimetre_id,
              CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN sd.name END AS depot_perimetre_nom,
              m.exposition, m.acr,
-             m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.version,
+             m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.source, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
              coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere,

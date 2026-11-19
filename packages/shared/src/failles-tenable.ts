@@ -253,6 +253,21 @@ export const BilanSynchronisation = z
 export type BilanSynchronisation = z.infer<typeof BilanSynchronisation>;
 
 /* ------------------------------------------------------------------ API : lecture */
+/** Source d'une machine et d'un constat : le type de l'instance qui l'a rapporté (lot N1 : Security Center par
+    synchronisation, ou Nessus par import de fichier). Un contrôle Nessus reste un contrôle de Tenable. */
+export const SOURCES_MACHINE = ['tenable', 'nessus-fichier'] as const;
+export type SourceMachine = (typeof SOURCES_MACHINE)[number];
+export const SOURCE_MACHINE_LIBELLES: Record<SourceMachine, string> = {
+  tenable: 'Tenable Security Center',
+  'nessus-fichier': 'Nessus, import de fichier',
+};
+/** Instance qui a rapporté une machine ou un constat (lot N1 : marque de la source dans les écrans du module). */
+export interface OrigineConnecteurDto {
+  id: string;
+  nom: string;
+  type: SourceMachine;
+}
+
 export const ROLES_MACHINE = ['front', 'back', 'bdd'] as const;
 export const RoleMachine = z.enum(ROLES_MACHINE);
 export type RoleMachine = z.infer<typeof RoleMachine>;
@@ -350,6 +365,8 @@ export interface ConstatResumeDto {
   priorite: Priorite;
   /** Délai de correction (lot S1) : âge, échéance calculée, état. */
   delai: DelaiFailleDto;
+  /** Lot N1 : instance qui a rapporté le constat (Security Center ou import Nessus). */
+  integration: OrigineConnecteurDto;
 }
 
 export interface MachineDetectionDto {
@@ -381,7 +398,6 @@ export interface ConstatDto extends ConstatResumeDto {
   cvesDetail: { cve: string; kev: boolean }[];
   /** Machines lisibles où le constat est présent, regroupées par rôle (`aucun` : rôle non renseigné). */
   parRole: Record<RoleMachine | 'aucun', MachineDetectionDto[]>;
-  integration: { id: string; nom: string };
 }
 
 export interface CompteursMachine {
@@ -420,8 +436,10 @@ export interface MachineDto {
   acr: number | null;
   premiere: string | null;
   derniere: string | null;
-  source: 'tenable';
-  integration: { id: string; nom: string };
+  /** Lot N1 : source de la machine (type de son instance) et instance. Une machine vue par Security Center et par un import
+      Nessus apparaît deux fois, une par instance (pas de fusion). */
+  source: SourceMachine;
+  integration: OrigineConnecteurDto;
   /** Constats présents sur la machine, par gravité, puis exploités et exploitables. */
   compteurs: CompteursMachine;
   /** Rang parmi les machines que la personne peut lire, et faits qui le fondent (lot V4a). */

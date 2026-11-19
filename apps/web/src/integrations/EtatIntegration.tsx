@@ -2,7 +2,8 @@
    (dernière synchronisation, erreur éventuelle) et un lien « Configurer l'intégration » vers la carte de la page Plateforme,
    visible seulement de qui peut administrer les intégrations (décision du RSSI du 19/11/2026, lot F1). Lot F1 : fréquence
    de la synchronisation automatique et prochaine synchronisation prévue, en lecture. Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation :
-   tout cela vit dans la carte. Composants sans état (droit passé par l'appelant), réutilisables par un futur outil. */
+   tout cela vit dans la carte. Composants sans état (droit passé par l'appelant), réutilisables par un futur outil.
+   Lot N1 : nature « import » (Nessus, import de fichier) : « Dernier import : date, N machines », sans fréquence. */
 import { Anchor, Group, Stack, Text } from '@mantine/core';
 import { StatusChip, type Etat } from '@suivi/ui';
 import { Link } from 'react-router';
@@ -11,6 +12,7 @@ import {
   dateDerniereSynchronisation,
   erreurSynchronisation,
   etatConnecteur,
+  etatImport,
   type ConnecteurLu,
   texteFrequence,
   texteProchaine,
@@ -34,17 +36,24 @@ export function EtatIntegration<C extends ConnecteurLu>({
   type,
   connecteurs,
   peutConfigurer,
-  qualifier = etatConnecteur,
+  nature = 'synchronisation',
+  qualifier = nature === 'import' ? etatImport : etatConnecteur,
   detail,
+  apresDate,
 }: {
   /** Nom de l'outil (« Tenable Security Center », « AlgoLightHouse »). */
   type: string;
   connecteurs: readonly C[];
   /** Droit d'administrer les intégrations (`integrations:administrer`), calculé par l'appelant : seul il montre le lien. */
   peutConfigurer: boolean;
+  /** Lot N1 : « import » pour un connecteur alimenté par import de fichier (libellés propres, pas de fréquence). */
+  nature?: 'synchronisation' | 'import';
   qualifier?: (c: C) => { libelle: string; etat: Etat };
   detail?: (c: C) => string | null | undefined;
+  /** Complément de la ligne de date (lot N1 : nombre de machines du dernier import). */
+  apresDate?: (c: C) => string | null | undefined;
 }) {
+  const imp = nature === 'import';
   return (
     <Stack gap="xs" component="section" aria-label={`État de l’intégration ${type}`}>
       {connecteurs.length === 0 ? (
@@ -58,6 +67,7 @@ export function EtatIntegration<C extends ConnecteurLu>({
           const date = dateDerniereSynchronisation(c);
           const erreur = erreurSynchronisation(c);
           const complement = detail?.(c);
+          const suite = apresDate?.(c);
           return (
             <Group key={c.integrationId} gap="sm" wrap="nowrap" align="flex-start">
               <StatusChip etat={q.etat}>{q.libelle}</StatusChip>
@@ -66,9 +76,16 @@ export function EtatIntegration<C extends ConnecteurLu>({
                   {c.nom}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  Dernière synchronisation :{' '}
-                  {date ? <span className="horodatage">{fmtDate(date)}</span> : 'aucune pour le moment'}
-                  {c.derniereCompleteLe && c.derniereCompleteLe !== date && (
+                  {imp ? 'Dernier import' : 'Dernière synchronisation'} :{' '}
+                  {date ? (
+                    <span className="horodatage">{fmtDate(date)}</span>
+                  ) : imp ? (
+                    'aucun pour le moment'
+                  ) : (
+                    'aucune pour le moment'
+                  )}
+                  {date && suite ? `, ${suite}` : ''}
+                  {!imp && c.derniereCompleteLe && c.derniereCompleteLe !== date && (
                     <>
                       {' '}
                       · dernière complète : <span className="horodatage">{fmtDate(c.derniereCompleteLe)}</span>
@@ -85,7 +102,8 @@ export function EtatIntegration<C extends ConnecteurLu>({
                 )}
                 {erreur && (
                   <Text size="xs" role="status">
-                    <strong>Erreur de la dernière synchronisation :</strong> {erreur}
+                    <strong>{imp ? 'Erreur du dernier import :' : 'Erreur de la dernière synchronisation :'}</strong>{' '}
+                    {erreur}
                   </Text>
                 )}
                 {complement && (

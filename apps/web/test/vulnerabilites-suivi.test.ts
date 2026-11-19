@@ -83,6 +83,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   priorite,
   suivi: suivi({ etat: 'a_traiter', proposition: 'a_confirmer' }),
   delai: DELAI,
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const declaree: FailleDeclareeDto = {

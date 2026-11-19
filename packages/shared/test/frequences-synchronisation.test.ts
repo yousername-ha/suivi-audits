@@ -17,6 +17,7 @@ import {
   FrequenceVeilleBody,
   frequenceConnecteur,
   frequenceConnecteurAdmise,
+  frequenceConnecteurReglable,
   frequenceVeille,
   frequenceVeilleAdmise,
   frequenceVeilleModifiable,
@@ -53,8 +54,15 @@ describe('listes fermées (tableau du RSSI)', () => {
     expect(frequenceVeille('nvd', 12)).toBe(12);
   });
 
-  it('connecteurs : Tenable 6 h à 7 jours, AlgoLightHouse 12 h à 7 jours ; 24 h par défaut', () => {
-    expect(FREQUENCES_CONNECTEUR).toEqual({ tenable: [6, 12, 24, 168], algolighthouse: [12, 24, 168] });
+  it('connecteurs : Tenable 6 h à 7 jours, AlgoLightHouse 12 h à 7 jours ; 24 h par défaut ; import Nessus sans synchronisation', () => {
+    expect(FREQUENCES_CONNECTEUR).toEqual({
+      tenable: [6, 12, 24, 168],
+      algolighthouse: [12, 24, 168],
+      'nessus-fichier': [],
+    });
+    expect(frequenceConnecteurReglable('tenable')).toBe(true);
+    expect(frequenceConnecteurReglable('nessus-fichier')).toBe(false);
+    expect(frequenceConnecteurAdmise('nessus-fichier', 24)).toBe(false);
     expect(FREQUENCE_CONNECTEUR_DEFAUT).toBe(24);
     expect(frequenceConnecteur(null)).toBe(24);
     expect(frequenceConnecteur(6)).toBe(6);

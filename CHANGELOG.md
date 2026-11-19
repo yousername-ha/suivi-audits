@@ -37,6 +37,14 @@ démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période. L
 Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
 par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
 
+**Migration automatique `092`** (lot N1 : import de scans Nessus, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (contrainte de la source des machines recréée pour admettre `nessus-fichier`, table `vulnerabilites_imports`, un
+index), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune règle de pare-feu : l'import ne fait
+aucun appel réseau. Le fichier `.nessus` se dépose dans Plateforme, carte « Intégrations », instance « Nessus, import de
+fichier » ; prévoir environ 500 Mo de mémoire libre dans le navigateur pour un fichier de 100 Mo. Les machines importées sont
+sans périmètre (aucun dépôt) : elles ne sont visibles qu'avec le droit d'administrer le module tant qu'un périmètre ne leur
+est pas indiqué. (session « Module surveillance vulnérabilités SMSI »)
+
 **Lot S3 du module Vulnérabilités** (regroupement par correctif, fin de support, état du correctif) : sans migration, aucune
 action. La fin de support et l'état du correctif n'ont aucun effet sur la priorité ni sur les alertes. (session « Module
 surveillance vulnérabilités SMSI »)
@@ -96,6 +104,15 @@ annoncée sur la page de maintenance, même certificat). Aucune action. (session
 
 ### Ajouté
 
+- Vulnérabilités et intégrations, **import de scans Nessus** (lot N1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision du RSSI du 19/11/2026) : connecteur « Nessus, import de fichier » dans la carte « Intégrations », sans adresse, sans
+  clé, sans flux ni exécutant, avec « Importer un scan ». Le fichier `.nessus` est lu dans le navigateur ; seul un extrait en
+  liste blanche part vers l'API, en JSON, par lots de machines entières, revalidé champ par champ ; rangement dans les tables
+  de Tenable Security Center. Pour chaque machine du fichier, une faille absente est disparue ; les machines absentes du
+  fichier ne changent pas. Machines et failles marquées de leur source dans le module ; imports dans « Exécutions ». Migration
+  `092` ; routes `POST /api/integrations/instances/:id/imports`, `…/imports/:execution/lots`, `…/imports/:execution/fin`,
+  `GET /api/vulnerabilites/imports/etat`. Format écrit sans export réel, non vérifié. (session « Module surveillance
+  vulnérabilités SMSI »)
 - Vulnérabilités et intégrations, **fréquence de synchronisation réglable** par source de veille et par connecteur (lot F1,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md), décision du RSSI du 19/11/2026) : catalogue KEV, CERT-FR et CERT Santé
   de toutes les heures à une fois par jour, NVD jamais plus d'une fois toutes les deux heures (plancher garanti en base et par

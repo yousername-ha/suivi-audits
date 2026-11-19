@@ -389,6 +389,10 @@
   l'addendum « lot S3 » ci-dessous.
 - **Lot R1, barre de recherche globale** (19/11/2026) : sans migration, une barre en tête de toutes les pages du module, une
   route ; CVE même non détectées sur le parc, machines, actifs exposés, applications. Voir l'addendum « lot R1 » ci-dessous.
+- **Lot N1, import de scans Nessus** (19/11/2026) : migration `092`, connecteur « Nessus, import de fichier » sans adresse,
+  sans clé, sans flux ni exécutant ; fichier `.nessus` lu dans le navigateur, extrait en liste blanche envoyé par lots de
+  machines entières et rangé par le chemin d'écriture de Tenable ; disparition par machine scannée. Voir l'addendum « lot N1 »
+  ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -2557,3 +2561,121 @@ stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
    aussi le plancher de deux heures ?
 2. Purge du journal des collectes de la veille et des exécutions des connecteurs (volume multiplié par la cadence).
 3. Les choix ci-dessus.
+
+
+## Addendum du 19/11/2026 — lot N1 : import de scans Nessus (fichier .nessus)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`092`, trois routes d'écriture et une route de lecture ajoutées, aucune dépendance, **aucun flux sortant**, rien chez
+l'assistant, `scripts/exploitation-worker.py`, `scripts/integration-http.py` et `docker-compose.yml` inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. **Connecteur à part**, « Nessus, import de fichier », dans le catalogue de la carte « Intégrations » : sans adresse, sans
+   clé, sans flux sortant, sans exécutant, avec un bouton « Importer un scan » sur l'instance (aucune action de connecteur dans
+   les écrans du module). Machines et failles apparaissent dans le module, marquées de leur source ; une machine aussi vue par
+   Security Center apparaît deux fois (pas de fusion).
+2. **Disparition par machine scannée** : pour chaque machine du fichier, une faille qui n'y figure plus est disparue (même
+   traitement qu'après une synchronisation complète) ; les machines absentes du fichier ne changent pas.
+3. **Lecture dans le navigateur** (`DOMParser`, aucune dépendance) ; seul un extrait en liste blanche part, en JSON, revalidé
+   champ par champ par l'API, qui ne lit aucun XML.
+4. **Gravités comme Security Center** : critiques et élevées par défaut, réglables par instance ; jamais les contrôles
+   informatifs ; filtre appliqué dans le navigateur et revérifié par l'API.
+
+### Réalisation
+
+- **Catalogue** (`packages/shared/src/integrations.ts`) : type `nessus-fichier`, portée `organisation`, champ `gravites` seul
+  (`ConfigurationNessusFichier`), `secrets: []`, `pointsAcces: []`, `flux: null`, opération `importer`. `TYPES_INTEGRATION_RESEAU`
+  (types avec flux) sert au script, à l'exécutant, à l'état des flux et à la réclamation : le type n'y figure pas (test
+  d'architecture). Fréquence : liste vide (`FREQUENCES_CONNECTEUR`), `IntegrationDto.frequenceHeures` nul, 422 si une
+  fréquence est envoyée ; la contrainte de la migration `090` n'admet que NULL pour ce type, inchangée.
+- **Extraction** (`apps/web/src/integrations/nessus.ts`, fonctions pures testées hors navigateur sur une représentation
+  minimale d'un nœud XML) : taille de 100 Mo au plus (message avant lecture) ; texte refusé s'il contient `<!DOCTYPE` ou
+  `<!ENTITY` (casse ignorée), contrôle fait **avant** le `DOMParser` ; erreur d'analyse (`parsererror`) = refus ; racine
+  `NessusClientData_v2` exigée ; au plus 10 000 machines. Seuls `Report` > `ReportHost` sont parcourus (jamais `Policy`).
+  Règles de nettoyage recopiées du script de Tenable : textes sur une ligne, balises retirées et entités décodées jusqu'au
+  point fixe, bornes de la migration `075`, nom de machine en minuscules (« DOMAINE\NOM » réduit au nom), adresse IP,
+  identifiant `uuid:` ou `ip:<adresse>|<nom>` (même fonction `cleMachine`), lien https seul.
+- **Champs gardés** — machine : `host-ip` (sinon le nom du `ReportHost` s'il est une adresse), `host-fqdn`, sinon
+  `netbios-name`, sinon le nom du `ReportHost` s'il n'est pas une adresse ; `operating-system` (200 caractères) ;
+  `HOST_START_TIMESTAMP`/`HOST_END_TIMESTAMP`, sinon `HOST_START`/`HOST_END` (lus à l'heure du poste, sans fuseau) ;
+  `host-uuid` s'il a la forme d'un UUID. Contrôle : `pluginID`, `pluginName`, `pluginFamily`, `severity` (1 à 4), `port`,
+  `protocol` (en majuscules), `cve` (toutes, 500 au plus), `cvss3_vector`, `cvss3_base_score`, `vpr_score`,
+  `exploit_available`, `exploitability_ease` (libellé de l'exploit, comme `exploitEase` de Security Center), `synopsis`,
+  `solution`, `see_also` (premier lien https), `vuln_publication_date`, `patch_publication_date`.
+- **Champs écartés** (jamais lus ni envoyés) : `plugin_output`, `description`, `Policy` et ses préférences (comptes de
+  scan), le nom du scan, `mac-address` et les autres étiquettes d'hôte, `risk_factor`, CVSS v2. **Écartés faute de colonne
+  dans le modèle de Security Center** (choix de réalisation, à confirmer) : `svc_name`, CVSS v4 (`cvss4_*`),
+  `exploited_by_malware`, `exploited_by_nessus`, `exploit_framework_*`, `in_the_news`, `plugin_publication_date`, et
+  `epss_score` (unité, probabilité ou pourcentage, non vérifiée sur un export réel ; la veille lit EPSS chez FIRST par CVE).
+- **Éléments hors norme écartés et comptés** (`ECARTS_IMPORT`) : machines sans adresse ni identifiant, machines au-delà de
+  5 000 détections, contrôles illisibles, contrôles informatifs, contrôles hors des gravités retenues, CVE mal formées, liens
+  refusés, valeurs hors norme (score, vecteur, date, nom, adresse), textes raccourcis à leur borne (marqués « … », comptés).
+- **Envoi** : `POST /api/integrations/instances/:id/imports` (début : machines et détections annoncées, éléments écartés ;
+  l'API fixe les gravités d'après la configuration de l'instance pour tout l'import), `…/imports/:execution/lots` (machines
+  entières et les contrôles qu'elles portent, chacun une fois, aucun orphelin ; 200 machines, 10 000 détections, 5 000
+  contrôles et 8 Mio au plus ; le navigateur vise 3 Mio), `…/imports/:execution/fin`. Droit `integrations:administrer`, module
+  Vulnérabilités actif, CSRF, limites de débit (10 imports commencés par heure et par personne, 600 lots par dix minutes). Un
+  import à la fois par instance ; seule la personne qui l'a commencé le poursuit ; resté sans lot trente minutes, il est clos
+  « en échec » au début d'un autre import ou au tic de l'API. Lot qui porte une gravité hors réglage, un champ en trop, une
+  forme inattendue : 422, rien n'est rangé. En cas d'arrêt, la fenêtre dit quelles machines sont importées et lesquelles ne
+  le sont pas, et clôt l'import (en échec, les machines importées le restent).
+- **Rangement** (`apps/api/src/vulnerabilites/import-nessus.ts`) : chaque lot, dans une transaction, est un **passage
+  complet pour ses machines** : numéro de passage suivant de l'instance (`vulnerabilites_tenable_etat`), machines (source
+  `nessus-fichier`), constats, CVE et détections par `SynchronisationTenable.rangerPassage` (chemin d'écriture de Tenable ; la
+  première détection d'un import n'est jamais avancée) ; les détections présentes des autres machines de l'instance, et ces
+  machines, sont **reportées** au nouveau numéro ; puis la référence de présence avance. Le fragment `present` des lectures
+  est inchangé. Puis, dans la même transaction : suivi (propositions « corrigée, à confirmer »), liaisons avec la surface
+  externe, **évaluation des alertes** (déclencheur `import-nessus`).
+- **Journal** : `integration.import.debute`, `vulnerabilites.import.lot`, `integration.import.termine` (instance, exécution,
+  nombres, gravités ; ni nom de machine, ni adresse, ni nom de fichier, que l'API ne reçoit pas). Historique : exécution
+  `importer` de l'instance (« Exécutions » : date, auteur, état, bilan chiffré ou erreur) et table `vulnerabilites_imports`
+  (migration `092`, qui élargit aussi la contrainte de `vulnerabilites_machines.source`).
+- **Écrans du module** : `GET /api/vulnerabilites/imports/etat` (`vulnerabilites:lire`) ; « Failles détectées » montre
+  « Dernier import : date, N machines » et le bilan (composant `EtatIntegration`, nature « import ») ; « Vue d'ensemble »
+  compte l'instance parmi ses capteurs ; chaque constat et chaque machine portent « Source : <instance> (<type>) » avec la
+  pastille Tenable (`ConstatResumeDto.integration`, `MachineDto.source`). Textes « Tenable Security Center » corrigés là où la
+  source peut être Nessus ; « contrôle de Tenable » et « détecté par Tenable » restent exacts.
+
+### Mesures (fichiers fictifs générés, Chromium de la pile locale)
+
+| Fichier | Machines | Lecture dans le navigateur | Mémoire des processus de rendu (avant → pic) | Envoi (lots) |
+|---|---|---|---|---|
+| 30 Mo | 315 (7 538 détections retenues) | 1,5 s | 545 → 730 Mo | 2,5 s (2) |
+| 99 Mo | 1 037 (24 890 détections retenues) | 4,6 s | 553 → 1 037 Mo | 7,5 s (6) |
+
+Le gros du fichier est fait des sorties brutes, analysées par le `DOMParser` mais jamais lues ; la borne de 100 Mo est gardée.
+Mesure sur un seul poste, sans réseau entre le navigateur et l'API.
+
+### Périmètres
+
+Security Center rattache ses machines par **dépôt** (lot V4d) ; un fichier `.nessus` n'a pas de dépôt. Les machines importées
+sont donc **sans périmètre** : lisibles seulement avec `vulnerabilites:administrer` (règle du point 14), rattachables par les
+outils existants (écran « Machines », une machine ou en masse) ; aucun mécanisme de droits nouveau.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Champs écartés faute de colonne** (liste ci-dessus) : ajouter CVSS v4, `exploited_by_malware` (exploitation avérée ?) ou le
+  service demanderait d'étendre le modèle des deux sources et la règle de priorité.
+- **Pastille** : celle de Tenable (« TEN »), un contrôle Nessus étant un contrôle de Tenable, avec la source en clair à côté ;
+  aucune pastille propre, aucun logo.
+- **Activation exigée** pour importer ; elle n'ouvre aucun flux.
+- **Chaque lot fait foi pour ses machines** et déclenche suivi et alertes ; un import interrompu garde ses lots rangés.
+- **Report** de la présence des autres machines à chaque lot (coût proportionnel aux détections présentes de l'instance).
+- **Une machine sans contrôle retenu** (aucune faille aux gravités choisies) est importée : ses failles passées disparaissent.
+- **Identité d'une machine** : `host-uuid` s'il existe, sinon adresse et nom ; une machine dont le nom ou l'adresse change
+  d'un scan à l'autre devient une nouvelle machine, l'ancienne restant présente (elle n'est plus dans les fichiers).
+- **Limite** de dix imports commencés par heure et par personne.
+
+### Non vérifié
+
+**Le format a été écrit d'après la connaissance de `NessusClientData_v2` et n'a pas été vérifié sur un export réel**
+(noms des étiquettes `host-uuid` et `*_TIMESTAMP`, unité d'`epss_score`, forme des dates, libellé du menu d'export). Fichiers
+d'exemple fictifs écrits à la main (`tests/fixtures/nessus/`). Parcours Playwright joués sur une pile locale sans Docker (API et
+Vite, Chromium), à rejouer en CI ; CSP stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Fusion d'une machine vue par Security Center et par un import (exclue de ce lot).
+3. Retrait d'une instance d'import et de ses machines (aucune route de retrait d'instance n'existe).

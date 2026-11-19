@@ -6,8 +6,10 @@ import {
   ETAT_EXECUTION_LIBELLES,
   erreurAdresse,
   erreurAdresseAlh,
+  BilanImportNessus,
   FREQUENCE_CONNECTEUR_DEFAUT,
   FREQUENCES_CONNECTEUR,
+  frequenceConnecteurReglable,
   GRAVITES_PAR_DEFAUT,
   libelleFrequence,
   GRAVITES_TENABLE,
@@ -22,6 +24,7 @@ import {
 } from '@suivi/shared';
 import type { Etat } from '@suivi/ui';
 import { resumeBilanAlh } from '../vulnerabilites/surface';
+import { resumeBilanImport } from './nessus';
 
 /** Carte « Intégrations » de la page Plateforme (addendum du 19/11/2026 de l'ADR 0076) : seul endroit où les connecteurs se
     configurent. L'ancienne rubrique du Pilotage (`/integrations`) y redirige. */
@@ -59,8 +62,11 @@ export const ETAT_EXECUTION: Record<ExecutionIntegrationDto['etat'], Etat> = {
 };
 export const libelleEtatExecution = (e: ExecutionIntegrationDto['etat']) => ETAT_EXECUTION_LIBELLES[e];
 export const libelleOperation = (o: ExecutionIntegrationDto['operation']) => OPERATION_LIBELLES[o];
-export const executionEnCours = (e: Pick<ExecutionIntegrationDto, 'etat'> | null | undefined) =>
-  e?.etat === 'en_file' || e?.etat === 'en_cours';
+/** Exécution en file ou en cours, que la carte suit de près. Un import (lot N1) est suivi par sa propre fenêtre, pas par la
+    carte : un import abandonné par le navigateur est clos par le serveur après trente minutes. */
+export const executionEnCours = (
+  e: (Pick<ExecutionIntegrationDto, 'etat'> & Partial<Pick<ExecutionIntegrationDto, 'operation'>>) | null | undefined,
+) => e?.operation !== 'importer' && (e?.etat === 'en_file' || e?.etat === 'en_cours');
 
 const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
 
@@ -83,14 +89,21 @@ export function resumeSynchronisation(r: Record<string, unknown>): string {
 
 /** Résultat lisible d'une exécution terminée : version rendue par « Tester la connexion », bilan d'une synchronisation, ou
     l'erreur courte. */
-export function resumeExecution(e: Pick<ExecutionIntegrationDto, 'etat' | 'resultat' | 'erreur'>): string {
+export function resumeExecution(
+  e: Pick<ExecutionIntegrationDto, 'etat' | 'resultat' | 'erreur'> &
+    Partial<Pick<ExecutionIntegrationDto, 'operation'>>,
+): string {
   if (e.etat === 'recu') {
     const v = e.resultat?.version;
     if (typeof v === 'string') return `Connexion établie : version ${v}.`;
+    // Lot N1 : bilan d'un import (avant celui d'une synchronisation, qui compte aussi des constats).
+    const b = e.resultat ? BilanImportNessus.safeParse(e.resultat) : null;
+    if (b?.success) return resumeBilanImport(b.data);
     if (e.resultat && typeof e.resultat.constats === 'number') return resumeSynchronisation(e.resultat);
     if (e.resultat && typeof e.resultat.alertes === 'number') return resumeBilanAlh(e.resultat);
     return 'Résultat reçu.';
   }
+  if (e.etat === 'en_cours' && e.operation === 'importer') return 'Import en cours depuis un navigateur…';
   if (e.etat === 'en_file') return 'En attente de l’exécutant d’exploitation (en général moins d’une minute).';
   if (e.etat === 'en_cours') return 'Appel en cours…';
   return e.erreur ?? 'Échec sans détail.';
@@ -107,6 +120,12 @@ export function messageExecutant(e: EtatIntegrationsDto['executant']): string | 
 /** Flux du type d'une instance, d'après l'état rendu par l'API (fermé si inconnu). */
 export const fluxOuvertPour = (etat: EtatIntegrationsDto | undefined, type: IntegrationDto['type']) =>
   etat?.flux.find((f) => f.type === type)?.ouvert === true;
+/** Lot N1 : un type sans réseau (import de fichier) n'a pas de flux : il ne bute jamais sur un flux fermé. */
+export const fluxOuvertInstance = (
+  etat: EtatIntegrationsDto | undefined,
+  type: IntegrationDto['type'],
+  t: Pick<TypeIntegrationDto, 'flux'> | undefined,
+) => (t?.flux === null ? true : fluxOuvertPour(etat, type));
 
 /* ------------------------------------------------------------------ Formulaire de configuration */
 /** Le formulaire porte tous les champs connus ; seuls ceux du type (catalogue, `champs`) sont affichés, contrôlés et
@@ -157,8 +176,10 @@ export function formulaireDepuis(i: IntegrationDto | null, t: TypeIntegrationDto
 export function erreursFormulaire(f: FormulaireConfiguration, t?: TypeChamps): string[] {
   const r: string[] = [];
   if (!f.nom.trim()) r.push('Nom obligatoire.');
-  const a = t?.id === 'algolighthouse' ? erreurAdresseAlh(f.adresse) : erreurAdresse(f.adresse);
-  if (a) r.push(a);
+  if (champsDe(t).includes('adresse')) {
+    const a = t?.id === 'algolighthouse' ? erreurAdresseAlh(f.adresse) : erreurAdresse(f.adresse);
+    if (a) r.push(a);
+  }
   if (champsDe(t).includes('gravites') && !f.gravites.length) r.push('Choisissez au moins une gravité à synchroniser.');
   return r;
 }
@@ -167,11 +188,12 @@ export function erreursFormulaire(f: FormulaireConfiguration, t?: TypeChamps): s
 export function configurationDepuis(f: FormulaireConfiguration, t?: TypeChamps) {
   const champs = champsDe(t);
   const c: {
-    adresse: string;
+    adresse?: string;
     autoriteCertification?: string;
     delaiSecondes?: number;
     gravites?: GraviteTenable[];
-  } = { adresse: f.adresse.trim() };
+  } = {};
+  if (champs.includes('adresse')) c.adresse = f.adresse.trim();
   if (champs.includes('autoriteCertification')) c.autoriteCertification = f.autoriteCertification;
   if (champs.includes('delaiSecondes')) c.delaiSecondes = f.delaiSecondes;
   if (champs.includes('gravites')) c.gravites = GRAVITES_TENABLE.filter((g) => f.gravites.includes(g));
@@ -182,18 +204,20 @@ export const corpsCreation = (t: TypeIntegrationDto, f: FormulaireConfiguration)
   type: t.id,
   nom: f.nom.trim(),
   configuration: configurationDepuis(f, t),
-  frequenceHeures: f.frequenceHeures,
+  // Lot N1 : un type sans synchronisation automatique (import de fichier) n'envoie pas de fréquence.
+  ...(frequenceConnecteurReglable(t.id) ? { frequenceHeures: f.frequenceHeures } : {}),
 });
 
 /** Modification : seuls le nom, la configuration et la fréquence changés sont envoyés. */
 export function corpsModification(i: IntegrationDto, f: FormulaireConfiguration, t?: TypeChamps) {
   const out: { nom?: string; configuration?: ReturnType<typeof configurationDepuis>; frequenceHeures?: number } = {};
   if (f.nom.trim() !== i.nom) out.nom = f.nom.trim();
-  if (f.frequenceHeures !== (i.frequenceHeures ?? FREQUENCE_CONNECTEUR_DEFAUT)) out.frequenceHeures = f.frequenceHeures;
+  if (frequenceConnecteurReglable(i.type) && f.frequenceHeures !== (i.frequenceHeures ?? FREQUENCE_CONNECTEUR_DEFAUT))
+    out.frequenceHeures = f.frequenceHeures;
   const c = configurationDepuis(f, t);
   const avant = formulaireDepuis(i, { libelle: i.nom } as TypeIntegrationDto);
   if (
-    c.adresse.replace(/\/$/, '').toLowerCase() !== avant.adresse ||
+    (c.adresse !== undefined && c.adresse.replace(/\/$/, '').toLowerCase() !== avant.adresse) ||
     (c.autoriteCertification !== undefined && c.autoriteCertification !== avant.autoriteCertification) ||
     (c.delaiSecondes !== undefined && c.delaiSecondes !== avant.delaiSecondes) ||
     (c.gravites !== undefined && c.gravites.join() !== avant.gravites.join())

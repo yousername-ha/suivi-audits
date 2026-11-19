@@ -5,7 +5,8 @@
    de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). Lot V4d : origine du périmètre d'une
    machine (hérité du dépôt Tenable ou indiqué à la main). Lot S1 : filtre par état de délai de correction et tri par
    échéance, repris de l'adresse (lien de la tuile « En dépassement » et de la notification de résumé). Lot S3 : marque
-   et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). */
+   et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). Lot N1 : source d'une
+   machine ou d'un constat (instance Security Center ou import Nessus), marquée dans les listes. */
 import {
   type ConstatDto,
   type ConstatResumeDto,
@@ -19,6 +20,8 @@ import {
   libelleFaitRang,
   type MachineDto,
   NIVEAUX_PRIORITE,
+  type OrigineConnecteurDto,
+  SOURCE_MACHINE_LIBELLES,
   type NiveauPriorite,
   type Priorite,
   type RangMachineDto,
@@ -225,3 +228,7 @@ export function originePerimetre(m: Pick<MachineDto, 'perimetreOrigine' | 'depot
 
 export const totalCompteurs = (m: Pick<MachineDto, 'compteurs'>) =>
   m.compteurs.critique + m.compteurs.elevee + m.compteurs.moyenne + m.compteurs.faible;
+
+/** Lot N1 : source d'une machine ou d'un constat, en clair (« Source : Nessus fictif (Nessus, import de fichier) »). Un
+    contrôle Nessus reste un contrôle de Tenable ; la source est l'instance qui l'a rapporté. */
+export const texteSource = (o: OrigineConnecteurDto) => `Source : ${o.nom} (${SOURCE_MACHINE_LIBELLES[o.type]})`;

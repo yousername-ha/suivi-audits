@@ -242,3 +242,14 @@ connecteur porte sa **fréquence de synchronisation automatique**, réglée dans
 12 h, 24 h ou 7 jours, AlgoLightHouse 12 h, 24 h ou 7 jours, 24 h par défaut ; avertissement affiché sous 24 h, sans blocage.
 Les outils n'en montrent que la valeur et la prochaine synchronisation prévue, en lecture seule. Le lien « Configurer
 l'intégration » des outils n'est plus visible que de qui peut administrer les intégrations.
+
+**Lot N1** (19/11/2026, décision du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot N1 ») : le catalogue
+compte un **type sans réseau**, `nessus-fichier` (« Nessus, import de fichier »), de portée `organisation` : ni adresse, ni
+clé, ni flux sortant (`flux: null`, aucune entrée au registre de l'ADR 0097), ni exécutant (le type n'est connu ni de
+`scripts/integration-http.py` ni de `scripts/exploitation-worker.py` ; un test d'architecture le vérifie), ni fréquence
+(colonne `frequence_heures` toujours NULL, contrainte de la migration `090` inchangée). Une seule opération, **« Importer un
+scan »**, dans la tuile de l'instance de la carte « Intégrations », avec le droit `integrations:administrer` ; activer ou
+désactiver l'instance n'ouvre ni ne ferme aucun flux. L'import est une exécution de l'instance (opération `importer`),
+inscrite « en cours » par l'API au début de l'import, hors de la file de l'exécutant (le ménage de la file ne la touche pas),
+visible dans « Exécutions ». Le point 4 (fichiers traités par l'API) ne s'applique pas à ce type : le fichier est lu dans le
+navigateur et l'API ne reçoit qu'un extrait JSON revalidé.

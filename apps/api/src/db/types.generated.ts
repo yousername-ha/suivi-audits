@@ -1854,6 +1854,22 @@ export interface VulnerabilitesDetections {
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesImports {
+  execution_id: string;
+  integration_id: string;
+  gravites: string[];
+  machines_annoncees: number;
+  detections_annoncees: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  lots: Generated<number>;
+  machines: Generated<number>;
+  detections: Generated<number>;
+  disparues: Generated<number>;
+  premier_numero: number | null;
+  dernier_numero: number | null;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesInstantanes {
   jour: ColumnType<Date, Date | string, Date | string>;
   debut: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -1881,7 +1897,7 @@ export interface VulnerabilitesInstantanesMesures {
 export interface VulnerabilitesMachines {
   id: Generated<string>;
   integration_id: string;
-  source: Generated<string>;
+  source: Generated<"tenable" | "nessus-fichier">;
   identifiant_source: string;
   uuid_source: string | null;
   nom: string | null;
@@ -2321,6 +2337,7 @@ export interface DB {
   vulnerabilites_constats: VulnerabilitesConstats;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_imports: VulnerabilitesImports;
   vulnerabilites_instantanes: VulnerabilitesInstantanes;
   vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
   vulnerabilites_machines: VulnerabilitesMachines;

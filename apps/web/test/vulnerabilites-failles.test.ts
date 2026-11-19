@@ -88,6 +88,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
     depuis: '2026-11-10T08:00:00.000Z',
     echeance: '2026-11-25T08:00:00.000Z',
   },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -125,7 +126,7 @@ const fiche = (c: Partial<ConstatDto> = {}): ConstatDto => ({
     bdd: [machineDetection('bdd-01.exemple.invalid', 'bdd')],
     aucun: [machineDetection(null, null)],
   },
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
@@ -143,7 +144,7 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   premiere: null,
   derniere: null,
   source: 'tenable',
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   compteurs: {
     critique: 2,
     elevee: 1,
