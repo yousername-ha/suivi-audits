@@ -586,124 +586,37 @@
   justify-content: space-between;
   gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
 }
-/* Bloc centré ; grille à trois rangées partagées (libellé, numéro, étiquette) : les deux numéros et la flèche sont sur
-   la même ligne, quel que soit le nombre de lignes de chaque version. */
+/* Versions en deux cartes bleu nuit compactes, comme les cartes Identifiant et Mot de passe de la connexion (piste 2
+   retenue par le RSSI le 19/11/2026, après « gros bloc au milieu » puis « pas de bleu clair ») : fenêtre blanche, carte
+   « installée » au dégradé du menu, carte « disponible » au bleu de survol du menu avec un liseré cyan, flèche entre les
+   deux. Mêmes couleurs dans les deux thèmes, comme le menu. */
 .maj-versions {
   display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: auto auto auto;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--mantine-spacing-md);
+}
+.maj-version {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-xl);
-  padding: var(--mantine-spacing-md) var(--mantine-spacing-xl);
-  /* Touche « bleu du menu », effet verre (demande du RSSI du 19/11/2026) : dégradé bleu nuit du menu, légèrement
-     translucide, reflet en haut et flou de l'arrière-plan ; mêmes couleurs en clair et en sombre, comme le menu. */
-  border: var(--suivi-trait-l) solid var(--menu-trait);
-  border-radius: var(--mantine-radius-md);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--menu-texte) 9%, transparent), transparent 55%),
-    linear-gradient(
-      163deg,
-      color-mix(in srgb, var(--menu-fond-haut) 94%, transparent),
-      color-mix(in srgb, var(--menu-fond-bas) 90%, transparent)
-    );
-  backdrop-filter: blur(var(--mantine-spacing-xs)) saturate(1.2);
-  box-shadow: inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--menu-texte) 14%, transparent);
+  justify-content: center;
+  gap: var(--mantine-spacing-2xs);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border: var(--suivi-trait-l) solid transparent;
+  border-radius: var(--mantine-radius-lg);
+  background: var(--menu-fond);
+  box-shadow: 0 var(--mantine-spacing-sm) var(--mantine-spacing-xl) calc(var(--mantine-spacing-md) * -1)
+    color-mix(in srgb, var(--menu-fond-haut) 70%, transparent);
   color: var(--menu-texte);
   text-align: center;
 }
-.maj-versions .maj-libelle {
-  color: var(--menu-secondaire);
-}
-.maj-versions .maj-version strong {
-  color: var(--menu-texte);
-}
-.maj-versions .maj-version--cible strong,
-.maj-versions .maj-etiquette {
-  color: var(--neon-cyan);
-}
-.maj-versions .maj-version--note > span:last-child {
-  color: var(--menu-texte);
-}
-/* Thème clair (remarques du RSSI du 19/11/2026 : « gros bloc au milieu », « pas de gris, bleu transparent, comme la
-   connexion, le menu et la page de maintenance ») : fenêtre opaque au léger dégradé du bleu du menu (aucun gris de voile
-   au travers), carte en verre bleuté, bloc des versions en vitre bleue transparente ; textes en bleu nuit du menu. Le
-   thème sombre garde le bloc bleu nuit. */
-[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) {
-  background:
-    radial-gradient(
-      ellipse 70% 50% at 0% 0%,
-      color-mix(in srgb, var(--neon-violet) 14%, transparent) 0%,
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 90% 55% at 100% 0%,
-      color-mix(in srgb, var(--neon-cyan) 14%, transparent) 0%,
-      transparent 70%
-    ),
-    linear-gradient(
-      172deg,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 32%, var(--suivi-surface)) 0%,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 14%, var(--suivi-surface)) 40%,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 5%, var(--suivi-surface)) 85%
-    );
-}
-[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Modal-header {
-  background: transparent;
-}
-[data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Card-root {
-  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
-  background: color-mix(in srgb, var(--suivi-surface) 58%, transparent);
-  backdrop-filter: blur(var(--mantine-spacing-sm)) saturate(1.5);
-  box-shadow:
-    inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 90%, transparent),
-    0 var(--mantine-spacing-sm) var(--mantine-spacing-xl) calc(var(--mantine-spacing-md) * -1)
-      color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
-}
-[data-mantine-color-scheme='light'] .maj-versions {
-  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--menu-fond-haut) 10%);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--suivi-surface) 42%, transparent), transparent 50%),
-    linear-gradient(
-      163deg,
-      color-mix(in srgb, var(--neon-violet) 20%, transparent) 0%,
-      color-mix(in srgb, var(--menu-teinte-pilotage) 42%, transparent) 45%,
-      color-mix(in srgb, var(--neon-cyan) 24%, transparent) 100%
-    );
-  box-shadow:
-    inset 0 var(--suivi-trait-l) color-mix(in srgb, var(--suivi-surface) 85%, transparent),
-    0 var(--mantine-spacing-sm) var(--mantine-spacing-xl) calc(var(--mantine-spacing-sm) * -1)
-      color-mix(in srgb, var(--menu-fond-haut) 40%, transparent);
-  color: var(--menu-fond-haut);
-}
-[data-mantine-color-scheme='light'] .maj-versions .maj-libelle {
-  color: color-mix(in srgb, var(--menu-fond-haut) 72%, transparent);
-}
-[data-mantine-color-scheme='light'] .maj-versions .maj-version strong,
-[data-mantine-color-scheme='light'] .maj-versions .maj-version--note > span:last-child {
-  color: var(--menu-fond-haut);
-}
-[data-mantine-color-scheme='light'] .maj-versions .maj-version--cible strong,
-[data-mantine-color-scheme='light'] .maj-versions .maj-etiquette {
-  color: color-mix(in srgb, var(--menu-teinte-pilotage) 45%, var(--menu-fond-haut));
-}
-[data-mantine-color-scheme='light'] .maj-versions .maj-fleche {
-  background: linear-gradient(90deg, var(--menu-teinte-pilotage), var(--neon-cyan));
-}
-@media (prefers-reduced-transparency: reduce) {
-  [data-mantine-color-scheme='light'] .mantine-Modal-content:has(.maj-versions) .mantine-Card-root {
-    background: var(--suivi-surface);
-    backdrop-filter: none;
-  }
-}
-.maj-version {
-  display: grid;
-  grid-row: 1 / span 3;
-  grid-template-rows: subgrid;
-  justify-items: center;
-  row-gap: var(--mantine-spacing-2xs);
-  min-inline-size: 0;
-  margin: 0;
+.maj-version--cible,
+.maj-version--note {
+  border-color: color-mix(in srgb, var(--neon-cyan) 45%, transparent);
+  background: linear-gradient(163deg, var(--menu-survol), var(--menu-fond-haut));
 }
 .maj-libelle {
   color: var(--mantine-color-dimmed);
@@ -712,8 +625,11 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.maj-version .maj-libelle {
+  color: var(--menu-secondaire);
+}
 .maj-version strong {
-  color: var(--neon-titre);
+  color: var(--menu-texte);
   font-size: calc(var(--mantine-font-size-xl) * 1.5);
   font-weight: 550;
   line-height: 1.2;
@@ -721,20 +637,37 @@
   overflow-wrap: anywhere;
 }
 .maj-version--cible strong,
-.maj-etiquette {
-  color: var(--neon-accent);
+.maj-version .maj-etiquette {
+  color: var(--neon-cyan);
 }
 .maj-version--note > span:last-child {
-  color: var(--mantine-color-text);
+  color: var(--menu-texte);
   font-size: var(--mantine-font-size-sm);
   line-height: 1.6;
 }
 .maj-fleche {
   position: relative;
-  grid-row: 2;
   align-self: center;
   inline-size: calc(var(--mantine-spacing-2xl) * 1.1);
   block-size: var(--suivi-trait-focus);
+  background: linear-gradient(90deg, var(--menu-fond-haut), var(--neon-cyan));
+}
+/* Sans nouvelle version : deux cartes côte à côte, sans flèche. Téléphone : cartes empilées, flèche vers le bas. */
+.maj-versions:not(:has(.maj-fleche)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 36em) {
+  .maj-versions,
+  .maj-versions:not(:has(.maj-fleche)) {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+  .maj-fleche {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+}
+[data-mantine-color-scheme='dark'] .maj-fleche {
   background: linear-gradient(90deg, var(--menu-secondaire), var(--neon-cyan));
 }
 .maj-fleche::after {
@@ -813,13 +746,8 @@
   color: var(--mantine-color-dimmed);
   font-size: var(--mantine-font-size-sm);
 }
-@media (prefers-reduced-transparency: reduce) {
-  .maj-versions {
-    backdrop-filter: none;
-  }
-}
 @media (forced-colors: active) {
-  .maj-versions {
+  .maj-version {
     border-color: CanvasText;
     background: Canvas;
     color: CanvasText;
