@@ -1,4 +1,4 @@
-/* Tableaux de bord multiples de l'accueil (ADR 0109) : barre des favoris (5 au plus) réordonnable au glisser comme les
+/* Tableaux de bord multiples de l'accueil (ADR 0109) : encart des favoris (5 au plus) réordonnable au glisser comme les
    rubriques du menu (et Alt + flèches au clavier), bouton déroulant ⌄ de tous les tableaux de la personne avec « + » et
    « − » des favoris, « + » de création, fenêtres de création et de partage, bandeau d'un tableau qui n'est pas à la
    personne. Le premier favori s'ouvre à l'arrivée sur l'accueil. */
@@ -17,6 +17,7 @@ import {
   VisuallyHidden,
 } from '@mantine/core';
 import {
+  DEFS_MODELES,
   MAX_FAVORIS,
   type AnnuaireTableauDeBord,
   type DepartTableau,
@@ -95,6 +96,14 @@ function nature(t: TableauResume) {
   return null;
 }
 
+/** Descriptif d'un tableau affiché hors favoris, sous son nom : celui du modèle pour un tableau proposé d'office, sinon
+    son auteur. */
+export function descriptifTableau(t: TableauResume): string {
+  if (t.modele) return DEFS_MODELES[t.modele].description;
+  if (t.origine === 'mien') return 'Votre tableau de bord';
+  return `${t.public ? 'Tableau public' : 'Tableau partagé'} de ${t.auteur ?? 'un autre compte'}, en lecture seule`;
+}
+
 /** « + » de la barre d'outils : créer un tableau (droit tableau_de_bord:modifier). */
 export function BoutonCreer({ onCreer }: { onCreer: () => void }) {
   return (
@@ -123,7 +132,7 @@ export function BoutonCreer({ onCreer }: { onCreer: () => void }) {
 }
 
 /** Bouton déroulant ⌄ : tous les tableaux que la personne peut afficher (favoris d'abord), avec un petit « + » pour en
-    mettre un dans la barre des favoris (5 au plus) ou un « − » pour l'en retirer (choix du RSSI du 20/11/2026). */
+    mettre un dans l’encart des favoris (5 au plus) ou un « − » pour l'en retirer (choix du RSSI du 20/11/2026). */
 export function MenuTableaux({
   donnees,
   actif,
@@ -253,8 +262,8 @@ export function MenuTableaux({
   );
 }
 
-/** Barre des favoris (5 au plus, « Global » d'office) : onglets réordonnables au glisser comme les rubriques du menu ;
-    le premier s'ouvre à l'arrivée. */
+/** Encart des favoris, à gauche de l'en-tête, au style des sélecteurs segmentés (5 au plus, « Global » d'office ; choix
+    du RSSI du 20/11/2026) : réordonnables au glisser comme les rubriques du menu ; le premier s'ouvre à l'arrivée. */
 export function OngletsTableaux({
   donnees,
   actif,
@@ -375,7 +384,7 @@ export function OngletsTableaux({
   return (
     <div className="tdb-onglets" ref={barre}>
       <div
-        className="onglets-rubriques"
+        className="tdb-favoris"
         role="tablist"
         aria-label="Mes favoris"
         data-tri-actif={glisse ? 'oui' : undefined}

@@ -23,6 +23,22 @@
   color: var(--neon-secondaire);
   font-size: var(--mantine-font-size-xs);
 }
+/* Nom et descriptif d'un tableau affiché hors favoris (ADR 0109). */
+.tdb .tdb-titre {
+  margin: calc(var(--mantine-spacing-xs) * -1) 0 var(--mantine-spacing-md);
+}
+.tdb .tdb-titre h2 {
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.tdb .tdb-titre p {
+  margin: 0.2em 0 0;
+  color: var(--neon-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.4;
+}
 .na-grille {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1004,7 +1020,7 @@
 }
 
 /* ========================================================================
-   TABLEAUX DE BORD MULTIPLES (ADR 0109) : barre des favoris (forme commune des onglets), glissés comme les rubriques du
+   TABLEAUX DE BORD MULTIPLES (ADR 0109) : encart des favoris (forme des sélecteurs segmentés), glissés comme les rubriques du
    menu ; liste ⌄ de tous les tableaux ; « + » de création ; bandeau d'un tableau d'un autre auteur ; fenêtres.
    ======================================================================== */
 .tdb-onglets {
@@ -1012,18 +1028,57 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
 }
-.tdb-onglets .onglets-rubriques a {
+/* Encart des favoris (ADR 0109, choix du RSSI du 20/11/2026) : la forme des sélecteurs segmentés de la plateforme, un
+   contour sans fond, le favori affiché en bleu nuit du menu avec l'effet verre (voir neon-ergonomie.css). */
+.tdb-favoris {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: 0.85rem;
+}
+.tdb-favoris a {
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
+  padding: calc(var(--mantine-spacing-xs) / 2) var(--mantine-spacing-sm);
+  border-radius: 0.6rem;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  line-height: 1.55;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   user-select: none;
 }
-.tdb-onglets .onglets-rubriques[data-tri-actif] a {
+.tdb-favoris a:hover:not([aria-selected='true']) {
+  color: var(--mantine-color-text);
+}
+.tdb-favoris a[aria-selected='true'] {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 24%, transparent) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 7%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--menu-fond);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+  color: var(--menu-texte);
+  font-weight: 600;
+}
+.tdb-favoris a:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: 1px;
+}
+.tdb-favoris[data-tri-actif] a {
   cursor: grabbing;
 }
-.tdb-onglets .onglets-rubriques a[data-glisse] {
+.tdb-favoris a[data-glisse] {
   opacity: 0.55;
   outline: 2px dashed var(--menu-teinte-pilotage);
   outline-offset: -2px;

@@ -180,12 +180,13 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 - **Tableaux de bord multiples de l'accueil et publication pour tous** (décisions du RSSI du 20/11/2026, sur maquettes ;
   [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)). Chacun crée ses tableaux nommés (20 au plus),
-  et garde à gauche de l'en-tête une barre de 5 favoris au plus (« Global » d'office), réordonnés en les glissant comme
-  les rubriques du menu ; le premier s'ouvre à l'arrivée. Un bouton déroulant ⌄ liste tous ses tableaux (les siens,
-  proposés d'office, partagés, publics), avec « + » et « − » pour les favoris ; un tableau d'un autre reste celui de son
-  auteur, en lecture seule. Un petit « + » crée un tableau (vide, disposition standard, ou copie d'un de ses tableaux ou
-  d'un tableau public). La recherche des dalles devient une loupe, les exports une icône, et le filtre des référentiels
-  se lit « Tous / ISO / HDS ». Tableaux
+  et garde à gauche de l'en-tête un encart de 5 favoris au plus (« Global » d'office), réordonnés en les glissant comme
+  les rubriques du menu ; le premier s'ouvre à l'arrivée. L'encart prend la place du filtre des référentiels « Global /
+  ISO / HDS », retiré. Un bouton déroulant ⌄ liste tous ses tableaux (les siens, proposés d'office, partagés, publics),
+  avec « + » et « − » pour les favoris ; un tableau ouvert hors favoris affiche son nom et son descriptif en haut ; un
+  tableau d'un autre reste celui de son auteur, en lecture seule. Un petit « + » crée un tableau (vide, disposition
+  standard, ou copie d'un de ses tableaux ou d'un tableau public). La recherche des dalles devient une loupe, les exports
+  une icône. Tableaux
   proposés d'office : Global, Suivi SMSI, et bientôt Vulnérabilités (RSSI) et Suivi réglementaire. Partage avec des
   personnes, des groupes ou des rôles. Le droit « Publier pour tous » (action « Administrer » du module « Tableau de
   bord », rôles RSSI et Administrateur d'office) publie un tableau pour tous et ouvre aux destinataires les chiffres et

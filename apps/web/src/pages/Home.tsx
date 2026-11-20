@@ -21,6 +21,7 @@ import {
   MenuTableaux,
   OngletsTableaux,
   PartageTableau,
+  descriptifTableau,
   useTableaux,
 } from '../components/TableauxDeBord';
 import { useLive, usePresence } from '../realtime';
@@ -273,6 +274,11 @@ export function HomePage() {
             disposition={actif?.disposition ?? null}
             ouverts={chiffres}
             gauche={t && actif && <OngletsTableaux donnees={t} actif={actif.id} onChoisir={choisir} />}
+            titre={
+              t && actif && !t.onglets.some((o) => o.id === actif.id)
+                ? { nom: actif.nom, description: descriptifTableau(actif) }
+                : undefined
+            }
             outils={
               t &&
               mode === 'lecture' && (

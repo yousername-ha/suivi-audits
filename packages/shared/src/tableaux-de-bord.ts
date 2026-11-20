@@ -13,7 +13,7 @@ import {
   type IdDalle,
 } from './disposition-tableau-de-bord.js';
 
-/** Tableaux personnels par compte, favoris par compte (barre des favoris, choix du RSSI du 20/11/2026), destinataires
+/** Tableaux personnels par compte, favoris par compte (encart des favoris, choix du RSSI du 20/11/2026), destinataires
     d'un partage. Les « onglets » du stockage sont les favoris. */
 export const MAX_TABLEAUX_PAR_COMPTE = 20;
 export const MAX_FAVORIS = 5;
@@ -134,7 +134,7 @@ export const TableauDetail = TableauResume.extend({
 export type TableauDetail = z.infer<typeof TableauDetail>;
 
 export const TableauxOut = z.object({
-  /** Favoris dans l'ordre de la personne (barre des favoris, 5 au plus) ; le premier s'ouvre à l'arrivée. */
+  /** Favoris dans l'ordre de la personne (encart des favoris, 5 au plus) ; le premier s'ouvre à l'arrivée. */
   onglets: z.array(TableauDetail),
   /** Tous les tableaux qu'elle peut afficher (les siens, proposés, partagés avec elle, publics), favoris compris
       (`enOnglet`) : liste du bouton déroulant. */

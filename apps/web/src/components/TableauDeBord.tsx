@@ -6,7 +6,7 @@
    affichée. Le taux global est la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0069),
    affiché comme tel et distinct des taux par référentiel ; jamais une somme d'exigences de référentiels différents
    (ADR 0060). L'écran mural et le Pilotage gardent les cartes de Synthese.tsx. */
-import { ActionIcon, Button, Drawer, Group, SegmentedControl, Table, TextInput, Tooltip } from '@mantine/core';
+import { ActionIcon, Button, Drawer, Group, Table, TextInput, Tooltip } from '@mantine/core';
 import {
   cleDalle,
   completerDisposition,
@@ -988,6 +988,7 @@ export function TableauDeBordConformite({
   ouverts = null,
   outils = null,
   gauche,
+  titre,
 }: {
   s: Synthese;
   disposition?: Disposition | null;
@@ -995,13 +996,16 @@ export function TableauDeBordConformite({
   ouverts?: ChiffresPublics | null;
   /** Commandes placées en tête de la barre d'outils (liste des tableaux, création). */
   outils?: ReactNode;
-  /** Remplace le titre de la vue d'ensemble, à gauche de la barre d'outils (barre des favoris, ADR 0109). */
+  /** Remplace le titre de la vue d'ensemble, à gauche de la barre d'outils (encart des favoris, ADR 0109). */
   gauche?: ReactNode;
+  /** Nom et descriptif d'un tableau affiché hors favoris, en haut du tableau (ADR 0109). */
+  titre?: { nom: string; description: string };
 }) {
   const can = useCan();
   const [recherche, setRecherche] = useState('');
   const [rechercheOuverte, setRechercheOuverte] = useState(false);
-  const [portee, setPortee] = useState('global');
+  // Le filtre des référentiels (Tous, ISO, HDS) a laissé sa place à l'encart des favoris (choix du RSSI du 20/11/2026).
+  const portee = 'global';
   const [detail, setDetail] = useState<string | null>(null);
   const placees = dallesDisposees(useDallesTableauDeBord(s, portee, ouverts), disposition);
   const filtre = recherche.trim().toLocaleLowerCase();
@@ -1066,18 +1070,14 @@ export function TableauDeBordConformite({
               </ActionIcon>
             </Tooltip>
           )}
-          <SegmentedControl
-            aria-label="Référentiels affichés"
-            value={portee}
-            onChange={setPortee}
-            data={[
-              { value: 'global', label: 'Tous' },
-              { value: 'iso', label: 'ISO' },
-              { value: 'hds', label: 'HDS' },
-            ]}
-          />
         </Group>
       </div>
+      {titre && (
+        <div className="tdb-titre">
+          <h2>{titre.nom}</h2>
+          <p>{titre.description}</p>
+        </div>
+      )}
       <div className="grille-cartes tdb-grille">
         {visibles.map((x) => (
           <Fragment key={x.cle}>

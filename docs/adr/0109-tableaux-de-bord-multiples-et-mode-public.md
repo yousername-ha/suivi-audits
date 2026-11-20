@@ -1,6 +1,6 @@
 # ADR 0109 — Tableaux de bord multiples de l'accueil et mode public
 
-- Statut : acceptée (décisions du RSSI du 20/11/2026, maquettes validées le même jour, barre des favoris validée sur
+- Statut : acceptée (décisions du RSSI du 20/11/2026, maquettes validées le même jour, encart des favoris validé sur
   rendu réel le même jour)
 - Date : 2026-11-20
 - Rédaction : session « Ergonomie et refonte Neon », avis du conseiller du dépôt
@@ -12,21 +12,23 @@
 
 ## Décision
 
-1. **Plusieurs tableaux par personne, et une barre des favoris.** Chacun crée autant de tableaux nommés qu'il veut, au
+1. **Plusieurs tableaux par personne, et un encart des favoris.** Chacun crée autant de tableaux nommés qu'il veut, au
    plus 20, avec le droit `tableau_de_bord:modifier` ; le catalogue ne propose que les dalles des modules qu'il lit. À
-   gauche de l'en-tête, à la place du titre, la **barre des favoris**, à la forme commune des onglets : « Global »
-   d'office, **au plus 5 favoris**, réordonnés en les **glissant comme les rubriques du menu** (et au clavier) ; l'ordre
-   est retenu pour chaque personne. À l'ouverture de l'accueil, le **premier favori** s'affiche.
+   gauche de l'en-tête, à la place du titre, l'**encart des favoris**, à la forme des sélecteurs segmentés de la
+   plateforme (il remplace le filtre des référentiels « Global / ISO / HDS », retiré) : « Global » d'office, **au plus 5
+   favoris**, réordonnés en les **glissant comme les rubriques du menu** (et au clavier) ; l'ordre est retenu pour chaque
+   personne. À l'ouverture de l'accueil, le **premier favori** s'affiche. Il n'y a pas d'autre barre de tableaux.
 2. **Bouton déroulant ⌄ et « + ».** À droite, un bouton déroulant liste **tous les tableaux** que la personne peut
    afficher (les siens, proposés d'office, partagés avec elle, publics), favoris d'abord, avec « Favoris : n / 5 » : un
-   clic sur un nom affiche ce tableau, même hors favoris ; un petit « + » le met dans la barre, un « − » l'en retire (le
-   dernier favori reste). Un tableau d'un autre reste celui de son auteur, tenu à jour, en **lecture seule**. Un petit
+   clic sur un nom affiche ce tableau, même hors favoris (son nom et son descriptif s'affichent alors en haut du
+   tableau, aucun favori n'étant sélectionné) ; un petit « + » le met dans l'encart, un « − » l'en retire (le dernier
+   favori reste). Un tableau d'un autre reste celui de son auteur, tenu à jour, en **lecture seule**. Un petit
    « + » sert seulement à **créer un tableau** : un nom, puis un point de départ — vide (le catalogue s'ouvre aussitôt),
    la disposition standard de la vue analytique, ou la **copie d'un tableau** choisi dans une liste de ses tableaux et
    des tableaux publics, ces derniers suivis de « (Public) ». C'est le seul chemin de copie : le bouton « Copier comme
    mon tableau » de l'ADR 0078 disparaît. Une copie ne prend que la disposition ; elle est à son auteur et suit ses
    droits. Le nouveau tableau rejoint les favoris s'il reste une place. La recherche des dalles devient une loupe,
-   les exports une icône, et le filtre des référentiels se lit « Tous / ISO / HDS ».
+   les exports une icône.
 3. **Tableaux proposés d'office**, décrits dans le code (`DEFS_MODELES`, `packages/shared/src/tableaux-de-bord.ts`) pour
    rester à jour du catalogue de dalles ; l'administrateur (`administration:administrer`) peut modifier leur disposition
    et leur public, gardés en base : **Global** (disposition de la vue analytique, tout le monde ; une nouvelle personne
