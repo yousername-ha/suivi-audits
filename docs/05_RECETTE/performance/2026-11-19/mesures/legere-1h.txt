@@ -1,0 +1,39 @@
+{
+ "etiquette": "legere-1h",
+ "personnes": 5,
+ "minutes": 60,
+ "reflexionMs": [
+  2000,
+  6000
+ ],
+ "requetes": 3958,
+ "debitParSeconde": 1.1,
+ "erreurs": 3,
+ "medianeMs": 30,
+ "p95Ms": 2017,
+ "maxMs": 31808,
+ "detailErreurs": {
+  "vuln-constats 500 {\"error\":\"Erreur interne.\"}": 3
+ }
+}
+    65 err=   3  14027  28196  31808 ms vuln-constats
+    50 err=   0   4127   7641   8415 ms vuln-machines
+    38 err=   0   3805   7131   7483 ms vuln-fiche-machine
+    47 err=   0   2051   3039   3745 ms vuln-vue
+   129 err=   0    720   1652  16371 ms synthese-perimetres
+   161 err=   0    699   1490  17820 ms mes-elements
+   296 err=   0    242    546   4276 ms notifications
+   189 err=   0    161    408  12272 ms incidents
+   178 err=   0     35    239  13251 ms dashboard
+   829 err=   0     22    223   4982 ms tasks
+   165 err=   0     25    218   2285 ms tasks-dashboard
+   205 err=   0     19    193    459 ms tasks-window
+    55 err=   0     49    172   1491 ms ecr-action-modifier
+   278 err=   0     18    101    632 ms fiche-action
+    96 err=   0     30     96  10490 ms ecr-action-creer
+   472 err=   0     20     88   1003 ms actions
+   185 err=   0     31     88    438 ms documents
+   102 err=   0     31     83    231 ms risk-map
+   252 err=   0     21     71   1195 ms risques-registre
+    51 err=   0     29     61     99 ms vuln-fiche-constat
+   115 err=   0      9     25    373 ms me

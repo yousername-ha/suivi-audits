@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-19T21:24:35.552Z",
+  "mesures": [
+    {
+      "compte": "admin",
+      "nom": "Vulnérabilités : failles",
+      "chemin": "/vulnerabilites/failles",
+      "repetitions": 1,
+      "froidMedianeMs": 4677,
+      "froidP95Ms": 4677,
+      "froidMaxMs": 4677,
+      "chaudMedianeMs": 4701,
+      "chaudP95Ms": 4701,
+      "chaudMaxMs": 4701,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 4677,
+          "loadMs": 333,
+          "requetesApi": 17,
+          "octetsApi": 3261533,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /update/status.json"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 4701,
+          "loadMs": 80,
+          "requetesApi": 17,
+          "octetsApi": 88658,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /update/status.json"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    }
+  ]
+}

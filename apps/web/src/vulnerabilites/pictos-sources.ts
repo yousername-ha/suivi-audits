@@ -2,7 +2,7 @@
    de la veille (catalogue KEV de la CISA, NVD, EPSS, CERT-FR, CERT Santé) et par connecteur (Tenable, AlgoLightHouse),
    dessinée pour la charte : monogramme court, forme et teinte propres à chaque source. Aucun logo officiel ni image de marque.
    La distinction ne repose jamais sur la couleur seule : le monogramme se lit, la forme diffère, le nom complet est le nom
-   accessible et l'info-bulle. */
+   accessible et l'info-bulle. Lot SI1 : pastille de Silène (ANSSI), dessinée pour la charte (trapèze, sarcelle), sans logo. */
 import type {
   FicheFailleDto,
   SourceExploitable,
@@ -12,13 +12,23 @@ import type {
   SourceVeille,
 } from '@suivi/shared';
 
-export const SOURCES_PICTO = ['cisa-kev', 'nvd', 'epss', 'cert-fr', 'cert-sante', 'tenable', 'algolighthouse'] as const;
+export const SOURCES_PICTO = [
+  'cisa-kev',
+  'nvd',
+  'epss',
+  'cert-fr',
+  'cert-sante',
+  'tenable',
+  'algolighthouse',
+  'silene',
+] as const;
 export type SourcePicto = (typeof SOURCES_PICTO)[number];
 
 /** Formes des pastilles (dessinées dans une boîte de 44 × 24). */
-export type FormePicto = 'bouclier' | 'rectangle' | 'pilule' | 'fanion' | 'octogone' | 'parallelogramme' | 'hexagone';
-/** Teintes de la charte (jetons --carte-*-accent et --carte-*-doux, clair et sombre). */
-export type TeintePicto = 'rouge' | 'marine' | 'orange' | 'bleu' | 'vert' | 'violet' | 'gris';
+export type FormePicto =
+  'bouclier' | 'rectangle' | 'pilule' | 'fanion' | 'octogone' | 'parallelogramme' | 'hexagone' | 'trapeze';
+/** Teintes de la charte (jetons --carte-*-accent et --carte-*-doux ; lot SI1 : sarcelle, jetons « teal » de la charte). */
+export type TeintePicto = 'rouge' | 'marine' | 'orange' | 'bleu' | 'vert' | 'violet' | 'gris' | 'sarcelle';
 
 export interface DefinitionPicto {
   /** Monogramme dessiné dans la pastille (trois ou quatre caractères au plus). */
@@ -51,6 +61,7 @@ export const PICTOS_SOURCES: Record<SourcePicto, DefinitionPicto> = {
     forme: 'hexagone',
     teinte: 'gris',
   },
+  silene: { sigle: 'SIL', court: 'Silène', nom: 'Silène (ANSSI)', forme: 'trapeze', teinte: 'sarcelle' },
 };
 
 /** Tracés des formes, dans une boîte de 44 × 24 (marge d'un demi-trait). */
@@ -62,6 +73,7 @@ export const TRACES_FORMES: Record<FormePicto, string> = {
   octogone: 'M7.5 1.5h29l6 6v9l-6 6h-29l-6-6v-9z',
   parallelogramme: 'M8.5 1.5h34l-7 21h-34z',
   hexagone: 'M8 1.5h28l6.5 10.5L36 22.5H8L1.5 12z',
+  trapeze: 'M1.5 22.5L8.5 1.5h27l7 21z',
 };
 
 /** Nom accessible d'une pastille. */

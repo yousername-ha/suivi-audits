@@ -91,6 +91,8 @@ import {
   EffetMotQuery,
   LiaisonDepotTenable,
   LiaisonPerimetreAlh,
+  FicheActifSileneRequete,
+  RechercheConstatsSilene,
   RechercheActifsAlh,
   RechercheAlertesAlh,
   RechercheTechnologiesAlh,
@@ -853,7 +855,8 @@ export const vulnerabilitesRoutes = [
   route({
     method: 'GET',
     url: '/api/vulnerabilites/surface/actifs',
-    summary: 'Hôtes et domaines AlgoLightHouse lisibles ; recherche par adresse ou domaine ; filtre par type',
+    summary:
+      'Actifs exposés lisibles, liste commune à AlgoLightHouse et à Silène (lot SI1 : un actif par adresse IP ou nom de domaine, avec ce que chaque source en dit) ; recherche par adresse ou domaine ; filtre par type',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheActifsAlh,
@@ -861,9 +864,71 @@ export const vulnerabilitesRoutes = [
   }),
   route({
     method: 'GET',
+    url: '/api/vulnerabilites/surface/silene',
+    summary:
+      'Note Silène de chaque instance lisible (note, sous-note réseau, nombres par famille, date du rapport, évolution, historique) et état de son dernier import',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.silene.notes((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/constats',
+    summary:
+      'Constats Silène lisibles et présents, par contrôle (classe, points, hôtes concernés) ; recherche par contrôle, identifiant ou adresse',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheConstatsSilene,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.silene.constats((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/constats/:id',
+    summary:
+      'Fiche d’un constat Silène lisible : détail par hôte (port, protocole, service, produit, nom, type, échéance)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.silene.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/actif',
+    summary:
+      'Ce que Silène dit d’un actif lisible (adresse IP ou nom de domaine) : ports ouverts, noms, produits, constats',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: FicheActifSileneRequete,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.silene.ficheActif((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/perimetres',
+    summary: 'Instances Silène et le périmètre de la plateforme relié à chacune (non relié : administration seulement)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.silene.perimetres(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/surface/silene/perimetres/:id',
+    summary:
+      'Relier (ou délier) une instance Silène à un périmètre de la plateforme (If-Match, 0 si jamais reliée) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonPerimetreAlh,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.silene.lier(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
     url: '/api/vulnerabilites/surface/carte',
     summary:
-      'Carte « Lignes d’approche » de la surface externe : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles ; bornée, déjà filtrée par les droits',
+      'Carte « Lignes d’approche » de la surface externe, deux sources (AlgoLightHouse, Silène) : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles, ports ouverts et constats Silène des hôtes ; bornée, déjà filtrée par les droits',
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.carte((s as Session).user),

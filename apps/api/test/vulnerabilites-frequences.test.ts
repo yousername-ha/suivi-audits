@@ -140,14 +140,26 @@ describe('migration 090 : listes fermées garanties en base', () => {
   it('connecteurs : chaque type n’admet que sa liste ; les listes de la migration sont celles du code', async () => {
     // Lot N1 : l'import de fichier (« nessus-fichier ») n'a aucune synchronisation automatique : liste vide, seule la valeur
     // NULL passe en base.
+    // Lot SI1 : même règle pour l'import du rapport Silène (« silene-fichier »).
     const { rows } = await t.svc.db.q<{ id: string }>(
       `INSERT INTO integrations (type, nom, configuration, created_by, updated_by)
        VALUES ('nessus-fichier', 'Nessus fréquence fictif', '{}', 'test', 'test') RETURNING id`,
     );
-    const parType = { tenable: tenable.id, algolighthouse: alh.id, 'nessus-fichier': rows[0]!.id };
+    const { rows: silene } = await t.svc.db.q<{ id: string }>(
+      `INSERT INTO integrations (type, nom, configuration, created_by, updated_by)
+       VALUES ('silene-fichier', 'Silène fréquence fictif', '{}', 'test', 'test') RETURNING id`,
+    );
+    const parType = {
+      tenable: tenable.id,
+      algolighthouse: alh.id,
+      'nessus-fichier': rows[0]!.id,
+      'silene-fichier': silene[0]!.id,
+    };
     expect(FREQUENCES_CONNECTEUR['nessus-fichier']).toEqual([]);
+    expect(FREQUENCES_CONNECTEUR['silene-fichier']).toEqual([]);
     for (const type of INTEGRATION_TYPES) {
-      if (type !== 'nessus-fichier') expect(FREQUENCES_CONNECTEUR[type]).toContain(FREQUENCE_CONNECTEUR_DEFAUT);
+      if (type !== 'nessus-fichier' && type !== 'silene-fichier')
+        expect(FREQUENCES_CONNECTEUR[type]).toContain(FREQUENCE_CONNECTEUR_DEFAUT);
       for (const h of candidates) {
         const essai = t.svc.db.q('UPDATE integrations SET frequence_heures = $2 WHERE id = $1', [parType[type], h]);
         if (FREQUENCES_CONNECTEUR[type].includes(h)) await essai;

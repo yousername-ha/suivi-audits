@@ -1,0 +1,188 @@
+{
+  "etiquette": "legere-1h",
+  "personnes": 5,
+  "minutes": 60,
+  "reflexionMs": [
+    2000,
+    6000
+  ],
+  "requetes": 3958,
+  "debitParSeconde": 1.1,
+  "erreurs": 3,
+  "medianeMs": 30,
+  "p95Ms": 2017,
+  "maxMs": 31808,
+  "detailErreurs": {
+    "vuln-constats 500 {\"error\":\"Erreur interne.\"}": 3
+  },
+  "parRoute": [
+    {
+      "route": "vuln-constats",
+      "n": 65,
+      "erreurs": 3,
+      "medianeMs": 14027,
+      "p95Ms": 28196,
+      "maxMs": 31808
+    },
+    {
+      "route": "vuln-machines",
+      "n": 50,
+      "erreurs": 0,
+      "medianeMs": 4127,
+      "p95Ms": 7641,
+      "maxMs": 8415
+    },
+    {
+      "route": "vuln-fiche-machine",
+      "n": 38,
+      "erreurs": 0,
+      "medianeMs": 3805,
+      "p95Ms": 7131,
+      "maxMs": 7483
+    },
+    {
+      "route": "vuln-vue",
+      "n": 47,
+      "erreurs": 0,
+      "medianeMs": 2051,
+      "p95Ms": 3039,
+      "maxMs": 3745
+    },
+    {
+      "route": "synthese-perimetres",
+      "n": 129,
+      "erreurs": 0,
+      "medianeMs": 720,
+      "p95Ms": 1652,
+      "maxMs": 16371
+    },
+    {
+      "route": "mes-elements",
+      "n": 161,
+      "erreurs": 0,
+      "medianeMs": 699,
+      "p95Ms": 1490,
+      "maxMs": 17820
+    },
+    {
+      "route": "notifications",
+      "n": 296,
+      "erreurs": 0,
+      "medianeMs": 242,
+      "p95Ms": 546,
+      "maxMs": 4276
+    },
+    {
+      "route": "incidents",
+      "n": 189,
+      "erreurs": 0,
+      "medianeMs": 161,
+      "p95Ms": 408,
+      "maxMs": 12272
+    },
+    {
+      "route": "dashboard",
+      "n": 178,
+      "erreurs": 0,
+      "medianeMs": 35,
+      "p95Ms": 239,
+      "maxMs": 13251
+    },
+    {
+      "route": "tasks",
+      "n": 829,
+      "erreurs": 0,
+      "medianeMs": 22,
+      "p95Ms": 223,
+      "maxMs": 4982
+    },
+    {
+      "route": "tasks-dashboard",
+      "n": 165,
+      "erreurs": 0,
+      "medianeMs": 25,
+      "p95Ms": 218,
+      "maxMs": 2285
+    },
+    {
+      "route": "tasks-window",
+      "n": 205,
+      "erreurs": 0,
+      "medianeMs": 19,
+      "p95Ms": 193,
+      "maxMs": 459
+    },
+    {
+      "route": "ecr-action-modifier",
+      "n": 55,
+      "erreurs": 0,
+      "medianeMs": 49,
+      "p95Ms": 172,
+      "maxMs": 1491
+    },
+    {
+      "route": "fiche-action",
+      "n": 278,
+      "erreurs": 0,
+      "medianeMs": 18,
+      "p95Ms": 101,
+      "maxMs": 632
+    },
+    {
+      "route": "ecr-action-creer",
+      "n": 96,
+      "erreurs": 0,
+      "medianeMs": 30,
+      "p95Ms": 96,
+      "maxMs": 10490
+    },
+    {
+      "route": "actions",
+      "n": 472,
+      "erreurs": 0,
+      "medianeMs": 20,
+      "p95Ms": 88,
+      "maxMs": 1003
+    },
+    {
+      "route": "documents",
+      "n": 185,
+      "erreurs": 0,
+      "medianeMs": 31,
+      "p95Ms": 88,
+      "maxMs": 438
+    },
+    {
+      "route": "risk-map",
+      "n": 102,
+      "erreurs": 0,
+      "medianeMs": 31,
+      "p95Ms": 83,
+      "maxMs": 231
+    },
+    {
+      "route": "risques-registre",
+      "n": 252,
+      "erreurs": 0,
+      "medianeMs": 21,
+      "p95Ms": 71,
+      "maxMs": 1195
+    },
+    {
+      "route": "vuln-fiche-constat",
+      "n": 51,
+      "erreurs": 0,
+      "medianeMs": 29,
+      "p95Ms": 61,
+      "maxMs": 99
+    },
+    {
+      "route": "me",
+      "n": 115,
+      "erreurs": 0,
+      "medianeMs": 9,
+      "p95Ms": 25,
+      "maxMs": 373
+    }
+  ]
+}

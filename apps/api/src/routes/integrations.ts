@@ -6,10 +6,18 @@
    entières, fin, avec le droit d'administrer les intégrations ; le module Vulnérabilités, qui range les données, doit être
    actif. Le corps d'un lot est un extrait en JSON, revalidé champ par champ ; aucune route ne reçoit de XML.
    Lot N2 : suppression d'une instance « Nessus, import de fichier » et de tout ce qu'elle a importé (If-Match, même droit),
-   avec son aperçu chiffré ; refus net pour tout autre type (aucune suppression de Security Center ni d'AlgoLightHouse). */
+   avec son aperçu chiffré ; refus net pour tout autre type (aucune suppression de Security Center ni d'AlgoLightHouse).
+   Lot SI1 : import du rapport Silène (connecteur « silene-fichier ») par le même protocole (début, lots d'hôtes et de
+   constats, fin ; mêmes droits, même limite d'imports) sous `…/silene/imports`, et suppression de son instance avec ce
+   qu'elle a importé par les mêmes routes de suppression. */
 import {
   catalogueIntegrations,
   DebutImportNessus,
+  DebutImportSilene,
+  FinImportSilene,
+  LotImportSilene,
+  SILENE_BORNES,
+  TYPE_SILENE_FICHIER,
   FinImportNessus,
   LotImportNessus,
   MESSAGE_LIMITE_IMPORTS,
@@ -219,19 +227,88 @@ export const integrationsRoutes = [
     body: FinImportNessus,
     handler: async ({ svc, s, params, ip }) => {
       await svc.modules.assert('vulnerabilites');
-      return svc.vulnerabilites.importNessus.terminer(params.id, params.execution, (s as Session).user, ip);
+      const bilan = await svc.vulnerabilites.importNessus.terminer(
+        params.id,
+        params.execution,
+        (s as Session).user,
+        ip,
+      );
+      // Transaction validée : statistiques des tables réécrites, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.importNessus.apresValidation();
+      return bilan;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/silene/imports',
+    summary:
+      'Silène, import de fichier : commencer un import (synthèse du rapport, périmètre déclaré, hôtes et constats annoncés, éléments écartés comptés par le navigateur) ; module Vulnérabilités actif exigé',
+    tags,
+    access: 'integrations:administrer',
+    params: id,
+    body: DebutImportSilene,
+    bodyLimit: SILENE_BORNES.corpsDebut,
+    status: 201,
+    handler: async ({ svc, s, params, body, ip }) => {
+      const sess = s as Session;
+      await svc.modules.assert('vulnerabilites');
+      // Même limite que l'import Nessus : fichiers commencés par heure et par personne, tous imports confondus.
+      if (!svc.limits.importNessus(sess.user.id)) throw new HttpError(429, MESSAGE_LIMITE_IMPORTS);
+      return svc.vulnerabilites.importSilene.debuter(params.id, body, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/silene/imports/:execution/lots',
+    summary:
+      'Silène, import de fichier : un lot d’hôtes (adresse, noms, ports ouverts, produits, contrôles) et de constats (contrôle, classe, points, hôtes, lignes), JSON revalidé champ par champ',
+    tags,
+    access: 'integrations:administrer',
+    params: importId,
+    body: LotImportSilene,
+    bodyLimit: SILENE_BORNES.corpsLot,
+    handler: async ({ svc, s, params, body, ip }) => {
+      const sess = s as Session;
+      await svc.modules.assert('vulnerabilites');
+      if (!svc.limits.importNessusLot(sess.user.id))
+        throw new HttpError(429, 'Trop de lots envoyés. Réessayez dans quelques minutes.');
+      return svc.vulnerabilites.importSilene.lot(params.id, params.execution, body, sess.user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/integrations/instances/:id/silene/imports/:execution/fin',
+    summary:
+      'Silène, import de fichier : terminer l’import (complet : il fait foi, ce qui n’est plus dans le rapport n’est plus présent ; sinon en échec, le rapport précédent reste celui qui fait foi)',
+    tags,
+    access: 'integrations:administrer',
+    params: importId,
+    body: FinImportSilene,
+    handler: async ({ svc, s, params, ip }) => {
+      await svc.modules.assert('vulnerabilites');
+      const bilan = await svc.vulnerabilites.importSilene.terminer(
+        params.id,
+        params.execution,
+        (s as Session).user,
+        ip,
+      );
+      // Transaction validée : statistiques des tables réécrites, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.importSilene.apresValidation();
+      return bilan;
     },
   }),
   route({
     method: 'GET',
     url: '/api/integrations/instances/:id/suppression',
     summary:
-      'Nessus, import de fichier : ce que la suppression de l’instance ferait disparaître (machines, failles, détections, imports) ; autre type refusé',
+      'Nessus ou Silène, import de fichier : ce que la suppression de l’instance ferait disparaître (Nessus : machines, failles, détections, imports ; Silène : hôtes, constats, imports) ; autre type refusé',
     tags,
     access: 'integrations:administrer',
     params: id,
     handler: async ({ svc, params }) => {
       await svc.modules.assert('vulnerabilites');
+      if ((await svc.integrations.lire(params.id)).type === TYPE_SILENE_FICHIER)
+        return svc.vulnerabilites.importSilene.apercuSuppression(params.id);
       return svc.vulnerabilites.importNessus.apercuSuppression(params.id);
     },
   }),
@@ -239,13 +316,17 @@ export const integrationsRoutes = [
     method: 'DELETE',
     url: '/api/integrations/instances/:id',
     summary:
-      'Nessus, import de fichier seulement : supprimer l’instance et tout ce qu’elle a importé (If-Match) ; alertes réévaluées ; tout autre type est refusé (422)',
+      'Nessus ou Silène, import de fichier seulement : supprimer l’instance et tout ce qu’elle a importé (If-Match) ; tout autre type est refusé (422)',
     tags,
     access: 'integrations:administrer',
     params: id,
     handler: async ({ svc, s, params, req, ip }) => {
       const attendue = requireIfMatch(req);
       await svc.modules.assert('vulnerabilites');
+      const type = (await svc.integrations.lire(params.id)).type;
+      if (type === TYPE_SILENE_FICHIER)
+        return svc.vulnerabilites.importSilene.supprimer(params.id, attendue, (s as Session).user, ip);
+      // Nessus, et refus net (422) de tout autre type par le service de l'import Nessus.
       return svc.vulnerabilites.importNessus.supprimer(params.id, attendue, (s as Session).user, ip);
     },
   }),
