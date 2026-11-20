@@ -22,7 +22,8 @@ export const NIVEAU_ALERTE_GLOBAL_LIBELLES: Record<NiveauAlerteGlobal, string> =
 };
 
 /** Faits du niveau d'alerte, comptés sur TOUS les faits connus de la plateforme (les mêmes pour tout le monde) :
-    - `critiques` : failles au seuil d'une alerte critique (présentes en P1 : exploitation avérée et présence chez nous) ;
+    - `critiques` : failles au seuil d'une alerte critique (présentes en P1 : exploitation avérée et présence chez nous, ou,
+      lot PRIO-1, P2 montée d'un cran sur une machine en fin de support) ;
     - `simples` : failles au seuil d'une alerte simple (P2 exploitable sur un actif exposé directement sur Internet, V6b) ;
     - `p2Presentes` : failles présentes (détectées, déclarées ou exposées) en P2 ;
     - `exploiteesAConfirmer` : failles à exploitation avérée dont le produit reste à confirmer (rapprochement proposé). */
@@ -47,7 +48,7 @@ export interface NiveauAlerteGlobalDto {
     2 (Vigilance) : sinon, au moins une faille présente en P2, ou une faille exploitée dont le produit reste à confirmer ;
     1 (Veille) : sinon. */
 export const REGLE_NIVEAU_ALERTE_GLOBAL =
-  'Niveau 4 : au moins une faille présente en P1 (exploitation avérée). Niveau 3 : au moins une faille P2 exploitable sur un actif exposé directement sur Internet. Niveau 2 : au moins une faille présente en P2, ou une faille exploitée dont le produit reste à confirmer. Niveau 1 : aucune de ces situations. Règle proposée, à confirmer par le RSSI.';
+  'Niveau 4 : au moins une faille présente en P1 (exploitation avérée, ou montée en P1 sur une machine en fin de support). Niveau 3 : au moins une faille P2 exploitable sur un actif exposé directement sur Internet. Niveau 2 : au moins une faille présente en P2, ou une faille exploitée dont le produit reste à confirmer. Niveau 1 : aucune de ces situations. Règle proposée, à confirmer par le RSSI.';
 
 const failles = (n: number) => `${n} faille${n > 1 ? 's' : ''}`;
 
@@ -61,7 +62,7 @@ export function niveauAlerteGlobal(f: FaitsNiveauAlerteGlobal): NiveauAlerteGlob
   if (f.critiques > 0)
     return sortie(
       4,
-      `${failles(f.critiques)} exploitée${f.critiques > 1 ? 's' : ''} et présente${f.critiques > 1 ? 's' : ''} chez nous (P1) : seuil d’alerte critique.`,
+      `${failles(f.critiques)} présente${f.critiques > 1 ? 's' : ''} chez nous en P1 (exploitation avérée, ou machine en fin de support) : seuil d’alerte critique.`,
     );
   if (f.simples > 0)
     return sortie(
@@ -132,8 +133,12 @@ const RANG_GRAVITE: Record<GraviteTenable, number> = { critique: 0, elevee: 1, m
 /** Rang d'une gravité pour l'ordre des cibles (sans gravité : après toutes). Hors de comparerCibles : appelée des centaines
     de milliers de fois pour trier les failles suivies (lot PERF-04). */
 const rangGraviteCible = (x: GraviteTenable | null) => (x ? RANG_GRAVITE[x] : GRAVITES_TENABLE.length);
-/** Ordre des cibles, le même pour tout le monde (aucun nombre lié aux droits n'y entre) : priorité, exploitation avérée,
-    présence (une faille présente avant une faille à confirmer), « exploitable », gravité, score EPSS décroissant, clé. */
+/** Lot PRIO-1 : fait « utilisée par des rançongiciels » de la priorité (même règle que prioriteRancongiciel de la grille,
+    recopiée ici sans import à l'exécution). */
+const rancon = (p: Pick<Priorite, 'faits'>) => (p.faits.some((f) => f.fait === 'rancongiciel') ? 1 : 0);
+/** Ordre des cibles, le même pour tout le monde (aucun nombre lié aux droits n'y entre) : priorité, utilisée par des
+    rançongiciels (lot PRIO-1, décision du RSSI du 20/11/2026), exploitation avérée, présence (une faille présente avant une
+    faille à confirmer), « exploitable », gravité, score EPSS décroissant, clé. */
 export function comparerCibles(
   a: Pick<CibleVueDto, 'priorite' | 'exploitee' | 'aConfirmer' | 'exploitable' | 'gravite' | 'epss' | 'cle'>,
   b: Pick<CibleVueDto, 'priorite' | 'exploitee' | 'aConfirmer' | 'exploitable' | 'gravite' | 'epss' | 'cle'>,
@@ -141,6 +146,7 @@ export function comparerCibles(
   const g = rangGraviteCible;
   return (
     NIVEAUX_PRIORITE.indexOf(a.priorite.niveau) - NIVEAUX_PRIORITE.indexOf(b.priorite.niveau) ||
+    rancon(b.priorite) - rancon(a.priorite) ||
     Number(b.exploitee) - Number(a.exploitee) ||
     Number(a.aConfirmer) - Number(b.aConfirmer) ||
     Number(b.exploitable) - Number(a.exploitable) ||

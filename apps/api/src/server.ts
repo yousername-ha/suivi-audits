@@ -55,6 +55,10 @@ async function main() {
         svc.modules
           .run(true, async () => {
             if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            // Lot PRIO-1 : journal des collectes et des exécutions purgé au-delà de 90 jours, au plus une fois par heure.
+            await svc.vulnerabilites.purgeJournaux
+              .tic()
+              .catch((e: unknown) => log.warn({ err: String(e) }, 'purge des journaux des vulnérabilités'));
             await svc.vulnerabilites.veille.planifier();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),

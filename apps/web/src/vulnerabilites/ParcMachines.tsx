@@ -9,8 +9,9 @@
    fiche de la machine) au nom accessible complet. Sous la CSP stricte (ADR 0006) : aucun style en ligne ; couleurs, traits
    et animations par les classes de packages/ui/src/neon-parc.css (jetons de la charte, clair et sombre ; animations coupées
    par le mouvement réduit et à l'impression). Lot S3 : mention « Fin de support » sur la tuile (système ou logiciel qui ne
-   reçoit plus de correctif de sécurité, date de Tenable passée) et précision « sans correctif connu » à côté de la marque
-   zero-day (la marque n'est pas renommée) ; texte et icône, jamais la seule couleur. */
+   reçoit plus de correctif de sécurité, date de Tenable passée) ; texte et icône, jamais la seule couleur. Lot PRIO-1
+   (décision du RSSI du 20/11/2026) : le triangle dit « exploitation avérée » ; le mot « zero-day » n'est écrit que pour une
+   faille exploitée sans correctif connu (infobulle du triangle et mention à côté). */
 import { VisuallyHidden } from '@mantine/core';
 import {
   type EchelleParc,
@@ -27,7 +28,9 @@ import { useId, useState } from 'react';
 import { libelleMachine } from './failles';
 import {
   LEGENDE_EXPLOITABLE,
+  LEGENDE_EXPLOITATION_AVEREE,
   LEGENDE_FIN_SUPPORT,
+  MARQUE_EXPLOITATION_AVEREE,
   LEGENDE_SANS_CORRECTIF,
   LEGENDE_ZERO_DAY,
   MARQUE_FIN_SUPPORT,
@@ -100,10 +103,11 @@ export function IconeInternet() {
   );
 }
 
-/** Marque « zero-day » : triangle d'avertissement. L'infobulle porte le libellé exact. */
-export function MarqueZeroDay() {
+/** Marque d'une faille à exploitation avérée : triangle d'avertissement. L'infobulle porte le libellé exact : « Zero-day : … »
+    seulement si `zeroDay` (exploitée sans correctif connu), sinon « Exploitation avérée » (lot PRIO-1). */
+export function MarqueZeroDay({ zeroDay = false }: { zeroDay?: boolean }) {
   return (
-    <span className="parc-marque parc-marque--zd" title={MARQUE_ZERO_DAY}>
+    <span className="parc-marque parc-marque--zd" title={zeroDay ? MARQUE_ZERO_DAY : MARQUE_EXPLOITATION_AVEREE}>
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M12 3 2 20h20Z" />
         <path d="M12 10v4M12 17.2v.1" />
@@ -143,7 +147,7 @@ export function MentionFinSupport({ court = false }: { court?: boolean }) {
   );
 }
 
-/** Lot S3 : précision à côté de la marque zero-day : « Exploitée, sans correctif connu ». */
+/** Lot S3, lot PRIO-1 : mention à côté du triangle pour une faille exploitée sans correctif connu (« Zero-day : … »). */
 export function MentionSansCorrectif() {
   return <span className="parc-mention parc-mention--sc">{PRECISION_SANS_CORRECTIF}</span>;
 }
@@ -153,11 +157,15 @@ export function MarquesMachine({ marques, texte = false }: { marques: MachineMar
   if (!marques.exploitationAveree && !marques.exploitable) return null;
   return (
     <span className="parc-marques">
-      {marques.exploitationAveree && <MarqueZeroDay />}
+      {marques.exploitationAveree && <MarqueZeroDay zeroDay={marques.exploiteeSansCorrectif} />}
       {marques.exploitable && <MarqueExploitable />}
       {texte && (
         <VisuallyHidden>
-          {[marques.exploitationAveree ? MARQUE_ZERO_DAY : '', marques.exploitable ? MARQUE_EXPLOITABLE : '']
+          {[
+            marques.exploitationAveree ? MARQUE_EXPLOITATION_AVEREE : '',
+            marques.exploiteeSansCorrectif ? MARQUE_ZERO_DAY : '',
+            marques.exploitable ? MARQUE_EXPLOITABLE : '',
+          ]
             .filter(Boolean)
             .join(' ; ')}
         </VisuallyHidden>
@@ -172,8 +180,13 @@ export function LegendeMarques({ parc = false }: { parc?: boolean }) {
     <ul className="parc-legende" aria-label="Légende des marques">
       <li>
         <MarqueZeroDay />
+        <span>{LEGENDE_EXPLOITATION_AVEREE}</span>
+      </li>
+      <li>
+        <MarqueZeroDay zeroDay />
         <span>{LEGENDE_ZERO_DAY}</span>
       </li>
+
       <li>
         <MarqueExploitable />
         <span>{LEGENDE_EXPLOITABLE}</span>

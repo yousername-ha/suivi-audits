@@ -3431,3 +3431,145 @@ machine, adresse, domaine, fournisseur d'accès, numéro d'AS, rôle ou nom de p
 ### Non vérifié
 
 Qualité des réponses avec un modèle réel ; Node 26 ; pile Docker.
+
+## Addendum du 20/11/2026 — lot PRIO-1 : règles de priorité, libellés, fréquences, cartes d'avis
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`097` (colonne `vulnerabilites_constats.kits_exploitation`, liste vide par défaut, contrainte de liste fermée ; aucune donnée
+reprise). Aucune dépendance, **aucun flux sortant nouveau** (un champ de plus gardé dans la réponse déjà lue de
+`/rest/analysis`), aucune route nouvelle (la liste des avis est élargie), aucun rôle ni droit nouveau.
+`apps/api/src/assistant/*`, `apps/web/src/assistant/*`, `docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py`
+non touchés. Lève la question 1 (mot « zero-day ») et la question 2 (fin de support) de l'addendum « lot S3 », le point à
+trancher et le point ouvert 6 de l'addendum « lot S1 », le point ouvert 1 de l'addendum « lot L1 », les points ouverts 1 et
+2 et deux choix de l'addendum « lot F1 », et les points 8 à 12 et 14 de la reprise du 20/11/2026 (§ 3).
+
+### Décisions du RSSI (19 et 20/11/2026)
+
+1. **Fin de support : un cran de plus.** Une faille sur une machine dont le système ou le produit n'est plus maintenu par
+   l'éditeur gagne un cran (P3 → P2, P2 → P1, P4 → P3 ; P1 reste P1), visible dans l'explication de la priorité.
+2. **P1 sous exception : alerte gardée**, marquée « risque accepté », au lieu d'être close ; pas de nouvelle notification du
+   seul fait de la marque.
+3. **Kit d'exploitation disponible (Tenable)** (« Exploit available », « Exploitable with » : Metasploit, Core Impact,
+   CANVAS), rangé avec « exploitable » : il compte pour la règle des alertes P2 exposées sur Internet, pas comme exploitation
+   avérée.
+4. **Rançongiciels (KEV)** : `knownRansomwareCampaignUse` devient un fait visible (liste, fiche, explication).
+5. **« Zero-day » réservé** à une faille à exploitation avérée sans correctif connu ; sinon « exploitation avérée ».
+6. **« Logiciel malveillant (Tenable) »** dans les listes ; dans la fiche, le terme officiel « Exploited by malware ».
+7. **Fréquences** : plancher de deux heures de NVD aussi pour « Collecter maintenant » ; purge du journal des collectes et des
+   exécutions au-delà de 90 jours ; « En retard » après trois périodes sans collecte réussie ; fréquences gardées à la remise
+   à vide du travail.
+8. **Cartes d'avis** : « présente sur le parc » et « exposée sur Internet » quand une CVE citée concerne la plateforme, en une
+   lecture d'ensemble.
+
+### Réalisation
+
+- **Grille** (`packages/shared/src/priorite-vulnerabilites.ts`) : `calculerPriorite` applique la grille de départ, puis
+  (a) le fait `rancongiciel`, placé après celui de l'exploitation, sans effet sur le niveau ; (b) si `finDeSupport` et que la
+  présence est avérée (détectée, déclarée ou exposée), un cran de plus (`monterDUnCran`, partagé avec la majoration du lot
+  ALH5) et le fait `fin_de_support` à la fin, même en P1. Une faille absente ou « produit à confirmer » ne monte jamais. Sans
+  ces deux faits, le résultat est exactement celui d'avant (test en table). Libellés : « Machine en fin de support (système
+  ou produit plus maintenu par l'éditeur) : un cran de plus », « Utilisée par des rançongiciels (catalogue KEV) ».
+- **Machine en fin de support** (`apps/api/src/vulnerabilites/sql.ts`, `machinesFinSupport`) : même règle que la fiche
+  d'une machine du lot S3 (au moins un contrôle présent dont la `seolDate` de Tenable est passée, quel que soit son état de
+  suivi), toutes machines confondues (un fait commun, comme les priorités du lot ALH5), en sous-requête sans corrélation
+  évaluée une fois. Une faille détectée a le fait si elle est présente sur au moins une telle machine ; une faille déclarée,
+  si le produit surveillé est relié à au moins une telle machine. Appliqué partout où la priorité est calculée : liste et
+  fiche des constats, failles déclarées, marques des machines (et donc la majoration de la surface externe, le parc et les
+  périmètres), calcul global (alertes, vue d'ensemble, délais, tendances, rapport), vue par correctif, délai d'une décision
+  « corrigée », rapprochements, fiche d'une CVE et outil `evaluer_cve` de l'assistant (repères inchangés, aucun nom). Colonnes
+  ajoutées aux requêtes existantes ; une requête de plus seulement pour l'outil `evaluer_cve` (une faille).
+- **Kit d'exploitation** : `scripts/integration-http.py` garde `exploitFrameworks` dans sa liste blanche et en tire les seuls
+  noms connus (`kits_exploitation`, chaîne, casse ignorée ; une liste, un nombre ou tout autre texte ne donnent rien) ;
+  l'import `.nessus` lit `exploit_framework_metasploit`, `_core`, `_canvas` (« true » seulement, autre valeur comptée « hors
+  norme »). Champ `kitsExploitation` facultatif de l'élément reçu (`KitsExploitation`, liste fermée sans doublon), rangé dans
+  la colonne de la migration `097` et remis à vide par un passage suivant sans kit. Source `tenable-kit` de
+  `SOURCES_EXPLOITABLE` (rangée en dernier, sans date) : filtre « Exploitable », compteur des machines, P2 d'une faille
+  élevée, condition « exploitable » de l'alerte simple ; jamais dans `SOURCES_EXPLOITATION`. Marque « Kit d'exploitation :
+  Metasploit (Tenable) » en liste, « Kit d'exploitation disponible selon Tenable (« Exploitable with ») : … » en fiche.
+- **Rançongiciels** : `kev_rancongiciel` (déjà rangé depuis le lot V2) est lu par `lireFaitsCve` ; `SourcesFailleDto` porte
+  `rancongiciel` (absent : non) ; marque « Rançongiciels (KEV) », phrase de la fiche « Utilisée par des rançongiciels selon
+  le catalogue KEV de la CISA (« Known Ransomware Campaign Use ») ».
+- **P1 sous exception** (`apps/api/src/vulnerabilites/alertes.ts`) : un objet suivi (constat ou faille déclarée) en
+  « risque accepté » reste traité pour tout le reste (listes, compteurs, délais, vue d'ensemble, rapport) ; s'il est en P1,
+  sa priorité est gardée à part avec la faille (`exceptionsP1`). Quand rien d'autre ne rend la faille critique, l'alerte est
+  critique et ses faits portent `risqueAccepte` ; l'empreinte change (mise à jour sans rejeu : aucune notification), la
+  fenêtre, la liste et la fiche affichent « Risque accepté » et les machines de l'exception sont comptées. Une faille P2 sous
+  exception n'est pas gardée. À l'échéance (expiration par l'évaluation des délais), l'objet n'est plus sous exception : la
+  marque tombe, l'alerte reste critique, sans notification.
+- **« Zero-day »** (`correctifs-vulnerabilites.ts` : `REGLE_ZERO_DAY`, `estZeroDay`, `libelleMarqueExploitation`) : seule
+  la situation « exploitée, sans correctif connu » (CERT Santé « Un correctif existe : Non », aucune source contraire) est
+  dite « Zero-day : exploitée, sans correctif connu » ; « correctif disponible » et « correctif non renseigné » donnent
+  « Exploitation avérée ». Le triangle des tuiles, des listes, des cartes de périmètre et de la vue par correctif dit
+  « Exploitation avérée » ; son infobulle dit « Zero-day » seulement dans ce cas. Les champs d'API (`zeroDay`,
+  `exploitationAveree`) ne sont pas renommés.
+- **Libellés de Tenable** : `SOURCE_EXPLOITATION_LIBELLES.tenable` = « Logiciel malveillant (Tenable) » (listes, faits,
+  notifications) ; `SOURCE_EXPLOITATION_LIBELLES_COMPLETS` et `libelleFaitPrioriteComplet` pour la fiche : « Exploitée par
+  un logiciel malveillant selon Tenable (« Exploited by malware ») ».
+- **Fréquences** : « Collecter maintenant » refuse NVD (409, message propre) quand une collecte NVD non expirée a été
+  demandée depuis moins de deux heures (`PLANCHER_NVD_HEURES`) ; `sourceEnRetard` (trois périodes de la fréquence réglée,
+  `PERIODES_AVANT_RETARD`) remplace `VEILLE_RETARD_HEURES` ; purge (`apps/api/src/vulnerabilites/purge-journaux.ts`) au tic de
+  l'API, au plus une fois par heure ; la remise à vide « travail » relit les fréquences choisies avant d'effacer et les
+  réinscrit seules.
+- **Cartes d'avis** : `AvisVeilleDto.parc` (`presentes`, `exposees`) : CVE citées détectées (détection présente) ou déclarées
+  (rapprochement rattaché), quel que soit l'état de suivi, et CVE portées par la surface externe (`cvesExposees`, porteurs
+  sans droits) ; deux lectures pour toute la page. Marques « Présente sur le parc » et « Exposée sur Internet » (avec « n CVE
+  citées sur m » quand toutes ne le sont pas) ; rubrique « Sur la plateforme » de la fiche de l'avis.
+- **Vue d'ensemble** : la tuile « Exploitées et présentes » compte désormais les failles à exploitation avérée (une P1 peut
+  venir de la fin de support) ; l'explication du niveau 4 dit « présente chez nous en P1 (exploitation avérée, ou machine en
+  fin de support) ». La fenêtre d'alerte critique titre « Faille P1 présente chez nous » quand l'alerte n'a aucune source
+  d'exploitation.
+
+### Décisions complémentaires du RSSI (20/11/2026, après relecture)
+
+- **a. Le contrôle de fin de support lui-même ne monte pas.** Seules les AUTRES failles présentes sur la machine montent
+  d'un cran ; pas de vague d'alertes critiques sur les contrôles « système / produit non maintenu ». Le fait reste visible au
+  rapport (section « fin de support » existante) et la marque « Fin de support » reste sur le contrôle. Réalisation : partout
+  où le fait est calculé (liste et fiche des constats, marques des machines, calcul global, vue par correctif, délai d'une
+  décision, fiche d'une CVE), un constat dont la `seolDate` est passée est exclu de la montée ; `surMachineFinSupport` y est
+  faux. Une faille déclarée n'est jamais ce contrôle.
+- **b. Rançongiciels : aucun changement de niveau ; à priorité égale, ces failles passent devant**, critère placé juste
+  après le niveau, avant les critères existants : liste des failles détectées, liste des failles déclarées (tris en
+  mémoire, après la lecture SQL, qui n'en dépend pas) et ordre des cibles (`comparerCibles`, qui lit le fait `rancongiciel`
+  de la priorité ; le radar de l'interface et l'outil `failles_prioritaires` de l'assistant, qui reprennent cet ordre,
+  restent identiques à l'écran). La question posée plus haut est ainsi tranchée.
+- **c. Un seul cran au plus** : la fin de support et la majoration par une machine interne vulnérable (lot ALH5) ne se
+  cumulent pas ; `majorerPriorite` n'ajoute plus de cran à une priorité qui porte déjà le fait `fin_de_support`, les deux
+  faits restent affichés. Aujourd'hui, la fin de support ne s'applique qu'aux présences détectées et déclarées et la
+  majoration qu'à la présence exposée : la règle est gardée dans la fonction partagée (testée), sans cas en base. Une
+  faille d'une machine en fin de support qui en devient « vulnérable » peut toujours faire monter, d'un cran, une autre
+  faille portée par un actif exposé relié : ce sont deux failles distinctes.
+
+### Choix de réalisation, à confirmer par le RSSI
+- **Fin de support d'AlgoLightHouse non comptée** : un service exposé en fin de vie (`version_status = eol`) ne fait pas
+  monter les CVE exposées ; aucun lien sûr n'existe entre ce service et les CVE de la technologie.
+- **Fiche d'une CVE de la veille** : elle ne lit que les faits par CVE (choix du lot N2) ; une CVE inconnue de NVD y est en P4
+  et y monte en P3, alors que le constat de Tenable qui la porte est en P1.
+- **Exception en vigueur** : l'état « risque accepté » ; une exception dont l'échéance vient de passer compte encore jusqu'à
+  l'évaluation des délais qui l'expire (au plus un quart d'heure).
+- **Plancher NVD** : vaut pour « Collecter maintenant » seulement ; la planification garde sa règle (une collecte manuelle en
+  file tient lieu de la collecte automatique, puis une par période depuis la référence) : une collecte automatique peut donc
+  suivre une collecte manuelle terminée de moins de deux heures.
+- **Purge** : les exécutions qui portent le journal d'un import de fichier (Nessus, Silène) ne sont jamais purgées ; la
+  dernière exécution de chaque instance et opération, et la dernière collecte de chaque source, sont gardées.
+- **Remise à vide « tout »** : les fréquences de la veille sont effacées avec la configuration.
+- **Kit d'exploitation** : facultatif dans l'élément reçu (un script plus ancien reste accepté) ; « Core » seul n'est pas
+  lu comme Core Impact dans `exploitFrameworks`.
+- **Présence sur le parc des cartes d'avis** : un fait commun, sans tenir compte des droits de lecture (comme l'existence
+  d'une priorité, lot ALH5) ; la fiche de chaque CVE dit ce que la personne lit.
+
+### Question au RSSI
+
+- **Rançongiciels et priorité** : tranchée le 20/11/2026 (décision b ci-dessus : ordre à priorité égale, niveau inchangé).
+
+### Non vérifié
+
+Forme réelle d'`exploitFrameworks` sur une instance (la fixture relevée sur 6.9.1 la donne vide) et des champs
+`exploit_framework_*` d'un export `.nessus` réel ; nombre réel de machines en fin de support et d'alertes critiques qui en
+découlent ; e2e Playwright non joués (CI seulement) ; Node 26 ; pile Docker ; CSP du serveur de production.
+
+### Points ouverts (hors lot)
+
+1. Ordre des autres listes (alertes, correctifs, parc) à priorité égale : inchangé par la décision b.
+2. Fin de support au niveau de la technologie d'AlgoLightHouse et des services exposés (point ouvert 3 de l'addendum « lot
+   S3 »).
+3. Historiser la montée de priorité due à la fin de support (le délai court depuis la première présence, règle du lot S1).

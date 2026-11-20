@@ -6,7 +6,14 @@
 import { Group, Stack, Table, Text, Title } from '@mantine/core';
 import type { SourcesFailleDto } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
-import { libelleMention, lignesValeurs, marquesSources, resumeExploitable, resumeExploitation } from './sources';
+import {
+  libelleMention,
+  lignesValeurs,
+  marquesSources,
+  MENTION_RANCONGICIEL,
+  resumeExploitable,
+  resumeExploitation,
+} from './sources';
 import { PictoSource } from './PictoSource';
 import { PICTO_EXPLOITABLE, PICTO_EXPLOITATION, type SourcePicto } from './pictos-sources';
 
@@ -36,7 +43,8 @@ export function MarquesSources({ s }: { s: SourcesFailleDto }) {
 
 /** Section « Ce que disent les sources » d'une fiche (sans état). */
 export function SourcesFaille({ s }: { s: SourcesFailleDto }) {
-  const exploitation = resumeExploitation(s);
+  // Lot PRIO-1 : dans une fiche, libellés complets (terme officiel de Tenable, « Exploited by malware »).
+  const exploitation = resumeExploitation(s, true);
   const exploitable = resumeExploitable(s);
   const valeurs = lignesValeurs(s);
   return (
@@ -45,6 +53,7 @@ export function SourcesFaille({ s }: { s: SourcesFailleDto }) {
         Ce que disent les sources
       </Title>
       <Text size="sm">Exploitation avérée : {exploitation ?? 'aucune source ne la signale'}.</Text>
+      {s.rancongiciel && <Text size="sm">{MENTION_RANCONGICIEL}.</Text>}
       <Text size="sm">Exploitable : {exploitable ?? 'aucune source ne le signale'}.</Text>
       <Text size="xs" c="dimmed">
         Une seule source suffit ; la première à l’avoir signalé est citée d’abord.

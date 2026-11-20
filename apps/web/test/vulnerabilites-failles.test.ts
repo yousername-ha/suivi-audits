@@ -35,6 +35,8 @@ const rien = () => undefined;
 
 const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   id: '00000000-0000-4000-8000-000000000c01',
+  kitsExploitation: [],
+  surMachineFinSupport: false,
   plugin: '900001',
   nom: 'Exemple Linux : noyau (EX-2026-0001)',
   gravite: 'critique',
@@ -328,19 +330,25 @@ describe('rendu', () => {
         ],
       },
     });
-    expect(marquesConstat(malware).map((m) => m.libelle)).toEqual([
-      'Exploitée par un logiciel malveillant (selon Tenable)',
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : libellé court dans les listes, terme officiel de Tenable dans la fiche.
+    expect(marquesConstat(malware).map((m) => m.libelle)).toEqual(['Logiciel malveillant (Tenable)', 'Exploitable']);
+    expect(marquesConstat(malware, true).map((m) => m.libelle)).toEqual([
+      'Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)',
       'Exploitable',
     ]);
     expect(marquesConstat(malware)[0]!.etat).toBe('erreur');
     const html = rendu(createElement(ConstatsTable, { constats: [malware], onOuvrir: rien }));
     expect(html).toContain('>P1<');
-    expect(html).toContain('Exploitée par un logiciel malveillant (selon Tenable)');
-    expect(html).toContain(
-      'Exploitation avérée (Exploitée par un logiciel malveillant (selon Tenable)) · Détectée par Tenable',
-    );
+    expect(html).toContain('Logiciel malveillant (Tenable)');
+    expect(html).not.toContain('Exploited by malware');
+    expect(html).toContain('Exploitation avérée (Logiciel malveillant (Tenable)) · Détectée par Tenable');
     expect(html).toContain('Exploitation avérée (1 source)');
-    expect(html).toContain('d’abord Exploitée par un logiciel malveillant (selon Tenable)');
+    expect(html).toContain('d’abord Logiciel malveillant (Tenable)');
+    const ficheHtml = rendu(createElement(FicheConstat, { c: fiche({ ...malware }) }));
+    expect(ficheHtml).toContain('Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)');
+    expect(ficheHtml).toContain(
+      'Exploitation avérée : Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »).',
+    );
     // Pastille de la source : celle de Tenable (décorative, le texte la nomme).
     expect(html).toMatch(/<span class="ps ps--violet ps--parallelogramme" data-source="tenable" aria-hidden="true">/);
     expect(html).not.toContain('Exploitée (KEV)');

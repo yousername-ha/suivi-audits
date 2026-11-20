@@ -6,6 +6,33 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `097`** (lot PRIO-1 du module Vulnérabilités : règles de priorité, libellés, fréquences, cartes
+d'avis, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `kits_exploitation` des constats, liste vide
+par défaut, et sa contrainte), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucun flux nouveau.
+**Des priorités et des alertes changent dès la mise à jour**, sans action de votre part, à la première évaluation (fin de la
+prochaine synchronisation de Tenable, collecte de la veille ou décision) :
+- **les autres failles présentes sur une machine en fin de support montent d'un cran** (P4 → P3, P3 → P2, P2 → P1 ;
+  P1 reste P1) : seules celles qui étaient en P2 (critiques, ou à fort score EPSS, ou élevées et exploitables) passent en
+  **P1** et **ouvrent une alerte critique** (notification et fenêtre rouge), avec le délai de correction de P1 (48 heures
+  par défaut). Le contrôle de Tenable qui signale lui-même le système ou le produit non maintenu **ne monte pas** : pas
+  d'alerte critique du seul fait de la fin de support ; il reste listé dans la section « fin de support » du rapport. Ce
+  cran ne se cumule pas avec celui d'un actif exposé relié à une machine interne vulnérable. Les compteurs « à traiter », le
+  niveau d'alerte de la vue d'ensemble, les tendances et le rapport suivent ;
+- **une faille P1 sous exception** (risque accepté en vigueur) **garde son alerte critique**, marquée « Risque accepté » ;
+  une alerte close pour ce motif avant la mise à jour se rouvre (nouvelle alerte critique, notifiée une fois) ; une alerte
+  encore ouverte reçoit seulement la marque, sans notification ;
+- le fait « Utilisée par des rançongiciels (catalogue KEV) » s'ajoute à l'explication de la priorité, sans changer le
+  niveau ; à priorité égale, ces failles passent devant dans les listes et dans « Cibles par priorité » : l'ordre des listes
+  change. Les alertes concernées sont mises à jour (faits et version) sans notification ; une prise en compte préparée juste
+  avant est à refaire.
+Les kits d'exploitation de Tenable ne sont lus qu'à la prochaine synchronisation de Security Center ou au prochain import
+d'un fichier `.nessus`. Une source de la veille passe « En retard » après trois périodes de sa fréquence sans collecte réussie
+(six heures pour une source lue toutes les deux heures, trois jours pour EPSS) au lieu de 36 heures. « Collecter maintenant »
+refuse NVD moins de deux heures après la précédente collecte NVD demandée. Au premier passage du planificateur, les lignes
+du journal des collectes de la veille et des exécutions des connecteurs de plus de 90 jours sont effacées (la dernière de
+chaque source, de chaque instance et de chaque opération, les files en cours et les imports de fichiers sont gardés) ; le
+journal d'audit n'est pas touché. Une remise à vide du travail garde désormais les fréquences choisies pour la veille.
+(session « Module surveillance vulnérabilités SMSI »)
 **Lot PERF-04 du module Vulnérabilités** (ordre du calcul global, décision du RSSI du 20/11/2026,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : sans migration, aucune action sur le serveur. À la mise à jour, le
 détail affiché de quelques failles peut changer à priorité égale ; aucune priorité, aucune alerte, aucun compteur ne change.
@@ -102,6 +129,22 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Ajouté
 
+- Vulnérabilités, **kit d'exploitation disponible selon Tenable** (lot PRIO-1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  migration `097`) : Metasploit, Core Impact et CANVAS (« Exploitable with »), lus dans la chaîne `exploitFrameworks` de
+  Security Center et dans `exploit_framework_metasploit`, `exploit_framework_core` et `exploit_framework_canvas` d'un fichier
+  `.nessus` ; rangés avec « exploitable » (règle des alertes P2 exposées sur Internet), jamais comme exploitation avérée ;
+  marque « Kit d'exploitation : … (Tenable) » dans les listes, libellé complet dans la fiche (session « Module surveillance
+  vulnérabilités SMSI »).
+- Vulnérabilités, **rançongiciels** (lot PRIO-1) : la mention du catalogue KEV « utilisée par des rançongiciels »
+  (`knownRansomwareCampaignUse`) devient un fait visible dans la liste, la fiche et l'explication de la priorité, sans changer
+  le niveau (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **cartes d'avis de la veille** (lot PRIO-1) : marques « Présente sur le parc » et « Exposée sur Internet »
+  quand une CVE citée concerne la plateforme, et liste des CVE concernées dans la fiche de l'avis ; la réponse de la liste des
+  avis porte ces faits, lus en une fois pour la page, les mêmes pour tous, sans nom ni nombre (session « Module surveillance
+  vulnérabilités SMSI »).
+- Vulnérabilités, **purge des journaux** (lot PRIO-1) : journal des collectes de la veille et des exécutions des connecteurs
+  purgé au-delà de 90 jours, au tic de l'API, au plus une fois par heure ; journal d'audit `vulnerabilites.journaux.purges`
+  (nombres seulement) (session « Module surveillance vulnérabilités SMSI »).
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
   en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
   réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
@@ -198,7 +241,22 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
-- Vulnérabilités, **rapport de pilotage** (décision du RSSI du 20/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+- Vulnérabilités, **règles de priorité** (lot PRIO-1, décisions du RSSI des 19 et 20/11/2026,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : une faille présente sur une machine en fin de support gagne un cran
+  (P1 reste P1), fait cité dans l'explication, sauf le contrôle de fin de support lui-même, et sans cumul avec la majoration
+  par une machine interne vulnérable (un cran au plus) ; à priorité égale, les failles utilisées par des rançongiciels
+  passent devant dans les listes et les cibles de la vue d'ensemble ; une faille P1 sous exception garde son alerte critique, marquée « Risque
+  accepté », sans nouvelle notification (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **libellés** (lot PRIO-1) : le mot « zero-day » est réservé à une faille exploitée sans correctif connu ; une
+  faille exploitée qui a un correctif (ou dont le correctif n'est pas renseigné) est dite « exploitation avérée » ;
+  « Logiciel malveillant (Tenable) » dans les listes, terme officiel de Tenable « Exploited by malware » dans la fiche ; la
+  tuile « Exploitées et présentes » de la vue d'ensemble compte les failles exploitées (et non plus toutes les P1) (session
+  « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **fréquences** (lot PRIO-1) : « Collecter maintenant » respecte aussi le plancher de deux heures de NVD ;
+  une source passe « En retard » après trois périodes sans collecte réussie ; une remise à vide du travail garde les
+  fréquences choisies de la veille (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **rapport de pilotage** (décision du RSSI du 20/11/2026
+, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
   les failles critiques sont listées présentes depuis le plus longtemps d'abord, et les dépassements de même échéance dans
   le même ordre ; au-delà de 200 lignes, ce sont les plus anciennes qui restent affichées. Les totaux ne changent pas
   (session « Module surveillance vulnérabilités SMSI »).

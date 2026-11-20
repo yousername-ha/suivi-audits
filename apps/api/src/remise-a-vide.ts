@@ -320,8 +320,21 @@ export class RemiseAVide {
       // Les triggers d'immuabilité sont suspendus le temps de l'effacement (propriétaire des tables) ; la transaction
       // les rétablit ou, en cas d'échec, annule tout.
       const touchees = [...aVider, ...(portee === 'tout' ? ['users'] : [])];
+      // Lot PRIO-1 (décision du RSSI du 20/11/2026) : la remise à vide du travail garde les fréquences choisies pour les
+      // sources de la veille (un réglage, comme celle des connecteurs, qui suit leur instance) ; l'état des sources
+      // (dernière collecte, fenêtre NVD, référence de planification) repart de zéro. La portée « tout » efface aussi la
+      // configuration : les fréquences reviennent alors aux valeurs par défaut.
+      const frequences =
+        portee === 'travail'
+          ? await k
+              .selectFrom('vulnerabilites_veille_sources')
+              .select(['source', 'frequence_heures'])
+              .where('frequence_heures', 'is not', null)
+              .execute()
+          : [];
       for (const t of touchees) await sql`ALTER TABLE ${sql.table(t)} DISABLE TRIGGER USER`.execute(k);
       await sql`TRUNCATE ${sql.join(aVider.map((t) => sql.table(t)))} RESTART IDENTITY`.execute(k);
+      if (frequences.length) await k.insertInto('vulnerabilites_veille_sources').values(frequences).execute();
       if (portee === 'tout') {
         await k.deleteFrom('users').execute();
         await k.deleteFrom('roles').where('system', '=', false).execute();

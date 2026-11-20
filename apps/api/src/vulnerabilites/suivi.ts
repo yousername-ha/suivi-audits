@@ -132,6 +132,13 @@ export const close = (nature: NatureSuivi): RawBuilder<boolean> =>
     : sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id
         AND sc.etat IN ('corrigee', 'risque_accepte', 'non_concernee'))`;
 
+/** Lot PRIO-1 : le constat `c` ou la faille déclarée `r` est sous exception (état « risque accepté »). */
+export const sousException = (nature: NatureSuivi): RawBuilder<boolean> =>
+  nature === 'constat'
+    ? sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id AND sc.etat = 'risque_accepte')`
+    : sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id
+        AND sc.etat = 'risque_accepte')`;
+
 /* ---------------------------------------------------------------- Types internes */
 interface ObjetSuivi {
   /** Au moins une machine touchée est lisible. */

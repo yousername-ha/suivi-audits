@@ -598,7 +598,26 @@ describe('planification et fréquence', () => {
     await t.svc.db.q("UPDATE vulnerabilites_veille_collectes SET etat = 'echec', termine_le = now(), erreur = 'x'");
     expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(409);
     await t.svc.db.q("UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '16 minutes'");
-    expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : seize minutes après, NVD reste refusé (plancher de deux heures de
+    // NVD, « Collecter maintenant » compris), avec un message propre ; une autre source passe (quinze minutes).
+    const plancher = await rssi.post(`${base}/collectes`, { source: 'nvd' });
+    expect(plancher.statusCode).toBe(409);
+    expect(plancher.json().error).toContain('NVD demande de ne pas être lu plus d’une fois toutes les deux heures');
+    expect((await admin.post(`${base}/collectes`, { source: 'cisa-kev' })).statusCode).toBe(201);
+    // Au-delà de deux heures, NVD repasse ; juste avant, non.
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '119 minutes' WHERE source = 'nvd'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(409);
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '121 minutes' WHERE source = 'nvd'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
+    // Une collecte NVD expirée (jamais lancée par l'exécutant) ne compte pas dans le plancher.
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET etat = 'expire', termine_le = now(), erreur = 'x', demande_le = now() - interval '20 minutes' WHERE source = 'nvd' AND etat = 'en_file'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
     // Quatre demandes par heure et par personne.
     expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(429);
   });

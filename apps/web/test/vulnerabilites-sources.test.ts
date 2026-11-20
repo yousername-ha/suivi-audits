@@ -152,6 +152,7 @@ describe('rendu', () => {
     ).toContain('Dernière lecture : jamais');
     const avis: AvisVeilleDto = {
       id: '00000000-0000-4000-8000-000000000a01',
+      parc: { presentes: [], exposees: [] },
       source: 'cert-sante',
       identifiant: '10351',
       nature: 'alerte',

@@ -82,7 +82,7 @@ import type { FaillesDetectees } from './failles.js';
 import type { MotsNonMasquesVulnerabilites } from './mots-non-masques.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
-import { lisible, lisibleAlh, present } from './sql.js';
+import { cveSurMachineFinSupport, lisible, lisibleAlh, present } from './sql.js';
 import type { SuiviFailles } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 import type { VueEnsembleVulnerabilites } from './vue-ensemble.js';
@@ -700,7 +700,13 @@ export class AssistantVulnerabilites {
             ? 'a_confirmer'
             : 'absente';
     const sources = faits || exposition || detectee ? sourcesDe(faits ? [faits] : []) : null;
-    const prioriteCve = sources ? calculerPriorite({ ...faitsDepuisSources(sources), presence }, reglage) : null;
+    // Lot PRIO-1 : un cran de plus si la CVE est présente sur une machine en fin de support (même règle que la fiche).
+    const finDeSupport =
+      (presence === 'detectee' || presence === 'declaree') &&
+      (await sql<{ oui: boolean }>`SELECT ${cveSurMachineFinSupport(cve)} AS oui`.execute(k)).rows[0]!.oui;
+    const prioriteCve = sources
+      ? calculerPriorite({ ...faitsDepuisSources(sources), presence, finDeSupport }, reglage)
+      : null;
     const v = faits?.veille
       ? await k
           .selectFrom('vulnerabilites_veille_cve')

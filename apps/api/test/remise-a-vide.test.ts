@@ -147,12 +147,30 @@ describe('remise à vide : effacement', () => {
     expect(avant.versions + avant.methodes + avant.evaluations).toBeGreaterThan(0);
     const auditAvant = await compte('audit_log');
     const comptesAvant = await compte('users');
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : fréquences choisies pour la veille, et état d'une source (à effacer).
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_sources (source, frequence_heures, derniere_reussite, planifiee_le)
+       VALUES ('cisa-kev', 12, now(), now()), ('nvd', 4, NULL, now()), ('cert-fr', NULL, now(), NULL)
+       ON CONFLICT (source) DO UPDATE SET frequence_heures = EXCLUDED.frequence_heures,
+         derniere_reussite = EXCLUDED.derniere_reussite, planifiee_le = EXCLUDED.planifiee_le`,
+    );
     await autoriser(true);
     await sauvegardeRecente();
 
     const res = await a.post('/api/admin/remise-a-vide', await requete('travail'));
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ portee: 'travail', jeton: false });
+    // Fréquences gardées, état des sources reparti de zéro ; une source sans fréquence choisie n'est pas recréée.
+    expect(
+      (
+        await t.svc.db.q(
+          'SELECT source, frequence_heures, derniere_reussite, planifiee_le FROM vulnerabilites_veille_sources ORDER BY source',
+        )
+      ).rows,
+    ).toEqual([
+      { source: 'cisa-kev', frequence_heures: 12, derniere_reussite: null, planifiee_le: null },
+      { source: 'nvd', frequence_heures: 4, derniere_reussite: null, planifiee_le: null },
+    ]);
 
     for (const table of [
       'grc_objects',
@@ -198,9 +216,15 @@ describe('remise à vide : effacement', () => {
     await autoriser(true);
     await sauvegardeRecente();
 
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_sources (source, frequence_heures) VALUES ('cisa-kev', 12)
+       ON CONFLICT (source) DO UPDATE SET frequence_heures = EXCLUDED.frequence_heures`,
+    );
     const res = await a.post('/api/admin/remise-a-vide', await requete('tout'));
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ portee: 'tout', jeton: true });
+    // Lot PRIO-1 : la portée « tout » efface aussi la configuration, fréquences de la veille comprises.
+    expect(await compte('vulnerabilites_veille_sources')).toBe(0);
 
     expect(await compte('users')).toBe(0);
     expect(await compte('sessions')).toBe(0);

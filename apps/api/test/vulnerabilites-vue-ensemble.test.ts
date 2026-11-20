@@ -296,7 +296,9 @@ describe('lot PC1 : vue d’ensemble du module Vulnérabilités', () => {
     expect(commun(a)).toEqual(commun(ad));
     // Niveau 4 : CVE-2026-92001 exploitée (KEV) et présente.
     expect(a.niveau).toMatchObject({ niveau: 4, libelle: 'Maximale' });
-    expect(a.niveau.explication).toMatch(/^1 faille exploitée et présente chez nous \(P1\)/);
+    expect(a.niveau.explication).toMatch(
+      /^1 faille présente chez nous en P1 \(exploitation avérée, ou machine en fin de support\)/,
+    );
     expect(a.niveau.faits).toMatchObject({ critiques: 1, exploiteesAConfirmer: 1 });
     // 4 failles du parc + 45 constats sans CVE + 1 proposition.
     expect(a.total).toBe(50);

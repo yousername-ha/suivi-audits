@@ -14,6 +14,8 @@ import {
   rangPriorite,
   SOURCES_EXPLOITABLE,
   SOURCE_EXPLOITATION_LIBELLES,
+  SOURCE_EXPLOITATION_LIBELLES_COMPLETS,
+  libelleFaitPrioriteComplet,
   SOURCES_EXPLOITATION,
   type SourcesFailleDto,
   valeursRetenues,
@@ -353,7 +355,11 @@ describe('plusieurs sources (V26) : exploitation avérée et « exploitable »',
 describe('lot N2 : contrôle exploité par un logiciel malveillant (selon Tenable)', () => {
   it('source d’exploitation avérée, libellé exact, rangée après les sources datées', () => {
     expect(SOURCES_EXPLOITATION).toEqual(['kev', 'cert-fr', 'cert-sante', 'alh', 'tenable']);
-    expect(SOURCE_EXPLOITATION_LIBELLES.tenable).toBe('Exploitée par un logiciel malveillant (selon Tenable)');
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : libellé court dans les listes, terme officiel de Tenable dans la fiche.
+    expect(SOURCE_EXPLOITATION_LIBELLES.tenable).toBe('Logiciel malveillant (Tenable)');
+    expect(SOURCE_EXPLOITATION_LIBELLES_COMPLETS.tenable).toBe(
+      'Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)',
+    );
     expect(calculerPriorite(faits({ exploitation: ['tenable'], gravite: 'moyenne' }))).toEqual({
       niveau: 'P1',
       faits: [
@@ -362,7 +368,10 @@ describe('lot N2 : contrôle exploité par un logiciel malveillant (selon Tenabl
       ],
     });
     expect(libelleFaitPriorite({ fait: 'exploitation', sources: ['kev', 'tenable'] })).toBe(
-      'Exploitation avérée (catalogue KEV, Exploitée par un logiciel malveillant (selon Tenable))',
+      'Exploitation avérée (catalogue KEV, Logiciel malveillant (Tenable))',
+    );
+    expect(libelleFaitPrioriteComplet({ fait: 'exploitation', sources: ['kev', 'tenable'] })).toBe(
+      'Exploitation avérée (catalogue KEV, Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »))',
     );
     expect(
       rangerSignalements(

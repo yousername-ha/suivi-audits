@@ -44,7 +44,7 @@ import type { Db } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, perimetreMachine, premiereConstat, present } from './sql.js';
+import { lisible, machinesFinSupport, perimetreMachine, premiereConstat, present } from './sql.js';
 import { colonnesSuivi, filtreSuivi, type LigneSuivi } from './suivi.js';
 
 const nombre = (v: string | null) => (v === null ? null : Number(v));
@@ -63,6 +63,9 @@ interface LigneConstat extends LigneSuivi {
   exploitable: boolean;
   /** Lot N2 : contrôle « exploité par un logiciel malveillant » selon Tenable. */
   exploite_malware: boolean;
+  /** Lot PRIO-1 : kits d'exploitation cités par Tenable ; présent sur une machine en fin de support. */
+  kits_exploitation: string[];
+  sur_fin_support: boolean;
   correctif_publie_le: Date | null;
   fin_support_le: Date | null;
   premiere: Date;
@@ -168,15 +171,16 @@ export class CorrectifsVulnerabilites {
     const k = this.db.k;
     const reglage = await this.reglage.valeurs();
     const { rows } = await sql<LigneConstat>`
-      WITH x AS (
-        SELECT d.constat_id, ${lisible(user)} AS lu
+      WITH fsm AS MATERIALIZED (${machinesFinSupport}),
+      x AS (
+        SELECT d.constat_id, ${lisible(user)} AS lu, d.machine_id IN (SELECT fsm.machine_id FROM fsm) AS fds
         FROM vulnerabilites_detections d
         JOIN vulnerabilites_machines m ON m.id = d.machine_id
         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
         WHERE ${present}),
-      p AS (SELECT constat_id, bool_or(NOT lu) AS hors_lecture FROM x GROUP BY constat_id)
+      p AS (SELECT constat_id, bool_or(NOT lu) AS hors_lecture, bool_or(fds) AS sur_fin_support FROM x GROUP BY constat_id)
       SELECT c.id, c.plugin_id, c.nom, c.gravite, c.correctif, c.cvss3_score, c.epss_score, c.exploitable,
-        c.exploite_malware, c.correctif_publie_le, c.fin_support_le, ${premiereConstat} AS premiere, p.hors_lecture, ${colonnesSuivi}
+        c.exploite_malware, c.kits_exploitation, (p.sur_fin_support AND NOT (c.fin_support_le IS NOT NULL AND c.fin_support_le <= now())) AS sur_fin_support, c.correctif_publie_le, c.fin_support_le, ${premiereConstat} AS premiere, p.hors_lecture, ${colonnesSuivi}
       FROM vulnerabilites_constats c JOIN p ON p.constat_id = c.id
       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
       WHERE ${filtreSuivi(undefined, sql<boolean>`true`)}`.execute(k);
@@ -211,10 +215,15 @@ export class CorrectifsVulnerabilites {
           epss: nombre(l.epss_score),
           exploitable: l.exploitable,
           malware: l.exploite_malware,
+          kits: l.kits_exploitation,
         },
       );
       const f = faitsDepuisSources(sources);
-      const priorite = calculerPriorite({ ...f, presence: 'detectee' }, reglage).niveau;
+      // Lot PRIO-1 : un cran de plus sur une machine en fin de support (même règle que la liste des failles).
+      const priorite = calculerPriorite(
+        { ...f, presence: 'detectee', finDeSupport: l.sur_fin_support },
+        reglage,
+      ).niveau;
       const correctif = etatCorrectif({
         tenablePublieLe: iso(l.correctif_publie_le),
         certSante: sources.certSante?.correctif ?? null,

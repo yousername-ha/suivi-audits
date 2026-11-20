@@ -277,6 +277,7 @@ describe('lot S3 : regroupement par correctif, fin de support, état du correcti
     });
     expect(groupe(l, PATCH)).toMatchObject({ failles: 1, priorite: 'P1', exploitees: 1, exploiteesSansCorrectif: 1 });
     expect(groupe(l, MIGRER)).toMatchObject({ failles: 1, finDeSupport: 0 });
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : 940005 est lui-même le contrôle de fin de support : il ne monte pas.
     expect(groupe(l, null)).toMatchObject({ cle: 'aucun', failles: 1, finDeSupport: 1, priorite: 'P2' });
     // Recherche dans le texte, filtre de priorité ; l'en-tête reste celui de toutes les mises à jour.
     expect((await lister(admin, '?q=patch')).groupes.map((g) => g.solution)).toEqual([PATCH]);

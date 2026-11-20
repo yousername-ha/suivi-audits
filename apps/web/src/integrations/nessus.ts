@@ -23,6 +23,7 @@ import {
   GRAVITE_TENABLE_LIBELLES,
   GRAVITES_TENABLE,
   type GraviteTenable,
+  type KitExploitation,
   type LotImportNessus,
   MachineLotNessus,
   NESSUS_BORNES,
@@ -216,6 +217,10 @@ export const CHAMPS_CONTROLE = [
   'exploit_available',
   'exploitability_ease',
   'exploited_by_malware',
+  // Lot PRIO-1 : kits d'exploitation cités par Tenable (« Exploitable with »).
+  'exploit_framework_metasploit',
+  'exploit_framework_core',
+  'exploit_framework_canvas',
   'vuln_publication_date',
   'patch_publication_date',
   'see_also',
@@ -263,6 +268,21 @@ export function exploiteParMalware(brut: string | undefined, ecarts?: Compteur):
   return false;
 }
 
+/** Lot PRIO-1 : kits d'exploitation d'un contrôle (`exploit_framework_metasploit`, `_core`, `_canvas`), même règle que
+    `exploited_by_malware` : « true » (casse et espaces ignorés) = oui ; absent, vide ou « false » = non ; autre valeur = non,
+    comptée « valeur hors norme ». */
+export function kitsNessus(
+  v: Partial<Record<'exploit_framework_metasploit' | 'exploit_framework_core' | 'exploit_framework_canvas', string>>,
+  ecarts?: Compteur,
+): KitExploitation[] {
+  const champs: [KitExploitation, string | undefined][] = [
+    ['metasploit', v.exploit_framework_metasploit],
+    ['core_impact', v.exploit_framework_core],
+    ['canvas', v.exploit_framework_canvas],
+  ];
+  return champs.filter(([, brut]) => exploiteParMalware(brut, ecarts)).map(([k]) => k);
+}
+
 /** Description d'un contrôle, lue une fois : seuls les éléments de CHAMPS_CONTROLE sont lus. */
 function lireControle(
   item: NoeudXml,
@@ -306,6 +326,7 @@ function lireControle(
     exploitable: v.exploit_available?.trim().toLowerCase() === 'true',
     exploitLibelle: texteNettoye(v.exploitability_ease ?? null, TENABLE_BORNES.libelleExploit, ecarts),
     exploiteMalware: exploiteParMalware(v.exploited_by_malware, ecarts),
+    kitsExploitation: kitsNessus(v, ecarts),
     failleLe: valeur(v.vuln_publication_date, datePublication(v.vuln_publication_date ?? null)),
     correctifLe: valeur(v.patch_publication_date, datePublication(v.patch_publication_date ?? null)),
     voirAussi: lien,
