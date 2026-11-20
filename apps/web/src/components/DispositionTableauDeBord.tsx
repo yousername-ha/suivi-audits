@@ -620,6 +620,11 @@ export function EditionTableauDeBord({
             }}
           />
         </Group>
+        {modele && (
+          <Alert color="blue" role="note">
+            Tableau proposé d’office : vos modifications s’appliquent à tous ceux qui l’affichent.
+          </Alert>
+        )}
         <TextInput
           className="tdb-edition-nom"
           label="Nom du tableau"

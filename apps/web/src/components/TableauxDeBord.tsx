@@ -605,16 +605,14 @@ export function PartageTableau({
   );
 }
 
-/** Bandeau d'un tableau qui n'est pas à la personne : origine, lecture seule, retrait de ses onglets. */
+/** Bandeau d'un tableau partagé avec la personne ou public : origine, lecture seule, retrait de ses onglets. */
 export function BandeauTableau({ tableau, onRetirer }: { tableau: TableauDetail; onRetirer?: () => void }) {
-  if (tableau.origine === 'mien') return null;
+  // Ses tableaux et les tableaux proposés d'office (l'accueil de chacun) n'ont pas de bandeau.
+  if (tableau.origine === 'mien' || tableau.origine === 'propose') return null;
   const n = nature(tableau);
-  const qui =
-    tableau.origine === 'propose'
-      ? 'Tableau proposé d’office'
-      : tableau.public
-        ? `Tableau public de ${tableau.auteur ?? 'un autre compte'}`
-        : `Tableau partagé par ${tableau.auteur ?? 'un autre compte'}`;
+  const qui = tableau.public
+    ? `Tableau public de ${tableau.auteur ?? 'un autre compte'}`
+    : `Tableau partagé par ${tableau.auteur ?? 'un autre compte'}`;
   return (
     <div className={`tdb-bandeau${tableau.public ? ' tdb-bandeau--public' : ''}`} role="note">
       {n?.icone}
