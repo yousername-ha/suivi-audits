@@ -308,6 +308,8 @@ export type PartageOut = z.infer<typeof PartageOut>;
 export const AnnuaireTableauDeBord = z.object({
   utilisateurs: z.array(z.object({ id: z.uuid(), nom: z.string(), identifiant: z.string() })),
   groupes: z.array(z.object({ id: z.uuid(), nom: z.string(), membres: z.number().int() })),
+  /** Rôles, prédéfinis et personnalisés (destinataires d'un tableau, ADR 0109). */
+  roles: z.array(z.object({ id: z.string(), nom: z.string() })),
 });
 export type AnnuaireTableauDeBord = z.infer<typeof AnnuaireTableauDeBord>;
 
