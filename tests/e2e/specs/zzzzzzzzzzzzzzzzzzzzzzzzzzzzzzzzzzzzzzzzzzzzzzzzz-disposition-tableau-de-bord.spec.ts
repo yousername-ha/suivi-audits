@@ -1,7 +1,9 @@
-/* Disposition du tableau de bord de l'accueil (ADR 0078, lots 2a à 2c) : déplacer une dalle au clavier et au glisser,
-   changer sa largeur, la masquer puis la réafficher, changer sa visualisation, enregistrer (la disposition survit au rechargement), puis revenir à
-   la disposition par défaut. Puis partager sa disposition avec un compte Lecteur, qui l'affiche sans pouvoir la
-   modifier. Le compte d'administration reprend ensuite la disposition standard. */
+/* Disposition du tableau de bord de l'accueil (ADR 0078, lots 2a à 2c ; tableau unique, ADR 0108) : déplacer une dalle
+   au clavier et au glisser, changer sa largeur et sa hauteur, la masquer puis la rajouter depuis le catalogue, ajouter
+   une dalle classique et une copie d'une carte, changer une visualisation, enregistrer (la disposition survit au
+   rechargement), puis revenir à la disposition par défaut, celle de la vue analytique. Puis partager sa disposition avec
+   un compte Lecteur, qui l'affiche sans pouvoir la modifier. Le compte d'administration reprend ensuite la disposition
+   standard. */
 import { expect, test, type Page } from '@playwright/test';
 import { creerEcartCommun, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
 
@@ -35,7 +37,8 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await page.getByRole('button', { name: 'Modifier la disposition' }).click();
     await expect(page.getByRole('region', { name: 'Modifier la disposition du tableau de bord' })).toBeVisible();
     const depart = await ordreEdition(page);
-    expect(depart[0]).toBe('phare');
+    // Disposition standard : celle de la vue analytique, bandeau en tête (ADR 0108).
+    expect(depart[0]).toBe('bandeau');
 
     // Clavier : la deuxième dalle passe en tête, annoncée « position 1 ».
     const deuxieme = depart[1]!;
@@ -51,10 +54,10 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await page.keyboard.press('End');
     expect((await ordreEdition(page)).at(-1)).toBe(deuxieme);
 
-    // Glisser : la carte phare, prise par sa poignée, est déposée sur la dalle « Prochaines échéances ».
+    // Glisser : le bandeau, pris par sa poignée, est déposé sur la carte « Plan d’action ».
     const avantGlisser = await ordreEdition(page);
-    const phare = page.locator('[data-dalle="phare"] .tdb-poignee').boundingBox();
-    const cible = page.locator('[data-dalle="echeances"]').boundingBox();
+    const phare = page.locator('[data-dalle="bandeau"] .tdb-poignee').boundingBox();
+    const cible = page.locator('[data-dalle="plan-action"]').boundingBox();
     const [a, b] = await Promise.all([phare, cible]);
     await page.mouse.move(a!.x + a!.width / 2, a!.y + a!.height / 2);
     await page.mouse.down();
@@ -62,19 +65,19 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await page.mouse.up();
     const apresGlisser = await ordreEdition(page);
     expect(apresGlisser).not.toEqual(avantGlisser);
-    expect(apresGlisser.indexOf('phare')).toBeGreaterThan(avantGlisser.indexOf('phare'));
+    expect(apresGlisser.indexOf('bandeau')).toBeGreaterThan(avantGlisser.indexOf('bandeau'));
 
-    // Largeur, puis masquer et réafficher.
-    await page.getByLabel('Largeur de « Prochaines échéances »').selectOption('12');
-    await expect(page.locator('[data-dalle="echeances"]')).toHaveClass(/tdb-l12/);
+    // Largeur, puis masquer et rajouter depuis le catalogue.
+    await page.getByLabel('Largeur de « Plan d’action »').selectOption('12');
+    await expect(page.locator('[data-dalle="plan-action"]')).toHaveClass(/tdb-l12/);
 
     // Largeur au glisser (lot 2d) : le bord droit tiré jusqu'au milieu de la dalle l'aimante sur « la moitié », annoncée ;
     // au clavier, deux flèches à droite la rendent à toute la largeur.
-    const echeances = page.locator('[data-dalle="echeances"]');
+    const echeances = page.locator('[data-dalle="plan-action"]');
     const annonceEdition = page
       .getByRole('region', { name: 'Modifier la disposition du tableau de bord' })
       .locator('[aria-live="polite"]');
-    const bord = echeances.getByRole('button', { name: /^Redimensionner « Prochaines échéances »/ });
+    const bord = echeances.getByRole('button', { name: /^Redimensionner « Plan d’action »/ });
     await bord.scrollIntoViewIfNeeded();
     const [zoneBord, zoneCase] = await Promise.all([bord.boundingBox(), echeances.boundingBox()]);
     await page.mouse.move(zoneBord!.x + zoneBord!.width / 2, zoneBord!.y + zoneBord!.height / 2);
@@ -82,17 +85,32 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await page.mouse.move(zoneCase!.x + zoneCase!.width / 2, zoneBord!.y + zoneBord!.height / 2, { steps: 10 });
     await page.mouse.up();
     await expect(echeances).toHaveClass(/tdb-l6/);
-    await expect(annonceEdition).toHaveText(/« Prochaines échéances » : position \d+ sur \d+, la moitié\./);
+    await expect(annonceEdition).toHaveText(/« Plan d’action » : position \d+ sur \d+, la moitié\./);
     await bord.focus();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
     await expect(echeances).toHaveClass(/tdb-l12/);
-    await expect(annonceEdition).toHaveText('« Prochaines échéances » : toute la largeur.');
-    await page.getByRole('button', { name: 'Masquer « Écarts »', exact: true }).click();
-    await expect(page.locator('[data-dalle="ecarts"]')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Afficher « Écarts »' }).click();
-    await expect(page.locator('[data-dalle="ecarts"]')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Masquer « Écarts »', exact: true }).click();
+    await expect(annonceEdition).toHaveText('« Plan d’action » : toute la largeur.');
+    // Hauteur (ADR 0108) : la liste puis le bord bas au clavier.
+    await page.getByLabel('Hauteur de « Plan d’action »').selectOption('8');
+    await expect(echeances).toHaveClass(/tdb-h8/);
+    await echeances.getByRole('button', { name: /^Redimensionner en hauteur « Plan d’action »/ }).focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(echeances).toHaveClass(/tdb-h6/);
+    await expect(annonceEdition).toHaveText('« Plan d’action » : une rangée et demie.');
+    await page.getByRole('button', { name: 'Masquer « Audits & constats »', exact: true }).click();
+    await expect(page.locator('[data-dalle="constats"]')).toHaveCount(0);
+    // Catalogue : la carte masquée revient ; une dalle classique s'ajoute ; une carte affichée s'ajoute en copie.
+    await page.getByRole('button', { name: '+ Ajouter une dalle' }).click();
+    const catalogue = page.getByRole('dialog', { name: 'Ajouter une dalle' });
+    await catalogue.getByRole('button', { name: 'Ajouter « Audits & constats »', exact: true }).click();
+    await expect(page.locator('[data-dalle="constats"]')).toHaveCount(1);
+    await catalogue.getByRole('button', { name: 'Ajouter « Écarts par statut »', exact: true }).click();
+    await catalogue.getByRole('button', { name: 'Ajouter encore « Bandeau ISO 27001 / HDS »', exact: true }).click();
+    await expect(page.locator('[data-cle="bandeau~2"]')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(catalogue).toHaveCount(0);
+    await page.getByRole('button', { name: 'Masquer « Audits & constats »', exact: true }).click();
 
     // Réglages (lot 2c) : « Écarts par statut » passe en anneau, aperçu immédiat.
     const statut = page.locator('[data-dalle="ecarts-statut"]');
@@ -108,11 +126,16 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByRole('button', { name: 'Modifier la disposition' })).toBeVisible();
 
-    // Mode lecture : ordre enregistré, « Écarts » masquée, largeur appliquée ; identique après rechargement.
+    // Mode lecture : ordre enregistré, « Audits & constats » masquée, taille appliquée, copie du bandeau présente ;
+    // identique après rechargement.
     const verifier = async () => {
+      // Les dalles arrivent avec la synthèse, après le titre de la page : on attend leur affichage avant de les compter.
+      await expect(page.locator('.tdb-grille > section')).toHaveCount(voulu.length);
       expect((await ordreLecture(page)).length).toBe(voulu.length);
-      await expect(page.locator('.tdb-grille > section[aria-label="Écarts"]')).toHaveCount(0);
-      await expect(page.locator('.tdb-grille > section[aria-label="Prochaines échéances"]')).toHaveClass(/tdb-l12/);
+      await expect(page.locator('.tdb-grille > section[aria-label="Audits & constats"]')).toHaveCount(0);
+      await expect(page.locator('.tdb-grille > section[aria-label="Plan d’action"]')).toHaveClass(/tdb-l12/);
+      await expect(page.locator('.tdb-grille > section[aria-label="Plan d’action"]')).toHaveClass(/tdb-h6/);
+      await expect(page.locator('.tdb-grille > section[aria-label="Bandeau ISO 27001 / HDS"]')).toHaveCount(2);
       await expect(page.locator('.tdb-grille > section[aria-label="Écarts par statut"] .graph-anneau')).toHaveCount(1);
     };
     await verifier();
@@ -120,12 +143,12 @@ test('disposition du tableau de bord : clavier, glisser, largeur, masquer, enreg
     await expect(page.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
     await verifier();
 
-    // Retour à la disposition par défaut : l'ordre et les largeurs standard reviennent.
+    // Retour à la disposition par défaut : l'ordre et les tailles de la vue analytique reviennent.
     await page.getByRole('button', { name: 'Modifier la disposition' }).click();
     await page.getByRole('button', { name: 'Revenir à la disposition par défaut' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmer' }).click();
     await expect(page.getByRole('button', { name: 'Modifier la disposition' })).toBeVisible();
-    await expect(page.locator('.tdb-grille > section[aria-label="Écarts"]')).toHaveCount(1);
+    await expect(page.locator('.tdb-grille > section[aria-label="Audits & constats"]')).toHaveCount(1);
     expect(await ordreLecture(page)).toEqual(standard);
     expect(problems).toEqual([]);
   } finally {
@@ -176,17 +199,18 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
   const page = await ctx.newPage();
   const problems = watchPage(page);
   try {
-    // L'administrateur enregistre une disposition (« Prochaines échéances » en tête), puis la partage au Lecteur.
+    // L'administrateur enregistre une disposition (le bandeau, en tête de la disposition standard, passe en dernier),
+    // puis la partage au Lecteur.
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
     await page.getByRole('button', { name: 'Modifier la disposition' }).click();
-    const poignee = page.locator('[data-dalle="echeances"] .tdb-poignee');
+    const poignee = page.locator('[data-dalle="bandeau"] .tdb-poignee');
     await poignee.focus();
-    await page.keyboard.press('Home');
+    await page.keyboard.press('End');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByRole('button', { name: 'Partager' })).toBeVisible();
     const voulu = await ordreLecture(page);
-    expect(voulu[0]).toBe('Prochaines échéances');
+    expect(voulu.at(-1)).toBe('Bandeau ISO 27001 / HDS');
 
     await page.getByRole('button', { name: 'Partager' }).click();
     const zone = page.getByRole('region', { name: 'Partager mon tableau de bord' });
@@ -199,7 +223,7 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
     expect(partage.destinataires).toEqual([expect.objectContaining({ type: 'utilisateur', id: lecteurId })]);
 
     // Le Lecteur (session déjà ouverte par l'enrôlement : une connexion de moins dans la limite par adresse) : pas de
-    // bouton de modification ; il choisit le tableau reçu, qui suit l'ordre de l'administrateur.
+    // bouton de modification ; il choisit le tableau reçu, qui suit l'ordre de l'administrateur (bandeau en dernier).
     const lecteur = lc;
     try {
       expect((await (await lecteur.request.get('/api/auth/me')).json()).stage).toBe('ok');
@@ -213,11 +237,11 @@ test('partage du tableau de bord : un compte Lecteur reçoit la disposition et l
       await expect(choix).toBeVisible();
       const recu = lp.locator('select.mantine-NativeSelect-input option', { hasText: /^Tableau de bord de / });
       await choix.selectOption({ label: (await recu.first().textContent())! });
-      await expect.poll(async () => (await ordreLecture(lp))[0]).toBe('Prochaines échéances');
+      await expect.poll(async () => (await ordreLecture(lp)).at(-1)).toBe('Bandeau ISO 27001 / HDS');
       await lp.reload();
       await expect(lp.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
       await expect(lp.getByLabel('Tableau affiché')).toHaveValue(/.+/);
-      await expect.poll(async () => (await ordreLecture(lp))[0]).toBe('Prochaines échéances');
+      await expect.poll(async () => (await ordreLecture(lp)).at(-1)).toBe('Bandeau ISO 27001 / HDS');
       // Sans le droit, il ne peut pas en faire sa disposition (le serveur refuse aussi).
       await expect(lp.getByRole('button', { name: 'Copier comme mon tableau' })).toHaveCount(0);
       const refus = await lecteur.request.put('/api/tableau-de-bord/disposition', {

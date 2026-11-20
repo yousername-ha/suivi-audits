@@ -92,7 +92,12 @@ test.beforeAll(async ({ browser }) => {
 });
 
 const PAGES = [
-  { nom: 'tableau-de-bord', url: () => '/', titre: /^Bonjour/, contenu: /^Prochaines échéances$/ },
+  {
+    nom: 'tableau-de-bord',
+    url: () => '/',
+    titre: /^Bonjour/,
+    contenu: /^Vue d’ensemble · Gouvernance, risque et conformité$/,
+  },
   {
     nom: 'liste-fiche',
     url: () => `/documents/${docId}`,
