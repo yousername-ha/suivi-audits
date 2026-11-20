@@ -35,6 +35,18 @@ const LIBELLE_CLASSIFICATION: Record<string, string> = {
   mineure: 'Non-conformité mineure',
   point_sensible: 'Point sensible',
 };
+const NON_CLASSE = 'Non classé';
+const CONSTAT_OU_OPPORTUNITE = 'Constat ou opportunité';
+const SOURCE_CERTIFICATION = 'Audit de certification';
+const SOURCE_INTERNE = 'Audit interne';
+const SOURCE_NON_PRECISEE = 'Non précisé';
+/** Libellés connus des répartitions des écarts (`ecarts.parStatut`, `parType`, `parSource`) : listes fermées reprises par
+    les chiffres ouverts d'un tableau de bord (ADR 0109). Un statut inconnu, repris tel quel par `parStatut`, n'y figure pas. */
+export const LIBELLES_ECARTS = {
+  statut: Object.values(LIBELLE_STATUT),
+  type: [...Object.values(LIBELLE_CLASSIFICATION), NON_CLASSE, CONSTAT_OU_OPPORTUNITE],
+  source: [SOURCE_CERTIFICATION, SOURCE_INTERNE, SOURCE_NON_PRECISEE],
+} as const;
 /** Code historique des types d'écart (couleurs du graphique) selon la classification ou la nature du constat. */
 const CODE_TYPE = (classification: string, nature: string) =>
   classification === 'majeure'
@@ -141,12 +153,12 @@ async function tableauDeBordNatifBase(
       total += r.n;
       cumul(LIBELLE_STATUT[r.st] ?? r.st, r.n, parStatut);
       cumul(
-        LIBELLE_CLASSIFICATION[r.cl] ?? (r.nature === 'nonconformity' ? 'Non classé' : 'Constat ou opportunité'),
+        LIBELLE_CLASSIFICATION[r.cl] ?? (r.nature === 'nonconformity' ? NON_CLASSE : CONSTAT_OU_OPPORTUNITE),
         r.n,
         parType,
       );
       cumul(
-        r.src === 'AFNOR' ? 'Audit de certification' : r.src === 'Interne' ? 'Audit interne' : 'Non précisé',
+        r.src === 'AFNOR' ? SOURCE_CERTIFICATION : r.src === 'Interne' ? SOURCE_INTERNE : SOURCE_NON_PRECISEE,
         r.n,
         parSource,
       );

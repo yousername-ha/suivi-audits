@@ -92,7 +92,12 @@ test.beforeAll(async ({ browser }) => {
 });
 
 const PAGES = [
-  { nom: 'tableau-de-bord', url: () => '/', titre: /^Bonjour/, contenu: /^Prochaines échéances$/ },
+  {
+    nom: 'tableau-de-bord',
+    url: () => '/',
+    titre: /^Bonjour/,
+    contenu: /^Global$/,
+  },
   {
     nom: 'liste-fiche',
     url: () => `/documents/${docId}`,
@@ -160,7 +165,7 @@ for (const [w, h] of [
     const ctx = await context(browser, w, h, 'light');
     const page = await ctx.newPage();
     await page.goto('/');
-    await pret(page, /^Bonjour/, /^Prochaines échéances$/);
+    await pret(page, /^Bonjour/, /^Global$/);
     const r = await page.evaluate(() => {
       const cartes = Array.from(document.querySelectorAll('.grille-cartes > *')).map((e) => e.getBoundingClientRect());
       const gauche = Math.min(...cartes.map((c) => c.left));

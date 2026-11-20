@@ -1,17 +1,21 @@
 /* Droits effectifs (RBAC) côté serveur : lecture des attributions, garde-fous, instantanés pour le journal d'audit. */
 import {
+  DEFAULT_PREFERENCES,
+  effectivePermissions,
   isPermission,
   isSystemRole,
   legacyKeyModule,
   MODULE_LABELS,
+  Preferences,
+  Rights,
   SYSTEM_ROLE_DEFS,
   type Action,
   type Module,
   type Permission,
   type RoleGrant,
-  type Rights,
 } from '@suivi/shared';
 import { sql } from 'kysely';
+import type { SessionUser } from './auth.js';
 import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 
@@ -87,6 +91,55 @@ export async function loadGrants(c: Q, userId: string): Promise<RoleGrant[]> {
     modules: g.group_id ? null : ((g.modules as Module[] | null) ?? null),
     via: g.group_id ? { kind: 'group', groupId: g.group_id, groupName: g.group_name ?? '' } : { kind: 'direct' },
   }));
+}
+
+/** Compte actif : ni désactivé ni arrivé à expiration. */
+export const compteActif = (u: { disabled: boolean; expires_at: Date | string | null }) =>
+  !u.disabled && !(u.expires_at && new Date(u.expires_at) <= new Date());
+
+/** Droits effectifs d'un compte, relus en base : rôles directs (avec leur portée) et rôles hérités des groupes. */
+export async function droitsDe(c: Q, userId: string): Promise<{ grants: RoleGrant[]; rights: Rights }> {
+  const grants = await loadGrants(c, userId);
+  return { grants, rights: new Rights(effectivePermissions(grants).keys()) };
+}
+
+/** Auteur d'un tableau de bord dont les chiffres sont ouverts (ADR 0109) : la personne telle que le calcul de ses chiffres
+    la voit, avec ses droits relus en base à chaque appel (jamais de cache). `null` si le compte n'existe plus, est désactivé
+    ou expiré, ou n'a plus le droit de publier (tableau_de_bord:administrer). Ce n'est pas une session : aucun jeton, aucune
+    étape d'accès ; elle ne sert qu'à calculer la synthèse avec ses droits et sa portée. L'activation des modules reste
+    appliquée par l'appelant (la synthèse la relit elle-même). */
+export async function utilisateurPourCalcul(db: Db, id: string): Promise<SessionUser | null> {
+  const u = await db.k
+    .selectFrom('users')
+    .select([
+      'id',
+      'username',
+      'display_name',
+      'disabled',
+      'expires_at',
+      'preferences',
+      'totp_enabled',
+      'must_change_password',
+    ])
+    .where('id', '=', id)
+    .executeTakeFirst();
+  if (!u || !compteActif(u)) return null;
+  const { grants, rights } = await droitsDe(db.pool, u.id);
+  if (!rights.has('tableau_de_bord:administrer')) return null;
+  return {
+    id: u.id,
+    username: u.username,
+    displayName: u.display_name,
+    roles: [...new Set(grants.map((g) => g.roleName))],
+    rights,
+    expiresAt: u.expires_at ? new Date(u.expires_at).toISOString() : null,
+    preferences: Preferences.safeParse(u.preferences).data ?? DEFAULT_PREFERENCES,
+    totpEnabled: u.totp_enabled,
+    cles: 0,
+    clesEnregistrees: 0,
+    cleRequise: false,
+    mustChangePassword: u.must_change_password,
+  };
 }
 
 /** Nombre d'administrateurs actifs et permanents : comptes non désactivés, sans date d'expiration,

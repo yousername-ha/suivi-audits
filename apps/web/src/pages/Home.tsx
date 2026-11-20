@@ -1,33 +1,31 @@
-/* Accueil : tableau de bord « Suivi de la conformité » en verre et relief (synthèse selon les droits, ADR 0069), dans la
-   disposition de la personne ou dans un tableau partagé avec elle (ADR 0078), puis accès aux modules et activité en
-   cours. Plus de colonnes sur les grands écrans. Refonte Neon (ADR 0093) : une seconde présentation, la vue analytique, se
-   choisit au-dessus du tableau ; le choix est une préférence du compte (tous les appareils), la disposition reste le défaut.
-   Sans droit de lecture métier, aucune des deux présentations n'est affichée. */
-import { Button, Card, NativeSelect, SegmentedControl, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
-import {
-  ConfirmButton,
-  ErrorAlert,
-  IconeAdministration,
-  IconeDocuments,
-  IconeHistorique,
-  Page,
-  PageHeader,
-} from '@suivi/ui';
-import type { DispositionEnregistree, DispositionsOut, Preferences, TableauPartage } from '@suivi/shared';
+/* Accueil : tableaux de bord de la personne, favoris en barre (ADR 0109), au style de la vue analytique (ADR 0108) ; le
+   premier favori s'ouvre à l'arrivée. Ses tableaux se modifient et se partagent ; ceux des autres (proposés d'office, partagés,
+   publics) restent en lecture seule, avec les chiffres de leur auteur quand ils sont ouverts. Puis accès aux modules et
+   activité en cours. Sans droit métier, seuls les tableaux aux chiffres ouverts ont des données. */
+import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
+import { ErrorAlert, IconeAdministration, IconeDocuments, IconeHistorique, Page, PageHeader } from '@suivi/ui';
+import type { ChiffresPublics, TableauDetail } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { cartesVisibles } from '../administration-droits';
-import { api, del, get } from '../api';
+import { api, get } from '../api';
 import type { SyntheseApi } from '../components/Synthese';
-import { CLE_DISPOSITION, EditionTableauDeBord } from '../components/DispositionTableauDeBord';
-import { NeonAnalytics } from '../components/NeonAnalytics';
-import { PartageTableauDeBord } from '../components/PartageTableauDeBord';
-import { TableauDeBordConformite } from '../components/TableauDeBord';
+import { EditionTableauDeBord } from '../components/DispositionTableauDeBord';
+import { syntheseOuverte, TableauDeBordConformite } from '../components/TableauDeBord';
+import {
+  BandeauTableau,
+  CLE_TABLEAUX,
+  BoutonCreer,
+  FenetreCreer,
+  MenuTableaux,
+  OngletsTableaux,
+  PartageTableau,
+  descriptifTableau,
+  useTableaux,
+} from '../components/TableauxDeBord';
 import { useLive, usePresence } from '../realtime';
-import { canAdminArea, canReadBusiness, useCan, useMe, usePreferences } from '../session';
-
-type VueAccueil = NonNullable<Preferences['accueil']>;
+import { canAdminArea, canReadBusiness, useCan, useMe } from '../session';
 
 const RESOURCE_LABELS: [RegExp, string][] = [
   [/^documents\/.+/, 'un document'],
@@ -37,29 +35,6 @@ const RESOURCE_LABELS: [RegExp, string][] = [
   [/^home$/, 'l’accueil'],
 ];
 const resourceLabel = (r: string) => RESOURCE_LABELS.find(([re]) => re.test(r))?.[1] ?? r;
-
-/** Tableau affiché : celui choisi s'il est encore visible, sinon le sien, sinon celui de l'organisation (null : la
-    disposition standard). */
-function tableauAffiche(d: DispositionsOut): DispositionEnregistree | TableauPartage | null {
-  const choisi = d.choix && [d.personnelle, d.organisation, ...d.partages].find((x) => x?.id === d.choix);
-  return choisi || d.personnelle || d.organisation;
-}
-
-/** Tableaux que la personne peut afficher ; la valeur vide est le choix automatique. */
-function choixTableaux(d: DispositionsOut) {
-  const auto = d.personnelle
-    ? 'Mon tableau de bord'
-    : d.organisation
-      ? 'Tableau de bord de l’organisation'
-      : 'Tableau de bord standard';
-  return [
-    { value: '', label: auto },
-    ...(d.personnelle && d.organisation
-      ? [{ value: d.organisation.id, label: 'Tableau de bord de l’organisation' }]
-      : []),
-    ...d.partages.map((p) => ({ value: p.id, label: `Tableau de bord de ${p.auteur}` })),
-  ];
-}
 
 /** Adresse du site de l'organisation, acceptée seulement en https : lien ouvert par clic explicite, jamais chargé. */
 const siteHttps = (u: string) => {
@@ -108,63 +83,49 @@ export function HomePage() {
     queryFn: () => get<SyntheseApi>('/api/mur/synthese'),
     enabled: canReadBusiness(can),
   });
-  const dispositions = useQuery({
-    queryKey: CLE_DISPOSITION,
-    queryFn: () => get<DispositionsOut>('/api/tableau-de-bord/disposition'),
-    enabled: canReadBusiness(can),
-  });
   const qc = useQueryClient();
+  const tableaux = useTableaux();
+  const t = tableaux.data;
+  const [choisi, setChoisi] = useState<string | null>(null);
   const [mode, setMode] = useState<'lecture' | 'edition' | 'partage'>('lecture');
-  const [erreurChoix, setErreurChoix] = useState<unknown>(null);
-  const d = dispositions.data;
-  // Disposer et partager son tableau : droit tableau_de_bord:modifier (ADR 0078, lot 2b).
-  const peutModifier = can('tableau_de_bord', 'modifier');
-  // Tableau choisi, sinon le sien, sinon celui de l'organisation, sinon la standard (aussi s'il ne se charge pas).
-  const affiche = d ? tableauAffiche(d) : null;
-  const disposition = affiche?.disposition ?? null;
-  const recu = d?.partages.find((p) => p.id === affiche?.id) ?? null;
-  const choix = d ? choixTableaux(d) : [];
-  // Présentation choisie par la personne (préférence du compte), sinon le tableau personnalisable.
-  const { prefs, save } = usePreferences();
-  const vue: VueAccueil = prefs.accueil ?? 'personnalisee';
-  const choisirVue = (v: VueAccueil) => {
-    if (v !== vue) void save({ accueil: v });
-  };
-  const analytique = vue === 'analytique';
+  const [catalogueAuDepart, setCatalogueAuDepart] = useState(false);
+  const [creation, setCreation] = useState(false);
+  const [erreurOnglet, setErreurOnglet] = useState<unknown>(null);
+  // Tableau choisi hors des favoris, depuis la liste du bouton déroulant : lu à part.
+  const horsFavoris = !!t && !!choisi && !t.onglets.some((o) => o.id === choisi);
+  const choisiHors = useQuery({
+    queryKey: [...CLE_TABLEAUX, choisi, 'detail'],
+    queryFn: () => get<TableauDetail>(`/api/tableaux-de-bord/${choisi}`),
+    enabled: horsFavoris,
+  });
+  // Premier favori à l'arrivée (ADR 0109) ; un tableau supprimé ou devenu invisible ramène au premier.
+  const actif: TableauDetail | undefined = t
+    ? (t.onglets.find((o) => o.id === choisi) ?? (horsFavoris ? choisiHors.data : undefined) ?? t.onglets[0])
+    : undefined;
+  const ouverts = useQuery({
+    queryKey: [...CLE_TABLEAUX, actif?.id, 'chiffres'],
+    queryFn: () => get<ChiffresPublics>(`/api/tableaux-de-bord/${actif!.id}/chiffres`),
+    enabled: !!actif?.chiffresOuverts,
+  });
+  const chiffres = actif?.chiffresOuverts ? (ouverts.data ?? null) : null;
+  const s = chiffres ? syntheseOuverte(chiffres, synthese.data, me.orgName) : synthese.data;
+  const peutPartager =
+    !!actif &&
+    ((actif.origine === 'mien' && !!t?.droits.creer) || (actif.origine === 'propose' && !!t?.droits.modeles));
 
-  async function choisir(tableau: string) {
-    choisirVue('personnalisee');
-    setErreurChoix(null);
-    try {
-      qc.setQueryData(
-        CLE_DISPOSITION,
-        await api<DispositionsOut>('PUT', '/api/tableau-de-bord/choix', {
-          body: { tableau: tableau || null },
-        }),
-      );
-    } catch (e) {
-      setErreurChoix(e);
-    }
+  function choisir(id: string) {
+    setChoisi(id);
+    setMode('lecture');
   }
-  async function abandonner() {
-    setErreurChoix(null);
+  async function retirer(id: string) {
+    setErreurOnglet(null);
     try {
-      await del('/api/tableau-de-bord/disposition');
-      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
-    } catch (e) {
-      setErreurChoix(e);
-    }
-  }
-  async function copier(t: TableauPartage) {
-    setErreurChoix(null);
-    try {
-      await api('PUT', '/api/tableau-de-bord/disposition', {
-        body: { disposition: t.disposition },
-        ifMatch: d?.personnelle?.version ?? 0,
+      await api('PUT', '/api/tableaux-de-bord/onglets', {
+        body: { tableaux: (t?.onglets ?? []).map((o) => o.id).filter((x) => x !== id) },
       });
-      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
+      await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
     } catch (e) {
-      setErreurChoix(e);
+      setErreurOnglet(e);
     }
   }
   const online = [...new Map(presence.map((p) => [p.username, p])).values()];
@@ -256,52 +217,25 @@ export function HomePage() {
       <Text className="page-eyebrow">Vue d’ensemble</Text>
       <PageHeader
         title={`Bonjour ${me.user?.displayName || me.user?.username}`}
-        description={synthese.data ? `Tableau de bord — ${synthese.data.organisation}` : undefined}
+        description={s ? `Tableau de bord — ${s.organisation}` : undefined}
         actions={
-          (site || (synthese.data && d && mode === 'lecture' && (peutModifier || d.personnelle))) && (
+          (site || (s && actif && mode === 'lecture' && (actif.modifiable || peutPartager))) && (
             <>
-              {synthese.data && d && mode === 'lecture' && peutModifier && (
-                <>
-                  <Button
-                    variant="default"
-                    onClick={() => {
-                      choisirVue('personnalisee');
-                      setMode('edition');
-                    }}
-                  >
-                    Modifier la disposition
-                  </Button>
-                  {d.personnelle && (
-                    <Button variant="default" onClick={() => setMode('partage')}>
-                      Partager
-                    </Button>
-                  )}
-                  {recu && (
-                    <ConfirmButton
-                      variant="light"
-                      color="blue"
-                      message={
-                        d.personnelle
-                          ? `Copier le tableau de bord de ${recu.auteur} ? Il remplacera votre disposition.`
-                          : `Copier le tableau de bord de ${recu.auteur} comme le vôtre ?`
-                      }
-                      onConfirm={() => void copier(recu)}
-                    >
-                      Copier comme mon tableau
-                    </ConfirmButton>
-                  )}
-                </>
-              )}
-              {synthese.data && d?.personnelle && mode === 'lecture' && !peutModifier && (
-                // Disposition enregistrée avant le droit dédié : on peut toujours l'abandonner (ADR 0078, lot 2b).
-                <ConfirmButton
+              {s && actif && mode === 'lecture' && actif.modifiable && (
+                <Button
                   variant="default"
-                  color="gray"
-                  message="Revenir à la disposition par défaut ? Votre disposition personnelle sera supprimée."
-                  onConfirm={() => void abandonner()}
+                  onClick={() => {
+                    setCatalogueAuDepart(false);
+                    setMode('edition');
+                  }}
                 >
-                  Revenir à la disposition par défaut
-                </ConfirmButton>
+                  Modifier la disposition
+                </Button>
+              )}
+              {actif && mode === 'lecture' && peutPartager && (
+                <Button variant="default" onClick={() => setMode('partage')}>
+                  Partager
+                </Button>
               )}
               {site && <LienSite url={site} nom={me.orgName} />}
             </>
@@ -309,46 +243,70 @@ export function HomePage() {
         }
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
-      <ErrorAlert error={erreurChoix} />
-      {synthese.data && mode === 'lecture' && (
-        <SegmentedControl
-          aria-label="Présentation du tableau de bord"
-          className="tdb-presentation"
-          value={vue}
-          onChange={(v) => choisirVue(v === 'analytique' ? 'analytique' : 'personnalisee')}
-          data={[
-            { value: 'analytique', label: 'Vue analytique Neon' },
-            { value: 'personnalisee', label: 'Tableau personnalisable' },
-          ]}
+      <ErrorAlert error={ouverts.error ?? erreurOnglet} />
+      {actif && mode === 'lecture' && (
+        <BandeauTableau
+          tableau={actif}
+          onRetirer={
+            t && t.onglets.length > 1 && t.onglets.some((o) => o.id === actif.id)
+              ? () => void retirer(actif.id)
+              : undefined
+          }
         />
       )}
-      {synthese.data && d && mode === 'lecture' && !analytique && choix.length > 1 && (
-        <NativeSelect
-          className="tdb-choix"
-          label="Tableau affiché"
-          value={d.choix ?? ''}
-          data={choix}
-          onChange={(e) => void choisir(e.currentTarget.value)}
-        />
+      {actif && mode === 'partage' && t && (
+        <PartageTableau tableau={actif} peutPublier={t.droits.publier} onFin={() => setMode('lecture')} />
       )}
-      {synthese.data && mode === 'partage' && <PartageTableauDeBord onFin={() => setMode('lecture')} />}
-      {synthese.data &&
-        !dispositions.isPending &&
-        (mode === 'edition' && d ? (
+      {s &&
+        (mode === 'edition' && actif?.modifiable && synthese.data ? (
           <EditionTableauDeBord
+            key={actif.id}
             s={synthese.data}
-            dispositions={d}
-            base={disposition}
-            peutDefinirDefaut={can('administration', 'administrer')}
+            tableau={actif}
+            ouvrirCatalogue={catalogueAuDepart}
             onFin={() => setMode('lecture')}
           />
-        ) : mode === 'lecture' && analytique ? (
-          <NeonAnalytics s={synthese.data} />
         ) : (
-          <TableauDeBordConformite s={synthese.data} disposition={disposition} />
+          // Module « tableau de bord » désactivé ou onglets indisponibles : disposition standard, sans onglets.
+          <TableauDeBordConformite
+            key={actif?.id ?? 'standard'}
+            s={s}
+            disposition={actif?.disposition ?? null}
+            ouverts={chiffres}
+            gauche={t && actif && <OngletsTableaux donnees={t} actif={actif.id} onChoisir={choisir} />}
+            titre={
+              t && actif && !t.onglets.some((o) => o.id === actif.id)
+                ? { nom: actif.nom, description: descriptifTableau(actif) }
+                : undefined
+            }
+            outils={
+              t &&
+              mode === 'lecture' && (
+                <>
+                  <MenuTableaux donnees={t} actif={actif?.id ?? ''} onChoisir={choisir} />
+                  {t.droits.creer && <BoutonCreer onCreer={() => setCreation(true)} />}
+                </>
+              )
+            }
+          />
         ))}
+      {t && (
+        <>
+          <FenetreCreer
+            ouverte={creation}
+            donnees={t}
+            onFermer={() => setCreation(false)}
+            onCree={(nouveau) => {
+              setCreation(false);
+              setChoisi(nouveau.id);
+              setCatalogueAuDepart(nouveau.disposition.dalles.every((x) => x.masquee));
+              setMode('edition');
+            }}
+          />
+        </>
+      )}
       <div className="grille-cartes">
-        {synthese.data && (
+        {s && (
           <div className="section-label carte-large">
             <Text className="page-eyebrow">Votre espace de travail</Text>
             <Text size="sm" c="dimmed">

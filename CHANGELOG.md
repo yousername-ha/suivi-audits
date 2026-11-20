@@ -76,6 +76,15 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 **Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
 page de maintenance des mises à jour prend aussi Lexend.
 
+**Tableau de bord unique, puis tableaux multiples de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md),
+[ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)) : **migration automatique `096`**, de schéma
+seulement (plusieurs tableaux par compte, favoris ordonnés, destinataires par rôle, publication), durée négligeable,
+aucune action sur le serveur. **Sans reprise de données** (règle du 14/11/2026) : les tableaux personnels déjà
+enregistrés restent ceux de leur auteur, mais le « tableau affiché », la disposition par défaut de l'organisation et la
+bascule « Vue analytique Neon / Tableau personnalisable » ne sont plus lus ; chacun démarre avec le favori « Global ». Un
+rôle personnalisé qui portait déjà l'action « Administrer » du module « Tableau de bord » gagne la publication pour tous
+(« Publier pour tous »).
+
 ### Ajouté
 
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
@@ -215,6 +224,33 @@ page de maintenance des mises à jour prend aussi Lexend.
   fenêtres. Les sélecteurs segmentés (« Par faille / Par machine », densité, thème…) perdent leur fond gris : un simple
   contour, et le choix actif en bleu nuit du menu avec un reflet bleu transparent et un liseré, sans lumière animée.
   Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableau de bord unique de l'accueil, au style de la vue analytique** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [ADR 0108](docs/adr/0108-tableau-de-bord-unique.md), [docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md](docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md)).
+  La vue analytique et le tableau personnalisable ne font plus qu'un : par défaut la disposition de la vue analytique,
+  modifiable par « Modifier la disposition ». Toutes les dalles prennent le cadre et les chiffres des cartes Neon, avec la
+  flèche de détail. En modification : « + Ajouter une dalle » ouvre le catalogue de toutes les dalles par famille (Pilotage,
+  Conformité, Écarts et actions, Risques et incidents), une dalle déjà affichée s'ajoute encore en copie ; le bord droit
+  règle la largeur, le bord bas la hauteur, le coin les deux, aimantés avec une étiquette de taille ; listes et flèches du
+  clavier en alternative ; l'aimant comble aussi les creux laissés par une dalle haute. La hauteur est un minimum : le
+  contenu reste toujours visible. Aucune migration (champs facultatifs `cle` et `hauteur` dans la disposition).
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableaux de bord multiples de l'accueil et publication pour tous** (décisions du RSSI du 20/11/2026, sur maquettes ;
+  [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)). Chacun crée ses tableaux nommés (20 au plus),
+  et garde à gauche de l'en-tête un encart de 5 favoris au plus (« Global » d'office), réordonnés en les glissant comme
+  les rubriques du menu ; le premier s'ouvre à l'arrivée. L'encart prend la place du filtre des référentiels « Global /
+  ISO / HDS », retiré. Un bouton déroulant ⌄ liste tous ses tableaux (les siens, proposés d'office, partagés, publics),
+  avec « + » et « − » pour les favoris ; un tableau ouvert hors favoris affiche son nom et son descriptif en haut ; un
+  tableau d'un autre reste celui de son auteur, en lecture seule. Un petit « + » crée un tableau (vide, disposition
+  standard, ou copie d'un de ses tableaux ou d'un tableau public). La recherche des dalles devient une loupe, les exports
+  une icône. Tableaux
+  proposés d'office : Global, Suivi SMSI, et bientôt Vulnérabilités (RSSI) et Suivi réglementaire. Partage avec des
+  personnes, des groupes ou des rôles. Le droit « Publier pour tous » (action « Administrer » du module « Tableau de
+  bord », rôles RSSI et Administrateur d'office) publie un tableau pour tous et ouvre aux destinataires les chiffres et
+  graphiques de son auteur, registres restreints compris, en liste blanche côté serveur ; les listes nommées, le journal
+  d'audit et les registres restent selon les droits de chacun. Publication, retrait et suspension journalisés.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
