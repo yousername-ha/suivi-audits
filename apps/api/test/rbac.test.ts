@@ -139,6 +139,17 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'PATCH /api/retex/:id/propositions/:pid',
     'DELETE /api/retex/:id/propositions/:pid',
     'PUT /api/retex/:id/terminee',
+    // Tableaux de bord de l'accueil (ADR 0109) : ouverts à tout compte connecté ; la visibilité de chaque tableau (le sien,
+    // proposé d'office, partagé, public), le droit d'écrire (tableau_de_bord:modifier sur le sien, administration:administrer
+    // sur un tableau proposé) et l'ouverture des chiffres de l'auteur sont évalués par le service ; refus 401, 403 et 404
+    // testés dans tableau-de-bord-disposition.test.ts et tableau-de-bord-partage.test.ts.
+    'GET /api/tableaux-de-bord',
+    'PUT /api/tableaux-de-bord/onglets',
+    'PUT /api/tableaux-de-bord/:id',
+    'DELETE /api/tableaux-de-bord/:id',
+    'GET /api/tableaux-de-bord/:id/partage',
+    'PUT /api/tableaux-de-bord/:id/partage',
+    'GET /api/tableaux-de-bord/:id/chiffres',
     'GET /api/config-grc/templates',
     'POST /api/config-grc/templates/:id/adopt',
     'GET /api/config-grc/items',
