@@ -1,0 +1,143 @@
+Timing is on.
+                                                                                  QUERY PLAN                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=27838.35..27838.36 rows=1 width=8) (actual time=121.703..124.769 rows=1.00 loops=1)
+   Buffers: shared hit=12 read=1585 dirtied=1
+   ->  Gather  (cost=27838.14..27838.35 rows=2 width=8) (actual time=121.499..124.757 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=12 read=1585 dirtied=1
+         ->  Partial Aggregate  (cost=26838.14..26838.15 rows=1 width=8) (actual time=116.860..116.861 rows=1.00 loops=3)
+               Buffers: shared hit=12 read=1585 dirtied=1
+               ->  Parallel Index Only Scan using audit_log_action on audit_log  (cost=0.43..24754.70 rows=833376 width=0) (actual time=1.402..70.250 rows=666675.67 loops=3)
+                     Heap Fetches: 31
+                     Index Searches: 1
+                     Buffers: shared hit=12 read=1585 dirtied=1
+ Planning:
+   Buffers: shared hit=112 read=1
+ Planning Time: 0.861 ms
+ Execution Time: 124.870 ms
+(16 rows)
+
+Time: 127.119 ms
+                                                                  QUERY PLAN                                                                   
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=89.02..89.04 rows=1 width=4) (actual time=3.343..3.345 rows=1.00 loops=1)
+   Buffers: shared hit=6 read=37
+   ->  Bitmap Heap Scan on audit_log  (cost=77.04..89.02 rows=3 width=0) (actual time=3.338..3.340 rows=0.00 loops=1)
+         Recheck Cond: ((action = 'document.scan_alerte'::text) AND (ts > (now() - '01:00:00'::interval)))
+         Buffers: shared hit=6 read=37
+         ->  BitmapAnd  (cost=77.04..77.04 rows=3 width=0) (actual time=3.321..3.322 rows=0.00 loops=1)
+               Buffers: shared hit=6 read=37
+               ->  Bitmap Index Scan on audit_log_action  (cost=0.00..26.93 rows=2467 width=0) (actual time=0.365..0.365 rows=1943.00 loops=1)
+                     Index Cond: (action = 'document.scan_alerte'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=3 read=1
+               ->  Bitmap Index Scan on audit_log_ts  (cost=0.00..49.86 rows=2324 width=0) (actual time=2.861..2.862 rows=19761.00 loops=1)
+                     Index Cond: (ts > (now() - '01:00:00'::interval))
+                     Index Searches: 1
+                     Buffers: shared hit=3 read=36
+ Planning:
+   Buffers: shared hit=22
+ Planning Time: 0.292 ms
+ Execution Time: 3.408 ms
+(19 rows)
+
+Time: 4.535 ms
+                                                                  QUERY PLAN                                                                   
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=89.03..89.04 rows=1 width=12) (actual time=1.194..1.195 rows=1.00 loops=1)
+   Buffers: shared hit=43
+   ->  Bitmap Heap Scan on audit_log  (cost=77.04..89.02 rows=3 width=8) (actual time=1.190..1.191 rows=0.00 loops=1)
+         Recheck Cond: ((action = 'auth.account_locked'::text) AND (ts > (now() - '01:00:00'::interval)))
+         Buffers: shared hit=43
+         ->  BitmapAnd  (cost=77.04..77.04 rows=3 width=0) (actual time=1.170..1.171 rows=0.00 loops=1)
+               Buffers: shared hit=43
+               ->  Bitmap Index Scan on audit_log_action  (cost=0.00..26.93 rows=2467 width=0) (actual time=0.544..0.544 rows=1971.00 loops=1)
+                     Index Cond: (action = 'auth.account_locked'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=4
+               ->  Bitmap Index Scan on audit_log_ts  (cost=0.00..49.86 rows=2324 width=0) (actual time=0.528..0.529 rows=19761.00 loops=1)
+                     Index Cond: (ts > (now() - '01:00:00'::interval))
+                     Index Searches: 1
+                     Buffers: shared hit=39
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.144 ms
+ Execution Time: 1.297 ms
+(19 rows)
+
+Time: 2.037 ms
+                                                                      QUERY PLAN                                                                       
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=6873.18..6873.20 rows=1 width=4) (actual time=21.820..21.824 rows=1.00 loops=1)
+   Buffers: shared hit=399 read=7
+   ->  Bitmap Heap Scan on audit_log  (cost=4955.98..6871.85 rows=532 width=0) (actual time=20.034..21.803 rows=7.00 loops=1)
+         Recheck Cond: ((ts > (now() - '01:00:00'::interval)) AND (action = 'auth.login'::text))
+         Heap Blocks: exact=7
+         Buffers: shared hit=399 read=7
+         ->  BitmapAnd  (cost=4955.98..4955.98 rows=532 width=0) (actual time=19.702..19.704 rows=0.00 loops=1)
+               Buffers: shared hit=399
+               ->  Bitmap Index Scan on audit_log_ts  (cost=0.00..49.86 rows=2324 width=0) (actual time=0.750..0.750 rows=19761.00 loops=1)
+                     Index Cond: (ts > (now() - '01:00:00'::interval))
+                     Index Searches: 1
+                     Buffers: shared hit=39
+               ->  Bitmap Index Scan on audit_log_action  (cost=0.00..4905.60 rows=457757 width=0) (actual time=18.705..18.705 rows=454410.00 loops=1)
+                     Index Cond: (action = 'auth.login'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=360
+ Planning:
+   Buffers: shared hit=5
+ Planning Time: 0.194 ms
+ Execution Time: 21.935 ms
+(20 rows)
+
+Time: 22.725 ms
+                 action                  | count  
+-----------------------------------------+--------
+ auth.login                              | 454410
+ grc.object.updated                      | 303633
+ auth.logout                             | 302822
+ grc.object.created                      | 170009
+ incident.updated                        | 151985
+ vulnerabilites.constat.suivi            | 151813
+ auth.login_failed                       | 151679
+ document.download                       | 151405
+ legacy.state_saved                      | 151105
+ admin.audit_export                      |   2010
+ auth.account_locked                     |   1971
+ modules.update                          |   1957
+ document.scan_alerte                    |   1943
+ securite.alerte_cle                     |   1909
+ grc.membership.changed                  |    824
+ admin.user_create                       |    299
+ auth.password_ok                        |     50
+ account.password_changed                |     39
+ incident.created                        |     30
+ grc.method.published                    |     30
+ grc.smsi.created                        |     29
+ document.create                         |     20
+ admin.user_password_reset               |     20
+ setup.token_issued                      |      5
+ vulnerabilites.rapport.produit          |      4
+ grc.report.exported                     |      3
+ suivi.export                            |      3
+ export.legacy                           |      3
+ auth.rate_limited                       |      2
+ vulnerabilites.delais.evalues           |      2
+ securite.poivre_defini                  |      1
+ setup.admin_created                     |      1
+ vulnerabilites.synchronisation.terminee |      1
+ vulnerabilites.instantane.pris          |      1
+ vulnerabilites.suivi.synchronisation    |      1
+ integration.activee                     |      1
+ flux.externe.ouvert                     |      1
+ integration.creee                       |      1
+ integration.execution.demandee          |      1
+ integration.execution.reclamee          |      1
+ integration.execution.terminee          |      1
+ integration.secret_defini               |      1
+ sauvegarde.cle_secours_definie          |      1
+(43 rows)
+
+Time: 119.543 ms

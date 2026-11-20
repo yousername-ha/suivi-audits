@@ -1,0 +1,193 @@
+{
+  "etiquette": "charge20",
+  "personnes": 20,
+  "minutes": 10,
+  "reflexionMs": [
+    500,
+    2000
+  ],
+  "requetes": 7843,
+  "debitParSeconde": 12.96,
+  "erreurs": 1374,
+  "medianeMs": 33,
+  "p95Ms": 1191,
+  "maxMs": 15999,
+  "detailErreurs": {
+    "vuln-fiche-machine 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 226,
+    "vuln-constats 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 362,
+    "vuln-machines 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 270,
+    "vuln-vue 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 190,
+    "vuln-fiche-constat 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 220,
+    "ecr-action-modifier 422 {\"error\":\"Données invalides — kind : valeur non autorisée, choisissez une valeur proposée\"}": 106
+  },
+  "parRoute": [
+    {
+      "route": "vuln-constats",
+      "n": 383,
+      "erreurs": 362,
+      "medianeMs": 10,
+      "p95Ms": 10717,
+      "maxMs": 15999
+    },
+    {
+      "route": "vuln-machines",
+      "n": 291,
+      "erreurs": 270,
+      "medianeMs": 10,
+      "p95Ms": 4903,
+      "maxMs": 6933
+    },
+    {
+      "route": "vuln-fiche-machine",
+      "n": 242,
+      "erreurs": 226,
+      "medianeMs": 10,
+      "p95Ms": 4434,
+      "maxMs": 7062
+    },
+    {
+      "route": "synthese-perimetres",
+      "n": 236,
+      "erreurs": 0,
+      "medianeMs": 898,
+      "p95Ms": 2399,
+      "maxMs": 3295
+    },
+    {
+      "route": "mes-elements",
+      "n": 318,
+      "erreurs": 0,
+      "medianeMs": 890,
+      "p95Ms": 2380,
+      "maxMs": 3851
+    },
+    {
+      "route": "vuln-vue",
+      "n": 207,
+      "erreurs": 190,
+      "medianeMs": 11,
+      "p95Ms": 2137,
+      "maxMs": 3615
+    },
+    {
+      "route": "notifications",
+      "n": 650,
+      "erreurs": 0,
+      "medianeMs": 382,
+      "p95Ms": 1908,
+      "maxMs": 3034
+    },
+    {
+      "route": "incidents",
+      "n": 373,
+      "erreurs": 0,
+      "medianeMs": 181,
+      "p95Ms": 960,
+      "maxMs": 2634
+    },
+    {
+      "route": "dashboard",
+      "n": 383,
+      "erreurs": 0,
+      "medianeMs": 42,
+      "p95Ms": 553,
+      "maxMs": 2126
+    },
+    {
+      "route": "ecr-action-creer",
+      "n": 159,
+      "erreurs": 0,
+      "medianeMs": 25,
+      "p95Ms": 539,
+      "maxMs": 1585
+    },
+    {
+      "route": "vuln-fiche-constat",
+      "n": 237,
+      "erreurs": 220,
+      "medianeMs": 10,
+      "p95Ms": 494,
+      "maxMs": 1549
+    },
+    {
+      "route": "ecr-action-modifier",
+      "n": 106,
+      "erreurs": 106,
+      "medianeMs": 33,
+      "p95Ms": 490,
+      "maxMs": 1470
+    },
+    {
+      "route": "tasks-window",
+      "n": 387,
+      "erreurs": 0,
+      "medianeMs": 22,
+      "p95Ms": 481,
+      "maxMs": 2432
+    },
+    {
+      "route": "actions",
+      "n": 864,
+      "erreurs": 0,
+      "medianeMs": 26,
+      "p95Ms": 460,
+      "maxMs": 2064
+    },
+    {
+      "route": "tasks-dashboard",
+      "n": 306,
+      "erreurs": 0,
+      "medianeMs": 36,
+      "p95Ms": 455,
+      "maxMs": 2120
+    },
+    {
+      "route": "risques-registre",
+      "n": 477,
+      "erreurs": 0,
+      "medianeMs": 25,
+      "p95Ms": 439,
+      "maxMs": 1563
+    },
+    {
+      "route": "tasks",
+      "n": 776,
+      "erreurs": 0,
+      "medianeMs": 28,
+      "p95Ms": 395,
+      "maxMs": 1905
+    },
+    {
+      "route": "fiche-action",
+      "n": 631,
+      "erreurs": 0,
+      "medianeMs": 20,
+      "p95Ms": 299,
+      "maxMs": 1984
+    },
+    {
+      "route": "risk-map",
+      "n": 219,
+      "erreurs": 0,
+      "medianeMs": 35,
+      "p95Ms": 237,
+      "maxMs": 2029
+    },
+    {
+      "route": "me",
+      "n": 218,
+      "erreurs": 0,
+      "medianeMs": 10,
+      "p95Ms": 177,
+      "maxMs": 1173
+    },
+    {
+      "route": "documents",
+      "n": 380,
+      "erreurs": 0,
+      "medianeMs": 31,
+      "p95Ms": 135,
+      "maxMs": 1505
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+2026-11-19 20:38:56.348 UTC [2165] suivi_app@suivi 172.19.0.3LOG:  duration: 850.815 ms  plan:
+	Query Text: SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, EXISTS (SELECT 1 FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id
+	        AND sc.etat IN ('corrigee', 'risque_accepte', 'non_concernee')) AS clos,
+	         c.correctif_publie_le, c.fin_support_le,
+	         (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
+	         coalesce((SELECT min(dp.premiere_detection) FROM vulnerabilites_detections dp
+	  WHERE dp.constat_id = c.id), c.cree_le) AS premiere,
+	         (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS repart,
+	         coalesce((SELECT array_agg(cc.cve ORDER BY cc.cve) FROM vulnerabilites_constat_cves cc
+	                   WHERE cc.constat_id = c.id), '{}') AS cves,
+	         p.machines
+	       FROM vulnerabilites_constats c
+	       JOIN LATERAL (
+	         SELECT array_agg(DISTINCT d.machine_id) AS machines FROM vulnerabilites_detections d
+	         JOIN vulnerabilites_machines m ON m.id = d.machine_id
+	         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+	         WHERE d.constat_id = c.id AND (d.vu_numero >= coalesce(e.numero_complet, 0))) p ON p.machines IS NOT NULL
+	Nested Loop  (cost=110.40..1723514.80 rows=9998 width=195) (actual time=404.913..804.474 rows=9994.00 loops=1)
+	  Buffers: shared hit=348046
+	  ->  Seq Scan on vulnerabilites_constats c  (cost=0.00..516.98 rows=9998 width=90) (actual time=0.014..1.269 rows=10000.00 loops=1)
+	        Buffers: shared hit=417
+	  ->  Aggregate  (cost=110.40..110.41 rows=1 width=32) (actual time=0.063..0.063 rows=1.00 loops=10000)
+	        Filter: (array_agg(DISTINCT d.machine_id) IS NOT NULL)
+	        Rows Removed by Filter: 0
+	        Buffers: shared hit=143859
+	        ->  Sort  (cost=110.37..110.38 rows=4 width=16) (actual time=0.060..0.061 rows=11.47 loops=10000)
+	              Sort Key: d.machine_id
+	              Sort Method: quicksort  Memory: 25kB
+	              Buffers: shared hit=143859
+	              ->  Nested Loop Left Join  (cost=64.01..110.33 rows=4 width=16) (actual time=0.046..0.058 rows=11.47 loops=10000)
+	                    Join Filter: (e.integration_id = m.integration_id)
+	                    Filter: (d.vu_numero >= COALESCE(e.numero_complet, 0))
+	                    Buffers: shared hit=143859
+	                    ->  Hash Join  (cost=64.01..109.11 rows=12 width=36) (actual time=0.046..0.055 rows=11.47 loops=10000)
+	                          Hash Cond: (d.machine_id = m.id)
+	                          Buffers: shared hit=143858
+	                          ->  Bitmap Heap Scan on vulnerabilites_detections d  (cost=4.51..49.58 rows=12 width=20) (actual time=0.045..0.052 rows=11.47 loops=10000)
+	                                Recheck Cond: (constat_id = c.id)
+	                                Heap Blocks: exact=113716
+	                                Buffers: shared hit=143821
+	                                ->  Bitmap Index Scan on vulnerabilites_detections_constat_id_machine_id_port_protoc_key  (cost=0.00..4.51 rows=12 width=0) (actual time=0.004..0.004 rows=11.47 loops=10000)
+	                                      Index Cond: (constat_id = c.id)
+	                                      Index Searches: 10000
+	                                      Buffers: shared hit=30105
+	                          ->  Hash  (cost=47.00..47.00 rows=1000 width=32) (actual time=0.330..0.331 rows=1000.00 loops=1)
+	                                Buckets: 1024  Batches: 1  Memory Usage: 71kB
+	                                Buffers: shared hit=37
+	                                ->  Seq Scan on vulnerabilites_machines m  (cost=0.00..47.00 rows=1000 width=32) (actual time=0.018..0.160 rows=1000.00 loops=1)
+	                                      Buffers: shared hit=37
+	                    ->  Materialize  (cost=0.00..1.01 rows=1 width=20) (actual time=0.000..0.000 rows=1.00 loops=114718)
+	                          Storage: Memory  Maximum Storage: 17kB
+	                          Buffers: shared hit=1
+	                          ->  Seq Scan on vulnerabilites_tenable_etat e  (cost=0.00..1.01 rows=1 width=20) (actual time=0.008..0.008 rows=1.00 loops=1)
+	                                Buffers: shared hit=1
+	  SubPlan 2
+	    ->  Seq Scan on vulnerabilites_suivis sc  (cost=0.00..2.66 rows=1 width=16) (actual time=10.406..10.407 rows=0.00 loops=1)
+	          Filter: (etat = ANY ('{corrigee,risque_accepte,non_concernee}'::text[]))
+	          Rows Removed by Filter: 48
+	          Buffers: shared hit=2
+	  SubPlan 3
+	    ->  Seq Scan on vulnerabilites_suivis sc_1  (cost=0.00..2.60 rows=1 width=9) (actual time=0.002..0.002 rows=0.00 loops=9994)
+	          Filter: (constat_id = c.id)
+	          Rows Removed by Filter: 48
+	          Buffers: shared hit=19988
+	  SubPlan 4
+	    ->  Aggregate  (cost=49.61..49.62 rows=1 width=8) (actual time=0.007..0.007 rows=1.00 loops=9994)
+	          Buffers: shared hit=143803
+	          ->  Bitmap Heap Scan on vulnerabilites_detections dp  (cost=4.51..49.58 rows=12 width=8) (actual time=0.003..0.006 rows=11.48 loops=9994)
+	                Recheck Cond: (constat_id = c.id)
+	                Heap Blocks: exact=113716
+	                Buffers: shared hit=143803
+	                ->  Bitmap Index Scan on vulnerabilites_detections_constat_id_machine_id_port_protoc_key  (cost=0.00..4.51 rows=12 width=0) (actual time=0.002..0.002 rows=11.48 loops=9994)
+	                      Index Cond: (constat_id = c.id)
+	                      Index Searches: 9994
+	                      Buffers: shared hit=30087
+	  SubPlan 5
+	    ->  Seq Scan on vulnerabilites_suivis sc_2  (cost=0.00..2.60 rows=1 width=8) (actual time=0.002..0.002 rows=0.00 loops=9994)
+	          Filter: (constat_id = c.id)
+	          Rows Removed by Filter: 48
+	          Buffers: shared hit=19988
+	  SubPlan 6
+	    ->  Aggregate  (cost=4.31..4.32 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=9994)
+	          Buffers: shared hit=19989
+	          ->  Index Only Scan using vulnerabilites_constat_cves_pkey on vulnerabilites_constat_cves cc  (cost=0.29..4.30 rows=1 width=15) (actual time=0.002..0.002 rows=1.30 loops=9994)
+	                Index Cond: (constat_id = c.id)
+	                Heap Fetches: 0
+	                Index Searches: 9994
+	                Buffers: shared hit=19989
+	JIT:
+	  Functions: 60
+	  Options: Inlining true, Optimization true, Expressions true, Deforming true
+	  Timing: Generation 2.967 ms (Deform 1.447 ms), Inlining 19.494 ms, Optimization 222.200 ms, Emission 160.997 ms, Total 405.658 ms
+2026-11-19 20:38:56.348 UTC [2165] suivi_app@suivi 172.19.0.3LOG:  duration: 855.269 ms  statement: SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, EXISTS (SELECT 1 FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id
+	        AND sc.etat IN ('corrigee', 'risque_accepte', 'non_concernee')) AS clos,
+	         c.correctif_publie_le, c.fin_support_le,
+	         (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
+	         coalesce((SELECT min(dp.premiere_detection) FROM vulnerabilites_detections dp
+	  WHERE dp.constat_id = c.id), c.cree_le) AS premiere,
+	         (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS repart,
+	         coalesce((SELECT array_agg(cc.cve ORDER BY cc.cve) FROM vulnerabilites_constat_cves cc
+	                   WHERE cc.constat_id = c.id), '{}') AS cves,
+	         p.machines
+	       FROM vulnerabilites_constats c
+	       JOIN LATERAL (
+	         SELECT array_agg(DISTINCT d.machine_id) AS machines FROM vulnerabilites_detections d
+	         JOIN vulnerabilites_machines m ON m.id = d.machine_id
+	         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+	         WHERE d.constat_id = c.id AND (d.vu_numero >= coalesce(e.numero_complet, 0))) p ON p.machines IS NOT NULL
+2026-11-19 20:38:57.378 UTC [2216] [unknown]@[unknown] 127.0.0.1LOG:  connection received: host=127.0.0.1 port=54014

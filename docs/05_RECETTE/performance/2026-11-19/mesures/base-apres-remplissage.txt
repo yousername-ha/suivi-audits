@@ -1,0 +1,78 @@
+              now              |  base  |  octets   
+-------------------------------+--------+-----------
+ 2026-11-19 20:35:13.844833+00 | 589 MB | 618108607
+
+                o                |  count  
+---------------------------------+---------
+ evenements de chronologie       |   23760
+ state_history                   |       2
+ perimetres                      |      30
+ acces perimetres                |     853
+ comptes                         |     300
+ machines                        |    1000
+ documents                       |    2000
+ series                          |     151
+ incidents (suivi_incidents)     |    3000
+ risques                         |    2000
+ occurrences                     |   18114
+ constats (controles)            |   10000
+ actions_total                   |   23114
+ grc_links                       |   18114
+ cve veille                      |   20000
+ grc_object_versions             |   18352
+ detections                      |  114718
+ actions_plan (hors occurrences) |    5000
+ notifications                   |  200346
+ journal audit                   | 2000010
+
+           relname           |  total  |    tas     |  index  | n_live_tup 
+-----------------------------+---------+------------+---------+------------
+ audit_log                   | 351 MB  | 242 MB     | 109 MB  |    2000102
+ grc_notifications           | 84 MB   | 43 MB      | 41 MB   |     200346
+ grc_objects                 | 57 MB   | 36 MB      | 21 MB   |      25266
+ vulnerabilites_detections   | 27 MB   | 13 MB      | 14 MB   |     114718
+ grc_object_versions         | 21 MB   | 18 MB      | 2880 kB |      18352
+ grc_links                   | 8232 kB | 3920 kB    | 4272 kB |      18114
+ vulnerabilites_veille_cve   | 7264 kB | 6400 kB    | 832 kB  |      20000
+ vulnerabilites_constats     | 4208 kB | 3336 kB    | 832 kB  |      10000
+ grc_occurrences             | 4048 kB | 1792 kB    | 2216 kB |      18114
+ suivi_incidents             | 3088 kB | 2648 kB    | 400 kB  |       3000
+ vulnerabilites_constat_cves | 2296 kB | 768 kB     | 1488 kB |      13000
+ state_history               | 1424 kB | 8192 bytes | 16 kB   |          2
+ documents                   | 776 kB  | 464 kB     | 272 kB  |       2000
+ vulnerabilites_machines     | 624 kB  | 296 kB     | 296 kB  |       1000
+ users                       | 240 kB  | 128 kB     | 80 kB   |        300
+
+                          indexrelname                           |          relname          | pg_size_pretty 
+-----------------------------------------------------------------+---------------------------+----------------
+ audit_log_ts                                                    | audit_log                 | 54 MB
+ audit_log_pkey                                                  | audit_log                 | 43 MB
+ grc_notifications_object_id_user_id_kind_due_key_key            | grc_notifications         | 24 MB
+ audit_log_action                                                | audit_log                 | 13 MB
+ grc_notifications_user                                          | grc_notifications         | 9320 kB
+ vulnerabilites_detections_constat_id_machine_id_port_protoc_key | vulnerabilites_detections | 8648 kB
+ grc_notifications_pkey                                          | grc_notifications         | 8496 kB
+ grc_objects_data                                                | grc_objects               | 5904 kB
+ grc_objects_page                                                | grc_objects               | 4752 kB
+ vulnerabilites_detections_pkey                                  | vulnerabilites_detections | 4680 kB
+ grc_objects_registre                                            | grc_objects               | 4592 kB
+ grc_links_smsi_id_source_ref_target_ref_type_key                | grc_links                 | 3440 kB
+
+           relname           | n_live_tup | n_dead_tup |        last_autovacuum        |       last_autoanalyze        |         last_analyze          
+-----------------------------+------------+------------+-------------------------------+-------------------------------+-------------------------------
+ audit_log                   |    2000102 |          0 | 2026-11-19 20:21:55.093931+00 | 2026-11-19 20:21:55.917815+00 | 2026-11-19 20:35:00.529642+00
+ grc_notifications           |     200346 |          0 | 2026-11-19 20:21:57.321527+00 | 2026-11-19 20:21:57.656424+00 | 2026-11-19 20:35:01.531463+00
+ vulnerabilites_detections   |     114718 |          0 | 2026-11-19 20:34:50.254713+00 | 2026-11-19 20:33:50.280397+00 | 2026-11-19 20:35:01.931028+00
+ grc_objects                 |      25266 |          0 | 2026-11-19 20:20:51.385693+00 | 2026-11-19 20:20:51.659056+00 | 2026-11-19 20:35:01.031918+00
+ vulnerabilites_veille_cve   |      20000 |          0 |                               |                               | 2026-11-19 20:35:01.761278+00
+ grc_object_versions         |      18352 |          0 | 2026-11-19 20:19:50.407745+00 | 2026-11-19 20:20:51.922119+00 | 2026-11-19 20:35:01.187007+00
+ grc_links                   |      18114 |          0 | 2026-11-19 20:19:50.514518+00 | 2026-11-19 20:20:52.001928+00 | 2026-11-19 20:35:01.259074+00
+ grc_occurrences             |      18114 |          0 | 2026-11-19 20:19:50.576791+00 | 2026-11-19 20:20:52.036332+00 | 2026-11-19 20:35:01.299937+00
+ vulnerabilites_constat_cves |      13000 |          0 | 2026-11-19 20:33:50.247606+00 | 2026-11-19 20:33:50.258577+00 | 2026-11-19 20:35:01.846801+00
+ vulnerabilites_constats     |      10000 |          0 | 2026-11-19 20:33:50.213179+00 | 2026-11-19 20:33:50.245116+00 | 2026-11-19 20:35:01.831051+00
+ suivi_incidents             |       3000 |          0 | 2026-11-19 20:20:52.162053+00 | 2026-11-19 20:20:52.203719+00 | 2026-11-19 20:35:01.580378+00
+ documents                   |       2000 |          0 | 2026-11-19 20:20:50.870229+00 | 2026-11-19 20:20:50.888502+00 | 2026-11-19 20:35:00.555081+00
+ vulnerabilites_depassements |       1465 |          0 | 2026-11-19 20:34:50.263568+00 | 2026-11-19 20:34:50.268069+00 | 2026-11-19 20:35:01.949373+00
+ vulnerabilites_machines     |       1000 |         80 |                               | 2026-11-19 20:33:50.208291+00 | 2026-11-19 20:35:01.633988+00
+ grc_members                 |        853 |          0 |                               | 2026-11-19 20:16:49.976466+00 | 2026-11-19 20:35:00.730998+00
+
