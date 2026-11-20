@@ -48,6 +48,7 @@ import { useOngletVisible } from '../parcours-iso/mouvement';
 import { FenetreAlerteCritique } from '../vulnerabilites/FenetreAlerteCritique';
 import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
 import { RechercheVulnerabilites } from '../vulnerabilites/RechercheVulnerabilites';
+import { appliquerStyleFenetres } from '../fenetres';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -76,10 +77,21 @@ function useAffichage() {
     html.dataset.taille = prefs.taille;
     html.dataset.densite = densite;
     html.dataset.style = me.appearance.style;
+    // Fenêtres : style à l'essai pour toute l'instance (Plateforme > Apparence, barre d'accent par défaut).
+    appliquerStyleFenetres(html, me.appearance.fenetres);
     // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
     html.dataset.onglets = prefs.onglets ?? 'barre';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
-  }, [prefs.taille, densite, me.appearance.style, prefs.onglets, theme, colorScheme, setColorScheme]);
+  }, [
+    prefs.taille,
+    densite,
+    me.appearance.style,
+    me.appearance.fenetres,
+    prefs.onglets,
+    theme,
+    colorScheme,
+    setColorScheme,
+  ]);
   return theme;
 }
 

@@ -42,6 +42,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
+import { appliquerStyleFenetres, styleFenetres } from '../fenetres';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
@@ -620,6 +621,40 @@ function StyleGlobal({ p }: { p: P }) {
   );
 }
 
+/** Style des fenêtres à l'essai (addendum du 19/11/2026 à l'ADR 0093), pour toute l'instance : aperçu immédiat (la fenêtre
+    de réglage elle-même change de cadre) tant que la section n'est pas enregistrée ; abandonné en quittant le panneau. */
+function FenetresEssai({ p }: { p: P }) {
+  const enregistre = useMe().appearance.fenetres;
+  const choisi = styleFenetres(p.values.fenetres);
+  useEffect(() => {
+    appliquerStyleFenetres(document.documentElement, choisi);
+    return () => appliquerStyleFenetres(document.documentElement, enregistre);
+  }, [choisi, enregistre]);
+  return (
+    <Radio.Group
+      label="Fenêtres (essai)"
+      description="Cadre des fenêtres et des panneaux, pour tous les comptes de l’instance. Essai : un seul style sera gardé."
+      value={choisi}
+      onChange={(v) => p.set('fenetres', v)}
+    >
+      <Stack gap="xs" mt="xs">
+        <Radio
+          value="barre"
+          label="Barre d’accent"
+          description="Trait gris discret et fine barre dégradée en haut (par défaut)."
+          disabled={p.ro}
+        />
+        <Radio
+          value="lisere"
+          label="Liseré dégradé"
+          description="Liseré dégradé sur tout le contour."
+          disabled={p.ro}
+        />
+      </Stack>
+    </Radio.Group>
+  );
+}
+
 /* ---------------------------------------------------------------- Sections */
 const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
   general: (p) => <General p={p} />,
@@ -661,9 +696,10 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
         />
       </Stack>
       <StyleGlobal p={p} />
+      <FenetresEssai p={p} />
       <Text size="sm" c="dimmed">
         Thème et densité s’appliquent à toute personne qui n’a pas choisi ses propres préférences d’affichage. Le style
-        est le même pour tous les comptes.
+        et les fenêtres sont les mêmes pour tous les comptes.
       </Text>
     </Stack>
   ),

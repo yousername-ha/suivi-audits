@@ -3,8 +3,8 @@
    - couleurs tirées des jetons de la charte (--suivi-*, --neon-*, --mantine-*, --tdb-*), clair et sombre ; aucune
      couleur codée en dur ;
    - rayons bornés à 12 px (ADR 0093) ;
-   - le titre de la page, le menu latéral commun (lot 1) et l'habillage « Biseau » des fenêtres (lot 2) sont conservés :
-     les surcharges de navigation et de cadre de la référence ne sont pas reprises ;
+   - le titre de la page, le menu latéral commun (lot 1) et l'habillage commun des fenêtres (lot 2, revu le 19/11/2026)
+     sont conservés : les surcharges de navigation et de cadre de la référence ne sont pas reprises ;
    - le registre garde le défilement local des listes de lignes ouvrables (lot 2, ListeDefilante).
    Choix « Applicable » et « Mise en œuvre » : remplis, plus foncés, vert / orange / rouge selon la valeur. */
 .dda-module,
@@ -812,7 +812,7 @@
   opacity: 1;
 }
 
-/* Fiche d'une mesure : cadre « Biseau » commun (lot 2) et hauteur naturelle ; regroupements et relief de la référence. */
+/* Fiche d’une mesure : cadre commun des fenêtres (neon-fenetres.css) ; regroupements et relief de la référence. */
 .mantine-Modal-content.dda-modal {
   background: var(--dda-panel);
 }

@@ -1,4 +1,4 @@
-/* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, versions, import legacy, système.
+/* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, instantanés, import legacy, système.
    Chaque onglet n'apparaît qu'avec la permission correspondante (le serveur contrôle chaque appel). */
 import { Alert, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
 import type { SystemeOut } from '@suivi/shared';
@@ -76,7 +76,7 @@ export function AdminPage() {
           <Audit />
         </Tabs.Panel>
         <Tabs.Panel value="versions" pt="md">
-          <Versions />
+          <InstantanesEtat />
         </Tabs.Panel>
         <Tabs.Panel value="murs" pt="md">
           <MursPanel />
@@ -298,7 +298,7 @@ export function Audit() {
   );
 }
 
-/* ---------------------------------------------------------------- Versions de l'état legacy */
+/* ---------------------------------------------------------------- Instantanés de l'état de suivi (versions de l'état legacy) */
 interface VersionRow {
   version: number;
   updated_at: string;
@@ -308,18 +308,23 @@ interface VersionRow {
   items: number;
   import_batch_id: number | null;
 }
-export function Versions() {
+/** Instantanés complets de l'état de suivi, enregistrés par l'application (API /api/admin/versions, inchangée). Rangés dans
+    la carte « Sauvegardes et restauration » (décision du RSSI du 19/11/2026) ; Télécharger et Restaurer sont inchangés. */
+export function InstantanesEtat() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin', 'versions'], queryFn: () => get<VersionRow[]>('/api/admin/versions') });
   return (
-    <Stack>
-      <Text size="sm" c="dimmed">
-        Historique des enregistrements de l’outil de suivi (ancienne interface). Une restauration crée une nouvelle
-        version.
-      </Text>
-      <ErrorAlert error={q.error} />
-      <Card withBorder p={0}>
-        <div className="table-wrap" role="region" aria-label="Versions de l’application" tabIndex={0}>
+    <Card withBorder>
+      <Stack>
+        <Title order={2} size="h4">
+          Instantanés de l’état de suivi
+        </Title>
+        <Text size="sm" c="dimmed">
+          Instantanés complets de l’état de suivi, enregistrés par l’application. Une restauration crée une nouvelle
+          version.
+        </Text>
+        <ErrorAlert error={q.error} />
+        <div className="table-wrap" role="region" aria-label="Instantanés de l’état de suivi" tabIndex={0}>
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -369,8 +374,8 @@ export function Versions() {
             </Table.Tbody>
           </Table>
         </div>
-      </Card>
-    </Stack>
+      </Stack>
+    </Card>
   );
 }
 
