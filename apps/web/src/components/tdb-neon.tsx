@@ -61,9 +61,27 @@ function Etat({ pending, erreur }: { pending?: boolean; erreur?: unknown }) {
   );
 }
 
-/** Données des cartes qui ne viennent pas de la synthèse (incidents, journal), chargées selon les droits. */
+/** Incidents agrégés pour la carte : compteurs et nombre par mois de détection. */
+export interface IncidentsAgreges {
+  total: number;
+  enCours: number;
+  clos: number;
+  parMois: { libelle: string; valeur: number }[];
+}
+/** Agrégats de la carte « Incidents » à partir du registre lisible par la personne. */
+export function agregerIncidents(i: readonly Incident[]): IncidentsAgreges {
+  return {
+    total: i.length,
+    enCours: i.filter((x) => x.status === 'En cours').length,
+    clos: i.filter((x) => ['Clos', 'Résolu'].includes(x.status)).length,
+    parMois: compterMois(i.map((x) => ({ date: x.detectedAt }))),
+  };
+}
+
+/** Données des cartes qui ne viennent pas de la synthèse (incidents, journal), chargées selon les droits ou reçues avec
+    les chiffres ouverts d'un auteur (incidents seulement : le journal n'est jamais ouvert, ADR 0109). */
 export interface DonneesNeon {
-  incidents: { lisible: boolean; data?: Incident[]; pending: boolean; error: unknown };
+  incidents: { lisible: boolean; data?: IncidentsAgreges; pending: boolean; error: unknown };
   journal: { lisible: boolean; data?: EvenementNeon[]; pending: boolean; error: unknown };
   /** Référentiels affichés par les cartes de conformité : tous, ISO seuls ou HDS seul. */
   portee: string;
@@ -273,15 +291,12 @@ export function dallesNeon(
           'Événements enregistrés par mois',
           i ? (
             <>
-              <NeonColonnes
-                titre="Incidents par mois de détection"
-                valeurs={compterMois(i.map((x) => ({ date: x.detectedAt })))}
-              />
+              <NeonColonnes titre="Incidents par mois de détection" valeurs={i.parMois} />
               <Stats
                 valeurs={[
-                  ['Incidents', i.length],
-                  ['En cours', i.filter((x) => x.status === 'En cours').length],
-                  ['Clos / résolus', i.filter((x) => ['Clos', 'Résolu'].includes(x.status)).length],
+                  ['Incidents', i.total],
+                  ['En cours', i.enCours],
+                  ['Clos / résolus', i.clos],
                 ]}
               />
             </>

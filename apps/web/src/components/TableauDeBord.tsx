@@ -14,6 +14,7 @@ import {
   dispositionStandard,
   hauteurDalle,
   visualisationDalle,
+  type ChiffresPublics,
   type Disposition,
   type Incident,
   type IdDalle,
@@ -45,7 +46,7 @@ import { get } from '../api';
 import { useCan } from '../session';
 import type { EvenementNeon } from './neon-donnees';
 import { fmtJour, TEINTE_ECART } from './Synthese';
-import { dallesNeon, type DonneesNeon } from './tdb-neon';
+import { agregerIncidents, dallesNeon, type DonneesNeon } from './tdb-neon';
 import type { DalleTableauDeBord, RenduDalle } from './tdb-types';
 
 export type { DalleTableauDeBord } from './tdb-types';
@@ -831,10 +832,15 @@ export function dallesTableauDeBord(s: Synthese, donnees: DonneesNeon = SANS_DON
 }
 
 /** Données des cartes de la vue analytique chargées hors de la synthèse (incidents, journal d'audit), selon les droits,
-    et dalles disponibles pour la personne. */
-export function useDallesTableauDeBord(s: Synthese, portee = 'global'): DalleTableauDeBord[] {
+    et dalles disponibles pour la personne. Avec les chiffres ouverts d'un auteur (ADR 0109), les incidents sont les
+    siens, agrégés par le serveur ; le journal reste toujours celui que la personne a le droit de lire. */
+export function useDallesTableauDeBord(
+  s: Synthese,
+  portee = 'global',
+  ouverts: ChiffresPublics | null = null,
+): DalleTableauDeBord[] {
   const can = useCan();
-  const lireIncidents = can('incidents', 'lire');
+  const lireIncidents = can('incidents', 'lire') && !ouverts;
   const lireJournal = can('administration', 'lire');
   const incidents = useQuery({
     queryKey: ['incidents'],
@@ -846,16 +852,60 @@ export function useDallesTableauDeBord(s: Synthese, portee = 'global'): DalleTab
     queryFn: () => get<EvenementNeon[]>('/api/admin/audit?limit=500'),
     enabled: lireJournal,
   });
+  const agregats = ouverts?.incidents
+    ? {
+        total: ouverts.incidents.total,
+        enCours: ouverts.incidents.enCours,
+        clos: ouverts.incidents.clos,
+        parMois: ouverts.incidents.parMois.map((m) => ({ libelle: m.mois, valeur: m.n })),
+      }
+    : incidents.data
+      ? agregerIncidents(incidents.data.incidents)
+      : undefined;
   return dallesTableauDeBord(s, {
     incidents: {
-      lisible: lireIncidents,
-      data: incidents.data?.incidents,
-      pending: incidents.isPending,
+      lisible: lireIncidents || !!ouverts?.incidents,
+      data: agregats,
+      pending: lireIncidents && incidents.isPending,
       error: incidents.error,
     },
     journal: { lisible: lireJournal, data: journal.data, pending: journal.isPending, error: journal.error },
     portee,
   });
+}
+
+/** Synthèse d'un tableau aux chiffres ouverts (ADR 0109) : les nombres de l'auteur (liste blanche reçue du serveur) ; les
+    listes nommées (échéances, journées du plan d'audit, intitulé du prochain audit) restent celles de la personne qui
+    regarde, ou vides sans droit. */
+export function syntheseOuverte(c: ChiffresPublics, propre: Synthese | undefined, organisation: string): Synthese {
+  return {
+    organisation: propre?.organisation ?? organisation,
+    genereLe: c.genereLe,
+    prochainAudit: c.prochainAudit
+      ? {
+          date: c.prochainAudit.date,
+          annee: propre?.prochainAudit?.date === c.prochainAudit.date ? propre.prochainAudit.annee : null,
+          libelle: propre?.prochainAudit?.date === c.prochainAudit.date ? propre.prochainAudit.libelle : '',
+        }
+      : null,
+    auditInterne: c.auditInterne,
+    ecarts: c.ecarts,
+    echeances: propre?.echeances ?? [],
+    plan: propre?.plan ?? null,
+    mesures: c.mesures,
+    conformite: c.conformite,
+    ecartsOuverts: c.ecartsOuverts,
+    indicateurs: c.indicateurs,
+    plans: c.plans,
+    actions: c.actions,
+    recurrences: c.recurrences,
+    risques: c.risques,
+    continuite: c.continuite,
+    incidents: c.incidents
+      ? { total: c.incidents.total, ouverts: c.incidents.ouverts, securiteOuverts: c.incidents.securiteOuverts }
+      : null,
+    pilotage: null,
+  };
 }
 
 /** Dalle placée : sa définition, sa clé (copies comprises), sa largeur, sa hauteur et ses réglages. */
@@ -899,12 +949,21 @@ export function BoutonDetail({ titre, onClick }: { titre: string; onClick: () =>
 
 /** Tableau de bord de l'accueil en lecture : en-tête de la vue analytique (recherche, exports, référentiels), grille des
     dalles dans la disposition affichée, détail d'une dalle dans un panneau latéral. */
-export function TableauDeBordConformite({ s, disposition = null }: { s: Synthese; disposition?: Disposition | null }) {
+export function TableauDeBordConformite({
+  s,
+  disposition = null,
+  ouverts = null,
+}: {
+  s: Synthese;
+  disposition?: Disposition | null;
+  /** Chiffres ouverts de l'auteur du tableau affiché (ADR 0109) ; `s` est alors leur synthèse (`syntheseOuverte`). */
+  ouverts?: ChiffresPublics | null;
+}) {
   const can = useCan();
   const [recherche, setRecherche] = useState('');
   const [portee, setPortee] = useState('global');
   const [detail, setDetail] = useState<string | null>(null);
-  const placees = dallesDisposees(useDallesTableauDeBord(s, portee), disposition);
+  const placees = dallesDisposees(useDallesTableauDeBord(s, portee, ouverts), disposition);
   const filtre = recherche.trim().toLocaleLowerCase();
   const visibles = filtre
     ? placees.filter((x) => `${x.dalle.titre} ${x.dalle.description}`.toLocaleLowerCase().includes(filtre))

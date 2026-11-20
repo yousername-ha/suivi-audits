@@ -8,7 +8,18 @@
    (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée n'est
    enregistrée : seulement l'ordre, les tailles, les copies et les dalles masquées. Le déplacement visuel passe par des
    variables CSS posées par le CSSOM (permis par l'ADR 0006), jamais par un attribut style. */
-import { Alert, Button, Drawer, Group, NativeSelect, NumberInput, Switch, Text, VisuallyHidden } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Drawer,
+  Group,
+  NativeSelect,
+  NumberInput,
+  Switch,
+  Text,
+  TextInput,
+  VisuallyHidden,
+} from '@mantine/core';
 import {
   ajouterDalle,
   cleDalle,
@@ -18,7 +29,6 @@ import {
   dallesAffichees,
   deplacerDalle,
   deplacerDalleAuClavier,
-  dispositionStandard,
   hauteurAimantee,
   hauteurDalle,
   HAUTEURS_DALLE,
@@ -36,7 +46,7 @@ import {
   visualisationDalle,
   type DalleDisposee,
   type Disposition,
-  type DispositionsOut,
+  type TableauDetail,
   type HauteurDisposee,
   type IdDalle,
   type ReglagesDalle,
@@ -55,13 +65,12 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { api, del } from '../api';
+import { api } from '../api';
 import { useDallesTableauDeBord } from './TableauDeBord';
+import { CLE_TABLEAUX } from './TableauxDeBord';
 import { GROUPES_DALLES, type DalleTableauDeBord } from './tdb-types';
 
-export const CLE_DISPOSITION = ['tableau-de-bord', 'disposition'] as const;
-const URL_PERSO = '/api/tableau-de-bord/disposition';
-const URL_DEFAUT = '/api/admin/tableau-de-bord/disposition-par-defaut';
+const URL_TABLEAUX = '/api/tableaux-de-bord';
 
 const SENS_TOUCHES: Record<string, -1 | 1 | 'debut' | 'fin'> = {
   ArrowLeft: -1,
@@ -323,16 +332,15 @@ function PanneauReglages({
 
 export function EditionTableauDeBord({
   s,
-  dispositions,
-  base,
-  peutDefinirDefaut,
+  tableau,
+  ouvrirCatalogue = false,
   onFin,
 }: {
   s: Synthese;
-  dispositions: DispositionsOut;
-  /** Disposition affichée au moment d'entrer en modification (la sienne, celle de l'organisation ou un tableau reçu). */
-  base: Disposition | null;
-  peutDefinirDefaut: boolean;
+  /** Tableau modifié : un des siens, ou un tableau proposé d'office pour l'administrateur (ADR 0109). */
+  tableau: TableauDetail;
+  /** Ouvrir le catalogue dès l'entrée (tableau créé vide). */
+  ouvrirCatalogue?: boolean;
   onFin: () => void;
 }) {
   const qc = useQueryClient();
@@ -341,23 +349,20 @@ export function EditionTableauDeBord({
   const parId = useMemo(() => new Map(dalles.map((x) => [x.id, x])), [dalles]);
   const idsDisponibles = dalles.map((x) => x.id).join(' ');
   const disponibles = useMemo(() => new Set<IdDalle>(idsDisponibles.split(' ') as IdDalle[]), [idsDisponibles]);
-  // Départ : la disposition affichée (la sienne, celle de l'organisation ou un tableau reçu), complète, sinon la
-  // disposition standard de la vue analytique (ADR 0108).
+  // Départ : la disposition du tableau, complète (dalles ajoutées au catalogue depuis : affichées à la fin).
   const [depart] = useState<Disposition>(() =>
-    base
-      ? completerDisposition(
-          base,
-          Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
-        )
-      : dispositionStandard(),
+    completerDisposition(
+      tableau.disposition,
+      Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
+    ),
   );
-  // Partir d'un autre tableau que le sien : l'enregistrer en fait sa disposition, même sans changement.
-  const autreQueLaSienne = base !== (dispositions.personnelle?.disposition ?? null);
+  const [nom, setNom] = useState(tableau.nom);
+  const modele = tableau.origine === 'propose';
   const [d, setD] = useState<Disposition>(depart);
   const [glisse, setGlisse] = useState<Glisse | null>(null);
   const [redim, setRedim] = useState<Redim | null>(null);
   const [magnetique, setMagnetique] = useState(true);
-  const [catalogue, setCatalogue] = useState(false);
+  const [catalogue, setCatalogue] = useState(ouvrirCatalogue);
   const grille = useRef<HTMLDivElement>(null);
   const glissee = glisse?.demarre ? glisse.id : null;
   // Dalle posée au dernier lâcher : son rang et sa taille sont annoncés une fois la disposition rendue.
@@ -374,14 +379,14 @@ export function EditionTableauDeBord({
     const t = (x && parId.get(x.id)?.titre) ?? cle;
     return x?.cle ? `${t} (copie ${x.cle.split('~')[1]})` : t;
   };
-  const modifiee = !memesDispositions(d, depart);
+  const modifiee = !memesDispositions(d, depart) || nom.trim() !== tableau.nom;
 
   async function agir(fn: () => Promise<unknown>) {
     setPending(true);
     setError(null);
     try {
       await fn();
-      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
+      await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
       onFin();
     } catch (e) {
       setError(e);
@@ -615,13 +620,24 @@ export function EditionTableauDeBord({
             }}
           />
         </Group>
+        <TextInput
+          className="tdb-edition-nom"
+          label="Nom du tableau"
+          maxLength={60}
+          disabled={modele}
+          value={nom}
+          onChange={(e) => setNom(e.currentTarget.value)}
+        />
         <Group gap="xs">
           <Button
-            disabled={(!modifiee && !autreQueLaSienne) || pending}
+            disabled={!modifiee || !nom.trim() || pending}
             loading={pending}
             onClick={() =>
               void agir(() =>
-                api('PUT', URL_PERSO, { body: { disposition: d }, ifMatch: dispositions.personnelle?.version ?? 0 }),
+                api('PUT', `${URL_TABLEAUX}/${tableau.id}`, {
+                  body: { disposition: d, ...(nom.trim() !== tableau.nom ? { nom: nom.trim() } : {}) },
+                  ifMatch: tableau.version,
+                }),
               )
             }
           >
@@ -630,41 +646,27 @@ export function EditionTableauDeBord({
           <Button variant="default" disabled={pending} onClick={onFin}>
             Annuler
           </Button>
-          {dispositions.personnelle && (
+          {modele ? (
             <ConfirmButton
               variant="default"
               color="gray"
-              message="Revenir à la disposition par défaut ? Votre disposition personnelle sera supprimée."
-              onConfirm={() => void agir(() => del(URL_PERSO))}
-            >
-              Revenir à la disposition par défaut
-            </ConfirmButton>
-          )}
-          {peutDefinirDefaut && (
-            <ConfirmButton
-              variant="light"
-              color="blue"
-              message="Proposer cette disposition à tous ? Elle s’affichera pour chaque personne qui n’a pas la sienne."
+              message={`Revenir au modèle « ${tableau.nom} » fourni avec l’application, pour tout le monde ?`}
               onConfirm={() =>
-                void agir(() =>
-                  api('PUT', URL_DEFAUT, {
-                    body: { disposition: d },
-                    ifMatch: dispositions.organisation?.version ?? 0,
-                  }),
-                )
+                void agir(() => api('DELETE', `${URL_TABLEAUX}/${tableau.id}`, { ifMatch: tableau.version }))
               }
             >
-              Proposer cette disposition à tous
+              Revenir au modèle
             </ConfirmButton>
-          )}
-          {peutDefinirDefaut && dispositions.organisation && (
+          ) : (
             <ConfirmButton
               variant="default"
-              color="gray"
-              message="Rétablir la disposition standard pour tous ceux qui n’ont pas la leur ?"
-              onConfirm={() => void agir(() => del(URL_DEFAUT))}
+              color="red"
+              message={`Supprimer le tableau « ${tableau.nom} » ? Ses partages et sa publication disparaissent aussi.`}
+              onConfirm={() =>
+                void agir(() => api('DELETE', `${URL_TABLEAUX}/${tableau.id}`, { ifMatch: tableau.version }))
+              }
             >
-              Rétablir la disposition standard pour tous
+              Supprimer ce tableau
             </ConfirmButton>
           )}
         </Group>

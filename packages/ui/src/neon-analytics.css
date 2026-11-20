@@ -1002,3 +1002,180 @@
     box-shadow: none;
   }
 }
+
+/* ========================================================================
+   TABLEAUX DE BORD MULTIPLES (ADR 0109) : onglets des tableaux de la personne (forme commune des onglets), glissés comme
+   les rubriques du menu ; bouton « + » ; bandeau d'un tableau d'un autre auteur ; fenêtres de création et de partage.
+   ======================================================================== */
+.tdb-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.tdb-onglets .onglets-rubriques a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  cursor: pointer;
+  user-select: none;
+}
+.tdb-onglets .onglets-rubriques[data-tri-actif] a {
+  cursor: grabbing;
+}
+.tdb-onglets .onglets-rubriques a[data-glisse] {
+  opacity: 0.55;
+  outline: 2px dashed var(--menu-teinte-pilotage);
+  outline-offset: -2px;
+}
+.tdb-onglet-icone {
+  inline-size: 0.9em;
+  block-size: 0.9em;
+  flex: none;
+}
+.tdb-onglets-plus {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  padding: 0;
+  border: 1px dashed color-mix(in srgb, var(--menu-teinte-pilotage) 70%, transparent);
+  border-radius: 0.7rem;
+  background: var(--suivi-surface);
+  color: var(--menu-fond);
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  box-shadow: var(--suivi-ombre);
+  cursor: pointer;
+}
+.tdb-onglets-plus:hover,
+.tdb-onglets-plus[aria-expanded='true'] {
+  background: var(--menu-fond);
+  color: var(--menu-teinte-pilotage);
+  border-style: solid;
+}
+[data-mantine-color-scheme='dark'] .tdb-onglets-plus {
+  color: var(--menu-teinte-pilotage);
+}
+.tdb-onglets-plus:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: 2px;
+}
+.tdb-bandeau {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 8%, transparent);
+  font-size: var(--mantine-font-size-sm);
+}
+.tdb-bandeau > span {
+  flex: 1;
+}
+.tdb-bandeau--public {
+  border-color: color-mix(in srgb, var(--mantine-color-green-filled) 45%, transparent);
+  background: color-mix(in srgb, var(--mantine-color-green-filled) 7%, transparent);
+}
+.tdb-bandeau .tdb-onglet-icone {
+  inline-size: 1.1em;
+  block-size: 1.1em;
+}
+.tdb-fenetre {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+}
+.tdb-departs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+.tdb-depart {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.tdb-depart:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.tdb-depart[aria-checked='true'] {
+  border-color: var(--menu-teinte-pilotage);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 7%, transparent);
+}
+.tdb-depart:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: 2px;
+}
+.tdb-depart small {
+  color: var(--neon-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.4;
+}
+.tdb-depart-vignette {
+  display: block;
+  block-size: 3rem;
+  margin-block-end: 0.3rem;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-sm);
+}
+.tdb-depart-vide {
+  background-image:
+    linear-gradient(90deg, var(--suivi-trait) 1px, transparent 1px),
+    linear-gradient(var(--suivi-trait) 1px, transparent 1px);
+  background-size: 25% 50%;
+}
+.tdb-depart-standard {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent),
+    color-mix(in srgb, var(--neon-rose) 35%, transparent)
+  );
+}
+.tdb-depart-copie {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--neon-violet) 35%, transparent),
+    color-mix(in srgb, var(--menu-teinte-pilotage) 25%, transparent)
+  );
+}
+.tdb-etiquette {
+  display: inline-block;
+  margin-inline-start: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: var(--mantine-radius-xl);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 18%, transparent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.tdb-etiquette--public {
+  background: color-mix(in srgb, var(--mantine-color-green-filled) 18%, transparent);
+}
+.tdb-publication {
+  padding: var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--mantine-color-green-filled) 45%, transparent);
+  border-radius: var(--mantine-radius-md);
+  background: color-mix(in srgb, var(--mantine-color-green-filled) 6%, transparent);
+}
+.tdb-publication ul {
+  margin: var(--mantine-spacing-xs) 0 0;
+  padding-inline-start: 1.1rem;
+  color: var(--neon-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.5;
+}
+.tdb-edition-nom {
+  max-inline-size: 24rem;
+}
