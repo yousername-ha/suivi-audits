@@ -2,8 +2,10 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
-0. [Reprise du 29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) : état le plus récent (version 6.0.0 préparée, reste à faire) ;
-   [reprise du 27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) : règles de fusion et de travail.
+0. [Reprise du 20/11/2026](01_REPRISE_IA/REPRISE-2026-11-20.md) : état le plus récent (module Vulnérabilités, décisions du RSSI
+   en attente) ; les reprises précédentes sont listées dans [HANDOVER](../HANDOVER.md), dont celle du
+   [29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) (version 6.0.0 préparée) et celle du
+   [27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion et de travail).
 
 1. [README](../README.md), [PRODUCT](PRODUCT.md), [REFERENTIALS](REFERENTIALS.md) : ce que fait la plateforme.
 2. [ARCHITECTURE](ARCHITECTURE.md) et [DAT](03_ARCHITECTURE/DAT.md) : comment elle est construite ; [ADR](adr/README.md) et

@@ -9,11 +9,18 @@ import type { SessionUser } from '../auth.js';
 export const perimetreMachine = sql<string | null>`coalesce(m.perimetre_id,
   (SELECT td.perimetre_id FROM vulnerabilites_tenable_depots td WHERE td.id = m.depot_id))`;
 
+/** Périmètres que la personne voit (pyramide, grc_smsi_visible). Sous-requête sans corrélation : PostgreSQL l'évalue une
+    seule fois par requête (InitPlan), au lieu d'un appel de grc_smsi_visible par ligne lue (lot PERF, PERF-01 : 114 718
+    appels pour la liste des constats). Même règle : un périmètre effectif existe toujours dans grc_smsis (clés étrangères
+    ON DELETE SET NULL), il est donc visible si et seulement s'il figure dans ce tableau. */
+export const perimetresVisibles = (user: SessionUser): RawBuilder<string[]> =>
+  sql<string[]>`ARRAY(SELECT sv.id FROM grc_smsis sv WHERE grc_smsi_visible(sv.id, ${user.id}::uuid))`;
+
 /** Machine `m` lisible par la personne : périmètre effectif visible (pyramide), ou sans périmètre effectif avec
     administrer. */
 export const lisible = (user: SessionUser): RawBuilder<boolean> =>
   sql<boolean>`(CASE WHEN ${perimetreMachine} IS NULL THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
-                ELSE grc_smsi_visible(${perimetreMachine}, ${user.id}::uuid) END)`;
+                ELSE ${perimetreMachine} = ANY(${perimetresVisibles(user)}) END)`;
 
 /** Détection `d` présente : vue par la dernière synchronisation complète de son instance (alias `e`), ou plus récemment. */
 export const present = sql<boolean>`(d.vu_numero >= coalesce(e.numero_complet, 0))`;
