@@ -62,9 +62,12 @@ export const TABLES_CONFIGURATION = [
   'notification_reglages',
   'notification_portees',
   'wall_screens',
+  // Tableaux de bord de l'accueil (ADR 0078, 0109) : tableaux, partages et onglets de chaque personne. Les tableaux proposés
+  // d'office sont recréés depuis le code à la première lecture.
   'tableaux_de_bord',
   'tableaux_de_bord_partages',
   'tableaux_de_bord_choix',
+  'tableaux_de_bord_onglets',
   'calendriers_plateforme',
   'calendriers_plateforme_journal',
   'calendriers_plateforme_jours',
