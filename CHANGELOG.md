@@ -63,10 +63,10 @@ page de maintenance des mises à jour prend aussi Lexend.
 
 **Tableau de bord unique, puis tableaux multiples de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md),
 [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)) : **migration automatique `096`**, de schéma
-seulement (plusieurs tableaux par compte, onglets ordonnés, destinataires par rôle, publication), durée négligeable,
+seulement (plusieurs tableaux par compte, favoris ordonnés, destinataires par rôle, publication), durée négligeable,
 aucune action sur le serveur. **Sans reprise de données** (règle du 14/11/2026) : les tableaux personnels déjà
 enregistrés restent ceux de leur auteur, mais le « tableau affiché », la disposition par défaut de l'organisation et la
-bascule « Vue analytique Neon / Tableau personnalisable » ne sont plus lus ; chacun démarre avec l'onglet « Global ». Un
+bascule « Vue analytique Neon / Tableau personnalisable » ne sont plus lus ; chacun démarre avec le favori « Global ». Un
 rôle personnalisé qui portait déjà l'action « Administrer » du module « Tableau de bord » gagne la publication pour tous
 (« Publier pour tous »).
 
@@ -180,9 +180,12 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 - **Tableaux de bord multiples de l'accueil et publication pour tous** (décisions du RSSI du 20/11/2026, sur maquettes ;
   [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)). Chacun crée ses tableaux nommés (20 au plus),
-  affichés en onglets qu'on réordonne en les glissant comme les rubriques du menu ; le premier s'ouvre à l'arrivée.
-  « + » : créer un tableau (vide, disposition standard, ou copie d'un de ses tableaux ou d'un tableau public) ou ajouter
-  un tableau existant (proposé d'office, partagé, public), qui reste celui de son auteur, en lecture seule. Tableaux
+  et garde à gauche de l'en-tête une barre de 5 favoris au plus (« Global » d'office), réordonnés en les glissant comme
+  les rubriques du menu ; le premier s'ouvre à l'arrivée. Un bouton déroulant ⌄ liste tous ses tableaux (les siens,
+  proposés d'office, partagés, publics), avec « + » et « − » pour les favoris ; un tableau d'un autre reste celui de son
+  auteur, en lecture seule. Un petit « + » crée un tableau (vide, disposition standard, ou copie d'un de ses tableaux ou
+  d'un tableau public). La recherche des dalles devient une loupe, les exports une icône, et le filtre des référentiels
+  se lit « Tous / ISO / HDS ». Tableaux
   proposés d'office : Global, Suivi SMSI, et bientôt Vulnérabilités (RSSI) et Suivi réglementaire. Partage avec des
   personnes, des groupes ou des rôles. Le droit « Publier pour tous » (action « Administrer » du module « Tableau de
   bord », rôles RSSI et Administrateur d'office) publie un tableau pour tous et ouvre aux destinataires les chiffres et
