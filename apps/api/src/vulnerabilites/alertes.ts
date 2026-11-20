@@ -402,8 +402,9 @@ export class AlertesVulnerabilites {
   /** Vue d'ensemble (lot PC1) : faits de chaque faille suivie, sur tous les faits connus (sans droits), propositions comprises
       (présence « produit à confirmer »), titres et produits. Lecture seule, nombre de requêtes fixe (aucune par faille).
       Lot PERF-04 : `titres` à false, aucun titre n'est lu (la vue d'ensemble lit ceux des seules failles qu'elle rend) ;
-      `machines` à false, les machines des failles et des objets suivis ne sont pas lues (ensembles et listes vides), pour
-      qui n'en compte pas (vue d'ensemble, dépassements de délai). Priorités, faits et nombres de failles inchangés. */
+      `machines` à false, les machines des contrôles de Tenable ne sont pas lues (Cumul.machines et ObjetDelai.machines n'ont
+      alors que celles des failles déclarées), pour qui ne les compte pas (vue d'ensemble, dépassements de délai). Priorités,
+      faits et nombres de failles inchangés. */
   async situationGlobale(
     k: Kdb,
     propositions: readonly PropositionCumul[],
