@@ -310,6 +310,12 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
   actifs exposés d'une CVE (repères « E-… » de l'assistant) sont aussi rangés dans un ordre stable, qui dépendait du plan
   choisi par PostgreSQL. Sans migration, aucune action. (session « Projet audit_suivi Coeur »)
 
+### Retiré
+
+- Scripts PowerShell d'essai de `scripts/dev` (exemples Tenable et AlgoLightHouse, résumé ADS, anonymisation, contrôles
+  par CVE, ports AlgoLightHouse) : retirés du dépôt à la demande du RSSI, qui les conserve hors du dépôt. Aucun effet sur
+  l'application. (session « Projet audit_suivi Coeur »)
+
 
 ## [7.4.0] — 2026-11-19
 
