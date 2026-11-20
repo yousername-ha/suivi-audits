@@ -1,32 +1,53 @@
-/* Mode « Modifier la disposition » du tableau de bord de l'accueil (ADR 0078, lot 2a) : déplacer les dalles au glisser
-   (poignée ou surface de la dalle à la souris, poignée au doigt) ou au clavier (flèches, Origine, Fin sur la poignée),
-   changer leur largeur (bord à tirer, aimanté sur les largeurs proposées, ou liste), les masquer et les réafficher, régler
-   leurs seuils, leur cible et leur visualisation (lot 2c). Pendant le glissé, la dalle suit le pointeur et une ombre bleue
-   translucide marque sa place d'arrivée ; les autres se poussent en direct. Placement magnétique (activé par défaut) : au
-   lâcher, les fins de rangée libres sont comblées par les dalles suivantes qui y tiennent. Enregistre la disposition
-   personnelle (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée
-   n'est enregistrée : seulement l'ordre, les largeurs et les dalles masquées. Le déplacement visuel passe par des
+/* Mode « Modifier la disposition » du tableau de bord de l'accueil (ADR 0078, lot 2a ; tableau unique, ADR 0108) :
+   déplacer les dalles au glisser (poignée ou surface de la dalle à la souris, poignée au doigt) ou au clavier (flèches,
+   Origine, Fin sur la poignée), changer leur largeur et leur hauteur (bord droit, bord bas ou coin à tirer, aimantés sur
+   les tailles proposées, ou listes), les retirer, ajouter n'importe quelle dalle du catalogue, plusieurs fois au besoin,
+   régler leurs seuils, leur cible et leur visualisation (lot 2c). Pendant le glissé, la dalle suit le pointeur et une
+   ombre bleue translucide marque sa place d'arrivée ; les autres se poussent en direct. Aimant (activé par défaut) : au
+   lâcher, les places libres sont comblées par les dalles suivantes qui y tiennent. Enregistre la disposition personnelle
+   (droit tableau_de_bord:modifier, lot 2b) ; un administrateur peut aussi la proposer à tous. Aucune donnée n'est
+   enregistrée : seulement l'ordre, les tailles, les copies et les dalles masquées. Le déplacement visuel passe par des
    variables CSS posées par le CSSOM (permis par l'ADR 0006), jamais par un attribut style. */
-import { Alert, Button, Group, NativeSelect, NumberInput, Switch, Text, VisuallyHidden } from '@mantine/core';
 import {
+  Alert,
+  Button,
+  Drawer,
+  Group,
+  NativeSelect,
+  NumberInput,
+  Switch,
+  Text,
+  TextInput,
+  VisuallyHidden,
+} from '@mantine/core';
+import {
+  ajouterDalle,
+  cleDalle,
   compacterDisposition,
   COLONNES_TABLEAU_DE_BORD,
   completerDisposition,
   dallesAffichees,
   deplacerDalle,
   deplacerDalleAuClavier,
+  hauteurAimantee,
+  hauteurDalle,
+  HAUTEURS_DALLE,
   largeurAimantee,
   LARGEURS_DALLE,
+  LIBELLES_HAUTEUR,
   LIBELLES_LARGEUR,
   LIBELLES_VISUALISATION,
   memesDispositions,
   modifierDalle,
   REGLAGES_DALLE,
+  retirerDalle,
   SEUILS_JOURS_STANDARD,
   SEUILS_STANDARD,
   visualisationDalle,
+  type DalleDisposee,
   type Disposition,
-  type DispositionsOut,
+  type TableauDetail,
+  type HauteurDisposee,
   type IdDalle,
   type ReglagesDalle,
   type Synthese,
@@ -44,12 +65,12 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { api, del } from '../api';
-import { dallesTableauDeBord } from './TableauDeBord';
+import { api } from '../api';
+import { useDallesTableauDeBord } from './TableauDeBord';
+import { CLE_TABLEAUX } from './TableauxDeBord';
+import { GROUPES_DALLES, type DalleTableauDeBord } from './tdb-types';
 
-export const CLE_DISPOSITION = ['tableau-de-bord', 'disposition'] as const;
-const URL_PERSO = '/api/tableau-de-bord/disposition';
-const URL_DEFAUT = '/api/admin/tableau-de-bord/disposition-par-defaut';
+const URL_TABLEAUX = '/api/tableaux-de-bord';
 
 const SENS_TOUCHES: Record<string, -1 | 1 | 'debut' | 'fin'> = {
   ArrowLeft: -1,
@@ -65,11 +86,12 @@ const SEUIL_GLISSE = 6;
 /** Bande, en pixels, près des bords haut et bas de la fenêtre où le glissé fait défiler la page. */
 const BANDE_DEFILEMENT = 56;
 /** Éléments d'une case qui gardent leur propre comportement : ils ne démarrent pas de glissé. */
-const HORS_GLISSE = 'button:not(.tdb-poignee), select, input, textarea, a, label, .tdb-reglages, .tdb-redim';
+const HORS_GLISSE =
+  'button:not(.tdb-poignee), select, input, textarea, a, label, .tdb-reglages, .tdb-redim, .tdb-redim-bas, .tdb-redim-coin';
 
-/** Glissé en cours : dalle, point de saisie dans la dalle, dernière position du pointeur, seuil franchi ou non. */
+/** Glissé en cours : clé de la dalle, point de saisie dans la dalle, dernière position du pointeur, seuil franchi ou non. */
 interface Glisse {
-  id: IdDalle;
+  id: string;
   decalX: number;
   decalY: number;
   departX: number;
@@ -78,12 +100,101 @@ interface Glisse {
   y: number;
   demarre: boolean;
 }
-/** Redimensionnement en cours : bord gauche de la dalle et largeur d'une colonne (écart compris), en pixels. */
+/** Redimensionnement en cours : clé de la dalle, bord tiré (droit, bas ou coin), coin haut gauche de la dalle (haut
+    mesuré dans la page), largeur d'une colonne et hauteur d'une ligne (écarts compris), en pixels. */
 interface Redim {
-  id: IdDalle;
+  id: string;
+  sens: 'largeur' | 'hauteur' | 'coin';
   gauche: number;
+  hautPage: number;
   colonne: number;
   ecart: number;
+  ligne: number;
+  ecartLignes: number;
+}
+
+/** Position et taille annoncées après un lâcher : la largeur après un glissé ou un bord droit, la hauteur après le bord
+    bas, les deux après le coin. */
+type Posee = { id: string; quoi: 'largeur' | 'hauteur' | 'coin' };
+
+const minuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+
+function IconeRetirer() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      aria-hidden="true"
+    >
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </svg>
+  );
+}
+
+/** Catalogue « Ajouter une dalle » (ADR 0108) : toutes les dalles lisibles, par famille ; une dalle déjà affichée
+    s'ajoute encore, en copie. */
+function Catalogue({
+  ouvert,
+  onFermer,
+  dalles,
+  disposition,
+  onAjouter,
+}: {
+  ouvert: boolean;
+  onFermer: () => void;
+  dalles: readonly DalleTableauDeBord[];
+  disposition: Disposition;
+  onAjouter: (id: IdDalle) => void;
+}) {
+  const affichees = (id: IdDalle) => disposition.dalles.filter((x) => x.id === id && !x.masquee).length;
+  return (
+    <Drawer opened={ouvert} onClose={onFermer} title="Ajouter une dalle" position="right" size="md" lockScroll={false}>
+      <div className="tdb-catalogue">
+        <Text size="sm" c="dimmed">
+          Une dalle ajoutée se place à la fin, puis l’aimant la remonte dans la première place libre.
+        </Text>
+        {GROUPES_DALLES.map((groupe) => {
+          const membres = dalles
+            .filter((x) => x.groupe === groupe)
+            .sort((a, b) => a.titre.localeCompare(b.titre, 'fr'));
+          if (!membres.length) return null;
+          return (
+            <section key={groupe} className="tdb-catalogue-groupe" aria-label={groupe}>
+              <h3>{groupe}</h3>
+              <ul>
+                {membres.map((x) => {
+                  const n = affichees(x.id);
+                  return (
+                    <li key={x.id} className="tdb-catalogue-dalle">
+                      <div>
+                        <b>{x.titre}</b>
+                        <span>{x.description}</span>
+                        {n > 0 && (
+                          <span className="tdb-catalogue-etat">{n > 1 ? `Affichée ${n} fois` : 'Affichée'}</span>
+                        )}
+                      </div>
+                      <Button
+                        size="compact-sm"
+                        variant={n ? 'default' : 'light'}
+                        aria-label={`${n ? 'Ajouter encore' : 'Ajouter'} « ${x.titre} »`}
+                        onClick={() => onAjouter(x.id)}
+                      >
+                        {n ? 'Ajouter encore' : 'Ajouter'}
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+    </Drawer>
+  );
 }
 
 function IconePoignee() {
@@ -221,58 +332,61 @@ function PanneauReglages({
 
 export function EditionTableauDeBord({
   s,
-  dispositions,
-  base,
-  peutDefinirDefaut,
+  tableau,
+  ouvrirCatalogue = false,
   onFin,
 }: {
   s: Synthese;
-  dispositions: DispositionsOut;
-  /** Disposition affichée au moment d'entrer en modification (la sienne, celle de l'organisation ou un tableau reçu). */
-  base: Disposition | null;
-  peutDefinirDefaut: boolean;
+  /** Tableau modifié : un des siens, ou un tableau proposé d'office pour l'administrateur (ADR 0109). */
+  tableau: TableauDetail;
+  /** Ouvrir le catalogue dès l'entrée (tableau créé vide). */
+  ouvrirCatalogue?: boolean;
   onFin: () => void;
 }) {
   const qc = useQueryClient();
   const aide = useId();
-  const dalles = useMemo(() => dallesTableauDeBord(s), [s]);
+  const dalles = useDallesTableauDeBord(s);
   const parId = useMemo(() => new Map(dalles.map((x) => [x.id, x])), [dalles]);
-  const disponibles = useMemo(() => new Set<IdDalle>(parId.keys()), [parId]);
-  // Départ : la disposition affichée (la sienne, celle de l'organisation, un tableau reçu ou la standard), complète.
-  const depart = useMemo(
-    () =>
-      completerDisposition(
-        base,
-        Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
-      ),
-    [base, dalles],
+  const idsDisponibles = dalles.map((x) => x.id).join(' ');
+  const disponibles = useMemo(() => new Set<IdDalle>(idsDisponibles.split(' ') as IdDalle[]), [idsDisponibles]);
+  // Départ : la disposition du tableau, complète (dalles ajoutées au catalogue depuis : affichées à la fin).
+  const [depart] = useState<Disposition>(() =>
+    completerDisposition(
+      tableau.disposition,
+      Object.fromEntries(dalles.map((x) => [x.id, x.largeur])) as Partial<Record<IdDalle, LargeurDalle>>,
+    ),
   );
-  // Partir d'un autre tableau que le sien : l'enregistrer en fait sa disposition, même sans changement.
-  const autreQueLaSienne = base !== (dispositions.personnelle?.disposition ?? null);
+  const [nom, setNom] = useState(tableau.nom);
+  const modele = tableau.origine === 'propose';
   const [d, setD] = useState<Disposition>(depart);
   const [glisse, setGlisse] = useState<Glisse | null>(null);
   const [redim, setRedim] = useState<Redim | null>(null);
   const [magnetique, setMagnetique] = useState(true);
+  const [catalogue, setCatalogue] = useState(ouvrirCatalogue);
   const grille = useRef<HTMLDivElement>(null);
   const glissee = glisse?.demarre ? glisse.id : null;
-  // Dalle posée au dernier lâcher : son rang et sa largeur sont annoncés une fois la disposition rendue.
-  const [posee, setPosee] = useState<IdDalle | null>(null);
-  const [reglee, setReglee] = useState<IdDalle | null>(null);
+  // Dalle posée au dernier lâcher : son rang et sa taille sont annoncés une fois la disposition rendue.
+  const [posee, setPosee] = useState<Posee | null>(null);
+  const [reglee, setReglee] = useState<string | null>(null);
   const [annonce, setAnnonce] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   const vues = dallesAffichees(d, disponibles);
-  const masquees = d.dalles.filter((x) => x.masquee && disponibles.has(x.id));
-  const titre = (id: IdDalle) => parId.get(id)?.titre ?? id;
-  const modifiee = !memesDispositions(d, depart);
+  /** Titre d'une dalle par sa clé ; une copie porte son numéro. */
+  const titre = (cle: string) => {
+    const x = d.dalles.find((y) => cleDalle(y) === cle);
+    const t = (x && parId.get(x.id)?.titre) ?? cle;
+    return x?.cle ? `${t} (copie ${x.cle.split('~')[1]})` : t;
+  };
+  const modifiee = !memesDispositions(d, depart) || nom.trim() !== tableau.nom;
 
   async function agir(fn: () => Promise<unknown>) {
     setPending(true);
     setError(null);
     try {
       await fn();
-      await qc.invalidateQueries({ queryKey: CLE_DISPOSITION });
+      await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
       onFin();
     } catch (e) {
       setError(e);
@@ -281,7 +395,7 @@ export function EditionTableauDeBord({
     }
   }
 
-  const surTouche = (id: IdDalle) => (e: KeyboardEvent<HTMLButtonElement>) => {
+  const surTouche = (id: string) => (e: KeyboardEvent<HTMLButtonElement>) => {
     const sens = SENS_TOUCHES[e.key];
     if (!sens) return;
     e.preventDefault();
@@ -290,11 +404,12 @@ export function EditionTableauDeBord({
     setAnnonce(`« ${titre(id)} » : position ${r.rang} sur ${r.total}.`);
   };
 
-  const caseDe = (id: IdDalle) => grille.current?.querySelector<HTMLElement>(`[data-dalle="${id}"]`) ?? null;
+  const caseDe = (id: string) =>
+    [...(grille.current?.querySelectorAll<HTMLElement>('[data-cle]') ?? [])].find((c) => c.dataset.cle === id) ?? null;
 
   /** Saisie d'une dalle : par la poignée (souris ou doigt, glissé immédiat) ou par sa surface (souris ou stylet, glissé
       au-delà de quelques pixels, pour laisser les clics). */
-  const surPointeurBas = (id: IdDalle) => (e: PointerEvent<HTMLElement>) => {
+  const surPointeurBas = (id: string) => (e: PointerEvent<HTMLElement>) => {
     if (e.button !== 0 || redim) return;
     const cible = e.target as HTMLElement;
     const parPoignee = !!cible.closest('.tdb-poignee');
@@ -316,9 +431,9 @@ export function EditionTableauDeBord({
 
   /** Place d'arrivée : la dalle sous le pointeur (avant elle en remontant, après elle en descendant), ou la fin de la
       grille sous la dernière rangée. */
-  const placer = (id: IdDalle, x: number, y: number) => {
-    const cases = [...(grille.current?.querySelectorAll<HTMLElement>('[data-dalle]') ?? [])].filter(
-      (c) => c.dataset.dalle !== id,
+  const placer = (id: string, x: number, y: number) => {
+    const cases = [...(grille.current?.querySelectorAll<HTMLElement>('[data-cle]') ?? [])].filter(
+      (c) => c.dataset.cle !== id,
     );
     const sous = cases.find((c) => {
       const r = c.getBoundingClientRect();
@@ -326,12 +441,12 @@ export function EditionTableauDeBord({
     });
     const bas = Math.max(...cases.map((c) => c.getBoundingClientRect().bottom));
     setD((cur) => {
-      const ids = dallesAffichees(cur, disponibles).map((v) => v.id);
+      const cles = dallesAffichees(cur, disponibles).map(cleDalle);
       if (sous) {
-        const cible = sous.dataset.dalle as IdDalle;
-        return disponibles.has(cible) ? deplacerDalle(cur, id, cible, ids.indexOf(cible) > ids.indexOf(id)) : cur;
+        const cible = sous.dataset.cle!;
+        return cles.includes(cible) ? deplacerDalle(cur, id, cible, cles.indexOf(cible) > cles.indexOf(id)) : cur;
       }
-      const derniere = ids[ids.length - 1];
+      const derniere = cles[cles.length - 1];
       return cases.length && y > bas && derniere && derniere !== id ? deplacerDalle(cur, id, derniere, true) : cur;
     });
   };
@@ -339,13 +454,20 @@ export function EditionTableauDeBord({
   useEffect(() => {
     if (!posee) return;
     const vuesApres = dallesAffichees(d, disponibles);
-    const r = vuesApres.find((v) => v.id === posee);
+    const r = vuesApres.find((v) => cleDalle(v) === posee.id);
+    const taille = !r
+      ? ''
+      : posee.quoi === 'hauteur'
+        ? minuscule(LIBELLES_HAUTEUR[hauteurDalle(r)])
+        : posee.quoi === 'coin'
+          ? `${minuscule(LIBELLES_LARGEUR[r.largeur])}, ${minuscule(LIBELLES_HAUTEUR[hauteurDalle(r)])}`
+          : minuscule(LIBELLES_LARGEUR[r.largeur]);
     setAnnonce(
-      `« ${titre(posee)} » : position ${vuesApres.findIndex((v) => v.id === posee) + 1} sur ${vuesApres.length}` +
-        (r ? `, ${LIBELLES_LARGEUR[r.largeur].toLowerCase()}.` : '.'),
+      `« ${titre(posee.id)} » : position ${vuesApres.findIndex((v) => cleDalle(v) === posee.id) + 1} sur ${vuesApres.length}` +
+        (taille ? `, ${taille}.` : '.'),
     );
     setPosee(null);
-    // titre ne dépend que de parId, stable pendant l'édition.
+    // titre ne dépend que de la disposition et des dalles, déjà suivies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posee, d, disponibles]);
 
@@ -355,13 +477,25 @@ export function EditionTableauDeBord({
     if (!glisse && !redim) return;
     const bouge = (e: globalThis.PointerEvent) => {
       if (redim) {
-        const colonnes = (e.clientX - redim.gauche + redim.ecart) / redim.colonne;
-        const largeur = largeurAimantee(Math.min(COLONNES_TABLEAU_DE_BORD, Math.max(1, colonnes)));
-        setD((cur) =>
-          cur.dalles.find((v) => v.id === redim.id)?.largeur === largeur
-            ? cur
-            : modifierDalle(cur, redim.id, { largeur }),
-        );
+        const champs: Partial<Pick<DalleDisposee, 'largeur' | 'hauteur'>> = {};
+        if (redim.sens !== 'hauteur') {
+          const colonnes = (e.clientX - redim.gauche + redim.ecart) / redim.colonne;
+          champs.largeur = largeurAimantee(Math.min(COLONNES_TABLEAU_DE_BORD, Math.max(1, colonnes)));
+        }
+        if (redim.sens !== 'largeur') {
+          const lignes = (e.clientY + window.scrollY - redim.hautPage + redim.ecartLignes) / redim.ligne;
+          champs.hauteur = hauteurAimantee(Math.max(1, lignes));
+        }
+        setD((cur) => {
+          const x = cur.dalles.find((v) => cleDalle(v) === redim.id);
+          if (!x) return cur;
+          const memeLargeur = champs.largeur === undefined || champs.largeur === x.largeur;
+          const memeHauteur = champs.hauteur === undefined || champs.hauteur === hauteurDalle(x);
+          return memeLargeur && memeHauteur ? cur : modifierDalle(cur, redim.id, champs);
+        });
+        if (e.clientY < BANDE_DEFILEMENT && redim.sens !== 'largeur') window.scrollBy(0, -BANDE_DEFILEMENT / 4);
+        else if (e.clientY > window.innerHeight - BANDE_DEFILEMENT && redim.sens !== 'largeur')
+          window.scrollBy(0, BANDE_DEFILEMENT / 4);
         return;
       }
       if (!glisse) return;
@@ -376,11 +510,12 @@ export function EditionTableauDeBord({
     };
     const fin = () => {
       const id = redim?.id ?? (glisse?.demarre ? glisse.id : null);
+      const quoi = redim?.sens ?? 'largeur';
       setGlisse(null);
       setRedim(null);
       if (!id) return;
       if (magnetique) setD((cur) => compacterDisposition(cur, disponibles, id));
-      setPosee(id);
+      setPosee({ id, quoi });
     };
     window.addEventListener('pointermove', bouge);
     window.addEventListener('pointerup', fin);
@@ -405,56 +540,109 @@ export function EditionTableauDeBord({
     c.style.setProperty('--tdb-dy', `${glisse.y - glisse.decalY - r.top}px`);
   });
 
-  /** Bord droit d'une dalle : largeur au glisser (aimantée), ou flèches gauche et droite au clavier. */
-  const surRedimBas = (id: IdDalle) => (e: PointerEvent<HTMLButtonElement>) => {
+  /** Bord droit, bord bas ou coin d'une dalle : taille au glisser, aimantée sur les tailles proposées. */
+  const surRedimBas = (id: string, sens: Redim['sens']) => (e: PointerEvent<HTMLElement>) => {
     if (e.button !== 0 || !grille.current) return;
     const c = caseDe(id);
     if (!c) return;
     e.preventDefault();
     e.stopPropagation();
     const g = grille.current.getBoundingClientRect();
-    const ecart = parseFloat(getComputedStyle(grille.current).columnGap) || 0;
+    const style = getComputedStyle(grille.current);
+    const ecart = parseFloat(style.columnGap) || 0;
+    const ecartLignes = parseFloat(style.rowGap) || 0;
+    const r = c.getBoundingClientRect();
+    // Hauteur minimale d'une ligne de la grille (« minmax(56px, auto) » une fois calculée).
+    const ligneMin = parseFloat(/([\d.]+)px/.exec(style.gridAutoRows)?.[1] ?? '') || r.height / 4;
     setRedim({
       id,
-      gauche: c.getBoundingClientRect().left,
+      sens,
+      gauche: r.left,
+      hautPage: r.top + window.scrollY,
       colonne: (g.width + ecart) / COLONNES_TABLEAU_DE_BORD,
       ecart,
+      ligne: ligneMin + ecartLignes,
+      ecartLignes,
     });
   };
-  const surRedimTouche = (id: IdDalle, largeur: LargeurDalle) => (e: KeyboardEvent<HTMLButtonElement>) => {
+  const surRedimTouche = (id: string, largeur: LargeurDalle) => (e: KeyboardEvent<HTMLButtonElement>) => {
     const pas = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
     if (!pas) return;
     e.preventDefault();
     const suivante = LARGEURS_DALLE[LARGEURS_DALLE.indexOf(largeur) + pas];
     if (!suivante) return;
     setD((cur) => modifierDalle(cur, id, { largeur: suivante }));
-    setAnnonce(`« ${titre(id)} » : ${LIBELLES_LARGEUR[suivante].toLowerCase()}.`);
+    setAnnonce(`« ${titre(id)} » : ${minuscule(LIBELLES_LARGEUR[suivante])}.`);
   };
+  const surHauteurTouche = (id: string, hauteur: HauteurDisposee) => (e: KeyboardEvent<HTMLButtonElement>) => {
+    const pas = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+    if (!pas) return;
+    e.preventDefault();
+    const suivante = HAUTEURS_DALLE[HAUTEURS_DALLE.indexOf(hauteur) + pas];
+    if (!suivante) return;
+    setD((cur) => modifierDalle(cur, id, { hauteur: suivante }));
+    setAnnonce(`« ${titre(id)} » : ${minuscule(LIBELLES_HAUTEUR[suivante])}.`);
+  };
+
+  function ajouter(id: IdDalle) {
+    const r = ajouterDalle(d, id);
+    if (!r.cle) {
+      setAnnonce('Le tableau de bord est complet : retirez une dalle avant d’en ajouter une autre.');
+      return;
+    }
+    const cle = r.cle;
+    const suivante = magnetique ? compacterDisposition(r.disposition, disponibles) : r.disposition;
+    setD(suivante);
+    const apres = dallesAffichees(suivante, disponibles).map(cleDalle);
+    const t = parId.get(id)?.titre ?? id;
+    setAnnonce(`« ${t} » ajoutée : position ${apres.indexOf(cle) + 1} sur ${apres.length}.`);
+  }
 
   return (
     <div className="tdb tdb--edition">
       <div className="tdb-edition-barre" role="region" aria-label="Modifier la disposition du tableau de bord">
         <Text size="sm" id={aide}>
-          Glissez une dalle par sa surface ou par sa poignée : une ombre bleue montre sa place d’arrivée. Tirez son bord
-          droit pour changer sa largeur. Au clavier, flèches sur la poignée (Origine et Fin : premier et dernier rang)
-          et sur le bord droit (largeur). Les dalles sans données lisibles avec vos droits n’apparaissent pas.
+          Glissez une dalle par sa poignée ou sa surface. Tirez son bord droit, son bord bas ou son coin pour la
+          redimensionner. Au clavier, flèches sur la poignée (Origine et Fin : premier et dernier rang), sur le bord
+          droit (largeur) et sur le bord bas (hauteur).
         </Text>
-        <Switch
-          label="Placement magnétique : combler les fins de rangée au lâcher d’une dalle"
-          checked={magnetique}
-          onChange={(e) => {
-            const actif = e.currentTarget.checked;
-            setMagnetique(actif);
-            if (actif) setD((cur) => compacterDisposition(cur, disponibles));
-          }}
+        <Group gap="xs" className="tdb-edition-outils">
+          <Button variant="light" onClick={() => setCatalogue(true)}>
+            + Ajouter une dalle
+          </Button>
+          <Switch
+            label="Aimant : combler les places libres au lâcher"
+            checked={magnetique}
+            onChange={(e) => {
+              const actif = e.currentTarget.checked;
+              setMagnetique(actif);
+              if (actif) setD((cur) => compacterDisposition(cur, disponibles));
+            }}
+          />
+        </Group>
+        {modele && (
+          <Alert color="blue" role="note">
+            Tableau proposé d’office : vos modifications s’appliquent à tous ceux qui l’affichent.
+          </Alert>
+        )}
+        <TextInput
+          className="tdb-edition-nom"
+          label="Nom du tableau"
+          maxLength={60}
+          disabled={modele}
+          value={nom}
+          onChange={(e) => setNom(e.currentTarget.value)}
         />
         <Group gap="xs">
           <Button
-            disabled={(!modifiee && !autreQueLaSienne) || pending}
+            disabled={!modifiee || !nom.trim() || pending}
             loading={pending}
             onClick={() =>
               void agir(() =>
-                api('PUT', URL_PERSO, { body: { disposition: d }, ifMatch: dispositions.personnelle?.version ?? 0 }),
+                api('PUT', `${URL_TABLEAUX}/${tableau.id}`, {
+                  body: { disposition: d, ...(nom.trim() !== tableau.nom ? { nom: nom.trim() } : {}) },
+                  ifMatch: tableau.version,
+                }),
               )
             }
           >
@@ -463,146 +651,148 @@ export function EditionTableauDeBord({
           <Button variant="default" disabled={pending} onClick={onFin}>
             Annuler
           </Button>
-          {dispositions.personnelle && (
+          {modele ? (
             <ConfirmButton
               variant="default"
               color="gray"
-              message="Revenir à la disposition par défaut ? Votre disposition personnelle sera supprimée."
-              onConfirm={() => void agir(() => del(URL_PERSO))}
-            >
-              Revenir à la disposition par défaut
-            </ConfirmButton>
-          )}
-          {peutDefinirDefaut && (
-            <ConfirmButton
-              variant="light"
-              color="blue"
-              message="Proposer cette disposition à tous ? Elle s’affichera pour chaque personne qui n’a pas la sienne."
+              message={`Revenir au modèle « ${tableau.nom} » fourni avec l’application, pour tout le monde ?`}
               onConfirm={() =>
-                void agir(() =>
-                  api('PUT', URL_DEFAUT, {
-                    body: { disposition: d },
-                    ifMatch: dispositions.organisation?.version ?? 0,
-                  }),
-                )
+                void agir(() => api('DELETE', `${URL_TABLEAUX}/${tableau.id}`, { ifMatch: tableau.version }))
               }
             >
-              Proposer cette disposition à tous
+              Revenir au modèle
             </ConfirmButton>
-          )}
-          {peutDefinirDefaut && dispositions.organisation && (
+          ) : (
             <ConfirmButton
               variant="default"
-              color="gray"
-              message="Rétablir la disposition standard pour tous ceux qui n’ont pas la leur ?"
-              onConfirm={() => void agir(() => del(URL_DEFAUT))}
+              color="red"
+              message={`Supprimer le tableau « ${tableau.nom} » ? Ses partages et sa publication disparaissent aussi.`}
+              onConfirm={() =>
+                void agir(() => api('DELETE', `${URL_TABLEAUX}/${tableau.id}`, { ifMatch: tableau.version }))
+              }
             >
-              Rétablir la disposition standard pour tous
+              Supprimer ce tableau
             </ConfirmButton>
           )}
         </Group>
         <ErrorAlert error={error} />
-        {masquees.length > 0 && (
-          <div className="tdb-masquees" role="group" aria-label="Dalles masquées">
-            <Text size="sm" fw={600}>
-              Dalles masquées :
-            </Text>
-            {masquees.map((x) => (
-              <Button
-                key={x.id}
-                size="compact-sm"
-                variant="light"
-                onClick={() => {
-                  setD((cur) => modifierDalle(cur, x.id, { masquee: false }));
-                  setAnnonce(`« ${titre(x.id)} » est de nouveau affichée.`);
-                }}
-              >
-                Afficher « {titre(x.id)} »
-              </Button>
-            ))}
-          </div>
-        )}
         {vues.length === 0 && (
           <Alert color="yellow" role="status">
-            Toutes les dalles sont masquées : réaffichez-en au moins une pour garder un tableau de bord utile.
+            Aucune dalle n’est affichée : ajoutez-en au moins une pour garder un tableau de bord utile.
           </Alert>
         )}
         <VisuallyHidden aria-live="polite">{annonce}</VisuallyHidden>
       </div>
+      <Catalogue
+        ouvert={catalogue}
+        onFermer={() => setCatalogue(false)}
+        dalles={dalles}
+        disposition={d}
+        onAjouter={ajouter}
+      />
       <div ref={grille} className="grille-cartes tdb-grille" data-glisse={glissee || redim ? 'oui' : undefined}>
         {vues.map((x) => {
+          const cle = cleDalle(x);
           const dalle = parId.get(x.id)!;
+          const nom = titre(cle);
+          const hauteur = hauteurDalle(x);
           return (
             <div
-              key={x.id}
+              key={cle}
               data-dalle={x.id}
-              className={`tdb-l${x.largeur} tdb-case${glissee === x.id ? ' tdb-case--glissee' : ''}${redim?.id === x.id ? ' tdb-case--redim' : ''}`}
-              onPointerDown={surPointeurBas(x.id)}
+              data-cle={cle}
+              className={`tdb-l${x.largeur} tdb-h${hauteur} tdb-case${glissee === cle ? ' tdb-case--glissee' : ''}${redim?.id === cle ? ' tdb-case--redim' : ''}`}
+              onPointerDown={surPointeurBas(cle)}
             >
               <div className="tdb-case-corps">
                 <div className="tdb-case-outils">
                   <button
                     type="button"
                     className="tdb-poignee"
-                    aria-label={`Déplacer « ${dalle.titre} »`}
+                    aria-label={`Déplacer « ${nom} »`}
                     aria-describedby={aide}
-                    onKeyDown={surTouche(x.id)}
+                    onKeyDown={surTouche(cle)}
                   >
                     <IconePoignee />
                   </button>
                   <NativeSelect
                     className="tdb-case-largeur"
                     size="xs"
-                    aria-label={`Largeur de « ${dalle.titre} »`}
+                    aria-label={`Largeur de « ${nom} »`}
                     value={String(x.largeur)}
                     data={LARGEURS_DALLE.map((l) => ({ value: String(l), label: LIBELLES_LARGEUR[l] }))}
                     onChange={(e) => {
                       const largeur = Number(e.currentTarget.value) as LargeurDalle;
-                      setD((cur) => modifierDalle(cur, x.id, { largeur }));
+                      setD((cur) => modifierDalle(cur, cle, { largeur }));
+                    }}
+                  />
+                  <NativeSelect
+                    className="tdb-case-largeur"
+                    size="xs"
+                    aria-label={`Hauteur de « ${nom} »`}
+                    value={String(hauteur)}
+                    data={HAUTEURS_DALLE.map((h) => ({ value: String(h), label: LIBELLES_HAUTEUR[h] }))}
+                    onChange={(e) => {
+                      const h = Number(e.currentTarget.value) as HauteurDisposee;
+                      setD((cur) => modifierDalle(cur, cle, { hauteur: h }));
                     }}
                   />
                   {REGLAGES_DALLE[x.id] && (
                     <Button
                       size="compact-sm"
-                      variant={reglee === x.id ? 'light' : 'subtle'}
-                      aria-label={`Réglages de « ${dalle.titre} »`}
-                      aria-expanded={reglee === x.id}
-                      aria-controls={`${aide}-reglages-${x.id}`}
-                      onClick={() => setReglee((cur) => (cur === x.id ? null : x.id))}
+                      variant={reglee === cle ? 'light' : 'subtle'}
+                      aria-label={`Réglages de « ${nom} »`}
+                      aria-expanded={reglee === cle}
+                      aria-controls={`${aide}-reglages-${cle}`}
+                      onClick={() => setReglee((cur) => (cur === cle ? null : cle))}
                     >
                       Réglages
                     </Button>
                   )}
-                  <Button
-                    size="compact-sm"
-                    variant="subtle"
-                    aria-label={`Masquer « ${dalle.titre} »`}
+                  <button
+                    type="button"
+                    className="tdb-retirer"
+                    aria-label={`${x.cle ? 'Retirer' : 'Masquer'} « ${nom} »`}
+                    title={x.cle ? 'Retirer cette copie' : 'Masquer (elle reste au catalogue)'}
                     onClick={() => {
-                      setD((cur) => modifierDalle(cur, x.id, { masquee: true }));
-                      setAnnonce(`« ${dalle.titre} » est masquée.`);
+                      setD((cur) => retirerDalle(cur, cle));
+                      setAnnonce(x.cle ? `« ${nom} » est retirée.` : `« ${nom} » est masquée.`);
                     }}
                   >
-                    Masquer
-                  </Button>
+                    <IconeRetirer />
+                  </button>
                 </div>
-                {reglee === x.id && (
+                {reglee === cle && (
                   <PanneauReglages
                     id={x.id}
-                    idPanneau={`${aide}-reglages-${x.id}`}
-                    titre={dalle.titre}
+                    idPanneau={`${aide}-reglages-${cle}`}
+                    titre={nom}
                     reglages={x.reglages}
-                    onChange={(reglages) => setD((cur) => modifierDalle(cur, x.id, { reglages }))}
+                    onChange={(reglages) => setD((cur) => modifierDalle(cur, cle, { reglages }))}
                   />
                 )}
-                {dalle.rendu(x.largeur, x.reglages)}
+                {dalle.rendu({ largeur: x.largeur, reglages: x.reglages })}
               </div>
+              {redim?.id === cle && (
+                <span className="tdb-redim-etiquette" aria-hidden="true">
+                  {LIBELLES_LARGEUR[x.largeur]} · {minuscule(LIBELLES_HAUTEUR[hauteur])}
+                </span>
+              )}
               <button
                 type="button"
                 className="tdb-redim"
-                aria-label={`Redimensionner « ${dalle.titre} » (${LIBELLES_LARGEUR[x.largeur].toLowerCase()}) : glisser, ou flèches gauche et droite`}
-                onPointerDown={surRedimBas(x.id)}
-                onKeyDown={surRedimTouche(x.id, x.largeur)}
+                aria-label={`Redimensionner « ${nom} » (${minuscule(LIBELLES_LARGEUR[x.largeur])}) : glisser, ou flèches gauche et droite`}
+                onPointerDown={surRedimBas(cle, 'largeur')}
+                onKeyDown={surRedimTouche(cle, x.largeur)}
               />
+              <button
+                type="button"
+                className="tdb-redim-bas"
+                aria-label={`Redimensionner en hauteur « ${nom} » (${minuscule(LIBELLES_HAUTEUR[hauteur])}) : glisser, ou flèches haut et bas`}
+                onPointerDown={surRedimBas(cle, 'hauteur')}
+                onKeyDown={surHauteurTouche(cle, hauteur)}
+              />
+              <span className="tdb-redim-coin" aria-hidden="true" onPointerDown={surRedimBas(cle, 'coin')} />
             </div>
           );
         })}

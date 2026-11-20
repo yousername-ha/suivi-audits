@@ -20,6 +20,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   ACTION_LABELS,
+  libelleAction,
   ACTIONS,
   AUDITOR_MODULES,
   MODULE_LABELS,
@@ -548,7 +549,7 @@ function EffectiveRights({ userId }: { userId: string }) {
               return (
                 <Table.Tr key={p.permission}>
                   <Table.Td>
-                    {MODULE_LABELS[m]} — {ACTION_LABELS[a]}
+                    {MODULE_LABELS[m]} — {libelleAction(m, a)}
                   </Table.Td>
                   <Table.Td>{p.origins.map(origin).join(' · ')}</Table.Td>
                 </Table.Tr>
@@ -912,7 +913,7 @@ function RoleEditor({ role, readOnly, onDone }: { role: RoleOut; readOnly: boole
             checked={perms.has(p)}
             onChange={() => toggle(p)}
             disabled={readOnly}
-            aria-label={`${MODULE_LABELS[p.split(':')[0] as Module]} : ${ACTION_LABELS[p.split(':')[1] as (typeof ACTIONS)[number]]}`}
+            aria-label={`${MODULE_LABELS[p.split(':')[0] as Module]} : ${libelleAction(p.split(':')[0] as Module, p.split(':')[1] as (typeof ACTIONS)[number])}`}
             className="matrix-check"
           />
         )}
