@@ -61,11 +61,14 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 **Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
 page de maintenance des mises à jour prend aussi Lexend.
 
-**Tableau de bord unique de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md)) : sans migration, aucune
-action sur le serveur. La bascule « Vue analytique Neon / Tableau personnalisable » disparaît : chaque personne retrouve son
-tableau de bord enregistré, auquel s'ajoutent à la fin les onze cartes de la vue analytique (à retirer d'un clic au besoin) ;
-sans tableau enregistré, l'accueil affiche la disposition de la vue analytique. La préférence de présentation du compte
-n'a plus d'effet.
+**Tableau de bord unique, puis tableaux multiples de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md),
+[ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)) : **migration automatique `096`**, de schéma
+seulement (plusieurs tableaux par compte, onglets ordonnés, destinataires par rôle, publication), durée négligeable,
+aucune action sur le serveur. **Sans reprise de données** (règle du 14/11/2026) : les tableaux personnels déjà
+enregistrés restent ceux de leur auteur, mais le « tableau affiché », la disposition par défaut de l'organisation et la
+bascule « Vue analytique Neon / Tableau personnalisable » ne sont plus lus ; chacun démarre avec l'onglet « Global ». Un
+rôle personnalisé qui portait déjà l'action « Administrer » du module « Tableau de bord » gagne la publication pour tous
+(« Publier pour tous »).
 
 ### Ajouté
 
@@ -173,6 +176,18 @@ n'a plus d'effet.
   règle la largeur, le bord bas la hauteur, le coin les deux, aimantés avec une étiquette de taille ; listes et flèches du
   clavier en alternative ; l'aimant comble aussi les creux laissés par une dalle haute. La hauteur est un minimum : le
   contenu reste toujours visible. Aucune migration (champs facultatifs `cle` et `hauteur` dans la disposition).
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableaux de bord multiples de l'accueil et publication pour tous** (décisions du RSSI du 20/11/2026, sur maquettes ;
+  [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)). Chacun crée ses tableaux nommés (20 au plus),
+  affichés en onglets qu'on réordonne en les glissant comme les rubriques du menu ; le premier s'ouvre à l'arrivée.
+  « + » : créer un tableau (vide, disposition standard, ou copie d'un de ses tableaux ou d'un tableau public) ou ajouter
+  un tableau existant (proposé d'office, partagé, public), qui reste celui de son auteur, en lecture seule. Tableaux
+  proposés d'office : Global, Suivi SMSI, et bientôt Vulnérabilités (RSSI) et Suivi réglementaire. Partage avec des
+  personnes, des groupes ou des rôles. Le droit « Publier pour tous » (action « Administrer » du module « Tableau de
+  bord », rôles RSSI et Administrateur d'office) publie un tableau pour tous et ouvre aux destinataires les chiffres et
+  graphiques de son auteur, registres restreints compris, en liste blanche côté serveur ; les listes nommées, le journal
+  d'audit et les registres restent selon les droits de chacun. Publication, retrait et suspension journalisés.
   _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
