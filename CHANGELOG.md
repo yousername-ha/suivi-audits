@@ -183,6 +183,13 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
+- **Boîte d'outils des pages en mode clair : un bloc avec un contour, et le bleu nuit à l'essai** (choix du RSSI du
+  20/11/2026). En mode clair, la boîte d'outils (vues, recherche, filtres) n'est plus fondue dans le fond blanc : elle
+  devient un bloc clair, au contour fin teinté de violet, avec un léger fondu à gauche et une ombre douce. Un réglage à
+  l'essai, « Boîte d'outils en mode clair », dans Mon compte > Affichage, garde au choix ce bloc clair (par défaut) ou
+  le bloc bleu nuit du mode sombre. Le mode sombre ne change pas. Le réglage sera retiré une fois la forme choisie.
+  Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 - Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
   est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
   (session « Module surveillance vulnérabilités SMSI »)
