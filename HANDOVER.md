@@ -1,6 +1,10 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md)** (flux vers l'extérieur fermés par défaut et
+> **Reprise la plus récente : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
+> [ADR 0100](docs/adr/0100-module-vulnerabilites.md) : recherche du module, intégrations dans la page Plateforme, fréquences de
+> synchronisation, imports Nessus et Silène, surface externe à deux sources en page entière, migrations `090`, `093`, `094` et
+> `095` ; correctifs de performance PERF-01 à PERF-04 en PR ; décisions du RSSI prises et en attente, ordre de la file).
+> Précédente : **[15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md)** (flux vers l'extérieur fermés par défaut et
 > ouverts par l'activation du module, [ADR 0097](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md), lots 1 à 3, migration `071` ;
 > critères fournisseurs, [ADR 0098](docs/adr/0098-criteres-rattaches-aux-fournisseurs.md), migration `070` ; animations en continu,
 > [ADR 0099](docs/adr/0099-animations-en-continu-sans-bouton-de-pause.md) ; versions 7.0.0 à 7.1.1 publiées). Précédente :

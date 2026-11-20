@@ -34,8 +34,10 @@ d'AlgoLightHouse, contraintes des listes de fréquences), durée négligeable, s
 serveur. **Changement de cadence voulu dès la mise à jour** : une installation existante passe d'une collecte de veille par
 jour à **une toutes les deux heures** pour le CERT-FR, le CERT Santé, le catalogue KEV et NVD (EPSS reste une fois par jour ;
 Tenable et AlgoLightHouse restent une fois par jour). La première collecte de chaque source part dans la minute qui suit le
-démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période. La fréquence se règle par source dans l'écran
-« Veille » (droit d'administrer le module) et par connecteur dans la fenêtre « Configurer » de la carte « Intégrations ».
+démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période ; de même, chaque connecteur actif et prêt
+(Tenable, AlgoLightHouse : clé saisie, flux ouvert) demande sa première synchronisation automatique dans la minute, puis une
+par période. La fréquence se règle par source dans l'écran « Veille » (droit d'administrer le module) et par connecteur dans
+la fenêtre « Configurer » de la carte « Intégrations ».
 Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
 par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
 
@@ -47,6 +49,13 @@ intégrations change : il devient la carte « Intégrations » de la page Platef
 adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
+
+**Lot SI2 du module Vulnérabilités et imports de fichiers** : sans migration, aucune action sur le serveur. La carte de la
+surface externe devient la page elle-même : plus de cadre, de zoom ni de déplacement à la souris, la page défile et la barre
+de regroupement reste visible. Ce qu'importe une instance d'import (Nessus, Silène) n'est visible que des personnes qui
+administrent le module Vulnérabilités tant que ce n'est pas rattaché à un périmètre : pour Nessus, chaque machine (écran
+« Machines ») ; pour Silène, l'instance (Surface externe, onglet « Périmètres »). (session « Module surveillance
+vulnérabilités SMSI »)
 
 **Barre de téléchargement de la page de maintenance** ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md),
 addendum du 19/11/2026) : sans migration, aucune action. La barre pleine pendant la vérification des signatures n'apparaît
