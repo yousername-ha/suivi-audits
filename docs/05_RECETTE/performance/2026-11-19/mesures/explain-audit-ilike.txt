@@ -1,0 +1,16 @@
+Limit  (cost=1000.45..36714.08 rows=200 width=100) (actual time=1423.379..1428.739 rows=0.00 loops=1)
+  Buffers: shared hit=12872 read=35409 dirtied=1
+  ->  Gather Merge  (cost=1000.45..82784.67 rows=458 width=100) (actual time=1423.377..1428.735 rows=0.00 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=12872 read=35409 dirtied=1
+        ->  Parallel Index Scan Backward using audit_log_pkey on audit_log  (cost=0.43..81731.78 rows=191 width=100) (actual time=1419.587..1419.588 rows=0.00 loops=3)
+              Filter: ((username ~~* '%zzz-introuvable%'::text) OR (action ~~* '%zzz-introuvable%'::text) OR (target ~~* '%zzz-introuvable%'::text) OR ((ip)::text ~~* '%zzz-introuvable%'::text))
+              Rows Removed by Filter: 666849
+              Index Searches: 1
+              Buffers: shared hit=12872 read=35409 dirtied=1
+Planning:
+  Buffers: shared hit=144 read=35
+Planning Time: 2.146 ms
+Execution Time: 1428.852 ms
+pg_trgm

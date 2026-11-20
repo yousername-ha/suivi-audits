@@ -1,0 +1,54 @@
+Timing is on.
+ setseed 
+---------
+ 
+(1 row)
+
+Time: 0.684 ms
+DROP TABLE
+Time: 2.557 ms
+SELECT 30
+Time: 4.475 ms
+ALTER TABLE
+Time: 0.700 ms
+UPDATE 30
+Time: 1.693 ms
+ALTER TABLE
+Time: 0.591 ms
+UPDATE 30
+Time: 1.790 ms
+CREATE FUNCTION
+Time: 1.395 ms
+DROP TABLE
+Time: 1.632 ms
+SELECT 30
+Time: 3.356 ms
+== Plan d actions : 5 000 actions (hors occurrences récurrentes)
+INSERT 0 0
+Time: 19.811 ms
+== Occurrences récurrentes : statuts réalistes (anciennes réalisées, quelques retards)
+UPDATE 17840
+Time: 759.322 ms
+== Risques : 2 000
+INSERT 0 0
+Time: 3.191 ms
+== Documents : 2 000 fiches
+INSERT 0 0
+Time: 1.769 ms
+== Incidents : 3 000 avec chronologies (registre historique, table suivi_incidents)
+INSERT 0 2970
+Time: 334.031 ms
+== Notifications : 200 000
+INSERT 0 181375
+Time: 26669.448 ms (00:26.669)
+== Journal d audit : 2 000 000
+INSERT 0 1980296
+Time: 19977.290 ms (00:19.977)
+DROP TABLE
+Time: 4.451 ms
+DROP TABLE
+Time: 2.657 ms
+
+real	0m47.883s
+user	0m0.022s
+sys	0m0.015s

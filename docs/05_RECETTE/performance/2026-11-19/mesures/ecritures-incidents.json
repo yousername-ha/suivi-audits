@@ -1,0 +1,18 @@
+{
+  "incidents": 3016,
+  "creation": {
+    "repetitions": 15,
+    "medianeMs": 2633,
+    "p95Ms": 2849,
+    "maxMs": 2849
+  },
+  "modification": {
+    "repetitions": 15,
+    "medianeMs": 2703,
+    "p95Ms": 2991,
+    "maxMs": 2991
+  },
+  "stateHistoryAvant": "2|83550|1458176",
+  "stateHistoryApres": "3|798971|18096128",
+  "dernierInstantaneOctetsStockes_Texte": "715421|7656677"
+}

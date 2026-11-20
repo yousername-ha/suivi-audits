@@ -1,0 +1,44 @@
+{
+ "etiquette": "charge20",
+ "personnes": 20,
+ "minutes": 10,
+ "reflexionMs": [
+  500,
+  2000
+ ],
+ "requetes": 7843,
+ "debitParSeconde": 12.96,
+ "erreurs": 1374,
+ "medianeMs": 33,
+ "p95Ms": 1191,
+ "maxMs": 15999,
+ "detailErreurs": {
+  "vuln-fiche-machine 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 226,
+  "vuln-constats 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 362,
+  "vuln-machines 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 270,
+  "vuln-vue 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 190,
+  "vuln-fiche-constat 403 {\"error\":\"Droits insuffisants : vous ne pouvez pas consulter dans « Vulnérabilités ».\",\"reason\":\"permission\",\"permission": 220,
+  "ecr-action-modifier 422 {\"error\":\"Données invalides — kind : valeur non autorisée, choisissez une valeur proposée\"}": 106
+ }
+}
+   383 err= 362     10  10717  15999 ms vuln-constats
+   291 err= 270     10   4903   6933 ms vuln-machines
+   242 err= 226     10   4434   7062 ms vuln-fiche-machine
+   236 err=   0    898   2399   3295 ms synthese-perimetres
+   318 err=   0    890   2380   3851 ms mes-elements
+   207 err= 190     11   2137   3615 ms vuln-vue
+   650 err=   0    382   1908   3034 ms notifications
+   373 err=   0    181    960   2634 ms incidents
+   383 err=   0     42    553   2126 ms dashboard
+   159 err=   0     25    539   1585 ms ecr-action-creer
+   237 err= 220     10    494   1549 ms vuln-fiche-constat
+   106 err= 106     33    490   1470 ms ecr-action-modifier
+   387 err=   0     22    481   2432 ms tasks-window
+   864 err=   0     26    460   2064 ms actions
+   306 err=   0     36    455   2120 ms tasks-dashboard
+   477 err=   0     25    439   1563 ms risques-registre
+   776 err=   0     28    395   1905 ms tasks
+   631 err=   0     20    299   1984 ms fiche-action
+   219 err=   0     35    237   2029 ms risk-map
+   218 err=   0     10    177   1173 ms me
+   380 err=   0     31    135   1505 ms documents
