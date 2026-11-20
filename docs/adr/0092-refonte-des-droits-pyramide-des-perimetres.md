@@ -132,9 +132,13 @@ Le lot 3 est précisé ainsi ; il remplace le tableau ci-dessus là où ils diff
    - comptes **Lecteur** : la migration les reprend en **auditeur des périmètres dont ils
      sont membres** (rien s'ils n'en ont aucun) ;
    - **rôles personnalisés existants** : la migration retire la matrice.
-5. **En attendant le lot 3**, les modules qui ont besoin de DPO ou d'Analyste (veille réglementaire, import de l'annuaire) les
-   branchent sur l'existant de la façon la plus simple, sans créer de rôle prédéfini ; le lot 3 les reprend sans changement
-   de sens.
+5. **En attendant le lot 3** :
+   - **DPO** est un droit réservé hors matrice (`veille_reglementaire:dpo`, mécanisme des droits réservés, table « Droits
+     réservés » de l'écran des rôles), coché dans un rôle personnalisé ; il n'est donné d'office ni à l'administrateur ni au
+     rôle RSSI (l'administrateur ne qualifie pas la veille). Les droits réservés préfigurent les droits spéciaux du lot 3 ;
+   - **Analyste** reste porté par les droits actuels du module Vulnérabilités, noms de l'annuaire compris : aucun droit à part ;
+   - aucun rôle prédéfini n'est créé ; le lot 3 reprend ces droits sans changement de sens (les comptes RSSI reçoivent alors
+     DPO, point 4).
 
 ## Questions restantes
 
