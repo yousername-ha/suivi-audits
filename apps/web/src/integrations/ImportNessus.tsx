@@ -57,12 +57,21 @@ export function texteProgression(faits: number, lots: number, machines: number, 
 
 /** Refus d'un import avant tout envoi (lot N2) : message du serveur tel quel (par exemple la limite horaire des imports
     commencés), rien n'est importé. `id` relie le texte de l'alerte au bouton « Importer » (description accessible). */
-export function RefusImport({ id, erreur }: { id: string; erreur: string }) {
+export function RefusImport({
+  id,
+  erreur,
+  rien = 'Aucune machine n’a été importée.',
+}: {
+  id: string;
+  erreur: string;
+  /** Ce qui n'a pas été importé (lot SI1 : « Aucun hôte ni constat n'a été importé. » pour Silène). */
+  rien?: string;
+}) {
   return (
     <Alert color="red" role="alert" title="Import refusé">
       <Stack gap="xs" id={id}>
         <Text size="sm">{erreur}</Text>
-        <Text size="sm">Aucune machine n’a été importée. Le fichier reste choisi : relancez l’import plus tard.</Text>
+        <Text size="sm">{rien} Le fichier reste choisi : relancez l’import plus tard.</Text>
       </Stack>
     </Alert>
   );

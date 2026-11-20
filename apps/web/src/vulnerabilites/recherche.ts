@@ -225,7 +225,7 @@ export function ouvertureVeille(p: URLSearchParams): { q: string | null; cve: st
 export function ouvertureMachines(p: URLSearchParams): { q: string | null; machine: string | null } {
   return { q: texteListe(p.get('q')), machine: uuid(p.get('machine')) };
 }
-export const ONGLETS_SURFACE = ['carte', 'alertes', 'actifs', 'technologies', 'perimetres'] as const;
+export const ONGLETS_SURFACE = ['carte', 'alertes', 'actifs', 'technologies', 'constats-silene', 'perimetres'] as const;
 export type OngletSurface = (typeof ONGLETS_SURFACE)[number];
 /** Surface externe : `onglet`, `q` (recherche de l'onglet « Actifs » ou « Technologies ») et `actif` (actif ouvert, s'il
     figure dans la liste filtrée). */

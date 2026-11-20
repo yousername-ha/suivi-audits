@@ -307,6 +307,9 @@ describe('carte « Lignes d’approche » : graphe filtré par les droits', () =
     expect(alertes.get(await idAlerte(32))).toMatchObject({ actifId: await idActif(12), priorite: null });
     expect(alertes.get(await idAlerte(34))).toMatchObject({ type: 'typosquatting', actifId: null });
     expect(c).toMatchObject({ tronquee: false, totaux: { actifs: 7, alertes: 5 } });
+    // Lot SI2 : sans instance Silène, chaque actif est d'AlgoLightHouse seul, sans constat.
+    expect(c.actifs.every((a) => a.sources.join() === 'alh' && a.alhId === a.id && a.silene === null)).toBe(true);
+    expect(c.constatsSilene).toEqual([]);
   });
 
   it('lecteur d’un seul périmètre : rien d’un périmètre illisible, parent illisible effacé, machine illisible jamais nommée', async () => {

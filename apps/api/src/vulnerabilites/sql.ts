@@ -40,8 +40,9 @@ export const scoreNvd = sql<
 
 /* ------------------------------------------------------------------ Surface externe (AlgoLightHouse, lots ALH1 et ALH2) */
 /** Élément du périmètre ALH (alias fermé `lp` ou `lp2` de vulnerabilites_alh_perimetres) lisible : périmètre relié visible,
-    ou non relié avec administrer. */
-export const lisibleAlh = (user: SessionUser, alias: 'lp' | 'lp2' = 'lp'): RawBuilder<boolean> =>
+    ou non relié avec administrer. Lot SI1 : même règle pour ce qu'une instance Silène a importé (alias `sp` de
+    vulnerabilites_silene_perimetres, jointure externe : instance sans liaison = non reliée). */
+export const lisibleAlh = (user: SessionUser, alias: 'lp' | 'lp2' | 'sp' = 'lp'): RawBuilder<boolean> =>
   sql<boolean>`(CASE WHEN ${sql.ref(`${alias}.perimetre_id`)} IS NULL
                 THEN ${user.rights.can('vulnerabilites', 'administrer')}::boolean
                 ELSE grc_smsi_visible(${sql.ref(`${alias}.perimetre_id`)}, ${user.id}::uuid) END)`;

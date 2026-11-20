@@ -66,6 +66,7 @@ export * from './veille-vulnerabilites.js';
 export * from './frequences-synchronisation.js';
 export * from './failles-tenable.js';
 export * from './import-nessus.js';
+export * from './import-silene.js';
 export * from './surface-externe.js';
 export * from './liaisons-surface.js';
 export * from './carte-surface.js';

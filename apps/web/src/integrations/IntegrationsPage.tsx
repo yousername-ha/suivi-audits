@@ -71,6 +71,7 @@ import {
   type FormulaireConfiguration,
 } from './integrations';
 import { ImportNessus } from './ImportNessus';
+import { ImportSilene } from './ImportSilene';
 import { LIBELLE_SUPPRESSION, SuppressionNessus } from './SuppressionNessus';
 
 const CLE = ['integrations'] as const;
@@ -152,6 +153,9 @@ export function TuileInstance({
   const synchronisable = !!t?.operations.includes('synchroniser');
   const testable = !!t?.operations.includes('tester');
   const importable = !!t?.operations.includes('importer');
+  // Lot SI1 : « Importer un rapport » pour Silène, « Importer un scan » pour Nessus.
+  const libelleImport = libelleOperation('importer', i.type);
+  const silene = i.type === 'silene-fichier';
   const pret = i.actif && fluxOuvert && Object.values(i.secrets).every(Boolean);
   const e = ETAT_TUILE[etatTuile(i, fluxOuvert)];
   const derniere = i.derniereExecution;
@@ -191,17 +195,23 @@ export function TuileInstance({
             Vulnérabilités &gt; Surface externe.
           </Text>
         )}
-        {importable && (
+        {importable && !silene && (
           <Text size="xs" c="dimmed">
             Import de fichier, sans synchronisation automatique ; gravités retenues :{' '}
             {libelleGravites(i.configuration.gravites)} ; rangé dans Risques &gt; Vulnérabilités.
+          </Text>
+        )}
+        {importable && silene && (
+          <Text size="xs" c="dimmed">
+            Import du rapport JSON, sans synchronisation automatique ; rangé dans Risques &gt; Vulnérabilités &gt;
+            Surface externe.
           </Text>
         )}
         {i.actif && !fluxOuvert && t?.flux && <FluxFermeAlerte module={t.flux} />}
         <Text size="sm" c={derniere ? undefined : 'dimmed'} role="status">
           {derniere ? (
             <>
-              Dernière exécution ({libelleOperation(derniere.operation)},{' '}
+              Dernière exécution ({libelleOperation(derniere.operation, i.type)},{' '}
               <span className="horodatage">{fmtDate(derniere.demandeLe)}</span>) : {resumeExecution(derniere)}
             </>
           ) : (
@@ -242,9 +252,9 @@ export function TuileInstance({
               size="compact-sm"
               disabled={!i.actif}
               onClick={onImporter}
-              aria-label={`Importer un scan dans ${i.nom}`}
+              aria-label={`${libelleImport} dans ${i.nom}`}
             >
-              Importer un scan
+              {libelleImport}
             </Button>
           )}
           {peutAdministrer && importable && onSupprimer && (
@@ -261,7 +271,7 @@ export function TuileInstance({
         </Group>
         {peutAdministrer && importable && !i.actif && (
           <Text size="xs" c="dimmed">
-            Activez le connecteur pour importer un scan.
+            Activez le connecteur pour {silene ? 'importer un rapport' : 'importer un scan'}.
           </Text>
         )}
       </Stack>
@@ -270,7 +280,14 @@ export function TuileInstance({
 }
 
 /** Dernières exécutions d'une instance (sans état). */
-export function TableExecutions({ executions }: { executions: ExecutionIntegrationDto[] }) {
+export function TableExecutions({
+  executions,
+  type,
+}: {
+  executions: ExecutionIntegrationDto[];
+  /** Type de l'instance : libellé de l'import propre au type (lot SI1). */
+  type?: IntegrationDto['type'];
+}) {
   return (
     <DataTable label="Dernières exécutions">
       <Table>
@@ -287,7 +304,7 @@ export function TableExecutions({ executions }: { executions: ExecutionIntegrati
           {executions.map((e) => (
             <Table.Tr key={e.id}>
               <Table.Td className="horodatage">{fmtDate(e.demandeLe)}</Table.Td>
-              <Table.Td>{libelleOperation(e.operation)}</Table.Td>
+              <Table.Td>{libelleOperation(e.operation, type)}</Table.Td>
               <Table.Td>{e.demandePar}</Table.Td>
               <Table.Td>
                 <StatusChip etat={ETAT_EXECUTION[e.etat]}>{libelleEtatExecution(e.etat)}</StatusChip>
@@ -478,7 +495,7 @@ export function IntegrationsPanel() {
         lockScroll={false}
         classNames={{ content: 'fenetre-admin' }}
       >
-        {historique && <Historique id={historique.id} />}
+        {historique && <Historique id={historique.id} type={historique.type} />}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
@@ -489,13 +506,23 @@ export function IntegrationsPanel() {
         withCloseButton={!importOccupe}
         closeOnEscape={!importOccupe}
         closeOnClickOutside={!importOccupe}
-        title={`Importer un scan : ${importation?.nom ?? ''}`}
+        title={`${importation ? libelleOperation('importer', importation.type) : 'Importer'} : ${importation?.nom ?? ''}`}
         size="lg"
         centered
         lockScroll={false}
         classNames={{ content: 'fenetre-admin' }}
       >
-        {importation && (
+        {importation && importation.type === 'silene-fichier' && (
+          <ImportSilene
+            instance={importation}
+            onOccupe={setImportOccupe}
+            onFait={() => {
+              void rafraichir();
+              void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+            }}
+          />
+        )}
+        {importation && importation.type !== 'silene-fichier' && (
           <ImportNessus instance={importation} onOccupe={setImportOccupe} onFait={() => void rafraichir()} />
         )}
       </Modal>
@@ -523,7 +550,10 @@ export function IntegrationsPanel() {
               setSuppression(null);
               notifications.show({
                 color: 'teal',
-                message: `Connecteur supprimé : ${n.machines} machine(s) et ${n.failles} faille(s) retirées.`,
+                message:
+                  'hotes' in n
+                    ? `Connecteur supprimé : ${n.hotes} hôte(s) et ${n.constats} constat(s) retirés.`
+                    : `Connecteur supprimé : ${n.machines} machine(s) et ${n.failles} faille(s) retirées.`,
               });
               void rafraichir();
               void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
@@ -535,7 +565,7 @@ export function IntegrationsPanel() {
   );
 }
 
-function Historique({ id }: { id: string }) {
+function Historique({ id, type }: { id: string; type: IntegrationDto['type'] }) {
   const q = useQuery({
     queryKey: [...CLE, 'executions', id],
     queryFn: () => get<ExecutionIntegrationDto[]>(`/api/integrations/instances/${id}/executions`),
@@ -544,7 +574,7 @@ function Historique({ id }: { id: string }) {
   return (
     <Stack>
       <ErrorAlert error={q.error} />
-      {q.data && <TableExecutions executions={q.data} />}
+      {q.data && <TableExecutions executions={q.data} type={type} />}
     </Stack>
   );
 }

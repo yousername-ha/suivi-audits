@@ -54,12 +54,14 @@ describe('listes fermées (tableau du RSSI)', () => {
     expect(frequenceVeille('nvd', 12)).toBe(12);
   });
 
-  it('connecteurs : Tenable 6 h à 7 jours, AlgoLightHouse 12 h à 7 jours ; 24 h par défaut ; import Nessus sans synchronisation', () => {
+  it('connecteurs : Tenable 6 h à 7 jours, AlgoLightHouse 12 h à 7 jours ; 24 h par défaut ; imports Nessus et Silène sans synchronisation', () => {
     expect(FREQUENCES_CONNECTEUR).toEqual({
       tenable: [6, 12, 24, 168],
       algolighthouse: [12, 24, 168],
       'nessus-fichier': [],
+      'silene-fichier': [],
     });
+    expect(frequenceConnecteurReglable('silene-fichier')).toBe(false);
     expect(frequenceConnecteurReglable('tenable')).toBe(true);
     expect(frequenceConnecteurReglable('nessus-fichier')).toBe(false);
     expect(frequenceConnecteurAdmise('nessus-fichier', 24)).toBe(false);

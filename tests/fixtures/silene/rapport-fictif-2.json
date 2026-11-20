@@ -1,0 +1,366 @@
+{
+  "_fichier_fictif": "Rapport Silène FICTIF écrit à la main pour les tests (lot SI1), second passage : 198.51.100.20 et le constat RES-FICTIF-0003 ont disparu : adresses de documentation (RFC 5737), noms en example.org, toutes les valeurs sont inventées. Les champs interdits portent des marqueurs INTERDIT pour prouver qu'ils ne partent jamais vers le serveur.",
+  "computation_date": {
+    "_type": "date",
+    "v": "2026-11-18"
+  },
+  "db_name": "BASE-INTERDITE-MARQUEUR",
+  "filter": "FILTRE-INTERDIT-MARQUEUR",
+  "summary": {
+    "computation_date": {
+      "_type": "date",
+      "v": "2026-11-18"
+    },
+    "starttime": "2026-11-18 06:00:00",
+    "endtime": "2026-11-18 07:30:00",
+    "grade": 16.25,
+    "grades": {
+      "network": 15
+    },
+    "vulnreco_count": 1,
+    "warning_count": 1,
+    "info_count": 3,
+    "ok_count": 42
+  },
+  "perimeter": {
+    "asnums": [],
+    "domains": [
+      "example.org",
+      "nom de domaine non valide"
+    ],
+    "ip": [
+      "192.0.2.0/24",
+      "198.51.100.0/24",
+      "203.0.113.30"
+    ]
+  },
+  "networks": {
+    "192.0.2.0/24": 1,
+    "198.51.100.0/24": 1
+  },
+  "modules": {
+    "OpenPort": {
+      "a0a1a2a3a4a5a6a7a8a9b0b1b2b3b4b5b6b7b8b9c0c1c2c3c4c5c6c7c8c9d0d1d2d3": "valeur fictive",
+      "results": [
+        "RES-FICTIF-0001"
+      ],
+      "time_taken_ms": 12
+    },
+    "SelfSignedCertificate": {
+      "results": [
+        "RES-FICTIF-0002"
+      ],
+      "time_taken_ms": 7
+    },
+    "ExpiredCertificate": {
+      "results": [],
+      "time_taken_ms": 5
+    },
+    "ControleFictifInconnu": {
+      "results": [
+        "RES-FICTIF-0004"
+      ],
+      "time_taken_ms": 1
+    },
+    "nom de contrôle invalide": {
+      "results": [],
+      "time_taken_ms": 1
+    }
+  },
+  "results": {
+    "RES-FICTIF-0001": {
+      "_type": "result",
+      "id": "RES-FICTIF-0001",
+      "result_class": 2,
+      "grades": {
+        "network": 0
+      },
+      "max_points": {
+        "network": 10
+      },
+      "applicable_hosts": [
+        "192.0.2.10"
+      ],
+      "listing": {
+        "192.0.2.10": [
+          {
+            "addr": "192.0.2.10",
+            "port": 22,
+            "protocol": "tcp",
+            "service": "ssh",
+            "product": "FictionalSSH",
+            "version": "9.9"
+          }
+        ]
+      }
+    },
+    "RES-FICTIF-0002": {
+      "_type": "result",
+      "id": "RES-FICTIF-0002",
+      "result_class": 1,
+      "max_points": {
+        "network": 5
+      },
+      "applicable_hosts": [
+        "203.0.113.30"
+      ],
+      "listing": {
+        "203.0.113.30": [
+          {
+            "addr": "203.0.113.30",
+            "hostname": "vpn.example.org",
+            "domain": "example.org",
+            "port": 443,
+            "protocol": "tcp",
+            "type": "autosigne",
+            "subject": "CN=SUJET-CERTIFICAT-INTERDIT-MARQUEUR",
+            "san": [
+              "SAN-CERTIFICAT-INTERDIT-MARQUEUR.example.org"
+            ]
+          }
+        ]
+      }
+    },
+    "RES-FICTIF-0004": {
+      "_type": "result",
+      "id": "RES-FICTIF-0004",
+      "result_class": 0,
+      "max_points": {
+        "network": 0
+      },
+      "applicable_hosts": [],
+      "listing": {}
+    },
+    "RES-FICTIF-0005": {
+      "_type": "result",
+      "id": "RES-FICTIF-0005",
+      "result_class": 1,
+      "max_points": {
+        "network": 1
+      },
+      "applicable_hosts": [
+        "192.0.2.10"
+      ],
+      "listing": {}
+    },
+    "RES-FICTIF-0006": {
+      "_type": "result",
+      "id": "RES-FICTIF-0006",
+      "result_class": "deux",
+      "max_points": {
+        "network": 1
+      },
+      "applicable_hosts": [],
+      "listing": {}
+    }
+  },
+  "hosts": {
+    "192.0.2.10": {
+      "addr": "192.0.2.10",
+      "net": "192.0.2.0/24",
+      "source": "SILENE",
+      "schema_version": 1,
+      "state": "up",
+      "state_reason": "syn-ack",
+      "starttime": "2026-11-15 06:01:00",
+      "endtime": "2026-11-15 06:20:00",
+      "categories": [
+        "OpenPort",
+        "HttpVersion"
+      ],
+      "hostnames": [
+        {
+          "name": "www.example.org",
+          "type": "A",
+          "domains": [
+            "example.org"
+          ]
+        },
+        {
+          "name": "host-10.ptr.example.org",
+          "type": "PTR",
+          "domains": [
+            "example.org"
+          ]
+        },
+        {
+          "name": "WWW.example.org.",
+          "type": "cert-san-dns",
+          "domains": [
+            "example.org"
+          ]
+        },
+        {
+          "name": "type-inconnu.example.org",
+          "type": "MX",
+          "domains": [
+            "example.org"
+          ]
+        }
+      ],
+      "cpes": [
+        {
+          "type": "a",
+          "vendor": "fictional",
+          "product": "httpd",
+          "version": "9.9",
+          "origins": [
+            "ORIGINE-INTERDITE-MARQUEUR"
+          ]
+        },
+        {
+          "type": "o",
+          "vendor": "fictional",
+          "product": "fictional_os",
+          "origins": []
+        }
+      ],
+      "openports": {
+        "count": 3,
+        "tcp": {
+          "count": 3,
+          "ports": [
+            22,
+            443,
+            8443
+          ]
+        }
+      },
+      "ports": [
+        {
+          "port": 22,
+          "protocol": "tcp",
+          "state_state": "open",
+          "state_reason": "syn-ack",
+          "state_reason_ttl": 52,
+          "service_name": "ssh",
+          "service_product": "FictionalSSH",
+          "service_method": "probed",
+          "scripts": [
+            {
+              "id": "ssh-hostkey",
+              "output": "SORTIE-SONDE-INTERDITE-MARQUEUR"
+            }
+          ]
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "state_state": "open",
+          "state_reason": "syn-ack",
+          "service_name": "https",
+          "service_product": "Fictional httpd",
+          "service_tunnel": "ssl",
+          "scripts": [
+            {
+              "id": "ssl-cert",
+              "output": "-----BEGIN CERTIFICATE----- CERTIFICAT-INTERDIT-MARQUEUR",
+              "pem": "-----BEGIN CERTIFICATE----- PEM-INTERDIT-MARQUEUR",
+              "pubkey": {
+                "type": "rsa",
+                "bits": 2048,
+                "modulus": "CLE-PUBLIQUE-INTERDITE-MARQUEUR"
+              },
+              "sha256": "EMPREINTE-INTERDITE-MARQUEUR"
+            },
+            {
+              "id": "http-headers",
+              "output": "Server: ENTETE-HTTP-INTERDITE-MARQUEUR"
+            },
+            {
+              "id": "http-title",
+              "output": "TITRE-PAGE-INTERDIT-MARQUEUR"
+            }
+          ]
+        },
+        {
+          "port": 70000,
+          "protocol": "tcp",
+          "state_state": "open"
+        },
+        {
+          "port": 25,
+          "protocol": "tcp",
+          "state_state": "closed"
+        }
+      ],
+      "infos": {
+        "geo": {
+          "country": "GEOLOCALISATION-INTERDITE-MARQUEUR",
+          "city": "VILLE-INTERDITE-MARQUEUR"
+        },
+        "asn": "SYSTEME-AUTONOME-INTERDIT-MARQUEUR"
+      }
+    },
+    "203.0.113.30": {
+      "addr": "203.0.113.30",
+      "net": "203.0.113.0/24",
+      "source": "SILENE",
+      "schema_version": 1,
+      "state": "up",
+      "starttime": "2026-11-15 06:41:00",
+      "endtime": "2026-11-15 06:50:00",
+      "categories": [
+        "SelfSignedCertificate"
+      ],
+      "hostnames": [
+        {
+          "name": "vpn.example.org",
+          "type": "A",
+          "domains": [
+            "example.org"
+          ]
+        }
+      ],
+      "openports": {
+        "count": 1,
+        "tcp": {
+          "count": 1,
+          "ports": [
+            443
+          ]
+        }
+      },
+      "ports": [
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "state_state": "open",
+          "service_name": "https",
+          "service_tunnel": "ssl"
+        }
+      ],
+      "infos": {}
+    },
+    "hote-sans-adresse": {
+      "addr": "pas une adresse",
+      "source": "SILENE",
+      "schema_version": 1,
+      "categories": [],
+      "openports": {
+        "count": 0
+      },
+      "infos": {}
+    }
+  },
+  "_prev": {
+    "summary": {
+      "grade": 99,
+      "vulnreco_count": 999
+    },
+    "hosts": {
+      "192.0.2.250": {
+        "addr": "192.0.2.250",
+        "categories": [
+          "OpenPort"
+        ],
+        "hostnames": [
+          {
+            "name": "PASSAGE-PRECEDENT-INTERDIT-MARQUEUR.example.org",
+            "type": "A"
+          }
+        ]
+      }
+    }
+  }
+}
