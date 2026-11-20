@@ -144,6 +144,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     // sur un tableau proposé) et l'ouverture des chiffres de l'auteur sont évalués par le service ; refus 401, 403 et 404
     // testés dans tableau-de-bord-disposition.test.ts et tableau-de-bord-partage.test.ts.
     'GET /api/tableaux-de-bord',
+    'GET /api/tableaux-de-bord/:id',
     'PUT /api/tableaux-de-bord/onglets',
     'PUT /api/tableaux-de-bord/:id',
     'DELETE /api/tableaux-de-bord/:id',

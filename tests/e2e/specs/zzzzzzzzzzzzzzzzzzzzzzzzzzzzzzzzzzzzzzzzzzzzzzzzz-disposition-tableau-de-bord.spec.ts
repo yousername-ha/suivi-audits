@@ -2,8 +2,9 @@
    ADR 0109) : créer un tableau depuis la disposition standard, déplacer une dalle au clavier et au glisser, changer sa
    largeur et sa hauteur, la masquer puis la rajouter depuis le catalogue, ajouter une dalle classique et une copie d'une
    carte, changer une visualisation, enregistrer (la disposition survit au rechargement), puis supprimer le tableau : le
-   premier onglet, Global, montre la disposition de la vue analytique. Puis partager un tableau avec un compte Lecteur,
-   qui l'ajoute en onglet et l'affiche sans pouvoir le modifier. Les tableaux créés sont supprimés à la fin. */
+   premier favori, Global, montre la disposition de la vue analytique. Puis partager un tableau avec un compte Lecteur,
+   qui l'affiche depuis la liste de ses tableaux (⌄), l'ajoute à ses favoris et l'affiche sans pouvoir le modifier. Les
+   tableaux créés sont supprimés à la fin. */
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { creerEcartCommun, csrfOf, markTotpUsed, PASSWORD, sessionAdmin, totp, watchPage } from '../helpers';
 
@@ -14,10 +15,14 @@ const ordreEdition = (page: Page) =>
 const ordreLecture = (page: Page) =>
   page.locator('.tdb-grille > section').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
 
-/** Crée un tableau depuis la disposition standard par le menu « + » ; il s'ouvre en modification. */
+/** Barre des favoris de l'accueil (onglets des tableaux de bord). */
+const favoris = (page: Page) => page.getByRole('tablist', { name: 'Mes favoris' });
+/** Bouton déroulant ⌄ de la liste de tous ses tableaux de bord. */
+const boutonListe = (page: Page) => page.getByRole('button', { name: 'Mes tableaux de bord', exact: true });
+
+/** Crée un tableau depuis la disposition standard par le bouton « + » ; il s'ouvre en modification. */
 async function creerTableau(page: Page, nom: string) {
-  await page.getByRole('button', { name: 'Ajouter un tableau de bord' }).click();
-  await page.getByRole('menuitem', { name: /Créer un nouveau tableau/ }).click();
+  await page.getByRole('button', { name: 'Créer un tableau de bord', exact: true }).click();
   const fenetre = page.getByRole('dialog', { name: 'Créer un tableau de bord' });
   await fenetre.getByLabel('Nom').fill(nom);
   await fenetre.getByRole('radio', { name: /Disposition standard/ }).click();
@@ -25,15 +30,20 @@ async function creerTableau(page: Page, nom: string) {
   await expect(page.getByRole('region', { name: 'Modifier la disposition du tableau de bord' })).toBeVisible();
 }
 
-/** Nettoyage : supprime les tableaux du compte (If-Match : leur version). */
+/** Nettoyage : supprime les tableaux du compte, favoris ou non (liste complète, puis version lue par GET /:id pour
+    l'If-Match). */
 async function supprimerMesTableaux(rq: APIRequestContext, csrf: string) {
   const r = await rq.get('/api/tableaux-de-bord');
   if (!r.ok()) return;
-  const { onglets } = (await r.json()) as { onglets: { id: string; origine: string; version: number }[] };
-  for (const t of onglets.filter((o) => o.origine === 'mien'))
+  const { disponibles } = (await r.json()) as { disponibles: { id: string; origine: string }[] };
+  for (const t of disponibles.filter((o) => o.origine === 'mien')) {
+    const d = await rq.get(`/api/tableaux-de-bord/${t.id}`);
+    if (!d.ok()) continue;
+    const { version } = (await d.json()) as { version: number };
     await rq.delete(`/api/tableaux-de-bord/${t.id}`, {
-      headers: { 'x-csrf-token': csrf, 'if-match': `"${t.version}"` },
+      headers: { 'x-csrf-token': csrf, 'if-match': `"${version}"` },
     });
+  }
 }
 
 test('disposition du tableau de bord : créer, clavier, glisser, largeur, masquer, enregistrer, supprimer', async ({
@@ -53,8 +63,8 @@ test('disposition du tableau de bord : créer, clavier, glisser, largeur, masque
   try {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
-    // Premier onglet d'un compte : Global, la disposition de la vue analytique (ADR 0109).
-    await expect(page.getByRole('tab', { name: /^Global/ })).toHaveAttribute('aria-selected', 'true');
+    // Premier favori d'un compte : Global, la disposition de la vue analytique (ADR 0109).
+    await expect(favoris(page).getByRole('tab', { name: /^Global/ })).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('.tdb-grille > section').first()).toBeVisible();
     const standard = await ordreLecture(page);
     expect(standard.length).toBeGreaterThanOrEqual(3);
@@ -163,17 +173,19 @@ test('disposition du tableau de bord : créer, clavier, glisser, largeur, masque
       await expect(page.locator('.tdb-grille > section[aria-label="Écarts par statut"] .graph-anneau')).toHaveCount(1);
     };
     await verifier();
-    // Après rechargement, le premier onglet (Global) s'ouvre ; le tableau créé est en dernier onglet.
+    // Après rechargement, le premier favori (Global) s'ouvre ; le tableau créé est le dernier favori.
     await page.reload();
     await expect(page.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
-    await page.getByRole('tab', { name: /^Recette disposition/ }).click();
+    await favoris(page)
+      .getByRole('tab', { name: /^Recette disposition/ })
+      .click();
     await verifier();
 
-    // Suppression du tableau : retour au premier onglet, la disposition de la vue analytique.
+    // Suppression du tableau : retour au premier favori, la disposition de la vue analytique.
     await page.getByRole('button', { name: 'Modifier la disposition' }).click();
     await page.getByRole('button', { name: 'Supprimer ce tableau' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmer' }).click();
-    await expect(page.getByRole('tab', { name: /^Recette disposition/ })).toHaveCount(0);
+    await expect(favoris(page).getByRole('tab', { name: /^Recette disposition/ })).toHaveCount(0);
     await expect(page.locator('.tdb-grille > section[aria-label="Audits & constats"]')).toHaveCount(1);
     expect(await ordreLecture(page)).toEqual(standard);
     expect(problems).toEqual([]);
@@ -184,7 +196,7 @@ test('disposition du tableau de bord : créer, clavier, glisser, largeur, masque
   }
 });
 
-test('partage du tableau de bord : un compte Lecteur l’ajoute en onglet et l’affiche, sans le modifier', async ({
+test('partage du tableau de bord : un compte Lecteur l’affiche depuis sa liste, l’ajoute à ses favoris, sans le modifier', async ({
   browser,
 }) => {
   test.setTimeout(120_000);
@@ -245,16 +257,16 @@ test('partage du tableau de bord : un compte Lecteur l’ajoute en onglet et l�
     await zone.getByRole('option', { name: /Lecture du tableau/ }).click();
     await zone.getByRole('button', { name: 'Enregistrer le partage' }).click();
     await expect(zone).toHaveCount(0);
-    const { onglets } = (await (await rq.get('/api/tableaux-de-bord')).json()) as {
-      onglets: { id: string; nom: string }[];
+    const { disponibles } = (await (await rq.get('/api/tableaux-de-bord')).json()) as {
+      disponibles: { id: string; nom: string; origine: string }[];
     };
-    const tableau = onglets.find((o) => o.nom === 'Recette partage')!;
+    const tableau = disponibles.find((o) => o.origine === 'mien' && o.nom === 'Recette partage')!;
     const partage = await (await rq.get(`/api/tableaux-de-bord/${tableau.id}/partage`)).json();
     expect(partage.destinataires).toEqual([expect.objectContaining({ type: 'utilisateur', id: lecteurId })]);
 
     // Le Lecteur (session déjà ouverte par l'enrôlement : une connexion de moins dans la limite par adresse) : pas de
-    // bouton de modification ; il ajoute le tableau reçu en onglet, qui suit l'ordre de l'administrateur (bandeau en
-    // dernier).
+    // bouton de modification ni de création ; il affiche le tableau reçu depuis la liste de ses tableaux (⌄), hors
+    // favoris, puis l'ajoute à ses favoris ; il suit l'ordre de l'administrateur (bandeau en dernier).
     const lecteur = lc;
     try {
       expect((await (await lecteur.request.get('/api/auth/me')).json()).stage).toBe('ok');
@@ -264,19 +276,36 @@ test('partage du tableau de bord : un compte Lecteur l’ajoute en onglet et l�
       await expect(lp.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
       await expect(lp.getByRole('button', { name: 'Modifier la disposition' })).toHaveCount(0);
       await expect(lp.getByRole('button', { name: 'Partager' })).toHaveCount(0);
-      await lp.getByRole('button', { name: 'Ajouter un tableau de bord' }).click();
-      await expect(lp.getByRole('menuitem', { name: /Créer un nouveau tableau/ })).toHaveCount(0);
-      await lp.getByRole('menuitem', { name: /Ajouter un tableau existant/ }).click();
-      await lp
-        .getByRole('dialog', { name: 'Ajouter un tableau existant' })
-        .getByRole('button', { name: 'Ajouter « Recette partage »' })
-        .click();
-      await expect(lp.getByRole('tab', { name: /^Recette partage/ })).toHaveAttribute('aria-selected', 'true');
+      await expect(boutonListe(lp)).toBeVisible();
+      await expect(lp.getByRole('button', { name: 'Créer un tableau de bord', exact: true })).toHaveCount(0);
+      // Affiché depuis la liste, hors favoris : disposition de l'administrateur, son nom et son descriptif en haut, aucun
+      // favori sélectionné ni retrait des favoris.
+      await boutonListe(lp).click();
+      const liste = lp.getByRole('list', { name: 'Mes tableaux de bord' });
+      await liste.getByRole('button', { name: /^Recette partage/ }).click();
+      await expect.poll(async () => (await ordreLecture(lp)).at(-1)).toBe('Bandeau ISO 27001 / HDS');
+      await expect(lp.getByRole('note').filter({ hasText: 'Tableau partagé par' })).toBeVisible();
+      await expect(lp.getByRole('heading', { level: 2, name: 'Recette partage', exact: true })).toBeVisible();
+      await expect(lp.getByText(/^Tableau partagé de .+, en lecture seule$/)).toBeVisible();
+      await expect(favoris(lp).getByRole('tab', { name: /^Recette partage/ })).toHaveCount(0);
+      await expect(favoris(lp).getByRole('tab', { selected: true })).toHaveCount(0);
+      await expect(lp.getByRole('button', { name: 'Retirer de mes favoris' })).toHaveCount(0);
+      // Ajouté aux favoris : il prend un onglet, sélectionné, et peut en être retiré.
+      await boutonListe(lp).click();
+      await liste.getByRole('button', { name: 'Ajouter « Recette partage » aux favoris' }).click();
+      await expect(liste.getByRole('button', { name: 'Retirer « Recette partage » des favoris' })).toBeVisible();
+      await boutonListe(lp).click();
+      await expect(liste).toBeHidden();
+      await expect(favoris(lp).getByRole('tab', { name: /^Recette partage/ })).toHaveAttribute('aria-selected', 'true');
+      await expect(lp.getByRole('heading', { level: 2, name: 'Recette partage', exact: true })).toHaveCount(0);
+      await expect(lp.getByRole('button', { name: 'Retirer de mes favoris' })).toBeVisible();
       await expect.poll(async () => (await ordreLecture(lp)).at(-1)).toBe('Bandeau ISO 27001 / HDS');
       await expect(lp.getByRole('button', { name: 'Modifier la disposition' })).toHaveCount(0);
       await lp.reload();
       await expect(lp.getByRole('heading', { level: 1, name: /^Bonjour/ })).toBeVisible();
-      await lp.getByRole('tab', { name: /^Recette partage/ }).click();
+      await favoris(lp)
+        .getByRole('tab', { name: /^Recette partage/ })
+        .click();
       await expect.poll(async () => (await ordreLecture(lp)).at(-1)).toBe('Bandeau ISO 27001 / HDS');
       // Sans le droit, il ne peut ni le copier ni créer de tableau (le serveur refuse aussi).
       await expect(lp.getByRole('button', { name: 'Copier comme mon tableau' })).toHaveCount(0);

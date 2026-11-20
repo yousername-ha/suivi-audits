@@ -1,9 +1,10 @@
 /* Partage et publication des tableaux de bord (ADR 0109) : partage en lecture avec des personnes, des groupes ou des
    rôles (droit tableau_de_bord:modifier, If-Match, journalisé), annuaire sans courriel, visibilité recontrôlée à chaque
-   lecture, copie d'un tableau public, suppression en cascade ; publication pour tous (droit « Publier pour tous »,
-   tableau_de_bord:administrer, propriétaire seulement) et chiffres ouverts de l'auteur : liste blanche (aucune chaîne
-   libre), registres restreints comptés (décision B du RSSI), auteur désactivé, rétrogradé ou supprimé, module désactivé,
-   suspension journalisée une seule fois, limite de débit. Données fictives. */
+   lecture (liste de tous ses tableaux, barre des favoris, et lecture d'un tableau favori ou non par GET /:id, avec les
+   mêmes informations), copie d'un tableau public, suppression en cascade ; publication pour tous (droit « Publier pour
+   tous », tableau_de_bord:administrer, propriétaire seulement) et chiffres ouverts de l'auteur : liste blanche (aucune
+   chaîne libre), registres restreints comptés (décision B du RSSI), auteur désactivé, rétrogradé ou supprimé, module
+   désactivé, suspension journalisée une seule fois, limite de débit. Données fictives. */
 import { ChiffresPublics, type TableauDetail, type TableauResume, type TableauxOut } from '@suivi/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DEFAULT_SMSI } from '../src/grc/core.js';
@@ -215,13 +216,22 @@ describe('recevoir un tableau partagé', () => {
         chiffresOuverts: false,
         enOnglet: false,
       });
+      // Affiché hors favoris (GET /:id) : disposition de l'auteur, lecture seule, mêmes informations que la liste.
+      const r = await a.get(`${URL}/${tAlice.id}`);
+      expect(r.statusCode, r.body).toBe(200);
+      expect(r.json()).toMatchObject({ ...x, disposition: D_ALICE, modifiable: false });
     }
     expect(await dispo(carole, tAlice.id)).toBeUndefined();
     expect(await dispo(vide, tAlice.id)).toBeUndefined();
-    expect((await lire(alice)).disponibles.some((x) => x.id === tAlice.id)).toBe(false);
+    expect((await carole.get(`${URL}/${tAlice.id}`)).statusCode).toBe(404);
+    expect((await vide.get(`${URL}/${tAlice.id}`)).statusCode).toBe(404);
+    // Son auteur le voit une seule fois, comme le sien, jamais comme un tableau partagé avec lui.
+    expect(
+      (await lire(alice)).disponibles.filter((x) => x.id === tAlice.id).map((x) => [x.origine, x.chiffresOuverts]),
+    ).toEqual([['mien', false]]);
   });
 
-  it('l’ajouter à ses onglets : disposition de l’auteur, en lecture seule ; puis le retirer', async () => {
+  it('l’ajouter à ses favoris : disposition de l’auteur, en lecture seule ; puis le retirer', async () => {
     const d = await lire(bob);
     const r = await bob.put(`${URL}/onglets`, { tableaux: [...d.onglets.map((o) => o.id), tAlice.id] });
     expect(r.statusCode, r.body).toBe(200);
@@ -229,8 +239,10 @@ describe('recevoir un tableau partagé', () => {
     expect(o).toMatchObject({ origine: 'partage', modifiable: false, disposition: D_ALICE, auteur: 'Nom alice' });
     // Le lecteur (sans le droit de modifier) peut aussi l'ajouter.
     expect((await lecteur.put(`${URL}/onglets`, { tableaux: [tAlice.id] })).statusCode).toBe(200);
-    // Son propre tableau (« Ancien ») reste, à la fin.
-    expect((await lire(lecteur)).onglets.map((x) => x.nom)).toEqual(['Tableau d’alice', 'Ancien']);
+    // Ses favoris sont ceux qu'il a choisis ; son propre tableau (« Ancien ») reste dans la liste, hors favoris.
+    const d2 = await lire(lecteur);
+    expect(d2.onglets.map((x) => x.nom)).toEqual(['Tableau d’alice']);
+    expect(d2.disponibles.find((x) => x.nom === 'Ancien')).toMatchObject({ origine: 'mien', enOnglet: false });
   });
 
   it('impossible d’ajouter un tableau qui ne vous est pas partagé (404)', async () => {
@@ -260,15 +272,20 @@ describe('recevoir un tableau partagé', () => {
     expect(r.json().reason).toBe('copie_impossible');
   });
 
-  it('un partage retiré disparaît des onglets à la lecture suivante', async () => {
+  it('un partage retiré disparaît des favoris à la lecture suivante', async () => {
     expect((await lire(lecteur)).onglets[0]!.id).toBe(tAlice.id);
-    // Le lecteur quitte le groupe : plus de partage, l'onglet disparaît ; il garde son propre tableau.
+    // Le lecteur quitte le groupe : plus de partage, le favori disparaît et, sans autre favori, Global revient ; son
+    // propre tableau reste dans la liste. Le tableau n'est plus lisible, même par GET /:id.
     await t.svc.db.q('DELETE FROM user_groups WHERE user_id = $1', [uLecteur.id]);
-    const d = await lire(lecteur);
-    expect(d.onglets.map((x) => x.modele)).toEqual([null]);
-    expect(d.onglets[0]!.nom).toBe('Ancien');
-    expect(d.disponibles.some((x) => x.id === tAlice.id)).toBe(false);
-    await t.svc.db.q('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [uLecteur.id, groupe]);
+    try {
+      const d = await lire(lecteur);
+      expect(d.onglets.map((x) => x.modele)).toEqual(['global']);
+      expect(d.disponibles.find((x) => x.nom === 'Ancien')).toMatchObject({ origine: 'mien' });
+      expect(d.disponibles.some((x) => x.id === tAlice.id)).toBe(false);
+      expect((await lecteur.get(`${URL}/${tAlice.id}`)).statusCode).toBe(404);
+    } finally {
+      await t.svc.db.q('INSERT INTO user_groups(user_id, group_id) VALUES ($1, $2)', [uLecteur.id, groupe]);
+    }
     expect((await lire(lecteur)).onglets.map((x) => x.id)).toContain(tAlice.id);
   });
 
@@ -329,6 +346,8 @@ describe('recevoir un tableau partagé', () => {
     expect((await lire(lecteur)).onglets.map((x) => x.id)).toContain(tAlice.id);
     expect((await alice.del(`${URL}/${tAlice.id}`, v(version + 1))).statusCode).toBe(204);
     expect((await lire(lecteur)).onglets.map((x) => x.id)).not.toContain(tAlice.id);
+    expect((await lecteur.get(`${URL}/${tAlice.id}`)).statusCode).toBe(404);
+    expect((await alice.get(`${URL}/${tAlice.id}`)).statusCode).toBe(404);
     const n = await t.svc.db.one<{ p: number; o: number }>(
       `SELECT (SELECT count(*) FROM tableaux_de_bord_partages WHERE tableau = $1)::int AS p,
               (SELECT count(*) FROM tableaux_de_bord_onglets WHERE tableau = $1)::int AS o`,
@@ -511,6 +530,33 @@ describe('publication et chiffres ouverts', () => {
     expect((await bob.get(`${URL}/${p.id}/chiffres`)).statusCode).toBe(404);
   });
 
+  it('liste : ses tableaux, puis proposés, partagés et publics ; chacun se lit par GET /:id avec les mêmes informations, chiffres ouverts compris', async () => {
+    const d = await lire(carole);
+    expect(d.disponibles.map((x) => [x.origine, x.nom, x.chiffresOuverts])).toEqual([
+      ['mien', 'Ma copie du publié', false],
+      ['propose', 'Global', false],
+      ['propose', 'Suivi SMSI', false],
+      ['partage', 'Partagé avec chiffres', true],
+      ['public', 'Tableau publié', true],
+    ]);
+    for (const x of d.disponibles) {
+      const r = await carole.get(`${URL}/${x.id}`);
+      expect(r.statusCode, r.body).toBe(200);
+      expect(r.json()).toMatchObject({ ...x, modifiable: x.origine === 'mien' });
+    }
+    expect((await carole.get(`${URL}/${publie.id}`)).json().disposition).toEqual(publie.disposition);
+    // Un compte sans droit métier lit aussi le tableau public (garde « connecté »), chiffres de l'auteur ouverts.
+    expect((await vide.get(`${URL}/${publie.id}`)).json()).toMatchObject({
+      origine: 'public',
+      auteur: 'Nom rssi',
+      chiffresOuverts: true,
+      modifiable: false,
+    });
+    // Partagé avec carole seulement : introuvable pour bob.
+    const p = d.disponibles.find((x) => x.nom === 'Partagé avec chiffres')!;
+    expect((await bob.get(`${URL}/${p.id}`)).statusCode).toBe(404);
+  });
+
   it('auteur désactivé : chiffres refusés (404), suspension journalisée une seule fois ; réactivé : de nouveau servis', async () => {
     const p = (await lire(carole)).disponibles.find((x) => x.nom === 'Partagé avec chiffres')!;
     await t.svc.db.q('UPDATE users SET disabled = true WHERE id = $1', [uPub.id]);
@@ -520,8 +566,9 @@ describe('publication et chiffres ouverts', () => {
       expect(await suspensions(p.id)).toEqual([
         { username: 'système', details: expect.objectContaining({ raison: 'auteur_inactif' }) },
       ]);
-      // Toujours partagé avec carole, mais vu avec ses droits.
+      // Toujours partagé avec carole, mais vu avec ses droits (liste et GET /:id).
       expect(await dispo(carole, p.id)).toMatchObject({ origine: 'partage', chiffresOuverts: false });
+      expect((await carole.get(`${URL}/${p.id}`)).json()).toMatchObject({ origine: 'partage', chiffresOuverts: false });
     } finally {
       await t.svc.db.q('UPDATE users SET disabled = false WHERE id = $1', [uPub.id]);
     }
@@ -547,11 +594,13 @@ describe('publication et chiffres ouverts', () => {
     await t.svc.db.q("UPDATE user_roles SET role_id = 'contributeur' WHERE user_id = $1", [uPub.id]);
     try {
       expect(await dispo(bob, pPublic.id)).toBeUndefined();
+      expect((await bob.get(`${URL}/${pPublic.id}`)).statusCode).toBe(404);
       expect((await bob.get(`${URL}/${pPublic.id}/chiffres`)).statusCode).toBe(404);
       expect(await suspensions(pPublic.id)).toEqual([
         { username: 'système', details: expect.objectContaining({ raison: 'droit_retire', public: true }) },
       ]);
       expect(await dispo(carole, pPartage.id)).toMatchObject({ chiffresOuverts: false });
+      expect((await carole.get(`${URL}/${pPartage.id}`)).json()).toMatchObject({ chiffresOuverts: false });
       expect((await carole.get(`${URL}/${pPartage.id}/chiffres`)).statusCode).toBe(404);
       // Il retire lui-même la publication, sans le droit de publier.
       const { version } = await partage(pub, pPublic.id);
@@ -578,6 +627,7 @@ describe('publication et chiffres ouverts', () => {
       expect((await carole.get(`${URL}/${p.id}/chiffres`)).statusCode).toBe(404);
       expect((await carole.get(`${URL}/${publie.id}/chiffres`)).statusCode).toBe(404);
       expect(await dispo(carole, publie.id)).toBeUndefined();
+      expect((await carole.get(`${URL}/${publie.id}`)).statusCode).toBe(404);
       expect(await dispo(carole, p.id)).toMatchObject({ chiffresOuverts: false });
     });
     const apres = await suspensions(p.id);
@@ -612,6 +662,7 @@ describe('publication et chiffres ouverts', () => {
     await t.svc.db.q('DELETE FROM users WHERE id = $1', [uPub.id]);
     expect((await carole.get(`${URL}/${p.id}/chiffres`)).statusCode).toBe(404);
     expect(await dispo(carole, p.id)).toBeUndefined();
+    expect((await carole.get(`${URL}/${p.id}`)).statusCode).toBe(404);
     const n = await t.svc.db.one<{ n: number }>(
       'SELECT count(*)::int AS n FROM tableaux_de_bord WHERE proprietaire = $1',
       [uPub.id],
@@ -624,6 +675,7 @@ describe('publication et chiffres ouverts', () => {
     const r = await admin.put(`${URL}/${publie.id}/partage`, { destinataires: [], public: false }, v(version));
     expect(r.statusCode, r.body).toBe(200);
     expect(await dispo(carole, publie.id)).toBeUndefined();
+    expect((await carole.get(`${URL}/${publie.id}`)).statusCode).toBe(404);
     expect((await carole.get(`${URL}/${publie.id}/chiffres`)).statusCode).toBe(404);
     expect(await suspensions(publie.id)).toHaveLength(1); // celle du module désactivé, pas celle-ci
     const audit = await t.svc.db.one<{ username: string; details: { nom: string } }>(
