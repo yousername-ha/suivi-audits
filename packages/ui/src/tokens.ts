@@ -289,7 +289,7 @@ export const POINTS_DE_RUPTURE = {
 } as const;
 
 export const POLICE =
-  '"Inter", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif';
+  '"Lexend", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif';
 export const POLICE_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
 
 /* ---------------------------------------------------------------- Contraste (WCAG 2.1) */

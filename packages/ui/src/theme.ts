@@ -44,7 +44,9 @@ export const theme = createTheme({
   black: BRAND.encre,
   fontFamily: POLICE,
   fontFamilyMonospace: POLICE_MONO,
-  headings: { fontFamily: POLICE, fontWeight: '650' },
+  // Lexend (choix du RSSI du 19/11/2026) : titres en 600 et graisse « medium » à 500, moins lourds que 650 et 600.
+  headings: { fontFamily: POLICE, fontWeight: '600' },
+  fontWeights: { medium: '500' },
   radius: RAYONS,
   defaultRadius: 'md',
   spacing: ESPACEMENTS,
