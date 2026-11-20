@@ -196,6 +196,14 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Corrigé
 
+- Vulnérabilités, **lectures rapides sur un grand parc** (défauts PERF-01 à PERF-04 du banc de performance du 19/11/2026,
+  addendum « lot PERF » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : les périmètres visibles sont lus une fois
+  par requête au lieu d'une fois par détection ; la liste des failles détectées ne lit le résumé complet que pour la page
+  rendue ; la liste et la fiche des machines n'ont plus de sous-requête par machine ; la recherche range les CVE en une
+  lecture. Sur un jeu fictif de 1 000 machines et 114 000 détections (poste de développement) : liste des failles 3,9 s →
+  0,5 s (RSSI), machines 4,9 s → 0,4 s, fiche d'une machine 5,0 s → 0,2 s, recherche 4,5 s → 0,2 s, vue d'ensemble 1,6 s →
+  1,3 s (95e centile). Mêmes réponses, mêmes droits ; aucune migration. Nouveau test de non-régression
+  `performance-vulnerabilites`. (session « Module surveillance vulnérabilités SMSI »)
 - Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
   19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
   l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la

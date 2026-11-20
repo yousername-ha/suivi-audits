@@ -3109,3 +3109,99 @@ ni cadre fixe ni regroupement par adresse : elles ne correspondent plus au dessi
    avec les CVE (point 2 du lot SI1).
 3. Liaison d'un actif vu par Silène seul à une machine interne (aujourd'hui : seuls les actifs d'AlgoLightHouse se
    relient).
+
+## Addendum du 20/11/2026 — lot PERF : lectures des failles, des machines, de la recherche et de la vue d'ensemble (PERF-01 à PERF-04)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Corrige les défauts
+PERF-01 à PERF-04 du banc de performance du 19/11/2026. **Aucune migration**, aucune route nouvelle, aucun champ changé,
+aucune dépendance, aucun flux sortant ; droits, priorité, alertes, majoration, délais, bornes de synchronisation
+(`TENABLE_BORNES`, PERF-09 : décision du RSSI) et contrat de la recherche inchangés. Réglage du JIT de PostgreSQL non touché
+(socle et RSSI) : les requêtes réécrites ont un coût estimé sous `jit_above_cost`.
+
+### Ce qui a changé dans les requêtes
+
+- **Lisibilité d'une machine** (`sql.ts`, fragment `lisible`) : les périmètres que la personne voit (`grc_smsi_visible`,
+  pyramide) sont lus **une fois par requête** (sous-requête sans corrélation, `perimetresVisibles`), puis le périmètre
+  effectif de la machine est cherché dans ce tableau. Avant : un appel de `grc_smsi_visible` par ligne lue (114 718 pour la
+  liste des constats du banc, chacun parcourant la pyramide pour un non-administrateur). Même règle : un périmètre effectif
+  existe toujours dans `grc_smsis` (clés étrangères `ON DELETE SET NULL`). Toutes les lectures qui utilisent ce fragment en
+  profitent (73 emplois).
+- **Liste des constats** (PERF-01, `FaillesDetectees.requeteConstats` et `constats`) : lisibilité calculée une fois par
+  machine (CTE matérialisée), puis deux agrégats (par constat et machine, puis par constat) au lieu d'un tri distinct de
+  toutes les détections ; première présence prise dans le même agrégat. La liste lit d'abord les **seules colonnes de la
+  priorité, du délai et de l'ordre** pour tous les constats filtrés, calcule la priorité (fonction partagée, en TypeScript),
+  trie et découpe en mémoire, puis lit le **résumé complet des 25 constats de la page** (seconde requête, mêmes règles). Choix :
+  l'ordre dépend de la priorité, calculée en TypeScript sur les faits des sources ; la copier en SQL aurait dédoublé la
+  règle. Le délai n'est calculé pour tous que s'il sert au filtre ou à l'ordre « par échéance ».
+- **Machines, fiche d'une machine, parc** (PERF-02, `machinesRangees`) : machines lisibles calculées une fois ; faits de chaque
+  constat ouvert (KEV, exploitation avérée) calculés une fois par constat sous forme d'ensembles (`cvesExploitees` de
+  `sources.ts`, même règle qu'`exploiteeCve`) ; un seul agrégat par machine au lieu d'une sous-requête latérale par machine ;
+  fins de support lues en une fois (cinq au plus par machine, même ordre). La fiche garde le calcul de toutes les machines
+  lisibles : son rang (position et total) en dépend. L'index partiel sur `fin_support_le` proposé par le banc n'est plus
+  utile (les fins de support ne sont plus cherchées machine par machine) : pas de migration.
+- **Recherche** (PERF-03, `RechercheVulnerabilites.cves`) : elle profite des deux réécritures ci-dessus (machines,
+  contrôles) ; l'ordre « présente sur une machine lisible » des CVE candidates est calculé une fois (ensemble) au lieu d'une
+  sous-requête par candidate. Mêmes groupes, mêmes bornes, mêmes champs.
+- **Vue d'ensemble** (PERF-04) : elle profite de la lisibilité calculée une fois (machines et fiches lisibles). Le calcul
+  global des failles (`AlertesVulnerabilites.situationGlobale`) n'est pas réécrit : voir « Ce qui reste ».
+
+### Mesures (banc local, avant / après)
+
+Jeu fictif déterministe inséré en base puis `ANALYZE` (script hors dépôt) : 1 020 machines (1 000 de Tenable sur 7 dépôts
+dont 6 reliés à 6 périmètres, 84 à périmètre propre, 40 sans dépôt ; 20 importées de Nessus), 10 050 constats, 120 200
+détections dont 113 800 présentes (80 % sur 20 % des machines), 20 000 CVE de veille dont 1 000 au catalogue KEV, 12 produits
+surveillés reliés, suivis et propositions. Comptes : administrateur ; RSSI non administrateur membre de 3 périmètres dont un
+parent (pyramide) ; lecteur d'un périmètre ; lecteur sans périmètre. Médiane / 95e centile en ms, 15 appels après un
+échauffement, API dans le processus (injection Fastify), PostgreSQL 16 local (`work_mem` 4 Mo, JIT actif par défaut),
+poste de développement de 4 cœurs : **pas l'image de production ni le serveur réel**. Requêtes : nombre d'instructions SQL
+d'un appel, session comprise.
+
+| Route | Compte | Avant | Après | Requêtes avant / après | Lignes rendues (total) |
+| --- | --- | --- | --- | --- | --- |
+| `constats` (page 1) | administrateur | 2 030 / 2 631 | 387 / 479 | 8 / 9 | 9 539 |
+| `constats` (page 1) | RSSI | 3 477 / 3 921 | 366 / 473 | 8 / 9 | 9 538 |
+| `constats?q=CVE-2099-1000` | administrateur | 810 / 893 | 137 / 207 | 8 / 9 | 6 |
+| `constats?q=CVE-2099-1000` | RSSI | 2 314 / 2 367 | 137 / 180 | 9 / 9 | 6 |
+| `machines` (page 1) | administrateur | 4 663 / 4 927 | 380 / 414 | 14 / 14 | 1 020 |
+| `machines` (page 1) | RSSI | 3 685 / 3 862 | 320 / 400 | 14 / 14 | 576 |
+| `machines/:id` | administrateur | 4 523 / 5 003 | 178 / 202 | 4 / 4 | 1 |
+| `machines/:id` | RSSI | 3 327 / 3 528 | 110 / 164 | 4 / 4 | 1 |
+| `vue-ensemble` | administrateur | 1 434 / 1 502 | 1 193 / 1 345 | 17 / 17 | 16 399 failles suivies |
+| `vue-ensemble` | RSSI | 1 488 / 1 568 | 1 225 / 1 266 | 17 / 17 | 16 399 failles suivies |
+| `recherche?q=CVE-2099-1000` | administrateur | 4 321 / 4 493 | 172 / 236 | 11 / 11 | — |
+| `recherche?q=CVE-2099-1000` | RSSI | 3 397 / 3 693 | 129 / 147 | 11 / 11 | — |
+
+Plans (`EXPLAIN (ANALYZE, BUFFERS)` de la requête la plus lente de chaque appel) : liste des constats du RSSI 2 803 ms →
+229 ms (coût estimé 344 215 → 13 442) ; requête des machines 4 520 ms dont **1 779 ms de compilation JIT** → 191 ms sans
+JIT déclenché (coût estimé 1 320 067 → 16 978) ; la même requête servait la fiche et la recherche. **Égalité des réponses** :
+les réponses complètes de 14 appels (listes, pages 2 et 3, filtres « tous » et « par échéance », recherche par CVE, par
+texte et par nom, parc, deux fiches, vue d'ensemble, recherche) sont identiques octet pour octet avant et après, pour les
+quatre comptes (56 comparaisons), y compris les 404 de la fiche pour qui ne lit pas la machine.
+
+Test de non-régression `apps/api/test/performance-vulnerabilites.test.ts` (1 000 machines, 5 000 constats, 50 000 détections
+présentes ; budgets de CI 800 ms et 1,5 s au 95e centile ; totaux comparés à une requête de référence indépendante des
+fragments du module) : environ 47 s, trois passages stables (95e centile de 63 à 266 ms pour les listes, la fiche et la
+recherche, 761 à 797 ms pour la vue d'ensemble) ; il échoue sur le code d'avant (95e centile de 1 108 à 2 638 ms).
+
+### Ce qui reste au-dessus de l'objectif, et pourquoi
+
+- **Vue d'ensemble** : 1,2 à 1,3 s ici (objectif 1,5 s ; le banc mesurait sur un poste environ deux fois plus lent). Le calcul
+  global des failles lit tous les constats présents (coût estimé 1,9 million) : **324 ms de JIT** sur 628 ms pour sa requête
+  (294 ms sans JIT dans la même session) ; le reste est le calcul en TypeScript des cumuls de toutes les failles, le même pour
+  tout le monde. Une réécriture de cette requête en un agrégat a été essayée puis retirée : elle change l'ordre des constats
+  rendus, et le calcul global en dépend (à priorité égale, la première faille rencontrée fixe les faits affichés d'une
+  cible). Cet ordre n'est aujourd'hui fixé que par l'ordre physique de la table : point ouvert ci-dessous.
+- **Parc des machines** (`machines/parc`, hors banc) : 1,3 s pour l'administrateur, à cause des marques de toutes les
+  machines filtrées (`faillesDesMachines` sur 1 020 machines), inchangées.
+- **Liste des constats** : environ 180 ms de SQL et 200 ms de calcul et de lecture des faits des sources pour 9 500
+  constats ; elle croît avec le nombre de constats lisibles. Les estimations de lignes de l'agrégat par constat et machine
+  restent basses (`work_mem` de 4 Mo : un débordement sur disque d'environ 8 Mo).
+
+### Points ouverts (hors lot)
+
+1. **JIT** : `jit = off` pour le rôle applicatif ou le serveur ôterait encore environ 0,3 s à la vue d'ensemble (décision du
+   socle et du RSSI, non prise ici).
+2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : le fixer explicitement (par exemple par identifiant)
+   rendrait le résultat indépendant de l'ordre physique et permettrait la réécriture ensembliste ; il changerait, à priorité
+   égale, les faits affichés de certaines cibles : à décider.
+3. **PERF-09** (bornes de synchronisation) : décision du RSSI, inchangée.
