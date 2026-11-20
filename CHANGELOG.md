@@ -69,6 +69,9 @@ aucune action sur le serveur. La configuration du service `db` change : la base 
 (dans la fenêtre de maintenance déjà annoncée), avec un cache partagé de 256 Mo, 16 Mo par tri et la compilation à la volée
 (JIT) coupée, dans la même limite mémoire de 1 Gio. (session « Projet audit_suivi Coeur »)
 
+**Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
+page de maintenance des mises à jour prend aussi Lexend.
+
 ### Ajouté
 
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
@@ -200,6 +203,15 @@ aucune action sur le serveur. La configuration du service `db` change : la base 
   titre des pages, onglets des pages et des fenêtres, sélecteur de vues des objectifs, présentations du contexte, RETEX et
   Assistant RSSI. Les onglets verticaux ne changent pas. La forme écartée, la préférence et son réglage seront retirés une
   fois le choix fait. Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Police Lexend, liens et sélecteurs redessinés sur toute la plateforme** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [docs/refonte-neon/TYPOGRAPHIE-LEXEND.md](docs/refonte-neon/TYPOGRAPHIE-LEXEND.md)). Lexend remplace Inter, hébergée par
+  la plateforme (SIL OFL), y compris dans l'Assistant RSSI et la page de maintenance des mises à jour. Texte courant sans
+  resserrement, titres moins gras (600) et graisse intermédiaire à 500. Les liens prennent le bleu du menu, avec un
+  soulignement fin et pâle qui fonce au survol ou au focus, au lieu du bleu souligné du navigateur ou des pastilles des
+  fenêtres. Les sélecteurs segmentés (« Par faille / Par machine », densité, thème…) perdent leur fond gris : un simple
+  contour, et le choix actif en bleu nuit du menu avec un reflet bleu transparent et un liseré, sans lumière animée.
+  Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
   addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).

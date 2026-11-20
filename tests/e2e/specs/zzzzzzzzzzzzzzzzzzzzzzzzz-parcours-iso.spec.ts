@@ -152,7 +152,10 @@ test('Parcours ISO / HDS : arbre, carte, sous-actions, fiche, liste, HDS et anim
       .getByRole('button', { name: /^Revue/ })
       .click();
     await expect(carte).toBeVisible();
-    await page.locator('rect.parcours-fond').click({ position: { x: 20, y: 700 } });
+    // Coin bas gauche du fond, à 20 px des bords : le point suit la taille de l'arbre (largeur du menu, police).
+    const fond = page.locator('rect.parcours-fond');
+    const boite = (await fond.boundingBox())!;
+    await fond.click({ position: { x: 20, y: boite.height - 20 } });
     await expect(carte).toHaveCount(0);
 
     // Les étapes sans raccourci s'ouvrent depuis la bande « Autres étapes ».

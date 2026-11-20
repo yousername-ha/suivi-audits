@@ -175,39 +175,7 @@
   font-weight: 550;
   letter-spacing: normal;
 }
-/* Un lien reste reconnaissable sans la couleur : contour et flèche permanents. */
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Anchor-root:not(.mantine-Button-root) {
-  padding: 0.1em 0.35em;
-  border: 1px solid var(--suivi-trait);
-  border-radius: 0.35rem;
-  background: var(--suivi-surface-douce);
-  color: var(--neon-titre);
-  font-weight: 500;
-  text-decoration: none;
-  overflow-wrap: anywhere;
-  box-decoration-break: clone;
-}
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Anchor-root:not(.mantine-Button-root)::after {
-  content: '';
-  display: inline-block;
-  width: 0.45em;
-  height: 0.45em;
-  margin-inline-start: 0.45em;
-  vertical-align: 0.1em;
-  border-top: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  background: linear-gradient(135deg, transparent 42%, currentColor 42%, currentColor 58%, transparent 58%);
-}
-:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
-  > :is(.mantine-Modal-body, .mantine-Drawer-body)
-  .mantine-Anchor-root:not(.mantine-Button-root):hover {
-  background: var(--neon-doux);
-  text-decoration: none;
-}
+/* Liens des fenêtres : forme commune à toute la plateforme (styles.css, choix du RSSI du 19/11/2026). */
 /* Onglets des fenêtres : forme commune à toute la plateforme (neon-ergonomie.css, demande du RSSI du 19/11/2026). */
 
 /* Fenêtres des flux vers l'extérieur (validation d'une ouverture, fermeture depuis le résumé ; demande du RSSI du
