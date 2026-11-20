@@ -100,16 +100,21 @@ export class RechercheVulnerabilites {
         })();
     // Ordre : identifiant exact, puis présente sur une machine lisible (détection), puis la plus récente ; aucun nombre lié
     // à ce que la personne ne lit pas n'entre dans l'ordre.
+    // Lot PERF (PERF-03) : les candidates présentes sur une machine lisible sont calculées une fois (ensemble `lues`), au
+    // lieu d'une sous-requête par candidate ; même ordre.
     const { rows: tete } = await sql<{ cve: string; total: number; exacte: boolean }>`
-      WITH c AS (${candidats})
+      WITH c AS MATERIALIZED (${candidats}),
+      lues AS MATERIALIZED (
+        SELECT DISTINCT cc.cve FROM c
+        JOIN vulnerabilites_constat_cves cc ON cc.cve = c.cve
+        JOIN vulnerabilites_detections d ON d.constat_id = cc.constat_id
+        JOIN vulnerabilites_machines m ON m.id = d.machine_id
+        LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+        WHERE ${present} AND ${lisible(user)})
       SELECT c.cve, count(*) OVER ()::int AS total, bool_or(c.cve = ${exacte}) OVER () AS exacte
       FROM c LEFT JOIN vulnerabilites_veille_cve v ON v.cve = c.cve
       ORDER BY (c.cve = ${exacte}) DESC NULLS LAST,
-        EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
-                JOIN vulnerabilites_detections d ON d.constat_id = cc.constat_id
-                JOIN vulnerabilites_machines m ON m.id = d.machine_id
-                LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-                WHERE cc.cve = c.cve AND ${present} AND ${lisible(user)}) DESC,
+        (c.cve IN (SELECT lues.cve FROM lues)) DESC,
         coalesce(v.publie_le, v.kev_ajout, v.cree_le) DESC NULLS LAST, c.cve DESC
       LIMIT ${B.parGroupe}`.execute(k);
     const total = tete[0]?.total ?? 0;

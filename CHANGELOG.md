@@ -34,8 +34,10 @@ d'AlgoLightHouse, contraintes des listes de fréquences), durée négligeable, s
 serveur. **Changement de cadence voulu dès la mise à jour** : une installation existante passe d'une collecte de veille par
 jour à **une toutes les deux heures** pour le CERT-FR, le CERT Santé, le catalogue KEV et NVD (EPSS reste une fois par jour ;
 Tenable et AlgoLightHouse restent une fois par jour). La première collecte de chaque source part dans la minute qui suit le
-démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période. La fréquence se règle par source dans l'écran
-« Veille » (droit d'administrer le module) et par connecteur dans la fenêtre « Configurer » de la carte « Intégrations ».
+démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période ; de même, chaque connecteur actif et prêt
+(Tenable, AlgoLightHouse : clé saisie, flux ouvert) demande sa première synchronisation automatique dans la minute, puis une
+par période. La fréquence se règle par source dans l'écran « Veille » (droit d'administrer le module) et par connecteur dans
+la fenêtre « Configurer » de la carte « Intégrations ».
 Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
 par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
 
@@ -47,6 +49,13 @@ intégrations change : il devient la carte « Intégrations » de la page Platef
 adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
 personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
 SMSI »)
+
+**Lot SI2 du module Vulnérabilités et imports de fichiers** : sans migration, aucune action sur le serveur. La carte de la
+surface externe devient la page elle-même : plus de cadre, de zoom ni de déplacement à la souris, la page défile et la barre
+de regroupement reste visible. Ce qu'importe une instance d'import (Nessus, Silène) n'est visible que des personnes qui
+administrent le module Vulnérabilités tant que ce n'est pas rattaché à un périmètre : pour Nessus, chaque machine (écran
+« Machines ») ; pour Silène, l'instance (Surface externe, onglet « Périmètres »). (session « Module surveillance
+vulnérabilités SMSI »)
 
 **Barre de téléchargement de la page de maintenance** ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md),
 addendum du 19/11/2026) : sans migration, aucune action. La barre pleine pendant la vérification des signatures n'apparaît
@@ -174,6 +183,9 @@ page de maintenance des mises à jour prend aussi Lexend.
   à la taille du conteneur (768 Mo) et compilation à la volée (JIT) coupée, paramètres du service `db` dans
   `docker-compose.yml` (décision du RSSI du 20/11/2026). Le banc du 19/11 mesurait jusqu'à 1,6 s de compilation par requête
   sur les vulnérabilités et 4 Go de fichiers temporaires de tri. (session « Projet audit_suivi Coeur »)
+- Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
+  est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
+  (session « Module surveillance vulnérabilités SMSI »)
 - **Fenêtres : coins arrondis, taille automatique, style à l'essai ; fenêtre « Mises à jour et versions » revue**
   (décisions du RSSI du 19/11/2026, addendum à l'[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)). Le
   cadre « Biseau » (coins coupés) des fenêtres et panneaux latéraux, présentation « Périmètre et contexte » comprise, est
@@ -231,6 +243,14 @@ page de maintenance des mises à jour prend aussi Lexend.
 
 ### Corrigé
 
+- Vulnérabilités, **lectures rapides sur un grand parc** (défauts PERF-01 à PERF-04 du banc de performance du 19/11/2026,
+  addendum « lot PERF » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : les périmètres visibles sont lus une fois
+  par requête au lieu d'une fois par détection ; la liste des failles détectées ne lit le résumé complet que pour la page
+  rendue ; la liste et la fiche des machines n'ont plus de sous-requête par machine ; la recherche range les CVE en une
+  lecture. Sur un jeu fictif de 1 000 machines et 114 000 détections (poste de développement) : liste des failles 3,9 s →
+  0,5 s (RSSI), machines 4,9 s → 0,4 s, fiche d'une machine 5,0 s → 0,2 s, recherche 4,5 s → 0,2 s, vue d'ensemble 1,6 s →
+  1,3 s (95e centile). Mêmes réponses, mêmes droits ; aucune migration. Nouveau test de non-régression
+  `performance-vulnerabilites`. (session « Module surveillance vulnérabilités SMSI »)
 - Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
   19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
   l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la

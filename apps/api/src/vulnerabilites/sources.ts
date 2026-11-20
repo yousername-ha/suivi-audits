@@ -268,6 +268,16 @@ export const exploiteeCve = (colonne: 'v.cve' | 'cc.cve' | 'r.cve'): RawBuilder<
       AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui')))
     OR EXISTS (SELECT 1 FROM (${cvesAlh}) za WHERE za.cve = ${sql.ref(colonne)} AND za.exploitee))`;
 
+/** Lot PERF (PERF-02) : ensemble des CVE à l'exploitation avérée selon une source, même règle qu'exploiteeCve sous forme
+    d'ensemble (une lecture par requête au lieu de trois sous-requêtes par CVE, coût estimé sous le seuil du JIT). Toute
+    évolution de l'une se reporte sur l'autre (test vulnerabilites-priorite-commune). Colonne : cve. */
+export const cvesExploitees = sql<{ cve: string }>`SELECT vk.cve FROM vulnerabilites_veille_cve vk
+    WHERE vk.kev_ajout IS NOT NULL
+  UNION SELECT x.cve FROM vulnerabilites_veille_avis a CROSS JOIN LATERAL unnest(a.cves) AS x(cve)
+    WHERE x.cve IS NOT NULL
+      AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui'))
+  UNION SELECT za.cve FROM (${cvesAlh}) za WHERE za.exploitee AND za.cve IS NOT NULL`;
+
 /** La CVE de la colonne désignée est « exploitable » selon la fiche du CERT Santé (preuve de concept disponible), ou selon
     AlgoLightHouse sur une technologie encore détectée (lots ALH2 et ALH5). */
 export const preuveCertSante = (colonne: 'cc.cve'): RawBuilder<boolean> =>
