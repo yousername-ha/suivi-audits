@@ -16,7 +16,7 @@ import { PolitiqueClesPanel } from '../components/PolitiqueCles';
 import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
-import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
+import { DetailsTechniques, Audit, InstantanesEtat, Sessions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
@@ -270,7 +270,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'sauvegardes',
     cote: 'systeme',
     titre: 'Sauvegardes et restauration',
-    resume: 'Archives, restauration guidée et suivi des tests de restauration.',
+    resume: 'Archives, restauration guidée, suivi des tests de restauration et instantanés de l’état de suivi.',
     icone: 'base',
     teinte: 'vert',
     detail: (m, can) => (
@@ -279,6 +279,8 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         <BackupsPanel />
         <PolitiqueSauvegardesPanel />
         {can('parametres', 'lire') && <SectionLoader section="sauvegardes" onDirty={m} />}
+        {/* Instantanés de l'état de suivi (décision du RSSI du 19/11/2026) : venus de « Mises à jour et versions ». */}
+        <InstantanesEtat />
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
     ),
@@ -296,15 +298,10 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'mises-a-jour',
     cote: 'systeme',
     titre: 'Mises à jour et versions',
-    resume: 'Version installée, mise à jour depuis l’interface, historique des versions.',
+    resume: 'Version installée, mise à jour depuis l’interface, reçus des dernières installations.',
     icone: 'maj',
     teinte: 'bleu',
-    detail: () => (
-      <Stack gap="xl">
-        <UpdatesPanel />
-        <Versions />
-      </Stack>
-    ),
+    detail: () => <UpdatesPanel />,
   },
   {
     id: 'flux-externes',

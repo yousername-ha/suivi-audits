@@ -82,10 +82,16 @@ export const DENSITES = ['compacte', 'normale', 'confortable'] as const;
 /** Style global de l'instance (identique pour tous les comptes) : « sage » = Référence 08 (défaut), « clair » = clair bleuté.
     Il ne remplace que les fonds et bordures claires ; le mode clair/sombre reste une préférence distincte. */
 export const STYLES = ['sage', 'clair'] as const;
+/** Style des fenêtres et panneaux, à l'essai pour toute l'instance (addendum du 19/11/2026 à l'ADR 0093, à réduire à un
+    seul style une fois le choix fait) : « barre » = barre d'accent dégradée en haut (B, défaut), « lisere » = liseré
+    dégradé sur tout le contour (A). Appliqué par l'attribut data-fenetres de <html>. */
+export const FENETRES = ['barre', 'lisere'] as const;
+export type StyleFenetres = (typeof FENETRES)[number];
 export const ApparenceSettings = z.object({
   theme: z.enum(THEMES),
   densite: z.enum(DENSITES),
   style: z.enum(STYLES).default('sage'),
+  fenetres: z.enum(FENETRES).default('barre'),
 });
 export const NotificationsSettings = z.object({
   echeancesJours: z.number().int().min(0).max(365),
