@@ -1508,6 +1508,11 @@ export interface TableauxDeBord {
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  public: Generated<boolean>;
+  publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  modele: string | null;
+  surchargee: Generated<boolean>;
+  chiffres_servis_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface TableauxDeBordChoix {
@@ -1516,12 +1521,19 @@ export interface TableauxDeBordChoix {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface TableauxDeBordOnglets {
+  utilisateur: string;
+  tableau: string;
+  rang: number;
+}
+
 export interface TableauxDeBordPartages {
   tableau: string;
   utilisateur: string | null;
   groupe: string | null;
   created_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  role: string | null;
 }
 
 export interface TypesProcessus {
@@ -2433,6 +2445,7 @@ export interface DB {
   sup_scope_links: SupScopeLinks;
   tableaux_de_bord: TableauxDeBord;
   tableaux_de_bord_choix: TableauxDeBordChoix;
+  tableaux_de_bord_onglets: TableauxDeBordOnglets;
   tableaux_de_bord_partages: TableauxDeBordPartages;
   types_processus: TypesProcessus;
   update_jobs: UpdateJobs;

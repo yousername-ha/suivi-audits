@@ -541,7 +541,7 @@ joué en local seulement, sur une pile sans Docker.
 
 ### Formes constatées sur un espace réel (17/11/2026)
 
-Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt). Elles confirment
+Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt ; le script en a été retiré le 20/11/2026). Elles confirment
 que les listes sont des tableaux directs, sans pagination, et que les volumes tiennent très en dessous des bornes. Trois
 formes ont demandé une adaptation, couverte par un test : la liste des alertes peut rendre une date de création vide (an 1),
 le détail porte la vraie ; « * » tient lieu de valeur absente pour le produit et le nom affiché d'une technologie, dont la

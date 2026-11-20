@@ -61,6 +61,12 @@ export const ACTION_LABELS: Record<Action, string> = {
 };
 
 export type Permission = `${Module}:${Action}`;
+/** Libellé propre à une action d'un module, quand l'action générique ne dit pas ce qu'elle permet (écran des rôles). */
+export const ACTION_LABELS_MODULE: Partial<Record<Module, Partial<Record<Action, string>>>> = {
+  tableau_de_bord: { modifier: 'Créer et partager', administrer: 'Publier pour tous' },
+};
+export const libelleAction = (m: Module, a: Action) => ACTION_LABELS_MODULE[m]?.[a] ?? ACTION_LABELS[a];
+
 export const ALL_PERMISSIONS: readonly Permission[] = MODULES.flatMap((m) =>
   ACTIONS.map((a) => `${m}:${a}` as Permission),
 );

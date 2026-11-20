@@ -136,6 +136,7 @@ describe('migration 052 : rattachements convertis en copies des périmètres', (
         '093_vulnerabilites_import_nessus.sql',
         '094_vulnerabilites_exploite_malware.sql',
         '095_vulnerabilites_silene.sql',
+        '096_tableaux_de_bord_multiples.sql',
       ]);
 
       const { rows } = await t.svc.db.q<{

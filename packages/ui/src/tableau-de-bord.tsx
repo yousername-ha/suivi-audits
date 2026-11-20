@@ -67,25 +67,34 @@ export function Dalle({
   titre,
   sousTitre,
   largeur = 4,
+  hauteur,
   lueur = false,
   className = '',
+  action,
   children,
 }: {
   titre: string;
   sousTitre?: string;
   largeur?: LargeurDalle;
+  /** Hauteur minimale en lignes de la grille (tableau de bord unique, ADR 0108) ; absente : hauteur naturelle. */
+  hauteur?: number;
   lueur?: boolean;
   className?: string;
+  /** Commande placée à droite du titre (détail de la dalle). */
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section
-      className={`tdb-dalle tdb-l${largeur}${lueur ? ' tdb-dalle--lueur' : ''}${className ? ` ${className}` : ''}`}
+      className={`tdb-dalle tdb-l${largeur}${hauteur ? ` tdb-h${hauteur}` : ''}${lueur ? ' tdb-dalle--lueur' : ''}${className ? ` ${className}` : ''}`}
       aria-label={titre}
     >
       <div className="tdb-dalle-tete">
-        <h2 className="tdb-dalle-titre">{titre}</h2>
-        {sousTitre && <p className="tdb-dalle-sous-titre">{sousTitre}</p>}
+        <div className="tdb-dalle-titres">
+          <h2 className="tdb-dalle-titre">{titre}</h2>
+          {sousTitre && <p className="tdb-dalle-sous-titre">{sousTitre}</p>}
+        </div>
+        {action}
       </div>
       <div className="tdb-dalle-corps">{children}</div>
     </section>

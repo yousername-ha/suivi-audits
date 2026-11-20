@@ -323,6 +323,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),
+      /** Chiffres ouverts d'un tableau de bord (ADR 0109) : soixante calculs par minute et par compte. */
+      tableauChiffres: limiter(60, 60e3),
       /* Clés de sécurité (ADR 0079) : options et vérifications, par session et par compte. */
       webauthnBySession: limiter(10, 10 * 60e3),
       webauthnByUser: limiter(20, 15 * 60e3),
