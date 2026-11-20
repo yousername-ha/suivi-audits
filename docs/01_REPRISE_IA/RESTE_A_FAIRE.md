@@ -38,5 +38,6 @@ Décidés sans place dans la file : rançongiciels (catalogue KEV et évaluation
 quatre réglages des fréquences, marques « présente sur le parc » et « exposée sur Internet » sur les cartes d'avis, rapport
 de pilotage en vrai PDF (plus tard). Détail : § 3 de la reprise.
 
-Décisions encore attendues du RSSI : PERF-09 (bornes de synchronisation Tenable), ordre du calcul global de la vue d'ensemble
+Décisions encore attendues du RSSI (PERF-09 est tranché le 20/11/2026 : bornes inchangées pour la 7.5.0) : ordre du calcul
+global de la vue d'ensemble
 à priorité égale, sens des classes des constats Silène, sens du champ « type » du rapport de l'Active Directory.

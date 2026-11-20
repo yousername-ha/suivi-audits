@@ -3208,4 +3208,8 @@ pas, et ce budget est à resserrer quand le calcul global sera réécrit.
 2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : le fixer explicitement (par exemple par identifiant)
    rendrait le résultat indépendant de l'ordre physique et permettrait la réécriture ensembliste ; il changerait, à priorité
    égale, les faits affichés de certaines cibles : à décider.
-3. **PERF-09** (bornes de synchronisation) : décision du RSSI, inchangée.
+3. **PERF-09** (bornes de synchronisation) : **tranché le 20/11/2026 par le RSSI** : la synchronisation de Tenable Security
+   Center reste bornée à 20 000 détections (`TENABLE_BORNES`) pour la version 7.5.0, sans relèvement ni découpage par dépôt.
+   Conséquence connue et acceptée : au-delà de la borne, la synchronisation est rendue « incomplète », ce que l'écran
+   affiche, et plus rien n'est marqué comme disparu tant qu'une synchronisation complète n'a pas eu lieu. À réexaminer
+   quand le nombre réel de détections du parc sera connu.
