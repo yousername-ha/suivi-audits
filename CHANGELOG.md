@@ -162,6 +162,9 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Modifié
 
+- Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
+  est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
+  (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, imports de fichiers (Nessus, Silène) : les statistiques des tables réécrites sont recalculées à la fin d'un
   import, comme après une synchronisation reçue de Security Center ou d'AlgoLightHouse, sans jamais faire échouer l'import.
   (session « Module surveillance vulnérabilités SMSI »)
