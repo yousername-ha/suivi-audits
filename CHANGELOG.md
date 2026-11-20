@@ -73,6 +73,11 @@ suivi-audits »)
 **Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
 Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
 
+**Base de données, réglages de mémoire et JIT** (décision du RSSI du 20/11/2026, banc de performance du 19/11/2026) :
+aucune action sur le serveur. La configuration du service `db` change : la base redémarre une fois pendant la mise à jour
+(dans la fenêtre de maintenance déjà annoncée), avec un cache partagé de 256 Mo, 16 Mo par tri et la compilation à la volée
+(JIT) coupée, dans la même limite mémoire de 1 Gio. (session « Projet audit_suivi Coeur »)
+
 **Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
 page de maintenance des mises à jour prend aussi Lexend.
 
@@ -183,6 +188,10 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
+- Base de données : cache partagé porté de 128 à 256 Mo, mémoire de tri de 4 à 16 Mo, estimation du cache disponible ramenée
+  à la taille du conteneur (768 Mo) et compilation à la volée (JIT) coupée, paramètres du service `db` dans
+  `docker-compose.yml` (décision du RSSI du 20/11/2026). Le banc du 19/11 mesurait jusqu'à 1,6 s de compilation par requête
+  sur les vulnérabilités et 4 Go de fichiers temporaires de tri. (session « Projet audit_suivi Coeur »)
 - Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
   est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
   (session « Module surveillance vulnérabilités SMSI »)
