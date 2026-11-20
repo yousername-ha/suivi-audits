@@ -183,6 +183,16 @@
   display: flex;
   gap: var(--mantine-spacing-xs);
 }
+/* Verre « maintenance » (choix du RSSI du 20/11/2026) : liseré épais à gauche de la boîte d'outils, liseré intérieur et
+   ombre portée des boutons d'ajout. Classe doublée : même poids que la règle commune des boîtes (:is), placée après elle. */
+.app-main .barre-boite.barre-boite {
+  border-inline-start: 3px solid var(--menu-teinte-pilotage);
+}
+.app-main .barre-outils__ajout .mantine-Button-root {
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--menu-fond-haut) 35%, transparent),
+    0 1em 2em -1.2em color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
+}
 
 /* Filtre sur le titre d'une colonne : le mot ouvre les valeurs ; la colonne filtrée est marquée. */
 .filtre-colonne {
@@ -318,6 +328,19 @@ html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
     0 1px 2px color-mix(in srgb, var(--menu-fond-haut) 6%, transparent),
     0 6px 18px color-mix(in srgb, var(--mantine-color-violet-9) 7%, transparent);
   color: var(--mantine-color-text);
+}
+/* Boîte d'outils en clair : verre de la page de maintenance (choix du RSSI du 20/11/2026), bords teintés de violet,
+   liseré violet à gauche, dégradé en biais. Classe doublée : passe devant la règle commune des boîtes en clair. */
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite.barre-boite {
+  border: 1.5px solid var(--suivi-trait);
+  border-block-start-color: color-mix(in srgb, var(--mantine-color-violet-3) 32%, var(--suivi-trait));
+  border-inline-start: 3px solid var(--mantine-color-violet-4);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--mantine-color-violet-5) 8%, var(--suivi-surface)),
+    var(--suivi-surface)
+  );
+  box-shadow: 0 1.4em 3em -1.6em color-mix(in srgb, var(--menu-fond-haut) 38%, transparent);
 }
 html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite__sep {
   background: var(--suivi-trait);

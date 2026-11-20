@@ -66,11 +66,44 @@
   align-items: center;
   column-gap: var(--mantine-spacing-xs);
   padding: 0.5rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--ton) 35%, var(--tache-trait));
+  /* Verre de la page de maintenance (choix du RSSI du 20/11/2026), forme inchangée : liseré épais de la teinte à gauche,
+     bords teintés de violet, dégradé en biais, trait lumineux en bas à droite. */
+  border: 1.5px solid var(--tache-trait);
+  border-block-start-color: color-mix(in srgb, var(--mantine-color-violet-3) 30%, var(--tache-trait));
+  border-block-end-color: color-mix(in srgb, var(--mantine-color-violet-3) 18%, var(--tache-trait));
+  border-inline-start: 3px solid var(--ton);
   border-radius: 0.875rem 0.25rem 0.875rem 0.25rem;
-  background: linear-gradient(110deg, var(--suivi-surface), color-mix(in srgb, var(--ton) 7%, var(--suivi-surface)));
-  box-shadow: var(--suivi-ombre);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--ton) 11%, var(--suivi-surface)),
+    color-mix(in srgb, var(--suivi-surface) 82%, transparent)
+  );
+  box-shadow: 0 1.4em 3em -1.6em color-mix(in srgb, var(--menu-fond-haut) 38%, transparent);
+  backdrop-filter: blur(10px);
   min-width: 0;
+}
+.taches-metrique::after {
+  content: '';
+  position: absolute;
+  inset-block-end: -1.5px;
+  inset-inline-end: 1.25rem;
+  inline-size: 4.5rem;
+  block-size: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--mantine-color-violet-4) 60%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+[data-mantine-color-scheme='dark'] .taches-metrique {
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--ton) 14%, var(--suivi-surface)),
+    color-mix(in srgb, var(--suivi-surface) 70%, transparent)
+  );
+  box-shadow: 0 1.6em 3.4em -1.6em color-mix(in srgb, var(--mantine-color-black) 55%, transparent);
 }
 .taches-metrique::before {
   content: '';
