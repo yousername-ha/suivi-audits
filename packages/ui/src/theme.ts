@@ -61,10 +61,17 @@ export const theme = createTheme({
         lockScroll: false,
         radius: 'lg',
         onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
+        // Le corps défile seul quand il dépasse (taille automatique, addendum de l'ADR 0093) : il doit être atteignable
+        // au clavier pour défiler sans souris (règle axe « scrollable-region-focusable », WCAG 2.1.1).
+        attributes: { body: { tabIndex: 0 } },
       },
     }),
     Drawer: Drawer.extend({
-      defaultProps: { lockScroll: false, onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche) },
+      defaultProps: {
+        lockScroll: false,
+        onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
+        attributes: { body: { tabIndex: 0 } },
+      },
     }),
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
     Button: Button.extend({ defaultProps: { radius: 'md' } }),
