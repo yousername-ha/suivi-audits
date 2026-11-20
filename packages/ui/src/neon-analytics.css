@@ -549,11 +549,7 @@
 .tdb-presentation.mantine-SegmentedControl-root {
   align-self: flex-start;
 }
-.na-entete .mantine-SegmentedControl-label[data-active] {
-  background: var(--mantine-color-suivi-8);
-  color: var(--mantine-color-white);
-  border-radius: var(--mantine-radius-sm);
-}
+/* Choix actif : forme commune des sélecteurs segmentés (neon-ergonomie.css, choix du RSSI du 19/11/2026). */
 .neon-analytics {
   --na-hauteur: 17rem;
 }
