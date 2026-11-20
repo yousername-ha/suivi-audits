@@ -1,7 +1,8 @@
 /* Présentation « Périmètre et contexte » (refonte Neon, lot 3, ADR 0093) : lecture distincte de la saisie, ouverte d'abord
    pour une fiche existante. Aucune commande d'écriture dans les onglets de consultation : la modification reste celle du
-   formulaire de RecordEditor (droits, versions, If-Match), ouverte par « Modifier ». Le cadre Biseau et les cinq
-   pictogrammes animés sont décoratifs ; les textes et les données restent immobiles. */
+   formulaire de RecordEditor (droits, versions, If-Match), ouverte par « Modifier ». Le cadre est celui de toutes les
+   fenêtres (addendum du 19/11/2026 à l'ADR 0093) ; les cinq pictogrammes animés sont décoratifs ; les textes et les données
+   restent immobiles. */
 import { Button, Group, Modal, Stack, Tabs, Text } from '@mantine/core';
 import { GRC_LABELS, libelleRelation, PILOTAGE_FIELDS, type GrcKind, type GrcObject } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -263,20 +264,10 @@ export function ContextPresentation({
       title={GRC_LABELS.context}
       size="xl"
       fullScreen={fullScreen}
-      data-cadre="biseau"
       classNames={{ root: 'contexte-fenetre', content: 'contexte-presentation', body: 'contexte-presentation-corps' }}
       closeButtonProps={{ 'aria-label': 'Fermer la présentation' }}
     >
       <Stack>
-        <div className="contexte-cadre" aria-hidden="true">
-          {['haut-gauche', 'haut-droite', 'bas-droite', 'bas-gauche'].map((coin) => (
-            <span key={coin} className={`contexte-cadre-coin contexte-cadre-coin--${coin}`}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" focusable="false">
-                <path d="M0 24 24 0" />
-              </svg>
-            </span>
-          ))}
-        </div>
         <ErrorAlert error={error} />
         <Tabs defaultValue="presentation" keepMounted={false}>
           <Tabs.List>

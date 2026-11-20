@@ -25,8 +25,13 @@ import {
 const UUID = '0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
 
 describe('catalogue des connecteurs', () => {
-  it('trois types livrés : Tenable Security Center et AlgoLightHouse (réseau, avec flux et secrets), Nessus par import de fichier (lot N1), tous de portée organisation', () => {
-    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual(['tenable', 'algolighthouse', 'nessus-fichier']);
+  it('quatre types livrés : Tenable Security Center et AlgoLightHouse (réseau, avec flux et secrets), Nessus et Silène par import de fichier (lots N1 et SI1), tous de portée organisation', () => {
+    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual([
+      'tenable',
+      'algolighthouse',
+      'nessus-fichier',
+      'silene-fichier',
+    ]);
     expect(TYPES_INTEGRATION_RESEAU.map((t) => t.id)).toEqual(['tenable', 'algolighthouse']);
     const t = typeIntegration('tenable');
     expect(t.libelle).toBe('Tenable Security Center');
@@ -56,6 +61,18 @@ describe('catalogue des connecteurs', () => {
     expect(n.operations).toEqual(['importer']);
     expect(n.champs).toEqual(['gravites']);
     expect(FLUX_MODULES as readonly string[]).not.toContain('nessus-fichier');
+    // Lot SI1 : Silène par import de fichier, sans adresse, sans clé, sans réglage, sans flux, sans exécutant.
+    const si = typeIntegration('silene-fichier');
+    expect([si.libelle, si.portee, si.flux, si.secrets, si.pointsAcces, si.operations, si.champs]).toEqual([
+      'Silène, import de fichier',
+      'organisation',
+      null,
+      [],
+      [],
+      ['importer'],
+      [],
+    ]);
+    expect(FLUX_MODULES as readonly string[]).not.toContain('silene-fichier');
     // Sortie de l'API : sans schéma ni motif.
     const c = catalogueIntegrations();
     expect(JSON.parse(JSON.stringify(c))).toEqual(c);

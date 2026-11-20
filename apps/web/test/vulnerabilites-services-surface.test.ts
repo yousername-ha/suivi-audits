@@ -19,7 +19,6 @@ import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
 import { CarteSurface } from '../src/vulnerabilites/CarteSurface';
 import {
-  colonneService,
   COLONNES,
   construireModele,
   couperLibelle,
@@ -30,7 +29,8 @@ import {
   INTERNET_INTERLIGNE,
   type LigneDessinee,
   libelleResume,
-  replisParDefaut,
+  serviceAbsent,
+  serviceDessine,
   toutDeplier,
   X,
   yInternet,
@@ -51,7 +51,11 @@ const service = (port: number, protocole: 'tcp' | 'udp' | null, extra: Partial<S
   ...extra,
 });
 const HTTPS = service(443, 'tcp', { nom: 'https', produit: 'nginx', version: '1.18' });
-const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
+const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => {
+  const a = base(v);
+  return 'alhId' in v ? a : { ...a, alhId: a.id };
+};
+const base = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
   id: id(++n),
   type: 'domaine',
   valeur: 'exemple.example',
@@ -66,6 +70,9 @@ const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
   versionLiaisons: 1,
   services: [],
   nombreServices: 0,
+  sources: ['alh'],
+  alhId: null,
+  silene: null,
   ...v,
 });
 const alerte = (v: Partial<AlerteCarteDto>): AlerteCarteDto => ({
@@ -117,6 +124,7 @@ function surface() {
       }),
       alerte({ type: 'data_leak', titre: 'Identifiants divulgués de la messagerie' }),
     ],
+    constatsSilene: [],
     tronquee: false,
     totaux: { actifs: 6, alertes: 5 },
   };
@@ -151,32 +159,37 @@ describe('carte : colonne « Service »', () => {
   it('libellés exacts : port/protocole · service, puis produit et version ; « port non communiqué » en alerte sans port', () => {
     const { carte } = surface();
     const m = filtrerModele(construireModele(carte, 'parent'), FILTRES_CARTE_VIDES);
-    const lignes = new Map(m.groupes.flatMap((g) => g.lignes).map((l) => [l.domaine?.valeur ?? l.hote?.valeur, l]));
+    const lignes = new Map(m.groupes.flatMap((g) => g.lignes).map((l) => [l.domaines[0]?.valeur ?? l.hote?.valeur, l]));
     const portail = lignes.get('portail-patients-consultations.exemple-sante.example')!;
     // Services de l'hôte vers lequel résout le domaine, fusionnés, triés par port ; le total compte ceux au-delà de la borne.
-    expect(portail.services.map((s) => s.port)).toEqual([22, 443]);
-    expect(colonneService(portail)).toEqual({
-      libelle: '22/tcp · SSH (+2)',
+    expect(portail.ports.map((s) => s.port)).toEqual([22, 443]);
+    expect(portail.nombreServices).toBe(3);
+    expect(serviceDessine(portail, portail.ports[0]!)).toEqual({
+      libelle: '22/tcp · SSH',
       produit: 'OpenSSH 9.6',
-      connu: true,
-      nom: 'Service 22/tcp · SSH, OpenSSH 9.6, et 2 autres services',
+      sources: ['alh'],
+      constats: [],
+      nom: 'Service 22/tcp · SSH, OpenSSH 9.6, vu par AlgoLightHouse',
     });
-    expect(colonneService(lignes.get('vpn.exemple-sante.example')!)).toMatchObject({
-      libelle: 'port non communiqué',
-      connu: false,
+    expect(serviceDessine(portail, portail.ports[1]!)).toMatchObject({
+      libelle: '443/tcp · HTTPS',
+      produit: 'nginx 1.18',
     });
+    expect(serviceAbsent(lignes.get('vpn.exemple-sante.example')!)).toMatchObject({ libelle: 'port non communiqué' });
     // Sans alerte et sans service : rien ; sans alerte avec un service : le service, protocole jamais inventé.
-    expect(colonneService(lignes.get('exemple-sante.example')!)).toBeNull();
-    expect(colonneService(lignes.get('calme.exemple-sante.example')!)).toMatchObject({
-      libelle: '8443',
-      produit: 'nginx',
-    });
+    const racine = lignes.get('exemple-sante.example')!;
+    expect(racine.ports).toEqual([]);
+    expect(serviceAbsent(racine)).toBeNull();
+    const calme = lignes.get('calme.exemple-sante.example')!;
+    expect(serviceAbsent(calme)).toBeNull();
+    expect(serviceDessine(calme, calme.ports[0]!)).toMatchObject({ libelle: '8443', produit: 'nginx' });
   });
 
   it('faisceaux repliés : nombre de services connus', () => {
     const { carte } = surface();
     const m = filtrerModele(construireModele(carte, 'parent'), FILTRES_CARTE_VIDES);
-    const s = disposer(m, replisParDefaut(m), { peutModifier: true });
+    // Branche en alerte dépliée, ses lignes sans alerte en faisceau (repli par défaut au-delà du seuil).
+    const s = disposer(m, { groupes: new Set([m.groupes[0]!.cle]), calmes: new Set() }, { peutModifier: true });
     const faisceau = s.rangees.find((r) => r.type === 'faisceau' && r.calmes)!;
     expect(faisceau.type === 'faisceau' && faisceau.resume.services).toBe(1);
     expect(libelleResume(s.groupes[0]!.resume)).toContain('4 services connus');
@@ -241,11 +254,13 @@ describe('carte : rendu', () => {
     const html = rendreCarte(surface().carte);
     for (const t of [
       '>Service<',
-      '22/tcp · SSH (+2)',
+      '>22/tcp · SSH<',
+      '>443/tcp · HTTPS<',
       'OpenSSH 9.6',
+      'et 1 autre service',
       'port non communiqué',
       'aria-label="Port non communiqué : le détail des alertes de cet actif ne donne aucun service"',
-      'aria-label="Service 22/tcp · SSH, OpenSSH 9.6, et 2 autres services : ouvrir la fiche de 192.0.2.10"',
+      'aria-label="Service 22/tcp · SSH, OpenSSH 9.6, vu par AlgoLightHouse : ouvrir la fiche de 192.0.2.10"',
       'seuls les services portés par une alerte sont connus',
       'AlgoLightHouse ne publie pas la liste des ports ouverts',
       'Domaine, adresse, CVE, port (443, 443/tcp) ou produit.',

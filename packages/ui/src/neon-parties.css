@@ -568,7 +568,7 @@
   justify-self: start;
 }
 
-/* Consultation d'une partie intéressée : fenêtre Biseau commune (neon-fenetres.css), panneaux de lecture. */
+/* Consultation d'une partie intéressée : cadre commun des fenêtres (neon-fenetres.css), panneaux de lecture. */
 .partie-presentation {
   --modal-size: 72rem;
 }

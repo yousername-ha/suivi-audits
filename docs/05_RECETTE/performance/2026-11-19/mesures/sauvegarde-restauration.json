@@ -1,0 +1,9 @@
+{
+  "pgDumpS": 12.7,
+  "chiffrementAgeS": 0.1,
+  "dechiffrementS": 0.2,
+  "pgRestoreS": 17.6,
+  "analyzeS": 1.7,
+  "tailleDumpOctets": 111374806,
+  "tailleArchiveOctets": 111407864
+}

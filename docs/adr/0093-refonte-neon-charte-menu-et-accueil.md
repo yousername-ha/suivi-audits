@@ -8,6 +8,8 @@
 - **Modifiée par** l'[ADR 0099](0099-animations-en-continu-sans-bouton-de-pause.md) (15/11/2026) : les boutons de pause des
   animations (menu, points 2 et 15, et écrans des lots 3 à 8) sont retirés ; les animations tournent en continu, arrêtées par
   le mouvement réduit, l'onglet masqué et l'impression.
+- **Addendum du 19/11/2026** (fenêtres : style B et taille automatique, en fin de document) : remplace, pour le cadre et la
+  hauteur des fenêtres, le « Biseau commun » et la « hauteur naturelle » de la décision 6.
 - Rédaction : session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`)
 - Remplace, pour la direction graphique, l'[ADR 0015](0015-refonte-visuelle-sauge.md) (palette Sauge). Les autres
   principes de l'ADR 0015 restent : Inter locale, styles partagés dans `packages/ui`, rayons de 6 à 12 px, mouvement réduit.
@@ -114,3 +116,37 @@ filtres et fonctions propres à la cible restent ; aucun module retiré n'est r�
 - Points laissés à la décision du RSSI : Timeline par défaut pour les tâches (une ligne de `packages/shared`) ; coexistence du
   bandeau de synthèse et des compteurs du panorama des Parties intéressées (constat RSSI-05) ; nom accessible de la croix de
   fermeture des fenêtres (règle axe `button-name`, déjà présente avant la refonte).
+
+## Addendum du 19/11/2026 — Fenêtres : style B et taille automatique
+
+- Décision du RSSI du 19/11/2026, sur maquette ; rédaction : session « Projet audit_suivi Coeur »
+  (`session_01ES6jrfuR1tD6Az1XDgAnS3`). Remplace le « Biseau commun » (coins coupés, traits violet/cyan) et la « hauteur
+  naturelle » (voile extérieur défilant) de la décision 6. Les exclusions restent : fenêtres RETEX, menu mobile, fenêtres plein
+  écran (sans cadre) ; le mode `forced-colors` garde un contour système.
+
+1. **Style B, par défaut** : coins arrondis (`--mantine-radius-lg`), trait gris discret (`--suivi-trait`), fine barre d'accent
+   dégradée violet → cyan (`--neon-violet` → `--neon-cyan`, trois traits) en haut seulement, ombre `--suivi-ombre-haute`.
+   Toutes les fenêtres (`.mantine-Modal-content`) et tous les panneaux latéraux (`.mantine-Drawer-content`, coins arrondis côté
+   écran). La présentation « Périmètre et contexte » prend le même cadre : son cadre propre et ses coins SVG décoratifs sont
+   retirés, son contenu est inchangé. La classe `.neon-cadre-biseau`, sans usage, est retirée.
+2. **À l'essai, à réduire à un seul style une fois le choix fait** : style A, « Liseré dégradé » (coins arrondis, liseré
+   violet → cyan sur tout le contour, fond du thème conservé), au choix de la plateforme pour tous les comptes : Plateforme >
+   Apparence, « Fenêtres (essai) », « Barre d'accent » (B) ou « Liseré dégradé » (A). Réglage `fenetres` de la section
+   d'apparence existante (`barre` par défaut, `lisere`, toute autre valeur refusée), dans le JSON des réglages : aucune
+   migration ; même droit que l'apparence (`parametres:modifier`), journal d'audit et If-Match ; appliqué par l'attribut
+   `data-fenetres` de `<html>`.
+3. **Taille automatique, commune** : la taille demandée (`size`) est la largeur de base ; une fenêtre qui contient un tableau
+   prend la largeur de son contenu (`fit-content`, au moins la largeur de base). Jamais plus de 92 % de la largeur ni 90 % de
+   la hauteur de la fenêtre du navigateur, marge constante (`--modal-x-offset: 4vw`, `--modal-y-offset: 5dvh`) ; pleine
+   largeur sous la largeur d'une tablette (téléphone, moins de 36em, marge réduite). Seul le corps défile, verticalement ;
+   l'en-tête (titre, fermeture) et le pied (boutons) restent visibles ; jamais de défilement horizontal de la fenêtre, un
+   tableau large défile dans son propre cadre `.table-wrap`. Tout en CSS dans `packages/ui/src/neon-fenetres.css`, jetons de
+   la charte.
+4. **Fenêtre « Mises à jour et versions »** : composition de la page de maintenance (versions installée et disponible,
+   pastille d'état, opération en cours, reçus) dans le thème de l'application ; trois reçus d'installation au plus, limite
+   côté interface (API inchangée). L'historique de l'« ancienne interface » devient « Instantanés de l'état de suivi » dans la
+   carte « Sauvegardes et restauration », avec Télécharger et Restaurer inchangés (mêmes droits, même API
+   `/api/admin/versions`).
+
+Conséquences : les captures de référence qui montrent une fenêtre ou un panneau changent (relecture du RSSI avant
+remplacement) ; les cartes et dessins qui ne sont pas des fenêtres (matrice SWOT biseautée, cartes Studio) ne changent pas.

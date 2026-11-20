@@ -49,6 +49,8 @@ import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ImportNessus } from './vulnerabilites/import-nessus.js';
+import { ImportSilene } from './vulnerabilites/import-silene.js';
+import { SurfaceSilene } from './vulnerabilites/surface-silene.js';
 import { DepotsTenable } from './vulnerabilites/depots.js';
 import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
 import { LiaisonsMachines } from './vulnerabilites/liaisons-machines.js';
@@ -121,6 +123,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités ; priorité de ses CVE
      par la grille commune (lot ALH2). */
   const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc, reglagePriorite);
+  /* Lot SI1 : surface externe importée de Silène (ANSSI), réunie avec AlgoLightHouse dans la liste « Actifs ». */
+  const sileneSurface = new SurfaceSilene(db, grc);
+  surfaceExterne.silene = sileneSurface;
   integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
   const rapprochements = new Rapprochements(db, reglagePriorite);
   const veille = new VeilleVulnerabilites(db, flux, mandataire);
@@ -225,6 +230,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       tenable,
       /** Lot N1 : import de scans Nessus (connecteur « nessus-fichier »), lancé depuis la carte « Intégrations ». */
       importNessus,
+      /** Lot SI1 : import du rapport Silène (connecteur « silene-fichier »), lancé depuis la carte « Intégrations », et
+          lecture de ce qu'il a importé (note, constats, actifs, liaison au périmètre). */
+      importSilene: new ImportSilene(db, integrations),
+      silene: sileneSurface,
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
       depots: new DepotsTenable(db, grc),
       surfaceExterne,
@@ -293,7 +302,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       integrationSynchro: limiter(6, 60 * 60e3),
       /** Lot N1 : imports de scans Nessus commencés (trente fichiers par heure et par personne depuis le lot N2 :
           NESSUS_BORNES.importsParHeure) et lots envoyés (six cents par dix minutes et par personne : un import de dix
-          mille machines tient en cinquante lots au moins). */
+          mille machines tient en cinquante lots au moins). Lot SI1 : les imports de rapports Silène comptent dans les mêmes
+          limites (fichiers commencés, tous imports confondus). */
       importNessus: limiter(NESSUS_BORNES.importsParHeure, 60 * 60e3),
       importNessusLot: limiter(600, 10 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */

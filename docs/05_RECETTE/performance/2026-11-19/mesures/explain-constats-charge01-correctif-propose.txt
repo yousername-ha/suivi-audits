@@ -1,0 +1,160 @@
+SET
+                                                                                              QUERY PLAN                                                                                              
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=23420.79..78405.86 rows=579 width=527) (actual time=458.320..822.923 rows=9946.00 loops=1)
+   Hash Cond: (x.constat_id = c.id)
+   Join Filter: (pc.present OR (s.id IS NOT NULL))
+   Buffers: shared hit=255976 read=11, temp read=1545 written=1547
+   CTE vis
+     ->  Seq Scan on vulnerabilites_machines m  (cost=0.00..2697.00 rows=1000 width=305) (actual time=4.433..171.440 rows=1000.00 loops=1)
+           Buffers: shared hit=14127 read=11
+           SubPlan 1
+             ->  Seq Scan on vulnerabilites_tenable_depots td  (cost=0.00..1.07 rows=1 width=16) (actual time=0.001..0.001 rows=1.00 loops=920)
+                   Filter: (id = m.depot_id)
+                   Rows Removed by Filter: 5
+                   Buffers: shared hit=920
+           SubPlan 2
+             ->  Seq Scan on vulnerabilites_tenable_depots td_1  (cost=0.00..1.07 rows=1 width=16) (actual time=0.001..0.001 rows=1.00 loops=920)
+                   Filter: (id = m.depot_id)
+                   Rows Removed by Filter: 5
+                   Buffers: shared hit=920
+   CTE x
+     ->  Hash Join  (cost=47.27..4697.57 rows=114716 width=42) (actual time=173.735..233.170 rows=114718.00 loops=1)
+           Hash Cond: (d.machine_id = m_1.id)
+           Buffers: shared hit=15767 read=11
+           ->  Seq Scan on vulnerabilites_detections d  (cost=0.00..2786.16 rows=114716 width=44) (actual time=0.019..18.291 rows=114718.00 loops=1)
+                 Buffers: shared hit=1639
+           ->  Hash  (cost=34.77..34.77 rows=1000 width=21) (actual time=173.695..173.698 rows=1000.00 loops=1)
+                 Buckets: 1024  Batches: 1  Memory Usage: 63kB
+                 Buffers: shared hit=14128 read=11
+                 ->  Hash Left Join  (cost=1.02..34.77 rows=1000 width=21) (actual time=4.458..173.313 rows=1000.00 loops=1)
+                       Hash Cond: (m_1.integration_id = e.integration_id)
+                       Buffers: shared hit=14128 read=11
+                       ->  CTE Scan on vis m_1  (cost=0.00..20.00 rows=1000 width=33) (actual time=4.437..172.672 rows=1000.00 loops=1)
+                             Storage: Memory  Maximum Storage: 284kB
+                             Buffers: shared hit=14127 read=11
+                       ->  Hash  (cost=1.01..1.01 rows=1 width=20) (actual time=0.014..0.015 rows=1.00 loops=1)
+                             Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                             Buffers: shared hit=1
+                             ->  Seq Scan on vulnerabilites_tenable_etat e  (cost=0.00..1.01 rows=1 width=20) (actual time=0.011..0.012 rows=1.00 loops=1)
+                                   Buffers: shared hit=1
+   ->  GroupAggregate  (cost=15472.25..16975.63 rows=9459 width=29) (actual time=428.639..470.596 rows=9994.00 loops=1)
+         Group Key: x.constat_id, pc.present
+         Filter: bool_or(x.lisible)
+         Buffers: shared hit=15775 read=11, temp read=1545 written=1547
+         ->  Sort  (cost=15472.25..15687.34 rows=86037 width=42) (actual time=428.608..448.996 rows=114718.00 loops=1)
+               Sort Key: x.constat_id, pc.present, x.machine_id
+               Sort Method: external merge  Disk: 6528kB
+               Buffers: shared hit=15775 read=11, temp read=1545 written=1547
+               ->  Hash Join  (cost=3175.32..5770.87 rows=86037 width=42) (actual time=324.548..361.213 rows=114718.00 loops=1)
+                     Hash Cond: (x.constat_id = pc.constat_id)
+                     Join Filter: (x.present OR (NOT pc.present))
+                     Buffers: shared hit=15767 read=11, temp read=729 written=729
+                     ->  CTE Scan on x  (cost=0.00..2294.32 rows=114716 width=42) (actual time=173.739..184.645 rows=114718.00 loops=1)
+                           Storage: Disk  Maximum Storage: 5826kB
+                           Buffers: shared hit=14130 read=11, temp read=729 written=1
+                     ->  Hash  (cost=3057.08..3057.08 rows=9459 width=17) (actual time=150.763..150.765 rows=9994.00 loops=1)
+                           Buckets: 16384  Batches: 1  Memory Usage: 607kB
+                           Buffers: shared hit=1637, temp written=728
+                           ->  Subquery Scan on pc  (cost=2867.90..3057.08 rows=9459 width=17) (actual time=147.122..148.947 rows=9994.00 loops=1)
+                                 Buffers: shared hit=1637, temp written=728
+                                 ->  HashAggregate  (cost=2867.90..2962.49 rows=9459 width=17) (actual time=147.119..148.138 rows=9994.00 loops=1)
+                                       Group Key: x_1.constat_id
+                                       Batches: 1  Memory Usage: 793kB
+                                       Buffers: shared hit=1637, temp written=728
+                                       ->  CTE Scan on x x_1  (cost=0.00..2294.32 rows=114716 width=17) (actual time=0.001..108.914 rows=114718.00 loops=1)
+                                             Storage: Disk  Maximum Storage: 5826kB
+                                             Buffers: shared hit=1637, temp written=728
+   ->  Hash  (cost=546.32..546.32 rows=612 width=375) (actual time=17.154..17.156 rows=9952.00 loops=1)
+         Buckets: 16384 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 3388kB
+         Buffers: shared hit=419
+         ->  Hash Left Join  (cost=3.08..546.32 rows=612 width=375) (actual time=0.088..6.484 rows=9952.00 loops=1)
+               Hash Cond: (c.id = s.constat_id)
+               Filter: ((COALESCE(s.proposition, 'aucune'::text) <> 'a_confirmer'::text) AND (COALESCE(s.etat, 'nouvelle'::text) = ANY ('{nouvelle,a_traiter,en_cours}'::text[])))
+               Rows Removed by Filter: 48
+               Buffers: shared hit=419
+               ->  Seq Scan on vulnerabilites_constats c  (cost=0.00..516.98 rows=9998 width=322) (actual time=0.015..1.337 rows=10000.00 loops=1)
+                     Buffers: shared hit=417
+               ->  Hash  (cost=2.48..2.48 rows=48 width=69) (actual time=0.040..0.040 rows=48.00 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                     Buffers: shared hit=2
+                     ->  Seq Scan on vulnerabilites_suivis s  (cost=0.00..2.48 rows=48 width=69) (actual time=0.009..0.019 rows=48.00 loops=1)
+                           Buffers: shared hit=2
+   SubPlan 6
+     ->  Hash Join  (cost=878.29..1138.09 rows=649 width=16) (actual time=1.459..5.267 rows=500.00 loops=1)
+           Hash Cond: (cc.cve = v.cve)
+           Buffers: shared hit=897
+           ->  Seq Scan on vulnerabilites_constat_cves cc  (cost=0.00..225.74 rows=12974 width=31) (actual time=0.026..0.651 rows=13000.00 loops=1)
+                 Buffers: shared hit=96
+           ->  Hash  (cost=865.79..865.79 rows=1000 width=15) (actual time=1.412..1.413 rows=1000.00 loops=1)
+                 Buckets: 1024  Batches: 1  Memory Usage: 54kB
+                 Buffers: shared hit=801
+                 ->  Bitmap Heap Scan on vulnerabilites_veille_cve v  (cost=13.40..865.79 rows=1000 width=15) (actual time=0.227..1.277 rows=1000.00 loops=1)
+                       Recheck Cond: (kev_ajout IS NOT NULL)
+                       Heap Blocks: exact=800
+                       Buffers: shared hit=801
+                       ->  Bitmap Index Scan on vulnerabilites_veille_cve_kev  (cost=0.00..13.15 rows=1000 width=0) (actual time=0.143..0.143 rows=1000.00 loops=1)
+                             Index Searches: 1
+                             Buffers: shared hit=1
+   SubPlan 8
+     ->  Seq Scan on vulnerabilites_constat_cves cc_1  (cost=0.00..225.74 rows=12974 width=16) (actual time=0.012..0.748 rows=13000.00 loops=1)
+           Buffers: shared hit=96
+   SubPlan 9
+     ->  Aggregate  (cost=49.61..49.62 rows=1 width=8) (actual time=0.017..0.017 rows=1.00 loops=9946)
+           Buffers: shared hit=143171
+           ->  Bitmap Heap Scan on vulnerabilites_detections dp  (cost=4.51..49.58 rows=12 width=8) (actual time=0.005..0.013 rows=11.48 loops=9946)
+                 Recheck Cond: (constat_id = c.id)
+                 Heap Blocks: exact=113228
+                 Buffers: shared hit=143171
+                 ->  Bitmap Index Scan on vulnerabilites_detections_constat_id_machine_id_port_protoc_key  (cost=0.00..4.51 rows=12 width=0) (actual time=0.002..0.002 rows=11.48 loops=9946)
+                       Index Cond: (constat_id = c.id)
+                       Index Searches: 9946
+                       Buffers: shared hit=29943
+   SubPlan 11
+     ->  Nested Loop Semi Join  (cost=0.00..387.92 rows=65 width=16) (actual time=4.130..4.131 rows=0.00 loops=1)
+           Join Filter: (a.cves @> ARRAY[cc_2.cve])
+           Buffers: shared hit=96
+           ->  Seq Scan on vulnerabilites_constat_cves cc_2  (cost=0.00..225.74 rows=12974 width=31) (actual time=0.003..0.634 rows=13000.00 loops=1)
+                 Buffers: shared hit=96
+           ->  Seq Scan on vulnerabilites_veille_avis a  (cost=0.00..0.00 rows=1 width=32) (actual time=0.000..0.000 rows=0.00 loops=13000)
+                 Filter: ((source = 'cert-fr'::text) AND (nature = 'alerte'::text))
+   SubPlan 12
+     ->  Aggregate  (cost=12.61..12.62 rows=1 width=32) (actual time=0.006..0.006 rows=1.00 loops=9946)
+           Buffers: shared hit=55635
+           ->  Nested Loop  (cost=0.57..12.61 rows=1 width=4) (actual time=0.005..0.006 rows=1.00 loops=9946)
+                 Buffers: shared hit=55635
+                 ->  Index Only Scan using vulnerabilites_constat_cves_pkey on vulnerabilites_constat_cves cc_3  (cost=0.29..4.30 rows=1 width=15) (actual time=0.001..0.001 rows=1.30 loops=9946)
+                       Index Cond: (constat_id = c.id)
+                       Heap Fetches: 0
+                       Index Searches: 9946
+                       Buffers: shared hit=19893
+                 ->  Index Scan using vulnerabilites_veille_cve_pkey on vulnerabilites_veille_cve v_1  (cost=0.29..8.30 rows=1 width=19) (actual time=0.003..0.003 rows=0.77 loops=12898)
+                       Index Cond: (cve = cc_3.cve)
+                       Index Searches: 12898
+                       Buffers: shared hit=35742
+   SubPlan 13
+     ->  Aggregate  (cost=4.31..4.32 rows=1 width=4) (actual time=0.002..0.002 rows=1.00 loops=9946)
+           Buffers: shared hit=19893
+           ->  Index Only Scan using vulnerabilites_constat_cves_pkey on vulnerabilites_constat_cves cc_4  (cost=0.29..4.30 rows=1 width=0) (actual time=0.001..0.001 rows=1.30 loops=9946)
+                 Index Cond: (constat_id = c.id)
+                 Heap Fetches: 0
+                 Index Searches: 9946
+                 Buffers: shared hit=19893
+   SubPlan 14
+     ->  Limit  (cost=0.29..4.30 rows=1 width=15) (actual time=0.001..0.001 rows=1.30 loops=9946)
+           Buffers: shared hit=19994
+           ->  Index Only Scan Backward using vulnerabilites_constat_cves_pkey on vulnerabilites_constat_cves cc_5  (cost=0.29..4.30 rows=1 width=15) (actual time=0.001..0.001 rows=1.30 loops=9946)
+                 Index Cond: (constat_id = c.id)
+                 Heap Fetches: 0
+                 Index Searches: 9946
+                 Buffers: shared hit=19994
+   SubPlan 15
+     ->  Aggregate  (cost=0.00..0.02 rows=1 width=4) (actual time=0.002..0.002 rows=1.00 loops=9946)
+           ->  Seq Scan on vulnerabilites_suivi_actions sa  (cost=0.00..0.00 rows=1 width=0) (actual time=0.000..0.000 rows=0.00 loops=9946)
+                 Filter: (suivi_id = s.id)
+ Planning:
+   Buffers: shared hit=1259 read=55
+ Planning Time: 15.318 ms
+ Execution Time: 827.499 ms
+(155 rows)
+

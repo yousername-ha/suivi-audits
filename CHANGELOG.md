@@ -6,6 +6,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `095`** (lot SI1 : import du rapport Silène, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (dix tables `vulnerabilites_silene_*`, index), durée négligeable, sans reprise de données. Aucune action sur le
+serveur, aucune règle de pare-feu : l'import ne fait aucun appel réseau. Le rapport JSON se dépose dans Plateforme, carte
+« Intégrations », instance « Silène, import de fichier » ; relier ensuite l'instance à un périmètre (Surface externe,
+onglet « Périmètres ») pour que ses lecteurs la voient. (session « Module surveillance vulnérabilités SMSI »)
+
 **Migration automatique `094`** (lot N2 : contrôle exploité par un logiciel malveillant, suppression d'un connecteur d'import,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `exploite_malware` des constats, fausse par défaut),
 durée négligeable, sans reprise de données. Aucune action sur le serveur. Les failles déjà importées ne sont pas relues :
@@ -72,6 +78,29 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Ajouté
 
+- Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
+  en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
+  réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
+  seul est rendu ; ports ouverts de Silène et services d'AlgoLightHouse réunis sans doublon, source de chacun ; constats
+  Silène marqués « n SIL » sur l'adresse et sur le port, liste et fiche du constat, sans priorité), mêmes droits que la liste
+  des actifs, bornes communes. Les noms d'une branche qui résolvent vers une même adresse rejoignent un seul nœud ; une
+  adresse déjà tracée ailleurs devient un renvoi qui y mène. « Regrouper par » : nom de domaine, adresse IP publique (la
+  branche est l'adresse, dépliée sur ses noms, ses services, la limite du SI et les machines) ou périmètre. Filtre « Nom de
+  domaine ou adresse IP » (partie du nom, casse ignorée, ou début d'adresse ; nombre annoncé ; effacement). Décision du
+  RSSI : la carte est la page elle-même (plus de cadre, de zoom, de déplacement à la souris ni de vue d'ensemble ; défilement
+  de la page, barre de regroupement et titres des colonnes collants ; présentation empilée sur écran étroit) ; tout déplié
+  jusqu'à 30 lignes, au-delà branches en alerte seules dépliées (douze au plus) ; vue gardée en changeant d'onglet.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **import du rapport Silène de l'ANSSI** (lot SI1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  migration `095`) : connecteur « Silène, import de fichier » de la carte « Intégrations » (ni adresse, ni clé, ni flux),
+  « Importer un rapport » : export JSON lu dans le navigateur (50 Mo au plus), extrait en liste blanche (jamais de
+  certificat, d'en-tête HTTP, de sortie de sonde, de géolocalisation ni de passage précédent), revalidé par l'API, envoyé
+  par lots ; chaque import complet fait foi, la note est gardée d'un import à l'autre. Écran « Surface externe » : note Silène
+  à côté de l'état d'AlgoLightHouse (pastille SIL), liste des actifs commune aux deux sources (un actif par adresse IP ou nom
+  de domaine, ports ouverts de Silène et services d'AlgoLightHouse réunis, source de chaque information visible), onglet
+  « Constats Silène », liaison de chaque instance à un périmètre ; recherche du module étendue sans changer son contrat ;
+  suppression du connecteur et de ce qu'il a importé. Aucune priorité ni alerte tirée de Silène. (session « Module
+  surveillance vulnérabilités SMSI »)
 - Vulnérabilités, **contrôle exploité par un logiciel malveillant** (lot N2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
   décision du RSSI du 19/11/2026) : le champ `exploited_by_malware` d'un scan Nessus est lu (liste blanche, revalidé par
   l'API) et compte comme une **exploitation avérée**, au même titre que le catalogue KEV, une alerte du CERT-FR ou la fiche
@@ -145,6 +174,23 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
+- **Fenêtres : coins arrondis, taille automatique, style à l'essai ; fenêtre « Mises à jour et versions » revue**
+  (décisions du RSSI du 19/11/2026, addendum à l'[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)). Le
+  cadre « Biseau » (coins coupés) des fenêtres et panneaux latéraux, présentation « Périmètre et contexte » comprise, est
+  remplacé par des coins arrondis, un trait gris discret et une fine barre d'accent dégradée violet → cyan en haut (style
+  « Barre d'accent », par défaut) ; le style « Liseré dégradé » (liseré sur tout le contour) est à l'essai, choisi pour toute
+  l'instance dans Plateforme > Apparence, « Fenêtres (essai) » (réglage d'apparence `fenetres`, sans migration, même droit
+  que l'apparence, journal d'audit et If-Match), avant d'en garder un seul. Taille automatique : la taille demandée sert de
+  largeur de base, une fenêtre qui contient un tableau s'élargit jusqu'à la largeur de son contenu, jamais plus de 92 % de
+  la largeur ni 90 % de la hauteur de l'écran, pleine largeur sur téléphone ; seul le corps défile, verticalement, titre,
+  fermeture et boutons restant visibles. « Mises à jour et versions » reprend la composition de la page de maintenance dans
+  le thème de l'application (versions installée et disponible, pastille d'état) et ne montre plus que les trois derniers
+  reçus d'installation ; l'historique de l'ancienne interface devient « Instantanés de l'état de suivi », dans la carte
+  « Sauvegardes et restauration » (Télécharger et Restaurer inchangés). Aucune action sur le serveur. (session « Projet
+  audit_suivi Coeur »)
+- Vulnérabilités, imports de fichiers (Nessus, Silène) : les statistiques des tables réécrites sont recalculées à la fin d'un
+  import, comme après une synchronisation reçue de Security Center ou d'AlgoLightHouse, sans jamais faire échouer l'import.
+  (session « Module surveillance vulnérabilités SMSI »)
 - Intégrations, **limite des imports de scans Nessus** (lot N2, décision du RSSI du 19/11/2026) : trente fichiers commencés par
   heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
   dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module

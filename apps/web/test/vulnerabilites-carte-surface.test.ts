@@ -1,46 +1,58 @@
 /* Module Vulnérabilités (ADR 0100, lot ALH4) : carte « Lignes d'approche » de la surface externe, côté interface. Modèle
    (branches par domaine parent ou par périmètre, hôte relié par l'adresse de résolution, typosquatting et fuites côté
-   Internet), filtres, repli par défaut des branches sans alerte, faisceaux, borne d'affichage à grande échelle (150
-   domaines et plus), chemin d'entrée critique (P1), « à relier » réservé à qui peut modifier, machine illisible jamais
-   nommée, caméra (zoom, déplacement, recadrage) et rendu sans style en ligne. Données entièrement fictives : domaines en
-   .example, adresses de 192.0.2.0/24 et 198.51.100.0/24, machines inventées. */
+   Internet), filtres, repli par défaut au-delà d'un seuil, faisceaux, borne d'affichage à grande échelle (150 domaines et
+   plus), chemin d'entrée critique (P1), « à relier » réservé à qui peut modifier, machine illisible jamais nommée, rendu
+   sans style en ligne. Lot SI2 : deux sources (nœud unique, pastilles, services réunis, constats Silène sans priorité),
+   regroupement par adresse IP, noms d'une même adresse réunis et renvoi entre branches, filtre par nom de domaine ou début
+   d'adresse, carte « page entière » (plus de caméra : scène entière, repères collants, présentation empilée sur écran
+   étroit), grande échelle (150 noms, 60 adresses, 200 services) dans les deux regroupements. Données entièrement fictives :
+   domaines en .example et example.org, adresses de 192.0.2.0/24, 198.51.100.0/24 et 203.0.113.0/24, machines inventées. */
 import { MantineProvider } from '@mantine/core';
-import type { ActifCarteDto, AlerteCarteDto, CarteSurfaceDto } from '@suivi/shared';
+import type { ActifCarteDto, AlerteCarteDto, CarteSurfaceDto, ServiceAlhDto, SileneCarteDto } from '@suivi/shared';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
-import { CarteSurface } from '../src/vulnerabilites/CarteSurface';
+import { annonceFiltreNom, CarteSurface } from '../src/vulnerabilites/CarteSurface';
+import * as carteSurface from '../src/vulnerabilites/carte-surface';
 import {
   basculerCalmes,
   basculerGroupe,
-  borner,
-  cameraInitiale,
+  constatsDeLaCarte,
+  constatsDuPort,
   construireModele,
-  deplacer,
+  deplierVers,
   disposer,
+  DOMAINE_H,
   epaisseurFaisceau,
   etiquetteDomaine,
   FILTRES_CARTE_VIDES,
   type FiltresCarte,
+  filtreNom,
   filtrerModele,
-  hauteurCamera,
   LIGNES_MAX,
   type LigneDessinee,
-  RAPPORT,
-  recadrer,
+  type LigneFiltree,
+  type ModeleFiltre,
+  parentDeduit,
+  type Regroupement,
   replisParDefaut,
+  SEUIL_DEPLIE,
+  serviceDessine,
   toutDeplier,
   toutReplier,
   X,
-  ZOOM_MIN,
-  zoomer,
 } from '../src/vulnerabilites/carte-surface';
 import { URL_CARTE_SURFACE } from '../src/vulnerabilites/surface';
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 let n = 0;
-const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
+/** Actif d'AlgoLightHouse par défaut (`alhId` = `id`) ; `alhId: null` et `sources: ['silene']` : vu par Silène seul. */
+const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => {
+  const a = brut(v);
+  return 'alhId' in v ? a : { ...a, alhId: a.id };
+};
+const brut = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
   id: id(++n),
   type: 'domaine',
   valeur: 'exemple.example',
@@ -55,6 +67,9 @@ const actif = (v: Partial<ActifCarteDto>): ActifCarteDto => ({
   versionLiaisons: 1,
   services: [],
   nombreServices: 0,
+  sources: ['alh'],
+  alhId: null,
+  silene: null,
   ...v,
 });
 const alerte = (v: Partial<AlerteCarteDto>): AlerteCarteDto => ({
@@ -120,6 +135,7 @@ function petite() {
   const carte: CarteSurfaceDto = {
     actifs: [sante, vpn, mail, extranet, calme, labo, hoteVpn, isole],
     alertes: [critique, surHote, surMail, surExtranet, typo, fuite, orpheline],
+    constatsSilene: [],
     tronquee: false,
     totaux: { actifs: 8, alertes: 7 },
   };
@@ -144,7 +160,22 @@ function grande(racines: number, parRacine: number): CarteSurfaceDto {
       if (i % 10 === 0 && r % 2 === 0) alertes.push(alerte({ actifId: d.id, criticite: 'minor' }));
     }
   }
-  return { actifs, alertes, tronquee: false, totaux: { actifs: actifs.length, alertes: alertes.length } };
+  return {
+    actifs,
+    alertes,
+    constatsSilene: [],
+    tronquee: false,
+    totaux: { actifs: actifs.length, alertes: alertes.length },
+  };
+}
+
+/** Petite surface au-delà du seuil de repli par défaut : trente noms calmes de plus sous exemple-labo.example. */
+function petiteAuDela() {
+  const p = petite();
+  const calmes = Array.from({ length: SEUIL_DEPLIE.lignes }, (_, i) =>
+    actif({ valeur: `c${i}.exemple-labo.example`, parentId: p.labo.id, perimetreNom: 'Périmètre fictif B' }),
+  );
+  return { ...p, carte: { ...p.carte, actifs: [...p.carte.actifs, ...calmes] } };
 }
 
 const rendre = (carte: CarteSurfaceDto, peutModifier = true) =>
@@ -239,10 +270,19 @@ describe('carte « Lignes d’approche » : repli et mise en page', () => {
   const p = petite();
   const f = filtrerModele(construireModele(p.carte, 'parent'), FILTRES_CARTE_VIDES);
 
-  it('par défaut : seules les branches en alerte sont dépliées ; leurs lignes sans alerte en faisceau chiffré', () => {
+  it('sous le seuil : tout est déplié par défaut (branches et lignes sans alerte)', () => {
     const e = replisParDefaut(f);
-    expect([...e.groupes]).toEqual([f.groupes[0]!.cle]);
+    expect([...e.groupes].sort()).toEqual(f.groupes.map((g) => g.cle).sort());
     const s = disposer(f, e, { peutModifier: true });
+    expect(s.rangees.every((r) => r.type === 'ligne')).toBe(true);
+    expect(s.lignesAffichees).toBe(f.groupes.reduce((n, g) => n + g.lignes.length, 0));
+  });
+
+  it('au-delà du seuil : seules les branches en alerte sont dépliées ; leurs lignes sans alerte en faisceau chiffré', () => {
+    const fa = filtrerModele(construireModele(petiteAuDela().carte, 'parent'), FILTRES_CARTE_VIDES);
+    const e = replisParDefaut(fa);
+    expect([...e.groupes]).toEqual([fa.groupes[0]!.cle]);
+    const s = disposer(fa, e, { peutModifier: true });
     const sante = s.groupes.find((g) => g.libelle === 'exemple-sante.example')!;
     expect(sante.deplie).toBe(true);
     expect(s.groupes.filter((g) => !g.deplie).map((g) => g.libelle)).toEqual(
@@ -279,7 +319,8 @@ describe('carte « Lignes d’approche » : repli et mise en page', () => {
 
   it('bascules : une branche, ses lignes calmes ; une branche sans alerte se déplie sur ses lignes', () => {
     const cle = f.groupes[0]!.cle;
-    let e = replisParDefaut(f);
+    // Repli par défaut au-delà du seuil : la branche en alerte dépliée, ses lignes calmes en faisceau.
+    let e: ReturnType<typeof replisParDefaut> = { groupes: new Set([cle]), calmes: new Set() };
     e = basculerCalmes(e, cle);
     expect(
       disposer(f, e, { peutModifier: false }).rangees.filter((r) => r.groupe === cle && r.type === 'ligne'),
@@ -321,23 +362,45 @@ describe('carte « Lignes d’approche » : grande échelle', () => {
   });
 });
 
-describe('carte « Lignes d’approche » : caméra', () => {
-  const scene = { largeur: 1176, hauteur: 3000 };
-  it('vue de départ : toute la largeur ; rapport constant', () => {
-    const c = cameraInitiale(scene);
-    expect(c).toEqual({ x: 0, y: 0, w: 1176 });
-    expect(hauteurCamera(c)).toBeCloseTo(1176 * RAPPORT);
+describe('carte « Lignes d’approche » : la page elle-même (décision du RSSI du 19/11/2026)', () => {
+  it('plus de caméra ni de zoom : la scène entière est la viewBox, la page défile', () => {
+    for (const retire of ['cameraInitiale', 'zoomer', 'deplacer', 'recadrer', 'borner', 'RAPPORT', 'ZOOM_MIN'])
+      expect(retire in carteSurface).toBe(false);
+    const p = petite();
+    const f = filtrerModele(construireModele(p.carte, 'parent'), FILTRES_CARTE_VIDES);
+    const s = disposer(f, replisParDefaut(f), { peutModifier: true });
+    const html = rendre(p.carte);
+    const svg = html.match(/<svg[^>]*class="sc-svg"[^>]*>/i)![0];
+    expect(svg).toContain(`viewBox="0 0 ${s.largeur} ${s.hauteur}"`);
+    // Le dessin n'est plus une zone focalisable qui capte les flèches ; ses nœuds le sont.
+    expect(svg).not.toMatch(/tabindex/i);
+    expect(html).not.toContain('Vue d’ensemble');
+    expect(html).not.toContain('Rapprocher (zoom avant)');
+    expect(html).not.toContain('Recadrer');
+    // Repères collants : barre de regroupement et de filtre par nom, titres des colonnes.
+    const debut = html.indexOf('<div class="sc-collant">');
+    const collant = html.slice(debut, html.indexOf('</svg>', html.indexOf('class="sc-entetes"')));
+    expect(collant).toContain('Regrouper par');
+    expect(collant).toContain('Nom de domaine ou adresse IP');
+    expect(collant).toMatch(/<svg[^>]*class="sc-entetes"/);
+    for (const t of ['>Domaine parent<', '>Nom de domaine<', '>IP publique<', '>Service<', '>Limite du SI<'])
+      expect(collant).toContain(t);
   });
-  it('zoom borné autour d’un point ; déplacement borné ; recadrer montre tout', () => {
-    const c = cameraInitiale(scene);
-    const proche = zoomer(c, 0.5, scene, { x: 588, y: 300 });
-    expect(proche.w).toBe(588);
-    expect(proche.x).toBeCloseTo(294);
-    expect(zoomer(proche, 0.01, scene).w).toBe(ZOOM_MIN);
-    expect(deplacer(c, -10_000, -10_000, scene)).toMatchObject({ x: -588, y: (-c.w * RAPPORT) / 2 });
-    const tout = recadrer(scene);
-    expect(hauteurCamera(tout)).toBeGreaterThanOrEqual(3000);
-    expect(borner({ x: 0, y: 0, w: 1e9 }, scene).w).toBeLessThan(1e9);
+
+  it('écran étroit : la même scène, empilée branche par branche, avec les mêmes noms accessibles', () => {
+    const html = rendre(petite().carte);
+    const pile = html.match(/<div class="sc-empile">[\s\S]*?<\/ol><\/li><\/ol>/i)![0];
+    expect(pile).toContain('aria-label="Lignes d’approche, branche par branche"');
+    expect(pile).toMatch(/aria-expanded="true"[^>]*aria-label="Replier la branche exemple-sante\.example/);
+    expect(pile).toContain(
+      'aria-label="Nom de domaine vpn.exemple-sante.example, résout vers 192.0.2.10, vu par AlgoLightHouse : ouvrir sa fiche"',
+    );
+    expect(pile).toContain('Machine interne (derrière la limite du SI)');
+    expect(pile).toContain('srv-vpn-01.interne.invalid');
+    // Les éléments propres à la présentation empilée n'ont aucun attribut de style (Mantine pose les siens à part).
+    const propres = pile.match(/<(?:ol|li|div|span)[^>]*class="sc-pile[^"]*"[^>]*>/g) ?? [];
+    expect(propres.length).toBeGreaterThan(5);
+    for (const e of propres) expect(e).not.toMatch(/\sstyle=/i);
   });
 });
 
@@ -345,26 +408,24 @@ describe('carte « Lignes d’approche » : rendu', () => {
   it('branches, faisceaux, chemin critique, « à relier », machine illisible sans nom ; aucun style en ligne', () => {
     const p = petite();
     const html = rendre(p.carte);
-    // Le dessin (carte, vue d'ensemble, légende) n'a aucun attribut de style ; Mantine pose les siens hors du dessin.
+    // Le dessin (en-têtes, carte, légende) n'a aucun attribut de style ; Mantine pose les siens hors du dessin.
     const dessins = html.match(/<svg(?=[^>]*class="sc-)[\s\S]*?<\/svg>/gi) ?? [];
     expect(dessins.length).toBeGreaterThanOrEqual(3);
     for (const d of dessins) expect(d).not.toMatch(/\sstyle=/i);
     expect(html.match(/<ul class="sc-legende"[\s\S]*?<\/ul>/i)?.[0]).not.toMatch(/\sstyle=/i);
     expect(html).toMatch(/<svg[^>]*role="group"[^>]*aria-label="Carte des lignes d’approche/i);
     expect(html).toContain('exemple-sante.example');
-    expect(html).toContain('lignes sans alerte');
+    expect(rendre(petiteAuDela().carte)).toContain('lignes sans alerte');
     expect(html).toContain('sc-lien--critique');
     expect(html).toContain('Un actif exposé sur Internet porte une faille en priorité P1');
     expect(html).toContain('À relier à une machine interne (1 proposition à décider)');
     expect(html).toContain('Reliée à une machine que vous ne pouvez pas lire');
     expect(html).toContain('srv-vpn-01.interne.invalid');
     // Nœuds atteignables au clavier, avec un nom.
-    expect(html).toMatch(/<g role="button" tabindex="0" aria-label="Domaine vpn\.exemple-sante\.example/i);
+    expect(html).toMatch(/<g role="button" tabindex="0" aria-label="Nom de domaine vpn\.exemple-sante\.example/i);
     expect(html).toMatch(/aria-label="Critique \(2 alertes\), P1 : VPN SSL/i);
     // Typosquatting côté Internet ; boutons de zoom nommés ; légende avec formes et libellés.
     expect(html).toContain('exemp1e-sante.example');
-    expect(html).toContain('aria-label="Rapprocher (zoom avant)"');
-    expect(html).toContain('aria-label="Recadrer : toute la carte"');
     expect(html).toContain('Pointillé rouge : chemin d’entrée critique (P1)');
     // Regroupement par défaut confirmé par le RSSI (lot ALH5) : plus de mention « à confirmer ».
     expect(html).toContain('Regrouper par');
@@ -376,9 +437,9 @@ describe('carte « Lignes d’approche » : rendu', () => {
   });
 
   it('carte vide et carte bornée : dit', () => {
-    expect(rendre({ actifs: [], alertes: [], tronquee: false, totaux: { actifs: 0, alertes: 0 } })).toContain(
-      'la carte est vide',
-    );
+    expect(
+      rendre({ actifs: [], alertes: [], constatsSilene: [], tronquee: false, totaux: { actifs: 0, alertes: 0 } }),
+    ).toContain('la carte est vide');
     const p = petite();
     expect(rendre({ ...p.carte, tronquee: true, totaux: { actifs: 5000, alertes: 7 } })).toContain(
       'Carte bornée : 8 actifs sur 5000',
@@ -392,3 +453,386 @@ describe('carte « Lignes d’approche » : rendu', () => {
     expect(aide).toContain('à relier');
   });
 });
+
+/* ------------------------------------------------------------------ Lot SI2 */
+const service = (port: number, protocole: 'tcp' | 'udp' | null, extra: Partial<ServiceAlhDto> = {}): ServiceAlhDto => ({
+  port,
+  protocole,
+  nom: null,
+  produit: null,
+  version: null,
+  editeur: null,
+  cpe: null,
+  statutVersion: null,
+  ...extra,
+});
+const vuParSilene = (v: Partial<SileneCarteDto>): SileneCarteDto => ({
+  adresses: [],
+  ports: [],
+  nombrePorts: 0,
+  portsOuverts: null,
+  constats: [],
+  nombreConstats: 0,
+  ...v,
+});
+const filtrer = (c: CarteSurfaceDto, r: Regroupement, f: Partial<FiltresCarte> = {}) =>
+  filtrerModele(construireModele(c, r), filtres(f));
+const lignesDe = (m: ModeleFiltre) => m.groupes.flatMap((g) => g.lignes);
+const ligneDe = (m: ModeleFiltre, ip: string) => lignesDe(m).find((l) => l.adresse === ip && !l.renvoi)!;
+
+/** Deux sources : l'hôte 192.0.2.10 vu par AlgoLightHouse (service 443 porté par une alerte) et par Silène (ports 22 et
+    443, un constat sur le port 443) ; www.example.org vu par les deux ; 203.0.113.30 et vpn.example.org vus par Silène
+    seul ; 198.51.100.20 porté par deux noms de deux branches (renvoi). */
+function deuxSources() {
+  const constat = { id: id(7001), identifiant: 'RES-FICTIF-0001', controle: 'OpenPort', classe: 2 };
+  const autre = { id: id(7002), identifiant: 'RES-FICTIF-0002', controle: 'SelfSignedCertificate', classe: 1 };
+  const hote = actif({
+    type: 'hote',
+    valeur: '192.0.2.10',
+    niveau: null,
+    sources: ['alh', 'silene'],
+    services: [service(443, null, { nom: 'https', produit: 'nginx', version: '1.18' })],
+    nombreServices: 1,
+    silene: vuParSilene({
+      adresses: ['192.0.2.10'],
+      ports: [
+        { port: 22, protocole: 'tcp', service: 'ssh', produit: 'FictionalSSH', tunnel: null },
+        { port: 443, protocole: 'tcp', service: 'https', produit: 'Fictional httpd', tunnel: 'ssl' },
+      ],
+      nombrePorts: 2,
+      portsOuverts: 2,
+      constats: [
+        { id: constat.id, ports: [{ port: 443, protocole: 'tcp' }] },
+        { id: autre.id, ports: [] },
+      ],
+      nombreConstats: 2,
+    }),
+  });
+  const www = actif({
+    valeur: 'www.example.org',
+    adresse: '192.0.2.10',
+    sources: ['alh', 'silene'],
+    silene: vuParSilene({ adresses: ['192.0.2.10'] }),
+  });
+  const api = actif({ valeur: 'api.example.org', adresse: '192.0.2.10' });
+  const seulHote = actif({
+    id: id(8001),
+    alhId: null,
+    type: 'hote',
+    valeur: '203.0.113.30',
+    niveau: null,
+    sources: ['silene'],
+    silene: vuParSilene({
+      adresses: ['203.0.113.30'],
+      ports: [{ port: 443, protocole: 'tcp', service: 'https', produit: null, tunnel: null }],
+      nombrePorts: 1,
+    }),
+  });
+  const seulNom = actif({
+    id: id(8002),
+    alhId: null,
+    valeur: 'vpn.example.org',
+    adresse: '203.0.113.30',
+    niveau: null,
+    sources: ['silene'],
+    silene: vuParSilene({ adresses: ['203.0.113.30'] }),
+  });
+  const partage = actif({
+    type: 'hote',
+    valeur: '198.51.100.20',
+    niveau: null,
+    services: [service(25, 'tcp')],
+    nombreServices: 1,
+  });
+  const mailA = actif({ valeur: 'mail.example.org', adresse: '198.51.100.20' });
+  const mailB = actif({ valeur: 'mail.exemple-b.example', adresse: '198.51.100.20' });
+  const surHote = alerte({ criticite: 'major', titre: 'Service exposé', actifId: hote.id });
+  const surPartage = alerte({ criticite: 'minor', titre: 'Messagerie exposée', actifId: partage.id });
+  const carte: CarteSurfaceDto = {
+    actifs: [hote, www, api, seulHote, seulNom, partage, mailA, mailB],
+    alertes: [surHote, surPartage],
+    constatsSilene: [constat, autre],
+    tronquee: false,
+    totaux: { actifs: 8, alertes: 2 },
+  };
+  return { carte, hote, www, api, seulHote, seulNom, partage, mailA, mailB, constat, autre };
+}
+
+describe('lot SI2 : deux sources', () => {
+  it('un actif vu par les deux est un seul nœud ; services réunis sans doublon port/protocole, source de chacun', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'parent');
+    const l = ligneDe(m, '192.0.2.10');
+    expect(lignesDe(m).filter((x) => x.hote?.id === d.hote.id && !x.renvoi)).toHaveLength(1);
+    expect(l.sources).toEqual(['alh', 'silene']);
+    expect(l.domaines.map((x) => x.valeur)).toEqual(['api.example.org', 'www.example.org']);
+    // 443 sans protocole chez AlgoLightHouse rejoint le 443/tcp de Silène : deux services, pas trois.
+    expect(l.ports.map((p) => `${p.port}/${p.protocole}`)).toEqual(['22/tcp', '443/tcp']);
+    expect(l.nombreServices).toBe(2);
+    const https = serviceDessine(l, l.ports[1]!);
+    expect(https).toMatchObject({
+      libelle: '443/tcp · HTTPS',
+      produit: 'Fictional httpd, tunnel ssl',
+      sources: ['alh', 'silene'],
+    });
+    expect(https.nom).toBe(
+      'Service 443/tcp · HTTPS, Fictional httpd, tunnel ssl, vu par AlgoLightHouse et Silène (ANSSI), 1 constat Silène sur ce port',
+    );
+    expect(serviceDessine(l, l.ports[0]!).sources).toEqual(['silene']);
+  });
+
+  it('constats Silène : sur l’hôte et sur le port, comptés, sans priorité ni confusion avec les alertes', () => {
+    const d = deuxSources();
+    const l = ligneDe(filtrer(d.carte, 'parent'), '192.0.2.10');
+    expect(l.nombreConstats).toBe(2);
+    expect(constatsDuPort(l, { port: 443, protocole: 'tcp' }).map((c) => c.constat.id)).toEqual([d.constat.id]);
+    expect(constatsDuPort(l, { port: 22, protocole: 'tcp' })).toEqual([]);
+    expect(constatsDeLaCarte(d.carte, d.hote, null).map((c) => c.controle)).toEqual([
+      'OpenPort',
+      'SelfSignedCertificate',
+    ]);
+    expect(constatsDeLaCarte(d.carte, d.hote, { port: 443, protocole: 'tcp' }).map((c) => c.id)).toEqual([
+      d.constat.id,
+    ]);
+    // Les alertes de la ligne sont celles d'AlgoLightHouse seulement : un constat n'est jamais une alerte.
+    expect(l.alertes.map((a) => a.titre)).toEqual(['Service exposé']);
+    const html = rendre(d.carte);
+    expect(html).toContain('aria-label="2 constats Silène sur 192.0.2.10, sans priorité : les voir"');
+    expect(html).toContain(
+      'aria-label="1 constat Silène sur le port 443/tcp · HTTPS de 192.0.2.10, sans priorité : les voir"',
+    );
+    expect(html).toContain(
+      'aria-label="IP publique 192.0.2.10, vu par AlgoLightHouse et Silène (ANSSI), 2 services connus : ouvrir sa fiche"',
+    );
+    expect(html).toMatch(/class="sc-constats"/);
+    expect(html).toContain('>2 SIL<');
+    // Pastilles dessinées : formes et monogrammes du lot L1.
+    expect(html).toMatch(/<g class="ps ps--sarcelle" transform="translate\([0-9. ]+\) scale\(0\.5\)">/);
+    expect(html).toContain('>SIL<');
+    expect(html).toContain('>ALH<');
+  });
+
+  it('actif vu par Silène seul : présent, sans liaison possible ; domaine parent déduit', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'parent');
+    const l = ligneDe(m, '203.0.113.30');
+    expect(l.sources).toEqual(['silene']);
+    expect(l.reliable).toBe(false);
+    expect(l.domaines.map((x) => x.valeur)).toEqual(['vpn.example.org']);
+    // vpn.example.org n'a pas de parent chez Silène : il rejoint la branche example.org (deux derniers niveaux).
+    expect(m.groupes.find((g) => g.lignes.includes(l))!.libelle).toBe('example.org');
+    expect(parentDeduit('a.b.example.org', new Set(['b.example.org']))).toBe('b.example.org');
+    expect(parentDeduit('www.example.org', new Set())).toBe('example.org');
+    expect(parentDeduit('example.org', new Set())).toBe('example.org');
+    const s = disposer(m, toutDeplier(m), { peutModifier: true });
+    const r = s.rangees.find((x): x is LigneDessinee => x.type === 'ligne' && x.ligne === l)!;
+    expect(r.aRelier).toBe(false);
+    expect(rendre(d.carte)).toContain(
+      'aria-label="Nom de domaine vpn.example.org, résout vers 203.0.113.30, vu par Silène (ANSSI) : ouvrir sa fiche"',
+    );
+  });
+});
+
+describe('lot SI2 : noms d’une même adresse et renvoi', () => {
+  it('par nom de domaine : deux noms d’une branche vers une adresse rejoignent un seul nœud d’adresse', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'parent');
+    const s = disposer(m, toutDeplier(m), { peutModifier: true });
+    const r = s.rangees.find((x): x is LigneDessinee => x.type === 'ligne' && x.ligne.adresse === '192.0.2.10')!;
+    expect(r.domainesY).toEqual([r.y, r.y + DOMAINE_H]);
+    // Le second nom rejoint l'adresse par une courbe ; un seul trait de l'adresse vers les services.
+    expect(s.liens.find((x) => x.cle === `${r.cle}:d1`)!.d).toMatch(new RegExp(`C.* ${X.hote - 6} ${r.y}$`));
+    expect(s.liens.filter((x) => x.cle.startsWith(`${r.cle}:t`))).toHaveLength(1);
+    // La courbe part après la colonne des noms : elle ne traverse aucun libellé de nom (32 caractères au plus).
+    expect(s.liens.find((x) => x.cle === `${r.cle}:d1`)!.d).toContain(`L${X.hote - 56} ${r.y + DOMAINE_H} C`);
+    expect(X.hote - 56).toBeGreaterThan(X.domaine + (32 * 6.4) / 2);
+  });
+
+  it('adresse déjà tracée dans une autre branche : renvoi explicite, services et alertes de l’hôte non répétés', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'parent');
+    const portees = lignesDe(m).filter((l) => l.adresse === '198.51.100.20');
+    expect(portees).toHaveLength(2);
+    const [porteur, renvoi] = [portees.find((l) => !l.renvoi)!, portees.find((l) => l.renvoi)!];
+    expect(renvoi.renvoi).toMatchObject({ cle: porteur.cle });
+    expect(porteur.ports.map((p) => p.port)).toEqual([25]);
+    expect(renvoi.ports).toEqual([]);
+    expect(renvoi.alertes).toEqual([]);
+    // Résumé : le service de l'adresse n'est compté qu'une fois.
+    const total = lignesDe(m)
+      .filter((l) => l.adresse === '198.51.100.20')
+      .reduce((n, l) => n + l.nombreServices, 0);
+    expect(total).toBe(1);
+    // Aller à la ligne qui porte l'adresse : sa branche se déplie.
+    const g = m.groupes.find((x) => x.lignes.includes(porteur))!;
+    expect(deplierVers(m, toutReplier(), porteur.cle).groupes.has(g.cle)).toBe(true);
+    expect(rendre(d.carte)).toContain(
+      `aria-label="Adresse IP 198.51.100.20, déjà tracée sous la branche ${porteur.renvoi?.libelle ?? g.libelle} avec ses services, ses alertes et ses machines : y aller"`,
+    );
+  });
+
+  it('par adresse IP : la branche est l’adresse, ses noms, ses services une fois, puis la limite et les machines', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'adresse');
+    const g = m.groupes.find((x) => x.libelle === '198.51.100.20')!;
+    expect(g.lignes).toHaveLength(1);
+    expect(g.lignes[0]!.domaines.map((x) => x.valeur)).toEqual(['mail.example.org', 'mail.exemple-b.example']);
+    expect(g.lignes[0]!.ports.map((p) => p.port)).toEqual([25]);
+    expect(lignesDe(m).some((l) => l.renvoi)).toBe(false);
+    expect(m.groupes.map((x) => x.libelle).sort()).toEqual(['192.0.2.10', '198.51.100.20', '203.0.113.30']);
+    // Le titre de la colonne de branche suit le regroupement.
+    expect(rendreRegroupe(d.carte, 'adresse')).toContain('>Adresse IP publique<');
+  });
+});
+
+describe('lot SI2 : filtre par nom de domaine ou adresse IP', () => {
+  it('partie du nom, casse ignorée ; seuls les noms qui correspondent restent, les autres comptés', () => {
+    const d = deuxSources();
+    for (const r of ['parent', 'adresse'] as const) {
+      const m = filtrer(d.carte, r, { nom: 'WWW.Example' });
+      expect(lignesDe(m).flatMap((l) => l.domaines.map((x) => x.valeur))).toEqual(['www.example.org']);
+      expect(lignesDe(m)[0]!.domainesMasques).toBe(1);
+      expect(m.correspondances).toEqual({ domaines: 1, adresses: 1 });
+    }
+  });
+  it('début d’adresse IP : toute la ligne, tous ses noms ; aucune expression régulière construite', () => {
+    const d = deuxSources();
+    const m = filtrer(d.carte, 'parent', { nom: '192.0.2.' });
+    expect(lignesDe(m).map((l) => l.adresse)).toEqual(['192.0.2.10']);
+    expect(lignesDe(m)[0]!.domaines).toHaveLength(2);
+    // Saisie prise à la lettre : « .* » ne correspond à rien, « 0.2.10 » n'est pas un début d'adresse.
+    expect(lignesDe(filtrer(d.carte, 'parent', { nom: '.*' }))).toEqual([]);
+    expect(filtreNom({ domaines: [], adresse: '192.0.2.10', hote: null }, '0.2.10')).toBeNull();
+    // S'ajoute aux autres filtres : seule l'adresse en alerte reste, avec le renvoi de l'autre branche vers elle.
+    const enAlerte = lignesDe(filtrer(d.carte, 'parent', { nom: 'mail', enAlerteSeulement: true }));
+    expect(enAlerte.map((l) => l.adresse)).toEqual(['198.51.100.20', '198.51.100.20']);
+    expect(enAlerte.filter((l) => l.renvoi)).toHaveLength(1);
+    expect(lignesDe(filtrer(d.carte, 'parent', { nom: 'vpn', enAlerteSeulement: true }))).toEqual([]);
+  });
+  it('nombre de résultats annoncé, bouton d’effacement', () => {
+    expect(annonceFiltreNom('', { domaines: 3, adresses: 2 })).toBe('');
+    expect(annonceFiltreNom(' mail ', { domaines: 2, adresses: 1 })).toBe(
+      '2 noms de domaine et 1 adresse IP correspondent à « mail ».',
+    );
+    expect(annonceFiltreNom('zz', { domaines: 0, adresses: 0 })).toBe(
+      'Aucun nom de domaine ni aucune adresse IP ne correspond à « zz ».',
+    );
+    const html = rendre(deuxSources().carte);
+    const annonce = html.match(/<p[^>]*sc-annonce[^>]*>/)![0];
+    expect(annonce).toContain('role="status"');
+    expect(annonce).toContain('aria-live="polite"');
+    expect(html).toContain('Effacer le filtre par nom');
+  });
+});
+
+/** Fabrique du jeu de grande taille (essai du lot SI2, rien n'est commité d'autre) : `noms` noms de domaine sous
+    `racines` domaines parents, répartis sur `adresses` adresses (plusieurs noms par adresse), `services` services
+    répartis sur les hôtes (une source ou l'autre ou les deux), une alerte pour un hôte sur six, des constats Silène. */
+export function grandeEchelle(noms = 150, adresses = 60, services = 200, racines = 8): CarteSurfaceDto {
+  const actifs: ActifCarteDto[] = [];
+  const alertes: AlerteCarteDto[] = [];
+  const ip = (i: number) => ['192.0.2', '198.51.100', '203.0.113'][i % 3] + `.${10 + Math.floor(i / 3)}`;
+  const parents = Array.from({ length: racines }, (_, r) => actif({ valeur: `exemple-${r}.example` }));
+  actifs.push(...parents);
+  const hotes = Array.from({ length: adresses }, (_, i) => {
+    const deux = i % 3 === 0;
+    const n = Math.floor(services / adresses) + (i < services % adresses ? 1 : 0);
+    const ports = Array.from({ length: n }, (_, k) => 1000 + k * 7 + i);
+    return actif({
+      type: 'hote',
+      valeur: ip(i),
+      niveau: null,
+      ...(i % 3 === 2
+        ? { alhId: null, sources: ['silene'] as const }
+        : { sources: deux ? ['alh', 'silene'] : ['alh'] }),
+      // AlgoLightHouse seul : tous les ports ; deux sources : un sur deux chez AlgoLightHouse, tous chez Silène.
+      services:
+        i % 3 === 2 ? [] : ports.filter((_, k) => !deux || k % 2 === 0).map((p) => service(p, 'tcp', { nom: 'http' })),
+      nombreServices: i % 3 === 2 ? 0 : ports.filter((_, k) => !deux || k % 2 === 0).length,
+      silene:
+        i % 3 === 0 || i % 3 === 2
+          ? vuParSilene({
+              adresses: [ip(i)],
+              ports: ports.map((p) => ({
+                port: p,
+                protocole: 'tcp' as const,
+                service: 'http',
+                produit: null,
+                tunnel: null,
+              })),
+              nombrePorts: ports.length,
+              constats: i % 5 === 0 ? [{ id: id(90000 + i), ports: [{ port: ports[0]!, protocole: 'tcp' }] }] : [],
+              nombreConstats: i % 5 === 0 ? 1 : 0,
+            })
+          : null,
+    } as Partial<ActifCarteDto>);
+  });
+  actifs.push(...hotes);
+  for (let i = 0; i < noms; i++) {
+    const r = parents[i % racines]!;
+    actifs.push(
+      actif({
+        valeur: `service-${String(i).padStart(3, '0')}-portail.${r.valeur}`,
+        adresse: ip(i % adresses),
+        parentId: r.id,
+        perimetreNom: `Périmètre fictif ${i % 4}`,
+      }),
+    );
+  }
+  hotes.forEach((h, i) => {
+    if (i % 6 === 0) alertes.push(alerte({ actifId: h.id, criticite: i % 12 === 0 ? 'critical' : 'minor' }));
+  });
+  return {
+    actifs,
+    alertes,
+    constatsSilene: hotes.flatMap((_, i) =>
+      i % 5 === 0 ? [{ id: id(90000 + i), identifiant: `RES-FICTIF-${i}`, controle: 'OpenPort', classe: 2 }] : [],
+    ),
+    tronquee: false,
+    totaux: { actifs: actifs.length, alertes: alertes.length },
+  };
+}
+
+describe('lot SI2 : grande échelle (150 noms, 60 adresses, 200 services)', () => {
+  const c = grandeEchelle();
+  it('jeu conforme : 150 noms, 60 adresses, 200 services réunis', () => {
+    expect(c.actifs.filter((a) => a.type === 'domaine' && a.parentId)).toHaveLength(150);
+    const m = filtrer(c, 'adresse');
+    expect(m.groupes.filter((g) => g.lignes[0]!.hote)).toHaveLength(60);
+    expect(lignesDe(m).reduce((n, l) => n + l.ports.length, 0)).toBe(200);
+  });
+  for (const r of ['parent', 'adresse'] as const)
+    it(`regroupement « ${r} » : replié par défaut, borné, sans service dupliqué, calcul rapide`, () => {
+      const debut = performance.now();
+      const m = filtrer(c, r);
+      const s = disposer(m, replisParDefaut(m), { peutModifier: true });
+      const duree = performance.now() - debut;
+      expect(duree).toBeLessThan(500);
+      expect(s.lignesAffichees).toBeLessThanOrEqual(LIGNES_MAX);
+      expect(s.groupes.filter((g) => g.deplie).length).toBeLessThanOrEqual(SEUIL_DEPLIE.branches);
+      expect(s.groupes.filter((g) => !g.deplie).length).toBeGreaterThan(0);
+      // Chaque adresse ne porte ses services qu'une fois (renvois exclus).
+      const porteurs = lignesDe(m).filter((l): l is LigneFiltree => !!l.hote && !l.renvoi);
+      expect(new Set(porteurs.map((l) => l.adresse)).size).toBe(porteurs.length);
+      expect(porteurs.reduce((n, l) => n + l.ports.length, 0)).toBe(200);
+      // Tout déplier reste borné ; le filtre par nom réduit à quelques lignes.
+      const tout = disposer(m, toutDeplier(m), { peutModifier: true });
+      expect(tout.lignesAffichees).toBeLessThanOrEqual(LIGNES_MAX);
+      expect(lignesDe(filtrer(c, r, { nom: 'service-007' })).flatMap((l) => l.domaines)).toHaveLength(1);
+    });
+});
+
+const rendreRegroupe = (carte: CarteSurfaceDto, regroupement: Regroupement) =>
+  renderToStaticMarkup(
+    createElement(
+      MantineProvider,
+      null,
+      createElement(CarteSurface, {
+        carte,
+        peutModifier: true,
+        vue: { regroupement, filtres: FILTRES_CARTE_VIDES, replis: {} },
+        onVue: () => undefined,
+        actions: { onAlerte: () => undefined, onActif: () => undefined, onMachine: () => undefined },
+      }),
+    ),
+  );

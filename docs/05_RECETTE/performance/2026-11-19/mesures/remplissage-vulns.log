@@ -1,0 +1,25 @@
+Timing is on.
+ setseed 
+---------
+ 
+(1 row)
+
+Time: 0.816 ms
+INSERT 0 7000
+Time: 375.648 ms
+INSERT 0 7000
+Time: 318.528 ms
+INSERT 0 94718
+Time: 6383.658 ms (00:06.384)
+INSERT 0 20000
+Time: 465.150 ms
+ constats | detections | machines | veille 
+----------+------------+----------+--------
+    10000 |     114718 |     1000 |  20000
+(1 row)
+
+Time: 10.036 ms
+
+real	0m7.650s
+user	0m0.022s
+sys	0m0.017s

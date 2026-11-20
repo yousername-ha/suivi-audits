@@ -1992,6 +1992,113 @@ export interface VulnerabilitesRapprochements {
   annulation_note: Generated<string>;
 }
 
+export interface VulnerabilitesSileneConstatHotes {
+  constat_id: string;
+  adresse: string;
+}
+
+export interface VulnerabilitesSileneConstats {
+  id: Generated<string>;
+  integration_id: string;
+  identifiant: string;
+  controle: string;
+  classe: number;
+  points: ColumnType<string | null, number | string | null, number | string | null>;
+  note: ColumnType<string | null, number | string | null, number | string | null>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneEtat {
+  integration_id: string;
+  numero: Generated<number>;
+  numero_complet: Generated<number>;
+  complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesSileneHotes {
+  id: Generated<string>;
+  integration_id: string;
+  adresse: string;
+  ports_ouverts: number | null;
+  controles: Generated<string[]>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneImports {
+  execution_id: string;
+  integration_id: string;
+  numero: number;
+  date_rapport: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  debut_rapport: string | null;
+  fin_rapport: string | null;
+  note: ColumnType<string | null, number | string | null, number | string | null>;
+  note_reseau: ColumnType<string | null, number | string | null, number | string | null>;
+  vulnreco: number | null;
+  warning: number | null;
+  info: number | null;
+  ok: number | null;
+  perimetre_domaines: Generated<string[]>;
+  perimetre_plages: Generated<string[]>;
+  hotes_annonces: number;
+  constats_annonces: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  lots: Generated<number>;
+  hotes: Generated<number>;
+  constats: Generated<number>;
+  hotes_disparus: Generated<number>;
+  constats_disparus: Generated<number>;
+  complet: Generated<boolean>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneLignes {
+  constat_id: string;
+  rang: number;
+  adresse: string;
+  port: number | null;
+  protocole: string | null;
+  service: string | null;
+  produit: string | null;
+  nom_hote: string | null;
+  type: string | null;
+  echeance: string | null;
+}
+
+export interface VulnerabilitesSileneNoms {
+  id: Generated<string>;
+  hote_id: string;
+  nom: string;
+  type: "A" | "PTR" | "cert-san-dns" | "cert-subject-cn";
+}
+
+export interface VulnerabilitesSilenePerimetres {
+  integration_id: string;
+  perimetre_id: string | null;
+  version: Generated<number>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string | null;
+}
+
+export interface VulnerabilitesSilenePorts {
+  hote_id: string;
+  port: number;
+  protocole: "tcp" | "udp";
+  service: string | null;
+  produit: string | null;
+  tunnel: string | null;
+}
+
+export interface VulnerabilitesSileneProduits {
+  hote_id: string;
+  rang: number;
+  type: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  version: string | null;
+}
+
 export interface VulnerabilitesSuiviActions {
   suivi_id: string;
   action_id: string;
@@ -2373,6 +2480,16 @@ export interface DB {
   vulnerabilites_produits: VulnerabilitesProduits;
   vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;
   vulnerabilites_rapprochements: VulnerabilitesRapprochements;
+  vulnerabilites_silene_constat_hotes: VulnerabilitesSileneConstatHotes;
+  vulnerabilites_silene_constats: VulnerabilitesSileneConstats;
+  vulnerabilites_silene_etat: VulnerabilitesSileneEtat;
+  vulnerabilites_silene_hotes: VulnerabilitesSileneHotes;
+  vulnerabilites_silene_imports: VulnerabilitesSileneImports;
+  vulnerabilites_silene_lignes: VulnerabilitesSileneLignes;
+  vulnerabilites_silene_noms: VulnerabilitesSileneNoms;
+  vulnerabilites_silene_perimetres: VulnerabilitesSilenePerimetres;
+  vulnerabilites_silene_ports: VulnerabilitesSilenePorts;
+  vulnerabilites_silene_produits: VulnerabilitesSileneProduits;
   vulnerabilites_suivi_actions: VulnerabilitesSuiviActions;
   vulnerabilites_suivi_historique: VulnerabilitesSuiviHistorique;
   vulnerabilites_suivis: VulnerabilitesSuivis;
