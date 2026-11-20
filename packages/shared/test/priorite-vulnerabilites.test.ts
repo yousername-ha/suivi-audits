@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculerPriorite,
+  comparerControlesGlobal,
   comparerMachines,
   faitsDepuisSources,
   graviteDepuisScore,
@@ -573,6 +574,75 @@ describe('surface externe (lot ALH2) : présence « exposée » et AlgoLightHous
     expect(prioriteLaPlusHaute([p('P3'), p('P2'), p('P4')])).toEqual(p('P2'));
     expect(prioriteLaPlusHaute([])).toBeNull();
     expect(rangPriorite(p('P1'))).toBe(1);
+  });
+});
+
+describe('ordre des contrôles du calcul global (lot PERF-04, décision du RSSI du 20/11/2026)', () => {
+  const id = (n: number) => `0d0d0d0d-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`;
+  const c = (n: number, d: string | null) => ({ id: id(n), dernierePresente: d });
+
+  it('le contrôle détecté le plus récemment d’abord', () => {
+    expect(comparerControlesGlobal(c(1, '2026-11-10T08:00:00.000Z'), c(2, '2026-11-15T08:00:00.000Z'))).toBeGreaterThan(
+      0,
+    );
+    expect(comparerControlesGlobal(c(2, '2026-11-15T08:00:00.000Z'), c(1, '2026-11-10T08:00:00.000Z'))).toBeLessThan(0);
+    // Mêmes instants écrits autrement : comparés comme des dates.
+    expect(
+      comparerControlesGlobal(c(1, '2026-11-15T09:00:00.000+01:00'), c(2, '2026-11-15T08:00:00.000Z')),
+    ).toBeLessThan(0);
+  });
+
+  it('égalité parfaite : le plus petit identifiant ; sans date : après les contrôles datés', () => {
+    expect(comparerControlesGlobal(c(4, '2026-11-12T08:00:00.000Z'), c(3, '2026-11-12T08:00:00.000Z'))).toBeGreaterThan(
+      0,
+    );
+    expect(comparerControlesGlobal(c(3, '2026-11-12T08:00:00.000Z'), c(4, '2026-11-12T08:00:00.000Z'))).toBeLessThan(0);
+    expect(comparerControlesGlobal(c(1, null), c(9, '2026-01-01T08:00:00.000Z'))).toBeGreaterThan(0);
+    expect(comparerControlesGlobal(c(9, '2026-01-01T08:00:00.000Z'), c(1, null))).toBeLessThan(0);
+    expect(comparerControlesGlobal(c(3, null), c(4, null))).toBeLessThan(0);
+    expect(comparerControlesGlobal(c(3, null), c(3, null))).toBe(0);
+  });
+
+  it('ordre total : le même résultat quel que soit l’ordre reçu', () => {
+    const liste = [
+      c(5, '2026-11-12T08:00:00.000Z'),
+      c(2, null),
+      c(7, '2026-11-20T08:00:00.000Z'),
+      c(1, '2026-11-12T08:00:00.000Z'),
+      c(9, null),
+      c(3, '2026-11-01T08:00:00.000Z'),
+    ];
+    const attendu = [7, 1, 5, 3, 2, 9].map((n) => id(n));
+    // Toutes les rotations et leurs miroirs, plus un mélange pseudo-aléatoire rejouable.
+    const ordres: (typeof liste)[] = [];
+    for (let i = 0; i < liste.length; i++) {
+      const r = [...liste.slice(i), ...liste.slice(0, i)];
+      ordres.push(r, [...r].reverse());
+    }
+    let graine = 7;
+    const melange = [...liste];
+    for (let i = melange.length - 1; i > 0; i--) {
+      graine = (graine * 48271) % 2147483647;
+      const j = graine % (i + 1);
+      [melange[i], melange[j]] = [melange[j]!, melange[i]!];
+    }
+    ordres.push(melange);
+    for (const o of ordres) expect([...o].sort(comparerControlesGlobal).map((x) => x.id)).toEqual(attendu);
+    // Avec prioriteLaPlusHaute (la première à niveau égal), le contrôle retenu ne dépend donc plus de l'ordre reçu.
+    const p = (n: number, niveau: 'P1' | 'P2'): Priorite => ({
+      niveau,
+      faits: [
+        { fait: 'presence', presence: 'detectee' },
+        { fait: 'gravite', gravite: n === 1 ? 'critique' : null },
+      ],
+    });
+    for (const o of ordres) {
+      const triee = [...o].sort(comparerControlesGlobal);
+      const niveaux = triee.map((x) => p(Number(x.id.slice(-2)), x.id === id(3) ? 'P1' : 'P2'));
+      // P1 l'emporte toujours, quel que soit son rang ; à P2 égal, le plus récent (07) le serait.
+      expect(prioriteLaPlusHaute(niveaux)?.niveau).toBe('P1');
+      expect(prioriteLaPlusHaute(niveaux.filter((x) => x.niveau === 'P2'))).toEqual(p(7, 'P2'));
+    }
   });
 });
 

@@ -3205,11 +3205,135 @@ pas, et ce budget est à resserrer quand le calcul global sera réécrit.
 
 1. **JIT** : `jit = off` pour le rôle applicatif ou le serveur ôterait encore environ 0,3 s à la vue d'ensemble (décision du
    socle et du RSSI, non prise ici).
-2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : le fixer explicitement (par exemple par identifiant)
-   rendrait le résultat indépendant de l'ordre physique et permettrait la réécriture ensembliste ; il changerait, à priorité
-   égale, les faits affichés de certaines cibles : à décider.
+2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : **tranché le 20/11/2026 par le RSSI** : à priorité
+   égale, le contrôle détecté le plus récemment. Réalisé par le lot PERF-04 (addendum ci-dessous).
 3. **PERF-09** (bornes de synchronisation) : **tranché le 20/11/2026 par le RSSI** : la synchronisation de Tenable Security
    Center reste bornée à 20 000 détections (`TENABLE_BORNES`) pour la version 7.5.0, sans relèvement ni découpage par dépôt.
    Conséquence connue et acceptée : au-delà de la borne, la synchronisation est rendue « incomplète », ce que l'écran
    affiche, et plus rien n'est marqué comme disparu tant qu'une synchronisation complète n'a pas eu lieu. À réexaminer
    quand le nombre réel de détections du parc sera connu.
+
+## Addendum du 20/11/2026 — lot PERF-04 : ordre du calcul global fixé, calcul ensembliste
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Réalise la décision du
+RSSI du 20/11/2026 sur le point ouvert 2 de l'addendum « lot PERF » et la réécriture du calcul global retirée de ce lot.
+**Aucune migration** (097 et 098 restent réservées ; 099 non utilisée), aucune route nouvelle, aucun champ d'échange changé,
+aucune dépendance, aucun flux sortant ; règles de priorité, d'alerte, de majoration, délais, droits et bornes de
+synchronisation (PERF-09) inchangés ; `apps/api/src/assistant/*` non touché.
+
+### Décision et règle écrite
+
+Quand plusieurs contrôles de Tenable (constats) présents et non traités portent la même faille du calcul global (une CVE, ou
+un constat sans CVE) et donnent la même priorité, l'un d'eux fournit les faits affichés de la priorité (la liste des faits :
+présence, gravité, score EPSS, sources de l'exploitation…). C'était le premier lu dans l'ordre physique de la table, qui
+n'était écrit nulle part et changeait seul (CLUSTER, VACUUM FULL, restauration). **Décision du RSSI** : à priorité égale, le
+contrôle détecté le plus récemment. Règle écrite (`comparerControlesGlobal`, `packages/shared/src/priorite-vulnerabilites.ts`) :
+
+1. la dernière détection **présente** la plus récente du constat (maximum de `derniere_detection` de ses détections
+   présentes au sens de la dernière synchronisation complète de leur instance, toutes machines confondues : le calcul global
+   est le même pour tout le monde, lot ALH5, décision A) ; un constat traité (corrigé, risque accepté, non concerné) ne
+   donne aucune priorité et n'entre pas en compte ; une détection absente non plus ;
+2. un constat dont aucune détection présente n'est datée vient après tous les constats datés ;
+3. à égalité parfaite, le plus petit identifiant du constat.
+
+L'ordre est total : deux calculs rendent le même résultat quel que soit l'ordre des lignes (vérifié par un test qui force un
+`CLUSTER` et réécrit des lignes, et sur le banc par un `CLUSTER` de la table des constats). Les failles déclarées et
+l'exposition sur Internet viennent, comme avant, après les contrôles (une faille déclarée d'une CVE donne toujours la même
+priorité ; l'exposition est unique par CVE). `prioriteLaPlusHaute` est inchangée (la première à niveau égal).
+
+**Ni la priorité, ni le niveau d'une alerte, ni aucun nombre ne changent** : seuls, à priorité égale, les faits montrés.
+
+### Autres ordres fixés (choix de réalisation, à confirmer par le RSSI)
+
+L'ordre physique décidait aussi de deux listes du rapport de pilotage, bornées à 200 lignes : les failles critiques (P1),
+dans l'ordre de rencontre des failles, et les dépassements de même échéance. Pour que le rapport ne dépende plus de l'ordre
+des lignes, le calcul global rend les failles **dans l'ordre de leur clé** (CVE, puis « constat:<identifiant> ») et les
+objets suivis **dans l'ordre de leur identifiant** (constats, puis failles déclarées). Les totaux du rapport ne changent pas ;
+quand une liste dépasse 200 lignes, les lignes listées peuvent changer à la mise à jour. Les fins de support et les autres
+lectures (vue d'ensemble, tendances, alertes, délais) avaient déjà un ordre propre.
+
+### Alertes existantes à la mise à jour
+
+L'empreinte d'une alerte contient les faits de la priorité. À la première évaluation après la mise à jour (fin d'une
+synchronisation, d'une collecte, ou décision qui change les faits), une alerte dont le contrôle retenu change est **mise à
+jour** (`deciderAlerte` : même niveau, empreinte différente) : faits, empreinte, date de mise à jour et version avancent ;
+**aucune notification** (la mise à jour ne se rejoue pas), **ni réouverte ni close**, niveau et priorité inchangés, prise en
+compte conservée, pas d'entrée `vulnerabilites.alerte.niveau` (seule l'entrée de synthèse
+`vulnerabilites.alertes.evaluees` compte la mise à jour). Une prise en compte préparée sur l'ancienne version reçoit un
+conflit de version (409) et se refait après rechargement. Aucune migration n'est nécessaire.
+
+### Réécriture du calcul global
+
+- **Constats présents** (`AlertesVulnerabilites.calculer`) : un agrégat des détections par constat (machines présentes,
+  dernière détection présente, première détection) et un agrégat des CVE, au lieu de sous-requêtes par constat ; état de
+  suivi par jointure (un suivi au plus par constat). Mêmes règles qu'avant. Listes de machines et de CVE rendues en texte
+  séparé par des virgules (lecture d'un tableau PostgreSQL trop coûteuse pour 100 000 identifiants). Coût estimé sous le
+  seuil du JIT : la requête n'est plus compilée (`EXPLAIN ANALYZE` sur le jeu du banc : 794 ms dont 418 ms de JIT → 160 à
+  210 ms).
+- **Une passe par constat** : la priorité de son délai et celle de sa faille sont calculées une fois quand il n'a qu'une CVE ;
+  les sources d'une faille ne sont calculées que pour un constat non traité.
+- **Vue d'ensemble** : le calcul global ne lit ni les titres de toutes les failles (seulement ceux des failles rendues) ni
+  leurs machines (inutiles à la vue : ses nombres de machines lisibles ont leur propre requête ; les machines en fin de
+  support sont relues à partir des constats, même requête qu'avant, même nombre) ; les mesures de la variation sur sept jours
+  sont composées sans machines (la vue ne montre pas leur total) ; clés de l'ordre des cibles calculées une fois. Les
+  dépassements de délai (`DelaisVulnerabilites`) lisent aussi le calcul sans titres ni machines.
+- Fonctions de service sans changement de résultat : `parSource` (`sources.ts`) et `valeursRetenues` (paquet partagé)
+  trouvent la valeur retenue en un passage au lieu d'un tri.
+- Nombre de requêtes inchangé : vue d'ensemble 17, évaluation des alertes 14, rapport 44.
+
+### Mesures (banc local, avant / après)
+
+Même jeu et même poste que l'addendum « lot PERF » (1 020 machines, 10 050 constats, 113 800 détections présentes, 20 000
+CVE ; API dans le processus, sources TypeScript chargées par `tsx`, PostgreSQL 16 local, 4 cœurs ; **pas l'image de
+production ni le serveur réel**). Médiane / 95e centile en ms ; 15 appels après échauffement (3 pour les deux lecteurs).
+
+| Mesure | Compte | Avant | Après | Requêtes |
+| --- | --- | --- | --- | --- |
+| `vue-ensemble` | administrateur | 1 386 / 1 606 | 575 / 725 | 17 / 17 |
+| `vue-ensemble` | RSSI non administrateur | 1 332 / 1 580 | 557 / 836 | 17 / 17 |
+| `vue-ensemble` | lecteur d'un périmètre | 1 365 / 1 390 | 598 / 610 | 17 / 17 |
+| `vue-ensemble` | lecteur sans périmètre | 1 288 / 1 487 | 543 / 570 | 17 / 17 |
+| évaluation des alertes (fin de synchronisation) | — | 1 236 / 1 303 | 613 / 641 | 14 / 14 |
+| `rapport` (mois) | administrateur | 1 206 / 1 453 | 824 / 935 | 44 / 44 |
+| `rapport` (mois) | RSSI non administrateur | 1 222 / 1 416 | 844 / 1 009 | 44 / 44 |
+
+Requête la plus lente d'un appel de la vue d'ensemble : 629 à 817 ms → 72 à 108 ms. Sur le code compilé (`tsc`, comme
+l'image), vue d'ensemble de 560 à 590 ms en médiane et 690 à 770 ms au 95e centile. Le banc du 19/11/2026 mesurait sur un
+serveur environ 1,6 à 2 fois plus lent : la vue d'ensemble y est attendue entre 0,9 et 1,5 s au 95e centile, à confirmer
+par un nouveau passage du banc. Alertes, tendances : inchangées (15 à 25 ms et 5 à 9 ms).
+
+Test de non-régression `performance-vulnerabilites` (5 000 constats) : vue d'ensemble 305 à 439 ms au 95e centile sur trois
+passages (761 à 797 ms avant). Le budget de CI de la vue d'ensemble revient de 2,4 s à **1,5 s** (`SEUIL_SYNTHESE_MS`, celui
+de la recherche) : il laisse plus de trois fois la mesure locale, et le premier passage en CI était 2,1 fois plus lent que le
+poste (1 692 ms pour 797 ms).
+
+### Réponses comparées avant / après (quatre comptes)
+
+Réponses complètes de la vue d'ensemble, des alertes (deux pages et fenêtre), des tendances (plateforme et périmètre) et du
+rapport (JSON et CSV, plateforme et périmètre), pour l'administrateur, le RSSI non administrateur, un lecteur d'un périmètre
+et un lecteur sans périmètre, plus le calcul global complet et les objets suivis :
+
+- **calcul global** : 16 554 failles ; **647** dont les faits de la priorité changent, toutes à priorité égale ; aucun autre
+  écart (priorité, présences, nombres de machines et d'objets, traités, « exploitable », gravité et EPSS retenus, correctif,
+  constats, états) ;
+- **vue d'ensemble** : 14 des 208 cibles rendues changent de faits (même niveau, même ordre, mêmes cases) ; tuiles, totaux,
+  niveau, cases, nombres lisibles, journal identiques, pour les quatre comptes ;
+- **alertes** : 1 alerte sur 923 change de faits (même niveau, même priorité) ; listes rendues identiques ; à la première
+  évaluation après la mise à jour (alertes de l'ancien code rechargées) : 1 mise à jour, 0 création, 0 clôture, 0
+  notification, aucun changement d'état (l'alerte prise en compte le reste) ;
+- **tendances** : identiques ;
+- **rapport** : totaux identiques (failles critiques 923 et P2 11 156 pour la plateforme ; 854 et 10 217 pour le
+  périmètre) ; failles critiques listées dans l'ordre des CVE (131 des 200 lignes communes, contenu identique pour celles-ci)
+  ; dépassements : même total (7 611), 200 lignes listées différentes parmi les échéances égales ; fins de support
+  identiques ; le CSV suit ;
+- **droits** : codes de réponse identiques (404 du périmètre illisible pour le RSSI et le lecteur sans périmètre) ; nombres
+  lisibles identiques.
+
+Avec l'ancien code, un `CLUSTER` de la table des constats changeait à lui seul la vue d'ensemble et le rapport ; avec le
+nouveau, les réponses sont identiques (hors heure de production).
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus (ordre des failles critiques et des dépassements du rapport).
+2. JIT (point ouvert 1 de l'addendum « lot PERF ») : n'est plus déclenché par le calcul global ; décision du socle.
+3. Nouveau passage du banc de performance sur le serveur de mesure, pour confirmer la vue d'ensemble sous 1,5 s.

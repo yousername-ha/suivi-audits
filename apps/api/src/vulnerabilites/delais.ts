@@ -215,7 +215,7 @@ export class DelaisVulnerabilites {
         c,
       );
     // Dépassements : sur tous les faits connus, après l'expiration (une faille rendue à traiter compte de nouveau).
-    const { objets, reglage } = await this.alertes.situationGlobale(k, []);
+    const { objets, reglage } = await this.alertes.situationGlobale(k, [], { titres: false, machines: false });
     const depasses = objetsEnDepassement(objets, reglage.delais, maintenant);
     const cle = (x: { nature: string; id: string }) => `${x.nature}:${x.id}`;
     const deja = new Map(

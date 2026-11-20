@@ -6,6 +6,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Lot PERF-04 du module Vulnérabilités** (ordre du calcul global, décision du RSSI du 20/11/2026,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : sans migration, aucune action sur le serveur. À la mise à jour, le
+détail affiché de quelques failles peut changer à priorité égale ; aucune priorité, aucune alerte, aucun compteur ne change.
+Quand plusieurs contrôles de Tenable de même priorité portent une même faille, ses faits (vue d'ensemble, alertes) sont ceux
+du contrôle détecté le plus récemment. À la première évaluation des alertes qui suit, une alerte concernée est seulement mise
+à jour (faits et version) : aucune notification, ni réouverte ni close, prise en compte conservée ; une prise en compte
+préparée juste avant est à refaire après rechargement. Dans le rapport de pilotage, les failles critiques sont listées dans
+l'ordre des CVE et les dépassements de même échéance dans l'ordre de leur identifiant : au-delà de 200 lignes, les lignes
+listées peuvent changer, pas les totaux. (session « Module surveillance vulnérabilités SMSI »)
+
 **Migration automatique `095`** (lot SI1 : import du rapport Silène, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
 additive (dix tables `vulnerabilites_silene_*`, index), durée négligeable, sans reprise de données. Aucune action sur le
 serveur, aucune règle de pare-feu : l'import ne fait aucun appel réseau. Le rapport JSON se dépose dans Plateforme, carte
@@ -230,6 +240,14 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
   0,5 s (RSSI), machines 4,9 s → 0,4 s, fiche d'une machine 5,0 s → 0,2 s, recherche 4,5 s → 0,2 s, vue d'ensemble 1,6 s →
   1,3 s (95e centile). Mêmes réponses, mêmes droits ; aucune migration. Nouveau test de non-régression
   `performance-vulnerabilites`. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **ordre du calcul global fixé et calcul réécrit** (PERF-04, décision du RSSI du 20/11/2026, addendum
+  « lot PERF-04 » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : à priorité égale, les faits affichés d'une
+  faille venaient du premier contrôle lu dans l'ordre physique de la base, qui pouvait changer seul ; ils viennent désormais
+  du contrôle détecté le plus récemment, puis du plus petit identifiant (règle `comparerControlesGlobal` du paquet partagé).
+  Le calcul lit les constats présents en un agrégat (plus de compilation JIT) : sur le jeu fictif du banc, vue d'ensemble
+  1,6 s → 0,8 s et évaluation des alertes 1,3 s → 0,6 s (95e centile), même nombre de requêtes. Priorités, niveaux
+  d'alerte, compteurs et droits inchangés. Budget de CI de la vue d'ensemble ramené de 2,4 s à 1,5 s. (session « Module
+  surveillance vulnérabilités SMSI »)
 - Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
   19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
   l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la

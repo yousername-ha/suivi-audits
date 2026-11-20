@@ -18,7 +18,9 @@
      global (aucune requête de plus). Lot S2 : variation sur sept jours, une requête de plus (l'instantané de référence),
      les nombres du moment étant composés à partir du même calcul global : 19 au plus. Lot S3 : précision « sans correctif
      connu » des failles exploitées et présentes (même calcul, aucune requête de plus) ; fin de support : constats présents
-     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. */
+     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. Lot PERF-04 : le calcul global est lu sans
+     titres ni machines ; titres des seules failles rendues (1), machines en fin de support relues à partir des constats (1) :
+     même nombre de requêtes. */
 import {
   type EtatCorrectifDto,
   etatCorrectif,
@@ -75,14 +77,17 @@ interface Suivie {
 export class VueEnsembleVulnerabilites {
   constructor(
     private readonly db: Db,
-    private readonly alertes: Pick<AlertesVulnerabilites, 'situationGlobale' | 'titreEtProduit'>,
+    private readonly alertes: Pick<AlertesVulnerabilites, 'situationGlobale' | 'titreEtProduit' | 'titres'>,
     private readonly surface: Pick<SurfaceExterneAlh, 'surfaceDesCves'>,
   ) {}
 
   async lire(user: SessionUser): Promise<VueEnsembleDto> {
     const k = this.db.k;
     const propositions = await propositionsEnCours(k);
-    const { cumuls, sources, titres, objets, reglage } = await this.alertes.situationGlobale(k, propositions);
+    const { cumuls, sources, objets, reglage } = await this.alertes.situationGlobale(k, propositions, {
+      titres: false,
+      machines: false,
+    });
     const maintenant = new Date();
 
     // Failles suivies : au moins une présence non traitée, ou un produit à confirmer.
@@ -113,7 +118,9 @@ export class VueEnsembleVulnerabilites {
       gravite: s.x.gravite,
       epss: s.x.epss,
     });
-    suivies.sort((a, b) => comparerCibles(ordre(a), ordre(b)));
+    // Clés de l'ordre calculées une fois par faille (lot PERF-04), pas à chaque comparaison ; même ordre (comparerCibles).
+    const cles = new Map(suivies.map((s) => [s, ordre(s)]));
+    suivies.sort((a, b) => comparerCibles(cles.get(a)!, cles.get(b)!));
 
     // Cases du radar (secteur × priorité) : total toujours rendu, cibles bornées par case.
     const totaux = new Map<string, CaseRadarDto>();
@@ -128,7 +135,11 @@ export class VueEnsembleVulnerabilites {
     const parPriorite = Object.fromEntries(NIVEAUX_PRIORITE.map((n) => [n, 0])) as Record<NiveauPriorite, number>;
     for (const s of suivies) parPriorite[s.priorite.niveau]++;
 
-    const [lisibles, surface, corrigees, journal] = [
+    const [titres, lisibles, surface, corrigees, journal] = [
+      await this.alertes.titres(
+        k,
+        retenues.flatMap((s) => (s.x.cve ? [s.x.cve] : [])),
+      ),
       await this.machinesLisibles(user, retenues),
       await this.surfaceLisible(user, retenues),
       await this.corrigeesCeMois(),
@@ -162,7 +173,10 @@ export class VueEnsembleVulnerabilites {
     // Lot S2 : variation sur sept jours, par rapport à l'instantané de référence (une requête), avec les nombres du moment
     // calculés par la même composition que l'instantané (aucune requête de plus).
     const reference = await instantaneDeReference(k, maintenant);
-    const actuel = composerInstantane(entreesInstantane(cumuls, sources, objets, reglage, maintenant));
+    // Mesures globales seulement (sans machines ni actifs, rendus nuls ici) : la vue n'en montre pas le total.
+    const actuel = composerInstantane(
+      entreesInstantane(cumuls, sources, objets, reglage, maintenant, undefined, false),
+    );
     // Lot S3 : précision des failles exploitées et présentes selon l'état de leur correctif (sans renommer la marque).
     const p1 = suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1');
     const etats = p1.map((s) => correctifDeCumul(s.x, sources).etat);
@@ -170,7 +184,10 @@ export class VueEnsembleVulnerabilites {
     const fin = objets.filter(
       (o) => o.nature === 'constat' && etatFinSupport(o.finSupportLe ?? null, maintenant) === 'atteinte',
     );
-    const machinesFin = await this.machinesLues(user, [...new Set(fin.flatMap((o) => o.machines))]);
+    const machinesFin = await this.machinesLues(
+      user,
+      fin.map((o) => o.id),
+    );
     const servicesFin = await servicesFinDeSupport(k, user);
     return {
       niveau,
@@ -257,13 +274,20 @@ export class VueEnsembleVulnerabilites {
     return out;
   }
 
-  /** Lot S3 : parmi les machines données (identifiants internes), celles que la personne lit ; drapeau pour les autres. */
-  private async machinesLues(user: SessionUser, ids: readonly string[]): Promise<NombreLisible> {
-    if (!ids.length) return { ...VIDE };
-    const { rows } = await sql<{ lues: number }>`SELECT count(*)::int AS lues FROM vulnerabilites_machines m
-      WHERE m.id = ANY(${[...ids]}::uuid[]) AND ${lisible(user)}`.execute(this.db.k);
+  /** Lot S3 : machines où les constats donnés (identifiants) sont présents, celles que la personne lit ; drapeau pour les
+      autres. Lot PERF-04 : lues ici à partir des constats (le calcul global de la vue ne lit pas les machines), mêmes
+      machines qu'avant (détections présentes de ces constats). */
+  private async machinesLues(user: SessionUser, constats: readonly string[]): Promise<NombreLisible> {
+    if (!constats.length) return { ...VIDE };
+    const { rows } = await sql<{ lues: number; total: number }>`
+      SELECT count(*) FILTER (WHERE x.lu)::int AS lues, count(*)::int AS total FROM (
+        SELECT DISTINCT m.id, ${lisible(user)} AS lu
+        FROM vulnerabilites_detections d
+        JOIN vulnerabilites_machines m ON m.id = d.machine_id
+        LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+        WHERE d.constat_id = ANY(${[...constats]}::uuid[]) AND ${present}) x`.execute(this.db.k);
     const lues = rows[0]?.lues ?? 0;
-    return { lisibles: lues, horsLecture: lues < ids.length };
+    return { lisibles: lues, horsLecture: lues < (rows[0]?.total ?? 0) };
   }
 
   /** Actifs exposés que la personne lit, pour les CVE rendues exposées sur Internet. */
