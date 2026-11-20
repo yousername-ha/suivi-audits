@@ -138,6 +138,48 @@ describe('paramètres', () => {
     expect(t.svc.settings.get('apparence').style).toBe('sage');
   });
 
+  it('fenêtres à l’essai : barre d’accent par défaut, liseré pour tous les comptes, valeur inconnue refusée', async () => {
+    const reader = await login(t, await makeUser(t, 'fenetres_reader', 'ro'));
+    expect((await reader.get('/api/auth/me')).json().appearance.fenetres).toBe('barre');
+    const s = await section(A, 'apparence');
+    expect(s.values.fenetres).toBe('barre');
+    const lisere = await A.put('/api/settings/apparence', { ...s.values, fenetres: 'lisere' }, { 'if-match': s.etag });
+    expect(lisere.statusCode, lisere.body).toBe(200);
+    expect((await reader.get('/api/auth/me')).json().appearance.fenetres).toBe('lisere');
+    const log = await t.svc.db.one<{ details: { before: { fenetres: string }; after: { fenetres: string } } }>(
+      "SELECT details FROM audit_log WHERE action = 'settings.update' ORDER BY id DESC LIMIT 1",
+    );
+    expect(log!.details.before.fenetres).toBe('barre');
+    expect(log!.details.after.fenetres).toBe('lisere');
+    const apres = await section(A, 'apparence');
+    // Version précédente : If-Match obligatoire et à jour.
+    const perime = await A.put(
+      '/api/settings/apparence',
+      { ...apres.values, fenetres: 'barre' },
+      { 'if-match': s.etag },
+    );
+    expect(perime.statusCode).toBe(412);
+    const invalide = await A.put(
+      '/api/settings/apparence',
+      { ...apres.values, fenetres: 'hexagone' },
+      { 'if-match': apres.etag },
+    );
+    expect(invalide.statusCode).toBe(422);
+    const refus = await reader.put(
+      '/api/settings/apparence',
+      { ...apres.values, fenetres: 'barre' },
+      { 'if-match': apres.etag },
+    );
+    expect(refus.statusCode).toBe(403);
+    expect((await reader.get('/api/auth/me')).json().appearance.fenetres).toBe('lisere');
+    // Un enregistrement sans le champ reste lisible : barre d'accent.
+    await t.svc.db.q(
+      "UPDATE settings SET value = jsonb_set(value, '{values}', (value->'values') - 'fenetres') WHERE key = 'section:apparence'",
+    );
+    await t.svc.settings.load();
+    expect(t.svc.settings.get('apparence').fenetres).toBe('barre');
+  });
+
   it('politique de sécurité : bornes non négociables, appliquée aux mots de passe', async () => {
     const s = await section(A, 'securite');
     expect(
