@@ -165,7 +165,7 @@ for (const [w, h] of [
     const ctx = await context(browser, w, h, 'light');
     const page = await ctx.newPage();
     await page.goto('/');
-    await pret(page, /^Bonjour/, /^Prochaines échéances$/);
+    await pret(page, /^Bonjour/, /^Vue d’ensemble · Gouvernance, risque et conformité$/);
     const r = await page.evaluate(() => {
       const cartes = Array.from(document.querySelectorAll('.grille-cartes > *')).map((e) => e.getBoundingClientRect());
       const gauche = Math.min(...cartes.map((c) => c.left));
