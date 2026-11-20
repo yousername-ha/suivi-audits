@@ -1004,8 +1004,8 @@
 }
 
 /* ========================================================================
-   TABLEAUX DE BORD MULTIPLES (ADR 0109) : onglets des tableaux de la personne (forme commune des onglets), glissés comme
-   les rubriques du menu ; bouton « + » ; bandeau d'un tableau d'un autre auteur ; fenêtres de création et de partage.
+   TABLEAUX DE BORD MULTIPLES (ADR 0109) : barre des favoris (forme commune des onglets), glissés comme les rubriques du
+   menu ; liste ⌄ de tous les tableaux ; « + » de création ; bandeau d'un tableau d'un autre auteur ; fenêtres.
    ======================================================================== */
 .tdb-onglets {
   display: flex;

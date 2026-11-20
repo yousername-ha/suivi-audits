@@ -187,7 +187,7 @@ export const tableauxDeBordRoutes = [
     method: 'PUT',
     url: '/api/tableaux-de-bord/onglets',
     summary:
-      'Ordre des onglets de la personne (liste complète : un tableau absent sort de ses onglets, ses propres tableaux y restent ; au plus 30)',
+      'Favoris de la personne, dans l’ordre (liste complète : un tableau absent sort de ses favoris ; au plus 5)',
     tags,
     access: 'auth',
     body: OngletsBody,

@@ -1,5 +1,5 @@
 /* Tableaux de bord multiples de l'accueil (ADR 0109) : tableaux proposés d'office, visibilité recontrôlée à chaque lecture,
-   onglets de chaque personne et destinataires d'un partage. Une disposition ne contient aucune donnée ; les chiffres
+   favoris de chaque personne et destinataires d'un partage. Une disposition ne contient aucune donnée ; les chiffres
    ouverts d'un auteur sont calculés à part (chiffres.ts).
 
    Visibilité d'un tableau pour une personne :

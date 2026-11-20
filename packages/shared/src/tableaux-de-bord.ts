@@ -1,6 +1,6 @@
-/* Tableaux de bord multiples de l'accueil et mode public (ADR 0109, décisions du RSSI du 20/11/2026). Chaque personne a
-   des tableaux nommés en onglets, dans l'ordre qu'elle choisit (le premier s'ouvre à l'arrivée) : les siens, et ceux
-   qu'elle ajoute (proposés d'office, partagés avec elle, publics), qui restent ceux de leur auteur, en lecture seule. Un
+/* Tableaux de bord multiples de l'accueil et mode public (ADR 0109, décisions du RSSI du 20/11/2026). Chaque personne voit
+   ses tableaux nommés et ceux des autres (proposés d'office, partagés avec elle, publics), qui restent ceux de leur
+   auteur, en lecture seule ; 5 favoris au plus en barre, dans l'ordre qu'elle choisit (le premier s'ouvre à l'arrivée). Un
    tableau publié, ou partagé par un détenteur du droit « Publier pour tous » (tableau_de_bord:administrer), ouvre aux
    destinataires les CHIFFRES de son auteur (`ChiffresPublics`, liste blanche de nombres) ; les listes nommées, le journal
    d'audit et l'accès aux registres gardent les droits de chacun. Contrat partagé par l'API et l'interface. */
@@ -50,7 +50,7 @@ export interface DefModele {
   description: string;
   /** Public visé par défaut : null pour tout le monde, sinon des rôles. */
   roles: readonly string[] | null;
-  /** Faux tant que les dalles du tableau n'existent pas (« Bientôt » dans « Ajouter un tableau existant »). */
+  /** Faux tant que les dalles du tableau n'existent pas (« bientôt » dans la liste des tableaux). */
   disponible: boolean;
   disposition: () => Disposition;
 }
