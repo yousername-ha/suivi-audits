@@ -2,6 +2,7 @@
    Alt + flèches au clavier), menu « + » (créer un tableau, ajouter un tableau existant), fenêtres de création, d'ajout et
    de partage, bandeau d'un tableau qui n'est pas à la personne. Le premier onglet s'ouvre à l'arrivée sur l'accueil. */
 import {
+  ActionIcon,
   Button,
   Group,
   Menu,
@@ -91,19 +92,63 @@ function nature(t: TableauResume) {
   return null;
 }
 
-/** Barre d'onglets des tableaux de la personne et menu « + ». */
+/** « + » de la barre d'outils du tableau de bord : créer un tableau (avec le droit) ou ajouter un tableau existant. */
+export function MenuPlus({
+  peutCreer,
+  onCreer,
+  onAjouter,
+}: {
+  peutCreer: boolean;
+  onCreer: () => void;
+  onAjouter: () => void;
+}) {
+  return (
+    <Menu position="bottom-start">
+      <Menu.Target>
+        <ActionIcon variant="default" size="lg" className="tdb-outil" aria-label="Ajouter un tableau de bord">
+          <svg
+            viewBox="0 0 16 16"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        {peutCreer && (
+          <Menu.Item onClick={onCreer}>
+            <b>Créer un nouveau tableau</b>
+            <Text size="xs" c="dimmed">
+              Vide, disposition standard ou copie d’un tableau
+            </Text>
+          </Menu.Item>
+        )}
+        <Menu.Item onClick={onAjouter}>
+          <b>Ajouter un tableau existant</b>
+          <Text size="xs" c="dimmed">
+            Proposé d’office, partagé avec vous ou public
+          </Text>
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
+/** Barre d'onglets des tableaux de la personne. Avec un seul tableau, elle n'est lue que par les lecteurs d'écran (choix
+    du RSSI du 20/11/2026) : le « + » de la barre d'outils suffit. */
 export function OngletsTableaux({
   donnees,
   actif,
   onChoisir,
-  onCreer,
-  onAjouter,
 }: {
   donnees: TableauxOut;
   actif: string;
   onChoisir: (id: string) => void;
-  onCreer: () => void;
-  onAjouter: () => void;
 }) {
   const qc = useQueryClient();
   const [brouillon, setBrouillon] = useState<string[] | null>(null);
@@ -214,7 +259,7 @@ export function OngletsTableaux({
   };
 
   return (
-    <div className="tdb-onglets" ref={barre}>
+    <div className="tdb-onglets" ref={barre} data-seul={ordre.length < 2 ? 'oui' : undefined}>
       <div
         className="onglets-rubriques"
         role="tablist"
@@ -241,6 +286,7 @@ export function OngletsTableaux({
               aria-selected={id === actif}
               aria-current={id === actif ? 'page' : undefined}
               aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
+              tabIndex={ordre.length < 2 ? -1 : undefined}
               draggable={false}
               onPointerDown={surPointeurBas(id)}
               onKeyDown={surTouche(t)}
@@ -260,29 +306,6 @@ export function OngletsTableaux({
           );
         })}
       </div>
-      <Menu position="bottom-start" withinPortal={false}>
-        <Menu.Target>
-          <button type="button" className="tdb-onglets-plus" aria-label="Ajouter un tableau de bord">
-            +
-          </button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {donnees.droits.creer && (
-            <Menu.Item onClick={onCreer}>
-              <b>Créer un nouveau tableau</b>
-              <Text size="xs" c="dimmed">
-                Vide, disposition standard ou copie d’un tableau
-              </Text>
-            </Menu.Item>
-          )}
-          <Menu.Item onClick={onAjouter}>
-            <b>Ajouter un tableau existant</b>
-            <Text size="xs" c="dimmed">
-              Proposé d’office, partagé avec vous ou public
-            </Text>
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
       <ErrorAlert error={erreur} />
       <VisuallyHidden aria-live="polite">{annonce}</VisuallyHidden>
     </div>

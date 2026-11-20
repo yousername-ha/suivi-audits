@@ -18,6 +18,7 @@ import {
   CLE_TABLEAUX,
   FenetreAjouter,
   FenetreCreer,
+  MenuPlus,
   OngletsTableaux,
   PartageTableau,
   useTableaux,
@@ -234,15 +235,7 @@ export function HomePage() {
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
       <ErrorAlert error={ouverts.error ?? erreurOnglet} />
-      {t && actif && mode !== 'edition' && (
-        <OngletsTableaux
-          donnees={t}
-          actif={actif.id}
-          onChoisir={choisir}
-          onCreer={() => setFenetre('creer')}
-          onAjouter={() => setFenetre('ajouter')}
-        />
-      )}
+      {t && actif && mode !== 'edition' && <OngletsTableaux donnees={t} actif={actif.id} onChoisir={choisir} />}
       {actif && mode === 'lecture' && (
         <BandeauTableau
           tableau={actif}
@@ -270,6 +263,16 @@ export function HomePage() {
             s={s}
             disposition={actif?.disposition ?? null}
             ouverts={chiffres}
+            outils={
+              t &&
+              mode === 'lecture' && (
+                <MenuPlus
+                  peutCreer={t.droits.creer}
+                  onCreer={() => setFenetre('creer')}
+                  onAjouter={() => setFenetre('ajouter')}
+                />
+              )
+            }
           />
         ))}
       {t && (

@@ -6,7 +6,7 @@
    affichée. Le taux global est la moyenne simple des taux par référentiel (décision du RSSI du 28/10/2026, ADR 0069),
    affiché comme tel et distinct des taux par référentiel ; jamais une somme d'exigences de référentiels différents
    (ADR 0060). L'écran mural et le Pilotage gardent les cartes de Synthese.tsx. */
-import { Button, Drawer, Group, SegmentedControl, Table, TextInput } from '@mantine/core';
+import { ActionIcon, Button, Drawer, Group, SegmentedControl, Table, TextInput, Tooltip } from '@mantine/core';
 import {
   cleDalle,
   completerDisposition,
@@ -936,6 +936,39 @@ export function dallesDisposees(dalles: DalleTableauDeBord[], disposition: Dispo
   }));
 }
 
+function IconeLoupe() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      aria-hidden="true"
+    >
+      <circle cx="7" cy="7" r="4.6" />
+      <path d="M10.4 10.4 14 14" />
+    </svg>
+  );
+}
+function IconeExport() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      aria-hidden="true"
+    >
+      <path d="M8 10V2M4.8 5.2 8 2l3.2 3.2" />
+      <path d="M2.5 9.5v3a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5v-3" />
+    </svg>
+  );
+}
+
 /** Bouton de détail d'une dalle (flèche oblique), comme sur les cartes de la vue analytique. */
 export function BoutonDetail({ titre, onClick }: { titre: string; onClick: () => void }) {
   return (
@@ -953,14 +986,18 @@ export function TableauDeBordConformite({
   s,
   disposition = null,
   ouverts = null,
+  outils = null,
 }: {
   s: Synthese;
   disposition?: Disposition | null;
   /** Chiffres ouverts de l'auteur du tableau affiché (ADR 0109) ; `s` est alors leur synthèse (`syntheseOuverte`). */
   ouverts?: ChiffresPublics | null;
+  /** Commandes placées en tête de la barre d'outils (« + » des tableaux de bord). */
+  outils?: ReactNode;
 }) {
   const can = useCan();
   const [recherche, setRecherche] = useState('');
+  const [rechercheOuverte, setRechercheOuverte] = useState(false);
   const [portee, setPortee] = useState('global');
   const [detail, setDetail] = useState<string | null>(null);
   const placees = dallesDisposees(useDallesTableauDeBord(s, portee, ouverts), disposition);
@@ -979,17 +1016,50 @@ export function TableauDeBordConformite({
             <span className="horodatage">{new Date(s.genereLe).toLocaleDateString('fr-FR')}</span>
           </p>
         </div>
-        <Group gap="xs">
-          <TextInput
-            aria-label="Rechercher une dalle"
-            placeholder="Rechercher une dalle"
-            value={recherche}
-            onChange={(e) => setRecherche(e.currentTarget.value)}
-          />
+        <Group gap="xs" className="tdb-outils">
+          {outils}
+          {rechercheOuverte || recherche ? (
+            <TextInput
+              aria-label="Rechercher une dalle"
+              placeholder="Rechercher une dalle"
+              className="tdb-recherche"
+              autoFocus={rechercheOuverte}
+              leftSection={<IconeLoupe />}
+              value={recherche}
+              onChange={(e) => setRecherche(e.currentTarget.value)}
+              onBlur={() => setRechercheOuverte(false)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Escape') return;
+                setRecherche('');
+                setRechercheOuverte(false);
+              }}
+            />
+          ) : (
+            <Tooltip label="Rechercher une dalle" withArrow>
+              <ActionIcon
+                variant="default"
+                size="lg"
+                className="tdb-outil"
+                aria-label="Rechercher une dalle"
+                onClick={() => setRechercheOuverte(true)}
+              >
+                <IconeLoupe />
+              </ActionIcon>
+            </Tooltip>
+          )}
           {can('import_export', 'lire') && (
-            <Button component={Link} to="/exports" variant="filled">
-              Exports
-            </Button>
+            <Tooltip label="Exports" withArrow>
+              <ActionIcon
+                component={Link}
+                to="/exports"
+                variant="filled"
+                size="lg"
+                className="tdb-outil"
+                aria-label="Exports"
+              >
+                <IconeExport />
+              </ActionIcon>
+            </Tooltip>
           )}
           <SegmentedControl
             aria-label="Référentiels affichés"

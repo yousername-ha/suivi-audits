@@ -1033,34 +1033,26 @@
   block-size: 0.9em;
   flex: none;
 }
-.tdb-onglets-plus {
-  display: inline-grid;
-  place-items: center;
-  inline-size: 2.3rem;
-  block-size: 2.3rem;
-  padding: 0;
-  border: 1px dashed color-mix(in srgb, var(--menu-teinte-pilotage) 70%, transparent);
-  border-radius: 0.7rem;
-  background: var(--suivi-surface);
-  color: var(--menu-fond);
-  font: inherit;
-  font-size: 1.3rem;
-  line-height: 1;
-  box-shadow: var(--suivi-ombre);
-  cursor: pointer;
+/* Un seul tableau : la barre d'onglets n'est lue que par les lecteurs d'écran (choix du RSSI du 20/11/2026). */
+.tdb-onglets[data-seul] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
-.tdb-onglets-plus:hover,
-.tdb-onglets-plus[aria-expanded='true'] {
-  background: var(--menu-fond);
-  color: var(--menu-teinte-pilotage);
-  border-style: solid;
+/* Outils compacts de l'en-tête : « + », loupe, export, à la taille des boutons du sélecteur de référentiels. */
+.tdb-outils {
+  align-items: center;
 }
-[data-mantine-color-scheme='dark'] .tdb-onglets-plus {
-  color: var(--menu-teinte-pilotage);
+.tdb-outils .tdb-outil {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: 0.6rem;
 }
-.tdb-onglets-plus:focus-visible {
-  outline: var(--suivi-trait-focus) solid var(--menu-focus);
-  outline-offset: 2px;
+.tdb-outils .tdb-recherche {
+  inline-size: 15rem;
 }
 .tdb-bandeau {
   display: flex;
