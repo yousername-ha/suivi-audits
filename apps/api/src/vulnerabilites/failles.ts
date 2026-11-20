@@ -93,13 +93,13 @@ import type { Grc } from '../grc/core.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
-import { lireFaitsCve, exploiteeCve, preuveCertSante, sourcesDe } from './sources.js';
+import { cvesExploitees, lireFaitsCve, exploiteeCve, preuveCertSante, sourcesDe } from './sources.js';
 import {
   alerteCertFr,
   detecteeSurMachine,
   lisible,
   perimetreMachine,
-  premiereConstat,
+  perimetresVisibles,
   present,
   scoreNvd,
 } from './sql.js';
@@ -171,6 +171,24 @@ interface LigneConstat extends LigneSuivi {
   premiere: Date;
 }
 
+/** Colonnes d'un constat utiles à la priorité, au délai et à l'ordre de la liste (lot PERF). */
+type LigneOrdre = Pick<
+  LigneConstat,
+  | 'id'
+  | 'plugin_id'
+  | 'gravite'
+  | 'cvss3_score'
+  | 'epss_score'
+  | 'exploitable'
+  | 'exploite_malware'
+  | 'machines'
+  | 'present'
+  | 'exploite'
+  | 'premiere'
+  | 'suivi_etat'
+  | 'suivi_repart'
+>;
+
 interface LigneMachine {
   id: string;
   nom: string | null;
@@ -208,7 +226,7 @@ interface LigneMachine {
     Exploitation et « exploitable » selon toutes les sources ; gravité et EPSS : la valeur la plus sévère entre Tenable et
     les sources de la veille (V27). Un constat sans CVE (non maintenu) n'a que les valeurs de Tenable : il est classé sur sa
     gravité. L'état de suivi n'entre pas dans la priorité. */
-const prioriteConstat = (l: LigneConstat, sources: SourcesFailleDto, reglage: ReglagePriorite) =>
+const prioriteConstat = (l: Pick<LigneConstat, 'present'>, sources: SourcesFailleDto, reglage: ReglagePriorite) =>
   calculerPriorite({ ...faitsDepuisSources(sources), presence: l.present ? 'detectee' : 'absente' }, reglage);
 
 /** Sources d'un constat : faits des CVE qu'il cite (AlgoLightHouse compris, les mêmes pour tout le monde), et Tenable
@@ -254,8 +272,8 @@ const versResume = (
   reglage: ReglagePriorite,
   maintenant = new Date(),
   jour = aujourdhui(maintenant),
+  priorite = prioriteConstat(l, sources, reglage),
 ): ConstatResumeDto => {
-  const priorite = prioriteConstat(l, sources, reglage);
   return {
     finDeSupport: etatFinSupport(iso(l.fin_support_le), maintenant) === 'atteinte',
     correctifEtat: etatCorrectif({
@@ -285,17 +303,26 @@ const versResume = (
     priorite,
     integration: { id: l.integration_id, nom: l.integration_nom, type: l.integration_type },
     suivi: versSuiviResume(l, jour),
-    delai: calculerDelai({
-      priorite: priorite.niveau,
-      etatSuivi: l.suivi_etat,
-      present: l.present,
-      premiere: l.premiere.toISOString(),
-      repartLe: iso(l.suivi_repart),
-      delais: reglage.delais,
-      maintenant,
-    }),
+    delai: delaiConstat(l, priorite, reglage, maintenant),
   };
 };
+
+/** Délai de correction d'un constat (lot S1), pour sa priorité courante. */
+const delaiConstat = (
+  l: Pick<LigneConstat, 'suivi_etat' | 'present' | 'premiere' | 'suivi_repart'>,
+  priorite: ReturnType<typeof prioriteConstat>,
+  reglage: ReglagePriorite,
+  maintenant: Date,
+): DelaiFailleDto =>
+  calculerDelai({
+    priorite: priorite.niveau,
+    etatSuivi: l.suivi_etat,
+    present: l.present,
+    premiere: l.premiere.toISOString(),
+    repartLe: iso(l.suivi_repart),
+    delais: reglage.delais,
+    maintenant,
+  });
 
 /** Filtre par état de délai et ordre « par échéance » (lot S1), sur les éléments déjà rangés par priorité. */
 function delaiFiltreTrie<T>(liste: T[], delai: (x: T) => DelaiFailleDto, q: { delai?: string; tri?: string }): T[] {
@@ -464,32 +491,55 @@ export class FaillesDetectees {
   /** Requête des constats lisibles, avec leurs compteurs limités aux machines lisibles touchées : celles où le constat est
       présent ; s'il ne l'est plus nulle part (lot V4b), celles où il a été vu en dernier. Sans aucune machine lisible
       touchée, le constat n'est ni listé ni ouvert. */
-  private requeteConstats(user: SessionUser, conditions: RawBuilder<boolean>[], constatId?: string) {
+  private requeteConstats(
+    user: SessionUser,
+    conditions: RawBuilder<boolean>[],
+    constatIds?: readonly string[],
+    colonnes: 'resume' | 'ordre' = 'resume',
+  ) {
     const ou = conditions.length ? sql.join(conditions, sql` AND `) : sql`true`;
-    const un = constatId ? sql`d.constat_id = ${constatId}::uuid` : sql`true`;
+    const un = constatIds ? sql`d.constat_id = ANY(${[...constatIds]}::uuid[])` : sql`true`;
+    // Lot PERF (PERF-01) : lisibilité calculée une fois par machine (lm), puis deux agrégats sans tri distinct : par
+    // constat et machine (x), puis par constat (par_constat). Mêmes règles qu'avant : « présent » si une détection l'est
+    // sur une machine quelconque ; machines comptées et dernière détection parmi les machines lisibles où il est présent,
+    // ou, s'il ne l'est plus nulle part, où il a été vu ; première présence sur toutes ses détections (premiereConstat).
     return sql`
-      WITH x AS (
-        SELECT d.constat_id, d.machine_id, d.derniere_detection, ${present} AS present, ${lisible(user)} AS lisible
+      WITH lm AS MATERIALIZED (
+        SELECT m.id, m.integration_id, ${lisible(user)} AS lisible FROM vulnerabilites_machines m),
+      x AS (
+        SELECT d.constat_id, bool_or(${present}) AS present, bool_or(m.lisible) AS lisible,
+               max(d.derniere_detection) FILTER (WHERE ${present}) AS derniere_presente,
+               max(d.derniere_detection) AS derniere, min(d.premiere_detection) AS premiere
         FROM vulnerabilites_detections d
-        JOIN vulnerabilites_machines m ON m.id = d.machine_id
+        JOIN lm m ON m.id = d.machine_id
         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-        WHERE ${un}),
-      pc AS (SELECT constat_id, bool_or(present) AS present FROM x GROUP BY constat_id),
+        WHERE ${un}
+        GROUP BY d.constat_id, d.machine_id),
       par_constat AS (
-        SELECT x.constat_id, pc.present, count(DISTINCT x.machine_id) FILTER (WHERE x.lisible)::int AS machines,
-               max(x.derniere_detection) FILTER (WHERE x.lisible) AS derniere
-        FROM x JOIN pc ON pc.constat_id = x.constat_id
-        WHERE x.present OR NOT pc.present
-        GROUP BY x.constat_id, pc.present
-        HAVING bool_or(x.lisible))
-      SELECT c.*, i.nom AS integration_nom, i.type AS integration_type, p.machines, p.derniere, p.present,
-        ${exploite} AS exploite, ${sansCve} AS non_maintenu,
-        ${premiereConstat} AS premiere,
-        ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
-        (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
-        ARRAY(SELECT cc.cve FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id ORDER BY cc.cve DESC LIMIT 5)
-          AS cves,
-        ${colonnesSuivi}
+        SELECT y.* FROM (
+          SELECT x.constat_id, bool_or(x.present) AS present,
+                 CASE WHEN bool_or(x.present) THEN count(*) FILTER (WHERE x.present AND x.lisible)
+                      ELSE count(*) FILTER (WHERE x.lisible) END::int AS machines,
+                 CASE WHEN bool_or(x.present) THEN max(x.derniere_presente) FILTER (WHERE x.lisible)
+                      ELSE max(x.derniere) FILTER (WHERE x.lisible) END AS derniere,
+                 min(x.premiere) AS premiere
+          FROM x GROUP BY x.constat_id) y
+        WHERE y.machines > 0)
+      SELECT ${
+        colonnes === 'ordre'
+          ? // Colonnes de la priorité, du délai et de l'ordre seulement (LigneOrdre) : le résumé est lu pour la page.
+            sql`c.id, c.plugin_id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware, p.machines,
+              p.present, ${exploite} AS exploite, coalesce(p.premiere, c.cree_le) AS premiere,
+              coalesce(s.etat, 'nouvelle') AS suivi_etat, s.delai_repart_le AS suivi_repart`
+          : sql`c.*, i.nom AS integration_nom, i.type AS integration_type, p.machines, p.derniere, p.present,
+              ${exploite} AS exploite, ${sansCve} AS non_maintenu,
+              coalesce(p.premiere, c.cree_le) AS premiere,
+              ${alerteConstat} AS alerte_certfr, ${epssVeille} AS epss_veille,
+              (SELECT count(*)::int FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id) AS nombre_cves,
+              ARRAY(SELECT cc.cve FROM vulnerabilites_constat_cves cc WHERE cc.constat_id = c.id ORDER BY cc.cve DESC
+                LIMIT 5) AS cves,
+              ${colonnesSuivi}`
+      }
       FROM vulnerabilites_constats c JOIN par_constat p ON p.constat_id = c.id
       JOIN integrations i ON i.id = c.integration_id
       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
@@ -517,30 +567,55 @@ export class FaillesDetectees {
       else conditions.push(sql<boolean>`c.nom ILIKE ${`%${motif}%`}`);
     }
     const reglage = await this.reglage.valeurs();
-    const { rows } = await sql<LigneConstat>`SELECT * FROM (${this.requeteConstats(user, conditions)}) c`.execute(
-      this.db.k,
-    );
+    const { rows } = await sql<LigneOrdre>`SELECT * FROM (${this.requeteConstats(
+      user,
+      conditions,
+      undefined,
+      'ordre',
+    )}) c`.execute(this.db.k);
     const sources = await sourcesDesConstats(this.db.k, rows);
     const maintenant = new Date();
+    const jour = aujourdhui(maintenant);
     // Priorité calculée par la fonction partagée, puis filtre et ordre : priorité, gravité, exploitée, machines, contrôle.
+    // Lot PERF (PERF-01) : l'ordre dépend de la priorité, calculée en TypeScript sur les faits des sources ; il reste fait
+    // en mémoire, sur les constats déjà filtrés en SQL, sans copie de la règle en SQL. Seuls la priorité (et le délai, s'il
+    // sert au filtre ou à l'ordre) sont calculés pour tous, sur les colonnes utiles (LigneOrdre) ; le résumé complet n'est lu
+    // et calculé que pour la page rendue (seconde requête, mêmes règles, limitée à ces constats), avec la même priorité.
     const ranges = rows
-      .map((l) => ({ l, r: versResume(l, sources.get(l.id)!, reglage, maintenant) }))
-      .filter((x) => !q.priorite || x.r.priorite.niveau === q.priorite)
+      .map((l) => {
+        const s = sources.get(l.id)!;
+        return { l, s, priorite: prioriteConstat(l, s, reglage), delai: null as DelaiFailleDto | null };
+      })
+      .filter((x) => !q.priorite || x.priorite.niveau === q.priorite)
       .sort(
         (a, b) =>
-          a.r.priorite.niveau.localeCompare(b.r.priorite.niveau) ||
+          a.priorite.niveau.localeCompare(b.priorite.niveau) ||
           ORDRE_GRAVITE(a.l.gravite) - ORDRE_GRAVITE(b.l.gravite) ||
           Number(b.l.exploite) - Number(a.l.exploite) ||
           b.l.machines - a.l.machines ||
           a.l.plugin_id - b.l.plugin_id,
       );
-    const tous = delaiFiltreTrie(ranges, (x) => x.r.delai, q);
+    const delai = (x: (typeof ranges)[number]) => (x.delai ??= delaiConstat(x.l, x.priorite, reglage, maintenant));
+    const tous = delaiFiltreTrie(ranges, delai, q);
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
+    const page = tous.slice(debut, debut + FAILLES_PAR_PAGE);
+    const { rows: completes } = page.length
+      ? await sql<LigneConstat>`SELECT * FROM (${this.requeteConstats(
+          user,
+          [],
+          page.map((x) => x.l.id),
+        )}) c`.execute(this.db.k)
+      : { rows: [] };
+    const parId = new Map(completes.map((l) => [l.id, l]));
     return {
       total: tous.length,
       page: q.page,
       parPage: FAILLES_PAR_PAGE,
-      elements: tous.slice(debut, debut + FAILLES_PAR_PAGE).map((x) => x.r),
+      // Un constat retiré entre les deux lectures (synchronisation concurrente) n'est pas rendu.
+      elements: page.flatMap((x) => {
+        const l = parId.get(x.l.id);
+        return l ? [versResume(l, x.s, reglage, maintenant, jour, x.priorite)] : [];
+      }),
     };
   }
 
@@ -548,7 +623,7 @@ export class FaillesDetectees {
       défaut, où il a été vu en dernier), par rôle. Un constat sans machine lisible répond comme un constat inconnu. */
   async constat(user: SessionUser, id: string): Promise<ConstatDto> {
     const { rows } = await sql<LigneConstat>`
-      SELECT x.* FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], id)}) x`.execute(this.db.k);
+      SELECT x.* FROM (${this.requeteConstats(user, [sql<boolean>`c.id = ${id}::uuid`], [id])}) x`.execute(this.db.k);
     const l = rows[0];
     if (!l) throw new HttpError(404, 'Faille introuvable ou non accessible.');
     const cves = await this.db.k
@@ -621,40 +696,66 @@ export class FaillesDetectees {
       non concernée ne compte pas (lot V4b). Public : le suivi (V30) et l'assistant (repères) rangent les machines par ce
       même rang. */
   async machinesRangees(user: SessionUser): Promise<MachineDto[]> {
+    // Lot PERF (PERF-02) : machines lisibles calculées une fois (lm), faits de chaque constat ouvert une fois (cf), puis un
+    // seul agrégat par machine (k) et une seule lecture des fins de support (fs), au lieu d'une sous-requête latérale et
+    // d'une sous-requête « fin de support » par machine. Mêmes compteurs, mêmes cinq fins de support au plus, même ordre.
     const { rows } = await sql<LigneMachine>`
+      WITH lm AS MATERIALIZED (
+        SELECT m.id, m.integration_id FROM vulnerabilites_machines m WHERE ${lisible(user)}),
+      -- Mêmes règles que les fragments exploite et exploiteeAvere, sous forme d'ensembles (une lecture chacun).
+      ex AS MATERIALIZED (${cvesExploitees}),
+      cf AS MATERIALIZED (
+        SELECT c.id, c.gravite, c.exploitable,
+               c.id IN (SELECT cc.constat_id FROM vulnerabilites_constat_cves cc
+                        JOIN vulnerabilites_veille_cve v ON v.cve = cc.cve WHERE v.kev_ajout IS NOT NULL) AS exploite,
+               (c.exploite_malware OR c.id IN (SELECT cc.constat_id FROM vulnerabilites_constat_cves cc
+                                               JOIN ex ON ex.cve = cc.cve)) AS avere
+        FROM vulnerabilites_constats c WHERE NOT ${close('constat')}),
+      k AS (
+        SELECT d.machine_id,
+               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'critique')::int AS critique,
+               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'elevee')::int AS elevee,
+               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'moyenne')::int AS moyenne,
+               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'faible')::int AS faible,
+               count(DISTINCT c.id) FILTER (WHERE c.exploite)::int AS exploites,
+               count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
+               count(DISTINCT c.id) FILTER (WHERE c.avere)::int AS exploitees_avere
+        FROM lm m JOIN vulnerabilites_detections d ON d.machine_id = m.id
+        LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+        JOIN cf c ON c.id = d.constat_id
+        WHERE ${present}
+        GROUP BY d.machine_id),
+      -- Lot S3 : contrôles présents en fin de support, quel que soit leur état de suivi (cinq au plus par machine).
+      fs AS (
+        SELECT z.machine_id, json_agg(json_build_object('nom', z.nom, 'le', z.le) ORDER BY z.le, z.nom) AS fins
+        FROM (SELECT y.*, row_number() OVER (PARTITION BY y.machine_id ORDER BY y.le, y.nom) AS n
+              FROM (SELECT DISTINCT d.machine_id, c.nom, c.fin_support_le AS le
+                    FROM vulnerabilites_constats c JOIN vulnerabilites_detections d ON d.constat_id = c.id
+                    JOIN lm m ON m.id = d.machine_id
+                    LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+                    WHERE ${finSupportConstat} AND ${present}) y) z
+        WHERE z.n <= 5 GROUP BY z.machine_id)
       SELECT m.id, m.nom, m.adresse, m.systeme, m.role, ${perimetreMachine} AS perimetre_id, s.name AS perimetre_nom,
              CASE WHEN m.perimetre_id IS NOT NULL THEN 'machine' WHEN td.perimetre_id IS NOT NULL THEN 'depot' END
                AS perimetre_origine,
              td.id AS depot_id, td.nom AS depot_nom,
              -- Périmètre du dépôt : montré seulement s'il est visible de la personne (son nom ne fuit pas autrement).
-             CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN td.perimetre_id END AS depot_perimetre_id,
-             CASE WHEN grc_smsi_visible(td.perimetre_id, ${user.id}::uuid) THEN sd.name END AS depot_perimetre_nom,
+             CASE WHEN td.perimetre_id = ANY(${perimetresVisibles(user)}) THEN td.perimetre_id END AS depot_perimetre_id,
+             CASE WHEN td.perimetre_id = ANY(${perimetresVisibles(user)}) THEN sd.name END AS depot_perimetre_nom,
              m.exposition, m.acr,
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.source, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
              coalesce(k.exploitables, 0) AS exploitables, coalesce(k.exploitees_avere, 0) AS exploitees_avere,
-             -- Lot S3 : contrôles présents en fin de support, quel que soit leur état de suivi (cinq au plus).
-             (SELECT coalesce(json_agg(json_build_object('nom', z.nom, 'le', z.le) ORDER BY z.le, z.nom), '[]'::json)
-              FROM (SELECT DISTINCT c.nom, c.fin_support_le AS le FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
-                    WHERE d.machine_id = m.id AND ${present} AND ${finSupportConstat} ORDER BY le, nom LIMIT 5) z) AS fins_support
-      FROM vulnerabilites_machines m
+             coalesce(fs.fins, '[]'::json) AS fins_support
+      FROM lm
+      JOIN vulnerabilites_machines m ON m.id = lm.id
       JOIN integrations i ON i.id = m.integration_id
       LEFT JOIN vulnerabilites_tenable_depots td ON td.id = m.depot_id
       LEFT JOIN grc_smsis sd ON sd.id = td.perimetre_id
       LEFT JOIN grc_smsis s ON s.id = ${perimetreMachine}
-      LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-      LEFT JOIN LATERAL (
-        SELECT count(DISTINCT c.id) FILTER (WHERE c.gravite = 'critique')::int AS critique,
-               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'elevee')::int AS elevee,
-               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'moyenne')::int AS moyenne,
-               count(DISTINCT c.id) FILTER (WHERE c.gravite = 'faible')::int AS faible,
-               count(DISTINCT c.id) FILTER (WHERE ${exploite})::int AS exploites,
-               count(DISTINCT c.id) FILTER (WHERE c.exploitable)::int AS exploitables,
-               count(DISTINCT c.id) FILTER (WHERE ${exploiteeAvere})::int AS exploitees_avere
-        FROM vulnerabilites_detections d JOIN vulnerabilites_constats c ON c.id = d.constat_id
-        WHERE d.machine_id = m.id AND ${present} AND NOT ${close('constat')}) k ON true
-      WHERE ${lisible(user)}`.execute(this.db.k);
+      LEFT JOIN k ON k.machine_id = m.id
+      LEFT JOIN fs ON fs.machine_id = m.id`.execute(this.db.k);
     const { rows: declarees } = await sql<DeclareeMachine>`
       SELECT DISTINCT m.id AS machine_id, r.cve, v.cvss31_gravite, v.cvss40_gravite,
              (SELECT max(a.fiche_cvss31) FROM vulnerabilites_veille_avis a WHERE a.source = 'cert-sante'

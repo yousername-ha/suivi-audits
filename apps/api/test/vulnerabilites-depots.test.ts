@@ -341,6 +341,38 @@ describe('périmètre hérité du dépôt', () => {
     expect((await noms(respVuln)).length).toBe(4);
   });
 
+  it('pyramide : dépôt relié à un enfant du périmètre lu (lot PERF : périmètres visibles calculés une fois par requête)', async () => {
+    const enfant = (
+      await admin.post('/api/grc/smsis', { name: 'Périmètre fictif A, enfant', scope: 'x', timezone: 'Europe/Paris' })
+    ).json().id as string;
+    // Le dépôt et sa liaison sont effacés avant chaque test (beforeEach) : l'enfant reste, sans machine.
+    await t.svc.db.q('UPDATE grc_smsis SET parent_id = $1 WHERE id = $2', [perimA, enfant]);
+    expect((await relier(admin, SUD.nom, enfant)).statusCode).toBe(200);
+    // Membre de A : lit la machine du dépôt relié à l'enfant, et voit le périmètre du dépôt.
+    const vues = await lignes(lecteurA);
+    expect(vues.map((m) => [m.nom, m.perimetreNom, m.perimetreOrigine])).toEqual([
+      [nomMachine(3), 'Périmètre fictif A, enfant', 'depot'],
+    ]);
+    expect(vues[0]!.depot).toMatchObject({ perimetreId: enfant, perimetreNom: 'Périmètre fictif A, enfant' });
+    const m3 = await machineId(3);
+    expect((await lecteurA.get(`${V}/machines/${m3.id}`)).json()).toMatchObject({
+      perimetreId: enfant,
+      rang: { position: 1, total: 1 },
+    });
+    const page = (await lecteurA.get(`${V}/constats`)).json();
+    expect([page.total, page.elements[0].machines]).toEqual([1, 1]);
+    const recherche = (await lecteurA.get(`${V}/recherche?q=srv-depot`)).json();
+    expect(recherche.machines.elements.map((m: { nom: string }) => m.nom)).toEqual([nomMachine(3)]);
+    const cve = (await lecteurA.get(`${V}/recherche?q=CVE-2026-94001`)).json();
+    expect(cve.cves.elements[0]).toMatchObject({ cve: 'CVE-2026-94001', machines: 1, horsLecture: true });
+    // Membre de B seulement : rien ; administration du module sans rattachement : les machines sans périmètre.
+    expect(await noms(lecteurB)).toEqual([]);
+    expect((await lecteurB.get(`${V}/constats`)).json().total).toBe(0);
+    expect((await lecteurB.get(`${V}/machines/${m3.id}`)).statusCode).toBe(404);
+    expect(await noms(respVuln)).toEqual([nomMachine(1), nomMachine(2), nomMachine(4)]);
+    expect((await respVuln.get(`${V}/constats`)).json().elements[0].machines).toBe(3);
+  });
+
   it('exception indiquée à la main qui prime ; retour à l’hérité et ses garde-fous', async () => {
     expect((await relier(admin, NORD.nom, perimA)).statusCode).toBe(200);
     // Exception : la machine 2 est indiquée à la main dans B.
