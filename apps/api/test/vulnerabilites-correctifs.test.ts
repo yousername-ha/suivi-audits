@@ -466,6 +466,37 @@ describe('lot S3 : regroupement par correctif, fin de support, état du correcti
     });
   });
 
+  it('rapport de pilotage : failles critiques présentes depuis le plus longtemps d’abord (décision du RSSI du 20/11/2026)', async () => {
+    const ordre = async () =>
+      (
+        (await admin.get(`${V}/rapport?mois=${MOIS}`)).json() as { critiques: { elements: { cve: string }[] } }
+      ).critiques.elements.map((f) => f.cve);
+    const dater = (plugin: string, le: string | null) =>
+      t.svc.db.q(
+        `UPDATE vulnerabilites_detections d SET premiere_detection = coalesce($2::timestamptz, d.premiere_detection)
+           FROM vulnerabilites_constats c WHERE c.id = d.constat_id AND c.plugin_id = $1::int RETURNING d.id`,
+        [plugin, le],
+      );
+    const avant = await t.svc.db.q<{ id: string; premiere_detection: Date }>(
+      `SELECT d.id, d.premiere_detection FROM vulnerabilites_detections d
+         JOIN vulnerabilites_constats c ON c.id = d.constat_id WHERE c.plugin_id IN (940001, 940003, 940004)`,
+    );
+    try {
+      // La faille du contrôle 940004 devient la plus ancienne : elle passe en tête.
+      expect((await dater('940004', '2020-01-01T00:00:00Z')).rows.length).toBeGreaterThan(0);
+      expect(await ordre()).toEqual(['CVE-2026-94004', 'CVE-2026-94001']);
+      // Puis celle du contrôle 940001 devient plus ancienne encore : l'ordre s'inverse.
+      expect((await dater('940001', '2019-01-01T00:00:00Z')).rows.length).toBeGreaterThan(0);
+      expect(await ordre()).toEqual(['CVE-2026-94001', 'CVE-2026-94004']);
+    } finally {
+      for (const d of avant.rows)
+        await t.svc.db.q('UPDATE vulnerabilites_detections SET premiere_detection = $2 WHERE id = $1', [
+          d.id,
+          d.premiere_detection,
+        ]);
+    }
+  });
+
   it('rapport de pilotage : état du correctif des failles critiques et section « fin de support »', async () => {
     const r = await admin.get(`${V}/rapport?mois=${MOIS}`);
     expect(r.statusCode, r.body).toBe(200);

@@ -34,6 +34,12 @@ et addenda de l'[ADR 0100](../adr/0100-module-vulnerabilites.md). Ordre de la fi
 5. Produits vus par Silène rapprochés des CVE « à confirmer ».
 6. Rapport d'analyse de l'Active Directory importé par fichier JSON lu dans le navigateur.
 
+Lot ASSISTANT-V1 (outils de l'assistant alignés sur la vue d'ensemble, actifs exposés dans « Machines prioritaires »,
+« Quoi faire » sans renvoi interne ; addendum de l'ADR 0100) : réalisé le 20/11/2026, sans migration. Restent à confirmer
+par le RSSI les choix de réalisation de l'addendum (ordre des actifs exposés, rien d'exposé pour un constat de Tenable, ce
+qui compte comme correctif) et, avec la session de l'assistant, la mise à jour des descriptions des outils
+(`apps/api/src/assistant/outils.ts`, non touché) ; qualité des réponses non vérifiée avec un modèle réel.
+
 Décidés sans place dans la file : rançongiciels (catalogue KEV et évaluation de la CISA), volume de la veille à mesurer,
 quatre réglages des fréquences, marques « présente sur le parc » et « exposée sur Internet » sur les cartes d'avis, rapport
 de pilotage en vrai PDF (plus tard). Détail : § 3 de la reprise.

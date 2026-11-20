@@ -186,12 +186,15 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
+  /* Lot PC1 : vue d'ensemble ; lot ASSISTANT-V1 : ses cibles servent aussi à l'outil failles_prioritaires de l'assistant. */
+  const vueEnsemble = new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne);
   const assistantVulnerabilites = new AssistantVulnerabilites(
     db,
     failles,
     suivi,
     reglagePriorite,
     motsNonMasques,
+    vueEnsemble,
     surfaceExterne,
   );
   assistant.vulnerabilites = assistantVulnerabilites;
@@ -247,7 +250,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
       alertes: alertesVulnerabilites,
       /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
-      vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
+      vueEnsemble,
       /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
       fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
       /** Lot S1 : délais de correction (réglés avec les seuils de priorité), exceptions à échéance, mesure des corrections. */

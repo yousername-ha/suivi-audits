@@ -3252,6 +3252,11 @@ objets suivis **dans l'ordre de leur identifiant** (constats, puis failles décl
 quand une liste dépasse 200 lignes, les lignes listées peuvent changer à la mise à jour. Les fins de support et les autres
 lectures (vue d'ensemble, tendances, alertes, délais) avaient déjà un ordre propre.
 
+**Décision du RSSI du 20/11/2026** : dans le rapport, les failles critiques sont listées **présentes depuis le plus
+longtemps d'abord** (sans date en dernier, puis par clé), et les dépassements de même échéance dans le même ordre (puis par
+identifiant). La borne de 200 lignes garde ainsi les plus anciennes. Les totaux ne changent pas. Test :
+`apps/api/test/vulnerabilites-correctifs.test.ts`.
+
 ### Alertes existantes à la mise à jour
 
 L'empreinte d'une alerte contient les faits de la priorité. À la première évaluation après la mise à jour (fin d'une
@@ -3337,3 +3342,92 @@ nouveau, les réponses sont identiques (hors heure de production).
 1. Les choix ci-dessus (ordre des failles critiques et des dépassements du rapport).
 2. JIT (point ouvert 1 de l'addendum « lot PERF ») : n'est plus déclenché par le calcul global ; décision du socle.
 3. Nouveau passage du banc de performance sur le serveur de mesure, pour confirmer la vue d'ensemble sous 1,5 s.
+
+## Addendum du 20/11/2026 — lot ASSISTANT-V1 : outils de l'assistant alignés sur la vue d'ensemble, actifs exposés, « Quoi faire »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route nouvelle, aucune dépendance, aucun flux sortant ; `apps/api/src/assistant/*`, `apps/web/src/assistant/*`,
+`docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py` non touchés (descriptions des outils et consigne
+inchangées). Fichier central : `apps/api/src/vulnerabilites/assistant.ts`.
+
+### Décisions du RSSI (20/11/2026)
+
+1. `failles_prioritaires` lit la **même source que le tableau « Cibles par priorité »** de la vue d'ensemble, avec les mêmes
+   droits de lecture, et signale les produits « à confirmer » : pour une même personne, l'outil et l'écran donnent les mêmes
+   failles dans le même ordre.
+2. `machines_prioritaires` rend aussi les **actifs exposés** (surface externe), sous des repères `E-001…`, à côté des
+   machines `M-001…`.
+3. `evaluer_cve` : la rubrique « Quoi faire » ne contient plus de renvoi interne (« voir chaque constat », « voir
+   surfaceExterne.alertes ») ; elle porte le contenu réel, avec sa source nommée ; une rubrique vide est omise ; sans
+   correctif, la mention explicite « aucun correctif publié par les sources lues ».
+4. `sources: []` gardé tel quel ; `elements` reflète ce que chaque outil rend.
+
+Rien d'identifiant ne part vers l'assistant : ni nom de machine, ni adresse, ni domaine, ni rôle, ni nom de périmètre ;
+seulement des repères et des compteurs, remplacés en local à l'affichage (mécanisme du lot « Assistant » et du lot ALH2,
+inchangé, masque compris).
+
+### Réalisation
+
+- **`failles_prioritaires`** : `VueEnsembleVulnerabilites.cibles(user)` rend les cibles telles que la route de la vue
+  d'ensemble les rend à la personne. `lire` et `cibles` partagent le même code (failles suivies du calcul global, ordre
+  `comparerCibles`, bornes par case, puis titres, machines lisibles par `lisible(user)` — donc `perimetresVisibles(user)` —,
+  actifs lisibles et fiche lisible) : aucune seconde règle à tenir. L'outil rend les premières cibles (25 au plus), dans
+  l'ordre : rang, CVE, titre et produit (ceux de l'écran), priorité et faits, présences (libellés), `produitAConfirmer`
+  (un produit surveillé est seulement proposé), `seulementAConfirmer` (c'est la seule présence), exploitée, exploitable,
+  gravité, EPSS, état de suivi, nombres de machines et d'actifs que la personne lit (drapeau sans nombre pour le reste), et
+  `nature` et `id` de la fiche qu'elle peut ouvrir (repris par `proposer_action_vulnerabilite`), absents sinon. Total :
+  `faillesSuiviesAuTotal` (celui de l'écran). Les failles et leur ordre sont les mêmes pour tout le monde (lot ALH5) ; une
+  personne à périmètre restreint voit donc aussi les failles qu'elle ne lit pas, comme sur l'écran, sans nombre ni fiche.
+- **`machines_prioritaires`** : `actifsExposes` (repères `E-…`, rang, `rangSur`, `faillesExposees`, et sans CVE demandée
+  `faillesParPriorite`), `actifsExposesDansLaPortee`, `actifsExposesSansRepere` (actif lisible inconnu de la cartographie).
+  Sans filtre : les actifs lisibles qui portent une faille suivie exposée sur Internet (calcul global de la vue
+  d'ensemble), rangés par la faille la plus prioritaire qu'ils portent (ordre des cibles), puis par nombre de failles
+  exposées, puis par identifiant. Avec une CVE : les actifs lisibles qui la portent (mêmes porteurs et mêmes repères que la
+  surface externe d'`evaluer_cve`). Avec un constat de Tenable : machines seulement. Même borne que les machines (`nombre`,
+  30 au plus). Lecture par `SurfaceExterneAlh.actifsDesCves` (une requête, mêmes porteurs et même lisibilité que
+  `exposition`). Les actifs vus par Silène seul n'ont pas de repère (la table des repères externes ne vise que les actifs
+  d'AlgoLightHouse) et ne sont pas rendus.
+- **`evaluer_cve`, « Quoi faire »** (`quoiFaire`, remplace `recommandations`) : rubriques `catalogueKev` (action exigée et
+  échéance, « Catalogue KEV de la CISA »), `certSante` (mentions « un correctif existe », « un contournement existe »),
+  `tenable` (un correctif par texte publié, avec les numéros des contrôles lisibles qui le portent et la date de publication
+  la plus ancienne), `algoLightHouse` (défauts et résolutions de l'éditeur des alertes ouvertes lisibles, bornés comme
+  avant) ; chacune nomme sa source et n'apparaît que si elle a un contenu. `correctif` : la mention « aucun correctif publié
+  par les sources lues » quand aucune source ne publie de correctif (ni correctif de Tenable, ni action du catalogue KEV, ni
+  « un correctif existe : oui » du CERT Santé, ni résolution de l'éditeur). Le texte du correctif quitte chaque constat
+  (`correctifPublieParTenable` ; la date `correctifPublieLe` reste) et les recommandations quittent `surfaceExterne.alertes`
+  (`recommandationsDeLEditeur`) : plus de copie en double. Les textes de l'éditeur repassent par le masque avant l'envoi,
+  comme avant.
+- **`elements`** : `evaluer_cve`, 1 (la CVE) + avis rendus + constats rendus + produits surveillés rendus + rubriques de
+  « Quoi faire » qui portent un contenu (la mention n'en est pas une) + 1 si la section de la surface externe est rendue ;
+  0 pour une CVE inconnue. `machines_prioritaires` : machines rendues + actifs exposés rendus. `failles_prioritaires` :
+  failles rendues.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. Ordre des actifs exposés sans filtre (faille la plus prioritaire qu'ils portent, puis nombre de failles exposées).
+2. Avec un constat de Tenable, aucun actif exposé n'est rendu (le constat porte sur des machines internes).
+3. Ce qui compte comme « correctif » pour la mention (liste ci-dessus) : une fiche du CERT Santé qui ne dit qu'« un
+   contournement existe » laisse la mention, à côté de la rubrique du CERT Santé.
+4. Les avis du CERT-FR et du CERT Santé restent listés à part (`avis` : source, identifiant, date et titre) : ils ne sont pas une
+   rubrique de « Quoi faire ».
+5. Les descriptions des outils et la consigne de l'assistant (`apps/api/src/assistant/outils.ts`, hors du périmètre du lot)
+   ne sont pas changées : la description de `machines_prioritaires` ne cite que les repères `M-…`, celle de
+   `failles_prioritaires` parle encore des « constats de Tenable et failles déclarées ». La consigne cite déjà les repères
+   `E-…` dans « Actifs à traiter d'abord » ; le champ `note` de chaque résultat explique les nouveaux champs. À reprendre
+   avec la session de l'assistant si le RSSI le souhaite.
+
+### Tests
+
+`apps/api/test/assistant-vulnerabilites-outils.test.ts` (nouveau) : serveur sans connecteur Tenable (les trois outils
+répondent) ; égalité outil / écran pour l'administrateur et deux personnes à périmètre restreint, avant et après l'arrivée
+des machines de Tenable ; produit à confirmer signalé ; actifs exposés rangés, selon les droits, mêmes repères
+qu'`evaluer_cve` ; les trois formes de « Quoi faire » (contenu avec source pour le catalogue KEV, le CERT Santé, Tenable et
+l'éditeur de la surface externe ; rubriques vides omises ; mention « aucun correctif… ») ; `elements` ; aucune sortie des
+trois outils (résultat du service pour trois personnes, puis requêtes réellement remises à un faux modèle) ne contient nom de
+machine, adresse, domaine, fournisseur d'accès, numéro d'AS, rôle ou nom de périmètre. Tests adaptés :
+`assistant-vulnerabilites.test.ts` (« Quoi faire », première faille prioritaire et sa fiche), `assistant-surface-externe.test.ts`
+(recommandations de l'éditeur dans « Quoi faire »).
+
+### Non vérifié
+
+Qualité des réponses avec un modèle réel ; Node 26 ; pile Docker.

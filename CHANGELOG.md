@@ -184,6 +184,10 @@ page de maintenance des mises à jour prend aussi Lexend.
 
 ### Modifié
 
+- Vulnérabilités, **rapport de pilotage** (décision du RSSI du 20/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+  les failles critiques sont listées présentes depuis le plus longtemps d'abord, et les dépassements de même échéance dans
+  le même ordre ; au-delà de 200 lignes, ce sont les plus anciennes qui restent affichées. Les totaux ne changent pas
+  (session « Module surveillance vulnérabilités SMSI »).
 - Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
   est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
   (session « Module surveillance vulnérabilités SMSI »)
@@ -260,6 +264,16 @@ page de maintenance des mises à jour prend aussi Lexend.
   1,6 s → 0,8 s et évaluation des alertes 1,3 s → 0,6 s (95e centile), même nombre de requêtes. Priorités, niveaux
   d'alerte, compteurs et droits inchangés. Budget de CI de la vue d'ensemble ramené de 2,4 s à 1,5 s. (session « Module
   surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **outils de l'assistant RSSI** (lot ASSISTANT-V1, décisions du RSSI du 20/11/2026, addendum de
+  l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : « failles prioritaires » ne lisait que les constats de Tenable et
+  les failles déclarées, dans un ordre à lui ; il rend désormais les failles du tableau « Cibles par priorité » de la vue
+  d'ensemble, dans le même ordre, avec les mêmes droits de lecture, et signale les produits à confirmer. « Machines
+  prioritaires » rend aussi les actifs exposés sur Internet, sous des repères `E-001…`, après les machines. Dans
+  « Évaluer une CVE », la rubrique « Quoi faire » ne renvoie plus à d'autres parties du résultat : elle donne le contenu
+  publié par chaque source (catalogue KEV, CERT Santé, Tenable, éditeur de la surface externe), avec la source nommée,
+  omet une source sans contenu et dit « aucun correctif publié par les sources lues » quand aucune n'en publie. Le nombre
+  d'éléments journalisé suit ce que chaque outil rend. Toujours aucun nom de machine, adresse, domaine, rôle ni périmètre
+  vers le modèle ; aucune migration. (session « Module surveillance vulnérabilités SMSI »)
 - Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
   19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
   l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la
