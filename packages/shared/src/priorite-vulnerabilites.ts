@@ -163,8 +163,14 @@ export function valeursRetenues(v: ValeursFaille): {
   epss: ScoreSource | null;
 } {
   const ordre = (s: SourceValeur) => SOURCES_VALEUR.indexOf(s);
-  const plus = <T extends { source: SourceValeur }>(liste: readonly T[], valeur: (x: T) => number): T | null =>
-    [...liste].sort((a, b) => valeur(b) - valeur(a) || ordre(a.source) - ordre(b.source))[0] ?? null;
+  // La première de la liste rangée par valeur décroissante puis par ordre des sources, trouvée en un passage (lot PERF-04 :
+  // même résultat que le tri, sans copie ; à égalité parfaite, la première rencontrée, comme le tri stable).
+  const plus = <T extends { source: SourceValeur }>(liste: readonly T[], valeur: (x: T) => number): T | null => {
+    let m: T | null = null;
+    for (const x of liste)
+      if (!m || valeur(x) > valeur(m) || (valeur(x) === valeur(m) && ordre(x.source) < ordre(m.source))) m = x;
+    return m;
+  };
   return {
     gravite: plus(v.gravites, (x) => RANG_GRAVITE[x.gravite]),
     cvss: plus(
@@ -272,6 +278,32 @@ export function prioriteLaPlusHaute(liste: readonly Priorite[]): Priorite | null
   let m: Priorite | null = null;
   for (const p of liste) if (!m || rangPriorite(p) < rangPriorite(m)) m = p;
   return m;
+}
+
+/** Contrôle de Tenable (constat présent) vu par le calcul global des failles : son identifiant et sa dernière détection
+    présente (la plus récente des détections présentes du constat, toutes machines confondues, ISO 8601), ou null si
+    aucune n'est datée. */
+export interface ControleGlobal {
+  id: string;
+  dernierePresente: string | null;
+}
+
+/** Ordre des contrôles du calcul global (décision du RSSI du 20/11/2026, lot PERF-04). Quand plusieurs contrôles présents et
+    non traités d'une même faille (une CVE, ou un constat sans CVE) donnent la même priorité, celui qui vient en premier
+    fournit les faits affichés (prioriteLaPlusHaute garde la première à niveau égal) : le contrôle détecté le plus
+    récemment (dernière détection présente la plus récente ; sans date, après tous les contrôles datés), puis, à égalité
+    parfaite, le plus petit identifiant. Ordre total : il ne dépend ni de l'ordre des lignes en base ni de l'ordre reçu. Ne
+    change ni la priorité, ni le niveau d'une alerte, ni aucun nombre : seulement, à priorité égale, le contrôle dont les
+    faits sont montrés. Les failles déclarées et l'exposition viennent après les contrôles (même priorité retenue). */
+export function comparerControlesGlobal(a: ControleGlobal, b: ControleGlobal): number {
+  if (a.dernierePresente !== b.dernierePresente) {
+    if (a.dernierePresente === null) return 1;
+    if (b.dernierePresente === null) return -1;
+    const ta = Date.parse(a.dernierePresente);
+    const tb = Date.parse(b.dernierePresente);
+    if (ta !== tb) return tb - ta;
+  }
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 /* ------------------------------------------------------------------ Majoration par la machine interne (lot ALH5) */

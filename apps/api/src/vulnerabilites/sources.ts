@@ -179,7 +179,13 @@ function parSource<T extends { source: SourceValeur }>(liste: T[], valeur: (x: T
     const deja = m.get(x.source);
     if (!deja || valeur(x) > valeur(deja)) m.set(x.source, x);
   }
-  return SOURCES_VALEUR.flatMap((s) => (m.has(s) ? [m.get(s)!] : []));
+  // Lot PERF-04 : boucle simple (appelée trois fois par ensemble de sources, des dizaines de milliers de fois par calcul global).
+  const out: T[] = [];
+  for (const s of SOURCES_VALEUR) {
+    const x = m.get(s);
+    if (x) out.push(x);
+  }
+  return out;
 }
 const RANG: Record<GraviteTenable, number> = { critique: 4, elevee: 3, moyenne: 2, faible: 1 };
 /** Mention identique dans toutes les fiches lues, sinon non renseignée (null). */

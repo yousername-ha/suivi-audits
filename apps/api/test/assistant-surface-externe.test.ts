@@ -359,6 +359,24 @@ describe('évaluer une CVE exposée sur Internet (décision C)', () => {
       }),
     ]);
     expect(s.alertes[0]).toMatchObject({ criticite: 'Critique' });
+    // Lot ASSISTANT-V1 : les recommandations de l'éditeur sont dans « Quoi faire », avec leur source, plus dans les alertes.
+    expect(evaluation.quoiFaire).toMatchObject({
+      algoLightHouse: {
+        source: 'AlgoLightHouse (recommandations de l’éditeur de la surface externe)',
+        recommandations: [
+          {
+            defauts: [
+              expect.objectContaining({
+                defaut: 'Composant vulnérable',
+                resolutions: [expect.objectContaining({ resolution: 'Mettre à jour nginx' })],
+              }),
+            ],
+          },
+        ],
+      },
+    });
+    expect(evaluation.quoiFaire).not.toHaveProperty('correctif');
+    expect(s.alertes[0]).not.toHaveProperty('recommandationsDeLEditeur');
     // Le résultat d'outil est rendu en clair au service ; c'est le masque qui le relit avant l'envoi.
     const tout = JSON.stringify(modele.demandes);
     sansIdentifiant(tout, 'requêtes au modèle');

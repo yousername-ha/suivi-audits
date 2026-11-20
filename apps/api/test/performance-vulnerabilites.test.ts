@@ -3,12 +3,11 @@
    périmètre propre et sans périmètre), 5 000 constats, 50 000 détections présentes, insérés en base puis ANALYZE ; un
    compte RSSI non administrateur membre de 3 périmètres (dont un parent : pyramide), et l'administrateur. Pour chacun :
    liste des constats, liste des machines, fiche d'une machine, vue d'ensemble, recherche d'une CVE. Budgets de CI
-   (exécuteur partagé) : p95 sous 800 ms pour les listes et la fiche, sous 1 500 ms pour la recherche, sous 2 400 ms pour la
-   vue d'ensemble ; les objectifs du serveur réel (500 ms et 1,5 s) restent ceux du RSSI. Le budget de la vue d'ensemble
-   applique à son objectif la marge déjà prise pour les listes (800 ms pour 500 ms, soit × 1,6) : son calcul global n'est pas
-   réécrit par le lot PERF (PERF-04, ordre à priorité égale à décider par le RSSI) et elle a été mesurée à 1 692 ms au p95
-   sur l'exécuteur de CI pour le RSSI non administrateur. Ce budget garde la régression (elle était au-delà avant le lot sur
-   le même exécuteur) sans prétendre que l'objectif est tenu : il est à resserrer quand le calcul global sera réécrit. Les
+   (exécuteur partagé) : p95 sous 800 ms pour les listes et la fiche, sous 1 500 ms pour la recherche et la vue d'ensemble ;
+   les objectifs du serveur réel (500 ms et 1,5 s) restent ceux du RSSI. Le budget de la vue d'ensemble, porté à 2 400 ms le
+   20/11/2026 (1 692 ms au p95 en CI pour le RSSI non administrateur, calcul global non réécrit), est revenu à 1 500 ms avec le
+   lot PERF-04 (calcul global ensembliste, ordre fixé par la décision du RSSI du 20/11/2026) : 305 à 439 ms au p95 sur le
+   poste de mesure (761 à 797 ms avant), soit moins de 900 ms sur un exécuteur deux fois plus lent. Les
    totaux sont comparés à une requête de
    référence indépendante (sans les fragments SQL du module) : une optimisation qui changerait les droits fait échouer le
    test. Données entièrement fictives. Si PERF_OUT est défini, les mesures sont écrites en JSON à côté
@@ -23,7 +22,6 @@ const CONSTATS = 5000;
 const REPETITIONS = 15;
 const SEUIL_LISTE_MS = 800;
 const SEUIL_SYNTHESE_MS = 1500;
-const SEUIL_VUE_MS = 2400;
 const INSTANCE = '0c0c0c0c-0000-4000-8000-000000000001';
 
 let t: TestApp, admin: Agent, rssi: Agent, uRssi: TestUser;
@@ -210,7 +208,7 @@ describe.each(comptes)(`module Vulnérabilités, %s`, (nom, agent, compte) => {
       `${V}/recherche?q=CVE-2099-1000`,
       (c: { cves: { total: number } }) => expect(c.cves.total).toBe(cves),
     );
-    expect(vue.p95Ms).toBeLessThan(SEUIL_VUE_MS);
+    expect(vue.p95Ms).toBeLessThan(SEUIL_SYNTHESE_MS);
     expect(recherche.p95Ms).toBeLessThan(SEUIL_SYNTHESE_MS);
   }, 120_000);
 });

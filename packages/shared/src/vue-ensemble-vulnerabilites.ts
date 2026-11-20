@@ -129,13 +129,16 @@ export interface CibleVueDto {
 }
 
 const RANG_GRAVITE: Record<GraviteTenable, number> = { critique: 0, elevee: 1, moyenne: 2, faible: 3 };
+/** Rang d'une gravité pour l'ordre des cibles (sans gravité : après toutes). Hors de comparerCibles : appelée des centaines
+    de milliers de fois pour trier les failles suivies (lot PERF-04). */
+const rangGraviteCible = (x: GraviteTenable | null) => (x ? RANG_GRAVITE[x] : GRAVITES_TENABLE.length);
 /** Ordre des cibles, le même pour tout le monde (aucun nombre lié aux droits n'y entre) : priorité, exploitation avérée,
     présence (une faille présente avant une faille à confirmer), « exploitable », gravité, score EPSS décroissant, clé. */
 export function comparerCibles(
   a: Pick<CibleVueDto, 'priorite' | 'exploitee' | 'aConfirmer' | 'exploitable' | 'gravite' | 'epss' | 'cle'>,
   b: Pick<CibleVueDto, 'priorite' | 'exploitee' | 'aConfirmer' | 'exploitable' | 'gravite' | 'epss' | 'cle'>,
 ): number {
-  const g = (x: GraviteTenable | null) => (x ? RANG_GRAVITE[x] : GRAVITES_TENABLE.length);
+  const g = rangGraviteCible;
   return (
     NIVEAUX_PRIORITE.indexOf(a.priorite.niveau) - NIVEAUX_PRIORITE.indexOf(b.priorite.niveau) ||
     Number(b.exploitee) - Number(a.exploitee) ||

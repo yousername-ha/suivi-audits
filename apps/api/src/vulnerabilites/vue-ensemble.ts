@@ -18,7 +18,10 @@
      global (aucune requête de plus). Lot S2 : variation sur sept jours, une requête de plus (l'instantané de référence),
      les nombres du moment étant composés à partir du même calcul global : 19 au plus. Lot S3 : précision « sans correctif
      connu » des failles exploitées et présentes (même calcul, aucune requête de plus) ; fin de support : constats présents
-     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. */
+     (même calcul), machines lisibles 1, services exposés lisibles 1 : 21 au plus. Lot PERF-04 : le calcul global est lu sans
+     titres ni machines ; titres des seules failles rendues (1), machines en fin de support relues à partir des constats (1) :
+     même nombre de requêtes. Lot ASSISTANT-V1 : `cibles(user)` rend à l'outil `failles_prioritaires` de l'assistant les
+     mêmes cibles que le tableau « Cibles par priorité », par le même code que `lire`. */
 import {
   type EtatCorrectifDto,
   etatCorrectif,
@@ -75,94 +78,28 @@ interface Suivie {
 export class VueEnsembleVulnerabilites {
   constructor(
     private readonly db: Db,
-    private readonly alertes: Pick<AlertesVulnerabilites, 'situationGlobale' | 'titreEtProduit'>,
+    private readonly alertes: Pick<AlertesVulnerabilites, 'situationGlobale' | 'titreEtProduit' | 'titres'>,
     private readonly surface: Pick<SurfaceExterneAlh, 'surfaceDesCves'>,
   ) {}
 
   async lire(user: SessionUser): Promise<VueEnsembleDto> {
     const k = this.db.k;
-    const propositions = await propositionsEnCours(k);
-    const { cumuls, sources, titres, objets, reglage } = await this.alertes.situationGlobale(k, propositions);
+    const { propositions, cumuls, sources, objets, reglage, suivies } = await this.suivies(k);
     const maintenant = new Date();
-
-    // Failles suivies : au moins une présence non traitée, ou un produit à confirmer.
-    const suivies: Suivie[] = [];
-    for (const x of cumuls.values()) {
-      const presente = prioriteLaPlusHaute(x.priorites);
-      const p = prioriteLaPlusHaute([...x.priorites, ...(x.aConfirmer ? [x.aConfirmer] : [])]);
-      if (!p) continue;
-      const exploitee = exploiteeSelonSources(x, sources);
-      suivies.push({
-        x,
-        priorite: p,
-        presences: [
-          ...PRESENCES.filter((s) => x.presences.has(s)),
-          ...(x.aConfirmer && !x.presences.has('a_confirmer') ? (['a_confirmer'] as const) : []),
-        ],
-        aConfirmer: !presente,
-        secteur: secteurDe(x.familles as FamilleProduit[]),
-        exploitee,
-      });
-    }
-    const ordre = (s: Suivie) => ({
-      cle: s.x.cle,
-      priorite: s.priorite,
-      exploitee: s.exploitee,
-      aConfirmer: s.aConfirmer,
-      exploitable: s.x.exploitable,
-      gravite: s.x.gravite,
-      epss: s.x.epss,
-    });
-    suivies.sort((a, b) => comparerCibles(ordre(a), ordre(b)));
-
-    // Cases du radar (secteur × priorité) : total toujours rendu, cibles bornées par case.
-    const totaux = new Map<string, CaseRadarDto>();
-    const retenues: Suivie[] = [];
-    for (const s of suivies) {
-      const cle = `${s.secteur}|${s.priorite.niveau}`;
-      let c = totaux.get(cle);
-      if (!c) totaux.set(cle, (c = { secteur: s.secteur, priorite: s.priorite.niveau, total: 0 }));
-      if (c.total < VUE_ENSEMBLE_BORNES.ciblesParCase) retenues.push(s);
-      c.total++;
-    }
+    const { totaux, retenues } = rangerParCase(suivies);
     const parPriorite = Object.fromEntries(NIVEAUX_PRIORITE.map((n) => [n, 0])) as Record<NiveauPriorite, number>;
     for (const s of suivies) parPriorite[s.priorite.niveau]++;
 
-    const [lisibles, surface, corrigees, journal] = [
-      await this.machinesLisibles(user, retenues),
-      await this.surfaceLisible(user, retenues),
-      await this.corrigeesCeMois(),
-      await this.journal(),
-    ];
-    const cibles: CibleVueDto[] = retenues.map((s) => {
-      const { titre, produit } = this.alertes.titreEtProduit(s.x, titres);
-      const m = lisibles.get(s.x.cle);
-      const a = s.x.cve ? surface.get(s.x.cve) : undefined;
-      return {
-        cle: s.x.cle,
-        cve: s.x.cve,
-        titre,
-        produit,
-        secteur: s.secteur,
-        priorite: s.priorite,
-        presences: s.presences,
-        exploitee: s.exploitee,
-        exploitable: s.x.exploitable,
-        aConfirmer: s.aConfirmer,
-        gravite: s.x.gravite,
-        epss: s.x.epss,
-        etat: etatLeMoinsAvance(s.x.etats),
-        machines: m ? { lisibles: m.lisibles, horsLecture: m.horsLecture } : VIDE,
-        actifs: a ? { lisibles: a.actifs, horsLecture: a.horsLecture } : VIDE,
-        produitId: [...s.x.produitIds].sort()[0] ?? null,
-        fiche: m?.fiche ?? null,
-      };
-    });
+    const cibles = await this.rendre(user, retenues);
+    const [corrigees, journal] = [await this.corrigeesCeMois(), await this.journal()];
     const niveau = niveauDesFailles(cumuls, sources);
     // Lot S2 : variation sur sept jours, par rapport à l'instantané de référence (une requête), avec les nombres du moment
     // calculés par la même composition que l'instantané (aucune requête de plus).
     const reference = await instantaneDeReference(k, maintenant);
-    const actuel = composerInstantane(entreesInstantane(cumuls, sources, objets, reglage, maintenant));
+    // Mesures globales seulement (sans machines ni actifs, rendus nuls ici) : la vue n'en montre pas le total.
+    const actuel = composerInstantane(
+      entreesInstantane(cumuls, sources, objets, reglage, maintenant, undefined, false),
+    );
     // Lot S3 : précision des failles exploitées et présentes selon l'état de leur correctif (sans renommer la marque).
     const p1 = suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1');
     const etats = p1.map((s) => correctifDeCumul(s.x, sources).etat);
@@ -170,7 +107,10 @@ export class VueEnsembleVulnerabilites {
     const fin = objets.filter(
       (o) => o.nature === 'constat' && etatFinSupport(o.finSupportLe ?? null, maintenant) === 'atteinte',
     );
-    const machinesFin = await this.machinesLues(user, [...new Set(fin.flatMap((o) => o.machines))]);
+    const machinesFin = await this.machinesLues(
+      user,
+      fin.map((o) => o.id),
+    );
     const servicesFin = await servicesFinDeSupport(k, user);
     return {
       niveau,
@@ -202,6 +142,106 @@ export class VueEnsembleVulnerabilites {
         : null,
       calculeLe: maintenant.toISOString(),
     };
+  }
+
+  /** Pour l'assistant (lot ASSISTANT-V1, outils `failles_prioritaires` et `machines_prioritaires`) : les cibles du tableau
+      « Cibles par priorité » telles que l'écran les rend à la personne (même calcul global, même ordre, mêmes bornes par
+      case, mêmes nombres lisibles et même fiche lisible : `lire` et cette méthode partagent `suivies`, `rangerParCase` et
+      `rendre`), le total des failles suivies, et les CVE exposées sur Internet parmi TOUTES les failles suivies, dans le
+      même ordre, avec leur priorité (les mêmes pour tout le monde, lot ALH5). Aucun nom de machine, de domaine, d'adresse
+      ni de périmètre. Requêtes : celles du calcul global et des cibles de la vue, sans le journal ni les tuiles. */
+  async cibles(user: SessionUser): Promise<{
+    cibles: CibleVueDto[];
+    total: number;
+    exposees: { cve: string; niveau: NiveauPriorite }[];
+  }> {
+    const { suivies } = await this.suivies(this.db.k);
+    const { retenues } = rangerParCase(suivies);
+    return {
+      cibles: await this.rendre(user, retenues),
+      total: suivies.length,
+      exposees: suivies.flatMap((s) =>
+        s.x.cve && s.x.presences.has('exposee') ? [{ cve: s.x.cve, niveau: s.priorite.niveau }] : [],
+      ),
+    };
+  }
+
+  /** Failles suivies (calcul global, propositions comprises), rangées dans l'ordre des cibles (comparerCibles). */
+  private async suivies(k: Kdb) {
+    const propositions = await propositionsEnCours(k);
+    const { cumuls, sources, objets, reglage } = await this.alertes.situationGlobale(k, propositions, {
+      titres: false,
+      machines: false,
+    });
+
+    // Failles suivies : au moins une présence non traitée, ou un produit à confirmer.
+    const suivies: Suivie[] = [];
+    for (const x of cumuls.values()) {
+      const presente = prioriteLaPlusHaute(x.priorites);
+      const p = prioriteLaPlusHaute([...x.priorites, ...(x.aConfirmer ? [x.aConfirmer] : [])]);
+      if (!p) continue;
+      const exploitee = exploiteeSelonSources(x, sources);
+      suivies.push({
+        x,
+        priorite: p,
+        presences: [
+          ...PRESENCES.filter((s) => x.presences.has(s)),
+          ...(x.aConfirmer && !x.presences.has('a_confirmer') ? (['a_confirmer'] as const) : []),
+        ],
+        aConfirmer: !presente,
+        secteur: secteurDe(x.familles as FamilleProduit[]),
+        exploitee,
+      });
+    }
+    const ordre = (s: Suivie) => ({
+      cle: s.x.cle,
+      priorite: s.priorite,
+      exploitee: s.exploitee,
+      aConfirmer: s.aConfirmer,
+      exploitable: s.x.exploitable,
+      gravite: s.x.gravite,
+      epss: s.x.epss,
+    });
+    // Clés de l'ordre calculées une fois par faille (lot PERF-04), pas à chaque comparaison ; même ordre (comparerCibles).
+    const cles = new Map(suivies.map((s) => [s, ordre(s)]));
+    suivies.sort((a, b) => comparerCibles(cles.get(a)!, cles.get(b)!));
+    return { propositions, cumuls, sources, objets, reglage, suivies };
+  }
+
+  /** Cibles rendues à la personne : titres, machines et actifs qu'elle lit, fiche lisible (trois requêtes). */
+  private async rendre(user: SessionUser, retenues: readonly Suivie[]): Promise<CibleVueDto[]> {
+    const [titres, lisibles, surface] = [
+      await this.alertes.titres(
+        this.db.k,
+        retenues.flatMap((s) => (s.x.cve ? [s.x.cve] : [])),
+      ),
+      await this.machinesLisibles(user, retenues),
+      await this.surfaceLisible(user, retenues),
+    ];
+    return retenues.map((s) => {
+      const { titre, produit } = this.alertes.titreEtProduit(s.x, titres);
+      const m = lisibles.get(s.x.cle);
+      const a = s.x.cve ? surface.get(s.x.cve) : undefined;
+      return {
+        cle: s.x.cle,
+        cve: s.x.cve,
+        titre,
+        produit,
+        secteur: s.secteur,
+        priorite: s.priorite,
+        presences: s.presences,
+        exploitee: s.exploitee,
+        exploitable: s.x.exploitable,
+        aConfirmer: s.aConfirmer,
+        gravite: s.x.gravite,
+        epss: s.x.epss,
+        etat: etatLeMoinsAvance(s.x.etats),
+        machines: m ? { lisibles: m.lisibles, horsLecture: m.horsLecture } : VIDE,
+        actifs: a ? { lisibles: a.actifs, horsLecture: a.horsLecture } : VIDE,
+        produitId: [...s.x.produitIds].sort()[0] ?? null,
+        fiche: m?.fiche ?? null,
+      };
+    });
   }
 
   /** Machines touchées que la personne lit, par faille rendue (une requête), et fiche lisible : le premier constat présent,
@@ -257,13 +297,20 @@ export class VueEnsembleVulnerabilites {
     return out;
   }
 
-  /** Lot S3 : parmi les machines données (identifiants internes), celles que la personne lit ; drapeau pour les autres. */
-  private async machinesLues(user: SessionUser, ids: readonly string[]): Promise<NombreLisible> {
-    if (!ids.length) return { ...VIDE };
-    const { rows } = await sql<{ lues: number }>`SELECT count(*)::int AS lues FROM vulnerabilites_machines m
-      WHERE m.id = ANY(${[...ids]}::uuid[]) AND ${lisible(user)}`.execute(this.db.k);
+  /** Lot S3 : machines où les constats donnés (identifiants) sont présents, celles que la personne lit ; drapeau pour les
+      autres. Lot PERF-04 : lues ici à partir des constats (le calcul global de la vue ne lit pas les machines), mêmes
+      machines qu'avant (détections présentes de ces constats). */
+  private async machinesLues(user: SessionUser, constats: readonly string[]): Promise<NombreLisible> {
+    if (!constats.length) return { ...VIDE };
+    const { rows } = await sql<{ lues: number; total: number }>`
+      SELECT count(*) FILTER (WHERE x.lu)::int AS lues, count(*)::int AS total FROM (
+        SELECT DISTINCT m.id, ${lisible(user)} AS lu
+        FROM vulnerabilites_detections d
+        JOIN vulnerabilites_machines m ON m.id = d.machine_id
+        LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+        WHERE d.constat_id = ANY(${[...constats]}::uuid[]) AND ${present}) x`.execute(this.db.k);
     const lues = rows[0]?.lues ?? 0;
-    return { lisibles: lues, horsLecture: lues < ids.length };
+    return { lisibles: lues, horsLecture: lues < (rows[0]?.total ?? 0) };
   }
 
   /** Actifs exposés que la personne lit, pour les CVE rendues exposées sur Internet. */
@@ -385,6 +432,21 @@ export function niveauDesFailles(cumuls: ReadonlyMap<string, Cumul>, sources: Re
     } else if (x.aConfirmer && exploiteeSelonSources(x, sources)) faits.exploiteesAConfirmer++;
   }
   return niveauAlerteGlobal(faits);
+}
+
+/** Cases du radar (secteur × priorité) : total toujours compté, cibles retenues dans l'ordre des failles suivies, bornées
+    par case (VUE_ENSEMBLE_BORNES.ciblesParCase). */
+function rangerParCase(suivies: readonly Suivie[]) {
+  const totaux = new Map<string, CaseRadarDto>();
+  const retenues: Suivie[] = [];
+  for (const s of suivies) {
+    const cle = `${s.secteur}|${s.priorite.niveau}`;
+    let c = totaux.get(cle);
+    if (!c) totaux.set(cle, (c = { secteur: s.secteur, priorite: s.priorite.niveau, total: 0 }));
+    if (c.total < VUE_ENSEMBLE_BORNES.ciblesParCase) retenues.push(s);
+    c.total++;
+  }
+  return { totaux, retenues };
 }
 
 /** État le moins avancé des objets suivis encore ouverts (ordre de ETATS_SUIVI : nouvelle, à traiter, en cours…). */
