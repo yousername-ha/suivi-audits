@@ -1,0 +1,50 @@
+Timing is on.
+ setseed 
+---------
+ 
+(1 row)
+
+Time: 0.549 ms
+psql:<stdin>:9: NOTICE:  table "banc_perimetres" does not exist, skipping
+DROP TABLE
+Time: 0.182 ms
+SELECT 30
+Time: 5.161 ms
+ALTER TABLE
+Time: 0.845 ms
+UPDATE 30
+Time: 1.699 ms
+ALTER TABLE
+Time: 0.828 ms
+UPDATE 30
+Time: 1.784 ms
+CREATE FUNCTION
+Time: 1.153 ms
+psql:<stdin>:19: NOTICE:  table "banc_redacteurs" does not exist, skipping
+DROP TABLE
+Time: 0.225 ms
+SELECT 30
+Time: 2.982 ms
+== Plan
+psql:<stdin>:23: error: unterminated quoted string
+INSERT 0 4938
+Time: 359.219 ms
+== Occurrences récurrentes : statuts réalistes (anciennes réalisées, quelques retards)
+UPDATE 17840
+Time: 713.492 ms
+== Risques : 2 000
+INSERT 0 1976
+Time: 110.127 ms
+== Documents : 2 000 fiches (sans pièce, sauf les échantillons de
+psql:<stdin>:58: error: unterminated quoted string
+INSERT 0 1980
+Time: 47.781 ms
+== Incidents : 3 000 avec chronologies (registre historique, table suivi_incidents)
+psql:<stdin>:85: ERROR:  syntax error at or near ")"
+LINE 17:     FROM generate_series(1, 8 + 0 * g) e)))
+                                                   ^
+Time: 0.384 ms
+
+real	0m1.336s
+user	0m0.015s
+sys	0m0.024s

@@ -253,3 +253,17 @@ désactiver l'instance n'ouvre ni ne ferme aucun flux. L'import est une exécuti
 inscrite « en cours » par l'API au début de l'import, hors de la file de l'exécutant (le ménage de la file ne la touche pas),
 visible dans « Exécutions ». Le point 4 (fichiers traités par l'API) ne s'applique pas à ce type : le fichier est lu dans le
 navigateur et l'API ne reçoit qu'un extrait JSON revalidé.
+
+**Lot SI1** (19/11/2026, décisions du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot SI1 ») : la décision R3
+(« Silène : import de fichier JSON ») est **réalisée** pour la surface exposée, sous la forme du lot N1 et non du point 4 : le
+catalogue compte un second **type sans réseau**, `silene-fichier` (« Silène, import de fichier »), de portée `organisation`
+(et non `smsi` comme prévu par l'addendum du 16/11/2026 : ce qu'il importe est rattaché à un périmètre par l'écran
+« Périmètres » du module Vulnérabilités, comme AlgoLightHouse), sans adresse, clé, réglage, flux ni exécutant, sans fréquence.
+Une seule opération, **« Importer un rapport »** (`importer`, libellé propre au type), droit `integrations:administrer` ; le
+rapport JSON est lu dans le **navigateur** et l'API ne reçoit qu'un extrait en liste blanche revalidé (ni certificat, ni
+en-tête HTTP, ni sortie de sonde, ni géolocalisation, ni passage précédent, ni nom de fichier) ; ce qu'il apporte va au module
+Vulnérabilités (surface externe, à côté d'AlgoLightHouse), **pas** aux écarts : le moteur d'écarts de Tenacy n'est pas utilisé
+et le point 3 ne s'applique pas à ce type. Suppression du connecteur et de ce qu'il a importé comme pour Nessus. **Non
+réalisé** : la tuile au logo de l'ANSSI (R16 ; la tuile garde le pictogramme neutre, la pastille du module est dessinée pour
+la charte, sans logo), et le schéma écrit « à partir d'un exemple anonymisé fourni par le RSSI » (point 4) : le format a été
+écrit d'après un relevé des seuls noms de champs, types et nombres d'un export réel, aucune valeur n'en est connue.

@@ -10,13 +10,16 @@
      alertes, technologies) ; service sur Internet, joint par le mandataire de l'établissement quand il est actif
      (ADR 0101).
    Lot N1 (ADR 0100) : un type sans réseau, « nessus-fichier » (Nessus, import de fichier) : ni adresse, ni clé, ni flux,
-   ni exécutant ; une seule opération, « Importer un scan », lancée depuis la carte « Intégrations » (import-nessus.ts). */
+   ni exécutant ; une seule opération, « Importer un scan », lancée depuis la carte « Intégrations » (import-nessus.ts).
+   Lot SI1 (ADR 0100) : second type sans réseau, « silene-fichier » (Silène de l'ANSSI, import du rapport JSON) : sans
+   configuration, une seule opération, « Importer un rapport » (import-silene.ts). */
 import { z } from 'zod';
 import { FiltreGravites, GRAVITES_PAR_DEFAUT, BilanSynchronisation } from './failles-tenable.js';
 import { AdresseAlh, BilanSynchronisationAlh, CLE_API_ALH, ResultatTestAlh } from './surface-externe.js';
 import type { FluxModule } from './flux-externes.js';
 import { FrequenceHeures } from './frequences-synchronisation.js';
 import { BilanImportNessus } from './import-nessus.js';
+import { BilanImportSilene } from './import-silene.js';
 import type { Module } from './permissions.js';
 
 /* ------------------------------------------------------------------ Champs communs */
@@ -127,8 +130,13 @@ export const ConfigurationNessusFichier = z
   .strict();
 export type ConfigurationNessusFichier = z.infer<typeof ConfigurationNessusFichier>;
 
+/* ------------------------------------------------------------------ Silène, import de fichier (lot SI1) */
+/** Aucune adresse, aucune clé, aucun réglage : le rapport est importé tel quel (liste blanche). */
+export const ConfigurationSileneFichier = z.object({}).strict();
+export type ConfigurationSileneFichier = z.infer<typeof ConfigurationSileneFichier>;
+
 /* ------------------------------------------------------------------ Catalogue */
-export const INTEGRATION_TYPES = ['tenable', 'algolighthouse', 'nessus-fichier'] as const;
+export const INTEGRATION_TYPES = ['tenable', 'algolighthouse', 'nessus-fichier', 'silene-fichier'] as const;
 export const IntegrationType = z.enum(INTEGRATION_TYPES);
 export type IntegrationType = z.infer<typeof IntegrationType>;
 
@@ -148,6 +156,10 @@ export const OPERATION_LIBELLES: Record<OperationIntegration, string> = {
   synchroniser: 'Synchroniser',
   importer: 'Importer un scan',
 };
+/** Lot SI1 : libellé de l'opération « importer » propre à un type (un rapport Silène n'est pas un scan). */
+export const LIBELLES_IMPORT: Partial<Record<IntegrationType, string>> = { 'silene-fichier': 'Importer un rapport' };
+export const libelleOperationType = (type: IntegrationType | undefined, operation: OperationIntegration): string =>
+  (operation === 'importer' && type ? LIBELLES_IMPORT[type] : undefined) ?? OPERATION_LIBELLES[operation];
 /** Opérations rapportées par lots (`suivi integrations-lot`) avant leur fin, et module qui doit être actif pour qu'elles
     soient inscrites ou réclamées (ce module range les données reçues). */
 export const OPERATIONS_EN_LOTS: Partial<Record<OperationIntegration, Module>> = { synchroniser: 'vulnerabilites' };
@@ -272,6 +284,23 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
     champs: ['gravites'],
     aideAdresse: '',
     configuration: ConfigurationNessusFichier as unknown as z.ZodType<Record<string, unknown>, unknown>,
+    secrets: [],
+    flux: null,
+    pointsAcces: [],
+    operations: ['importer'],
+  },
+  {
+    // Lot SI1 (ADR 0100, décisions du RSSI du 19/11/2026) : connecteur à part, sans adresse, sans clé, sans réglage, sans
+    // flux sortant, sans exécutant. Le rapport JSON est lu dans le navigateur ; seul un extrait en liste blanche part vers
+    // l'API (ni certificat, ni en-tête HTTP, ni sortie de sonde, ni géolocalisation, ni passage précédent).
+    id: 'silene-fichier',
+    libelle: 'Silène, import de fichier',
+    description:
+      'Import du rapport Silène de l’ANSSI (surface exposée sur Internet), exporté au format JSON et lu dans votre navigateur : seuls la note, le périmètre déclaré, les hôtes (adresses IP, noms, ports ouverts, produits) et les constats partent vers le serveur, qui les range dans le module Vulnérabilités (onglet « Surface externe »), à côté d’AlgoLightHouse. Ni adresse, ni clé, ni flux réseau. Chaque import est l’état complet de la surface vue par Silène à la date du rapport : ce qui n’y figure plus n’est plus présent.',
+    portee: 'organisation',
+    champs: [],
+    aideAdresse: '',
+    configuration: ConfigurationSileneFichier as unknown as z.ZodType<Record<string, unknown>, unknown>,
     secrets: [],
     flux: null,
     pointsAcces: [],
@@ -459,6 +488,7 @@ export const RESULTATS_OPERATION: Record<IntegrationType, Partial<Record<Operati
   tenable: { tester: ResultatTestTenable, synchroniser: BilanSynchronisation },
   algolighthouse: { tester: ResultatTestAlh, synchroniser: BilanSynchronisationAlh },
   'nessus-fichier': { importer: BilanImportNessus },
+  'silene-fichier': { importer: BilanImportSilene },
 };
 
 /** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */

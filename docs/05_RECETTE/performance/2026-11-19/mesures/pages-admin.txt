@@ -1,0 +1,12 @@
+  1261   1453 |    941   1120 ms  api=16 52 Ko err=2 [échec /api/settings/logo, échec /api/presence]  Accueil (tableau de bord)
+  2319   2678 |   2026   2391 ms  api=24 236 Ko err=1 [échec /api/settings/logo] DEPASSE Tâches récurrentes
+  2108   2607 |   1843   1961 ms  api=23 212 Ko err=1 [échec /api/settings/logo] DEPASSE Plan d’actions
+  1593   1694 |   1242   1380 ms  api=19 216 Ko err=1 [échec /api/settings/logo]  Risques
+  1359   1554 |   1065   1272 ms  api=18 1329 Ko err=1 [échec /api/settings/logo]  Registre des incidents
+  1982   2367 |   1596   1923 ms  api=18 549 Ko err=2 [échec /api/settings/logo, échec /api/presence] DEPASSE Documents
+  2256   2537 |   1967   2122 ms  api=20 146 Ko err=1 [échec /api/settings/logo] DEPASSE Vulnérabilités : vue d’ensemble
+  4954   5453 |   4676   4944 ms  api=17 86 Ko err=2 [échec /api/settings/logo, échec /update/status.json] DEPASSE Vulnérabilités : failles
+  4913   6104 |   4820   5158 ms  api=16 81 Ko err=1 [échec /api/settings/logo] DEPASSE Vulnérabilités : machines
+  1243   1382 |    918   1051 ms  api=17 78 Ko err=1 [échec /api/settings/logo]  Vulnérabilités : veille
+  1221   2044 |    917   1034 ms  api=16 108 Ko err=1 [échec /api/settings/logo] DEPASSE Journal d’audit
+  1684   1767 |   1422   1491 ms  api=19 92 Ko err=1 [échec /api/settings/logo]  Périmètres (cartes)

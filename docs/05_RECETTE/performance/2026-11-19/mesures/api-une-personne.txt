@@ -1,0 +1,106 @@
+admin        200    125    152    152 ms      34 Ko         Tâches récurrentes : occurrences (page 1)
+admin        200    137    161    161 ms      37 Ko         Tâches récurrentes : occurrences en retard
+admin        200     16     18     18 ms      24 Ko         Tâches récurrentes : séries
+admin        200    115    184    184 ms      32 Ko         Tâches récurrentes : calendrier du mois
+admin        200    138    177    177 ms       0 Ko         Tâches récurrentes : tableau de bord
+admin        200     18     26     26 ms      33 Ko         Plan d’actions (page 1)
+admin        200     28     32     32 ms      37 Ko         Plan d’actions : page 40
+admin        200     20     30     30 ms      33 Ko         Plan d’actions : recherche « fictive »
+admin        200    312    338    338 ms      41 Ko         Registres : mes éléments
+admin        200     59     66     66 ms      35 Ko         Registres : éléments (actions)
+admin        200      8      9      9 ms       1 Ko         Fiche action
+admin        200     13     24     24 ms      34 Ko         Risques (page 1)
+admin        200     27     29     29 ms     147 Ko         Registre des risques
+admin        200     30     41     41 ms     481 Ko         Carte des risques
+admin        200     11     19     19 ms       1 Ko         Fiche risque
+admin        200    212    248    248 ms    6709 Ko         Incidents (registre, tous périmètres)
+admin        200    130    157    157 ms    1259 Ko         Incidents (un périmètre)
+admin        200     20     24     24 ms     497 Ko         Documents (liste)
+admin        200     22     38     38 ms     497 Ko         Documents : recherche
+admin        200      8     12     12 ms       1 Ko         Fiche document
+admin        200   4425   4711   4711 ms      34 Ko DEPASSE Vulnérabilités : constats (page 1)
+admin        200   2459   2709   2709 ms       1 Ko DEPASSE Vulnérabilités : constats recherche CVE
+admin        200   4382   4794   4794 ms      27 Ko DEPASSE Vulnérabilités : machines (page 1)
+admin        200   4034   4246   4246 ms       1 Ko DEPASSE Vulnérabilités : fiche machine la plus touchée
+admin        200     51     61     61 ms     208 Ko         Vulnérabilités : fiche constat le plus répandu
+admin        200   1779   1889   1889 ms      91 Ko DEPASSE Vulnérabilités : vue d’ensemble
+admin        200      9     11     11 ms       5 Ko         Vulnérabilités : tendances
+admin        200     13     16     16 ms       1 Ko         Vulnérabilités : délais
+admin        200     36     43     43 ms      24 Ko         Vulnérabilités : veille (failles)
+admin        200      7      9      9 ms       0 Ko         Vulnérabilités : produits
+admin        200   4307   4595   4595 ms       2 Ko DEPASSE Vulnérabilités : recherche globale
+admin        200      7     10     10 ms       2 Ko         Vulnérabilités : périmètres
+admin        200      8     10     10 ms      35 Ko         Journal d’audit (200 dernières)
+admin        200     10     16     16 ms      28 Ko         Journal d’audit : recherche « login »
+admin        200    416    488    488 ms      29 Ko         Journal d’audit : recherche rare « verrou »
+admin        200     17     21     21 ms      31 Ko         Journal d’audit : un mois de 2019
+admin        200     14     19     19 ms      32 Ko         Journal d’audit : un compte
+admin        200    247    290    290 ms      35 Ko         Notifications (cloche)
+admin        200     10     10     10 ms       4 Ko         Compte : notifications
+admin        200    147    183    183 ms       1 Ko         Tableau de bord du périmètre
+admin        200    670    800    800 ms      22 Ko         Cartes des périmètres (synthèse)
+admin        200    358    407    407 ms       5 Ko         Mur : synthèse
+admin        200    197    232    232 ms    6919 Ko         État du suivi (état historique)
+admin        200     57     70     70 ms       4 Ko         Administration : informations
+admin        200      9     12     12 ms       8 Ko         Administration : système
+admin        200    127    160    160 ms       0 Ko         Couverture du périmètre
+admin        200      8      9      9 ms      11 Ko         Périmètres accessibles
+admin        200      5      6      6 ms       2 Ko         Session (auth/me)
+admin        200     40     42     42 ms     556 Ko         Export : journal d’audit CSV (5 000 lignes)
+admin        200    372    394    394 ms     505 Ko         Export : suivi complet (Excel)
+admin        200    284    318    318 ms     595 Ko         Rapport comité SMSI
+admin        200   1770   1833   1833 ms      61 Ko         Rapport mensuel vulnérabilités (CSV)
+admin        200    372    509    509 ms    6919 Ko         Export de l’état historique
+charge01     200    135    181    181 ms      34 Ko         Tâches récurrentes : occurrences (page 1)
+charge01     200    117    157    157 ms      37 Ko         Tâches récurrentes : occurrences en retard
+charge01     200     13     14     14 ms      24 Ko         Tâches récurrentes : séries
+charge01     200    104    128    128 ms      32 Ko         Tâches récurrentes : calendrier du mois
+charge01     200    141    203    203 ms       0 Ko         Tâches récurrentes : tableau de bord
+charge01     200     18     26     26 ms      33 Ko         Plan d’actions (page 1)
+charge01     200     27     45     45 ms      37 Ko         Plan d’actions : page 40
+charge01     200     22     28     28 ms      33 Ko         Plan d’actions : recherche « fictive »
+charge01     200    683    732    732 ms      36 Ko DEPASSE Registres : mes éléments
+charge01     200    138    174    174 ms      35 Ko         Registres : éléments (actions)
+charge01     200     15     23     23 ms       1 Ko         Fiche action
+charge01     200     15     16     16 ms      34 Ko         Risques (page 1)
+charge01     200     26     31     31 ms     147 Ko         Registre des risques
+charge01     200     28     32     32 ms     481 Ko         Carte des risques
+charge01     200     11     11     11 ms       1 Ko         Fiche risque
+charge01     200    210    254    254 ms    6709 Ko         Incidents (registre, tous périmètres)
+charge01     200    144    186    186 ms    1259 Ko         Incidents (un périmètre)
+charge01     200     26     29     29 ms     497 Ko         Documents (liste)
+charge01     200     24     29     29 ms     497 Ko         Documents : recherche
+charge01     200      8      9      9 ms       1 Ko         Fiche document
+charge01     200  13010  14563  14563 ms      34 Ko DEPASSE Vulnérabilités : constats (page 1)
+charge01     200  11221  12435  12435 ms       1 Ko DEPASSE Vulnérabilités : constats recherche CVE
+charge01     200   4634   5124   5124 ms      27 Ko DEPASSE Vulnérabilités : machines (page 1)
+charge01     200   4185   4813   4813 ms       1 Ko DEPASSE Vulnérabilités : fiche machine la plus touchée
+charge01     200    119    160    160 ms     208 Ko         Vulnérabilités : fiche constat le plus répandu
+charge01     200   1909   2133   2133 ms      91 Ko DEPASSE Vulnérabilités : vue d’ensemble
+charge01     200     10     13     13 ms       5 Ko         Vulnérabilités : tendances
+charge01     200     13     15     15 ms       1 Ko         Vulnérabilités : délais
+charge01     200     30     40     40 ms      24 Ko         Vulnérabilités : veille (failles)
+charge01     200      6      8      8 ms       0 Ko         Vulnérabilités : produits
+charge01     200   4246   4435   4435 ms       2 Ko DEPASSE Vulnérabilités : recherche globale
+charge01     200      9     12     12 ms       2 Ko         Vulnérabilités : périmètres
+charge01     403      8      9      9 ms       0 Ko         Journal d’audit (200 dernières)
+charge01     403      7     12     12 ms       0 Ko         Journal d’audit : recherche « login »
+charge01     403      6      8      8 ms       0 Ko         Journal d’audit : recherche rare « verrou »
+charge01     403      6      9      9 ms       0 Ko         Journal d’audit : un mois de 2019
+charge01     403      6      9      9 ms       0 Ko         Journal d’audit : un compte
+charge01     200    242    274    274 ms      34 Ko         Notifications (cloche)
+charge01     200      9     15     15 ms       4 Ko         Compte : notifications
+charge01     200    160    210    210 ms       1 Ko         Tableau de bord du périmètre
+charge01     200    647    694    694 ms      22 Ko         Cartes des périmètres (synthèse)
+charge01     200    378    429    429 ms       5 Ko         Mur : synthèse
+charge01     200    189    234    234 ms    6919 Ko         État du suivi (état historique)
+charge01     403      6      8      8 ms       0 Ko         Administration : informations
+charge01     403      5      7      7 ms       0 Ko         Administration : système
+charge01     200    113    168    168 ms       0 Ko         Couverture du périmètre
+charge01     200     11     12     12 ms      11 Ko         Périmètres accessibles
+charge01     200      5      7      7 ms       2 Ko         Session (auth/me)
+charge01     403      5      6      6 ms       0 Ko         Export : journal d’audit CSV (5 000 lignes)
+charge01     200    321    340    340 ms     505 Ko         Export : suivi complet (Excel)
+charge01     200    289    312    312 ms     595 Ko         Rapport comité SMSI
+charge01     200   1874   1906   1906 ms      61 Ko         Rapport mensuel vulnérabilités (CSV)
+charge01     200    369    402    402 ms    6919 Ko         Export de l’état historique

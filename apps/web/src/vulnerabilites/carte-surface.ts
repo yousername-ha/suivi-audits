@@ -1,32 +1,48 @@
 /* Module Vulnérabilités (ADR 0100, lot ALH4) : carte « Lignes d'approche » de la surface externe, retenue par le RSSI le
-   17/11/2026. Fonctions pures, sans appel réseau ni DOM (testées à part) : regroupement des actifs en branches (domaine
-   parent ou périmètre), filtres, repli des branches et des lignes sans alerte, mise en page en colonnes (Internet → groupes
-   → domaines → hôtes → alertes → rempart → machines internes), caméra (déplacement et zoom par la viewBox).
-   La carte ne montre que ce que la route rend. Lot ALH6 : colonne « Service » (port/protocole · service, puis produit et
-   version), entre l'IP publique et l'alerte ouverte ; seuls les services portés par une alerte sont connus (l'éditeur ne
-   publie pas la liste des ports ouverts) : un actif en alerte sans port connu affiche « port non communiqué ». Les machines
-   sont celles des liaisons confirmées lisibles (lot ALH3) ; une machine illisible n'est jamais nommée (drapeau seulement),
-   une proposition ou l'absence de liaison s'affiche « à relier » pour qui peut modifier. */
+   17/11/2026. Fonctions pures, sans appel réseau ni DOM (testées à part) : regroupement des actifs en branches, filtres,
+   repli des branches et des lignes sans alerte, mise en page en colonnes (Internet → branche → nom de domaine → IP publique
+   → service → alerte ouverte → limite du SI → machine interne).
+   Lot ALH6 : colonne « Service » (port/protocole · service, puis produit et version).
+   Lot SI2 (demandes du RSSI du 19/11/2026) :
+   - deux sources : un actif vu par AlgoLightHouse et par Silène est un seul nœud, avec ses pastilles ; les services d'une
+     ligne réunissent les ports ouverts de Silène et les services portés par les alertes d'AlgoLightHouse
+     (`fusionnerPortsActif`, sans doublon port/protocole, la source de chaque service gardée) ; les constats Silène de
+     l'hôte sont joints, sans priorité ;
+   - une ligne est une adresse IP publique : dans une branche, les noms de domaine qui résolvent vers la même adresse
+     convergent vers un seul nœud d'adresse (services, alertes de l'hôte et machines une seule fois). Une adresse déjà
+     tracée dans une autre branche devient un renvoi explicite vers la ligne qui la porte, sans répéter ses services ;
+   - regroupement par nom de domaine (domaine parent), par adresse IP (la branche est l'adresse, dépliée sur ses noms, ses
+     services, la limite du SI et les machines) ou par périmètre ;
+   - filtre par nom de domaine (partie du nom, casse ignorée, comparaison littérale) ou début d'adresse IP ;
+   - la carte est la page elle-même (décision du RSSI du 19/11/2026) : plus de caméra ni de zoom, la scène entière est
+     dessinée à la largeur de la page et se parcourt par le défilement normal ; les branches repliées par défaut au-delà
+     d'un seuil, le regroupement et les filtres la gardent lisible. */
 import {
   type ActifCarteDto,
   type AlerteCarteDto,
   type CarteSurfaceDto,
+  type ConstatCarteDto,
   CRITICITES_ALH,
   type CriticiteAlh,
+  fusionnerPortsActif,
   fusionnerServices,
   libelleProduitService,
-  libelleService,
   type MachineCarteDto,
   normaliserAdresseIp,
-  type ServiceAlhDto,
+  type PortActifDto,
+  type ProtocoleSilene,
   serviceCorrespond,
+  SOURCES_SURFACE,
+  type SourceSurface,
   type TypeAlerteAlh,
 } from '@suivi/shared';
 import { libelleCriticite, libellePerimetre } from './surface';
+import { libellePortActif, produitPortSilene } from './surface-silene';
 
-export type Regroupement = 'parent' | 'perimetre';
+export type Regroupement = 'parent' | 'adresse' | 'perimetre';
 export const OPTIONS_REGROUPEMENT: { value: Regroupement; label: string }[] = [
-  { value: 'parent', label: 'Domaine parent' },
+  { value: 'parent', label: 'Nom de domaine' },
+  { value: 'adresse', label: 'Adresse IP publique' },
   { value: 'perimetre', label: 'Périmètre' },
 ];
 /** Regroupement par défaut : par domaine parent (confirmé par le RSSI le 17/11/2026, lot ALH5). */
@@ -37,30 +53,58 @@ export const TYPES_ALERTE_INTERNET: readonly TypeAlerteAlh[] = ['typosquatting',
 
 /** Au-delà de ce nombre de lignes affichées, les branches suivantes restent repliées en faisceaux. */
 export const LIGNES_MAX = 250;
+/** Repli par défaut (lot SI2) : jusqu'à `lignes` lignes, tout est déplié ; au-delà, seules les branches qui portent une
+    alerte retenue sont dépliées, `branches` au plus (les plus graves d'abord), et leurs lignes sans alerte restent en
+    faisceau. */
+export const SEUIL_DEPLIE = { lignes: 30, branches: 12 } as const;
 
 const GROUPE_HOTES = '§hotes';
+const GROUPE_SANS_ADRESSE = '§sans-adresse';
 const rangCriticite = (c: CriticiteAlh | null) => (c ? CRITICITES_ALH.indexOf(c) : CRITICITES_ALH.length);
 const parNom = (a: string, b: string) => a.localeCompare(b, 'fr');
 
 /* ------------------------------------------------------------------ Modèle */
-export interface LigneCarte {
-  /** « d:<id> » (domaine, avec l'hôte vers lequel il résout) ou « h:<id> » (hôte sans domaine). */
-  cle: string;
-  domaine: ActifCarteDto | null;
-  hote: ActifCarteDto | null;
-  /** Libellé court du domaine dans sa branche (« vpn » pour vpn.exemple.example sous exemple.example). */
-  etiquette: string;
-  perimetre: string;
-  /** Alertes ouvertes du domaine et de son hôte (hors typosquatting et fuites), sans doublon. */
+/** Constat Silène d'une ligne et les ports de l'hôte que ses lignes de détail citent. */
+export interface ConstatLigne {
+  constat: ConstatCarteDto;
+  ports: { port: number; protocole: ProtocoleSilene | null }[];
+}
+
+/** Ce que portent les actifs d'une ligne : alertes, machines, services, constats. */
+export interface Agregat {
+  /** Alertes ouvertes (hors typosquatting et fuites), sans doublon. */
   alertes: AlerteCarteDto[];
   machines: MachineCarteDto[];
   propositions: number;
   autresMachines: boolean;
-  /** Services connus du domaine et de son hôte (lot ALH6), fusionnés et triés par port ; `nombreServices` : leur total
-      (au-delà de la borne de la route aussi). `actifServices` : l'actif dont la fiche liste ces services. */
-  services: ServiceAlhDto[];
+  /** Services réunis des deux sources, sans doublon port/protocole, triés par port. */
+  ports: PortActifDto[];
+  /** Total des services connus (au-delà des bornes de la route aussi). */
   nombreServices: number;
+  constats: ConstatLigne[];
+  nombreConstats: number;
+}
+
+export interface LigneCarte extends Agregat {
+  /** « a:<branche>|<adresse> » (adresse IP), « d:<id> » (nom sans adresse connue) ou « h:<id> » (hôte sans nom). */
+  cle: string;
+  /** Noms de domaine de la ligne, qui résolvent vers son adresse (triés). */
+  domaines: ActifCarteDto[];
+  /** Hôte exposé de l'adresse (null : l'adresse n'est connue que par la résolution d'un nom). */
+  hote: ActifCarteDto | null;
+  /** Adresse IP publique de la ligne (normalisée), ou null (nom sans adresse connue). */
+  adresse: string | null;
+  /** Libellé de tri : premier nom (court sous sa racine en regroupement par domaine parent), sinon l'adresse. */
+  etiquette: string;
+  perimetre: string;
+  /** Sources qui voient un actif de la ligne (ordre fixe). */
+  sources: SourceSurface[];
+  /** Actif dont la fiche liste les services (l'hôte, sinon le premier nom qui en porte). */
   actifServices: ActifCarteDto | null;
+  /** Au moins un actif d'AlgoLightHouse : la ligne peut se relier à une machine interne (Silène seul : non). */
+  reliable: boolean;
+  /** Ce que portent les seuls noms de la ligne (sans l'hôte) : affiché quand l'adresse est un renvoi. */
+  propre: Agregat & { reliable: boolean };
 }
 
 export interface GroupeCarte {
@@ -80,6 +124,10 @@ export interface ModeleCarte {
 }
 
 const dedoublonner = <T extends { id: string }>(l: T[]) => [...new Map(l.map((x) => [x.id, x])).values()];
+const sourcesDe = (actifs: ActifCarteDto[]): SourceSurface[] => {
+  const vues = new Set(actifs.flatMap((a) => a.sources));
+  return SOURCES_SURFACE.filter((s) => vues.has(s));
+};
 
 /** Domaine racine d'un domaine : on remonte les parents rendus par la route (cycle évité). */
 function racineDe(d: ActifCarteDto, parId: Map<string, ActifCarteDto>): ActifCarteDto {
@@ -94,16 +142,34 @@ function racineDe(d: ActifCarteDto, parId: Map<string, ActifCarteDto>): ActifCar
   return r;
 }
 
+/** Domaine parent déduit d'un nom dont le parent n'est pas rendu (Silène ne le dit pas ; chez AlgoLightHouse, il peut être
+    absent ou illisible) : le plus proche nom de la carte dont il est un sous-domaine, sinon ses deux derniers niveaux
+    (« example.org » pour « www.example.org »). */
+export function parentDeduit(valeur: string, connus: ReadonlySet<string>): string {
+  const niveaux = valeur.split('.');
+  for (let i = 1; i < niveaux.length - 1; i++) {
+    const c = niveaux.slice(i).join('.');
+    if (connus.has(c)) return c;
+  }
+  return niveaux.length > 2 ? niveaux.slice(-2).join('.') : valeur;
+}
+
 /** Libellé court d'un domaine sous sa racine ; la racine garde son nom complet. */
 export function etiquetteDomaine(valeur: string, racine: string | null): string {
   if (racine && valeur !== racine && valeur.endsWith(`.${racine}`)) return valeur.slice(0, -racine.length - 1);
   return valeur;
 }
 
+/** Adresses IP d'un nom de domaine : celle d'AlgoLightHouse, puis celles des hôtes de Silène qui le portent. */
+export const adressesDomaine = (d: ActifCarteDto): string[] => [
+  ...new Set([d.adresse, ...(d.silene?.adresses ?? [])].map(normaliserAdresseIp).filter((x): x is string => !!x)),
+];
+
 export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupement): ModeleCarte {
   const parId = new Map(dto.actifs.map((a) => [a.id, a]));
   const hotes = dto.actifs.filter((a) => a.type === 'hote');
-  const domaines = dto.actifs.filter((a) => a.type === 'domaine');
+  const domaines = dto.actifs.filter((a) => a.type === 'domaine').sort((a, b) => parNom(a.valeur, b.valeur));
+  const constats = new Map((dto.constatsSilene ?? []).map((c) => [c.id, c]));
   const hoteParIp = new Map<string, ActifCarteDto>();
   for (const h of hotes) {
     const ip = normaliserAdresseIp(h.valeur);
@@ -117,49 +183,124 @@ export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupemen
     else if (a.actifId && parId.has(a.actifId)) alertesDe.set(a.actifId, [...(alertesDe.get(a.actifId) ?? []), a]);
     else sansActif.push(a);
   }
-  const groupes = new Map<string, GroupeCarte>();
-  const ajouter = (cle: string, libelle: string, l: LigneCarte) => {
-    let g = groupes.get(cle);
-    if (!g) groupes.set(cle, (g = { cle, libelle, lignes: [] }));
-    g.lignes.push(l);
-  };
-  const ligne = (cle: string, domaine: ActifCarteDto | null, hote: ActifCarteDto | null, etiquette: string) => {
-    const actifs = [domaine, hote].filter((x): x is ActifCarteDto => !!x);
-    const services = fusionnerServices(actifs.flatMap((x) => x.services));
-    const horsBorne = actifs.reduce((n, x) => n + Math.max(0, x.nombreServices - x.services.length), 0);
+
+  const agreger = (actifs: ActifCarteDto[], hote: ActifCarteDto | null): Agregat => {
+    const alh = fusionnerServices(actifs.flatMap((x) => x.services));
+    const ports = fusionnerPortsActif(alh, hote?.silene?.ports ?? []);
+    const horsBorne =
+      actifs.reduce((n, x) => n + Math.max(0, x.nombreServices - x.services.length), 0) +
+      Math.max(0, (hote?.silene?.nombrePorts ?? 0) - (hote?.silene?.ports.length ?? 0));
+    const cs = (hote?.silene?.constats ?? []).flatMap((c) => {
+      const constat = constats.get(c.id);
+      return constat ? [{ constat, ports: c.ports }] : [];
+    });
     return {
-      cle,
-      domaine,
-      hote,
-      etiquette,
-      perimetre: libellePerimetre(domaine ?? hote!),
       alertes: dedoublonner(actifs.flatMap((x) => alertesDe.get(x.id) ?? [])),
       machines: dedoublonner(actifs.flatMap((x) => x.machines)),
       propositions: actifs.reduce((n, x) => n + x.propositions, 0),
       autresMachines: actifs.some((x) => x.autresMachines),
-      services,
-      nombreServices: services.length + horsBorne,
-      actifServices: actifs.find((x) => x.services.length) ?? null,
-    } satisfies LigneCarte;
+      ports,
+      nombreServices: ports.length + horsBorne,
+      constats: cs,
+      nombreConstats: Math.max(cs.length, hote?.silene?.nombreConstats ?? 0),
+    };
   };
-  const relies = new Set<string>();
-  for (const d of domaines) {
-    const ip = normaliserAdresseIp(d.adresse);
-    const h = ip ? (hoteParIp.get(ip) ?? null) : null;
-    if (h) relies.add(h.id);
-    const racine = racineDe(d, parId);
-    const l = ligne(`d:${d.id}`, d, h, etiquetteDomaine(d.valeur, regroupement === 'parent' ? racine.valeur : null));
-    if (regroupement === 'parent') ajouter(`r:${racine.id}`, racine.valeur, l);
-    else ajouter(`p:${l.perimetre}`, l.perimetre, l);
-  }
-  for (const h of hotes) {
-    if (relies.has(h.id)) continue;
-    const l = ligne(`h:${h.id}`, null, h, h.valeur);
-    if (regroupement === 'parent') ajouter(GROUPE_HOTES, 'Hôtes sans domaine', l);
-    else ajouter(`p:${l.perimetre}`, l.perimetre, l);
+  const ligne = (
+    cle: string,
+    noms: ActifCarteDto[],
+    hote: ActifCarteDto | null,
+    adresse: string | null,
+    etiquette: string,
+  ): LigneCarte => {
+    const actifs = [...noms, ...(hote ? [hote] : [])];
+    return {
+      cle,
+      domaines: noms,
+      hote,
+      adresse,
+      etiquette,
+      perimetre: libellePerimetre(noms[0] ?? hote!),
+      sources: sourcesDe(actifs),
+      actifServices: hote ?? noms.find((x) => x.services.length) ?? null,
+      reliable: actifs.some((x) => !!x.alhId),
+      ...agreger(actifs, hote),
+      propre: { ...agreger(noms, null), reliable: noms.some((x) => !!x.alhId) },
+    };
+  };
+
+  const groupes = new Map<string, GroupeCarte & { parAdresse: Map<string, ActifCarteDto[]> }>();
+  const groupe = (cle: string, libelle: string) => {
+    let g = groupes.get(cle);
+    if (!g) groupes.set(cle, (g = { cle, libelle, lignes: [], parAdresse: new Map() }));
+    return g;
+  };
+  const valeurs = new Set(domaines.map((d) => d.valeur));
+  /** Branche d'un nom (domaine parent ou périmètre) et sa racine (pour le libellé court). */
+  const brancheDe = (d: ActifCarteDto): { cle: string; libelle: string; racine: string | null } => {
+    if (regroupement === 'perimetre') {
+      const p = libellePerimetre(d);
+      return { cle: `p:${p}`, libelle: p, racine: null };
+    }
+    if (d.parentId) {
+      const r = racineDe(d, parId);
+      return { cle: `r:${r.valeur}`, libelle: r.valeur, racine: r.valeur };
+    }
+    // Parent non rendu (Silène ne le dit pas ; chez AlgoLightHouse, absent ou illisible) : parent déduit du nom, puis sa
+    // propre racine s'il est un actif de la carte.
+    const p = parentDeduit(d.valeur, valeurs);
+    const actifParent = domaines.find((x) => x.valeur === p && x.id !== d.id);
+    const r = actifParent?.parentId ? racineDe(actifParent, parId).valeur : p;
+    return { cle: `r:${r}`, libelle: r, racine: r };
+  };
+
+  if (regroupement === 'adresse') {
+    const parIp = new Map<string, ActifCarteDto[]>();
+    const sansAdresse: ActifCarteDto[] = [];
+    for (const d of domaines) {
+      const ips = adressesDomaine(d);
+      if (!ips.length) sansAdresse.push(d);
+      for (const ip of ips) parIp.set(ip, [...(parIp.get(ip) ?? []), d]);
+    }
+    for (const ip of hoteParIp.keys()) if (!parIp.has(ip)) parIp.set(ip, []);
+    for (const [ip, noms] of parIp) {
+      const g = groupe(`a:${ip}`, ip);
+      g.lignes.push(ligne(`a:${ip}`, noms, hoteParIp.get(ip) ?? null, ip, noms[0]?.valeur ?? ip));
+    }
+    for (const d of sansAdresse)
+      groupe(GROUPE_SANS_ADRESSE, 'Noms sans adresse connue').lignes.push(
+        ligne(`d:${d.id}`, [d], null, null, d.valeur),
+      );
+  } else {
+    const relies = new Set<string>();
+    const racines = new Map<string, string | null>();
+    for (const d of domaines) {
+      const b = brancheDe(d);
+      racines.set(b.cle, b.racine);
+      const ip = adressesDomaine(d)[0] ?? null;
+      const g = groupe(b.cle, b.libelle);
+      if (!ip) {
+        g.lignes.push(ligne(`d:${d.id}`, [d], null, null, etiquetteDomaine(d.valeur, b.racine)));
+        continue;
+      }
+      g.parAdresse.set(ip, [...(g.parAdresse.get(ip) ?? []), d]);
+    }
+    for (const g of groupes.values())
+      for (const [ip, noms] of g.parAdresse) {
+        const h = hoteParIp.get(ip) ?? null;
+        if (h) relies.add(h.id);
+        const racine = racines.get(g.cle) ?? null;
+        g.lignes.push(ligne(`a:${g.cle}|${ip}`, noms, h, ip, etiquetteDomaine(noms[0]!.valeur, racine)));
+      }
+    for (const h of hotes) {
+      if (relies.has(h.id)) continue;
+      const ip = normaliserAdresseIp(h.valeur);
+      const l = ligne(`h:${h.id}`, [], h, ip, h.valeur);
+      if (regroupement === 'parent') groupe(GROUPE_HOTES, 'Hôtes sans domaine').lignes.push(l);
+      else groupe(`p:${l.perimetre}`, l.perimetre).lignes.push(l);
+    }
   }
   return {
-    groupes: [...groupes.values()],
+    groupes: [...groupes.values()].map(({ cle, libelle, lignes }) => ({ cle, libelle, lignes })),
     internet,
     sansActif,
     perimetres: [...new Set(dto.actifs.map((a) => libellePerimetre(a)))].sort(parNom),
@@ -170,6 +311,8 @@ export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupemen
 export interface FiltresCarte {
   /** Domaine, adresse ou identifiant CVE (partie) ; port (« 443 », « 443/tcp ») ; service ou produit (partie). */
   texte: string;
+  /** Lot SI2 : partie d'un nom de domaine (casse ignorée) ou début d'une adresse IP ; comparaison littérale. */
+  nom: string;
   /** Criticités retenues (vide : toutes). */
   criticites: CriticiteAlh[];
   enAlerteSeulement: boolean;
@@ -179,6 +322,7 @@ export interface FiltresCarte {
 }
 export const FILTRES_CARTE_VIDES: FiltresCarte = {
   texte: '',
+  nom: '',
   criticites: [],
   enAlerteSeulement: false,
   perimetre: '',
@@ -193,12 +337,23 @@ export const alerteRetenue = (a: AlerteCarteDto, f: FiltresCarte) =>
     priorité majorée parce que l'actif mène à une machine interne vulnérable ; lot ALH5). */
 export const alerteCritique = (a: AlerteCarteDto) => a.priorite === 'P1';
 
+/** Renvoi : l'adresse de la ligne est déjà tracée, avec ses services, dans une autre branche. */
+export interface Renvoi {
+  /** Ligne qui porte l'adresse, et sa branche. */
+  cle: string;
+  groupe: string;
+  libelle: string;
+}
+
 export interface LigneFiltree extends LigneCarte {
   /** Alertes retenues par les filtres de criticité et de type. */
   retenues: AlerteCarteDto[];
   /** Alerte la plus haute (criticité de l'éditeur, puis priorité), ou null. */
   principale: AlerteCarteDto | null;
   critique: boolean;
+  /** Noms de la ligne écartés par le filtre par nom (comptés, non dessinés). */
+  domainesMasques: number;
+  renvoi: Renvoi | null;
 }
 export interface GroupeFiltre extends Omit<GroupeCarte, 'lignes'> {
   lignes: LigneFiltree[];
@@ -209,6 +364,8 @@ export interface ModeleFiltre {
   groupes: GroupeFiltre[];
   internet: AlerteCarteDto[];
   sansActif: AlerteCarteDto[];
+  /** Noms de domaine et adresses IP retenus (annoncés avec le filtre par nom). */
+  correspondances: { domaines: number; adresses: number };
 }
 
 const comparerAlertes = (a: AlerteCarteDto, b: AlerteCarteDto) =>
@@ -220,6 +377,43 @@ const comparerAlertes = (a: AlerteCarteDto, b: AlerteCarteDto) =>
 const contient = (valeurs: (string | null | undefined)[], t: string) =>
   valeurs.some((v) => !!v && v.toLowerCase().includes(t));
 
+/** Le texte désigne le service d'un port réuni (l'une ou l'autre source). */
+export function portCorrespond(p: PortActifDto, t: string): boolean {
+  if (p.alh && serviceCorrespond(p.alh, t)) return true;
+  if (!p.silene) return false;
+  return serviceCorrespond(
+    {
+      port: p.port,
+      protocole: p.protocole,
+      nom: p.silene.service,
+      produit: produitPortSilene(p.silene),
+      version: null,
+      editeur: null,
+    },
+    t,
+  );
+}
+
+/** Filtre par nom (lot SI2) : la ligne est retenue si un de ses noms contient le texte (casse ignorée) ou si son adresse
+    commence par lui ; seuls les noms qui le contiennent sont gardés, sauf si c'est l'adresse qui correspond. Comparaison
+    littérale : aucune expression régulière n'est construite à partir de la saisie. */
+export function filtreNom(
+  l: Pick<LigneCarte, 'domaines' | 'adresse' | 'hote'>,
+  saisie: string,
+): { domaines: ActifCarteDto[]; masques: number } | null {
+  const n = saisie.trim().toLowerCase();
+  if (!n) return { domaines: l.domaines, masques: 0 };
+  if ([l.adresse, l.hote?.valeur].some((v) => !!v && v.toLowerCase().startsWith(n)))
+    return { domaines: l.domaines, masques: 0 };
+  const retenus = l.domaines.filter((d) => d.valeur.toLowerCase().includes(n));
+  return retenus.length ? { domaines: retenus, masques: l.domaines.length - retenus.length } : null;
+}
+
+const alertesRetenues = (l: Pick<Agregat, 'alertes'>, f: FiltresCarte) => {
+  const retenues = l.alertes.filter((a) => alerteRetenue(a, f)).sort(comparerAlertes);
+  return { retenues, principale: retenues[0] ?? null, critique: retenues.some(alerteCritique) };
+};
+
 export function filtrerModele(m: ModeleCarte, f: FiltresCarte): ModeleFiltre {
   const t = f.texte.trim().toLowerCase();
   const alerteCorrespond = (a: AlerteCarteDto) => contient([...a.cves, a.cible?.valeur, a.titre], t);
@@ -228,16 +422,18 @@ export function filtrerModele(m: ModeleCarte, f: FiltresCarte): ModeleFiltre {
     const lignes: LigneFiltree[] = [];
     for (const l of g.lignes) {
       if (f.perimetre && l.perimetre !== f.perimetre) continue;
-      const retenues = l.alertes.filter((a) => alerteRetenue(a, f)).sort(comparerAlertes);
-      if (f.enAlerteSeulement && !retenues.length) continue;
+      const r = alertesRetenues(l, f);
+      if (f.enAlerteSeulement && !r.retenues.length) continue;
       if (
         t &&
-        !contient([l.domaine?.valeur, l.domaine?.adresse, l.hote?.valeur], t) &&
-        !retenues.some((a) => contient(a.cves, t)) &&
-        !l.services.some((x) => serviceCorrespond(x, t))
+        !contient([...l.domaines.map((d) => d.valeur), l.adresse, l.hote?.valeur], t) &&
+        !r.retenues.some((a) => contient(a.cves, t)) &&
+        !l.ports.some((p) => portCorrespond(p, t))
       )
         continue;
-      lignes.push({ ...l, retenues, principale: retenues[0] ?? null, critique: retenues.some(alerteCritique) });
+      const nom = filtreNom(l, f.nom);
+      if (!nom) continue;
+      lignes.push({ ...l, ...r, domaines: nom.domaines, domainesMasques: nom.masques, renvoi: null });
     }
     if (!lignes.length) continue;
     lignes.sort(
@@ -247,26 +443,51 @@ export function filtrerModele(m: ModeleCarte, f: FiltresCarte): ModeleFiltre {
         rangCriticite(a.principale?.criticite ?? null) - rangCriticite(b.principale?.criticite ?? null) ||
         parNom(a.etiquette, b.etiquette),
     );
-    groupes.push({
-      cle: g.cle,
-      libelle: g.libelle,
-      lignes,
-      critique: lignes.some((l) => l.critique),
-      alertes: new Set(lignes.flatMap((l) => l.retenues.map((a) => a.id))).size,
-    });
+    groupes.push({ cle: g.cle, libelle: g.libelle, lignes, critique: false, alertes: 0 });
   }
-  groupes.sort(
-    (a, b) =>
-      Number(b.critique) - Number(a.critique) ||
-      b.alertes - a.alertes ||
-      Number(a.cle === GROUPE_HOTES) - Number(b.cle === GROUPE_HOTES) ||
-      parNom(a.libelle, b.libelle),
-  );
+  const resumerGroupe = (g: GroupeFiltre) => {
+    g.critique = g.lignes.some((l) => l.critique);
+    g.alertes = new Set(g.lignes.flatMap((l) => l.retenues.map((a) => a.id))).size;
+  };
+  groupes.forEach(resumerGroupe);
+  const ordre = () =>
+    groupes.sort(
+      (a, b) =>
+        Number(b.critique) - Number(a.critique) ||
+        b.alertes - a.alertes ||
+        Number(a.cle === GROUPE_HOTES || a.cle === GROUPE_SANS_ADRESSE) -
+          Number(b.cle === GROUPE_HOTES || b.cle === GROUPE_SANS_ADRESSE) ||
+        parNom(a.libelle, b.libelle),
+    );
+  ordre();
+  // Une adresse n'est tracée qu'une fois, avec ses services, ses alertes et ses machines : sur la première ligne qui la
+  // porte, dans l'ordre d'affichage ; ailleurs, la ligne garde ses noms (et ce qu'ils portent eux-mêmes) et renvoie vers
+  // elle.
+  const porteurs = new Map<string, Renvoi>();
+  for (const g of groupes) {
+    g.lignes = g.lignes.map((l) => {
+      if (!l.adresse || !l.hote) return l;
+      const porteur = porteurs.get(l.adresse);
+      if (!porteur) {
+        porteurs.set(l.adresse, { cle: l.cle, groupe: g.cle, libelle: g.libelle });
+        return l;
+      }
+      const { reliable, ...propre } = l.propre;
+      return { ...l, ...propre, ...alertesRetenues(propre, f), reliable, renvoi: porteur };
+    });
+    resumerGroupe(g);
+  }
+  ordre();
   const filtreInternet = (a: AlerteCarteDto) => alerteRetenue(a, f) && (!t || alerteCorrespond(a));
+  const toutes = groupes.flatMap((g) => g.lignes);
   return {
     groupes,
     internet: m.internet.filter(filtreInternet).sort(comparerAlertes),
     sansActif: m.sansActif.filter(filtreInternet).sort(comparerAlertes),
+    correspondances: {
+      domaines: new Set(toutes.flatMap((l) => l.domaines.map((d) => d.valeur))).size,
+      adresses: new Set(toutes.flatMap((l) => (l.adresse ? [l.adresse] : []))).size,
+    },
   };
 }
 
@@ -277,17 +498,26 @@ export interface EtatReplis {
   /** Branches dont les lignes sans alerte sont aussi dépliées. */
   calmes: ReadonlySet<string>;
 }
-/** Par défaut, seules les branches qui portent une alerte retenue sont dépliées ; leurs lignes sans alerte restent en
-    faisceau. */
-export const replisParDefaut = (m: ModeleFiltre): EtatReplis => ({
-  groupes: new Set(m.groupes.filter((g) => g.alertes > 0).map((g) => g.cle)),
-  calmes: new Set(),
-});
 export const toutReplier = (): EtatReplis => ({ groupes: new Set(), calmes: new Set() });
 export const toutDeplier = (m: ModeleFiltre): EtatReplis => ({
   groupes: new Set(m.groupes.map((g) => g.cle)),
   calmes: new Set(m.groupes.map((g) => g.cle)),
 });
+/** Par défaut (lot SI2) : tout déplié jusqu'à SEUIL_DEPLIE.lignes lignes ; au-delà, seules les branches qui portent une
+    alerte retenue sont dépliées (SEUIL_DEPLIE.branches au plus, les plus graves d'abord), leurs lignes sans alerte en
+    faisceau. */
+export function replisParDefaut(m: ModeleFiltre): EtatReplis {
+  if (m.groupes.reduce((n, g) => n + g.lignes.length, 0) <= SEUIL_DEPLIE.lignes) return toutDeplier(m);
+  return {
+    groupes: new Set(
+      m.groupes
+        .filter((g) => g.alertes > 0)
+        .slice(0, SEUIL_DEPLIE.branches)
+        .map((g) => g.cle),
+    ),
+    calmes: new Set(),
+  };
+}
 const basculer = (s: ReadonlySet<string>, cle: string) => {
   const n = new Set(s);
   if (!n.delete(cle)) n.add(cle);
@@ -295,12 +525,21 @@ const basculer = (s: ReadonlySet<string>, cle: string) => {
 };
 export const basculerGroupe = (e: EtatReplis, cle: string): EtatReplis => ({ ...e, groupes: basculer(e.groupes, cle) });
 export const basculerCalmes = (e: EtatReplis, cle: string): EtatReplis => ({ ...e, calmes: basculer(e.calmes, cle) });
+/** Déplie la branche d'une ligne (et ses lignes sans alerte si la ligne en est une) : aller à la ligne d'un renvoi. */
+export function deplierVers(m: ModeleFiltre, e: EtatReplis, cle: string): EtatReplis {
+  const g = m.groupes.find((x) => x.lignes.some((l) => l.cle === cle));
+  if (!g) return e;
+  const l = g.lignes.find((x) => x.cle === cle)!;
+  return {
+    groupes: new Set([...e.groupes, g.cle]),
+    calmes: l.principale ? e.calmes : new Set([...e.calmes, g.cle]),
+  };
+}
 
 /* ------------------------------------------------------------------ Mise en page */
 /** Abscisses des colonnes (unités de la viewBox). `tronc` : les traits d'Internet vers les branches descendent le long de
-    cette abscisse, à droite de la colonne « Internet » : ils ne croisent jamais les libellés du typosquatting et des fuites
-    (lot ALH6). Écarts calculés pour des libellés de 32 caractères (domaine), 24 (service, produit, machine) et 26 (alerte)
-    sans chevauchement. */
+    cette abscisse, à droite de la colonne « Internet » (lot ALH6). Écarts calculés pour des libellés de 32 caractères
+    (domaine), 24 (service, produit, machine) et 26 (alerte) sans chevauchement. */
 export const X = {
   internet: 96,
   tronc: 210,
@@ -314,15 +553,23 @@ export const X = {
   machine: 1226,
   fin: 1460,
 } as const;
-/** Marge du haut : les en-têtes de colonnes au-dessus des libellés de la première ligne. */
-export const HAUT = 84;
-/** Hauteur d'une ligne : libellés au-dessus (deux lignes pour une alerte), produit du service en dessous. */
-export const LIGNE_H = 52;
+/** Marge du haut : la première ligne sous les libellés (les en-têtes de colonnes sont dessinés à part, collants). */
+export const HAUT = 44;
+/** Hauteur d'une ligne : libellés au-dessus (deux lignes pour une alerte), pastilles et produit en dessous. */
+export const LIGNE_H = 56;
 export const MACHINE_H = 24;
+/** Écart vertical entre deux noms empilés d'une même adresse (libellé au-dessus, pastilles en dessous). */
+export const DOMAINE_H = 46;
+/** Écart vertical entre deux services empilés (libellé au-dessus, produit et pastilles en dessous). */
+export const SERVICE_H = 48;
 export const ECART_GROUPES = 16;
-/** Machines dessinées au plus par ligne ; les autres sont comptées (« et n autres »). */
+/** Machines, noms et services dessinés au plus par ligne ; les autres sont comptés (« et n autres »). */
 export const MACHINES_PAR_LIGNE = 3;
+export const DOMAINES_PAR_LIGNE = 8;
+export const SERVICES_PAR_LIGNE = 3;
 
+export const libelleColonneGroupe = (r: Regroupement) =>
+  r === 'adresse' ? 'Adresse IP publique' : r === 'perimetre' ? 'Périmètre' : 'Domaine parent';
 export const COLONNES = [
   { cle: 'internet', libelle: 'Internet', x: X.internet },
   { cle: 'groupe', libelle: 'Domaine parent', x: (X.groupe + X.groupeFin) / 2 },
@@ -345,8 +592,10 @@ export interface Resume {
   domaines: number;
   hotes: number;
   machines: number;
-  /** Services connus (portés par une alerte ouverte), lot ALH6. */
+  /** Services connus (deux sources, sans doublon par adresse). */
   services: number;
+  /** Constats Silène des hôtes. */
+  constats: number;
   alertes: number;
   parCriticite: ParCriticite;
   critique: boolean;
@@ -354,10 +603,11 @@ export interface Resume {
 export function resumer(lignes: LigneFiltree[]): Resume {
   const alertes = lignes.flatMap((l) => l.retenues);
   return {
-    domaines: lignes.filter((l) => l.domaine).length,
+    domaines: new Set(lignes.flatMap((l) => l.domaines.map((d) => d.id))).size,
     hotes: new Set(lignes.flatMap((l) => (l.hote ? [l.hote.id] : []))).size,
     machines: new Set(lignes.flatMap((l) => l.machines.map((m) => m.id))).size,
     services: lignes.reduce((n, l) => n + l.nombreServices, 0),
+    constats: lignes.reduce((n, l) => n + l.nombreConstats, 0),
     alertes: new Set(alertes.map((a) => a.id)).size,
     parCriticite: compterCriticites(alertes),
     critique: lignes.some((l) => l.critique),
@@ -379,10 +629,14 @@ export interface LigneDessinee {
   groupe: string;
   y: number;
   ligne: LigneFiltree;
-  /** Ordonnées des machines dessinées (MACHINES_PAR_LIGNE au plus). */
+  /** Ordonnées des noms, des services et des machines dessinés (… _PAR_LIGNE au plus). */
+  domainesY: number[];
+  servicesY: number[];
   machinesY: number[];
-  /** Marque « à relier » : aucune machine lisible reliée, aucune liaison vers une machine illisible, droit de modifier. */
+  /** Marque « à relier » : aucune machine lisible reliée, aucune liaison vers une machine illisible, un actif
+      d'AlgoLightHouse sur la ligne, droit de modifier. */
   aRelier: boolean;
+  hauteur: number;
 }
 export interface FaisceauDessine {
   type: 'faisceau';
@@ -421,11 +675,9 @@ export interface Scene {
 }
 
 export const INTERNET_MAX = 6;
-/** Ordonnée de la n-ième alerte tracée côté Internet (sous le point de départ) : forme, libellé sur deux lignes au plus,
-    nature. */
+/** Ordonnée de la n-ième alerte tracée côté Internet (sous le point de départ). */
 export const yInternet = (i: number) => HAUT + 80 + i * 92;
-/** Caractères par ligne d'un libellé côté Internet : la colonne s'arrête avant le tronc. Trois lignes au plus (72
-    caractères) : un nom de domaine ressemblant se lit en entier. */
+/** Caractères par ligne d'un libellé côté Internet : la colonne s'arrête avant le tronc. Trois lignes au plus. */
 export const INTERNET_CARACTERES = 24;
 export const INTERNET_LIGNES = 3;
 /** Écart entre deux lignes d'un libellé (unités de la viewBox), sans chevauchement à la taille de la charte. */
@@ -447,9 +699,21 @@ export const branche = (y0: number, x2: number, y: number) =>
     ? droite(X.groupeFin, y, x2)
     : `M${X.groupeFin} ${y0} C${X.groupeFin + 12} ${y0} ${X.groupeFin + 12} ${y} ${X.groupeFin + 24} ${y} L${x2} ${y}`;
 
+/** Nom empilé vers le nœud d'adresse : à l'horizontale sous son libellé, puis une courbe courte après la colonne des noms
+    (elle ne traverse pas les libellés des autres noms). */
+export const versAdresse = (yd: number, y: number) =>
+  `M${X.domaine + 8} ${yd} L${X.hote - 56} ${yd} C${X.hote - 30} ${yd} ${X.hote - 30} ${y} ${X.hote - 6} ${y}`;
+/** Adresse vers un service empilé : courbe courte juste après l'adresse, puis à l'horizontale jusqu'au service (elle ne
+    traverse pas le produit du service au-dessus). */
+export const versService = (y: number, ys: number) =>
+  `M${X.hote + 6} ${y} C${X.hote + 30} ${y} ${X.hote + 30} ${ys} ${X.hote + 56} ${ys} L${X.service - 8} ${ys}`;
+
 /** Lignes sans alerte retenue, repliables en faisceau dans une branche dépliée. */
 const calmesDe = (g: GroupeFiltre) => g.lignes.filter((l) => !l.principale);
 const activesDe = (g: GroupeFiltre) => g.lignes.filter((l) => !!l.principale);
+
+/** Ordonnées empilées à partir de `y` (`n` au plus). */
+const empiler = (y: number, n: number, pas: number) => Array.from({ length: n }, (_, i) => y + i * pas);
 
 export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: boolean }): Scene {
   const groupes: NoeudGroupe[] = [];
@@ -478,7 +742,6 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
     const y0 = y;
     const debut = rangees.length;
     if (!deplie) {
-      const resume = resumer(g.lignes);
       rangees.push({
         type: 'faisceau',
         cle: `f:${g.cle}`,
@@ -486,25 +749,37 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
         y,
         calmes: false,
         lignes: g.lignes.length,
-        resume,
+        resume: resumer(g.lignes),
         epaisseur: epaisseurFaisceau(g.lignes.length),
       });
       y += LIGNE_H;
     } else {
       const dessinees = calmesDeplies ? [...actives, ...calmes] : actives;
       for (const l of dessinees) {
-        const n = Math.min(l.machines.length, MACHINES_PAR_LIGNE);
-        const machinesY = Array.from({ length: n }, (_, i) => y + i * MACHINE_H);
+        const nd = Math.min(l.domaines.length, DOMAINES_PAR_LIGNE);
+        const ns = Math.min(l.ports.length, SERVICES_PAR_LIGNE);
+        const nm = Math.min(l.machines.length, MACHINES_PAR_LIGNE);
+        const plus = (n: number, max: number) => (n > max ? MACHINE_H / 2 : 0);
+        const hauteur =
+          LIGNE_H +
+          Math.max(
+            Math.max(0, nd - 1) * DOMAINE_H + plus(l.domaines.length + l.domainesMasques, DOMAINES_PAR_LIGNE),
+            Math.max(0, ns - 1) * SERVICE_H + plus(l.nombreServices, SERVICES_PAR_LIGNE),
+            Math.max(0, nm - 1) * MACHINE_H + plus(l.machines.length, MACHINES_PAR_LIGNE),
+          );
         rangees.push({
           type: 'ligne',
           cle: l.cle,
           groupe: g.cle,
           y,
           ligne: l,
-          machinesY,
-          aRelier: o.peutModifier && !l.machines.length && !l.autresMachines,
+          domainesY: empiler(y, nd, DOMAINE_H),
+          servicesY: empiler(y, ns, SERVICE_H),
+          machinesY: empiler(y, nm, MACHINE_H),
+          aRelier: o.peutModifier && l.reliable && !l.machines.length && !l.autresMachines,
+          hauteur,
         });
-        y += LIGNE_H + Math.max(0, n - 1) * MACHINE_H + (l.machines.length > MACHINES_PAR_LIGNE ? MACHINE_H / 2 : 0);
+        y += hauteur;
       }
       if (!calmesDeplies && calmes.length) {
         rangees.push({
@@ -521,7 +796,8 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
       }
     }
     groupes.push({ cle: g.cle, libelle: g.libelle, y: y0, deplie, replieParBorne, resume: resumer(g.lignes) });
-    // Liens de la branche : groupe → chaque rangée, puis le long de la rangée jusqu'au rempart et aux machines.
+    // Liens de la branche : groupe → chaque nom (ou l'adresse), noms → adresse, adresse → services, puis le long de la
+    // rangée jusqu'au rempart et aux machines.
     for (const r of rangees.slice(debut)) {
       if (r.type === 'faisceau') {
         const critique = r.resume.critique;
@@ -543,31 +819,21 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
         continue;
       }
       const l = r.ligne;
-      const xDepart = l.domaine ? X.domaine : X.hote;
-      liens.push({
-        cle: `${r.cle}:g`,
-        d: branche(y0, xDepart - 8, r.y),
-        critique: l.critique,
-        faisceau: false,
-        epaisseur: null,
-      });
-      const fin = r.machinesY.length || r.aRelier ? X.machine : X.rempart;
-      liens.push({
-        cle: `${r.cle}:t`,
-        d: droite(xDepart, r.y, fin),
-        critique: l.critique,
-        faisceau: false,
-        epaisseur: null,
-      });
-      r.machinesY.slice(1).forEach((my, i) =>
-        liens.push({
-          cle: `${r.cle}:m${i + 1}`,
-          d: courbe(X.rempart, r.y, X.machine, my),
-          critique: l.critique,
-          faisceau: false,
-          epaisseur: null,
-        }),
-      );
+      const lien = (cle: string, d: string) =>
+        liens.push({ cle: `${r.cle}:${cle}`, d, critique: l.critique, faisceau: false, epaisseur: null });
+      const xDepart = r.domainesY.length ? X.domaine : X.hote;
+      if (r.domainesY.length)
+        r.domainesY.forEach((yd, j) => {
+          lien(j ? `g${j}` : 'g', branche(y0, X.domaine - 8, yd));
+          if (j) lien(`d${j}`, versAdresse(yd, r.y));
+        });
+      else lien('g', branche(y0, X.hote - 8, r.y));
+      // Un renvoi s'arrête à l'adresse, sauf si ses noms portent eux-mêmes une alerte ou une machine.
+      const fin =
+        r.machinesY.length || r.aRelier ? X.machine : l.renvoi && !l.principale && !l.ports.length ? X.hote : X.rempart;
+      lien('t', droite(xDepart, r.y, fin));
+      r.servicesY.slice(1).forEach((ys, j) => lien(`s${j + 1}`, versService(r.y, ys)));
+      r.machinesY.slice(1).forEach((my, j) => lien(`m${j + 1}`, courbe(X.rempart, r.y, X.machine, my)));
     }
     y += ECART_GROUPES;
   }
@@ -604,10 +870,11 @@ const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? pl
 /** Résumé d'un faisceau en une ligne (nombres seulement). */
 export function libelleResume(r: Resume): string {
   const parts = [
-    r.domaines ? pluriel(r.domaines, 'domaine', 'domaines') : null,
+    r.domaines ? pluriel(r.domaines, 'nom de domaine', 'noms de domaine') : null,
     r.hotes ? pluriel(r.hotes, 'hôte', 'hôtes') : null,
     pluriel(r.alertes, 'alerte ouverte', 'alertes ouvertes'),
     r.services ? pluriel(r.services, 'service connu', 'services connus') : null,
+    r.constats ? pluriel(r.constats, 'constat Silène', 'constats Silène') : null,
     r.machines ? pluriel(r.machines, 'machine interne reliée', 'machines internes reliées') : null,
   ].filter(Boolean);
   const crit = r.parCriticite.critical ? `, dont ${pluriel(r.parCriticite.critical, 'critique', 'critiques')}` : '';
@@ -624,34 +891,48 @@ export function libelleAlertes(l: LigneFiltree): string {
 
 export const nomMachineCarte = (m: MachineCarteDto) => m.nom ?? m.adresse ?? 'Machine sans nom';
 
-/** Colonne « Service » d'une ligne (lot ALH6) : « 443/tcp · HTTPS » (premier service par port, « +n » s'il y en a
-    d'autres), puis « nginx 1.18 » ; un actif en alerte sans port connu : « port non communiqué » ; sinon rien. Le nom
-    accessible donne tout en clair. */
-export interface ColonneService {
+/** Sources en clair : « vu par AlgoLightHouse et Silène (ANSSI) ». */
+export function texteSources(s: readonly SourceSurface[]): string {
+  const noms = s.map((x) => (x === 'alh' ? 'AlgoLightHouse' : 'Silène (ANSSI)'));
+  return noms.length ? `vu par ${noms.join(' et ')}` : 'source inconnue';
+}
+
+/** Constats Silène d'une ligne qui citent un port (même numéro ; même protocole s'il est connu des deux côtés). */
+export const constatsDuPort = (l: Pick<Agregat, 'constats'>, p: Pick<PortActifDto, 'port' | 'protocole'>) =>
+  l.constats.filter((c) =>
+    c.ports.some((x) => x.port === p.port && (!x.protocole || !p.protocole || x.protocole === p.protocole)),
+  );
+
+/** Un service de la colonne « Service » : libellé, produit et version (Silène d'abord), sources, nom accessible complet. */
+export interface ServiceDessine {
   libelle: string;
   produit: string | null;
-  connu: boolean;
+  sources: SourceSurface[];
+  constats: ConstatLigne[];
   nom: string;
 }
-export function colonneService(l: LigneFiltree): ColonneService | null {
-  const premier = l.services[0];
-  if (!premier) {
-    if (!l.principale) return null;
-    return {
-      libelle: 'port non communiqué',
-      produit: null,
-      connu: false,
-      nom: 'Port non communiqué : le détail des alertes de cet actif ne donne aucun service',
-    };
-  }
-  const autres = l.nombreServices - 1;
-  const libelle = libelleService(premier);
-  const produit = libelleProduitService(premier);
+export function serviceDessine(l: Pick<Agregat, 'constats'>, p: PortActifDto): ServiceDessine {
+  const sources: SourceSurface[] = [...(p.alh ? (['alh'] as const) : []), ...(p.silene ? (['silene'] as const) : [])];
+  const produit = (p.silene ? produitPortSilene(p.silene) : null) ?? (p.alh ? libelleProduitService(p.alh) : null);
+  const constats = constatsDuPort(l, p);
+  const libelle = libellePortActif(p);
   return {
-    libelle: autres > 0 ? `${libelle} (+${autres})` : libelle,
+    libelle,
     produit,
-    connu: true,
-    nom: `Service ${libelle}${produit ? `, ${produit}` : ''}${autres > 0 ? `, et ${pluriel(autres, 'autre service', 'autres services')}` : ''}`,
+    sources,
+    constats,
+    nom: `Service ${libelle}${produit ? `, ${produit}` : ''}, ${texteSources(sources)}${
+      constats.length ? `, ${pluriel(constats.length, 'constat Silène', 'constats Silène')} sur ce port` : ''
+    }`,
+  };
+}
+
+/** Colonne « Service » d'une ligne sans service connu : « port non communiqué » pour un actif en alerte ; sinon rien. */
+export function serviceAbsent(l: LigneFiltree): { libelle: string; nom: string } | null {
+  if (l.ports.length || !l.principale) return null;
+  return {
+    libelle: 'port non communiqué',
+    nom: 'Port non communiqué : le détail des alertes de cet actif ne donne aucun service',
   };
 }
 
@@ -673,50 +954,20 @@ export function couperLibelle(texte: string, n: number, lignes = INTERNET_LIGNES
   return out;
 }
 
-/* ------------------------------------------------------------------ Caméra */
-/** Rapport hauteur / largeur de la zone affichée (le cadre de la carte a le même, par sa feuille de style). */
-export const RAPPORT = 0.6;
-export interface Camera {
-  x: number;
-  y: number;
-  w: number;
+/** Constats Silène d'un hôte de la carte (tous, ou ceux qui citent un port), avec leur contrôle et leur classe. */
+export function constatsDeLaCarte(
+  dto: Pick<CarteSurfaceDto, 'constatsSilene'>,
+  hote: ActifCarteDto,
+  port: Pick<PortActifDto, 'port' | 'protocole'> | null,
+): ConstatCarteDto[] {
+  const parId = new Map(dto.constatsSilene.map((c) => [c.id, c]));
+  return (hote.silene?.constats ?? [])
+    .filter(
+      (c) =>
+        !port ||
+        c.ports.some(
+          (x) => x.port === port.port && (!x.protocole || !port.protocole || x.protocole === port.protocole),
+        ),
+    )
+    .flatMap((c) => (parId.has(c.id) ? [parId.get(c.id)!] : []));
 }
-export const ZOOM_MIN = 280;
-export const hauteurCamera = (c: Camera) => c.w * RAPPORT;
-export const viewBoxDe = (c: Camera) =>
-  `${c.x.toFixed(1)} ${c.y.toFixed(1)} ${c.w.toFixed(1)} ${hauteurCamera(c).toFixed(1)}`;
-const largeurMax = (s: Pick<Scene, 'largeur' | 'hauteur'>) => Math.max(s.largeur, s.hauteur / RAPPORT) * 1.05;
-
-/** La zone affichée reste à moitié au moins sur la carte. */
-export function borner(c: Camera, s: Pick<Scene, 'largeur' | 'hauteur'>): Camera {
-  const w = Math.min(Math.max(c.w, ZOOM_MIN), largeurMax(s));
-  const h = w * RAPPORT;
-  return {
-    w,
-    x: Math.min(Math.max(c.x, -w / 2), s.largeur - w / 2),
-    y: Math.min(Math.max(c.y, -h / 2), s.hauteur - h / 2),
-  };
-}
-/** Vue de départ : toute la largeur, depuis le haut. */
-export const cameraInitiale = (s: Pick<Scene, 'largeur' | 'hauteur'>): Camera =>
-  borner({ x: 0, y: 0, w: s.largeur }, s);
-/** Recadrer : toute la carte dans la zone affichée. */
-export const recadrer = (s: Pick<Scene, 'largeur' | 'hauteur'>): Camera =>
-  borner({ x: 0, y: 0, w: Math.max(s.largeur, s.hauteur / RAPPORT) }, s);
-/** Zoom d'un facteur (moins de 1 : rapproche) autour d'un point de la carte (par défaut, le centre affiché). */
-export function zoomer(
-  c: Camera,
-  facteur: number,
-  s: Pick<Scene, 'largeur' | 'hauteur'>,
-  centre?: { x: number; y: number },
-): Camera {
-  const p = centre ?? { x: c.x + c.w / 2, y: c.y + hauteurCamera(c) / 2 };
-  const w = Math.min(Math.max(c.w * facteur, ZOOM_MIN), largeurMax(s));
-  const k = w / c.w;
-  return borner({ w, x: p.x - (p.x - c.x) * k, y: p.y - (p.y - c.y) * k }, s);
-}
-export const deplacer = (c: Camera, dx: number, dy: number, s: Pick<Scene, 'largeur' | 'hauteur'>): Camera =>
-  borner({ ...c, x: c.x + dx, y: c.y + dy }, s);
-/** Centre la zone affichée sur un point (vue d'ensemble). */
-export const centrerSur = (c: Camera, x: number, y: number, s: Pick<Scene, 'largeur' | 'hauteur'>): Camera =>
-  borner({ ...c, x: x - c.w / 2, y: y - hauteurCamera(c) / 2 }, s);

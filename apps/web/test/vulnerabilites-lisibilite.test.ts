@@ -80,10 +80,10 @@ const faille = (f: Partial<FailleVeilleDto> = {}): FailleVeilleDto => ({
 });
 
 describe('pastilles de source', () => {
-  it('sept sources, chacune avec son sigle, sa forme et sa teinte propres ; noms exacts', () => {
-    expect(SOURCES_PICTO).toHaveLength(7);
+  it('huit sources (lot SI1 : Silène), chacune avec son sigle, sa forme et sa teinte propres ; noms exacts', () => {
+    expect(SOURCES_PICTO).toHaveLength(8);
     const d = SOURCES_PICTO.map((s) => PICTOS_SOURCES[s]);
-    for (const cle of ['sigle', 'forme', 'teinte'] as const) expect(new Set(d.map((x) => x[cle])).size).toBe(7);
+    for (const cle of ['sigle', 'forme', 'teinte'] as const) expect(new Set(d.map((x) => x[cle])).size).toBe(8);
     for (const x of d) {
       expect(x.sigle.length).toBeLessThanOrEqual(4);
       expect(TRACES_FORMES[x.forme]).toMatch(/^M[\d .a-zA-Z-]+$/);
@@ -96,6 +96,7 @@ describe('pastilles de source', () => {
       'Source : CERT Santé',
       'Source : Tenable',
       'Source : AlgoLightHouse',
+      'Source : Silène (ANSSI)',
     ]);
   });
   it('correspondances des sources de la plateforme vers les pastilles', () => {
