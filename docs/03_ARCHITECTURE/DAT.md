@@ -373,6 +373,9 @@ sans tâche d’optimisation planifiée ; `scripts/restore.sh` et la migration d
 base après `pg_restore`, et la fin reçue d’une synchronisation Tenable ou AlgoLightHouse qui a rangé des éléments un
 `ANALYZE` des seules tables réécrites, après la validation (`apps/api/src/db/analyser.ts`, rôle applicatif propriétaire,
 sous le délai de 30 s par requête) ; un échec n’est qu’un avertissement.
+Réglages de la base (décision du RSSI du 20/11/2026, d’après le banc de performance du 19/11/2026) : `shared_buffers`
+256 Mo, `work_mem` 16 Mo, `effective_cache_size` 768 Mo (conteneur limité à 1 Gio) et `jit` coupé, passés en paramètres
+du service `db` dans `docker-compose.yml`.
 L’analyse antivirale est limitée à 15 s ; si elle échoue, le dépôt est refusé quand
 elle est obligatoire et le contact technique reçoit au plus une alerte par heure.
 Sondes Docker : `app` prête quand la base répond et que les migrations sont

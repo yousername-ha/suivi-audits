@@ -65,6 +65,18 @@ services:
       - log_line_prefix=%m [%p] %q%u@%d %h
       - -c
       - max_connections=50
+      # Réglages issus du banc de performance du 19/11/2026, décision du RSSI du 20/11/2026 : cache partagé porté à 256 Mo
+      # (128 Mo par défaut) dans la limite de 1 Gio du conteneur, mémoire de tri à 16 Mo (4 Mo par défaut : 4 Go de fichiers
+      # temporaires écrits au banc), estimation du cache disponible ramenée à la taille réelle du conteneur, et compilation
+      # à la volée (JIT) coupée : sa compilation coûtait jusqu'à 1,6 s par requête sans gain à ce volume.
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - jit=off
     volumes:
       # PostgreSQL 18 : l'image range la base dans /var/lib/postgresql/18/docker (donc postgres18/18/docker sur le serveur) et
       # refuse un dossier contenant déjà une base d'une version plus ancienne : d'où un dossier à part de l'ancien « postgres ».

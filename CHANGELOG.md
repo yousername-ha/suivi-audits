@@ -64,6 +64,11 @@ suivi-audits »)
 **Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
 Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
 
+**Base de données, réglages de mémoire et JIT** (décision du RSSI du 20/11/2026, banc de performance du 19/11/2026) :
+aucune action sur le serveur. La configuration du service `db` change : la base redémarre une fois pendant la mise à jour
+(dans la fenêtre de maintenance déjà annoncée), avec un cache partagé de 256 Mo, 16 Mo par tri et la compilation à la volée
+(JIT) coupée, dans la même limite mémoire de 1 Gio. (session « Projet audit_suivi Coeur »)
+
 ### Ajouté
 
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
@@ -162,6 +167,10 @@ Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page
 
 ### Modifié
 
+- Base de données : cache partagé porté de 128 à 256 Mo, mémoire de tri de 4 à 16 Mo, estimation du cache disponible ramenée
+  à la taille du conteneur (768 Mo) et compilation à la volée (JIT) coupée, paramètres du service `db` dans
+  `docker-compose.yml` (décision du RSSI du 20/11/2026). Le banc du 19/11 mesurait jusqu'à 1,6 s de compilation par requête
+  sur les vulnérabilités et 4 Go de fichiers temporaires de tri. (session « Projet audit_suivi Coeur »)
 - Vulnérabilités, imports de fichiers (Nessus, Silène) : les statistiques des tables réécrites sont recalculées à la fin d'un
   import, comme après une synchronisation reçue de Security Center ou d'AlgoLightHouse, sans jamais faire échouer l'import.
   (session « Module surveillance vulnérabilités SMSI »)

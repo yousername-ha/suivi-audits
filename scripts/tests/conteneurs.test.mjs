@@ -84,3 +84,11 @@ test("l'exécutant peut abandonner ses privilèges, sans autre capacité (veille
   assert.ok(appels.length >= 3, 'appels sous le compte nobody');
   for (const appel of appels) assert.match(appel, /group=65534, extra_groups=\[\]/, appel);
 });
+
+test('la base garde les réglages de mémoire et le JIT coupé décidés après le banc de performance', () => {
+  const db = service('db');
+  for (const reglage of ['shared_buffers=256MB', 'work_mem=16MB', 'effective_cache_size=768MB', 'jit=off'])
+    assert.match(db, new RegExp(`- ${reglage}\\n`), reglage);
+  // Le cache partagé tient dans la limite mémoire du conteneur.
+  assert.match(db, /mem_limit: 1g/);
+});
