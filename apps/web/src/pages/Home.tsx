@@ -1,5 +1,5 @@
-/* Accueil : tableaux de bord de la personne en onglets (ADR 0109), au style de la vue analytique (ADR 0108) ; le premier
-   onglet s'ouvre à l'arrivée. Ses tableaux se modifient et se partagent ; ceux des autres (proposés d'office, partagés,
+/* Accueil : tableaux de bord de la personne, favoris en barre (ADR 0109), au style de la vue analytique (ADR 0108) ; le
+   premier favori s'ouvre à l'arrivée. Ses tableaux se modifient et se partagent ; ceux des autres (proposés d'office, partagés,
    publics) restent en lecture seule, avec les chiffres de leur auteur quand ils sont ouverts. Puis accès aux modules et
    activité en cours. Sans droit métier, seuls les tableaux aux chiffres ouverts ont des données. */
 import { Button, Card, Stack, Text, Title, VisuallyHidden } from '@mantine/core';
@@ -16,9 +16,9 @@ import { syntheseOuverte, TableauDeBordConformite } from '../components/TableauD
 import {
   BandeauTableau,
   CLE_TABLEAUX,
-  FenetreAjouter,
+  BoutonCreer,
   FenetreCreer,
-  MenuPlus,
+  MenuTableaux,
   OngletsTableaux,
   PartageTableau,
   useTableaux,
@@ -88,10 +88,19 @@ export function HomePage() {
   const [choisi, setChoisi] = useState<string | null>(null);
   const [mode, setMode] = useState<'lecture' | 'edition' | 'partage'>('lecture');
   const [catalogueAuDepart, setCatalogueAuDepart] = useState(false);
-  const [fenetre, setFenetre] = useState<'creer' | 'ajouter' | null>(null);
+  const [creation, setCreation] = useState(false);
   const [erreurOnglet, setErreurOnglet] = useState<unknown>(null);
-  // Premier onglet à l'arrivée (ADR 0109) ; un onglet retiré ou devenu invisible ramène au premier.
-  const actif: TableauDetail | undefined = t ? (t.onglets.find((o) => o.id === choisi) ?? t.onglets[0]) : undefined;
+  // Tableau choisi hors des favoris, depuis la liste du bouton déroulant : lu à part.
+  const horsFavoris = !!t && !!choisi && !t.onglets.some((o) => o.id === choisi);
+  const choisiHors = useQuery({
+    queryKey: [...CLE_TABLEAUX, choisi, 'detail'],
+    queryFn: () => get<TableauDetail>(`/api/tableaux-de-bord/${choisi}`),
+    enabled: horsFavoris,
+  });
+  // Premier favori à l'arrivée (ADR 0109) ; un tableau supprimé ou devenu invisible ramène au premier.
+  const actif: TableauDetail | undefined = t
+    ? (t.onglets.find((o) => o.id === choisi) ?? (horsFavoris ? choisiHors.data : undefined) ?? t.onglets[0])
+    : undefined;
   const ouverts = useQuery({
     queryKey: [...CLE_TABLEAUX, actif?.id, 'chiffres'],
     queryFn: () => get<ChiffresPublics>(`/api/tableaux-de-bord/${actif!.id}/chiffres`),
@@ -113,7 +122,6 @@ export function HomePage() {
       await api('PUT', '/api/tableaux-de-bord/onglets', {
         body: { tableaux: (t?.onglets ?? []).map((o) => o.id).filter((x) => x !== id) },
       });
-      setChoisi(null);
       await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
     } catch (e) {
       setErreurOnglet(e);
@@ -235,12 +243,13 @@ export function HomePage() {
       />
       {synthese.error && <ErrorAlert error={synthese.error} />}
       <ErrorAlert error={ouverts.error ?? erreurOnglet} />
-      {t && actif && mode !== 'edition' && <OngletsTableaux donnees={t} actif={actif.id} onChoisir={choisir} />}
       {actif && mode === 'lecture' && (
         <BandeauTableau
           tableau={actif}
           onRetirer={
-            actif.origine !== 'mien' && (t?.onglets.length ?? 0) > 1 ? () => void retirer(actif.id) : undefined
+            t && t.onglets.length > 1 && t.onglets.some((o) => o.id === actif.id)
+              ? () => void retirer(actif.id)
+              : undefined
           }
         />
       )}
@@ -263,14 +272,14 @@ export function HomePage() {
             s={s}
             disposition={actif?.disposition ?? null}
             ouverts={chiffres}
+            gauche={t && actif && <OngletsTableaux donnees={t} actif={actif.id} onChoisir={choisir} />}
             outils={
               t &&
               mode === 'lecture' && (
-                <MenuPlus
-                  peutCreer={t.droits.creer}
-                  onCreer={() => setFenetre('creer')}
-                  onAjouter={() => setFenetre('ajouter')}
-                />
+                <>
+                  <MenuTableaux donnees={t} actif={actif?.id ?? ''} onChoisir={choisir} />
+                  {t.droits.creer && <BoutonCreer onCreer={() => setCreation(true)} />}
+                </>
               )
             }
           />
@@ -278,23 +287,14 @@ export function HomePage() {
       {t && (
         <>
           <FenetreCreer
-            ouverte={fenetre === 'creer'}
+            ouverte={creation}
             donnees={t}
-            onFermer={() => setFenetre(null)}
+            onFermer={() => setCreation(false)}
             onCree={(nouveau) => {
-              setFenetre(null);
+              setCreation(false);
               setChoisi(nouveau.id);
               setCatalogueAuDepart(nouveau.disposition.dalles.every((x) => x.masquee));
               setMode('edition');
-            }}
-          />
-          <FenetreAjouter
-            ouverte={fenetre === 'ajouter'}
-            donnees={t}
-            onFermer={() => setFenetre(null)}
-            onAjoute={(id) => {
-              setFenetre(null);
-              choisir(id);
             }}
           />
         </>

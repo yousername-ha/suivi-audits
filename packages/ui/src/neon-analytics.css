@@ -1033,15 +1033,6 @@
   block-size: 0.9em;
   flex: none;
 }
-/* Un seul tableau : la barre d'onglets n'est lue que par les lecteurs d'écran (choix du RSSI du 20/11/2026). */
-.tdb-onglets[data-seul] {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 /* Outils compacts de l'en-tête : « + », loupe, export, à la taille des boutons du sélecteur de référentiels. */
 .tdb-outils {
   align-items: center;
@@ -1170,4 +1161,79 @@
 }
 .tdb-edition-nom {
   max-inline-size: 24rem;
+}
+
+/* Liste du bouton déroulant ⌄ : tous les tableaux de la personne, favoris d'abord, « + » ou « − » des favoris. */
+.tdb-liste-tableaux {
+  min-inline-size: 19rem;
+  padding: var(--mantine-spacing-xs);
+}
+.tdb-liste-tete {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  padding: 0.2rem 0.4rem 0.5rem;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-liste-tableaux ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.tdb-liste-tableaux li {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding-inline-end: 0.35rem;
+  border-radius: var(--mantine-radius-sm);
+}
+.tdb-liste-tableaux li.tdb-liste-actif {
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 16%, transparent);
+}
+.tdb-liste-nom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-inline-size: 0;
+  padding: 0.45rem 0.5rem;
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+.tdb-liste-nom:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 10%, transparent);
+}
+.tdb-liste-nom:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.tdb-liste-nom[aria-current] {
+  font-weight: 600;
+}
+.tdb-liste-nom > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tdb-liste-nom small {
+  margin-inline-start: auto;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.tdb-liste-nom:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: -2px;
+}
+.tdb-favori {
+  flex: none;
+  font-weight: 700;
 }

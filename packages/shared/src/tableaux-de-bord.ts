@@ -13,9 +13,11 @@ import {
   type IdDalle,
 } from './disposition-tableau-de-bord.js';
 
-/** Tableaux personnels par compte, onglets par compte, destinataires d'un partage. */
+/** Tableaux personnels par compte, favoris par compte (barre des favoris, choix du RSSI du 20/11/2026), destinataires
+    d'un partage. Les « onglets » du stockage sont les favoris. */
 export const MAX_TABLEAUX_PAR_COMPTE = 20;
-export const MAX_ONGLETS = 30;
+export const MAX_FAVORIS = 5;
+export const MAX_ONGLETS = MAX_FAVORIS;
 export const MAX_DESTINATAIRES_TABLEAU = 200;
 
 export const NomTableau = z
@@ -132,9 +134,10 @@ export const TableauDetail = TableauResume.extend({
 export type TableauDetail = z.infer<typeof TableauDetail>;
 
 export const TableauxOut = z.object({
-  /** Onglets dans l'ordre de la personne ; le premier s'ouvre à l'arrivée. */
+  /** Favoris dans l'ordre de la personne (barre des favoris, 5 au plus) ; le premier s'ouvre à l'arrivée. */
   onglets: z.array(TableauDetail),
-  /** Tableaux qu'elle peut ajouter en onglet ou copier : proposés, partagés avec elle, publics. */
+  /** Tous les tableaux qu'elle peut afficher (les siens, proposés, partagés avec elle, publics), favoris compris
+      (`enOnglet`) : liste du bouton déroulant. */
   disponibles: z.array(TableauResume),
   droits: z.object({
     /** Créer, modifier et partager ses tableaux (tableau_de_bord:modifier). */
@@ -161,8 +164,7 @@ export const ModifierTableauBody = z
   .object({ nom: NomTableau.optional(), disposition: Disposition.optional() })
   .strict()
   .refine((b) => b.nom !== undefined || b.disposition !== undefined, 'Rien à modifier.');
-/** Ordre complet des onglets de la personne (un tableau absent de la liste sort de ses onglets ; ses propres tableaux y
-    restent toujours). */
+/** Favoris de la personne, dans l'ordre (un tableau absent de la liste sort de ses favoris). */
 export const OngletsBody = z.object({ tableaux: z.array(z.uuid()).max(MAX_ONGLETS) }).strict();
 
 export const DestinataireTableau = z

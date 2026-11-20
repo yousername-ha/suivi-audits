@@ -987,13 +987,16 @@ export function TableauDeBordConformite({
   disposition = null,
   ouverts = null,
   outils = null,
+  gauche,
 }: {
   s: Synthese;
   disposition?: Disposition | null;
   /** Chiffres ouverts de l'auteur du tableau affiché (ADR 0109) ; `s` est alors leur synthèse (`syntheseOuverte`). */
   ouverts?: ChiffresPublics | null;
-  /** Commandes placées en tête de la barre d'outils (« + » des tableaux de bord). */
+  /** Commandes placées en tête de la barre d'outils (liste des tableaux, création). */
   outils?: ReactNode;
+  /** Remplace le titre de la vue d'ensemble, à gauche de la barre d'outils (barre des favoris, ADR 0109). */
+  gauche?: ReactNode;
 }) {
   const can = useCan();
   const [recherche, setRecherche] = useState('');
@@ -1009,13 +1012,15 @@ export function TableauDeBordConformite({
   return (
     <div className="tdb">
       <div className="na-entete">
-        <div>
-          <h2>Vue d’ensemble · Gouvernance, risque et conformité</h2>
-          <p>
-            {placees.length} visualisations · données de l’application · situation au{' '}
-            <span className="horodatage">{new Date(s.genereLe).toLocaleDateString('fr-FR')}</span>
-          </p>
-        </div>
+        {gauche ?? (
+          <div>
+            <h2>Vue d’ensemble · Gouvernance, risque et conformité</h2>
+            <p>
+              {placees.length} visualisations · données de l’application · situation au{' '}
+              <span className="horodatage">{new Date(s.genereLe).toLocaleDateString('fr-FR')}</span>
+            </p>
+          </div>
+        )}
         <Group gap="xs" className="tdb-outils">
           {outils}
           {rechercheOuverte || recherche ? (
@@ -1066,7 +1071,7 @@ export function TableauDeBordConformite({
             value={portee}
             onChange={setPortee}
             data={[
-              { value: 'global', label: 'Global' },
+              { value: 'global', label: 'Tous' },
               { value: 'iso', label: 'ISO' },
               { value: 'hds', label: 'HDS' },
             ]}

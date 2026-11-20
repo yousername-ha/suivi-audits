@@ -1,27 +1,30 @@
-/* Tableaux de bord multiples de l'accueil (ADR 0109) : onglets réordonnables au glisser comme les rubriques du menu (et
-   Alt + flèches au clavier), menu « + » (créer un tableau, ajouter un tableau existant), fenêtres de création, d'ajout et
-   de partage, bandeau d'un tableau qui n'est pas à la personne. Le premier onglet s'ouvre à l'arrivée sur l'accueil. */
+/* Tableaux de bord multiples de l'accueil (ADR 0109) : barre des favoris (5 au plus) réordonnable au glisser comme les
+   rubriques du menu (et Alt + flèches au clavier), bouton déroulant ⌄ de tous les tableaux de la personne avec « + » et
+   « − » des favoris, « + » de création, fenêtres de création et de partage, bandeau d'un tableau qui n'est pas à la
+   personne. Le premier favori s'ouvre à l'arrivée sur l'accueil. */
 import {
   ActionIcon,
   Button,
   Group,
-  Menu,
   Modal,
   MultiSelect,
   NativeSelect,
+  Popover,
   Switch,
   Text,
   TextInput,
+  Tooltip,
   VisuallyHidden,
 } from '@mantine/core';
-import type {
-  AnnuaireTableauDeBord,
-  DepartTableau,
-  DestinataireTableau,
-  PartageTableauOut,
-  TableauDetail,
-  TableauResume,
-  TableauxOut,
+import {
+  MAX_FAVORIS,
+  type AnnuaireTableauDeBord,
+  type DepartTableau,
+  type DestinataireTableau,
+  type PartageTableauOut,
+  type TableauDetail,
+  type TableauResume,
+  type TableauxOut,
 } from '@suivi/shared';
 import { ErrorAlert } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -92,55 +95,166 @@ function nature(t: TableauResume) {
   return null;
 }
 
-/** « + » de la barre d'outils du tableau de bord : créer un tableau (avec le droit) ou ajouter un tableau existant. */
-export function MenuPlus({
-  peutCreer,
-  onCreer,
-  onAjouter,
-}: {
-  peutCreer: boolean;
-  onCreer: () => void;
-  onAjouter: () => void;
-}) {
+/** « + » de la barre d'outils : créer un tableau (droit tableau_de_bord:modifier). */
+export function BoutonCreer({ onCreer }: { onCreer: () => void }) {
   return (
-    <Menu position="bottom-start">
-      <Menu.Target>
-        <ActionIcon variant="default" size="lg" className="tdb-outil" aria-label="Ajouter un tableau de bord">
-          <svg
-            viewBox="0 0 16 16"
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
-          >
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown>
-        {peutCreer && (
-          <Menu.Item onClick={onCreer}>
-            <b>Créer un nouveau tableau</b>
-            <Text size="xs" c="dimmed">
-              Vide, disposition standard ou copie d’un tableau
-            </Text>
-          </Menu.Item>
-        )}
-        <Menu.Item onClick={onAjouter}>
-          <b>Ajouter un tableau existant</b>
-          <Text size="xs" c="dimmed">
-            Proposé d’office, partagé avec vous ou public
-          </Text>
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+    <Tooltip label="Créer un tableau de bord" withArrow>
+      <ActionIcon
+        variant="default"
+        size="lg"
+        className="tdb-outil"
+        aria-label="Créer un tableau de bord"
+        onClick={onCreer}
+      >
+        <svg
+          viewBox="0 0 16 16"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
+          <path d="M8 3v10M3 8h10" />
+        </svg>
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
-/** Barre d'onglets des tableaux de la personne. Avec un seul tableau, elle n'est lue que par les lecteurs d'écran (choix
-    du RSSI du 20/11/2026) : le « + » de la barre d'outils suffit. */
+/** Bouton déroulant ⌄ : tous les tableaux que la personne peut afficher (favoris d'abord), avec un petit « + » pour en
+    mettre un dans la barre des favoris (5 au plus) ou un « − » pour l'en retirer (choix du RSSI du 20/11/2026). */
+export function MenuTableaux({
+  donnees,
+  actif,
+  onChoisir,
+}: {
+  donnees: TableauxOut;
+  actif: string;
+  onChoisir: (id: string) => void;
+}) {
+  const qc = useQueryClient();
+  const [ouvert, setOuvert] = useState(false);
+  const [erreur, setErreur] = useState<unknown>(null);
+  const favoris = donnees.onglets.map((t) => t.id);
+  const plein = favoris.length >= MAX_FAVORIS;
+  const parId = new Map<string, TableauResume>(donnees.disponibles.map((t) => [t.id, t]));
+  for (const t of donnees.onglets) if (!parId.has(t.id)) parId.set(t.id, t);
+  const liste = [
+    ...favoris.map((id) => parId.get(id)!).filter(Boolean),
+    ...donnees.disponibles.filter((t) => !favoris.includes(t.id)),
+  ];
+  async function ecrire(ids: string[]) {
+    setErreur(null);
+    try {
+      await api('PUT', `${URL}/onglets`, { body: { tableaux: ids } });
+      await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
+    } catch (e) {
+      setErreur(e);
+    }
+  }
+  return (
+    <Popover opened={ouvert} onChange={setOuvert} position="bottom-start" shadow="md" withinPortal={false}>
+      <Popover.Target>
+        <Tooltip label="Mes tableaux de bord" withArrow disabled={ouvert}>
+          <ActionIcon
+            variant="default"
+            size="lg"
+            className="tdb-outil"
+            aria-label="Mes tableaux de bord"
+            aria-expanded={ouvert}
+            onClick={() => setOuvert((o) => !o)}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <path d="M4 6l4 4 4-4" />
+            </svg>
+          </ActionIcon>
+        </Tooltip>
+      </Popover.Target>
+      <Popover.Dropdown className="tdb-liste-tableaux">
+        <div className="tdb-liste-tete">
+          <span>Mes tableaux de bord</span>
+          <span>
+            Favoris : {favoris.length} / {MAX_FAVORIS}
+          </span>
+        </div>
+        <ErrorAlert error={erreur} />
+        <ul aria-label="Mes tableaux de bord">
+          {liste.map((t) => {
+            const favori = favoris.includes(t.id);
+            const n = nature(t);
+            return (
+              <li key={t.id} className={t.id === actif ? 'tdb-liste-actif' : undefined}>
+                <button
+                  type="button"
+                  className="tdb-liste-nom"
+                  disabled={!t.disponible}
+                  aria-current={t.id === actif ? 'true' : undefined}
+                  onClick={() => {
+                    setOuvert(false);
+                    onChoisir(t.id);
+                  }}
+                >
+                  <span>{t.nom}</span>
+                  {n && (
+                    <>
+                      {n.icone}
+                      {t.restreint && t.origine === 'propose' ? (
+                        <VisuallyHidden>{n.texte}</VisuallyHidden>
+                      ) : (
+                        <small>{n.texte}</small>
+                      )}
+                    </>
+                  )}
+                  {!t.disponible && <small>bientôt</small>}
+                </button>
+                {favori ? (
+                  <ActionIcon
+                    size="sm"
+                    variant="filled"
+                    className="tdb-favori"
+                    aria-label={`Retirer « ${t.nom} » des favoris`}
+                    disabled={favoris.length < 2}
+                    onClick={() => void ecrire(favoris.filter((x) => x !== t.id))}
+                  >
+                    −
+                  </ActionIcon>
+                ) : (
+                  <ActionIcon
+                    size="sm"
+                    variant="default"
+                    className="tdb-favori"
+                    aria-label={`Ajouter « ${t.nom} » aux favoris`}
+                    disabled={plein || !t.disponible}
+                    onClick={() => void ecrire([...favoris, t.id])}
+                  >
+                    +
+                  </ActionIcon>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {plein && (
+          <Text size="xs" c="dimmed">
+            {MAX_FAVORIS} favoris au plus : retirez-en un pour en ajouter un autre.
+          </Text>
+        )}
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
+
+/** Barre des favoris (5 au plus, « Global » d'office) : onglets réordonnables au glisser comme les rubriques du menu ;
+    le premier s'ouvre à l'arrivée. */
 export function OngletsTableaux({
   donnees,
   actif,
@@ -259,11 +373,11 @@ export function OngletsTableaux({
   };
 
   return (
-    <div className="tdb-onglets" ref={barre} data-seul={ordre.length < 2 ? 'oui' : undefined}>
+    <div className="tdb-onglets" ref={barre}>
       <div
         className="onglets-rubriques"
         role="tablist"
-        aria-label="Mes tableaux de bord"
+        aria-label="Mes favoris"
         data-tri-actif={glisse ? 'oui' : undefined}
         onClickCapture={(e) => {
           if (!clicIgnore.current) return;
@@ -286,7 +400,6 @@ export function OngletsTableaux({
               aria-selected={id === actif}
               aria-current={id === actif ? 'page' : undefined}
               aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
-              tabIndex={ordre.length < 2 ? -1 : undefined}
               draggable={false}
               onPointerDown={surPointeurBas(id)}
               onKeyDown={surTouche(t)}
@@ -313,7 +426,7 @@ export function OngletsTableaux({
 }
 
 /** Création d'un tableau : un nom, puis un point de départ (vide, disposition standard, copie d'un de ses tableaux ou
-    d'un tableau public). Le nouveau tableau s'ajoute en dernier onglet et s'ouvre en modification. */
+    d'un tableau public). Le nouveau tableau rejoint les favoris s'il reste une place et s'ouvre en modification. */
 export function FenetreCreer({
   ouverte,
   donnees,
@@ -329,7 +442,7 @@ export function FenetreCreer({
   const [nom, setNom] = useState('');
   const [type, setType] = useState<DepartTableau['type']>('standard');
   const sources = [
-    ...donnees.onglets.filter((t) => t.origine === 'mien').map((t) => ({ value: t.id, label: t.nom })),
+    ...donnees.disponibles.filter((t) => t.origine === 'mien').map((t) => ({ value: t.id, label: t.nom })),
     ...donnees.disponibles.filter((t) => t.public).map((t) => ({ value: t.id, label: `${t.nom} (Public)` })),
   ];
   const [source, setSource] = useState('');
@@ -362,7 +475,7 @@ export function FenetreCreer({
     <Modal opened={ouverte} onClose={onFermer} title="Créer un tableau de bord" size="lg" lockScroll={false}>
       <div className="tdb-fenetre">
         <Text size="sm" c="dimmed">
-          Il s’ajoute en dernier onglet. Glissez-le en tête pour l’ouvrir à l’arrivée.
+          Il rejoint vos favoris s’il reste une place. Glissez-le en tête pour l’ouvrir à l’arrivée.
         </Text>
         <TextInput label="Nom" required maxLength={60} value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
         <div role="radiogroup" aria-label="Point de départ" className="tdb-departs">
@@ -402,101 +515,6 @@ export function FenetreCreer({
           </Button>
           <Button onClick={() => void creer()} loading={pending} disabled={!nom.trim()}>
             Créer et modifier
-          </Button>
-        </Group>
-      </div>
-    </Modal>
-  );
-}
-
-/** Ajout d'un tableau existant en onglet : proposés d'office, partagés avec la personne, publics. */
-export function FenetreAjouter({
-  ouverte,
-  donnees,
-  onFermer,
-  onAjoute,
-}: {
-  ouverte: boolean;
-  donnees: TableauxOut;
-  onFermer: () => void;
-  onAjoute: (id: string) => void;
-}) {
-  const qc = useQueryClient();
-  const [erreur, setErreur] = useState<unknown>(null);
-  const [pending, setPending] = useState<string | null>(null);
-  async function ajouter(t: TableauResume) {
-    setPending(t.id);
-    setErreur(null);
-    try {
-      await api('PUT', `${URL}/onglets`, { body: { tableaux: [...donnees.onglets.map((o) => o.id), t.id] } });
-      await qc.invalidateQueries({ queryKey: CLE_TABLEAUX });
-      onAjoute(t.id);
-    } catch (e) {
-      setErreur(e);
-    } finally {
-      setPending(null);
-    }
-  }
-  const groupes: [string, TableauResume[]][] = [
-    ['Proposés d’office', donnees.disponibles.filter((t) => t.origine === 'propose')],
-    ['Partagés avec vous', donnees.disponibles.filter((t) => t.origine === 'partage')],
-    ['Publics', donnees.disponibles.filter((t) => t.origine === 'public')],
-  ];
-  return (
-    <Modal opened={ouverte} onClose={onFermer} title="Ajouter un tableau existant" size="lg" lockScroll={false}>
-      <div className="tdb-fenetre">
-        <Text size="sm" c="dimmed">
-          Vous voyez le tableau de son auteur, tenu à jour, en lecture seule. Pour le modifier, créez une copie.
-        </Text>
-        <ErrorAlert error={erreur} />
-        {groupes.map(([titre, liste]) =>
-          liste.length ? (
-            <section key={titre} className="tdb-catalogue-groupe" aria-label={titre}>
-              <h3>{titre}</h3>
-              <ul>
-                {liste.map((t) => (
-                  <li key={t.id} className="tdb-catalogue-dalle">
-                    <div>
-                      <b>
-                        {t.nom}
-                        {t.public && <span className="tdb-etiquette tdb-etiquette--public">Public</span>}
-                        {t.restreint && <span className="tdb-etiquette">Restreint</span>}
-                      </b>
-                      <span>{t.auteur ? `De ${t.auteur}` : 'Proposé par l’administrateur'}</span>
-                    </div>
-                    {!t.disponible ? (
-                      <Text size="sm" c="dimmed">
-                        Bientôt
-                      </Text>
-                    ) : t.enOnglet ? (
-                      <Text size="sm" c="dimmed">
-                        Déjà en onglet
-                      </Text>
-                    ) : (
-                      <Button
-                        size="compact-sm"
-                        variant="light"
-                        aria-label={`Ajouter « ${t.nom} »`}
-                        loading={pending === t.id}
-                        onClick={() => void ajouter(t)}
-                      >
-                        Ajouter
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null,
-        )}
-        {groupes.every(([, l]) => !l.length) && (
-          <Text size="sm" c="dimmed">
-            Aucun tableau à ajouter pour l’instant.
-          </Text>
-        )}
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onFermer}>
-            Fermer
           </Button>
         </Group>
       </div>
@@ -583,7 +601,7 @@ export function PartageTableau({
   return (
     <div className="tdb-edition-barre" role="region" aria-label="Partager mon tableau de bord">
       <Text size="sm">
-        Les destinataires l’ajoutent en onglet par « Ajouter un tableau existant », en lecture seule.{' '}
+        Les destinataires le trouvent dans la liste de leurs tableaux (⌄), en lecture seule.{' '}
         {peutPublier
           ? 'Ils voient vos chiffres et graphiques, même sans droit sur les modules ; listes nommées et registres selon leurs droits.'
           : 'Chacun voit les chiffres avec ses propres droits.'}
@@ -628,7 +646,7 @@ export function PartageTableau({
   );
 }
 
-/** Bandeau d'un tableau partagé avec la personne ou public : origine, lecture seule, retrait de ses onglets. */
+/** Bandeau d'un tableau partagé avec la personne ou public : origine, lecture seule, retrait de ses favoris. */
 export function BandeauTableau({ tableau, onRetirer }: { tableau: TableauDetail; onRetirer?: () => void }) {
   // Ses tableaux et les tableaux proposés d'office (l'accueil de chacun) n'ont pas de bandeau.
   if (tableau.origine === 'mien' || tableau.origine === 'propose') return null;
@@ -644,11 +662,11 @@ export function BandeauTableau({ tableau, onRetirer }: { tableau: TableauDetail;
         {tableau.chiffresOuverts
           ? 'Chiffres et graphiques de son auteur ; listes et registres selon vos droits.'
           : 'Chiffres selon vos droits.'}{' '}
-        Pour en faire le vôtre : « + », Créer un nouveau tableau, Copie d’un tableau.
+        {tableau.public && 'Pour en faire le vôtre : « + », puis Copie d’un tableau.'}
       </span>
       {onRetirer && (
         <Button size="compact-sm" variant="default" onClick={onRetirer}>
-          Retirer de mes onglets
+          Retirer de mes favoris
         </Button>
       )}
     </div>

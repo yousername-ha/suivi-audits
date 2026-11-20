@@ -3,7 +3,7 @@
    ouverts d'un auteur sont calculés à part (chiffres.ts).
 
    Visibilité d'un tableau pour une personne :
-   - les siens, toujours ;
+   - les siens, toujours (dans la liste ; dans la barre des favoris seulement si la personne les y met) ;
    - un tableau proposé d'office : son public (lignes de partage s'il y en a, sinon les rôles du modèle, `null` : tout le
      monde) ; l'administrateur (administration:administrer) les voit tous, pour les gérer ;
    - celui d'une autre personne : partagé avec elle (directement, par un de ses groupes ou un de ses rôles), ou publié par un
@@ -281,8 +281,8 @@ export async function visibles(svc: Services, lc: Lecteur): Promise<Map<string, 
   return out;
 }
 
-/** Onglets effectifs du lecteur : ses lignes dans l'ordre, filtrées par la visibilité ; ses propres tableaux toujours,
-    ajoutés à la fin s'ils manquent ; sans aucun onglet, le tableau proposé « Global ». */
+/** Favoris effectifs du lecteur (lignes d'onglets) : dans l'ordre, filtrés par la visibilité ; sans aucun favori, le
+    tableau proposé « Global ». */
 export async function ongletsEffectifs(k: Kdb, lc: Lecteur, vus: Map<string, Vu>): Promise<string[]> {
   const rangs = await k
     .selectFrom('tableaux_de_bord_onglets')
@@ -291,9 +291,10 @@ export async function ongletsEffectifs(k: Kdb, lc: Lecteur, vus: Map<string, Vu>
     .orderBy('rang')
     .orderBy('tableau')
     .execute();
-  const ids = rangs.map((r) => r.tableau).filter((id) => vus.has(id));
-  const pris = new Set(ids);
-  for (const [id, v] of vus) if (v.origine === 'mien' && !pris.has(id)) ids.push(id);
+  const ids = rangs
+    .map((r) => r.tableau)
+    .filter((id) => vus.has(id))
+    .slice(0, MAX_ONGLETS);
   if (!ids.length) {
     const global = [...vus.values()].find((v) => v.modele === 'global');
     if (global) ids.push(global.ligne.id);
@@ -334,16 +335,17 @@ export const detail = (v: Vu, enOnglet: boolean, lc: Lecteur): TableauDetail => 
     v.origine === 'mien' ? lc.user.rights.has('tableau_de_bord:modifier') : v.origine === 'propose' && gereModeles(lc),
 });
 
-/** Réponse de lecture : onglets dans l'ordre, tableaux disponibles, droits. */
+/** Réponse de lecture : favoris dans l'ordre, tous les tableaux visibles (liste du bouton déroulant), droits. */
 export async function tableaux(svc: Services, lc: Lecteur): Promise<TableauxOut> {
   const vus = await visibles(svc, lc);
   const onglets = await ongletsEffectifs(svc.db.k, lc, vus);
   const enOnglet = new Set(onglets);
   const rangModele = (v: Vu) => (v.modele ? MODELES_TABLEAUX.indexOf(v.modele) : MODELES_TABLEAUX.length);
+  const rangOrigine = (v: Vu) => ['mien', 'propose', 'partage', 'public'].indexOf(v.origine);
   const disponibles = [...vus.values()]
-    .filter((v) => v.origine !== 'mien')
     .sort(
       (a, b) =>
+        rangOrigine(a) - rangOrigine(b) ||
         rangModele(a) - rangModele(b) ||
         nomDe(a).localeCompare(nomDe(b), 'fr', { sensitivity: 'base' }) ||
         (a.ligne.auteur ?? '').localeCompare(b.ligne.auteur ?? '', 'fr'),
@@ -459,10 +461,9 @@ export async function verifierDestinataires(k: Kdb, voulus: readonly Destinatair
   if (trouves.length !== voulus.length) throw inconnu();
 }
 
-/** Onglets : contrôle de la liste voulue (chaque tableau visible et disponible, sans doublon) ; ses propres tableaux sont
-    ajoutés à la fin s'ils manquent ; au plus MAX_ONGLETS. */
+/** Favoris : contrôle de la liste voulue (chaque tableau visible et disponible, sans doublon, au plus MAX_ONGLETS). */
 export function ongletsVoulus(vus: Map<string, Vu>, voulus: readonly string[]): string[] {
-  if (new Set(voulus).size !== voulus.length) throw new HttpError(422, 'Un tableau figure deux fois dans les onglets.');
+  if (new Set(voulus).size !== voulus.length) throw new HttpError(422, 'Un tableau figure deux fois dans les favoris.');
   for (const id of voulus) {
     const v = vus.get(id);
     if (!v) throw introuvable();
@@ -470,10 +471,8 @@ export function ongletsVoulus(vus: Map<string, Vu>, voulus: readonly string[]): 
       throw new HttpError(422, `Le tableau « ${nomDe(v)} » n’est pas encore disponible.`, { reason: 'indisponible' });
   }
   const ids = [...voulus];
-  const pris = new Set(ids);
-  for (const [id, v] of vus) if (v.origine === 'mien' && !pris.has(id)) ids.push(id);
   if (ids.length > MAX_ONGLETS)
-    throw new HttpError(422, `Au plus ${MAX_ONGLETS} onglets : retirez-en un pour en ajouter un autre.`, {
+    throw new HttpError(422, `Au plus ${MAX_ONGLETS} favoris : retirez-en un pour en ajouter un autre.`, {
       reason: 'trop_d_onglets',
     });
   return ids;

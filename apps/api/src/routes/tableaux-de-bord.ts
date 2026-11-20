@@ -125,7 +125,7 @@ export const tableauxDeBordRoutes = [
     method: 'GET',
     url: '/api/tableaux-de-bord',
     summary:
-      'Tableaux de bord de la personne : ses onglets dans son ordre (le premier s’ouvre à l’arrivée), les tableaux qu’elle peut ajouter ou copier, et ses droits',
+      'Tableaux de bord de la personne : ses favoris dans son ordre (le premier s’ouvre à l’arrivée), tous les tableaux qu’elle peut afficher, et ses droits',
     tags,
     access: 'auth',
     response: TableauxOut,
@@ -135,7 +135,7 @@ export const tableauxDeBordRoutes = [
     method: 'POST',
     url: '/api/tableaux-de-bord',
     summary:
-      'Création d’un tableau de bord (au plus 20 par compte, nom unique) : vide, disposition standard ou copie de la disposition d’un de ses tableaux ou d’un tableau public ; il devient le dernier onglet',
+      'Création d’un tableau de bord (au plus 20 par compte, nom unique) : vide, disposition standard ou copie de la disposition d’un de ses tableaux ou d’un tableau public ; il rejoint ses favoris s’il reste une place',
     tags,
     access: 'tableau_de_bord:modifier',
     body: CreerTableauBody,
@@ -162,12 +162,6 @@ export const tableauxDeBordRoutes = [
               `Vous avez déjà ${MAX_TABLEAUX_PAR_COMPTE} tableaux de bord : supprimez-en un pour en créer un autre.`,
               { reason: 'trop_de_tableaux' },
             );
-          if (onglets.length >= MAX_ONGLETS)
-            throw new HttpError(
-              422,
-              `Vous avez déjà ${MAX_ONGLETS} onglets : retirez-en un pour créer un nouveau tableau.`,
-              { reason: 'trop_d_onglets' },
-            );
           await exigerNomLibre(k, moi, body.nom);
           const { id } = await k
             .insertInto('tableaux_de_bord')
@@ -179,7 +173,8 @@ export const tableauxDeBordRoutes = [
             })
             .returning('id')
             .executeTakeFirstOrThrow();
-          await ecrireOnglets(k, moi, [...onglets, id]);
+          // Il rejoint les favoris s'il reste une place (5 au plus) ; sinon, il est dans la liste du bouton déroulant.
+          if (onglets.length < MAX_ONGLETS) await ecrireOnglets(k, moi, [...onglets, id]);
           return id;
         }, sess.user.username),
       );
@@ -239,6 +234,16 @@ export const tableauxDeBordRoutes = [
       ]);
       return { utilisateurs, groupes, roles };
     },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/tableaux-de-bord/:id',
+    summary: 'Un tableau de bord visible par la personne, avec sa disposition (affiché depuis la liste, hors favoris)',
+    tags,
+    access: 'auth',
+    params: parId,
+    response: TableauDetail,
+    handler: async ({ svc, s, params }) => detailDe(svc, await lecteur(svc, (s as Session).user), params.id),
   }),
   route({
     method: 'PUT',
