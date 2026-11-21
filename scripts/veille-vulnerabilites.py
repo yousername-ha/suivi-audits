@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Veille du module Vulnérabilités sur cinq sources publiques (ADR 0100, points 3 à 5 ; lots V2 et V3).
+"""Veille du module Vulnérabilités sur cinq sources publiques (ADR 0100, points 3 à 5 ; lots V2 et V3), et veille
+réglementaire sur quatre flux officiels (ADR 0110, lot VR-1 : CNIL, CEPD, EUR-Lex, ANSSI), par le même mécanisme.
 
 Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.py) sous un compte sans privilège, par
 `python -I`, avec un environnement minimal et un délai borné, jamais par l'API (qui reste sans accès réseau sortant).
@@ -29,7 +30,13 @@ Règles :
   des failles déjà publiées par les sources (liste reçue de l'application), jamais par produit ;
 - les avis sont des données, pas des consignes : identifiants contrôlés par expression régulière et écartés sinon, texte
   libre débarrassé de tout balisage et des caractères de contrôle, borné ; adresse gardée seulement en https sur l'hôte de
-  la source ; RSS refusé s'il déclare un type de document ou une entité, profondeur et nombre d'éléments bornés.
+  la source ; RSS refusé s'il déclare un type de document ou une entité, profondeur et nombre d'éléments bornés ;
+- veille réglementaire (SOURCES_REGLEMENTAIRES, recopiée de packages/shared/src/veille-reglementaire.ts) : un seul flux RSS
+  par source, à son chemin exact ; titre, date, lien et, pour les seules sources de RESUME_REGLEMENTAIRE, résumé. ANSSI :
+  le résumé n'est jamais lu. EUR-Lex : seuls les actes dont le titre contient un mot-clé de la liste reçue de l'application
+  (parametres.motsCles, forme contrôlée et bornée) sont remontés ; les autres sont comptés comme écartés. Un titre ou un résumé trop long n'est pas tronqué (licence CC BY-ND de la CNIL : aucune
+  modification du texte) : la publication est écartée (titre) ou gardée sans résumé ; lien gardé seulement en https sur
+  l'hôte de la source, sinon la publication est écartée ; date illisible : écartée.
 """
 import base64
 import datetime as dt
@@ -51,6 +58,13 @@ import xml.etree.ElementTree as ET
 # Liste fermée des sources : hôte et chemins exacts ({reference} : identifiant CERT-FR contrôlé). Une seule ligne JSON : le
 # test d'architecture la lit telle quelle.
 SOURCES = {"cisa-kev": {"hote": "www.cisa.gov", "chemins": ["/sites/default/files/feeds/known_exploited_vulnerabilities.json"]}, "nvd": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cves/2.0"]}, "epss": {"hote": "api.first.org", "chemins": ["/data/v1/epss"]}, "cert-fr": {"hote": "cert.cyber.gouv.fr", "chemins": ["/alerte/feed/", "/avis/feed/", "/alerte/{reference}/json/", "/avis/{reference}/json/"]}, "cert-sante": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/alertes-et-vulnerabilites/rss.xml", "/alertes/{slug}"]}}
+# Veille réglementaire (ADR 0110) : hôte et chemin exact du flux de chaque source, sources dont le résumé est gardé, bornes ;
+# recopiés de packages/shared/src/veille-reglementaire.ts et comparés par apps/api/test/veille-reglementaire-architecture.test.ts.
+SOURCES_REGLEMENTAIRES = {"cnil": {"hote": "www.cnil.fr", "chemins": ["/fr/rss.xml"]}, "cepd": {"hote": "www.edpb.europa.eu", "chemins": ["/feed/publications_en"]}, "eur-lex": {"hote": "eur-lex.europa.eu", "chemins": ["/EN/display-feed.rss?rssId=222"]}, "anssi": {"hote": "cyber.gouv.fr", "chemins": ["/actualites/rss/"]}}
+RESUME_REGLEMENTAIRE = ["cnil", "cepd", "eur-lex"]
+BORNES_REGLEMENTAIRES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500, "items": 200, "motsCles": 60, "motCle": 60}
+DOMAINES_REGLEMENTAIRES = ("securite", "donnees-personnelles")
+TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
 BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
@@ -78,6 +92,7 @@ CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
 SEULE_BASIC = "Seule l'authentification simple (Basic) est prise en charge ; NTLM et Kerberos ne le sont pas."
 ELEMENTS_MAX = BORNES["lot"] * BORNES["lots"]
 REPONSE_MAX = {"cisa-kev": 16 * 1024 * 1024, "nvd": 32 * 1024 * 1024, "epss": 1024 * 1024, "cert-fr": 2 * 1024 * 1024, "cert-sante": 2 * 1024 * 1024}
+REPONSE_MAX.update({s: 2 * 1024 * 1024 for s in SOURCES_REGLEMENTAIRES})
 ERREUR_MAX = 300
 DELAI_REQUETE = 30
 DUREE_MAX = 240
@@ -202,7 +217,7 @@ def horodatage_rss(v):
 # ------------------------------------------------------------------ Réseau
 def destination(source):
     """Hôte de la liste fermée, port 443. Remplacé en test par un faux service local."""
-    return SOURCES[source]["hote"], 443
+    return TOUTES_SOURCES[source]["hote"], 443
 
 
 def contexte():
@@ -335,7 +350,7 @@ class ConnexionMandataire(http.client.HTTPSConnection):
 
 
 def chemin_admis(source, chemin):
-    for motif in SOURCES.get(source, {}).get("chemins", ()):
+    for motif in TOUTES_SOURCES.get(source, {}).get("chemins", ()):
         for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE)):
             if variable in motif:
                 debut, fin = motif.split(variable)
@@ -389,7 +404,7 @@ class Client:
         if not chemin_admis(self.source, chemin):
             raise Refus("Lecture refusée : %s hors de la liste fermée de la source." % chemin[:80])
         if requete and (not re.fullmatch(r"[A-Za-z0-9=&,:.\-]{1,4000}", requete)
-                        or chemin not in SOURCES[self.source]["chemins"]):
+                        or chemin not in TOUTES_SOURCES[self.source]["chemins"]):
             raise Refus("Paramètres de lecture refusés.")
         if time.monotonic() - self.debut > DUREE_MAX:
             raise Refus("Durée maximale de la collecte atteinte : collecte interrompue.")
@@ -910,7 +925,89 @@ def cert_sante(client, parametres, bilan):
     return elements
 
 
+# ------------------------------------------------------------------ Veille réglementaire (ADR 0110)
+CARACTERES_LIEN = re.compile(r"^[\x21-\x7e]+$")
+
+
+def texte_entier(brut, maximum):
+    """Texte simple (balises retirées, comme texte()), mais jamais tronqué : None s'il dépasse la borne ou s'il est vide."""
+    s = texte(brut, maximum * 20)
+    return s if s and len(s) <= maximum else None
+
+
+def lien_reglementaire(source, brut):
+    """Lien gardé seulement en https sur l'hôte exact de la source, sans espace, guillemet ni chevron, borné."""
+    lien = (brut or "").strip() if isinstance(brut, str) else ""
+    prefixe = "https://%s/" % SOURCES_REGLEMENTAIRES[source]["hote"]
+    if (len(lien) > BORNES_REGLEMENTAIRES["lien"] or not lien.startswith(prefixe) or not CARACTERES_LIEN.fullmatch(lien)
+            or any(c in lien for c in "\"'<>\\`")):
+        return None
+    return lien
+
+
+def normaliser(t):
+    """Forme comparée (normaliserMotCle de packages/shared) : sans accent, en minuscules, tout ce qui n'est ni lettre ni
+    chiffre réduit à une espace."""
+    t = "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn").lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", t).split())
+
+
+def mots_cles(parametres):
+    """Mots-clés d'EUR-Lex reçus de l'application : liste de 1 à 60 objets {mot, domaine}, mot de 2 à 60 caractères ;
+    renvoie [(forme comparée, domaine)]. Forme inattendue : rien n'est lu."""
+    l = parametres.get("motsCles") if isinstance(parametres, dict) else None
+    illisible = Refus("Liste des mots-clés illisible : rien n'a été lu.")
+    if not isinstance(l, list) or not 1 <= len(l) <= BORNES_REGLEMENTAIRES["motsCles"]:
+        raise illisible
+    out = []
+    for m in l:
+        if not isinstance(m, dict) or set(m) != {"mot", "domaine"} or m["domaine"] not in DOMAINES_REGLEMENTAIRES:
+            raise illisible
+        mot = m["mot"]
+        if not isinstance(mot, str) or not 2 <= len(mot.strip()) <= BORNES_REGLEMENTAIRES["motCle"] or len(normaliser(mot)) < 2:
+            raise illisible
+        out.append((normaliser(mot), m["domaine"]))
+    return out
+
+
+def domaine_titre(titre, mots):
+    """Domaine du mot-clé trouvé (mot entier) ; données personnelles l'emporte ; None si aucun."""
+    t = " %s " % normaliser(titre)
+    trouves = {d for m, d in mots if " %s " % m in t}
+    return "donnees-personnelles" if "donnees-personnelles" in trouves else ("securite" if trouves else None)
+
+
+def reglementaire(source):
+    """Collecteur d'une source réglementaire : le flux RSS à son chemin exact, une publication par élément <item>."""
+    def collecter(client, parametres, bilan):
+        elements, vus = [], set()
+        mots = mots_cles(parametres) if source == "eur-lex" else None
+        items = lire_rss(client.lire(SOURCES_REGLEMENTAIRES[source]["chemins"][0]))
+        if len(items) >= BORNES_REGLEMENTAIRES["items"]:
+            bilan.tronque = True
+        for item in items[: BORNES_REGLEMENTAIRES["items"]]:
+            titre = texte_entier(item.get("title"), BORNES_REGLEMENTAIRES["titre"])
+            lien = lien_reglementaire(source, item.get("link"))
+            publie = horodatage_rss(item.get("pubDate"))
+            guid = texte_entier(item.get("guid"), BORNES_REGLEMENTAIRES["identifiant"])
+            identifiant = guid or lien
+            if not (titre and lien and publie and identifiant) or identifiant in vus:
+                bilan.ecartes += 1
+                continue
+            # EUR-Lex : un acte sans mot-clé n'est pas remonté, seulement compté.
+            if mots is not None and domaine_titre(titre, mots) is None:
+                bilan.ecartes += 1
+                continue
+            vus.add(identifiant)
+            # ANSSI : la description du flux n'est jamais lue (décision du RSSI du 20/11/2026).
+            resume = texte_entier(item.get("description"), BORNES_REGLEMENTAIRES["resume"]) if source in RESUME_REGLEMENTAIRE else None
+            elements.append({"identifiant": identifiant, "titre": titre, "resume": resume, "lien": lien, "publieLe": publie})
+        return elements
+    return collecter
+
+
 COLLECTES = {"cisa-kev": kev, "nvd": nvd, "epss": epss, "cert-fr": cert_fr, "cert-sante": cert_sante}
+COLLECTES.update({s: reglementaire(s) for s in SOURCES_REGLEMENTAIRES})
 
 
 def executer(p):
@@ -918,7 +1015,7 @@ def executer(p):
         if not isinstance(p, dict):
             raise Refus("Demande illisible.")
         source, parametres = p.get("source"), p.get("parametres")
-        if source not in COLLECTES or source not in SOURCES:
+        if source not in COLLECTES or source not in TOUTES_SOURCES:
             raise Refus("Source inconnue : rien n'a été lu.")
         if not isinstance(parametres, dict):
             raise Refus("Demande illisible.")

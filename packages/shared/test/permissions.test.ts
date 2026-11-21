@@ -4,10 +4,15 @@ import {
   AUDITOR_MODULES,
   BUSINESS_MODULES,
   canReceive,
+  DROITS_HORS_ROLES_PREDEFINIS,
   ENTITIES,
   effectivePermissions,
+  estPermissionReservee,
+  isPermission,
   legacyKeyModule,
+  libellePermission,
   MODULES,
+  PERMISSIONS_RESERVEES,
   Rights,
   SYSTEM_ROLE_DEFS,
   V2_ROLE_MAPPING,
@@ -15,14 +20,31 @@ import {
 import { LEGACY_MODULES } from '../src/legacy/index.js';
 
 describe('modèle de droits', () => {
-  it('permissions = modules × actions (16 × 5)', () => {
-    expect(ALL_PERMISSIONS).toHaveLength(80);
-    expect(new Set(ALL_PERMISSIONS).size).toBe(80);
+  it('permissions = modules × actions (17 × 5), plus les droits réservés (1)', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(86);
+    expect(new Set(ALL_PERMISSIONS).size).toBe(86);
+    // Un seul droit réservé (droit spécial cumulable « DPO », ADR 0110) : il est dans ALL_PERMISSIONS…
+    expect(ALL_PERMISSIONS.filter((p) => estPermissionReservee(p))).toEqual([...PERMISSIONS_RESERVEES]);
+    expect(PERMISSIONS_RESERVEES).toEqual(['veille_reglementaire:dpo']);
+    expect(ALL_PERMISSIONS).toContain('veille_reglementaire:dpo');
+    expect(isPermission('veille_reglementaire:dpo')).toBe(true);
+    expect(isPermission('audit:dpo')).toBe(false);
+    expect(libellePermission('veille_reglementaire:dpo')).toBe(
+      'Veille réglementaire — DPO : lire la veille réglementaire et qualifier les publications « données personnelles »',
+    );
+    expect(libellePermission('vulnerabilites:lire')).toBe('Vulnérabilités — Lire');
+    expect(libellePermission('tableau_de_bord:administrer')).toBe(
+      'Tableau de bord de l’accueil (disposition et partage) — Publier pour tous',
+    );
   });
 
   it('rôles prédéfinis conformes à la spécification', () => {
     const p = (r: keyof typeof SYSTEM_ROLE_DEFS) => new Set(SYSTEM_ROLE_DEFS[r].permissions);
-    expect(p('administrateur').size).toBe(80);
+    // … mais n'entre pas dans « tous les droits » des rôles prédéfinis : ni l'administrateur ni le RSSI ne l'ont d'office.
+    expect(p('administrateur').size).toBe(85);
+    expect(DROITS_HORS_ROLES_PREDEFINIS).toEqual(['veille_reglementaire:dpo']);
+    for (const r of ['administrateur', 'rssi', 'contributeur', 'lecteur', 'auditeur_externe'] as const)
+      expect(p(r).has('veille_reglementaire:dpo'), r).toBe(false);
     expect([...p('rssi')].some((x) => x.startsWith('administration:'))).toBe(false);
     expect(p('rssi').has('parametres:administrer')).toBe(true);
     expect(p('contributeur').has('ecarts:modifier')).toBe(true);
@@ -55,6 +77,17 @@ describe('modèle de droits', () => {
       for (const a of ['lire', 'modifier', 'administrer'] as const) expect(p(r).has(`integrations:${a}`)).toBe(true);
     for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
       expect([...p(r)].some((x) => x.startsWith('integrations:'))).toBe(false);
+    // Veille réglementaire (ADR 0110) : hors des modules métier ; droits de la matrice à l'administrateur et au RSSI, jamais
+    // le droit réservé « DPO » (vérifié plus haut) ; aucun rôle prédéfini « DPO » ; rien au contributeur, au lecteur ni à
+    // l'auditeur externe.
+    for (const r of ['administrateur', 'rssi'] as const)
+      for (const a of ['lire', 'modifier', 'administrer'] as const)
+        expect(p(r).has(`veille_reglementaire:${a}`)).toBe(true);
+    expect(Object.keys(SYSTEM_ROLE_DEFS)).not.toContain('dpo');
+    for (const r of ['contributeur', 'lecteur', 'auditeur_externe'] as const)
+      expect([...p(r)].some((x) => x.startsWith('veille_reglementaire:'))).toBe(false);
+    expect(BUSINESS_MODULES).not.toContain('veille_reglementaire');
+    expect(AUDITOR_MODULES).not.toContain('veille_reglementaire');
     // Lecteur : lecture seule, plus l'export des cartes (CARTO-01).
     expect([...p('lecteur')].every((x) => x.endsWith(':lire') || x === 'cartographie:exporter')).toBe(true);
     expect(p('lecteur').has('cartographie:modifier')).toBe(false);

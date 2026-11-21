@@ -20,11 +20,13 @@ import {
 import { notifications } from '@mantine/notifications';
 import {
   ACTION_LABELS,
-  libelleAction,
   ACTIONS,
   AUDITOR_MODULES,
+  libellePermission,
   MODULE_LABELS,
   MODULES,
+  PERMISSION_RESERVEE_LIBELLES,
+  PERMISSIONS_RESERVEES,
   type EffectiveRightsOut,
   type GroupOut,
   type Module,
@@ -545,12 +547,9 @@ function EffectiveRights({ userId }: { userId: string }) {
           </Table.Thead>
           <Table.Tbody>
             {q.data.permissions.map((p) => {
-              const [m, a] = p.permission.split(':') as [Module, (typeof ACTIONS)[number]];
               return (
                 <Table.Tr key={p.permission}>
-                  <Table.Td>
-                    {MODULE_LABELS[m]} — {libelleAction(m, a)}
-                  </Table.Td>
+                  <Table.Td>{libellePermission(p.permission)}</Table.Td>
                   <Table.Td>{p.origins.map(origin).join(' · ')}</Table.Td>
                 </Table.Tr>
               );
@@ -586,6 +585,25 @@ function RightsMatrix({ cell }: { cell: (p: Permission) => React.ReactNode }) {
                   {cell(`${m}:${a}`)}
                 </Table.Td>
               ))}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+      {/* Droits réservés (ADR 0110 ; addendum de l’ADR 0092) : hors de la matrice, chacun rattaché à son module. */}
+      <Table className="matrix" withColumnBorders aria-label="Droits réservés">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Droit réservé</Table.Th>
+            <Table.Th className="center">Accordé</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {PERMISSIONS_RESERVEES.map((p) => (
+            <Table.Tr key={p}>
+              <Table.Th scope="row">
+                {MODULE_LABELS[p.split(':')[0] as Module]} : {PERMISSION_RESERVEE_LIBELLES[p]}
+              </Table.Th>
+              <Table.Td className="center">{cell(p)}</Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>
@@ -913,7 +931,7 @@ function RoleEditor({ role, readOnly, onDone }: { role: RoleOut; readOnly: boole
             checked={perms.has(p)}
             onChange={() => toggle(p)}
             disabled={readOnly}
-            aria-label={`${MODULE_LABELS[p.split(':')[0] as Module]} : ${libelleAction(p.split(':')[0] as Module, p.split(':')[1] as (typeof ACTIONS)[number])}`}
+            aria-label={libellePermission(p).replace(' — ', ' : ')}
             className="matrix-check"
           />
         )}

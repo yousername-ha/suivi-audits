@@ -64,6 +64,7 @@ export * from './flux-externes.js';
 export * from './vulnerabilites.js';
 export * from './integrations.js';
 export * from './veille-vulnerabilites.js';
+export * from './veille-reglementaire.js';
 export * from './frequences-synchronisation.js';
 export * from './failles-tenable.js';
 export * from './import-nessus.js';

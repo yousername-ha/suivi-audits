@@ -5,7 +5,7 @@
    Exception : la « Configuration du pilotage » (`/pilotage/configuration`) n'est plus une rubrique du menu Pilotage mais une
    carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. De
    même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige. */
-import type { Action, Module, OrdreMenu } from '@suivi/shared';
+import type { Action, Module, OrdreMenu, Permission } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
 
 export type FamilleId = 'pilotage' | 'organisation' | 'risques' | 'conformite' | 'actions' | 'resilience' | 'documents';
@@ -21,6 +21,8 @@ export interface Rubrique {
   action: Action;
   /** Second droit exigé (la cartographie des risques demande aussi la lecture du Pilotage). */
   aussi?: [Module, Action];
+  /** Droit qui ouvre aussi la rubrique, à la place du droit de lecture (veille réglementaire : le droit réservé « DPO »). */
+  ou?: Permission;
   /** Préfixe d'adresse qui désigne la rubrique (pages à sous-adresses) ; sinon l'adresse exacte. */
   prefixe?: boolean;
   /** Adresses supplémentaires qui désignent la même rubrique. */
@@ -160,6 +162,15 @@ export const FAMILLES: Famille[] = [
         p('audits'),
       ]),
       dest('preuves', 'Preuves et contrôles', [p('preuves'), p('controles')]),
+      // Veille réglementaire (ADR 0110) : publications des autorités (RGPD, sécurité, santé), qualifiées par le RSSI et le DPO.
+      // Rangée avec la conformité plutôt qu'avec la veille des vulnérabilités (choix à confirmer par le RSSI).
+      dest('veille-reglementaire', 'Veille réglementaire', [
+        // Lecture du module, ou le droit réservé « DPO » à lui seul (ADR 0110).
+        {
+          ...page('veille-reglementaire', 'Veille réglementaire', '/veille-reglementaire', 'veille_reglementaire'),
+          ou: 'veille_reglementaire:dpo',
+        },
+      ]),
     ],
   },
   {
@@ -204,8 +215,14 @@ export const FAMILLES: Famille[] = [
 
 type Can = (module: Module, action: Action) => boolean;
 
+/** Droit « module:action » interrogé par `can`, droit réservé compris (useCan lit la liste des droits de la session). */
+const canPermission = (can: Can, p: Permission) => {
+  const [m, a] = p.split(':') as [Module, Action];
+  return can(m, a);
+};
 const rubriqueVisible = (r: Rubrique, can: Can) =>
-  (!r.module || can(r.module, r.action)) && (!r.aussi || can(r.aussi[0], r.aussi[1]));
+  (!r.module || can(r.module, r.action) || (!!r.ou && canPermission(can, r.ou))) &&
+  (!r.aussi || can(r.aussi[0], r.aussi[1]));
 
 /** Rubriques affichables d'une destination, dans l'ordre du menu. */
 export const rubriquesVisibles = (d: Destination, can: Can) => d.rubriques.filter((r) => rubriqueVisible(r, can));

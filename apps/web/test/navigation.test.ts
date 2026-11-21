@@ -67,6 +67,7 @@ const INVENTAIRE = [
   'conformite|audits|audits|/pilotage/audits|plan_audit|lire',
   'conformite|preuves|preuves|/pilotage/preuves|documents|lire',
   'conformite|preuves|controles|/pilotage/controles|pilotage|lire',
+  'conformite|veille-reglementaire|veille-reglementaire|/veille-reglementaire|veille_reglementaire|lire',
   'actions|amelioration|amelioration|/pilotage/amelioration|ecarts|lire',
   'actions|plan-actions|actions|/pilotage/actions|ecarts|lire',
   'actions|recurrences|recurrences|/pilotage/recurrences|ecarts|lire',

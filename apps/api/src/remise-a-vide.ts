@@ -181,6 +181,12 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_veille_cve',
   'vulnerabilites_veille_avis',
   'vulnerabilites_veille_collectes',
+  // Veille réglementaire (ADR 0110) : publications collectées et leur qualification, état et réglage des sources (activation,
+  // fréquence), journal des collectes ; effacés ensemble, comme la veille des vulnérabilités. Le droit réservé
+  // « DPO » suit les rôles personnalisés qui le portent.
+  'veille_reglementaire_publications',
+  'veille_reglementaire_sources',
+  'veille_reglementaire_collectes',
   // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
   // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
   'vulnerabilites_machines',
