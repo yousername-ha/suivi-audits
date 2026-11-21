@@ -1,0 +1,21 @@
+QUERY PLAN
+------------------------------------------------------------
+ Sort  (cost=4444.32..4535.29 rows=36387 width=142) (actual time=3505.247..3506.451 rows=19624.00 loops=1)
+   Sort Key: c.cve, a.source, a.identifiant
+   Sort Method: quicksort  Memory: 2667kB
+   Buffers: shared hit=572
+   ->  Nested Loop  (cost=32.25..1687.80 rows=36387 width=142) (actual time=1.802..3474.139 rows=19624.00 loops=1)
+         Buffers: shared hit=569
+         ->  Seq Scan on vulnerabilites_veille_avis a  (cost=0.00..745.88 rows=12129 width=193) (actual time=1.054..3414.509 rows=10852.00 loops=1)
+               Filter: (cves && '{… 12898 CVE fictives …}'::text[])
+               Rows Removed by Filter: 3298
+               Buffers: shared hit=569
+         ->  Function Scan on unnest c  (cost=32.25..32.29 rows=3 width=32) (actual time=0.003..0.004 rows=1.81 loops=10852)
+               Filter: (cve = ANY ('{… 12898 CVE fictives …}'::text[]))
+               Rows Removed by Filter: 1
+ Planning:
+   Buffers: shared hit=359
+ Planning Time: 18.625 ms
+ Execution Time: 3508.634 ms
+(17 rows)
+
