@@ -14,6 +14,7 @@ import {
   ETAT_SUIVI_LIBELLES,
   type EtatSourceVeilleDto,
   type EtatSurfaceExterneDto,
+  type EtatImportNessusDto,
   type EtatSynchronisationDto,
   type EtatVeilleDto,
   type FicheDeclareeDto,
@@ -35,6 +36,8 @@ import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { LienConfigurerIntegration } from '../integrations/EtatIntegration';
+import { erreurSynchronisation, peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
 import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
@@ -43,12 +46,12 @@ import { ANNEAUX, disposerRadar, libelleEpss, libelleTouches, RAYON, type SceneR
 import { SuiviFaille } from './SuiviFaille';
 import { ADRESSE_TENDANCES } from './tendances';
 import { etatSource } from './veille';
+import { etatConnecteur as etatConnecteurCommun, etatImport } from '../integrations/etat-integration';
 import {
   type CaseChoisie,
   CIBLES_PAR_PAGE,
   CLE_VUE,
   deuxChiffres,
-  etatConnecteur,
   faitsCible,
   FILTRE_CIBLES_LIBELLES,
   FILTRES_CIBLES,
@@ -657,20 +660,28 @@ export function CiblesTable({
 /* ------------------------------------------------------------------ Capteurs */
 const heureCourte = (iso: string | null) => (iso ? fmtDate(iso) : 'jamais');
 
+/** Capteurs : état en lecture seule des sources de veille et des connecteurs (ADR 0076, addendum du 19/11/2026 : aucun
+    réglage ni bouton ici ; « Configurer l'intégration » mène à la carte de la Plateforme, pour qui a le droit de la lire). */
 export function Capteurs({
   veille,
   tenable,
   alh,
+  imports,
+  peutConfigurer = false,
 }: {
   veille: EtatVeilleDto | undefined;
   tenable: EtatSynchronisationDto[] | undefined;
   alh: EtatSurfaceExterneDto[] | undefined;
+  /** Lot N1 : instances « Nessus, import de fichier » (date du dernier import). */
+  imports?: EtatImportNessusDto[] | undefined;
+  peutConfigurer?: boolean;
 }) {
   const id = useId();
   const sources: EtatSourceVeilleDto[] = veille?.sources ?? [];
   const connecteurs = [
-    ...(tenable ?? []).map((c) => ({ c, type: 'Tenable Security Center' })),
-    ...(alh ?? []).map((c) => ({ c, type: 'AlgoLightHouse' })),
+    ...(tenable ?? []).map((c) => ({ c, type: 'Tenable Security Center', imp: false })),
+    ...(imports ?? []).map((c) => ({ c, type: 'Nessus, import de fichier', imp: true })),
+    ...(alh ?? []).map((c) => ({ c, type: 'AlgoLightHouse', imp: false })),
   ];
   return (
     <section className="pc-capteurs" aria-labelledby={id}>
@@ -703,13 +714,15 @@ export function Capteurs({
       <h3 className="pc-etiquette">Connecteurs</h3>
       {connecteurs.length ? (
         <ul className="pc-capteurs__liste">
-          {connecteurs.map(({ c, type }, i) => {
-            const e = etatConnecteur(c);
+          {connecteurs.map(({ c, type, imp }, i) => {
+            const e = imp ? etatImport(c) : etatConnecteurCommun(c);
+            const erreur = erreurSynchronisation(c);
             return (
               <li key={c.integrationId} className={`pc-capteur pc-capteur--${e.etat}`}>
                 <span className="pc-capteur__num pc-mono">{deuxChiffres(i + 1)}</span>
                 <strong>{c.nom}</strong>
                 <small>{type}</small>
+                {erreur && <small>Erreur : {erreur}</small>}
                 <span className="pc-capteur__pied">
                   <StatusChip etat={e.etat}>{e.libelle}</StatusChip>
                   <span className="horodatage">{heureCourte(e.reussie)}</span>
@@ -720,9 +733,14 @@ export function Capteurs({
         </ul>
       ) : (
         <Text size="sm" c="dimmed">
-          Aucun connecteur Tenable Security Center ni AlgoLightHouse : ils se configurent dans Pilotage &gt;
-          Intégrations.
+          Aucun connecteur Tenable Security Center, Nessus ni AlgoLightHouse : ils se configurent dans la page
+          Plateforme, carte « Intégrations ».
         </Text>
+      )}
+      {peutConfigurer && (
+        <p className="pc-capteurs__lien">
+          <LienConfigurerIntegration visible />
+        </p>
       )}
     </section>
   );
@@ -730,7 +748,8 @@ export function Capteurs({
 
 /* ------------------------------------------------------------------ Page */
 export function VueEnsemblePage() {
-  const lire = useCan()('vulnerabilites', 'lire');
+  const can = useCan();
+  const lire = can('vulnerabilites', 'lire');
   const navigate = useNavigate();
   const [filtre, setFiltre] = useState<FiltreCibles>('toutes');
   const [caseChoisie, setCaseChoisie] = useState<CaseChoisie | null>(null);
@@ -762,6 +781,11 @@ export function VueEnsemblePage() {
   const alh = useQuery({
     queryKey: ['vulnerabilites', 'surface', 'etat'],
     queryFn: () => get<EtatSurfaceExterneDto[]>('/api/vulnerabilites/surface/etat'),
+    enabled: lire,
+  });
+  const imports = useQuery({
+    queryKey: ['vulnerabilites', 'failles', 'imports'],
+    queryFn: () => get<EtatImportNessusDto[]>('/api/vulnerabilites/imports/etat'),
     enabled: lire,
   });
   const produits = useQuery({
@@ -918,7 +942,13 @@ export function VueEnsemblePage() {
               </Anchor>
             </div>
           </section>
-          <Capteurs veille={veille.data} tenable={tenable.data} alh={alh.data} />
+          <Capteurs
+            veille={veille.data}
+            tenable={tenable.data}
+            alh={alh.data}
+            imports={imports.data}
+            peutConfigurer={peutConfigurerIntegration(can)}
+          />
           <p className="poste__note">
             Chaque point du radar est une faille suivie, placée par la plateforme ; seul le balayage est décoratif. La
             plateforme décide des alertes ; une personne décide du traitement.

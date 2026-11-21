@@ -71,6 +71,14 @@ const ETATS_EXECUTION: Record<string, string> = {
   expire: 'Expirée',
 };
 
+/** Ordre « présent depuis le plus longtemps d'abord » sur des dates ISO ; sans date en dernier. */
+function comparerAnciennete(a: string | null, b: string | null): number {
+  if (a === b) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a < b ? -1 : 1;
+}
+
 export class RapportVulnerabilites {
   constructor(
     private readonly db: Db,
@@ -138,20 +146,28 @@ export class RapportVulnerabilites {
     const presentes = s.presentes.filter((p) => dansPortee(p.perimetres));
     const p1 = presentes.filter((p) => p.priorite.niveau === 'P1');
     const critiques: FailleRapportDto[] = [];
-    for (const p of p1.slice(0, RAPPORT_LISTE_MAX)) {
-      const { titre, produit } = this.alertes.titreEtProduit(p.x, s.titres);
+    // Décision du RSSI du 20/11/2026 : les failles présentes depuis le plus longtemps d'abord (sans date en dernier, puis
+    // par clé), pour que la borne de la liste garde les plus anciennes.
+    const p1Datees = p1.map((p) => {
       const cles = [
         ...p.x.constatIds.map((id) => `constat:${id}`),
         ...p.x.rapprochementIds.map((id) => `declaree:${id}`),
       ];
       const premieres = cles.flatMap((c) => (objetParCle.has(c) ? [objetParCle.get(c)!.premiere] : [])).sort();
+      return { p, cles, depuis: premieres[0] ?? null };
+    });
+    p1Datees.sort(
+      (a, b) => comparerAnciennete(a.depuis, b.depuis) || (a.p.x.cle < b.p.x.cle ? -1 : a.p.x.cle > b.p.x.cle ? 1 : 0),
+    );
+    for (const { p, cles, depuis } of p1Datees.slice(0, RAPPORT_LISTE_MAX)) {
+      const { titre, produit } = this.alertes.titreEtProduit(p.x, s.titres);
       critiques.push({
         cle: p.x.cle,
         cve: p.x.cve,
         titre: (await texte(titre))!,
         produit: await texte(produit),
         presences: PRESENCES.filter((x) => p.x.presences.has(x)),
-        depuis: premieres[0] ?? null,
+        depuis,
         enDepassement: cles.some((c) => enDepassement.has(c)),
         correctif: correctifDeCumul(p.x, s.sources),
       });
@@ -181,7 +197,16 @@ export class RapportVulnerabilites {
         const o = objetParCle.get(`${d.nature}:${d.id}`);
         return !!o && (cle === null || s.perimetresObjet(o).has(cle));
       })
-      .sort((a, b) => (a.echeance < b.echeance ? -1 : a.echeance > b.echeance ? 1 : 0));
+      .sort(
+        (a, b) =>
+          (a.echeance < b.echeance ? -1 : a.echeance > b.echeance ? 1 : 0) ||
+          // À échéance égale : présent depuis le plus longtemps d'abord (décision du RSSI du 20/11/2026), puis identifiant.
+          comparerAnciennete(
+            objetParCle.get(`${a.nature}:${a.id}`)?.premiere ?? null,
+            objetParCle.get(`${b.nature}:${b.id}`)?.premiere ?? null,
+          ) ||
+          (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+      );
     const depassements: DepassementRapportDto[] = [];
     for (const d of depassesPortee.slice(0, RAPPORT_LISTE_MAX)) {
       const o = objetParCle.get(`${d.nature}:${d.id}`)!;

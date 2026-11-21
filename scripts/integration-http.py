@@ -409,9 +409,22 @@ def tenable_tester(client):
 # Champs lus dans un résultat de l'analyse `vulndetails` (cadrage, §5 bis) : tout autre champ, `pluginText` d'abord, est
 # écarté dès la lecture et ne sort jamais du script.
 CHAMPS_ANALYSE = ("pluginID", "pluginName", "severity", "family", "synopsis", "solution", "cvssV3Vector", "cvssV3BaseScore",
-                  "vprScore", "epssScore", "exploitAvailable", "exploitEase", "vulnPubDate", "patchPubDate", "seolDate",
+                  "vprScore", "epssScore", "exploitAvailable", "exploitEase", "exploitFrameworks", "vulnPubDate",
+                  "patchPubDate", "seolDate",
                   "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore", "keyDrivers",
                   "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
+# Lot PRIO-1 : kits d'exploitation que Tenable nomme (« Exploitable with ») dans la CHAÎNE `exploitFrameworks` (pas une liste).
+# Seuls ces trois noms sont retenus, comme KITS_EXPLOITATION du paquet partagé ; le reste de la chaîne ne sort jamais.
+KITS_EXPLOITATION = (("metasploit", re.compile(r"\bmetasploit\b")), ("core_impact", re.compile(r"\bcore\s+impact\b")),
+                     ("canvas", re.compile(r"\bcanvas\b")))
+
+
+def kits_exploitation(v):
+    """Kits cités par `exploitFrameworks` (chaîne), dans l'ordre fixe ; toute autre forme : aucun."""
+    t = v.lower() if isinstance(v, str) else ""
+    return [k for k, motif in KITS_EXPLOITATION if motif.search(t)]
+
+
 # Champs lus du dépôt d'un résultat (`repository`, objet ; lot V4d) : identifiant et nom seulement.
 CHAMPS_DEPOT = ("id", "name")
 # Champs lus dans une machine de l'inventaire (`GET /rest/hosts`, liste directe).
@@ -615,6 +628,7 @@ def lire_resultat(brut, sortie, bilan):
             "epss": decimal(r.get("epssScore"), 0, 100, diviseur=100),
             "exploitable": isinstance(r.get("exploitAvailable"), str) and r["exploitAvailable"].strip() == "Yes",
             "exploitLibelle": texte(r.get("exploitEase"), BORNES_SYNCHRO["libelleExploit"]),
+            "kitsExploitation": kits_exploitation(r.get("exploitFrameworks")),
             "failleLe": instant(r.get("vulnPubDate")), "correctifLe": instant(r.get("patchPubDate")),
             "finSupportLe": instant(r.get("seolDate")), "voirAussi": voir_aussi(r.get("seeAlso")),
             "cves": liste, "cvesTronquees": tronquees,

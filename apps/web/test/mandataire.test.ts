@@ -62,10 +62,10 @@ describe('mandataire sortant : carte et règles', () => {
     expect(effaceraMotDePasse(reglage, { ...reglage, identifiant: 'autre' }, true)).toBe(true);
     expect(effaceraMotDePasse(reglage, { ...reglage, identifiant: 'autre' }, false)).toBe(false);
   });
-  it('liste les flux : la veille et AlgoLightHouse l’utilisent, Tenable et le courriel en accès direct, les autres pas encore pris en charge', () => {
+  it('liste les flux : les deux veilles et AlgoLightHouse l’utilisent, Tenable et le courriel en accès direct, les autres pas encore pris en charge', () => {
     const g = lignesFluxMandataire();
     expect(g.map((x) => [x.libelle, x.flux.map((f) => f.id)])).toEqual([
-      ['Utilise le mandataire', ['veille-vulnerabilites', 'algolighthouse']],
+      ['Utilise le mandataire', ['veille-vulnerabilites', 'algolighthouse', 'veille-reglementaire']],
       ['Accès direct, par construction', ['courriel', 'tenable']],
       ['Pas encore pris en charge', ['assistant', 'acme', 'antivirus', 'mises-a-jour']],
     ]);
@@ -140,19 +140,21 @@ describe('flux et mandataire actif', () => {
       expect(html, m).not.toContain('mandataire');
     }
   });
-  it('pare-feu à faire autoriser : vers le mandataire pour la veille et AlgoLightHouse seulement', () => {
+  it('pare-feu à faire autoriser : vers le mandataire pour les deux veilles et AlgoLightHouse seulement', () => {
     const etats = FLUX_MODULES.map((module) => ({ module, ouvert: true }));
     const sans = pareFeuAOuvrir(FLUX_EXTERNES, etats);
     const par = pareFeuAOuvrir(FLUX_EXTERNES, etats, true);
     const veille = fluxExterne('veille-vulnerabilites').libelle;
     const alh = fluxExterne('algolighthouse').libelle;
+    const reglementaire = fluxExterne('veille-reglementaire').libelle;
     expect(sans.find((p) => p.libelle === veille)!.regles.join(' ')).toContain('www.cisa.gov');
     expect(sans.find((p) => p.libelle === alh)!.regles.join(' ')).toContain('algolighthouse.fr');
-    for (const l of [veille, alh])
+    expect(sans.find((p) => p.libelle === reglementaire)!.regles.join(' ')).toContain('www.cnil.fr');
+    for (const l of [veille, alh, reglementaire])
       expect(par.find((p) => p.libelle === l)!.regles, l).toEqual([
         'Sortie TCP du serveur vers le mandataire de l’établissement, sur le port réglé.',
       ]);
-    for (const p of par.filter((x) => x.libelle !== veille && x.libelle !== alh))
+    for (const p of par.filter((x) => ![veille, alh, reglementaire].includes(x.libelle)))
       expect(p.regles, p.libelle).toEqual(sans.find((x) => x.libelle === p.libelle)!.regles);
   });
 });

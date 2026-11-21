@@ -95,6 +95,33 @@ main sur la machine, sinon celui de son dépôt de Tenable (`vulnerabilites_tena
 résultats de l'analyse, liaison par `vulnerabilites:administrer`, `If-Match`, écriture sur les périmètres) ; un seul fragment
 SQL (`perimetreMachine`) porte cette règle pour toutes les lectures. Ces données ne partent nulle part ailleurs (ni assistant, ni notification, ni export).
 
+Type sans réseau : « Nessus, import de fichier » (`nessus-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md), lot N1 ;
+migration `093`). Ni adresse, ni clé, ni flux, ni exécutant (`flux: null`, absent du script et de l'exécutant). Le fichier
+`.nessus` est lu dans le navigateur (`DOMParser`, DOCTYPE et entités refusés avant l'analyse,
+`apps/web/src/integrations/nessus.ts`) ; l'API ne lit aucun XML : elle reçoit un extrait JSON en liste blanche, par lots de
+machines entières (`POST /api/integrations/instances/:id/imports`, `…/lots`, `…/fin`, `integrations:administrer`, corps de
+8 Mio au plus, limites de débit), revalidé par `LotImportNessus` (`packages/shared/src/import-nessus.ts`), et le range par le
+chemin d'écriture de Tenable (`SynchronisationTenable.rangerPassage`, mêmes tables, même numéro de passage). Chaque lot est
+un passage complet pour ses machines : les détections présentes des autres machines de l'instance sont reportées au numéro du
+passage, si bien qu'une faille disparaît seulement sur une machine du fichier. Journal des imports : `vulnerabilites_imports`
+(nombres seulement), exécution `importer` de l'instance (`apps/api/src/vulnerabilites/import-nessus.ts`). Lot N2 (migration
+`094`) : `exploited_by_malware` lu en plus, rangé dans `vulnerabilites_constats.exploite_malware` (source d'exploitation
+avérée `tenable` du paquet partagé, ajoutée à `sourcesDe` et au filtre SQL des constats) ; limite de trente imports
+commencés par heure et par personne ; suppression d'une instance de ce type seulement et de tout ce qu'elle a importé
+(`DELETE /api/integrations/instances/:id`, If-Match, aperçu `GET …/suppression`) par les clés étrangères en cascade, puis
+liaisons et alertes réévaluées dans la même transaction.
+
+Second type sans réseau : « Silène, import de fichier » (`silene-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md),
+lot SI1 ; migration `095`). Le rapport JSON de l'ANSSI est lu dans le navigateur (`JSON.parse`, 50 Mo au plus, liste blanche,
+`apps/web/src/integrations/silene.ts`) ; l'API reçoit un extrait JSON (`POST /api/integrations/instances/:id/silene/imports`,
+`…/lots`, `…/fin`, `integrations:administrer`, limites de l'import Nessus partagées), revalidé par `LotImportSilene`
+(`packages/shared/src/import-silene.ts`), rangé dans les tables `vulnerabilites_silene_*` (`apps/api/src/vulnerabilites/
+import-silene.ts`) : un import complet fait foi (numéro de référence, comme une synchronisation complète d'AlgoLightHouse),
+la note de chaque import est gardée. Lecture (`apps/api/src/vulnerabilites/surface-silene.ts`) sous les droits du périmètre
+relié à l'instance (fragment `lisibleAlh`, alias `sp`) ; la liste « Actifs » de la surface externe réunit les deux sources
+par adresse IP ou nom de domaine (`SurfaceExterneAlh.actifs`), la recherche du module l'utilise sans changer de contrat.
+Aucun effet sur les priorités ni les alertes ; rien ne part vers l'assistant.
+
 Second type : AlgoLightHouse ([ADR 0100](../adr/0100-module-vulnerabilites.md), lot ALH1 ; flux `algolighthouse`, porté par
 `updater`, service de l'éditeur sur Internet, adresse `https://<espace>.algolighthouse.fr` seulement, port 443, en-tête
 `X-API-Key`). Liste fermée de huit `GET` de la version 1 de l'API, sans paramètre ; jamais d'écriture. Le socle range chaque
@@ -138,8 +165,9 @@ lien seulement, jamais de nom de machine, de domaine, d'adresse ni de périmètr
 (`vulnerabilites:lire`). Fenêtre d'alerte critique côté interface, montée une fois dans la mise en page.
 
 Veille du module Vulnérabilités ([ADR 0100](../adr/0100-module-vulnerabilites.md), lots V2 et V3) : même chemin que les
-connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par jour (créneau consommé avant
-l'inscription) dans `vulnerabilites_veille_collectes` (migration `074`) ; `exploitation-worker.py` la réclame
+connecteurs, sans secret. Le tic de 60 s de l'API inscrit au plus une collecte par source et par période réglée (lot F1, migration `090` :
+deux heures par défaut, NVD deux heures au moins, EPSS une fois par jour ; référence de la dernière demande automatique
+consommée avant l'inscription) dans `vulnerabilites_veille_collectes` (migration `074`) ; `exploitation-worker.py` la réclame
 (`suivi veille-claim`) si le flux `veille-vulnerabilites` est ouvert et le module actif, lance `scripts/veille-vulnerabilites.py`
 (`python -I`, uid 65534, environnement minimal, GET seulement, HTTPS vérifié en TLS 1.2 au minimum, aucune redirection, liste
 fermée des cinq hôtes et de leurs chemins comparée au registre partagé par `apps/api/test/veille-architecture.test.ts`, réponses
@@ -277,6 +305,15 @@ ligne `envoyee` ou `non_requise` (et toute troncature) ; seule la remise à vide
 rubriques et leur source, pré-remplissage, jalons de rappel) dans `packages/shared/src/declarations-incidents.ts`. Identité de
 l’établissement : section de paramètres `etablissement` (table `settings`), droits `parametres` et `conformite`.
 
+**Contacts de crise issus des comptes (18/11/2026, [ADR 0107](../adr/0107-contacts-de-crise-issus-des-comptes.md)).**
+Table `contacts_crise_comptes` (migration additive `092`) : une ligne par compte désigné, supprimée avec le compte,
+périmètres en tableau d'identifiants contrôlés à l'écriture, version pour `If-Match`. Écriture de la fiche entière par
+`administration:administrer` (`PUT /api/admin/users/:id/contact-crise`) ; la personne ne modifie que ses téléphones et sa
+disponibilité (`PATCH /api/account/contact-crise`, accès `auth`, schéma strict). Lecture par `GET /api/crise`
+(`contactsComptes`, `incidents:lire`) : comptes actifs (prédicat des annuaires) du périmètre affiché, ou couvrant au moins un
+périmètre lisible ; aucun sans périmètre lisible. Journal `admin.user_crisis_contact` et `account.crisis_contact_update`,
+noms des champs seulement, jamais les numéros. Temps réel : entité `users` (identifiant du compte seulement).
+
 ## Traitements asynchrones
 
 API : purge/expiration de sessions et comptes, notifications/occurrences métier.
@@ -302,7 +339,9 @@ fin, il est mis à jour seulement si l’empreinte de ce qu’il exécute et ser
 coupure de quelques secondes annoncée sur la page de maintenance (ADR 0103).
 Pendant la préparation, l'exécutant tire les trois images par l'API du moteur Docker
 (socket Unix déjà monté) et publie dans l'état public les octets reçus sur un total fixé
-d'après les manifestes du registre ; la page de maintenance en remplit sa barre. Repli sur
+d'après les manifestes du registre ; la page de maintenance en remplit sa barre. La valeur
+finale reste publiée pendant la vérification des signatures, jusqu'à la sortie de l'étape de
+préparation (barre pleine, addendum du 19/11/2026). Repli sur
 `docker pull`, sans progression, avec des identifiants de registre ou si l'API ne répond
 pas (ADR 0104) ; les vérifications de signature qui suivent sont inchangées.
 L’empreinte du frontal couvre aussi l’identité épinglée de son image de base Caddy
@@ -329,6 +368,14 @@ consultatifs, un seul exécutant d’exploitation). Le pool PostgreSQL garde ses
 connexions. Une transaction annulée par deadlock ou échec de sérialisation (codes
 40P01 et 40001) est rejouée entière, au plus deux fois, après 50 à 200 ms, chaque
 relance journalisée ; une transaction restée inactive est coupée après une minute.
+Statistiques du planificateur (décision du RSSI du 19/11/2026) : l’autovacuum de PostgreSQL 18 suffit en régime courant,
+sans tâche d’optimisation planifiée ; `scripts/restore.sh` et la migration du moteur PostgreSQL lancent un `ANALYZE` de la
+base après `pg_restore`, et la fin reçue d’une synchronisation Tenable ou AlgoLightHouse qui a rangé des éléments un
+`ANALYZE` des seules tables réécrites, après la validation (`apps/api/src/db/analyser.ts`, rôle applicatif propriétaire,
+sous le délai de 30 s par requête) ; un échec n’est qu’un avertissement.
+Réglages de la base (décision du RSSI du 20/11/2026, d’après le banc de performance du 19/11/2026) : `shared_buffers`
+256 Mo, `work_mem` 16 Mo, `effective_cache_size` 768 Mo (conteneur limité à 1 Gio) et `jit` coupé, passés en paramètres
+du service `db` dans `docker-compose.yml`.
 L’analyse antivirale est limitée à 15 s ; si elle échoue, le dépôt est refusé quand
 elle est obligatoire et le contact technique reçoit au plus une alerte par heure.
 Sondes Docker : `app` prête quand la base répond et que les migrations sont

@@ -6,9 +6,11 @@
    - Flux « veille-vulnerabilites » (ADR 0097), fermé par défaut, ouvert par « Activer la veille » (route commune des flux,
      validation explicite), refermé par la désactivation du module. Flux fermé ou module désactivé : rien n'est inscrit ni
      réclamé ; une collecte en file est close sans appel.
-   - Planification : une collecte par source et par jour (Europe/Paris) au plus ; le créneau du jour est consommé avant
-     l'inscription, dans la même transaction : une collecte perdue (exécutant absent, panne) n'est pas rejouée. EPSS passe
-     après les quatre autres sources du jour, puisqu'il ne note que des failles déjà connues de la veille.
+   - Planification (lot F1) : une collecte par source et par période réglée au plus (deux heures par défaut, NVD jamais plus
+     d'une fois toutes les deux heures, EPSS une fois par jour), comptée depuis la dernière demande automatique ; cette
+     référence est consommée avant l'inscription, dans la même transaction : une collecte perdue (exécutant absent, panne)
+     ou en échec n'est pas redemandée avant la période suivante. EPSS passe quand la file est vide, puisqu'il ne note que
+     des failles déjà connues de la veille.
    - Les éléments sont des données publiques, validées un à un par le schéma de leur source (packages/shared) et rangées sans
      doublon (clé de la faille, ou source et identifiant de l'avis) : une collecte rejouée met à jour, n'ajoute rien.
    - Lot V4c (V23, V26) : une CVE citée par un avis existe dans la veille dès cette publication, avant NVD ; chaque fait
@@ -20,7 +22,16 @@
 import { createHash } from 'node:crypto';
 import {
   CVE_ID,
+  echeanceAtteinte,
   ELEMENT_VEILLE,
+  type EtatSourceVeilleDto,
+  FREQUENCES_VEILLE,
+  frequenceVeille,
+  frequenceVeilleAdmise,
+  frequenceVeilleModifiable,
+  prochaineAffichee,
+  referenceApresDemande,
+  sourceVeille,
   FICHE_CERTSANTE_RELECTURE_JOURS,
   type AvisVeilleDto,
   type CollecteVeilleDto,
@@ -43,7 +54,9 @@ import {
   type SurfaceCveDto,
   VEILLE_BORNES,
   VEILLE_PAR_PAGE,
-  VEILLE_RETARD_HEURES,
+  JOURNAUX_CONSERVATION_JOURS,
+  PLANCHER_NVD_HEURES,
+  sourceEnRetard,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
@@ -51,6 +64,7 @@ import type { SessionUser } from '../auth.js';
 import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { VulnerabilitesVeilleCollectes } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
+import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { Mandataire } from '../mandataire.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
@@ -59,7 +73,6 @@ import type { SurfaceExterneAlh } from './surface-externe.js';
 type LigneCollecte = Selectable<VulnerabilitesVeilleCollectes>;
 
 const FLUX = 'veille-vulnerabilites' as const;
-const FUSEAU = 'Europe/Paris';
 /** Verrou consultatif de la file des collectes (727277 : courriels, 727278 : connecteurs). */
 const verrouFile = (k: Kdb) => sql`SELECT pg_advisory_xact_lock(727279)`.execute(k);
 /** Une collecte non réclamée après ce délai expire ; une collecte « en cours » au-delà est considérée interrompue (NVD
@@ -68,6 +81,9 @@ const EXPIRATION_FILE = sql<Date>`now() - interval '30 minutes'`;
 const ABANDON_EN_COURS = sql<Date>`now() - interval '20 minutes'`;
 /** « Collecter maintenant » : une source déjà demandée à la main depuis moins de ce délai n'est pas redemandée. */
 const INTERVALLE_MANUEL = sql<Date>`now() - interval '15 minutes'`;
+/** Lot PRIO-1 : refus de « Collecter maintenant » pour NVD sous le plancher de deux heures. */
+export const MESSAGE_PLANCHER_NVD =
+  'NVD demande de ne pas être lu plus d’une fois toutes les deux heures : une collecte NVD a été demandée il y a moins de deux heures. Réessayez plus tard.';
 /** Fenêtre NVD : la suivante part de la fin de la précédente réussie ; jamais plus de sept jours en arrière (le rattrapage
     d'une longue interruption est borné), un jour pour la première collecte. */
 const NVD_PREMIERE_FENETRE_MS = 24 * 3_600_000;
@@ -99,8 +115,6 @@ const versCollecte = (r: LigneCollecte): CollecteVeilleDto => ({
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
 const litteral = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
 const nombre = (v: string | null) => (v === null ? null : Number(v));
-/** Jour courant (AAAA-MM-JJ) dans le fuseau de la plateforme. */
-const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 export class VeilleVulnerabilites {
   /** Recalcul des rapprochements après une collecte NVD (lot V4a) ou CERT Santé (lot V4c : produit cité par une CVE
@@ -137,7 +151,7 @@ export class VeilleVulnerabilites {
           .execute()
       ).map((c) => [c.source, versCollecte(c)]),
     );
-    const limite = Date.now() - VEILLE_RETARD_HEURES * 3_600_000;
+    const maintenant = new Date();
     const fiches = await this.db.k
       .selectFrom('vulnerabilites_veille_avis')
       .select([
@@ -161,6 +175,7 @@ export class VeilleVulnerabilites {
       sources: SOURCES_VEILLE_DEFINITIONS.map((d) => {
         const l = lignes.get(d.id);
         const reussite = l?.derniere_reussite ?? null;
+        const frequence = frequenceVeille(d.id, l?.frequence_heures);
         return {
           source: d.id,
           libelle: d.libelle,
@@ -172,8 +187,14 @@ export class VeilleVulnerabilites {
           derniereReussite: reussite?.toISOString() ?? null,
           dernierEssai: l?.dernier_essai?.toISOString() ?? null,
           erreur: l?.erreur ?? null,
-          enRetard: flux.ouvert && (!reussite || reussite.getTime() < limite),
+          // Lot PRIO-1 : en retard après trois périodes de la source sans collecte réussie (au lieu de 36 h fixes).
+          enRetard: flux.ouvert && sourceEnRetard(reussite, frequence, maintenant),
           derniereCollecte: dernieres.get(d.id) ?? null,
+          frequenceHeures: frequence,
+          prochaineCollecte: flux.ouvert
+            ? prochaineAffichee(l?.planifiee_le ?? null, frequence, maintenant).toISOString()
+            : null,
+          version: l?.version ?? 1,
         };
       }),
       fichesCertSante: {
@@ -224,11 +245,21 @@ export class VeilleVulnerabilites {
       .limit(VEILLE_PAR_PAGE)
       .offset((q.page - 1) * VEILLE_PAR_PAGE)
       .execute();
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : CVE citées présentes sur le parc et exposées sur Internet, en deux
+    // lectures d'ensemble pour toute la page (aucune par avis), sur tous les faits connus (lot ALH5, décision A : un fait,
+    // le même pour tout le monde ; ni nom ni nombre).
+    const citees = [...new Set(lignes.flatMap((l) => l.cves))];
+    const presentes = await this.cvesPresentes(citees);
+    const exposees = citees.length && this.surface ? await this.surface.cvesExposees(citees) : new Set<string>();
     return {
       total: n,
       page: q.page,
       parPage: VEILLE_PAR_PAGE,
       elements: lignes.map((l) => ({
+        parc: {
+          presentes: l.cves.filter((c) => presentes.has(c)),
+          exposees: l.cves.filter((c) => exposees.has(c)),
+        },
         id: l.id,
         source: l.source,
         identifiant: l.identifiant,
@@ -254,6 +285,22 @@ export class VeilleVulnerabilites {
           : null,
       })),
     };
+  }
+
+  /** Lot PRIO-1 : CVE présentes sur le parc : détectées par Tenable (détection présente) ou déclarées (produit surveillé
+      rattachée, d'office ou confirmée), quel que soit leur état de suivi (un fait). Une lecture pour toutes les CVE. */
+  private async cvesPresentes(cves: readonly string[]): Promise<Set<string>> {
+    if (!cves.length) return new Set();
+    const { rows } = await sql<{ cve: string }>`
+      SELECT x.cve FROM unnest(${[...cves]}::text[]) AS x(cve)
+      WHERE EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+              JOIN vulnerabilites_detections d ON d.constat_id = cc.constat_id
+              JOIN vulnerabilites_machines m ON m.id = d.machine_id
+              LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+              WHERE cc.cve = x.cve AND d.vu_numero >= coalesce(e.numero_complet, 0))
+         OR EXISTS (SELECT 1 FROM vulnerabilites_rapprochements r
+              WHERE r.cve = x.cve AND r.statut IN ('rattachee', 'confirmee'))`.execute(this.db.k);
+    return new Set(rows.map((r) => r.cve));
   }
 
   /** Failles connues de la veille ; `kev` : celles du catalogue des failles exploitées, les plus récemment ajoutées d'abord.
@@ -360,11 +407,18 @@ export class VeilleVulnerabilites {
         'L’exécutant d’exploitation du serveur n’est pas disponible : c’est lui qui lit les sources (guide d’installation, étape 11.6).',
       );
     const voulues = source ? [source] : [...SOURCES_VEILLE];
+    let plancherNvd = false;
     const crees = await this.db.tx(async (c, k) => {
       await verrouFile(k);
       await this.menage(k, c);
       const out: LigneCollecte[] = [];
       for (const s of voulues) {
+        // Lot PRIO-1 (décision du RSSI du 20/11/2026) : NVD n'est jamais lu moins de deux heures après la précédente
+        // demande, manuelle ou automatique, « Collecter maintenant » compris.
+        if (s === 'nvd' && (await this.nvdSousPlancher(k))) {
+          plancherNvd = true;
+          continue;
+        }
         const occupee = await k
           .selectFrom('vulnerabilites_veille_collectes')
           .select('id')
@@ -385,16 +439,49 @@ export class VeilleVulnerabilites {
     if (!crees.length)
       throw new HttpError(
         409,
-        'Collecte déjà en cours, ou demandée il y a moins de quinze minutes : réessayez plus tard.',
+        plancherNvd && source === 'nvd'
+          ? MESSAGE_PLANCHER_NVD
+          : 'Collecte déjà en cours, ou demandée il y a moins de quinze minutes : réessayez plus tard.',
       );
     return crees.map(versCollecte);
   }
 
+  /** Lot PRIO-1 : une collecte NVD (manuelle ou automatique, sauf une collecte expirée, que l'exécutant n'a jamais lancée)
+      a été demandée il y a moins de deux heures. */
+  private async nvdSousPlancher(k: Kdb): Promise<boolean> {
+    return !!(await k
+      .selectFrom('vulnerabilites_veille_collectes')
+      .select('id')
+      .where('source', '=', 'nvd')
+      .where('etat', '<>', 'expire')
+      .where('demande_le', '>', sql<Date>`now() - make_interval(hours => ${PLANCHER_NVD_HEURES})`)
+      .executeTakeFirst());
+  }
+
+  /** Lot PRIO-1 (décision du RSSI du 20/11/2026) : journal des collectes purgé au-delà de 90 jours. Les collectes en file
+      ou en cours sont gardées, ainsi que la dernière de chaque source (état affiché). Rend le nombre de lignes effacées. */
+  async purgerJournal(k: Kdb): Promise<number> {
+    const r = await sql<{ n: number }>`
+      WITH effacees AS (
+        DELETE FROM vulnerabilites_veille_collectes x
+        WHERE x.etat NOT IN ('en_file', 'en_cours')
+          AND x.demande_le < now() - make_interval(days => ${JOURNAUX_CONSERVATION_JOURS})
+          AND x.id <> (SELECT y.id FROM vulnerabilites_veille_collectes y WHERE y.source = x.source
+                       ORDER BY y.demande_le DESC, y.id LIMIT 1)
+        RETURNING 1)
+      SELECT count(*)::int AS n FROM effacees`.execute(k);
+    return r.rows[0]?.n ?? 0;
+  }
+
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
-  /** Inscrit au plus une collecte par source et par jour. Le module est contrôlé par l'appelant ; flux fermé : rien. */
+  /** Lot F1 : inscrit au plus une collecte par source et par période réglée (deux heures par défaut, EPSS une fois par jour),
+      comptée depuis la dernière demande AUTOMATIQUE. La référence est consommée avant l'inscription, dans la même
+      transaction : une collecte perdue, expirée ou en échec n'est pas redemandée avant la période suivante (aucune boucle à
+      chaque tic). Une collecte de la source déjà en file ou en cours (demandée à la main) tient lieu de celle-ci. EPSS passe
+      après les autres sources dues au même tic, quand la file est vide. Le module est contrôlé par l'appelant ; flux fermé :
+      rien. */
   async planifier(maintenant = new Date()): Promise<string[]> {
     if (!(await this.flux.ouvert(FLUX))) return [];
-    const jour = jourDe(maintenant);
     return this.db.tx(async (c, k) => {
       await verrouFile(k);
       await this.menage(k, c);
@@ -407,11 +494,15 @@ export class VeilleVulnerabilites {
         (
           await k
             .selectFrom('vulnerabilites_veille_sources')
-            .select(['source', sql<string | null>`creneau::text`.as('creneau')])
+            .select(['source', 'frequence_heures', 'planifiee_le'])
             .forUpdate()
             .execute()
-        ).map((l) => [l.source, l.creneau]),
+        ).map((l) => [l.source, l]),
       );
+      const due = (s: SourceVeille) => {
+        const e = etats.get(s);
+        return echeanceAtteinte(e?.planifiee_le ?? null, frequenceVeille(s, e?.frequence_heures), maintenant);
+      };
       const enAttente = async (s?: SourceVeille) => {
         let q = k
           .selectFrom('vulnerabilites_veille_collectes')
@@ -422,18 +513,78 @@ export class VeilleVulnerabilites {
       };
       const ids: string[] = [];
       const consommer = async (s: SourceVeille) => {
-        // Créneau consommé d'abord : une collecte inscrite puis perdue ne sera pas réinscrite le même jour.
-        await k.updateTable('vulnerabilites_veille_sources').set({ creneau: jour }).where('source', '=', s).execute();
-        etats.set(s, jour);
-        // Une collecte de la source déjà en file ou en cours (demandée à la main) tient lieu de celle du jour.
+        const e = etats.get(s);
+        const reference = referenceApresDemande(
+          e?.planifiee_le ?? null,
+          frequenceVeille(s, e?.frequence_heures),
+          maintenant,
+        );
+        // Référence consommée d'abord : une collecte inscrite puis perdue n'est pas réinscrite avant la période suivante.
+        await k
+          .updateTable('vulnerabilites_veille_sources')
+          .set({ planifiee_le: reference })
+          .where('source', '=', s)
+          .execute();
+        // Une collecte de la source déjà en file ou en cours (demandée à la main) tient lieu de celle-ci.
         if (!(await enAttente(s))) ids.push((await this.inscrire(k, c, s, 'planifie', PLANIFICATION, null)).id);
       };
-      for (const s of AVANT_EPSS) if (etats.get(s) !== jour) await consommer(s);
-      // EPSS : seulement quand les quatre autres sources du jour sont inscrites et toutes traitées.
-      if (etats.get('epss') !== jour && AVANT_EPSS.every((s) => etats.get(s) === jour) && !(await enAttente()))
-        await consommer('epss');
+      for (const s of AVANT_EPSS) if (due(s)) await consommer(s);
+      // EPSS : seulement quand aucune collecte n'attend (les autres sources dues sont traitées), pour noter les failles
+      // qu'elles viennent d'apporter.
+      if (due('epss') && !(await enAttente())) await consommer('epss');
       return ids;
     });
+  }
+
+  /* ---------------------------------------------------------------- Fréquence (vulnerabilites:administrer) */
+  /** Lot F1 : règle la fréquence d'une source (liste fermée de la source, 422 hors liste ; EPSS fixe). If-Match sur la version
+      de la source ; journal `vulnerabilites.veille.frequence` (source, ancienne et nouvelle fréquence). La référence de la
+      dernière demande automatique est gardée : la prochaine échéance se recalcule, sans rafale (une seule demande si elle est
+      déjà passée). */
+  async reglerFrequence(
+    source: SourceVeille,
+    frequenceHeures: number,
+    attendue: number,
+    user: SessionUser,
+    ip: string,
+  ): Promise<EtatSourceVeilleDto> {
+    if (!frequenceVeilleModifiable(source))
+      throw new HttpError(422, `La fréquence de la source « ${sourceVeille(source).libelle} » est fixe.`);
+    if (!frequenceVeilleAdmise(source, frequenceHeures))
+      throw new HttpError(
+        422,
+        `Fréquence refusée pour la source « ${sourceVeille(source).libelle} » : ${FREQUENCES_VEILLE[source].join(', ')} heures seulement.`,
+      );
+    await this.db.tx(async (c, k) => {
+      await k
+        .insertInto('vulnerabilites_veille_sources')
+        .values({ source })
+        .onConflict((oc) => oc.column('source').doNothing())
+        .execute();
+      const avant = await k
+        .selectFrom('vulnerabilites_veille_sources')
+        .select(['frequence_heures', 'version'])
+        .where('source', '=', source)
+        .forUpdate()
+        .executeTakeFirstOrThrow();
+      if (avant.version !== attendue)
+        throw conflict({ version: avant.version, frequenceHeures: frequenceVeille(source, avant.frequence_heures) });
+      const ancienne = frequenceVeille(source, avant.frequence_heures);
+      await k
+        .updateTable('vulnerabilites_veille_sources')
+        .set((eb) => ({ frequence_heures: frequenceHeures, version: eb('version', '+', 1) }))
+        .where('source', '=', source)
+        .execute();
+      await this.db.audit(
+        user,
+        ip,
+        'vulnerabilites.veille.frequence',
+        source,
+        { source, avant: ancienne, apres: frequenceHeures },
+        c,
+      );
+    }, user.username);
+    return (await this.etat()).sources.find((s) => s.source === source)!;
   }
 
   private async inscrire(

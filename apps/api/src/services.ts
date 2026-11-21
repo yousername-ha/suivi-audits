@@ -1,4 +1,5 @@
 /* Services partagés par les routes (injectés : chaque test construit les siens avec sa propre base). */
+import { NESSUS_BORNES } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
@@ -23,6 +24,7 @@ import { Bus, Presence } from './realtime.js';
 import { Vault } from './security/crypto.js';
 import { Settings } from './settings.js';
 import { ConfigGrc } from './config-grc.js';
+import { ContactsCriseComptes } from './contacts-crise-comptes.js';
 import { BusinessPolicies } from './business-policy.js';
 import { Grc } from './grc/core.js';
 import { Walls } from './walls.js';
@@ -44,8 +46,14 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { VeilleReglementaire } from './veille-reglementaire.js';
+import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
+import { ImportNessus } from './vulnerabilites/import-nessus.js';
+import { AnnuaireAd } from './vulnerabilites/annuaire-ad.js';
+import { ImportSilene } from './vulnerabilites/import-silene.js';
+import { SurfaceSilene } from './vulnerabilites/surface-silene.js';
 import { DepotsTenable } from './vulnerabilites/depots.js';
 import { SurfaceExterneAlh } from './vulnerabilites/surface-externe.js';
 import { LiaisonsMachines } from './vulnerabilites/liaisons-machines.js';
@@ -61,6 +69,7 @@ import { FichesFailles } from './vulnerabilites/fiches.js';
 import { DelaisVulnerabilites } from './vulnerabilites/delais.js';
 import { TendancesVulnerabilites } from './vulnerabilites/tendances.js';
 import { CorrectifsVulnerabilites } from './vulnerabilites/correctifs.js';
+import { RechercheVulnerabilites } from './vulnerabilites/recherche.js';
 import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
@@ -117,6 +126,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Surface externe lue dans AlgoLightHouse (ADR 0100, lot ALH1), rangée dans le module Vulnérabilités ; priorité de ses CVE
      par la grille commune (lot ALH2). */
   const surfaceExterne = new SurfaceExterneAlh(db, flux, integrations, grc, reglagePriorite);
+  /* Lot SI1 : surface externe importée de Silène (ANSSI), réunie avec AlgoLightHouse dans la liste « Actifs ». */
+  const sileneSurface = new SurfaceSilene(db, grc);
+  surfaceExterne.silene = sileneSurface;
   integrations.enLots['algolighthouse:synchroniser'] = surfaceExterne;
   const rapprochements = new Rapprochements(db, reglagePriorite);
   const veille = new VeilleVulnerabilites(db, flux, mandataire);
@@ -146,6 +158,19 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     await liaisonsMachines.recalculer(k, c);
     await alertesVulnerabilites.evaluer('synchronisation-tenable', { k, c });
   };
+  /* Lot N1 : import d'un scan Nessus, rangé par le chemin d'écriture de Tenable ; chaque lot est un passage complet pour ses
+     machines, suivi des mêmes traitements qu'une synchronisation reçue. */
+  const importNessus = new ImportNessus(db, integrations, tenable);
+  importNessus.apresImport = async (k, c, id) => {
+    await suivi.apresSynchronisation(k, c, id, true);
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('import-nessus', { k, c });
+  };
+  // Lot N2 : après la suppression d'une instance d'import, liaisons et alertes réévaluées dans la même transaction.
+  importNessus.apresSuppression = async (k, c) => {
+    await liaisonsMachines.recalculer(k, c);
+    await alertesVulnerabilites.evaluer('suppression-import-nessus', { k, c });
+  };
   veille.apresReception = (source) => alertesVulnerabilites.evaluer(`collecte-${source}`);
   rapprochements.apresBascules = (k, c, produit, bascules) => suivi.apresRapprochement(k, c, produit, bascules);
   const failles = new FaillesDetectees(db, grc, reglagePriorite);
@@ -164,12 +189,15 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
+  /* Lot PC1 : vue d'ensemble ; lot ASSISTANT-V1 : ses cibles servent aussi à l'outil failles_prioritaires de l'assistant. */
+  const vueEnsemble = new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne);
   const assistantVulnerabilites = new AssistantVulnerabilites(
     db,
     failles,
     suivi,
     reglagePriorite,
     motsNonMasques,
+    vueEnsemble,
     surfaceExterne,
   );
   assistant.vulnerabilites = assistantVulnerabilites;
@@ -187,6 +215,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     surfaceExterne,
     (user) => assistantVulnerabilites.masque(user, null),
   );
+  const produitsSurveilles = new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne);
   return {
     cfg,
     log,
@@ -197,12 +226,26 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     grc,
     configGrc,
     historique,
+    /** Contacts de crise issus des comptes (ADR 0107) : fiche de l'administrateur, mise à jour par la personne. */
+    contactsCrise: new ContactsCriseComptes(db, grc),
+    /** Veille réglementaire (ADR 0110) : publications de sources officielles (file traitée par l'exécutant), qualification
+        par le rôle RSSI ou DPO. */
+    veilleReglementaire: new VeilleReglementaire(db, flux, mandataire),
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {
-      produits: new ProduitsSurveilles(db, grc, rapprochements, surfaceExterne),
+      produits: produitsSurveilles,
       veille,
       tenable,
+      /** Lot N1 : import de scans Nessus (connecteur « nessus-fichier »), lancé depuis la carte « Intégrations ». */
+      importNessus,
+      /** Lot SI1 : import du rapport Silène (connecteur « silene-fichier »), lancé depuis la carte « Intégrations », et
+          lecture de ce qu'il a importé (note, constats, actifs, liaison au périmètre). */
+      importSilene: new ImportSilene(db, integrations),
+      silene: sileneSurface,
+      /** Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) importé depuis la page « Active Directory » du module ;
+          noms des objets lus point par point (route à part), consultation tracée. */
+      annuaire: new AnnuaireAd(db),
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
       depots: new DepotsTenable(db, grc),
       surfaceExterne,
@@ -216,7 +259,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
       alertes: alertesVulnerabilites,
       /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
-      vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
+      vueEnsemble,
       /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
       fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
       /** Lot S1 : délais de correction (réglés avec les seuils de priorité), exceptions à échéance, mesure des corrections. */
@@ -229,6 +272,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       rapport,
       /** Lot S3 : vue « Correctifs » (failles regroupées par texte de solution de Tenable), lecture seule. */
       correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
+      /** Lot R1 : barre de recherche globale du module (CVE, machines, actifs exposés, applications), lecture seule. */
+      recherche: new RechercheVulnerabilites(db, failles, surfaceExterne, produitsSurveilles),
+      /** Lot PRIO-1 : purge du journal des collectes et des exécutions des connecteurs au-delà de 90 jours (tic de l'API). */
+      purgeJournaux: new PurgeJournaux(db, veille),
     },
     modules,
     flux,
@@ -267,6 +314,12 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       integrationTest: limiter(10, 60e3),
       /** « Synchroniser maintenant » (Tenable) : six demandes par heure et par personne. */
       integrationSynchro: limiter(6, 60 * 60e3),
+      /** Lot N1 : imports de scans Nessus commencés (trente fichiers par heure et par personne depuis le lot N2 :
+          NESSUS_BORNES.importsParHeure) et lots envoyés (six cents par dix minutes et par personne : un import de dix
+          mille machines tient en cinquante lots au moins). Lot SI1 : les imports de rapports Silène comptent dans les mêmes
+          limites (fichiers commencés, tous imports confondus). */
+      importNessus: limiter(NESSUS_BORNES.importsParHeure, 60 * 60e3),
+      importNessusLot: limiter(600, 10 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
       veilleCollecte: limiter(4, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
@@ -281,6 +334,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       setupByIp: limiter(10, 15 * 60e3),
       presence: limiter(30, 60e3),
       wallActivation: limiter(10, 15 * 60e3),
+      /** Chiffres ouverts d'un tableau de bord (ADR 0109) : soixante calculs par minute et par compte. */
+      tableauChiffres: limiter(60, 60e3),
       /* Clés de sécurité (ADR 0079) : options et vérifications, par session et par compte. */
       webauthnBySession: limiter(10, 10 * 60e3),
       webauthnByUser: limiter(20, 15 * 60e3),

@@ -64,7 +64,8 @@ export interface Periode {
   unite: Echelle;
   reperes: Intervalle[];
 }
-const numeroSemaine = (n: number) => {
+/** Numéro de semaine ISO 8601 du jour `n` (minuit UTC). */
+export const numeroSemaine = (n: number) => {
   const d = new Date(n);
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   return Math.ceil(((d.getTime() - janvier(d.getUTCFullYear())) / JOUR + 1) / 7);

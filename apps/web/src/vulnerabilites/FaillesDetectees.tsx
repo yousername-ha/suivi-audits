@@ -35,6 +35,7 @@ import {
   type TriFailles,
   type ConstatDto,
   type ConstatResumeDto,
+  type EtatImportNessusDto,
   type EtatSynchronisationDto,
   type FailleDeclareeDto,
   type FicheDeclareeDto,
@@ -51,11 +52,15 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router';
+import { ouvertureConstat } from './recherche';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
+import { EtatIntegration } from '../integrations/EtatIntegration';
+import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { resumeExecution } from '../integrations/integrations';
+import { machinesImportees, resumeBilanImport } from '../integrations/nessus';
 import { useCan } from '../session';
 import {
   ETAT_PRIORITE,
@@ -82,6 +87,7 @@ import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
+import { SourceConnecteur } from './SourceConnecteur';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
@@ -185,6 +191,7 @@ export function ConstatsTable({
                   ))}
                 </Group>
                 <MarquesSources s={c.sources} />
+                <SourceConnecteur origine={c.integration} />
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
@@ -343,7 +350,7 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
     <Stack>
       <Group gap="xs">
         <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
-        {marquesConstat(c).map((m) => (
+        {marquesConstat(c, true).map((m) => (
           <StatusChip key={m.libelle} etat={m.etat}>
             {m.libelle}
           </StatusChip>
@@ -503,30 +510,47 @@ export function FicheDeclaree({ f }: { f: FicheDeclareeDto }) {
   );
 }
 
-/** Dernière synchronisation de chaque instance (sans état). */
-export function EtatSynchronisations({ etats }: { etats: EtatSynchronisationDto[] }) {
-  if (!etats.length)
-    return (
-      <Alert color="gray" role="status">
-        Aucun connecteur Tenable Security Center : il se configure dans Pilotage &gt; Intégrations.
-      </Alert>
-    );
+/** Lot N1 : état en lecture seule de chaque instance « Nessus, import de fichier » (sans état) : date du dernier import et
+    nombre de machines, erreur éventuelle, bilan ; aucun bouton (l'import se fait dans la carte « Intégrations »). */
+export function EtatImports({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatImportNessusDto[];
+  peutConfigurer?: boolean;
+}) {
   return (
-    <Stack gap="2xs">
-      {etats.map((e) => (
-        <Text key={e.integrationId} size="sm" role="status">
-          <strong>{e.nom}</strong> :{' '}
-          {e.derniere ? (
-            <>
-              <span className="horodatage">{fmtDate(e.derniere.demandeLe)}</span> ·{' '}
-              {resumeExecution({ etat: e.derniere.etat, resultat: e.derniere.bilan, erreur: e.derniere.erreur })}
-            </>
-          ) : (
-            'jamais synchronisé.'
-          )}
-        </Text>
-      ))}
-    </Stack>
+    <EtatIntegration
+      type="Nessus (import de fichier)"
+      nature="import"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      apresDate={(e) => (e.derniere?.bilan ? machinesImportees(e.derniere.bilan) : null)}
+      detail={(e) => (e.derniere?.etat === 'recu' && e.derniere.bilan ? resumeBilanImport(e.derniere.bilan) : null)}
+    />
+  );
+}
+
+/** État en lecture seule de chaque instance de Tenable (sans état) : dernière synchronisation, erreur éventuelle, bilan, et
+    lien « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076, addendum du 19/11/2026). */
+export function EtatSynchronisations({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatSynchronisationDto[];
+  peutConfigurer?: boolean;
+}) {
+  return (
+    <EtatIntegration
+      type="Tenable Security Center"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      detail={(e) =>
+        e.derniere?.etat === 'recu' && e.derniere.bilan
+          ? resumeExecution({ etat: 'recu', resultat: e.derniere.bilan, erreur: null })
+          : null
+      }
+    />
   );
 }
 
@@ -543,11 +567,32 @@ export function FaillesDetecteesPage() {
   const [page, setPage] = useState(1);
   const [pageMachines, setPageMachines] = useState(1);
   const [pageDeclarees, setPageDeclarees] = useState(1);
-  const [ouvert, setOuvert] = useState<string | null>(null);
+  const [ouvert, setOuvert] = useState<string | null>(() => ouvertureConstat(adresse));
+  // Lot R1 : la barre de recherche du module ouvre cette liste filtrée (`?q=`) ou la fiche d'un contrôle (`?constat=`), y
+  // compris quand la page est déjà affichée (chaque navigation a sa clé) ; la fiche répond 404 pour l'illisible.
+  const loc = useLocation();
+  useEffect(() => {
+    const p = new URLSearchParams(loc.search);
+    if (p.has('q')) {
+      const f = filtresDepuisAdresse(p);
+      setVue('failles');
+      setFiltres(f);
+      setSaisie(f.q);
+      setPage(1);
+    }
+    const c = ouvertureConstat(p);
+    if (c) setOuvert(c);
+  }, [loc.key, loc.search]);
   const [declareeOuverte, setDeclareeOuverte] = useState<string | null>(null);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatSynchronisationDto[]>('/api/vulnerabilites/synchronisation'),
+    enabled: lire,
+    refetchInterval: 60_000,
+  });
+  const imports = useQuery({
+    queryKey: [...CLE, 'imports'],
+    queryFn: () => get<EtatImportNessusDto[]>('/api/vulnerabilites/imports/etat'),
     enabled: lire,
     refetchInterval: 60_000,
   });
@@ -608,7 +653,7 @@ export function FaillesDetecteesPage() {
     <Page>
       <PageHeader
         title="Failles détectées"
-        description="Failles rapportées par Tenable Security Center sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
+        description="Failles rapportées par Tenable Security Center, ou importées d’un scan Nessus (carte « Intégrations » de la page Plateforme), sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
         actions={
           <Button component={Link} to="/vulnerabilites/machines" variant="default">
             Machines
@@ -616,8 +661,15 @@ export function FaillesDetecteesPage() {
         }
       />
       <Stack>
-        <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSynchronisations etats={etat.data} />}
+        <ErrorAlert error={etat.error ?? imports.error} />
+        {/* Lot N1 : sans instance Security Center, seul l'état des imports est montré quand il y en a. */}
+        {etat.data && (etat.data.length > 0 || !imports.data?.length) && (
+          <EtatSynchronisations
+            etats={etat.data}
+            peutConfigurer={peutConfigurerIntegration(can) && !imports.data?.length}
+          />
+        )}
+        {!!imports.data?.length && <EtatImports etats={imports.data} peutConfigurer={peutConfigurerIntegration(can)} />}
         <SegmentedControl
           value={vue}
           onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}

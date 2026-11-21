@@ -1,0 +1,163 @@
+{
+  "etapes": {
+    "perimetres": 0,
+    "risquesApi": 3,
+    "incidentsApi": 5,
+    "documentsApi": 6
+  },
+  "tIncidentsCreationMs": [
+    109,
+    77,
+    80,
+    115,
+    117,
+    167,
+    82,
+    102,
+    78,
+    76,
+    86,
+    105,
+    90,
+    98,
+    86,
+    113,
+    102,
+    84,
+    91,
+    78,
+    84,
+    96,
+    81,
+    83,
+    75,
+    77,
+    76,
+    109,
+    114,
+    88
+  ],
+  "acces": "voir phase 1",
+  "methodes": {
+    "00000000-0000-4000-8000-000000000001": {
+      "id": "93133c6f-8c34-40e0-bd95-a115ddce15fd",
+      "version": 1
+    },
+    "2f5de677-d4b8-44cd-832c-4b7f9b772f19": {
+      "id": "3b7f2fd9-3cda-48da-9bf6-6c1ea0311f3f",
+      "version": 1
+    },
+    "8cd60f8c-1cee-4948-8db7-c0fe90eeedf6": {
+      "id": "09d3bc63-f082-4ef4-b2f1-b0f1e630f42a",
+      "version": 1
+    },
+    "1bb3216a-c6b9-4d2d-b6ad-fce7b7be41f2": {
+      "id": "e0198d7f-222c-442d-a7d7-04fa1863c5d8",
+      "version": 1
+    },
+    "d1870c5d-b94e-441d-8d27-cdac733a4ad5": {
+      "id": "6f775cdc-9c67-4aa9-b187-6de4e08187ce",
+      "version": 1
+    },
+    "bd7f5c37-99e6-476a-a754-b8e306275f08": {
+      "id": "03b52965-2b03-4692-9a6b-650e873bdd67",
+      "version": 1
+    },
+    "fbccecda-41ca-403a-8f69-b0daebaad90c": {
+      "id": "2e2a09f3-acad-4133-bd36-f02de67dd01e",
+      "version": 1
+    },
+    "99b1e298-fd42-4150-b86f-983309a0dd37": {
+      "id": "26a76722-06b9-4216-a95b-570603a10556",
+      "version": 1
+    },
+    "91721154-b64a-4fac-ac9a-27cea8d8ae0b": {
+      "id": "c9317f62-b2ad-458c-8632-129c7fa45703",
+      "version": 1
+    },
+    "f3db7ff5-fc8a-4c7b-ad62-ba28faf25dbb": {
+      "id": "1aa14a65-3024-445a-99f1-7340bba4bfda",
+      "version": 1
+    },
+    "a77414a5-1cf8-4324-8b7c-7d9f94a61582": {
+      "id": "72caeb1d-6ba3-49c8-94b1-f04c8ed17d3a",
+      "version": 1
+    },
+    "4ebba954-7dbb-4322-9a33-41eb9f2007ad": {
+      "id": "eb3144a5-ab18-49ea-9571-c01a898eefe8",
+      "version": 1
+    },
+    "e5cc93c4-ce4d-466f-bf19-fdc882dc2b9d": {
+      "id": "44ad080e-9752-4133-9827-e80610f30bf1",
+      "version": 1
+    },
+    "417afdc9-4e31-483d-adb9-c008c71a96da": {
+      "id": "d02f16ee-a94a-4f92-9610-36695e8d2047",
+      "version": 1
+    },
+    "2242502a-b9a3-4c7b-ad2b-a3f1e0e80469": {
+      "id": "136d2ecf-3cfb-4ced-989e-473705d00628",
+      "version": 1
+    },
+    "60b50413-2dd1-4eff-b92e-cc1234db83da": {
+      "id": "fb95ec6f-a9a0-4825-94fe-f6d0877a23f9",
+      "version": 1
+    },
+    "32dd317a-5a78-4d74-bcd9-410b4cdd27df": {
+      "id": "80686103-f41f-4674-8731-f62fb0bcfef0",
+      "version": 1
+    },
+    "86707528-33d1-4c52-bfe8-e462457b6470": {
+      "id": "0023d0d0-f1b1-49ce-a763-cead569aae84",
+      "version": 1
+    },
+    "1599dea5-1d9e-4391-85d5-b6f09f6cb105": {
+      "id": "3318b88c-30f1-4415-82fc-e72b7743071e",
+      "version": 1
+    },
+    "c53b3a25-7f3a-48c4-bfa0-1a142624730d": {
+      "id": "f3080c98-ba78-4d91-aaf0-2f6f2550df3c",
+      "version": 1
+    },
+    "bf2bdb37-7431-4068-af02-aa3d3ec366ba": {
+      "id": "fd95ad2b-caba-44a6-9cd0-1ce475b0377e",
+      "version": 1
+    },
+    "d78378d7-c489-420e-b15e-103c5901f400": {
+      "id": "15e83a99-500d-480e-afdc-24e92d73b1c8",
+      "version": 1
+    },
+    "8ed7a09a-44da-4537-8d01-851420a2a8a1": {
+      "id": "fd41bb20-7b42-4b5c-a6fa-91efd32ee8ab",
+      "version": 1
+    },
+    "6194a8cf-67c3-4bb4-9781-4d3006e77066": {
+      "id": "03c319e6-5a65-48ac-a4cc-d73c724efc87",
+      "version": 1
+    },
+    "d8c5841c-f4ff-473e-a745-ac4bf34e1b1a": {
+      "id": "f139be2d-c05b-4ddb-8a25-351e23d3d5fb",
+      "version": 1
+    },
+    "960a53da-951c-4cdd-8dbd-73d9f4875aef": {
+      "id": "f4426cc9-2800-46cb-9796-740d51f8581d",
+      "version": 1
+    },
+    "5f51ebc1-21fa-40de-9589-e72763674172": {
+      "id": "19b4bcc9-1955-4a44-ac8b-764d3d13ccb0",
+      "version": 1
+    },
+    "4a703f83-b435-446e-abec-1a1e54b0f7ad": {
+      "id": "1fb6525a-dc44-46ea-8aa0-a1d0acbc8109",
+      "version": 1
+    },
+    "25c86e12-00b1-4cfe-9a04-5e700f8b8c00": {
+      "id": "02b945c4-88c4-4a42-899d-e396052eada9",
+      "version": 1
+    },
+    "ddc5f670-ecd4-4e10-9945-0124586a7a9c": {
+      "id": "61708989-c470-40d6-8959-9fb803ef7caa",
+      "version": 1
+    }
+  }
+}

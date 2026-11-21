@@ -1,6 +1,6 @@
 # ADR 0092 — Refonte des droits : trois profils et pyramide des périmètres
 
-- Statut : **acceptée** (décisions du RSSI du 13/11/2026). Lot 1 livré ; lot 2 livré côté serveur (écran du contributeur à faire) ; lot 3 décidé, non livré
+- Statut : **acceptée** (décisions du RSSI du 13/11/2026). Lot 1 livré ; lot 2 livré côté serveur (écran du contributeur à faire) ; lot 3 décidé et précisé par l'addendum du 20/11/2026, non livré
 - Date : 2026-11-13
 - Rédaction : session « Refonte des droits d'accès » (`session_01EnWdzeZgHxzTs1KxQ6ja6Z`)
 - Amende le point 4 de l'[ADR 0039](0039-hierarchie-des-perimetres.md) (« droits et membres ne se propagent pas »), pour les seuls membres.
@@ -107,11 +107,43 @@ l'effet recherché ; relire les membres des périmètres de tête avant de mettr
 l'écran ; devenir des droits par ressource (lecteur, contributeur, gestionnaire) et des registres restreints ; reprise des
 comptes existants (migration). Chaque point touche des comptes en place : plan de reprise à valider avant d'écrire la migration.
 
+## Addendum du 20/11/2026 : profils, droits spéciaux et rôles composés (décisions du RSSI)
+
+Le lot 3 est précisé ainsi ; il remplace le tableau ci-dessus là où ils diffèrent.
+
+| Profil         | Attribution                       | Ce qu'il voit et fait                                                              |
+| -------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| Administrateur | sur la plateforme                 | configure la plateforme ; indépendant du pilotage                                  |
+| Pilote         | sur un ou plusieurs périmètres    | tout, dans ces périmètres et leurs enfants (création, modification, suppression)  |
+| Contributeur   | par « Attribuer à »               | seulement ce qui lui est attribué et ce qu'il y a créé (lot 2, inchangé)          |
+| Auditeur       | sur un ou plusieurs périmètres    | lecture seule de ces périmètres et de leurs enfants                                |
+
+1. **Auditeur** : il n'est plus « externe, sur toute la plateforme » ; il est désigné **sur un périmètre**, en lecture seule. La
+   date d'expiration reste possible.
+2. **Droits spéciaux**, cumulables avec n'importe quel profil :
+   - **DPO** : ouvre la veille réglementaire (ADR 0110) ;
+   - **Analyste** : ouvre le module Vulnérabilités (ADR 0100), **noms des objets de l'annuaire importé compris**.
+   Ils remplacent le rôle prédéfini « dpo » et le droit réservé `vulnerabilites:noms_annuaire` envisagés plus tôt le même jour :
+   ni l'un ni l'autre n'est créé.
+3. **Rôles personnalisés conservés, comme combinaisons** : un rôle personnalisé assemble un profil et des droits spéciaux (par
+   exemple « Pilote + Analyste + DPO » ou « Contributeur + DPO »). La matrice module × action disparaît de l'écran.
+4. **Reprise des comptes** (question 2 tranchée) :
+   - comptes **RSSI** : **pilote du sommet + Analyste + DPO**, sans devenir administrateurs de la plateforme ;
+   - comptes **Lecteur** : la migration les reprend en **auditeur des périmètres dont ils
+     sont membres** (rien s'ils n'en ont aucun) ;
+   - **rôles personnalisés existants** : la migration retire la matrice.
+5. **En attendant le lot 3** :
+   - **DPO** est un droit réservé hors matrice (`veille_reglementaire:dpo`, mécanisme des droits réservés, table « Droits
+     réservés » de l'écran des rôles), coché dans un rôle personnalisé ; il n'est donné d'office ni à l'administrateur ni au
+     rôle RSSI (l'administrateur ne qualifie pas la veille). Les droits réservés préfigurent les droits spéciaux du lot 3 ;
+   - **Analyste** reste porté par les droits actuels du module Vulnérabilités, noms de l'annuaire compris : aucun droit à part ;
+   - aucun rôle prédéfini n'est créé ; le lot 3 reprend ces droits sans changement de sens (les comptes RSSI reçoivent alors
+     DPO, point 4).
+
 ## Questions restantes
 
-1. **Lecture seule sur un périmètre** : la garde-t-on à côté du pilote ? Le lot 1 la conserve et la fait descendre aux enfants.
-2. **Reprise des comptes** au lot 3 : que deviennent les comptes RSSI (administrateur ? pilote du sommet ?) et Lecteur
-   (lecture seule du sommet ? retirés ?) ?
+1. ~~**Lecture seule sur un périmètre**~~ : tranchée le 20/11/2026, c'est le profil Auditeur (addendum, point 1).
+2. ~~**Reprise des comptes** au lot 3~~ : tranchée le 20/11/2026 (addendum, point 4).
 3. **Écarts** : le contributeur les alimente-t-il comme les actions, par le même champ ?
 
 ## Preuves

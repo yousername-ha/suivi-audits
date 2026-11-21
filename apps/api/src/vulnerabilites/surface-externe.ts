@@ -35,9 +35,13 @@
      vulnérable monte d'un cran (majorerPriorite, majoration.ts), sans nommer la machine.
    Lot ALH6 (décision du RSSI du 17/11/2026) : services exposés (port, protocole, produit) lus dans les fragments du détail
    d'une alerte, rangés sur l'actif visé (services-surface.ts) et rendus avec la carte, la liste et la fiche des actifs et
-   la fiche d'une alerte, sous les droits de lecture de l'actif ; aucun effet sur la priorité. */
+   la fiche d'une alerte, sous les droits de lecture de l'actif ; aucun effet sur la priorité.
+   Lot SI1 : la liste « Actifs » est commune à AlgoLightHouse et à Silène (surface-silene.ts) : un actif est identifié par
+   son adresse IP ou son nom de domaine ; vu par les deux sources, il n'apparaît qu'une fois, avec ce que chacune en dit. */
 import {
-  type ActifAlhDto,
+  type ActifCarteDto,
+  type ActifSileneDto,
+  type ActifSurfaceDto,
   type AlerteAlhDto,
   type AlerteCarteDto,
   BilanSynchronisationAlh,
@@ -70,7 +74,11 @@ import {
   type ElementTechnologieActifAlh,
   type ElementTechnologieAlh,
   type ElementTechnologieCveAlh,
+  echeanceAtteinte,
+  frequenceConnecteur,
   type EtatSurfaceExterneDto,
+  prochaineAffichee,
+  referenceApresDemande,
   LiaisonPerimetreAlh,
   LotSynchronisation,
   ALH_BORNES,
@@ -80,6 +88,7 @@ import {
   type RechercheAlertesAlh,
   type RechercheTechnologiesAlh,
   SERVICES_PAR_ACTIF_MAX,
+  type SileneCarteDto,
   STATUTS_ALERTE_ALH_OUVERTS,
   type StatutActifAlh,
   type StatutAlerteAlh,
@@ -92,6 +101,7 @@ import {
 } from '@suivi/shared';
 import { sql, type RawBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
+import { analyserTables } from '../db/analyser.js';
 import type { Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import type { Grc } from '../grc/core.js';
@@ -104,12 +114,11 @@ import { actifsMenantAUneMachineVulnerable } from './majoration.js';
 import { rangerServicesAlertes, sansAlertes, servicesDeLAlerte, servicesDesActifs } from './services-surface.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
 import { cvesAlh, lisibleAlh } from './sql.js';
+import { cleActif, type SurfaceSilene } from './surface-silene.js';
 
 const TYPE = 'algolighthouse';
-const FUSEAU = 'Europe/Paris';
 const PLANIFICATION = { username: 'planification' };
 const EXECUTANT = { username: 'exécutant serveur' };
-const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 const iso = (d: Date | null) => d?.toISOString() ?? null;
 const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
@@ -131,6 +140,9 @@ export class SurfaceExterneAlh implements OperationEnLots {
   /** Lot ALH3 : propositions de liaison entre actifs exposés et machines internes, recalculées dans la transaction de la fin
       d'une synchronisation reçue. */
   apresSynchronisation?: (k: Kdb, c: Client) => Promise<void>;
+  /** Lot SI1 : surface externe importée de Silène, réunie avec AlgoLightHouse dans la liste « Actifs » (branchée par
+      services.ts). */
+  silene?: SurfaceSilene;
 
   constructor(
     private readonly db: Db,
@@ -260,6 +272,31 @@ export class SurfaceExterneAlh implements OperationEnLots {
     );
     if (bilan && !refus) await this.apresSynchronisation?.(k, c);
     return refus;
+  }
+
+  /** Après la validation d'une fin reçue, hors transaction : statistiques des tables réécrites par les lots, s'il y en a eu. */
+  async apresValidation(executionId: string): Promise<void> {
+    const s = await this.db.k
+      .selectFrom('vulnerabilites_alh_synchronisations')
+      .select('elements')
+      .where('execution_id', '=', executionId)
+      .executeTakeFirst();
+    if (s?.elements)
+      await analyserTables(
+        this.db.k,
+        [
+          'vulnerabilites_alh_perimetres',
+          'vulnerabilites_alh_actifs',
+          'vulnerabilites_alh_alertes',
+          'vulnerabilites_alh_alerte_cves',
+          'vulnerabilites_alh_services',
+          'vulnerabilites_alh_service_alertes',
+          'vulnerabilites_alh_technologies',
+          'vulnerabilites_alh_technologie_actifs',
+          'vulnerabilites_alh_technologie_cves',
+        ],
+        this.db.log,
+      );
   }
 
   /* ---------------------------------------------------------------- Rangement (sans doublon) */
@@ -586,11 +623,11 @@ export class SurfaceExterneAlh implements OperationEnLots {
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
-  /** Inscrit au plus une synchronisation par jour et par instance AlgoLightHouse active dont la clé est enregistrée. Les
+  /** Lot F1 : inscrit au plus une synchronisation par période réglée (vingt-quatre heures par défaut ; 12 h, 24 h ou 7 jours)
+      et par instance AlgoLightHouse active dont la clé est enregistrée. Les
       modules Intégrations et Vulnérabilités sont contrôlés par l'appelant ; flux « algolighthouse » fermé : rien. */
   async planifier(maintenant = new Date()): Promise<string[]> {
     if (!(await this.flux.ouvert('algolighthouse'))) return [];
-    const jour = jourDe(maintenant);
     const instances = (await this.integrations.lister()).filter(
       (i) => i.type === TYPE && i.actif && Object.values(i.secrets).every(Boolean),
     );
@@ -606,15 +643,20 @@ export class SurfaceExterneAlh implements OperationEnLots {
           .execute();
         const e = await k
           .selectFrom('vulnerabilites_alh_etat')
-          .select(sql<string | null>`creneau::text`.as('creneau'))
+          .select('planifiee_le')
           .where('integration_id', '=', i.id)
           .forUpdate()
           .executeTakeFirstOrThrow();
-        if (e.creneau === jour) return;
-        // Créneau consommé d'abord : une synchronisation inscrite puis perdue n'est pas réinscrite le même jour.
+        // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
+        // dernière demande automatique.
+        if (!echeanceAtteinte(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant)) return;
+        // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
+        // avant la période suivante.
         await k
           .updateTable('vulnerabilites_alh_etat')
-          .set({ creneau: jour })
+          .set({
+            planifiee_le: referenceApresDemande(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant),
+          })
           .where('integration_id', '=', i.id)
           .execute();
         const occupee = await k
@@ -633,6 +675,8 @@ export class SurfaceExterneAlh implements OperationEnLots {
   async etat(user: SessionUser): Promise<EtatSurfaceExterneDto[]> {
     const instances = (await this.integrations.lister()).filter((i) => i.type === TYPE);
     const administrer = user.rights.can('vulnerabilites', 'administrer');
+    const fluxOuvert = await this.flux.ouvert('algolighthouse');
+    const maintenant = new Date();
     const out: EtatSurfaceExterneDto[] = [];
     for (const i of instances) {
       const e = await this.db.k
@@ -677,6 +721,16 @@ export class SurfaceExterneAlh implements OperationEnLots {
           : null,
         derniereCompleteLe: e?.complete_le?.toISOString() ?? null,
         perimetresNonRelies: nonRelies,
+        frequenceHeures: frequenceConnecteur(i.frequenceHeures),
+        // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
+        prochaineSynchronisation:
+          fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
+            ? prochaineAffichee(
+                e?.planifiee_le ?? null,
+                frequenceConnecteur(i.frequenceHeures),
+                maintenant,
+              ).toISOString()
+            : null,
       });
     }
     return out;
@@ -864,7 +918,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
     };
   }
 
-  async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifAlhDto>> {
+  /** Liste « Actifs » (lot SI1 : commune à AlgoLightHouse et à Silène). Un actif est identifié par son adresse IP (hôte) ou
+      son nom de domaine. Chaque actif lisible d'AlgoLightHouse garde sa ligne et ses champs, comme avant, et reçoit ce que
+      Silène dit de la même valeur ; un actif vu par Silène seul (aucun actif d'AlgoLightHouse de même type et de même
+      valeur parmi ceux que la personne lit et que les filtres retiennent) s'y ajoute une fois. Ordre : alertes ouvertes,
+      type, valeur. Le filtre « Machine interne » ne retient que des actifs d'AlgoLightHouse (seuls à se relier). */
+  async actifs(user: SessionUser, q: RechercheActifsAlh): Promise<PageSurface<ActifSurfaceDto>> {
     const conditions: RawBuilder<boolean>[] = [lisible(user), present('x')];
     if (q.type) conditions.push(sql<boolean>`x.type = ${q.type}`);
     if (q.liaison) conditions.push(filtreLiaison(user, q.liaison));
@@ -873,98 +932,163 @@ export class SurfaceExterneAlh implements OperationEnLots {
       const motif = `%${litteral(texte.toLowerCase())}%`;
       conditions.push(sql<boolean>`(x.valeur LIKE ${motif} OR x.adresse LIKE ${motif})`);
     }
-    const { rows } = await sql<{
-      id: string;
-      type: TypeActifAlh;
-      valeur: string;
-      statut: StatutActifAlh | null;
-      adresse: string | null;
-      fai: string | null;
-      asn: string | null;
-      pays: string | null;
-      cdn: boolean | null;
-      mutualise: boolean | null;
-      joignable: boolean | null;
-      joignable_le: Date | null;
-      niveau: number | null;
-      cree_alh_le: Date | null;
-      maj_alh_le: Date | null;
-      integration_id: string;
-      integration_nom: string;
-      perimetre_alh_nom: string | null;
-      perimetre_nom: string | null;
-      alertes_ouvertes: number;
-      technologies: number;
-      liaisons_version: number;
-      total: number;
-    }>`
-      SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
-        x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
-        x.liaisons_version,
-        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
-        (SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
+    const alertesOuvertes = sql<number>`(SELECT count(*)::int FROM vulnerabilites_alh_alertes a2
            LEFT JOIN vulnerabilites_alh_perimetres lp2 ON lp2.integration_id = a2.integration_id
              AND lp2.alh_id = a2.perimetre_alh
            WHERE a2.integration_id = x.integration_id AND a2.statut = ANY(${OUVERTS}::text[]) AND ${present('a2')}
              AND ${lisible(user, 'lp2')}
-             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id))
-        ) AS alertes_ouvertes,
+             AND ((x.type = 'hote' AND a2.cible_hote = x.alh_id) OR (x.type = 'domaine' AND a2.cible_domaine = x.alh_id)))`;
+    const silene = this.silene && !q.liaison ? this.silene.clesActifs(user, { type: q.type, q: texte }) : null;
+    const { rows: cles } = await sql<{ id: string; type: TypeActifAlh; valeur: string; alh: boolean; total: number }>`
+      WITH alh AS (
+        SELECT x.id, x.type, x.valeur, ${alertesOuvertes} AS alertes_ouvertes
+        FROM vulnerabilites_alh_actifs x
+        LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+        LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+        WHERE ${sql.join(conditions, sql` AND `)}
+      ),
+      tous AS (
+        SELECT id, type, valeur, alertes_ouvertes, true AS alh FROM alh
+        ${
+          silene
+            ? sql`UNION ALL SELECT s.id, s.type, s.valeur, 0, false FROM (${silene}) s
+                WHERE NOT EXISTS (SELECT 1 FROM alh WHERE alh.type = s.type AND alh.valeur = s.valeur)`
+            : sql``
+        }
+      )
+      SELECT id, type, valeur, alh, count(*) OVER ()::int AS total FROM tous
+      ORDER BY alertes_ouvertes DESC, type, valeur, id
+      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+    const idsAlh = cles.filter((c) => c.alh).map((c) => c.id);
+    const { rows } = idsAlh.length
+      ? await sql<{
+          id: string;
+          type: TypeActifAlh;
+          valeur: string;
+          statut: StatutActifAlh | null;
+          adresse: string | null;
+          fai: string | null;
+          asn: string | null;
+          pays: string | null;
+          cdn: boolean | null;
+          mutualise: boolean | null;
+          joignable: boolean | null;
+          joignable_le: Date | null;
+          niveau: number | null;
+          cree_alh_le: Date | null;
+          maj_alh_le: Date | null;
+          integration_id: string;
+          integration_nom: string;
+          perimetre_alh_nom: string | null;
+          perimetre_nom: string | null;
+          alertes_ouvertes: number;
+          technologies: number;
+          liaisons_version: number;
+        }>`
+      SELECT x.id, x.type, x.valeur, x.statut, x.adresse, x.fai, x.asn, x.pays, x.cdn, x.mutualise, x.joignable,
+        x.joignable_le, x.niveau, x.cree_alh_le, x.maj_alh_le, x.integration_id, i.nom AS integration_nom,
+        x.liaisons_version,
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom,
+        ${alertesOuvertes} AS alertes_ouvertes,
         (SELECT count(DISTINCT ta.technologie_id)::int FROM vulnerabilites_alh_technologie_actifs ta
            JOIN vulnerabilites_alh_technologies t2 ON t2.id = ta.technologie_id
            WHERE t2.integration_id = x.integration_id AND ta.actif_type = x.type AND ta.actif_alh = x.alh_id AND ta.actuel
              AND t2.vu_numero >= coalesce(e.numero_complet, 0)
-        ) AS technologies,
-        count(*) OVER ()::int AS total
+        ) AS technologies
       FROM vulnerabilites_alh_actifs x
       JOIN integrations i ON i.id = x.integration_id
       LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
       LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
       LEFT JOIN grc_smsis sm ON sm.id = lp.perimetre_id
-      WHERE ${sql.join(conditions, sql` AND `)}
-      ORDER BY alertes_ouvertes DESC, x.type, x.valeur, x.id
-      LIMIT ${SURFACE_PAR_PAGE} OFFSET ${(q.page - 1) * SURFACE_PAR_PAGE}`.execute(this.db.k);
+      WHERE x.id = ANY(${idsAlh}::uuid[])`.execute(this.db.k)
+      : { rows: [] };
+    const parId = new Map(rows.map((x) => [x.id, x]));
     // Lot ALH3 : machines internes reliées ou proposées, limitées à celles que la personne peut lire.
-    const liaisons = await resumesLiaisons(
-      this.db.k,
-      user,
-      rows.map((x) => x.id),
-    );
+    const liaisons = await resumesLiaisons(this.db.k, user, idsAlh);
     // Lot ALH6 : services connus de chaque actif (portés par une alerte ouverte et présente).
-    const services = await servicesDesActifs(
-      this.db.k,
-      user,
-      rows.map((x) => x.id),
-    );
+    const services = await servicesDesActifs(this.db.k, user, idsAlh);
+    // Lot SI1 : ce que Silène dit de chaque actif de la page (même adresse IP ou même nom de domaine).
+    const sil = this.silene
+      ? await this.silene.actifs(
+          this.db.k,
+          user,
+          cles.map((c) => ({ type: c.type, valeur: c.valeur })),
+          SERVICES_PAR_ACTIF_MAX,
+        )
+      : new Map<string, ActifSileneDto & { constatIds: string[] }>();
+    const sansIds = (a: (ActifSileneDto & { constatIds?: string[] }) | undefined): ActifSileneDto | null => {
+      if (!a) return null;
+      const { constatIds: _ignore, ...dto } = a;
+      void _ignore;
+      return dto;
+    };
     return {
-      total: rows[0]?.total ?? 0,
+      total: cles[0]?.total ?? 0,
       page: q.page,
       parPage: SURFACE_PAR_PAGE,
-      elements: rows.map((x) => ({
-        id: x.id,
-        type: x.type,
-        valeur: x.valeur,
-        statut: x.statut,
-        adresse: x.adresse,
-        fai: x.fai,
-        asn: x.asn,
-        pays: x.pays,
-        cdn: x.cdn,
-        mutualise: x.mutualise,
-        joignable: x.joignable,
-        joignableLe: iso(x.joignable_le),
-        niveau: x.niveau,
-        alertesOuvertes: x.alertes_ouvertes,
-        technologies: x.technologies,
-        creeLe: iso(x.cree_alh_le),
-        majLe: iso(x.maj_alh_le),
-        perimetreAlh: x.perimetre_alh_nom,
-        perimetreNom: x.perimetre_nom,
-        integration: { id: x.integration_id, nom: x.integration_nom },
-        machinesInternes: liaisons.get(x.id)!,
-        versionLiaisons: x.liaisons_version,
-        services: sansAlertes(services.get(x.id)!.slice(0, SERVICES_PAR_ACTIF_MAX)),
-        nombreServices: services.get(x.id)!.length,
-      })),
+      elements: cles.map((c): ActifSurfaceDto => {
+        const s = sansIds(sil.get(cleActif(c.type, c.valeur)));
+        const x = parId.get(c.id);
+        if (!c.alh || !x)
+          return {
+            id: c.id,
+            type: c.type,
+            valeur: c.valeur,
+            statut: null,
+            adresse: c.type === 'domaine' ? (s?.adresses[0] ?? null) : null,
+            fai: null,
+            asn: null,
+            pays: null,
+            cdn: null,
+            mutualise: null,
+            joignable: null,
+            joignableLe: null,
+            niveau: null,
+            alertesOuvertes: 0,
+            technologies: 0,
+            creeLe: null,
+            majLe: null,
+            perimetreAlh: null,
+            perimetreNom: s?.perimetreNom ?? null,
+            integration: s?.instances[0] ?? { id: c.id, nom: 'Silène' },
+            machinesInternes: { reliees: [], nombreReliees: 0, propositions: 0, autresMachines: false },
+            versionLiaisons: 0,
+            services: [],
+            nombreServices: 0,
+            sources: ['silene'],
+            alhId: null,
+            silene: s,
+          };
+        return {
+          id: x.id,
+          type: x.type,
+          valeur: x.valeur,
+          statut: x.statut,
+          adresse: x.adresse,
+          fai: x.fai,
+          asn: x.asn,
+          pays: x.pays,
+          cdn: x.cdn,
+          mutualise: x.mutualise,
+          joignable: x.joignable,
+          joignableLe: iso(x.joignable_le),
+          niveau: x.niveau,
+          alertesOuvertes: x.alertes_ouvertes,
+          technologies: x.technologies,
+          creeLe: iso(x.cree_alh_le),
+          majLe: iso(x.maj_alh_le),
+          perimetreAlh: x.perimetre_alh_nom,
+          perimetreNom: x.perimetre_nom,
+          integration: { id: x.integration_id, nom: x.integration_nom },
+          machinesInternes: liaisons.get(x.id)!,
+          versionLiaisons: x.liaisons_version,
+          services: sansAlertes(services.get(x.id)!.slice(0, SERVICES_PAR_ACTIF_MAX)),
+          nombreServices: services.get(x.id)!.length,
+          sources: s ? ['alh', 'silene'] : ['alh'],
+          alhId: x.id,
+          silene: s,
+        };
+      }),
     };
   }
 
@@ -1187,8 +1311,10 @@ export class SurfaceExterneAlh implements OperationEnLots {
   /** Graphe de la surface externe pour la carte, déjà filtré par les droits de la personne : actifs lisibles et présents
       (ceux qui portent une alerte ouverte lisible d'abord), leur domaine parent s'il est lui aussi rendu, leurs machines
       internes reliées lisibles (lot ALH3), et les alertes ouvertes lisibles et présentes avec leur priorité (la plus haute
-      de leurs CVE, présence « exposée », majorée si l'actif visé mène à une machine interne vulnérable : lot ALH5). Borné
-      (CARTE_SURFACE_BORNES) ; rien n'est écrit. */
+      de leurs CVE, présence « exposée », majorée si l'actif visé mène à une machine interne vulnérable : lot ALH5). Lot SI2 :
+      deux sources ; un actif d'AlgoLightHouse reçoit ce que Silène dit de la même valeur (ports ouverts et constats de
+      l'hôte), un actif vu par Silène seul s'ajoute après eux (mêmes règles de lecture que la liste « Actifs » du lot SI1).
+      Borné (CARTE_SURFACE_BORNES, toutes sources confondues) ; rien n'est écrit. */
   async carte(user: SessionUser): Promise<CarteSurfaceDto> {
     const { rows: actifs } = await sql<{
       id: string;
@@ -1260,30 +1386,103 @@ export class SurfaceExterneAlh implements OperationEnLots {
       actifs.map((x) => x.id),
     );
     const { priorite, menants } = await this.evaluateur(alertes.flatMap((a) => a.cves));
+    // Lot SI2 : actifs vus par Silène seul (aucun actif lisible et présent d'AlgoLightHouse de même type et de même
+    // valeur), dans la borne restante ; puis ce que Silène dit de chaque actif rendu, et ses constats.
+    const silene = this.silene;
+    const alhVoit = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_alh_actifs x
+        LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
+        LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
+        WHERE x.type = s.type AND x.valeur = s.valeur AND ${lisible(user)} AND ${present('x')})`;
+    const seuls = silene
+      ? await silene.actifsSeuls(this.db.k, user, alhVoit, CARTE_SURFACE_BORNES.actifs - actifs.length)
+      : { total: 0, elements: [] };
+    const sil = silene
+      ? await silene.actifs(
+          this.db.k,
+          user,
+          [...actifs, ...seuls.elements].map((x) => ({ type: x.type, valeur: x.valeur })),
+          SERVICES_PAR_ACTIF_MAX,
+        )
+      : new Map<string, ActifSileneDto & { constatIds: string[] }>();
+    const paires = [...actifs, ...seuls.elements].flatMap((x) =>
+      x.type === 'hote'
+        ? (sil.get(cleActif(x.type, x.valeur))?.constatIds ?? [])
+            .slice(0, CARTE_SURFACE_BORNES.constatsParActif)
+            .map((constat) => ({ constat, adresse: x.valeur }))
+        : [],
+    );
+    const constats = silene ? await silene.constatsCarte(this.db.k, paires) : { constats: [], ports: new Map() };
+    /** Ce que Silène dit d'un actif rendu : ports et constats sur l'hôte seulement (un nom n'en porte pas). */
+    const sileneDe = (type: TypeActifAlh, valeur: string): SileneCarteDto | null => {
+      const s = sil.get(cleActif(type, valeur));
+      if (!s) return null;
+      const hote = type === 'hote';
+      return {
+        adresses: s.adresses,
+        ports: hote ? s.ports : [],
+        nombrePorts: hote ? s.nombrePorts : 0,
+        portsOuverts: hote ? s.portsOuverts : null,
+        constats: hote
+          ? s.constatIds.slice(0, CARTE_SURFACE_BORNES.constatsParActif).map((id) => ({
+              id,
+              ports: constats.ports.get(`${id}|${valeur}`) ?? [],
+            }))
+          : [],
+        nombreConstats: hote ? s.constatIds.length : 0,
+      };
+    };
     return {
-      actifs: actifs.map((x) => {
-        const l = liaisons.get(x.id)!;
-        const sv = services.get(x.id)!;
-        return {
-          id: x.id,
-          type: x.type,
-          valeur: x.valeur,
-          adresse: x.adresse,
-          niveau: x.niveau,
-          parentId:
-            x.type === 'domaine' && x.parent_alh
-              ? (rendus.get(cle(x.integration_id, 'domaine', x.parent_alh)) ?? null)
-              : null,
-          perimetreNom: x.perimetre_nom,
-          perimetreAlh: x.perimetre_alh_nom,
-          machines: l.machines,
-          propositions: l.propositions,
-          autresMachines: l.autresMachines,
-          versionLiaisons: x.liaisons_version,
-          services: sansAlertes(sv.slice(0, SERVICES_PAR_ACTIF_MAX)),
-          nombreServices: sv.length,
-        };
-      }),
+      actifs: [
+        ...actifs.map((x): ActifCarteDto => {
+          const l = liaisons.get(x.id)!;
+          const sv = services.get(x.id)!;
+          const s = sileneDe(x.type, x.valeur);
+          return {
+            id: x.id,
+            type: x.type,
+            valeur: x.valeur,
+            adresse: x.adresse,
+            niveau: x.niveau,
+            parentId:
+              x.type === 'domaine' && x.parent_alh
+                ? (rendus.get(cle(x.integration_id, 'domaine', x.parent_alh)) ?? null)
+                : null,
+            perimetreNom: x.perimetre_nom,
+            perimetreAlh: x.perimetre_alh_nom,
+            machines: l.machines,
+            propositions: l.propositions,
+            autresMachines: l.autresMachines,
+            versionLiaisons: x.liaisons_version,
+            services: sansAlertes(sv.slice(0, SERVICES_PAR_ACTIF_MAX)),
+            nombreServices: sv.length,
+            sources: s ? ['alh', 'silene'] : ['alh'],
+            alhId: x.id,
+            silene: s,
+          };
+        }),
+        ...seuls.elements.map((x): ActifCarteDto => {
+          const s = sileneDe(x.type, x.valeur)!;
+          return {
+            id: x.id,
+            type: x.type,
+            valeur: x.valeur,
+            adresse: x.type === 'domaine' ? (s.adresses[0] ?? null) : null,
+            niveau: null,
+            parentId: null,
+            perimetreNom: sil.get(cleActif(x.type, x.valeur))?.perimetreNom ?? null,
+            perimetreAlh: null,
+            machines: [],
+            propositions: 0,
+            autresMachines: false,
+            versionLiaisons: 0,
+            services: [],
+            nombreServices: 0,
+            sources: ['silene'],
+            alhId: null,
+            silene: s,
+          };
+        }),
+      ],
       alertes: alertes.map((a): AlerteCarteDto => ({
         id: a.id,
         type: a.type,
@@ -1300,8 +1499,12 @@ export class SurfaceExterneAlh implements OperationEnLots {
           (a.cible_domaine ? rendus.get(cle(a.integration_id, 'domaine', a.cible_domaine)) : undefined) ??
           null,
       })),
-      tronquee: (actifs[0]?.total ?? 0) > actifs.length || (alertes[0]?.total ?? 0) > alertes.length,
-      totaux: { actifs: actifs[0]?.total ?? 0, alertes: alertes[0]?.total ?? 0 },
+      constatsSilene: constats.constats,
+      tronquee:
+        (actifs[0]?.total ?? 0) > actifs.length ||
+        seuls.total > seuls.elements.length ||
+        (alertes[0]?.total ?? 0) > alertes.length,
+      totaux: { actifs: (actifs[0]?.total ?? 0) + seuls.total, alertes: alertes[0]?.total ?? 0 },
     };
   }
 
@@ -1437,6 +1640,13 @@ export class SurfaceExterneAlh implements OperationEnLots {
     return out;
   }
 
+  /** Lot PRIO-1 (cartes d'avis de la veille) : CVE demandées exposées sur Internet, oui ou non, sur tous les faits connus et
+      sans droits (décision A du lot ALH5 : un fait de la priorité, le même pour tout le monde). Une lecture pour toutes les
+      CVE ; aucun nom ni nombre rendu. */
+  async cvesExposees(cves: readonly string[]): Promise<Set<string>> {
+    return new Set((await this.porteurs(null, cves)).map((r) => r.cve));
+  }
+
   /** Pour la veille : sur combien d'actifs lisibles chaque CVE est vue, et par combien d'alertes ouvertes lisibles ;
       `horsLecture` (lot ALH5) : elle l'est aussi sur un actif ou par une alerte que la personne ne lit pas (sans nom ni
       nombre). Une CVE que la surface externe ne porte pas du tout est absente de la table rendue. */
@@ -1519,7 +1729,11 @@ export class SurfaceExterneAlh implements OperationEnLots {
     const toutes = await this.porteurs(null, [cve]);
     const lues = new Set(lignes.map((r) => `${r.nature}|${r.cle}|${r.alerte_id}|${r.technologie_id}`));
     const actifs = new Map<string, string | null>();
-    for (const r of lignes) if (r.cle && !actifs.has(r.cle)) actifs.set(r.cle, r.actif_id);
+    // Ordre stable des actifs (repères de l'assistant), quel que soit le plan choisi par PostgreSQL pour `porteurs`.
+    const parCle = [...lignes].sort((a, b) =>
+      (a.cle ?? '') < (b.cle ?? '') ? -1 : (a.cle ?? '') > (b.cle ?? '') ? 1 : 0,
+    );
+    for (const r of parCle) if (r.cle && !actifs.has(r.cle)) actifs.set(r.cle, r.actif_id);
     const techIds = [...new Set(lignes.flatMap((r) => (r.technologie_id ? [r.technologie_id] : [])))];
     const alerteIds = [...new Set(lignes.flatMap((r) => (r.alerte_id ? [r.alerte_id] : [])))];
     const technologies = techIds.length
@@ -1575,6 +1789,26 @@ export class SurfaceExterneAlh implements OperationEnLots {
       })),
       alertes,
     };
+  }
+
+  /** Pour l'assistant (lot ASSISTANT-V1, outil `machines_prioritaires`) : actifs rangés et lisibles par la personne qui
+      portent les CVE données (mêmes porteurs que `exposition`), avec les CVE de chacun ; identifiants internes seulement
+      (l'appelant les remplace par des repères « E-… »). `sansFiche` : actifs lisibles inconnus de la cartographie (sans
+      fiche, donc sans repère), comptés une fois chacun. Une lecture, quel que soit le nombre de CVE. */
+  async actifsDesCves(
+    user: SessionUser,
+    cves: readonly string[],
+  ): Promise<{ actifs: Map<string, Set<string>>; sansFiche: number }> {
+    const actifs = new Map<string, Set<string>>();
+    const sansFiche = new Set<string>();
+    for (const r of await this.porteurs(user, cves)) {
+      if (r.actif_id) {
+        let x = actifs.get(r.actif_id);
+        if (!x) actifs.set(r.actif_id, (x = new Set()));
+        x.add(r.cve);
+      } else if (r.cle) sansFiche.add(r.cle);
+    }
+    return { actifs, sansFiche: sansFiche.size };
   }
 
   /** Pour le masque de l'assistant (décision C) : toutes les valeurs qui désignent un actif de la surface externe

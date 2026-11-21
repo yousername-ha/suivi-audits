@@ -66,6 +66,9 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     // Lot PC2 : liste avec la colonne « Priorité et marques » et la légende ; présentation « Parc », réduite puis grand écran.
     await expect(page.locator('th', { hasText: /^Priorité et marques$/ })).toBeVisible();
     await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('Zero-day');
+    // Lot PRIO-1 : le triangle dit « exploitation avérée » ; « zero-day » est réservé aux failles sans correctif connu.
+    await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('Exploitation avérée');
+    await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('sans correctif connu');
     const presentation = page.getByRole('radiogroup', { name: 'Présentation des machines' });
     await presentation.getByText('Parc', { exact: true }).click();
     for (const zone of ['Front', 'Back applicatif', 'Base de données', 'Rôle non indiqué'])

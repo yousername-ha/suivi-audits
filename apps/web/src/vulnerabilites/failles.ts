@@ -5,7 +5,8 @@
    de suivi (vide : failles encore à traiter ; un état ; « à clore » ; « tous »). Lot V4d : origine du périmètre d'une
    machine (hérité du dépôt Tenable ou indiqué à la main). Lot S1 : filtre par état de délai de correction et tri par
    échéance, repris de l'adresse (lien de la tuile « En dépassement » et de la notification de résumé). Lot S3 : marque
-   et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). */
+   et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). Lot N1 : source d'une
+   machine ou d'un constat (instance Security Center ou import Nessus), marquée dans les listes. */
 import {
   type ConstatDto,
   type ConstatResumeDto,
@@ -13,12 +14,20 @@ import {
   FILTRES_SUIVI,
   type FiltreSuivi,
   GRAVITE_TENABLE_LIBELLES,
+  SOURCE_EXPLOITATION_LIBELLES,
+  SOURCE_EXPLOITATION_LIBELLES_COMPLETS,
   GRAVITES_TENABLE,
   type GraviteTenable,
+  type KitExploitation,
   libelleFaitPriorite,
+  libelleFaitPrioriteComplet,
   libelleFaitRang,
+  libelleKits,
+  type SourcesFailleDto,
   type MachineDto,
   NIVEAUX_PRIORITE,
+  type OrigineConnecteurDto,
+  SOURCE_MACHINE_LIBELLES,
   type NiveauPriorite,
   type Priorite,
   type RangMachineDto,
@@ -124,8 +133,10 @@ export const ETAT_PRIORITE: Record<NiveauPriorite, Etat> = {
   P3: 'info',
   P4: 'neutre',
 };
-/** Faits qui fondent une priorité, en clair. */
+/** Faits qui fondent une priorité, en clair (libellés courts des listes). */
 export const faitsPriorite = (p: Priorite) => p.faits.map(libelleFaitPriorite);
+/** Lot PRIO-1 : faits d'une priorité pour la fiche d'une faille (terme officiel de Tenable, « Exploited by malware »). */
+export const faitsPrioriteComplets = (p: Priorite) => p.faits.map(libelleFaitPrioriteComplet);
 /** Faits qui fondent le rang d'une machine, en clair. */
 export const faitsDuRang = (r: RangMachineDto) => r.faits.map(libelleFaitRang);
 
@@ -164,17 +175,45 @@ export const libelleMachine = (m: { nom: string | null; adresse: string | null }
   m.nom ?? m.adresse ?? 'Machine sans nom';
 
 /** Marques d'un constat, dans l'ordre d'affichage. Lot S3 : « Fin de support » (date de fin de support de Tenable passée),
-    distincte de « Non maintenu » (constat sans CVE, V18). */
+    distincte de « Non maintenu » (constat sans CVE, V18). Lot N2 : exploitation avérée propre au contrôle (import Nessus),
+    libellé court « Logiciel malveillant (Tenable) » dans les listes (lot PRIO-1). Lot PRIO-1 : « Rançongiciels (KEV) »,
+    « Kit d'exploitation : … (Tenable) » et « Sur une machine en fin de support » (un cran de priorité de plus). */
 export function marquesConstat(
-  c: Pick<ConstatResumeDto, 'exploite' | 'exploitable' | 'nonMaintenu'> & { finDeSupport?: boolean },
+  c: Pick<ConstatResumeDto, 'exploite' | 'exploiteMalware' | 'exploitable' | 'nonMaintenu'> & {
+    finDeSupport?: boolean;
+    kitsExploitation?: readonly KitExploitation[];
+    surMachineFinSupport?: boolean;
+    sources?: Pick<SourcesFailleDto, 'rancongiciel'>;
+  },
+  /** Fiche d'une faille : libellés complets, termes officiels de Tenable (« Exploited by malware », « Exploitable with »). */
+  complet = false,
 ) {
   const out: { libelle: string; etat: Etat }[] = [];
   if (c.exploite) out.push({ libelle: 'Exploitée (KEV)', etat: 'erreur' });
+  if (c.sources?.rancongiciel) out.push({ libelle: MARQUE_RANCONGICIEL, etat: 'erreur' });
+  if (c.exploiteMalware)
+    out.push({
+      libelle: (complet ? SOURCE_EXPLOITATION_LIBELLES_COMPLETS : SOURCE_EXPLOITATION_LIBELLES).tenable,
+      etat: 'erreur',
+    });
   if (c.exploitable) out.push({ libelle: 'Exploitable', etat: 'attention' });
+  if (c.kitsExploitation?.length)
+    out.push({
+      libelle: complet ? marqueKitsComplete(c.kitsExploitation) : marqueKits(c.kitsExploitation),
+      etat: 'attention',
+    });
   if (c.finDeSupport) out.push({ libelle: FIN_SUPPORT_LIBELLE, etat: 'attention' });
+  else if (c.surMachineFinSupport) out.push({ libelle: MARQUE_MACHINE_FIN_SUPPORT, etat: 'attention' });
   if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });
   return out;
 }
+
+/** Lot PRIO-1 : marques courtes des listes. */
+export const MARQUE_RANCONGICIEL = 'Rançongiciels (KEV)';
+export const MARQUE_MACHINE_FIN_SUPPORT = 'Sur une machine en fin de support';
+export const marqueKits = (kits: readonly KitExploitation[]) => `Kit d’exploitation : ${libelleKits(kits)} (Tenable)`;
+export const marqueKitsComplete = (kits: readonly KitExploitation[]) =>
+  `Kit d’exploitation disponible selon Tenable (« Exploitable with ») : ${libelleKits(kits)}`;
 
 /** CVE résumées : les premières, puis le reste en nombre ; « aucune CVE » pour un système qui n'est plus maintenu. */
 export function resumeCves(c: Pick<ConstatResumeDto, 'cves' | 'nombreCves'>): string {
@@ -225,3 +264,7 @@ export function originePerimetre(m: Pick<MachineDto, 'perimetreOrigine' | 'depot
 
 export const totalCompteurs = (m: Pick<MachineDto, 'compteurs'>) =>
   m.compteurs.critique + m.compteurs.elevee + m.compteurs.moyenne + m.compteurs.faible;
+
+/** Lot N1 : source d'une machine ou d'un constat, en clair (« Source : Nessus fictif (Nessus, import de fichier) »). Un
+    contrôle Nessus reste un contrôle de Tenable ; la source est l'instance qui l'a rapporté. */
+export const texteSource = (o: OrigineConnecteurDto) => `Source : ${o.nom} (${SOURCE_MACHINE_LIBELLES[o.type]})`;

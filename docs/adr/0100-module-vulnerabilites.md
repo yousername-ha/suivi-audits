@@ -387,6 +387,16 @@
   correctif » de « Failles détectées » (« n mises à jour à faire pour m failles »), état du correctif à trois valeurs avec sa
   source, précision « sans correctif connu » à côté de la marque zero-day, fin de support signalée et filtrée. Voir
   l'addendum « lot S3 » ci-dessous.
+- **Lot R1, barre de recherche globale** (19/11/2026) : sans migration, une barre en tête de toutes les pages du module, une
+  route ; CVE même non détectées sur le parc, machines, actifs exposés, applications. Voir l'addendum « lot R1 » ci-dessous.
+- **Lot N1, import de scans Nessus** (19/11/2026) : migration `093`, connecteur « Nessus, import de fichier » sans adresse,
+  sans clé, sans flux ni exécutant ; fichier `.nessus` lu dans le navigateur, extrait en liste blanche envoyé par lots de
+  machines entières et rangé par le chemin d'écriture de Tenable ; disparition par machine scannée. Voir l'addendum « lot N1 »
+  ci-dessous.
+- **Lot N2, exploitation par un logiciel malveillant, limite des imports, suppression d'un connecteur d'import**
+  (19/11/2026) : migration `094` ; `exploited_by_malware` vaut exploitation avérée selon Tenable ; trente imports par heure ;
+  « Supprimer ce connecteur et tout ce qu'il a importé » pour une instance d'import seulement. Voir l'addendum « lot N2 »
+  ci-dessous.
 - **Règle des sources (V26), à appliquer partout** : un fait est retenu dès qu'**une** source le publie, avec sa provenance
   et sa date ; les sources suivantes complètent sans retarder. Conséquences à réaliser : une CVE publiée par le CERT-FR ou
   le CERT Santé avant NVD est suivie tout de suite, avec ce que la source en dit (produit, gravité, exploitation), et entre
@@ -531,7 +541,7 @@ joué en local seulement, sur une pile sans Docker.
 
 ### Formes constatées sur un espace réel (17/11/2026)
 
-Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt). Elles confirment
+Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt ; le script en a été retiré le 20/11/2026). Elles confirment
 que les listes sont des tableaux directs, sans pagination, et que les volumes tiennent très en dessous des bornes. Trois
 formes ont demandé une adaptation, couverte par un test : la liste des alertes peut rendre une date de création vide (an 1),
 le détail porte la vraie ; « * » tient lieu de valeur absente pour le produit et le nom affiché d'une technologie, dont la
@@ -2162,3 +2172,1563 @@ l'interface. À 390 px, les tables du détail d'un correctif sont serrées (colo
 2. Criticité métier des machines (point ouvert 3 de l'addendum « lot S1 ») : non réalisée.
 3. Fin de support au niveau de la **technologie** d'AlgoLightHouse : la liste `/technologies` ne porte pas `version_status`
    dans ce qui est lu.
+
+## Addendum du 19/11/2026 — lot R1 : barre de recherche globale
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun stockage nouveau, **aucun appel sortant**, aucune dépendance ni extension PostgreSQL nouvelle, rien de nouveau chez
+l'assistant (ni outil, ni texte envoyé au modèle). Réalise la barre de recherche du point 15 et de V11 ; lève le point ouvert
+6 de l'addendum « lot PC1 ».
+
+### Demande du RSSI (19/11/2026)
+
+« La possibilité depuis une barre de recherche de trouver une CVE même si non détectée sur le parc. La barre de recherche
+peut trouver n'importe quel asset, par IP, nom, nom d'application. »
+
+### Réalisation
+
+- **Paquet partagé** (`packages/shared/src/recherche-vulnerabilites.ts`, testé en table) : schéma de la demande (`q` rogné, 2 à
+  200 caractères, aucun autre paramètre) et de la réponse (six groupes bornés à 8 éléments, nombre total, `cveInconnue`),
+  `estIdentifiantCve`, `ressembleACve`, `motifLitteral` (`\`, `%` et `_` échappés), `machineCorrespond` (règle commune à la
+  barre et à la liste « Machines »), `etatCveRecherche` (état d'une CVE en clair).
+- **Route** `GET /api/vulnerabilites/recherche?q=` (`vulnerabilites:lire`, `apps/api/src/vulnerabilites/recherche.ts`) : lecture
+  seule, aucune entrée de journal (comme les listes, le texte cherché n'est pas tracé). Six lectures en parallèle :
+  - **CVE** : par début d'identifiant dans la veille (`vulnerabilites_veille_cve`) et dans ce qui est détecté
+    (`vulnerabilites_constat_cves`, `vulnerabilites_alh_alerte_cves`, `vulnerabilites_alh_technologie_cves`) ; sinon par texte
+    dans la veille (éditeurs et produits de NVD, le tiret bas lu aussi comme une espace ; description ; éditeur, produit et
+    nom du catalogue KEV). Ordre : identifiant exact, puis CVE détectée sur une machine que la personne lit, puis la plus
+    récente ; aucun nombre lié à ce qu'elle ne lit pas n'entre dans l'ordre. Pour chaque CVE rendue : machines lisibles où
+    Tenable la détecte, machines lisibles reliées à un produit rattaché (« déclarée »), actifs exposés lisibles
+    (`surfaceDesCves`), drapeau sans nombre `horsLecture` pour le reste (lot ALH5), gravité et score de NVD, catalogue KEV,
+    `veille` (connue de la veille locale) et `fiche` (la fiche d'une CVE du lot PC4 s'ouvre : connue de la veille, d'un
+    contrôle ou exposée) ;
+  - **identifiant CVE bien formé** que ni la veille ni aucune détection ne cite : `cveInconnue: { cve }`, sans aucun appel
+    sortant. L'objet est prévu pour qu'un lot suivant y ajoute une action (consultation de NVD à la demande, décision du RSSI
+    en attente) ;
+  - **machines internes** : `FaillesDetectees.machinesRangees` (droits du périmètre effectif, liste « Machines »), filtrées par
+    `machineCorrespond` (nom ou système partiels, casse ignorée ; adresse IP par préfixe, l'adresse exacte comprise),
+    correspondance exacte d'abord puis l'ordre du rang ;
+  - **actifs exposés** : `SurfaceExterneAlh.actifs` (liste « Actifs », mêmes droits, même filtre sur le nom de domaine ou
+    l'adresse IP) ;
+  - **applications** : produits surveillés (registre de l'organisation, lu avec `lire` comme sa liste ; éditeur, nom, version
+    ou CPE) et leurs machines reliées lisibles (trois nommées, les autres comptées) ; technologies d'AlgoLightHouse
+    (`SurfaceExterneAlh.technologies` : versions encore détectées sur des actifs lisibles) et leurs actifs ; contrôles de
+    Tenable par leur nom ou leur numéro (`FaillesDetectees.constats`, filtre par défaut de « Failles détectées » : présents sur
+    une machine lisible, encore à traiter). Un début d'identifiant CVE ne cherche pas d'application.
+  Les groupes des machines, actifs, technologies et contrôles appellent les services des listes avec la saisie telle quelle :
+  leur nombre total est celui de la liste ouverte par « tout voir ».
+- **Interface** (`apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx`, `recherche.ts`) : barre placée dans la mise en
+  page commune (`Layout.tsx`), sous les onglets du module, sur **toutes** ses pages, pour qui a `lire`. Champ `combobox` nommé
+  « Rechercher une CVE, une machine, une adresse IP ou une application » ; délai de frappe de 300 ms, appel précédent annulé
+  (signal passé au client d'API) ; panneau de résultats groupés (`listbox`, `group`, `option`, option active désignée par
+  `aria-activedescendant`), zone de statut qui annonce les nombres ; flèches haut et bas, Entrée, Échap (ferme, puis efface).
+  État de chaque CVE dit en texte, la teinte du liseré le double. Feuille `packages/ui/src/neon-recherche.css` (jetons de la
+  charte, clair et sombre, ni px ni rem, aucun style en ligne).
+- **Pages ouvertes** (paramètres d'adresse relus à chaque navigation, la page déjà affichée comprise) : CVE → « Veille »
+  (`?q=&cve=`, fiche illustrée de la CVE) ; CVE sans fiche ouvrable → « Surface externe », onglet « Technologies » cherché sur
+  la CVE ; machine → « Machines » (`?machine=`, fiche lue par la route existante, 404 pour l'illisible) ; actif → « Surface
+  externe », onglet « Actifs » filtré sur sa valeur, fiche ouverte (`?onglet=actifs&q=&actif=`) ; produit → « Produits
+  surveillés » (`?produit=`) ; technologie → onglet « Technologies » cherché sur son nom ; contrôle → « Failles détectées »
+  (`?constat=`). « Tout voir » : « Veille », « Machines », onglets « Actifs » et « Technologies », « Failles détectées »
+  (`?q=`) ; aucun pour les produits surveillés (le registre ne se cherche pas) ni pour une saisie de plus de 100 caractères
+  (borne des listes).
+- **Mesure** (PostgreSQL de test local, données fictives : 10 000 CVE de la veille, 150 machines, 2 000 contrôles, 10 000 CVE
+  de contrôles, 16 000 détections ; administrateur et lecteur d'un périmètre) : 160 à 300 ms par recherche, quelle que soit la
+  saisie (début d'identifiant, texte qui trouve les 10 000 CVE, adresse IP, nom de machine, nom de contrôle, rien) ; réponse
+  de 0,3 à 2,5 Kio. `EXPLAIN ANALYZE` de la recherche par texte dans la veille : balayage séquentiel, 7,5 ms sur 10 000 CVE.
+  Le coût fixe vient des lectures des listes réutilisées (rang des machines, contrôles). **Aucun index ajouté.**
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Emplacement** : une seule barre dans la mise en page commune, sur toutes les pages du module (y compris la vue
+  d'ensemble), sous les onglets ; la recherche de pages du menu (Ctrl K) reste distincte.
+- **« Nom d'application »** couvre trois sources : produits surveillés, technologies d'AlgoLightHouse et **noms des contrôles
+  de Tenable** (« Serveur applicatif 9.0.x < 9.0.99 … »), qui sont souvent le seul endroit où le nom d'une application
+  installée apparaît. Les services exposés d'AlgoLightHouse ne sont pas cherchés à part (ils sont portés par les actifs).
+- **CVE non détectée** : elle s'ouvre dans la fiche illustrée d'une CVE (lot PC4), dans l'écran « Veille ». Une CVE présente
+  seulement chez d'autres (illisible) est trouvée et dite « présente hors des périmètres que vous lisez », sans nombre ni nom,
+  comme la fiche et la veille (lot ALH5).
+- **Machines** : « présente » compte les détections de Tenable et, à part, les machines reliées à un produit rattaché ; une
+  CVE déclarée n'est pas dite « détectée ».
+- **Liste « Machines »** : sa recherche suit désormais la même règle (casse ignorée, adresse IP, système) ; elle ne cherchait
+  que dans le nom, en tenant compte de la casse.
+- **Identifiant bien formé et inconnu** : signalé même quand d'autres CVE commencent par lui (« CVE-2026-1234 » inconnue,
+  « CVE-2026-12345 » connue).
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 440 et 390 px) avec
+une réponse remplacée par des données fictives ; parcours Playwright ajouté
+(`zzz…-vulnerabilites-recherche.spec.ts`) joué sur cette pile (axe `wcag2a`/`wcag2aa` sans violation, aucune violation de CSP
+relevée par la console), à rejouer en CI ; la CSP stricte du serveur de production n'a pas été vérifiée hors CI. Durée sur un
+parc réel ; Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. **Consultation de NVD à la demande** pour une CVE inconnue de la veille locale (décision du RSSI en attente) : ce serait un
+   appel sortant porté par l'exécutant, sur le flux `veille-vulnerabilites`, déclenché par une personne.
+2. Les choix ci-dessus.
+3. Recherche dans les **avis du CERT-FR et du CERT Santé** (identifiant d'avis, titre) depuis la barre : non faite (l'écran
+   « Veille » la fait déjà).
+
+## Addendum du 19/11/2026 — lot L1 : lisibilité des alertes de la veille et pastilles de source
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucun changement d'API ni de schéma, aucun appel sortant, aucune dépendance nouvelle, aucune image téléchargée, rien chez
+l'assistant.
+
+### Demande du RSSI (19/11/2026)
+
+« Il faudrait un petit logo sur l'alerte pour savoir si ça vient du NVD ou du CERT etc., et mettre en forme l'alerte car à
+lire c'est compliqué, un visuel de l'alerte sauf si tu l'as déjà fait. »
+
+### Réalisation
+
+- **Pastilles de source** (`apps/web/src/vulnerabilites/pictos-sources.ts`, `PictoSource.tsx`) : un composant unique pour les
+  cinq sources de la veille et les deux connecteurs. Aucun logo officiel ni image de marque : chaque pastille est dessinée en
+  SVG pour la charte, avec un sigle, une forme et une teinte qui lui sont propres, de sorte que la couleur n'est jamais seule
+  à distinguer.
+
+  | Source | Sigle | Forme | Teinte | Nom accessible |
+  |---|---|---|---|---|
+  | `cisa-kev` | KEV | bouclier | rouge | Source : catalogue KEV de la CISA |
+  | `nvd` | NVD | rectangle | marine | Source : NVD (NIST) |
+  | `epss` | EPSS | pilule | orange | Source : EPSS (FIRST) |
+  | `cert-fr` | FR | fanion | bleu | Source : CERT-FR (ANSSI) |
+  | `cert-sante` | CS | octogone | vert | Source : CERT Santé |
+  | `tenable` | TEN | parallélogramme | violet | Source : Tenable |
+  | `algolighthouse` | ALH | hexagone | gris | Source : AlgoLightHouse |
+
+  Sigle dans la teinte « accent » sur le fond « doux » de la même teinte (jetons `--carte-*`, contraste AA en clair et en
+  sombre). Nom complet en info-bulle ; nom accessible `role="img"` « Source : … » là où aucun texte voisin ne nomme la source
+  (cartes des alertes et avis, liste des sources d'une CVE, en-tête de la fiche illustrée, tableau des sources), pastille
+  décorative (`aria-hidden`) là où le texte la nomme déjà (marques d'exploitation, recommandations de la fiche, écran
+  « Alertes », fenêtre d'alerte critique, barre de recherche : sans info-bulle dans la liste de choix).
+- **Alertes et avis** (`AvisVeille.tsx`) : le tableau dense devient une liste de cartes, une par publication : pastille et nom
+  court de la source, nature (« Alerte » ou « Avis », pictogramme et mot), identifiant, date, titre en titre de niveau 3,
+  résumé limité à trois lignes, produit cité et mentions du CERT Santé (liste de définitions), marques, CVE citées en boutons
+  (six, puis « et N autres ») qui ouvrent la fiche illustrée de la CVE (lot PC4), « Ouvrir la fiche » et lien vers l'original
+  (nouvel onglet, `rel="noopener noreferrer"`, `referrerPolicy="no-referrer"`). Recherche, pagination et textes d'état vide
+  inchangés.
+- **Fiche d'une alerte ou d'un avis** : aucune n'existait (la fiche illustrée ne connaît que constat, faille déclarée, CVE et
+  alerte d'AlgoLightHouse) ; une fenêtre de l'écran « Veille » la rend à partir de l'élément déjà lu par la liste, sans appel
+  nouveau : tout le résumé, découpé en paragraphes et listes, mentions, toutes les CVE citées (chacune ouvre sa fiche), lien
+  vers l'original. Le résumé reste du **texte simple** : la veille le range sur une ligne (`texteExterneValide` refuse les
+  caractères de contrôle), la découpe (`blocsTexte`) ne fait que reconnaître les puces intégrées (« - », « – », « • », « * »
+  entre espaces après une ponctuation de fin, deux au moins) et, si un jour il y en a, les retours à la ligne ; React échappe
+  tout, aucun `dangerouslySetInnerHTML`.
+- **Failles connues** (`ListeFailles`, écran « Veille », après une recherche) : une carte par CVE, pastilles des sources qui
+  l'ont publiée (avec EPSS quand un score existe, AlgoLightHouse quand elle est exposée), puis un fait par ligne : gravité CVSS
+  et vecteur, exploitation (marques et première source), EPSS (FIRST), produit touché, exposition. Mêmes données qu'avant.
+- **Fiche illustrée** : ligne « Sources » dans l'en-tête (sources dont la fiche reprend quelque chose : origine, faits de la
+  priorité, vecteurs, correctif, recommandations), pastille sur chaque recommandation ; `referrerPolicy="no-referrer"` ajouté
+  au lien d'un avis cité.
+- Feuille `packages/ui/src/neon-veille.css` (jetons de la charte, clair et sombre, ni px ni rem, aucun style en ligne),
+  exportée par `packages/ui` ; aide de l'écran « Veille » complétée.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Alerte qui se détache** : liseré, fond et pastille « Alerte » rouges pour une **alerte du CERT-FR** seulement (règle déjà
+  retenue par les recommandations de la fiche, lot PC4). Le CERT Santé range toutes ses publications comme « alerte » : elles
+  gardent le mot « Alerte », au trait orange, sans le fond rouge, pour qu'une alerte du CERT-FR reste rare et visible.
+- **Marques d'une alerte ou d'un avis**, tirées de ce que la veille range déjà : « Exploitation avérée (alerte du CERT-FR) »
+  pour une alerte du CERT-FR qui cite au moins une CVE (règle V26 de la plateforme), « Exploitée selon le CERT Santé » et
+  « Preuve de concept disponible (CERT Santé) » d'après la fiche lue. « Présente sur le parc » et « exposée sur Internet » ne
+  sont **pas** affichées dans la liste : la réponse de la liste des avis ne les porte pas, et l'API n'a pas été élargie ; elles
+  se lisent dans la fiche de chaque CVE.
+- **Sigles** courts propres à la plateforme (« FR » pour le CERT-FR, « CS » pour le CERT Santé, « TEN », « ALH ») ; le nom
+  complet est toujours donné à côté, au survol ou aux lecteurs d'écran.
+
+### Non vérifié
+
+Aucune donnée réelle. Rendu vu sur une pile locale sans Docker (API et Vite, Chromium, clair et sombre, 1 366 et 390 px)
+avec des réponses remplacées par des données fictives ; parcours Playwright ajouté à
+`zzz…-vulnerabilites-veille.spec.ts` (clair 1 366 px, sombre 390 px : cartes, pastilles nommées, lien sans référent, aucun
+débordement horizontal, fiche ouverte au clavier, CVE citée vers sa fiche, axe `wcag2a`/`wcag2aa` sans violation) joué sur
+cette pile, à rejouer en CI ; CSP stricte du serveur de production vérifiée en CI seulement. Forme réelle des résumés du
+CERT-FR et du CERT Santé (présence de puces) non vérifiée sur des données réelles. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Présente sur le parc » et « exposée sur Internet » dans la liste des alertes et avis : à ajouter à la réponse de la liste
+   (lecture par CVE citée, mêmes règles de lecture que la recherche, lot ALH5) si le RSSI le veut.
+2. Recherche des alertes et avis depuis la barre du module (point ouvert 3 du lot R1).
+3. Les choix ci-dessus.
+
+
+## Addendum du 19/11/2026 — lot I1 : intégrations configurées dans la page Plateforme, état en lecture seule dans les outils
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route d'API ajoutée, retirée ni modifiée, aucun droit changé, aucune dépendance, aucun appel sortant nouveau, rien chez
+l'assistant. Réalise l'addendum du 19/11/2026 de l'[ADR 0076](0076-module-integrations.md).
+
+### Décision du RSSI (19/11/2026)
+
+Les intégrations se configurent dans la configuration de la plateforme, et nulle part ailleurs. Les outils qui exploitent une
+intégration n'affichent qu'un lien « Configurer l'intégration » (visible de qui a le droit de la voir) et l'état en lecture
+seule (date de la dernière synchronisation, erreur éventuelle). La veille (sources publiques sans clé) n'est pas un connecteur
+du module Intégrations : elle reste dans l'écran « Veille », avec « Collecter maintenant » et son activation.
+
+### Réalisation
+
+- **Carte « Intégrations » de la page Plateforme** (`apps/web/src/pages/Administration.tsx`, `administration-droits.ts`) : le
+  panneau `IntegrationsPanel` (ancien écran : connecteurs, catalogue, configuration, clés, activation du flux, « Tester la
+  connexion », « Synchroniser maintenant » pour Tenable **et** AlgoLightHouse, exécutions) s'ouvre dans la fenêtre de carte
+  commune (largeur « fiche », titre non répété). Visible si et seulement si la personne a `integrations:lire`, droit de
+  l'ancienne rubrique. Rangée après « Assistant RSSI », avant « Import et export ».
+- **Menu et adresses** : la destination « Intégrations » du menu Pilotage est retirée (et donc de la recherche de pages
+  Ctrl K, qui reprend le menu) ; `/integrations` redirige vers `/plateforme/integrations` (lien profond qui ouvre la carte) ;
+  le registre des flux (`packages/shared/src/flux-externes.ts`, champ `reglage` des flux `tenable` et `algolighthouse`) et
+  l'aide pointent vers la carte (« Plateforme > Intégrations »).
+- **Composant commun** `apps/web/src/integrations/EtatIntegration.tsx` (règle pure dans `etat-integration.ts`) : par instance,
+  pastille d'état, date de la dernière synchronisation, dernière complète, **erreur** de la dernière synchronisation en lecture
+  (message déjà rendu par l'API, inchangé), complément facultatif (bilan, périmètres non reliés), puis le lien
+  `LienConfigurerIntegration` si l'appelant a calculé `integrations:lire` (depuis le 19/11/2026, lot F1 :
+  `integrations:administrer`, voir ci-dessous). Aucun bouton. Utilisé par « Failles détectées »
+  (Tenable) et « Surface externe » (AlgoLightHouse, avec son état « À jour / incomplète / en échec » d'avant) ; la « Vue
+  d'ensemble » garde ses capteurs (même règle d'état, erreur ajoutée en lecture) et reçoit le lien.
+- **Veille** : après « Collecter maintenant », le message dit « N collectes de veille demandées : l'exécutant les traite à son
+  prochain passage. Les connecteurs (Tenable, AlgoLightHouse) ne sont pas concernés. » ; l'aide et le guide d'installation le
+  précisent.
+- **Correctif de la fenêtre de carte** : Mantine ferme toutes les fenêtres ouvertes sur Échap ; une fenêtre ouverte depuis le
+  panneau d'une carte (configuration d'une instance, exécutions, validation du flux, et de même pour les autres cartes)
+  fermait aussi la carte. La fenêtre de carte ignore désormais sa fermeture tant qu'une autre fenêtre est ouverte au-dessus
+  (`fenetreAuDessus`) ; sans fenêtre au-dessus, Échap la ferme comme avant.
+
+### Frontière des réglages, à valider par le RSSI
+
+| Réglage | Où il est | Motif |
+|---|---|---|
+| Adresse, port, autorité de certification, délai d'une requête (Tenable, AlgoLightHouse) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| Clés d'API (écriture seule) | **Carte « Intégrations »** (déjà là) | Secret du connecteur |
+| Gravités lues par la synchronisation de Tenable | **Carte « Intégrations »** (déjà là) | Filtre de la lecture du connecteur |
+| Activer / désactiver un connecteur (ouverture du flux) | **Carte « Intégrations »** (déjà là) | Configuration du connecteur |
+| « Tester la connexion », « Synchroniser maintenant » (Tenable et AlgoLightHouse), exécutions | **Carte « Intégrations »** (déjà là) | Actions du connecteur |
+| Dépôts Tenable ↔ périmètres (« Machines », onglet « Dépôts Tenable ») | Laissé dans le module | Réglage métier (lecture par périmètre) |
+| Périmètres AlgoLightHouse ↔ périmètres (« Surface externe », onglet « Périmètres ») | Laissé dans le module | Réglage métier |
+| Liaisons actif exposé ↔ machine, « Relier en masse » (« Surface externe », onglet « Actifs ») | Laissé dans le module | Réglage métier |
+| Produits surveillés reliés aux machines, rapprochements | Laissé dans le module | Réglage métier |
+| Rôles des machines (front, back, base) | Laissé dans le module | Réglage métier |
+| Seuils de priorité et délais de correction | Laissé dans le module | Réglage métier |
+| Exceptions (risque accepté) | Laissé dans le module | Décision métier |
+| Mots à ne pas masquer | Laissé dans le module | Réglage métier de l'assistant |
+| Activation de la veille, « Collecter maintenant » | Laissé dans le module (« Veille ») | Pas un connecteur (décision du RSSI) |
+
+**Supprimé des écrans du module** : seulement les renvois textuels « Pilotage > Intégrations » (« Failles détectées »,
+« Surface externe », « Vue d'ensemble », listes vides des dépôts Tenable et des périmètres AlgoLightHouse), remplacés par le
+lien ou par « ils apparaissent après une synchronisation du connecteur ». Constat du relevé : **aucun** bouton de test, de
+synchronisation, de connexion, de saisie d'adresse ou de clé, ni aucun appel en écriture à `/api/integrations/...`, n'existait
+dans `apps/web/src/vulnerabilites/` ; « Synchroniser maintenant » d'AlgoLightHouse était déjà dans l'écran des intégrations.
+Un test de l'interface garde cette absence (aucune mention de `/api/integrations`, « Synchroniser maintenant », « Tester la
+connexion » ni `PasswordInput` dans les fichiers du module).
+
+**Routes d'API devenues sans appelant** : aucune. Les routes du module Intégrations sont appelées par la carte, celles de
+l'état (`/api/vulnerabilites/synchronisation`, `/api/vulnerabilites/surface/etat`) par les écrans du module.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Place de la carte** : après « Assistant RSSI », avant « Import et export » ; pictogramme « réseau », teinte bleue.
+- **Lien même sans instance** : avec le droit, « Configurer l'intégration » apparaît aussi quand aucune instance n'est
+  configurée (pour en ajouter une) ; sans le droit, le texte dit qu'un administrateur des intégrations l'ajoute dans la page
+  Plateforme.
+- **Droit du lien** : `integrations:lire` (celui de la carte), même si seul `integrations:administrer` permet de modifier.
+  **Tranché par le RSSI le 19/11/2026** (réalisé avec le lot F1) : le lien n'est visible que de qui peut **administrer** les
+  intégrations (`integrations:administrer`) ; un compte qui lit sans administrer voit l'état, pas le lien. La carte de la
+  Plateforme garde son droit (`integrations:lire`). Règle unique `peutConfigurerIntegration`
+  (`apps/web/src/integrations/etat-integration.ts`), appelée par les trois écrans.
+- **Recherche Ctrl K** : elle ne liste que les pages du menu ; « Intégrations » n'y figure plus (la page « Plateforme » oui).
+  Indexer les cartes de la Plateforme serait un ajout à décider.
+- **Échap dans les fenêtres imbriquées** : correctif appliqué à toutes les cartes de la Plateforme et de la Configuration
+  système (même fenêtre commune).
+
+### Non vérifié
+
+Aucune donnée réelle. Parcours Playwright joués sur une pile locale sans Docker (API et Vite, Chromium) : carte, redirection,
+lien et son droit (compte fictif à `vulnerabilites:lire` seul), absence de réglage dans les trois écrans, Échap, axe
+`wcag2a`/`wcag2aa` sans violation sur la carte ; à rejouer en CI. CSP stricte du serveur de production vérifiée en CI
+seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Indexer les cartes de la Plateforme dans la recherche de pages (Ctrl K).
+
+
+## Addendum du 19/11/2026 — lot F1 : fréquence de synchronisation réglable par connecteur et par source de veille
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`090`, une route d'API ajoutée, un champ ajouté à la création et à la modification d'une instance de connecteur, aucune
+dépendance, aucun flux sortant nouveau (seule la cadence change), rien chez l'assistant, `scripts/exploitation-worker.py` et
+`docker-compose.yml` inchangés.
+
+### Décision du RSSI (19/11/2026)
+
+« Pour la synchro des connecteurs je propose de définir dans chaque connecteur l'occurrence, avec un avertissement si c'est
+trop. Les paquets installés sur une machine changent peu alors qu'une CVE sort très souvent ; donc Tenable une fois par jour
+mais la veille plusieurs fois, et si la veille correspond à un composant alors il y a une alerte si c'est critique. » Un
+réglage par source de veille, selon le tableau validé :
+
+| Source | Choix | Par défaut | Avertissement affiché |
+|---|---|---|---|
+| Veille : CERT-FR, CERT Santé, catalogue KEV (CISA) | 1 h, 2 h, 4 h, 12 h, 24 h | 2 h | aucun |
+| Veille : NVD | 2 h, 4 h, 12 h, 24 h | 2 h | NVD demande de ne pas être lu automatiquement plus d'une fois toutes les deux heures (plancher non contournable, y compris par l'API) |
+| Veille : EPSS | 24 h, fixe (affiché, non modifiable) | 24 h | les scores ne sont publiés qu'une fois par jour |
+| Tenable Security Center | 6 h, 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : charge sur Security Center pour un inventaire qui change peu |
+| AlgoLightHouse | 12 h, 24 h, 7 jours | 24 h | en dessous de 24 h : limite d'appels de l'éditeur inconnue |
+
+Ajout du même jour : le lien « Configurer l'intégration » des outils n'est visible que de qui peut **administrer** les
+intégrations (voir l'addendum « lot I1 », point « Droit du lien »).
+
+### Réalisation
+
+- **Modèle** (`packages/shared/src/frequences-synchronisation.ts`) : listes fermées par source et par type, valeurs par défaut,
+  schéma du corps (`FrequenceVeilleBody`, nombre entier d'heures), fonctions pures `prochaineEcheance`, `echeanceAtteinte`,
+  `referenceApresDemande`, `prochaineAffichee`, `avertissementVeille`, `avertissementConnecteur`, `libelleFrequence`.
+- **Migration `090_frequences_synchronisation.sql`** (additive) : `vulnerabilites_veille_sources.frequence_heures`,
+  `.planifiee_le`, `.version` ; `integrations.frequence_heures` ; `vulnerabilites_tenable_etat.planifiee_le` et
+  `vulnerabilites_alh_etat.planifiee_le`. Contraintes CHECK recopiant les listes (NVD 2 h au moins et EPSS 24 h garantis en
+  base) ; NULL = valeur par défaut du code. L'ancien créneau quotidien (`creneau`) n'est plus lu ; il reste en place.
+- **Planification** (tic de l'API, `veille.ts`, `tenable.ts`, `surface-externe.ts`) : « au plus une par jour » devient « au
+  plus une par période réglée », comptée depuis la dernière demande **automatique** (`planifiee_le`).
+- **API** : `GET /api/vulnerabilites/veille/etat` rend par source `frequenceHeures`, `prochaineCollecte` et `version` ;
+  `PUT /api/vulnerabilites/veille/sources/:source/frequence` (`vulnerabilites:administrer`, If-Match sur la version de la
+  source, 422 hors liste, 422 pour EPSS, journal `vulnerabilites.veille.frequence` : source, ancienne et nouvelle fréquence) ;
+  instance de connecteur : champ `frequenceHeures` de `POST /api/integrations/instances` et `PATCH
+  /api/integrations/instances/:id` (`integrations:administrer`, If-Match sur la version de l'instance comme le reste de sa
+  configuration, 422 hors liste du type, journal `integration.frequence` en plus de `integration.modifiee`) ;
+  `IntegrationDto.frequenceHeures` ; `GET /api/vulnerabilites/synchronisation` et `/surface/etat` rendent `frequenceHeures`
+  et `prochaineSynchronisation` (null si l'instance n'est pas prête : inactive, clé manquante ou flux fermé).
+- **Interface** : composant `ChampFrequence` (liste native, avertissement « Attention : … » en description du champ, relié par
+  `aria-describedby`, liseré et teinte de la charte en doublure du mot) ; écran « Veille », colonne « Fréquence » du tableau
+  des sources (liste pour qui administre le module, texte sinon, EPSS « Une fois par jour (fixe) », avertissements de NVD et
+  d'EPSS, prochaine collecte prévue) ; fenêtre « Configurer » / « Ajouter » de la carte « Intégrations » (fréquence de
+  l'instance, avertissement affiché avant l'enregistrement, sans blocage) ; tuiles : « Synchronisation automatique : … » au
+  lieu de « Synchronisation quotidienne » ; `EtatIntegration` (Failles détectées, Surface externe) : fréquence et prochaine
+  synchronisation en lecture seule.
+- **Alertes** : règles inchangées. L'évaluation tourne à la fin de chaque collecte reçue (`apresReception`, après le
+  rapprochement d'une collecte NVD ou CERT Santé) ; un test le prouve désormais pour une collecte **planifiée** : une CVE
+  exploitée (KEV) et critique qui touche un produit surveillé relié à une machine ouvre son alerte critique à la collecte NVD
+  qui l'apporte (déclencheur `collecte-nvd`).
+
+### Rangement, et pourquoi
+
+- **Veille** : dans `vulnerabilites_veille_sources` (ligne par source, qui portait déjà le créneau), comme demandé.
+- **Connecteur** : la fréquence est une colonne de `integrations`, pas des tables d'état du module (`vulnerabilites_tenable_etat`,
+  `vulnerabilites_alh_etat`). C'est un réglage de l'instance : il se modifie par la même route, le même droit et la même
+  version (If-Match) que sa configuration, il est journalisé avec elle, il survit à la remise à vide du travail comme
+  l'instance (les tables d'état sont créées à la volée par le planificateur, sans version, et effacées avec le travail), et
+  une colonne permet la contrainte CHECK par type, que le JSON de configuration n'aurait pas eue simplement. La **référence
+  de planification** (`planifiee_le`), elle, est un état : elle va dans les tables d'état de chaque connecteur.
+
+### Planification, échec et bornes
+
+- **Référence consommée avant l'inscription**, dans la même transaction (comme l'ancien créneau) : une collecte ou une
+  synchronisation perdue, expirée ou en **échec** n'est pas redemandée avant la période suivante ; rien ne repart à chaque tic.
+  « Collecter maintenant » et « Synchroniser maintenant » restent le moyen de relancer tout de suite, avec leurs garde-fous
+  (droit, une demande en file ou en cours à la fois, quinze minutes entre deux demandes manuelles, débit par personne).
+- **Aucune dérive** : tant que le retard est inférieur à une période, la référence rangée est l'échéance théorique, pas
+  l'instant du tic (le tic d'une minute n'accumule pas de décalage) ; au-delà (panne, fréquence raccourcie), elle repart de
+  maintenant : **une seule** demande, jamais de rattrapage en rafale. Une collecte de la source déjà en file ou en cours tient
+  lieu de la demande automatique (pas de double demande). EPSS ne passe que quand la file de la veille est vide.
+- **Fenêtre NVD** : inchangée ; elle part de la fin de la dernière collecte réussie et remonte au plus **sept jours** (borne du
+  code, sous la limite de 120 jours de l'API NVD), un jour pour la première. Toutes les deux heures, la fenêtre ne couvre que
+  deux heures de modifications : moins de pages par collecte qu'avant. Le plancher de deux heures vaut pour les demandes
+  automatiques ; « Collecter maintenant » garde ses garde-fous (point à confirmer ci-dessous).
+- **Exécutant** (`scripts/exploitation-worker.py`, passage chaque minute, `VEILLE_MAX_PAR_PASSAGE = 2`,
+  `VEILLE_BUDGET_SECONDES = 120`, expiration d'une collecte non réclamée à trente minutes) : au pire quatre collectes dues au
+  même tic (sources à une heure), plus EPSS une fois par jour, sont réclamées en deux ou trois passages ; aucun changement
+  nécessaire ni fait.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- Avertissement de NVD et d'EPSS affiché **en permanence** sous leur réglage (il explique la liste) ; ceux des connecteurs
+  seulement sous 24 h.
+- La fréquence d'une source part dès le choix dans la liste (pas de bouton « Enregistrer » dans le tableau) ; celle d'un
+  connecteur avec « Enregistrer la configuration ».
+- Remise à vide du travail : les sources de la veille sont effacées avec lui (règle existante), leur fréquence revient donc à
+  la valeur par défaut ; celle des connecteurs suit l'instance.
+- « En retard » d'une source (`VEILLE_RETARD_HEURES`, 36 h sans réussite) inchangé quelle que soit la fréquence.
+- Journal : chaque collecte demandée, réclamée et terminée garde ses trois entrées ; avec quatre sources toutes les deux heures,
+  environ 150 entrées par jour au lieu d'une quinzaine, et une cinquantaine de lignes par jour dans le journal des collectes,
+  sans purge (aucune n'existait).
+
+### Non vérifié
+
+Aucune donnée réelle, aucune source ni aucun connecteur joint. Planification prouvée par des tests sur PostgreSQL avec horloge
+injectée ; tenue réelle de l'exécutant à cette cadence non mesurée (pile Docker non rejouée ici). Parcours Playwright
+`zzz…-vulnerabilites-frequences.spec.ts` joué sur une pile locale sans Docker (API et Vite, Chromium), à rejouer en CI ; CSP
+stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. « Collecter maintenant » pour NVD reste possible quinze minutes après la précédente demande manuelle : faut-il lui appliquer
+   aussi le plancher de deux heures ?
+2. Purge du journal des collectes de la veille et des exécutions des connecteurs (volume multiplié par la cadence).
+3. Les choix ci-dessus.
+
+
+## Addendum du 19/11/2026 — lot N1 : import de scans Nessus (fichier .nessus)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`093`, trois routes d'écriture et une route de lecture ajoutées, aucune dépendance, **aucun flux sortant**, rien chez
+l'assistant, `scripts/exploitation-worker.py`, `scripts/integration-http.py` et `docker-compose.yml` inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. **Connecteur à part**, « Nessus, import de fichier », dans le catalogue de la carte « Intégrations » : sans adresse, sans
+   clé, sans flux sortant, sans exécutant, avec un bouton « Importer un scan » sur l'instance (aucune action de connecteur dans
+   les écrans du module). Machines et failles apparaissent dans le module, marquées de leur source ; une machine aussi vue par
+   Security Center apparaît deux fois (pas de fusion).
+2. **Disparition par machine scannée** : pour chaque machine du fichier, une faille qui n'y figure plus est disparue (même
+   traitement qu'après une synchronisation complète) ; les machines absentes du fichier ne changent pas.
+3. **Lecture dans le navigateur** (`DOMParser`, aucune dépendance) ; seul un extrait en liste blanche part, en JSON, revalidé
+   champ par champ par l'API, qui ne lit aucun XML.
+4. **Gravités comme Security Center** : critiques et élevées par défaut, réglables par instance ; jamais les contrôles
+   informatifs ; filtre appliqué dans le navigateur et revérifié par l'API.
+
+### Réalisation
+
+- **Catalogue** (`packages/shared/src/integrations.ts`) : type `nessus-fichier`, portée `organisation`, champ `gravites` seul
+  (`ConfigurationNessusFichier`), `secrets: []`, `pointsAcces: []`, `flux: null`, opération `importer`. `TYPES_INTEGRATION_RESEAU`
+  (types avec flux) sert au script, à l'exécutant, à l'état des flux et à la réclamation : le type n'y figure pas (test
+  d'architecture). Fréquence : liste vide (`FREQUENCES_CONNECTEUR`), `IntegrationDto.frequenceHeures` nul, 422 si une
+  fréquence est envoyée ; la contrainte de la migration `090` n'admet que NULL pour ce type, inchangée.
+- **Extraction** (`apps/web/src/integrations/nessus.ts`, fonctions pures testées hors navigateur sur une représentation
+  minimale d'un nœud XML) : taille de 100 Mo au plus (message avant lecture) ; texte refusé s'il contient `<!DOCTYPE` ou
+  `<!ENTITY` (casse ignorée), contrôle fait **avant** le `DOMParser` ; erreur d'analyse (`parsererror`) = refus ; racine
+  `NessusClientData_v2` exigée ; au plus 10 000 machines. Seuls `Report` > `ReportHost` sont parcourus (jamais `Policy`).
+  Règles de nettoyage recopiées du script de Tenable : textes sur une ligne, balises retirées et entités décodées jusqu'au
+  point fixe, bornes de la migration `075`, nom de machine en minuscules (« DOMAINE\NOM » réduit au nom), adresse IP,
+  identifiant `uuid:` ou `ip:<adresse>|<nom>` (même fonction `cleMachine`), lien https seul.
+- **Champs gardés** — machine : `host-ip` (sinon le nom du `ReportHost` s'il est une adresse), `host-fqdn`, sinon
+  `netbios-name`, sinon le nom du `ReportHost` s'il n'est pas une adresse ; `operating-system` (200 caractères) ;
+  `HOST_START_TIMESTAMP`/`HOST_END_TIMESTAMP`, sinon `HOST_START`/`HOST_END` (lus à l'heure du poste, sans fuseau) ;
+  `host-uuid` s'il a la forme d'un UUID. Contrôle : `pluginID`, `pluginName`, `pluginFamily`, `severity` (1 à 4), `port`,
+  `protocol` (en majuscules), `cve` (toutes, 500 au plus), `cvss3_vector`, `cvss3_base_score`, `vpr_score`,
+  `exploit_available`, `exploitability_ease` (libellé de l'exploit, comme `exploitEase` de Security Center), `synopsis`,
+  `solution`, `see_also` (premier lien https), `vuln_publication_date`, `patch_publication_date`.
+- **Champs écartés** (jamais lus ni envoyés) : `plugin_output`, `description`, `Policy` et ses préférences (comptes de
+  scan), le nom du scan, `mac-address` et les autres étiquettes d'hôte, `risk_factor`, CVSS v2. **Écartés faute de colonne
+  dans le modèle de Security Center** (choix de réalisation, à confirmer) : `svc_name`, CVSS v4 (`cvss4_*`),
+  `exploited_by_malware`, `exploited_by_nessus`, `exploit_framework_*`, `in_the_news`, `plugin_publication_date`, et
+  `epss_score` (unité, probabilité ou pourcentage, non vérifiée sur un export réel ; la veille lit EPSS chez FIRST par CVE).
+- **Éléments hors norme écartés et comptés** (`ECARTS_IMPORT`) : machines sans adresse ni identifiant, machines au-delà de
+  5 000 détections, contrôles illisibles, contrôles informatifs, contrôles hors des gravités retenues, CVE mal formées, liens
+  refusés, valeurs hors norme (score, vecteur, date, nom, adresse), textes raccourcis à leur borne (marqués « … », comptés).
+- **Envoi** : `POST /api/integrations/instances/:id/imports` (début : machines et détections annoncées, éléments écartés ;
+  l'API fixe les gravités d'après la configuration de l'instance pour tout l'import), `…/imports/:execution/lots` (machines
+  entières et les contrôles qu'elles portent, chacun une fois, aucun orphelin ; 200 machines, 10 000 détections, 5 000
+  contrôles et 8 Mio au plus ; le navigateur vise 3 Mio), `…/imports/:execution/fin`. Droit `integrations:administrer`, module
+  Vulnérabilités actif, CSRF, limites de débit (10 imports commencés par heure et par personne, 600 lots par dix minutes). Un
+  import à la fois par instance ; seule la personne qui l'a commencé le poursuit ; resté sans lot trente minutes, il est clos
+  « en échec » au début d'un autre import ou au tic de l'API. Lot qui porte une gravité hors réglage, un champ en trop, une
+  forme inattendue : 422, rien n'est rangé. En cas d'arrêt, la fenêtre dit quelles machines sont importées et lesquelles ne
+  le sont pas, et clôt l'import (en échec, les machines importées le restent).
+- **Rangement** (`apps/api/src/vulnerabilites/import-nessus.ts`) : chaque lot, dans une transaction, est un **passage
+  complet pour ses machines** : numéro de passage suivant de l'instance (`vulnerabilites_tenable_etat`), machines (source
+  `nessus-fichier`), constats, CVE et détections par `SynchronisationTenable.rangerPassage` (chemin d'écriture de Tenable ; la
+  première détection d'un import n'est jamais avancée) ; les détections présentes des autres machines de l'instance, et ces
+  machines, sont **reportées** au nouveau numéro ; puis la référence de présence avance. Le fragment `present` des lectures
+  est inchangé. Puis, dans la même transaction : suivi (propositions « corrigée, à confirmer »), liaisons avec la surface
+  externe, **évaluation des alertes** (déclencheur `import-nessus`).
+- **Journal** : `integration.import.debute`, `vulnerabilites.import.lot`, `integration.import.termine` (instance, exécution,
+  nombres, gravités ; ni nom de machine, ni adresse, ni nom de fichier, que l'API ne reçoit pas). Historique : exécution
+  `importer` de l'instance (« Exécutions » : date, auteur, état, bilan chiffré ou erreur) et table `vulnerabilites_imports`
+  (migration `093`, qui élargit aussi la contrainte de `vulnerabilites_machines.source`).
+- **Écrans du module** : `GET /api/vulnerabilites/imports/etat` (`vulnerabilites:lire`) ; « Failles détectées » montre
+  « Dernier import : date, N machines » et le bilan (composant `EtatIntegration`, nature « import ») ; « Vue d'ensemble »
+  compte l'instance parmi ses capteurs ; chaque constat et chaque machine portent « Source : <instance> (<type>) » avec la
+  pastille Tenable (`ConstatResumeDto.integration`, `MachineDto.source`). Textes « Tenable Security Center » corrigés là où la
+  source peut être Nessus ; « contrôle de Tenable » et « détecté par Tenable » restent exacts.
+
+### Mesures (fichiers fictifs générés, Chromium de la pile locale)
+
+| Fichier | Machines | Lecture dans le navigateur | Mémoire des processus de rendu (avant → pic) | Envoi (lots) |
+|---|---|---|---|---|
+| 30 Mo | 315 (7 538 détections retenues) | 1,5 s | 545 → 730 Mo | 2,5 s (2) |
+| 99 Mo | 1 037 (24 890 détections retenues) | 4,6 s | 553 → 1 037 Mo | 7,5 s (6) |
+
+Le gros du fichier est fait des sorties brutes, analysées par le `DOMParser` mais jamais lues ; la borne de 100 Mo est gardée.
+Mesure sur un seul poste, sans réseau entre le navigateur et l'API.
+
+### Périmètres
+
+Security Center rattache ses machines par **dépôt** (lot V4d) ; un fichier `.nessus` n'a pas de dépôt. Les machines importées
+sont donc **sans périmètre** : lisibles seulement avec `vulnerabilites:administrer` (règle du point 14), rattachables par les
+outils existants (écran « Machines », une machine ou en masse) ; aucun mécanisme de droits nouveau.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Champs écartés faute de colonne** (liste ci-dessus) : ajouter CVSS v4, `exploited_by_malware` (exploitation avérée ?) ou le
+  service demanderait d'étendre le modèle des deux sources et la règle de priorité.
+- **Pastille** : celle de Tenable (« TEN »), un contrôle Nessus étant un contrôle de Tenable, avec la source en clair à côté ;
+  aucune pastille propre, aucun logo.
+- **Activation exigée** pour importer ; elle n'ouvre aucun flux.
+- **Chaque lot fait foi pour ses machines** et déclenche suivi et alertes ; un import interrompu garde ses lots rangés.
+- **Report** de la présence des autres machines à chaque lot (coût proportionnel aux détections présentes de l'instance).
+- **Une machine sans contrôle retenu** (aucune faille aux gravités choisies) est importée : ses failles passées disparaissent.
+- **Identité d'une machine** : `host-uuid` s'il existe, sinon adresse et nom ; une machine dont le nom ou l'adresse change
+  d'un scan à l'autre devient une nouvelle machine, l'ancienne restant présente (elle n'est plus dans les fichiers).
+- **Limite** de dix imports commencés par heure et par personne.
+
+### Non vérifié
+
+**Le format a été écrit d'après la connaissance de `NessusClientData_v2` et n'a pas été vérifié sur un export réel**
+(noms des étiquettes `host-uuid` et `*_TIMESTAMP`, unité d'`epss_score`, forme des dates, libellé du menu d'export). Fichiers
+d'exemple fictifs écrits à la main (`tests/fixtures/nessus/`). Parcours Playwright joués sur une pile locale sans Docker (API et
+Vite, Chromium), à rejouer en CI ; CSP stricte du serveur de production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Fusion d'une machine vue par Security Center et par un import (exclue de ce lot).
+3. Retrait d'une instance d'import et de ses machines (aucune route de retrait d'instance n'existe).
+
+## Addendum du 19/11/2026 — lot N2 : exploitation par un logiciel malveillant, limite des imports, suppression d'un connecteur d'import
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`094` (la migration du lot N1 est renumérotée `093` avant toute publication, `092` étant prise sur la branche de référence),
+deux routes ajoutées, aucune dépendance, **aucun flux sortant**, `scripts/integration-http.py` et `apps/api/src/assistant/*`
+inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. **« Exploitée par un logiciel malveillant » est une exploitation avérée**, au même titre que le catalogue KEV, l'alerte du
+   CERT-FR et la fiche du CERT Santé. Libellé de la source : « Exploitée par un logiciel malveillant (selon Tenable) » ;
+   pastille de Tenable.
+2. **Limite des imports** : trente fichiers commencés par heure et par personne (au lieu de dix), refus explicite.
+3. **Suppression d'un connecteur d'import** : « Supprimer ce connecteur et tout ce qu'il a importé », pour une instance
+   « Nessus, import de fichier » seulement ; droit d'administrer les intégrations ; confirmation explicite ; If-Match ; journal
+   sans nom de machine ni adresse ; refus net pour tout autre type.
+
+### Règle de priorité : sources d'exploitation avérée
+
+Une seule source suffit (V26) : catalogue KEV, alerte du CERT-FR qui cite la CVE, fiche du CERT Santé (« activement
+exploitée : Oui »), AlgoLightHouse (`is_exploited`), et désormais **Tenable : contrôle marqué `exploited_by_malware`**
+(`SOURCES_EXPLOITATION` = `kev`, `cert-fr`, `cert-sante`, `alh`, `tenable`). Le fait est **propre au contrôle** (constat),
+pas à ses CVE : il reste dans la colonne de sa source (`vulnerabilites_constats.exploite_malware`), sans date (rangé après
+les sources datées). La grille ne change pas : P1 si présente, P2 si produit à confirmer, P4 avec le fait si absente. Une
+faille sans ce fait garde exactement sa priorité (test de non-régression du paquet partagé sur toutes les combinaisons de la
+grille, et test d'API sur un contrôle voisin).
+
+Endroits où l'exploitation avérée est calculée, et ce qui change :
+
+| Endroit | Changement |
+|---|---|
+| `packages/shared/src/priorite-vulnerabilites.ts` (`SOURCES_EXPLOITATION`, libellés, `calculerPriorite`, `libelleFaitPriorite`) | source `tenable` ajoutée en dernier, libellé exact ; fonctions inchangées |
+| `apps/api/src/vulnerabilites/sources.ts` (`sourcesDe`, `FaitsTenable`) | `malware` exigé dans les faits de Tenable, signalement `tenable` sans date |
+| `apps/api/src/vulnerabilites/failles.ts` (`exploiteeAvere` SQL : filtre « Exploitation avérée », compteur et rang des machines ; `sourcesDesConstats` : priorité, liste, fiche, marques `faillesDesMachines`) | `c.exploite_malware OR …` ; colonne lue avec les faits de Tenable |
+| `apps/api/src/vulnerabilites/alertes.ts` (calcul global : priorités par CVE, faits d'une alerte) | faits de Tenable avec `malware` ; `exploitationDeCumul` ajoute Tenable aux sources de la CVE quand un contrôle présent et non traité le porte |
+| `apps/api/src/vulnerabilites/vue-ensemble.ts` (`exploiteeSelonSources`, repris par les tendances, les instantanés et le rapport) | passe par `exploitationDeCumul` |
+| `apps/api/src/vulnerabilites/correctifs.ts`, `delais.ts` | colonne lue avec les faits de Tenable (priorité du regroupement par correctif, délai) |
+| Périmètres, majoration par la machine interne, carte de la surface | inchangés : ils passent par `faillesDesMachines` |
+| Interface (`marquesConstat`, `PICTO_EXPLOITATION`, `SeuilsPriorite`, aide) | marque sur la faille, pastille de Tenable, textes |
+
+Inchangés, et pourquoi : la fiche d'une **CVE de la veille** et la **surface externe** ne lisent que les faits par CVE (comme
+pour « exploitable » de Tenable, déjà absent de ces fiches) ; la marque « Exploitée (KEV) » reste celle du seul catalogue ;
+l'assistant n'est pas touché (le libellé de la source peut lui parvenir par les sources d'un constat, sans nom ni adresse).
+
+### Import et Security Center
+
+- **Import** : `exploited_by_malware` ajouté à la liste blanche (`apps/web/src/integrations/nessus.ts`) : « true » (casse et
+  espaces ignorés) = oui ; absent, vide, « false » = non ; autre valeur = non, comptée « valeur hors norme ». Seul le booléen
+  `exploiteMalware` part ; il est **exigé** par le schéma partagé (`ConstatImportNessus`), toute autre forme fait refuser le
+  lot (422). Un import suivant sans le champ remet le constat à faux.
+- **Security Center** : aucune preuve dans le dépôt d'un champ équivalent dans la réponse de `/rest/analysis` (`vulndetails`).
+  La forme relevée sur l'instance 6.9.1 (fixture de `scripts/tests/test_integration_http.py`) porte `exploitAvailable`,
+  `exploitEase` et `exploitFrameworks`, aucun champ « malware » ; le cadrage (§ 5 bis) n'en cite pas. Le script et ses comptes
+  figés sont inchangés ; les constats de Security Center gardent `exploite_malware` à faux.
+
+### Limite des imports
+
+`NESSUS_BORNES.importsParHeure` = 30 (nombre de fichiers commencés, pas de machines), message partagé
+`MESSAGE_LIMITE_IMPORTS` : « Trop d'imports de fichiers commencés (30 par heure). Réessayez dans une heure. ». La fenêtre
+d'import affiche un refus avant tout envoi dans une alerte « Import refusé » dont le texte décrit le bouton « Importer »
+(`aria-describedby`) ; la fenêtre reste ouverte et le fichier reste choisi.
+
+### Suppression d'un connecteur d'import
+
+`GET /api/integrations/instances/:id/suppression` (aperçu chiffré) et `DELETE /api/integrations/instances/:id` (If-Match),
+`integrations:administrer`, module Vulnérabilités actif, refus (422) pour tout autre type, refus (409) pendant un import en
+cours (un import abandonné depuis trente minutes est d'abord clos). Dans une transaction : signalements de dépassement des
+constats effacés, suppression de l'instance, liaisons recalculées, alertes réévaluées (déclencheur
+`suppression-import-nessus`), journal `integration.supprimee` (cible : identifiant de l'instance ; détails : type et nombres
+de machines, failles, détections, imports ; ni nom de l'instance, ni nom de machine, ni adresse). Interface : bouton sur la
+tuile, fenêtre « Supprimer : <instance> » (nombres, « Action irréversible », mot SUPPRIMER à saisir, bouton relié à
+l'avertissement, `closeButtonProps` nommé, `lockScroll={false}`).
+
+Ce que devient chaque donnée :
+
+| Donnée | Sort | Pourquoi |
+|---|---|---|
+| Instance, exécutions, journal des imports, état des passages | effacés | clés étrangères `ON DELETE CASCADE` (migrations 073, 075, 093) |
+| Machines, détections | effacées | cascade depuis l'instance, puis depuis la machine |
+| Constats (failles), leurs CVE | effacés | un constat appartient à une seule instance (`UNIQUE (integration_id, plugin_id)`) : aucun constat partagé |
+| Suivis des constats, propositions de l'assistant | effacés | cascade depuis le constat (migrations 077, 079) |
+| Liaisons actif exposé ↔ machine, produits reliés aux machines | liaisons effacées, actifs et produits gardés | cascade depuis la machine (migrations 076, 083) |
+| Signalements de dépassement de délai | effacés par la suppression | sans clé étrangère (migration 087) |
+| Repères de l'assistant | gardés, machine remise à vide | `ON DELETE SET NULL` (migration 079) : le texte garde un repère sans nom |
+| Historique du suivi | **gardé** | table immuable (déclencheur), jamais contourné ; identifiants d'objets disparus |
+| Instantanés des tendances | **gardés** | historiques, jamais réécrits |
+| Alertes | gardées, réévaluées | une alerte dont la seule présence venait de l'import se clôt (motif « plus présente ») ; l'alerte close reste |
+| Notifications déjà envoyées | **gardées** | historique des personnes |
+| Journal d'audit | **gardé** | immuable |
+
+### Spec e2e
+
+La spec de l'import supprime son instance par l'interface en fin de parcours, et dans `finally` si le parcours s'est arrêté
+avant. Elle **garde son préfixe** (passe en dernier) : l'alerte critique ouverte par le contrôle exploité est close par la
+suppression, mais l'alerte close et les notifications restent, et des parcours précédents vérifient des listes d'alertes
+vides sur une pile vierge. La fenêtre d'alerte critique est écartée pour la session (« Plus tard ») par un gestionnaire de
+Playwright ; le refus 429 est simulé par une réponse interceptée (aucun import de plus).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- Clé de la source : `tenable` (même clé que « exploitable » selon Tenable) ; libellé exact demandé, d'où « Exploitation
+  avérée (…, Exploitée par un logiciel malveillant (selon Tenable)) » avec des parenthèses imbriquées dans les faits.
+- Le fait du contrôle s'étend à **toutes ses CVE** dans le calcul global par CVE (alertes, vue d'ensemble), comme
+  « exploitable » de Tenable.
+- Valeur hors norme d'`exploited_by_malware` dans le fichier : lue comme « non » et comptée, sans refuser le fichier.
+- Suppression : module Vulnérabilités actif exigé (comme l'import) ; refus pendant un import en cours ; mot SUPPRIMER (convention
+  des confirmations à fortes conséquences) ; l'instance peut être active ou non.
+- Le numéro du contrôle reste dans le journal des lots ; le journal de suppression ne donne que l'identifiant de l'instance.
+
+### Non vérifié
+
+`exploited_by_malware` n'a pas été vu sur un export réel (forme « true » supposée). Parcours Playwright joués sur une pile
+locale sans Docker (API et Vite, Chromium, PostgreSQL 16 local), à rejouer en CI ; CSP stricte du serveur de production vérifiée
+en CI seulement.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus.
+2. Security Center : si un champ équivalent est attesté (export réel, documentation de l'éditeur), l'ajouter au script et à
+   ses comptes figés.
+3. Suppression des connecteurs Security Center et AlgoLightHouse (non créée).
+4. Fusion d'une machine vue par Security Center et par un import (toujours exclue).
+
+## Addendum du 19/11/2026 — lot SI1 : import du rapport Silène (ANSSI), lu à côté d'AlgoLightHouse
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`095`, routes ajoutées (trois d'import, quatre de lecture, deux de liaison), deux routes de suppression étendues au nouveau
+type, aucune dépendance, **aucun flux sortant** ; `apps/api/src/assistant/*`, `apps/web/src/assistant/ReglagesAssistant.tsx`,
+`scripts/exploitation-worker.py`, `scripts/integration-http.py`, `docker-compose.yml`, `docker/*` et la carte « Lignes
+d'approche » (`CarteSurface.tsx`) inchangés.
+
+### Décisions du RSSI (19/11/2026)
+
+1. Silène (service de l'ANSSI qui scanne la surface exposée d'un bénéficiaire) s'importe **par fichier** (export JSON) et se
+   lit **fusionné avec la surface externe d'AlgoLightHouse** : une seule surface externe, deux sources. Silène apporte en
+   particulier les **ports ouverts par hôte**, qu'AlgoLightHouse ne publie pas.
+2. Même principe que Nessus : **connecteur à part** « Silène, import de fichier » dans la carte « Intégrations », sans
+   adresse, clé, flux ni exécutant ; bouton « Importer un rapport » ; fichier lu dans le navigateur, seul un extrait en liste
+   blanche part, revalidé par l'API ; suppression du connecteur et de ce qu'il a importé (comme N2) ; limite d'imports
+   alignée sur N2.
+3. **Jamais gardés ni envoyés** : certificats et clés (`ssl-cert`, `pem`, `pubkey`, empreintes), en-têtes HTTP, sorties
+   brutes des sondes (`scripts[].output`), titres de pages, géolocalisation et système autonome (`infos`), `db_name`,
+   `filter`, le passage précédent (`_prev`), le nom du fichier.
+4. Rien de plus ne part vers l'assistant ; priorité et alertes inchangées (correspondance classe → priorité en attente).
+
+### Réalisation
+
+- **Catalogue** (`packages/shared/src/integrations.ts`) : type `silene-fichier`, portée `organisation`, aucun champ
+  (`ConfigurationSileneFichier` vide et stricte), `secrets: []`, `pointsAcces: []`, `flux: null`, opération `importer`
+  (libellé propre au type : « Importer un rapport », `LIBELLES_IMPORT`) ; fréquence : liste vide (contrainte de la migration
+  `090` inchangée, NULL seul).
+- **Extraction** (`apps/web/src/integrations/silene.ts`, fonctions pures) : JSON seulement (`JSON.parse`), 50 Mo au plus
+  (message avant lecture) ; structure exigée : objet avec `summary`, `modules`, `results` et `hosts` objets, sinon refus
+  « Structure inconnue ». Seuls sont lus les champs de la liste blanche (`CHAMPS_RACINE`, `CHAMPS_HOTE`, `CHAMPS_PORT`,
+  `CHAMPS_CONSTAT`, `CHAMPS_LIGNE`) ; textes sur une ligne, sans caractère de contrôle, bornés à 100 caractères (« … »
+  compté) ; adresses IP et noms de domaine en minuscules contrôlés comme ceux d'AlgoLightHouse ; tout élément hors norme
+  écarté et compté (`ECARTS_SILENE`, quinze compteurs).
+- **Envoi** : `POST /api/integrations/instances/:id/silene/imports` (début : synthèse, périmètre déclaré, hôtes et constats
+  annoncés, écarts ; corps de 2 Mio au plus), `…/:execution/lots` (hôtes puis constats, 500 hôtes ou 200 constats et 8 Mio au
+  plus ; le navigateur vise 3 Mio), `…/:execution/fin`. Droit `integrations:administrer`, module Vulnérabilités actif, CSRF ;
+  limites de l'import Nessus **partagées** (trente fichiers commencés par heure et par personne, tous imports confondus ;
+  six cents lots par dix minutes). Un import à la fois par instance, poursuivi par la personne qui l'a commencé, clos « en
+  échec » après trente minutes sans lot (au début d'un autre import ou au tic de l'API). Lot à champ en trop ou hors norme :
+  422, rien n'est rangé.
+- **Rangement** (`apps/api/src/vulnerabilites/import-silene.ts`) : chaque import reçoit un **numéro** (état
+  `vulnerabilites_silene_etat`) ; hôtes et constats rangés sans doublon (instance et adresse ; instance et identifiant),
+  leurs noms, ports, produits, hôtes concernés et lignes **remplacés** ; à la fin d'un import **complet** (tous les hôtes et
+  constats annoncés reçus), le numéro de référence avance : ce qui n'est plus dans le rapport n'est plus présent (rien n'est
+  supprimé) et les disparus sont comptés. Import incomplet : en échec, la référence ne bouge pas (le rapport précédent fait
+  foi), les éléments rangés restent. La synthèse du rapport et le périmètre déclaré sont gardés avec chaque import
+  (`vulnerabilites_silene_imports`) : la note des imports complets fait la tendance.
+- **Journal** : `integration.import.debute`, `vulnerabilites.silene.lot`, `integration.import.termine`,
+  `integration.supprimee`, `vulnerabilites.silene.perimetre.relie|delie` : instance, exécution, numéro et nombres ; ni
+  adresse, ni nom de domaine, ni nom de contrôle, ni nom de fichier (test d'API).
+- **Lecture** (`apps/api/src/vulnerabilites/surface-silene.ts`, `vulnerabilites:lire`) :
+  `GET /api/vulnerabilites/surface/silene` (note de chaque instance lisible : dernier import complet, précédent, historique
+  de vingt-quatre notes, présents, périmètre déclaré en nombres, dernier import), `…/silene/constats` (par contrôle, 25 par
+  page, recherche par contrôle, identifiant ou adresse), `…/silene/constats/:id` (détail par hôte),
+  `…/silene/actif?type=&valeur=` (fiche Silène d'un actif). Administration du module : `GET …/silene/perimetres`,
+  `PUT …/silene/perimetres/:id` (If-Match, 0 tant que l'instance n'a jamais été reliée).
+- **Liste commune des actifs** (`SurfaceExterneAlh.actifs`, route inchangée `GET /api/vulnerabilites/surface/actifs`) : un
+  actif est identifié par son **adresse IP** (hôte) ou son **nom de domaine** (pour Silène, nom de **résolution directe**,
+  type `A`, d'un hôte : `TYPES_NOM_ACTIF`). Chaque actif lisible d'AlgoLightHouse garde sa ligne et ses champs comme avant et
+  reçoit ce que Silène dit de la même valeur (`silene`, `sources`, `alhId` de `ActifSurfaceDto`) ; un actif vu par Silène
+  seul (aucun actif d'AlgoLightHouse de même type et de même valeur parmi ceux que la personne lit et que les filtres
+  retiennent) s'ajoute une fois, ordonné avec les autres (alertes ouvertes, type, valeur). Le filtre « Machine interne » ne
+  retient que des actifs d'AlgoLightHouse (seuls à se relier). `SurfaceSilene.clesActifs` et `SurfaceSilene.actifs` (clé
+  `type|valeur`) sont faits pour que la carte s'en serve au lot SI2 sans autre lecture.
+- **Recherche du module** (lot R1) : elle appelle la liste « Actifs » ; un actif vu par Silène seul est donc trouvé, avec
+  pour identifiant celui de l'hôte (ou du nom) chez Silène. **Contrat inchangé** (groupes, bornes, droits, schéma
+  `ResultatActif` : identifiant UUID, alertes ouvertes 0).
+- **Interface** : en tête de « Surface externe », l'état d'AlgoLightHouse et la **note Silène** côte à côte, chacun dans son
+  cadre avec sa pastille (`NoteSilene` : note, sous-note réseau, nombres par famille tels que le rapport les nomme, date du
+  rapport, évolution depuis l'import précédent, présents, dernier import) ; onglet « Actifs » : pastilles des sources, colonne
+  « Services connus » réunissant ports ouverts de Silène et services d'AlgoLightHouse (`fusionnerPortsActif` : sans doublon
+  port/protocole, un service sans protocole rejoint le seul port de même numéro), chaque information suivie de sa source
+  (« Silène : … », « AlgoLightHouse : … ») ; fiche d'un actif : machines internes (AlgoLightHouse) et « Vu par Silène » (ports,
+  noms, produits, constats) ; onglet « **Constats Silène** » (contrôle, classe, hôtes concernés, points, fiche par hôte) ;
+  onglet « Périmètres » : section Silène. Pastille **SIL** (trapèze, teinte « sarcelle » tirée des jetons `teal` de la charte
+  Mantine, contraste AA en clair et en sombre), sans logo. Carte « Intégrations » : « Importer un rapport », fenêtre d'import
+  (`ImportSilene`), suppression (fenêtre de N2, nombres d'hôtes, de constats et d'imports).
+
+### Tables (migration `095`)
+
+| Table | Contenu | Remise à vide |
+|---|---|---|
+| `vulnerabilites_silene_etat` | numéros d'import par instance (dernier, dernier complet) | avec les instances |
+| `vulnerabilites_silene_imports` | journal des imports, synthèse du rapport (note, sous-note, familles, dates sans fuseau), périmètre déclaré, nombres, écarts | avec les instances |
+| `vulnerabilites_silene_perimetres` | périmètre de la plateforme relié à une instance, `version` | avec le travail |
+| `vulnerabilites_silene_hotes` | adresse, ports ouverts annoncés, contrôles, présence | avec le travail |
+| `vulnerabilites_silene_noms`, `…_ports`, `…_produits` | noms et types, ports ouverts, produits (CPE) d'un hôte | avec le travail |
+| `vulnerabilites_silene_constats`, `…_constat_hotes`, `…_lignes` | constat (contrôle, classe, points, note), hôtes concernés, lignes de détail | avec le travail |
+
+Bornes et CHECK alignés sur AlgoLightHouse (migrations `080`, `085`) : adresse `^[0-9a-f:.]+$` (45 caractères), noms en
+minuscules (`^[a-z0-9_*:.-]+$`, 253), textes sans caractère de contrôle (100), port de 1 à 65535, protocole `tcp` ou `udp`,
+classe entière de −1000 à 1000, notes et points bornés à un million en valeur absolue (quatre décimales).
+
+### Champs gardés et écartés
+
+- **Gardés** — synthèse : `summary.computation_date.v` (sinon `computation_date.v`), `summary.starttime`, `summary.endtime`,
+  `summary.grade`, `summary.grades.network`, `summary.vulnreco_count`, `warning_count`, `info_count`, `ok_count` ;
+  périmètre déclaré : `perimeter.domains`, `perimeter.ip` ; contrôle d'un constat : nom du module de `$.modules` dont
+  `results` cite l'identifiant ; hôte : `addr` (sinon la clé), `hostnames[].name` et `.type`, `ports[]` ouverts (`port`,
+  `protocol`, `service_name`, `service_product`, `service_tunnel`), `openports.tcp.ports` et `.udp.ports` (port sans service),
+  `openports.count`, `cpes[]` (`type`, `vendor`, `product`, `version`), `categories` ; constat : `id`, `result_class`,
+  `max_points.network`, `grades.network`, `applicable_hosts`, `listing` (par hôte : `addr` sinon la clé, `hostname`,
+  `port`, `protocol`, `service`, `product`, `type`, `expires`).
+- **Écartés, jamais lus** : `db_name`, `filter`, `networks`, `_prev`, `modules.*` hors `results`, `results.*._type`,
+  `listing.*.domain`, `.version`, `.san`, `.subject`, `hosts.*.net`, `source`, `schema_version`, `state`, `state_reason`,
+  `starttime`, `endtime`, `hostnames[].domains`, `cpes[].origins`, `ports[].state_reason`, `state_reason_ttl`,
+  `service_method`, `scripts` (dont certificats, clés, empreintes, en-têtes, titres, sorties), `infos` (géolocalisation,
+  système autonome), et tout champ inconnu. Les fichiers d'exemple fictifs (`tests/fixtures/silene/`) portent ces champs
+  avec des marqueurs « INTERDIT » ; un test de l'interface vérifie qu'aucun n'est dans ce qui part.
+
+### Mesures (fichiers fictifs générés, Chromium de la pile locale)
+
+| Fichier | Hôtes, ports, constats | Lecture dans le navigateur | Tas JavaScript (avant → après la lecture) | Envoi (lots) |
+|---|---|---|---|---|
+| 20 Mo | 850, 5 100, 850 | 0,14 s | 57 → 65 Mo | 1,6 s (7) |
+| 49 Mo | 2 080, 12 480, 2 080 | 0,53 s | 101 → 111 Mo | 2,2 s (16) |
+
+Le gros du fichier est fait des sorties de sondes, analysées par `JSON.parse` mais jamais lues ; la borne de 50 Mo est
+gardée. Tas mesuré par le protocole de débogage de Chromium avant et après la lecture (le pic pendant `JSON.parse` n'est pas
+mesuré). Un seul poste, sans réseau entre le navigateur et l'API.
+
+### Périmètres
+
+Même logique qu'AlgoLightHouse, même fragment SQL (`lisibleAlh`, alias `sp`) : tout ce qu'une instance Silène a importé
+hérite du périmètre de la plateforme relié à l'instance ; non reliée, lisible avec `vulnerabilites:administrer` seulement.
+La liaison se fait dans l'onglet « Périmètres » (droit d'administrer le module, écriture sur le périmètre actuel et sur le
+périmètre visé, If-Match, journal). Aucun mécanisme de droits nouveau.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Actif de type nom de domaine** : seuls les noms de résolution directe (`A`) d'un hôte deviennent des actifs de la liste ;
+  les noms `PTR`, `cert-san-dns` et `cert-subject-cn` restent dans la fiche de l'hôte.
+- **Fusion** : chaque actif d'AlgoLightHouse garde sa ligne (deux instances d'AlgoLightHouse qui voient la même valeur font
+  deux lignes, comme avant) ; Silène s'y rattache par la valeur. Les ports d'un nom de domaine vu par Silène sont ceux de
+  l'hôte, montrés sur la ligne de l'hôte (la ligne du nom dit seulement par quelles adresses il est porté).
+- **Identité d'un constat** : son identifiant (`id`) ; s'il change d'un rapport à l'autre, l'ancien n'est plus présent et le
+  nouveau apparaît. Un constat qu'aucun module ne cite est écarté et compté (aucun contrôle à lui donner).
+- **Hôte au-delà de 1 000 ports** : les 1 000 premiers (par numéro) sont gardés, les autres comptés ; le nombre annoncé par
+  Silène reste affiché.
+- **Limites** partagées avec Nessus (mêmes compteurs) ; activation exigée pour importer.
+- **Dates du rapport** gardées sans fuseau, telles quelles (« AAAA-MM-JJTHH:MM:SS »).
+- **Libellés des familles** : « Vulnérabilités ou recommandations (vulnreco) », « Avertissements (warning) », « Informations
+  (info) », « Conformes (ok) », le nom du champ restant visible.
+
+### Non vérifié
+
+Forme du rapport écrite d'après un relevé des seuls noms de champs, types et nombres d'un export réel : **aucune valeur réelle
+n'est connue**. Non vérifiés : valeurs de `result_class` et leur sens (table `CLASSES_SILENE` vide, « classe N » affichée),
+valeurs de `_type`, format exact des dates de 19 caractères (deux formes admises), échelle de `grade` (bornée seulement),
+sens de `networks` (non lu), forme des clés de `$.results` et de `$.hosts` (adresse supposée pour `$.hosts`, sinon `addr`),
+valeurs de `type` d'une ligne de détail, stabilité de l'identifiant d'un constat d'un rapport à l'autre. Parcours Playwright
+joués sur une pile locale sans Docker (API et Vite, Chromium, PostgreSQL 16), à rejouer en CI ; CSP stricte du serveur de
+production vérifiée en CI seulement. Docker et Node 26.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; correspondance **classe → famille** (à inscrire dans `CLASSES_SILENE`) et **classe → priorité**
+   (décision du RSSI).
+2. Rapprochement des produits vus par Silène (CPE : type, éditeur, produit, version) avec les CVE : il faudrait former un
+   identifiant CPE 2.3 à partir de ces parties, le rapprocher des CPE de NVD de la veille (règle du rapprochement des
+   produits surveillés, `rapprochement-vulnerabilites.ts`) et décider si une CVE ainsi trouvée vaut présence « exposée »
+   (comme une technologie d'AlgoLightHouse) ou seulement une indication à confirmer, avec son effet sur la priorité.
+3. Carte « Lignes d'approche » : regroupement par adresse IP, filtre par nom de domaine et fusion des deux sources (lot SI2).
+4. Masque de l'assistant : les adresses et noms vus par Silène seul ne sont pas dans la liste des actifs à masquer (rien de
+   Silène ne part vers l'assistant à ce jour).
+
+## Addendum du 19/11/2026 — lot SI2 : carte à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte en page entière
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route nouvelle (la route de la carte rend plus), aucune dépendance, **aucun flux sortant** ;
+`apps/api/src/assistant/*`, `apps/web/src/assistant/ReglagesAssistant.tsx`, `scripts/exploitation-worker.py`,
+`docker-compose.yml` et `docker/*` inchangés. Lève le point ouvert 3 de l'addendum « lot SI1 ». Remplace, pour la carte, le
+déplacement et le zoom par la `viewBox`, la vue d'ensemble et le cadre décrits dans l'addendum « lot ALH4 ».
+
+### Demandes et décision du RSSI (19/11/2026)
+
+1. « Silène : fusionner avec ALH. »
+2. « Pour l'EASM il faut essayer de réunir par IP aussi pour déployer la branche et filtrer aussi par nom de domaine. »
+3. Décision en cours de lot : **la carte de la surface externe est la page elle-même**, pas un cadre dans lequel on se
+   déplace : toute la largeur utile, sa hauteur naturelle, le défilement normal de la page ; les repères utiles (titres des
+   colonnes, barre de regroupement et de filtre) restent visibles pendant le défilement ; avec 150 noms de domaine, ce sont
+   le repli par défaut, le regroupement et le filtre qui gardent la page lisible ; pas de débordement horizontal à 390 px.
+
+Restent vraies : environ 150 domaines ; chaîne « domaine parent → nom de domaine → adresse IP publique → service → limite
+du SI → machine interne » ; termes techniques précis ; priorité et alertes inchangées ; constats Silène sans priorité.
+
+### Réalisation
+
+- **Route** `GET /api/vulnerabilites/surface/carte` (`SurfaceExterneAlh.carte`, droits inchangés : `vulnerabilites:lire`) :
+  chaque actif d'AlgoLightHouse rendu reçoit ce que Silène dit de la même clé `type|valeur` (lot SI1 :
+  `SurfaceSilene.actifs`) ; les actifs lisibles vus par **Silène seul** (`SurfaceSilene.actifsSeuls` : aucun actif lisible et
+  présent d'AlgoLightHouse de même type et de même valeur) s'ajoutent dans la borne restante, hôtes d'abord. Nouveaux champs
+  de `ActifCarteDto` : `sources`, `alhId` (null : Silène seul, aucune liaison possible), `silene` (`SileneCarteDto` : adresses
+  qui portent le nom ; pour un hôte seulement, ports ouverts — `SERVICES_PAR_ACTIF_MAX` au plus —, nombre annoncé, constats
+  présents qui le concernent et ports que leurs lignes de détail citent). `CarteSurfaceDto.constatsSilene` : contrôle,
+  identifiant et classe des constats cités. Lecture seule, aucune entrée de journal ; mêmes règles de lecture que la liste des
+  actifs (périmètre relié à l'instance, sinon `administrer`).
+- **Bornes** (`CARTE_SURFACE_BORNES`) : 3 000 actifs **toutes sources confondues** (AlgoLightHouse d'abord, actifs en alerte
+  en tête comme avant, puis Silène seul) ; `totaux.actifs` les compte tous ; nouvelle borne `constatsParActif` (20,
+  `nombreConstats` donne le total). Pas de borne propre aux constats de la carte : ils sont au plus 20 par hôte rendu, et un
+  import en compte 5 000 au plus.
+- **Modèle** (`apps/web/src/vulnerabilites/carte-surface.ts`, fonctions pures) : une **ligne est une adresse IP publique**.
+  Dans une branche, les noms qui résolvent vers une même adresse sont empilés et convergent vers **un seul nœud
+  d'adresse** ; services, alertes de l'hôte, constats et machines n'y sont qu'une fois. Une adresse déjà tracée dans une
+  autre branche (ordre d'affichage) devient un **renvoi** : la ligne garde ses noms et ce qu'ils portent eux-mêmes, le nœud
+  d'adresse est en pointillé, « ↑ voir … », et un clic (ou Entrée) déplie la branche qui porte l'adresse et y met le focus.
+  Services d'une ligne : `fusionnerPortsActif` (ports de Silène de l'hôte et services d'AlgoLightHouse des actifs de la
+  ligne), sans doublon port/protocole, trois empilés au plus (« et n autres services »), chacun avec la pastille de sa ou ses
+  sources et, si un constat le cite, une marque. Noms : huit au plus par ligne (« et n autres noms »).
+- **Regroupement** : « Nom de domaine » (branche : domaine parent ; par défaut, inchangé), « **Adresse IP publique** » (la branche est
+  l'adresse ; une seule ligne, dépliée sur ses noms — un nom de Silène porté par plusieurs hôtes paraît sous chacun —, ses
+  services, la limite du SI et les machines ; noms sans adresse connue dans une branche à part), « Périmètre ». Le titre de
+  la colonne de branche suit le regroupement. **Domaine parent d'un nom dont le parent n'est pas rendu** (Silène ne le
+  donne pas ; chez AlgoLightHouse, absent ou illisible) : déduit du nom (`parentDeduit` : le plus proche nom de la carte dont
+  il est un sous-domaine, sinon les deux derniers niveaux).
+- **Filtre par nom** (`filtreNom`), champ « Nom de domaine ou adresse IP » de la barre collante : partie d'un nom, casse
+  ignorée, ou début d'adresse ; comparaison **littérale** (`includes`, `startsWith`), aucune expression régulière construite
+  depuis la saisie. Seuls les noms qui correspondent restent sur la ligne (les autres comptés), sauf si c'est l'adresse qui
+  correspond. S'ajoute aux autres filtres, dans les trois regroupements ; nombre de noms et d'adresses retenus annoncé
+  (`role="status"`, `aria-live="polite"`) ; bouton « Effacer le filtre par nom ». Pas dans l'adresse de la page : les autres
+  filtres de la carte n'y sont pas.
+- **Repli par défaut** (`replisParDefaut`, `SEUIL_DEPLIE`) : jusqu'à 30 lignes, tout est déplié ; au-delà, seules les
+  branches qui portent une alerte retenue (douze au plus, les plus graves d'abord), leurs lignes sans alerte en faisceau.
+  « Tout déplier » reste borné à 250 lignes (`LIGNES_MAX`). La vue (regroupement, filtres, replis par regroupement) est tenue
+  par l'écran : elle survit au changement d'onglet.
+- **Page entière** (décision 3) : le SVG a pour `viewBox` la scène entière, `inline-size: 100%`, hauteur selon le rapport ;
+  la page défile. **Retirés** : caméra (`viewBox` mobile), glisser à la souris, Ctrl + molette, boutons « Rapprocher »,
+  « Éloigner », « Recadrer », flèches et + / − / 0 au clavier, vue d'ensemble miniature, cadre à défilement propre. Les
+  nœuds restent atteignables par Tab (le navigateur fait défiler jusqu'au nœud qui reçoit le focus). **Collants**
+  (`.sc-collant`, `position: sticky` sous l'en-tête de l'application) : regroupement, filtre par nom et son annonce, « Tout
+  replier », « Tout déplier », et les titres des colonnes, dessinés dans un second SVG de même largeur de scène. Les autres
+  filtres (texte, périmètre, type, criticité, « Branches en alerte seulement ») restent au-dessus, non collants.
+- **Écran étroit** (moins de 62 em) : la chaîne à huit colonnes réduite à la largeur d'un téléphone donnerait un texte de
+  quelques pixels ; la même scène (mêmes branches, mêmes replis, mêmes noms accessibles) est **présentée empilée** : une
+  branche par bloc (bouton `aria-expanded`), chaque ligne en étapes « Nom de domaine », « IP publique », « Service »,
+  « Alerte ouverte », « Machine interne (derrière la limite du SI) ». Sous 48 em, la barre n'est plus collante (elle
+  occuperait l'écran). Aucun débordement horizontal mesuré à 390 px.
+- **Constats Silène** : marque sarcelle « n SIL » (jetons `teal` de la charte, comme la pastille SIL), jamais un rond
+  d'alerte, sur l'adresse (tous les constats de l'hôte) et sur le service dont le port est cité ; un clic ouvre la liste
+  (contrôle, classe, identifiant) puis la fiche du constat (`FicheConstatSilene`). Ni priorité, ni alerte, ni chemin
+  critique.
+- **Accessibilité** : chaque nœud a un nom complet (« IP publique 192.0.2.10, vu par AlgoLightHouse et Silène (ANSSI),
+  2 services connus : ouvrir sa fiche » ; « Service 443/tcp · HTTPS, …, 1 constat Silène sur ce port » ; « Adresse IP …,
+  déjà tracée sous la branche … : y aller ») ; pastilles décoratives dans le dessin (le nom les dit) ; légende complétée
+  (pastilles, marque des constats, renvoi). Aucun style en ligne : positions par attributs SVG, pastilles par `transform`
+  (attribut), couleurs par classes.
+- **Fiches** : un nœud d'AlgoLightHouse ouvre la fiche existante (machines internes) et ce qu'en dit Silène ; un nœud de
+  Silène seul ouvre la fiche Silène de l'actif.
+
+### Mesures (jeu fictif généré, pile locale)
+
+Jeu fictif généré pour l'essai (non commité ; la fabrique `grandeEchelle` du test de l'interface en est l'équivalent) :
+8 domaines parents, 150 noms de domaine, 60 adresses (40 vues par AlgoLightHouse, 40 par Silène, 20 par les deux),
+150 ports ouverts de Silène et 40 services d'AlgoLightHouse portés par 30 alertes ouvertes (environ 190 services
+distincts), 14 constats Silène. Chromium de la pile locale (API et Vite de développement, sans Docker), facteur d'échelle 2,
+mouvement réduit.
+
+| Mesure | 1 366 px | 390 px |
+|---|---|---|
+| Ouverture de l'écran jusqu'à la carte dessinée (navigation et lectures comprises) | 1,9 s | 1,7 à 2,0 s |
+| « Tout déplier » sur les 150 noms (clic et 200 ms d'attente compris) | 0,75 à 0,82 s | 0,65 à 0,73 s |
+| Passage au regroupement par adresse IP (choix dans la liste et 200 ms compris) | 0,63 à 0,69 s | 0,6 à 0,7 s |
+| Défilement continu de la page (120 images) : médiane, 95e centile | 16,7 ms, 17,4 ms au plus | 16,7 ms, 16,9 ms |
+| Débordement horizontal de la page | 0 | 0 |
+
+Calcul pur (modèle, filtre, repli, mise en page) sur la fabrique de test : moins de 500 ms exigés par le test, dans les deux
+regroupements. Repli par défaut : par nom de domaine, les 8 branches (toutes en alerte) dépliées, leurs lignes sans alerte
+en faisceaux ; par adresse IP, douze des trente branches en alerte dépliées (les plus graves d'abord), les autres repliées. Filtre « portail-01 » : 10 noms et
+4 adresses annoncés. Ces durées sont celles d'un poste de développement et de Vite en mode développement, pas de l'image de
+production.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Domaine parent déduit** d'un nom sans parent rendu (deux derniers niveaux à défaut de mieux : faux pour un suffixe
+  public à deux niveaux comme `gouv.fr`) ; le périmètre déclaré du rapport Silène (`perimeter.domains`) pourrait servir de
+  liste des domaines parents.
+- **Libellés du regroupement** : « Nom de domaine » (branche : domaine parent), « Adresse IP publique », « Périmètre » (gardé).
+- **Renvoi** plutôt que nœud d'adresse dupliqué entre deux branches ; la ligne qui porte l'adresse est la première dans
+  l'ordre d'affichage (branches critiques et en alerte d'abord).
+- **Seuils** : tout déplié jusqu'à 30 lignes, douze branches en alerte au plus au-delà ; trois services, huit noms et trois
+  machines dessinés par ligne.
+- **Filtre « Branches en alerte seulement »** : une ligne de renvoi vers une adresse en alerte reste affichée.
+- **Écran étroit** : présentation empilée sous 62 em (et non la chaîne à huit colonnes), barre non collante sous 48 em.
+- **Retraits de la page entière** (zoom, déplacement à la souris, vue d'ensemble, raccourcis + / − / 0 et flèches) : à
+  valider sur les captures.
+
+### Non vérifié
+
+Aucune donnée réelle. Parcours Playwright joués sur une pile locale sans Docker (API et Vite, Chromium, PostgreSQL 16), à
+rejouer en CI ; sur une pile vierge, AlgoLightHouse n'a aucune donnée : le nœud à deux sources n'est vu qu'en tests de
+l'API et de l'interface et sur les captures (jeu fictif inséré en base locale). CSP stricte du serveur de production
+vérifiée en CI seulement. Docker et Node 26. Les maquettes `docs/unification/maquettes-vulnerabilites/08*.png` ne montrent
+ni cadre fixe ni regroupement par adresse : elles ne correspondent plus au dessin (non régénérées).
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; filtre et regroupement dans l'adresse de la page (avec les autres filtres de la carte), si voulu.
+2. Correspondance classe → priorité des constats Silène (toujours en attente) ; rapprochement des produits vus par Silène
+   avec les CVE (point 2 du lot SI1).
+3. Liaison d'un actif vu par Silène seul à une machine interne (aujourd'hui : seuls les actifs d'AlgoLightHouse se
+   relient).
+
+## Addendum du 20/11/2026 — lot PERF : lectures des failles, des machines, de la recherche et de la vue d'ensemble (PERF-01 à PERF-04)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Corrige les défauts
+PERF-01 à PERF-04 du banc de performance du 19/11/2026. **Aucune migration**, aucune route nouvelle, aucun champ changé,
+aucune dépendance, aucun flux sortant ; droits, priorité, alertes, majoration, délais, bornes de synchronisation
+(`TENABLE_BORNES`, PERF-09 : décision du RSSI) et contrat de la recherche inchangés. Réglage du JIT de PostgreSQL non touché
+(socle et RSSI) : les requêtes réécrites ont un coût estimé sous `jit_above_cost`.
+
+### Ce qui a changé dans les requêtes
+
+- **Lisibilité d'une machine** (`sql.ts`, fragment `lisible`) : les périmètres que la personne voit (`grc_smsi_visible`,
+  pyramide) sont lus **une fois par requête** (sous-requête sans corrélation, `perimetresVisibles`), puis le périmètre
+  effectif de la machine est cherché dans ce tableau. Avant : un appel de `grc_smsi_visible` par ligne lue (114 718 pour la
+  liste des constats du banc, chacun parcourant la pyramide pour un non-administrateur). Même règle : un périmètre effectif
+  existe toujours dans `grc_smsis` (clés étrangères `ON DELETE SET NULL`). Toutes les lectures qui utilisent ce fragment en
+  profitent (73 emplois).
+- **Liste des constats** (PERF-01, `FaillesDetectees.requeteConstats` et `constats`) : lisibilité calculée une fois par
+  machine (CTE matérialisée), puis deux agrégats (par constat et machine, puis par constat) au lieu d'un tri distinct de
+  toutes les détections ; première présence prise dans le même agrégat. La liste lit d'abord les **seules colonnes de la
+  priorité, du délai et de l'ordre** pour tous les constats filtrés, calcule la priorité (fonction partagée, en TypeScript),
+  trie et découpe en mémoire, puis lit le **résumé complet des 25 constats de la page** (seconde requête, mêmes règles). Choix :
+  l'ordre dépend de la priorité, calculée en TypeScript sur les faits des sources ; la copier en SQL aurait dédoublé la
+  règle. Le délai n'est calculé pour tous que s'il sert au filtre ou à l'ordre « par échéance ».
+- **Machines, fiche d'une machine, parc** (PERF-02, `machinesRangees`) : machines lisibles calculées une fois ; faits de chaque
+  constat ouvert (KEV, exploitation avérée) calculés une fois par constat sous forme d'ensembles (`cvesExploitees` de
+  `sources.ts`, même règle qu'`exploiteeCve`) ; un seul agrégat par machine au lieu d'une sous-requête latérale par machine ;
+  fins de support lues en une fois (cinq au plus par machine, même ordre). La fiche garde le calcul de toutes les machines
+  lisibles : son rang (position et total) en dépend. L'index partiel sur `fin_support_le` proposé par le banc n'est plus
+  utile (les fins de support ne sont plus cherchées machine par machine) : pas de migration.
+- **Recherche** (PERF-03, `RechercheVulnerabilites.cves`) : elle profite des deux réécritures ci-dessus (machines,
+  contrôles) ; l'ordre « présente sur une machine lisible » des CVE candidates est calculé une fois (ensemble) au lieu d'une
+  sous-requête par candidate. Mêmes groupes, mêmes bornes, mêmes champs.
+- **Vue d'ensemble** (PERF-04) : elle profite de la lisibilité calculée une fois (machines et fiches lisibles). Le calcul
+  global des failles (`AlertesVulnerabilites.situationGlobale`) n'est pas réécrit : voir « Ce qui reste ».
+
+### Mesures (banc local, avant / après)
+
+Jeu fictif déterministe inséré en base puis `ANALYZE` (script hors dépôt) : 1 020 machines (1 000 de Tenable sur 7 dépôts
+dont 6 reliés à 6 périmètres, 84 à périmètre propre, 40 sans dépôt ; 20 importées de Nessus), 10 050 constats, 120 200
+détections dont 113 800 présentes (80 % sur 20 % des machines), 20 000 CVE de veille dont 1 000 au catalogue KEV, 12 produits
+surveillés reliés, suivis et propositions. Comptes : administrateur ; RSSI non administrateur membre de 3 périmètres dont un
+parent (pyramide) ; lecteur d'un périmètre ; lecteur sans périmètre. Médiane / 95e centile en ms, 15 appels après un
+échauffement, API dans le processus (injection Fastify), PostgreSQL 16 local (`work_mem` 4 Mo, JIT actif par défaut),
+poste de développement de 4 cœurs : **pas l'image de production ni le serveur réel**. Requêtes : nombre d'instructions SQL
+d'un appel, session comprise.
+
+| Route | Compte | Avant | Après | Requêtes avant / après | Lignes rendues (total) |
+| --- | --- | --- | --- | --- | --- |
+| `constats` (page 1) | administrateur | 2 030 / 2 631 | 387 / 479 | 8 / 9 | 9 539 |
+| `constats` (page 1) | RSSI | 3 477 / 3 921 | 366 / 473 | 8 / 9 | 9 538 |
+| `constats?q=CVE-2099-1000` | administrateur | 810 / 893 | 137 / 207 | 8 / 9 | 6 |
+| `constats?q=CVE-2099-1000` | RSSI | 2 314 / 2 367 | 137 / 180 | 9 / 9 | 6 |
+| `machines` (page 1) | administrateur | 4 663 / 4 927 | 380 / 414 | 14 / 14 | 1 020 |
+| `machines` (page 1) | RSSI | 3 685 / 3 862 | 320 / 400 | 14 / 14 | 576 |
+| `machines/:id` | administrateur | 4 523 / 5 003 | 178 / 202 | 4 / 4 | 1 |
+| `machines/:id` | RSSI | 3 327 / 3 528 | 110 / 164 | 4 / 4 | 1 |
+| `vue-ensemble` | administrateur | 1 434 / 1 502 | 1 193 / 1 345 | 17 / 17 | 16 399 failles suivies |
+| `vue-ensemble` | RSSI | 1 488 / 1 568 | 1 225 / 1 266 | 17 / 17 | 16 399 failles suivies |
+| `recherche?q=CVE-2099-1000` | administrateur | 4 321 / 4 493 | 172 / 236 | 11 / 11 | — |
+| `recherche?q=CVE-2099-1000` | RSSI | 3 397 / 3 693 | 129 / 147 | 11 / 11 | — |
+
+Plans (`EXPLAIN (ANALYZE, BUFFERS)` de la requête la plus lente de chaque appel) : liste des constats du RSSI 2 803 ms →
+229 ms (coût estimé 344 215 → 13 442) ; requête des machines 4 520 ms dont **1 779 ms de compilation JIT** → 191 ms sans
+JIT déclenché (coût estimé 1 320 067 → 16 978) ; la même requête servait la fiche et la recherche. **Égalité des réponses** :
+les réponses complètes de 14 appels (listes, pages 2 et 3, filtres « tous » et « par échéance », recherche par CVE, par
+texte et par nom, parc, deux fiches, vue d'ensemble, recherche) sont identiques octet pour octet avant et après, pour les
+quatre comptes (56 comparaisons), y compris les 404 de la fiche pour qui ne lit pas la machine.
+
+Test de non-régression `apps/api/test/performance-vulnerabilites.test.ts` (1 000 machines, 5 000 constats, 50 000 détections
+présentes ; budgets de CI au 95e centile : 800 ms pour les listes et la fiche, 1,5 s pour la recherche, 2,4 s pour la vue
+d'ensemble ; totaux comparés à une requête de référence indépendante des fragments du module) : environ 47 s, trois passages stables (95e centile de 63 à 266 ms pour les listes, la fiche et la
+recherche, 761 à 797 ms pour la vue d'ensemble) ; il échoue sur le code d'avant (95e centile de 1 108 à 2 638 ms).
+Le budget de la vue d'ensemble a été fixé à 2,4 s le 20/11/2026, après un premier passage en CI à 1 692 ms au 95e centile
+pour le RSSI non administrateur (exécuteur partagé, plus lent que le poste de mesure) : c'est la marge déjà prise pour les
+listes (800 ms pour un objectif de 500 ms, soit × 1,6), appliquée à l'objectif de 1,5 s. L'objectif du serveur réel ne change
+pas, et ce budget est à resserrer quand le calcul global sera réécrit.
+
+### Ce qui reste au-dessus de l'objectif, et pourquoi
+
+- **Vue d'ensemble** : 1,2 à 1,3 s ici (objectif 1,5 s ; le banc mesurait sur un poste environ deux fois plus lent). Le calcul
+  global des failles lit tous les constats présents (coût estimé 1,9 million) : **324 ms de JIT** sur 628 ms pour sa requête
+  (294 ms sans JIT dans la même session) ; le reste est le calcul en TypeScript des cumuls de toutes les failles, le même pour
+  tout le monde. Une réécriture de cette requête en un agrégat a été essayée puis retirée : elle change l'ordre des constats
+  rendus, et le calcul global en dépend (à priorité égale, la première faille rencontrée fixe les faits affichés d'une
+  cible). Cet ordre n'est aujourd'hui fixé que par l'ordre physique de la table : point ouvert ci-dessous.
+- **Parc des machines** (`machines/parc`, hors banc) : 1,3 s pour l'administrateur, à cause des marques de toutes les
+  machines filtrées (`faillesDesMachines` sur 1 020 machines), inchangées.
+- **Liste des constats** : environ 180 ms de SQL et 200 ms de calcul et de lecture des faits des sources pour 9 500
+  constats ; elle croît avec le nombre de constats lisibles. Les estimations de lignes de l'agrégat par constat et machine
+  restent basses (`work_mem` de 4 Mo : un débordement sur disque d'environ 8 Mo).
+
+### Points ouverts (hors lot)
+
+1. **JIT** : `jit = off` pour le rôle applicatif ou le serveur ôterait encore environ 0,3 s à la vue d'ensemble (décision du
+   socle et du RSSI, non prise ici).
+2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : **tranché le 20/11/2026 par le RSSI** : à priorité
+   égale, le contrôle détecté le plus récemment. Réalisé par le lot PERF-04 (addendum ci-dessous).
+3. **PERF-09** (bornes de synchronisation) : **tranché le 20/11/2026 par le RSSI** : la synchronisation de Tenable Security
+   Center reste bornée à 20 000 détections (`TENABLE_BORNES`) pour la version 7.5.0, sans relèvement ni découpage par dépôt.
+   Conséquence connue et acceptée : au-delà de la borne, la synchronisation est rendue « incomplète », ce que l'écran
+   affiche, et plus rien n'est marqué comme disparu tant qu'une synchronisation complète n'a pas eu lieu. À réexaminer
+   quand le nombre réel de détections du parc sera connu.
+
+## Addendum du 20/11/2026 — lot PERF-04 : ordre du calcul global fixé, calcul ensembliste
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Réalise la décision du
+RSSI du 20/11/2026 sur le point ouvert 2 de l'addendum « lot PERF » et la réécriture du calcul global retirée de ce lot.
+**Aucune migration** (097 et 098 restent réservées ; 099 non utilisée), aucune route nouvelle, aucun champ d'échange changé,
+aucune dépendance, aucun flux sortant ; règles de priorité, d'alerte, de majoration, délais, droits et bornes de
+synchronisation (PERF-09) inchangés ; `apps/api/src/assistant/*` non touché.
+
+### Décision et règle écrite
+
+Quand plusieurs contrôles de Tenable (constats) présents et non traités portent la même faille du calcul global (une CVE, ou
+un constat sans CVE) et donnent la même priorité, l'un d'eux fournit les faits affichés de la priorité (la liste des faits :
+présence, gravité, score EPSS, sources de l'exploitation…). C'était le premier lu dans l'ordre physique de la table, qui
+n'était écrit nulle part et changeait seul (CLUSTER, VACUUM FULL, restauration). **Décision du RSSI** : à priorité égale, le
+contrôle détecté le plus récemment. Règle écrite (`comparerControlesGlobal`, `packages/shared/src/priorite-vulnerabilites.ts`) :
+
+1. la dernière détection **présente** la plus récente du constat (maximum de `derniere_detection` de ses détections
+   présentes au sens de la dernière synchronisation complète de leur instance, toutes machines confondues : le calcul global
+   est le même pour tout le monde, lot ALH5, décision A) ; un constat traité (corrigé, risque accepté, non concerné) ne
+   donne aucune priorité et n'entre pas en compte ; une détection absente non plus ;
+2. un constat dont aucune détection présente n'est datée vient après tous les constats datés ;
+3. à égalité parfaite, le plus petit identifiant du constat.
+
+L'ordre est total : deux calculs rendent le même résultat quel que soit l'ordre des lignes (vérifié par un test qui force un
+`CLUSTER` et réécrit des lignes, et sur le banc par un `CLUSTER` de la table des constats). Les failles déclarées et
+l'exposition sur Internet viennent, comme avant, après les contrôles (une faille déclarée d'une CVE donne toujours la même
+priorité ; l'exposition est unique par CVE). `prioriteLaPlusHaute` est inchangée (la première à niveau égal).
+
+**Ni la priorité, ni le niveau d'une alerte, ni aucun nombre ne changent** : seuls, à priorité égale, les faits montrés.
+
+### Autres ordres fixés (choix de réalisation, à confirmer par le RSSI)
+
+L'ordre physique décidait aussi de deux listes du rapport de pilotage, bornées à 200 lignes : les failles critiques (P1),
+dans l'ordre de rencontre des failles, et les dépassements de même échéance. Pour que le rapport ne dépende plus de l'ordre
+des lignes, le calcul global rend les failles **dans l'ordre de leur clé** (CVE, puis « constat:<identifiant> ») et les
+objets suivis **dans l'ordre de leur identifiant** (constats, puis failles déclarées). Les totaux du rapport ne changent pas ;
+quand une liste dépasse 200 lignes, les lignes listées peuvent changer à la mise à jour. Les fins de support et les autres
+lectures (vue d'ensemble, tendances, alertes, délais) avaient déjà un ordre propre.
+
+**Décision du RSSI du 20/11/2026** : dans le rapport, les failles critiques sont listées **présentes depuis le plus
+longtemps d'abord** (sans date en dernier, puis par clé), et les dépassements de même échéance dans le même ordre (puis par
+identifiant). La borne de 200 lignes garde ainsi les plus anciennes. Les totaux ne changent pas. Test :
+`apps/api/test/vulnerabilites-correctifs.test.ts`.
+
+### Alertes existantes à la mise à jour
+
+L'empreinte d'une alerte contient les faits de la priorité. À la première évaluation après la mise à jour (fin d'une
+synchronisation, d'une collecte, ou décision qui change les faits), une alerte dont le contrôle retenu change est **mise à
+jour** (`deciderAlerte` : même niveau, empreinte différente) : faits, empreinte, date de mise à jour et version avancent ;
+**aucune notification** (la mise à jour ne se rejoue pas), **ni réouverte ni close**, niveau et priorité inchangés, prise en
+compte conservée, pas d'entrée `vulnerabilites.alerte.niveau` (seule l'entrée de synthèse
+`vulnerabilites.alertes.evaluees` compte la mise à jour). Une prise en compte préparée sur l'ancienne version reçoit un
+conflit de version (409) et se refait après rechargement. Aucune migration n'est nécessaire.
+
+### Réécriture du calcul global
+
+- **Constats présents** (`AlertesVulnerabilites.calculer`) : un agrégat des détections par constat (machines présentes,
+  dernière détection présente, première détection) et un agrégat des CVE, au lieu de sous-requêtes par constat ; état de
+  suivi par jointure (un suivi au plus par constat). Mêmes règles qu'avant. Listes de machines et de CVE rendues en texte
+  séparé par des virgules (lecture d'un tableau PostgreSQL trop coûteuse pour 100 000 identifiants). Coût estimé sous le
+  seuil du JIT : la requête n'est plus compilée (`EXPLAIN ANALYZE` sur le jeu du banc : 794 ms dont 418 ms de JIT → 160 à
+  210 ms).
+- **Une passe par constat** : la priorité de son délai et celle de sa faille sont calculées une fois quand il n'a qu'une CVE ;
+  les sources d'une faille ne sont calculées que pour un constat non traité.
+- **Vue d'ensemble** : le calcul global ne lit ni les titres de toutes les failles (seulement ceux des failles rendues) ni
+  leurs machines (inutiles à la vue : ses nombres de machines lisibles ont leur propre requête ; les machines en fin de
+  support sont relues à partir des constats, même requête qu'avant, même nombre) ; les mesures de la variation sur sept jours
+  sont composées sans machines (la vue ne montre pas leur total) ; clés de l'ordre des cibles calculées une fois. Les
+  dépassements de délai (`DelaisVulnerabilites`) lisent aussi le calcul sans titres ni machines.
+- Fonctions de service sans changement de résultat : `parSource` (`sources.ts`) et `valeursRetenues` (paquet partagé)
+  trouvent la valeur retenue en un passage au lieu d'un tri.
+- Nombre de requêtes inchangé : vue d'ensemble 17, évaluation des alertes 14, rapport 44.
+
+### Mesures (banc local, avant / après)
+
+Même jeu et même poste que l'addendum « lot PERF » (1 020 machines, 10 050 constats, 113 800 détections présentes, 20 000
+CVE ; API dans le processus, sources TypeScript chargées par `tsx`, PostgreSQL 16 local, 4 cœurs ; **pas l'image de
+production ni le serveur réel**). Médiane / 95e centile en ms ; 15 appels après échauffement (3 pour les deux lecteurs).
+
+| Mesure | Compte | Avant | Après | Requêtes |
+| --- | --- | --- | --- | --- |
+| `vue-ensemble` | administrateur | 1 386 / 1 606 | 575 / 725 | 17 / 17 |
+| `vue-ensemble` | RSSI non administrateur | 1 332 / 1 580 | 557 / 836 | 17 / 17 |
+| `vue-ensemble` | lecteur d'un périmètre | 1 365 / 1 390 | 598 / 610 | 17 / 17 |
+| `vue-ensemble` | lecteur sans périmètre | 1 288 / 1 487 | 543 / 570 | 17 / 17 |
+| évaluation des alertes (fin de synchronisation) | — | 1 236 / 1 303 | 613 / 641 | 14 / 14 |
+| `rapport` (mois) | administrateur | 1 206 / 1 453 | 824 / 935 | 44 / 44 |
+| `rapport` (mois) | RSSI non administrateur | 1 222 / 1 416 | 844 / 1 009 | 44 / 44 |
+
+Requête la plus lente d'un appel de la vue d'ensemble : 629 à 817 ms → 72 à 108 ms. Sur le code compilé (`tsc`, comme
+l'image), vue d'ensemble de 560 à 590 ms en médiane et 690 à 770 ms au 95e centile. Le banc du 19/11/2026 mesurait sur un
+serveur environ 1,6 à 2 fois plus lent : la vue d'ensemble y est attendue entre 0,9 et 1,5 s au 95e centile, à confirmer
+par un nouveau passage du banc. Alertes, tendances : inchangées (15 à 25 ms et 5 à 9 ms).
+
+Test de non-régression `performance-vulnerabilites` (5 000 constats) : vue d'ensemble 305 à 439 ms au 95e centile sur trois
+passages (761 à 797 ms avant). Le budget de CI de la vue d'ensemble revient de 2,4 s à **1,5 s** (`SEUIL_SYNTHESE_MS`, celui
+de la recherche) : il laisse plus de trois fois la mesure locale, et le premier passage en CI était 2,1 fois plus lent que le
+poste (1 692 ms pour 797 ms).
+
+### Réponses comparées avant / après (quatre comptes)
+
+Réponses complètes de la vue d'ensemble, des alertes (deux pages et fenêtre), des tendances (plateforme et périmètre) et du
+rapport (JSON et CSV, plateforme et périmètre), pour l'administrateur, le RSSI non administrateur, un lecteur d'un périmètre
+et un lecteur sans périmètre, plus le calcul global complet et les objets suivis :
+
+- **calcul global** : 16 554 failles ; **647** dont les faits de la priorité changent, toutes à priorité égale ; aucun autre
+  écart (priorité, présences, nombres de machines et d'objets, traités, « exploitable », gravité et EPSS retenus, correctif,
+  constats, états) ;
+- **vue d'ensemble** : 14 des 208 cibles rendues changent de faits (même niveau, même ordre, mêmes cases) ; tuiles, totaux,
+  niveau, cases, nombres lisibles, journal identiques, pour les quatre comptes ;
+- **alertes** : 1 alerte sur 923 change de faits (même niveau, même priorité) ; listes rendues identiques ; à la première
+  évaluation après la mise à jour (alertes de l'ancien code rechargées) : 1 mise à jour, 0 création, 0 clôture, 0
+  notification, aucun changement d'état (l'alerte prise en compte le reste) ;
+- **tendances** : identiques ;
+- **rapport** : totaux identiques (failles critiques 923 et P2 11 156 pour la plateforme ; 854 et 10 217 pour le
+  périmètre) ; failles critiques listées dans l'ordre des CVE (131 des 200 lignes communes, contenu identique pour celles-ci)
+  ; dépassements : même total (7 611), 200 lignes listées différentes parmi les échéances égales ; fins de support
+  identiques ; le CSV suit ;
+- **droits** : codes de réponse identiques (404 du périmètre illisible pour le RSSI et le lecteur sans périmètre) ; nombres
+  lisibles identiques.
+
+Avec l'ancien code, un `CLUSTER` de la table des constats changeait à lui seul la vue d'ensemble et le rapport ; avec le
+nouveau, les réponses sont identiques (hors heure de production).
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus (ordre des failles critiques et des dépassements du rapport).
+2. JIT (point ouvert 1 de l'addendum « lot PERF ») : n'est plus déclenché par le calcul global ; décision du socle.
+3. Nouveau passage du banc de performance sur le serveur de mesure, pour confirmer la vue d'ensemble sous 1,5 s.
+
+## Addendum du 20/11/2026 — lot ASSISTANT-V1 : outils de l'assistant alignés sur la vue d'ensemble, actifs exposés, « Quoi faire »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route nouvelle, aucune dépendance, aucun flux sortant ; `apps/api/src/assistant/*`, `apps/web/src/assistant/*`,
+`docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py` non touchés (descriptions des outils et consigne
+inchangées). Fichier central : `apps/api/src/vulnerabilites/assistant.ts`.
+
+### Décisions du RSSI (20/11/2026)
+
+1. `failles_prioritaires` lit la **même source que le tableau « Cibles par priorité »** de la vue d'ensemble, avec les mêmes
+   droits de lecture, et signale les produits « à confirmer » : pour une même personne, l'outil et l'écran donnent les mêmes
+   failles dans le même ordre.
+2. `machines_prioritaires` rend aussi les **actifs exposés** (surface externe), sous des repères `E-001…`, à côté des
+   machines `M-001…`.
+3. `evaluer_cve` : la rubrique « Quoi faire » ne contient plus de renvoi interne (« voir chaque constat », « voir
+   surfaceExterne.alertes ») ; elle porte le contenu réel, avec sa source nommée ; une rubrique vide est omise ; sans
+   correctif, la mention explicite « aucun correctif publié par les sources lues ».
+4. `sources: []` gardé tel quel ; `elements` reflète ce que chaque outil rend.
+
+Rien d'identifiant ne part vers l'assistant : ni nom de machine, ni adresse, ni domaine, ni rôle, ni nom de périmètre ;
+seulement des repères et des compteurs, remplacés en local à l'affichage (mécanisme du lot « Assistant » et du lot ALH2,
+inchangé, masque compris).
+
+### Réalisation
+
+- **`failles_prioritaires`** : `VueEnsembleVulnerabilites.cibles(user)` rend les cibles telles que la route de la vue
+  d'ensemble les rend à la personne. `lire` et `cibles` partagent le même code (failles suivies du calcul global, ordre
+  `comparerCibles`, bornes par case, puis titres, machines lisibles par `lisible(user)` — donc `perimetresVisibles(user)` —,
+  actifs lisibles et fiche lisible) : aucune seconde règle à tenir. L'outil rend les premières cibles (25 au plus), dans
+  l'ordre : rang, CVE, titre et produit (ceux de l'écran), priorité et faits, présences (libellés), `produitAConfirmer`
+  (un produit surveillé est seulement proposé), `seulementAConfirmer` (c'est la seule présence), exploitée, exploitable,
+  gravité, EPSS, état de suivi, nombres de machines et d'actifs que la personne lit (drapeau sans nombre pour le reste), et
+  `nature` et `id` de la fiche qu'elle peut ouvrir (repris par `proposer_action_vulnerabilite`), absents sinon. Total :
+  `faillesSuiviesAuTotal` (celui de l'écran). Les failles et leur ordre sont les mêmes pour tout le monde (lot ALH5) ; une
+  personne à périmètre restreint voit donc aussi les failles qu'elle ne lit pas, comme sur l'écran, sans nombre ni fiche.
+- **`machines_prioritaires`** : `actifsExposes` (repères `E-…`, rang, `rangSur`, `faillesExposees`, et sans CVE demandée
+  `faillesParPriorite`), `actifsExposesDansLaPortee`, `actifsExposesSansRepere` (actif lisible inconnu de la cartographie).
+  Sans filtre : les actifs lisibles qui portent une faille suivie exposée sur Internet (calcul global de la vue
+  d'ensemble), rangés par la faille la plus prioritaire qu'ils portent (ordre des cibles), puis par nombre de failles
+  exposées, puis par identifiant. Avec une CVE : les actifs lisibles qui la portent (mêmes porteurs et mêmes repères que la
+  surface externe d'`evaluer_cve`). Avec un constat de Tenable : machines seulement. Même borne que les machines (`nombre`,
+  30 au plus). Lecture par `SurfaceExterneAlh.actifsDesCves` (une requête, mêmes porteurs et même lisibilité que
+  `exposition`). Les actifs vus par Silène seul n'ont pas de repère (la table des repères externes ne vise que les actifs
+  d'AlgoLightHouse) et ne sont pas rendus.
+- **`evaluer_cve`, « Quoi faire »** (`quoiFaire`, remplace `recommandations`) : rubriques `catalogueKev` (action exigée et
+  échéance, « Catalogue KEV de la CISA »), `certSante` (mentions « un correctif existe », « un contournement existe »),
+  `tenable` (un correctif par texte publié, avec les numéros des contrôles lisibles qui le portent et la date de publication
+  la plus ancienne), `algoLightHouse` (défauts et résolutions de l'éditeur des alertes ouvertes lisibles, bornés comme
+  avant) ; chacune nomme sa source et n'apparaît que si elle a un contenu. `correctif` : la mention « aucun correctif publié
+  par les sources lues » quand aucune source ne publie de correctif (ni correctif de Tenable, ni action du catalogue KEV, ni
+  « un correctif existe : oui » du CERT Santé, ni résolution de l'éditeur). Le texte du correctif quitte chaque constat
+  (`correctifPublieParTenable` ; la date `correctifPublieLe` reste) et les recommandations quittent `surfaceExterne.alertes`
+  (`recommandationsDeLEditeur`) : plus de copie en double. Les textes de l'éditeur repassent par le masque avant l'envoi,
+  comme avant.
+- **`elements`** : `evaluer_cve`, 1 (la CVE) + avis rendus + constats rendus + produits surveillés rendus + rubriques de
+  « Quoi faire » qui portent un contenu (la mention n'en est pas une) + 1 si la section de la surface externe est rendue ;
+  0 pour une CVE inconnue. `machines_prioritaires` : machines rendues + actifs exposés rendus. `failles_prioritaires` :
+  failles rendues.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. Ordre des actifs exposés sans filtre (faille la plus prioritaire qu'ils portent, puis nombre de failles exposées).
+2. Avec un constat de Tenable, aucun actif exposé n'est rendu (le constat porte sur des machines internes).
+3. Ce qui compte comme « correctif » pour la mention (liste ci-dessus) : une fiche du CERT Santé qui ne dit qu'« un
+   contournement existe » laisse la mention, à côté de la rubrique du CERT Santé.
+4. Les avis du CERT-FR et du CERT Santé restent listés à part (`avis` : source, identifiant, date et titre) : ils ne sont pas une
+   rubrique de « Quoi faire ».
+5. Les descriptions des outils et la consigne de l'assistant (`apps/api/src/assistant/outils.ts`, hors du périmètre du lot)
+   ne sont pas changées : la description de `machines_prioritaires` ne cite que les repères `M-…`, celle de
+   `failles_prioritaires` parle encore des « constats de Tenable et failles déclarées ». La consigne cite déjà les repères
+   `E-…` dans « Actifs à traiter d'abord » ; le champ `note` de chaque résultat explique les nouveaux champs. À reprendre
+   avec la session de l'assistant si le RSSI le souhaite.
+
+### Tests
+
+`apps/api/test/assistant-vulnerabilites-outils.test.ts` (nouveau) : serveur sans connecteur Tenable (les trois outils
+répondent) ; égalité outil / écran pour l'administrateur et deux personnes à périmètre restreint, avant et après l'arrivée
+des machines de Tenable ; produit à confirmer signalé ; actifs exposés rangés, selon les droits, mêmes repères
+qu'`evaluer_cve` ; les trois formes de « Quoi faire » (contenu avec source pour le catalogue KEV, le CERT Santé, Tenable et
+l'éditeur de la surface externe ; rubriques vides omises ; mention « aucun correctif… ») ; `elements` ; aucune sortie des
+trois outils (résultat du service pour trois personnes, puis requêtes réellement remises à un faux modèle) ne contient nom de
+machine, adresse, domaine, fournisseur d'accès, numéro d'AS, rôle ou nom de périmètre. Tests adaptés :
+`assistant-vulnerabilites.test.ts` (« Quoi faire », première faille prioritaire et sa fiche), `assistant-surface-externe.test.ts`
+(recommandations de l'éditeur dans « Quoi faire »).
+
+### Non vérifié
+
+Qualité des réponses avec un modèle réel ; Node 26 ; pile Docker.
+
+## Addendum du 20/11/2026 — lot PRIO-1 : règles de priorité, libellés, fréquences, cartes d'avis
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`097` (colonne `vulnerabilites_constats.kits_exploitation`, liste vide par défaut, contrainte de liste fermée ; aucune donnée
+reprise). Aucune dépendance, **aucun flux sortant nouveau** (un champ de plus gardé dans la réponse déjà lue de
+`/rest/analysis`), aucune route nouvelle (la liste des avis est élargie), aucun rôle ni droit nouveau.
+`apps/api/src/assistant/*`, `apps/web/src/assistant/*`, `docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py`
+non touchés. Lève la question 1 (mot « zero-day ») et la question 2 (fin de support) de l'addendum « lot S3 », le point à
+trancher et le point ouvert 6 de l'addendum « lot S1 », le point ouvert 1 de l'addendum « lot L1 », les points ouverts 1 et
+2 et deux choix de l'addendum « lot F1 », et les points 8 à 12 et 14 de la reprise du 20/11/2026 (§ 3).
+
+### Décisions du RSSI (19 et 20/11/2026)
+
+1. **Fin de support : un cran de plus.** Une faille sur une machine dont le système ou le produit n'est plus maintenu par
+   l'éditeur gagne un cran (P3 → P2, P2 → P1, P4 → P3 ; P1 reste P1), visible dans l'explication de la priorité.
+2. **P1 sous exception : alerte gardée**, marquée « risque accepté », au lieu d'être close ; pas de nouvelle notification du
+   seul fait de la marque.
+3. **Kit d'exploitation disponible (Tenable)** (« Exploit available », « Exploitable with » : Metasploit, Core Impact,
+   CANVAS), rangé avec « exploitable » : il compte pour la règle des alertes P2 exposées sur Internet, pas comme exploitation
+   avérée.
+4. **Rançongiciels (KEV)** : `knownRansomwareCampaignUse` devient un fait visible (liste, fiche, explication).
+5. **« Zero-day » réservé** à une faille à exploitation avérée sans correctif connu ; sinon « exploitation avérée ».
+6. **« Logiciel malveillant (Tenable) »** dans les listes ; dans la fiche, le terme officiel « Exploited by malware ».
+7. **Fréquences** : plancher de deux heures de NVD aussi pour « Collecter maintenant » ; purge du journal des collectes et des
+   exécutions au-delà de 90 jours ; « En retard » après trois périodes sans collecte réussie ; fréquences gardées à la remise
+   à vide du travail.
+8. **Cartes d'avis** : « présente sur le parc » et « exposée sur Internet » quand une CVE citée concerne la plateforme, en une
+   lecture d'ensemble.
+
+### Réalisation
+
+- **Grille** (`packages/shared/src/priorite-vulnerabilites.ts`) : `calculerPriorite` applique la grille de départ, puis
+  (a) le fait `rancongiciel`, placé après celui de l'exploitation, sans effet sur le niveau ; (b) si `finDeSupport` et que la
+  présence est avérée (détectée, déclarée ou exposée), un cran de plus (`monterDUnCran`, partagé avec la majoration du lot
+  ALH5) et le fait `fin_de_support` à la fin, même en P1. Une faille absente ou « produit à confirmer » ne monte jamais. Sans
+  ces deux faits, le résultat est exactement celui d'avant (test en table). Libellés : « Machine en fin de support (système
+  ou produit plus maintenu par l'éditeur) : un cran de plus », « Utilisée par des rançongiciels (catalogue KEV) ».
+- **Machine en fin de support** (`apps/api/src/vulnerabilites/sql.ts`, `machinesFinSupport`) : même règle que la fiche
+  d'une machine du lot S3 (au moins un contrôle présent dont la `seolDate` de Tenable est passée, quel que soit son état de
+  suivi), toutes machines confondues (un fait commun, comme les priorités du lot ALH5), en sous-requête sans corrélation
+  évaluée une fois. Une faille détectée a le fait si elle est présente sur au moins une telle machine ; une faille déclarée,
+  si le produit surveillé est relié à au moins une telle machine. Appliqué partout où la priorité est calculée : liste et
+  fiche des constats, failles déclarées, marques des machines (et donc la majoration de la surface externe, le parc et les
+  périmètres), calcul global (alertes, vue d'ensemble, délais, tendances, rapport), vue par correctif, délai d'une décision
+  « corrigée », rapprochements, fiche d'une CVE et outil `evaluer_cve` de l'assistant (repères inchangés, aucun nom). Colonnes
+  ajoutées aux requêtes existantes ; une requête de plus seulement pour l'outil `evaluer_cve` (une faille).
+- **Kit d'exploitation** : `scripts/integration-http.py` garde `exploitFrameworks` dans sa liste blanche et en tire les seuls
+  noms connus (`kits_exploitation`, chaîne, casse ignorée ; une liste, un nombre ou tout autre texte ne donnent rien) ;
+  l'import `.nessus` lit `exploit_framework_metasploit`, `_core`, `_canvas` (« true » seulement, autre valeur comptée « hors
+  norme »). Champ `kitsExploitation` facultatif de l'élément reçu (`KitsExploitation`, liste fermée sans doublon), rangé dans
+  la colonne de la migration `097` et remis à vide par un passage suivant sans kit. Source `tenable-kit` de
+  `SOURCES_EXPLOITABLE` (rangée en dernier, sans date) : filtre « Exploitable », compteur des machines, P2 d'une faille
+  élevée, condition « exploitable » de l'alerte simple ; jamais dans `SOURCES_EXPLOITATION`. Marque « Kit d'exploitation :
+  Metasploit (Tenable) » en liste, « Kit d'exploitation disponible selon Tenable (« Exploitable with ») : … » en fiche.
+- **Rançongiciels** : `kev_rancongiciel` (déjà rangé depuis le lot V2) est lu par `lireFaitsCve` ; `SourcesFailleDto` porte
+  `rancongiciel` (absent : non) ; marque « Rançongiciels (KEV) », phrase de la fiche « Utilisée par des rançongiciels selon
+  le catalogue KEV de la CISA (« Known Ransomware Campaign Use ») ».
+- **P1 sous exception** (`apps/api/src/vulnerabilites/alertes.ts`) : un objet suivi (constat ou faille déclarée) en
+  « risque accepté » reste traité pour tout le reste (listes, compteurs, délais, vue d'ensemble, rapport) ; s'il est en P1,
+  sa priorité est gardée à part avec la faille (`exceptionsP1`). Quand rien d'autre ne rend la faille critique, l'alerte est
+  critique et ses faits portent `risqueAccepte` ; l'empreinte change (mise à jour sans rejeu : aucune notification), la
+  fenêtre, la liste et la fiche affichent « Risque accepté » et les machines de l'exception sont comptées. Une faille P2 sous
+  exception n'est pas gardée. À l'échéance (expiration par l'évaluation des délais), l'objet n'est plus sous exception : la
+  marque tombe, l'alerte reste critique, sans notification.
+- **« Zero-day »** (`correctifs-vulnerabilites.ts` : `REGLE_ZERO_DAY`, `estZeroDay`, `libelleMarqueExploitation`) : seule
+  la situation « exploitée, sans correctif connu » (CERT Santé « Un correctif existe : Non », aucune source contraire) est
+  dite « Zero-day : exploitée, sans correctif connu » ; « correctif disponible » et « correctif non renseigné » donnent
+  « Exploitation avérée ». Le triangle des tuiles, des listes, des cartes de périmètre et de la vue par correctif dit
+  « Exploitation avérée » ; son infobulle dit « Zero-day » seulement dans ce cas. Les champs d'API (`zeroDay`,
+  `exploitationAveree`) ne sont pas renommés.
+- **Libellés de Tenable** : `SOURCE_EXPLOITATION_LIBELLES.tenable` = « Logiciel malveillant (Tenable) » (listes, faits,
+  notifications) ; `SOURCE_EXPLOITATION_LIBELLES_COMPLETS` et `libelleFaitPrioriteComplet` pour la fiche : « Exploitée par
+  un logiciel malveillant selon Tenable (« Exploited by malware ») ».
+- **Fréquences** : « Collecter maintenant » refuse NVD (409, message propre) quand une collecte NVD non expirée a été
+  demandée depuis moins de deux heures (`PLANCHER_NVD_HEURES`) ; `sourceEnRetard` (trois périodes de la fréquence réglée,
+  `PERIODES_AVANT_RETARD`) remplace `VEILLE_RETARD_HEURES` ; purge (`apps/api/src/vulnerabilites/purge-journaux.ts`) au tic de
+  l'API, au plus une fois par heure ; la remise à vide « travail » relit les fréquences choisies avant d'effacer et les
+  réinscrit seules.
+- **Cartes d'avis** : `AvisVeilleDto.parc` (`presentes`, `exposees`) : CVE citées détectées (détection présente) ou déclarées
+  (rapprochement rattaché), quel que soit l'état de suivi, et CVE portées par la surface externe (`cvesExposees`, porteurs
+  sans droits) ; deux lectures pour toute la page. Marques « Présente sur le parc » et « Exposée sur Internet » (avec « n CVE
+  citées sur m » quand toutes ne le sont pas) ; rubrique « Sur la plateforme » de la fiche de l'avis.
+- **Vue d'ensemble** : la tuile « Exploitées et présentes » compte désormais les failles à exploitation avérée (une P1 peut
+  venir de la fin de support) ; l'explication du niveau 4 dit « présente chez nous en P1 (exploitation avérée, ou machine en
+  fin de support) ». La fenêtre d'alerte critique titre « Faille P1 présente chez nous » quand l'alerte n'a aucune source
+  d'exploitation.
+
+### Décisions complémentaires du RSSI (20/11/2026, après relecture)
+
+- **a. Le contrôle de fin de support lui-même ne monte pas.** Seules les AUTRES failles présentes sur la machine montent
+  d'un cran ; pas de vague d'alertes critiques sur les contrôles « système / produit non maintenu ». Le fait reste visible au
+  rapport (section « fin de support » existante) et la marque « Fin de support » reste sur le contrôle. Réalisation : partout
+  où le fait est calculé (liste et fiche des constats, marques des machines, calcul global, vue par correctif, délai d'une
+  décision, fiche d'une CVE), un constat dont la `seolDate` est passée est exclu de la montée ; `surMachineFinSupport` y est
+  faux. Une faille déclarée n'est jamais ce contrôle.
+- **b. Rançongiciels : aucun changement de niveau ; à priorité égale, ces failles passent devant**, critère placé juste
+  après le niveau, avant les critères existants : liste des failles détectées, liste des failles déclarées (tris en
+  mémoire, après la lecture SQL, qui n'en dépend pas) et ordre des cibles (`comparerCibles`, qui lit le fait `rancongiciel`
+  de la priorité ; le radar de l'interface et l'outil `failles_prioritaires` de l'assistant, qui reprennent cet ordre,
+  restent identiques à l'écran). La question posée plus haut est ainsi tranchée.
+- **c. Un seul cran au plus** : la fin de support et la majoration par une machine interne vulnérable (lot ALH5) ne se
+  cumulent pas ; `majorerPriorite` n'ajoute plus de cran à une priorité qui porte déjà le fait `fin_de_support`, les deux
+  faits restent affichés. Aujourd'hui, la fin de support ne s'applique qu'aux présences détectées et déclarées et la
+  majoration qu'à la présence exposée : la règle est gardée dans la fonction partagée (testée), sans cas en base. Une
+  faille d'une machine en fin de support qui en devient « vulnérable » peut toujours faire monter, d'un cran, une autre
+  faille portée par un actif exposé relié : ce sont deux failles distinctes.
+
+### Choix de réalisation, à confirmer par le RSSI
+- **Fin de support d'AlgoLightHouse non comptée** : un service exposé en fin de vie (`version_status = eol`) ne fait pas
+  monter les CVE exposées ; aucun lien sûr n'existe entre ce service et les CVE de la technologie.
+- **Fiche d'une CVE de la veille** : elle ne lit que les faits par CVE (choix du lot N2) ; une CVE inconnue de NVD y est en P4
+  et y monte en P3, alors que le constat de Tenable qui la porte est en P1.
+- **Exception en vigueur** : l'état « risque accepté » ; une exception dont l'échéance vient de passer compte encore jusqu'à
+  l'évaluation des délais qui l'expire (au plus un quart d'heure).
+- **Plancher NVD** : vaut pour « Collecter maintenant » seulement ; la planification garde sa règle (une collecte manuelle en
+  file tient lieu de la collecte automatique, puis une par période depuis la référence) : une collecte automatique peut donc
+  suivre une collecte manuelle terminée de moins de deux heures.
+- **Purge** : les exécutions qui portent le journal d'un import de fichier (Nessus, Silène) ne sont jamais purgées ; la
+  dernière exécution de chaque instance et opération, et la dernière collecte de chaque source, sont gardées.
+- **Remise à vide « tout »** : les fréquences de la veille sont effacées avec la configuration.
+- **Kit d'exploitation** : facultatif dans l'élément reçu (un script plus ancien reste accepté) ; « Core » seul n'est pas
+  lu comme Core Impact dans `exploitFrameworks`.
+- **Présence sur le parc des cartes d'avis** : un fait commun, sans tenir compte des droits de lecture (comme l'existence
+  d'une priorité, lot ALH5) ; la fiche de chaque CVE dit ce que la personne lit.
+
+### Question au RSSI
+
+- **Rançongiciels et priorité** : tranchée le 20/11/2026 (décision b ci-dessus : ordre à priorité égale, niveau inchangé).
+
+### Non vérifié
+
+Forme réelle d'`exploitFrameworks` sur une instance (la fixture relevée sur 6.9.1 la donne vide) et des champs
+`exploit_framework_*` d'un export `.nessus` réel ; nombre réel de machines en fin de support et d'alertes critiques qui en
+découlent ; e2e Playwright non joués (CI seulement) ; Node 26 ; pile Docker ; CSP du serveur de production.
+
+### Points ouverts (hors lot)
+
+1. Ordre des autres listes (alertes, correctifs, parc) à priorité égale : inchangé par la décision b.
+2. Fin de support au niveau de la technologie d'AlgoLightHouse et des services exposés (point ouvert 3 de l'addendum « lot
+   S3 »).
+3. Historiser la montée de priorité due à la fin de support (le délai court depuis la première présence, règle du lot S1).
+## Addendum du 20/11/2026 — lot AD-1 : rapport de l'Active Directory (service ADS de l'ANSSI, à partir d'une collecte ORADAD)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`099`, quatre routes nouvelles, aucun droit nouveau, aucune dépendance, **aucun flux sortant** ;
+`apps/api/src/assistant/*`, `apps/web/src/assistant/*`, `docker-compose.yml`, `docker/*`, `scripts/exploitation-worker.py`
+et `apps/api/src/vulnerabilites/recherche.ts` inchangés.
+
+### Décisions du RSSI (20/11/2026)
+
+1. Le rapport d'analyse de l'Active Directory remis par le service ADS de l'ANSSI (à partir d'une collecte ORADAD) s'importe
+   **par fichier JSON lu dans le navigateur**, sur le modèle des imports Nessus et Silène : liste blanche revalidée par
+   l'API, limite d'imports par heure, suppression d'un import, statistiques des tables recalculées après l'import.
+2. Le **type** d'un point est gardé en numéro, avec son libellé : 1 information, 2 avertissement, 3 vulnérabilité.
+3. L'import garde le **nombre et les noms** des objets concernés par point, avec ces protections :
+   1. **voir les noms fait partie du droit « Analyste »** : pas de droit à part ; en attendant le lot 3 de
+      l'[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md), il se branche sur l'existant, l'accès au module
+      Vulnérabilités (`vulnerabilites:lire`). Cette décision du 20/11/2026, confirmée en direct, remplace celle du même jour
+      qui demandait un droit de lecture réservé (réalisé un temps puis retiré, sans avoir été publié) ;
+   2. les noms ne sortent jamais de la plateforme : ni assistant, ni courriels, ni notifications, ni rapports, ni journal
+      d'audit, ni journaux applicatifs ; ces canaux ne reçoivent que des nombres ;
+   3. chaque consultation des noms est **tracée au journal d'audit** (qui, quand, quel point de contrôle), sans les noms ;
+   4. **conservation limitée** : les noms des deux derniers imports seulement ; les plus anciens ne gardent que les nombres
+      (purge à chaque import) ;
+   5. jamais conservés : mots de passe, empreintes, attributs détaillés des comptes, SID complets, chemins LDAP complets si un
+      nom court suffit ; seulement le nom affichable et la nature de l'objet, bornés en longueur et en nombre par point, avec
+      compteur du surplus ;
+   6. **bouton de suppression** d'un import (noms et nombres).
+4. **Écran** : une page du module (pas une fenêtre) : note globale et son évolution, points ouverts par niveau et par type,
+   pour chaque point le nombre d'objets et la variation, et les noms, « corrigés depuis » et « apparus depuis ».
+
+### Réalisation
+
+- **Droits** : aucun droit nouveau ; `packages/shared/src/permissions.ts` et l'écran des rôles sont inchangés. Les nombres
+  et les noms se lisent avec `vulnerabilites:lire` ; les noms seulement par une route à part, point par point, chaque
+  consultation tracée ; import et suppression avec `vulnerabilites:administrer`.
+- **Lecture du rapport** (`apps/web/src/vulnerabilites/ads.ts`, une fonction, `lireRapportAds`) : JSON seulement, 50 Mo au
+  plus. Toutes les clés supposées sont dans `CLES_RAPPORT_ADS` ; pour chaque information, la première clé présente dont la
+  valeur a la forme attendue l'emporte ; une enveloppe (`report`, `data`…) est descendue d'un niveau. Note globale,
+  progression et liste des points exigées ; chaque point exige un type (sinon lu dans l'identifiant public supposé), un
+  niveau (idem), une référence, un titre et des objets ou un nombre. Toute absence ou forme illisible fait **refuser tout le
+  rapport** (« Forme non reconnue : … (clés cherchées : …). Rien n'a été importé. »), jamais un import partiel silencieux.
+  Seuls les objets sans nom lisible, désignés par leur seul SID, au-delà de la borne ou en double sont écartés, et comptés.
+- **Noms courts** : chemin LDAP réduit à la valeur de son premier élément (`CN=compte,OU=…` → `compte`), `DOMAINE\nom` et
+  `nom@domaine` réduits au nom, SID jamais gardé, texte nettoyé (caractères de contrôle et invisibles), 64 caractères au plus
+  (« … » et compté). Nature lue de la classe ou du type de l'objet (ou du groupe qui le range : `users`, `computers`…), du
+  plus précis au plus général : contrôleur de domaine, compte de service, ordinateur, GPO, groupe, relation d'approbation,
+  compte d'utilisateur, sinon « autre » (« ordinateur » pour un nom terminé par `$`).
+- **Envoi** : `POST /api/vulnerabilites/annuaire/imports` (droit `vulnerabilites:administrer`, CSRF, corps de 8 Mio au plus,
+  limite des imports de fichiers commencés **partagée** avec Nessus et Silène : trente par heure et par personne). Corps
+  `ImportAds` (zod strict à chaque niveau) : synthèse (date sans heure, note entière 1 à 5, progression de cinq niveaux au
+  plus, total des conformes), 300 points au plus, éléments écartés. Les nombres d'aperçu restent sur le poste. Les formes
+  admises par le schéma sont au moins aussi strictes que les contraintes de la base : une contrainte violée (dont le message
+  de PostgreSQL recopierait la ligne refusée) ne peut pas venir d'un corps accepté.
+- **Rangement** (`apps/api/src/vulnerabilites/annuaire-ad.ts`) : un numéro par import (table verrouillée le temps de
+  l'attribution) ; dans la même transaction, les noms des imports plus anciens que les deux derniers sont effacés et leur
+  marque `noms_conserves` passe à faux. Après la validation, `ANALYZE` des points et des objets.
+- **Lecture** : `GET /api/vulnerabilites/annuaire` (`vulnerabilites:lire`) rend des **nombres seulement**, quel que soit le
+  droit de la personne : historique de vingt-quatre imports (note, date, nombres, noms gardés ou non), dernier et précédent,
+  points ouverts du dernier import (objets, objets du précédent, « apparu »), points corrigés (présents au précédent, absents
+  du dernier). `GET /api/vulnerabilites/annuaire/points/:identifiant/noms` (`vulnerabilites:lire`, route à part ; sans
+  accès au module, 403) : noms du dernier import, objets comptés sans nom, apparus et corrigés depuis le
+  précédent (si ses noms sont gardés ; comparaison marquée partielle si l'un des deux n'a pas gardé tous les noms du point).
+  Chaque appel écrit `vulnerabilites.annuaire.noms.consultes` (compte, horodatage, import, identifiant du point, nombres de
+  noms, d'apparus et de corrigés) dans la même transaction que la lecture.
+- **Suppression** : `DELETE /api/vulnerabilites/annuaire/imports/:id` (`vulnerabilites:administrer`, If-Match sur la version
+  de l'import) : points et noms en cascade ; journal `vulnerabilites.annuaire.import.supprime` en nombres.
+- **Journal** : `vulnerabilites.annuaire.importe` (numéro, note, nombres de points, d'objets, de noms, d'imports purgés,
+  écartés) ; aucun nom d'objet ni titre (test d'API).
+- **Interface** (`apps/web/src/vulnerabilites/AnnuaireAd.tsx`, Risques > Vulnérabilités > « Active Directory ») : note
+  globale et son évolution, notes successives, progression par niveau, tableau des points ouverts par niveau et par type,
+  liste des points (titre, identifiant, référence, type en numéro et libellé, niveau, objets, variation), « Voir les noms »
+  par point, sur clic, avec la mention que la consultation est tracée (une requête par ouverture, ni relance ni cache gardé), points corrigés, imports
+  (supprimer : saisie de SUPPRIMER), section d'import. Aucune fenêtre ; composants de la charte, CSP stricte. Aide de la page
+  (`vulnerabilites-annuaire`).
+
+### Tables (migration `099`)
+
+| Table | Contenu | Remise à vide |
+|---|---|---|
+| `vulnerabilites_ad_imports` | numéro, date du rapport, note, progression, total des conformes, nombres, écartés, `noms_conserves`, version, auteur | avec le travail |
+| `vulnerabilites_ad_points` | point non conforme d'un import : identifiant, référence, type (1 à 3), niveau (1 à 5), titre, objets | avec le travail |
+| `vulnerabilites_ad_objets` | nom court (1 à 64 caractères, ni SID, ni chemin LDAP, ni `\`) et nature d'un objet d'un point, rang | avec le travail |
+
+### Bornes choisies
+
+300 points non conformes par import ; 200 noms par point (au-delà, comptés « sans nom conservé ») ; 64 caractères par nom ;
+200 caractères par titre (« … » et compté) ; 64 par référence ; 96 par identifiant ; 10 000 000 objets annoncés par point ;
+50 Mo de fichier ; 8 Mio de corps (le pire corps admis, vérifié par un test, tient sous cette borne) ; deux imports gardent
+leurs noms ; vingt-quatre imports dans l'historique.
+
+### Clés supposées du rapport (`CLES_RAPPORT_ADS`, aucune vérifiée)
+
+Enveloppe : `report`, `rapport`, `data`, `result`, `results`. Note : `score`, `note`, `level`, `niveau`, `global_level`,
+`globalLevel`, `maturity_level`, `maturity`. Date : `date`, `generated`, `generated_at`, `generatedAt`, `generation_date`,
+`collect_date`, `collection_date`, `timestamp`. Progression : `levels`, `niveaux`, `progression`, `progress`,
+`level_progress`, `levelProgress` (tableau, ou objet indexé `1` à `5` ou `level1`…) ; dans un niveau : `level`, `niveau`,
+`id` ; conformes `passed`, `ok`, `conformes`, `compliant`, `success`, `validated` ; total `total`, `count`, `nombre`,
+`checks` ; pourcentage `percent`, `percentage`, `pourcentage`, `progress`, `ratio` (lu de 0 à 100), ou un nombre seul.
+Totaux : `totals`, `summary`, `stats`, `statistics`, `synthese` ; conformes `passed`, `ok`, `conformes`, `compliant`,
+`success`. Points : `rules`, `checks`, `points`, `findings`, `controles`, `vulnerabilities`, `anomalies` (tableau, ou objet
+indexé par identifiant). Point : identifiant `id`, `identifier`, `identifiant`, `code`, `rule_id`, `ruleId` ; type `type`,
+`severity`, `kind` ; niveau `level`, `niveau` ; référence `reference`, `ref`, `module`, `rule`, `check` ; titre `title`,
+`titre`, `name`, `nom`, `label`, `description` ; objets `objects`, `objets`, `members`, `items`, `affected`, `details`,
+`entries`, `accounts` (tableau de textes ou d'objets, ou objet de tableaux rangés par nature) ; nombre `count`, `nombre`,
+`total`, `objects_count`, `objectsCount`. Objet : nom `samaccountname`, `sAMAccountName`, `name`, `nom`, `displayName`,
+`displayname`, `cn`, `dnshostname`, `dNSHostName`, `distinguishedName`, `dn` ; nature `type`, `objectClass`, `objectclass`,
+`class`, `category`, `nature`, `kind`. Identifiant public supposé d'un point : `{vuln|warn|info}{niveau}_{référence}` (sert
+à lire le type et le niveau quand ils manquent, et à former l'identifiant quand le rapport n'en donne pas).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Données de l'organisation, sans périmètre** : tout lecteur du module voit les nombres (comme les produits surveillés) ;
+  aucun rattachement d'un rapport à un périmètre de la plateforme.
+- **Une seule série d'imports** pour l'organisation : deux domaines ou deux forêts importés l'un après l'autre seraient
+  comparés entre eux (« corrigés », « apparus ») ; le nom de domaine n'est pas lu.
+- **Import et suppression** avec le droit d'administrer le module (la réponse de l'import ne contient que des nombres).
+- **Suppression du dernier import** : l'import d'avant redevient le dernier ; celui qui le précède a pu perdre ses noms à un
+  import antérieur : la comparaison des noms n'est alors plus possible (« pas d'import précédent dont les noms sont
+  gardés »).
+- **Note globale entière** de 1 à 5 ; un rapport à note décimale est refusé (« forme non reconnue »).
+- **Réduction des noms** : `nom@domaine` réduit à `nom` et un chemin LDAP à son premier élément (deux objets homonymes de deux
+  unités d'organisation différentes ne font alors qu'un nom, compté « en double »).
+- **Identité d'un point** d'un import à l'autre : son identifiant ; un identifiant qui change fait un point « corrigé » et un
+  point « apparu ».
+
+### Limites
+
+- **Noms en clair dans la base et dans ses sauvegardes** : les noms des deux derniers imports sont rangés sans chiffrement ;
+  une sauvegarde faite avant une purge ou une suppression les garde jusqu'à sa rotation.
+- Les nombres (note, points, objets) et les noms sont vus de tout lecteur du module ; seuls les nombres figurent au journal
+  d'audit. Le droit « Analyste » du lot 3 de l'ADR 0092 restreindra les noms à ses titulaires.
+- Les journaux applicatifs ne reçoivent aucun nom de ce lot (ni le corps des requêtes, ni les messages de validation, qui ne
+  reprennent jamais une valeur refusée) ; ce point est garanti par la construction, non par un test qui lirait les journaux.
+
+### Tests
+
+`packages/shared/test/import-ads.test.ts` (schémas, liste blanche stricte, noms admis, bornes, pire corps sous 8 Mio,
+libellés) ; `apps/api/test/vulnerabilites-annuaire-ad.test.ts` (migration et contraintes, aucun droit nouveau, nombres
+seulement sur la page, 403 sans accès au module, 409 module désactivé, noms, apparus et corrigés pour un lecteur du module, consultation tracée sans nom, purge au troisième
+import, suppression avec If-Match, droit d'import, limite horaire, liste blanche, aucun nom dans le journal ni dans la
+recherche) ; `apps/web/test/vulnerabilites-annuaire-ad.test.ts` (lecture du rapport fictif `tests/fixtures/ads/`, champs
+marqués « INTERDIT » jamais envoyés, formes tolérées, « forme non reconnue », noms courts et nature, page (noms sur clic, consultation
+annoncée comme tracée ; import et suppression pour l'administration), aide).
+
+### Non vérifié
+
+**Aucun rapport réel n'a été lu** : forme et noms de clés supposés (liste ci-dessus), identifiant public
+`{vuln|warn|info}{niveau}_{référence}`, échelle de la progression (pourcentage de 0 à 100 ou nombres), forme des objets
+(textes ou objets, attributs de nom et de classe), présence d'un nombre d'objets distinct de la liste. Aucun parcours
+Playwright n'a été écrit ni joué ; Node 26, pile Docker et CSP du serveur de production non vérifiés localement.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; le sens du champ « type » reste celui de la décision (numéro et libellé).
+2. Corriger `CLES_RAPPORT_ADS` et le fichier fictif `tests/fixtures/ads/rapport-ads-fictif.json` sur la forme d'un rapport
+   réel, relevée sans aucune valeur (comme pour Silène).
+3. Plusieurs domaines ou forêts : une série d'imports par annuaire (libellé saisi à l'import) si le besoin existe.
+4. Chiffrement des noms au repos (coffre de la plateforme), si la limite « noms en clair dans les sauvegardes » n'est pas
+   acceptée.

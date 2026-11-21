@@ -1,10 +1,16 @@
-/* Module Intégrations (ADR 0076), socle des connecteurs réseau : rubrique « Intégrations ». Une tuile par type de connecteur
+/* Module Intégrations (ADR 0076), socle des connecteurs réseau : carte « Intégrations » de la page Plateforme (addendum du
+   19/11/2026 : les intégrations se configurent là et nulle part ailleurs ; l'ancienne adresse /integrations y redirige). Une
+   tuile par type de connecteur
    (catalogue) et par instance, avec un pictogramme neutre de packages/ui (aucun logo de marque dans ce lot). Configuration,
    secrets en écriture seule (« défini » / « non défini »), activation qui ouvre le flux du type après validation explicite
    (ADR 0097), « Tester la connexion », « Synchroniser maintenant » (Tenable : failles et machines, ADR 0100 lot V5) avec
    le filtre de gravité de l'instance et le dernier résultat, dernières exécutions, message clair si l'exécutant n'est pas
-   vu. CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons suivent les droits de la session pour l'affichage
-   seulement. */
+   vu. Lot F1 (ADR 0100) : fréquence de la synchronisation automatique de chaque instance, réglée dans « Configurer »,
+   avec un avertissement (sans blocage) en dessous de 24 heures. Lot N1 (ADR 0100) : type « Nessus, import de fichier »,
+   sans adresse, sans clé, sans flux ni exécutant, avec « Importer un scan » sur l'instance (droit d'administrer les
+   intégrations) ; ses imports figurent dans « Exécutions ». Lot N2 : « Supprimer ce connecteur et tout ce qu’il a
+   importé », pour ce type seulement (même droit, confirmation explicite, If-Match). CSP stricte (ADR 0006) : ni style ni script en ligne. Les boutons
+   suivent les droits de la session pour l'affichage seulement. */
 import {
   Alert,
   Badge,
@@ -24,18 +30,22 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
+  avertissementConnecteur,
   DELAI_MAX,
   DELAI_MIN,
+  FREQUENCES_CONNECTEUR,
+  libelleFrequence,
   type EtatIntegrationsDto,
   type ExecutionIntegrationDto,
   type IntegrationDto,
   type TypeIntegrationDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, IconeConnecteur, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, IconeConnecteur, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
+import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
@@ -48,7 +58,7 @@ import {
   erreursFormulaire,
   etatTuile,
   executionEnCours,
-  fluxOuvertPour,
+  fluxOuvertInstance,
   formulaireDepuis,
   libelleEtatExecution,
   libelleGravites,
@@ -60,6 +70,9 @@ import {
   resumeExecution,
   type FormulaireConfiguration,
 } from './integrations';
+import { ImportNessus } from './ImportNessus';
+import { ImportSilene } from './ImportSilene';
+import { LIBELLE_SUPPRESSION, SuppressionNessus } from './SuppressionNessus';
 
 const CLE = ['integrations'] as const;
 
@@ -89,7 +102,8 @@ export function TuileType({
           <Stack gap="2xs">
             <Text fw={700}>{t.libelle}</Text>
             <Text size="xs" c="dimmed">
-              {t.portee === 'organisation' ? 'Toute l’organisation' : 'Un périmètre'} · lecture seule
+              {t.portee === 'organisation' ? 'Toute l’organisation' : 'Un périmètre'} ·{' '}
+              {t.flux === null ? 'import de fichier, sans réseau' : 'lecture seule'}
             </Text>
           </Stack>
         </Group>
@@ -118,6 +132,8 @@ export function TuileInstance({
   onActiver,
   onTester,
   onSynchroniser,
+  onImporter,
+  onSupprimer,
   onExecutions,
 }: {
   i: IntegrationDto;
@@ -130,9 +146,16 @@ export function TuileInstance({
   onActiver: (actif: boolean) => void;
   onTester: () => void;
   onSynchroniser?: () => void;
+  onImporter?: () => void;
+  onSupprimer?: () => void;
   onExecutions: () => void;
 }) {
   const synchronisable = !!t?.operations.includes('synchroniser');
+  const testable = !!t?.operations.includes('tester');
+  const importable = !!t?.operations.includes('importer');
+  // Lot SI1 : « Importer un rapport » pour Silène, « Importer un scan » pour Nessus.
+  const libelleImport = libelleOperation('importer', i.type);
+  const silene = i.type === 'silene-fichier';
   const pret = i.actif && fluxOuvert && Object.values(i.secrets).every(Boolean);
   const e = ETAT_TUILE[etatTuile(i, fluxOuvert)];
   const derniere = i.derniereExecution;
@@ -160,21 +183,35 @@ export function TuileInstance({
             </Badge>
           ))}
         </Group>
-        {synchronisable && t?.champs.includes('gravites') && (
+        {synchronisable && t?.champs.includes('gravites') && i.frequenceHeures !== null && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne des failles : {libelleGravites(i.configuration.gravites)}.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()} ; failles lues :{' '}
+            {libelleGravites(i.configuration.gravites)}.
           </Text>
         )}
-        {synchronisable && t && !t.champs.includes('gravites') && (
+        {synchronisable && t && !t.champs.includes('gravites') && i.frequenceHeures !== null && (
           <Text size="xs" c="dimmed">
-            Synchronisation quotidienne, rangée dans Risques &gt; Vulnérabilités &gt; Surface externe.
+            Synchronisation automatique : {libelleFrequence(i.frequenceHeures).toLowerCase()}, rangée dans Risques &gt;
+            Vulnérabilités &gt; Surface externe.
           </Text>
         )}
-        {i.actif && !fluxOuvert && t && <FluxFermeAlerte module={t.flux} />}
+        {importable && !silene && (
+          <Text size="xs" c="dimmed">
+            Import de fichier, sans synchronisation automatique ; gravités retenues :{' '}
+            {libelleGravites(i.configuration.gravites)} ; rangé dans Risques &gt; Vulnérabilités.
+          </Text>
+        )}
+        {importable && silene && (
+          <Text size="xs" c="dimmed">
+            Import du rapport JSON, sans synchronisation automatique ; rangé dans Risques &gt; Vulnérabilités &gt;
+            Surface externe.
+          </Text>
+        )}
+        {i.actif && !fluxOuvert && t?.flux && <FluxFermeAlerte module={t.flux} />}
         <Text size="sm" c={derniere ? undefined : 'dimmed'} role="status">
           {derniere ? (
             <>
-              Dernière exécution ({libelleOperation(derniere.operation)},{' '}
+              Dernière exécution ({libelleOperation(derniere.operation, i.type)},{' '}
               <span className="horodatage">{fmtDate(derniere.demandeLe)}</span>) : {resumeExecution(derniere)}
             </>
           ) : (
@@ -200,7 +237,7 @@ export function TuileInstance({
               {i.actif && fluxOuvert ? 'Désactiver' : 'Activer'}
             </Button>
           )}
-          {peutLancer && (
+          {peutLancer && testable && (
             <Button size="compact-sm" variant="default" loading={enCours} disabled={!pret} onClick={onTester}>
               Tester la connexion
             </Button>
@@ -210,14 +247,47 @@ export function TuileInstance({
               Synchroniser maintenant
             </Button>
           )}
+          {peutAdministrer && importable && onImporter && (
+            <Button
+              size="compact-sm"
+              disabled={!i.actif}
+              onClick={onImporter}
+              aria-label={`${libelleImport} dans ${i.nom}`}
+            >
+              {libelleImport}
+            </Button>
+          )}
+          {peutAdministrer && importable && onSupprimer && (
+            <Button
+              size="compact-sm"
+              variant="light"
+              color="red"
+              onClick={onSupprimer}
+              aria-label={`${LIBELLE_SUPPRESSION} : ${i.nom}`}
+            >
+              {LIBELLE_SUPPRESSION}
+            </Button>
+          )}
         </Group>
+        {peutAdministrer && importable && !i.actif && (
+          <Text size="xs" c="dimmed">
+            Activez le connecteur pour {silene ? 'importer un rapport' : 'importer un scan'}.
+          </Text>
+        )}
       </Stack>
     </Paper>
   );
 }
 
 /** Dernières exécutions d'une instance (sans état). */
-export function TableExecutions({ executions }: { executions: ExecutionIntegrationDto[] }) {
+export function TableExecutions({
+  executions,
+  type,
+}: {
+  executions: ExecutionIntegrationDto[];
+  /** Type de l'instance : libellé de l'import propre au type (lot SI1). */
+  type?: IntegrationDto['type'];
+}) {
   return (
     <DataTable label="Dernières exécutions">
       <Table>
@@ -234,7 +304,7 @@ export function TableExecutions({ executions }: { executions: ExecutionIntegrati
           {executions.map((e) => (
             <Table.Tr key={e.id}>
               <Table.Td className="horodatage">{fmtDate(e.demandeLe)}</Table.Td>
-              <Table.Td>{libelleOperation(e.operation)}</Table.Td>
+              <Table.Td>{libelleOperation(e.operation, type)}</Table.Td>
               <Table.Td>{e.demandePar}</Table.Td>
               <Table.Td>
                 <StatusChip etat={ETAT_EXECUTION[e.etat]}>{libelleEtatExecution(e.etat)}</StatusChip>
@@ -257,7 +327,9 @@ export function TableExecutions({ executions }: { executions: ExecutionIntegrati
   );
 }
 
-export function IntegrationsPage() {
+/** Contenu de la carte « Intégrations » de la page Plateforme : la fenêtre de la carte porte le titre, le panneau ne le
+    répète pas. */
+export function IntegrationsPanel() {
   const can = useCan();
   const qc = useQueryClient();
   const lire = can('integrations', 'lire');
@@ -266,6 +338,10 @@ export function IntegrationsPage() {
   const flux = useValidationFlux();
   const [edition, setEdition] = useState<{ type: TypeIntegrationDto; instance: IntegrationDto | null } | null>(null);
   const [historique, setHistorique] = useState<IntegrationDto | null>(null);
+  const [importation, setImportation] = useState<IntegrationDto | null>(null);
+  const [importOccupe, setImportOccupe] = useState(false);
+  const [suppression, setSuppression] = useState<IntegrationDto | null>(null);
+  const [suppressionOccupee, setSuppressionOccupee] = useState(false);
   const [envoi, setEnvoi] = useState<string | null>(null);
   const catalogue = useQuery({
     queryKey: [...CLE, 'catalogue'],
@@ -304,10 +380,10 @@ export function IntegrationsPage() {
   const activer = (i: IntegrationDto, actif: boolean) =>
     agir(i.id, async () => {
       const t = types.get(i.type);
-      const ouvert = fluxOuvertPour(etat.data, i.type);
+      const ouvert = fluxOuvertInstance(etat.data, i.type, t);
       // Activer ouvre le flux du type, après validation explicite (une fois, tant qu'il est fermé) ; le port réglé de
-      // l'instance est rappelé.
-      if (actif && !ouvert && t && !(await flux.valider(t.flux, precisionPort(i)))) return;
+      // l'instance est rappelé. Un type sans réseau (import de fichier) n'a aucun flux.
+      if (actif && !ouvert && t?.flux && !(await flux.valider(t.flux, precisionPort(i)))) return;
       await api('PUT', `/api/integrations/instances/${i.id}/activation`, {
         body: actif && !ouvert ? { actif, fluxConfirme: true } : { actif },
         ifMatch: i.version,
@@ -326,27 +402,23 @@ export function IntegrationsPage() {
       notifications.show({ color: 'teal', message: 'Synchronisation demandée à l’exécutant d’exploitation.' });
     });
 
-  if (!lire)
-    return (
-      <Page>
-        <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>
-      </Page>
-    );
+  if (!lire) return <Alert>Vous ne disposez pas du droit de lire les intégrations.</Alert>;
   const avertissement = etat.data ? messageExecutant(etat.data.executant) : null;
   return (
-    <Page>
-      <PageHeader
-        title="Intégrations"
-        description="Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un administrateur."
-      />
+    <>
       <Stack>
+        <Text size="sm" c="dimmed" className="lecture">
+          Connecteurs en lecture seule vers des outils de l’organisation. Le serveur d’application n’a pas d’accès
+          réseau : c’est l’exécutant d’exploitation qui interroge chaque outil, flux par flux, après validation par un
+          administrateur. Les outils qui exploitent un connecteur (module Vulnérabilités) n’en montrent que l’état.
+        </Text>
         {avertissement && (
           <Alert color="orange" role="status" title="Exécutant d’exploitation non vu">
             {avertissement}
           </Alert>
         )}
         <ErrorAlert error={catalogue.error ?? instances.error ?? etat.error} />
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Connecteurs configurés
         </Title>
         {instances.data && instances.data.length === 0 && (
@@ -360,7 +432,7 @@ export function IntegrationsPage() {
               key={i.id}
               i={i}
               t={types.get(i.type)}
-              fluxOuvert={fluxOuvertPour(etat.data, i.type)}
+              fluxOuvert={fluxOuvertInstance(etat.data, i.type, types.get(i.type))}
               peutAdministrer={administrer}
               peutLancer={lancer}
               enCours={envoi === i.id || executionEnCours(i.derniereExecution)}
@@ -371,11 +443,13 @@ export function IntegrationsPage() {
               onActiver={(actif) => void activer(i, actif)}
               onTester={() => void tester(i)}
               onSynchroniser={() => void synchroniser(i)}
+              onImporter={() => setImportation(i)}
+              onSupprimer={() => setSuppression(i)}
               onExecutions={() => setHistorique(i)}
             />
           ))}
         </div>
-        <Title order={2} size="h4">
+        <Title order={3} size="h4">
           Catalogue
         </Title>
         <div className="integrations-tuiles">
@@ -398,6 +472,7 @@ export function IntegrationsPage() {
         size="lg"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
         {edition && (
           <EditeurInstance
@@ -418,14 +493,79 @@ export function IntegrationsPage() {
         size="xl"
         centered
         lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
       >
-        {historique && <Historique id={historique.id} />}
+        {historique && <Historique id={historique.id} type={historique.type} />}
       </Modal>
-    </Page>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!importation}
+        onClose={() => {
+          if (!importOccupe) setImportation(null);
+        }}
+        withCloseButton={!importOccupe}
+        closeOnEscape={!importOccupe}
+        closeOnClickOutside={!importOccupe}
+        title={`${importation ? libelleOperation('importer', importation.type) : 'Importer'} : ${importation?.nom ?? ''}`}
+        size="lg"
+        centered
+        lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
+      >
+        {importation && importation.type === 'silene-fichier' && (
+          <ImportSilene
+            instance={importation}
+            onOccupe={setImportOccupe}
+            onFait={() => {
+              void rafraichir();
+              void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+            }}
+          />
+        )}
+        {importation && importation.type !== 'silene-fichier' && (
+          <ImportNessus instance={importation} onOccupe={setImportOccupe} onFait={() => void rafraichir()} />
+        )}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!suppression}
+        onClose={() => {
+          if (!suppressionOccupee) setSuppression(null);
+        }}
+        withCloseButton={!suppressionOccupee}
+        closeOnEscape={!suppressionOccupee}
+        closeOnClickOutside={!suppressionOccupee}
+        title={`Supprimer : ${suppression?.nom ?? ''}`}
+        size="lg"
+        centered
+        lockScroll={false}
+        classNames={{ content: 'fenetre-admin' }}
+      >
+        {suppression && (
+          <SuppressionNessus
+            instance={suppression}
+            onOccupe={setSuppressionOccupee}
+            onAnnuler={() => setSuppression(null)}
+            onFait={(n) => {
+              setSuppression(null);
+              notifications.show({
+                color: 'teal',
+                message:
+                  'hotes' in n
+                    ? `Connecteur supprimé : ${n.hotes} hôte(s) et ${n.constats} constat(s) retirés.`
+                    : `Connecteur supprimé : ${n.machines} machine(s) et ${n.failles} faille(s) retirées.`,
+              });
+              void rafraichir();
+              void qc.invalidateQueries({ queryKey: ['vulnerabilites'] });
+            }}
+          />
+        )}
+      </Modal>
+    </>
   );
 }
 
-function Historique({ id }: { id: string }) {
+function Historique({ id, type }: { id: string; type: IntegrationDto['type'] }) {
   const q = useQuery({
     queryKey: [...CLE, 'executions', id],
     queryFn: () => get<ExecutionIntegrationDto[]>(`/api/integrations/instances/${id}/executions`),
@@ -434,7 +574,7 @@ function Historique({ id }: { id: string }) {
   return (
     <Stack>
       <ErrorAlert error={q.error} />
-      {q.data && <TableExecutions executions={q.data} />}
+      {q.data && <TableExecutions executions={q.data} type={type} />}
     </Stack>
   );
 }
@@ -493,14 +633,16 @@ function EditeurInstance({
         value={f.nom}
         onChange={(e) => setF({ ...f, nom: e.currentTarget.value })}
       />
-      <TextInput
-        label="Adresse du service"
-        description={type.aideAdresse}
-        required
-        value={f.adresse}
-        onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
-        spellCheck={false}
-      />
+      {type.champs.includes('adresse') && (
+        <TextInput
+          label="Adresse du service"
+          description={type.aideAdresse}
+          required
+          value={f.adresse}
+          onChange={(e) => setF({ ...f, adresse: e.currentTarget.value })}
+          spellCheck={false}
+        />
+      )}
       {type.champs.includes('autoriteCertification') && (
         <Textarea
           label="Autorité de certification (facultatif)"
@@ -513,18 +655,24 @@ function EditeurInstance({
           spellCheck={false}
         />
       )}
-      <NumberInput
-        label="Délai d’une requête (secondes)"
-        min={DELAI_MIN}
-        max={DELAI_MAX}
-        allowDecimal={false}
-        value={f.delaiSecondes}
-        onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
-      />
+      {type.champs.includes('delaiSecondes') && (
+        <NumberInput
+          label="Délai d’une requête (secondes)"
+          min={DELAI_MIN}
+          max={DELAI_MAX}
+          allowDecimal={false}
+          value={f.delaiSecondes}
+          onChange={(v) => setF({ ...f, delaiSecondes: typeof v === 'number' ? v : f.delaiSecondes })}
+        />
+      )}
       {type.champs.includes('gravites') && (
         <Checkbox.Group
-          label="Gravités à synchroniser"
-          description="Failles lues chaque jour dans Tenable : critiques et élevées par défaut."
+          label={type.flux === null ? 'Gravités à importer' : 'Gravités à synchroniser'}
+          description={
+            type.flux === null
+              ? 'Failles retenues à chaque import (les contrôles informatifs ne sont jamais rangés) : critiques et élevées par défaut. Le navigateur filtre, le serveur revérifie.'
+              : 'Failles lues dans Tenable à chaque synchronisation : critiques et élevées par défaut.'
+          }
           value={f.gravites}
           onChange={(v) => setF({ ...f, gravites: v as FormulaireConfiguration['gravites'] })}
         >
@@ -534,6 +682,15 @@ function EditeurInstance({
             ))}
           </Group>
         </Checkbox.Group>
+      )}
+      {type.operations.includes('synchroniser') && (
+        <ChampFrequence
+          label="Fréquence de la synchronisation automatique"
+          frequences={FREQUENCES_CONNECTEUR[type.id]}
+          valeur={f.frequenceHeures}
+          onChange={(h) => setF({ ...f, frequenceHeures: h })}
+          avertissement={avertissementConnecteur(type.id, f.frequenceHeures)}
+        />
       )}
       {instance && destinationChangee(instance, f) && Object.values(instance.secrets).some(Boolean) && (
         <Alert color="orange" role="status">
@@ -546,13 +703,14 @@ function EditeurInstance({
           {instance ? 'Enregistrer la configuration' : 'Créer l’instance'}
         </Button>
       </Group>
-      {instance ? (
-        <Secrets type={type} instance={instance} onFait={() => onFait(null)} />
-      ) : (
-        <Text size="sm" c="dimmed">
-          Les clés se saisissent une fois l’instance créée. Elles sont scellées et ne sont jamais réaffichées.
-        </Text>
-      )}
+      {type.secrets.length > 0 &&
+        (instance ? (
+          <Secrets type={type} instance={instance} onFait={() => onFait(null)} />
+        ) : (
+          <Text size="sm" c="dimmed">
+            Les clés se saisissent une fois l’instance créée. Elles sont scellées et ne sont jamais réaffichées.
+          </Text>
+        ))}
     </Stack>
   );
 }

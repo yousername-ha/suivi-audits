@@ -10,6 +10,8 @@ import { Alert, Anchor, Button, Group, List, Modal, Pagination, Select, Stack, T
 import {
   type AlerteVulnerabiliteDto,
   type FenetreAlertesDto,
+  DEFINITION_RISQUE_ACCEPTE,
+  MARQUE_RISQUE_ACCEPTE,
   FILTRE_ETAT_ALERTE_LIBELLES,
   FILTRES_ETAT_ALERTE,
   type FiltreEtatAlerte,
@@ -42,6 +44,8 @@ import {
   urlPriseEnCompte,
 } from './alertes';
 import { PrioriteFaits } from './FaillesDetectees';
+import { PictosSources } from './PictoSource';
+import { pictosExploitation } from './pictos-sources';
 import { nombrePages } from './veille';
 
 /** Liste des alertes (sans état) : rendu testable hors navigateur. */
@@ -69,6 +73,7 @@ export function AlertesTable({
             <Table.Tr key={a.id}>
               <Table.Td>
                 <StatusChip etat={NIVEAU_ALERTE_PUCE[a.niveau]}>{NIVEAU_ALERTE_LIBELLES[a.niveau]}</StatusChip>
+                {a.risqueAccepte && <StatusChip etat="neutre">{MARQUE_RISQUE_ACCEPTE}</StatusChip>}
               </Table.Td>
               <Table.Td>
                 <Anchor component="button" type="button" onClick={() => onOuvrir(a.id)} className="veille-texte">
@@ -136,14 +141,17 @@ export function FicheAlerte({
       <Group gap="xs">
         <StatusChip etat={NIVEAU_ALERTE_PUCE[a.niveau]}>{NIVEAU_ALERTE_LIBELLES[a.niveau]}</StatusChip>
         <StatusChip etat={ETAT_ALERTE_PUCE[a.etat]}>{libelleEtatAlerte(a.etat)}</StatusChip>
+        {a.risqueAccepte && <StatusChip etat="neutre">{MARQUE_RISQUE_ACCEPTE}</StatusChip>}
         <Text size="sm" className="veille-code">
           {libelleFaille(a)}
         </Text>
       </Group>
+      {a.risqueAccepte && <Text size="sm">{DEFINITION_RISQUE_ACCEPTE}</Text>}
       {a.produit && <Text size="sm">Produit : {a.produit}</Text>}
       <PrioriteFaits p={a.priorite} />
       <Text size="sm">
-        <strong>Exploitation avérée :</strong> {libelleExploitation(a)}
+        <strong>Exploitation avérée :</strong> <PictosSources sources={pictosExploitation(a.exploitation)} decoratif />{' '}
+        {libelleExploitation(a)}
       </Text>
       <Text size="sm">
         <strong>Présence :</strong> {libellePresences(a) || 'aucune'}

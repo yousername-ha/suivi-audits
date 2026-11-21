@@ -473,7 +473,9 @@ describe('confidentialité : rien d’identifiant sur une machine ne part chez l
       },
       () => appel('a3', 'failles_prioritaires', { nombre: 5 }),
       (d) => {
-        const f = dernierOutil<{ failles: { id: string }[] }>(d);
+        // Lot ASSISTANT-V1 : première cible du tableau « Cibles par priorité » ; sa fiche lisible est le constat 960001.
+        const f = dernierOutil<{ failles: { cve: string; nature: string; id: string }[] }>(d);
+        expect(f.failles[0]).toMatchObject({ cve: CVE_TENABLE, nature: 'constat', id: constat1 });
         return appel('a4', 'machines_prioritaires', { constat: f.failles[0]!.id });
       },
       () => appel('a5', 'machines_prioritaires', {}),
@@ -498,13 +500,31 @@ describe('confidentialité : rien d’identifiant sur une machine ne part chez l
       connue: true,
       presence: { detecteeParTenable: true },
       priorite: { niveau: 'P1' },
-      recommandations: { actionExigeeParLeCatalogueKev: 'Apply mitigations per vendor instructions.' },
+      // Lot ASSISTANT-V1 : « Quoi faire » porte le contenu de chaque source, avec la source nommée, sans renvoi interne.
+      quoiFaire: {
+        catalogueKev: {
+          source: 'Catalogue KEV de la CISA',
+          actionExigee: 'Apply mitigations per vendor instructions.',
+          echeance: '2026-10-22',
+        },
+        tenable: {
+          source: 'Tenable (correctif publié pour chaque contrôle)',
+          correctifs: [
+            {
+              controles: ['960001'],
+              correctif: 'Upgrade the fictional package to 2.0 or later.',
+              publieLe: '2026-10-05',
+            },
+          ],
+        },
+      },
     });
+    expect(evaluation).not.toHaveProperty('recommandations');
     const c = (evaluation.constats as Record<string, unknown>[])[0]!;
     expect(c).toMatchObject({
       id: constat1,
       controle: { numero: '960001' },
-      correctifPublieParTenable: 'Upgrade the fictional package to 2.0 or later.',
+      correctifPublieLe: '2026-10-05',
       // Machines 1, 3 et 4 lisibles par la personne (périmètre Alpha) ; jamais la 2.
       machinesTouchees: 3,
     });

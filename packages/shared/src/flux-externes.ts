@@ -5,6 +5,7 @@
    port est porté par un module de ce registre ou figure dans la courte liste du cœur de plateforme. */
 import { z } from 'zod';
 import type { Module } from './permissions.js';
+import { SOURCES_REGLEMENTAIRES_JOINTES } from './veille-reglementaire.js';
 import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
@@ -17,6 +18,7 @@ export const FLUX_MODULES = [
   'tenable',
   'veille-vulnerabilites',
   'algolighthouse',
+  'veille-reglementaire',
 ] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
@@ -221,7 +223,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     },
     donnees:
       'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines). Aucune donnée de la plateforme n’est envoyée.',
-    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    reglage: { libelle: 'Plateforme > Intégrations', lien: '/plateforme/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
     moduleActivation: 'integrations',
     pareFeu: ['Sortie TCP du serveur vers Tenable Security Center, sur le port réglé (443 par défaut).'],
@@ -273,12 +275,38 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     },
     donnees:
       'La clé d’API de l’espace AlgoLightHouse et des requêtes de lecture (version du service, périmètres, hôtes, domaines, alertes et leur détail, technologies), ainsi que l’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif. Aucune donnée de la plateforme n’est envoyée : ni commentaire, ni changement de statut, ni recherche.',
-    reglage: { libelle: 'Pilotage > Intégrations', lien: '/integrations' },
+    reglage: { libelle: 'Plateforme > Intégrations', lien: '/plateforme/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur AlgoLightHouse' },
     moduleActivation: 'integrations',
     pareFeu: ['Sortie TCP 443 du serveur vers l’espace AlgoLightHouse réglé (espace.algolighthouse.fr).'],
     siFerme:
       'Aucune requête ne part vers AlgoLightHouse : une demande en file est close sans appel ; la configuration, la clé et les données déjà lues sont conservées.',
+  },
+  {
+    // Veille réglementaire (ADR 0110, lot VR-1) : flux publics de la CNIL, du CEPD, d'EUR-Lex et de l'ANSSI, lus
+    // par le même script isolé que la veille des vulnérabilités. Les hôtes viennent de la liste fermée du module
+    // (veille-reglementaire.ts), recopiée dans le script de l'exécutant.
+    id: 'veille-reglementaire',
+    libelle: 'Veille réglementaire',
+    role: 'Lire les flux publics de publications réglementaires (CNIL, CEPD, EUR-Lex, ANSSI) pour le module Veille réglementaire.',
+    destinations: SOURCES_REGLEMENTAIRES_JOINTES.map((s) => ({
+      sens: 'sortant' as const,
+      hote: `${s.hote} (${s.organisme})`,
+      ports: 'TCP 443 (HTTPS)',
+    })),
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'L’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif, et la demande de lecture du flux RSS de chaque source activée. Aucune donnée métier : ni qualification, ni contenu de la plateforme.',
+    reglage: { libelle: 'Conformité et audits > Veille réglementaire', lien: '/veille-reglementaire' },
+    activation: { par: 'flux', geste: 'Bouton « Activer la veille réglementaire »' },
+    moduleActivation: 'veille_reglementaire',
+    pareFeu: [`Sortie TCP 443 du serveur vers ${SOURCES_REGLEMENTAIRES_JOINTES.map((s) => s.hote).join(', ')}.`],
+    siFerme:
+      'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les publications déjà collectées et leur qualification restent consultables.',
   },
 ];
 
@@ -369,6 +397,7 @@ export const FLUX_SANS_REPRISE = [
   'tenable',
   'veille-vulnerabilites',
   'algolighthouse',
+  'veille-reglementaire',
 ] as const satisfies readonly FluxModule[];
 /** Modules que la reprise de l'existant peut concerner : ceux qui existaient avant le registre des flux. */
 export type FluxModuleRepris = Exclude<FluxModule, (typeof FLUX_SANS_REPRISE)[number]>;

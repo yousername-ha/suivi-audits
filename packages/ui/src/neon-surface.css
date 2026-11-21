@@ -20,33 +20,123 @@
   --sc-rempart: var(--carte-marine-accent);
   min-inline-size: 0;
 }
-.sc-scene {
-  position: relative;
-  min-inline-size: 0;
-}
-/* Petit écran : la carte garde une largeur lisible et défile dans son cadre, jamais la page. */
-.sc-cadre {
-  overflow-x: auto;
+/* Lot SI2, décision du RSSI du 19/11/2026 : la carte est la page elle-même. Pas de cadre ni de défilement propre : la scène
+   est dessinée à la largeur utile, sa hauteur suit (rapport de la viewBox), et la page défile. */
+.sc-dessin {
   border: var(--suivi-trait-l) solid var(--suivi-trait);
   border-radius: var(--mantine-radius-md);
   background: var(--sc-fond);
+  overflow: hidden;
 }
 .sc-svg {
   display: block;
   inline-size: 100%;
-  min-inline-size: calc(var(--suivi-champ-l) * 2);
-  /* Même rapport que la caméra (RAPPORT = 0,6, carte-surface.ts). */
-  aspect-ratio: 5 / 3;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
+  block-size: auto;
 }
-.sc-svg:active {
-  cursor: grabbing;
+/* Repères collants pendant le défilement : regroupement, filtre par nom, repli et titres des colonnes. */
+.sc-collant {
+  position: sticky;
+  inset-block-start: var(--suivi-entete-h, 0);
+  z-index: 3;
+  display: grid;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  padding-block: var(--mantine-spacing-xs) 0;
+  background: var(--suivi-surface, var(--mantine-color-body));
+  border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
 }
-.sc-svg:focus-visible {
-  outline: var(--suivi-trait-focus) solid var(--neon-accent);
-  outline-offset: calc(var(--suivi-trait-focus) * -1);
+.sc-annonce:empty {
+  display: none;
+}
+.sc-entetes {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  background: var(--sc-fond);
+}
+/* Écran étroit : la chaîne à huit colonnes ne se lit plus ; même scène présentée empilée, branche par branche. */
+.sc-empile {
+  display: none;
+}
+@media (max-width: 62em) {
+  .sc-dessin,
+  .sc-entetes {
+    display: none;
+  }
+  .sc-empile {
+    display: grid;
+    gap: var(--mantine-spacing-sm);
+  }
+}
+@media (max-width: 48em) {
+  /* Sur un téléphone, la barre collante prendrait l'écran : elle défile avec la page. */
+  .sc-collant {
+    position: static;
+  }
+}
+.sc-pile,
+.sc-pile__lignes {
+  display: grid;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sc-pile__branche {
+  display: grid;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  padding: var(--mantine-spacing-xs);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-inline-start: var(--suivi-trait-focus) solid var(--sc-faisceau);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--sc-fond);
+  min-inline-size: 0;
+}
+.sc-pile__branche--critique {
+  border-inline-start-color: var(--sc-critique);
+}
+.sc-pile__tete {
+  justify-self: start;
+  max-inline-size: 100%;
+}
+.sc-pile__ligne {
+  display: grid;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--sc-boite);
+  min-inline-size: 0;
+}
+.sc-pile__ligne--critique {
+  outline: var(--suivi-trait-l) dashed var(--sc-critique);
+}
+.sc-pile__etape {
+  display: grid;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  padding-inline-start: var(--mantine-spacing-xs);
+  border-inline-start: var(--suivi-trait-l) solid var(--sc-lien);
+  min-inline-size: 0;
+}
+.sc-pile__etape--interne {
+  border-inline-start: var(--suivi-trait-focus) double var(--sc-rempart);
+}
+.sc-pile__titre {
+  color: var(--sc-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sc-pile__valeur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
+  min-inline-size: 0;
+}
+.sc-pile__lien {
+  overflow-wrap: anywhere;
+  text-align: start;
+  font-size: var(--mantine-font-size-sm);
 }
 .sc-fond {
   fill: var(--sc-fond);
@@ -136,6 +226,25 @@
 /* Service exposé (lot ALH6) : capsule sur la ligne de l'actif, entre l'IP publique et l'alerte. */
 .sc-service {
   stroke: var(--sc-faisceau);
+}
+/* Lot SI2 : adresse déjà tracée dans une autre branche (renvoi) ; adresse connue par la seule résolution d'un nom. */
+.sc-renvoi .sc-hote,
+.sc-forme.sc-legende__renvoi,
+.sc-adresse-seule .sc-hote {
+  stroke: var(--sc-secondaire);
+  stroke-dasharray: 3 2;
+}
+/* Constats Silène : étiquette sarcelle (jetons « teal » de la charte, comme la pastille SIL), jamais un rond d'alerte. */
+.sc-constats path {
+  fill: var(--mantine-color-teal-light);
+  stroke: var(--mantine-color-teal-light-color);
+  stroke-width: 1.2;
+}
+.sc-constats__texte {
+  fill: var(--mantine-color-teal-light-color);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
 }
 .sc-machine .sc-forme,
 .sc-forme.sc-machine {
@@ -268,66 +377,11 @@
   .surface-carte .sc-halo {
     animation: none;
   }
-  .surface-carte .sc-balayage,
-  .sc-commandes,
-  .sc-mini {
+  .surface-carte .sc-balayage {
     display: none;
   }
-}
-/* Commandes de zoom et vue d'ensemble, posées sur la carte (hors de la zone qui défile). */
-.sc-commandes {
-  position: absolute;
-  inset-block-start: var(--mantine-spacing-xs);
-  inset-inline-end: var(--mantine-spacing-xs);
-  display: flex;
-  flex-direction: column;
-  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
-}
-.sc-mini {
-  position: absolute;
-  inset-block-end: var(--mantine-spacing-xs);
-  inset-inline-end: var(--mantine-spacing-xs);
-  display: grid;
-  gap: var(--mantine-spacing-2xs, var(--mantine-spacing-xs));
-  inline-size: var(--suivi-champ-s);
-  padding: var(--mantine-spacing-xs);
-  border: var(--suivi-trait-l) solid var(--suivi-trait);
-  border-radius: var(--mantine-radius-sm);
-  background: var(--sc-boite);
-  box-shadow: var(--suivi-ombre);
-}
-.sc-mini__titre {
-  color: var(--sc-secondaire);
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.sc-mini__svg {
-  display: block;
-  inline-size: 100%;
-  aspect-ratio: 5 / 3;
-  background: var(--sc-fond);
-  cursor: crosshair;
-}
-.sc-mini__lien {
-  fill: none;
-  stroke: var(--sc-faisceau);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.sc-mini__lien--critique {
-  stroke: var(--sc-critique);
-}
-.sc-mini__cadre {
-  fill: color-mix(in srgb, var(--neon-accent) 10%, transparent);
-  stroke: var(--neon-accent);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-@media (max-width: 48em) {
-  .sc-mini {
-    display: none;
+  .sc-collant {
+    position: static;
   }
 }
 /* Légende : forme et libellé pour chaque teinte. */
@@ -637,4 +691,20 @@
   .alerte-critique::before {
     animation: none !important;
   }
+}
+
+/* ------------------------------------------------------------------ Lot SI1 : deux sources de la surface externe */
+/* En tête de l'écran « Surface externe » : l'état d'AlgoLightHouse et la note Silène côte à côte, chacun dans son cadre
+   avec sa pastille ; l'un sous l'autre sur un écran étroit. */
+.ss-sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--suivi-champ-l) * 1.5)), 1fr));
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+.ss-source {
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
 }

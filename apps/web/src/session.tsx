@@ -6,6 +6,7 @@ import {
   type MeOut,
   type Module,
   type Preferences,
+  type Permission,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
@@ -64,6 +65,14 @@ export function useCan() {
   const me = useMe();
   const set = new Set<string>(me.permissions);
   return (m: Module, a: Action) => set.has(`${m}:${a}`);
+}
+
+/** Droit précis, y compris un droit réservé hors matrice (veille réglementaire : `veille_reglementaire:dpo`). Affichage
+    seulement : le serveur reste seul juge. */
+export function usePermission() {
+  const me = useMe();
+  const set = new Set<string>(me.permissions);
+  return (p: Permission) => set.has(p);
 }
 
 /** Accès à l'espace d'administration : administration (comptes, journal…) ou import et export. */

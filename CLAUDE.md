@@ -4,7 +4,9 @@ Les consignes communes sont dans [AGENTS.md](AGENTS.md). Les lire avant toute
 intervention, puis consulter [HANDOVER.md](HANDOVER.md),
 [PROJECT_STATUS.md](PROJECT_STATUS.md) et [docs/00_INDEX.md](docs/00_INDEX.md).
 Ces fichiers donnent l’état actuel, les preuves de test et les priorités. Commencer par la
-[reprise du 15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md), la plus récente (flux vers l'extérieur pilotés par les modules, ADR 0097 à 0099), puis la
+[reprise du 20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md), la plus récente (module Vulnérabilités : recherche, imports Nessus et Silène,
+surface externe à deux sources, performance, ADR 0100), puis la
+[reprise du 15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md) (flux vers l'extérieur pilotés par les modules, ADR 0097 à 0099), puis la
 [reprise du 13/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-13.md) (refonte des droits, pyramide des périmètres, ADR 0092), puis la
 [reprise du 11/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-11.md) (retrait des modules CRRC et Investissements, ADR 0084), puis celle du
 [10/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-10.md) (porte de lecture, ADR 0083), puis celle du

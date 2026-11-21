@@ -12,8 +12,10 @@
      synchronisation interrompue ou incomplète ne fait donc rien disparaître.
    - L'inventaire des machines (`GET /rest/hosts`, annoncé expérimental) complète les machines connues ou en ajoute ; son
      échec est consigné sans faire échouer la synchronisation des failles.
-   - Planification : une synchronisation par jour (Europe/Paris) et par instance active et complète ; le créneau est consommé
-     avant l'inscription (aucun rejeu après une panne). Rien si le flux « tenable » est fermé ; le tic vérifie les modules.
+   - Planification (lot F1) : une synchronisation par période réglée sur l'instance (vingt-quatre heures par défaut ; 6 h,
+     12 h, 24 h ou 7 jours) et par instance active et complète, comptée depuis la dernière demande automatique ; cette
+     référence est consommée avant l'inscription (aucun rejeu après une panne ni redemande après un échec avant la période
+     suivante). Rien si le flux « tenable » est fermé ; le tic vérifie les modules.
    Journal `vulnerabilites.synchronisation.*` : identifiants internes et nombres seulement, jamais un nom ni une adresse de
    machine. Accès aux données en Kysely (ADR 0062).
    Lot V4b : à la fin d'une synchronisation reçue, le suivi des failles retire les propositions « corrigée » des constats
@@ -21,7 +23,12 @@
    propose « corrigé selon Tenable, à confirmer » pour les constats qui ne sont plus présents nulle part (suivi.ts).
    Lot V4d : le dépôt de chaque machine (identifiant et nom) est rangé par instance ; une synchronisation met à jour son nom
    et le dépôt de la machine, jamais la liaison du dépôt à un périmètre, ni le périmètre, le rôle ou la version d'une
-   machine. Une machine rapportée sans dépôt (inventaire, forme inattendue) garde celui qu'elle avait. */
+   machine. Une machine rapportée sans dépôt (inventaire, forme inattendue) garde celui qu'elle avait.
+   Lot N1 : l'import d'un scan Nessus (import-nessus.ts) range ses machines, constats et détections par ce même chemin
+   d'écriture (`rangerPassage`), avec la source « nessus-fichier » et la première détection la plus ancienne connue (un scan
+   ne dit que la date de son passage).
+   Lot N2 : un constat importé porte en plus `exploiteMalware` (« exploité par un logiciel malveillant » selon Tenable) ;
+   Security Center ne le rapporte pas, ses constats sont rangés à false. */
 import {
   BilanSynchronisation,
   cleMachine,
@@ -30,22 +37,31 @@ import {
   type ElementHoteTenable,
   type ElementMachineTenable,
   ElementSynchronisation,
+  echeanceAtteinte,
+  frequenceConnecteur,
   type EtatSynchronisationDto,
   GRAVITES_PAR_DEFAUT,
   type GraviteTenable,
+  kitsRanges,
   LotSynchronisation,
+  type SourceMachine,
+  prochaineAffichee,
+  referenceApresDemande,
   TENABLE_BORNES,
 } from '@suivi/shared';
 import { sql } from 'kysely';
+import { analyserTables } from '../db/analyser.js';
 import type { Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { HttpError } from '../http/errors.js';
 import { type Integrations, type OperationEnLots, verrouFileIntegrations } from '../integrations/index.js';
 
-const FUSEAU = 'Europe/Paris';
+/** Constat d'un passage : celui de Security Center, ou celui d'un import Nessus qui dit en plus s'il est exploité par un
+    logiciel malveillant (lot N2 ; absent : false). */
+export type ConstatPassage = ElementConstatTenable & { exploiteMalware?: boolean };
+
 const PLANIFICATION = { username: 'planification' };
 const EXECUTANT = { username: 'exécutant serveur' };
-const jourDe = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU }).format(d);
 
 /** Dernier élément de chaque clé (un même identifiant ne peut pas être mis à jour deux fois par la même requête). */
 function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
@@ -186,7 +202,46 @@ export class SynchronisationTenable implements OperationEnLots {
     return refus;
   }
 
+  /** Après la validation d'une fin reçue, hors transaction : statistiques des tables réécrites par les lots, s'il y en a eu. */
+  async apresValidation(executionId: string): Promise<void> {
+    const s = await this.db.k
+      .selectFrom('vulnerabilites_synchronisations')
+      .select('elements')
+      .where('execution_id', '=', executionId)
+      .executeTakeFirst();
+    if (s?.elements)
+      await analyserTables(
+        this.db.k,
+        [
+          'vulnerabilites_tenable_depots',
+          'vulnerabilites_machines',
+          'vulnerabilites_constats',
+          'vulnerabilites_constat_cves',
+          'vulnerabilites_detections',
+        ],
+        this.db.log,
+      );
+  }
+
   /* ---------------------------------------------------------------- Rangement (sans doublon) */
+  /** Lot N1 : un passage d'import (machines, puis constats, puis détections qui s'y réfèrent), par le chemin d'écriture d'une
+      synchronisation. Une détection d'un constat ou d'une machine inconnus fait refuser tout le passage. */
+  async rangerPassage(
+    k: Kdb,
+    integration: string,
+    numero: number,
+    el: {
+      machines: ElementMachineTenable[];
+      constats: ConstatPassage[];
+      detections: ElementDetectionTenable[];
+    },
+    source: SourceMachine,
+  ): Promise<void> {
+    await this.rangerMachines(k, integration, numero, el.machines, source);
+    await this.rangerConstats(k, integration, numero, el.constats);
+    await this.rangerDetections(k, integration, numero, el.detections, true);
+  }
+
   /** Dépôts vus dans le lot (identifiant et nom) : rangés sans doublon, nom mis à jour, liaison jamais touchée. Rend la
       correspondance identifiant Tenable -> identifiant interne. */
   private async rangerDepots(k: Kdb, integration: string, numero: number, el: ElementMachineTenable[]) {
@@ -216,7 +271,13 @@ export class SynchronisationTenable implements OperationEnLots {
     return new Map(r.map((d) => [String(d.depot_tenable), d.id]));
   }
 
-  private async rangerMachines(k: Kdb, integration: string, numero: number, el: ElementMachineTenable[]) {
+  private async rangerMachines(
+    k: Kdb,
+    integration: string,
+    numero: number,
+    el: ElementMachineTenable[],
+    source: SourceMachine = 'tenable',
+  ) {
     if (!el.length) return;
     const depots = await this.rangerDepots(k, integration, numero, el);
     await k
@@ -224,6 +285,7 @@ export class SynchronisationTenable implements OperationEnLots {
       .values(
         dernierParCle(el, (m) => m.cle).map((m) => ({
           integration_id: integration,
+          source,
           identifiant_source: m.cle,
           uuid_source: m.uuid,
           nom: m.nom,
@@ -256,7 +318,7 @@ export class SynchronisationTenable implements OperationEnLots {
       .execute();
   }
 
-  private async rangerConstats(k: Kdb, integration: string, numero: number, el: ElementConstatTenable[]) {
+  private async rangerConstats(k: Kdb, integration: string, numero: number, el: ConstatPassage[]) {
     if (!el.length) return;
     const uniques = dernierParCle(el, (c) => c.plugin);
     const ids = await k
@@ -276,6 +338,9 @@ export class SynchronisationTenable implements OperationEnLots {
           epss_score: c.epss === null ? null : String(c.epss),
           exploitable: c.exploitable,
           exploit_libelle: c.exploitLibelle,
+          exploite_malware: c.exploiteMalware ?? false,
+          // Lot PRIO-1 : kits d'exploitation cités par Tenable (absent : aucun ; un passage suivant sans kit les retire).
+          kits_exploitation: kitsRanges(c.kitsExploitation),
           faille_publiee_le: c.failleLe,
           correctif_publie_le: c.correctifLe,
           fin_support_le: c.finSupportLe,
@@ -297,6 +362,8 @@ export class SynchronisationTenable implements OperationEnLots {
           epss_score: eb.ref('excluded.epss_score'),
           exploitable: eb.ref('excluded.exploitable'),
           exploit_libelle: eb.ref('excluded.exploit_libelle'),
+          exploite_malware: eb.ref('excluded.exploite_malware'),
+          kits_exploitation: eb.ref('excluded.kits_exploitation'),
           faille_publiee_le: eb.ref('excluded.faille_publiee_le'),
           correctif_publie_le: eb.ref('excluded.correctif_publie_le'),
           fin_support_le: eb.ref('excluded.fin_support_le'),
@@ -326,8 +393,15 @@ export class SynchronisationTenable implements OperationEnLots {
   }
 
   /** Une détection se rattache à un constat et à une machine déjà rangés (lot courant ou précédent) : sinon, tout le lot est
-      refusé. */
-  private async rangerDetections(k: Kdb, integration: string, numero: number, el: ElementDetectionTenable[]) {
+      refusé. `premiereLaPlusAncienne` (import, lot N1) : la première détection rangée n'est jamais avancée (un scan ne donne
+      que la date de son passage) ; sinon celle de la source la remplace (Tenable donne sa propre première détection). */
+  private async rangerDetections(
+    k: Kdb,
+    integration: string,
+    numero: number,
+    el: ElementDetectionTenable[],
+    premiereLaPlusAncienne = false,
+  ) {
     if (!el.length) return;
     const d = dernierParCle(el, (x) => [x.plugin, x.machine, x.port, x.protocole].join('\u0000'));
     const r = await sql<{ id: string }>`
@@ -342,7 +416,9 @@ export class SynchronisationTenable implements OperationEnLots {
       JOIN vulnerabilites_constats c ON c.integration_id = ${integration}::uuid AND c.plugin_id = x.plugin
       JOIN vulnerabilites_machines m ON m.integration_id = ${integration}::uuid AND m.identifiant_source = x.cle
       ON CONFLICT (constat_id, machine_id, port, protocole) DO UPDATE SET
-        premiere_detection = coalesce(excluded.premiere_detection, d.premiere_detection),
+        premiere_detection = CASE WHEN ${premiereLaPlusAncienne}::boolean
+                                  THEN least(d.premiere_detection, excluded.premiere_detection)
+                                  ELSE coalesce(excluded.premiere_detection, d.premiere_detection) END,
         derniere_detection = coalesce(excluded.derniere_detection, d.derniere_detection),
         attenue = excluded.attenue,
         risque_accepte = excluded.risque_accepte,
@@ -411,11 +487,10 @@ export class SynchronisationTenable implements OperationEnLots {
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
-  /** Inscrit au plus une synchronisation par jour et par instance Tenable active dont les clés sont enregistrées. Les modules
+  /** Inscrit au plus une synchronisation par période réglée et par instance Tenable active dont les clés sont enregistrées. Les modules
       Intégrations et Vulnérabilités sont contrôlés par l'appelant ; flux « tenable » fermé : rien. */
   async planifier(maintenant = new Date()): Promise<string[]> {
     if (!(await this.flux.ouvert('tenable'))) return [];
-    const jour = jourDe(maintenant);
     const instances = (await this.integrations.lister()).filter(
       (i) => i.type === 'tenable' && i.actif && Object.values(i.secrets).every(Boolean),
     );
@@ -431,15 +506,20 @@ export class SynchronisationTenable implements OperationEnLots {
           .execute();
         const e = await k
           .selectFrom('vulnerabilites_tenable_etat')
-          .select(sql<string | null>`creneau::text`.as('creneau'))
+          .select('planifiee_le')
           .where('integration_id', '=', i.id)
           .forUpdate()
           .executeTakeFirstOrThrow();
-        if (e.creneau === jour) return;
-        // Créneau consommé d'abord : une synchronisation inscrite puis perdue n'est pas réinscrite le même jour.
+        // Lot F1 : au plus une par période réglée sur l'instance (vingt-quatre heures par défaut), comptée depuis la
+        // dernière demande automatique.
+        if (!echeanceAtteinte(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant)) return;
+        // Référence consommée d'abord : une synchronisation inscrite puis perdue, expirée ou en échec n'est pas redemandée
+        // avant la période suivante.
         await k
           .updateTable('vulnerabilites_tenable_etat')
-          .set({ creneau: jour })
+          .set({
+            planifiee_le: referenceApresDemande(e.planifiee_le, frequenceConnecteur(i.frequenceHeures), maintenant),
+          })
           .where('integration_id', '=', i.id)
           .execute();
         // Une exécution déjà en file ou en cours (demandée à la main, ou un test) tient lieu de celle du jour.
@@ -458,6 +538,8 @@ export class SynchronisationTenable implements OperationEnLots {
   /* ---------------------------------------------------------------- État (vulnerabilites:lire) */
   async etat(): Promise<EtatSynchronisationDto[]> {
     const instances = (await this.integrations.lister()).filter((i) => i.type === 'tenable');
+    const fluxOuvert = await this.flux.ouvert('tenable');
+    const maintenant = new Date();
     const out: EtatSynchronisationDto[] = [];
     for (const i of instances) {
       const e = await this.db.k
@@ -498,6 +580,16 @@ export class SynchronisationTenable implements OperationEnLots {
         inventaire:
           e && e.inventaire_ok !== null && e.inventaire_le
             ? { ok: e.inventaire_ok, erreur: e.inventaire_erreur, le: e.inventaire_le.toISOString() }
+            : null,
+        frequenceHeures: frequenceConnecteur(i.frequenceHeures),
+        // Lot F1 : prochaine synchronisation automatique, seulement pour une instance que le planificateur traite.
+        prochaineSynchronisation:
+          fluxOuvert && i.actif && Object.values(i.secrets).every(Boolean)
+            ? prochaineAffichee(
+                e?.planifiee_le ?? null,
+                frequenceConnecteur(i.frequenceHeures),
+                maintenant,
+              ).toISOString()
             : null,
       });
     }

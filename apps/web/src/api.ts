@@ -20,6 +20,8 @@ interface Opts {
   raw?: Blob | ArrayBuffer;
   headers?: Record<string, string>;
   ifMatch?: number | string;
+  /** Annulation (requête remplacée par une plus récente, par exemple la barre de recherche du module Vulnérabilités). */
+  signal?: AbortSignal;
 }
 
 export async function api<T = unknown>(method: string, url: string, o: Opts = {}): Promise<T> {
@@ -39,8 +41,17 @@ export async function api<T = unknown>(method: string, url: string, o: Opts = {}
   }
   let r: Response;
   try {
-    r = await fetch(url, { method, headers: h, body, credentials: 'same-origin', cache: 'no-store' });
-  } catch {
+    r = await fetch(url, {
+      method,
+      headers: h,
+      body,
+      credentials: 'same-origin',
+      cache: 'no-store',
+      ...(o.signal ? { signal: o.signal } : {}),
+    });
+  } catch (e) {
+    // Une requête annulée n'est pas une panne du réseau : l'erreur d'annulation remonte telle quelle.
+    if (o.signal?.aborted) throw e;
     throw new ApiError(0, 'Serveur injoignable. Vérifiez la connexion réseau.', null);
   }
   if (r.status === 204) return undefined as T;

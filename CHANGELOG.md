@@ -2,6 +2,523 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [7.5.0] — 2026-11-21
+
+### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `090` et `092` à `099` (fréquences de synchronisation, contacts de crise issus
+des comptes, imports Nessus, Silène et Active Directory, tableaux de bord multiples, règles de priorité des vulnérabilités,
+veille réglementaire), sans reprise de données ; aucune commande sur le serveur pour mettre à jour. Pendant la mise à jour,
+la base redémarre une fois (cache de 256 Mo, JIT coupé) et le frontal du site une fois (fichiers de la page de maintenance) :
+la page de suivi annonce ces coupures de quelques secondes et reprend seule. **Changements visibles dès la mise à jour** :
+
+- **nouvelles alertes critiques possibles** : des failles de machines en fin de support passent de P2 à P1, et une alerte
+  P1 close parce que la faille était sous exception se rouvre, marquée « Risque accepté » (détail sous la migration `097`) ;
+- **veille plus fréquente** : CERT-FR, CERT Santé, catalogue KEV et NVD sont collectés toutes les deux heures au lieu d'une
+  fois par jour, et chaque connecteur prêt demande sa première synchronisation dans la minute (détail sous la migration
+  `090`) ;
+- **accueil** : chacun démarre sur le tableau de bord « Global » ; l'ancien tableau affiché et la bascule « Vue analytique
+  Neon / Tableau personnalisable » ne sont plus lus (détail sous la migration `096`) ;
+- **police Lexend**, fenêtres à coins arrondis, boîte d'outils en clair et frises refaites : interface seulement.
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Relire qui détient le droit de lecture du module Vulnérabilités : il ouvre aussi les noms des objets de l'annuaire
+   importé (migration `099`).
+2. Désigner les contacts de crise parmi les comptes : aucun ne l'est après la mise à jour (migration `092`).
+3. Pour la veille réglementaire : faire autoriser les quatre nouveaux sites en sortie, ouvrir le flux, activer les sources
+   une à une, et cocher le droit DPO dans un rôle personnalisé pour qui qualifie les données personnelles (migration `098`).
+4. Si la nouvelle cadence de la veille ne convient pas, régler les fréquences (écran « Veille » et carte « Intégrations »).
+
+Le détail de chaque migration suit.
+
+**Migration automatique `098`** (lot VR-1 : veille réglementaire, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) :
+**additive** (trois tables `veille_reglementaire_*`, dont la liste des mots-clés d'EUR-Lex ; contrainte des modules recréée
+pour admettre `veille_reglementaire`), durée négligeable, sans reprise de données ; **aucun compte ni aucun rôle existant
+n'est touché**. Aucune action sur le serveur à la mise à jour.
+- **Rien n'est collecté** tant que le flux « Veille réglementaire » n'est pas ouvert (un administrateur, Conformité et audits,
+  Veille réglementaire, « Activer la veille réglementaire ») **et** que les sources ne sont pas activées une à une dans le
+  tableau des sources (toutes désactivées au départ). Relire la liste de mots-clés du filtre d'EUR-Lex (liste par défaut
+  fournie) avant d'activer cette source.
+- **Nouveaux sites en sortie**, une fois le flux ouvert : `www.cnil.fr`, `www.edpb.europa.eu`, `eur-lex.europa.eu` et
+  `cyber.gouv.fr`, en TCP 443, par l'exécutant d'exploitation (`updater`) ; à faire autoriser par l'équipe infrastructure, ou
+  par le mandataire de l'établissement s'il est réglé (la sortie va alors au mandataire, sur son port).
+- **Droit DPO** (`veille_reglementaire:dpo`) : il se coche dans un rôle personnalisé (Administration, Rôles, table « Droits
+  réservés ») et n'est donné d'office à personne, ni à l'administrateur ni au RSSI ; **avant le lot 3, un RSSI qui doit
+  qualifier les données personnelles le reçoit par un rôle personnalisé** (addendum du 20/11/2026 de
+  l'[ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), point 5). Il ouvre à lui seul la lecture de la
+  veille réglementaire.
+(session « Module surveillance vulnérabilités SMSI »)
+
+
+**Migration automatique `097`** (lot PRIO-1 du module Vulnérabilités : règles de priorité, libellés, fréquences, cartes
+d'avis, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `kits_exploitation` des constats, liste vide
+par défaut, et sa contrainte), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucun flux nouveau.
+**Des priorités et des alertes changent dès la mise à jour**, sans action de votre part, à la première évaluation (fin de la
+prochaine synchronisation de Tenable, collecte de la veille ou décision) :
+- **les autres failles présentes sur une machine en fin de support montent d'un cran** (P4 → P3, P3 → P2, P2 → P1 ;
+  P1 reste P1) : seules celles qui étaient en P2 (critiques, ou à fort score EPSS, ou élevées et exploitables) passent en
+  **P1** et **ouvrent une alerte critique** (notification et fenêtre rouge), avec le délai de correction de P1 (48 heures
+  par défaut). Le contrôle de Tenable qui signale lui-même le système ou le produit non maintenu **ne monte pas** : pas
+  d'alerte critique du seul fait de la fin de support ; il reste listé dans la section « fin de support » du rapport. Ce
+  cran ne se cumule pas avec celui d'un actif exposé relié à une machine interne vulnérable. Les compteurs « à traiter », le
+  niveau d'alerte de la vue d'ensemble, les tendances et le rapport suivent ;
+- **une faille P1 sous exception** (risque accepté en vigueur) **garde son alerte critique**, marquée « Risque accepté » ;
+  une alerte close pour ce motif avant la mise à jour se rouvre (nouvelle alerte critique, notifiée une fois) ; une alerte
+  encore ouverte reçoit seulement la marque, sans notification ;
+- le fait « Utilisée par des rançongiciels (catalogue KEV) » s'ajoute à l'explication de la priorité, sans changer le
+  niveau ; à priorité égale, ces failles passent devant dans les listes et dans « Cibles par priorité » : l'ordre des listes
+  change. Les alertes concernées sont mises à jour (faits et version) sans notification ; une prise en compte préparée juste
+  avant est à refaire.
+Les kits d'exploitation de Tenable ne sont lus qu'à la prochaine synchronisation de Security Center ou au prochain import
+d'un fichier `.nessus`. Une source de la veille passe « En retard » après trois périodes de sa fréquence sans collecte réussie
+(six heures pour une source lue toutes les deux heures, trois jours pour EPSS) au lieu de 36 heures. « Collecter maintenant »
+refuse NVD moins de deux heures après la précédente collecte NVD demandée. Au premier passage du planificateur, les lignes
+du journal des collectes de la veille et des exécutions des connecteurs de plus de 90 jours sont effacées (la dernière de
+chaque source, de chaque instance et de chaque opération, les files en cours et les imports de fichiers sont gardés) ; le
+journal d'audit n'est pas touché. Une remise à vide du travail garde désormais les fréquences choisies pour la veille.
+(session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `099`** (lot AD-1 : rapport de l'Active Directory, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (trois tables `vulnerabilites_ad_*`), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune
+règle de pare-feu : l'import ne fait aucun appel réseau. Aucun droit nouveau : toute personne qui lit le module
+Vulnérabilités (`vulnerabilites:lire`) peut afficher, point par point, les noms des objets de l'annuaire, et chaque
+consultation est inscrite au journal d'audit ; relire avant la mise à jour qui détient ce droit. Les noms des objets de
+l'annuaire (deux derniers imports) sont en clair dans la base et donc dans ses sauvegardes. (session « Module surveillance vulnérabilités
+SMSI »)
+
+**Lot PERF-04 du module Vulnérabilités** (ordre du calcul global, décision du RSSI du 20/11/2026,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : sans migration, aucune action sur le serveur. À la mise à jour, le
+détail affiché de quelques failles peut changer à priorité égale ; aucune priorité, aucune alerte, aucun compteur ne change.
+Quand plusieurs contrôles de Tenable de même priorité portent une même faille, ses faits (vue d'ensemble, alertes) sont ceux
+du contrôle détecté le plus récemment. À la première évaluation des alertes qui suit, une alerte concernée est seulement mise
+à jour (faits et version) : aucune notification, ni réouverte ni close, prise en compte conservée ; une prise en compte
+préparée juste avant est à refaire après rechargement. Dans le rapport de pilotage, les failles critiques sont listées dans
+l'ordre des CVE et les dépassements de même échéance dans l'ordre de leur identifiant : au-delà de 200 lignes, les lignes
+listées peuvent changer, pas les totaux. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `095`** (lot SI1 : import du rapport Silène, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (dix tables `vulnerabilites_silene_*`, index), durée négligeable, sans reprise de données. Aucune action sur le
+serveur, aucune règle de pare-feu : l'import ne fait aucun appel réseau. Le rapport JSON se dépose dans Plateforme, carte
+« Intégrations », instance « Silène, import de fichier » ; relier ensuite l'instance à un périmètre (Surface externe,
+onglet « Périmètres ») pour que ses lecteurs la voient. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `094`** (lot N2 : contrôle exploité par un logiciel malveillant, suppression d'un connecteur d'import,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `exploite_malware` des constats, fausse par défaut),
+durée négligeable, sans reprise de données. Aucune action sur le serveur. Les failles déjà importées ne sont pas relues :
+réimporter un scan pour que le marquage « exploitée par un logiciel malveillant » soit pris en compte ; une faille qui le
+porte passe en P1 et peut ouvrir une alerte critique. La limite des imports passe à trente fichiers commencés par heure et
+par personne. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `093`** (lot N1 : import de scans Nessus, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (contrainte de la source des machines recréée pour admettre `nessus-fichier`, table `vulnerabilites_imports`, un
+index), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune règle de pare-feu : l'import ne fait
+aucun appel réseau. Le fichier `.nessus` se dépose dans Plateforme, carte « Intégrations », instance « Nessus, import de
+fichier » ; prévoir environ 500 Mo de mémoire libre dans le navigateur pour un fichier de 100 Mo. Les machines importées sont
+sans périmètre (aucun dépôt) : elles ne sont visibles qu'avec le droit d'administrer le module tant qu'un périmètre ne leur
+est pas indiqué. (session « Module surveillance vulnérabilités SMSI »)
+
+**Migration automatique `090`** (lot F1 : fréquence de synchronisation réglable,
+[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonnes `frequence_heures`, `planifiee_le` et `version` de
+`vulnerabilites_veille_sources`, `frequence_heures` de `integrations`, `planifiee_le` des états de Tenable et
+d'AlgoLightHouse, contraintes des listes de fréquences), durée négligeable, sans reprise de données. Aucune action sur le
+serveur. **Changement de cadence voulu dès la mise à jour** : une installation existante passe d'une collecte de veille par
+jour à **une toutes les deux heures** pour le CERT-FR, le CERT Santé, le catalogue KEV et NVD (EPSS reste une fois par jour ;
+Tenable et AlgoLightHouse restent une fois par jour). La première collecte de chaque source part dans la minute qui suit le
+démarrage (l'ancien créneau quotidien n'est plus lu), puis une par période ; de même, chaque connecteur actif et prêt
+(Tenable, AlgoLightHouse : clé saisie, flux ouvert) demande sa première synchronisation automatique dans la minute, puis une
+par période. La fréquence se règle par source dans l'écran « Veille » (droit d'administrer le module) et par connecteur dans
+la fenêtre « Configurer » de la carte « Intégrations ».
+Le journal des collectes et le journal d'audit grossissent d'autant (environ cinquante collectes et cent cinquante entrées
+par jour avec les valeurs par défaut). (session « Module surveillance vulnérabilités SMSI »)
+
+**Lot R1 du module Vulnérabilités** (barre de recherche globale) : sans migration, aucune action. La recherche ne fait aucun
+appel sortant et n'écrit rien au journal. (session « Module surveillance vulnérabilités SMSI »)
+
+**Lot I1 (intégrations dans la page Plateforme)** : sans migration, aucune action sur le serveur. L'adresse de l'écran des
+intégrations change : il devient la carte « Intégrations » de la page Plateforme (`/plateforme/integrations`) ; l'ancienne
+adresse `/integrations` et les signets y redirigent. La rubrique « Intégrations » du menu Pilotage disparaît : une
+personne qui l'avait déplacée dans son ordre de menu ne la retrouve plus là. (session « Module surveillance vulnérabilités
+SMSI »)
+
+**Lot SI2 du module Vulnérabilités et imports de fichiers** : sans migration, aucune action sur le serveur. La carte de la
+surface externe devient la page elle-même : plus de cadre, de zoom ni de déplacement à la souris, la page défile et la barre
+de regroupement reste visible. Ce qu'importe une instance d'import (Nessus, Silène) n'est visible que des personnes qui
+administrent le module Vulnérabilités tant que ce n'est pas rattaché à un périmètre : pour Nessus, chaque machine (écran
+« Machines ») ; pour Silène, l'instance (Surface externe, onglet « Périmètres »). (session « Module surveillance
+vulnérabilités SMSI »)
+
+**Barre de téléchargement de la page de maintenance** ([ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md),
+addendum du 19/11/2026) : sans migration, aucune action. La barre pleine pendant la vérification des signatures n'apparaît
+qu'aux mises à jour lancées depuis une version qui contient ce correctif (exécutant de la version installée, page du frontal
+en service). Les fichiers de la page changent : à la fin de la mise à jour vers cette version depuis l'interface, le frontal
+du site est redémarré une fois ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes
+annoncée par la page de suivi, qui reprend seule. (session « Projet audit_suivi Coeur »)
+
+**Aucune action sur le serveur.** **Migration automatique `092`** (contacts de crise issus des comptes,
+[ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)) : additive (une table `contacts_crise_comptes` et son
+déclencheur temps réel ; aucune table existante modifiée), durée négligeable, sans reprise de données : aucun compte n'est
+contact de crise après la mise à jour. Les contacts de crise saisis à la main sont inchangés. (session « Refonte Neon
+suivi-audits »)
+
+**Onglets aux couleurs du menu, à l'essai** : changement d'interface seulement, sans migration, aucune action sur le serveur.
+Chaque personne choisit la forme dans Mon compte > Affichage, « Onglets de page (essai) » (barre bleu nuit par défaut).
+
+**Base de données, réglages de mémoire et JIT** (décision du RSSI du 20/11/2026, banc de performance du 19/11/2026) :
+aucune action sur le serveur. La configuration du service `db` change : la base redémarre une fois pendant la mise à jour
+(dans la fenêtre de maintenance déjà annoncée), avec un cache partagé de 256 Mo, 16 Mo par tri et la compilation à la volée
+(JIT) coupée, dans la même limite mémoire de 1 Gio. (session « Projet audit_suivi Coeur »)
+
+**Police Lexend, liens et sélecteurs redessinés** : changement d'interface seulement, sans migration, aucune action sur le serveur. La
+page de maintenance des mises à jour prend aussi Lexend.
+
+**Tableau de bord unique, puis tableaux multiples de l'accueil** ([ADR 0108](docs/adr/0108-tableau-de-bord-unique.md),
+[ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)) : **migration automatique `096`**, de schéma
+seulement (plusieurs tableaux par compte, favoris ordonnés, destinataires par rôle, publication), durée négligeable,
+aucune action sur le serveur. **Sans reprise de données** (règle du 14/11/2026) : les tableaux personnels déjà
+enregistrés restent ceux de leur auteur, mais le « tableau affiché », la disposition par défaut de l'organisation et la
+bascule « Vue analytique Neon / Tableau personnalisable » ne sont plus lus ; chacun démarre avec le favori « Global ». Un
+rôle personnalisé qui portait déjà l'action « Administrer » du module « Tableau de bord » gagne la publication pour tous
+(« Publier pour tous »).
+
+### Ajouté
+
+- **Tâches d'une action et avancement** (décisions du RSSI du 20/11/2026,
+  [ADR 0111](docs/adr/0111-taches-d-une-action-et-avancement.md)). Une action du plan d'actions peut contenir jusqu'à 50
+  tâches : intitulé, case « faite », responsable et échéance. La fiche de l'action les liste avec « n faites sur N » et
+  une jauge d'avancement. Dans la frise, la part faite du tube est plus foncée, avec « n/N · p % » au bout, et un petit
+  losange marque sous le tube l'échéance de chaque tâche (à faire, faite, en retard). Le responsable d'une tâche est un
+  simple affichage : il n'ouvre l'action à personne, et seul qui peut modifier l'action gère ses tâches. Cocher toutes les
+  tâches ne termine pas l'action. Champ facultatif des données d'une action, sans migration.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+- **Veille réglementaire** (lot VR-1, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) : nouveau module
+  `veille_reglementaire` et page Conformité et audits > Veille réglementaire. Publications de la CNIL, du CEPD, d'EUR-Lex et
+  de l'ANSSI lues par l'exécutant d'exploitation avec le script isolé de la veille des vulnérabilités (liste fermée, HTTPS
+  vérifié, aucune redirection, RSS sans déclaration de type ni entité, 200 éléments et 2 Mio au plus) ; titre, date, lien et
+  résumé du flux tels quels, jamais de résumé pour l'ANSSI, lien gardé seulement en https sur l'hôte de la source. EUR-Lex
+  (tous les actes du Journal officiel de l'Union) : seuls les actes dont le titre contient un mot-clé d'une liste réglable
+  (français et anglais, casse et accents ignorés, 60 mots au plus) sont gardés, leur domaine est celui du mot trouvé
+  (données personnelles si les deux domaines le sont) ; réglage avec `If-Match` et journal. ANS (aucun flux public connu) et
+  Légifrance prévues, sans collecteur. Flux « Veille réglementaire » au registre des flux, sources activables une à une, fréquence réglable (4, 12, 24 ou
+  168 heures). Qualification en un clic (« sans objet », « à suivre », « impactant ») par le rôle RSSI pour la sécurité et
+  par le nouveau droit spécial cumulable « DPO » (`veille_reglementaire:dpo`, droit réservé coché dans un rôle
+  personnalisé, qui ouvre aussi la lecture du module ; aucun rôle ne l'a d'office, administrateur et RSSI compris) pour les
+  données personnelles ; `route()` admet une liste de permissions d'un même module dont l'une suffit, `If-Match`, journal d'audit. API de lecture pour le
+  tableau de bord : synthèse, publications filtrées, état des sources. Suites données à une publication « impactant » hors
+  de ce lot. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **kit d'exploitation disponible selon Tenable** (lot PRIO-1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  migration `097`) : Metasploit, Core Impact et CANVAS (« Exploitable with »), lus dans la chaîne `exploitFrameworks` de
+  Security Center et dans `exploit_framework_metasploit`, `exploit_framework_core` et `exploit_framework_canvas` d'un fichier
+  `.nessus` ; rangés avec « exploitable » (règle des alertes P2 exposées sur Internet), jamais comme exploitation avérée ;
+  marque « Kit d'exploitation : … (Tenable) » dans les listes, libellé complet dans la fiche (session « Module surveillance
+  vulnérabilités SMSI »).
+- Vulnérabilités, **rançongiciels** (lot PRIO-1) : la mention du catalogue KEV « utilisée par des rançongiciels »
+  (`knownRansomwareCampaignUse`) devient un fait visible dans la liste, la fiche et l'explication de la priorité, sans changer
+  le niveau (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **cartes d'avis de la veille** (lot PRIO-1) : marques « Présente sur le parc » et « Exposée sur Internet »
+  quand une CVE citée concerne la plateforme, et liste des CVE concernées dans la fiche de l'avis ; la réponse de la liste des
+  avis porte ces faits, lus en une fois pour la page, les mêmes pour tous, sans nom ni nombre (session « Module surveillance
+  vulnérabilités SMSI »).
+- Vulnérabilités, **purge des journaux** (lot PRIO-1) : journal des collectes de la veille et des exécutions des connecteurs
+  purgé au-delà de 90 jours, au tic de l'API, au plus une fois par heure ; journal d'audit `vulnerabilites.journaux.purges`
+  (nombres seulement) (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **rapport de l'Active Directory (service ADS de l'ANSSI, à partir d'une collecte ORADAD)** (lot AD-1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `099`) : nouvelle page « Active Directory » du module. Le
+  rapport JSON est lu dans le navigateur ; seuls partent la note globale (1 à 5), la progression par niveau, les points de
+  contrôle non conformes (type gardé en numéro avec son libellé : 1 information, 2 avertissement, 3 vulnérabilité ; niveau ;
+  référence ; titre) et, par point, le nombre d'objets concernés et au plus 200 noms courts (64 caractères) avec leur nature,
+  le surplus compté ; jamais un mot de passe, une empreinte, un attribut de compte, un SID, un chemin LDAP complet, le nom de
+  domaine ni le nom du fichier. L'API revalide la liste blanche (champ en trop : tout est refusé) ; un rapport de forme non
+  reconnue est refusé en entier, sans import partiel. La page montre à tout lecteur du module la note et son évolution, la
+  progression, les points ouverts par niveau et par type, le nombre d'objets et sa variation par point, les points corrigés ;
+  les noms, avec « apparus depuis » et « corrigés depuis », se demandent point par point par une route à part (décision du
+  RSSI : ils font partie du droit « Analyste », branché sur `vulnerabilites:lire` en attendant le lot 3 de l'ADR 0092 ; pas
+  de droit à part), et chaque consultation est tracée au journal d'audit sans les noms. Seuls les deux derniers imports gardent leurs noms (purge à chaque import) ; un import se supprime (If-Match).
+  Les noms ne vont ni à l'assistant, ni aux courriels, notifications, rapports, journaux ou à la recherche du module. Import
+  et suppression avec le droit d'administrer le module, limite horaire commune aux imports de fichiers. Forme du rapport
+  supposée, jamais vérifiée sur un rapport réel. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
+  en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
+  réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
+  seul est rendu ; ports ouverts de Silène et services d'AlgoLightHouse réunis sans doublon, source de chacun ; constats
+  Silène marqués « n SIL » sur l'adresse et sur le port, liste et fiche du constat, sans priorité), mêmes droits que la liste
+  des actifs, bornes communes. Les noms d'une branche qui résolvent vers une même adresse rejoignent un seul nœud ; une
+  adresse déjà tracée ailleurs devient un renvoi qui y mène. « Regrouper par » : nom de domaine, adresse IP publique (la
+  branche est l'adresse, dépliée sur ses noms, ses services, la limite du SI et les machines) ou périmètre. Filtre « Nom de
+  domaine ou adresse IP » (partie du nom, casse ignorée, ou début d'adresse ; nombre annoncé ; effacement). Décision du
+  RSSI : la carte est la page elle-même (plus de cadre, de zoom, de déplacement à la souris ni de vue d'ensemble ; défilement
+  de la page, barre de regroupement et titres des colonnes collants ; présentation empilée sur écran étroit) ; tout déplié
+  jusqu'à 30 lignes, au-delà branches en alerte seules dépliées (douze au plus) ; vue gardée en changeant d'onglet.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **import du rapport Silène de l'ANSSI** (lot SI1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  migration `095`) : connecteur « Silène, import de fichier » de la carte « Intégrations » (ni adresse, ni clé, ni flux),
+  « Importer un rapport » : export JSON lu dans le navigateur (50 Mo au plus), extrait en liste blanche (jamais de
+  certificat, d'en-tête HTTP, de sortie de sonde, de géolocalisation ni de passage précédent), revalidé par l'API, envoyé
+  par lots ; chaque import complet fait foi, la note est gardée d'un import à l'autre. Écran « Surface externe » : note Silène
+  à côté de l'état d'AlgoLightHouse (pastille SIL), liste des actifs commune aux deux sources (un actif par adresse IP ou nom
+  de domaine, ports ouverts de Silène et services d'AlgoLightHouse réunis, source de chaque information visible), onglet
+  « Constats Silène », liaison de chaque instance à un périmètre ; recherche du module étendue sans changer son contrat ;
+  suppression du connecteur et de ce qu'il a importé. Aucune priorité ni alerte tirée de Silène. (session « Module
+  surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **contrôle exploité par un logiciel malveillant** (lot N2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision du RSSI du 19/11/2026) : le champ `exploited_by_malware` d'un scan Nessus est lu (liste blanche, revalidé par
+  l'API) et compte comme une **exploitation avérée**, au même titre que le catalogue KEV, une alerte du CERT-FR ou la fiche
+  du CERT Santé : priorité (P1 si la faille est présente), alertes, filtre « Exploitation avérée », compteurs et rang des
+  machines, marques zero-day, vue d'ensemble et tendances. Source « Exploitée par un logiciel malveillant (selon Tenable) »,
+  pastille de Tenable, marque sur la faille. Une faille sans ce champ garde exactement sa priorité. Security Center inchangé
+  (aucun champ équivalent attesté dans ce qu'il rend). Migration `094`. (session « Module surveillance vulnérabilités SMSI »)
+- Intégrations, **« Supprimer ce connecteur et tout ce qu'il a importé »** pour une instance « Nessus, import de fichier »
+  seulement (lot N2, décision du RSSI du 19/11/2026) : droit d'administrer les intégrations, fenêtre de confirmation (nombres
+  de machines, failles, détections et imports qui disparaîtront, action irréversible, mot SUPPRIMER à saisir), If-Match ;
+  machines, détections, failles, suivis, liaisons, imports et exécutions effacés ; alertes réévaluées (celles dont la seule
+  présence venait de l'import se closent) ; journal `integration.supprimee` (qui, type, nombres). Tout autre type est refusé.
+  Routes `GET /api/integrations/instances/:id/suppression` et `DELETE /api/integrations/instances/:id`. (session « Module
+  surveillance vulnérabilités SMSI »)
+- Vulnérabilités et intégrations, **import de scans Nessus** (lot N1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
+  décision du RSSI du 19/11/2026) : connecteur « Nessus, import de fichier » dans la carte « Intégrations », sans adresse, sans
+  clé, sans flux ni exécutant, avec « Importer un scan ». Le fichier `.nessus` est lu dans le navigateur ; seul un extrait en
+  liste blanche part vers l'API, en JSON, par lots de machines entières, revalidé champ par champ ; rangement dans les tables
+  de Tenable Security Center. Pour chaque machine du fichier, une faille absente est disparue ; les machines absentes du
+  fichier ne changent pas. Machines et failles marquées de leur source dans le module ; imports dans « Exécutions ». Migration
+  `093` ; routes `POST /api/integrations/instances/:id/imports`, `…/imports/:execution/lots`, `…/imports/:execution/fin`,
+  `GET /api/vulnerabilites/imports/etat`. Format écrit sans export réel, non vérifié. (session « Module surveillance
+  vulnérabilités SMSI »)
+- **Contacts de crise issus des comptes de la plateforme** (décisions du RSSI du 18/11/2026,
+  [ADR 0107](docs/adr/0107-contacts-de-crise-issus-des-comptes.md)). Dans Plateforme > Utilisateurs, la fiche d'un compte
+  reçoit une section « Contact de crise » : l'administrateur y désigne le compte, son rôle de crise, ses téléphones, sa
+  disponibilité, la case « Contact clé » (priorité dans la cellule de crise) et ses périmètres (tous par défaut, ou une liste
+  choisie). Dans Mon compte, une personne contact de crise met à jour ses téléphones et sa disponibilité et voit son rôle et
+  ses périmètres sans pouvoir les modifier. La page Contacts de crise montre en tête un bloc en lecture seule « Comptes de la
+  plateforme » (téléphones et courriel cliquables, mention « Modifiable dans Plateforme > Utilisateurs ») ; les contacts
+  saisis à la main restent en dessous, inchangés, et la cellule de crise reprend aussi les comptes, contacts clés en
+  premier. Seuls les comptes actifs apparaissent, et seulement pour qui lit les incidents du périmètre. Le journal d'audit
+  garde qui a modifié quels champs, sans les numéros (`admin.user_crisis_contact`, `account.crisis_contact_update`). L'export
+  Excel des contacts de crise ne reprend pas encore les comptes. _(Session « Refonte Neon suivi-audits »
+  (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- Vulnérabilités et intégrations, **fréquence de synchronisation réglable** par source de veille et par connecteur (lot F1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), décision du RSSI du 19/11/2026) : catalogue KEV, CERT-FR et CERT Santé
+  de toutes les heures à une fois par jour, NVD jamais plus d'une fois toutes les deux heures (plancher garanti en base et par
+  l'API), EPSS une fois par jour (fixe), deux heures par défaut ; Tenable Security Center toutes les 6 ou 12 heures, une fois
+  par jour (par défaut) ou une fois par semaine ; AlgoLightHouse toutes les 12 heures, une fois par jour (par défaut) ou une
+  fois par semaine. Écran « Veille » : colonne « Fréquence » (liste pour qui administre le module, avertissements de NVD et
+  d'EPSS, prochaine collecte prévue) ; fenêtre « Configurer » de la carte « Intégrations » : fréquence de l'instance, avec un
+  avertissement en dessous de 24 heures affiché avant d'enregistrer (sans blocage) ; « Failles détectées » et « Surface
+  externe » : fréquence et prochaine synchronisation en lecture seule. Une demande automatique en échec n'est pas redemandée
+  avant la période suivante ; « Collecter maintenant » et « Synchroniser maintenant » restent possibles. Les alertes, dont les
+  règles ne changent pas, sont évaluées à la fin de chaque collecte reçue : une CVE critique qui touche un produit surveillé
+  ouvre son alerte dès la collecte qui l'apporte. Migration `090` ; route `PUT /api/vulnerabilites/veille/sources/:source/frequence`.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, lisibilité des alertes de la veille et pastilles de source (lot L1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : chaque source a sa pastille dessinée pour la charte (sigle, forme et
+  teinte propres ; aucun logo officiel) avec son nom complet au survol et pour les lecteurs d'écran : catalogue KEV de la CISA,
+  NVD (NIST), EPSS (FIRST), CERT-FR (ANSSI), CERT Santé, Tenable, AlgoLightHouse ; posée dans l'écran « Veille » (sources,
+  alertes et avis, failles connues), les marques d'exploitation, l'en-tête et les recommandations de la fiche illustrée,
+  l'écran « Alertes », la fenêtre d'alerte critique et la barre de recherche. Les alertes et avis du CERT-FR et du CERT Santé
+  passent d'un tableau dense à des cartes : source, nature (une alerte du CERT-FR se détache d'un avis), identifiant, date,
+  titre, résumé sur trois lignes, marques publiées par la source, CVE citées en boutons qui ouvrent leur fiche, lien vers
+  l'original. « Ouvrir la fiche » montre l'alerte ou l'avis en entier, le résumé découpé en paragraphes et listes quand le
+  texte en porte (texte simple, aucun balisage interprété). Les failles connues de la recherche donnent un fait par ligne
+  (gravité, exploitation, EPSS, produit touché). Aucune migration, aucun changement d'API.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, barre de recherche globale (lot R1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : en tête de toutes
+  les pages du module, une barre trouve une CVE même non détectée sur le parc (veille locale : identifiant, éditeur, produit,
+  description ; détections de Tenable et d'AlgoLightHouse), avec son état (« détectée sur N machines », « exposée sur N actifs
+  exposés », présente hors des périmètres lus, ou « Non détectée sur le parc ») ; une machine interne par nom, adresse IP ou
+  système ; un actif exposé par nom de domaine ou adresse IP ; une application (produit surveillé, technologie
+  d'AlgoLightHouse, contrôle de Tenable) avec les machines ou actifs qui la portent. Huit résultats au plus par groupe avec
+  leur nombre total, « tout voir » vers la liste filtrée, chaque résultat ouvre la page existante ; un identifiant CVE inconnu
+  de la veille locale est signalé, sans consultation extérieure. Mêmes droits que les listes ; clavier et lecteurs d'écran.
+  (session « Module surveillance vulnérabilités SMSI »)
+
+### Modifié
+
+- **Frises (vue Timeline) du plan d'actions et des tâches récurrentes refaites** (décisions du RSSI du 20/11/2026, sur
+  maquettes). Colonnes à gauche (action ou série, responsable, échéance, état ou rythme, prochaine, dernier résultat),
+  frise à droite avec la ligne « Aujourd'hui », et pied qui compte les échéances ou occurrences de chaque période.
+  Plan d'actions : groupes repliables (« Regrouper par » priorité, responsable, état ou aucun), échelles Semaines, Mois,
+  Trimestres ou Année, actions en tubes de la teinte de leur état ; une action sans date de début part de sa date de
+  création ; terminées et annulées masquées par défaut, avec leurs interrupteurs. Tâches récurrentes : occurrences en
+  icônes de verre (carré vert OK, losange rouge KO, carré gris NA, carré orange « résultat attendu », carré pointillé « à
+  venir », triangle rouge dont la lueur pulse pour le retard, fixe si les animations sont réduites) ; actions hors série
+  repliées. Infobulle au survol (intitulé, dates, état), ligne survolée teintée de bleu nuit, jours de fond dans la
+  légende. Aucune occurrence n'est inventée, et les dates incohérentes restent listées.
+- **Boîte d'outils et en-tête des pages de tâches en verre « maintenance », bleu nuit à l'essai en clair** (choix du RSSI du
+  20/11/2026). En mode clair, la boîte d'outils (vues, recherche, filtres) n'est plus fondue dans le fond blanc : elle
+  devient un bloc clair, au contour fin teinté de violet, avec un léger fondu à gauche et une ombre douce. Un réglage à
+  l'essai, « Boîte d'outils en mode clair », dans Mon compte > Affichage, garde au choix ce bloc clair (par défaut) ou
+  le bloc bleu nuit du mode sombre. Le réglage sera retiré une fois la forme choisie. Puis, sur choix du RSSI du même jour,
+  l'en-tête des pages de tâches (Plan d'actions, Tâches récurrentes) prend le verre de la page de maintenance, sans changer
+  les formes : cartes de synthèse avec un liseré épais de leur teinte à gauche, des bords teintés de violet, un dégradé en
+  biais et un trait lumineux. La boîte d'outils prend un liseré à gauche (violet en clair, bleu du menu en sombre) et les
+  boutons d'ajout un liseré intérieur et une ombre portée. Aucune migration.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+- Vulnérabilités, **règles de priorité** (lot PRIO-1, décisions du RSSI des 19 et 20/11/2026,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : une faille présente sur une machine en fin de support gagne un cran
+  (P1 reste P1), fait cité dans l'explication, sauf le contrôle de fin de support lui-même, et sans cumul avec la majoration
+  par une machine interne vulnérable (un cran au plus) ; à priorité égale, les failles utilisées par des rançongiciels
+  passent devant dans les listes et les cibles de la vue d'ensemble ; une faille P1 sous exception garde son alerte critique, marquée « Risque
+  accepté », sans nouvelle notification (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **libellés** (lot PRIO-1) : le mot « zero-day » est réservé à une faille exploitée sans correctif connu ; une
+  faille exploitée qui a un correctif (ou dont le correctif n'est pas renseigné) est dite « exploitation avérée » ;
+  « Logiciel malveillant (Tenable) » dans les listes, terme officiel de Tenable « Exploited by malware » dans la fiche ; la
+  tuile « Exploitées et présentes » de la vue d'ensemble compte les failles exploitées (et non plus toutes les P1) (session
+  « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **fréquences** (lot PRIO-1) : « Collecter maintenant » respecte aussi le plancher de deux heures de NVD ;
+  une source passe « En retard » après trois périodes sans collecte réussie ; une remise à vide du travail garde les
+  fréquences choisies de la veille (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **rapport de pilotage** (décision du RSSI du 20/11/2026
+, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+  les failles critiques sont listées présentes depuis le plus longtemps d'abord, et les dépassements de même échéance dans
+  le même ordre ; au-delà de 200 lignes, ce sont les plus anciennes qui restent affichées. Les totaux ne changent pas
+  (session « Module surveillance vulnérabilités SMSI »).
+- Base de données : cache partagé porté de 128 à 256 Mo, mémoire de tri de 4 à 16 Mo, estimation du cache disponible ramenée
+  à la taille du conteneur (768 Mo) et compilation à la volée (JIT) coupée, paramètres du service `db` dans
+  `docker-compose.yml` (décision du RSSI du 20/11/2026). Le banc du 19/11 mesurait jusqu'à 1,6 s de compilation par requête
+  sur les vulnérabilités et 4 Go de fichiers temporaires de tri. (session « Projet audit_suivi Coeur »)
+- Audit des dépendances : l'exception sur `picomatch` (GHSA-fc5q-39xc-vjpf, [ADR 0063](docs/adr/0063-chaine-de-publication-durcie.md))
+  est retirée, l'avis n'étant plus signalé pour la version en place ; il ne reste que l'exception sur `minimatch`.
+  (session « Module surveillance vulnérabilités SMSI »)
+- **Fenêtres : coins arrondis, taille automatique, style à l'essai ; fenêtre « Mises à jour et versions » revue**
+  (décisions du RSSI du 19/11/2026, addendum à l'[ADR 0093](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)). Le
+  cadre « Biseau » (coins coupés) des fenêtres et panneaux latéraux, présentation « Périmètre et contexte » comprise, est
+  remplacé par des coins arrondis, un trait gris discret et une fine barre d'accent dégradée violet → cyan en haut (style
+  « Barre d'accent », par défaut) ; le style « Liseré dégradé » (liseré sur tout le contour) est à l'essai, choisi pour toute
+  l'instance dans Plateforme > Apparence, « Fenêtres (essai) » (réglage d'apparence `fenetres`, sans migration, même droit
+  que l'apparence, journal d'audit et If-Match), avant d'en garder un seul. Taille automatique : la taille demandée sert de
+  largeur de base, une fenêtre qui contient un tableau s'élargit jusqu'à la largeur de son contenu, jamais plus de 92 % de
+  la largeur ni 90 % de la hauteur de l'écran, pleine largeur sur téléphone ; seul le corps défile, verticalement, titre,
+  fermeture et boutons restant visibles. « Mises à jour et versions » reprend la composition de la page de maintenance dans
+  le thème de l'application (versions installée et disponible, pastille d'état) et ne montre plus que les trois derniers
+  reçus d'installation ; l'historique de l'ancienne interface devient « Instantanés de l'état de suivi », dans la carte
+  « Sauvegardes et restauration » (Télécharger et Restaurer inchangés). Aucune action sur le serveur. (session « Projet
+  audit_suivi Coeur »)
+- Vulnérabilités, imports de fichiers (Nessus, Silène) : les statistiques des tables réécrites sont recalculées à la fin d'un
+  import, comme après une synchronisation reçue de Security Center ou d'AlgoLightHouse, sans jamais faire échouer l'import.
+  (session « Module surveillance vulnérabilités SMSI »)
+- Intégrations, **limite des imports de scans Nessus** (lot N2, décision du RSSI du 19/11/2026) : trente fichiers commencés par
+  heure et par personne au lieu de dix ; le refus le dit (« Trop d'imports de fichiers commencés (30 par heure). Réessayez
+  dans une heure. ») dans une alerte « Import refusé » de la fenêtre d'import, qui reste ouverte. (session « Module
+  surveillance vulnérabilités SMSI »)
+- **Onglets aux couleurs du menu, une seule forme sur toute la plateforme, à l'essai** (décisions du RSSI du 19/11/2026,
+  sur maquettes ; [docs/refonte-neon/ONGLETS-BLEU-MENU.md](docs/refonte-neon/ONGLETS-BLEU-MENU.md)). Deux formes sont à
+  l'essai : une barre bleu nuit avec l'onglet actif en bleu du menu (par défaut), ou des pastilles avec l'onglet actif en bleu
+  nuit. Chaque personne choisit dans Mon compte > Affichage, « Onglets de page (essai) » (préférence d'affichage
+  `onglets`, facultative, enregistrée sur le serveur). La forme s'applique à tous les onglets horizontaux : rubriques sous le
+  titre des pages, onglets des pages et des fenêtres, sélecteur de vues des objectifs, présentations du contexte, RETEX et
+  Assistant RSSI. Les onglets verticaux ne changent pas. La forme écartée, la préférence et son réglage seront retirés une
+  fois le choix fait. Aucune migration. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Police Lexend, liens et sélecteurs redessinés sur toute la plateforme** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [docs/refonte-neon/TYPOGRAPHIE-LEXEND.md](docs/refonte-neon/TYPOGRAPHIE-LEXEND.md)). Lexend remplace Inter, hébergée par
+  la plateforme (SIL OFL), y compris dans l'Assistant RSSI et la page de maintenance des mises à jour. Texte courant sans
+  resserrement, titres moins gras (600) et graisse intermédiaire à 500. Les liens prennent le bleu du menu, avec un
+  soulignement fin et pâle qui fonce au survol ou au focus, au lieu du bleu souligné du navigateur ou des pastilles des
+  fenêtres. Les sélecteurs segmentés (« Par faille / Par machine », densité, thème…) perdent leur fond gris : un simple
+  contour, et le choix actif en bleu nuit du menu avec un reflet bleu transparent et un liseré, sans lumière animée.
+  Aucune migration, aucune API. _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableau de bord unique de l'accueil, au style de la vue analytique** (décisions du RSSI du 19/11/2026, sur maquettes ;
+  [ADR 0108](docs/adr/0108-tableau-de-bord-unique.md), [docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md](docs/refonte-neon/TABLEAU-DE-BORD-UNIQUE.md)).
+  La vue analytique et le tableau personnalisable ne font plus qu'un : par défaut la disposition de la vue analytique,
+  modifiable par « Modifier la disposition ». Toutes les dalles prennent le cadre et les chiffres des cartes Neon, avec la
+  flèche de détail. En modification : « + Ajouter une dalle » ouvre le catalogue de toutes les dalles par famille (Pilotage,
+  Conformité, Écarts et actions, Risques et incidents), une dalle déjà affichée s'ajoute encore en copie ; le bord droit
+  règle la largeur, le bord bas la hauteur, le coin les deux, aimantés avec une étiquette de taille ; listes et flèches du
+  clavier en alternative ; l'aimant comble aussi les creux laissés par une dalle haute. La hauteur est un minimum : le
+  contenu reste toujours visible. Aucune migration (champs facultatifs `cle` et `hauteur` dans la disposition).
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Tableaux de bord multiples de l'accueil et publication pour tous** (décisions du RSSI du 20/11/2026, sur maquettes ;
+  [ADR 0109](docs/adr/0109-tableaux-de-bord-multiples-et-mode-public.md)). Chacun crée ses tableaux nommés (20 au plus),
+  et garde à gauche de l'en-tête un encart de 5 favoris au plus (« Global » d'office), réordonnés en les glissant comme
+  les rubriques du menu ; le premier s'ouvre à l'arrivée. L'encart prend la place du filtre des référentiels « Global /
+  ISO / HDS », retiré. Un bouton déroulant ⌄ liste tous ses tableaux (les siens, proposés d'office, partagés, publics),
+  avec « + » et « − » pour les favoris ; un tableau ouvert hors favoris affiche son nom et son descriptif en haut ; un
+  tableau d'un autre reste celui de son auteur, en lecture seule. Un petit « + » crée un tableau (vide, disposition
+  standard, ou copie d'un de ses tableaux ou d'un tableau public). La recherche des dalles devient une loupe, les exports
+  une icône. Tableaux
+  proposés d'office : Global, Suivi SMSI, et bientôt Vulnérabilités (RSSI) et Suivi réglementaire. Partage avec des
+  personnes, des groupes ou des rôles. Le droit « Publier pour tous » (action « Administrer » du module « Tableau de
+  bord », rôles RSSI et Administrateur d'office) publie un tableau pour tous et ouvre aux destinataires les chiffres et
+  graphiques de son auteur, registres restreints compris, en liste blanche côté serveur ; les listes nommées, le journal
+  d'audit et les registres restent selon les droits de chacun. Publication, retrait et suspension journalisés.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
+- **Intégrations : configuration dans la page Plateforme, et nulle part ailleurs** (décision du RSSI du 19/11/2026,
+  addendum de l'[ADR 0076](docs/adr/0076-module-integrations.md) ; lot I1 de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)).
+  L'écran des intégrations (connecteurs, clés, test de connexion, « Synchroniser maintenant » de Tenable et d'AlgoLightHouse,
+  exécutions) devient la carte « Intégrations » de la page Plateforme, avec le même droit (lecture du module Intégrations) ;
+  la rubrique du menu Pilotage disparaît et `/integrations` redirige vers la carte. « Failles détectées », « Surface
+  externe » et « Vue d'ensemble » ne montrent plus que l'état du connecteur en lecture seule (dernière synchronisation,
+  erreur éventuelle) et un lien « Configurer l'intégration », visible seulement de qui peut administrer les intégrations
+  (décision du RSSI du 19/11/2026, livrée avec le lot F1 : lire sans administrer montre l'état, pas le lien). Après « Collecter
+  maintenant », l'écran « Veille » précise que seules les sources de la veille sont concernées. Échap dans une fenêtre
+  ouverte depuis une carte de la Plateforme ou de la Configuration système ne ferme plus que cette fenêtre. Aucune
+  migration, aucune route d'API. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, écran « Machines » : la recherche ignore la casse et trouve aussi une machine par le début de son adresse IP
+  (ou l'adresse exacte) et par son système, comme la barre de recherche du module ; les pages « Veille », « Machines »,
+  « Surface externe », « Produits surveillés » et « Failles détectées » s'ouvrent sur une recherche ou une fiche donnée par
+  leur adresse. (session « Module surveillance vulnérabilités SMSI »)
+
+### Corrigé
+
+- Vulnérabilités, **lectures rapides sur un grand parc** (défauts PERF-01 à PERF-04 du banc de performance du 19/11/2026,
+  addendum « lot PERF » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : les périmètres visibles sont lus une fois
+  par requête au lieu d'une fois par détection ; la liste des failles détectées ne lit le résumé complet que pour la page
+  rendue ; la liste et la fiche des machines n'ont plus de sous-requête par machine ; la recherche range les CVE en une
+  lecture. Sur un jeu fictif de 1 000 machines et 114 000 détections (poste de développement) : liste des failles 3,9 s →
+  0,5 s (RSSI), machines 4,9 s → 0,4 s, fiche d'une machine 5,0 s → 0,2 s, recherche 4,5 s → 0,2 s, vue d'ensemble 1,6 s →
+  1,3 s (95e centile). Mêmes réponses, mêmes droits ; aucune migration. Nouveau test de non-régression
+  `performance-vulnerabilites`. (session « Module surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **ordre du calcul global fixé et calcul réécrit** (PERF-04, décision du RSSI du 20/11/2026, addendum
+  « lot PERF-04 » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : à priorité égale, les faits affichés d'une
+  faille venaient du premier contrôle lu dans l'ordre physique de la base, qui pouvait changer seul ; ils viennent désormais
+  du contrôle détecté le plus récemment, puis du plus petit identifiant (règle `comparerControlesGlobal` du paquet partagé).
+  Le calcul lit les constats présents en un agrégat (plus de compilation JIT) : sur le jeu fictif du banc, vue d'ensemble
+  1,6 s → 0,8 s et évaluation des alertes 1,3 s → 0,6 s (95e centile), même nombre de requêtes. Priorités, niveaux
+  d'alerte, compteurs et droits inchangés. Budget de CI de la vue d'ensemble ramené de 2,4 s à 1,5 s. (session « Module
+  surveillance vulnérabilités SMSI »)
+- Vulnérabilités, **outils de l'assistant RSSI** (lot ASSISTANT-V1, décisions du RSSI du 20/11/2026, addendum de
+  l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : « failles prioritaires » ne lisait que les constats de Tenable et
+  les failles déclarées, dans un ordre à lui ; il rend désormais les failles du tableau « Cibles par priorité » de la vue
+  d'ensemble, dans le même ordre, avec les mêmes droits de lecture, et signale les produits à confirmer. « Machines
+  prioritaires » rend aussi les actifs exposés sur Internet, sous des repères `E-001…`, après les machines. Dans
+  « Évaluer une CVE », la rubrique « Quoi faire » ne renvoie plus à d'autres parties du résultat : elle donne le contenu
+  publié par chaque source (catalogue KEV, CERT Santé, Tenable, éditeur de la surface externe), avec la source nommée,
+  omet une source sans contenu et dit « aucun correctif publié par les sources lues » quand aucune n'en publie. Le nombre
+  d'éléments journalisé suit ce que chaque outil rend. Toujours aucun nom de machine, adresse, domaine, rôle ni périmètre
+  vers le modèle ; aucune migration. (session « Module surveillance vulnérabilités SMSI »)
+- Page de maintenance, **barre de téléchargement gardée pleine pendant la vérification des signatures** (décision du RSSI du
+  19/11/2026, addendum de l'[ADR 0104](docs/adr/0104-progression-reelle-du-telechargement.md)) : une fois les images reçues,
+  l'étape « Préparation » continue (signatures cosign, attestations SBOM, révision des sources), mais l'exécutant retirait la
+  mesure et la page repassait à l'animation décorative sans chiffre, comme si le téléchargement reprenait ; la dernière valeur
+  pouvait aussi être retenue par la limite d'une publication par seconde. L'exécutant publie désormais aussitôt la valeur
+  finale et la garde jusqu'à la sortie de l'étape de préparation (retirée à la sauvegarde, à la reprise, à la clôture, sur
+  échec ou repli sur `docker pull`). La page garde la barre pleine « 100 % · X / X Mo » avec la mention « Téléchargement
+  terminé — vérification des signatures », lue aussi par les technologies d'assistance, et un petit sceau qui pulse (immobile
+  en mouvement réduit), sans pourcentage, débit ni durée de la vérification. (session « Projet audit_suivi Coeur »)
+- **Cellule de crise : erreur interne pour un compte sans périmètre** : la lecture des cellules, contacts et scénarios de
+  crise répondait « Erreur interne » à une personne qui lit les incidents sans être rattachée à aucun périmètre ; elle
+  reçoit désormais des listes vides (ADR 0095). _(Session « Refonte Neon suivi-audits ».)_
+- **Statistiques de PostgreSQL recalculées après une restauration et après une synchronisation de vulnérabilités**
+  (décision du RSSI du 19/11/2026) : `pg_restore` ne restaure pas les statistiques du planificateur, et une synchronisation
+  de Tenable Security Center ou d'AlgoLightHouse réécrit chaque ligne de ses tables ; jusqu'au passage de l'autovacuum,
+  PostgreSQL pouvait choisir de mauvais plans (pages lentes dans les premières minutes). `scripts/restore.sh` et la migration
+  du moteur PostgreSQL 17 vers 18 lancent un `ANALYZE` de la base après la restauration réussie, avant la remise en service
+  (quelques secondes de plus) ; la fin reçue d'une synchronisation qui a rangé au moins un élément lance, après la validation,
+  un `ANALYZE` des seules tables réécrites par ses lots, par le rôle applicatif propriétaire des tables. Un `ANALYZE` en échec
+  n'est qu'un avertissement (journal technique, sans donnée) : la restauration ou la synchronisation reste réussie. Les
+  actifs exposés d'une CVE (repères « E-… » de l'assistant) sont aussi rangés dans un ordre stable, qui dépendait du plan
+  choisi par PostgreSQL. Sans migration, aucune action. (session « Projet audit_suivi Coeur »)
+
+### Retiré
+
+- Scripts PowerShell d'essai de `scripts/dev` (exemples Tenable et AlgoLightHouse, résumé ADS, anonymisation, contrôles
+  par CVE, ports AlgoLightHouse) : retirés du dépôt à la demande du RSSI, qui les conserve hors du dépôt. Aucun effet sur
+  l'application. (session « Projet audit_suivi Coeur »)
+
+
 ## [7.4.0] — 2026-11-19
 
 ### Notes de mise à jour

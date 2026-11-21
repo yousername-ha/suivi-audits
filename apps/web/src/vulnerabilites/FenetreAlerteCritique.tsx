@@ -15,6 +15,7 @@ import { Button, FocusTrap, Group, Portal } from '@mantine/core';
 import {
   type AlerteVulnerabiliteDto,
   type FenetreAlertesDto,
+  MARQUE_RISQUE_ACCEPTE,
   PRISE_EN_COMPTE_RESERVEE,
   resumeNombreLisible,
 } from '@suivi/shared';
@@ -38,6 +39,8 @@ import {
   urlFenetre,
   urlPriseEnCompte,
 } from './alertes';
+import { PictosSources } from './PictoSource';
+import { pictosExploitation } from './pictos-sources';
 
 /** Fait principal de la présence, en nombre que la personne lit. */
 function presence(a: AlerteVulnerabiliteDto): { libelle: string; valeur: string; detail: string } {
@@ -112,9 +115,13 @@ export function FenetreAlerteCritiqueVue({
             </svg>
           </span>
           <div>
-            <p className="ac-kicker">Alerte critique · priorité {a.priorite.niveau}</p>
+            <p className="ac-kicker">
+              Alerte critique · priorité {a.priorite.niveau}
+              {a.risqueAccepte ? ` · ${MARQUE_RISQUE_ACCEPTE.toLowerCase()}` : ''}
+            </p>
             <h2 className="ac-titre" id={`${id}-titre`}>
-              Faille exploitée présente chez nous
+              {/* Lot PRIO-1 : une faille peut monter en P1 par la fin de support, sans exploitation avérée. */}
+              {a.exploitation.length ? 'Faille exploitée présente chez nous' : 'Faille P1 présente chez nous'}
             </h2>
             <p className="ac-sous" id={`${id}-description`}>
               <b lang={a.cve ? 'en' : undefined}>{a.titre}</b> · <span className="veille-code">{libelleFaille(a)}</span>
@@ -135,7 +142,9 @@ export function FenetreAlerteCritiqueVue({
             <dt>Exploitation</dt>
             <dd>
               <strong>Avérée</strong>
-              <small>{libelleExploitation(a)}</small>
+              <small>
+                <PictosSources sources={pictosExploitation(a.exploitation)} decoratif /> {libelleExploitation(a)}
+              </small>
             </dd>
           </div>
           <div>

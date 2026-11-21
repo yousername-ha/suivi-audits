@@ -36,7 +36,6 @@ const INVENTAIRE = [
   'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
   'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
-  'pilotage|integrations|integrations|/integrations|integrations|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
@@ -47,6 +46,7 @@ const INVENTAIRE = [
   'risques|vulnerabilites|vulnerabilites-machines|/vulnerabilites/machines|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-perimetres|/vulnerabilites/perimetres|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-surface|/vulnerabilites/surface-externe|vulnerabilites|lire',
+  'risques|vulnerabilites|vulnerabilites-annuaire|/vulnerabilites/annuaire|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-alertes|/vulnerabilites/alertes|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-delais|/vulnerabilites/delais|vulnerabilites|lire',
   'risques|vulnerabilites|vulnerabilites-tendances|/vulnerabilites/tendances|vulnerabilites|lire',
@@ -67,6 +67,7 @@ const INVENTAIRE = [
   'conformite|audits|audits|/pilotage/audits|plan_audit|lire',
   'conformite|preuves|preuves|/pilotage/preuves|documents|lire',
   'conformite|preuves|controles|/pilotage/controles|pilotage|lire',
+  'conformite|veille-reglementaire|veille-reglementaire|/veille-reglementaire|veille_reglementaire|lire',
   'actions|amelioration|amelioration|/pilotage/amelioration|ecarts|lire',
   'actions|plan-actions|actions|/pilotage/actions|ecarts|lire',
   'actions|recurrences|recurrences|/pilotage/recurrences|ecarts|lire',
@@ -160,14 +161,9 @@ describe('navigation', () => {
     expect(rappels?.rubriques.map((r) => [r.id, r.to, r.module, r.action])).toEqual([
       ['rappels', '/pilotage/rappels', 'pilotage', 'lire'],
     ]);
-    expect(pilotage?.destinations.map((d) => d.id)).toEqual([
-      'synthese',
-      'parcours',
-      'objectifs',
-      'revues',
-      'rappels',
-      'integrations',
-    ]);
+    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues', 'rappels']);
+    // Intégrations (ADR 0076, addendum du 19/11/2026) : carte de la page Plateforme, plus au menu Pilotage.
+    expect(rubriques.some((r) => r.id === 'integrations' || r.to === '/integrations')).toBe(false);
     expect(rubriques.some((r) => r.id === 'configuration' || r.to === '/pilotage/configuration')).toBe(false);
     expect(localiser('/pilotage/rappels')).toMatchObject({
       famille: { id: 'pilotage' },

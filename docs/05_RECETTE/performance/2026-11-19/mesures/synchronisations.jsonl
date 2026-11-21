@@ -1,0 +1,2 @@
+{"date":"2026-11-19T20:34:17.327Z","machines":1000,"constats":3000,"detections":20000,"elements":24000,"lots":48,"claimMs":984,"lotsMs":53793,"finishMs":1648,"totalMs":56425,"lotMedianeMs":1115,"lotP95Ms":1310,"lotMaxMs":1506}
+{"date":"2026-11-19T21:55:09.196Z","machines":1000,"constats":3000,"detections":20000,"elements":24000,"lots":48,"claimMs":949,"lotsMs":54801,"finishMs":21015,"totalMs":76765,"lotMedianeMs":1105,"lotP95Ms":1521,"lotMaxMs":1581}

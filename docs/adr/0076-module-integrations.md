@@ -223,7 +223,47 @@ ailleurs. Ce point remplace le placement du point 12 (rubrique « Intégrations 
   la rubrique « Intégrations » du menu Pilotage disparaît, et son ancienne adresse redirige vers la nouvelle.
 - Les outils qui exploitent une intégration (module Vulnérabilités : failles détectées, surface externe, vue d'ensemble, et
   tout outil à venir) n'affichent plus que :
-  - un **lien** « Configurer l'intégration » vers la carte de la plateforme, visible de qui a le droit de la voir ;
+  - un **lien** « Configurer l'intégration » vers la carte de la plateforme, visible de qui a le droit de la voir (précisé
+    par le RSSI le 19/11/2026 : de qui peut administrer les intégrations, `integrations:administrer`) ;
   - l'**état en lecture seule** : date de la dernière synchronisation, et si elle est en erreur.
   Aucun réglage, aucune clé, aucun bouton de test ni de synchronisation dans les outils.
 - Réalisation confiée à la session « Module surveillance vulnérabilités SMSI », qui modifie ces écrans.
+
+**Réalisé** le 19/11/2026 sur `claude/hopeful-dijkstra-s1b9d2` (lot I1 de l'[ADR 0100](0100-module-vulnerabilites.md), sans
+migration ni changement d'API) : carte « Intégrations » de la page Plateforme (droit `integrations:lire`), rubrique du menu
+Pilotage retirée, `/integrations` redirigé vers `/plateforme/integrations` ; dans « Failles détectées », « Surface externe » et
+« Vue d'ensemble », état en lecture seule et lien « Configurer l'intégration » (composant commun `EtatIntegration`). Détail,
+frontière des réglages et points à valider : addendum « lot I1 » de l'ADR 0100.
+
+**Lot F1** (19/11/2026, décision du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot F1 ») : chaque instance de
+connecteur porte sa **fréquence de synchronisation automatique**, réglée dans la fenêtre « Configurer » de la carte
+« Intégrations » (même droit `integrations:administrer`, même If-Match sur la version de l'instance, colonne
+`integrations.frequence_heures` de la migration `090`, liste fermée par type contrôlée en base) : Tenable Security Center 6 h,
+12 h, 24 h ou 7 jours, AlgoLightHouse 12 h, 24 h ou 7 jours, 24 h par défaut ; avertissement affiché sous 24 h, sans blocage.
+Les outils n'en montrent que la valeur et la prochaine synchronisation prévue, en lecture seule. Le lien « Configurer
+l'intégration » des outils n'est plus visible que de qui peut administrer les intégrations.
+
+**Lot N1** (19/11/2026, décision du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot N1 ») : le catalogue
+compte un **type sans réseau**, `nessus-fichier` (« Nessus, import de fichier »), de portée `organisation` : ni adresse, ni
+clé, ni flux sortant (`flux: null`, aucune entrée au registre de l'ADR 0097), ni exécutant (le type n'est connu ni de
+`scripts/integration-http.py` ni de `scripts/exploitation-worker.py` ; un test d'architecture le vérifie), ni fréquence
+(colonne `frequence_heures` toujours NULL, contrainte de la migration `090` inchangée). Une seule opération, **« Importer un
+scan »**, dans la tuile de l'instance de la carte « Intégrations », avec le droit `integrations:administrer` ; activer ou
+désactiver l'instance n'ouvre ni ne ferme aucun flux. L'import est une exécution de l'instance (opération `importer`),
+inscrite « en cours » par l'API au début de l'import, hors de la file de l'exécutant (le ménage de la file ne la touche pas),
+visible dans « Exécutions ». Le point 4 (fichiers traités par l'API) ne s'applique pas à ce type : le fichier est lu dans le
+navigateur et l'API ne reçoit qu'un extrait JSON revalidé.
+
+**Lot SI1** (19/11/2026, décisions du RSSI, [ADR 0100](0100-module-vulnerabilites.md), addendum « lot SI1 ») : la décision R3
+(« Silène : import de fichier JSON ») est **réalisée** pour la surface exposée, sous la forme du lot N1 et non du point 4 : le
+catalogue compte un second **type sans réseau**, `silene-fichier` (« Silène, import de fichier »), de portée `organisation`
+(et non `smsi` comme prévu par l'addendum du 16/11/2026 : ce qu'il importe est rattaché à un périmètre par l'écran
+« Périmètres » du module Vulnérabilités, comme AlgoLightHouse), sans adresse, clé, réglage, flux ni exécutant, sans fréquence.
+Une seule opération, **« Importer un rapport »** (`importer`, libellé propre au type), droit `integrations:administrer` ; le
+rapport JSON est lu dans le **navigateur** et l'API ne reçoit qu'un extrait en liste blanche revalidé (ni certificat, ni
+en-tête HTTP, ni sortie de sonde, ni géolocalisation, ni passage précédent, ni nom de fichier) ; ce qu'il apporte va au module
+Vulnérabilités (surface externe, à côté d'AlgoLightHouse), **pas** aux écarts : le moteur d'écarts de Tenacy n'est pas utilisé
+et le point 3 ne s'applique pas à ce type. Suppression du connecteur et de ce qu'il a importé comme pour Nessus. **Non
+réalisé** : la tuile au logo de l'ANSSI (R16 ; la tuile garde le pictogramme neutre, la pastille du module est dessinée pour
+la charte, sans logo), et le schéma écrit « à partir d'un exemple anonymisé fourni par le RSSI » (point 4) : le format a été
+écrit d'après un relevé des seuls noms de champs, types et nombres d'un export réel, aucune valeur n'en est connue.

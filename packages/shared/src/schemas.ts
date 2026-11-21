@@ -6,6 +6,7 @@ import { Preferences as PreferencesSchema } from './affichage.js';
 import { PoivreAEnregistrer } from './poivre.js';
 import { CleSecoursAEnregistrer } from './cle-secours.js';
 import { AdresseSite } from './adresse-site.js';
+import { FENETRES } from './settings.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
 export const CLASSIFICATIONS = ['public', 'interne', 'restreint', 'confidentiel'] as const;
@@ -111,6 +112,8 @@ export const MeOut = z.object({
     theme: z.enum(['auto', 'clair', 'sombre']),
     densite: z.enum(['compacte', 'normale', 'confortable']),
     style: z.enum(['sage', 'clair']),
+    /** Style des fenêtres à l'essai (addendum du 19/11/2026 à l'ADR 0093). */
+    fenetres: z.enum(FENETRES),
   }),
   /** Préférences d'affichage de la personne (null avant la connexion). */
   preferences: PreferencesSchema.nullable(),

@@ -1,7 +1,9 @@
 /* Indépendant de React, de l'API et de la base. Pas de progression artificielle : l'illustration, le rang et les libellés
    de présentation découlent de l'état publié ; ils ne font jamais avancer d'étape et ne simulent ni pourcentage, ni débit,
    ni durée, ni ligne de journal. Seul pourcentage affiché : celui du téléchargement, calculé sur les octets reçus mesurés et
-   publiés par l'exécutant (ADR 0104). */
+   publiés par l'exécutant (ADR 0104). Reçu égal au total, valeur que l'exécutant garde publiée pendant la vérification des
+   signatures qui suit (addendum du 19/11/2026) : barre pleine, mention écrite dans la page et sceau animé ; l'animation ne dit
+   que l'attente de cette vérification, sans pourcentage, débit ni durée. */
 (() => {
   // Thème sombre seul, fixé dans la page (décision du RSSI du 15/11/2026).
   const root = document.documentElement;
@@ -47,6 +49,7 @@
   // Progression mesurée du téléchargement (ADR 0104) : pendant l'illustration « download » et pour une donnée cohérente
   // (entiers, total positif, reçu entre zéro et le total) ; sinon, barre décorative et aucun chiffre. Tailles en Mo (10^6
   // octets), en Ko sous 1 Mo ; une décimale sous 10. Le reçu est arrondi par défaut : il n'atteint le total qu'à la fin.
+  // Reçu égal au total : « termine », mention « Téléchargement terminé — vérification des signatures » affichée.
   const LARGEUR_BARRE = 164;
   const nombre = (valeur, arrondi) =>
     valeur < 10
@@ -68,8 +71,10 @@
       t.total > 0 &&
       t.recu >= 0 &&
       t.recu <= t.total;
+    const mention = get('telechargement-termine');
     if (!valide) {
       delete root.dataset.telechargement;
+      mention.hidden = true;
       barre.hidden = true;
       attribut(barre, 'aria-valuenow', null);
       attribut(barre, 'aria-valuetext', null);
@@ -81,10 +86,16 @@
     const [unite, octets] = t.total >= 1e6 ? ['Mo', 1e6] : ['Ko', 1e3];
     const total = nombre(t.total / octets, Math.round);
     const recu = t.recu === t.total ? total : nombre(t.recu / octets, Math.floor);
-    root.dataset.telechargement = 'mesure';
+    const termine = t.recu === t.total;
+    root.dataset.telechargement = termine ? 'termine' : 'mesure';
+    mention.hidden = !termine;
     ecrire('telechargement-valeur', `${pourcent} % · ${recu} / ${total} ${unite}`);
     attribut(barre, 'aria-valuenow', String(pourcent));
-    attribut(barre, 'aria-valuetext', `${pourcent} %, ${recu} ${unite} sur ${total} ${unite}`);
+    attribut(
+      barre,
+      'aria-valuetext',
+      `${pourcent} %, ${recu} ${unite} sur ${total} ${unite}${termine ? ', téléchargement terminé, vérification des signatures' : ''}`,
+    );
     barre.hidden = false;
     attribut(get('transfer-fill'), 'width', String(Math.round((LARGEUR_BARRE * 100 * t.recu) / t.total) / 100));
   }

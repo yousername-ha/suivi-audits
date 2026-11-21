@@ -21,7 +21,8 @@ import {
   resumePublications,
 } from '../src/vulnerabilites/sources';
 import { MarquesSources, SourcesFaille } from '../src/vulnerabilites/SourcesFaille';
-import { AvisTable, FaillesTable, FichesCertSante } from '../src/vulnerabilites/Veille';
+import { ListeAvis } from '../src/vulnerabilites/AvisVeille';
+import { FichesCertSante, ListeFailles } from '../src/vulnerabilites/Veille';
 
 const rendu = (e: ReactElement) => renderToStaticMarkup(createElement(MantineProvider, null, e));
 const rien = () => undefined;
@@ -151,6 +152,7 @@ describe('rendu', () => {
     ).toContain('Dernière lecture : jamais');
     const avis: AvisVeilleDto = {
       id: '00000000-0000-4000-8000-000000000a01',
+      parc: { presentes: [], exposees: [] },
       source: 'cert-sante',
       identifiant: '10351',
       nature: 'alerte',
@@ -172,10 +174,11 @@ describe('rendu', () => {
         preuveLe: null,
       },
     };
-    const html = rendu(createElement(AvisTable, { avis: [avis] }));
+    const html = rendu(createElement(ListeAvis, { avis: [avis] }));
     expect(html).toContain('Produit cité : Produit &lt;b&gt;fictif&lt;/b&gt;');
-    expect(html).toContain('Activement exploitée : Oui');
-    expect(html).toContain('Une mesure de contournement existe : Non renseignée');
+    // Lot L1 : mentions en liste de définitions (terme, puis valeur telle quelle).
+    expect(html).toContain('<dt>Activement exploitée :</dt><dd>Oui</dd>');
+    expect(html).toContain('<dt>Une mesure de contournement existe :</dt><dd>Non renseignée</dd>');
     const faille: FailleVeilleDto = {
       cve: 'CVE-2026-0004',
       description: null,
@@ -192,7 +195,7 @@ describe('rendu', () => {
       sources,
       surfaceExterne: null,
     };
-    const f = rendu(createElement(FaillesTable, { failles: [faille] }));
+    const f = rendu(createElement(ListeFailles, { failles: [faille] }));
     expect(f).toContain('Publiée par : CERT Santé (le 10/11/2026)');
     expect(f).toContain('Exploitation avérée (2 sources)');
     expect(f).toContain('Produit fictif');

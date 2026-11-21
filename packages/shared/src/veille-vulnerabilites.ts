@@ -335,8 +335,8 @@ export type RapportCollecte = z.infer<typeof RapportCollecte>;
 export const ETATS_COLLECTE = ['en_file', 'en_cours', 'recu', 'echec', 'expire'] as const;
 export type EtatCollecte = (typeof ETATS_COLLECTE)[number];
 
-/** Source sans collecte réussie depuis ce délai, alors que la veille est active : signalée en retard. */
-export const VEILLE_RETARD_HEURES = 36;
+/* Lot PRIO-1 : une source est « En retard » après trois périodes sans collecte réussie (sourceEnRetard de
+   frequences-synchronisation.ts), au lieu de 36 heures fixes. */
 
 export interface CollecteVeilleDto {
   id: string;
@@ -365,6 +365,12 @@ export interface EtatSourceVeilleDto {
   erreur: string | null;
   enRetard: boolean;
   derniereCollecte: CollecteVeilleDto | null;
+  /** Lot F1 : fréquence des collectes automatiques, en heures (réglée, sinon la valeur par défaut). */
+  frequenceHeures: number;
+  /** Prochaine collecte automatique prévue (au plus tôt maintenant) ; null si la veille est fermée. */
+  prochaineCollecte: string | null;
+  /** Version du réglage de la source (If-Match de la route de la fréquence). */
+  version: number;
 }
 
 export interface EtatVeilleDto {
@@ -422,6 +428,10 @@ export interface AvisVeilleDto {
   /** CERT Santé : produit cité par le titre, mentions de la fiche (null : fiche pas encore lue). */
   produit: string | null;
   fiche: FicheCertSanteDto | null;
+  /** Lot PRIO-1 : CVE citées qui concernent la plateforme, sur tous les faits connus (le même pour tout le monde, sans nom
+      ni nombre) : présentes sur le parc (détectées par Tenable ou déclarées par un produit surveillé rattaché) et exposées
+      sur Internet (surface externe). */
+  parc: { presentes: string[]; exposees: string[] };
 }
 
 /** Mentions de la fiche d'une publication du CERT Santé, telles quelles (null : non renseignée), et dates : lecture, premier

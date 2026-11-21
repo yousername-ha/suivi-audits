@@ -49,17 +49,31 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'rondes de l’assistant')),
       )
-      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par jour, rien si le module
+      // Veille des vulnérabilités (ADR 0100, lots V2 et V3) : au plus une collecte par source et par période réglée (lot F1), rien si le module
       // est désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
       .then(() =>
         svc.modules
           .run(true, async () => {
             if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            // Lot PRIO-1 : journal des collectes et des exécutions purgé au-delà de 90 jours, au plus une fois par heure.
+            await svc.vulnerabilites.purgeJournaux
+              .tic()
+              .catch((e: unknown) => log.warn({ err: String(e) }, 'purge des journaux des vulnérabilités'));
             await svc.vulnerabilites.veille.planifier();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
       )
-      // Synchronisation de Tenable (ADR 0100, lot V5) : une par jour et par instance active, rien si le module Intégrations
+      // Veille réglementaire (ADR 0110) : au plus une collecte par source activée et par période réglée, rien si le module est
+      // désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('veille_reglementaire')) return;
+            await svc.veilleReglementaire.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'veille réglementaire')),
+      )
+      // Synchronisation de Tenable (ADR 0100, lot V5) : une par période réglée (lot F1) et par instance active, rien si le module Intégrations
       // ou le module Vulnérabilités est désactivé, ou si le flux « tenable » est fermé.
       .then(() =>
         svc.modules
@@ -70,7 +84,7 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation de Tenable')),
       )
-      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par jour et par instance active, rien si le module
+      // Synchronisation d'AlgoLightHouse (ADR 0100, lot ALH1) : une par période réglée (lot F1) et par instance active, rien si le module
       // Intégrations ou le module Vulnérabilités est désactivé, ou si le flux « algolighthouse » est fermé.
       .then(() =>
         svc.modules
@@ -80,6 +94,18 @@ async function main() {
             await svc.vulnerabilites.surfaceExterne.planifier();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'synchronisation d’AlgoLightHouse')),
+      )
+      // Imports de scans Nessus et de rapports Silène abandonnés (ADR 0100, lots N1 et SI1) : clos après trente minutes sans
+      // lot. Rien si le module est désactivé.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('vulnerabilites')) return;
+            await svc.vulnerabilites.importNessus.tic();
+            // Lot SI1 : imports de rapports Silène abandonnés, même règle.
+            await svc.vulnerabilites.importSilene.tic();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'imports de fichiers')),
       )
       // Délais de correction et exceptions à échéance (ADR 0100, lot S1) : au plus une évaluation par quart d'heure ;
       // expiration et rappel des exceptions, failles entrées en dépassement, résumés notifiés. Rien si le module est

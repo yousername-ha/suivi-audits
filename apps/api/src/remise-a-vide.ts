@@ -46,6 +46,8 @@ export const TABLES_SYSTEME = [
 /** Effacé seulement par la portée « tout » : comptes, groupes, fonctions, réglages et configuration de la plateforme. */
 export const TABLES_CONFIGURATION = [
   'users',
+  // Contacts de crise issus des comptes (ADR 0107) : fiche qui complète le compte, effacée avec lui.
+  'contacts_crise_comptes',
   'sessions',
   'webauthn_credentials',
   'webauthn_challenges',
@@ -60,9 +62,12 @@ export const TABLES_CONFIGURATION = [
   'notification_reglages',
   'notification_portees',
   'wall_screens',
+  // Tableaux de bord de l'accueil (ADR 0078, 0109) : tableaux, partages et onglets de chaque personne. Les tableaux proposés
+  // d'office sont recréés depuis le code à la première lecture.
   'tableaux_de_bord',
   'tableaux_de_bord_partages',
   'tableaux_de_bord_choix',
+  'tableaux_de_bord_onglets',
   'calendriers_plateforme',
   'calendriers_plateforme_journal',
   'calendriers_plateforme_jours',
@@ -77,6 +82,12 @@ export const TABLES_CONFIGURATION = [
   // Synchronisations d'AlgoLightHouse (ADR 0100, lot ALH1) : même règle que pour Tenable.
   'vulnerabilites_alh_etat',
   'vulnerabilites_alh_synchronisations',
+  // Imports de scans Nessus (ADR 0100, lot N1) : journal rattaché aux instances et à leurs exécutions ; même règle.
+  'vulnerabilites_imports',
+  // Imports du rapport Silène (ADR 0100, lot SI1) : état des numéros et journal des imports (avec leurs notes, nombres
+  // seulement), rattachés aux instances et à leurs exécutions ; même règle.
+  'vulnerabilites_silene_etat',
+  'vulnerabilites_silene_imports',
 ] as const;
 
 /** Effacé par les deux portées : tout ce que les utilisateurs ont saisi ou importé. */
@@ -170,6 +181,12 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_veille_cve',
   'vulnerabilites_veille_avis',
   'vulnerabilites_veille_collectes',
+  // Veille réglementaire (ADR 0110) : publications collectées et leur qualification, état et réglage des sources (activation,
+  // fréquence), journal des collectes ; effacés ensemble, comme la veille des vulnérabilités. Le droit réservé
+  // « DPO » suit les rôles personnalisés qui le portent.
+  'veille_reglementaire_publications',
+  'veille_reglementaire_sources',
+  'veille_reglementaire_collectes',
   // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
   // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
   'vulnerabilites_machines',
@@ -212,6 +229,21 @@ export const TABLES_TRAVAIL = [
   // les actifs et les alertes qui les portent.
   'vulnerabilites_alh_services',
   'vulnerabilites_alh_service_alertes',
+  // Surface externe importée de Silène (ADR 0100, lot SI1) : relue au prochain import ; liaison de l'instance à un périmètre
+  // saisie par les utilisateurs, rattachée à grc_smsis (effacée avec le travail, comme celle des périmètres ALH).
+  'vulnerabilites_silene_perimetres',
+  'vulnerabilites_silene_hotes',
+  'vulnerabilites_silene_noms',
+  'vulnerabilites_silene_ports',
+  'vulnerabilites_silene_produits',
+  'vulnerabilites_silene_constats',
+  'vulnerabilites_silene_constat_hotes',
+  'vulnerabilites_silene_lignes',
+  // Rapport de l'Active Directory importé (ADR 0100, lot AD-1) : imports, points non conformes et noms des objets, relus au
+  // prochain import.
+  'vulnerabilites_ad_objets',
+  'vulnerabilites_ad_points',
+  'vulnerabilites_ad_imports',
   // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
   // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
   'vulnerabilites_alertes',
@@ -299,8 +331,21 @@ export class RemiseAVide {
       // Les triggers d'immuabilité sont suspendus le temps de l'effacement (propriétaire des tables) ; la transaction
       // les rétablit ou, en cas d'échec, annule tout.
       const touchees = [...aVider, ...(portee === 'tout' ? ['users'] : [])];
+      // Lot PRIO-1 (décision du RSSI du 20/11/2026) : la remise à vide du travail garde les fréquences choisies pour les
+      // sources de la veille (un réglage, comme celle des connecteurs, qui suit leur instance) ; l'état des sources
+      // (dernière collecte, fenêtre NVD, référence de planification) repart de zéro. La portée « tout » efface aussi la
+      // configuration : les fréquences reviennent alors aux valeurs par défaut.
+      const frequences =
+        portee === 'travail'
+          ? await k
+              .selectFrom('vulnerabilites_veille_sources')
+              .select(['source', 'frequence_heures'])
+              .where('frequence_heures', 'is not', null)
+              .execute()
+          : [];
       for (const t of touchees) await sql`ALTER TABLE ${sql.table(t)} DISABLE TRIGGER USER`.execute(k);
       await sql`TRUNCATE ${sql.join(aVider.map((t) => sql.table(t)))} RESTART IDENTITY`.execute(k);
+      if (frequences.length) await k.insertInto('vulnerabilites_veille_sources').values(frequences).execute();
       if (portee === 'tout') {
         await k.deleteFrom('users').execute();
         await k.deleteFrom('roles').where('system', '=', false).execute();

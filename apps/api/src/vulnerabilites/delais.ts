@@ -51,7 +51,7 @@ import { sourcesDesConstats } from './failles.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { tientLeRoleRssi } from './rssi.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, perimetreMachine, premiereConstat, present } from './sql.js';
+import { lisible, machinesFinSupport, perimetreMachine, premiereConstat, present } from './sql.js';
 import { aujourdhui, type DelaiObjet, type SuiviFailles } from './suivi.js';
 
 const SYSTEME = { username: 'système' };
@@ -119,27 +119,41 @@ export class DelaisVulnerabilites {
         cvss3_score: string | null;
         epss_score: string | null;
         exploitable: boolean;
+        exploite_malware: boolean;
+        kits_exploitation: string[];
+        fin_support: boolean;
         premiere: Date;
         repart: Date | null;
-      }>`SELECT c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, ${premiereConstat} AS premiere,
+      }>`SELECT c.id, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware, c.kits_exploitation,
+           ${premiereConstat} AS premiere,
+           -- Lot PRIO-1 : présent sur une machine en fin de support (un cran de plus).
+           EXISTS (SELECT 1 FROM vulnerabilites_detections d JOIN vulnerabilites_machines m ON m.id = d.machine_id
+             LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+             WHERE d.constat_id = c.id AND ${present} AND d.machine_id IN (${machinesFinSupport}))
+             AND NOT (c.fin_support_le IS NOT NULL AND c.fin_support_le <= now()) AS fin_support,
            (SELECT s.delai_repart_le FROM vulnerabilites_suivis s WHERE s.constat_id = c.id) AS repart
          FROM vulnerabilites_constats c WHERE c.id = ${id}::uuid`.execute(k);
       const c = rows[0];
       if (!c) return null;
       const sources = (await sourcesDesConstats(k, [c])).get(c.id)!;
-      priorite = calculerPriorite({ ...faitsDepuisSources(sources), presence: 'detectee' }, reglage).niveau;
+      priorite = calculerPriorite(
+        { ...faitsDepuisSources(sources), presence: 'detectee', finDeSupport: c.fin_support },
+        reglage,
+      ).niveau;
       premiere = c.premiere;
       repart = c.repart;
     } else {
-      const { rows } = await sql<{ cve: string; premiere: Date; repart: Date | null }>`
+      const { rows } = await sql<{ cve: string; premiere: Date; repart: Date | null; fin_support: boolean }>`
         SELECT r.cve, r.cree_le AS premiere,
+          EXISTS (SELECT 1 FROM vulnerabilites_produits_machines pfs
+            WHERE pfs.produit_id = r.produit_id AND pfs.machine_id IN (${machinesFinSupport})) AS fin_support,
           (SELECT s.delai_repart_le FROM vulnerabilites_suivis s WHERE s.rapprochement_id = r.id) AS repart
         FROM vulnerabilites_rapprochements r WHERE r.id = ${id}::uuid`.execute(k);
       const r = rows[0];
       if (!r) return null;
       const f = (await lireFaitsCve(k, [r.cve])).get(r.cve);
       priorite = calculerPriorite(
-        { ...faitsDepuisSources(sourcesDe(f ? [f] : [])), presence: 'declaree' },
+        { ...faitsDepuisSources(sourcesDe(f ? [f] : [])), presence: 'declaree', finDeSupport: r.fin_support },
         reglage,
       ).niveau;
       premiere = r.premiere;
@@ -213,7 +227,7 @@ export class DelaisVulnerabilites {
         c,
       );
     // Dépassements : sur tous les faits connus, après l'expiration (une faille rendue à traiter compte de nouveau).
-    const { objets, reglage } = await this.alertes.situationGlobale(k, []);
+    const { objets, reglage } = await this.alertes.situationGlobale(k, [], { titres: false, machines: false });
     const depasses = objetsEnDepassement(objets, reglage.delais, maintenant);
     const cle = (x: { nature: string; id: string }) => `${x.nature}:${x.id}`;
     const deja = new Map(

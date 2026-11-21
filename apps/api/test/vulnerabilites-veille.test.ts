@@ -541,9 +541,10 @@ describe('recherche', () => {
 });
 
 describe('planification et fréquence', () => {
-  it('une collecte par source et par jour, EPSS après les autres ; créneau consommé, pas de rejeu après panne', async () => {
+  it('une collecte par source et par période (deux heures par défaut), EPSS après les autres ; référence consommée, pas de rejeu après panne', async () => {
     await ouvrir();
     const jour = new Date('2026-11-16T09:00:00Z');
+    const plus = (minutes: number) => new Date(jour.getTime() + minutes * 60_000);
     const ids = await t.svc.vulnerabilites.veille.planifier(jour);
     expect(ids).toHaveLength(4);
     const sources = async () =>
@@ -555,18 +556,20 @@ describe('planification et fréquence', () => {
     expect((await sources()).map((s) => s.source).sort()).toEqual(['cert-fr', 'cert-sante', 'cisa-kev', 'nvd']);
     expect((await sources()).every((s) => s.origine === 'planifie')).toBe(true);
     expect(await t.svc.vulnerabilites.veille.planifier(jour)).toEqual([]);
-    // Exécutant absent : les collectes expirent ; le même jour, rien n'est réinscrit (créneau déjà consommé)…
+    // Exécutant absent : les collectes expirent ; avant la fin de la période, rien n'est réinscrit…
     await t.svc.db.q("UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '31 minutes'");
     expect(await t.svc.vulnerabilites.veille.planifier(jour)).toHaveLength(1); // … sauf EPSS, maintenant que la file est vide
     expect(await n('vulnerabilites_veille_collectes', "etat = 'expire'")).toBe(4);
     expect(await n('vulnerabilites_veille_collectes', "source = 'epss'")).toBe(1);
-    expect(await t.svc.vulnerabilites.veille.planifier(new Date('2026-11-16T22:00:00Z'))).toEqual([]);
+    expect(await t.svc.vulnerabilites.veille.planifier(plus(60))).toEqual([]);
+    expect(await t.svc.vulnerabilites.veille.planifier(plus(119))).toEqual([]);
     const s = (await lecteur.get(`${base}/etat`))
       .json()
       .sources.find((x: { source: string }) => x.source === 'cisa-kev');
     expect(s.erreur).toMatch(/expirée/);
-    // Le lendemain (heure de Paris), une nouvelle collecte par source.
-    expect(await t.svc.vulnerabilites.veille.planifier(new Date('2026-11-16T23:30:00Z'))).toHaveLength(4);
+    // Deux heures après la précédente demande automatique, une nouvelle par source ; EPSS attend vingt-quatre heures.
+    expect(await t.svc.vulnerabilites.veille.planifier(plus(120))).toHaveLength(4);
+    expect(await n('vulnerabilites_veille_collectes', "source = 'epss'")).toBe(1);
     expect((await audits('vulnerabilites.veille.collecte.demandee')).at(-1)).toMatchObject({
       username: 'planification',
     });
@@ -595,7 +598,26 @@ describe('planification et fréquence', () => {
     await t.svc.db.q("UPDATE vulnerabilites_veille_collectes SET etat = 'echec', termine_le = now(), erreur = 'x'");
     expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(409);
     await t.svc.db.q("UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '16 minutes'");
-    expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : seize minutes après, NVD reste refusé (plancher de deux heures de
+    // NVD, « Collecter maintenant » compris), avec un message propre ; une autre source passe (quinze minutes).
+    const plancher = await rssi.post(`${base}/collectes`, { source: 'nvd' });
+    expect(plancher.statusCode).toBe(409);
+    expect(plancher.json().error).toContain('NVD demande de ne pas être lu plus d’une fois toutes les deux heures');
+    expect((await admin.post(`${base}/collectes`, { source: 'cisa-kev' })).statusCode).toBe(201);
+    // Au-delà de deux heures, NVD repasse ; juste avant, non.
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '119 minutes' WHERE source = 'nvd'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(409);
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET demande_le = now() - interval '121 minutes' WHERE source = 'nvd'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
+    // Une collecte NVD expirée (jamais lancée par l'exécutant) ne compte pas dans le plancher.
+    await t.svc.db.q(
+      "UPDATE vulnerabilites_veille_collectes SET etat = 'expire', termine_le = now(), erreur = 'x', demande_le = now() - interval '20 minutes' WHERE source = 'nvd' AND etat = 'en_file'",
+    );
+    expect((await admin.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(201);
     // Quatre demandes par heure et par personne.
     expect((await rssi.post(`${base}/collectes`, { source: 'nvd' })).statusCode).toBe(429);
   });

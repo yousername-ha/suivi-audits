@@ -1,0 +1,444 @@
+{
+  "date": "2026-11-19T21:42:13.114Z",
+  "mesures": [
+    {
+      "compte": "admin",
+      "nom": "Accueil (tableau de bord)",
+      "chemin": "/",
+      "repetitions": 15,
+      "froidMedianeMs": 1261,
+      "froidP95Ms": 1453,
+      "froidMaxMs": 1453,
+      "chaudMedianeMs": 941,
+      "chaudP95Ms": 1120,
+      "chaudMaxMs": 1120,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1303,
+          "loadMs": 416,
+          "requetesApi": 16,
+          "octetsApi": 3226209,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /api/presence"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 954,
+          "loadMs": 86,
+          "requetesApi": 16,
+          "octetsApi": 52937,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /api/presence"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": false
+    },
+    {
+      "compte": "admin",
+      "nom": "Tâches récurrentes",
+      "chemin": "/pilotage/recurrences",
+      "repetitions": 15,
+      "froidMedianeMs": 2319,
+      "froidP95Ms": 2678,
+      "froidMaxMs": 2678,
+      "chaudMedianeMs": 2026,
+      "chaudP95Ms": 2391,
+      "chaudMaxMs": 2391,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 2319,
+          "loadMs": 343,
+          "requetesApi": 24,
+          "octetsApi": 4109621,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 2244,
+          "loadMs": 118,
+          "requetesApi": 24,
+          "octetsApi": 241883,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Plan d’actions",
+      "chemin": "/pilotage/actions",
+      "repetitions": 15,
+      "froidMedianeMs": 2108,
+      "froidP95Ms": 2607,
+      "froidMaxMs": 2607,
+      "chaudMedianeMs": 1843,
+      "chaudP95Ms": 1961,
+      "chaudMaxMs": 1961,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 2231,
+          "loadMs": 384,
+          "requetesApi": 23,
+          "octetsApi": 4084671,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1877,
+          "loadMs": 108,
+          "requetesApi": 23,
+          "octetsApi": 216993,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Risques",
+      "chemin": "/pilotage/risques",
+      "repetitions": 15,
+      "froidMedianeMs": 1593,
+      "froidP95Ms": 1694,
+      "froidMaxMs": 1694,
+      "chaudMedianeMs": 1242,
+      "chaudP95Ms": 1380,
+      "chaudMaxMs": 1380,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1605,
+          "loadMs": 339,
+          "requetesApi": 19,
+          "octetsApi": 4089241,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1261,
+          "loadMs": 98,
+          "requetesApi": 19,
+          "octetsApi": 221546,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": false
+    },
+    {
+      "compte": "admin",
+      "nom": "Registre des incidents",
+      "chemin": "/pilotage/incidents-registre",
+      "repetitions": 15,
+      "froidMedianeMs": 1359,
+      "froidP95Ms": 1554,
+      "froidMaxMs": 1554,
+      "chaudMedianeMs": 1065,
+      "chaudP95Ms": 1272,
+      "chaudMaxMs": 1272,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1436,
+          "loadMs": 398,
+          "requetesApi": 18,
+          "octetsApi": 5228403,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1100,
+          "loadMs": 102,
+          "requetesApi": 18,
+          "octetsApi": 1360674,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": false
+    },
+    {
+      "compte": "admin",
+      "nom": "Documents",
+      "chemin": "/documents",
+      "repetitions": 15,
+      "froidMedianeMs": 1982,
+      "froidP95Ms": 2367,
+      "froidMaxMs": 2367,
+      "chaudMedianeMs": 1596,
+      "chaudP95Ms": 1923,
+      "chaudMaxMs": 1923,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 2011,
+          "loadMs": 372,
+          "requetesApi": 18,
+          "octetsApi": 3735372,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /api/presence"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1350,
+          "loadMs": 219,
+          "requetesApi": 18,
+          "octetsApi": 562089,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /api/presence"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Vulnérabilités : vue d’ensemble",
+      "chemin": "/vulnerabilites/vue",
+      "repetitions": 15,
+      "froidMedianeMs": 2256,
+      "froidP95Ms": 2537,
+      "froidMaxMs": 2537,
+      "chaudMedianeMs": 1967,
+      "chaudP95Ms": 2122,
+      "chaudMaxMs": 2122,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 2094,
+          "loadMs": 324,
+          "requetesApi": 20,
+          "octetsApi": 3323032,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1943,
+          "loadMs": 103,
+          "requetesApi": 20,
+          "octetsApi": 149756,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Vulnérabilités : failles",
+      "chemin": "/vulnerabilites/failles",
+      "repetitions": 15,
+      "froidMedianeMs": 4954,
+      "froidP95Ms": 5453,
+      "froidMaxMs": 5453,
+      "chaudMedianeMs": 4676,
+      "chaudP95Ms": 4944,
+      "chaudMaxMs": 4944,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 5048,
+          "loadMs": 428,
+          "requetesApi": 17,
+          "octetsApi": 3261542,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /update/status.json"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 4913,
+          "loadMs": 85,
+          "requetesApi": 17,
+          "octetsApi": 88424,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /update/status.json"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Vulnérabilités : machines",
+      "chemin": "/vulnerabilites/machines",
+      "repetitions": 15,
+      "froidMedianeMs": 4913,
+      "froidP95Ms": 6104,
+      "froidMaxMs": 6104,
+      "chaudMedianeMs": 4820,
+      "chaudP95Ms": 5158,
+      "chaudMaxMs": 5158,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 4956,
+          "loadMs": 373,
+          "requetesApi": 16,
+          "octetsApi": 3256214,
+          "erreurs": 2,
+          "urlsErreur": [
+            "échec /api/settings/logo",
+            "échec /update/status.json"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 4415,
+          "loadMs": 86,
+          "requetesApi": 16,
+          "octetsApi": 82954,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Vulnérabilités : veille",
+      "chemin": "/vulnerabilites/veille",
+      "repetitions": 15,
+      "froidMedianeMs": 1243,
+      "froidP95Ms": 1382,
+      "froidMaxMs": 1382,
+      "chaudMedianeMs": 918,
+      "chaudP95Ms": 1051,
+      "chaudMaxMs": 1051,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1175,
+          "loadMs": 345,
+          "requetesApi": 17,
+          "octetsApi": 3253211,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 855,
+          "loadMs": 76,
+          "requetesApi": 17,
+          "octetsApi": 79948,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": false
+    },
+    {
+      "compte": "admin",
+      "nom": "Journal d’audit",
+      "chemin": "/systeme/journal",
+      "repetitions": 15,
+      "froidMedianeMs": 1221,
+      "froidP95Ms": 2044,
+      "froidMaxMs": 2044,
+      "chaudMedianeMs": 917,
+      "chaudP95Ms": 1034,
+      "chaudMaxMs": 1034,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1182,
+          "loadMs": 337,
+          "requetesApi": 16,
+          "octetsApi": 3284390,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 917,
+          "loadMs": 86,
+          "requetesApi": 16,
+          "octetsApi": 111091,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": true
+    },
+    {
+      "compte": "admin",
+      "nom": "Périmètres (cartes)",
+      "chemin": "/pilotage/perimetres",
+      "repetitions": 15,
+      "froidMedianeMs": 1684,
+      "froidP95Ms": 1767,
+      "froidMaxMs": 1767,
+      "chaudMedianeMs": 1422,
+      "chaudP95Ms": 1491,
+      "chaudMaxMs": 1491,
+      "dernier": {
+        "froid": {
+          "utilisableMs": 1729,
+          "loadMs": 338,
+          "requetesApi": 19,
+          "octetsApi": 3961777,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        },
+        "chaud": {
+          "utilisableMs": 1441,
+          "loadMs": 99,
+          "requetesApi": 19,
+          "octetsApi": 94294,
+          "erreurs": 1,
+          "urlsErreur": [
+            "échec /api/settings/logo"
+          ]
+        }
+      },
+      "seuilMs": 2000,
+      "depasse": false
+    }
+  ]
+}

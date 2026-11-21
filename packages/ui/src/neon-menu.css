@@ -8,7 +8,8 @@
    Couleurs : jetons MENU (tokens.ts), variables --menu-*. Chargée après styles.css, app.css et neon.css.
    ======================================================================== */
 :root {
-  --suivi-nav-l: 15.5rem;
+  /* 16,5 rem avec Lexend (choix du RSSI du 19/11/2026) : chaque famille du menu tient sur une ligne. */
+  --suivi-nav-l: 16.5rem;
   --menu-fond:
     radial-gradient(ellipse 115% 40% at 0% 100%, var(--menu-fond-halo) 0%, transparent 86%),
     linear-gradient(163deg, var(--menu-fond-haut) 0%, var(--menu-fond-milieu) 56%, var(--menu-fond-bas) 100%);

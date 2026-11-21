@@ -81,14 +81,14 @@ export function libelleFaillesPerimetre(f: FaillesParGravite): string {
 }
 
 /** Nom accessible d'une carte : « Portail fictif : 5 machines lues, priorité P1, failles présentes : 1 critique, …, 2
-    machines zero-day, 1 machine exploitable, 2 actifs exposés sur Internet ». */
+    machines à exploitation avérée, 1 machine exploitable, 2 actifs exposés sur Internet ». */
 export function nomAccessibleCarte(c: CartePerimetreDto): string {
   const parts = [
     pluriel(c.machines, 'machine lue', 'machines lues'),
     c.priorite ? `priorité ${c.priorite}` : 'aucune priorité',
     `failles présentes : ${libelleFaillesPerimetre(c.failles)}`,
     ...(c.machinesExploitationAveree
-      ? [`${pluriel(c.machinesExploitationAveree, 'machine', 'machines')} zero-day, exploitation avérée`]
+      ? [`${pluriel(c.machinesExploitationAveree, 'machine', 'machines')} à exploitation avérée`]
       : []),
     ...(c.machinesExploitables
       ? [pluriel(c.machinesExploitables, 'machine exploitable', 'machines exploitables')]

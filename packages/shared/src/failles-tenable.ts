@@ -143,6 +143,44 @@ export const ElementMachineTenable = z
   .refine((m) => m.cle === cleMachine(m.uuid, m.adresse, m.nom), { message: 'Identifiant de machine incohérent.' });
 export type ElementMachineTenable = z.infer<typeof ElementMachineTenable>;
 
+/** Kits d'exploitation nommés par Tenable (« Exploit available », « Exploitable with ») : Metasploit, Core Impact, CANVAS
+    (ADR 0100, lot PRIO-1). Security Center les cite dans la CHAÎNE `exploitFrameworks` (pas une liste) ; un fichier .nessus
+    dans `exploit_framework_metasploit`, `exploit_framework_core` et `exploit_framework_canvas`. Aucun autre nom n'est
+    retenu. Rangés avec « exploitable » (source `tenable-kit` de la grille), jamais comme exploitation avérée. */
+export const KITS_EXPLOITATION = ['metasploit', 'core_impact', 'canvas'] as const;
+export type KitExploitation = (typeof KITS_EXPLOITATION)[number];
+export const KIT_EXPLOITATION_LIBELLES: Record<KitExploitation, string> = {
+  metasploit: 'Metasploit',
+  core_impact: 'Core Impact',
+  canvas: 'CANVAS',
+};
+/** Liste de kits, sans doublon (schéma des éléments reçus). */
+export const KitsExploitation = z
+  .array(z.enum(KITS_EXPLOITATION))
+  .max(KITS_EXPLOITATION.length)
+  .refine((l) => new Set(l).size === l.length, 'Kit cité deux fois.');
+
+/** Kits cités par la chaîne `exploitFrameworks` de Security Center : chaque nom connu présent (casse ignorée), dans l'ordre
+    de KITS_EXPLOITATION ; tout autre texte est ignoré (rien n'est inventé). */
+export function kitsDepuisTexte(texte: string | null | undefined): KitExploitation[] {
+  const t = (texte ?? '').toLowerCase();
+  if (!t.trim()) return [];
+  const motifs: Record<KitExploitation, RegExp> = {
+    metasploit: /\bmetasploit\b/,
+    core_impact: /\bcore\s+impact\b/,
+    canvas: /\bcanvas\b/,
+  };
+  return KITS_EXPLOITATION.filter((k) => motifs[k].test(t));
+}
+
+/** Kits rangés dans l'ordre de KITS_EXPLOITATION, sans doublon ni valeur inconnue. */
+export const kitsRanges = (kits: readonly string[] | null | undefined): KitExploitation[] =>
+  KITS_EXPLOITATION.filter((k) => (kits ?? []).includes(k));
+
+/** Libellé d'une liste de kits : « Metasploit, CANVAS ». */
+export const libelleKits = (kits: readonly KitExploitation[]) =>
+  kits.map((k) => KIT_EXPLOITATION_LIBELLES[k]).join(', ');
+
 /** Constat de Tenable (un par contrôle) : champs du contrôle, CVE (bornées), sans aucune machine. */
 export const ElementConstatTenable = z
   .object({
@@ -160,6 +198,8 @@ export const ElementConstatTenable = z
     epss: z.number().min(0).max(1).nullable(),
     exploitable: z.boolean(),
     exploitLibelle: texteTenable(TENABLE_BORNES.libelleExploit).nullable(),
+    /** Lot PRIO-1 : kits d'exploitation cités par Tenable (absent : aucun). */
+    kitsExploitation: KitsExploitation.optional(),
     failleLe: instant,
     correctifLe: instant,
     finSupportLe: instant,
@@ -253,6 +293,21 @@ export const BilanSynchronisation = z
 export type BilanSynchronisation = z.infer<typeof BilanSynchronisation>;
 
 /* ------------------------------------------------------------------ API : lecture */
+/** Source d'une machine et d'un constat : le type de l'instance qui l'a rapporté (lot N1 : Security Center par
+    synchronisation, ou Nessus par import de fichier). Un contrôle Nessus reste un contrôle de Tenable. */
+export const SOURCES_MACHINE = ['tenable', 'nessus-fichier'] as const;
+export type SourceMachine = (typeof SOURCES_MACHINE)[number];
+export const SOURCE_MACHINE_LIBELLES: Record<SourceMachine, string> = {
+  tenable: 'Tenable Security Center',
+  'nessus-fichier': 'Nessus, import de fichier',
+};
+/** Instance qui a rapporté une machine ou un constat (lot N1 : marque de la source dans les écrans du module). */
+export interface OrigineConnecteurDto {
+  id: string;
+  nom: string;
+  type: SourceMachine;
+}
+
 export const ROLES_MACHINE = ['front', 'back', 'bdd'] as const;
 export const RoleMachine = z.enum(ROLES_MACHINE);
 export type RoleMachine = z.infer<typeof RoleMachine>;
@@ -322,6 +377,14 @@ export interface ConstatResumeDto {
   exploitable: boolean;
   /** Une CVE du constat figure au catalogue KEV rangé par la veille (jointure en lecture). */
   exploite: boolean;
+  /** Lot N2 : contrôle marqué « exploité par un logiciel malveillant » par Tenable (import Nessus seulement : Security
+      Center ne le rapporte pas) ; exploitation avérée selon Tenable. */
+  exploiteMalware: boolean;
+  /** Lot PRIO-1 : kits d'exploitation disponibles selon Tenable (« Exploitable with ») ; rangés avec « exploitable ». */
+  kitsExploitation: KitExploitation[];
+  /** Lot PRIO-1 : présent sur au moins une machine en fin de support, et n'est pas lui-même le contrôle de fin de support :
+      un cran de priorité de plus (décisions du RSSI des 19 et 20/11/2026). */
+  surMachineFinSupport: boolean;
   /** Constat sans CVE : système ou logiciel qui n'est plus maintenu (V18). */
   nonMaintenu: boolean;
   /** Date de fin de support du logiciel selon Tenable (`seolDate`), ou null. */
@@ -350,6 +413,8 @@ export interface ConstatResumeDto {
   priorite: Priorite;
   /** Délai de correction (lot S1) : âge, échéance calculée, état. */
   delai: DelaiFailleDto;
+  /** Lot N1 : instance qui a rapporté le constat (Security Center ou import Nessus). */
+  integration: OrigineConnecteurDto;
 }
 
 export interface MachineDetectionDto {
@@ -381,7 +446,6 @@ export interface ConstatDto extends ConstatResumeDto {
   cvesDetail: { cve: string; kev: boolean }[];
   /** Machines lisibles où le constat est présent, regroupées par rôle (`aucun` : rôle non renseigné). */
   parRole: Record<RoleMachine | 'aucun', MachineDetectionDto[]>;
-  integration: { id: string; nom: string };
 }
 
 export interface CompteursMachine {
@@ -420,8 +484,10 @@ export interface MachineDto {
   acr: number | null;
   premiere: string | null;
   derniere: string | null;
-  source: 'tenable';
-  integration: { id: string; nom: string };
+  /** Lot N1 : source de la machine (type de son instance) et instance. Une machine vue par Security Center et par un import
+      Nessus apparaît deux fois, une par instance (pas de fusion). */
+  source: SourceMachine;
+  integration: OrigineConnecteurDto;
   /** Constats présents sur la machine, par gravité, puis exploités et exploitables. */
   compteurs: CompteursMachine;
   /** Rang parmi les machines que la personne peut lire, et faits qui le fondent (lot V4a). */
@@ -516,4 +582,8 @@ export interface EtatSynchronisationDto {
   /** Dernière synchronisation complète (sans borne atteinte) : seule celle-ci fait foi pour les détections disparues. */
   derniereCompleteLe: string | null;
   inventaire: { ok: boolean; erreur: string | null; le: string } | null;
+  /** Lot F1 : fréquence de la synchronisation automatique (heures) et prochaine prévue (null si l'instance n'est pas prête :
+      inactive, clé manquante ou flux fermé). Lecture seule : le réglage vit dans la carte « Intégrations ». */
+  frequenceHeures: number;
+  prochaineSynchronisation: string | null;
 }

@@ -297,6 +297,20 @@ export interface CfgVersions {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface ContactsCriseComptes {
+  user_id: string;
+  role_crise: Generated<string>;
+  telephone: Generated<string>;
+  telephone2: Generated<string>;
+  disponibilite: Generated<string>;
+  cle: Generated<boolean>;
+  tous_perimetres: Generated<boolean>;
+  perimetres: Generated<string[]>;
+  mis_a_jour: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: Generated<string>;
+  version: Generated<number>;
+}
+
 export interface ContributionsElements {
   id: Generated<string>;
   objet_id: string;
@@ -699,6 +713,7 @@ export interface Integrations {
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  frequence_heures: number | null;
 }
 
 export interface JournalTechniqueConfig {
@@ -1493,6 +1508,11 @@ export interface TableauxDeBord {
   updated_by: string;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  public: Generated<boolean>;
+  publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  modele: string | null;
+  surchargee: Generated<boolean>;
+  chiffres_servis_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface TableauxDeBordChoix {
@@ -1501,12 +1521,19 @@ export interface TableauxDeBordChoix {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface TableauxDeBordOnglets {
+  utilisateur: string;
+  tableau: string;
+  rang: number;
+}
+
 export interface TableauxDeBordPartages {
   tableau: string;
   utilisateur: string | null;
   groupe: string | null;
   created_by: string;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  role: string | null;
 }
 
 export interface TypesProcessus {
@@ -1586,6 +1613,85 @@ export interface VDocuments {
   current_version: number | null;
   updated_by: string | null;
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VeilleReglementaireCollectes {
+  id: Generated<string>;
+  source: "cnil" | "cepd" | "eur-lex" | "anssi";
+  origine: "manuel" | "planifie";
+  etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
+  demande_par: string;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  ecartes: Generated<number>;
+  tronque: Generated<boolean>;
+  erreur: string | null;
+}
+
+export interface VeilleReglementairePublications {
+  id: Generated<string>;
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  domaine: "securite" | "donnees-personnelles";
+  identifiant: string;
+  titre: string;
+  resume: string | null;
+  lien: string;
+  publie_le: ColumnType<Date, Date | string, Date | string>;
+  collecte_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  statut: Generated<"a-qualifier" | "sans-objet" | "a-suivre" | "impactant">;
+  qualifie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  qualifie_par: string | null;
+  version: Generated<number>;
+}
+
+export interface VeilleReglementaireSources {
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  activee: Generated<boolean>;
+  frequence_heures: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  derniere_reussite: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  dernier_essai: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  mots_cles: ColumnType<JsonValue | null, string | null, string | null>;
+  version: Generated<number>;
+}
+
+export interface VulnerabilitesAdImports {
+  id: Generated<string>;
+  numero: number;
+  date_rapport: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  note: number;
+  progression: ColumnType<JsonValue, string, string>;
+  conformes: number | null;
+  points: number;
+  objets: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  noms_conserves: Generated<boolean>;
+  version: Generated<number>;
+  importe_par: string;
+  importe_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAdObjets {
+  point_id: string;
+  rang: number;
+  nom: string;
+  nature: "utilisateur" | "service" | "groupe" | "ordinateur" | "controleur" | "gpo" | "approbation" | "autre";
+}
+
+export interface VulnerabilitesAdPoints {
+  id: Generated<string>;
+  import_id: string;
+  identifiant: string;
+  reference: string;
+  type: number;
+  niveau: number;
+  titre: string;
+  objets: number;
 }
 
 export interface VulnerabilitesAlertes {
@@ -1671,6 +1777,7 @@ export interface VulnerabilitesAlhEtat {
   numero: Generated<number>;
   numero_complet: Generated<number>;
   complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesAlhLiaisonsMachines {
@@ -1827,6 +1934,8 @@ export interface VulnerabilitesConstats {
   vu_numero: number;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  exploite_malware: Generated<boolean>;
+  kits_exploitation: Generated<string[]>;
 }
 
 export interface VulnerabilitesDepassements {
@@ -1850,6 +1959,22 @@ export interface VulnerabilitesDetections {
   risque_requalifie: Generated<boolean>;
   vu_numero: number;
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesImports {
+  execution_id: string;
+  integration_id: string;
+  gravites: string[];
+  machines_annoncees: number;
+  detections_annoncees: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  lots: Generated<number>;
+  machines: Generated<number>;
+  detections: Generated<number>;
+  disparues: Generated<number>;
+  premier_numero: number | null;
+  dernier_numero: number | null;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export interface VulnerabilitesInstantanes {
@@ -1879,7 +2004,7 @@ export interface VulnerabilitesInstantanesMesures {
 export interface VulnerabilitesMachines {
   id: Generated<string>;
   integration_id: string;
-  source: Generated<string>;
+  source: Generated<"tenable" | "nessus-fichier">;
   identifiant_source: string;
   uuid_source: string | null;
   nom: string | null;
@@ -1945,6 +2070,113 @@ export interface VulnerabilitesRapprochements {
   annule_par: string | null;
   annule_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   annulation_note: Generated<string>;
+}
+
+export interface VulnerabilitesSileneConstatHotes {
+  constat_id: string;
+  adresse: string;
+}
+
+export interface VulnerabilitesSileneConstats {
+  id: Generated<string>;
+  integration_id: string;
+  identifiant: string;
+  controle: string;
+  classe: number;
+  points: ColumnType<string | null, number | string | null, number | string | null>;
+  note: ColumnType<string | null, number | string | null, number | string | null>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneEtat {
+  integration_id: string;
+  numero: Generated<number>;
+  numero_complet: Generated<number>;
+  complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesSileneHotes {
+  id: Generated<string>;
+  integration_id: string;
+  adresse: string;
+  ports_ouverts: number | null;
+  controles: Generated<string[]>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneImports {
+  execution_id: string;
+  integration_id: string;
+  numero: number;
+  date_rapport: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  debut_rapport: string | null;
+  fin_rapport: string | null;
+  note: ColumnType<string | null, number | string | null, number | string | null>;
+  note_reseau: ColumnType<string | null, number | string | null, number | string | null>;
+  vulnreco: number | null;
+  warning: number | null;
+  info: number | null;
+  ok: number | null;
+  perimetre_domaines: Generated<string[]>;
+  perimetre_plages: Generated<string[]>;
+  hotes_annonces: number;
+  constats_annonces: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  lots: Generated<number>;
+  hotes: Generated<number>;
+  constats: Generated<number>;
+  hotes_disparus: Generated<number>;
+  constats_disparus: Generated<number>;
+  complet: Generated<boolean>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesSileneLignes {
+  constat_id: string;
+  rang: number;
+  adresse: string;
+  port: number | null;
+  protocole: string | null;
+  service: string | null;
+  produit: string | null;
+  nom_hote: string | null;
+  type: string | null;
+  echeance: string | null;
+}
+
+export interface VulnerabilitesSileneNoms {
+  id: Generated<string>;
+  hote_id: string;
+  nom: string;
+  type: "A" | "PTR" | "cert-san-dns" | "cert-subject-cn";
+}
+
+export interface VulnerabilitesSilenePerimetres {
+  integration_id: string;
+  perimetre_id: string | null;
+  version: Generated<number>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_par: string | null;
+}
+
+export interface VulnerabilitesSilenePorts {
+  hote_id: string;
+  port: number;
+  protocole: "tcp" | "udp";
+  service: string | null;
+  produit: string | null;
+  tunnel: string | null;
+}
+
+export interface VulnerabilitesSileneProduits {
+  hote_id: string;
+  rang: number;
+  type: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  version: string | null;
 }
 
 export interface VulnerabilitesSuiviActions {
@@ -2026,6 +2258,7 @@ export interface VulnerabilitesTenableEtat {
   inventaire_ok: boolean | null;
   inventaire_erreur: string | null;
   inventaire_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface VulnerabilitesVeilleAvis {
@@ -2128,6 +2361,9 @@ export interface VulnerabilitesVeilleSources {
   erreur: string | null;
   creneau: ColumnType<Date | null, Date | string | null, Date | string | null>;
   fenetre_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  frequence_heures: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  version: Generated<number>;
 }
 
 export interface WallScreens {
@@ -2199,6 +2435,7 @@ export interface DB {
   cfg_items: CfgItems;
   cfg_usages: CfgUsages;
   cfg_versions: CfgVersions;
+  contacts_crise_comptes: ContactsCriseComptes;
   contributions_elements: ContributionsElements;
   courriel_jobs: CourrielJobs;
   dda_perimetres: DdaPerimetres;
@@ -2288,6 +2525,7 @@ export interface DB {
   sup_scope_links: SupScopeLinks;
   tableaux_de_bord: TableauxDeBord;
   tableaux_de_bord_choix: TableauxDeBordChoix;
+  tableaux_de_bord_onglets: TableauxDeBordOnglets;
   tableaux_de_bord_partages: TableauxDeBordPartages;
   types_processus: TypesProcessus;
   update_jobs: UpdateJobs;
@@ -2295,6 +2533,12 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  veille_reglementaire_collectes: VeilleReglementaireCollectes;
+  veille_reglementaire_publications: VeilleReglementairePublications;
+  veille_reglementaire_sources: VeilleReglementaireSources;
+  vulnerabilites_ad_imports: VulnerabilitesAdImports;
+  vulnerabilites_ad_objets: VulnerabilitesAdObjets;
+  vulnerabilites_ad_points: VulnerabilitesAdPoints;
   vulnerabilites_alertes: VulnerabilitesAlertes;
   vulnerabilites_alh_actifs: VulnerabilitesAlhActifs;
   vulnerabilites_alh_alerte_cves: VulnerabilitesAlhAlerteCves;
@@ -2315,12 +2559,23 @@ export interface DB {
   vulnerabilites_constats: VulnerabilitesConstats;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_imports: VulnerabilitesImports;
   vulnerabilites_instantanes: VulnerabilitesInstantanes;
   vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
   vulnerabilites_machines: VulnerabilitesMachines;
   vulnerabilites_produits: VulnerabilitesProduits;
   vulnerabilites_produits_machines: VulnerabilitesProduitsMachines;
   vulnerabilites_rapprochements: VulnerabilitesRapprochements;
+  vulnerabilites_silene_constat_hotes: VulnerabilitesSileneConstatHotes;
+  vulnerabilites_silene_constats: VulnerabilitesSileneConstats;
+  vulnerabilites_silene_etat: VulnerabilitesSileneEtat;
+  vulnerabilites_silene_hotes: VulnerabilitesSileneHotes;
+  vulnerabilites_silene_imports: VulnerabilitesSileneImports;
+  vulnerabilites_silene_lignes: VulnerabilitesSileneLignes;
+  vulnerabilites_silene_noms: VulnerabilitesSileneNoms;
+  vulnerabilites_silene_perimetres: VulnerabilitesSilenePerimetres;
+  vulnerabilites_silene_ports: VulnerabilitesSilenePorts;
+  vulnerabilites_silene_produits: VulnerabilitesSileneProduits;
   vulnerabilites_suivi_actions: VulnerabilitesSuiviActions;
   vulnerabilites_suivi_historique: VulnerabilitesSuiviHistorique;
   vulnerabilites_suivis: VulnerabilitesSuivis;

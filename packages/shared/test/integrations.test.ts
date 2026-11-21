@@ -18,14 +18,21 @@ import {
   RESULTATS_OPERATION,
   SECRETS_INTEGRATION,
   TYPES_INTEGRATION,
+  TYPES_INTEGRATION_RESEAU,
   typeIntegration,
 } from '../src/index.js';
 
 const UUID = '0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
 
 describe('catalogue des connecteurs', () => {
-  it('deux types livrés, Tenable Security Center et AlgoLightHouse, de portée organisation, chacun avec son flux et ses secrets', () => {
-    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual(['tenable', 'algolighthouse']);
+  it('quatre types livrés : Tenable Security Center et AlgoLightHouse (réseau, avec flux et secrets), Nessus et Silène par import de fichier (lots N1 et SI1), tous de portée organisation', () => {
+    expect(TYPES_INTEGRATION.map((t) => t.id)).toEqual([
+      'tenable',
+      'algolighthouse',
+      'nessus-fichier',
+      'silene-fichier',
+    ]);
+    expect(TYPES_INTEGRATION_RESEAU.map((t) => t.id)).toEqual(['tenable', 'algolighthouse']);
     const t = typeIntegration('tenable');
     expect(t.libelle).toBe('Tenable Security Center');
     expect(t.portee).toBe('organisation');
@@ -39,12 +46,33 @@ describe('catalogue des connecteurs', () => {
     expect(alh.secrets.map((s) => s.id)).toEqual(['cleApi']);
     expect(alh.operations).toEqual(['tester', 'synchroniser']);
     expect(alh.champs).toEqual(['adresse', 'delaiSecondes']);
-    // Chaque type emprunte un flux du registre (ADR 0097), refermé par la désactivation du module Intégrations.
-    for (const x of TYPES_INTEGRATION) {
+    // Chaque type réseau emprunte un flux du registre (ADR 0097), refermé par la désactivation du module Intégrations.
+    for (const x of TYPES_INTEGRATION_RESEAU) {
+      expect(x.flux).not.toBeNull();
       expect(FLUX_MODULES).toContain(x.flux);
-      expect(fluxExterne(x.flux).moduleActivation).toBe('integrations');
-      expect(fluxExterne(x.flux).porteur.type).toBe('executant');
+      expect(fluxExterne(x.flux!).moduleActivation).toBe('integrations');
+      expect(fluxExterne(x.flux!).porteur.type).toBe('executant');
     }
+    // Lot N1 : Nessus par import de fichier, sans adresse, sans clé, sans flux, sans point d'accès, sans exécutant.
+    const n = typeIntegration('nessus-fichier');
+    expect([n.libelle, n.portee, n.flux]).toEqual(['Nessus, import de fichier', 'organisation', null]);
+    expect(n.secrets).toEqual([]);
+    expect(n.pointsAcces).toEqual([]);
+    expect(n.operations).toEqual(['importer']);
+    expect(n.champs).toEqual(['gravites']);
+    expect(FLUX_MODULES as readonly string[]).not.toContain('nessus-fichier');
+    // Lot SI1 : Silène par import de fichier, sans adresse, sans clé, sans réglage, sans flux, sans exécutant.
+    const si = typeIntegration('silene-fichier');
+    expect([si.libelle, si.portee, si.flux, si.secrets, si.pointsAcces, si.operations, si.champs]).toEqual([
+      'Silène, import de fichier',
+      'organisation',
+      null,
+      [],
+      [],
+      ['importer'],
+      [],
+    ]);
+    expect(FLUX_MODULES as readonly string[]).not.toContain('silene-fichier');
     // Sortie de l'API : sans schéma ni motif.
     const c = catalogueIntegrations();
     expect(JSON.parse(JSON.stringify(c))).toEqual(c);
@@ -197,7 +225,7 @@ describe('rapport de l’exécutant', () => {
   });
 
   it('résultat de « tester » : la seule version, de forme contrôlée', () => {
-    const s = RESULTATS_OPERATION.tenable.tester;
+    const s = RESULTATS_OPERATION.tenable.tester!;
     expect(s.parse({ version: '6.9.1' })).toEqual({ version: '6.9.1' });
     for (const r of [
       { version: '6.9.1', ActivationCode: 'FAUX' },

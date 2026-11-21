@@ -1,5 +1,5 @@
 /* Administration en deux entrées, chacune une page de cartes (icône, nom, synthèse) : « Plateforme » (organisation,
-   comptes, référentiels, échelles, configuration du pilotage, affichage) et « Configuration système » (exploitation du serveur). Le détail d'une carte
+   comptes, référentiels, échelles, configuration du pilotage, affichage, intégrations) et « Configuration système » (exploitation du serveur). Le détail d'une carte
    s'ouvre dans une fenêtre centrée à bordure visible ; la fermer ramène à la page de cartes. Les anciennes adresses
    /parametres/… et /admin/… restent valables. Aucune API nouvelle : les panneaux sont ceux des écrans historiques. */
 import { Badge, Card, Group, Modal, Stack, Text, Title } from '@mantine/core';
@@ -16,7 +16,7 @@ import { PolitiqueClesPanel } from '../components/PolitiqueCles';
 import { RemiseAVidePanel } from '../components/RemiseAVide';
 import { UpdatesPanel } from '../components/Updates';
 import { useCan } from '../session';
-import { DetailsTechniques, Audit, Sessions, Versions } from './Admin';
+import { DetailsTechniques, Audit, InstantanesEtat, Sessions } from './Admin';
 import { GroupsPanel, RolesPanel, UsersPanel } from './AdminAccess';
 import { BackupsPanel } from './AdminBackups';
 import { PolitiqueSauvegardesPanel } from './AdminPolitiqueSauvegardes';
@@ -33,6 +33,7 @@ import { ImportTenacyPanel } from './AdminImportTenacy';
 import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
 import { ReglagesAssistantPanel } from '../assistant/ReglagesAssistant';
+import { IntegrationsPanel } from '../integrations/IntegrationsPage';
 import { NotificationsPanel } from './AdminNotifications';
 import { OperationsPanel } from './AdminOperations';
 import { TypesProcessusPanel } from './AdminTypesProcessus';
@@ -240,6 +241,17 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     detail: (m) => <ReglagesAssistantPanel onDirty={m} titreVisible={false} />,
   },
   {
+    // Addendum du 19/11/2026 de l'ADR 0076 : les intégrations se configurent ici et nulle part ailleurs.
+    id: 'integrations',
+    cote: 'plateforme',
+    titre: 'Intégrations',
+    resume:
+      'Connecteurs en lecture seule (Tenable Security Center, AlgoLightHouse) : adresse, clés, test, synchronisation ; import de scans Nessus.',
+    icone: 'reseau',
+    teinte: 'bleu',
+    detail: () => <IntegrationsPanel />,
+  },
+  {
     id: 'import',
     cote: 'plateforme',
     titre: 'Import et export',
@@ -258,7 +270,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'sauvegardes',
     cote: 'systeme',
     titre: 'Sauvegardes et restauration',
-    resume: 'Archives, restauration guidée et suivi des tests de restauration.',
+    resume: 'Archives, restauration guidée, suivi des tests de restauration et instantanés de l’état de suivi.',
     icone: 'base',
     teinte: 'vert',
     detail: (m, can) => (
@@ -267,6 +279,8 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         <BackupsPanel />
         <PolitiqueSauvegardesPanel />
         {can('parametres', 'lire') && <SectionLoader section="sauvegardes" onDirty={m} />}
+        {/* Instantanés de l'état de suivi (décision du RSSI du 19/11/2026) : venus de « Mises à jour et versions ». */}
+        <InstantanesEtat />
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
     ),
@@ -284,15 +298,10 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     id: 'mises-a-jour',
     cote: 'systeme',
     titre: 'Mises à jour et versions',
-    resume: 'Version installée, mise à jour depuis l’interface, historique des versions.',
+    resume: 'Version installée, mise à jour depuis l’interface, reçus des dernières installations.',
     icone: 'maj',
     teinte: 'bleu',
-    detail: () => (
-      <Stack gap="xl">
-        <UpdatesPanel />
-        <Versions />
-      </Stack>
-    ),
+    detail: () => <UpdatesPanel />,
   },
   {
     id: 'flux-externes',
@@ -491,6 +500,12 @@ function useSyntheses(actif: boolean): Record<string, ReactNode> {
   };
 }
 
+/** Une fenêtre ouverte depuis le panneau d'une carte (configuration, historique, confirmation) se place au-dessus de la
+    fenêtre de la carte. Mantine ferme toutes les fenêtres ouvertes sur Échap (écouteur global) : tant qu'une autre fenêtre
+    est ouverte, la fenêtre de la carte ignore sa fermeture, et Échap ne ferme que celle du dessus. */
+export const fenetreAuDessus = (doc: Pick<Document, 'querySelectorAll'> = document) =>
+  doc.querySelectorAll('.mantine-Modal-content').length > 1;
+
 export function PageCartes({ cote }: { cote: Cote }) {
   const can = useCan();
   const nav = useNavigate();
@@ -535,7 +550,11 @@ export function PageCartes({ cote }: { cote: Cote }) {
       <Modal
         closeButtonProps={{ 'aria-label': `Fermer ${ouverte?.titre ?? 'la fenêtre'}` }}
         opened={!!ouverte}
-        onClose={() => (modifie ? setQuitter(true) : fermer())}
+        onClose={() => {
+          if (fenetreAuDessus()) return;
+          if (modifie) setQuitter(true);
+          else fermer();
+        }}
         title={ouverte?.titre}
         size="xl"
         centered

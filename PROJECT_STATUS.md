@@ -1,5 +1,14 @@
 # État synthétique du projet
 
+> **20/11/2026** : module Vulnérabilités ([ADR 0100](docs/adr/0100-module-vulnerabilites.md)) sur `claude-suivi-smsi` depuis
+> la 7.4.0 : recherche du module, alertes de la veille en cartes, intégrations dans la page Plateforme, fréquences de
+> synchronisation (migration `090`, PR #326), imports `.nessus` et exploitation par logiciel malveillant (migrations `093` et
+> `094`, PR #331), import du rapport Silène et carte de la surface externe à deux sources en page entière (migration `095`,
+> PR #333) ; correctifs de performance PERF-01 à PERF-04 sans migration (PR #339, ouverte). Formats `.nessus` et Silène jamais
+> vérifiés sur un export réel. PERF-09 tranché le 20/11/2026 (bornes de synchronisation inchangées) ; ordre du calcul global tranché le
+> 20/11/2026 (à priorité égale, le contrôle détecté le plus récemment ; lot PERF-04, PR #339, sans migration). Décisions en
+> attente : classes Silène, type du rapport de l'Active Directory. Détail et file : [reprise du 20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md).
+>
 > **15/11/2026** : versions 7.0.0 à 7.1.1 publiées ; sur `claude-suivi-smsi`, flux vers l'extérieur fermés par défaut et ouverts
 > par l'activation du module (ADR 0097, lots 1 à 3, migration `071`), critères fournisseurs (ADR 0098, migration `070`), animations en
 > continu (ADR 0099). Détail et suite : [reprise du 15/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-15.md). Le tableau ci-dessous est daté.

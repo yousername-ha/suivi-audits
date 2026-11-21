@@ -7,6 +7,7 @@ import { buildOpenApi, registerRoutes, route, type RouteDef } from './http/route
 import { isHttps, setBaseHeaders } from './http/security.js';
 import { expireAccounts } from './rights.js';
 import { accessRoutes } from './routes/access.js';
+import { contactsCriseComptesRoutes } from './routes/contacts-crise-comptes.js';
 import { moduleRoutes } from './routes/modules.js';
 import { adminRoutes } from './routes/admin.js';
 import { alertesSecuriteRoutes } from './routes/alertes-securite.js';
@@ -36,11 +37,12 @@ import { parcoursRoutes } from './routes/parcours.js';
 import { registresRoutes } from './routes/registres.js';
 import { pilotageRoutes } from './routes/pilotage.js';
 import { affichageRoutes } from './routes/affichage.js';
-import { tableauDeBordRoutes } from './routes/tableau-de-bord.js';
+import { tableauxDeBordRoutes } from './routes/tableaux-de-bord.js';
 import { cartoRoutes } from './routes/carto.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { assistantRoutes } from './routes/assistant.js';
 import { vulnerabilitesRoutes } from './routes/vulnerabilites.js';
+import { veilleReglementaireRoutes } from './routes/veille-reglementaire.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
 import { ReadyOut, VersionOut } from '@suivi/shared';
@@ -120,6 +122,7 @@ export function allRoutes(): RouteDef[] {
     ...webauthnRoutes,
     ...documentRoutes,
     ...accessRoutes,
+    ...contactsCriseComptesRoutes,
     ...adminRoutes,
     ...moduleRoutes,
     ...operationRoutes,
@@ -146,11 +149,12 @@ export function allRoutes(): RouteDef[] {
     ...calendriersPlateformeRoutes,
     ...assistantRoutes,
     ...vulnerabilitesRoutes,
+    ...veilleReglementaireRoutes,
     ...integrationsRoutes,
     ...notificationsRoutes,
     ...pilotageRoutes,
     ...affichageRoutes,
-    ...tableauDeBordRoutes,
+    ...tableauxDeBordRoutes,
     ...cartoRoutes,
   );
   return list;

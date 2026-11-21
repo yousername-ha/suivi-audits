@@ -53,8 +53,24 @@
    (période, portée, format), sans contenu ; aucun nom de machine, de domaine ni d'adresse.
    Lot S3 : vue « Correctifs » (groupes par texte de solution de Tenable, et détail d'un groupe) avec `lire`, lecture seule,
    sans journal : priorité et nombres de failles communs à tous ; machines nommées et comptées selon les droits. Filtre
-   « fin de support » des constats, des machines et du parc. */
+   « fin de support » des constats, des machines et du parc.
+   Lot R1 : barre de recherche globale (CVE de la veille et détectées, machines, actifs exposés, applications) avec `lire`,
+   lecture seule, sans journal, aucun appel sortant ; machines et actifs lus par les droits de leurs listes ; nombres de
+   machines et d'actifs limités à ce que la personne lit ; la recherche des machines de la liste couvre aussi l'adresse IP
+   (préfixe) et le système.
+   Lot F1 : fréquence des collectes automatiques de chaque source de la veille (`administrer`, If-Match sur la version de la
+   source, liste fermée de la source, 422 hors liste, EPSS fixe, journal `vulnerabilites.veille.frequence`) ; celle d'un
+   connecteur se règle par la modification de l'instance (module Intégrations, `integrations:administrer`).
+   Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) ; lecture en nombres avec `lire`, noms d'un point par une route
+   à part, avec `lire` aussi (droit « Analyste » branché sur l'accès au module ; consultation tracée, sans les noms), import (limite horaire partagée) et suppression (If-Match)
+   avec `administrer`. */
 import {
+  ADS_BORNES,
+  IdentifiantPointAdsParams,
+  ImportAds,
+  MESSAGE_LIMITE_IMPORTS,
+  RechercheGlobaleReponse,
+  RechercheGlobaleVulnerabilites,
   CleCorrectif,
   RechercheCorrectifs,
   RechercheAlertesVulnerabilites,
@@ -77,9 +93,13 @@ import {
   NatureSuivi,
   RefusPropositionSuivi,
   DemandeCollecte,
+  FrequenceVeilleBody,
+  SourceVeille,
   EffetMotQuery,
   LiaisonDepotTenable,
   LiaisonPerimetreAlh,
+  FicheActifSileneRequete,
+  RechercheConstatsSilene,
   RechercheActifsAlh,
   RechercheAlertesAlh,
   RechercheTechnologiesAlh,
@@ -113,6 +133,17 @@ const suivi = z.object({ nature: NatureSuivi, id: z.uuid() });
 const lienAction = z.object({ nature: NatureSuivi, id: z.uuid(), actionId: z.uuid() });
 
 export const vulnerabilitesRoutes = [
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/recherche',
+    summary:
+      'Recherche globale du module (lot R1), saisie de 2 à 200 caractères : CVE de la veille locale ou détectées (état : détectée, déclarée, exposée sur ce que la personne lit, présente hors de sa lecture sans nombre, ou non détectée sur le parc ; identifiant bien formé inconnu signalé, sans appel sortant), machines internes (nom, adresse IP, système), actifs exposés (nom de domaine, adresse IP), applications (produits surveillés, technologies d’AlgoLightHouse, contrôles de Tenable) ; 8 résultats au plus par groupe et nombre total ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheGlobaleVulnerabilites,
+    response: RechercheGlobaleReponse,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.recherche.chercher((s as Session).user, query.q),
+  }),
   route({
     method: 'GET',
     url: '/api/vulnerabilites/vue-ensemble',
@@ -335,6 +366,27 @@ export const vulnerabilitesRoutes = [
     },
   }),
   route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/veille/sources/:source/frequence',
+    summary:
+      'Veille (lot F1) : régler la fréquence des collectes automatiques d’une source, en heures, dans la liste fermée de la source (NVD : deux heures au moins ; EPSS : fixe) ; If-Match : version de la source ; 422 hors liste',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: z.object({ source: SourceVeille }),
+    body: FrequenceVeilleBody,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.veille.reglerFrequence(
+        params.source,
+        body.frequenceHeures,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
     method: 'GET',
     url: '/api/vulnerabilites/synchronisation',
     summary:
@@ -342,6 +394,15 @@ export const vulnerabilitesRoutes = [
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc }) => svc.vulnerabilites.tenable.etat(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/imports/etat',
+    summary:
+      'Failles détectées : état des imports de scans Nessus de chaque instance « Nessus, import de fichier » (dernier import et son bilan chiffré)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.importNessus.etat(),
   }),
   route({
     method: 'GET',
@@ -801,7 +862,8 @@ export const vulnerabilitesRoutes = [
   route({
     method: 'GET',
     url: '/api/vulnerabilites/surface/actifs',
-    summary: 'Hôtes et domaines AlgoLightHouse lisibles ; recherche par adresse ou domaine ; filtre par type',
+    summary:
+      'Actifs exposés lisibles, liste commune à AlgoLightHouse et à Silène (lot SI1 : un actif par adresse IP ou nom de domaine, avec ce que chaque source en dit) ; recherche par adresse ou domaine ; filtre par type',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheActifsAlh,
@@ -809,9 +871,71 @@ export const vulnerabilitesRoutes = [
   }),
   route({
     method: 'GET',
+    url: '/api/vulnerabilites/surface/silene',
+    summary:
+      'Note Silène de chaque instance lisible (note, sous-note réseau, nombres par famille, date du rapport, évolution, historique) et état de son dernier import',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, s }) => svc.vulnerabilites.silene.notes((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/constats',
+    summary:
+      'Constats Silène lisibles et présents, par contrôle (classe, points, hôtes concernés) ; recherche par contrôle, identifiant ou adresse',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheConstatsSilene,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.silene.constats((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/constats/:id',
+    summary:
+      'Fiche d’un constat Silène lisible : détail par hôte (port, protocole, service, produit, nom, type, échéance)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.silene.constat((s as Session).user, params.id),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/actif',
+    summary:
+      'Ce que Silène dit d’un actif lisible (adresse IP ou nom de domaine) : ports ouverts, noms, produits, constats',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: FicheActifSileneRequete,
+    handler: async ({ svc, s, query }) => svc.vulnerabilites.silene.ficheActif((s as Session).user, query),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/surface/silene/perimetres',
+    summary: 'Instances Silène et le périmètre de la plateforme relié à chacune (non relié : administration seulement)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc }) => svc.vulnerabilites.silene.perimetres(),
+  }),
+  route({
+    method: 'PUT',
+    url: '/api/vulnerabilites/surface/silene/perimetres/:id',
+    summary:
+      'Relier (ou délier) une instance Silène à un périmètre de la plateforme (If-Match, 0 si jamais reliée) ; écriture exigée sur le périmètre actuel et le périmètre visé',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    body: LiaisonPerimetreAlh,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.silene.lier(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
     url: '/api/vulnerabilites/surface/carte',
     summary:
-      'Carte « Lignes d’approche » de la surface externe : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles ; bornée, déjà filtrée par les droits',
+      'Carte « Lignes d’approche » de la surface externe, deux sources (AlgoLightHouse, Silène) : actifs lisibles et présents, domaine parent, alertes ouvertes lisibles avec leur priorité, machines internes reliées lisibles, ports ouverts et constats Silène des hôtes ; bornée, déjà filtrée par les droits',
     tags,
     access: 'vulnerabilites:lire',
     handler: async ({ svc, s }) => svc.vulnerabilites.surfaceExterne.carte((s as Session).user),
@@ -1040,5 +1164,58 @@ export const vulnerabilitesRoutes = [
       setEtag(reply, r.version);
       return r;
     },
+  }),
+  // Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI). Lecture en nombres avec `lire` ; noms d'un point par une route
+  // à part, avec `lire` (décision du RSSI du 20/11/2026), consultation tracée ; import et suppression avec `administrer`.
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/annuaire',
+    summary:
+      'Rapport de l’Active Directory : note globale et son évolution, progression par niveau, points ouverts (nombre d’objets et variation), corrigés depuis l’import précédent ; nombres seulement, jamais de nom',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.annuaire.lire(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/annuaire/points/:identifiant/noms',
+    summary:
+      'Noms des objets d’un point de contrôle (dernier import, apparus et corrigés depuis le précédent)  : route à part, chaque consultation tracée au journal sans les noms',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: IdentifiantPointAdsParams,
+    handler: async ({ svc, s, params, ip }) =>
+      svc.vulnerabilites.annuaire.noms(params.identifiant, (s as Session).user, ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/annuaire/imports',
+    summary:
+      'Importer le rapport de l’Active Directory (extrait en liste blanche lu dans le navigateur, revalidé) ; noms des imports plus anciens que les deux derniers effacés',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ImportAds,
+    bodyLimit: ADS_BORNES.corps,
+    status: 201,
+    handler: async ({ svc, s, body, ip }) => {
+      const sess = s as Session;
+      // Même limite que les imports Nessus et Silène : fichiers commencés par heure et par personne, tous imports confondus.
+      if (!svc.limits.importNessus(sess.user.id)) throw new HttpError(429, MESSAGE_LIMITE_IMPORTS);
+      const bilan = await svc.vulnerabilites.annuaire.importer(body, sess.user, ip);
+      // Transaction validée : statistiques des tables qui grossissent, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.annuaire.apresValidation();
+      return bilan;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/annuaire/imports/:id',
+    summary:
+      'Supprimer un import du rapport de l’Active Directory, ses points et ses noms (If-Match : version de l’import)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    handler: async ({ svc, s, params, req, ip }) =>
+      svc.vulnerabilites.annuaire.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip),
   }),
 ];

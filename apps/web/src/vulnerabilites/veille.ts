@@ -88,3 +88,87 @@ export const echeanceDepassee = (echeance: string | null, aujourdhui: string) =>
 
 /** Nombre de pages d'une liste paginée. */
 export const nombrePages = (total: number, parPage: number) => Math.max(1, Math.ceil(total / parPage));
+
+/** Message après « Collecter maintenant » (demande du RSSI du 19/11/2026) : seules les sources de la veille sont relancées ;
+    les connecteurs se synchronisent depuis la carte « Intégrations » de la Plateforme. */
+export function messageCollectesDemandees(n: number): string {
+  const s = n > 1 ? 's' : '';
+  return `${n} collecte${s} de veille demandée${s} : l’exécutant les traite à son prochain passage. Les connecteurs (Tenable, AlgoLightHouse) ne sont pas concernés.`;
+}
+
+/* ------------------------------------------------------------------ Lot L1 : lisibilité des alertes et avis */
+/** Bloc d'un texte de source : paragraphe ou liste à puces. Le texte reste du texte simple (rendu échappé par React). */
+export type BlocTexte = { type: 'paragraphe'; texte: string } | { type: 'liste'; elements: string[] };
+
+/** Puce intégrée au texte : tiret, tiret moyen, puce ou astérisque entre espaces, après une ponctuation de fin. */
+const PUCE_EN_LIGNE = /(?<=[.:;!?])\s+[-–•*]\s+/g;
+const PUCE_EN_TETE = /^\s*[-–•*]\s+/;
+
+/** Découpe un texte de source en paragraphes et listes, sans rien réécrire : retours à la ligne (paragraphe sur une ligne
+    vide, puce en tête de ligne) et, pour un texte sur une ligne (forme rangée par la veille), puces intégrées quand il y en
+    a au moins deux. Aucun balisage n'est interprété. */
+export function blocsTexte(texte: string): BlocTexte[] {
+  const brut = texte.trim();
+  if (!brut) return [];
+  const enLigne = brut.match(PUCE_EN_LIGNE)?.length ?? 0;
+  const normalise = !brut.includes('\n') && enLigne >= 2 ? brut.replace(PUCE_EN_LIGNE, '\n- ') : brut;
+  const blocs: BlocTexte[] = [];
+  let paragraphe: string[] = [];
+  const fermer = () => {
+    if (paragraphe.length) blocs.push({ type: 'paragraphe', texte: paragraphe.join(' ') });
+    paragraphe = [];
+  };
+  for (const ligne of normalise.split(/\r?\n/).map((l) => l.trim())) {
+    if (!ligne) {
+      fermer();
+      continue;
+    }
+    if (PUCE_EN_TETE.test(ligne)) {
+      fermer();
+      const element = ligne.replace(PUCE_EN_TETE, '');
+      const dernier = blocs[blocs.length - 1];
+      if (dernier?.type === 'liste') dernier.elements.push(element);
+      else blocs.push({ type: 'liste', elements: [element] });
+      continue;
+    }
+    paragraphe.push(ligne);
+  }
+  fermer();
+  return blocs;
+}
+
+/** Une alerte du CERT-FR se distingue d'un avis (et d'une publication du CERT Santé, toujours rangée comme alerte) : c'est
+    la règle des recommandations de la fiche illustrée (lot PC4). */
+export const alerteUrgente = (a: Pick<AvisVeilleDto, 'source' | 'nature'>) =>
+  a.source === 'cert-fr' && a.nature === 'alerte';
+
+/** Marques d'une alerte ou d'un avis, tirées de ce que la veille range déjà (rien n'est déduit d'ailleurs) : exploitation
+    avérée selon la règle V26 (alerte du CERT-FR qui cite une CVE, mention « activement exploitée : oui » de la fiche du
+    CERT Santé), preuve de concept disponible (fiche du CERT Santé). La présence sur le parc et l'exposition sur Internet ne
+    sont pas dans la réponse de la liste : elles se lisent dans la fiche de chaque CVE. */
+export function marquesAvis(
+  a: Pick<AvisVeilleDto, 'source' | 'nature' | 'cves' | 'fiche'> & { parc?: AvisVeilleDto['parc'] },
+): { libelle: string; etat: 'erreur' | 'attention' }[] {
+  const out: { libelle: string; etat: 'erreur' | 'attention' }[] = [];
+  if (alerteUrgente(a) && a.cves.length)
+    out.push({ libelle: 'Exploitation avérée (alerte du CERT-FR)', etat: 'erreur' });
+  if (a.fiche?.exploitee === 'oui') out.push({ libelle: 'Exploitée selon le CERT Santé', etat: 'erreur' });
+  if (a.fiche?.preuveConcept === 'disponible')
+    out.push({ libelle: 'Preuve de concept disponible (CERT Santé)', etat: 'attention' });
+  // Lot PRIO-1 (décision du RSSI du 20/11/2026) : une CVE citée concerne la plateforme.
+  if (a.parc?.presentes.length)
+    out.push({ libelle: marqueParc('Présente sur le parc', a.parc.presentes, a.cves), etat: 'attention' });
+  if (a.parc?.exposees.length)
+    out.push({ libelle: marqueParc('Exposée sur Internet', a.parc.exposees, a.cves), etat: 'erreur' });
+  return out;
+}
+
+/** « Présente sur le parc », ou « Présente sur le parc (2 CVE citées sur 5) » quand toutes ne le sont pas. */
+function marqueParc(libelle: string, concernees: readonly string[], citees: readonly string[]): string {
+  return concernees.length === citees.length
+    ? libelle
+    : `${libelle} (${concernees.length} CVE citée${concernees.length > 1 ? 's' : ''} sur ${citees.length})`;
+}
+
+/** Libellé de la nature : « Alerte » ou « Avis ». */
+export const libelleNatureAvis = (a: Pick<AvisVeilleDto, 'nature'>) => (a.nature === 'alerte' ? 'Alerte' : 'Avis');

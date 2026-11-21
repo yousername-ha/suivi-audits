@@ -1,7 +1,8 @@
 /* Garde-fou du module Intégrations (ADR 0076, point 5) : l'exécutant et son script isolé ne lisent pas le catalogue
    TypeScript ; leurs listes fermées (points d'accès de lecture, opérations, flux de chaque type, formes contrôlées) sont
    recopiées et ce test garantit qu'elles restent identiques au catalogue partagé. Aucune valeur reçue de l'application n'y
-   est ajoutée à l'exécution. */
+   est ajoutée à l'exécution. Lot N1 : seuls les types qui joignent un outil par le réseau y figurent ; un type sans réseau
+   (import de fichier « nessus-fichier ») en est absent, et le test le vérifie. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -21,6 +22,7 @@ import {
   TENABLE_BORNES,
   TYPES_FRAGMENT_SERVICE_ALH,
   TYPES_INTEGRATION,
+  TYPES_INTEGRATION_RESEAU,
   USAGE_MANDATAIRE,
   VERSION_ALH,
   VERSION_TENABLE,
@@ -47,8 +49,14 @@ const motif = (texte: string, nom: string): string => {
 describe('architecture : connecteurs du module Intégrations', () => {
   it('la liste fermée des points d’accès du script est celle du catalogue partagé', () => {
     expect(constante(SCRIPT, 'POINTS_ACCES')).toEqual(
-      Object.fromEntries(TYPES_INTEGRATION.map((t) => [t.id, t.pointsAcces.map((p) => [p.methode, p.chemin])])),
+      Object.fromEntries(TYPES_INTEGRATION_RESEAU.map((t) => [t.id, t.pointsAcces.map((p) => [p.methode, p.chemin])])),
     );
+    // Lot N1 : un type sans réseau n'a aucun point d'accès et n'est connu ni du script ni de l'exécutant.
+    for (const t of TYPES_INTEGRATION.filter((x) => x.flux === null)) {
+      expect(t.pointsAcces).toEqual([]);
+      expect(SCRIPT).not.toContain(`"${t.id}"`);
+      expect(EXECUTANT).not.toContain(`"${t.id}"`);
+    }
     // Lecture seule : aucune méthode d'écriture métier n'y figure (POST n'est admis que pour l'analyse de Tenable).
     for (const t of TYPES_INTEGRATION)
       for (const p of t.pointsAcces) {
@@ -60,7 +68,7 @@ describe('architecture : connecteurs du module Intégrations', () => {
   it('paramètres de requête admis : liste fermée identique au catalogue, valeurs entières seulement', () => {
     expect(constante(SCRIPT, 'PARAMETRES_ACCES')).toEqual(
       Object.fromEntries(
-        TYPES_INTEGRATION.map((t) => [
+        TYPES_INTEGRATION_RESEAU.map((t) => [
           t.id,
           Object.fromEntries(
             t.pointsAcces.filter((p) => p.parametres).map((p) => [`${p.methode} ${p.chemin}`, [...p.parametres!]]),
@@ -97,11 +105,11 @@ describe('architecture : connecteurs du module Intégrations', () => {
   });
 
   it('opérations et flux de chaque type : script et exécutant identiques au catalogue', () => {
-    const operations = Object.fromEntries(TYPES_INTEGRATION.map((t) => [t.id, [...t.operations]]));
+    const operations = Object.fromEntries(TYPES_INTEGRATION_RESEAU.map((t) => [t.id, [...t.operations]]));
     expect(constante(SCRIPT, 'OPERATIONS')).toEqual(operations);
     expect(constante(EXECUTANT, 'INTEGRATIONS_OPERATIONS')).toEqual(operations);
     expect(constante(EXECUTANT, 'INTEGRATIONS_FLUX')).toEqual(
-      Object.fromEntries(TYPES_INTEGRATION.map((t) => [t.id, t.flux])),
+      Object.fromEntries(TYPES_INTEGRATION_RESEAU.map((t) => [t.id, t.flux])),
     );
   });
 
@@ -200,7 +208,7 @@ describe('architecture : connecteurs du module Intégrations', () => {
   });
 
   it('mandataire : seuls les types dont le flux l’utilise le reçoivent ; tunnel CONNECT, aucune option qui coupe la vérification', () => {
-    const utilisent = TYPES_INTEGRATION.filter((t) => USAGE_MANDATAIRE[t.flux] === 'utilise').map((t) => t.id);
+    const utilisent = TYPES_INTEGRATION_RESEAU.filter((t) => USAGE_MANDATAIRE[t.flux!] === 'utilise').map((t) => t.id);
     expect(utilisent).toEqual(['algolighthouse']);
     expect(
       constante(`TYPES_MANDATAIRE = {"v": ${/^TYPES_MANDATAIRE = (\[.*\])$/m.exec(SCRIPT)![1]}}`, 'TYPES_MANDATAIRE'),

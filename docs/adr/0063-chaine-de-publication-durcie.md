@@ -106,3 +106,7 @@ dans `picomatch` ≤ 4.0.7 (gravité élevée), sur des motifs « extglob » ré
   remplaçant n'est possible sans changer ces trois outils, eux-mêmes les plus répandus dans leur rôle. L'avis, publié ce
   jour, faisait échouer le job « Qualité ».
 - Réexamen au plus tard le 25/11/2026 (décision du RSSI du 18/11/2026) ; l'exception est retirée dans la PR qui adopte la version corrigée.
+- **Exception retirée le 20/11/2026** (décision du RSSI du 19/11/2026) : depuis le 19/11/2026, ni `pnpm audit` (rejoué sur une
+  copie du dépôt sans aucune exception) ni le registre npm ne signalent plus cet avis pour `picomatch` 4.0.7, restée la
+  dernière version ; la raison de ce retrait de l'avis n'a pas été établie. L'exception ne servait donc plus à rien. Si
+  l'avis réapparaît, le job « Qualité » échouera de nouveau et la question sera reposée au RSSI.

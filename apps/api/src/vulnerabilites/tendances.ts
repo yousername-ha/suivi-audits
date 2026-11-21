@@ -67,7 +67,9 @@ export interface Portee {
   aucun: boolean;
 }
 
-/** Failles et objets du calcul global, sous la forme attendue par composerInstantane (sans nom). */
+/** Failles et objets du calcul global, sous la forme attendue par composerInstantane (sans nom). `machines` à false (vue
+    d'ensemble, lot PERF-04) : machines et actifs omis, pour les seules mesures globales qui n'en dépendent pas (nombres de
+    failles par priorité, exploitées, dépassements, exceptions) ; les totaux de machines et d'actifs sont alors nuls. */
 export function entreesInstantane(
   cumuls: ReadonlyMap<string, Cumul>,
   sources: ReadonlyMap<string, SourcesFailleDto>,
@@ -79,6 +81,7 @@ export function entreesInstantane(
     perimetreActif: new Map(),
     corrections: [],
   },
+  machines = true,
 ): EntreeInstantane {
   const failles: FailleInstantane[] = [];
   for (const x of cumuls.values()) {
@@ -87,15 +90,15 @@ export function entreesInstantane(
     failles.push({
       priorite: p.niveau,
       exploitee: exploiteeSelonSources(x, sources),
-      machines: [...x.machines],
-      actifs: x.actifIds,
+      machines: machines ? [...x.machines] : [],
+      actifs: machines ? x.actifIds : [],
     });
   }
   const depasses = new Set(objetsEnDepassement(objets, reglage.delais, maintenant).map((o) => `${o.nature}:${o.id}`));
   const objetsInst: ObjetInstantane[] = objets.map((o) => ({
     depassement: depasses.has(`${o.nature}:${o.id}`),
     exception: o.etat === 'risque_accepte',
-    machines: o.machines,
+    machines: machines ? o.machines : [],
   }));
   return { failles, objets: objetsInst, ...cartes };
 }

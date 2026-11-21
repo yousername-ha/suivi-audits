@@ -14,7 +14,10 @@
    leur source (gravité déduite du score, comme pour le CERT Santé). Les CVE des alertes ne portent aucun fait : elles ne
    disent que la présence. Lot ALH5 (décision A du RSSI du 17/11/2026) : « une priorité est la même pour tout le monde » ;
    ces faits sont lus sur toutes les technologies, sans tenir compte des droits de lecture de la personne (ils ne nomment
-   aucun actif ; le choix n° 1 du lot ALH2 est remplacé). */
+   aucun actif ; le choix n° 1 du lot ALH2 est remplacé).
+   Lot N2 (décision du RSSI du 19/11/2026) : un contrôle de Tenable marqué « exploité par un logiciel malveillant » (colonne
+   `exploite_malware` du constat, import Nessus) est une source de plus de l'exploitation avérée, propre au constat (pas à
+   ses CVE) : sourcesDe la reçoit avec les faits de Tenable ; les filtres SQL l'ajoutent à exploiteeCve (failles.ts). */
 import {
   type GraviteSource,
   type GraviteTenable,
@@ -59,6 +62,8 @@ export interface FaitsCve {
   veille: boolean;
   nvd: { publieLe: string | null; gravite: GraviteTenable | null; score: number | null } | null;
   kevAjout: string | null;
+  /** Lot PRIO-1 : le catalogue KEV dit la CVE utilisée par des rançongiciels (`knownRansomwareCampaignUse` = « Known »). */
+  kevRancongiciel?: boolean;
   epss: number | null;
   /** Publications d'avis qui citent la CVE (source, nature, date de publication ou, à défaut, de première vue). */
   avis: { source: 'cert-fr' | 'cert-sante'; nature: 'alerte' | 'avis'; le: string; produit: string | null }[];
@@ -83,9 +88,10 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
     score: string | null;
     epss_score: string | null;
     kev_ajout: string | null;
+    kev_rancongiciel: boolean | null;
   }>`SELECT cve, publie_le, nvd_le, cvss31_gravite, cvss40_gravite,
             CASE WHEN cvss31_gravite IS NOT NULL THEN cvss31_score ELSE cvss40_score END AS score,
-            epss_score, kev_ajout::text AS kev_ajout
+            epss_score, kev_ajout::text AS kev_ajout, kev_rancongiciel
      FROM vulnerabilites_veille_cve WHERE cve = ANY(${liste}::text[])`.execute(k);
   for (const l of v)
     out.set(l.cve, {
@@ -99,6 +105,7 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
           }
         : null,
       kevAjout: l.kev_ajout,
+      ...(l.kev_ajout && l.kev_rancongiciel === true ? { kevRancongiciel: true } : {}),
       epss: nombre(l.epss_score),
       avis: [],
       fiches: [],
@@ -159,12 +166,17 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
   return out;
 }
 
-/** Ce que dit Tenable d'un constat (valeurs de la source « tenable »). */
+/** Ce que dit Tenable d'un constat (valeurs de la source « tenable »). Lot N2 : `malware`, contrôle marqué « exploité par un
+    logiciel malveillant » (import Nessus ; toujours faux pour Security Center), vaut exploitation avérée. */
 export interface FaitsTenable {
   gravite: GraviteTenable;
   cvss3: number | null;
   epss: number | null;
   exploitable: boolean;
+  malware: boolean;
+  /** Lot PRIO-1 : kits d'exploitation cités par Tenable (Metasploit, Core Impact, CANVAS) ; « exploitable », source
+      `tenable-kit`, jamais exploitation avérée. Absent : aucun. */
+  kits?: readonly string[];
 }
 
 /** Une valeur par source : la plus sévère de la source quand plusieurs CVE en portent une (constat de Tenable). */
@@ -174,7 +186,13 @@ function parSource<T extends { source: SourceValeur }>(liste: T[], valeur: (x: T
     const deja = m.get(x.source);
     if (!deja || valeur(x) > valeur(deja)) m.set(x.source, x);
   }
-  return SOURCES_VALEUR.flatMap((s) => (m.has(s) ? [m.get(s)!] : []));
+  // Lot PERF-04 : boucle simple (appelée trois fois par ensemble de sources, des dizaines de milliers de fois par calcul global).
+  const out: T[] = [];
+  for (const s of SOURCES_VALEUR) {
+    const x = m.get(s);
+    if (x) out.push(x);
+  }
+  return out;
 }
 const RANG: Record<GraviteTenable, number> = { critique: 4, elevee: 3, moyenne: 2, faible: 1 };
 /** Mention identique dans toutes les fiches lues, sinon non renseignée (null). */
@@ -190,8 +208,10 @@ export function sourcesDe(faits: readonly FaitsCve[], tenable?: FaitsTenable): S
   const cvss: ScoreSource[] = [];
   const epss: ScoreSource[] = [];
   const fiches = faits.flatMap((f) => f.fiches);
+  let rancongiciel = false;
   for (const f of faits) {
     if (f.kevAjout) exploitation.push({ source: 'kev', le: `${f.kevAjout}T00:00:00.000Z` });
+    if (f.kevRancongiciel) rancongiciel = true;
     for (const a of f.avis)
       if (a.source === 'cert-fr' && a.nature === 'alerte') exploitation.push({ source: 'cert-fr', le: a.le });
     for (const x of f.fiches) {
@@ -223,6 +243,10 @@ export function sourcesDe(faits: readonly FaitsCve[], tenable?: FaitsTenable): S
     if (tenable.cvss3 !== null) cvss.push({ source: 'tenable', score: tenable.cvss3 });
     if (tenable.epss !== null) epss.push({ source: 'tenable', score: tenable.epss });
     if (tenable.exploitable) exploitable.push({ source: 'tenable', le: null });
+    // Lot N2 : fait du contrôle, sans date (rangé après les sources datées, V26).
+    if (tenable.malware) exploitation.push({ source: 'tenable', le: null });
+    // Lot PRIO-1 : kit d'exploitation disponible selon Tenable, fait du contrôle sans date, rangé avec « exploitable ».
+    if (tenable.kits?.length) exploitable.push({ source: 'tenable-kit', le: null });
   }
   return {
     exploitation: rangerSignalements(exploitation, SOURCES_EXPLOITATION),
@@ -238,6 +262,7 @@ export function sourcesDe(faits: readonly FaitsCve[], tenable?: FaitsTenable): S
           contournement: commune(fiches.map((x) => x.contournement)),
         }
       : null,
+    ...(rancongiciel ? { rancongiciel: true } : {}),
   };
 }
 
@@ -260,6 +285,16 @@ export const exploiteeCve = (colonne: 'v.cve' | 'cc.cve' | 'r.cve'): RawBuilder<
     OR EXISTS (SELECT 1 FROM vulnerabilites_veille_avis a WHERE a.cves @> ARRAY[${sql.ref(colonne)}]::text[]
       AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui')))
     OR EXISTS (SELECT 1 FROM (${cvesAlh}) za WHERE za.cve = ${sql.ref(colonne)} AND za.exploitee))`;
+
+/** Lot PERF (PERF-02) : ensemble des CVE à l'exploitation avérée selon une source, même règle qu'exploiteeCve sous forme
+    d'ensemble (une lecture par requête au lieu de trois sous-requêtes par CVE, coût estimé sous le seuil du JIT). Toute
+    évolution de l'une se reporte sur l'autre (test vulnerabilites-priorite-commune). Colonne : cve. */
+export const cvesExploitees = sql<{ cve: string }>`SELECT vk.cve FROM vulnerabilites_veille_cve vk
+    WHERE vk.kev_ajout IS NOT NULL
+  UNION SELECT x.cve FROM vulnerabilites_veille_avis a CROSS JOIN LATERAL unnest(a.cves) AS x(cve)
+    WHERE x.cve IS NOT NULL
+      AND ((a.source = 'cert-fr' AND a.nature = 'alerte') OR (a.source = 'cert-sante' AND a.fiche_exploitee = 'oui'))
+  UNION SELECT za.cve FROM (${cvesAlh}) za WHERE za.exploitee AND za.cve IS NOT NULL`;
 
 /** La CVE de la colonne désignée est « exploitable » selon la fiche du CERT Santé (preuve de concept disponible), ou selon
     AlgoLightHouse sur une technologie encore détectée (lots ALH2 et ALH5). */

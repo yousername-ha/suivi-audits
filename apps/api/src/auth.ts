@@ -1,12 +1,11 @@
 /* Sessions, authentification (mot de passe, puis TOTP, clé de sécurité ou code de récupération), jeton d'installation. */
 import {
   DEFAULT_PREFERENCES,
-  effectivePermissions,
   Preferences as PreferencesSchema,
-  Rights,
   type AccessStage,
   type Permission,
   type Preferences,
+  type Rights,
   type SettingsValues,
 } from '@suivi/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -15,7 +14,7 @@ import type { Config } from './config.js';
 import { surConnexion, type Client, type Db } from './db/db.js';
 import { HttpError } from './http/errors.js';
 import { isHttps } from './http/security.js';
-import { loadGrants, permanentAdminCount, permissionDenied } from './rights.js';
+import { compteActif, droitsDe, permanentAdminCount, permissionDenied } from './rights.js';
 import type { MotsDePasse } from './mots-de-passe.js';
 import { dummyVerify, sha256, token, verifyTotp, type Vault } from './security/crypto.js';
 import {
@@ -266,9 +265,8 @@ export class Auth {
       .where('s.expires_at', '>', sql<Date>`now()`)
       .where('s.last_seen_at', '>', sql<Date>`now() - make_interval(mins => ${this.policy().sessionIdleMinutes})`)
       .executeTakeFirst();
-    if (!r || r.disabled || (r.expires_at && new Date(r.expires_at) <= new Date())) return null;
-    const grants = await loadGrants(this.db.pool, r.id);
-    const rights = new Rights(effectivePermissions(grants).keys());
+    if (!r || !compteActif(r)) return null;
+    const { grants, rights } = await droitsDe(this.db.pool, r.id);
     if (touch && Date.now() - new Date(r.last_seen_at).getTime() > 60e3) {
       this.db.k
         .updateTable('sessions')
@@ -330,7 +328,7 @@ export class Auth {
       ])
       .where('u.id', '=', userId)
       .executeTakeFirstOrThrow();
-    const rights = new Rights(effectivePermissions(await loadGrants(this.db.pool, userId)).keys());
+    const { rights } = await droitsDe(this.db.pool, userId);
     return accessStage(
       {
         mfaOk,

@@ -60,6 +60,8 @@ const DELAI = {
 const priorite = { niveau: 'P2' as const, faits: [{ fait: 'presence' as const, presence: 'detectee' as const }] };
 const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   id: '00000000-0000-4000-8000-000000000c01',
+  kitsExploitation: [],
+  surMachineFinSupport: false,
   plugin: '950003',
   nom: 'Exemple Linux : contrôle fictif',
   gravite: 'moyenne',
@@ -69,6 +71,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   epss: null,
   exploitable: false,
   exploite: false,
+  exploiteMalware: false,
   nonMaintenu: false,
   finSupportLe: null,
   finDeSupport: false,
@@ -83,6 +86,7 @@ const constat = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   priorite,
   suivi: suivi({ etat: 'a_traiter', proposition: 'a_confirmer' }),
   delai: DELAI,
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const declaree: FailleDeclareeDto = {

@@ -183,6 +183,16 @@
   display: flex;
   gap: var(--mantine-spacing-xs);
 }
+/* Verre « maintenance » (choix du RSSI du 20/11/2026) : liseré épais à gauche de la boîte d'outils, liseré intérieur et
+   ombre portée des boutons d'ajout. Classe doublée : même poids que la règle commune des boîtes (:is), placée après elle. */
+.app-main .barre-boite.barre-boite {
+  border-inline-start: 3px solid var(--menu-teinte-pilotage);
+}
+.app-main .barre-outils__ajout .mantine-Button-root {
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--menu-fond-haut) 35%, transparent),
+    0 1em 2em -1.2em color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
+}
 
 /* Filtre sur le titre d'une colonne : le mot ouvre les valeurs ; la colonne filtrée est marquée. */
 .filtre-colonne {
@@ -294,9 +304,11 @@
   }
 }
 
-/* Mode clair (choix du RSSI du 18/11/2026) : la boîte d'outils se fond dans le fond blanc, sans fond ni cadre ; le champ
-   de recherche garde un contour violet fin, un fondu violet léger à gauche et la même lueur qui fait le tour. */
-[data-mantine-color-scheme='light']
+/* Mode clair : bloc clair au contour fin, teinté de violet, léger fondu à gauche et ombre douce (choix du RSSI du
+   20/11/2026, il remplace la boîte sans fond ni cadre du 18/11/2026) ; le champ de recherche garde un contour violet fin,
+   un fondu violet léger à gauche et la même lueur qui fait le tour. À l'essai : la préférence « Bloc bleu nuit »
+   (`data-boite-outils`) garde en mode clair la boîte du mode sombre, ces règles ne s'appliquent alors pas. */
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
   .app-main
   :is(
     .barre-boite,
@@ -308,14 +320,32 @@
     .pi-toolbar-end,
     .bb-toolbar .bb-search
   ) {
-  border-color: transparent;
-  background: transparent;
+  border-color: color-mix(in srgb, var(--mantine-color-violet-4) 30%, var(--suivi-trait));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--mantine-color-violet-5) 7%, transparent) 0%, transparent 60%),
+    var(--suivi-surface);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--menu-fond-haut) 6%, transparent),
+    0 6px 18px color-mix(in srgb, var(--mantine-color-violet-9) 7%, transparent);
   color: var(--mantine-color-text);
 }
-[data-mantine-color-scheme='light'] .app-main .barre-boite__sep {
+/* Boîte d'outils en clair : verre de la page de maintenance (choix du RSSI du 20/11/2026), bords teintés de violet,
+   liseré violet à gauche, dégradé en biais. Classe doublée : passe devant la règle commune des boîtes en clair. */
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite.barre-boite {
+  border: 1.5px solid var(--suivi-trait);
+  border-block-start-color: color-mix(in srgb, var(--mantine-color-violet-3) 32%, var(--suivi-trait));
+  border-inline-start: 3px solid var(--mantine-color-violet-4);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--mantine-color-violet-5) 8%, var(--suivi-surface)),
+    var(--suivi-surface)
+  );
+  box-shadow: 0 1.4em 3em -1.6em color-mix(in srgb, var(--menu-fond-haut) 38%, transparent);
+}
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite__sep {
   background: var(--suivi-trait);
 }
-[data-mantine-color-scheme='light']
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
   .app-main
   :is(
     .barre-boite .mantine-ActionIcon-root,
@@ -327,13 +357,13 @@
   ) {
   color: var(--mantine-color-dimmed);
 }
-[data-mantine-color-scheme='light']
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
   .app-main
   :is(.barre-boite .mantine-ActionIcon-root, .barre-boite__outil, .fs-tool, .pr-tool, .pi-tool):hover {
   background: var(--neon-doux);
   color: var(--neon-accent);
 }
-[data-mantine-color-scheme='light']
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
   .app-main
   :is(
     .barre-boite [aria-pressed='true'],
@@ -343,14 +373,17 @@
   background: var(--neon-doux);
   color: var(--neon-accent);
 }
-[data-mantine-color-scheme='light']
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
   .app-main
   :is(.fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end)
   .mantine-Button-root[data-variant='default'] {
   border-color: var(--mantine-color-default-border);
   color: var(--mantine-color-text);
 }
-[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-input {
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
+  .app-main
+  .barre-boite__recherche
+  .mantine-Input-input {
   border-color: color-mix(in srgb, var(--mantine-color-violet-4) 45%, transparent);
   background:
     linear-gradient(
@@ -362,13 +395,22 @@
     var(--suivi-surface);
   color: var(--mantine-color-text);
 }
-[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-input::placeholder {
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
+  .app-main
+  .barre-boite__recherche
+  .mantine-Input-input::placeholder {
   color: var(--mantine-color-dimmed);
 }
-[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-section {
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
+  .app-main
+  .barre-boite__recherche
+  .mantine-Input-section {
   color: var(--neon-accent);
 }
-[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
+  .app-main
+  .barre-boite__recherche
+  .mantine-Input-wrapper::before {
   background: conic-gradient(
     from 0deg,
     transparent 0turn 0.74turn,
@@ -803,4 +845,171 @@ body:has(.as-launcher) .shell-main {
   .auth-connexion .auth-carte--valider::before {
     animation: none;
   }
+}
+
+/* Sélecteurs segmentés (« Par faille / Par machine », densité, thème…), choix du RSSI du 19/11/2026 : plus de fond gris,
+   un simple contour ; le choix actif prend le bleu nuit du menu avec l'effet verre du bouton « Se connecter » (reflet bleu
+   transparent de gauche à droite, liseré bleu), sans lumière animée. */
+.mantine-SegmentedControl-root {
+  padding: 0.25rem;
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: 0.85rem;
+  background: transparent;
+}
+.mantine-SegmentedControl-control::before {
+  display: none;
+}
+.mantine-SegmentedControl-indicator {
+  border-radius: 0.6rem;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 24%, transparent) 0%,
+      color-mix(in srgb, var(--menu-teinte-pilotage) 7%, transparent) 45%,
+      transparent 75%
+    ),
+    var(--menu-fond);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent);
+}
+.mantine-SegmentedControl-label {
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+.mantine-SegmentedControl-label:hover:not([data-active], [data-disabled]) {
+  color: var(--mantine-color-text);
+}
+.mantine-SegmentedControl-label[data-active],
+.mantine-SegmentedControl-label[data-active]:hover {
+  color: var(--menu-texte);
+  font-weight: 600;
+}
+
+/* Onglets, une seule forme sur toute la plateforme (demandes du RSSI du 19/11/2026) : rubriques sous le titre des pages,
+   onglets Mantine des pages et des fenêtres, onglets du RETEX et de l'Assistant RSSI. Deux formes aux couleurs du menu sont à
+   l'essai, au choix de chaque personne dans Mon compte > Affichage (préférence « onglets », barre bleu nuit par défaut). Une
+   fois le choix fait, retirer la forme écartée, la préférence et son réglage. Les onglets verticaux ne changent pas.
+   Le sélecteur :is() prend la spécificité de son élément le plus précis : la forme commune l'emporte ainsi sur les habillages
+   propres à un écran. */
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  .mantine-Tabs-list:not([data-orientation='vertical'])::before {
+  display: none;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles']) .as-tabs {
+  min-height: 0;
+  margin: 0.5rem 1rem;
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  flex: 0 0 auto;
+  align-self: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  line-height: 1.4;
+}
+/* Barre bleu nuit : onglet actif en bleu du menu et texte bleu nuit, comme l'action principale de la boîte d'outils. */
+html[data-onglets='barre']
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  border: 0;
+  background: var(--menu-fond);
+  box-shadow: var(--suivi-ombre);
+}
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  color: var(--menu-secondaire);
+}
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled], [aria-current='page'], [data-active], [aria-selected='true']) {
+  background: var(--menu-survol);
+  color: var(--menu-texte);
+}
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--menu-focus);
+  outline-offset: 2px;
+}
+html[data-onglets='barre']
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
+  background: var(--menu-teinte-pilotage);
+  color: var(--menu-fond-haut);
+  font-weight: 650;
+}
+/* Pastilles : cadre clair, onglet actif en bleu nuit du menu, cerné de bleu pour rester visible en sombre. */
+html[data-onglets='pastilles']
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  background: var(--suivi-surface-douce);
+  box-shadow: none;
+}
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  color: var(--mantine-color-dimmed);
+}
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled], [aria-current='page'], [data-active], [aria-selected='true']) {
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 12%, transparent);
+  color: var(--mantine-color-text);
+}
+html[data-onglets='pastilles']
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+  font-weight: 600;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--menu-teinte-pilotage) 45%, transparent),
+    0 4px 14px color-mix(in srgb, var(--menu-fond-haut) 22%, transparent);
 }

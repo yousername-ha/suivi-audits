@@ -17,7 +17,12 @@
    obligatoire, puis liaison des seules paires de l'aperçu.
    Lot ALH6 : services exposés (port/protocole · service, produit et version) dans l'onglet « Actifs », la fiche d'un actif
    et la fiche d'une alerte ; seuls les services portés par une alerte sont connus (l'éditeur ne publie pas la liste des
-   ports ouverts). */
+   ports ouverts).
+   Lot SI1 : Silène (ANSSI) comme seconde source de la surface externe (SurfaceSilene.tsx) : note Silène en tête à côté de
+   l'état d'AlgoLightHouse, chacun avec sa pastille ; liste « Actifs » commune (un actif par adresse IP ou nom de domaine,
+   ports ouverts de Silène et services d'AlgoLightHouse réunis, la source de chaque information visible) ; onglet
+   « Constats Silène » ; liaison de chaque instance Silène à un périmètre dans l'onglet « Périmètres ». La carte n'est pas
+   changée dans ce lot. */
 import {
   Alert,
   Anchor,
@@ -25,6 +30,7 @@ import {
   Button,
   Checkbox,
   Group,
+  List,
   Modal,
   Pagination,
   Select,
@@ -39,6 +45,11 @@ import { notifications } from '@mantine/notifications';
 import {
   serviceEnFinDeSupport,
   type ActifAlhDto,
+  type ActifCarteDto,
+  type FicheConstatSileneDto,
+  libelleClasseSilene,
+  type ActifSurfaceDto,
+  type NoteSileneDto,
   type AlerteAlhDto,
   type ApercuLiaisonMasseDto,
   type ModeLiaisonMasse,
@@ -69,12 +80,28 @@ import {
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useLocation } from 'react-router';
+import { type OngletSurface, ouvertureSurface } from './recherche';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
+import { EtatIntegration } from '../integrations/EtatIntegration';
+import { peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
-import { CarteSurface } from './CarteSurface';
+import { CarteSurface, VUE_CARTE_INITIALE, type VueCarte } from './CarteSurface';
+import { constatsDeLaCarte } from './carte-surface';
+import { PictoSource } from './PictoSource';
+import {
+  FicheActifSileneLue,
+  FicheConstatSilene,
+  NoteSilene,
+  OngletConstatsSilene,
+  PerimetresSilene,
+  PortsActif,
+  SILENE_SEUL,
+  SourcesActif,
+} from './SurfaceSilene';
+import { URL_NOTES_SILENE, urlFicheConstatSilene } from './surface-silene';
 import { ETAT_PRIORITE, FILTRES_MACHINES_VIDES, libelleMachine, urlMachines } from './failles';
 import { FicheMachine } from './Machines';
 import { MentionFinSupport } from './ParcMachines';
@@ -106,6 +133,7 @@ import {
   libelleTypeAlerte,
   pourcentage,
   OPTIONS_LIAISON_ACTIF,
+  detailEtatAlh,
   resumeEtatAlh,
   resumeMachineInterne,
   urlActifsAlh,
@@ -131,42 +159,24 @@ const OPTIONS_STATUT = [
 ];
 const OPTIONS_ACTIF = TYPES_ACTIF_ALH.map((t) => ({ value: t, label: libelleTypeActif(t) }));
 
-/** État de la synchronisation de chaque instance AlgoLightHouse (sans état). */
-export function EtatSurface({ etats }: { etats: EtatSurfaceExterneDto[] }) {
-  if (!etats.length)
-    return (
-      <Alert role="status" title="Aucun connecteur AlgoLightHouse">
-        Aucune instance AlgoLightHouse n’est configurée : un administrateur des intégrations l’ajoute dans{' '}
-        <Link to="/integrations">Pilotage &gt; Intégrations</Link>.
-      </Alert>
-    );
+/** État en lecture seule de chaque instance AlgoLightHouse (sans état) : état, dernière synchronisation, erreur éventuelle,
+    bilan et périmètres non reliés, puis « Configurer l'intégration » pour qui lit la carte de la Plateforme (ADR 0076,
+    addendum du 19/11/2026). */
+export function EtatSurface({
+  etats,
+  peutConfigurer = false,
+}: {
+  etats: EtatSurfaceExterneDto[];
+  peutConfigurer?: boolean;
+}) {
   return (
-    <Stack gap="xs">
-      {etats.map((e) => {
-        const r = resumeEtatAlh(e);
-        return (
-          <Group key={e.integrationId} gap="sm" wrap="nowrap" align="flex-start">
-            <StatusChip etat={r.etat}>{r.libelle}</StatusChip>
-            <Stack gap="2xs">
-              <Text size="sm" fw={600}>
-                {e.nom}
-              </Text>
-              {r.detail && (
-                <Text size="xs" c="dimmed" role="status">
-                  {r.detail}
-                </Text>
-              )}
-              {e.derniereCompleteLe && (
-                <Text size="xs" c="dimmed">
-                  Dernière synchronisation complète :{' '}
-                  <span className="horodatage">{fmtDate(e.derniereCompleteLe)}</span>
-                </Text>
-              )}
-            </Stack>
-          </Group>
-        );
-      })}
-    </Stack>
+    <EtatIntegration
+      type="AlgoLightHouse"
+      connecteurs={etats}
+      peutConfigurer={peutConfigurer}
+      qualifier={resumeEtatAlh}
+      detail={detailEtatAlh}
+    />
   );
 }
 
@@ -278,6 +288,9 @@ export function AlertesAlhTable({
 /** Limite de la connaissance des services, dite partout où ils s'affichent (lot ALH6). */
 export const LIMITE_SERVICES =
   'Seuls les services portés par une alerte sont connus : AlgoLightHouse ne publie pas la liste des ports ouverts.';
+/** Lot SI1 : ce que Silène ajoute. */
+export const PORTS_SILENE =
+  'Silène publie les ports ouverts de chaque hôte (pastille SIL) : ils sont réunis ici avec les services d’AlgoLightHouse (pastille ALH), sans doublon de port et de protocole.';
 
 /** Services exposés (sans état, lot ALH6) : port/protocole · service, produit et version, éditeur et CPE ; avec les
     alertes ouvertes lisibles qui les portent quand elles sont données. */
@@ -412,8 +425,11 @@ export function FicheAlerteAlh({ a }: { a: FicheAlerteAlhDto }) {
   );
 }
 
-/** Hôtes et domaines (sans état) ; `onOuvrir` ouvre la fiche d'un actif (machines internes). */
-export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; onOuvrir?: (x: ActifAlhDto) => void }) {
+/** Actif de la liste : d'AlgoLightHouse, et (lot SI1) ce que Silène en dit, avec ses sources. */
+type ActifListe = ActifAlhDto & Partial<Pick<ActifSurfaceDto, 'sources' | 'silene' | 'alhId'>>;
+
+/** Hôtes et domaines (sans état) ; `onOuvrir` ouvre la fiche d'un actif (machines internes, et ce qu'en dit Silène). */
+export function ActifsAlhTable<A extends ActifListe>({ actifs, onOuvrir }: { actifs: A[]; onOuvrir?: (x: A) => void }) {
   return (
     <DataTable label="Actifs exposés">
       <Table>
@@ -432,6 +448,8 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
         <Table.Tbody>
           {actifs.map((x) => {
             const mi = resumeMachineInterne(x.machinesInternes);
+            // Lot SI1 : actif vu par Silène seul (aucun champ d'AlgoLightHouse, aucune liaison possible).
+            const sileneSeul = !!x.sources && !x.sources.includes('alh');
             return (
               <Table.Tr key={x.id}>
                 <Table.Td>
@@ -448,8 +466,9 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
                     {libelleTypeActif(x.type)}
                     {x.adresse ? ` · résout vers ${x.adresse}` : ''}
                   </Text>
+                  {x.sources && <SourcesActif sources={x.sources} />}
                 </Table.Td>
-                <Table.Td>{libelleStatutActif(x.statut)}</Table.Td>
+                <Table.Td>{sileneSeul ? '—' : libelleStatutActif(x.statut)}</Table.Td>
                 <Table.Td>
                   <Text size="sm">
                     {[x.fai, x.asn ? `AS${x.asn}` : null, x.pays].filter(Boolean).join(' · ') || '—'}
@@ -472,7 +491,9 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
                   )}
                 </Table.Td>
                 <Table.Td>
-                  {x.services.length ? (
+                  {x.silene ? (
+                    <PortsActif actif={x as ActifSurfaceDto} />
+                  ) : x.services.length ? (
                     <>
                       {x.services.slice(0, 3).map((sv) => (
                         <div key={`${sv.port}/${sv.protocole ?? ''}`}>
@@ -501,11 +522,19 @@ export function ActifsAlhTable({ actifs, onOuvrir }: { actifs: ActifAlhDto[]; on
                 </Table.Td>
                 <Table.Td>{x.technologies}</Table.Td>
                 <Table.Td>
-                  <StatusChip etat={mi.etat}>{mi.libelle}</StatusChip>
-                  {mi.detail && (
-                    <Text size="xs" c="dimmed">
-                      {mi.detail}
+                  {sileneSeul ? (
+                    <Text size="sm" c="dimmed">
+                      {SILENE_SEUL}
                     </Text>
+                  ) : (
+                    <>
+                      <StatusChip etat={mi.etat}>{mi.libelle}</StatusChip>
+                      {mi.detail && (
+                        <Text size="xs" c="dimmed">
+                          {mi.detail}
+                        </Text>
+                      )}
+                    </>
                   )}
                 </Table.Td>
                 <Table.Td>{libellePerimetre(x)}</Table.Td>
@@ -1001,7 +1030,7 @@ export function PerimetresAlhTable({
             <Table.Tr>
               <Table.Td colSpan={3}>
                 <Text size="sm" c="dimmed">
-                  Aucun périmètre AlgoLightHouse : lancez une synchronisation depuis Pilotage &gt; Intégrations.
+                  Aucun périmètre AlgoLightHouse : ils apparaissent après une synchronisation du connecteur.
                 </Text>
               </Table.Td>
             </Table.Tr>
@@ -1329,12 +1358,34 @@ function OngletActifs() {
   const [type, setType] = useState<TypeActifAlh | ''>('');
   const [liaison, setLiaison] = useState<FiltreLiaisonActif | ''>('');
   const [page, setPage] = useState(1);
-  const [ouvert, setOuvert] = useState<ActifAlhDto | null>(null);
+  const [ouvert, setOuvert] = useState<ActifSurfaceDto | null>(null);
   const [masse, setMasse] = useState(false);
+  // Lot R1 : la barre de recherche du module ouvre cet onglet filtré (`?onglet=actifs&q=`) et, le cas échéant, la fiche
+  // d'un actif de la liste filtrée (`&actif=`), y compris quand l'onglet est déjà affiché.
+  const loc = useLocation();
+  const [actifVoulu, setActifVoulu] = useState<string | null>(null);
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search));
+    if (o.onglet !== 'actifs') return;
+    if (o.q !== null) {
+      setSaisie(o.q);
+      setRecherche(o.q);
+      setType('');
+      setLiaison('');
+      setPage(1);
+    }
+    setActifVoulu(o.actif);
+  }, [loc.key, loc.search]);
   const q = useQuery({
     queryKey: [...CLE, 'actifs', recherche, type, liaison, page],
-    queryFn: () => get<PageSurface<ActifAlhDto>>(urlActifsAlh(recherche, type, page, liaison)),
+    queryFn: () => get<PageSurface<ActifSurfaceDto>>(urlActifsAlh(recherche, type, page, liaison)),
   });
+  useEffect(() => {
+    if (!actifVoulu || !q.data) return;
+    const x = q.data.elements.find((e) => e.id === actifVoulu);
+    if (x) setOuvert(x);
+    setActifVoulu(null);
+  }, [actifVoulu, q.data]);
   return (
     <Stack>
       <form
@@ -1391,7 +1442,7 @@ function OngletActifs() {
       {q.data && <ActifsAlhTable actifs={q.data.elements} onOuvrir={setOuvert} />}
       {q.data && (
         <Text size="xs" c="dimmed">
-          Services connus : {LIMITE_SERVICES}
+          Services connus : {LIMITE_SERVICES} {PORTS_SILENE}
         </Text>
       )}
       {q.data && <Pages donnees={q.data} page={page} onPage={setPage} nom="actifs" />}
@@ -1399,12 +1450,23 @@ function OngletActifs() {
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!ouvert}
         onClose={() => setOuvert(null)}
-        title={ouvert ? `Machines internes de ${ouvert.valeur}` : 'Actif exposé'}
+        title={
+          ouvert
+            ? ouvert.alhId
+              ? `Machines internes de ${ouvert.valeur}`
+              : `Actif exposé : ${ouvert.valeur}`
+            : 'Actif exposé'
+        }
         size="xl"
         centered
         lockScroll={false}
       >
-        {ouvert && <FicheActif actif={ouvert} modifier={modifier} />}
+        {ouvert && (
+          <Stack>
+            {ouvert.alhId && <FicheActif actif={{ ...ouvert, id: ouvert.alhId }} modifier={modifier} />}
+            {ouvert.silene && <FicheActifSileneLue type={ouvert.type} valeur={ouvert.valeur} />}
+          </Stack>
+        )}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
@@ -1427,6 +1489,16 @@ function OngletTechnologies() {
   const [exploitee, setExploitee] = useState(false);
   const [tri, setTri] = useState<ReturnType<typeof triDepuis>>('');
   const [page, setPage] = useState(1);
+  // Lot R1 : la barre de recherche du module ouvre cet onglet filtré (`?onglet=technologies&q=`).
+  const loc = useLocation();
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search));
+    if (o.onglet !== 'technologies' || o.q === null) return;
+    setSaisie(o.q);
+    setRecherche(o.q);
+    setExploitee(false);
+    setPage(1);
+  }, [loc.key, loc.search]);
   const q = useQuery({
     queryKey: [...CLE, 'technologies', recherche, exploitee, tri, page],
     queryFn: () => get<PageSurface<TechnologieAlhDto>>(urlTechnologiesAlh(recherche, exploitee, page, tri)),
@@ -1481,13 +1553,19 @@ function OngletTechnologies() {
 }
 
 /** Onglet « Carte » (lot ALH4) : graphe lu une fois, filtré par les droits côté serveur ; un nœud ouvre la fiche
-    existante de l'alerte, de l'actif ou de la machine. */
-function OngletCarte() {
+    existante de l'alerte, de l'actif (et, lot SI2, ce qu'en dit Silène) ou de la machine, ou les constats Silène d'un hôte.
+    La vue (regroupement, filtres, replis) est tenue par l'écran : elle survit au changement d'onglet. */
+function OngletCarte({ vue, onVue }: { vue: VueCarte; onVue: (v: VueCarte) => void }) {
   const can = useCan();
   const modifier = can('vulnerabilites', 'modifier');
   const [alerte, setAlerte] = useState<string | null>(null);
-  const [actif, setActif] = useState<ActifOuvert | null>(null);
+  const [actif, setActif] = useState<ActifCarteDto | null>(null);
   const [machine, setMachine] = useState<string | null>(null);
+  const [constats, setConstats] = useState<{
+    hote: ActifCarteDto;
+    port: { port: number; protocole: 'tcp' | 'udp' | null } | null;
+  } | null>(null);
+  const [constat, setConstat] = useState<string | null>(null);
   const carte = useQuery({
     queryKey: [...CLE, 'carte'],
     queryFn: () => get<CarteSurfaceDto>(URL_CARTE_SURFACE),
@@ -1502,6 +1580,12 @@ function OngletCarte() {
     queryFn: () => get<MachineDto>(`/api/vulnerabilites/machines/${encodeURIComponent(machine!)}`),
     enabled: !!machine,
   });
+  const ficheConstat = useQuery({
+    queryKey: [...CLE, 'silene', 'constat', constat],
+    queryFn: () => get<FicheConstatSileneDto>(urlFicheConstatSilene(constat!)),
+    enabled: !!constat,
+  });
+  const listeConstats = constats && carte.data ? constatsDeLaCarte(carte.data, constats.hote, constats.port) : [];
   return (
     <Stack>
       <ErrorAlert error={carte.error} />
@@ -1509,7 +1593,14 @@ function OngletCarte() {
         <CarteSurface
           carte={carte.data}
           peutModifier={modifier}
-          actions={{ onAlerte: setAlerte, onActif: setActif, onMachine: setMachine }}
+          vue={vue}
+          onVue={onVue}
+          actions={{
+            onAlerte: setAlerte,
+            onActif: setActif,
+            onMachine: setMachine,
+            onConstats: (hote, port) => setConstats({ hote, port }),
+          }}
         />
       )}
       <Modal
@@ -1533,12 +1624,64 @@ function OngletCarte() {
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
         opened={!!actif}
         onClose={() => setActif(null)}
-        title={actif ? `Machines internes de ${actif.valeur}` : 'Actif exposé'}
+        title={
+          actif
+            ? actif.alhId
+              ? `Machines internes de ${actif.valeur}`
+              : `Actif exposé : ${actif.valeur}`
+            : 'Actif exposé'
+        }
         size="xl"
         centered
         lockScroll={false}
       >
-        {actif && <FicheActif actif={actif} modifier={modifier} />}
+        {actif && (
+          <Stack>
+            {actif.alhId && <FicheActif actif={{ ...actif, id: actif.alhId }} modifier={modifier} />}
+            {actif.silene && <FicheActifSileneLue type={actif.type} valeur={actif.valeur} />}
+          </Stack>
+        )}
+      </Modal>
+      <Modal
+        closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
+        opened={!!constats}
+        onClose={() => {
+          setConstats(null);
+          setConstat(null);
+        }}
+        title={
+          constats
+            ? `Constats Silène de ${constats.hote.valeur}${constats.port ? `, port ${constats.port.port}${constats.port.protocole ? `/${constats.port.protocole}` : ''}` : ''}`
+            : 'Constats Silène'
+        }
+        size="xl"
+        centered
+        lockScroll={false}
+      >
+        {constats && (
+          <Stack>
+            <Text size="sm" c="dimmed">
+              Sans priorité : un constat Silène n’a pas de CVE ; sa classe est celle du rapport (sens à confirmer).
+            </Text>
+            <List size="sm">
+              {listeConstats.map((c) => (
+                <List.Item key={c.id}>
+                  <Anchor component="button" type="button" onClick={() => setConstat(c.id)}>
+                    {c.controle}
+                  </Anchor>{' '}
+                  ({libelleClasseSilene(c.classe)}, {c.identifiant})
+                </List.Item>
+              ))}
+            </List>
+            {constats.hote.silene && listeConstats.length < constats.hote.silene.nombreConstats && !constats.port && (
+              <Text size="xs" c="dimmed">
+                Les autres sont dans la fiche de l’actif et dans l’onglet « Constats Silène ».
+              </Text>
+            )}
+            <ErrorAlert error={ficheConstat.error} />
+            {ficheConstat.data && <FicheConstatSilene c={ficheConstat.data} />}
+          </Stack>
+        )}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}
@@ -1597,6 +1740,7 @@ function OngletPerimetres() {
           onLier={(p, v) => void lier(p, v)}
         />
       )}
+      <PerimetresSilene options={options.data ?? []} />
     </Stack>
   );
 }
@@ -1605,10 +1749,29 @@ export function SurfaceExternePage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
   const administrer = can('vulnerabilites', 'administrer');
-  const [onglet, setOnglet] = useState<string | null>('carte');
+  // Lot R1 : onglet choisi par l'adresse (`?onglet=`, barre de recherche du module), au premier affichage et à chaque
+  // navigation.
+  const loc = useLocation();
+  const ongletAdresse = (search: string): OngletSurface | null => {
+    const o = ouvertureSurface(new URLSearchParams(search)).onglet;
+    return o && (o !== 'perimetres' || administrer) ? o : null;
+  };
+  const [onglet, setOnglet] = useState<string | null>(() => ongletAdresse(loc.search) ?? 'carte');
+  // Lot SI2 : vue de la carte (regroupement, filtres, replis) gardée pendant la navigation dans la page.
+  const [vueCarte, setVueCarte] = useState<VueCarte>(VUE_CARTE_INITIALE);
+  useEffect(() => {
+    const o = ouvertureSurface(new URLSearchParams(loc.search)).onglet;
+    if (o && (o !== 'perimetres' || administrer)) setOnglet(o);
+  }, [loc.key, loc.search, administrer]);
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatSurfaceExterneDto[]>('/api/vulnerabilites/surface/etat'),
+    enabled: lire,
+  });
+  // Lot SI1 : note Silène de chaque instance lisible.
+  const notes = useQuery({
+    queryKey: [...CLE, 'silene', 'notes'],
+    queryFn: () => get<NoteSileneDto[]>(URL_NOTES_SILENE),
     enabled: lire,
   });
   if (!lire)
@@ -1621,21 +1784,33 @@ export function SurfaceExternePage() {
     <Page>
       <PageHeader
         title="Surface externe"
-        description="Ce qu’AlgoLightHouse (éditeur AlgoSecure) voit de l’organisation sur Internet : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule, synchronisée chaque jour par l’exécutant d’exploitation ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse non relié n’est visible qu’avec le droit d’administrer le module. L’onglet « Carte » trace les lignes d’approche, de l’Internet aux machines internes reliées. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
+        description="Ce que deux sources voient de l’organisation sur Internet. AlgoLightHouse (éditeur AlgoSecure) : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Silène (ANSSI) : note du rapport importé, ports ouverts par hôte et constats. Un actif (adresse IP ou nom de domaine) vu par les deux n’apparaît qu’une fois. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule : AlgoLightHouse est synchronisé chaque jour par l’exécutant d’exploitation, Silène est importé par fichier ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse ou une instance Silène non reliés ne sont visibles qu’avec le droit d’administrer le module. L’onglet « Carte » trace les lignes d’approche, de l’Internet aux machines internes reliées. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
       />
       <Stack>
-        <ErrorAlert error={etat.error} />
-        {etat.data && <EtatSurface etats={etat.data} />}
+        <ErrorAlert error={etat.error ?? notes.error} />
+        <div className="ss-sources">
+          <Stack gap="sm" component="section" aria-label="AlgoLightHouse" className="ss-source">
+            <Group gap="xs">
+              <PictoSource source="algolighthouse" avecNom decoratif />
+              <Title order={2} size="h5">
+                AlgoLightHouse
+              </Title>
+            </Group>
+            {etat.data && <EtatSurface etats={etat.data} peutConfigurer={peutConfigurerIntegration(can)} />}
+          </Stack>
+          {notes.data && <NoteSilene notes={notes.data} peutConfigurer={peutConfigurerIntegration(can)} />}
+        </div>
         <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="carte">Carte</Tabs.Tab>
             <Tabs.Tab value="alertes">Alertes</Tabs.Tab>
             <Tabs.Tab value="actifs">Actifs</Tabs.Tab>
             <Tabs.Tab value="technologies">Technologies</Tabs.Tab>
+            <Tabs.Tab value="constats-silene">Constats Silène</Tabs.Tab>
             {administrer && <Tabs.Tab value="perimetres">Périmètres</Tabs.Tab>}
           </Tabs.List>
           <Tabs.Panel value="carte" pt="md">
-            <OngletCarte />
+            <OngletCarte vue={vueCarte} onVue={setVueCarte} />
           </Tabs.Panel>
           <Tabs.Panel value="alertes" pt="md">
             <OngletAlertes />
@@ -1645,6 +1820,9 @@ export function SurfaceExternePage() {
           </Tabs.Panel>
           <Tabs.Panel value="technologies" pt="md">
             <OngletTechnologies />
+          </Tabs.Panel>
+          <Tabs.Panel value="constats-silene" pt="md">
+            <OngletConstatsSilene />
           </Tabs.Panel>
           {administrer && (
             <Tabs.Panel value="perimetres" pt="md">

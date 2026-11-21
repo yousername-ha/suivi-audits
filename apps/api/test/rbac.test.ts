@@ -35,7 +35,15 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     const methods = (Array.isArray(d.method) ? d.method : [d.method]).filter((m) => m !== 'HEAD');
     return methods.map((m) => ({ method: m, url: d.url, access: d.access, raw: !!d.raw }));
   });
-  const guarded = routes.filter((r) => isPermission(r.access) || r.access === 'metier' || r.access === 'mur');
+  /** Permissions dont l'une suffit (route à droits alternatifs, ADR 0110 : lire ou le droit réservé « DPO »), ou la seule
+      exigée ; null pour une route sans permission. */
+  const alternatives = (access: unknown): Permission[] | null =>
+    Array.isArray(access) && access.every(isPermission)
+      ? (access as Permission[])
+      : isPermission(access)
+        ? [access]
+        : null;
+  const guarded = routes.filter((r) => alternatives(r.access) || r.access === 'metier' || r.access === 'mur');
 
   /** Routes sans permission métier par construction : authentification, compte personnel, temps réel, pages et fichiers
       statiques, données publiques de la plateforme. Aucune donnée d'un autre compte ni d'un module métier n'en sort. */
@@ -83,6 +91,10 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     // Notifications : chaque compte lit et modifie les siens (jamais ceux d'un autre) ; testé dans notifications-metier.test.ts.
     'GET /api/account/notifications',
     'PUT /api/account/notifications',
+    // Contact de crise (ADR 0107) : chaque compte lit sa propre fiche et ne modifie que ses téléphones et sa disponibilité ;
+    // testé dans contacts-crise-comptes.test.ts.
+    'GET /api/account/contact-crise',
+    'PATCH /api/account/contact-crise',
     'POST /api/mur/activer',
   ]);
 
@@ -135,6 +147,18 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'PATCH /api/retex/:id/propositions/:pid',
     'DELETE /api/retex/:id/propositions/:pid',
     'PUT /api/retex/:id/terminee',
+    // Tableaux de bord de l'accueil (ADR 0109) : ouverts à tout compte connecté ; la visibilité de chaque tableau (le sien,
+    // proposé d'office, partagé, public), le droit d'écrire (tableau_de_bord:modifier sur le sien, administration:administrer
+    // sur un tableau proposé) et l'ouverture des chiffres de l'auteur sont évalués par le service ; refus 401, 403 et 404
+    // testés dans tableau-de-bord-disposition.test.ts et tableau-de-bord-partage.test.ts.
+    'GET /api/tableaux-de-bord',
+    'GET /api/tableaux-de-bord/:id',
+    'PUT /api/tableaux-de-bord/onglets',
+    'PUT /api/tableaux-de-bord/:id',
+    'DELETE /api/tableaux-de-bord/:id',
+    'GET /api/tableaux-de-bord/:id/partage',
+    'PUT /api/tableaux-de-bord/:id/partage',
+    'GET /api/tableaux-de-bord/:id/chiffres',
     'GET /api/config-grc/templates',
     'POST /api/config-grc/templates/:id/adopt',
     'GET /api/config-grc/items',
@@ -155,7 +179,7 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
 
   it('toute route hors de la liste explicite exige une permission (ou un module métier lisible)', () => {
     const unexpected = routes
-      .filter((r) => !isPermission(r.access) && r.access !== 'metier' && r.access !== 'mur')
+      .filter((r) => !alternatives(r.access) && r.access !== 'metier' && r.access !== 'mur')
       .map((r) => `${r.method} ${r.url}`)
       .filter((k) => !UNGUARDED.has(k));
     expect(unexpected).toEqual([]);
@@ -212,8 +236,9 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     };
     const failures: string[] = [];
     for (const r of guarded) {
-      const required: Permission[] =
-        r.access === 'metier' || r.access === 'mur' ? ['audit:lire'] : [r.access as Permission];
+      const metier = r.access === 'metier' || r.access === 'mur';
+      // Droits alternatifs : chacun est essayé seul ; sans aucun d'eux, refus.
+      const required: Permission[] = metier ? ['audit:lire'] : alternatives(r.access)!;
       // Sans la permission (toutes les autres accordées ; pour « metier », aucune lecture métier). Vulnérabilités n'est plus un
       // module métier (ADR 0100, lot V5) : sa lecture reste accordée ici et ne doit pas ouvrir les routes « metier ».
       await setPerms(
@@ -222,19 +247,21 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
               (p) =>
                 !/^(audit|ecarts|plan_audit|pilotage|fournisseurs|conformite|ia|incidents|cartographie):lire$/.test(p),
             )
-          : ALL_PERMISSIONS.filter((p) => p !== r.access),
+          : ALL_PERMISSIONS.filter((p) => !required.includes(p)),
       );
       const denied = await call(r);
       if (denied.statusCode !== 403)
         failures.push(`${r.method} ${r.url} sans ${required.join()} : ${denied.statusCode}`);
-      // Avec la seule permission requise : jamais refusé pour cette permission-là.
-      await setPerms(required);
+      // Avec la seule permission requise (chacune des alternatives) : jamais refusé pour cette permission-là.
       // Flux SSE : la réponse ne se termine pas, l'accord n'est pas vérifié ici (le refus l'est).
       if (r.url.endsWith('/events')) continue;
-      const allowed = await call(r);
-      const body = allowed.headers['content-type']?.toString().includes('json') ? allowed.json() : {};
-      if (allowed.statusCode === 403 && (body.permission === r.access || r.access === 'metier' || r.access === 'mur'))
-        failures.push(`${r.method} ${r.url} avec ${required.join()} : refusé`);
+      for (const seule of metier ? [required] : required.map((p) => [p])) {
+        await setPerms(seule);
+        const allowed = await call(r);
+        const body = allowed.headers['content-type']?.toString().includes('json') ? allowed.json() : {};
+        if (allowed.statusCode === 403 && (metier || required.includes(body.permission)))
+          failures.push(`${r.method} ${r.url} avec ${seule.join()} : refusé`);
+      }
     }
     expect(failures).toEqual([]);
   }, 60_000);

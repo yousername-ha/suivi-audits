@@ -14,8 +14,10 @@ import { sameOrigin } from './security.js';
 type Method = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 /** public : sans session ; session : session ouverte à n'importe quelle étape ; auth : session complète
     (compte personnel) ; metier : au moins un module métier lisible ; mur : « metier » ou écran mural activé
-    (vue /mur, lecture seule) ; « module:action » : permission exigée. */
-type Access = 'public' | 'session' | 'auth' | 'metier' | 'mur' | Permission;
+    (vue /mur, lecture seule) ; « module:action » : permission exigée ; liste de permissions d'un même module : l'une d'elles
+    suffit (veille réglementaire, ADR 0110 : lire, ou le droit réservé « DPO »). Le module est celui des permissions de la
+    liste, toutes du même module (contrôlé à l'enregistrement de la route). */
+type Access = 'public' | 'session' | 'auth' | 'metier' | 'mur' | Permission | readonly [Permission, ...Permission[]];
 
 export interface Ctx<B = unknown, Q = unknown, P = unknown> {
   req: FastifyRequest;
@@ -62,6 +64,8 @@ const UNSAFE = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteDef<any, any, any>[]) {
   for (const d of defs) {
+    if (Array.isArray(d.access) && new Set(d.access.map((p) => p.split(':')[0])).size !== 1)
+      throw new Error(`${d.url} : les permissions alternatives doivent appartenir au même module.`);
     const methods = Array.isArray(d.method) ? d.method : [d.method];
     app.route({
       method: methods,
@@ -100,10 +104,17 @@ export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteD
             }
           } else if (d.access === 'auth') svc.auth.requireAuth(s);
           else if (d.access === 'metier') svc.auth.requireBusinessRead(s);
-          else if (d.access !== 'public') {
+          else if (Array.isArray(d.access)) {
+            // L'une des permissions suffit ; sans aucune, le refus nomme la première.
+            const liste = d.access as readonly Permission[];
             svc.auth.requireAuth(s);
-            await svc.modules.assert(d.access.split(':')[0] as Module);
-            svc.auth.requirePermission(s, d.access);
+            await svc.modules.assert(liste[0]!.split(':')[0] as Module);
+            if (!liste.some((p) => s!.user.rights.has(p))) svc.auth.requirePermission(s, liste[0]!);
+          } else if (d.access !== 'public') {
+            const p = d.access as Permission;
+            svc.auth.requireAuth(s);
+            await svc.modules.assert(p.split(':')[0] as Module);
+            svc.auth.requirePermission(s, p);
           }
           const body = d.raw ? req.body : d.body ? d.body.parse(req.body ?? {}) : undefined;
           const query = d.query ? d.query.parse(req.query ?? {}) : undefined;

@@ -20,3 +20,14 @@ Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. 
 Sources historiques détaillées conservées dans [diagnostics](../archive/diagnostics)
 et [CHANGELOG](../../CHANGELOG.md). Un titre de commit ne suffit pas à
 prouver un correctif : voir [bugs et tests](../04_QUALITE/REGISTRE_BUGS.md).
+
+## Module Vulnérabilités (mise à jour du 20/11/2026, Europe/Paris)
+
+Session « Module surveillance vulnérabilités SMSI ». Voir la [reprise du 20/11/2026](REPRISE-2026-11-20.md) ; contrôles tirés
+des descriptions des PR, non rejoués pour cette mise à jour.
+
+| Travaux | Trace Git / source | Validation accessible |
+| --- | --- | --- |
+| Lots R1, L1, I1 et F1 (recherche, pastilles de source, intégrations dans la page Plateforme, fréquences ; migration `090`) | PR #326 ; addenda de l'ADR 0100 | Tests unitaires et ciblés de l'API, parcours navigateur sur pile locale sans Docker ; CI de la PR. |
+| Lots N1 et N2 (import `.nessus`, logiciel malveillant, suppression d'un connecteur d'import, 30 imports par heure ; migrations `093` et `094`) | PR #331 ; addenda de l'ADR 0100 | Suite API complète verte (207 fichiers, 1 698 tests) avant la dernière reprise de la base ; format non vérifié sur un export réel. |
+| Lots SI1 et SI2 (import Silène, carte de la surface externe à deux sources en page entière ; migration `095`) | PR #333 ; addenda de l'ADR 0100 | Suite API complète verte après SI1 (209 fichiers, 1 712 tests) ; forme de l'export relevée sans valeurs. |

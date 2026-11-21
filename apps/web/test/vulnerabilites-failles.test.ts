@@ -35,6 +35,8 @@ const rien = () => undefined;
 
 const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   id: '00000000-0000-4000-8000-000000000c01',
+  kitsExploitation: [],
+  surMachineFinSupport: false,
   plugin: '900001',
   nom: 'Exemple Linux : noyau (EX-2026-0001)',
   gravite: 'critique',
@@ -44,6 +46,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
   epss: 0.0056,
   exploitable: true,
   exploite: true,
+  exploiteMalware: false,
   nonMaintenu: false,
   finSupportLe: null,
   finDeSupport: false,
@@ -88,6 +91,7 @@ const resume = (c: Partial<ConstatResumeDto> = {}): ConstatResumeDto => ({
     depuis: '2026-11-10T08:00:00.000Z',
     echeance: '2026-11-25T08:00:00.000Z',
   },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machineDetection = (nom: string | null, role: 'front' | 'back' | 'bdd' | null) => ({
@@ -125,7 +129,7 @@ const fiche = (c: Partial<ConstatDto> = {}): ConstatDto => ({
     bdd: [machineDetection('bdd-01.exemple.invalid', 'bdd')],
     aucun: [machineDetection(null, null)],
   },
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   ...c,
 });
 const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
@@ -143,7 +147,7 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   premiere: null,
   derniere: null,
   source: 'tenable',
-  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif' },
+  integration: { id: '00000000-0000-4000-8000-0000000000a1', nom: 'Tenable fictif', type: 'tenable' },
   compteurs: {
     critique: 2,
     elevee: 1,
@@ -183,6 +187,7 @@ describe('menu et aide', () => {
       'vulnerabilites-machines',
       'vulnerabilites-perimetres',
       'vulnerabilites-surface',
+      'vulnerabilites-annuaire',
       'vulnerabilites-alertes',
       'vulnerabilites-delais',
       'vulnerabilites-tendances',
@@ -308,6 +313,49 @@ describe('rendu', () => {
     expect(html).not.toContain('<img');
     expect(rendu(createElement(ConstatsTable, { constats: [], onOuvrir: rien }))).toContain('Aucune faille détectée');
   });
+  it('lot N2 : contrôle exploité par un logiciel malveillant, marque, faits de la priorité et pastille de Tenable', () => {
+    const malware = resume({
+      exploite: false,
+      exploiteMalware: true,
+      sources: {
+        exploitation: [{ source: 'tenable', le: null }],
+        exploitable: [],
+        valeurs: { gravites: [{ source: 'tenable', gravite: 'moyenne' }], cvss: [], epss: [] },
+        certSante: null,
+      },
+      priorite: {
+        niveau: 'P1',
+        faits: [
+          { fait: 'exploitation', sources: ['tenable'] },
+          { fait: 'presence', presence: 'detectee' },
+        ],
+      },
+    });
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : libellé court dans les listes, terme officiel de Tenable dans la fiche.
+    expect(marquesConstat(malware).map((m) => m.libelle)).toEqual(['Logiciel malveillant (Tenable)', 'Exploitable']);
+    expect(marquesConstat(malware, true).map((m) => m.libelle)).toEqual([
+      'Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)',
+      'Exploitable',
+    ]);
+    expect(marquesConstat(malware)[0]!.etat).toBe('erreur');
+    const html = rendu(createElement(ConstatsTable, { constats: [malware], onOuvrir: rien }));
+    expect(html).toContain('>P1<');
+    expect(html).toContain('Logiciel malveillant (Tenable)');
+    expect(html).not.toContain('Exploited by malware');
+    expect(html).toContain('Exploitation avérée (Logiciel malveillant (Tenable)) · Détectée par Tenable');
+    expect(html).toContain('Exploitation avérée (1 source)');
+    expect(html).toContain('d’abord Logiciel malveillant (Tenable)');
+    const ficheHtml = rendu(createElement(FicheConstat, { c: fiche({ ...malware }) }));
+    expect(ficheHtml).toContain('Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)');
+    expect(ficheHtml).toContain(
+      'Exploitation avérée : Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »).',
+    );
+    // Pastille de la source : celle de Tenable (décorative, le texte la nomme).
+    expect(html).toMatch(/<span class="ps ps--violet ps--parallelogramme" data-source="tenable" aria-hidden="true">/);
+    expect(html).not.toContain('Exploitée (KEV)');
+    // Sans le fait : aucune marque nouvelle.
+    expect(marquesConstat(resume()).map((m) => m.libelle)).toEqual(['Exploitée (KEV)', 'Exploitable']);
+  });
   it('fiche : correctif et vecteur tels quels, CVE du KEV marquées, machines par rôle, lien sans référent', () => {
     // Lot PC4 : le correctif de Tenable est rendu par la fiche illustrée commune, placée au-dessus du détail du constat.
     const html =
@@ -425,7 +473,11 @@ describe('rendu', () => {
     ).toContain('Aucun dépôt Tenable');
   });
   it('état des synchronisations : aucune instance, ou dernier bilan', () => {
-    expect(rendu(createElement(EtatSynchronisations, { etats: [] }))).toContain('Pilotage &gt; Intégrations');
+    // Aucune instance : l'écran le dit et renvoie à la page Plateforme (ADR 0076, addendum du 19/11/2026).
+    const vide = rendu(createElement(EtatSynchronisations, { etats: [] }));
+    expect(vide).toContain('Aucune instance Tenable Security Center n’est configurée.');
+    expect(vide).toContain('page Plateforme');
+    expect(vide).not.toContain('Configurer l’intégration');
     const html = rendu(
       createElement(EtatSynchronisations, {
         etats: [
@@ -455,11 +507,17 @@ describe('rendu', () => {
             },
             derniereCompleteLe: '2026-11-16T03:05:00.000Z',
             inventaire: { ok: true, erreur: null, le: '2026-11-16T03:05:00.000Z' },
+            frequenceHeures: 6,
+            prochaineSynchronisation: '2026-11-16T09:00:00.000Z',
           },
         ],
       }),
     );
     expect(html).toContain('Tenable fictif');
+    // Lot F1 : fréquence et prochaine synchronisation, en lecture seule.
+    expect(html).toContain('Synchronisation automatique : toutes les 6 heures');
+    expect(html).toContain('prochaine prévue');
+    expect(html).not.toMatch(/<select/);
     expect(html).toContain('1 faille sur 1 machine (1 détection)');
     expect(html).toContain('3 machines lues');
   });

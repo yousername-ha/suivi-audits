@@ -40,7 +40,7 @@ PHASES = {"controles": "preparing", "notes": "preparing", "sauvegarde": "backup"
 # sortie démarrés par leur profil Compose, services dans l'ordre de démarrage (clamav attend les signatures de freshclam).
 # Listes fermées : aucun nom reçu de l'application ne sert d'argument de commande. Leur concordance avec le registre et le
 # compose est vérifiée par apps/api/test/architecture-flux.test.ts (garder chaque constante sur une ligne, en JSON).
-FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour", "tenable", "veille-vulnerabilites", "algolighthouse")
+FLUX_MODULES = ("assistant", "courriel", "acme", "antivirus", "mises-a-jour", "tenable", "veille-vulnerabilites", "algolighthouse", "veille-reglementaire")
 FLUX_CONTENEURS = {"assistant": {"profil": "assistant", "services": ["assistant-relais"]}, "antivirus": {"profil": "antivirus", "services": ["freshclam", "clamav"]}}
 FLUX_ERREUR_MAX = 300
 # Rapport de l'état appliqué : à chaque changement, et renouvelé à cette période (secondes) pour ne pas inonder la base.
@@ -66,7 +66,9 @@ FRONTAL_DELAI = 120
 UUID_JSON = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$")
 # Progression réelle du téléchargement (ADR 0104) : images tirées par l'API du moteur Docker, sur le socket déjà monté, sans
 # préfixe de version (celle du moteur : un préfixe fixe serait refusé par un moteur trop ancien ou trop récent). Délai par image
-# identique à celui de « docker pull » ; octets reçus publiés au plus une fois par TELECHARGEMENT_PERIODE secondes.
+# identique à celui de « docker pull » ; octets reçus publiés au plus une fois par TELECHARGEMENT_PERIODE secondes. Valeur finale
+# publiée sans attendre et gardée jusqu'à la fin de l'étape « preparing » (vérification des signatures), puis retirée (ADR 0104,
+# addendum du 19/11/2026).
 DOCKER_SOCKET = "/var/run/docker.sock"
 TELECHARGEMENT_DELAI = 900
 TELECHARGEMENT_PERIODE = 1.0
@@ -304,6 +306,10 @@ class Worker:
         with self.guard:
             # Frise publique de l'installation : seules les transitions de phase, horodatées (aucune donnée sensible).
             phase = changes.get("phase")
+            # Mesure du téléchargement (ADR 0104, addendum du 19/11/2026) : gardée pendant la vérification qui suit, jamais
+            # au-delà de l'étape de préparation.
+            if phase and phase != "preparing" and self.state.get("telechargement") is not None:
+                changes["telechargement"] = None
             if (phase and phase not in ("idle", "checking") and self.job and self.job.get("kind") == "install"
                     and (phase != self.state.get("phase") or "etapes" in changes)):
                 etapes = list(changes.get("etapes", self.state.get("etapes") or []))
@@ -522,7 +528,7 @@ class Worker:
     def recover(self):
         if not self.job:
             return
-        self.publish(maintenance=True, ready=False, id=self.job["id"], target=self.job.get("target"))
+        self.publish(maintenance=True, ready=False, id=self.job["id"], target=self.job.get("target"), telechargement=None)
         if self.job.get("blocked"):
             self.publish(status="intervention", message="Une intervention de l’administrateur est nécessaire. Les accès restent protégés.")
             return
@@ -821,14 +827,16 @@ class Worker:
             result[digest] = taille
         return result
 
-    def publier_telechargement(self, progression):
-        """{recu, total} publié s'il a changé, au plus une fois par TELECHARGEMENT_PERIODE ; jamais en recul."""
+    def publier_telechargement(self, progression, final=False):
+        """{recu, total} publié s'il a changé, au plus une fois par TELECHARGEMENT_PERIODE (sans attendre pour la valeur
+        finale) ; jamais en recul."""
         actuel = self.state.get("telechargement") or {}
         recu = max(progression.recu, actuel.get("recu", 0) if actuel.get("total") == progression.total else 0)
         if actuel == {"recu": recu, "total": progression.total}:
             return
         maintenant = time.monotonic()
-        if self.telechargement_publie_le is not None and maintenant - self.telechargement_publie_le < TELECHARGEMENT_PERIODE:
+        if (not final and self.telechargement_publie_le is not None
+                and maintenant - self.telechargement_publie_le < TELECHARGEMENT_PERIODE):
             return
         self.telechargement_publie_le = maintenant
         self.publish(telechargement={"recu": recu, "total": progression.total})
@@ -898,6 +906,7 @@ class Worker:
         self.telechargement_publie_le = None
         # Place vérifiée avant le premier octet téléchargé (ADR 0106) : total des manifestes s'il est connu, sinon forfait.
         self.controler_espace(progression.total if progression else IMAGES_FORFAIT)
+        reussi = False
         try:
             if progression:
                 self.publier_telechargement(progression)
@@ -911,8 +920,15 @@ class Worker:
                         progression = None
                         self.publish(telechargement=None)
                 self.run(["docker", "pull", f"{depot}:{tag}"], timeout=TELECHARGEMENT_DELAI)
+            if progression:
+                # Trois images tirées par l'API : valeur finale (le total) publiée sans attendre la période, et gardée
+                # pendant la vérification des signatures qui suit ; publish la retire quand la phase quitte « preparing »
+                # (ADR 0104, addendum du 19/11/2026).
+                self.publier_telechargement(progression, final=True)
+            reussi = True
         finally:
-            if self.state.get("telechargement") is not None:
+            # Échec : la mesure est retirée de l'état public.
+            if not reussi and self.state.get("telechargement") is not None:
                 with contextlib.suppress(Exception):
                     self.publish(telechargement=None)
 

@@ -51,8 +51,15 @@ export const Preferences = z.object({
     })
     .default({}),
   /** Présentation de l'accueil choisie par la personne (refonte Neon, ADR 0093) : tableau personnalisable (défaut, absent)
-      ou vue analytique. Affichage seulement : les données restent filtrées par les droits de la personne. */
+      ou vue analytique. Sans effet depuis le tableau de bord unique (ADR 0108) : gardée pour lire les préférences déjà
+      enregistrées. */
   accueil: z.enum(['personnalisee', 'analytique']).optional(),
+  /** Onglets de page (rubriques d'une destination), essai demandé par le RSSI le 19/11/2026 : barre bleu nuit (défaut,
+      absent) ou pastilles. Affichage seulement, à retirer une fois la forme choisie. */
+  onglets: z.enum(['barre', 'pastilles']).optional(),
+  /** Boîte d'outils des pages en mode clair, essai demandé par le RSSI le 20/11/2026 : bloc clair au contour fin (défaut,
+      absent) ou bloc bleu nuit comme en mode sombre. Affichage seulement, à retirer une fois la forme choisie. */
+  boiteOutils: z.enum(['claire', 'bleu-nuit']).optional(),
   /** Écran « Machines » du module Vulnérabilités (ADR 0100, lot PC2) : liste ou parc en tuiles, et échelle du parc (réduit
       ou grand écran). Affichage seulement : les machines restent filtrées par les droits de la personne. */
   vulnerabilitesMachines: z

@@ -1,5 +1,5 @@
 /* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, clés de sécurité (sécurité du compte),
-   sessions ouvertes. */
+   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0107). */
 import {
   Alert,
   Badge,
@@ -21,6 +21,7 @@ import qrcode from 'qrcode-generator';
 import { useState } from 'react';
 import { errorMessage, get, post } from '../api';
 import { ClesSecuriteCard } from '../components/ClesSecurite';
+import { ContactCriseCompteCarte } from '../components/ContactCriseCompte';
 import { CriteresMotDePasse } from '../components/CriteresMotDePasse';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { usePresence } from '../realtime';
@@ -46,6 +47,7 @@ export function AccountPage() {
         {me.user?.displayName} ({me.user?.username})
       </Text>
       <AffichageCard />
+      <ContactCriseCompteCarte />
       <NotificationsCard />
       <PasswordCard minLen={me.passwordMinLength} />
       <TotpCard />
@@ -84,6 +86,19 @@ const THEMES = [
   { value: 'auto', label: 'Système' },
   { value: 'clair', label: 'Clair' },
   { value: 'sombre', label: 'Sombre' },
+];
+
+/** Onglets de page à l'essai (demande du RSSI du 19/11/2026) : deux formes, à réduire à une seule une fois le choix fait. */
+const ONGLETS = [
+  { value: 'barre', label: 'Barre bleu nuit' },
+  { value: 'pastilles', label: 'Pastilles' },
+];
+
+/** Boîte d'outils en mode clair à l'essai (demande du RSSI du 20/11/2026) : deux formes, à réduire à une seule une fois le
+    choix fait. */
+const BOITES_OUTILS = [
+  { value: 'claire', label: 'Bloc clair' },
+  { value: 'bleu-nuit', label: 'Bloc bleu nuit' },
 ];
 
 /** Préférences d'affichage : enregistrées sur le serveur, appliquées sur tous les appareils de la personne. */
@@ -134,6 +149,30 @@ function AffichageCard() {
             data={THEMES}
             value={prefs.theme}
             onChange={(v) => set({ theme: v as Preferences['theme'] })}
+          />
+        </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="onglets-label">
+            Onglets de page (essai)
+          </Text>
+          <SegmentedControl
+            aria-labelledby="onglets-label"
+            fullWidth
+            data={ONGLETS}
+            value={prefs.onglets ?? 'barre'}
+            onChange={(v) => set({ onglets: v as NonNullable<Preferences['onglets']> })}
+          />
+        </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="boite-outils-label">
+            Boîte d’outils en mode clair (essai)
+          </Text>
+          <SegmentedControl
+            aria-labelledby="boite-outils-label"
+            fullWidth
+            data={BOITES_OUTILS}
+            value={prefs.boiteOutils ?? 'claire'}
+            onChange={(v) => set({ boiteOutils: v as NonNullable<Preferences['boiteOutils']> })}
           />
         </div>
         <div>
