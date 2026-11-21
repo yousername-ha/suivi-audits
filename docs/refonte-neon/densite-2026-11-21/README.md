@@ -205,7 +205,7 @@ Après adaptation de `RECETTE_DIR` et du port vers l’instance locale à mesure
 RECETTE_DIR=docs/refonte-neon/densite-2026-11-21/outils
 python3 "$RECETTE_DIR/capturer.py" --base http://127.0.0.1:5173 --stage apres --out "$RECETTE_DIR/captures-finales" --sizes 1440x900,1920x1080 --themes clair,sombre --densities normale,compacte --taille 100
 python3 "$RECETTE_DIR/capturer.py" --base http://127.0.0.1:5173 --stage apres --out "$RECETTE_DIR/captures-auto-finales" --sizes 3840x2100 --themes clair,sombre --densities normale,compacte --taille auto
-python3 "$RECETTE_DIR/capturer.py" --base http://127.0.0.1:5173 --stage apres --out "$RECETTE_DIR/interactions-finales" --sizes 1440x900,3840x2100 --pages planning,vulnerabilites --themes clair --densities normale,compacte --taille auto --interactions
+python3 "$RECETTE_DIR/capturer.py" --base http://127.0.0.1:5173 --stage apres --out "$RECETTE_DIR/interactions-finales" --sizes 1440x900,3840x2100 --pages risques,planning,vulnerabilites --themes clair,sombre --densities normale,compacte --taille auto --interactions
 python3 "$RECETTE_DIR/comparer.py" --avant "$RECETTE_DIR/captures/avant/rapport.json" --apres "$RECETTE_DIR/captures-finales/apres/rapport.json" --out "$RECETTE_DIR/comparaison-finale.json"
 ```
 
