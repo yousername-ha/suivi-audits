@@ -61,7 +61,9 @@ describe('architecture : veille réglementaire', () => {
     expect(MIGRATION).toContain(`jsonb_array_length(mots_cles) BETWEEN 1 AND ${VEILLE_REGLEMENTAIRE_BORNES.motsCles}`);
     expect(SCRIPT).toMatch(/^DOMAINES_REGLEMENTAIRES = \("securite", "donnees-personnelles"\)$/m);
     for (const s of SOURCES_REGLEMENTAIRES_JOINTES)
-      expect(MIGRATION).toContain(`(source = '${s.id}' AND lien ~ '^https://${s.hote.replace(/\./g, '\\.')}/')`);
+      expect(MIGRATION).toContain(
+        `(source = '${s.id}' AND lien ~ '^https://${s.hote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/')`,
+      );
   });
 
   it('le flux « veille-reglementaire » déclare exactement ces hôtes, en TCP 443, porté par l’exécutant', () => {
