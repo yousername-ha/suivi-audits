@@ -9,6 +9,8 @@ La branche de travail a ensuite avancé vers `a44fe46` (PR #352/#353) : elle est
 Le raccordement conserve ces travaux ; le seul conflit était documentaire dans CHANGELOG, et les deux entrées sont conservées.
 Le frontend, `packages/ui` et les specs E2E sont identiques au code contrôlé (`git diff 16f58d1 -- apps/web packages/ui tests/e2e`, vide).
 Les nouveaux fichiers API/performance proviennent intégralement de la branche cible et n’ont pas été retestés dans ce lot UI.
+Le contrôle d’espaces du merge contre l’ancien parent signale des blancs dans les sorties EXPLAIN brutes apportées par le banc amont ;
+ces preuves ne sont pas retouchées. `git diff --check origin/claude-suivi-smsi...HEAD` réussit pour le diff propre au présent lot.
 Aucune fusion, publication de version ou mise en production n’a été effectuée. La validation visuelle par l’utilisateur reste à recueillir.
 
 ## Demande et analyse
