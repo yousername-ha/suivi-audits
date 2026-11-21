@@ -1,0 +1,139 @@
+Timing is on.
+QUERY PLAN
+------------------------------------------------------------
+ Limit  (cost=4375.43..4375.44 rows=2 width=145) (actual time=259.862..259.869 rows=12.00 loops=1)
+   Buffers: shared hit=44484
+   ->  Sort  (cost=4375.43..4375.44 rows=2 width=145) (actual time=259.860..259.865 rows=12.00 loops=1)
+         Sort Key: ("left"((o.data ->> 'dueAt'::text), 10)), o.name
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=44484
+         ->  Nested Loop Left Join  (cost=2.18..4375.42 rows=2 width=145) (actual time=0.234..259.372 rows=728.00 loops=1)
+               Join Filter: ((u.id)::text = (o.data ->> 'ownerId'::text))
+               Rows Removed by Join Filter: 217976
+               Buffers: shared hit=44481
+               ->  Nested Loop  (cost=2.18..4350.41 rows=1 width=514) (actual time=0.131..104.033 rows=728.00 loops=1)
+                     Join Filter: ((v.version = sm.business_version) AND (((o.kind = 'nonconformity'::text) AND (COALESCE((o.data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((o.kind = 'action'::text) AND ((o.data ->> 'seriesId'::text) IS NULL) AND (NOT (ANY (COALESCE((o.data ->> 'status'::text), ''::text) = (SubPlan 2).col1))))))
+                     Rows Removed by Join Filter: 4287
+                     Buffers: shared hit=16525
+                     ->  Nested Loop  (cost=2.18..4348.61 rows=1 width=518) (actual time=0.090..61.931 rows=5015.00 loops=1)
+                           Join Filter: (sm.id = o.smsi_id)
+                           Rows Removed by Join Filter: 40606
+                           Buffers: shared hit=10184
+                           ->  Seq Scan on grc_objects o  (cost=2.18..4346.93 rows=1 width=514) (actual time=0.081..50.745 rows=5015.00 loops=1)
+                                 Filter: ((NOT archived) AND ((registre_id IS NULL) OR (registre_id <> ALL ('{}'::uuid[]))) AND ((smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[])) OR (ANY (registre_id = (hashed SubPlan 1).col1))) AND ("left"((data ->> 'dueAt'::text), 10) ~ '^\d{4}-\d{2}-\d{2}$'::text) AND ("left"((data ->> 'dueAt'::text), 10) <= '2026-12-21'::text) AND (((kind = 'nonconformity'::text) AND (COALESCE((data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((kind = 'action'::text) AND ((data ->> 'seriesId'::text) IS NULL))))
+                                 Rows Removed by Filter: 20395
+                                 Buffers: shared hit=5169
+                                 SubPlan 1
+                                   ->  Seq Scan on registre_perimetres  (cost=0.07..1.96 rows=59 width=16) (never executed)
+                                         Filter: (smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[]))
+                           ->  Seq Scan on grc_smsis sm  (cost=0.00..1.30 rows=30 width=36) (actual time=0.001..0.001 rows=9.10 loops=5015)
+                                 Buffers: shared hit=5015
+                     ->  Seq Scan on business_policy_versions v  (cost=0.00..1.01 rows=1 width=1492) (actual time=0.000..0.000 rows=1.00 loops=5015)
+                           Buffers: shared hit=5015
+                     SubPlan 2
+                       ->  Function Scan on jsonb_array_elements st  (cost=0.01..1.51 rows=1 width=32) (actual time=0.005..0.005 rows=1.20 loops=5015)
+                             Filter: ((value ->> 'terminal'::text) = 'true'::text)
+                             Rows Removed by Filter: 3
+               ->  Seq Scan on users u  (cost=0.00..19.00 rows=300 width=32) (actual time=0.001..0.027 rows=300.00 loops=728)
+                     Buffers: shared hit=11648
+ Planning:
+   Buffers: shared hit=747
+ Planning Time: 4.041 ms
+ Execution Time: 260.064 ms
+(39 rows)
+
+Time: 267.409 ms
+BEGIN
+Time: 0.175 ms
+UPDATE 2201
+Time: 198.509 ms
+QUERY PLAN
+------------------------------------------------------------
+ Limit  (cost=4375.43..4375.44 rows=2 width=145) (actual time=120.368..120.375 rows=12.00 loops=1)
+   Buffers: shared hit=24891
+   ->  Sort  (cost=4375.43..4375.44 rows=2 width=145) (actual time=120.366..120.370 rows=12.00 loops=1)
+         Sort Key: ("left"((o.data ->> 'dueAt'::text), 10)), o.name
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=24891
+         ->  Nested Loop Left Join  (cost=2.18..4375.42 rows=2 width=145) (actual time=0.341..120.010 rows=728.00 loops=1)
+               Join Filter: ((u.id)::text = (o.data ->> 'ownerId'::text))
+               Rows Removed by Join Filter: 217976
+               Buffers: shared hit=24891
+               ->  Nested Loop  (cost=2.18..4350.41 rows=1 width=514) (actual time=0.191..71.558 rows=728.00 loops=1)
+                     Join Filter: ((v.version = sm.business_version) AND (((o.kind = 'nonconformity'::text) AND (COALESCE((o.data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((o.kind = 'action'::text) AND ((o.data ->> 'seriesId'::text) IS NULL) AND (NOT (ANY (COALESCE((o.data ->> 'status'::text), ''::text) = (SubPlan 2).col1))))))
+                     Rows Removed by Join Filter: 4287
+                     Buffers: shared hit=13243
+                     ->  Nested Loop  (cost=2.18..4348.61 rows=1 width=518) (actual time=0.107..40.956 rows=5015.00 loops=1)
+                           Join Filter: (sm.id = o.smsi_id)
+                           Rows Removed by Join Filter: 40606
+                           Buffers: shared hit=8228
+                           ->  Seq Scan on grc_objects o  (cost=2.18..4346.93 rows=1 width=514) (actual time=0.095..31.015 rows=5015.00 loops=1)
+                                 Filter: ((NOT archived) AND ((registre_id IS NULL) OR (registre_id <> ALL ('{}'::uuid[]))) AND ((smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[])) OR (ANY (registre_id = (hashed SubPlan 1).col1))) AND ("left"((data ->> 'dueAt'::text), 10) ~ '^\d{4}-\d{2}-\d{2}$'::text) AND ("left"((data ->> 'dueAt'::text), 10) <= '2026-12-21'::text) AND (((kind = 'nonconformity'::text) AND (COALESCE((data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((kind = 'action'::text) AND ((data ->> 'seriesId'::text) IS NULL))))
+                                 Rows Removed by Filter: 20395
+                                 Buffers: shared hit=3213
+                                 SubPlan 1
+                                   ->  Seq Scan on registre_perimetres  (cost=0.07..1.96 rows=59 width=16) (never executed)
+                                         Filter: (smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[]))
+                           ->  Seq Scan on grc_smsis sm  (cost=0.00..1.30 rows=30 width=36) (actual time=0.001..0.001 rows=9.10 loops=5015)
+                                 Buffers: shared hit=5015
+                     ->  Seq Scan on business_policy_versions v  (cost=0.00..1.01 rows=1 width=1492) (actual time=0.000..0.000 rows=1.00 loops=5015)
+                           Buffers: shared hit=5015
+                     SubPlan 2
+                       ->  Function Scan on jsonb_array_elements st  (cost=0.01..1.51 rows=1 width=32) (actual time=0.005..0.005 rows=1.20 loops=5015)
+                             Filter: ((value ->> 'terminal'::text) = 'true'::text)
+                             Rows Removed by Filter: 3
+               ->  Seq Scan on users u  (cost=0.00..19.00 rows=300 width=32) (actual time=0.001..0.024 rows=300.00 loops=728)
+                     Buffers: shared hit=11648
+ Planning:
+   Buffers: shared hit=5
+ Planning Time: 1.084 ms
+ Execution Time: 120.547 ms
+(39 rows)
+
+Time: 122.760 ms
+ROLLBACK
+Time: 0.771 ms
+QUERY PLAN
+------------------------------------------------------------
+ Limit  (cost=4375.43..4375.44 rows=2 width=145) (actual time=380.654..380.662 rows=12.00 loops=1)
+   Buffers: shared hit=44456
+   ->  Sort  (cost=4375.43..4375.44 rows=2 width=145) (actual time=380.652..380.657 rows=12.00 loops=1)
+         Sort Key: ("left"((o.data ->> 'dueAt'::text), 10)), o.name
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=44456
+         ->  Nested Loop Left Join  (cost=2.18..4375.42 rows=2 width=145) (actual time=0.297..379.790 rows=728.00 loops=1)
+               Join Filter: ((u.id)::text = (o.data ->> 'ownerId'::text))
+               Rows Removed by Join Filter: 217976
+               Buffers: shared hit=44456
+               ->  Nested Loop  (cost=2.18..4350.41 rows=1 width=514) (actual time=0.152..153.968 rows=728.00 loops=1)
+                     Join Filter: ((v.version = sm.business_version) AND (((o.kind = 'nonconformity'::text) AND (COALESCE((o.data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((o.kind = 'action'::text) AND ((o.data ->> 'seriesId'::text) IS NULL) AND (NOT (ANY (COALESCE((o.data ->> 'status'::text), ''::text) = (SubPlan 2).col1))))))
+                     Rows Removed by Join Filter: 4287
+                     Buffers: shared hit=16500
+                     ->  Nested Loop  (cost=2.18..4348.61 rows=1 width=518) (actual time=0.109..91.711 rows=5015.00 loops=1)
+                           Join Filter: (sm.id = o.smsi_id)
+                           Rows Removed by Join Filter: 40606
+                           Buffers: shared hit=10159
+                           ->  Seq Scan on grc_objects o  (cost=2.18..4346.93 rows=1 width=514) (actual time=0.097..74.784 rows=5015.00 loops=1)
+                                 Filter: ((NOT archived) AND ((registre_id IS NULL) OR (registre_id <> ALL ('{}'::uuid[]))) AND ((smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[])) OR (ANY (registre_id = (hashed SubPlan 1).col1))) AND ("left"((data ->> 'dueAt'::text), 10) ~ '^\d{4}-\d{2}-\d{2}$'::text) AND ("left"((data ->> 'dueAt'::text), 10) <= '2026-12-21'::text) AND (((kind = 'nonconformity'::text) AND (COALESCE((data ->> 'status'::text), 'open'::text) <> 'closed'::text)) OR ((kind = 'action'::text) AND ((data ->> 'seriesId'::text) IS NULL))))
+                                 Rows Removed by Filter: 20395
+                                 Buffers: shared hit=5144
+                                 SubPlan 1
+                                   ->  Seq Scan on registre_perimetres  (cost=0.07..1.96 rows=59 width=16) (never executed)
+                                         Filter: (smsi_id = ANY ('{00000000-0000-4000-8000-000000000001,173ebb66-761c-4b48-97ba-5e4af6ac4303,9d5faa7d-2230-471c-b097-f4fa8a09b9f3,7750d318-123e-435d-a4a2-3edd968a103b,8721216c-e0e3-4893-9def-f13074863dee,69f91a93-9ddb-4779-be7d-3d4610a7d9d2,0028ceb9-ff44-4acb-b0f7-8d7711de6d13,14594492-b520-4e40-80da-432017966157,e95d1c10-e53c-4600-93fe-c99313b43bf2,fdf2fe0a-ed6c-4723-b1fe-e557eeeb342a,2d8c7bc0-22db-40c9-bf84-460af9578377,4a7f7136-352e-4483-9009-7e5bd8a36d8a,2635206e-c4ad-4cdb-83e5-872c234d4208,b0eab2e2-2282-475e-997d-e02ab98d4020,d4d2bfa7-a700-4c2b-abb3-306295642d6c,f512e6f3-e68e-43ab-b4a5-fa5a4fc9435c,398fd490-145a-4e74-83d6-3d3748d523b8,6baaf2f9-d5f9-4d57-8fbe-9574d78b2f61,cfa3bdca-4d0b-4b8e-a7ee-68fd958bc1f0,227d6e4d-f93c-4d22-ae1a-b3f208420c1d,ee9f2796-cdc2-4c47-b123-982e06d4bfa3,797bd5a9-1c35-446d-bbda-b0db54a1dbc8,ff41ad6b-cec7-4e3d-9fe4-00278288d451,384c18d6-29e8-40ce-9779-8d4cb27a97f0,e454d02f-f709-4928-aabc-eb4f8550f3ea,4cd01488-f2fa-4426-b517-b411ca41f162,1bf1ac34-1186-4851-a201-6172055ca855,4342e2c0-62c4-40b0-a331-e0e39444e7c7,2a6c285f-0300-4a34-b0eb-7758256f3ccb,9b72e4a5-190f-426c-82b3-9a87efa2e80b}'::uuid[]))
+                           ->  Seq Scan on grc_smsis sm  (cost=0.00..1.30 rows=30 width=36) (actual time=0.001..0.002 rows=9.10 loops=5015)
+                                 Buffers: shared hit=5015
+                     ->  Seq Scan on business_policy_versions v  (cost=0.00..1.01 rows=1 width=1492) (actual time=0.000..0.000 rows=1.00 loops=5015)
+                           Buffers: shared hit=5015
+                     SubPlan 2
+                       ->  Function Scan on jsonb_array_elements st  (cost=0.01..1.51 rows=1 width=32) (actual time=0.008..0.008 rows=1.20 loops=5015)
+                             Filter: ((value ->> 'terminal'::text) = 'true'::text)
+                             Rows Removed by Filter: 3
+               ->  Seq Scan on users u  (cost=0.00..19.00 rows=300 width=32) (actual time=0.001..0.043 rows=300.00 loops=728)
+                     Buffers: shared hit=11648
+ Planning:
+   Buffers: shared hit=5
+ Planning Time: 1.074 ms
+ Execution Time: 380.854 ms
+(39 rows)
+
+Time: 383.133 ms
